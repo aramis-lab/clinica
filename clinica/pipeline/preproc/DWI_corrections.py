@@ -20,8 +20,30 @@ import os.path as op
 import clinica.pipeline.preproc.DWI_utils as predifutils
 
 def prepare_data(datasink_directory, name='prepare_data'):
+    """
+    Create a pipeline that prepare the data for further corrections. This pipeline coregister the B0 images and then average it in order
+    to obtain only one average B0 images. The bvectors and bvales are update according to the modifications.
     
-    inputnode = pe.Node(interface=niu.IdentityInterface(fields=["dwi_image", "bvectors_directions", "bvalues", 'T1_image']), name="inputnode")
+    Inputnode
+    ---------
+    dwi_image : FILE
+      Mandatory input. Input dwi file.
+    bvectors_directions : FILE
+      Mandatory input. Vector file of the diffusion directions of the dwi dataset.
+    bvalues : FILE
+      Mandatory input. B values file.
+    
+    Outputnode
+    ----------
+
+        outputnode.dwi_b0_merge - average of B0 images merged to the DWIs
+        outputnode.b0_average - average of the B0 images
+        outputnode.out_bvec - updated gradient vectors table
+        outputnode.out_bvals - updated gradient values table
+        outputnode.mask_b0 - Binary mask obtained from the average of the B0 images
+
+    """
+    inputnode = pe.Node(interface=niu.IdentityInterface(fields=["dwi_image", "bvectors_directions", "bvalues"]), name="inputnode")
 
     b0_dwi_split = pe.Node(niu.Function(input_names=['in_file', 'in_bvals', 'in_bvecs'], output_names=['out_b0', 'out_dwi', 'out_bvals', 'out_bvecs'], 
                                         function=predifutils.b0_dwi_split), name='b0_dwi_split')
