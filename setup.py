@@ -34,4 +34,5 @@ setup(
     install_requires=[
         'nipype>=0.11.0'
     ],
+    data_files=[('clinica', ['LICENSE.txt', 'clinica/VERSION'])],
 )
