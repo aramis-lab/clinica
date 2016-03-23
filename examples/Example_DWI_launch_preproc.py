@@ -6,12 +6,14 @@ Created on Tue Mar 22 15:56:18 2016
 """
 from clinica.pipeline.preproc.DWI_launch_preproc import launch
 import os
-from os.path import abspath,join
+from os.path import realpath,split,join
 
-DWI = join(abspath(__file__), '/data/DWI_launch_preproc/DWI.nii')
-T1 = join(abspath(__file__), '/data/DWI_launch_preproc/T1.nii')
-b_values = join(abspath(__file__), '/data/DWI_launch_preproc/b_values.txt')
-b_vectors = join(abspath(__file__), '/data/DWI_launch_preproc/b_vectors.txt')
+data_path = join(split(realpath(__file__))[0], 'data/DWI_launch_preproc')
+
+DWI = join(data_path, 'DWI.nii')
+T1 = join(data_path, 'T1.nii')
+b_values = join(data_path, 'b_values.txt')
+b_vectors = join(data_path, 'b_vectors.txt')
 
 working_direct = os.getcwd()
 datasink_direct = os.getcwd()
