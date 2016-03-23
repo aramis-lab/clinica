@@ -32,7 +32,8 @@ setup(
         'Programming Language :: Python :: 2.7',
     ],
     install_requires=[
-        'nipype>=0.11.0'
+        'nipype>=0.11.0',
+        'dipy==0.6.0'
     ],
     data_files=[('clinica', ['LICENSE.txt', 'clinica/VERSION'])],
 )
