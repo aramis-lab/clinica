@@ -103,7 +103,6 @@ def launch(in_dwi, in_T1, in_bvals, in_bvecs, working_directory, datasink_direct
     wf.connect([(epi, aac, [('outputnode.out_warp', 'inputnode.in_epi')])])
     wf.connect([(inputnode, aac, [('T1_image','inputnode.T1')])])
     
-    
     wf.connect([(aac, bias, [('outputnode.out_file','inputnode.in_file')])])
     
     wf.connect([(bias, datasink, [('outputnode.out_file','DWI_hmc_ecc_epi_bias_corrected')])])
