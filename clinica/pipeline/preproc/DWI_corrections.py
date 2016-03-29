@@ -303,8 +303,7 @@ def epi_pipeline(datasink_directory, name='epi_correct'):
     This workflow allows to correct for echo-planare induced susceptibility artifacts without fieldmap 
     (e.g. ADNI Database) by elastically register DWIs to their respective baseline T1-weighted 
     structural scans using an inverse consistent registration algorithm with a mutual information cost 
-    function (SyN algorithm). This workflow allows also a coregistration of DWIs with their respective 
-    baseline T1-weighted structural scans in order to latter combine tracks and cortex parcelation.
+    function (SyN algorithm).
     ..  warning:: This workflow rotates the `b`-vectors' 
     .. References
       .. Nir et al. (Neurobiology of Aging 2015)- Connectivity network measures predict volumetric atrophy in mild cognitive impairment
@@ -344,17 +343,6 @@ def epi_pipeline(datasink_directory, name='epi_correct'):
     import nipype.pipeline.engine as pe
     import nipype.interfaces.utility as niu
     import nipype.interfaces.fsl as fsl
-    
-    def expend_matrix_list(in_matrix, in_bvec):
-        
-        import numpy as np
-        
-        bvecs = np.loadtxt(in_bvec).T
-        out_matrix_list = [in_matrix]
-        
-        out_matrix_list = out_matrix_list * len(bvecs)
-    
-        return out_matrix_list
     
     def antsRegistrationSyNQuick(fixe_image, moving_image):
     
@@ -397,15 +385,15 @@ def epi_pipeline(datasink_directory, name='epi_correct'):
     flirt_b0_2_T1.inputs.interp = "spline"
     flirt_b0_2_T1.inputs.cost = 'normmi'
     flirt_b0_2_T1.inputs.cost_func = 'normmi'
-
+    
+    invertxfm = pe.Node(interface=fsl.ConvertXFM(), name='invert_xfm')
+    invertxfm.inputs.invert_xfm = True
+        
     apply_xfm = pe.Node(interface=fsl.ApplyXfm(), name='apply_xfm')
     apply_xfm.inputs.apply_xfm = True
-    
-    expend_matrix = pe.Node(interface=niu.Function(input_names=['in_matrix', 'in_bvec'], output_names=['out_matrix_list'], function=expend_matrix_list), name='expend_matrix')    
-    
-    rot_bvec = pe.Node(niu.Function(input_names=['in_matrix','in_bvec'],
-                       output_names=['out_file'], function=predifutils.rotate_bvecs),
-                       name='Rotate_Bvec')
+    apply_xfm.inputs.interp = "spline"
+    apply_xfm.inputs.cost = 'normmi'
+    apply_xfm.inputs.cost_func = 'normmi'
     
     antsRegistrationSyNQuick = pe.Node(interface=niu.Function(input_names=['fixe_image', 'moving_image'], output_names=['image_warped', 'affine_matrix', 'warp', 'inverse_warped', 'inverse_warp'], 
                                                               function=antsRegistrationSyNQuick), name='antsRegistrationSyNQuick')
@@ -419,8 +407,6 @@ def epi_pipeline(datasink_directory, name='epi_correct'):
     
     fsl_transf = pe.Node(fsl.WarpUtils(out_format='field'), name='fsl_transf')
     
-    warp_epi = pe.Node(fsl.ConvertWarp(), name='warp_epi')
-    
     apply_warp = pe.MapNode(interface=fsl.ApplyWarp(), iterfield=['in_file'],name='apply_warp')
     apply_warp.inputs.interp = 'spline'
     
@@ -429,9 +415,9 @@ def epi_pipeline(datasink_directory, name='epi_correct'):
     
     merge = pe.Node(fsl.Merge(dimension='t'), name='MergeDWIs')
     
-    outputnode = pe.Node(niu.IdentityInterface(fields=['B0_2_T1_rigid_body_matrix', 'out_bvec',
-                                                       'B0_2_T1_SyN_defomation_field', 'B0_2_T1_affine_matrix',
-                                                       'out_dwi', 'out_warp']), name='outputnode')
+    outputnode = pe.Node(niu.IdentityInterface(fields=['B0_2_T1_rigid_body_matrix', 'T1_2_B0_rigid_body_matrix',
+                                                       'T1_coregistered_2_B0', 'B0_2_T1_SyN_defomation_field', 
+                                                       'B0_2_T1_affine_matrix', 'out_dwi', 'out_warp']), name='outputnode')
     
     datasink = pe.Node(nio.DataSink(), name='datasink')
     datasink.inputs.base_directory = op.join(datasink_directory,'epi_correction/')
@@ -442,41 +428,40 @@ def epi_pipeline(datasink_directory, name='epi_correct'):
     wf.connect([(split, pick_ref, [('out_files','inlist')])])
     wf.connect([(pick_ref, flirt_b0_2_T1, [('out','in_file')])])
     wf.connect([(inputnode, flirt_b0_2_T1, [('T1','reference')])])
-    wf.connect([(inputnode, rot_bvec, [('bvec', 'in_bvec')])])
-    wf.connect([(flirt_b0_2_T1, expend_matrix, [('out_matrix_file','in_matrix')])])
-    wf.connect([(inputnode, expend_matrix, [('bvec','in_bvec')])])
-    wf.connect([(expend_matrix, rot_bvec, [('out_matrix_list','in_matrix')])])
-    wf.connect([(inputnode, antsRegistrationSyNQuick, [('T1','fixe_image')])])
-    wf.connect([(flirt_b0_2_T1, antsRegistrationSyNQuick,[('out_file','moving_image')])])
+    wf.connect([(flirt_b0_2_T1, invertxfm, [('out_matrix_file','in_file')])])
+    wf.connect([(invertxfm, apply_xfm, [('out_file','in_matrix_file')])])
+    wf.connect([(inputnode, apply_xfm, [('T1','in_file')])])
+    wf.connect([(pick_ref, apply_xfm, [('out','reference')])])
+    wf.connect([(apply_xfm, antsRegistrationSyNQuick, [('out_file','fixe_image')])])
+    wf.connect([(pick_ref, antsRegistrationSyNQuick,[('out','moving_image')])])
     wf.connect([(antsRegistrationSyNQuick, merge_transform, [('affine_matrix','in2'), ('warp','in1')])])
-    wf.connect([(flirt_b0_2_T1, combin_warp, [('out_file','in_file')])])
+    wf.connect([(pick_ref, combin_warp, [('out','in_file')])])
     wf.connect([(merge_transform, combin_warp, [('out','transforms_list')])])
-    wf.connect([(inputnode, combin_warp, [('T1','reference')])])   
-    wf.connect([(inputnode, coeffs, [('T1', 'reference')])])
+    wf.connect([(apply_xfm, combin_warp, [('out_file','reference')])])   
+    wf.connect([(apply_xfm, coeffs, [('out_file', 'reference')])])
     wf.connect([(combin_warp, coeffs, [('out_warp', 'in_file')])])
     wf.connect([(coeffs, fsl_transf, [('out_file', 'in_file')])])
-    wf.connect([(inputnode, fsl_transf, [('T1', 'reference')])])
-    wf.connect([(inputnode, warp_epi, [('T1','reference')])])
-    wf.connect([(flirt_b0_2_T1, warp_epi, [('out_matrix_file','premat')])])
-    wf.connect([(fsl_transf, warp_epi, [('out_file','warp1')])])
-    wf.connect([(warp_epi, apply_warp, [('out_file','field_file')])])
+    wf.connect([(apply_warp, fsl_transf, [('out_file', 'reference')])])
+    wf.connect([(fsl_transf, apply_warp, [('out_file','field_file')])])
     wf.connect([(split, apply_warp, [('out_files','in_file')])])
-    wf.connect([(inputnode, apply_warp, [('T1','ref_file')])])
+    wf.connect([(apply_xfm, apply_warp, [('out_file','ref_file')])])
     wf.connect([(apply_warp, thres, [('out_file','in_file')])])
     wf.connect([(thres, merge, [('out_file','in_files')])])
     wf.connect([(merge, outputnode, [('merged_file','out_dwi')])])
     wf.connect([(flirt_b0_2_T1, outputnode, [('out_matrix_file','B0_2_T1_rigid_body_matrix')])])
+    wf.connect([(invertxfm, outputnode, [('out_file', 'T1_2_B0_rigid_body_matrix')])])
+    wf.connect([(apply_xfm, outputnode, [('out_file','T1_coregistered_2_B0')])])
     wf.connect([(antsRegistrationSyNQuick, outputnode, [('warp','B0_2_T1_SyN_defomation_field'),
                                                         ('affine_matrix','B0_2_T1_affine_matrix')])])
-    wf.connect([(warp_epi, outputnode, [('out_file','out_warp')])])
-    wf.connect([(rot_bvec, outputnode, [('out_file','out_bvec')])])
+    wf.connect([(fsl_transf, outputnode, [('out_file','out_warp')])])
     wf.connect([(merge, datasink, [('merged_file','out_dwi')])])
-    wf.connect([(flirt_b0_2_T1, datasink, [('out_matrix_file','B0_2_T1_rigid_body_matrix'), ('out_file','flirt_out_file')])])
+    wf.connect([(flirt_b0_2_T1, datasink, [('out_matrix_file','B0_2_T1_rigid_body_matrix')])])
+    wf.connect([(invertxfm, datasink, [('out_file', 'T1_2_B0_rigid_body_matrix')])])
+    wf.connect([(apply_xfm, datasink, [('out_file','T1_coregistered_2_B0')])])
     wf.connect([(antsRegistrationSyNQuick, datasink, [('warp','B0_2_T1_SyN_defomation_field'),
                                                       ('affine_matrix','B0_2_T1_affine_matrix'),
                                                       ('image_warped','b0_warped_image')])])
-    wf.connect([(warp_epi, datasink, [('out_file','out_warp')])])
-    wf.connect([(rot_bvec, datasink, [('out_file','out_bvec')])])
+    wf.connect([(fsl_transf, datasink, [('out_file','out_warp')])])
 
     return wf
 
@@ -495,6 +480,23 @@ def apply_all_corrections(datasink_directory, name='UnwarpArtifacts'):
         name='outputnode')
         
     split = pe.Node(fsl.Split(dimension='t'), name='SplitDWIs')
+    
+    pick_ref = pe.Node(niu.Select(), name='Pick_b0') 
+    pick_ref.inputs.index = [0]
+    
+    flirt_b0_2_T1 = pe.Node(interface=fsl.FLIRT(dof=6), name = 'flirt_B0_2_T1')
+    flirt_b0_2_T1.inputs.interp = "spline"
+    flirt_b0_2_T1.inputs.cost = 'normmi'
+    flirt_b0_2_T1.inputs.cost_func = 'normmi'
+    
+    invertxfm = pe.Node(interface=fsl.ConvertXFM(), name='invert_xfm')
+    invertxfm.inputs.invert_xfm = True
+        
+    apply_xfm = pe.Node(interface=fsl.ApplyXfm(), name='apply_xfm')
+    apply_xfm.inputs.apply_xfm = True
+    apply_xfm.inputs.interp = "spline"
+    apply_xfm.inputs.cost = 'normmi'
+    apply_xfm.inputs.cost_func = 'normmi'
                 
     concat_hmc_ecc = pe.MapNode(fsl.ConvertXFM(), name="concat_hmc_ecc", iterfield=['in_file', 'in_file2'])
     concat_hmc_ecc.inputs.concat_xfm = True
@@ -524,14 +526,21 @@ def apply_all_corrections(datasink_directory, name='UnwarpArtifacts'):
                 (inputnode, concat_hmc_ecc, [('in_hmc','in_file')]),
                 (concat_hmc_ecc, warps, [('out_file','premat')]),                
                 (inputnode, warps, [('in_epi','warp1')]),
-                (inputnode, warps, [('T1','reference')]),
                 (inputnode, split, [('in_dwi', 'in_file')]),
+                (split, pick_ref, [('out_files','inlist')]),
+                (pick_ref, flirt_b0_2_T1, [('out','in_file')]),
+                (inputnode, flirt_b0_2_T1, [('T1','reference')]),
+                (flirt_b0_2_T1, invertxfm, [('out_matrix_file','in_file')]),
+                (invertxfm, apply_xfm, [('out_file','in_matrix_file')]),
+                (inputnode, apply_xfm, [('T1','in_file')]),
+                (pick_ref, apply_xfm, [('out','reference')]),
+                (apply_xfm, warps, [('out_file','reference')]),
                 (warps, unwarp, [('out_file', 'field_file')]),
                 (split, unwarp, [('out_files', 'in_file')]),
-                (inputnode, unwarp, [('T1', 'ref_file')]),
-                (inputnode, coeffs, [('T1', 'reference')]),
+                (apply_xfm, unwarp, [('out_file', 'ref_file')]),
+                (inputnode, coeffs, [('out_file', 'reference')]),
                 (warps, coeffs, [('out_file', 'in_file')]),
-                (inputnode, jacobian, [('T1', 'reference')]),
+                (apply_xfm, jacobian, [('out_file', 'reference')]),
                 (coeffs, jacobian, [('out_file', 'in_file')]),
                 (unwarp, jacmult, [('out_file', 'in_file')]),
                 (jacobian, jacmult, [('out_jacobian', 'operand_files')]),
