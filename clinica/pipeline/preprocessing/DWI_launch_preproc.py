@@ -96,7 +96,6 @@ def launch(in_dwi, in_T1, in_bvals, in_bvecs, working_directory, datasink_direct
     wf.connect([(pre, ecc, [('outputnode.mask_b0','inputnode.in_mask')])])
     wf.connect([(ecc, epi, [('outputnode.out_file','inputnode.DWI')])])
     wf.connect([(inputnode, epi, [('T1_image','inputnode.T1')])])
-    wf.connect([(hmc, epi, [('outputnode.out_bvec','inputnode.bvec')])])
     wf.connect([(pre, aac, [('outputnode.dwi_b0_merge', 'inputnode.in_dwi')])])
     wf.connect([(hmc, aac, [('outputnode.out_xfms', 'inputnode.in_hmc')])])
     wf.connect([(ecc, aac, [('outputnode.out_xfms', 'inputnode.in_ecc')])])
@@ -106,7 +105,7 @@ def launch(in_dwi, in_T1, in_bvals, in_bvecs, working_directory, datasink_direct
     wf.connect([(aac, bias, [('outputnode.out_file','inputnode.in_file')])])
     
     wf.connect([(bias, datasink, [('outputnode.out_file','DWI_hmc_ecc_epi_bias_corrected')])])
-    wf.connect([(epi, datasink, [('outputnode.out_bvec', 'out_bvecs')])])
+    wf.connect([(hmc, datasink, [('outputnode.out_bvec','out_bvecs')])])
     wf.connect([(pre, datasink, [('outputnode.out_bvals','out_bvals')])])
     wf.connect([(bias, datasink, [('outputnode.b0_mask','b0_mask')])])
     
