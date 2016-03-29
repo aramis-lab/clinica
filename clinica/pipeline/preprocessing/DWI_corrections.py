@@ -535,7 +535,7 @@ def apply_all_corrections(datasink_directory, name='UnwarpArtifacts'):
                 (warps, unwarp, [('out_file', 'field_file')]),
                 (split, unwarp, [('out_files', 'in_file')]),
                 (apply_xfm, unwarp, [('out_file', 'ref_file')]),
-                (inputnode, coeffs, [('out_file', 'reference')]),
+                (apply_xfm, coeffs, [('out_file', 'reference')]),
                 (warps, coeffs, [('out_file', 'in_file')]),
                 (apply_xfm, jacobian, [('out_file', 'reference')]),
                 (coeffs, jacobian, [('out_file', 'in_file')]),
