@@ -304,7 +304,6 @@ def epi_pipeline(datasink_directory, name='epi_correct'):
     (e.g. ADNI Database) by elastically register DWIs to their respective baseline T1-weighted 
     structural scans using an inverse consistent registration algorithm with a mutual information cost 
     function (SyN algorithm).
-    ..  warning:: This workflow rotates the `b`-vectors' 
     .. References
       .. Nir et al. (Neurobiology of Aging 2015)- Connectivity network measures predict volumetric atrophy in mild cognitive impairment
         
@@ -314,8 +313,6 @@ def epi_pipeline(datasink_directory, name='epi_correct'):
     ---------
     DWI : FILE
       Mandatory input. Input dwi file.
-    bvec : FILE
-      Mandatory input. Vector file of the diffusion directions of the dwi dataset.
     T1 : FILE
       Mandatory input. Input T1 file.
 
@@ -325,6 +322,7 @@ def epi_pipeline(datasink_directory, name='epi_correct'):
     outputnode.out_dwi - corrected dwi file
     outputnode.out_bvec - rotated gradient vectors table
     outputnode.B0_2_T1_rigid_body_matrix - B0 to T1 image FLIRT rigid body fsl coregistration matrix
+    outputnode.T1_coregistered_2_B0 - T1 image rigid body coregistered to the B0 image
     outputnode.B0_2_T1_affine_matrix - B0 to T1 image ANTs affine itk coregistration matrix
     outputnode.B0_2_T1_SyN_defomation_field - B0 to T1 image ANTs SyN itk warp
     outputnode.out_warp - Out warp allowing DWI to T1 registration and susceptibilty induced artifacts correction
@@ -333,7 +331,6 @@ def epi_pipeline(datasink_directory, name='epi_correct'):
     -------
     >>> epi = epi_pipeline()
     >>> epi.inputs.inputnode.DWI = 'DWI.nii'
-    >>> epi.inputs.inputnode.bvec = 'bvec.txt'
     >>> epi.inputs.inputnode.T1 = 'T1.nii'
     >>> epi.run() # doctest: +SKIP
     """
@@ -375,7 +372,7 @@ def epi_pipeline(datasink_directory, name='epi_correct'):
     
         return out_warp    
 
-    inputnode = pe.Node(niu.IdentityInterface(fields=['T1', 'DWI', 'bvec']), name='inputnode')
+    inputnode = pe.Node(niu.IdentityInterface(fields=['T1', 'DWI']), name='inputnode')
     
     split = pe.Node(fsl.Split(dimension='t'), name='SplitDWIs')
     pick_ref = pe.Node(niu.Select(), name='Pick_b0') 
