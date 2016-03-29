@@ -13,11 +13,11 @@ import tempfile
 import nipype.interfaces.fsl as fsl
 
 try:
-    if fsl.Info.version() > ['5','0','5']:
-        raise
-except:
-    print("FSL version must be great then 5.0.5")
-    exit(0)
+    if fsl.Info.version().split(".") < ['5','0','5']:
+        raise RuntimeError('FSL version must be great then 5.0.5')
+except Exception as e:
+    print(str(e))
+    exit(1)
 
 data_path = join(split(realpath(__file__))[0], 'data/DWI_launch_preproc')
 
