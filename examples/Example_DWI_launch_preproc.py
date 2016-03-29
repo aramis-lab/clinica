@@ -5,7 +5,7 @@ Created on Tue Mar 22 15:56:18 2016
 @author: jacquemont
 """
 from __future__ import absolute_import
-from clinica.pipeline.preproc.DWI_launch_preproc import launch
+from clinica.pipeline.preprocessing.DWI_launch_preproc import launch
 import os
 from os.path import realpath,split,join
 import tempfile
