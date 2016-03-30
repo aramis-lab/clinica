@@ -438,7 +438,7 @@ def epi_pipeline(datasink_directory, name='epi_correct'):
     wf.connect([(apply_xfm, coeffs, [('out_file', 'reference')])])
     wf.connect([(combin_warp, coeffs, [('out_warp', 'in_file')])])
     wf.connect([(coeffs, fsl_transf, [('out_file', 'in_file')])])
-    wf.connect([(apply_warp, fsl_transf, [('out_file', 'reference')])])
+    wf.connect([(apply_xfm, fsl_transf, [('out_file', 'reference')])])
     wf.connect([(fsl_transf, apply_warp, [('out_file','field_file')])])
     wf.connect([(split, apply_warp, [('out_files','in_file')])])
     wf.connect([(apply_xfm, apply_warp, [('out_file','ref_file')])])
