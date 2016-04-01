@@ -115,10 +115,9 @@ def dartel_pipeline(experiment_dir, datasink_directory, name='dartel_wf', modula
         Function receives a list of lists of native class images and a list of flow fields.
         It returns two lists of the same length to give as input to DARTEL2MNI
         This will allow to process each pair of files in parallel.
-        :param native_class_images:
-        :param flowfield_files:
-        :param template_file:
-        :return:
+        :param native_class_images: list of lists of native class images
+        :param flowfield_files: list of flow fields files
+        :return: expanded list of native images,list of flow fields files of the same length
         """
 
         native_files = [image for nat_class in native_class_images for image in nat_class]
@@ -137,7 +136,7 @@ def dartel_pipeline(experiment_dir, datasink_directory, name='dartel_wf', modula
 
     # DARTEL2MNI
     dartel2mni = pe.MapNode(spm.DARTELNorm2MNI(), name='dartel2MNI', iterfield=['apply_to_files', 'flowfield_files'])
-    #Modulate
+    #Modulation
     dartel2mni.inputs.modulate = modulate
     #Smoothing
     dartel2mni.inputs.fwhm = smooth
