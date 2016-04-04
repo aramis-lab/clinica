@@ -43,7 +43,7 @@ def launch(in_dwi, in_T1, in_bvals, in_bvecs, working_directory, datasink_direct
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
     import os.path as op
-    import clinica.pipeline.preprocessing.DWI_corrections as predifcorrect
+    import clinica.pipeline.preprocessing.dwi_corrections as predifcorrect
 
 # Inputs existence checking
 
