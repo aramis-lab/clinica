@@ -17,7 +17,7 @@ from nipype.workflows.dmri.fsl.artifacts import _xfm_jacobian
 from nipype.workflows.dmri.fsl.utils import extract_bval
 import os
 import os.path as op
-import clinica.pipeline.preprocessing.DWI_utils as predifutils
+import clinica.pipeline.preprocessing.dwi_utils as predifutils
 
 def prepare_data(datasink_directory, name='prepare_data'):
     """
@@ -297,7 +297,7 @@ head-motion correction)
     ])
     return wf
 
-def sdc_syb_pipeline(datasink_directory, name='epi_correct'):
+def sdc_syb_pipeline(datasink_directory, name='sdc_syb_correct'):
     
     """
     SDC stands for susceptibility distortion correction and SYB stand for SyN based. This workflow 
@@ -308,7 +308,7 @@ def sdc_syb_pipeline(datasink_directory, name='epi_correct'):
     .. References
       .. Nir et al. (Neurobiology of Aging 2015)- Connectivity network measures predict volumetric atrophy in mild cognitive impairment
         
-        Leow et al. (IEEE Trans Med Imaging 2007)- Statistical Properties of Jacobian Maps and the Realization of Unbiased Large Deformation Nonlinear Image Registration
+         Leow et al. (IEEE Trans Med Imaging 2007)- Statistical Properties of Jacobian Maps and the Realization of Unbiased Large Deformation Nonlinear Image Registration
 
     Inputnode
     ---------
@@ -420,7 +420,7 @@ def sdc_syb_pipeline(datasink_directory, name='epi_correct'):
     datasink = pe.Node(nio.DataSink(), name='datasink')
     datasink.inputs.base_directory = op.join(datasink_directory,'epi_correction/')
     
-    wf = pe.Workflow(name='epi_pipeline')
+    wf = pe.Workflow(name='sdc_syb_pipeline')
     
     wf.connect([(inputnode, split,[('DWI','in_file')])])
     wf.connect([(split, pick_ref, [('out_files','inlist')])])

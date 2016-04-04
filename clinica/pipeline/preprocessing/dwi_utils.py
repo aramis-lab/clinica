@@ -358,66 +358,10 @@ def dwi_flirt(name='DWICoregistration', excl_nodiff=False,
         (flirt,      thres,      [('out_file', 'in_file')]),
         (thres,      merge,      [('out_file', 'in_files')]),
         (merge,      outputnode, [('merged_file', 'out_file')]),
-         (inputnode,      outputnode, [('reference', 'out_ref')]),       
+        (inputnode,      outputnode, [('reference', 'out_ref')]),       
         (flirt,      outputnode, [('out_matrix_file', 'out_xfms')])
     ])
     return wf
-    
-def orig_flirt(name='DWICoregistration', excl_nodiff=False,
-                  flirt_param={}):
-        """
-        Generates a workflow for linear registration of dwi volumes using flirt.
-        
-        Inputnode
-        ---------
-        reference : FILE
-          Mandatory input. Reference data set.
-        in_file : FILE
-          Mandatory input. Moving data set.
-        ref_mask : FILE
-          Mandatory input. Binary mask of the reference volume.
-        in_xfms : FILE
-          Mandatory input. Intialisation matrices for flirt.
-        in_bval : FILE
-          Mandatory input. B values file.
-        
-        """
-        from nipype.workflows.data import get_flirt_schedule
-    
-        inputnode = pe.Node(niu.IdentityInterface(fields=['b0_avg_reference',
-                            'in_file', 'ref_mask']),
-                            name='inputnode')
-        
-        flirt_param = dict(dof=6, interp='spline', cost='normmi', cost_func='normmi', bins=50, save_log=True, padding_size=10,
-                      schedule=get_flirt_schedule('hmc'),
-                      searchr_x=[-4, 4], searchr_y=[-4, 4], searchr_z=[-4, 4], fine_search=1, coarse_search=10 )
-        
-        dilate = pe.Node(fsl.maths.MathsCommand(nan2zeros=True,
-                         args='-kernel sphere 5 -dilM'), name='MskDilate')
-        split = pe.Node(fsl.Split(dimension='t'), name='SplitDWIs')
-    
-        flirt = pe.MapNode(fsl.FLIRT(**flirt_param), name='CoRegistration',
-                           iterfield=['in_file'])
-        thres = pe.MapNode(fsl.Threshold(thresh=0.0), iterfield=['in_file'],
-                           name='RemoveNegative')
-        merge = pe.Node(fsl.Merge(dimension='t'), name='MergeDWIs')
-        outputnode = pe.Node(niu.IdentityInterface(fields=['out_file',
-                             'out_xfms', 'out_ref']), name='outputnode')
-        wf = pe.Workflow(name=name)
-        wf.connect([
-            (inputnode,  split,      [('in_file', 'in_file')]),
-            (inputnode,  dilate,     [('ref_mask', 'in_file')]),
-            (inputnode,  flirt,      [('b0_avg_reference', 'reference')]),
-            (dilate,     flirt,      [('out_file', 'ref_weight'),
-                                      ('out_file', 'in_weight')]),
-            (split,      flirt,      [('out_files', 'in_file')]),                         
-            (flirt,      thres,      [('out_file', 'in_file')]),
-            (thres,      merge,      [('out_file', 'in_files')]),
-            (merge,      outputnode, [('merged_file', 'out_file')]),
-            (inputnode,      outputnode, [('b0_avg_reference', 'out_ref')]),
-            (flirt,      outputnode, [('out_matrix_file', 'out_xfms')])
-        ])
-        return wf
 
 def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
     """
@@ -445,10 +389,6 @@ def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
      Output. The bvalues corresonding to the moving volume.
     volid : INT
       Index of the reference volume.
-
-    See
-    ---
-    :func:`epynet.preprocessing.pipeline.hmc_pipeline`
     """
     import numpy as np
     import nibabel as nib
