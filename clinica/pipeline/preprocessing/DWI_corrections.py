@@ -297,10 +297,11 @@ head-motion correction)
     ])
     return wf
 
-def epi_pipeline(datasink_directory, name='epi_correct'):
+def sdc_syb_pipeline(datasink_directory, name='epi_correct'):
     
     """
-    This workflow allows to correct for echo-planare induced susceptibility artifacts without fieldmap 
+    SDC stands for susceptibility distortion correction and SYB stand for SyN based. This workflow 
+    allows to correct for echo-planare induced susceptibility artifacts without fieldmap 
     (e.g. ADNI Database) by elastically register DWIs to their respective baseline T1-weighted 
     structural scans using an inverse consistent registration algorithm with a mutual information cost 
     function (SyN algorithm).
@@ -462,7 +463,7 @@ def epi_pipeline(datasink_directory, name='epi_correct'):
 
     return wf
 
-def apply_all_corrections(datasink_directory, name='UnwarpArtifacts'):
+def apply_all_corrections_syb(datasink_directory, name='UnwarpArtifacts'):
     """
     Combines two lists of linear transforms with the deformation field
     map obtained epi_correction by Ants.
@@ -471,7 +472,7 @@ def apply_all_corrections(datasink_directory, name='UnwarpArtifacts'):
     """
         
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['in_epi', 'in_hmc','in_ecc', 'in_dwi', 'T1']), name='inputnode')
+        fields=['in_sdc_syb', 'in_hmc','in_ecc', 'in_dwi', 'T1']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['out_file', 'out_warp', 'out_coeff', 'out_jacobian']),
         name='outputnode')

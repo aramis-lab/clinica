@@ -11,7 +11,7 @@ def launch(in_dwi, in_T1, in_bvals, in_bvecs, working_directory, datasink_direct
         - Preparation of the dataset
         - Correction for Head Motion 
         - Correction for Eddy Currents 
-        - Correction for EPI susceptibility induced distortions without the field map
+        - Correction for EPI susceptibility induced distortions using the SyN algorithm
         - Bias field correction
     The outputs presented are tipically outputs necessary for further tractography.
     
@@ -32,7 +32,7 @@ def launch(in_dwi, in_T1, in_bvals, in_bvecs, working_directory, datasink_direct
     
     Outputs
     ----------
-        DWI_hmc_ecc_epi_bias_corrected - DWI corrected for Head motion, Eddy currents, EPI susceptibility induced distortions and bias field
+        DWI_hmc_ecc_sdc_bias_corrected - DWI corrected for Head motion, Eddy currents, EPI susceptibility induced distortions (syb) and bias field
         out_bvecs - updated and corrected gradient vectors table
         out_bvals - updated gradient values table
         mask_b0 - Binary mask obtained from the average of the B0 images    
@@ -73,11 +73,11 @@ def launch(in_dwi, in_T1, in_bvals, in_bvecs, working_directory, datasink_direct
     
     ecc = predifcorrect.ecc_pipeline(datasink_directory)
 
-    epi = predifcorrect.epi_pipeline(datasink_directory)
+    sdc = predifcorrect.sdc_syb_pipeline(datasink_directory)
 
     bias = predifcorrect.remove_bias(datasink_directory)
     
-    aac = predifcorrect.apply_all_corrections(datasink_directory)
+    aac = predifcorrect.apply_all_corrections_syb(datasink_directory)
     
     datasink = pe.Node(nio.DataSink(), name='datasink_tracto')
     datasink.inputs.base_directory = op.join(datasink_directory, 'Outputs_for_Tractography/')
@@ -94,17 +94,17 @@ def launch(in_dwi, in_T1, in_bvals, in_bvecs, working_directory, datasink_direct
     wf.connect([(hmc, ecc, [('outputnode.out_xfms','inputnode.in_xfms'),('outputnode.out_file','inputnode.in_file')])])
     wf.connect([(pre, ecc, [('outputnode.out_bvals','inputnode.in_bval')])])
     wf.connect([(pre, ecc, [('outputnode.mask_b0','inputnode.in_mask')])])
-    wf.connect([(ecc, epi, [('outputnode.out_file','inputnode.DWI')])])
-    wf.connect([(inputnode, epi, [('T1_image','inputnode.T1')])])
+    wf.connect([(ecc, sdc, [('outputnode.out_file','inputnode.DWI')])])
+    wf.connect([(inputnode, sdc, [('T1_image','inputnode.T1')])])
     wf.connect([(pre, aac, [('outputnode.dwi_b0_merge', 'inputnode.in_dwi')])])
     wf.connect([(hmc, aac, [('outputnode.out_xfms', 'inputnode.in_hmc')])])
     wf.connect([(ecc, aac, [('outputnode.out_xfms', 'inputnode.in_ecc')])])
-    wf.connect([(epi, aac, [('outputnode.out_warp', 'inputnode.in_epi')])])
+    wf.connect([(sdc, aac, [('outputnode.out_warp', 'inputnode.in_sdc_syb')])])
     wf.connect([(inputnode, aac, [('T1_image','inputnode.T1')])])
     
     wf.connect([(aac, bias, [('outputnode.out_file','inputnode.in_file')])])
     
-    wf.connect([(bias, datasink, [('outputnode.out_file','DWI_hmc_ecc_epi_bias_corrected')])])
+    wf.connect([(bias, datasink, [('outputnode.out_file','DWI_hmc_ecc_sdc_bias_corrected')])])
     wf.connect([(hmc, datasink, [('outputnode.out_bvec','out_bvecs')])])
     wf.connect([(pre, datasink, [('outputnode.out_bvals','out_bvals')])])
     wf.connect([(bias, datasink, [('outputnode.b0_mask','b0_mask')])])
