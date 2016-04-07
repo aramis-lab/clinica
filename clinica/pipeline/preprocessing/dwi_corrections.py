@@ -815,7 +815,7 @@ def apply_all_corrections_syb(datasink_directory, name='UnwarpArtifacts'):
     wf.connect([(inputnode, concat_hmc_ecc, [('in_ecc','in_file2')]),
                 (inputnode, concat_hmc_ecc, [('in_hmc','in_file')]),
                 (concat_hmc_ecc, warps, [('out_file','premat')]),                
-                (inputnode, warps, [('in_epi','warp1')]),
+                (inputnode, warps, [('in_sdc_syb','warp1')]),
                 (inputnode, split, [('in_dwi', 'in_file')]),
                 (split, pick_ref, [('out_files','inlist')]),
                 (pick_ref, flirt_b0_2_T1, [('out','in_file')]),
