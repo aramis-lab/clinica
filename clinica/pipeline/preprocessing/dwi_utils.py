@@ -164,7 +164,8 @@ def b0_flirt_pipeline(name='b0coregistration', nb_b0= 5, excl_nodiff=False):
         (flirt, outputnode, [('out_matrix_file', 'out_xfms')])
     ])
     return wf
-    
+
+
     
 def b0_average(in_file, out_file=None):
     """
@@ -297,6 +298,7 @@ def rotate_bvecs(in_bvec, in_matrix):
     return out_file
 
 
+
 def dwi_flirt(name='DWICoregistration', excl_nodiff=False,
               flirt_param={}):
     """
@@ -355,6 +357,8 @@ def dwi_flirt(name='DWICoregistration', excl_nodiff=False,
         (flirt,      outputnode, [('out_matrix_file', 'out_xfms')])
     ])
     return wf
+
+
 
 def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
     """
