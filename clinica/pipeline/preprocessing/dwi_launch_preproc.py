@@ -74,8 +74,8 @@ def launch(in_dwi, in_T1, in_bvals, in_bvecs, working_directory, datasink_direct
     
     aac = predifcorrect.apply_all_corrections_syb(datasink_directory)
     
-#    datasink = pe.Node(nio.DataSink(), name='datasink_tracto')
-#    datasink.inputs.base_directory = op.join(datasink_directory, 'Outputs_for_Tractography/')
+    datasink = pe.Node(nio.DataSink(), name='datasink_tracto')
+    datasink.inputs.base_directory = op.join(datasink_directory, 'Outputs_for_Tractography/')
     
     wf = pe.Workflow(name='preprocess')
     wf.base_dir = working_directory

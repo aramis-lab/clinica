@@ -135,12 +135,13 @@ def hmc_pipeline(datasink_directory, name='motion_correct'):
     ----------
 
         outputnode.out_file - corrected dwi file
-        outputnode.out_bvecs - rotated gradient vectors table
+        outputnode.out_bvec - rotated gradient vectors table
         outputnode.out_xfms - list of transformation matrices
 
     """
     from nipype.workflows.data import get_flirt_schedule
-    from utils import merge_volumes_tdim
+    from dwi_utils import merge_volumes_tdim
+    from dwi_utils import hmc_split
     from dwi_corrections import dwi_flirt
     import nipype.interfaces.io as nio
 
@@ -156,7 +157,7 @@ def hmc_pipeline(datasink_directory, name='motion_correct'):
                     output_names=['out_ref', 'out_mov', 'out_bval', 'volid']),
                     name='split_ref_moving')
 
-    flirt = dwi_flirt(path_to_results=path_to_results, subject_id=subject_id, flirt_param=params)
+    flirt = dwi_flirt(flirt_param=params)
 
     insmat = pe.Node(niu.Function(input_names=['inlist', 'volid'],
                      output_names=['out'], function=insert_mat), name='insert_ref_matrix')
@@ -167,11 +168,11 @@ def hmc_pipeline(datasink_directory, name='motion_correct'):
 
     merged_volumes = pe.Node(niu.Function(input_names=['in_file1', 'in_file2'], output_names=['out_file'], function=merge_volumes_tdim), name='merge_reference_moving')
 
-     datasink = pe.Node(nio.DataSink(), name='datasink')
-     datasink.inputs.base_directory = op.join(datasink_directory, 'hmc_correction/')
+    datasink = pe.Node(nio.DataSink(), name='datasink')
+    datasink.inputs.base_directory = op.join(datasink_directory, 'hmc_correction/')
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['out_file',
-                         'out_bvecs', 'out_xfms']), name='outputnode')
+                         'out_bvec', 'out_xfms']), name='outputnode')
 
     wf = pe.Workflow(name=name)
     wf.connect([
@@ -186,14 +187,14 @@ def hmc_pipeline(datasink_directory, name='motion_correct'):
         (split,            insmat,           [('volid', 'volid')]),
         (inputnode,        rot_bvec,         [('in_bvec', 'in_bvec')]),
         (insmat,           rot_bvec,         [('out', 'in_matrix')]),
-        (rot_bvec,         outputnode,       [('out_file', 'out_bvecs')]),
+        (rot_bvec,         outputnode,       [('out_file', 'out_bvec')]),
         (flirt,            merged_volumes,   [('outputnode.out_ref', 'in_file1'),
                                               ('outputnode.out_file', 'in_file2')]),
         (merged_volumes,   outputnode,       [('out_file', 'out_file')]),
         (insmat,           outputnode,       [('out', 'out_xfms')]),
         (merged_volumes,   datasink,         [('out_file', 'out_file')]),
         (insmat,           datasink,         [('out', 'out_xfms')]),
-        (rot_bvec,         datasink,         [('out_file', 'out_bvecs')])
+        (rot_bvec,         datasink,         [('out_file', 'out_bvec')])
     ])
     return wf
 
@@ -368,8 +369,6 @@ head-motion correction)
     from nipype.workflows.dmri.fsl.artifacts import _xfm_jacobian
     import nipype.interfaces.io as nio
 
-    #params = dict(dof=12, interp='spline', bgvalue=0, cost='normmi', cost_func='normmi', bins=64,  padding_size=10, searchr_x=[-4, 4], searchr_y=[-4, 4], searchr_z=[-4, 4], fine_search=1, coarse_search=10)
-    #params = dict(dof=12, interp='spline', bgvalue=0, cost='normmi', cost_func='normmi', bins=50, padding_size=10, no_search=True)
     params = dict(dof=12, no_search=True, interp='spline', bgvalue=0,
                   schedule=get_flirt_schedule('ecc'))
 
@@ -383,7 +382,7 @@ head-motion correction)
         function=extract_bval), name='extract_dwi')
     pick_dws.inputs.b = 'diff'
 
-    flirt = dwi_flirt(path_to_results=path_to_results, subject_id=subject_id, flirt_param=params, excl_nodiff=True)
+    flirt = dwi_flirt(flirt_param=params, excl_nodiff=True)
 
     mult = pe.MapNode(fsl.BinaryMaths(operation='mul'), name='ModulateDWIs',
                       iterfield=['in_file', 'operand_value'])
@@ -1036,10 +1035,7 @@ def dwi_flirt(name='DWICoregistration', excl_nodiff=False, flirt_param={}):
         (thres,       merge,        [('out_file', 'in_files')]),
         (merge,       outputnode,   [('merged_file', 'out_file')]),
         (enhb0,       outputnode,   [('out_file', 'out_ref')]),
-        (flirt,       outputnode,   [('out_matrix_file', 'out_xfms')]),
-        (merge,       datasink,     [('merged_file', 'out_file')]),
-        (enhb0,       datasink,     [('out_file', 'out_ref')]),
-        (flirt,       datasink,     [('out_matrix_file', 'out_xfms')])
+        (flirt,       outputnode,   [('out_matrix_file', 'out_xfms')])
     ])
     return wf
 

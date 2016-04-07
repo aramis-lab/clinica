@@ -31,7 +31,7 @@ def merge_volumes_tdim(in_file1, in_file2):
 
 
 
-def b0_dwi_split(in_file, in_bvals, in_bvecs, lowbval=5.0):
+def b0_dwi_split(in_file, in_bvals, in_bvecs, lowbval=0.0):
     """
     Split the volumes into two datasets :
      - the first dataset contains the set of B0 volumes.
@@ -73,7 +73,7 @@ def b0_dwi_split(in_file, in_bvals, in_bvecs, lowbval=5.0):
     data = im.get_data()
     hdr = im.get_header().copy()
     bvals = np.loadtxt(in_bvals)
-    bvecs = np.loadtxt(in_bvecs)
+    bvecs = np.loadtxt(in_bvecs).T
 
     lowbs = np.where(bvals <= lowbval)[0]
     out_b0 = op.abspath('b0.nii.gz')
@@ -232,7 +232,7 @@ def insert_b0_into_dwi(in_b0, in_dwi, in_bvals, in_bvecs):
       Output. B values update.
     out_bvecs. Directions of diffusion update.
     """
-    from dwi_utils import merge_volumes_tdim
+    from clinica.pipeline.preprocessing.dwi_utils import merge_volumes_tdim
     import os.path as op
     import numpy as np 
 
@@ -360,7 +360,7 @@ def dwi_flirt(name='DWICoregistration', excl_nodiff=False,
 
 
 
-def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
+def hmc_split(in_file, in_bval, ref_num=0, lowbval=0.0):
     """
     Selects the reference ('out_ref') and moving ('out_mov') volumes
     from a dwi dataset for the purpose of head motion correction (HMC). 
