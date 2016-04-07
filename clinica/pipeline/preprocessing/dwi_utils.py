@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Mar 16 16:23:46 2016
+#!/usr/bin/python
 
-@author: jacquemont
-"""
 import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
 import nipype.interfaces.fsl as fsl
-    
+
 def merge_volumes_tdim(in_file1, in_file2):
     """
     Merge 'in_file1' and 'in_file2' in the t dimension.
@@ -34,7 +30,8 @@ def merge_volumes_tdim(in_file1, in_file2):
     return out_file
 
 
-def b0_dwi_split(in_file, in_bvals, in_bvecs, lowbval=0.0):
+
+def b0_dwi_split(in_file, in_bvals, in_bvecs, lowbval=5.0):
     """
     Split the volumes into two datasets :
      - the first dataset contains the set of B0 volumes.
@@ -76,7 +73,7 @@ def b0_dwi_split(in_file, in_bvals, in_bvecs, lowbval=0.0):
     data = im.get_data()
     hdr = im.get_header().copy()
     bvals = np.loadtxt(in_bvals)
-    bvecs = np.loadtxt(in_bvecs).T
+    bvecs = np.loadtxt(in_bvecs)
 
     lowbs = np.where(bvals <= lowbval)[0]
     out_b0 = op.abspath('b0.nii.gz')
@@ -93,12 +90,14 @@ def b0_dwi_split(in_file, in_bvals, in_bvecs, lowbval=0.0):
     bvals_dwi = bvals[dwi_bvals]
     out_bvals = op.abspath('bvals')
     np.savetxt(out_bvals, bvals_dwi, fmt='%d', delimiter=' ')
-
+    
     bvecs_dwi = np.array([bvecs[0][dwi_bvals].tolist(), bvecs[1][dwi_bvals].tolist(), bvecs[2][dwi_bvals].tolist()])
     out_bvecs = op.abspath('bvecs')
     np.savetxt(out_bvecs, bvecs_dwi, fmt='%10.5f', delimiter=' ')
 
     return out_b0, out_dwi, out_bvals, out_bvecs
+
+
 
 def b0_flirt_pipeline(name='b0coregistration', nb_b0= 5, excl_nodiff=False):
     """
@@ -206,6 +205,8 @@ def b0_average(in_file, out_file=None):
     
     return out_file
 
+
+
 def insert_b0_into_dwi(in_b0, in_dwi, in_bvals, in_bvecs):
     """
     This function inserts a b0 volume into the dwi dataset as the
@@ -230,7 +231,7 @@ def insert_b0_into_dwi(in_b0, in_dwi, in_bvals, in_bvecs):
       Output. B values update.
     out_bvecs. Directions of diffusion update.
     """
-
+    from dwi_utils import merge_volumes_tdim
     import os.path as op
     import numpy as np 
 
@@ -238,16 +239,6 @@ def insert_b0_into_dwi(in_b0, in_dwi, in_bvals, in_bvecs):
     assert(op.isfile(in_dwi))
     assert(op.isfile(in_bvals))
     assert(op.isfile(in_bvecs))
-    
-    def merge_volumes_tdim(in_file1, in_file2):
-   
-        import os.path as op
-        import os
-
-        out_file = op.abspath('merged_files.nii.gz')
-        cmd = 'fslmerge -t '+ out_file + ' ' + in_file1 + ' ' + in_file2
-        os.system(cmd)
-        return out_file
 
     out_dwi = merge_volumes_tdim(in_b0, in_dwi)
     
@@ -268,6 +259,8 @@ def insert_b0_into_dwi(in_b0, in_dwi, in_bvals, in_bvecs):
     np.savetxt(out_bvecs, bvecs_dwi, fmt='%10.5f', delimiter=' ')
 
     return out_dwi, out_bvals, out_bvecs
+
+
 
 def rotate_bvecs(in_bvec, in_matrix):
     """
