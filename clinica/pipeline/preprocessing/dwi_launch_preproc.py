@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Mar 16 16:23:47 2016
-
-@author: jacquemont
-"""
+#!/usr/bin/python
 
 def launch(in_dwi, in_T1, in_bvals, in_bvecs, working_directory, datasink_directory):
     """
