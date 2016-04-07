@@ -84,6 +84,120 @@ def prepare_data(datasink_directory, name='prepare_data'):
 
 
 
+def hmc_pipeline(datasink_directory, name='motion_correct'):
+    """
+    HMC stands for head-motion correction.
+
+    Creates a pipeline that corrects for head motion artifacts in dMRI
+    sequences. It takes a series of diffusion weighted images and
+    rigidly co-registers them to one reference image (FLIRT normalised
+    mutual information). Finally, the `b`-matrix is rotated
+    accordingly [Leemans09]_ making use of the rotation matrix
+    obtained by FLIRT.
+
+    A list of rigid transformation matrices is provided, so that transforms
+    can be chained.
+    This is useful to correct for artifacts with only one interpolation process
+    and also to compute nuisance regressors as proposed by [Yendiki13]_.
+
+    .. warning:: This workflow rotates the `b`-vectors, so please be advised
+      that not all the dicom converters ensure the consistency between the
+      resulting nifti orientation and the gradients table (e.g. dcm2nii
+      checks it).
+
+    .. admonition:: References
+
+      .. [Leemans09] Leemans A, and Jones DK, `The B-matrix must be rotated
+        when correcting for subject motion in DTI data
+        <http://dx.doi.org/10.1002/mrm.21890>`_,
+        Magn Reson Med. 61(6):1336-49. 2009. doi: 10.1002/mrm.21890.
+
+      .. [Yendiki13] Yendiki A et al., `Spurious group differences due to head
+        motion in a diffusion MRI study
+        <http://dx.doi.org/10.1016/j.neuroimage.2013.11.027>`_.
+        Neuroimage. 21(88C):79-90. 2013. doi: 10.1016/j.neuroimage.2013.11.027
+    
+    Inputnode
+    ---------
+    in_file : FILE
+      Mandatory input. Input dwi file.
+    in_bvec : FILE
+      Mandatory input. Vector file of the diffusion directions of the dwi dataset.
+    in_bval : FILE
+      Mandatory input. B values file.
+    in_mask : FILE
+      Mandatory input. Weights mask of reference image (a file with data
+      range in [0.0, 1.0], indicating the weight of each voxel when computing the metric
+    ref_num : INT
+      Optional input. Default=0. Index of the b0 volume that should be taken as reference.
+    
+    Outputnode
+    ----------
+
+        outputnode.out_file - corrected dwi file
+        outputnode.out_bvecs - rotated gradient vectors table
+        outputnode.out_xfms - list of transformation matrices
+
+    """
+    from nipype.workflows.data import get_flirt_schedule
+    from utils import merge_volumes_tdim
+    from dwi_corrections import dwi_flirt
+    import nipype.interfaces.io as nio
+
+    params = dict(dof=6, interp='spline', cost='normmi', cost_func='normmi', bins=50, save_log=True, padding_size=10,
+                  schedule=get_flirt_schedule('hmc'),
+                  searchr_x=[-4, 4], searchr_y=[-4, 4], searchr_z=[-4, 4], fine_search=1, coarse_search=10 )
+
+    inputnode = pe.Node(niu.IdentityInterface(fields=['in_file',
+                        'in_bvec', 'in_bval', 'in_mask', 'ref_num']), name='inputnode')
+
+    split = pe.Node(niu.Function(function=hmc_split,
+                    input_names=['in_file', 'in_bval', 'ref_num'],
+                    output_names=['out_ref', 'out_mov', 'out_bval', 'volid']),
+                    name='split_ref_moving')
+
+    flirt = dwi_flirt(path_to_results=path_to_results, subject_id=subject_id, flirt_param=params)
+
+    insmat = pe.Node(niu.Function(input_names=['inlist', 'volid'],
+                     output_names=['out'], function=insert_mat), name='insert_ref_matrix')
+
+    rot_bvec = pe.Node(niu.Function(input_names=['in_bvec', 'in_matrix'],
+                       output_names=['out_file'], function=rotate_bvecs),
+                       name='Rotate_Bvec')
+
+    merged_volumes = pe.Node(niu.Function(input_names=['in_file1', 'in_file2'], output_names=['out_file'], function=merge_volumes_tdim), name='merge_reference_moving')
+
+     datasink = pe.Node(nio.DataSink(), name='datasink')
+     datasink.inputs.base_directory = op.join(datasink_directory, 'hmc_correction/')
+
+    outputnode = pe.Node(niu.IdentityInterface(fields=['out_file',
+                         'out_bvecs', 'out_xfms']), name='outputnode')
+
+    wf = pe.Workflow(name=name)
+    wf.connect([
+        (inputnode,        split,            [('in_file', 'in_file'),
+                                              ('in_bval', 'in_bval'),
+                                              ('ref_num', 'ref_num')]),
+        (inputnode,        flirt,            [('in_mask', 'inputnode.ref_mask')]),
+        (split,            flirt,            [('out_ref', 'inputnode.reference'),
+                                              ('out_mov', 'inputnode.in_file'),
+                                              ('out_bval', 'inputnode.in_bval')]),
+        (flirt,            insmat,           [('outputnode.out_xfms', 'inlist')]),
+        (split,            insmat,           [('volid', 'volid')]),
+        (inputnode,        rot_bvec,         [('in_bvec', 'in_bvec')]),
+        (insmat,           rot_bvec,         [('out', 'in_matrix')]),
+        (rot_bvec,         outputnode,       [('out_file', 'out_bvecs')]),
+        (flirt,            merged_volumes,   [('outputnode.out_ref', 'in_file1'),
+                                              ('outputnode.out_file', 'in_file2')]),
+        (merged_volumes,   outputnode,       [('out_file', 'out_file')]),
+        (insmat,           outputnode,       [('out', 'out_xfms')]),
+        (merged_volumes,   datasink,         [('out_file', 'out_file')]),
+        (insmat,           datasink,         [('out', 'out_xfms')]),
+        (rot_bvec,         datasink,         [('out_file', 'out_bvecs')])
+    ])
+    return wf
+
+
 
 # def hmc_pipeline(datasink_directory, name='motion_correct'):
 #     """
@@ -246,7 +360,7 @@ head-motion correction)
         outputnode.out_file - corrected dwi file
         outputnode.out_xfms - list of transformation matrices
     """
-    from diffusion_pipeline import dwi_flirt
+    from dwi_corrections import dwi_flirt
     from nipype.workflows.data import get_flirt_schedule
     from nipype.workflows.dmri.fsl.utils import extract_bval
     from nipype.workflows.dmri.fsl.utils import recompose_xfm
