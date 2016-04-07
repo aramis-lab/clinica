@@ -3,58 +3,57 @@ import nipype.interfaces.spm as spm
 import nipype.pipeline.engine as pe
 import nipype.interfaces.io as nio
 from nipype.interfaces.utility import Function
+from t1_spm_utils import get_class_images
 
-from T1_SPM_utils import get_class_images
 
-
-def segmentation_pipeline(experiment_dir, datasink_directory, tissue_map, name='segmentation_wf'):
+def segmentation_pipeline(experiment_dir, datasink_directory, name='segmentation_wf'):
     """
     Creates a pipeline that performs SPM unified segmentation.
     It takes a series of MRI T1 images and extracts gray matter(GM),
     white matter(WM) and cerebrospinal fluid(CSF) tissue images.
 
-    Inputs:
+    new_segment node inputs:
     [Mandatory]
-    datasink_directory: Directory to save the resulting images of the segmentation process.
     new_segment.channel_files: (a list of items which are an existing file name)
         A list of files to be segmented.
-    [Optional]
-    new_segment.tissues: (a list of items which are a tuple of the form: (a tuple of
-         the form: (an existing file name, an integer), an integer, a tuple
-         of the form: (a boolean, a boolean), a tuple of the form: (a
-         boolean, a boolean)))
-        A list of tuples (one per tissue) with the following fields:
-         - tissue probability map (4D), 1-based index to frame
-         - number of gaussians
-         - which maps to save [Native, DARTEL] - a tuple of two boolean
-        values
-         - which maps to save [Unmodulated, Modulated] - a tuple of two
-        boolean values
-        By default GM, WM and CSF tissue maps are saved only in native space.
-    For more optional new_segment parameters check:
-    http://www.mit.edu/~satra/nipype-nightly/interfaces/generated/nipype.interfaces.spm.preprocess.html#newsegment
 
-    Outputs:
+    new_segment node outputs:
     new_segment.dartel_input_images: (a list of items which are a list of items which are an existing file name)
         dartel imported class images
     new_segment.native_class_images: (a list of items which are a list of items which are an existing file name)
         native space probability maps
-    For more new_segment outputs check:
+
+    For more optional new_segment parameters and outputs check:
     http://www.mit.edu/~satra/nipype-nightly/interfaces/generated/nipype.interfaces.spm.preprocess.html#newsegment
+
+    :param experiment_dir: Directory to run the workflow.
+    :param datasink_directory: Directory to save the resulting images of the segmentation process.
+    :param name: Workflow name
+    :return: Segmentation workflow
     """
 
     new_segment = pe.MapNode(spm.NewSegment(), name='new_segment', iterfield=['channel_files'])
 
     # Tissue images ((Native space, DARTEL input),(Warped Unmodulated, Warped Modulated))
-    GM = ((True, True), (False, False))
-    WM = ((True, False), (False, False))
-    CSF = ((True, False), (False, False))
 
-    tissue1 = ((tissue_map, 1), 2, GM[0], GM[1])
-    tissue2 = ((tissue_map, 2), 2, WM[0], WM[1])
-    tissue3 = ((tissue_map, 3), 2, CSF[0], CSF[1])
+    version = spm.Info.version()
+    print 'VERSION DE SPM'
+    print version
+    if version:
+        spm_path = version['path']
+        if version['name'] == 'SPM8':
+            tissue_map = op.join(spm_path,'toolbox/Seg/TPM.nii')
+        elif version['name'] == 'SPM12':
+            tissue_map = op.join(spm_path,'tpm/TPM.nii')
 
-    new_segment.inputs.tissues = [tissue1, tissue2, tissue3]
+    tissue1 = ((tissue_map, 1), 2, (True, True), (False, False))
+    tissue2 = ((tissue_map, 2), 2, (True, False), (False, False))
+    tissue3 = ((tissue_map, 3), 2, (True, False), (False, False))
+    tissue4 = ((tissue_map, 4), 3, (False, False), (False, False))
+    tissue5 = ((tissue_map, 5), 4, (False, False), (False, False))
+    tissue6 = ((tissue_map, 6), 2, (False, False), (False, False))
+
+    new_segment.inputs.tissues = [tissue1, tissue2, tissue3, tissue4, tissue5, tissue6]
 
     datasink = pe.Node(nio.DataSink(), name='datasink')
     datasink.inputs.parameterization = False
@@ -77,34 +76,29 @@ def dartel_pipeline(experiment_dir, datasink_directory, name='dartel_wf', modula
     white matter(WM) and cerebrospinal fluid(CSF) tissue images in native space
     and returns the registered images into a DARTEL template obtained for the group.
 
-    Inputs:
+    dartelTemplate node inputs:
     [Mandatory]
-    datasink_directory: Directory to save the resulting images of the segmentation process.
-    new_segment.channel_files: (a list of items which are an existing file name)
-        A list of files to be segmented.
-    [Optional]
-    new_segment.tissues: (a list of items which are a tuple of the form: (a tuple of
-         the form: (an existing file name, an integer), an integer, a tuple
-         of the form: (a boolean, a boolean), a tuple of the form: (a
-         boolean, a boolean)))
-        A list of tuples (one per tissue) with the following fields:
-         - tissue probability map (4D), 1-based index to frame
-         - number of gaussians
-         - which maps to save [Native, DARTEL] - a tuple of two boolean
-        values
-         - which maps to save [Unmodulated, Modulated] - a tuple of two
-        boolean values
-        By default GM, WM and CSF tissue maps are saved only in native space.
-    For more optional new_segment parameters check:
-    http://www.mit.edu/~satra/nipype-nightly/interfaces/generated/nipype.interfaces.spm.preprocess.html#newsegment
+    dartelTemplate.image_files: (a list of items which are a list of items which are an existing file name)
+        A list of files to be registered
 
-    Outputs:
-    new_segment.dartel_input_images: (a list of items which are a list of items which are an existing file name)
-        dartel imported class images
-    new_segment.native_class_images: (a list of items which are a list of items which are an existing file name)
-        native space probability maps
-    For more new_segment outputs check:
-    http://www.mit.edu/~satra/nipype-nightly/interfaces/generated/nipype.interfaces.spm.preprocess.html#newsegment
+    dartel2mni_input node inputs:
+    [Mandatory]
+    dartel2mni_input.native_class_images: (a list of items which are an existing file name)
+        Files to apply the transform to
+
+    For more dartelTemplate parameters and outputs check:
+    http://www.mit.edu/~satra/nipype-nightly/interfaces/generated/nipype.interfaces.spm.preprocess.html#dartel
+
+    For more dartel2mni parameters and outputs check:
+    http://www.mit.edu/~satra/nipype-nightly/interfaces/generated/nipype.interfaces.spm.preprocess.html#dartelnorm2mni
+
+    :param experiment_dir: Directory to run the workflow.
+    :param datasink_directory: Directory to save the resulting images of the registration process.
+    :param name: Workflow name
+    :param modulate: (a boolean) Modulate out images - no modulation preserves concentrations
+    :param smooth: (a list of from 3 to 3 items which are a float or a float)
+        3-list of fwhm for each dimension
+    :return: Registration workflow
     """
 
     # DARTEL Template creation node
@@ -159,7 +153,7 @@ def dartel_pipeline(experiment_dir, datasink_directory, name='dartel_wf', modula
     return wf
 
 
-def T1_SPM_prep_pipeline(experiment_dir, datasink_directory, tissue_map, name='T1_SPM_prep_wf', modulate=True, smooth=0):
+def t1_spm_prep_pipeline(experiment_dir, datasink_directory, name='T1_SPM_prep_wf', modulate=True, smooth=0):
     """
     Creates a pipeline that performs SPM preprocessing for T1 images.
     First unified segmentation is done and then a DARTEL registration.
@@ -168,27 +162,19 @@ def T1_SPM_prep_pipeline(experiment_dir, datasink_directory, tissue_map, name='T
     white matter(WM) and cerebrospinal fluid(CSF) tissue images registered
     into a DARTEL template obtained for the group.
 
-    Inputs:
-    [Mandatory]
-    datasink_directory: Directory to save the resulting images of the segmentation process.
-    new_segment.channel_files: (a list of items which are an existing file name)
-        A list of files to be segmented.
-    [Optional]
-    new_segment.tissues: (a list of items which are a tuple of the form: (a tuple of
-         the form: (an existing file name, an integer), an integer, a tuple
-         of the form: (a boolean, a boolean), a tuple of the form: (a
-         boolean, a boolean)))
-        A list of tuples (one per tissue) with the following fields:
-         - tissue probability map (4D), 1-based index to frame
-         - number of gaussians
-         - which maps to save [Native, DARTEL] - a tuple of two boolean
-        values
-         - which maps to save [Unmodulated, Modulated] - a tuple of two
-        boolean values
-        By default GM, WM and CSF tissue maps are saved only in native space.
-    For more optional new_segment parameters check:
-    http://www.mit.edu/~satra/nipype-nightly/interfaces/generated/nipype.interfaces.spm.preprocess.html#newsegment
 
+
+
+    :param experiment_dir: Directory to run the workflow.
+    :param datasink_directory: Directory to save the resulting images of segmentation and registration processes.
+    :param name: Workflow name
+    :param modulate: (a boolean) Modulate out images - no modulation preserves concentrations
+    :param smooth: (a list of from 3 to 3 items which are a float or a float)
+        3-list of fwhm for each dimension
+    :return: Segmentation and registration workflow
+    """
+
+    """
     Outputs:
     new_segment.dartel_input_images: (a list of items which are a list of items which are an existing file name)
         dartel imported class images
@@ -198,7 +184,7 @@ def T1_SPM_prep_pipeline(experiment_dir, datasink_directory, tissue_map, name='T
     http://www.mit.edu/~satra/nipype-nightly/interfaces/generated/nipype.interfaces.spm.preprocess.html#newsegment
     """
 
-    segmentation_wf = segmentation_pipeline(experiment_dir, datasink_directory, tissue_map)
+    segmentation_wf = segmentation_pipeline(experiment_dir, datasink_directory)
     dartel_wf = dartel_pipeline(experiment_dir, datasink_directory)
 
     wf = pe.Workflow(name=name)

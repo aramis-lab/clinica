@@ -12,7 +12,7 @@ def get_class_images(class_images,index_list):
 
     :param class_images: image set from which to extract images.
     :param index_list: index list of the classes to extract.
-    :returns: extracted images in a list of list (without empty lists).
+    :return: extracted images in a list of list (without empty lists).
 
     Example
     -------
