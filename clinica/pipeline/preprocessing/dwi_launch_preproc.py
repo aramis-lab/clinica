@@ -1,12 +1,12 @@
 #!/usr/bin/python
 
-def launch(in_dwi, in_T1, in_bvals, in_bvecs, working_directory, datasink_directory):
+def create_dwi_preproc_syb(in_dwi, in_T1, in_bvals, in_bvecs, working_directory, datasink_directory):
     """
     Create and run a high level pipeline to preprocess the DWI Images :
         - Preparation of the dataset
         - Correction for Head Motion 
         - Correction for Eddy Currents 
-        - Correction for EPI susceptibility induced distortions using the SyN algorithm
+        - Correction for EPI susceptibility induced distortions using the SyN algorithm (SyB)
         - Bias field correction
     The outputs presented are tipically outputs necessary for further tractography.
     
@@ -104,7 +104,7 @@ def launch(in_dwi, in_T1, in_bvals, in_bvecs, working_directory, datasink_direct
     wf.connect([(pre, datasink, [('outputnode.out_bvals','out_bvals')])])
     wf.connect([(bias, datasink, [('outputnode.b0_mask','b0_mask')])])
     
-    wf.run()
+    return wf
 
 
 
