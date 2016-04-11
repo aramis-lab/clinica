@@ -1,8 +1,12 @@
 from t1_spm_workflows import t1_spm_prep_pipeline, segmentation_pipeline
 
+import sys
+import argparse
+from os import walk
+
 import nipype.pipeline.engine as pe
 import nipype.interfaces.io as nio
-from os import walk
+
 
 def launch_segmentation_example(data_dir, experiment_dir, output_dir):
     """
@@ -126,16 +130,30 @@ def launch_XNATSource_example(server, user, password, experiment_dir, output_dir
 
 if __name__ == "__main__":
 
+    parser = argparse.ArgumentParser(description='Launch SPM T1 pre-processing pipeline')
+    parser.add_argument("-d","--data_dir", type=str, help="Path to the directory containing the data to be treated")
+    parser.add_argument("-e","--experiment_dir", type=str, help="Path to the directory where to store the experiment data")
+    parser.add_argument("-o","--output_dir", type=str, help="Path to the directory where the output should be saved")
+    args = parser.parse_args()
+    
+    if not args.data_dir or not args.experiment_dir or not args.output_dir:
+        print 'Insufficient input arguments'
+        parser.print_help
+        sys.exit(1)
+        
     # Experiment folders
-    data_dir = '/data/FAST_DRIVE2/samper/xnat_download'
-    experiment_dir = '/data/FAST_DRIVE2/samper/clinica/run'
-    output_dir = '/data/FAST_DRIVE2/samper/clinica/run/output'
+    #data_dir = '/data/FAST_DRIVE2/samper/xnat_download'
+    #experiment_dir = '/data/FAST_DRIVE2/samper/clinica/run'
+    #output_dir = '/data/FAST_DRIVE2/samper/clinica/run/output'
 
+    
     # To test XNATSource
     # server = 'http://134.157.198.180:8080/xnat'
     # user = 'user'
     # password = 'pwd'
 
-    launch_DataGrabber_example(data_dir, experiment_dir, output_dir)
+    launch_DataGrabber_example(args.data_dir, args.experiment_dir, args.output_dir)
+    
+    sys.exit(0)
 
     #launch_XNATSource_example(server, user, password, experiment_dir, output_dir)
