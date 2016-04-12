@@ -140,9 +140,9 @@ def hmc_pipeline(datasink_directory, name='motion_correct'):
 
     """
     from nipype.workflows.data import get_flirt_schedule
-    from dwi_utils import merge_volumes_tdim
-    from dwi_utils import hmc_split
-    from dwi_corrections import dwi_flirt
+    from clinica.pipeline.preprocessing.dwi_utils import merge_volumes_tdim
+    from clinica.pipeline.preprocessing.dwi_utils import hmc_split
+    from clinica.pipeline.preprocessing.dwi_utils import dwi_flirt
     import nipype.interfaces.io as nio
 
     params = dict(dof=6, interp='spline', cost='normmi', cost_func='normmi', bins=50, save_log=True, padding_size=10,
@@ -361,7 +361,7 @@ head-motion correction)
         outputnode.out_file - corrected dwi file
         outputnode.out_xfms - list of transformation matrices
     """
-    from dwi_corrections import dwi_flirt
+    from clinica.pipeline.preprocessing.dwi_utils import dwi_flirt
     from nipype.workflows.data import get_flirt_schedule
     from nipype.workflows.dmri.fsl.utils import extract_bval
     from nipype.workflows.dmri.fsl.utils import recompose_xfm
@@ -544,8 +544,8 @@ head-motion correction)
 
 def sdc_fmb(datasink_directory, name='fmb_correction',
             fugue_params=dict(smooth3d=2.0),
-            bmap_params=dict(delta_te=2.46e-3)
-  ,          epi_params=dict(echospacing=0.39e-3,
+            bmap_params=dict(delta_te=2.46e-3),
+            epi_params=dict(echospacing=0.39e-3,
                             enc_dir='y')):
     """
     SDC stands for susceptibility distortion correction. FMB stands for
@@ -984,7 +984,6 @@ def dwi_flirt(name='DWICoregistration', excl_nodiff=False, flirt_param={}):
     """
     from nipype.workflows.dmri.fsl.utils import _checkinitxfm
     from nipype.workflows.dmri.fsl.utils import enhance
-    import nipype.interfaces.io as nio
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['reference',
                         'in_file', 'ref_mask', 'in_xfms', 'in_bval']),
