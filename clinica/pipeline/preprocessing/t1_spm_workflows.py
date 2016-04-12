@@ -31,14 +31,15 @@ def segmentation_pipeline(experiment_dir, datasink_directory, name='segmentation
     :param name: Workflow name
     :return: Segmentation workflow
     """
-
+    spm_home = os.getenv("SPM_HOME")
+    version = spm.Info.version()
+    print 'VERSION DE SPM'
+    print version
+    
     new_segment = pe.MapNode(spm.NewSegment(), name='new_segment', iterfield=['channel_files'])
 
     # Tissue images ((Native space, DARTEL input),(Warped Unmodulated, Warped Modulated))
 
-    version = spm.Info.version()
-    print 'VERSION DE SPM'
-    print version
     if version:
         spm_path = version['path']
         if version['name'] == 'SPM8':
