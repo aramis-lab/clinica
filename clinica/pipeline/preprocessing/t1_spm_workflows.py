@@ -1,5 +1,7 @@
+import os
 import os.path as op
 import nipype.interfaces.spm as spm
+import nipype.interfaces.matlab as mlab
 import nipype.pipeline.engine as pe
 import nipype.interfaces.io as nio
 from nipype.interfaces.utility import Function
@@ -32,6 +34,10 @@ def segmentation_pipeline(experiment_dir, datasink_directory, name='segmentation
     :return: Segmentation workflow
     """
     spm_home = os.getenv("SPM_HOME")
+    mlab_home = os.getenv("MATLABCMD")
+    mlab.MatlabCommand.set_default_matlab_cmd(mlab_home)
+    mlab.MatlabCommand.set_default_paths(spm_home)
+    
     version = spm.Info.version()
     print 'VERSION DE SPM'
     print version
