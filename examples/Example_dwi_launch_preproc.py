@@ -36,3 +36,6 @@ print("Running...")
 dwi_preproc_syb = create_dwi_preproc_syb(DWI, T1, b_values, b_vectors, working_direct, datasink_direct)
 dwi_preproc_syb.run()
 
+print("Working Directory -> %s" % working_direct)
+print("Datasink Directory -> %s" % datasink_direct)
+
