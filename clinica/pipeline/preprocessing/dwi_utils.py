@@ -31,7 +31,7 @@ def merge_volumes_tdim(in_file1, in_file2):
 
 
 
-def b0_dwi_split(in_file, in_bvals, in_bvecs, lowbval=0.0):
+def b0_dwi_split(in_file, in_bvals, in_bvecs, lowbval=5.0):
     """
     Split the volumes into two datasets :
      - the first dataset contains the set of B0 volumes.
@@ -63,6 +63,7 @@ def b0_dwi_split(in_file, in_bvals, in_bvecs, lowbval=0.0):
     import numpy as np
     import nibabel as nib
     import os.path as op
+    import warnings
 
     assert(op.isfile(in_file))
     assert(op.isfile(in_bvals))
@@ -73,7 +74,11 @@ def b0_dwi_split(in_file, in_bvals, in_bvecs, lowbval=0.0):
     data = im.get_data()
     hdr = im.get_header().copy()
     bvals = np.loadtxt(in_bvals)
-    bvecs = np.loadtxt(in_bvecs).T
+    bvecs = np.loadtxt(in_bvecs)
+
+    if bvals.shape[0] == bvecs.shape[0]:
+        warnings.warn("Warning - The b-vectors file should be column-wise: the b-vectors will be transposed", UserWarning)
+        bvecs = bvecs.T
 
     lowbs = np.where(bvals <= lowbval)[0]
     out_b0 = op.abspath('b0.nii.gz')
@@ -99,7 +104,7 @@ def b0_dwi_split(in_file, in_bvals, in_bvecs, lowbval=0.0):
 
 
 
-def b0_flirt_pipeline(name='b0coregistration', nb_b0= 5, excl_nodiff=False):
+def b0_flirt_pipeline(name='b0coregistration', nb_b0= 10, excl_nodiff=False):
     """
     Rigid registration of the B0 dataset onto the first volume. Rigid
     registration is achieved using FLIRT and the normalized
@@ -360,7 +365,7 @@ def dwi_flirt(name='DWICoregistration', excl_nodiff=False,
 
 
 
-def hmc_split(in_file, in_bval, ref_num=0, lowbval=0.0):
+def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
     """
     Selects the reference ('out_ref') and moving ('out_mov') volumes
     from a dwi dataset for the purpose of head motion correction (HMC). 
