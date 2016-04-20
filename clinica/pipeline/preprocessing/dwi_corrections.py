@@ -585,7 +585,7 @@ def sdc_fmb(datasink_directory, name='fmb_correction',
     .. warning:: Only SIEMENS format fieldmaps are supported.
 
     .. admonition:: References
-
+<
       .. [Jezzard95] Jezzard P, and Balaban RS, `Correction for geometric
         distortion in echo planar images from B0 field variations
         <http://dx.doi.org/10.1002/mrm.1910340111>`_,
