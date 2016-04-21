@@ -6,51 +6,57 @@ from os.path import join as opj
 import nipype.pipeline.engine as pe 
 import nipype.interfaces.io as nio 
 from nipype.interfaces.freesurfer.preprocess import ReconAll
- 
-#define the variables, like the inputs and outputs files
-# Subjects
 
-# subject_list = ['sub%03d'% i for i in range(1,2)] # the input's subject_id files
-experiment_dir = '/aramis/home/wen/HAO_lab/Nipype/Data_AD' # the tutorial file to contain all the files
-data_dir = opj(experiment_dir, 'xnat_download')
-output_dir = opj(experiment_dir, 'recon-all_all_qcache')
-subject_list = []
-for dirpath, dirnames, filenames in os.walk(data_dir):
-    subject_list = filenames
-    break
-#subject_list = subject_list[:2]
-#Creat the pipelines that run the recon-all command
-wf = pe.Workflow(name='reconall_workflow')
-# wf.base_dir = opj(experiment_dir, 'working_dir')
-wf.base_dir = os.path.abspath('/aramis/home/wen/HAO_lab/Nipype/Data_AD/working_dir')
+def recon-all_pipeline(data_dir, experiment_dir, output_dir):
+"""
+    Creates a pipeline that performs Freesurfer commander, recon-all,
+    It takes the input files of MRI T1 images and executes the 31 steps to
+    reconstruct the surface of the brain, this progress includes surface-based
+    and Volume-based piepeline, which including gray(GM)and white matter(WM)
+    segementation, pial and white surface extraction!.
 
-#Grab the data
-datasource = pe.Node(interface = nio.DataGrabber(infields=['subject_id'], outfields=['out_files']), name="datasource")
-datasource.inputs.base_directory = data_dir 
-datasource.inputs.template = '%s'
-datasource.inputs.subject_id = subject_list
-datasource.inputs.sort_filelist = True
+    Inputnode
+    ---------
+    DataGrabber : FILE
+      Mandatory input: the input images, should be a string.
 
-#make the outputs files
-if not os.path.exists(output_dir):
-	os.mkdir(output_dir)
+    Outputnode
+    ----------
+    ReconAll
+      Optional input: T1_files: name of T1 file to process,(a list of items which are an existing file name)
+                      args: Additional parameters to the command, (a string)
+                      directive: ('all' or 'autorecon1' or 'autorecon2' or 'autorecon2-cp' or 'autorecon2-wm'
+                      or 'autorecon2-inflate1' or 'autorecon2-perhemi'
+                      or 'autorecon3' or 'localGI' or 'qcache', nipype default value: all)
 
-#Creat the MapNode
-data_dir_out = ['sub%03d'% i for i in range(1,61)]
-recon_all = pe.MapNode(interface=ReconAll(),name='recon_all', iterfield=['subject_id', 'T1_files'])
-recon_all.inputs.subject_id = data_dir_out
-recon_all.inputs.subjects_dir = output_dir
-#recon_all.inputs.T1_files = subject_list
-recon_all.inputs.directive = 'all'
-recon_all.inputs.args = '-qcache'
+        For more optional ReconAll inputs and  outputs check:
+        http://nipy.org/nipype/interfaces/generated/nipype.interfaces.freesurfer.preprocess.html#reconall
 
-#Connect the Node
-wf.connect(datasource,'out_files', recon_all,'T1_files')
-#wf.connect([(datasource, recon_all, [('out_file','T1_files')])])
+    :param: experiment_dir: Directory to run the workflow
+    :param: data_dir: Directory to contain the source data to progress
+    :param:
+    :return: Recon-all workflow
+    """
 
-#Run the wf
-wf.run("MultiProc", plugin_args={'n_procs':4})
+    wf = pe.Workflow(name='reconall_workflow')
+    wf.base_dir = opj(experiment_dir, 'working_dir')
+    wf.base_dir = os.path.abspath('/aramis/home/wen/HAO_lab/Nipype/Data_AD/working_dir')
 
-#Delete the tmp files
-#os.system('rm -rf %s' %wf.base_dir)##this is system dependent
-#os.rmdir(wf.base_dir)
+    datasource = pe.Node(interface = nio.DataGrabber(infields=['subject_id'], outfields=['out_files']), name="datasource")
+    datasource.inputs.base_directory = data_dir
+    datasource.inputs.template = '%s'
+    datasource.inputs.subject_id = subject_list
+    datasource.inputs.sort_filelist = True
+
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+
+    recon_all = pe.MapNode(interface=ReconAll(),name='recon_all', iterfield=['subject_id', 'T1_files'])
+    recon_all.inputs.subject_id = data_dir_out
+    recon_all.inputs.subjects_dir = output_dir
+    recon_all.inputs.directive = 'all'
+
+    wf.connect(datasource,'out_files', recon_all,'T1_files')
+
+    os.rmdir(wf.base_dir)
+    return wf
