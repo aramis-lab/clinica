@@ -18,12 +18,12 @@ def recon-all_pipeline(data_dir, experiment_dir, output_dir):
     Inputnode
     ---------
     DataGrabber : FILE
-      Mandatory input: the input images, should be a string.
+      Mandatory inputs: the input images, should be a string.
 
     Outputnode
     ----------
     ReconAll
-      Optional input: T1_files: name of T1 file to process,(a list of items which are an existing file name)
+      Optional inputs: T1_files: name of T1 file to process,(a list of items which are an existing file name)
                       args: Additional parameters to the command, (a string)
                       directive: ('all' or 'autorecon1' or 'autorecon2' or 'autorecon2-cp' or 'autorecon2-wm'
                       or 'autorecon2-inflate1' or 'autorecon2-perhemi'
@@ -60,3 +60,4 @@ def recon-all_pipeline(data_dir, experiment_dir, output_dir):
 
     os.rmdir(wf.base_dir)
     return wf
+
