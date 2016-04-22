@@ -40,7 +40,6 @@ def recon-all_pipeline(data_dir, experiment_dir, output_dir):
 
     wf = pe.Workflow(name='reconall_workflow')
     wf.base_dir = opj(experiment_dir, 'working_dir')
-    wf.base_dir = os.path.abspath('/aramis/home/wen/HAO_lab/Nipype/Data_AD/working_dir')
 
     datasource = pe.Node(interface = nio.DataGrabber(infields=['subject_id'], outfields=['out_files']), name="datasource")
     datasource.inputs.base_directory = data_dir
@@ -48,8 +47,13 @@ def recon-all_pipeline(data_dir, experiment_dir, output_dir):
     datasource.inputs.subject_id = subject_list
     datasource.inputs.sort_filelist = True
 
-    if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
+
+
+    try:
+        os.makedir(output_dir)
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise
 
     recon_all = pe.MapNode(interface=ReconAll(),name='recon_all', iterfield=['subject_id', 'T1_files'])
     recon_all.inputs.subject_id = data_dir_out
@@ -58,6 +62,5 @@ def recon-all_pipeline(data_dir, experiment_dir, output_dir):
 
     wf.connect(datasource,'out_files', recon_all,'T1_files')
 
-    os.rmdir(wf.base_dir)
     return wf
 
