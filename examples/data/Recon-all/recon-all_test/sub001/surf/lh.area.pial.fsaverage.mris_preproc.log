@@ -1,0 +1,75 @@
+Sat Apr 23 06:40:19 CEST 2016
+setenv SUBJECTS_DIR /aramis/home/wen/HAO_lab/Clinica/clinica/examples/data/recon-all_test
+cd /aramis/home/wen/HAO_lab/Clinica/clinica/examples/data/recon-all_test/sub001/surf
+/aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/bin/mris_preproc --s sub001 --hemi lh --meas area.pial --target fsaverage --out lh.area.pial.fsaverage.mgh
+
+Linux HP1973 3.11.0-26-generic #45~precise1-Ubuntu SMP Tue Jul 15 04:02:35 UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
+$Id: mris_preproc,v 1.59.2.4 2012/12/06 16:06:52 mreuter Exp $
+freesurfer-Linux-centos4_x86_64-stable-pub-v5.3.0
+tmpdir is ./tmp.mris_preproc.16884
+Src lh sphere.reg
+Trg lh sphere.reg
+
+
+
+
+---------------------------------------------------
+#@# 1/1 sub001 Sat Apr 23 06:40:19 CEST 2016 --------------
+-----------------------
+mri_surf2surf --srcsubject sub001 --srchemi lh --srcsurfreg sphere.reg --trgsubject fsaverage --trghemi lh --trgsurfreg sphere.reg --tval ./tmp.mris_preproc.16884/sub001.1.mgh --sval /aramis/home/wen/HAO_lab/Clinica/clinica/examples/data/recon-all_test/sub001/surf/lh.area.pial --jac --sfmt curv --noreshape --no-cortex
+Source registration surface changed to sphere.reg
+Target registration surface changed to sphere.reg
+srcsubject = sub001
+srcval     = /aramis/home/wen/HAO_lab/Clinica/clinica/examples/data/recon-all_test/sub001/surf/lh.area.pial
+srctype    = curv
+trgsubject = fsaverage
+trgval     = ./tmp.mris_preproc.16884/sub001.1.mgh
+trgtype    = 
+srcsurfreg = sphere.reg
+trgsurfreg = sphere.reg
+srchemi    = lh
+trghemi    = lh
+frame      = 0
+fwhm-in    = 0
+fwhm-out   = 0
+label-src  = (null)
+label-trg  = (null)
+OKToRevFaceOrder  = 1
+Reading source surface reg /aramis/home/wen/HAO_lab/Clinica/clinica/examples/data/recon-all_test/sub001/surf/lh.sphere.reg
+Loading source data
+Reading curvature file /aramis/home/wen/HAO_lab/Clinica/clinica/examples/data/recon-all_test/sub001/surf/lh.area.pial
+Reading target surface reg /aramis/home/wen/HAO_lab/Clinica/clinica/examples/data/recon-all_test/fsaverage/surf/lh.sphere.reg
+Done
+Mapping Source Volume onto Source Subject Surface with Jacobian Correction
+surf2surf_nnfr_jac: building source hash (res=16).
+Surf2SurfJac: 1st Forward Loop (163842)
+Surf2SurfJac: 2nd Forward Loop (163842)
+surf2surf_nnfr: building target hash (res=16).
+Surf2SurfJac: Reverse Loop (141496)
+Reverse Loop had 26407 hits
+INFO: nSrcLost = 0
+surf2surf_nnfr_jac() done
+nTrg121 = 143047, nTrgMulti = 20795, MnTrgMultiHits = 2.26987
+nSrc121 = 104546, nSrcLost =     0, nSrcMulti = 36950, MnSrcMultiHits = 2.31943
+Saving target data
+Saving to ./tmp.mris_preproc.16884/sub001.1.mgh
+
+
+
+-----------------------
+mri_concat ./tmp.mris_preproc.16884/sub001.1.mgh --o lh.area.pial.fsaverage.mgh
+ninputs = 1
+Checking inputs
+nframestot = 1
+Allocing output
+Done allocing
+nframes = 1
+Writing to lh.area.pial.fsaverage.mgh
+
+
+
+Cleaning up
+-----------------------
+rm -r ./tmp.mris_preproc.16884
+Sat Apr 23 06:40:29 CEST 2016
+mris_preproc done

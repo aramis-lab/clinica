@@ -1,0 +1,237 @@
+/aramis/home/wen/HAO_lab/Clinica/clinica/examples/data/recon-all_test/sub001/mri
+/aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/bin/mri_nu_correct.mni
+--i orig.mgz --o nu.mgz --uchar transforms/talairach.xfm --n 2
+nIters 2
+$Id: mri_nu_correct.mni,v 1.18.2.1 2013/01/09 21:23:42 nicks Exp $
+Linux HP1973 3.11.0-26-generic #45~precise1-Ubuntu SMP Tue Jul 15 04:02:35 UTC 2014 x86_64 x86_64 x86_64 GNU/Linux
+Fri Apr 22 19:57:35 CEST 2016
+Program nu_correct, built from:
+Package MNI N3, version 1.10, compiled by nicks@minerva (x86_64-unknown-linux-gnu) on 2010-02-20 at 17:32:37
+tmpdir is ./tmp.mri_nu_correct.mni.10428
+/aramis/home/wen/HAO_lab/Clinica/clinica/examples/data/recon-all_test/sub001/mri
+mri_convert orig.mgz ./tmp.mri_nu_correct.mni.10428/nu0.mnc -odt float
+mri_convert orig.mgz ./tmp.mri_nu_correct.mni.10428/nu0.mnc -odt float 
+$Id: mri_convert.c,v 1.179.2.7 2012/09/05 21:55:16 mreuter Exp $
+reading from orig.mgz...
+TR=0.00, TE=0.00, TI=0.00, flip angle=0.00
+i_ras = (-1, 0, 0)
+j_ras = (0, 0, -1)
+k_ras = (0, 1, 0)
+changing data type from uchar to float (noscale = 0)...
+writing to ./tmp.mri_nu_correct.mni.10428/nu0.mnc...
+ 
+--------------------------------------------------------
+Iteration 1 Fri Apr 22 19:57:39 CEST 2016
+nu_correct -clobber ./tmp.mri_nu_correct.mni.10428/nu0.mnc ./tmp.mri_nu_correct.mni.10428/nu1.mnc -tmpdir ./tmp.mri_nu_correct.mni.10428/0/
+[wen@HP1973:/aramis/home/wen/HAO_lab/Clinica/clinica/examples/data/recon-all_test/sub001/mri/] [2016-04-22 19:57:39] running:
+  /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/nu_estimate_np_and_em -parzen -log -sharpen 0.15 0.01 -iterations 50 -stop 0.001 -shrink 4 -auto_mask -nonotify -b_spline 1 -distance 200 -quiet -execute -clobber -nokeeptmp -tmpdir ./tmp.mri_nu_correct.mni.10428/0/ ./tmp.mri_nu_correct.mni.10428/nu0.mnc ./tmp.mri_nu_correct.mni.10428/nu1.imp
+
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Number of iterations: 28 
+CV of field change: 0.000975828
+[wen@HP1973:/aramis/home/wen/HAO_lab/Clinica/clinica/examples/data/recon-all_test/sub001/mri/] [2016-04-22 19:58:07] running:
+  /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/make_template -quiet -shrink 3 ./tmp.mri_nu_correct.mni.10428/nu0.mnc ./tmp.mri_nu_correct.mni.10428/0//template.mnc
+
+Transforming slices:......................................................................................Done
+Transforming slices:................................................................................................................................................................................................................................................................Done
+ 
+ 
+--------------------------------------------------------
+Iteration 2 Fri Apr 22 19:58:12 CEST 2016
+nu_correct -clobber ./tmp.mri_nu_correct.mni.10428/nu1.mnc ./tmp.mri_nu_correct.mni.10428/nu2.mnc -tmpdir ./tmp.mri_nu_correct.mni.10428/1/
+[wen@HP1973:/aramis/home/wen/HAO_lab/Clinica/clinica/examples/data/recon-all_test/sub001/mri/] [2016-04-22 19:58:12] running:
+  /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/nu_estimate_np_and_em -parzen -log -sharpen 0.15 0.01 -iterations 50 -stop 0.001 -shrink 4 -auto_mask -nonotify -b_spline 1 -distance 200 -quiet -execute -clobber -nokeeptmp -tmpdir ./tmp.mri_nu_correct.mni.10428/1/ ./tmp.mri_nu_correct.mni.10428/nu1.mnc ./tmp.mri_nu_correct.mni.10428/nu2.imp
+
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Use of ?PATTERN? without explicit operator is deprecated at /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/sharpen_volume line 153.
+Processing:.................................................................Done
+Number of iterations: 20 
+CV of field change: 0.000964112
+[wen@HP1973:/aramis/home/wen/HAO_lab/Clinica/clinica/examples/data/recon-all_test/sub001/mri/] [2016-04-22 19:58:32] running:
+  /aramis/dartagnan2/Software/FreeSurfer/freesurfer-5.3.0-15052013-x86_64-centos/mni/bin/make_template -quiet -shrink 3 ./tmp.mri_nu_correct.mni.10428/nu1.mnc ./tmp.mri_nu_correct.mni.10428/1//template.mnc
+
+Transforming slices:......................................................................................Done
+Transforming slices:................................................................................................................................................................................................................................................................Done
+ 
+ 
+ 
+mri_binarize --i ./tmp.mri_nu_correct.mni.10428/nu2.mnc --min -1 --o ./tmp.mri_nu_correct.mni.10428/ones.mgz
+
+$Id: mri_binarize.c,v 1.26.2.1 2011/04/08 15:40:50 greve Exp $
+cwd /aramis/home/wen/HAO_lab/Clinica/clinica/examples/data/recon-all_test/sub001/mri
+cmdline mri_binarize --i ./tmp.mri_nu_correct.mni.10428/nu2.mnc --min -1 --o ./tmp.mri_nu_correct.mni.10428/ones.mgz 
+sysname  Linux
+hostname HP1973
+machine  x86_64
+user     wen
+
+input      ./tmp.mri_nu_correct.mni.10428/nu2.mnc
+frame      0
+nErode3d   0
+nErode2d   0
+output     ./tmp.mri_nu_correct.mni.10428/ones.mgz
+Binarizing based on threshold
+min        -1
+max        +infinity
+binval        1
+binvalnot     0
+Found 16777216 values in range
+Counting number of voxels
+Found 16777216 voxels in final mask
+mri_binarize done
+mri_segstats --id 1 --seg ./tmp.mri_nu_correct.mni.10428/ones.mgz --i orig.mgz --sum ./tmp.mri_nu_correct.mni.10428/sum.junk --avgwf ./tmp.mri_nu_correct.mni.10428/input.mean.dat
+
+$Id: mri_segstats.c,v 1.75.2.9 2013/02/16 00:09:33 greve Exp $
+cwd 
+cmdline mri_segstats --id 1 --seg ./tmp.mri_nu_correct.mni.10428/ones.mgz --i orig.mgz --sum ./tmp.mri_nu_correct.mni.10428/sum.junk --avgwf ./tmp.mri_nu_correct.mni.10428/input.mean.dat 
+sysname  Linux
+hostname HP1973
+machine  x86_64
+user     wen
+UseRobust  0
+Loading ./tmp.mri_nu_correct.mni.10428/ones.mgz
+Loading orig.mgz
+Voxel Volume is 1 mm^3
+Generating list of segmentation ids
+Found   1 segmentations
+Computing statistics for each segmentation
+  0     1                                     16777216  16777216.000
+
+Reporting on   1 segmentations
+Computing spatial average of each frame
+  0
+Writing to ./tmp.mri_nu_correct.mni.10428/input.mean.dat
+mri_segstats done
+mri_segstats --id 1 --seg ./tmp.mri_nu_correct.mni.10428/ones.mgz --i ./tmp.mri_nu_correct.mni.10428/nu2.mnc --sum ./tmp.mri_nu_correct.mni.10428/sum.junk --avgwf ./tmp.mri_nu_correct.mni.10428/output.mean.dat
+
+$Id: mri_segstats.c,v 1.75.2.9 2013/02/16 00:09:33 greve Exp $
+cwd 
+cmdline mri_segstats --id 1 --seg ./tmp.mri_nu_correct.mni.10428/ones.mgz --i ./tmp.mri_nu_correct.mni.10428/nu2.mnc --sum ./tmp.mri_nu_correct.mni.10428/sum.junk --avgwf ./tmp.mri_nu_correct.mni.10428/output.mean.dat 
+sysname  Linux
+hostname HP1973
+machine  x86_64
+user     wen
+UseRobust  0
+Loading ./tmp.mri_nu_correct.mni.10428/ones.mgz
+Loading ./tmp.mri_nu_correct.mni.10428/nu2.mnc
+Voxel Volume is 1 mm^3
+Generating list of segmentation ids
+Found   1 segmentations
+Computing statistics for each segmentation
+  0     1                                     16777216  16777216.000
+
+Reporting on   1 segmentations
+Computing spatial average of each frame
+  0
+Writing to ./tmp.mri_nu_correct.mni.10428/output.mean.dat
+mri_segstats done
+mris_calc -o ./tmp.mri_nu_correct.mni.10428/nu2.mnc ./tmp.mri_nu_correct.mni.10428/nu2.mnc mul 1.05124770409212604198
+mri_convert ./tmp.mri_nu_correct.mni.10428/nu2.mnc nu.mgz --like orig.mgz
+mri_convert ./tmp.mri_nu_correct.mni.10428/nu2.mnc nu.mgz --like orig.mgz 
+$Id: mri_convert.c,v 1.179.2.7 2012/09/05 21:55:16 mreuter Exp $
+reading from ./tmp.mri_nu_correct.mni.10428/nu2.mnc...
+TR=0.00, TE=0.00, TI=0.00, flip angle=0.00
+i_ras = (-1, 0, 0)
+j_ras = (0, 0, -1)
+k_ras = (0, 1, 0)
+INFO: transform src into the like-volume: orig.mgz
+writing to nu.mgz...
+mri_make_uchar nu.mgz transforms/talairach.xfm nu.mgz
+type change took 0 minutes and 8 seconds.
+mapping (10, 127) to ( 3, 110)
+ 
+ 
+Fri Apr 22 19:59:14 CEST 2016
+mri_nu_correct.mni done
