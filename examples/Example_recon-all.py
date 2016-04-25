@@ -18,6 +18,7 @@ output_dir = tempfile.mkdtemp()
 
 print("Data Directory -> %s" % data_dir)
 print("Output Directory -> %s" % output_dir)
+print("temporary ouput Directory -> %s" % temporary_dir)
 
 print("Running...")
 T1_recon_all= recon_all_pipeline(data_dir,temporary_dir, output_dir)
