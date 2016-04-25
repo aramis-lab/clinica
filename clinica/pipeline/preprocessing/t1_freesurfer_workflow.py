@@ -1,7 +1,4 @@
-#!/usr/bin/python
-
-
-def recon_all_pipeline(data_dir, experiment_dir, output_dir, working_dir):
+def recon_all_pipeline(data_dir,temporary_dir, output_dir):
     """
         Creates a pipeline that performs Freesurfer commander, recon-all,
         It takes the input files of MRI T1 images and executes the 31 steps to
@@ -26,19 +23,24 @@ def recon_all_pipeline(data_dir, experiment_dir, output_dir, working_dir):
             For more optional ReconAll inputs and  outputs check:
             http://nipy.org/nipype/interfaces/generated/nipype.interfaces.freesurfer.preprocess.html#reconall
 
-        :param: experiment_dir: Directory to run the workflow
-        :param: data_dir: Directory to contain the source data to progress
-        :param:
+        :param: data_dir: the directory where to put the input images, eg, example1.nii, example2.nii
+        :param: temporary_dir: the directory where to put the temporary files in the recon-all pipeline
+        :param: output_dir: the directory where to put the results of the pipeline
         :return: Recon-all workflow
     """
-    #Import necessary modules from nipype
 
     import os
     import errno
-    from os.path import join as opj
     import nipype.pipeline.engine as pe
     import nipype.interfaces.io as nio
     from nipype.interfaces.freesurfer.preprocess import ReconAll
+
+    try:
+        if ReconAll.version.fget.func_globals['__version__'].split(".") < ['0', '11', '0']:
+            raise RuntimeError('ReconAll version should at least be version of 0.11.0')
+    except Exception as e:
+        print(str(e))
+        exit(1)
 
     subject_list = []
     for dirpath, dirnames, filenames in os.walk(data_dir):
@@ -47,7 +49,7 @@ def recon_all_pipeline(data_dir, experiment_dir, output_dir, working_dir):
     subject_list = filenames
 
     wf = pe.Workflow(name='reconall_workflow')
-    wf.base_dir = working_dir
+    wf.base_dir = temporary_dir
 
     datasource = pe.Node(interface = nio.DataGrabber(infields=['subject_id'], outfields=['out_files']), name="datasource")
     datasource.inputs.base_directory = data_dir
@@ -66,7 +68,6 @@ def recon_all_pipeline(data_dir, experiment_dir, output_dir, working_dir):
     recon_all.inputs.subject_id = data_dir_out
     recon_all.inputs.subjects_dir = output_dir
     recon_all.inputs.directive = 'all'
-    recon_all.inputs.args = '-qcache'
 
     wf.connect(datasource,'out_files', recon_all,'T1_files')
 
