@@ -1,4 +1,4 @@
-def recon_all_pipeline(data_dir,temporary_dir, output_dir, n_output, recon_all_args=''):
+def recon_all_pipeline(data_dir,temporary_dir, output_dir, n_output, recon_all_args='-qcache'):
     """
         Creates a pipeline that performs Freesurfer commander, recon-all,
         It takes the input files of MRI T1 images and executes the 31 steps to
@@ -27,7 +27,7 @@ def recon_all_pipeline(data_dir,temporary_dir, output_dir, n_output, recon_all_a
         :param: temporary_dir: the directory where to put the temporary files in the recon-all pipeline
         :param: output_dir: the directory where to put the results of the pipeline
         :param: n_output, scale, the number of output files that you want to contain the results, eg, if you define n_output, then the number of output file should be sub001...sub00(n_output-1)
-        :param: recon_all_args, this is the optional arguments, if you want to use other flags in recon-all, you can add it in this parameter
+        :param: recon_all_args, the default value will be set as '-qcache', which will get the result of the fsaverage.
         return: Recon-all workflow
     """
 
