@@ -16,16 +16,17 @@ except Exception as e:
     print(str(e))
     exit(1)
 
-data_path = join(split(realpath(__file__))[0], 'data/new_subject')
+data_path = join(split(realpath(__file__))[0], 'data/subject_example')
 
+output_directory = "/tmp/output_dwi_preprocessing_fieldmap_based/new_suject"
 
-preprocessing = diffusion_preprocessing_fieldmap_based(datasink_directory="/aramis/home/routier/Output/new_subject");
+preprocessing = diffusion_preprocessing_fieldmap_based(datasink_directory=output_directory)
 
-preprocessing.inputs.inputnode.in_file   = join(data_path, 'DWI/new_subject_dwi.nii.gz')
-preprocessing.inputs.inputnode.in_bvals  = join(data_path, 'DWI/new_subject_dwi.bval')
-preprocessing.inputs.inputnode.in_bvecs  = join(data_path, 'DWI/new_subject_dwi.bvec')
+preprocessing.inputs.inputnode.in_file   = join(data_path, 'DWI/subject_example_dwi.nii.gz')
+preprocessing.inputs.inputnode.in_bvals  = join(data_path, 'DWI/subject_example_dwi.bval')
+preprocessing.inputs.inputnode.in_bvecs  = join(data_path, 'DWI/subject_example_dwi.bvec')
 preprocessing.inputs.inputnode.bmap_mag  = join(data_path, 'B0MAP/0000.nii.gz')
-preprocessing.inputs.inputnode.bmap_pha  = join(data_path, 'B0MAPph/new_subject_b0mapph.nii.gz')
+preprocessing.inputs.inputnode.bmap_pha  = join(data_path, 'B0MAPph/subject_example_b0mapph.nii.gz')
 
 
 
@@ -37,4 +38,6 @@ preprocessing.inputs.inputnode.bmap_pha  = join(data_path, 'B0MAPph/new_subject_
 
 print("Running...")
 preprocessing.run()
+
+
 
