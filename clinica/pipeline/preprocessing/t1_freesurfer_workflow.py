@@ -1,4 +1,4 @@
-def recon_all_pipeline(data_dir,temporary_dir, output_dir):
+def recon_all_pipeline(data_dir,temporary_dir, output_dir, n_output, recon_all_args=''):
     """
         Creates a pipeline that performs Freesurfer commander, recon-all,
         It takes the input files of MRI T1 images and executes the 31 steps to
@@ -26,7 +26,9 @@ def recon_all_pipeline(data_dir,temporary_dir, output_dir):
         :param: data_dir: the directory where to put the input images, eg, example1.nii, example2.nii
         :param: temporary_dir: the directory where to put the temporary files in the recon-all pipeline
         :param: output_dir: the directory where to put the results of the pipeline
-        :return: Recon-all workflow
+        :param: n_output, scale, the number of output files that you want to contain the results, eg, if you define n_output, then the number of output file should be sub001...sub00(n_output-1)
+        :param: recon_all_args, this is the optional arguments, if you want to use other flags in recon-all, you can add it in this parameter
+        return: Recon-all workflow
     """
 
     import os
@@ -46,7 +48,7 @@ def recon_all_pipeline(data_dir,temporary_dir, output_dir):
     for dirpath, dirnames, filenames in os.walk(data_dir):
         subject_list = filenames
         break
-    subject_list = filenames
+    subject_list = subject_list[0: n_output-1]
 
     wf = pe.Workflow(name='reconall_workflow')
     wf.base_dir = temporary_dir
@@ -63,11 +65,12 @@ def recon_all_pipeline(data_dir,temporary_dir, output_dir):
         if exception.errno != errno.EEXIST:
             raise
 
-    data_dir_out = ['sub%03d' % i for i in range(1, 3)]
+    data_dir_out = subject_list
     recon_all = pe.MapNode(interface=ReconAll(),name='recon_all', iterfield=['subject_id', 'T1_files'])
     recon_all.inputs.subject_id = data_dir_out
     recon_all.inputs.subjects_dir = output_dir
     recon_all.inputs.directive = 'all'
+    recon_all.inputs.args = recon_all_args;
 
     wf.connect(datasource,'out_files', recon_all,'T1_files')
 

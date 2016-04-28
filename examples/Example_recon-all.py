@@ -21,6 +21,6 @@ print("Output Directory -> %s" % output_dir)
 print("temporary ouput Directory -> %s" % temporary_dir)
 
 print("Running...")
-T1_recon_all= recon_all_pipeline(data_dir,temporary_dir, output_dir)
+T1_recon_all= recon_all_pipeline(data_dir,temporary_dir, output_dir, 3)
 T1_recon_all.run("MultiProc", plugin_args={'n_procs':4})
 
