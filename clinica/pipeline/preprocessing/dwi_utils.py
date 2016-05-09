@@ -7,7 +7,7 @@ import nipype.interfaces.fsl as fsl
 def merge_volumes_tdim(in_file1, in_file2):
     """
     Merge 'in_file1' and 'in_file2' in the t dimension.
-    
+
     Parameters
     ----------
     in_file1 : FILE
@@ -19,7 +19,7 @@ def merge_volumes_tdim(in_file1, in_file2):
     ------
     out_file : FILE
       Output. The two volumes merged.
-    
+
     """
     import os.path as op
     import os
@@ -69,7 +69,7 @@ def b0_dwi_split(in_file, in_bvals, in_bvecs, lowbval=5.0):
     assert(op.isfile(in_bvals))
     assert(op.isfile(in_bvecs))
     assert(lowbval >= 0)
-    
+
     im = nib.load(in_file)
     data = im.get_data()
     hdr = im.get_header().copy()
@@ -90,12 +90,12 @@ def b0_dwi_split(in_file, in_bvals, in_bvecs, lowbval=5.0):
     out_dwi = op.abspath('dwi.nii.gz')
     dwidata = data[..., dwi_bvals]
     hdr.set_data_shape(dwidata.shape)
-    nib.Nifti1Image(dwidata, im.get_affine(), hdr).to_filename(out_dwi) 
+    nib.Nifti1Image(dwidata, im.get_affine(), hdr).to_filename(out_dwi)
 
     bvals_dwi = bvals[dwi_bvals]
     out_bvals = op.abspath('bvals')
     np.savetxt(out_bvals, bvals_dwi, fmt='%d', delimiter=' ')
-    
+
     bvecs_dwi = np.array([bvecs[0][dwi_bvals].tolist(), bvecs[1][dwi_bvals].tolist(), bvecs[2][dwi_bvals].tolist()])
     out_bvecs = op.abspath('bvecs')
     np.savetxt(out_bvecs, bvecs_dwi, fmt='%10.5f', delimiter=' ')
@@ -119,7 +119,7 @@ def b0_flirt_pipeline(name='b0coregistration', nb_b0= 10, excl_nodiff=False):
     ---------
     in_file : FILE
       Mandatory input. B0 dataset.
-    
+
     Outputnode
     ----------
     out_b0_reg : FILE
@@ -149,7 +149,7 @@ def b0_flirt_pipeline(name='b0coregistration', nb_b0= 10, excl_nodiff=False):
                        name='remove_negative')
     insert_ref = pe.Node(niu.Function(input_names=['in_file1', 'in_file2'], output_names=['out_file'], function=merge_volumes_tdim), name='concat_ref_moving')
     outputnode = pe.Node(niu.IdentityInterface(fields=['out_file', 'out_xfms']), name='outputnode')
-    
+
     wf = pe.Workflow(name=name)
     wf.connect([
         (inputnode,  fslroi_ref,   [('in_file', 'in_file')]),
@@ -171,17 +171,17 @@ def b0_flirt_pipeline(name='b0coregistration', nb_b0= 10, excl_nodiff=False):
     return wf
 
 
-    
+
 def b0_average(in_file, out_file=None):
     """
     Average the B0 volumes.
     Warning: the B0 volumes must be registered.
-    
+
     Parameters
     ----------
     in_file : FILE
       Mandatory input. B0 dataset registered.
- 
+
     Outputs
     -------
     out_file : FILE
@@ -208,7 +208,7 @@ def b0_average(in_file, out_file=None):
     hdr.set_xyzt_units('mm')
     hdr.set_data_dtype(np.float32)
     nb.Nifti1Image(b0, imgs[0].get_affine(), hdr).to_filename(out_file)
-    
+
     return out_file
 
 
@@ -239,7 +239,7 @@ def insert_b0_into_dwi(in_b0, in_dwi, in_bvals, in_bvecs):
     """
     from clinica.pipeline.preprocessing.dwi_utils import merge_volumes_tdim
     import os.path as op
-    import numpy as np 
+    import numpy as np
 
     assert(op.isfile(in_b0))
     assert(op.isfile(in_dwi))
@@ -247,7 +247,7 @@ def insert_b0_into_dwi(in_b0, in_dwi, in_bvals, in_bvecs):
     assert(op.isfile(in_bvecs))
 
     out_dwi = merge_volumes_tdim(in_b0, in_dwi)
-    
+
     lst = np.loadtxt(in_bvals).tolist()
     lst.insert(0,0)
     out_bvals = op.abspath('bvals')
@@ -304,71 +304,71 @@ def rotate_bvecs(in_bvec, in_matrix):
 
 
 
-def dwi_flirt(name='DWICoregistration', excl_nodiff=False,
-              flirt_param={}):
-    """
-    Generates a workflow for linear registration of dwi volumes using flirt.
-    
-    Inputnode
-    ---------
-    reference : FILE
-      Mandatory input. Reference data set.
-    in_file : FILE
-      Mandatory input. Moving data set.
-    ref_mask : FILE
-      Mandatory input. Binary mask of the reference volume.
-    in_xfms : FILE
-      Mandatory input. Intialisation matrices for flirt.
-    in_bval : FILE
-      Mandatory input. B values file.
-    
-    """
-    from nipype.workflows.dmri.fsl.utils import _checkinitxfm
-
-    inputnode = pe.Node(niu.IdentityInterface(fields=['reference',
-                        'in_file', 'ref_mask', 'in_xfms', 'in_bval']),
-                        name='inputnode')
-
-    initmat = pe.Node(niu.Function(input_names=['in_bval', 'in_xfms',
-                      'excl_nodiff'], output_names=['init_xfms'],
-                                   function=_checkinitxfm), name='InitXforms')
-    initmat.inputs.excl_nodiff = excl_nodiff
-    dilate = pe.Node(fsl.maths.MathsCommand(nan2zeros=True,
-                     args='-kernel sphere 5 -dilM'), name='MskDilate')
-    split = pe.Node(fsl.Split(dimension='t'), name='SplitDWIs')
-    
-    flirt = pe.MapNode(fsl.FLIRT(**flirt_param), name='CoRegistration',
-                       iterfield=['in_file', 'in_matrix_file'])
-    thres = pe.MapNode(fsl.Threshold(thresh=0.0), iterfield=['in_file'],
-                       name='RemoveNegative')
-    merge = pe.Node(fsl.Merge(dimension='t'), name='MergeDWIs')
-    outputnode = pe.Node(niu.IdentityInterface(fields=['out_file',
-                         'out_xfms', 'out_ref']), name='outputnode')
-    wf = pe.Workflow(name=name)
-    wf.connect([
-        (inputnode,  split,      [('in_file', 'in_file')]),
-        (inputnode,  dilate,     [('ref_mask', 'in_file')]),
-        (inputnode,  flirt,      [('ref_mask', 'reference')]),
-        (inputnode,  initmat,    [('in_xfms', 'in_xfms'),
-                                  ('in_bval', 'in_bval')]),
-        (dilate,     flirt,      [('out_file', 'ref_weight'),
-                                  ('out_file', 'in_weight')]),
-        (split,      flirt,      [('out_files', 'in_file')]),                         
-        (initmat,    flirt,      [('init_xfms', 'in_matrix_file')]),
-        (flirt,      thres,      [('out_file', 'in_file')]),
-        (thres,      merge,      [('out_file', 'in_files')]),
-        (merge,      outputnode, [('merged_file', 'out_file')]),
-        (inputnode,      outputnode, [('reference', 'out_ref')]),       
-        (flirt,      outputnode, [('out_matrix_file', 'out_xfms')])
-    ])
-    return wf
+# def dwi_flirt(name='DWICoregistration', excl_nodiff=False,
+#               flirt_param={}):
+#     """
+#     Generates a workflow for linear registration of dwi volumes using flirt.
+#
+#     Inputnode
+#     ---------
+#     reference : FILE
+#       Mandatory input. Reference data set.
+#     in_file : FILE
+#       Mandatory input. Moving data set.
+#     ref_mask : FILE
+#       Mandatory input. Binary mask of the reference volume.
+#     in_xfms : FILE
+#       Mandatory input. Intialisation matrices for flirt.
+#     in_bval : FILE
+#       Mandatory input. B values file.
+#
+#     """
+#     from nipype.workflows.dmri.fsl.utils import _checkinitxfm
+#
+#     inputnode = pe.Node(niu.IdentityInterface(fields=['reference',
+#                         'in_file', 'ref_mask', 'in_xfms', 'in_bval']),
+#                         name='inputnode')
+#
+#     initmat = pe.Node(niu.Function(input_names=['in_bval', 'in_xfms',
+#                       'excl_nodiff'], output_names=['init_xfms'],
+#                                    function=_checkinitxfm), name='InitXforms')
+#     initmat.inputs.excl_nodiff = excl_nodiff
+#     dilate = pe.Node(fsl.maths.MathsCommand(nan2zeros=True,
+#                      args='-kernel sphere 5 -dilM'), name='MskDilate')
+#     split = pe.Node(fsl.Split(dimension='t'), name='SplitDWIs')
+#
+#     flirt = pe.MapNode(fsl.FLIRT(**flirt_param), name='CoRegistration',
+#                        iterfield=['in_file', 'in_matrix_file'])
+#     thres = pe.MapNode(fsl.Threshold(thresh=0.0), iterfield=['in_file'],
+#                        name='RemoveNegative')
+#     merge = pe.Node(fsl.Merge(dimension='t'), name='MergeDWIs')
+#     outputnode = pe.Node(niu.IdentityInterface(fields=['out_file',
+#                          'out_xfms', 'out_ref']), name='outputnode')
+#     wf = pe.Workflow(name=name)
+#     wf.connect([
+#         (inputnode,  split,      [('in_file', 'in_file')]),
+#         (inputnode,  dilate,     [('ref_mask', 'in_file')]),
+#         (inputnode,  flirt,      [('ref_mask', 'reference')]),
+#         (inputnode,  initmat,    [('in_xfms', 'in_xfms'),
+#                                   ('in_bval', 'in_bval')]),
+#         (dilate,     flirt,      [('out_file', 'ref_weight'),
+#                                   ('out_file', 'in_weight')]),
+#         (split,      flirt,      [('out_files', 'in_file')]),
+#         (initmat,    flirt,      [('init_xfms', 'in_matrix_file')]),
+#         (flirt,      thres,      [('out_file', 'in_file')]),
+#         (thres,      merge,      [('out_file', 'in_files')]),
+#         (merge,      outputnode, [('merged_file', 'out_file')]),
+#         (inputnode,      outputnode, [('reference', 'out_ref')]),
+#         (flirt,      outputnode, [('out_matrix_file', 'out_xfms')])
+#     ])
+#     return wf
 
 
 
 def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
     """
     Selects the reference ('out_ref') and moving ('out_mov') volumes
-    from a dwi dataset for the purpose of head motion correction (HMC). 
+    from a dwi dataset for the purpose of head motion correction (HMC).
 
     Parameters
     ----------
@@ -394,7 +394,7 @@ def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
     """
     import numpy as np
     import nibabel as nib
-    import os.path as op 
+    import os.path as op
 
     im = nib.load(in_file)
     data = im.get_data()
@@ -404,7 +404,7 @@ def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
     lowbs = np.where(bval <= lowbval)[0]
     assert(ref_num in lowbs)
     volid = ref_num
-    
+
     out_ref = op.abspath('hmc_ref.nii.gz')
     refdata = data[..., volid]
     hdr.set_data_shape(refdata.shape)
@@ -420,7 +420,7 @@ def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
         data = np.concatenate((data[..., :volid], data[..., (volid + 1):]),
                               axis=3)
         bval = np.hstack((bval[:volid], bval[(volid + 1):]))
-  
+
     out_mov = op.abspath('hmc_mov.nii.gz')
     out_bval = op.abspath('bval_split.txt')
 
