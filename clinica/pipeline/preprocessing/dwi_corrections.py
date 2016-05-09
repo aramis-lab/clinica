@@ -738,82 +738,82 @@ def apply_all_corrections_syb(datasink_directory, name='UnwarpArtifacts'):
     return wf
 
 
+# 
+# def dwi_flirt(name='DWICoregistration', excl_nodiff=False, flirt_param={}):
+#     """
+#     Generates a workflow for linear registration of dwi volumes using flirt.
+#
+#     Inputnode
+#     ---------
+#     reference : FILE
+#       Mandatory input. Reference data set.
+#     in_file : FILE
+#       Mandatory input. Moving data set.
+#     ref_mask : FILE
+#       Mandatory input. Binary mask of the reference volume.
+#     in_xfms : FILE
+#       Mandatory input. Intialisation matrices for flirt.
+#     in_bval : FILE
+#       Mandatory input. B values file.
+#
+#     """
+#     from nipype.workflows.dmri.fsl.utils import _checkinitxfm
+#     from nipype.workflows.dmri.fsl.utils import enhance
+#
+#     inputnode = pe.Node(niu.IdentityInterface(fields=['reference',
+#                         'in_file', 'ref_mask', 'in_xfms', 'in_bval']),
+#                         name='inputnode')
+#
+#     initmat = pe.Node(niu.Function(input_names=['in_bval', 'in_xfms',
+#                       'excl_nodiff'], output_names=['init_xfms'],
+#                                    function=_checkinitxfm), name='InitXforms')
+#     initmat.inputs.excl_nodiff = excl_nodiff
+#     dilate = pe.Node(fsl.maths.MathsCommand(nan2zeros=True,
+#                      args='-kernel sphere 5 -dilM'), name='MskDilate')
+#     split = pe.Node(fsl.Split(dimension='t'), name='SplitDWIs')
+#     pick_ref = pe.Node(niu.Select(), name='Pick_b0')
+#     n4 = pe.Node(ants.N4BiasFieldCorrection(dimension=3), name='Bias')
+#     enhb0 = pe.Node(niu.Function(input_names=['in_file', 'in_mask',
+#                     'clip_limit'], output_names=['out_file'],
+#                                  function=enhance), name='B0Equalize')
+#     enhb0.inputs.clip_limit = 0.015
+#     enhdw = pe.MapNode(niu.Function(input_names=['in_file', 'in_mask'],
+#                        output_names=['out_file'], function=enhance),
+#                        name='DWEqualize', iterfield=['in_file'])
+#     flirt = pe.MapNode(fsl.FLIRT(**flirt_param), name='CoRegistration',
+#                        iterfield=['in_file', 'in_matrix_file'])
+#     thres = pe.MapNode(fsl.Threshold(thresh=0.0), iterfield=['in_file'],
+#                        name='RemoveNegative')
+#     merge = pe.Node(fsl.Merge(dimension='t'), name='MergeDWIs')
+#     outputnode = pe.Node(niu.IdentityInterface(fields=['out_file',
+#                          'out_xfms', 'out_ref']), name='outputnode')
+#
+#     wf = pe.Workflow(name=name)
+#     wf.connect([
+#         (inputnode,   split,        [('in_file', 'in_file')]),
+#         (inputnode,   dilate,       [('ref_mask', 'in_file')]),
+#         (inputnode,   enhb0,        [('ref_mask', 'in_mask')]),
+#         (inputnode,   initmat,      [('in_xfms', 'in_xfms'),
+#                                      ('in_bval', 'in_bval')]),
+#         (inputnode,   n4,           [('reference', 'input_image'),
+#                                      ('ref_mask', 'mask_image')]),
+#         (dilate,      flirt,        [('out_file', 'ref_weight'),
+#                                      ('out_file', 'in_weight')]),
+#         (n4,          enhb0,        [('output_image', 'in_file')]),
+#         (split,       enhdw,        [('out_files', 'in_file')]),
+#         (dilate,      enhdw,        [('out_file', 'in_mask')]),
+#         (enhb0,       flirt,        [('out_file', 'reference')]),
+#         (enhdw,       flirt,        [('out_file', 'in_file')]),
+#         (initmat,     flirt,        [('init_xfms', 'in_matrix_file')]),
+#         (flirt,       thres,        [('out_file', 'in_file')]),
+#         (thres,       merge,        [('out_file', 'in_files')]),
+#         (merge,       outputnode,   [('merged_file', 'out_file')]),
+#         (enhb0,       outputnode,   [('out_file', 'out_ref')]),
+#         (flirt,       outputnode,   [('out_matrix_file', 'out_xfms')])
+#     ])
+#     return wf
 
-def dwi_flirt(name='DWICoregistration', excl_nodiff=False, flirt_param={}):
-    """
-    Generates a workflow for linear registration of dwi volumes using flirt.
 
-    Inputnode
-    ---------
-    reference : FILE
-      Mandatory input. Reference data set.
-    in_file : FILE
-      Mandatory input. Moving data set.
-    ref_mask : FILE
-      Mandatory input. Binary mask of the reference volume.
-    in_xfms : FILE
-      Mandatory input. Intialisation matrices for flirt.
-    in_bval : FILE
-      Mandatory input. B values file.
-
-    """
-    from nipype.workflows.dmri.fsl.utils import _checkinitxfm
-    from nipype.workflows.dmri.fsl.utils import enhance
-
-    inputnode = pe.Node(niu.IdentityInterface(fields=['reference',
-                        'in_file', 'ref_mask', 'in_xfms', 'in_bval']),
-                        name='inputnode')
-
-    initmat = pe.Node(niu.Function(input_names=['in_bval', 'in_xfms',
-                      'excl_nodiff'], output_names=['init_xfms'],
-                                   function=_checkinitxfm), name='InitXforms')
-    initmat.inputs.excl_nodiff = excl_nodiff
-    dilate = pe.Node(fsl.maths.MathsCommand(nan2zeros=True,
-                     args='-kernel sphere 5 -dilM'), name='MskDilate')
-    split = pe.Node(fsl.Split(dimension='t'), name='SplitDWIs')
-    pick_ref = pe.Node(niu.Select(), name='Pick_b0')
-    n4 = pe.Node(ants.N4BiasFieldCorrection(dimension=3), name='Bias')
-    enhb0 = pe.Node(niu.Function(input_names=['in_file', 'in_mask',
-                    'clip_limit'], output_names=['out_file'],
-                                 function=enhance), name='B0Equalize')
-    enhb0.inputs.clip_limit = 0.015
-    enhdw = pe.MapNode(niu.Function(input_names=['in_file', 'in_mask'],
-                       output_names=['out_file'], function=enhance),
-                       name='DWEqualize', iterfield=['in_file'])
-    flirt = pe.MapNode(fsl.FLIRT(**flirt_param), name='CoRegistration',
-                       iterfield=['in_file', 'in_matrix_file'])
-    thres = pe.MapNode(fsl.Threshold(thresh=0.0), iterfield=['in_file'],
-                       name='RemoveNegative')
-    merge = pe.Node(fsl.Merge(dimension='t'), name='MergeDWIs')
-    outputnode = pe.Node(niu.IdentityInterface(fields=['out_file',
-                         'out_xfms', 'out_ref']), name='outputnode')
-
-    wf = pe.Workflow(name=name)
-    wf.connect([
-        (inputnode,   split,        [('in_file', 'in_file')]),
-        (inputnode,   dilate,       [('ref_mask', 'in_file')]),
-        (inputnode,   enhb0,        [('ref_mask', 'in_mask')]),
-        (inputnode,   initmat,      [('in_xfms', 'in_xfms'),
-                                     ('in_bval', 'in_bval')]),
-        (inputnode,   n4,           [('reference', 'input_image'),
-                                     ('ref_mask', 'mask_image')]),
-        (dilate,      flirt,        [('out_file', 'ref_weight'),
-                                     ('out_file', 'in_weight')]),
-        (n4,          enhb0,        [('output_image', 'in_file')]),
-        (split,       enhdw,        [('out_files', 'in_file')]),
-        (dilate,      enhdw,        [('out_file', 'in_mask')]),
-        (enhb0,       flirt,        [('out_file', 'reference')]),
-        (enhdw,       flirt,        [('out_file', 'in_file')]),
-        (initmat,     flirt,        [('init_xfms', 'in_matrix_file')]),
-        (flirt,       thres,        [('out_file', 'in_file')]),
-        (thres,       merge,        [('out_file', 'in_files')]),
-        (merge,       outputnode,   [('merged_file', 'out_file')]),
-        (enhb0,       outputnode,   [('out_file', 'out_ref')]),
-        (flirt,       outputnode,   [('out_matrix_file', 'out_xfms')])
-    ])
-    return wf
-
-#### Ze version that rocks !
 def dwi_flirt(name='DWICoregistration', excl_nodiff=False,
               flirt_param={}):
     """
