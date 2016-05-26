@@ -146,7 +146,7 @@ def whole_brain_tractography_pipeline(
         # Computation of FA from the DTI:
         (inputnode,     tensor_to_metric, [('in_b0_mask', 'in_b0_mask')]),
         (dwi_to_tensor, tensor_to_metric, [('out_dti', 'in_dti')]),
-        # Erosion of the b0 mask:
+        # Erosion of the b0 mask for the estimation of the response function:
         (inputnode, erode_mask, [('in_b0_mask','in_mask')]),
         # Estimation of the response function:
         (convert_nifti_to_mrtrix_format, estimate_response, [('out_dwi_mif', 'in_dwi_mif')]),
