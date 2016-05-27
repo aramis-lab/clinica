@@ -1,9 +1,22 @@
-# CLINICA PROJECT
-=================
+# Clinica project
 
-* Intro
-* Installation
-* Examples
-* How to Contribute
-* Wiki
-* License
+* [Intro]()
+* [Installation]()
+* [Wiki]()
+* [Contributing]()
+* [License]()
+
+## Introduction
+
+
+## Installation
+
+
+## Wiki
+
+
+## Contributing
+
+
+## License
+
