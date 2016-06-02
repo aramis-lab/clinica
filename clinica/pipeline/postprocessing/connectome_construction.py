@@ -7,6 +7,35 @@ Created on Wed Jun  1 10:05:42 2016
 
 def Connectome_construction_pipeline(in_parcellation, configuration_file, lut_type, lut_path, in_tracks, connectome_metric, working_directory, datasink_directory, in_scalar_image='', zeros_diagonal=True):
     
+    """
+    Perform the construction of the subject connectome.
+
+    This function combine tracks obtained from tractography with a parcellated cortex in order to compute the 
+    subject connectome as a connection matrix. This function first prepare a parcellated image for connectome 
+    construction by modifying the image values; typically this involves making the parcellation intensities 
+    increment from 1 to coincide with rows and columns of a matrix. The configuration file passed as the second 
+    argument specifies the indices that should be assigned to different structures; examples of such configuration 
+    files are provided in the MRtrix3 directory in src//dwi//tractography//connectomics//example_configs//. Then 
+    a connectome matrix is generated from a streamlines file and the configurate node parcellation image.
+
+    Args:
+        in_parcellation (str): 3D image of the parcellated cortex
+        configuration_file (str): the MRtrix connectome configuration file specifying desired nodes & indices 
+        lut_type (str): Type of lookup table should be 'freesurfer', 'aal', 'itksnap' or 'basic' otherwise
+        lut_path (str): Path of the lookup table. If type is 'FreeSurfer' then typically 'FreeSurferColorLUT.txt',
+            if it is 'aal' then typically 'ROI_MNI_V4.txt', if it is 'itksnap' the ntypically this include the ITK atlas
+            'LUT_GM.txt'. Otherwise, if it is 'basic' then this is a basic lookup table consisting of index / name pairs
+        in_tracks (str): the input track file
+        connectome_metric (str): specify the edge weight metric. Options are: count (default), meanlength, invlength, 
+            invnodevolume, invlength_invnodevolume, mean_scalar. If mean_scalar is selected an associate scalar image
+            is espected in the in_scalar_image
+        in_scalar_image (str): provide the associated image for the mean_scalar metric
+        zero_diagonal (bool): If set True set all diagonal entries in the matrix to zero (default is True)
+
+    Returns:
+        out_connectome (str): The output .csv file containing edge weights store in a matrix.
+    """    
+    
     import nipype.interfaces.io as nio
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
