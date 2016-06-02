@@ -7,6 +7,25 @@ Created on Fri Apr 15 11:56:12 2016
 
 def create_DTI_atlas_scalar_analysis(in_scalar_image, atlas_labels, atlas_scalar_image, working_directory, datasink_directory):
     
+    """
+    Perform tracts analysis according to a white matter atlas using a tensor-derived scalar image.
+
+    This function perform the analysis of tracts using a white matter atlas and compute mean value of 
+    the scalar on each tracts of this atlas. The function first coregister the subject scalar image 
+    on the equivalent scalar image of the atlas and then use the labels to computs the statistics of the 
+    scalar on each tracks of the whie matter atlas.
+
+    Args:
+        in_scalar_image (str): 3D image of the scalar obtained from the tensor
+        atlas_labels (str): 3D Image of the white matter labels from the atlas 
+        atlas_scalar_image (str): 3D image of the same scalar as in "in_scalar_image" but from the atlas
+
+    Returns:
+        out_stats_file (str): File containing for each tracts, the mean value of the scalar, the standart deviation
+            and the nb of voxels.
+    """    
+    
+    
     import nipype.interfaces.io as nio
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
