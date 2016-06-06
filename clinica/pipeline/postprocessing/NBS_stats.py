@@ -13,6 +13,7 @@ def NBS_permutation_test(vector_1, vector_2, number_of_permutation, tails=2):
     If tails is set to 1 the contrast is supposed to be vector_1 > vector_2
     
     WARNING: here 0 are not removed from the dataset
+    If tails is set to 1 the contrast is supposed to be vector_1 > vector_2
     """
     
     import numpy as np
@@ -30,7 +31,7 @@ def NBS_permutation_test(vector_1, vector_2, number_of_permutation, tails=2):
                 diff_random = np.abs(np.mean(zs[:n]) - np.mean(zs[n:]))
             if tails==1:
                 diff_random = np.mean(zs[:n]) - np.mean(zs[n:])
-            k += diff <= diff_random # EDIT: must be <= and not only < because if not, unexisting connexion (only 0) become significant
+            k += diff < diff_random # EDIT: must be <= and not only < because if not, unexisting connexion (only 0) become significant
         return k/float(nmc)
     
     p_value = 1.
@@ -39,7 +40,8 @@ def NBS_permutation_test(vector_1, vector_2, number_of_permutation, tails=2):
     Y = vector_2
     
     if X!=[] and Y!=[]:
-        p_value = exact_mc_perm_test(X,Y,number_of_permutation, tails)
+	if X.sum()!=0 or Y.sum()!=0:
+        	p_value = exact_mc_perm_test(X,Y,number_of_permutation, tails)
     
     return p_value
 
@@ -51,6 +53,7 @@ def NBS_t_test(vector_1, vector_2, tails=2):
     If tails is set to 1 the contrast is supposed to be vector_1 > vector_2.
     
     WARNING: here 0 are not removed from the dataset
+    If tails is set to 1 the contrast is supposed to be vector_1 > vector_2
     """
     
     import numpy as np
