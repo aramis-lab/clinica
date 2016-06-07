@@ -5,9 +5,6 @@ Created on Thu Jun  2 11:15:38 2016
 @author: jacquemont
 """
 
-import clinica.pipeline.postprocessing.NBS_stats as NBS_stats
-import clinica.pipeline.postprocessing.NBS_size as NBS_size
-
 def Network_Based_Statistics(list_of_connectome_1, list_of_connectome_2, test, nb_permutation, size, output_prefix,
                              threshold=0.05, significancy=0.05, tail=1, save_all=False):
     """
@@ -36,7 +33,8 @@ def Network_Based_Statistics(list_of_connectome_1, list_of_connectome_2, test, n
         p_value_matrix (str): Matrix of all connections who reach the threshold. Values in the matrix correspond 
             to 1-p_value
     """
-    
+    from clinica.pipeline.postprocessing.connectome_stats import permutation_test, t_test, Mann_Whitney
+    from clinica.pipeline.postprocessing.NBS_size import log_size, compute_graph_size
     import copy
     import numpy as np
     import networkx as nx
@@ -125,11 +123,11 @@ def Network_Based_Statistics(list_of_connectome_1, list_of_connectome_2, test, n
             list_1 = data_perm[:nb_subjects_1, k]
             list_2 = data_perm[nb_subjects_1:, k]
             if test=='permutation':
-                p_value = NBS_stats.NBS_permutation_test(list_1,list_2, nb_permutation, tails=tail)
+                p_value = permutation_test(list_1,list_2, nb_permutation, tails=tail)
             elif test=='t test':
-                p_value = NBS_stats.NBS_t_test(list_1,list_2, tails=tail)
+                p_value = t_test(list_1,list_2, tails=tail)
             else:
-                p_value = NBS_stats.NBS_Mann_Whitney(list_1,list_2, tails=tail)
+                p_value = Mann_Whitney(list_1,list_2, tails=tail)
             if p_value<threshold:
                 p_values_matrix[connexion_index_vector[k][0],connexion_index_vector[k][1]] = 1-p_value
         if i==0:
@@ -140,14 +138,14 @@ def Network_Based_Statistics(list_of_connectome_1, list_of_connectome_2, test, n
                 graph_size = np.zeros(len(list_of_sub_graph))
                 tmp_count = 0.
                 for nb, graph in enumerate(list_of_sub_graph):
-                    graph_size[nb] = NBS_size.graph_size(graph, size)
+                    graph_size[nb] = compute_graph_size(graph, size)
                 print('|Permutation|      Max Size     |      Max Size     | Lowest  |')
                 print('|           |       Random      |       Actual      | p-value |')
         else:
                 maximum_size = 0
                 G_rand = nx.Graph(p_values_matrix)
                 for graph in list(nx.connected_component_subgraphs(G_rand)):
-                    sub_size = NBS_size.graph_size(graph, size)
+                    sub_size = compute_graph_size(graph, size)
                     if sub_size>maximum_size:
                         maximum_size=sub_size
                 permutation_max_size_vectors[i-1] = maximum_size
@@ -197,14 +195,14 @@ def Network_Based_Statistics(list_of_connectome_1, list_of_connectome_2, test, n
     
     for nb, module in enumerate(list_of_graph_matrix):
         new_path = working_directory + '/' + output_prefix + '_Modules_matrix/Module_' + str(nb) + '.csv'
-        np.savetxt(new_path, module, delimiter=';')
+        np.savetxt(new_path, module, delimiter=' ')
         list_of_graph_matrix_path += [new_path]
     
     module_size_p_values = working_directory + '/' + output_prefix + '_modules_size_p_values.csv'
     p_value_matrix = working_directory + '/' + output_prefix + '_matrix_p_values.csv'
     
-    np.savetxt(module_size_p_values, np.array(list_of_p_value), delimiter=';')
-    np.savetxt(p_value_matrix, np.array(p_value_matrix_data), delimiter=';')
+    np.savetxt(module_size_p_values, np.array(list_of_p_value), delimiter=' ')
+    np.savetxt(p_value_matrix, np.array(p_value_matrix_data), delimiter=' ')
     
     return list_of_graph_matrix_path, module_size_p_values, p_value_matrix
             
