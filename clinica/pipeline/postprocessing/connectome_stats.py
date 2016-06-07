@@ -39,9 +39,9 @@ def permutation_test(vector_1, vector_2, number_of_permutation, tails=2):
     X = vector_1
     Y = vector_2
     
-    if X!=[] and Y!=[]:
-	if X.sum()!=0 or Y.sum()!=0:
-        	p_value = exact_mc_perm_test(X,Y,number_of_permutation, tails)
+    if X!=np.array([]) and Y!=np.array([]):   
+        if X.sum()!=0 or Y.sum()!=0:
+            p_value = exact_mc_perm_test(X,Y,number_of_permutation, tails)
     
     return p_value
 
@@ -64,7 +64,7 @@ def t_test(vector_1, vector_2, tails=2):
     X = vector_1
     Y = vector_2
     
-    if X!=[] and Y!=[]:
+    if X!=np.array([]) and Y!=np.array([]):
         p_value= ttest_ind(X,Y,equal_var=False).pvalue
         if tails==1:
             array_X = np.array(X)
@@ -98,15 +98,15 @@ def Mann_Whitney(vector_1, vector_2, tails=2):
     Y = vector_2
     Y_non_nul = [Y[k] for k in np.nonzero(Y)[0].tolist()]
     
-    if X!=[] and Y!=[]:
-        if X_non_nul!=[] or Y_non_nul!=[]:
+    if X!=np.array([]) and Y!=np.array([]):
+        if X_non_nul!=np.array([]) or Y_non_nul!=np.array([]):
             p_value= mannwhitneyu(X,Y).pvalue
             if tails==2:
                 p_value = 2*p_value
     
     return p_value
     
-def fdr_correction_matrix(p_value_matrix, template=False):
+def fdr_correction_matrix(p_value_matrix, template=None):
     """
     This function take a p value matrix as entry and return the p_value corrected for False Rate Discovery. 
     If not all statistical tests have been performed (typically in DTI at a absent connection) a template
@@ -117,13 +117,11 @@ def fdr_correction_matrix(p_value_matrix, template=False):
     import numpy as np
     from mne.stats import fdr_correction
     
-    if template:
+    if type(template)==type(p_value_matrix):
         if p_value_matrix.shape!=template.shape:
             raise IOError('p_value_matrix and template should have the same shape.')
-
-    if not template:
-         reject_test, p_value_corrected = fdr_correction(p_value_matrix)
-    else:  
+         
+    if type(template)==type(p_value_matrix):  
         p_value_corrected = np.ones(p_value_matrix.shape)
         reject_test = np.zeros(p_value_matrix.shape, dtype=bool)     
         eff_p_value = []
@@ -137,5 +135,8 @@ def fdr_correction_matrix(p_value_matrix, template=False):
         for i, corrected in enumerate(p_corrected):
             p_value_corrected[index_of_eff_p_value[i][0],index_of_eff_p_value[i][1]] = corrected
             reject_test[index_of_eff_p_value[i][0],index_of_eff_p_value[i][1]] = reject[i]
-    
+    elif not template:
+         reject_test, p_value_corrected = fdr_correction(p_value_matrix)
+    else:
+         raise IOError('template input should be an numpy array or None.') 
     return reject_test, p_value_corrected

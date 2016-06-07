@@ -80,19 +80,12 @@ def create_network_based_statistic_pipeline(list_of_connectome_1, list_of_connec
     if type(save_all)!=bool:
         raise IOError('Set save_all  parametter to False or True.')
     
-    # Nodes definition
-    
-    datasource = pe.Node(interface=nio.DataGrabber(infields=[], outfields=['list_of_connectome_1', 'list_of_connectome_2']), name='datasource')
-    datasource.inputs.template = '*'
-    datasource.inputs.field_template = dict(list_of_connectome_1=list_of_connectome_1,
-                                            list_of_connectome_1=list_of_connectome_2)
-    datasource.inputs.template_args = dict(list_of_connectome_1=[[]],
-                                           list_of_connectome_2=[[]])
-    datasource.inputs.sort_filelist = True
-    
+    # Nodes definition    
         
     inputnode = pe.Node(niu.IdentityInterface(fields=['list_of_connectome_1', 'list_of_connectome_2']),
                         name='inputnode')
+    inputnode.inputs.list_of_connectome_1 = list_of_connectome_1
+    inputnode.inputs.list_of_connectome_2 = list_of_connectome_2
     
     network_based_statistics = pe.Node(interface=niu.Function(input_names=['list_of_connectome_1', 'list_of_connectome_2', 'test', 
                                                                            'nb_permutation', 'size', 'output_prefix', 'threshold', 
@@ -118,8 +111,6 @@ def create_network_based_statistic_pipeline(list_of_connectome_1, list_of_connec
     wf = pe.Workflow(name='NBS')
     wf.base_dir = working_directory
     
-    wf.connect([(datasource, inputnode, [('list_of_connectome_1', 'list_of_connectome_1'),
-                                         ('list_of_connectome_2', 'list_of_connectome_2')])])
     wf.connect([(inputnode, network_based_statistics, [('list_of_connectome_1', 'list_of_connectome_1'), 
                                                        ('list_of_connectome_2','list_of_connectome_2')])])
     wf.connect([(network_based_statistics, outputnode, [('list_of_graph_matrix_path','list_of_graph_matrix_path'),

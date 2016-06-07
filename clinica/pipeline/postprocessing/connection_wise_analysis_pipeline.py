@@ -7,8 +7,8 @@ Created on Mon Jun  6 10:00:08 2016
 
 import clinica.pipeline.postprocessing.connection_wise_analysis as CWA
 
-def create_network_based_statistic_pipeline(list_of_connectome_1, list_of_connectome_2, test, FDR_correction, 
-                                            working_directory, datasink_directory, tail=1, nb_permutation=0):
+def create_network_based_statistic_pipeline(list_of_connectome_1, list_of_connectome_2, test, working_directory,
+                                            datasink_directory, FDR_correction=True, tail=1, nb_permutation=0):
  
     """
     This function create a pipeline which performs connection wise analysis. 
@@ -49,29 +49,25 @@ def create_network_based_statistic_pipeline(list_of_connectome_1, list_of_connec
     for connectome in list_of_connectome_2:
         if not op.exists(connectome):
             raise IOError('file {} does not exist'.format(connectome))
-        
-    if test not in ['permutation','t test', 'mann-whitney']:
-        raise IOError('Set test parametter to "permutation","t test", or "mann-whitney".')
     
     if type(nb_permutation)!=int:
         raise IOError('nb_permutation shoul be a int.')
+        
+    if test not in ['permutation','t test', 'mann-whitney']:
+        raise IOError('Set test parametter to "permutation","t test", or "mann-whitney".')
+    elif test=='permutation':
+        if nb_permutation<1:
+            raise IOError('nb_permutation shoul be > 0.')
     
     if tail!=1 and tail!=2:
         raise IOError('Set tail parametter to 1 or 2.')
     
-    # Nodes definition
-    
-    datasource = pe.Node(interface=nio.DataGrabber(infields=[], outfields=['list_of_connectome_1', 'list_of_connectome_2']), name='datasource')
-    datasource.inputs.template = '*'
-    datasource.inputs.field_template = dict(list_of_connectome_1=list_of_connectome_1,
-                                            list_of_connectome_1=list_of_connectome_2)
-    datasource.inputs.template_args = dict(list_of_connectome_1=[[]],
-                                           list_of_connectome_2=[[]])
-    datasource.inputs.sort_filelist = True
-    
+    # Nodes definition    
         
     inputnode = pe.Node(niu.IdentityInterface(fields=['list_of_connectome_1', 'list_of_connectome_2']),
                         name='inputnode')
+    inputnode.inputs.list_of_connectome_1 = list_of_connectome_1
+    inputnode.inputs.list_of_connectome_2 = list_of_connectome_2
     
     connection_wise_analysis = pe.Node(interface=niu.Function(input_names=['list_of_connectome_1', 'list_of_connectome_2', 'test', 
                                                                            'FDR_correction', 'tail', 'nb_permutation'], 
@@ -92,11 +88,13 @@ def create_network_based_statistic_pipeline(list_of_connectome_1, list_of_connec
     wf = pe.Workflow(name='Connection_wise_analysis')
     wf.base_dir = working_directory
     
-    wf.connect([(datasource, inputnode, [('list_of_connectome_1', 'list_of_connectome_1'),
-                                         ('list_of_connectome_2', 'list_of_connectome_2')])])
     wf.connect([(inputnode, connection_wise_analysis, [('list_of_connectome_1', 'list_of_connectome_1'), 
                                                        ('list_of_connectome_2','list_of_connectome_2')])])
     wf.connect([(connection_wise_analysis, outputnode, [('p_values_path','p_values_path'),
                                                         ('p_values_corrected_path','p_values_corrected_path')])])
+    wf.connect([(connection_wise_analysis, datasink, [('p_values_path','p_values_path')])])
+    
+    if FDR_correction:
+        wf.connect([(connection_wise_analysis, datasink, [('p_values_corrected_path','p_values_corrected_path')])])                                                       
     
     return wf
