@@ -51,6 +51,9 @@ def Network_Based_Statistics(list_of_connectome_1, list_of_connectome_2, test, n
     if type(nb_permutation)!=int:
         raise IOError('nb_permutation shoul be a int.')
         
+    if type(output_prefix)!=str:
+        raise IOError('nb_permutation shoul be a str.')
+        
     if size not in ['extent', 'intensity', 'log']:
         raise IOError('Set size parametter to "extent", "intensity" or "log".')
     
@@ -79,7 +82,7 @@ def Network_Based_Statistics(list_of_connectome_1, list_of_connectome_2, test, n
     Concatenate_connectome = np.recfromtxt(list_of_connectome_1[0], delimiter=';', dtype=float)
     nb_connexion = (Concatenate_connectome.shape[0]*(Concatenate_connectome.shape[0]-1))/2
     connexion_index_vector = []
-    vectorized_data = np.zeros((nb_subjects_1+nb_subjects_1, nb_connexion))
+    vectorized_data = np.zeros((nb_subjects_1+nb_subjects_2, nb_connexion))
     permutation_max_size_vectors = np.zeros((nb_permutation))    
     
     # Concatenation of all the connectome from the two list in one 3D array in the list order  
