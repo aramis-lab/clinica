@@ -7,7 +7,7 @@ Created on Mon Jun  6 10:00:08 2016
 
 import clinica.pipeline.postprocessing.connection_wise_analysis as CWA
 
-def create_network_based_statistic_pipeline(list_of_connectome_1, list_of_connectome_2, test, working_directory,
+def create_connection_wise_analysis_pipeline(list_of_connectome_1, list_of_connectome_2, test, working_directory,
                                             datasink_directory, FDR_correction=True, tail=1, nb_permutation=0):
  
     """
