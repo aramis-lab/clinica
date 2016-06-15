@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-def create_dwi_preproc_syb(in_dwi, in_T1, in_bvals, in_bvecs, working_directory, datasink_directory):
+def diffusion_preprocessing_SyN_based(in_dwi, in_T1, in_bvals, in_bvecs, working_directory, datasink_directory):
     """
     Create and run a high level pipeline to preprocess the DWI Images :
         - Preparation of the dataset
