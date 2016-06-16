@@ -10,7 +10,7 @@ from os.path import realpath,split,join
 import tempfile
 
 try:
-    if fsl.Info.version().split(".") < ['5','0','5']:
+    if fsl.Info.version() is None or fsl.Info.version().split(".") < ['5','0','5']:
         raise RuntimeError('FSL version must be great then 5.0.5')
 except Exception as e:
     print(str(e))
