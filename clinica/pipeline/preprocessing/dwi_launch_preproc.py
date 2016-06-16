@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import clinica.engine
+
 def create_dwi_preproc_syb(in_dwi, in_T1, in_bvals, in_bvecs, working_directory, datasink_directory):
     """
     Create and run a high level pipeline to preprocess the DWI Images :
@@ -108,7 +110,7 @@ def create_dwi_preproc_syb(in_dwi, in_T1, in_bvals, in_bvecs, working_directory,
 
 
 
-
+@RunDecorator(BaseInfo)
 def diffusion_preprocessing_fieldmap_based(datasink_directory, name='diffusion_preprocessing_fieldmap_based'):
     """
     First extract the b0 volumes, co-registration and mean of the b0 volumes.
