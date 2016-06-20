@@ -15,7 +15,7 @@ def log_size(x):
 
 # size function_definition
 
-def graph_size(G, size_type):
+def compute_graph_size(G, size_type):
     
     import networkx as nx
     
@@ -24,10 +24,10 @@ def graph_size(G, size_type):
     elif size_type=='intensity':
         graph = nx.Graph(G)
         size = sum(list(nx.get_edge_attributes(graph, 'weight').values()))
-    elif size_type=='log_intensity':
+    elif size_type=='log':
         graph = nx.Graph(G)
         size = sum(map(log_size, list(nx.get_edge_attributes(graph, 'weight').values())))
     else:
-        raise IOError('size_type input should set as "extent", "intensity" or "log_intensity".')
+        raise IOError('size_type input should set as "extent", "intensity" or "log".')
 
     return size
