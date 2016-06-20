@@ -5,9 +5,7 @@ Created on Thu Jun  2 11:15:38 2016
 @author: jacquemont
 """
 
-import clinica.pipeline.postprocessing.connectome_stats as connectome_stats
-
-def Connection_wise_analysis(list_of_connectome_1, list_of_connectome_2, test, FDR_correction, tail=1, nb_permutation=0):
+def connection_wise_analysis(list_of_connectome_1, list_of_connectome_2, test, FDR_correction, tail=1, nb_permutation=0):
     """
     This function performs connection wise analysis. 
     The statistic test used here can be one or two tail(s) and can be a permutation test, a T test or a
@@ -27,6 +25,7 @@ def Connection_wise_analysis(list_of_connectome_1, list_of_connectome_2, test, F
         p_values_corrected_path(str - optional): FDR corrected P value matrix (if FDR_correction set to True).  
         
     """
+    from clinica.pipeline.postprocessing.connectome_stats import permutation_test, t_test, Mann_Whitney, fdr_correction_matrix
     import numpy as np
     import os
 
@@ -52,17 +51,23 @@ def Connection_wise_analysis(list_of_connectome_1, list_of_connectome_2, test, F
         
     # initializing variables
         
-    Concatenate_connectome_1 = np.recfromtxt(list_of_connectome_1[0], delimiter=';', dtype=float)
-    Concatenate_connectome_2 = np.recfromtxt(list_of_connectome_2[0], delimiter=';', dtype=float)    
+    Concatenate_connectome_1 = np.recfromtxt(list_of_connectome_1[0], delimiter=' ', dtype=float)
+    
+    if len(Concatenate_connectome_1)<2:
+        raise IOError('Connectome matrix csv from first list file should be separated by a space ' '.')
+    if len(Concatenate_connectome_1)<2:
+        raise IOError('Connectome matrix csv from second list file should be separated by a space ' '.')
+
+    Concatenate_connectome_2 = np.recfromtxt(list_of_connectome_2[0], delimiter=' ', dtype=float)    
     
     # Concatenation of all the connectome from the two list in two 3D array in the list order  
     
     for connectome in list_of_connectome_1[1:]: 
-        Connect = np.recfromtxt(connectome, delimiter=';', dtype=float)
+        Connect = np.recfromtxt(connectome, delimiter=' ', dtype=float)
         Concatenate_connectome_1 = np.dstack((Concatenate_connectome_1, Connect))
         
     for connectome in list_of_connectome_2[1:]: 
-        Connect = np.recfromtxt(connectome, delimiter=';', dtype=float)
+        Connect = np.recfromtxt(connectome, delimiter=' ', dtype=float)
         Concatenate_connectome_2 = np.dstack((Concatenate_connectome_2, Connect))
 
     if Concatenate_connectome_1[:,:,0].shape!=Concatenate_connectome_1[:,:,0].shape:
@@ -80,24 +85,24 @@ def Connection_wise_analysis(list_of_connectome_1, list_of_connectome_2, test, F
             if list_1.sum()!=0 or list_2.sum()!=0:
                 effected_test[j,i] = 1
                 if test=='permutation':
-                    p_value = connectome_stats.permutation_test(list_1,list_2, nb_permutation, tails=tail)
+                    p_value = permutation_test(list_1,list_2, nb_permutation, tails=tail)
                 elif test=='t test':
-                    p_value = connectome_stats.t_test(list_1,list_2, tails=tail)
+                    p_value = t_test(list_1,list_2, tails=tail)
                 else:
-                    p_value = connectome_stats.Mann_Whitney(list_1,list_2, tails=tail)
+                    p_value = Mann_Whitney(list_1,list_2, tails=tail)
                 p_values[j,i] = p_value
     
     if FDR_correction:
-        reject, p_values_corrected = connectome_stats.fdr_correction_matrix(p_values, template=effected_test)
+        reject, p_values_corrected = fdr_correction_matrix(p_values, template=effected_test)
     
     working_directory = os.getcwd()    
     
     p_values_path = working_directory + '/P_values_matrix.csv'
-    np.savetxt(p_values_path, p_values, delimiter=';')
+    np.savetxt(p_values_path, p_values, delimiter=' ')
     
     if FDR_correction:
         p_values_corrected_path = working_directory + '/P_values_matrix_FDR_corrected.csv'
-        np.savetxt(p_values_corrected_path, p_values_corrected, delimiter=';')
+        np.savetxt(p_values_corrected_path, p_values_corrected, delimiter=' ')
     else:
         p_values_corrected_path = None
     
