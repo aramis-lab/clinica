@@ -1,11 +1,7 @@
-<<<<<<< HEAD
 from clinica.engine.cworkflow import *
 
 @Visualize("freeview", "-v ${subject_id}/mri/T1.mgz -f ${subject_id}/surf/lh.white:edgecolor=blue ${subject_id}/surf/lh.pial:edgecolor=green ${subject_id}/surf/rh.white:edgecolor=blue ${subject_id}/surf/rh.pial:edgecolor=green", "subject_id")
 def recon_all_pipeline(data_dir, output_dir, n_output, recon_all_args='-qcache'):
-=======
-def recon_all_pipeline(data_dir,temporary_dir, output_dir, n_output, recon_all_args='-qcache'):
->>>>>>> cb84188d452d15706f8aa56afdaf88768ff114e0
     """
         Creates a pipeline that performs Freesurfer commander, recon-all,
         It takes the input files of MRI T1 images and executes the 31 steps to
@@ -90,5 +86,3 @@ def recon_all_pipeline(data_dir,temporary_dir, output_dir, n_output, recon_all_a
 
     return wf
 
-
-print("Running...")

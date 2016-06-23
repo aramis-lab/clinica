@@ -27,7 +27,6 @@ class ClinicaWorkflow(Workflow):
 
     def run(self, plugin=None, plugin_args=None, updatehash=False):
         Workflow.run(self, plugin, plugin_args, updatehash)
-        print("running..")
         [task(self) for task in self.tasks.get('run', [])]
 
 
@@ -53,11 +52,6 @@ def Dump(clinicaWorkflow):
     import cPickle
     import datetime
     from os.path import realpath,join
-    print("dump...")
-    print(clinicaWorkflow.data)
-    print(type(clinicaWorkflow))
-    # if not isinstance(clinicaWorkflow, ClinicaWorkflow):
-    #     raise Exception('Need ClinicaWorkflow instance')
     print(clinicaWorkflow.base_dir)
     with open(join(realpath(clinicaWorkflow.base_dir), "clinica.pkl"), "wb") as dump_file:
         clinicaWorkflow.timestamp = datetime.datetime.utcnow()
@@ -66,7 +60,6 @@ def Dump(clinicaWorkflow):
 
 def Visualize(application, parameters, matches):
     def visu(clinicaWorkflow):
-        print('adding data')
         clinicaWorkflow.add_data('visualize', [application, parameters, matches])
         return Dump(clinicaWorkflow)
     return RunDecorator(visu)
