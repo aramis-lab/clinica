@@ -1,10 +1,17 @@
 from nipype import Workflow
 
-class DecoreWorkflow(Workflow):
+class ClinicaWorkflow(Workflow):
     tasks = {}
+    is_reset = False
 
     def __init__(self, name, base_dir=None):
         Workflow.__init__(self, name, base_dir)
+        reset(self)
+
+    def reset(self):
+        self.data = {}
+        self.timestamp = None
+        self.dump = False
 
     def add_task(self, name, type):
         if self.tasks.has_key(name):
@@ -12,9 +19,17 @@ class DecoreWorkflow(Workflow):
         else:
             self.tasks[name] = [type]
 
+    def add_data(self, name, info):
+        if self.data.has_key(name):
+            self.data[name].append(info)
+        else:
+            self.data[name] = info
+
     def run(self, plugin=None, plugin_args=None, updatehash=False):
         Workflow.run(self, plugin, plugin_args, updatehash)
+        print("running..")
         [task(self) for task in self.tasks.get('run', [])]
+
 
 def dwork(type, name):
     def decorator(func):
@@ -22,7 +37,10 @@ def dwork(type, name):
             wf = func(*args, **kwargs)
             if not isinstance(wf, Workflow):
                 raise Exception('Need Workflow instance')
-            wf.__class__ = DecoreWorkflow
+            wf.__class__ = ClinicaWorkflow
+            if wf.is_reset == False:
+                wf.reset()
+                wf.is_reset = True
             wf.add_task(name, type)
             return wf
         return wrappper
@@ -31,7 +49,24 @@ def dwork(type, name):
 def RunDecorator(type):
     return dwork(type, "run")
 
-def Dump(Workflow):
-    import pickle
-    with open(Workflow.name + ".pkl", "wb") as dump_file:
-        pickle.dump(Workflow, dump_file)
+def Dump(clinicaWorkflow):
+    import cPickle
+    import datetime
+    from os.path import realpath,join
+    print("dump...")
+    print(clinicaWorkflow.data)
+    print(type(clinicaWorkflow))
+    # if not isinstance(clinicaWorkflow, ClinicaWorkflow):
+    #     raise Exception('Need ClinicaWorkflow instance')
+    print(clinicaWorkflow.base_dir)
+    with open(join(realpath(clinicaWorkflow.base_dir), "clinica.pkl"), "wb") as dump_file:
+        clinicaWorkflow.timestamp = datetime.datetime.utcnow()
+        cPickle.dump(clinicaWorkflow, dump_file)
+    return clinicaWorkflow
+
+def Visualize(application, parameters, matches):
+    def visu(clinicaWorkflow):
+        print('adding data')
+        clinicaWorkflow.add_data('visualize', [application, parameters, matches])
+        return Dump(clinicaWorkflow)
+    return RunDecorator(visu)

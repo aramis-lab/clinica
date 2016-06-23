@@ -1,7 +1,7 @@
-import clinica.engine
+from clinica.engine.cworkflow import *
 
-@RunDecorator(Dump)
-def recon_all_pipeline(data_dir,temporary_dir, output_dir, n_output, recon_all_args='-qcache'):
+@Visualize("freeview", "-v ${subject_id}/mri/T1.mgz -f ${subject_id}/surf/lh.white:edgecolor=blue ${subject_id}/surf/lh.pial:edgecolor=green ${subject_id}/surf/rh.white:edgecolor=blue ${subject_id}/surf/rh.pial:edgecolor=green", "subject_id")
+def recon_all_pipeline(data_dir, output_dir, n_output, recon_all_args='-qcache'):
     """
         Creates a pipeline that performs Freesurfer commander, recon-all,
         It takes the input files of MRI T1 images and executes the 31 steps to
@@ -59,8 +59,7 @@ def recon_all_pipeline(data_dir,temporary_dir, output_dir, n_output, recon_all_a
         
     data_dir_out = data_dir_out[0: n_output-1]
 
-    wf = pe.Workflow(name='reconall_workflow')
-    wf.base_dir = temporary_dir
+    wf = pe.Workflow(name='reconall_workflow',base_dir=output_dir)
 
     datasource = pe.Node(interface = nio.DataGrabber(infields=['subject_id'], outfields=['out_files']), name="datasource")
     datasource.inputs.base_directory = data_dir

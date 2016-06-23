@@ -1,4 +1,6 @@
 build/
+dist/
+Clinica.egg-info
 *egg-info
 *.pyc
 .idea

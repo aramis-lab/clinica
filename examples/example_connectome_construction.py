@@ -5,7 +5,7 @@ Created on Tue Mar 22 15:56:18 2016
 @author: jacquemont
 """
 from __future__ import absolute_import
-from clinica.pipeline.postprocessing.connectome_construction.py import Connectome_construction_pipeline
+from clinica.pipeline.postprocessing.connectome_construction import Connectome_construction_pipeline
 import os
 from os.path import realpath,split,join
 import tempfile
@@ -21,17 +21,17 @@ in_tracks = join(data_path, 'Tracks.tck')
 connectome_metric = 'count'
 zeros_diagonal=True
 
-working_direct = tempfile.mkdtemp()
-datasink_direct = tempfile.mkdtemp()
+working_directory = tempfile.mkdtemp()
+datasink_directory = tempfile.mkdtemp()
 
-print("Working Directory -> %s" % working_direct)
-print("Datasink Directory -> %s" % datasink_direct)
+print("Working Directory -> %s" % working_directory)
+print("Datasink Directory -> %s" % datasink_directory)
 
 print("Running connectome construction")
 connectome =  Connectome_construction_pipeline(in_parcellation, configuration_file, lut_type, lut_path, in_tracks, connectome_metric, working_directory, datasink_directory, in_scalar_image='', zeros_diagonal=True)
 connectome.run()
 print("connectome construction done")
 
-print("Working Directory -> %s" % working_direct)
-print("Datasink Directory -> %s" % datasink_direct)
+print("Working Directory -> %s" % working_directory)
+print("Datasink Directory -> %s" % datasink_directory)
 
