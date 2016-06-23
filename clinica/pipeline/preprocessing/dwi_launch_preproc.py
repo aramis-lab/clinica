@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
-import clinica.engine
+from clinica.engine.cworkflow import *
 
+@RunDecorator(Dump)
 def create_dwi_preproc_syb(in_dwi, in_T1, in_bvals, in_bvecs, working_directory, datasink_directory):
     """
     Create and run a high level pipeline to preprocess the DWI Images :
@@ -79,7 +80,7 @@ def create_dwi_preproc_syb(in_dwi, in_T1, in_bvals, in_bvecs, working_directory,
     datasink = pe.Node(nio.DataSink(), name='datasink_tracto')
     datasink.inputs.base_directory = op.join(datasink_directory, 'Outputs_for_Tractography/')
     
-    wf = pe.Workflow(name='preprocess')
+    wf = pe.Workflow(name='preprocess',base_dir=datasink_directory)
     wf.base_dir = working_directory
     
     wf.connect([(datasource, inputnode, [('dwi_image','dwi_image'), ('bvalues','bvalues'), ('bvectors_directions','bvectors_directions'), ('T1_image','T1_image')])])
@@ -109,8 +110,7 @@ def create_dwi_preproc_syb(in_dwi, in_T1, in_bvals, in_bvecs, working_directory,
     return wf
 
 
-
-@RunDecorator(BaseInfo)
+@Visualize("freeview", "preprocessing/out_file/vol${subject_id}_maths_thresh_merged.nii.gz", "subject_id")
 def diffusion_preprocessing_fieldmap_based(datasink_directory, name='diffusion_preprocessing_fieldmap_based'):
     """
     First extract the b0 volumes, co-registration and mean of the b0 volumes.
@@ -189,7 +189,7 @@ def diffusion_preprocessing_fieldmap_based(datasink_directory, name='diffusion_p
     datasink = pe.Node(nio.DataSink(), name='datasink_preprocessing')
     datasink.inputs.base_directory = op.join(datasink_directory, 'preprocessing/')
 
-    wf = pe.Workflow(name=name)
+    wf = pe.Workflow(name=name,base_dir=datasink_directory)
     wf.connect([
             
             (inputnode,            b0_dwi_split,         [('in_file', 'in_file'),
