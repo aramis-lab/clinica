@@ -45,24 +45,27 @@ def recon_all_pipeline(data_dir,temporary_dir, output_dir, n_output, recon_all_a
         exit(1)
 
     subject_list = []
+    nii_list = []
     for dirpath, dirnames, filenames in os.walk(data_dir):
-        subject_list = filenames
+        subject_list = dirnames
+        nii_list = filenames
         break
 
-    data_dir_out = []
-    for element in subject_list:
-        element = element.split('.')[0]
-        data_dir_out.append(element)
-        
-    data_dir_out = data_dir_out[0: n_output-1]
+#    data_dir_out = []
+#    for element in subject_list:
+#        element = element.split('.')[0]
+#        data_dir_out.append(element)
+#        
+#    data_dir_out = data_dir_out[0: n_output-1]
 
     wf = pe.Workflow(name='reconall_workflow')
     wf.base_dir = temporary_dir
 
     datasource = pe.Node(interface = nio.DataGrabber(infields=['subject_id'], outfields=['out_files']), name="datasource")
     datasource.inputs.base_directory = data_dir
-    datasource.inputs.template = '%s'
-    datasource.inputs.subject_id = subject_list[0: n_output-1]
+    datasource.inputs.template = '%s/%s'
+    datasource.inputs.tempplate_args = dict(out_files=[['subject_id', 'nii_list']])
+    datasource.inputs.subject_id = subject_list
     datasource.inputs.sort_filelist = True
 
     try:
@@ -72,7 +75,7 @@ def recon_all_pipeline(data_dir,temporary_dir, output_dir, n_output, recon_all_a
             raise
 
     recon_all = pe.MapNode(interface=ReconAll(),name='recon_all', iterfield=['subject_id', 'T1_files'])
-    recon_all.inputs.subject_id = data_dir_out
+    recon_all.inputs.subject_id = subject_list
     recon_all.inputs.subjects_dir = output_dir
     recon_all.inputs.directive = 'all'
     recon_all.inputs.args = recon_all_args;
@@ -80,3 +83,6 @@ def recon_all_pipeline(data_dir,temporary_dir, output_dir, n_output, recon_all_a
     wf.connect(datasource,'out_files', recon_all,'T1_files')
 
     return wf
+
+
+print("Running...")
