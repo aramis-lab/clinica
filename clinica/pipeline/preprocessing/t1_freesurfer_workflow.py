@@ -27,7 +27,6 @@ def recon_all_pipeline(data_dir, output_dir, n_output, recon_all_args='-qcache')
             http://nipy.org/nipype/interfaces/generated/nipype.interfaces.freesurfer.preprocess.html#reconall
 
         :param: data_dir: the directory where to put the input images, eg, example1.nii, example2.nii
-        :param: temporary_dir: the directory where to put the temporary files in the recon-all pipeline
         :param: output_dir: the directory where to put the results of the pipeline
         :param: n_output, scale, the number of output files that you want to contain the results, eg, if you define n_output, then the number of output file should be sub001...sub00(n_output-1)
         :param: recon_all_args, the default value will be set as '-qcache', which will get the result of the fsaverage.
@@ -66,7 +65,7 @@ def recon_all_pipeline(data_dir, output_dir, n_output, recon_all_args='-qcache')
     datasource = pe.Node(interface = nio.DataGrabber(infields=['subject_id'], outfields=['out_files']), name="datasource")
     datasource.inputs.base_directory = data_dir
     datasource.inputs.template = '%s/%s'
-    datasource.inputs.tempplate_args = dict(out_files=[['subject_id', 'nii_list']])
+    datasource.inputs.template_args = dict(out_files=[['subject_id', 'nii_list']])
     datasource.inputs.subject_id = subject_list
     datasource.inputs.sort_filelist = True
 
