@@ -1,6 +1,3 @@
-import clinica.engine
-
-@RunDecorator(Dump)
 def recon_all_pipeline(data_dir,temporary_dir, output_dir, n_output, recon_all_args='-qcache'):
     """
         Creates a pipeline that performs Freesurfer commander, recon-all,
