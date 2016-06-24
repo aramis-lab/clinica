@@ -47,13 +47,9 @@ def recon_all_pipeline(data_dir, output_dir, n_output, recon_all_args='-qcache')
         exit(1)
 
     subject_list = []
-    nii_list = []
     for dirpath, dirnames, filenames in os.walk(data_dir):
         subject_list = dirnames
         break
-    for dirpath, dirnames, filenames in os.walk(data_dir):
-        for i in filenames:
-            nii_list.append(i)
 
     try:
         os.makedirs(output_dir)
@@ -63,10 +59,12 @@ def recon_all_pipeline(data_dir, output_dir, n_output, recon_all_args='-qcache')
 
     wf = pe.Workflow(name='reconall_workflow',base_dir=output_dir)
 
-    datasource = pe.Node(interface = nio.DataGrabber(infields=['subject_id'],outfields=['out_files']), name="datasource")
+    datasource = pe.MapNode(interface = nio.DataGrabber(infields=['subject_id'], 
+                                                     outfields=['out_files']), name="datasource",
+                                                     iterfield = ['subject_id'])
     datasource.inputs.base_directory = data_dir
-    datasource.inputs.template = '%s/%s'
-    datasource.inputs.template_args = dict(out_files=[['subject_id', nii_list]])
+    datasource.inputs.template = '%s/%s.nii'
+    datasource.inputs.template_args = dict(out_files=[['subject_id', 'struct']])
     datasource.inputs.subject_id = subject_list
     datasource.inputs.sort_filelist = True
 
