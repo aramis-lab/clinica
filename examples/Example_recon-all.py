@@ -18,6 +18,7 @@ field_templateB = '%s/%s/*.nii'
 template_argsB = [['subject_id', 'dir']]
 output_dir = tempfile.mkdtemp()
 
+
 print("Data Directory -> %s" % data_dir)
 print("Output Directory -> %s" % output_dir)
 print("Running...")
@@ -27,7 +28,10 @@ def recon_all_exampleA():
     
 def recon_all_exampleB():
     return recon_all_pipeline(data_dir, output_dir, 3, field_templateB, template_argsB)
+    
 T1_recon_allA = recon_all_exampleA()
 T1_recon_allA.run("MultiProc", plugin_args={'n_procs':4})
-T1_recon_allB = recon_all_exampleB()
-T1_recon_allB.run("MultiProc", plugin_args={'n_procs':4})
+#T1_recon_allB = recon_all_exampleB()
+#T1_recon_allB.run("MultiProc", plugin_args={'n_procs':4})
+#T1_recon_all = recon_all_pipeline(data_dir, output_dir, 3)
+#T1_recon_all.run("MultiProc", plugin_args={'n_procs':4})
