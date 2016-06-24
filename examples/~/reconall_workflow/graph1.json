@@ -1,0 +1,34 @@
+{
+    "groups": [
+        {
+            "name": "Group_00001", 
+            "procs": [
+                0, 
+                1
+            ], 
+            "total": 2
+        }
+    ], 
+    "links": [
+        {
+            "source": 0, 
+            "target": 1, 
+            "value": 1
+        }
+    ], 
+    "maxN": 2, 
+    "nodes": [
+        {
+            "group": 1, 
+            "name": "0_datasource", 
+            "report": "/home/guest/HAO/Clinica/clinica/examples//datasource/_report/report.rst", 
+            "result": "/home/guest/HAO/Clinica/clinica/examples//datasource/result_datasource.pklz"
+        }, 
+        {
+            "group": 1, 
+            "name": "1_recon_all", 
+            "report": "/home/guest/HAO/Clinica/clinica/examples//recon_all/_report/report.rst", 
+            "result": "/home/guest/HAO/Clinica/clinica/examples//recon_all/result_recon_all.pklz"
+        }
+    ]
+}
