@@ -1,1 +1,0 @@
-recon-all -all -i /home/guest/HAO/Clinica/clinica/examples/data/Recon-all/example2/example2.nii -qcache -subjid example2 -sd ~
