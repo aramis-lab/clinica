@@ -65,7 +65,6 @@ def recon_all_pipeline(data_dir, output_dir, n_output, field_template, template_
                                                      outfields=['out_files']), name="datasource",
                                                      iterfield = ['subject_id'])
     datasource.inputs.base_directory = data_dir
-    
     datasource.inputs.template = '*'  
     datasource.inputs.field_template = dict(out_files = field_template)
     datasource.inputs.template_args = dict(out_files = template_args) 
