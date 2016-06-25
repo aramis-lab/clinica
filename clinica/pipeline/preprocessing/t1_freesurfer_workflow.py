@@ -29,7 +29,7 @@ def recon_all_pipeline(data_dir, output_dir, n_output, field_template, template_
             http://nipy.org/nipype/interfaces/generated/nipype.interfaces.freesurfer.preprocess.html#reconall
 
         :param: data_dir: the directory where to put the input images, eg, example1.nii, example2.nii
-        :param: output_dir: the directory where to put the results of the pipeline
+        :param: output_dir: the directory where to put the results of the pipeline, should be absolute path!
         :param: n_output: scale, the number of output files that you want to contain the results, eg, if you define n_output, then the number of output file should be sub001...sub00(n_output-1)
         :param: field_template: list, you should define it based on your input data structure       
         :param: template_args: list containing list, you should define it based on your input data structure
@@ -55,7 +55,7 @@ def recon_all_pipeline(data_dir, output_dir, n_output, field_template, template_
     for dirpath, dirnames, filenames in os.walk(data_dir):
         subject_list = dirnames
         break
-
+    output_dir = os.path.expanduser(output_dir)
     try:
         os.makedirs(output_dir)
     except OSError as exception:
