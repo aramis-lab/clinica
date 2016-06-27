@@ -17,17 +17,17 @@ template_argsA =  [['subject_id', 'struct']]
 field_templateB = '%s/%s/*.nii'
 template_argsB = [['subject_id', 'dir']]
 output_dir = tempfile.mkdtemp()
-
+datasink_para = ['orig']
 
 print("Data Directory -> %s" % data_dir)
 print("Output Directory -> %s" % output_dir)
 print("Running...")
 
 def recon_all_exampleA():
-    return recon_all_pipeline(data_dir, output_dir, 3, field_templateA, template_argsA)
+    return recon_all_pipeline(data_dir, output_dir, 3, field_templateA, template_argsA, datasink_para)
     
 def recon_all_exampleB():
-    return recon_all_pipeline(data_dir, output_dir, 3, field_templateB, template_argsB)
+    return recon_all_pipeline(data_dir, output_dir, 3, field_templateB, template_argsB, datasink_para)
     
 T1_recon_allA = recon_all_exampleA()
 T1_recon_allA.run("MultiProc", plugin_args={'n_procs':4})
