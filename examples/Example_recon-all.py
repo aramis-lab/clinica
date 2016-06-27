@@ -12,22 +12,25 @@ from os.path import realpath,split,join
 import tempfile
 
 data_dir = join(split(realpath(__file__))[0], 'data/Recon-all').encode("utf-8") 
-field_templateA = '%s/%s.nii'
-template_argsA =  [['subject_id', 'struct']]
-field_templateB = '%s/%s/*.nii'
-template_argsB = [['subject_id', 'dir']]
 output_dir = tempfile.mkdtemp()
-datasink_para = ['orig']
+datasink_para = ['orig', 'white']
 
 print("Data Directory -> %s" % data_dir)
 print("Output Directory -> %s" % output_dir)
 print("Running...")
 
+# this is to use structureA, grab all the nifti files with the same nams, like 'struct'
 def recon_all_exampleA():
-    return recon_all_pipeline(data_dir, output_dir, 3, field_templateA, template_argsA, datasink_para)
-    
-def recon_all_exampleB():
-    return recon_all_pipeline(data_dir, output_dir, 3, field_templateB, template_argsB, datasink_para)
+    field_templateA = '%s/%s.nii'
+    template_argsA =   'struct'
+    return recon_all_pipeline(data_dir, output_dir, field_templateA, template_argsA, datasink_para)
+
+# this is to use structureB, grab all the nifti files with different name, like struct1.nii, struct2.nii....   
+#def recon_all_exampleB():
+#    field_templateB = '%s/struct%d.nii'
+#    template_argsB = [['subject_id', 'dir']]
+#    #datasink_para is optional, is usend in order to etc...
+#    return recon_all_pipeline(data_dir, output_dir, field_templateB, template_argsB, datasink_para)
     
 T1_recon_allA = recon_all_exampleA()
 T1_recon_allA.run("MultiProc", plugin_args={'n_procs':4})
