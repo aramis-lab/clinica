@@ -1,7 +1,7 @@
 from clinica.engine.cworkflow import *
 
 @Visualize("freeview", "-v ${subject_id}/mri/T1.mgz -f ${subject_id}/surf/lh.white:edgecolor=blue ${subject_id}/surf/lh.pial:edgecolor=green ${subject_id}/surf/rh.white:edgecolor=blue ${subject_id}/surf/rh.pial:edgecolor=green", "subject_id")
-def recon_all_pipeline(data_dir, output_dir, n_output, field_template, template_args, datasink_para, recon_all_args='-qcache'):
+def recon_all_pipeline(data_dir, output_dir,field_template, template_args, datasink_para, recon_all_args='-qcache'):
 #def recon_all_pipeline(data_dir, output_dir, n_output, recon_all_args='-qcache'):
     
     """
@@ -30,10 +30,9 @@ def recon_all_pipeline(data_dir, output_dir, n_output, field_template, template_
 
         :param: data_dir: the directory where to put the input images, eg, example1.nii, example2.nii
         :param: output_dir: the directory where to put the results of the pipeline, should be absolute path!
-        :param: n_output: scale, the number of output files that you want to contain the results, eg, if you define n_output, then the number of output file should be sub001...sub00(n_output-1)
         :param: field_template: list, you should define it based on your input data structure       
         :param: template_args: list containing list, you should define it based on your input data structure
-        :param: datasink_para: list containing string, the container inside the datasink_folder, for datasinker to store the result that you want, you can define many container to store your result!
+        :param: datasink_para: list containing string, optional, the container inside the datasink_folder, for datasinker to store the result that you want, you can define many container to store your result!
         :param: recon_all_args, the default value will be set as '-qcache', which will get the result of the fsaverage.
         return: Recon-all workflow
     """
@@ -76,7 +75,7 @@ def recon_all_pipeline(data_dir, output_dir, n_output, field_template, template_
     inputnode.inputs.base_directory = data_dir
     inputnode.inputs.template = '*'  
     inputnode.inputs.field_template = dict(out_files = field_template)
-    inputnode.inputs.template_args = dict(out_files = template_args) 
+    inputnode.inputs.template_args = dict(out_files =  [['subject_id', template_args]]) 
 
     inputnode.inputs.subject_id = subject_list
     inputnode.inputs.sort_filelist = True
