@@ -291,7 +291,7 @@ def estimate_fod(in_dwi_mif, in_b0_mask, in_response_function_coefficients, lmax
 
 
 def streamlines_tractography(
-        in_source, in_white_matter_mask, algorithm='iFOD2', number_of_tracks='100K',
+        in_source, in_white_matter_binary_mask, algorithm='iFOD2', number_of_tracks='100K',
         fod_treshold=None, step_size=None, angle=None, nthreads=2):
     """
     Perform streamlines tractography.
@@ -307,7 +307,7 @@ def streamlines_tractography(
             - iFOD1, iFOD2 (default), Nulldist2: the spherical harmonics
             coefficients image resulting from CSD
             - Tensor_Det, Tensor_Prob: the DWI image in MRtrix format.
-        in_white_matter_mask (str): Binary mask of the white matter
+        in_white_matter_binary_mask (str): Binary mask of the white matter
             segmentation. Seed streamlines will be entirely generated at random
             within this mask.
         algorithm (Optional[str]): #TODO
@@ -332,13 +332,13 @@ def streamlines_tractography(
     import os
 
 #    assert(op.isfile(in_source))
-    assert(op.isfile(in_white_matter_mask))
+    assert(op.isfile(in_white_matter_binary_mask))
     if algorithm not in ('iFOD1', 'iFOD2', 'Nulldist2', 'Tensor_Det', 'Tensor_Prob'):
         raise ValueError('Invalid choice of algorithm in streamlines_tractography function')
 
     out_tracks = op.abspath('out_tracks_' + number_of_tracks + '.tck')
 
-    cmd = 'tckgen -algorithm ' + algorithm + ' -number ' + number_of_tracks + ' -seed_image ' + in_white_matter_mask + \
+    cmd = 'tckgen -algorithm ' + algorithm + ' -number ' + number_of_tracks + ' -seed_image ' + in_white_matter_binary_mask + \
         ' ' + in_source + ' ' + out_tracks +  ' -nthreads ' + str(nthreads) #+ ' -rk4'
     # cmd = cmd + ' -step ' + str(step_size)
 

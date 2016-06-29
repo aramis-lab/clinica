@@ -20,7 +20,7 @@ def whole_brain_tractography_pipeline(
 
     Args:
         datasink_directory (str): Directory where the results are stored.
-        datasink_directory (Optional[str]): Directory where the temporary
+        working_directory (Optional[str]): Directory where the temporary
             results are stored. If not specified, it is automatically
             generated (generally in /tmp/).
         max_harmonic_order (Optional[int]): Maximum harmonic order according to
@@ -39,7 +39,7 @@ def whole_brain_tractography_pipeline(
         in_bvecs (str): File containing Diffusion Gradient table in FSL format.
         in_b0_mask (str): Binary mask of the b0 image. Only perform computation
             within this specified binary brain mask image.
-        in_white_matter_mask (str): Binary mask of the white matter
+        in_white_matter_binary_mask (str): Binary mask of the white matter
             segmentation. Seed streamlines will be entirely generated at random
             within this mask.
 
@@ -75,7 +75,7 @@ def whole_brain_tractography_pipeline(
         working_directory = tempfile.mkdtemp()
 
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['in_dwi_nii', 'in_bvecs', 'in_bvals', 'in_b0_mask', 'in_white_matter_mask']),
+        fields=['in_dwi_nii', 'in_bvecs', 'in_bvals', 'in_b0_mask', 'in_white_matter_binary_mask']),
         name='inputnode')
 
     convert_nifti_to_mrtrix_format = pe.Node(interface=niu.Function(
@@ -117,7 +117,7 @@ def whole_brain_tractography_pipeline(
     estimate_fod.inputs.nthreads = nthreads
 
     streamlines_tractography = pe.Node(interface=niu.Function(
-        input_names=['in_source', 'in_white_matter_mask', 'algorithm', 'number_of_tracks',
+        input_names=['in_source', 'in_white_matter_binary_mask', 'algorithm', 'number_of_tracks',
                      'fod_treshold', 'step_size', 'angle', 'nthreads'],
         output_names=['out_tracks'], function=streamlines_tractography), name='streamlines_tractography')
 #     streamlines_tractography.inputs.algorithm = tractography_algorithm
@@ -157,7 +157,7 @@ def whole_brain_tractography_pipeline(
         (estimate_response,              estimate_fod, [('out_response_function', 'in_response_function_coefficients')]),
         # Whole-brain tractography:
         (estimate_fod, streamlines_tractography, [('out_sh_coefficients_image', 'in_source')]),
-        (inputnode,    streamlines_tractography, [('in_white_matter_mask', 'in_white_matter_mask')]),
+        (inputnode,    streamlines_tractography, [('in_white_matter_binary_mask', 'in_white_matter_binary_mask')]),
         # Outputnode:
         (convert_nifti_to_mrtrix_format, outputnode, [('out_dwi_mif', 'out_dwi_mif')]),
         (dwi_to_tensor,                  outputnode, [('out_dti', 'out_dti')]),
