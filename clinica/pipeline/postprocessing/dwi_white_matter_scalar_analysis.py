@@ -30,23 +30,7 @@ def create_DTI_atlas_scalar_analysis(in_scalar_image, atlas_labels, atlas_scalar
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
     import os.path as op
-    
-    def antsRegistrationSyNQuick(fixe_image, moving_image):
-
-        import subprocess
-        import os.path as op
-
-        image_warped = op.abspath('SyN_QuickWarped.nii.gz')
-        affine_matrix = op.abspath('SyN_Quick0GenericAffine.mat')
-        warp = op.abspath('SyN_Quick1Warp.nii.gz')
-        inverse_warped = op.abspath('SyN_QuickInverseWarped.nii.gz')
-        inverse_warp = op.abspath('SyN_Quick1InverseWarp.nii.gz')
-
-        cmd = 'antsRegistrationSyNQuick.sh -t br -d 3 -f ' + fixe_image + ' -m ' + moving_image + ' -o SyN_Quick'
-        subprocess.call([cmd], shell=True)
-
-        return image_warped, affine_matrix, warp, inverse_warped, inverse_warp
-
+    from clinica.pipeline.registration.mri_registration import antsRegistrationSyNQuick
             
     def DTI_atlas_scalar_analysis(input_image, atlas_labels_image):
     
