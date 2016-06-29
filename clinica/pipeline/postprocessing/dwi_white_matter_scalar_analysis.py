@@ -98,7 +98,7 @@ def create_DTI_atlas_scalar_analysis(in_scalar_image, atlas_labels, atlas_scalar
     scalar_analysis = pe.Node(interface=niu.Function(input_names=['input_image', 'atlas_labels_image'], output_names=['outfile'],
                                                               function=DTI_atlas_scalar_analysis), name='scalar_analysis')
     
-    outputnode = pe.Node(niu.IdentityInterface(fields=['out_stats_file']), name='outputnode')
+    outputnode = pe.Node(niu.IdentityInterface(fields=['out_stats_file', 'affine_matrix', 'warp', 'inverse_warp', 'inverse_warped']), name='outputnode')
 
     datasink = pe.Node(nio.DataSink(), name='datasink')
     datasink.inputs.base_directory = op.join(datasink_directory,'dti_scalar_analysis/')
@@ -112,6 +112,8 @@ def create_DTI_atlas_scalar_analysis(in_scalar_image, atlas_labels, atlas_scalar
     wf.connect([(inputnode, antsRegistrationSyNQuick, [('in_scalar_image', 'moving_image'),('atlas_scalar_image', 'fixe_image')])])
     wf.connect([(inputnode, scalar_analysis, [('atlas_labels', 'atlas_labels_image')])])
     wf.connect([(antsRegistrationSyNQuick, scalar_analysis, [('image_warped', 'input_image')])])
+    wf.connect([(antsRegistrationSyNQuick, outputnode, [('affine_matrix', 'affine_matrix'),('warp','warp'),('inverse_warp','inverse_warp'),('inverse_warped','inverse_warped')])])
+    wf.connect([(antsRegistrationSyNQuick, datasink, [('affine_matrix', 'affine_matrix'),('warp','warp'),('inverse_warp','inverse_warp'),('inverse_warped','inverse_warped')])])
     wf.connect([(scalar_analysis, outputnode, [('outfile', 'out_stats_file')])])
     wf.connect([(scalar_analysis, datasink, [('outfile', 'out_stats_file')])])
     
