@@ -1,3 +1,11 @@
+#!/usr/bin/python#
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Apr 22 09:04:10 2016
+
+@author: Junhao WEN
+"""
+
 from clinica.engine.cworkflow import *
 
 @Visualize("freeview", "-v ${subject_id}/mri/T1.mgz -f ${subject_id}/surf/lh.white:edgecolor=blue ${subject_id}/surf/lh.pial:edgecolor=green ${subject_id}/surf/rh.white:edgecolor=blue ${subject_id}/surf/rh.pial:edgecolor=green", "subject_id")
