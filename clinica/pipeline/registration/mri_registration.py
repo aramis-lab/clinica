@@ -3,7 +3,7 @@
 Created on Tue May 10 15:32:00 2016
 
 @author: jacquemont
-""""
+"""
 
 def antsRegistrationSyNQuick(fixe_image, moving_image):
 
