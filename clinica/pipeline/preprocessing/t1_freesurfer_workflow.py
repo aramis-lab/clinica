@@ -63,13 +63,24 @@ def recon_all_pipeline(data_dir, output_dir, n_output, recon_all_args='-qcache')
                                                      outfields=['out_files']), name="datasource",
                                                      iterfield = ['subject_id'])
     datasource.inputs.base_directory = data_dir
-    datasource.inputs.template = '%s/%s.nii'
-    datasource.inputs.template_args = dict(out_files=[['subject_id', 'struct']])
+    # datasource.inputs.template = '%s/%s.nii' #/%d.nii'
+
+    datasource.inputs.template = '*'
+    datasource.inputs.field_template = dict(out_files='%s/%s/*.nii') #let the user define this as input
+    datasource.inputs.template_args = dict(out_files=[['subject_id', 'dir']])#let the user define this as input
+
+
+
+    # datasource.inputs.template = '%s/%s/%d.nii'
+    # datasource.inputs.template_args = dict(out_files=[['subject_id', 'struct']])
+    # datasource.inputs.template_args = dict(out_files=[['subject_id', 'dir', [1,2]]])
     datasource.inputs.subject_id = subject_list
+    # datasource.inputs.subject_id = data_dir
     datasource.inputs.sort_filelist = True
 
     recon_all = pe.MapNode(interface=ReconAll(),name='recon_all', iterfield=['subject_id', 'T1_files'])
     recon_all.inputs.subject_id = subject_list
+    # recon_all.inputs.subject_id = [data_dir]
     recon_all.inputs.subjects_dir = output_dir
     recon_all.inputs.directive = 'all'
     recon_all.inputs.args = recon_all_args
