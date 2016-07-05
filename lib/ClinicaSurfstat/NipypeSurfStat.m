@@ -1,4 +1,4 @@
-function NipypeSurfStat( ContrastLinearModel, Format, CSVFilename,PATH_TO_RECON_ALL_OUTPUTS,a_required_path,varargin)
+function NipypeSurfStat( ContrastLinearModel, Format, CSVFilename,PATH_TO_RECON_ALL_OUTPUTS,a_required_path, result_dir, varargin)
 % Saves all the output images for group analysis of T1 images smoothed data
 %
 % Usage: [some outputs] = groupAnalysisReconall( ContrastLinearModel,Format, CSVFilename,PATH_TO_RECON_ALL_OUTPUTS,a_required_path,varargin);
@@ -8,7 +8,9 @@ function NipypeSurfStat( ContrastLinearModel, Format, CSVFilename,PATH_TO_RECON_
 % - CSVFilename: string, the path to your csv file
 % - PATH_TO_RECON_ALL_OUTPUTS:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
 % - a_required_path:  this is the path to find the this matlab function.
-  
+% - result_dir: the directory to contain the result images.
+
+
 % the following are optional, we use varargin to define the optional inputs!
 % - fasaverage_size_fwhm: fwhm for the surface smoothing, default is 20, integer
 % - thresholdUncorrectedPValue: threshold to display the uncorrected Pvalue, float
@@ -30,10 +32,10 @@ function NipypeSurfStat( ContrastLinearModel, Format, CSVFilename,PATH_TO_RECON_
 %  Revised 
 
     %% define the default value for inputs    
-    if nargin < 5
+    if nargin < 6
         error('the function at least has 5 required inputs!'); 
     end
-    if nargin == 6
+    if nargin == 7
         error('Number of inputs is wrong!')
     end
     fasaverage_size_fwhm = 20;
@@ -203,6 +205,8 @@ function NipypeSurfStat( ContrastLinearModel, Format, CSVFilename,PATH_TO_RECON_
     eval(ContrastLinearModel)
     
     %% Create Images folder for output
+    cd ../..
+    cd examples/ClinicaSurfstat
     if exist('Figures', 'dir') ~= 7
         mkdir Figures
     end 
@@ -217,24 +221,28 @@ function NipypeSurfStat( ContrastLinearModel, Format, CSVFilename,PATH_TO_RECON_
     clearvars CSVdataSorted CSVdata ThicknessSubjects
      
     % Contrast Positive: 
-    %Computation of the T-statistic̣:  T statistics for a contrast in a univariate or multivariate model.
     slm_EffectsOnGroup = SurfStatT( slm_EffectsOnGroup, contrastEffectForGroupP );
     SurfStatView( slm_EffectsOnGroup.t .* mask, averageSurface, [ 'ContrastPo-value of the T-statistic for ' Label1 '-' Label2]);    
+    cd(result_dir); 
     save2jpeg(strcat('Figures/', fileName, '/ContrastPositive-TValue.jpg')); 
+    cd(PATH_TO_ALL_USEFUL_PACKAGE);
 
     % Computation of the uncorrected p-value:
     t = tpdf(abs(slm_EffectsOnGroup.t), slm_EffectsOnGroup.df);
     uncorrected_pValues = double(t<=0.05).*t+double(t>0.05);
-
     clearvars struct; struct.P = uncorrected_pValues; struct.mask = mask; struct.thresh = thresholdUncorrectedPValue;
     SurfStatView( struct, averageSurface, [ '(ContrastPo-Uncorrected P-values)' Label1 '-' Label2 ]);
+    cd(result_dir); 
     save2jpeg(strcat('Figures/', fileName, '/ContrastPositive-UncorrectedPValue.jpg'));
+    cd(PATH_TO_ALL_USEFUL_PACKAGE);
   
     % Computation of the corrected p-values: P-value threshold or statistic threshold for defining clusters, 0.001 by default
     [ pval, peak, clus ] = SurfStatP( slm_EffectsOnGroup , mask, clusterThreshold);
     pval.thresh = thresholdCorrectedPValue;
     SurfStatView( pval, averageSurface, ['(ContrastPo-Corrected P-values) ' Label1 '-' Label2 ' (clusterThreshold = ' num2str(clusterThreshold) ')']);
+    cd(result_dir); 
     save2jpeg(strcat('Figures/', fileName, '/ContrastPositive-CorrectedPValue.jpg' )); 
+    cd(PATH_TO_ALL_USEFUL_PACKAGE);
     
     disp('###')
     disp('After correction(Clusterwise Correction for Multiple Comparisons): ')
@@ -249,29 +257,35 @@ function NipypeSurfStat( ContrastLinearModel, Format, CSVFilename,PATH_TO_RECON_
     % Computation of the false discovery rate :
     qval = SurfStatQ( slm_EffectsOnGroup , mask );
     SurfStatView( qval, averageSurface, ['ContrastPo-False discovery rate ' Label1 '-' Label2 ]);
-    save2jpeg(strcat('Figures/', fileName, '/ContrastPositive-FalseDiscoveryRate.jpg')) ; 
+    cd(result_dir); 
+    save2jpeg(strcat('Figures/', fileName, '/ContrastPositive-FalseDiscoveryRate.jpg')) ;
+    cd(PATH_TO_ALL_USEFUL_PACKAGE);
 
 
     %% Contrast Negative: 
     % Computation of the T-statistic̣:  T statistics for a contrast in a univariate or multivariate model.
-    slm_EffectsOnGroup = SurfStatT( slm_EffectsOnGroup, contrastEffectForGroupN );
-    
+    slm_EffectsOnGroup = SurfStatT( slm_EffectsOnGroup, contrastEffectForGroupN );    
     SurfStatView( slm_EffectsOnGroup.t .* mask, averageSurface, [ 'ContrastNe-value of the T-statistic for ' Label1 '-' Label2 ]);
+    cd(result_dir); 
     save2jpeg( strcat('Figures/', fileName, '/ContrastNegative-TValue.jpg')); 
+    cd(PATH_TO_ALL_USEFUL_PACKAGE);
 
     % Computation of the uncorrected p-value:
     t = tpdf(abs(slm_EffectsOnGroup.t), slm_EffectsOnGroup.df);
     uncorrected_pValues = double(t<=0.05).*t+double(t>0.05);
-    % here, is the formula that transfer the t_value to p_value
     clearvars struct; struct.P = uncorrected_pValues; struct.mask = mask; struct.thresh = thresholdUncorrectedPValue;
     SurfStatView( struct, averageSurface, [ '(ContrastNe-Uncorrected P-values )' Label1 '-' Label2]);
+    cd(result_dir); 
     save2jpeg(strcat('Figures/', fileName, '/ContrastNegative-UncorrectedPValue.jpg')); 
+    cd(PATH_TO_ALL_USEFUL_PACKAGE);
 
     % Computation of the corrected p-values: P-value threshold or statistic threshold for defining clusters, 0.001 by default
     [ pval, peak, clus ] = SurfStatP( slm_EffectsOnGroup , mask, clusterThreshold);
     pval.thresh = thresholdCorrectedPValue;
     SurfStatView( pval, averageSurface, ['(ContrastNe-Corrected P-values )' Label1 '-' Label2 ' (clusterThreshold = ' num2str(clusterThreshold) ')']);
+    cd(result_dir); 
     save2jpeg(strcat('Figures/', fileName, '/ContrastNegative-CorrectedPValue.jpg')); 
+    cd(PATH_TO_ALL_USEFUL_PACKAGE);
     
     disp('###')
     disp('After correction(Clusterwise Correction for Multiple Comparisons): ')
@@ -286,5 +300,7 @@ function NipypeSurfStat( ContrastLinearModel, Format, CSVFilename,PATH_TO_RECON_
     % Computation of the false discovery rate :
     qval = SurfStatQ( slm_EffectsOnGroup , mask );
     SurfStatView( qval, averageSurface, ['ContrastNe-False discovery rate ' Label1 '-' Label2 ]);
+    cd(result_dir);
     save2jpeg(strcat('Figures/', fileName, '/ContrastNegative-FalseDiscoveryRate.jpg' )); 
+    cd(PATH_TO_ALL_USEFUL_PACKAGE);
 
