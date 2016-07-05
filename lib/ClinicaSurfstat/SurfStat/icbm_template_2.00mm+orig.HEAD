@@ -1,0 +1,87 @@
+
+type = string-attribute
+name = LABEL_1
+count = 26
+'icbm_template_2.00mm+orig~
+
+type = string-attribute
+name = DATASET_NAME
+count = 28
+'./icbm_template_2.00mm+orig~
+
+type = float-attribute
+name = ORIGIN
+count = 3
+	-90	-126	-72	
+
+type = float-attribute
+name = DELTA
+count = 3
+	2	2	2	
+
+type = integer-attribute
+name = SCENE_DATA
+count = 8
+	0	0	0	-999	-999
+	-999	-999	-999	
+
+type = integer-attribute
+name = ORIENT_SPECIFIC
+count = 3
+	0	3	4	
+
+type = string-attribute
+name = TYPESTRING
+count = 15
+'3DIM_HEAD_ANAT~
+
+type = integer-attribute
+name = DATASET_DIMENSIONS
+count = 5
+	91	109	91	0	0
+
+type = integer-attribute
+name = DATASET_RANK
+count = 8
+	3	1	0	0	0
+	0	0	0	
+
+type = integer-attribute
+name = BRICK_TYPES
+count = 1
+	3	
+
+type = string-attribute
+name = BYTEORDER_STRING
+count = 10
+'MSB_FIRST~
+
+type = string-attribute
+name = MachineFormat
+count = 8
+'ieee-be~
+
+type = string-attribute
+name = FileFormat
+count = 5
+'BRIK~
+
+type = float-attribute
+name = BRICK_FLOAT_FACS
+count = 1
+	0	
+
+type = string-attribute
+name = HISTORY_NOTE
+count = 148
+'\n[Not UNIX@Keith_Worsley: 15-Apr-2008 19:19:26]\n\tC:\keith\surfstat\surfstat\n\tSurfStatWriteVol(ln46)->fmris_write_afni(ln154)->WriteBrik(ln461)~
+
+type = string-attribute
+name = IDCODE_DATE
+count = 21
+'15-Apr-2008 19:19:26~
+
+type = string-attribute
+name = GEN_SOURCE
+count = 83
+'WriteBrik matlab library functions V2.0 (please report bugs to saadz@mail.nih.gov)~
