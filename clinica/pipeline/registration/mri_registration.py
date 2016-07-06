@@ -20,3 +20,18 @@ def antsRegistrationSyNQuick(fixe_image, moving_image):
         subprocess.call([cmd], shell=True)
 
         return image_warped, affine_matrix, warp, inverse_warped, inverse_warp
+
+def antscombintransform(in_file, transforms_list, reference):
+
+        import os
+        import os.path as op
+
+        out_warp = op.abspath('out_warp.nii.gz')
+
+        transforms = ""
+        for trans in transforms_list:
+            transforms += " " + trans
+        cmd = 'antsApplyTransforms -o [out_warp.nii.gz,1] -i ' + in_file + ' -r ' + reference + ' -t' + transforms
+        os.system(cmd)
+
+        return out_warp
