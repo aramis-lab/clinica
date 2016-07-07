@@ -221,11 +221,11 @@ def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2):
     os.system(cmd)
 
     out_rd = op.abspath('radial_diffusivity_from_dti.nii')
-    cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -rd' + out_rd
+    cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -rd ' + out_rd
     os.system(cmd)
 
     out_ev = op.abspath('ev_from_dti.nii')
-    cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -vector' + out_ev
+    cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -vector ' + out_ev
     os.system(cmd)
 
     return out_fa, out_md, out_rd, out_ev
