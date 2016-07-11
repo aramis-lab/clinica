@@ -97,6 +97,11 @@ def whole_brain_tractography_pipeline(
 #    tensor_to_metric.inputs.metric = 'fa'
 #    tensor_to_metric.inputs.nthreads = nthreads
 
+    tensor_to_metrics = pe.Node(interface=niu.Function(
+        input_names=['in_dti', 'in_b0_mask', 'nthreads'],
+        output_names=['out_fa', 'out_md', 'out_rd', 'out_ev'],
+        function=tensor_to_metrics), name='tensor_to_metrics')
+
     erode_mask = pe.Node(interface=niu.Function(
         input_names=['in_mask', 'npass', 'nthreads'],
         output_names=['out_eroded_mask'], function=erode_mask), name='erode_mask')
@@ -128,7 +133,7 @@ def whole_brain_tractography_pipeline(
 #     streamlines_tractography.inputs.nthreads = nthreads
 
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['out_dwi_mif', 'out_dti', 'out_metric', 'out_response_function','out_sh_coefficients_image', 'out_tracks']),
+        fields=['out_dwi_mif', 'out_dti', 'out_metric', 'out_metrics', 'out_fa', 'out_md', 'out_rd', 'out_ev', 'out_response_function','out_sh_coefficients_image', 'out_tracks']),
         name='outputnode')
 
     datasink = pe.Node(nio.DataSink(), name='datasink')
@@ -146,6 +151,9 @@ def whole_brain_tractography_pipeline(
         # Computation of FA from the DTI:
         (inputnode,     tensor_to_metric, [('in_b0_mask', 'in_b0_mask')]),
         (dwi_to_tensor, tensor_to_metric, [('out_dti', 'in_dti')]),
+        # Computation of the different metrics from the DTI:
+        (inputnode,     tensor_to_metrics, [('in_b0_mask', 'in_b0_mask')]),
+        (dwi_to_tensor, tensor_to_metrics, [('out_dti', 'in_dti')]),
         # Erosion of the b0 mask for the estimation of the response function:
         (inputnode, erode_mask, [('in_b0_mask','in_mask')]),
         # Estimation of the response function:
@@ -162,6 +170,10 @@ def whole_brain_tractography_pipeline(
         (convert_nifti_to_mrtrix_format, outputnode, [('out_dwi_mif', 'out_dwi_mif')]),
         (dwi_to_tensor,                  outputnode, [('out_dti', 'out_dti')]),
         (tensor_to_metric,               outputnode, [('out_metric', 'out_metric')]),
+        (tensor_to_metrics,              outputnode, [('out_fa', 'out_fa')]),
+        (tensor_to_metrics,              outputnode, [('out_md', 'out_md')]),
+        (tensor_to_metrics,              outputnode, [('out_rd', 'out_rd')]),
+        (tensor_to_metrics,              outputnode, [('out_ev', 'out_ev')]),
         (erode_mask,                     outputnode, [('out_eroded_mask', 'out_eroded_mask')]),
         (estimate_response,              outputnode, [('out_response_function', 'out_response_function')]),
         (estimate_fod,                   outputnode, [('out_sh_coefficients_image', 'out_sh_coefficients_image')]),
@@ -170,6 +182,10 @@ def whole_brain_tractography_pipeline(
         (convert_nifti_to_mrtrix_format, datasink, [('out_dwi_mif', 'out_dwi_mif')]),
         (dwi_to_tensor,                  datasink, [('out_dti', 'out_dti')]),
         (tensor_to_metric,               datasink, [('out_metric', 'out_metric')]),
+        (tensor_to_metrics,              datasink, [('out_fa', 'out_metrics.fa')]),
+        (tensor_to_metrics,              datasink, [('out_md', 'out_metrics.md')]),
+        (tensor_to_metrics,              datasink, [('out_rd', 'out_metrics.rd')]),
+        (tensor_to_metrics,              datasink, [('out_ev', 'out_metrics.ev')]),
         (erode_mask,                     datasink, [('out_eroded_mask', 'out_eroded_mask')]),
         (estimate_response,              datasink, [('out_response_function', 'out_response_function')]),
         (estimate_fod,                   datasink, [('out_sh_coefficients_image', 'out_sh_coefficients_image')]),

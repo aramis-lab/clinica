@@ -185,6 +185,50 @@ def tensor_to_metric(in_dti, in_b0_mask, metric='fa', nthreads=2):
 
     return out_metric
 
+def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2):
+    """
+    Generate maps of tensor-derived parameters.
+
+    Args:
+        in_dti (str): Tensor.
+        in_b0_mask (str): Binary mask of the b0 image. Only perform computation
+            within this specified binary brain mask image.
+        metric (str): Tensor-derived parameter. Currenly, choices are:
+            - adc/md: mean apparent diffusion coefficient (also called
+            mean diffusivity)
+            - fa(default): fractional anisotropy
+        nthreads (Optional[int]): Number of threads used in this function
+            (default=2, 0 disables multi-threading).
+
+    Returns:
+        out_TODO (str): The tensor-derived parameter TODO.
+        out_TODO (str): The tensor-derived parameter TODO.
+        out_TODO (str): The tensor-derived parameter TODO.
+        out_TODO (str): The tensor-derived parameter TODO.
+    """
+    import os.path as op
+    import os
+
+    assert(op.isfile(in_dti))
+    assert(op.isfile(in_b0_mask))
+
+    out_fa = op.abspath('fractional_anisotropy_from_dti.nii')
+    cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -fa ' + out_fa
+    os.system(cmd)
+
+    out_md = op.abspath('mean_diffusivity_from_dti.nii')
+    cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -adc ' + out_md
+    os.system(cmd)
+
+    out_rd = op.abspath('radial_diffusivity_from_dti.nii')
+    cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -rd ' + out_rd
+    os.system(cmd)
+
+    out_ev = op.abspath('ev_from_dti.nii')
+    cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -vector ' + out_ev
+    os.system(cmd)
+
+    return out_fa, out_md, out_rd, out_ev
 
 
 def estimate_response(in_dwi_mif, in_b0_mask, lmax=None, algorithm='tax', tmpdir='/tmp/', nthreads=2):
@@ -282,7 +326,7 @@ def estimate_fod(in_dwi_mif, in_b0_mask, in_response_function_coefficients, lmax
 
     out_sh_coefficients_image = op.abspath('sh_coefficients_image.mif')
 
-    cmd = 'dwi2fod -mask ' + in_b0_mask + ' ' +  in_dwi_mif + ' ' + in_response_function_coefficients + ' ' + out_sh_coefficients_image
+    cmd = 'dwi2fod csd -mask ' + in_b0_mask + ' ' +  in_dwi_mif + ' ' + in_response_function_coefficients + ' ' + out_sh_coefficients_image
     if lmax is not None:
         cmd = cmd + ' -lmax ' + str(lmax)
     os.system(cmd)
