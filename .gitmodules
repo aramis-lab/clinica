@@ -1,0 +1,3 @@
+[submodule "examples/external-data"]
+	path = examples/external-data
+	url = git@gitlab.icm-institute.org:admin_aramis/clinica-data.git
