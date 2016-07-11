@@ -23,17 +23,17 @@ Clinica should run on any Unix-like system. For installation instructions, pleas
 
 ## Tasks performed by Clinica
 
-The list of every example can be found [here](wikis/ListOfExamples).
+The list of every example can be found [here](https://gitlab.icm-institute.org/aramis/clinica/wikis/ListOfExamples).
 
 ### Anatomical MRI
-* [Perform recon-all pipeline with T1 images in FreeSurfer](aramis/clinica/wikis/T1_FreesurferReconAll)
-* [Perform voxel-based morphometry with SPM](aramis/clinica/wikis/T1_VoxelBasedMorphometry)
+* [Perform recon-all pipeline with T1 images in FreeSurfer](https://gitlab.icm-institute.org/aramis/clinica/wikis/T1_FreesurferReconAll)
+* [Perform voxel-based morphometry with SPM](https://gitlab.icm-institute.org/aramis/clinica/wikis/T1_VoxelBasedMorphometry)
 
 ### Diffusion MRI
-* [Preprocesing of raw DWI dataset](aramis/clinica/wikis/DWI_Preprocessing)
-* [Processing of corrected DWI dataset (DTI, tractography)](aramis/clinica/wikis/DWI_Processing)
-* Postprocessing of tractogrammes ([computation of connectome](aramis/clinica/wikis/connectome_construction)) and DTI derived scalar map ([atlas-based tracks scalar analysis](DWI_WM_scalar_analysis))
-* Statistical analysis of connectomes ([connection wise analysis](aramis/clinica/wikis/connection_wise_analysis), [network-based statistics](Network-based_statistics))
+* [Preprocesing of raw DWI dataset](https://gitlab.icm-institute.org/aramis/clinica/wikis/DWI_Preprocessing)
+* [Processing of corrected DWI dataset (DTI, tractography)](https://gitlab.icm-institute.org/aramis/clinica/wikis/DWI_Processing)
+* Postprocessing of tractogrammes ([computation of connectome](https://gitlab.icm-institute.org/aramis/clinica/wikis/connectome_construction)) and DTI derived scalar map ([atlas-based tracks scalar analysis](DWI_WM_scalar_analysis))
+* Statistical analysis of connectomes ([connection wise analysis](https://gitlab.icm-institute.org/aramis/clinica/wikis/connection_wise_analysis), [network-based statistics](Network-based_statistics))
 
 ## Documentation
 
