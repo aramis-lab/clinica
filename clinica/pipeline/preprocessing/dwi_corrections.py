@@ -52,7 +52,7 @@ def prepare_data(datasink_directory, name='prepare_data', low_bval=5.0):
 
     b0_flirt = predifutils.b0_flirt_pipeline(name='b0_co_registration')
 
-    b0_avg = pe.Node(niu.Function(input_names=['in_file'], output_names=['out_file'], function=predifutils.b0_reference), name='b0_reference')
+    b0_avg = pe.Node(niu.Function(input_names=['in_file'], output_names=['out_file'], function=predifutils.b0_average), name='b0_average')
 
     mask_b0 = pe.Node(fsl.BET(frac=0.3, mask=True, robust=True), name='mask_b0')
 
