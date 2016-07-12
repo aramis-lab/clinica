@@ -156,6 +156,7 @@ def diffusion_preprocessing_fieldmap_based(datasink_directory, name='diffusion_p
     from clinica.pipeline.preprocessing.dwi_corrections import sdc_fmb
     from clinica.pipeline.preprocessing.dwi_corrections import ecc_pipeline
     from clinica.pipeline.preprocessing.dwi_corrections import remove_bias
+    from clinica.pipeline.preprocessing.dwi_corrections import prepare_data
     from nipype.workflows.dmri.fsl.utils import apply_all_corrections
     import nipype.interfaces.fsl as fsl
     import nipype.interfaces.io as nio
@@ -174,7 +175,7 @@ def diffusion_preprocessing_fieldmap_based(datasink_directory, name='diffusion_p
     hmc.inputs.inputnode.ref_num = 0
     sdc = sdc_fmb(name='fmb_correction', datasink_directory=datasink_directory)
     ecc = ecc_pipeline(name='eddy_correct', datasink_directory=datasink_directory)
-    pre = predifcorrect.prepare_data(datasink_directory=datasink_directory)
+    pre = prepare_data(datasink_directory=datasink_directory)
     unwarp = apply_all_corrections()
 
     datasink = pe.Node(nio.DataSink(), name='datasink_preprocessing')
