@@ -74,22 +74,22 @@ def prepare_data(datasink_directory, name='prepare_data', low_bval=5.0):
         wf.connect([
             (inputnode,             b0_dwi_split,       [('in_bvals', 'in_bvals'),
                                                          ('in_bvecs', 'in_bvecs'),
-                                                         ('in_file', 'in_file')])])
-            (b0_dwi_split,          b0_flirt,           [('out_b0', 'inputnode.in_file')])
-            (b0_flirt,              b0_avg,             [('outputnode.out_file', 'in_file')])
-            (b0_avg,                insert_b0_into_dwi, [('out_file', 'in_b0')])
-            (b0_avg,                mask_b0,            [('out_file', 'in_file')])
+                                                         ('in_file', 'in_file')]),
+            (b0_dwi_split,          b0_flirt,           [('out_b0', 'inputnode.in_file')]),
+            (b0_flirt,              b0_avg,             [('outputnode.out_file', 'in_file')]),
+            (b0_avg,                insert_b0_into_dwi, [('out_file', 'in_b0')]),
+            (b0_avg,                mask_b0,            [('out_file', 'in_file')]),
             (b0_dwi_split,          insert_b0_into_dwi, [('out_dwi','in_dwi'),
                                                          ('out_bvals','in_bvals'),
-                                                         ('out_bvecs','in_bvecs')])
+                                                         ('out_bvecs','in_bvecs')]),
             (insert_b0_into_dwi,    outputnode,         [('out_dwi','dwi_b0_merge'),
                                                          ('out_bvals','out_bvals'),
-                                                         ('out_bvecs','out_bvecs')])
-            (mask_b0,               outputnode,         [('mask_file','mask_b0')])
-            (b0_avg,                outputnode,         [('out_file','b0_reference')])
+                                                         ('out_bvecs','out_bvecs')]),
+            (mask_b0,               outputnode,         [('mask_file','mask_b0')]),
+            (b0_avg,                outputnode,         [('out_file','b0_reference')]),
             (insert_b0_into_dwi,    datasink,           [('out_dwi','dwi_b0_merge'),
                                                          ('out_bvals','out_bvals'),
-                                                         ('out_bvecs','out_bvecs')])
+                                                         ('out_bvecs','out_bvecs')]),
             (mask_b0,               datasink,           [('mask_file','mask_b0')])
             (b0_avg,                datasink,           [('out_file','b0_reference')])
             ])
@@ -97,19 +97,19 @@ def prepare_data(datasink_directory, name='prepare_data', low_bval=5.0):
         wf.connect([
             (inputnode,             b0_dwi_split,       [('in_bvals', 'in_bvals'),
                                                          ('in_bvecs', 'in_bvecs'),
-                                                         ('in_file', 'in_file')])])
+                                                         ('in_file', 'in_file')]),
             (b0_dwi_split,          insert_b0_into_dwi, [('out_dwi','in_dwi'),
                                                          ('out_bvals','in_bvals'),
-                                                         ('out_bvecs','in_bvecs')])
+                                                         ('out_bvecs','in_bvecs')]),
             (insert_b0_into_dwi,    outputnode,         [('out_dwi','dwi_b0_merge'),
                                                          ('out_bvals','out_bvals'),
-                                                         ('out_bvecs','out_bvecs')])
-            (mask_b0,               outputnode,         [('mask_file','mask_b0')])
-            (insert_b0_into_dwi,    outputnode,         [('out_dwi','b0_reference')])
+                                                         ('out_bvecs','out_bvecs')]),
+            (mask_b0,               outputnode,         [('mask_file','mask_b0')]),
+            (insert_b0_into_dwi,    outputnode,         [('out_dwi','b0_reference')]),
             (insert_b0_into_dwi,    datasink,           [('out_dwi','dwi_b0_merge'),
                                                          ('out_bvals','out_bvals'),
-                                                         ('out_bvecs','out_bvecs')])
-            (mask_b0,               datasink,           [('mask_file','mask_b0')])
+                                                         ('out_bvecs','out_bvecs')]),
+            (mask_b0,               datasink,           [('mask_file','mask_b0')]),
             (insert_b0_into_dwi,    datasink,           [('out_dwi','b0_reference')])
             ])
     else:
