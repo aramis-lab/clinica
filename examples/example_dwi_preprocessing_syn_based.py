@@ -6,6 +6,7 @@ Created on Tue Mar 22 15:56:18 2016
 """
 from __future__ import absolute_import
 from clinica.pipeline.preprocessing.dwi_launch_preproc import create_dwi_preproc_syb
+from clinica.pipeline.preprocessing.dwi_utils import count_b0s
 import os
 from os.path import realpath,split,join
 import tempfile
@@ -33,7 +34,7 @@ print("Working Directory -> %s" % working_direct)
 print("Datasink Directory -> %s" % datasink_direct)
 
 print("Running...")
-dwi_preproc_syb = create_dwi_preproc_syb(DWI, T1, b_values, b_vectors, working_direct, datasink_direct)
+dwi_preproc_syb = create_dwi_preproc_syb(DWI, T1, b_values, b_vectors, working_direct, count_b0s(b_values), datasink_direct)
 dwi_preproc_syb.run()
 
 print("Working Directory -> %s" % working_direct)

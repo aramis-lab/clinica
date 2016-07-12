@@ -44,7 +44,7 @@ import clinica.pipeline.preprocessing.dwi_utils as predifutils
 #         ])
 #     return wf
 
-def prepare_data(datasink_directory, num_b0s, name='prepare_b0', low_bval=5.0):
+def prepare_data(datasink_directory, num_b0s, name='prepare_data', low_bval=5.0):
     """
     Create a pipeline that prepare the data for further corrections. This pipeline coregister the B0 images and then average it in order
     to obtain only one average B0 images. The bvectors and bvales are update according to the modifications.
@@ -122,9 +122,11 @@ def prepare_data(datasink_directory, num_b0s, name='prepare_b0', low_bval=5.0):
             (inputnode,             b0_dwi_split,       [('in_bvals', 'in_bvals'),
                                                          ('in_bvecs', 'in_bvecs'),
                                                          ('in_file', 'in_file')]),
-            (b0_dwi_split,          insert_b0_into_dwi, [('out_dwi','in_dwi'),
+            (b0_dwi_split,          insert_b0_into_dwi, [('out_b0', 'in_b0'),
+                                                         ('out_dwi','in_dwi'),
                                                          ('out_bvals','in_bvals'),
                                                          ('out_bvecs','in_bvecs')]),
+            (b0_dwi_split,          mask_b0,            [('out_b0', 'in_file')]),
             (insert_b0_into_dwi,    outputnode,         [('out_dwi','dwi_b0_merge'),
                                                          ('out_bvals','out_bvals'),
                                                          ('out_bvecs','out_bvecs')]),

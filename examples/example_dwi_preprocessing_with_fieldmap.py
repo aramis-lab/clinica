@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 
 from clinica.pipeline.preprocessing.dwi_launch_preproc import diffusion_preprocessing_fieldmap_based
+from clinica.pipeline.preprocessing.dwi_utils import count_b0s
 import nipype.interfaces.fsl as fsl
 
 import os
@@ -20,7 +21,8 @@ data_path = join(split(realpath(__file__))[0], 'external-data/raw_data/subject_e
 
 output_directory = "/tmp/output_dwi_preprocessing_fieldmap_based/new_suject"
 
-preprocessing = diffusion_preprocessing_fieldmap_based(datasink_directory=output_directory)
+preprocessing = diffusion_preprocessing_fieldmap_based(datasink_directory=output_directory,
+    num_b0s=count_b0s(join(data_path, 'DWI/subject_example_dwi.bval')))
 
 preprocessing.inputs.inputnode.in_file   = join(data_path, 'DWI/subject_example_dwi.nii.gz')
 preprocessing.inputs.inputnode.in_bvals  = join(data_path, 'DWI/subject_example_dwi.bval')
