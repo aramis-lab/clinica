@@ -10,7 +10,7 @@ import os
 from os.path import realpath,split,join
 import tempfile
 
-data_path = join(split(realpath(__file__))[0], 'data/DWI_postproc')
+data_path = join(split(realpath(__file__))[0], 'external-data/DWI_postproc')
 
 in_parcellation = join('path to parc')
 configuration_file = join(data_path, 'config_file.nii')

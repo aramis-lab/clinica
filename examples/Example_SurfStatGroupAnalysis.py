@@ -20,7 +20,7 @@ import os
 path = join(split(realpath(__file__))[0])
 parent_path = os.path.dirname(path)
 a_required_path = os.path.join(parent_path, 'lib/ClinicaSurfstat')
-PATH_TO_RECON_ALL_OUTPUTS = os.path.join(os.path.split(os.path.realpath(__file__))[0], 'data/Recon-all_Output')
+PATH_TO_RECON_ALL_OUTPUTS = os.path.join(os.path.split(os.path.realpath(__file__))[0], 'external-data/Recon-all_Output')
 CSVFilename  = os.path.join(os.path.split(os.path.realpath(__file__))[0], 'ClinicaSurfstat/Database/template.csv')
 Format = '%s %s %s %f'
 ContrastLinearModel = '1 + Label + Gender + Age'

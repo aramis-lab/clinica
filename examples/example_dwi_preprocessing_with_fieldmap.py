@@ -16,7 +16,7 @@ except Exception as e:
     print(str(e))
     exit(1)
 
-data_path = join(split(realpath(__file__))[0], 'data/raw_data/subject_example')
+data_path = join(split(realpath(__file__))[0], 'external-data/raw_data/subject_example')
 
 output_directory = "/tmp/output_dwi_preprocessing_fieldmap_based/new_suject"
 

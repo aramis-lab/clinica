@@ -10,7 +10,7 @@ import os
 from os.path import realpath,split,join
 import tempfile
 
-data_path = join(split(realpath(__file__))[0], 'data/DWI_postproc')
+data_path = join(split(realpath(__file__))[0], 'external-data/DWI_postproc')
 
 in_scalar_image = join(data_path, 'FA.nii')
 atlas_labels = join(data_path, 'WM_atlas_labels.nii')

@@ -19,7 +19,7 @@ except Exception as e:
     print(str(e))
     exit(1)
 
-data_path = join(split(realpath(__file__))[0], 'data/DWI_launch_preproc')
+data_path = join(split(realpath(__file__))[0], 'external-data/DWI_launch_preproc')
 
 DWI = join(data_path, 'DWI.nii')
 T1 = join(data_path, 'T1.nii')

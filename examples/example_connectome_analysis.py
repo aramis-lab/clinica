@@ -11,7 +11,7 @@ import os
 from os.path import realpath,split,join
 import tempfile
 
-data_path = join(split(realpath(__file__))[0], 'data/DWI_launch_preproc')
+data_path = join(split(realpath(__file__))[0], 'external-data/DWI_launch_preproc')
 
 List_of connectome_1 = 					# List of paths to the connectome of your first group of subject
 List_of connectome_2 = 					# List of paths to the connectome of your second group of subject

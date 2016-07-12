@@ -11,7 +11,7 @@ from clinica.pipeline.preprocessing.t1_freesurfer_workflow import recon_all_pipe
 from os.path import realpath,split,join
 import tempfile
 
-data_dir = join(split(realpath(__file__))[0], 'data/Recon-all').encode("utf-8") 
+data_dir = join(split(realpath(__file__))[0], 'external-data/Recon-all').encode("utf-8")
 output_dir = tempfile.mkdtemp()
 datasink_para = ['orig', 'white']
 
