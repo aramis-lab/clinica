@@ -2,6 +2,7 @@
 
 import os
 import os.path as op
+import numpy as np
 import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
 import nipype.interfaces.fsl as fsl
