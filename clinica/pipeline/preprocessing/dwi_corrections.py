@@ -22,10 +22,37 @@ from nipype.workflows.dmri.fsl.utils import add_empty_vol
 from nipype.workflows.dmri.fsl.utils import vsm2warp
 import clinica.pipeline.preprocessing.dwi_utils as predifutils
 
-def prepare_data(datasink_directory, name='prepare_data', low_bval=5.0):
+# def prepare_data(datasink_directory, name='prepare_data', low_bval=5.0):
+#
+#     inputnode = pe.Node(interface=niu.IdentityInterface(fields=["in_file", "in_bvecs", "in_bvals"]), name="inputnode")
+#     pre = prepare_b0(datasink_directory=datasink_directory)
+#     cb0s = pe.Node(niu.Function(input_names=['in_bvals'], output_names=['num_b0s'], function=predifutils.count_b0s), name='count_b0s')
+#     outputnode = pe.Node(niu.IdentityInterface(fields=['mask_b0', 'b0_reference','out_bvecs', 'dwi_b0_merge', 'out_bvals'  ]), name='outputnode')
+#
+#     wf = pe.Workflow(name=name)
+#     wf.connect([
+#         (inputnode,        cb0s,        [('in_bvals', 'in_bvals')]),
+#         (inputnode,        pre,         [('in_bvals', 'inputnode.in_bvals'),
+#                                          ('in_bvecs', 'inputnode.in_bvecs'),
+#                                          ('in_file', 'inputnode.in_file')]),
+#         (cb0s,             pre,         [('num_b0s', 'num_b0s')]),
+#         (pre,              outputnode,  [('outputnode.mask_b0', 'mask_b0'),
+#                                          ('outputnode.b0_reference', 'b0_reference'),
+#                                          ('outputnode.out_bvecs', 'out_bvecs'),
+#                                          ('outputnode.dwi_b0_merge', 'dwi_b0_merge'),
+#                                          ('outputnode.out_bvals', 'bvals')])
+#         ])
+#     return wf
+
+def prepare_data(datasink_directory, num_b0s, name='prepare_b0', low_bval=5.0):
     """
     Create a pipeline that prepare the data for further corrections. This pipeline coregister the B0 images and then average it in order
     to obtain only one average B0 images. The bvectors and bvales are update according to the modifications.
+
+    Parameters
+    ----------
+    num_b0s : INT
+      Mandatory input. Number of the B0 volumes in the dataset.
 
     Inputnode
     ---------
@@ -48,8 +75,7 @@ def prepare_data(datasink_directory, name='prepare_data', low_bval=5.0):
     """
     inputnode = pe.Node(interface=niu.IdentityInterface(fields=["in_file", "in_bvecs", "in_bvals"]), name="inputnode")
 
-    b0_dwi_split = pe.Node(niu.Function(input_names=['in_file', 'in_bvals', 'in_bvecs'], output_names=['out_b0', 'out_dwi', 'out_bvals', 'out_bvecs'],
-                                        function=predifutils.b0_dwi_split), name='b0_dwi_split')
+    b0_dwi_split = pe.Node(niu.Function(input_names=['in_file', 'in_bvals', 'in_bvecs'], output_names=['out_b0', 'out_dwi', 'out_bvals', 'out_bvecs'], function=predifutils.b0_dwi_split), name='b0_dwi_split')
 
     b0_flirt = predifutils.b0_flirt_pipeline(name='b0_co_registration')
 
@@ -65,9 +91,6 @@ def prepare_data(datasink_directory, name='prepare_data', low_bval=5.0):
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['mask_b0', 'b0_reference','out_bvecs', 'dwi_b0_merge', 'out_bvals'  ]), name='outputnode')
 
-    # Counting the number of b0s
-    bvals = np.loadtxt(in_bvals)
-    num_b0s = len(np.where(bvals <= low_bval)[0])
 
     wf = pe.Workflow(name=name)
 
