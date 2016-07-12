@@ -21,38 +21,38 @@ from nipype.workflows.dmri.fsl.utils import add_empty_vol
 from nipype.workflows.dmri.fsl.utils import vsm2warp
 import clinica.pipeline.preprocessing.dwi_utils as predifutils
 
-def prepare_data(datasink_directory, name='prepare_data'):
+def prepare_data(datasink_directory, name='prepare_data', low_bval=5.0):
     """
     Create a pipeline that prepare the data for further corrections. This pipeline coregister the B0 images and then average it in order
     to obtain only one average B0 images. The bvectors and bvales are update according to the modifications.
 
     Inputnode
     ---------
-    dwi_image : FILE
+    in_file : FILE
       Mandatory input. Input dwi file.
-    bvectors_directions : FILE
+    in_bvecs : FILE
       Mandatory input. Vector file of the diffusion directions of the dwi dataset.
-    bvalues : FILE
+    in_bvals : FILE
       Mandatory input. B values file.
 
     Outputnode
     ----------
 
         outputnode.dwi_b0_merge - average of B0 images merged to the DWIs
-        outputnode.b0_average - average of the B0 images
+        outputnode.b0_reference - average of the B0 images or the only B0 image
         outputnode.out_bvec - updated gradient vectors table
         outputnode.out_bvals - updated gradient values table
         outputnode.mask_b0 - Binary mask obtained from the average of the B0 images
 
     """
-    inputnode = pe.Node(interface=niu.IdentityInterface(fields=["dwi_image", "bvectors_directions", "bvalues"]), name="inputnode")
+    inputnode = pe.Node(interface=niu.IdentityInterface(fields=["in_file", "in_bvecs", "in_bvals"]), name="inputnode")
 
     b0_dwi_split = pe.Node(niu.Function(input_names=['in_file', 'in_bvals', 'in_bvecs'], output_names=['out_b0', 'out_dwi', 'out_bvals', 'out_bvecs'],
                                         function=predifutils.b0_dwi_split), name='b0_dwi_split')
 
     b0_flirt = predifutils.b0_flirt_pipeline(name='b0_co_registration')
 
-    b0_avg = pe.Node(niu.Function(input_names=['in_file'], output_names=['out_file'], function=predifutils.b0_average), name='b0_average')
+    b0_avg = pe.Node(niu.Function(input_names=['in_file'], output_names=['out_file'], function=predifutils.b0_reference), name='b0_reference')
 
     mask_b0 = pe.Node(fsl.BET(frac=0.3, mask=True, robust=True), name='mask_b0')
 
@@ -62,23 +62,58 @@ def prepare_data(datasink_directory, name='prepare_data'):
     datasink = pe.Node(nio.DataSink(), name='datasink_prep')
     datasink.inputs.base_directory = op.join(datasink_directory, 'pre_preprocess/')
 
-    outputnode = pe.Node(niu.IdentityInterface(fields=['mask_b0', 'b0_average','out_bvecs', 'dwi_b0_merge', 'out_bvals'  ]), name='outputnode')
+    outputnode = pe.Node(niu.IdentityInterface(fields=['mask_b0', 'b0_reference','out_bvecs', 'dwi_b0_merge', 'out_bvals'  ]), name='outputnode')
 
+    # Counting the number of b0s
+    bvals = np.loadtxt(in_bvals)
+    num_b0s = len(np.where(bvals <= low_bval)[0])
 
     wf = pe.Workflow(name=name)
 
-    wf.connect([(inputnode, b0_dwi_split, [('bvalues', 'in_bvals'),('bvectors_directions', 'in_bvecs'), ('dwi_image', 'in_file')])])
-    wf.connect([(b0_dwi_split, b0_flirt, [('out_b0', 'inputnode.in_file')])])
-    wf.connect([(b0_flirt, b0_avg, [('outputnode.out_file', 'in_file')])])
-    wf.connect([(b0_avg, insert_b0_into_dwi, [('out_file', 'in_b0')])])
-    wf.connect([(b0_avg, mask_b0,[('out_file', 'in_file')])])
-    wf.connect([(b0_dwi_split, insert_b0_into_dwi, [('out_dwi','in_dwi'), ('out_bvals','in_bvals'), ('out_bvecs','in_bvecs')])])
-    wf.connect([(insert_b0_into_dwi, outputnode, [('out_dwi','dwi_b0_merge'), ('out_bvals','out_bvals'),('out_bvecs','out_bvecs')])])
-    wf.connect([(mask_b0, outputnode, [('mask_file','mask_b0')])])
-    wf.connect([(b0_avg, outputnode, [('out_file','b0_average')])])
-    wf.connect([(insert_b0_into_dwi, datasink, [('out_dwi','dwi_b0_merge'), ('out_bvals','out_bvals'),('out_bvecs','out_bvecs')])])
-    wf.connect([(mask_b0, datasink, [('mask_file','mask_b0')])])
-    wf.connect([(b0_avg, datasink, [('out_file','b0_average')])])
+    if num_b0s > 1:
+        wf.connect([
+            (inputnode,             b0_dwi_split,       [('in_bvals', 'in_bvals'),
+                                                         ('in_bvecs', 'in_bvecs'),
+                                                         ('in_file', 'in_file')])])
+            (b0_dwi_split,          b0_flirt,           [('out_b0', 'inputnode.in_file')])
+            (b0_flirt,              b0_avg,             [('outputnode.out_file', 'in_file')])
+            (b0_avg,                insert_b0_into_dwi, [('out_file', 'in_b0')])
+            (b0_avg,                mask_b0,            [('out_file', 'in_file')])
+            (b0_dwi_split,          insert_b0_into_dwi, [('out_dwi','in_dwi'),
+                                                         ('out_bvals','in_bvals'),
+                                                         ('out_bvecs','in_bvecs')])
+            (insert_b0_into_dwi,    outputnode,         [('out_dwi','dwi_b0_merge'),
+                                                         ('out_bvals','out_bvals'),
+                                                         ('out_bvecs','out_bvecs')])
+            (mask_b0,               outputnode,         [('mask_file','mask_b0')])
+            (b0_avg,                outputnode,         [('out_file','b0_reference')])
+            (insert_b0_into_dwi,    datasink,           [('out_dwi','dwi_b0_merge'),
+                                                         ('out_bvals','out_bvals'),
+                                                         ('out_bvecs','out_bvecs')])
+            (mask_b0,               datasink,           [('mask_file','mask_b0')])
+            (b0_avg,                datasink,           [('out_file','b0_reference')])
+            ])
+    elif num_b0s == 1:
+        wf.connect([
+            (inputnode,             b0_dwi_split,       [('in_bvals', 'in_bvals'),
+                                                         ('in_bvecs', 'in_bvecs'),
+                                                         ('in_file', 'in_file')])])
+            (b0_dwi_split,          insert_b0_into_dwi, [('out_dwi','in_dwi'),
+                                                         ('out_bvals','in_bvals'),
+                                                         ('out_bvecs','in_bvecs')])
+            (insert_b0_into_dwi,    outputnode,         [('out_dwi','dwi_b0_merge'),
+                                                         ('out_bvals','out_bvals'),
+                                                         ('out_bvecs','out_bvecs')])
+            (mask_b0,               outputnode,         [('mask_file','mask_b0')])
+            (insert_b0_into_dwi,    outputnode,         [('out_dwi','b0_reference')])
+            (insert_b0_into_dwi,    datasink,           [('out_dwi','dwi_b0_merge'),
+                                                         ('out_bvals','out_bvals'),
+                                                         ('out_bvecs','out_bvecs')])
+            (mask_b0,               datasink,           [('mask_file','mask_b0')])
+            (insert_b0_into_dwi,    datasink,           [('out_dwi','b0_reference')])
+            ])
+    else:
+        raise()
 
     return wf
 
@@ -708,7 +743,7 @@ def apply_all_corrections_syb(datasink_directory, name='UnwarpArtifacts'):
     return wf
 
 
-# 
+#
 # def dwi_flirt(name='DWICoregistration', excl_nodiff=False, flirt_param={}):
 #     """
 #     Generates a workflow for linear registration of dwi volumes using flirt.
