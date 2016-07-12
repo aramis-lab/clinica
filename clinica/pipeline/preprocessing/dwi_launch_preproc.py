@@ -111,7 +111,7 @@ def create_dwi_preproc_syb(in_dwi, in_T1, in_bvals, in_bvecs, working_directory,
 
 
 @Visualize("freeview", "preprocessing/out_file/vol${subject_id}_maths_thresh_merged.nii.gz", "subject_id")
-def diffusion_preprocessing_fieldmap_based(datasink_directory, name='diffusion_preprocessing_fieldmap_based'):
+def diffusion_preprocessing_fieldmap_based(datasink_directory, num_b0s, name='diffusion_preprocessing_fieldmap_based'):
     """
     First extract the b0 volumes, co-registration and mean of the b0 volumes.
     See :func:`dwi_utils.b0_dwi_split`, :func:`dwi_utils.b0_flirt_pipeline`, :func:`dwi_utils.b0_average`.
@@ -175,7 +175,7 @@ def diffusion_preprocessing_fieldmap_based(datasink_directory, name='diffusion_p
     hmc.inputs.inputnode.ref_num = 0
     sdc = sdc_fmb(name='fmb_correction', datasink_directory=datasink_directory)
     ecc = ecc_pipeline(name='eddy_correct', datasink_directory=datasink_directory)
-    pre = prepare_data(datasink_directory=datasink_directory)
+    pre = prepare_data(datasink_directory=datasink_directory, num_b0s=num_b0s)
     unwarp = apply_all_corrections()
 
     datasink = pe.Node(nio.DataSink(), name='datasink_preprocessing')
@@ -183,10 +183,9 @@ def diffusion_preprocessing_fieldmap_based(datasink_directory, name='diffusion_p
 
     wf = pe.Workflow(name=name,base_dir=datasink_directory)
     wf.connect([
-
-            (inputnode,            pre,                  [('in_file', 'in_file'),
-                                                          ('in_bvals', 'in_bvals'),
-                                                          ('in_bvecs', 'in_bvecs')]),
+            (inputnode,            pre,                  [('in_file', 'inputnode.in_file'),
+                                                          ('in_bvals', 'inputnode.in_bvals'),
+                                                          ('in_bvecs', 'inputnode.in_bvecs')]),
             (pre,                  hmc,                  [('outputnode.dwi_b0_merge', 'inputnode.in_file'),
                                                           ('outputnode.out_bvals', 'inputnode.in_bval'),
                                                           ('outputnode.out_bvecs', 'inputnode.in_bvec')]),
