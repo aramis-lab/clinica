@@ -133,7 +133,7 @@ def whole_brain_tractography_pipeline(
 #     streamlines_tractography.inputs.nthreads = nthreads
 
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['out_dwi_mif', 'out_dti', 'out_metric', 'out_metrics', 'out_fa', 'out_md', 'out_rd', 'out_ev', 'out_response_function','out_sh_coefficients_image', 'out_tracks']),
+        fields=['out_dwi_mif', 'out_dti', , 'out_metrics', 'out_fa', 'out_md', 'out_rd', 'out_ev', 'out_response_function','out_sh_coefficients_image', 'out_tracks']),
         name='outputnode')
 
     datasink = pe.Node(nio.DataSink(), name='datasink')
@@ -169,7 +169,6 @@ def whole_brain_tractography_pipeline(
         # Outputnode:
         (convert_nifti_to_mrtrix_format, outputnode, [('out_dwi_mif', 'out_dwi_mif')]),
         (dwi_to_tensor,                  outputnode, [('out_dti', 'out_dti')]),
-        (tensor_to_metric,               outputnode, [('out_metric', 'out_metric')]),
         (tensor_to_metrics,              outputnode, [('out_fa', 'out_fa')]),
         (tensor_to_metrics,              outputnode, [('out_md', 'out_md')]),
         (tensor_to_metrics,              outputnode, [('out_rd', 'out_rd')]),
@@ -181,7 +180,6 @@ def whole_brain_tractography_pipeline(
         # Saving files with datasink:
         (convert_nifti_to_mrtrix_format, datasink, [('out_dwi_mif', 'out_dwi_mif')]),
         (dwi_to_tensor,                  datasink, [('out_dti', 'out_dti')]),
-        (tensor_to_metric,               datasink, [('out_metric', 'out_metric')]),
         (tensor_to_metrics,              datasink, [('out_fa', 'out_metrics.fa')]),
         (tensor_to_metrics,              datasink, [('out_md', 'out_metrics.md')]),
         (tensor_to_metrics,              datasink, [('out_rd', 'out_metrics.rd')]),
