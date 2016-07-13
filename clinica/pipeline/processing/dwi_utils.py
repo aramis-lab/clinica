@@ -73,11 +73,9 @@ def compute_maximum_harmonic_order(in_bvecs):
         out_lmax = 6
     elif number_of_directions > 45 and number_of_directions <= 66:
         out_lmax = 8
-    elif number_of_directions > 66 and number_of_directions <= 91:
-        out_lmax = 10
     else:
-        warnings.warn("The number of distinct directions is > to 91, lmax is automatically set to 12", UserWarning)
-        out_lmax = 12
+        warnings.warn("The number of distinct directions is > to 66, lmax is automatically set to 8", UserWarning)
+        out_lmax = 8
 
     return out_lmax
 
@@ -193,18 +191,15 @@ def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2):
         in_dti (str): Tensor.
         in_b0_mask (str): Binary mask of the b0 image. Only perform computation
             within this specified binary brain mask image.
-        metric (str): Tensor-derived parameter. Currenly, choices are:
-            - adc/md: mean apparent diffusion coefficient (also called
-            mean diffusivity)
-            - fa(default): fractional anisotropy
         nthreads (Optional[int]): Number of threads used in this function
             (default=2, 0 disables multi-threading).
 
     Returns:
-        out_TODO (str): The tensor-derived parameter TODO.
-        out_TODO (str): The tensor-derived parameter TODO.
-        out_TODO (str): The tensor-derived parameter TODO.
-        out_TODO (str): The tensor-derived parameter TODO.
+        out_fa (str): The tensor-derived parameter fractional anisotropy.
+        out_md (str): The tensor-derived parameter mean diffusivity (also
+            called mean apparent diffusion).
+        out_rd (str): The tensor-derived parameter radial diffusivity.
+        out_ev (str): The first eigenvector modulated by the FA.
     """
     import os.path as op
     import os
