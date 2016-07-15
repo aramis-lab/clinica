@@ -50,7 +50,8 @@ else
     c=pinvX*contrast;
     r=contrast-slm.X*c;
     if sum(r(:).^2)/sum(contrast(:).^2)>eps
-        warning('Contrast is not in the model :-(');
+%         warning('Contrast is not in the model :-(');
+        error('Contrast is not in the model :-(');
     end
 end
 slm.c=c';
