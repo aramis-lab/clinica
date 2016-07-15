@@ -1,17 +1,17 @@
-%save2jpeg Saves a figure as a properly cropped pdf
+%save2jpeg Saves a figure as a properly cropped jpg
 %
 %   save2jpeg(jpgFileName,handle,dpi)
 %
-%   - jpgFileName: Destination to write the pdf to.
-%   - handle:  (optional) Handle of the figure to write to a pdf.  If
+%   - jpgFileName: Destination to write the jpg to.
+%   - handle:  (optional) Handle of the figure to write to a jpg.  If
 %              omitted, the current figure is used.  Note that handles
 %              are typically the figure number.
 %   - dpi: (optional) Integer value of dots per inch (DPI).  Sets
-%          resolution of output pdf.  Note that 150 dpi is the Matlab
+%          resolution of output jpg.  Note that 150 dpi is the Matlab
 %          default and this function's default, but 600 dpi is typical for
 %          production-quality.
 %
-%   Saves figure as a pdf with margins cropped to match the figure size.
+%   Saves figure as a jpg with margins cropped to match the figure size.
 
 %   (c) Gabe Hoffmann, gabe.hoffmann@gmail.com
 %   Written 8/30/2007
@@ -58,7 +58,7 @@ set(handle,'PaperPosition',[0,0,position(3:4)]);
 set(handle,'PaperSize',position(3:4));
 % set(handle, 'Fontsize', 2);
 
-% Save the pdf (this is the same method used by "saveas")
+% Save the jpg (this is the same method used by "saveas")
 print(handle,'-djpeg',jpgFileName,sprintf('-r%d',dpi))
 
 % Restore the previous settings
