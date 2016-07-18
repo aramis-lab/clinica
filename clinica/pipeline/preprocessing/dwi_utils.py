@@ -171,6 +171,27 @@ def b0_flirt_pipeline(name='b0coregistration', nb_b0= 10, excl_nodiff=False):
     return wf
 
 
+def count_b0s(in_bvals, low_bval=5.0):
+    """
+    Count the number of B0 volumes.
+
+    Parameters
+    ----------
+    in_file : FILE
+      Mandatory input. Bvals file.
+
+    Outputs
+    -------
+    num_b0s : Number of the B0 volumes.
+    """
+    import numpy as np
+
+    # Counting the number of b0s
+    bvals = np.loadtxt(in_bvals)
+    num_b0s = len(np.where(bvals <= low_bval)[0])
+
+    return num_b0s
+
 
 def b0_average(in_file, out_file=None):
     """
