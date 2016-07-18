@@ -49,10 +49,10 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
     import nipype.pipeline.engine as pe
     from os.path import realpath, split, join, dirname 
     
-#    cwd_path = split(realpath(__file__))[0]
-#    parent_path = dirname(dirname(cwd_path))
-#    path_to_matscript = join(parent_path, 'lib/clinicasurfstat')     
-    path_to_matscript = '/aramis/home/wen/HAO_lab/Clinica/clinica/lib/clinicasurfstat'
+    cwd_path = split(realpath(__file__))[0]
+    parent_path = dirname(dirname(cwd_path))
+    path_to_matscript = join(parent_path, 'lib/clinicasurfstat')     
+#    path_to_matscript = '/aramis/home/wen/HAO_lab/Clinica/clinica/lib/clinicasurfstat'
       
     def runmatlab(input_directory, output_directory, linear_model, contrast, csv_file, str_format, path_to_matscript):
         from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
