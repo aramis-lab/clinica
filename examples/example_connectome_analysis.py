@@ -13,8 +13,8 @@ import tempfile
 
 data_path = join(split(realpath(__file__))[0], 'external-data/DWI_launch_preproc')
 
-List_of connectome_1 = 					# List of paths to the connectome of your first group of subject
-List_of connectome_2 = 					# List of paths to the connectome of your second group of subject
+list_of_connectome_1 = 'add your path'			# List of paths to the connectome of your first group of subject
+list_of_connectome_2 = 'add your path'			# List of paths to the connectome of your second group of subject
 test = 't test' 					# Perform a Student T test on the connectome
 FDR_correction = True 					# Correct for Family Wise Error Rate
 tail = 1 						# Testing the hypothesis: Connectome group 1 > Connectome group 2. If tail set to 2 the hypothesis tested is Connectome group 1 != Connectome group 2
@@ -25,11 +25,11 @@ threshold = 0.01 					# Set primary threshold to 0.01
 significancy = 0.05 					# Set significancy to 0.05
 save_all = True 					# Save all network-based results
 
-working_direct = tempfile.mkdtemp()
-datasink_direct = tempfile.mkdtemp()
+working_directory = tempfile.mkdtemp()
+datasink_directory = tempfile.mkdtemp()
 
-print("Working Directory -> %s" % working_direct)
-print("Datasink Directory -> %s" % datasink_direct)
+print("Working Directory -> %s" % working_directory)
+print("Datasink Directory -> %s" % datasink_directory)
 
 if tail==1:
 	print("Testing the hypothesis: Connectome group 1 > Connectome group 2")
@@ -49,6 +49,6 @@ network_based_statistic_pipeline = create_network_based_statistic_pipeline(list_
 network_based_statistic_pipeline.run()
 print("Network-based statistics done")
 
-print("Working Directory -> %s" % working_direct)
-print("Datasink Directory -> %s" % datasink_direct)
+print("Working Directory -> %s" % working_directory)
+print("Datasink Directory -> %s" % datasink_directory)
 
