@@ -26,6 +26,8 @@ csv_file  = join(split(realpath(__file__))[0], 'external-data/clinica_surfstat/c
 str_format = '%s %s %s %f'
 linear_model = '1 + Label + Gender + Age'
 output_directory = tempfile.mkdtemp()
+print 'Output dir %s' % output_directory
 contrast = 'Label'
 surfstat = clinica_surfstat(input_directory,output_directory, linear_model, contrast, csv_file, str_format)
 surfstat.run()
+print 'END!'
