@@ -64,6 +64,7 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
          clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s');
         """%(input_directory, output_directory, linear_model, contrast, csv_file, str_format)  # here, we should define the inputs for the matlab function that you want to use
         matlab.inputs.mfile = True # this will create a file: pyscript.m , the pyscript.m is the default name
+        print "matlab.inputs.script = %s" % matlab.inputs.script
         out = matlab.run()
         return out
 
