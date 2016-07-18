@@ -82,8 +82,8 @@ def recon_all_pipeline(data_dir, output_dir,field_template, template_args, datas
    
     inputnode.inputs.base_directory = data_dir
     inputnode.inputs.template = '*'  
-    inputnode.inputs.field_template = dict(out_files = field_template)
-    inputnode.inputs.template_args = dict(out_files =  [['subject_id', template_args]]) 
+    inputnode.inputs.field_template = dict(out_files=field_template)
+    inputnode.inputs.template_args = dict(out_files=[['subject_id', template_args]])
 
     inputnode.inputs.subject_id = subject_list
     inputnode.inputs.sort_filelist = True
