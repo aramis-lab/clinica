@@ -117,15 +117,15 @@ def whole_brain_tractography_pipeline(
         input_names=['in_source', 'in_white_matter_binary_mask', 'algorithm', 'number_of_tracks',
                      'fod_treshold', 'step_size', 'angle', 'nthreads'],
         output_names=['out_tracks'], function=streamlines_tractography), name='streamlines_tractography')
-     streamlines_tractography.inputs.algorithm = tractography_algorithm
-     streamlines_tractography.inputs.number_of_tracks = tractography_nb_of_tracks
-     streamlines_tractography.inputs.fod_treshold = tractography_fod_treshold
-     streamlines_tractography.inputs.step_size = tractography_step_size
-     streamlines_tractography.inputs.angle = tractography_angle
-     streamlines_tractography.inputs.nthreads = nthreads
+    streamlines_tractography.inputs.algorithm = tractography_algorithm
+    streamlines_tractography.inputs.number_of_tracks = tractography_nb_of_tracks
+    streamlines_tractography.inputs.fod_treshold = tractography_fod_treshold
+    streamlines_tractography.inputs.step_size = tractography_step_size
+    streamlines_tractography.inputs.angle = tractography_angle
+    streamlines_tractography.inputs.nthreads = nthreads
 
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['out_dwi_mif', 'out_dti', , 'out_metrics', 'out_fa', 'out_md', 'out_rd', 'out_ev',
+        fields=['out_dwi_mif', 'out_dti', 'out_metrics', 'out_fa', 'out_md', 'out_rd', 'out_ev',
                 'out_response_function','out_sh_coefficients_image', 'out_tracks']),
         name='outputnode')
 
