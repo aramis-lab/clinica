@@ -82,20 +82,13 @@ def whole_brain_tractography_pipeline(
         input_names=['in_dwi_nii', 'in_bvals', 'in_bvecs', 'nthreads'],
         output_names=['out_dwi_mif'],
         function=convert_nifti_to_mrtrix_format), name='convert_nifti_to_mrtrix_format')
-#    convert_nifti_to_mrtrix_format.inputs.nthreads = nthreads
+    convert_nifti_to_mrtrix_format.inputs.nthreads = nthreads
 
     dwi_to_tensor = pe.Node(interface=niu.Function(
         input_names=['in_dwi_mif', 'in_b0_mask', 'nthreads'],
         output_names=['out_dti'],
         function=dwi_to_tensor), name='dwi_to_tensor')
-#    dwi_to_tensor.inputs.nthreads = nthreads
-
-    tensor_to_metric = pe.Node(interface=niu.Function(
-        input_names=['in_dti', 'in_b0_mask', 'metric', 'nthreads'],
-        output_names=['out_metric'],
-        function=tensor_to_metric), name='tensor_to_metric')
-#    tensor_to_metric.inputs.metric = 'fa'
-#    tensor_to_metric.inputs.nthreads = nthreads
+    dwi_to_tensor.inputs.nthreads = nthreads
 
     tensor_to_metrics = pe.Node(interface=niu.Function(
         input_names=['in_dti', 'in_b0_mask', 'nthreads'],
@@ -105,15 +98,14 @@ def whole_brain_tractography_pipeline(
     erode_mask = pe.Node(interface=niu.Function(
         input_names=['in_mask', 'npass', 'nthreads'],
         output_names=['out_eroded_mask'], function=erode_mask), name='erode_mask')
-#    erode_mask.inputs.nthreads = nthreads
+    erode_mask.inputs.nthreads = nthreads
 
     estimate_response = pe.Node(interface=niu.Function(
         input_names=['in_dwi_mif', 'in_b0_mask', 'lmax', 'algorithm', 'tmpdir', 'nthreads'],
         output_names=['out_response_function'], function=estimate_response), name='estimate_response')
-#    estimate_response.inputs.lmax = max_harmonic_order
-#    estimate_response.inputs.algorithm = 'tax'
-#    estimate_response.inputs.tmpdir = working_directory
-#    estimate_response.inputs.nthreads = nthreads
+    estimate_response.inputs.lmax = max_harmonic_order
+    estimate_response.inputs.tmpdir = working_directory
+    estimate_response.inputs.nthreads = nthreads
 
     estimate_fod = pe.Node(interface=niu.Function(
         input_names=['in_dwi_mif', 'in_b0_mask', 'in_response_function_coefficients', 'lmax', 'nthreads'],
@@ -125,15 +117,16 @@ def whole_brain_tractography_pipeline(
         input_names=['in_source', 'in_white_matter_binary_mask', 'algorithm', 'number_of_tracks',
                      'fod_treshold', 'step_size', 'angle', 'nthreads'],
         output_names=['out_tracks'], function=streamlines_tractography), name='streamlines_tractography')
-#     streamlines_tractography.inputs.algorithm = tractography_algorithm
-#     streamlines_tractography.inputs.number_of_tracks = tractography_nb_of_tracks
-#     streamlines_tractography.inputs.fod_treshold = tractography_fod_treshold
-#     streamlines_tractography.inputs.step_size = tractography_step_size
-#     streamlines_tractography.inputs.angle = tractography_angle
-#     streamlines_tractography.inputs.nthreads = nthreads
+     streamlines_tractography.inputs.algorithm = tractography_algorithm
+     streamlines_tractography.inputs.number_of_tracks = tractography_nb_of_tracks
+     streamlines_tractography.inputs.fod_treshold = tractography_fod_treshold
+     streamlines_tractography.inputs.step_size = tractography_step_size
+     streamlines_tractography.inputs.angle = tractography_angle
+     streamlines_tractography.inputs.nthreads = nthreads
 
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['out_dwi_mif', 'out_dti', , 'out_metrics', 'out_fa', 'out_md', 'out_rd', 'out_ev', 'out_response_function','out_sh_coefficients_image', 'out_tracks']),
+        fields=['out_dwi_mif', 'out_dti', , 'out_metrics', 'out_fa', 'out_md', 'out_rd', 'out_ev',
+                'out_response_function','out_sh_coefficients_image', 'out_tracks']),
         name='outputnode')
 
     datasink = pe.Node(nio.DataSink(), name='datasink')
@@ -148,9 +141,6 @@ def whole_brain_tractography_pipeline(
         # Computation of the DTI:
         (inputnode,                      dwi_to_tensor, [('in_b0_mask', 'in_b0_mask')]),
         (convert_nifti_to_mrtrix_format, dwi_to_tensor, [('out_dwi_mif', 'in_dwi_mif')]),
-        # Computation of FA from the DTI:
-        (inputnode,     tensor_to_metric, [('in_b0_mask', 'in_b0_mask')]),
-        (dwi_to_tensor, tensor_to_metric, [('out_dti', 'in_dti')]),
         # Computation of the different metrics from the DTI:
         (inputnode,     tensor_to_metrics, [('in_b0_mask', 'in_b0_mask')]),
         (dwi_to_tensor, tensor_to_metrics, [('out_dti', 'in_dti')]),
