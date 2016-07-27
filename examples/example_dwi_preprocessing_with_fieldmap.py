@@ -19,7 +19,9 @@ except Exception as e:
 
 data_path = join(split(realpath(__file__))[0], 'external-data/raw_data/subject_example')
 
-output_directory = "/tmp/output_dwi_preprocessing_fieldmap_based/new_suject"
+output_directory = tempfile.mkdtemp()
+
+print("Datasink Directory -> %s" % output_directory)
 
 preprocessing = diffusion_preprocessing_fieldmap_based(datasink_directory=output_directory,
     num_b0s=count_b0s(join(data_path, 'DWI/subject_example_dwi.bval')))
@@ -27,16 +29,9 @@ preprocessing = diffusion_preprocessing_fieldmap_based(datasink_directory=output
 preprocessing.inputs.inputnode.in_file   = join(data_path, 'DWI/subject_example_dwi.nii.gz')
 preprocessing.inputs.inputnode.in_bvals  = join(data_path, 'DWI/subject_example_dwi.bval')
 preprocessing.inputs.inputnode.in_bvecs  = join(data_path, 'DWI/subject_example_dwi.bvec')
-preprocessing.inputs.inputnode.bmap_mag  = join(data_path, 'B0MAP/0000.nii.gz')
+preprocessing.inputs.inputnode.bmap_mag  = join(data_path, 'B0MAP/subject_example_b0map_echo1.nii.gz')
 preprocessing.inputs.inputnode.bmap_pha  = join(data_path, 'B0MAPph/subject_example_b0mapph.nii.gz')
 
-
-
-#working_direct = tempfile.mkdtemp()
-#datasink_direct = tempfile.mkdtemp()
-
-#print("Working Directory -> %s" % working_direct)
-#print("Datasink Directory -> %s" % datasink_direct)
-
-print("Running...")
 preprocessing.run()
+
+print("Datasink Directory -> %s" % output_directory)

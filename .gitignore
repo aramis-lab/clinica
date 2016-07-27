@@ -6,3 +6,4 @@ Clinica.egg-info
 .idea
 .coverage
 crash*
+.DS_Store
