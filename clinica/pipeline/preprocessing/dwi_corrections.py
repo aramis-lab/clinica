@@ -114,7 +114,7 @@ def prepare_data(datasink_directory, num_b0s, name='prepare_data', low_bval=5.0)
             (insert_b0_into_dwi,    datasink,           [('out_dwi','dwi_b0_merge'),
                                                          ('out_bvals','out_bvals'),
                                                          ('out_bvecs','out_bvecs')]),
-            (mask_b0,               datasink,           [('mask_file','mask_b0')])
+            (mask_b0,               datasink,           [('mask_file','mask_b0')]),
             (b0_avg,                datasink,           [('out_file','b0_reference')])
             ])
     elif num_b0s == 1:
