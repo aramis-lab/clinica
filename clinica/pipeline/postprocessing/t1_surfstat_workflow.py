@@ -52,19 +52,22 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
     cwd_path = split(realpath(__file__))[0]
     parent_path = dirname(dirname(cwd_path))
     path_to_matscript = join(parent_path, 'lib/clinicasurfstat')     
-#    path_to_matscript = '/aramis/home/wen/HAO_lab/Clinica/clinica/lib/clinicasurfstat'
       
     def runmatlab(input_directory, output_directory, linear_model, contrast, csv_file, str_format, path_to_matscript):
         from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
         
-        MatlabCommand.set_default_matlab_cmd(get_matlab_command())#this is to set the matlab_path in your bashrc file, if the user r not in bash or linux, but anyway, this is just to find ur matlab
+        MatlabCommand.set_default_matlab_cmd(get_matlab_command())#this is to set the matlab_path(os.environ) in your bashrc file, to choose which version of matlab do you wanna use     
         matlab = MatlabCommand()
         matlab.inputs.paths = path_to_matscript  #CLINICA_HOME, this is the path to add into matlab, addpath
         matlab.inputs.script = """
-         clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s');
+        clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s');
         """%(input_directory, output_directory, linear_model, contrast, csv_file, str_format)  # here, we should define the inputs for the matlab function that you want to use
         matlab.inputs.mfile = True # this will create a file: pyscript.m , the pyscript.m is the default name
-        print "matlab.inputs.script = %s" % matlab.inputs.script
+        matlab.inputs.single_comp_thread = False  #this will stop runing with single thread      
+        print "matlab script command = %s" % matlab.inputs.script
+        print "MatlabCommand inputs flag: single_comp_thread = %s" % matlab.inputs.single_comp_thread
+        print "MatlabCoomand choose which matlab to use: %s" % get_matlab_command()
+        # here, we should also add another inputs.trait---nosoftwareopengl, we should checkout the instance's inputs, gointo MatlabInputSpec
         out = matlab.run()
         return out
 

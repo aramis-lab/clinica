@@ -16,6 +16,7 @@ from __future__ import absolute_import
 from clinica.pipeline.postprocessing.t1_surfstat_workflow import clinica_surfstat
 from os.path import realpath, split, join
 import tempfile
+import time
 
 
 #path = join(split(realpath(__file__))[0])
@@ -25,9 +26,12 @@ input_directory = join(split(realpath(__file__))[0], 'external-data/clinica_surf
 csv_file  = join(split(realpath(__file__))[0], 'external-data/clinica_surfstat/csv_file/template.csv')
 str_format = '%s %s %s %f'
 linear_model = '1 + Label + Gender + Age'
-output_directory = tempfile.mkdtemp()
+#output_directory = tempfile.mkdtemp()
+output_directory = "~/test"
 print 'Output dir %s' % output_directory
 contrast = 'Label'
+start = time.time()
 surfstat = clinica_surfstat(input_directory,output_directory, linear_model, contrast, csv_file, str_format)
 surfstat.run()
-print 'END!'
+time_consuming = time.time() - start
+print 'END! time consuming is : %s' %time_consuming
