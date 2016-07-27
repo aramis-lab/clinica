@@ -198,14 +198,14 @@ if iscell(csvdata{indexunique})
 
     thicksubject = thicksubject';
 
-    slm  = SurfStatLinMod(thicksubject, eval(linearmodel), averagesurface);
+    slmmodel  = SurfStatLinMod(thicksubject, eval(linearmodel), averagesurface);
     disp(['The GLM linear model is: ', linearmodel])
 
     %% Clear the variables which will not be used later
     clearvars csvsorted csvdata thicksubject
 
     % Contrast Positive:
-    slm = SurfStatT( slm, contrastpos );
+    slm = SurfStatT( slmmodel, contrastpos );
     SurfStatView( slm.t .* mask, averagesurface, [ 'ContrastPo-value of the T-statistic for ' factor1 '-' factor2]);
     save2jpeg(strcat(outputdir,'/ClinicaSurfStatOutput/ContrastPositive-TValue.jpg'));
 
@@ -239,7 +239,7 @@ if iscell(csvdata{indexunique})
 
     %% Contrast Negative:
     % Computation of the T-statistic̣:  T statistics for a contrast in a univariate or multivariate model.
-    slm = SurfStatT( slm, contrasteffectgroupneg );
+    slm = SurfStatT( slmmodel, contrasteffectgroupneg );
 
     SurfStatView( slm.t .* mask, averagesurface, [ 'ContrastNe-value of the T-statistic for ' factor1 '-' factor2 ]);
     save2jpeg( strcat('ClinicaSurfStatOutput/ContrastNegative-TValue.jpg'));
