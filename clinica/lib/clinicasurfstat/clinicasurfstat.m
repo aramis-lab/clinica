@@ -56,8 +56,7 @@ while length(pp) >= 2,
     end
 end
 
-
-
+opengl info
 
 %% define the path
 addpath(fileparts(which(mfilename())));
@@ -205,22 +204,28 @@ if iscell(csvdata{indexunique})
     clearvars csvsorted csvdata thicksubject
 
     % Contrast Positive:
+    tic;
     slm = SurfStatT( slmmodel, contrastpos );
     SurfStatView( slm.t .* mask, averagesurface, [ 'ContrastPo-value of the T-statistic for ' factor1 '-' factor2]);
     save2jpeg(strcat(outputdir,'/ClinicaSurfStatOutput/ContrastPositive-TValue.jpg'));
+    disp('Contrast Positive: Tvalue'); toc;
 
     % Computation of the uncorrected p-value:
+    tic;
     t = tpdf(abs(slm.t), slm.df);
     uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
     clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(ContrastPo-Uncorrected P-values)' factor1 '-' factor2 ]);
-    save2jpeg(strcat(outputdir, '/ClinicaSurfStatOutput/ContrastPositive-UncorrectedPValue.jpg'));    
+    save2jpeg(strcat(outputdir, '/ClinicaSurfStatOutput/ContrastPositive-UncorrectedPValue.jpg'));   
+    disp('Contrast Positive: uncorrected Pvalue'); toc;
 
     % Computation of the corrected p-values: P-value threshold or statistic threshold for defining clusters, 0.001 by default
+    tic;
     [ pval, ~, clus ] = SurfStatP( slm , mask, clusterthreshold);
     pval.thresh = thresholdcorrectedpvalue;
     SurfStatView( pval, averagesurface, ['(ContrastPo-Corrected P-values) ' factor1 '-' factor2 ' (clusterthreshold = ' num2str(clusterthreshold) ')']);
     save2jpeg(strcat('ClinicaSurfStatOutput/ContrastPositive-CorrectedPValue.jpg' ));
+    disp('Contrast Positive: Corrected Pvalue'); toc;
 
     disp('###')
     disp('After correction(Clusterwise Correction for Multiple Comparisons): ')
@@ -233,29 +238,37 @@ if iscell(csvdata{indexunique})
     disp('###');
 
     % Computation of the false discovery rate :
+    tic;
     qval = SurfStatQ( slm , mask );
     SurfStatView( qval, averagesurface, ['ContrastPo-False discovery rate ' factor1 '-' factor2 ]);
     save2jpeg(strcat('ClinicaSurfStatOutput/ContrastPositive-FalseDiscoveryRate.jpg')) ;
-
+    disp('Contrast Positive: FDR'); toc;
+    
     %% Contrast Negative:
     % Computation of the T-statistic̣:  T statistics for a contrast in a univariate or multivariate model.
+    tic;
     slm = SurfStatT( slmmodel, contrasteffectgroupneg );
-
     SurfStatView( slm.t .* mask, averagesurface, [ 'ContrastNe-value of the T-statistic for ' factor1 '-' factor2 ]);
     save2jpeg( strcat('ClinicaSurfStatOutput/ContrastNegative-TValue.jpg'));
-
+    disp('Contrast Negative: Tvalue'); toc;
+    
     % Computation of the uncorrected p-value:
+    tic;
     t = tpdf(abs(slm.t), slm.df);
     uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
     clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(ContrastNe-Uncorrected P-values )' factor1 '-' factor2]);
     save2jpeg(strcat('ClinicaSurfStatOutput/ContrastNegative-UncorrectedPValue.jpg'));
+    disp('Contrast Negative: Uncorrected Pvalue'); toc;
+    
 
     % Computation of the corrected p-values: P-value threshold or statistic threshold for defining clusters, 0.001 by default
+    tic;
     [ pval, ~, clus ] = SurfStatP( slm , mask, clusterthreshold);
     pval.thresh = thresholdcorrectedpvalue;
     SurfStatView( pval, averagesurface, ['(ContrastNe-Corrected P-values )' factor1 '-' factor2 ' (clusterthreshold = ' num2str(clusterthreshold) ')']);
     save2jpeg(strcat('ClinicaSurfStatOutput/ContrastNegative-CorrectedPValue.jpg'));
+    disp('Contrast Negative: Corrected Pvalue'); toc;
 
     disp('###')
     disp('After correction(Clusterwise Correction for Multiple Comparisons): ')
@@ -268,9 +281,12 @@ if iscell(csvdata{indexunique})
     disp('###')
 
     % Computation of the false discovery rate :
+    tic;
     qval = SurfStatQ( slm , mask );
     SurfStatView( qval, averagesurface, ['ContrastNe-False discovery rate ' factor1 '-' factor2 ]);
     save2jpeg(strcat('ClinicaSurfStatOutput/ContrastNegative-FalseDiscoveryRate.jpg' ));
+    disp('Contrast Negative: FDR'); toc;
+    
 else
 %     factorterm = eval(contrast);
     contrastpos    = eval(contrast);
@@ -284,22 +300,28 @@ else
     clearvars csvsorted csvdata thicksubject
 
     % Contrast Positive:
+    tic;
     slm = SurfStatT( slm, contrastpos );
     SurfStatView( slm.t .* mask, averagesurface, [ 'T-statistic for ' contrast ]);
     save2jpeg(strcat(outputdir,'/ClinicaSurfStatOutput/TValue.jpg'));
+    disp('Tvalue'); toc;
 
     % Computation of the uncorrected p-value:
+    tic;
     t = tpdf(abs(slm.t), slm.df);
     uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
     clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(Uncorrected P-values)' contrast ]);
-    save2jpeg(strcat(outputdir, '/ClinicaSurfStatOutput/UncorrectedPValue.jpg'));    
+    save2jpeg(strcat(outputdir, '/ClinicaSurfStatOutput/UncorrectedPValue.jpg'));
+    disp('Uncorrected Pvalue'); toc;
 
     % Computation of the corrected p-values: P-value threshold or statistic threshold for defining clusters, 0.001 by default
+    tic;
     [ pval, ~, clus ] = SurfStatP( slm , mask, clusterthreshold);
     pval.thresh = thresholdcorrectedpvalue;
     SurfStatView( pval, averagesurface, ['(Corrected P-values) ' contrast ' (clusterthreshold = ' num2str(clusterthreshold) ')']);
     save2jpeg(strcat('ClinicaSurfStatOutput/CorrectedPValue.jpg' ));
+    disp('Corrected Pvalue'); toc;
 
     disp('###')
     disp('After correction(Clusterwise Correction for Multiple Comparisons): ')
@@ -312,9 +334,11 @@ else
     disp('###');
 
     % Computation of the false discovery rate :
+    tic;
     qval = SurfStatQ( slm , mask );
     SurfStatView( qval, averagesurface, ['False discovery rate ' contrast ]);
     save2jpeg(strcat('ClinicaSurfStatOutput/FalseDiscoveryRate.jpg')) ;
+    disp('FDR'); toc;
 
 end
 
