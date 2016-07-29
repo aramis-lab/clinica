@@ -1,33 +1,48 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jun 30 17:03:04 2016
-    Explaination: This example is to show you how to use Clinicasurfstat to do group analysis, basically, the parameters below:
-      :param: ContrastLinearModel: string, the linear model that fit into the GLM, for example '1+Lable'.
-      :param: Format: string, the format that you want to use for your CSV file column variables, it depends on the CSV file.
-      :param: CSVFilename: string, the path to your csv file, we put it in the directory 'Clinicasurfstat/Database'
-      :param: PATH_TO_RECON_ALL_OUTPUTS:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
+=================================================
+Example of cilinca_surfstat 
+=================================================
+
+This example is to elaborate how to do some statistical analysis(GLM) for the preprocessed data, here, our null hypothesis is :
+The thickness between AD and CN is the same.
+
+the parameter explanation is below:
+      :param: linear_model: string, the linear model that fit into the GLM, for example '1 + Label + Gender + Age'.
+      :param: str_format: string, the format that you want to use for your CSV file column variables, it depends on your CSV file.
+      :param: csv_file: string, the path to your csv file.
+      :param: input_directory:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
               we put in the directory 'data/Recon-all_Output'.
-      :param: a_required_path:  this is the path to find the matlabscript(Nipypesurfstat.m) that you are going to run.
-      :param: result_dir: the directory to contain the result images. The out put directory in the example is in the directory 'Clinicasurfstat/Figures   '.
+      :param: contrast:  string, depending on what you want to do, there are two kinds of contrast, one is categorized facor contrast, like 'Label',
+              this will return you 8 images, including positive contrast results and negative contrast result; another is continuous factor result, 
+              like 'age', which will return you 4 images.
+      :param: output_directory: the directory to contain the result images. 
+      
+Outputs:
+      after the clinica_surfstat pipeline, we will get the results images in the output_directory, also, in the output_directory, we will also
+      have a log file 'matlab_output.log', which includes the matlab version information and the surfstat progress information.
+
+Note: as we will use OpenGL to render the result images, and after Matlab2014, they changed the opengl algorithms to make rendering more flexible, 
+      meanwhile, maybe a little slower than the older version(not always), and we always recommend using the hardware for OpenGL, which is default
+      mode in clinica_surfstat.
 
 @author: wen
 """
+
 from __future__ import absolute_import
 from clinica.pipeline.postprocessing.t1_surfstat_workflow import clinica_surfstat
 from os.path import realpath, split, join
 import tempfile
 import time
 
+print(__doc__)
 
-#path = join(split(realpath(__file__))[0])
-#parent_path = dirname(dirname(path))
-#a_required_path = join(parent_path, 'lib/Clinicasurfstat')
 input_directory = join(split(realpath(__file__))[0], 'external-data/clinica_surfstat')
 csv_file  = join(split(realpath(__file__))[0], 'external-data/clinica_surfstat/csv_file/template.csv')
 str_format = '%s %s %s %f'
 linear_model = '1 + Label + Gender + Age'
-#output_directory = tempfile.mkdtemp()
-output_directory = "~/test"
+output_directory = tempfile.mkdtemp()
+
 print 'Output dir %s' % output_directory
 contrast = 'Label'
 start = time.time()
