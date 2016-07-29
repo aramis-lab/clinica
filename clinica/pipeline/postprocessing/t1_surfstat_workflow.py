@@ -59,6 +59,12 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
         
         MatlabCommand.set_default_matlab_cmd(get_matlab_command())#this is to set the matlab_path(os.environ) in your bashrc file, to choose which version of matlab do you wanna use     
         matlab = MatlabCommand()
+        
+        # add the dynamic traits
+        #openGL_trait = traits.Bool(True, argstr='-nosoftwareopengl', usedefault=True, desc='Switch on hardware openGL', nohash=True)
+        #matlab.input_spec.add_trait(matlab.input_spec(), 'nosoftwareopengl', openGL_trait() )
+        
+        matlab.inputs.args = '-nosoftwareopengl'
         matlab.inputs.paths = path_to_matscript  #CLINICA_HOME, this is the path to add into matlab, addpath
         matlab.inputs.script = """
         clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s');
@@ -69,8 +75,8 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
         print "matlab logfile is located in the folder: %s" % matlab.inputs.logfile            
         print "matlab script command = %s" % matlab.inputs.script
         print "MatlabCommand inputs flag: single_comp_thread = %s" % matlab.inputs.single_comp_thread
-        print "MatlabCoomand choose which matlab to use: %s" % get_matlab_command()
-        # here, we should also add another inputs.trait---nosoftwareopengl, we should checkout the instance's inputs, gointo MatlabInputSpec
+        print "MatlabCommand choose which matlab to use: %s" % get_matlab_command()
+        print "MatlabCommand inputs flag: nosoftwareopengl = %s" % matlab.inputs.args
         out = matlab.run()
         return out
 
