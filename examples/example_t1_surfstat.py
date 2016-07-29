@@ -24,7 +24,9 @@ Outputs:
 
 Note: as we will use OpenGL to render the result images, and after Matlab2014, they changed the opengl algorithms to make rendering more flexible, 
       meanwhile, maybe a little slower than the older version(not always), and we always recommend using the hardware for OpenGL, which is default
-      mode in clinica_surfstat.
+      mode in clinica_surfstat. To choose which matlab version that you want to use in your local machine, you should export an environment variable
+      'MATLABCMD' in your bashrc file to point to the needed matlab version, if 'MATLABCMD' is not defined, clinica_surfstat will use default matlab
+      command line 'matlab'.
 
 @author: wen
 """
