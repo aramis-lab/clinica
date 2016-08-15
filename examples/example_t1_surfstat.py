@@ -54,7 +54,7 @@ output_directory = tempfile.mkdtemp()
 print 'Output dir %s' % output_directory
 contrast = 'Label'
 start = time.time()
-surfstat = clinica_surfstat(input_directory,output_directory, linear_model, contrast, csv_file, str_format, size_of_fwhm = 20, cluster_threshold = 0.001)
+surfstat = clinica_surfstat(input_directory,output_directory, linear_model, contrast, csv_file, str_format)
 surfstat.run()
 time_consuming = time.time() - start
 print 'END! time consuming is : %s' %time_consuming
