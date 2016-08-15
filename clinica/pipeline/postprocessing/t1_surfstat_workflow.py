@@ -13,7 +13,7 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
         This is to use surfstat to do the Group analysis for the reconAll outputs, after the reconAll pipeline, you should just define the paths to
         surfstatGroupAnalysis, and create the CSV file, and run the pipeline, at last, you will get the results images.
 
-        Inputnode
+        Inputs
         ---------
         surfstat
         Inputs: :param input_directory:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
@@ -25,7 +25,6 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
                           the string name that you choose should be exactly the same with the columns names in your csv_file.
                 :param csv_file: string, the path to your csv file.
                 :param str_format: string, the str_format which uses to read your csv file, the typy of the string should corresponds exactly with the columns in the csv file.
-                :param path_to_matscript: this is the path to find the matlabscript where we put it in clinica/lib/clinicasurfstat
                  Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
                 :param size_of_fwhm: fwhm for the surface smoothing, default is 20, integer.
                 :param threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float.
@@ -34,19 +33,8 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
           For more infomation about SurfStat, please check:
           http://www.math.mcgill.ca/keith/surfstat/
 
-        Outputnode:
-
-        :param: input_directory:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
-        :param: output_directory: the directory to contain the result images.
-        :param: linear_model: string, the linear model that fit into the GLM, for example '1+Lable'.
-        :param: contrast: string, the contrast matrix for GLM, if the factor you choose is categorized variable, clinica_surfstat will create two contrasts,
-                          for example, contrast = 'Label', this will create contrastpos = Label.AD - Label.CN, contrastneg = Label.CN - Label.AD; if the fac-
-                          tory that you choose is a continuous factor, clinica_surfstat will just create one contrast, for example, contrast = 'Age', but note,
-                          the string name that you choose should be exactly the same with the columns names in your csv_file.
-        :param: csv_file: string, the path to your csv file.
-        :param: str_format: string, the str_format which uses to read your csv file, the typy of the string should corresponds exactly with the columns in the csv file.
-
-        return images in output_directory
+        Outputs:
+        return result images in output_directory
 
     """
     
