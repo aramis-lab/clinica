@@ -14,16 +14,16 @@ function clinicasurfstat( inputdir, outputdir, linearmodel, contrast, csvfile, s
 
 
 % the following are optional, we use varargin to define the optional inputs!
-% - fasaveragesizefwhm: fwhm for the surface smoothing, default is 20, integer
-% - thresholduncorrectedpvalue: threshold to display the uncorrected Pvalue, float
+% - sizeoffwhm: fwhm for the surface smoothing, default is 20, integer.
+% - thresholduncorrectedpvalue: threshold to display the uncorrected Pvalue, float.
 % - thresholdcorrectedpvalue: the threshold to display the corrected cluster, default is 0.05, float.
-% - clusterthreshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float
+% - clusterthreshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float.
 %
 % Saves output images to outputdir as .jpg format.
 %
 % Note: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-%  (c) Alexrandre ROUTIER, Junhao WEN 
+%  (c) Alexandre ROUTIER, Junhao WEN 
 %  Written 16/06/2016
 
 %% define the default value for inputs
@@ -33,29 +33,37 @@ end
 if nargin == 7
     error('Number of inputs is wrong!')
 end
-fasaveragesizefwhm = 20;
+sizeoffwhm = 20;
 thresholduncorrectedpvalue = 0.001;
-thresholdcorrectedpvalue = 0.05;
+thresholdcorrectedpvalue = 0.050;
 clusterthreshold = 0.001;
 pp = varargin;
 while length(pp) >= 2,
     prop = pp{1};
     val = pp{2};
     pp = pp(3 : end);
-    switch prop
-        case 'fasaveragesizefwhm'
-            fasaveragesizefwhm = val;
-        case 'thresholduncorrectedpvalue'
-            thresholduncorrectedpvalue = val;
-        case 'thresholdcorrectedpvalue'
-            thresholdcorrectedpvalue = val;
-        case 'clusterthreshold'
-            clusterthreshold = val;
-        otherwise
-            error('Optional inputs are wrong, we do not have this optional input!')
+    if ischar(val)
+        newval = str2double(val);
+    end
+    if ischar(prop) && isnumeric(newval)
+        switch prop
+            case 'sizeoffwhm'
+                sizeoffwhm = newval;
+            case 'thresholduncorrectedpvalue'
+                thresholduncorrectedpvalue = newval;
+            case 'thresholdcorrectedpvalue'
+                thresholdcorrectedpvalue = newval;
+            case 'clusterthreshold'
+                clusterthreshold = newval;
+            otherwise
+                error('Optional inputs are wrong, we do not have this optional input!')
+        end
+    else
+        error('The type of default variables are not correct!')
     end
 end
 
+disp('###For OpengGl, we should choose Hardware to render the images###');
 opengl info
 
 %% define the path
@@ -90,8 +98,8 @@ end
 for indexsubject = 1 : nrsubject
     subjectname = csvdata{1}{indexsubject};
     Y = SurfStatReadData( { ...
-        [ inputdir '/' subjectname '/surf/lh.thickness.fwhm' num2str(fasaveragesizefwhm) '.fsaverage.mgh' ],...
-        [ inputdir '/' subjectname '/surf/rh.thickness.fwhm' num2str(fasaveragesizefwhm) '.fsaverage.mgh' ]} );
+        [ inputdir '/' subjectname '/surf/lh.thickness.fwhm' num2str(sizeoffwhm) '.fsaverage.mgh' ],...
+        [ inputdir '/' subjectname '/surf/rh.thickness.fwhm' num2str(sizeoffwhm) '.fsaverage.mgh' ]} );
     if size(Y, 1) ~= 1
         error('Unexpected dimension of Y in SurfStatReadData')
     end
@@ -212,8 +220,11 @@ if iscell(csvdata{indexunique})
 
     % Computation of the uncorrected p-value:
     tic;
-    t = tpdf(abs(slm.t), slm.df);
-    uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
+    %Method 1:
+    %t = tpdf(abs(slm.t), slm.df);
+    %uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
+    %Method 2:
+    uncorrectedpValues = 2*(1-tcdf(abs(slm.t),slm.df)); % here, we consider it to be 2-tailed t-distribution
     clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(ContrastPo-Uncorrected P-values)' factor1 '-' factor2 ]);
     save2jpeg(strcat(outputdir, '/ClinicaSurfStatOutput/ContrastPositive-UncorrectedPValue.jpg'));   
@@ -254,8 +265,7 @@ if iscell(csvdata{indexunique})
     
     % Computation of the uncorrected p-value:
     tic;
-    t = tpdf(abs(slm.t), slm.df);
-    uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
+    uncorrectedpValues = 2*(1-tcdf(abs(slm.t),slm.df)); % here, we consider it to be 2-tailed t-distribution
     clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(ContrastNe-Uncorrected P-values )' factor1 '-' factor2]);
     save2jpeg(strcat('ClinicaSurfStatOutput/ContrastNegative-UncorrectedPValue.jpg'));
@@ -288,7 +298,6 @@ if iscell(csvdata{indexunique})
     disp('Contrast Negative: FDR'); toc;
     
 else
-%     factorterm = eval(contrast);
     contrastpos    = eval(contrast);
     
     thicksubject = thicksubject';
@@ -308,8 +317,7 @@ else
 
     % Computation of the uncorrected p-value:
     tic;
-    t = tpdf(abs(slm.t), slm.df);
-    uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
+    uncorrectedpValues = 2*(1-tcdf(abs(slm.t),slm.df)); % here, we consider it to be 2-tailed t-distribution
     clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(Uncorrected P-values)' contrast ]);
     save2jpeg(strcat(outputdir, '/ClinicaSurfStatOutput/UncorrectedPValue.jpg'));
