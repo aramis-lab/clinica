@@ -1,5 +1,25 @@
-function [] = weighted_prototypes(lambda_g,lambda_a,lambda_b,filename_bundle,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input)
-             
+% Compute Streamline Weighted Prototypes of a bundle in VTK format
+%
+% Usage: weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input)
+%
+% MANDATORY INPUTS:
+% - filename_bundle:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
+% - lambda_g: the directory to contain the result images.
+% - lambda_a: string, the linear model that fit into the GLM, for example '1+Lable'
+% - lambda_b: string, the contrast that you want to use in the GLM, but the contrast should be inclued into the linearmodel, otherwise, you will get errors.
+% 
+% OPTIONAL INPUTS:
+% - bound_limit_input: 
+% - degree_precision_input: 
+% - num_iter_modularity_input: 
+% - minimum_number_fibers_cluster_input: 
+% - minValueTau_input: 
+%
+%  Copyright Pietro GORI, Inria 
+%  Written 16/08/2016
+    
+function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input)
+    
     addpath('Matlab_Functions')
     
     switch nargin
