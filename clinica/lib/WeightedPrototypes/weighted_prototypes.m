@@ -1,52 +1,101 @@
 % Compute Streamline Weighted Prototypes of a bundle in VTK format
 %
-% Usage: weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input)
+% Usage: weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
 %
 % MANDATORY INPUTS:
-% - filename_bundle:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
-% - lambda_g: the directory to contain the result images.
-% - lambda_a: string, the linear model that fit into the GLM, for example '1+Lable'
-% - lambda_b: string, the contrast that you want to use in the GLM, but the contrast should be inclued into the linearmodel, otherwise, you will get errors.
+% - filename_bundle: filename of the fiber bundle which must be a .vtk file.
+% It must have a list of 3D points and then it should use te keyword
+% "LINES" for polygons. Each row describes a streamline. The first number
+% is the number of points. The other numbers are the indexes of the points
+% previously listed.
+% - lambda_g: geometric kernel bandidth (as in usual currents)
+% - lambda_a: kernel bandwidth of the STARTING structure
+% - lambda_b: kernel bandwidth of the ENDING structure
+% To note: streamlines must have a consistent orientation, namely they must
+% have the same starting and ending ROIs
 % 
 % OPTIONAL INPUTS:
-% - bound_limit_input: 
-% - degree_precision_input: 
-% - num_iter_modularity_input: 
-% - minimum_number_fibers_cluster_input: 
-% - minValueTau_input: 
+% - bound_limit_input: maximum average angle (in radians) that a streamline 
+% may have with the other streamlines in the framework of weighted currents. 
+% Default value is 1.5359 = 88 degrees
+% - degree_precision_input: percentage of the norm of the bundle explained by the
+% weighted prototypes. Default value is 0.15, which means that the weighted
+% prototypes will explain (1-0.15)*100 % of the norm of the bundle in the
+% framework of weighted currents.
+% - num_iter_modularity_input: Modularity computation is based on a greedy
+% approach. Results may differ between iterations. The greater number of 
+% iterations, the better. Default value is 10
+% See "Fast unfolding of community hier archies in large networks", V. Blondel et al.
+% - minimum_number_fibers_cluster_input: Clustering based on modularity may
+% result in unbalanced clusters. We remove the clusters which have less
+% than minimum_number_fibers_cluster_input fibers. Default value is 10
+% - minValueTau_input: We remove the prototypes that approximate less than
+% minValueTau_input fibers. Default value is 1
+% - increase_radius_input: All tubes are normalised such that the maximum 
+% radius is equal to 1mm. We then augment all radii of
+% increase_radius_input. Default value is 0.02
+%
+% This function requires:
+% - The binary files of the C++ functions in the folder CPP_code
+% - CMake > 2.8
+% - VTK > 6
+% - Louvain community detection (https://sourceforge.net/projects/louvain/)
+% which is already present 
+% - Eigen (http://eigen.tuxfamily.org/index.php?title=Main_Page)
+% which is also already present
 %
 %  Copyright Pietro GORI, Inria 
 %  Written 16/08/2016
     
-function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input)
+function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
     
     addpath('Matlab_Functions')
     
+    %% Check dependencies
+    if ~exist('CPP_code/Gramiam','file') 
+        error('Compile C++ code in the folder CPP_code')
+    end
+    if ~exist('CPP_code/MedoidsFinale','file') 
+        error('Compile C++ code in the folder CPP_code')
+    end
+    if ~exist('CPP_code/WriteTube','file') 
+        error('Compile C++ code in the folder CPP_code')
+    end
+    if ~exist('Community_latest/community','file') 
+        error('Compile C++ code in the folder Community_latest')
+    end
+    if ~exist('Community_latest/hierarchy','file') 
+        error('Compile C++ code in the folder Community_latest')
+    end
+        
+  
+    %% Check input parameters    
     switch nargin
         
         case 4            
-            bound_limit=1.5533; % 85=1.4835 , 86=1.5010 , 87=1.5184 , 87.5=1.5272 , 88=1.5359 , 89=1.5533
-            degree_precision=0.15; % it will explain (1-degree_precision)*100 % of the total norm                     
-            num_iter_modularity=5;  
+            bound_limit=1.5359; % 85=1.4835 , 86=1.5010 , 87=1.5184 , 87.5=1.5272 , 88=1.5359 , 89=1.5533
+            degree_precision=0.15; % it will explain (1-degree_precision)*100 % of the norm of the bundle                     
+            num_iter_modularity=10;  
             minimum_number_fibers_cluster=10;
-            minValueTau=1;      
+            minValueTau=1; 
+            increase_radius=0.02; 
             
-        case 9  
+        case 10  
             
             if isempty(bound_limit_input)
-                bound_limit=1.5533; % 85=1.4835 , 86=1.5010 , 87=1.5184 , 87.5=1.5272 , 88=1.5359 , 89=1.5533
+                bound_limit=1.5359; 
             else
                 bound_limit=bound_limit_input;
             end
             
             if isempty(degree_precision_input)
-                degree_precision=0.15; % it will explain (1-degree_precision)*100 % of the total norm 
+                degree_precision=0.15; 
             else
                 degree_precision=degree_precision_input;
             end
             
             if isempty(num_iter_modularity_input)
-                num_iter_modularity=5;  
+                num_iter_modularity=10;  
             else
                 num_iter_modularity=num_iter_modularity_input;
             end
@@ -62,6 +111,12 @@ function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bou
             else
                 minValueTau=minValueTau_input;
             end 
+            
+            if isempty(increase_radius_input)
+                increase_radius=0.02;
+            else
+                increase_radius=increase_radius_input;
+            end            
      
         otherwise
             error('Please insert either only lambda_g,lambda_a,lambda_b and filename_bundle or all parameters. If you want to use default parameter please use [] as input value')
@@ -156,7 +211,7 @@ function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bou
     for i=1:Number_clusters
        [Fibers,~]=find(Ci==Groups(i)); 
        Cluster(i).Fibers=Fibers;
-       Radius(i)=length(Fibers); % I do consider the Medoid
+       Radius(i)=length(Fibers); % we consider the prototype
        Cluster(i).Radius=Radius;
        if Radius(i)<minimum_number_fibers_cluster    
            index_to_remove=[index_to_remove ; i];  
@@ -203,7 +258,6 @@ function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bou
     eval(sprintf('! CPP_code/MedoidsFinale %s %s %s %f %f %f %d %s', filename_graph_bin, filename_graph_weights, filename_graph_diag, minValueTau, degree_precision, bound_limit, NClusters, filename_fibers_tot));
     pause(1);   
     diary off
-
             
     % SAVING RESULTS   
     fid = fopen(filename_final_med, 'r');
@@ -243,11 +297,12 @@ function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bou
     
     disp('Writing Tube')
 
-    %% Max radius is 1 otherwise problem to visualize
+    %% Write tubes
+    % Max radius is 1 otherwise problem to visualize
 
     Radius=TauGlobal;
     Radius=Radius/max(Radius);
-    Radius=Radius+0.2;         
+    Radius=Radius+increase_radius; % if tubes are too small, increase this value         
 
     % Points Medoids
     filename_points = 'Points.txt';
