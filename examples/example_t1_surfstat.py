@@ -17,6 +17,12 @@ the parameter explanation is below:
               this will return you 8 images, including positive contrast results and negative contrast result; another is continuous factor result, 
               like 'age', which will return you 4 images.
       :param: output_directory: the directory to contain the result images. 
+       Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
+      :param: size_of_fwhm: fwhm for the surface smoothing, default is 20, integer.
+      :param: threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float.
+      :param: threshold_corrected_pvalue: the threshold to display the corrected cluster, default is 0.05, float.
+      :param: cluster_threshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float.
+      
       
 Outputs:
       after the clinica_surfstat pipeline, we will get the results images in the output_directory, also, in the output_directory, we will also
@@ -28,7 +34,7 @@ Note: as we will use OpenGL to render the result images, and after Matlab2014, t
       'MATLABCMD' in your bashrc file to point to the needed matlab version, if 'MATLABCMD' is not defined, clinica_surfstat will use default matlab
       command line 'matlab'.
 
-@author: wen
+@author: Junhao WEN
 """
 
 from __future__ import absolute_import
