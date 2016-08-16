@@ -52,13 +52,10 @@ If (NOT DEFINED CMAKE_BUILD_TYPE:STRING)
 Endif (NOT DEFINED CMAKE_BUILD_TYPE:STRING)
 
 
-##############################################################################
-
-# TO CHANGE!!!!! PUT THE DIRECTORY OF EIGEN
+################## EIGEN ##############################
 Include_Directories(
-    /aramis/home/gori/eigen-eigen-36fd1ba04c12
+    ../../Eigen
 )
-
 ################################################################################
 
 #
@@ -145,4 +142,3 @@ Target_Link_Libraries(Density
   ${ITK_LIBRARIES}
   ${VTK_DEPENDANCIES}
 )
-
