@@ -2,40 +2,36 @@
 //
 // C++ function that takes as input a Gram matrix and the result of the clustering
 // based on modularity and it computes the weighted prototypes as explained in
-//
+// "Parsimonious Approximation of Streamline Trajectories in White Matter Fiber Bundles",
+// IEEE Transactions on Medical Imaging, 2016
 //
 // Usage: Medoids_Finale Links Weights Diagonal minValueTau degree_precision outlier_limit Number_Fascicles Index_fibers1 Index_fibers2 ...
 //
 // Input Parameters:
-//	- FiberBundle: filename fiber bundle in .vtk format
-//	- dimension: dimension of the points of the stremlines (i.e. 3 for 3D)
-//	- lambdaW: bandwidth of the geometric kernel of usual currents
-//	- Lambda_Start: bandwidth of kernel relative to the starting points
-//	- Lambda_End: bandwidth of kernel relative to the ending points
-// To note: Streamlines must have a consistent orientation ! For instance they
-// should all have the same starting and ending ROIs (Region Of Interest)
+//	- Links: graph.bin of compute_gramiam.cpp
+//	- Weights: graph.weights of compute_gramiam.cpp
+//	- Diagonal: graph.diag of compute_gramiam.cpp
+//	- minValueTau: We remove the prototypes that approximate less than
+//                    minValueTau fibers. Default value is 1
+//	- degree_precision: percentage of the norm of the bundle explained by the
+//                      weighted prototypes. Default value is 0.15, which means
+//                      that the weighted prototypes will explain (1-0.15)*100 %
+//                      of the norm of the bundle in the framework of weighted currents
+//	- outlier_limit: maximum average angle (in radians) that a streamline may
+//                   have with the other streamlines in the framework of weighted
+// 									 currents. Default value is 1.5359 = 88 degrees
+//	- Number_Fascicles: number of fascicles (clusters)
+//	- Index_fibersXXX: for each cluster (fascicle) we have a text file with the indexes
+//										 of the streamlines of the bundle belonging to the cluster
 //
 // Outputs:
-// 3 binary files, let N be equal to the number of streamlines
-//	- graph.diag: it is a vector [Nx1] with the squared norm of each streamline.
-//                Every value is saved as a char of 4 bits
-//	- graph.bin: It is a vector of char. If first writes the number of Nodes
-//	            (i.e. number fo streamlines) as a char of 4 bits. Then it writes
-//							the cumulative degree sequence, which means that for each
-//							streamline i it writes the number of streamlines that have an
-//							inner product greater than 0 as a char of 8 bits. Then it writes
-//							the numbers of all these streamlines as a char of 4 bits.
-//	- graph.weights: A vector with the inner products different from 0 between
-//									 the streamlines. They are chars of 4 bits. The squared norm
-//                   of each streamline is not considered.
+// 3 binary files
+//	- Outliers_global: indexes of the streamlines of the bundle which are
+//										 considered outliers
+//	- Medoids_global_normalised: indexes of the streamlines of the bundle which
+//															 are considered prototypes
+//	- Tau_global_normalised: Weights of the prototypes
 //
-// To note, this is the style accepted in the function community.
-//
-// Example: Gram matrix is [2 0 2; 3 4 6; 0 0 2].
-//	graph.diag contains: 2 4 2 (squared norms, diagonal)
-//	graph.bin contains: 3 (number streamlines) 1 2 0 (number entries different from 0)
-//											2 (last column) 0 2 (first and last columns) (no value there are only zeros)
-//  graph.weights contains: 2 3 6 (the inner products different from zero)
 
 #include <cmath>
 #include <cstdio>
@@ -754,6 +750,10 @@ indexFibers.clear();
 indexFibersNoOutliers.setZero(1);
 
 ///////////////////////////////////////////// NORMALISATION /////////////////////////////////////
+// We put all prototypes together and we recompute the weights of the prototypes
+// This is useful to recompute the weights of the prototypes close to two
+// cluseters (fascicles)
+
 cout << "Normalisation \n" << endl;
 
 unsigned int NMedoids = MedoidsGlobal.size();
@@ -941,6 +941,9 @@ OutliersGlobal.setZero(1);
 	}
 
 	//////////////////////////////////// REDUNDANCY //////////////////////
+	// Here we remove the prototypes that explain less than minValueTau
+	// we might have two prototypes from two different fascicles that are close
+	// to each other. We may need just one of them.
 
 	int ind;
 	double minimum = ExactTauGlobal.minCoeff(&ind);
