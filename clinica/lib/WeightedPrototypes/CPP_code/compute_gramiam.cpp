@@ -1,3 +1,43 @@
+// Created on 17/08/2016 by Pietro Gori, Inria
+//
+// C++ function that takes as input a fiber bundle in .VTK format and computes the
+// gramiam matrix between all streamlines. Every cell of the gramiam matrix is
+// the inner product between two streamlines in the framework of weighted
+// currents.
+//
+// Usage: Gramiam FiberBundle dimension lambdaW Lambda_Start Lambda_End
+//
+// Input Parameters:
+//	- FiberBundle: filename fiber bundle in .vtk format
+//	- dimension: dimension of the points of the stremlines (i.e. 3 for 3D)
+//	- lambdaW: bandwidth of the geometric kernel of usual currents
+//	- Lambda_Start: bandwidth of kernel relative to the starting points
+//	- Lambda_End: bandwidth of kernel relative to the ending points
+// To note: Streamlines must have a consistent orientation ! For instance they
+// should all have the same starting and ending ROIs (Region Of Interest)
+//
+// Outputs:
+// 3 binary files, let N be equal to the number of streamlines
+//	- graph.diag: it is a vector [Nx1] with the squared norm of each streamline.
+//                Every value is saved as a char of 4 bits
+//	- graph.bin: It is a vector of char. If first writes the number of Nodes
+//	            (i.e. number fo streamlines) as a char of 4 bits. Then it writes
+//							the cumulative degree sequence, which means that for each
+//							streamline i it writes the number of streamlines that have an
+//							inner product greater than 0 as a char of 8 bits. Then it writes
+//							the numbers of all these streamlines as a char of 4 bits.
+//	- graph.weights: A vector with the inner products different from 0 between
+//									 the streamlines. They are chars of 4 bits. The squared norm
+//                   of each streamline is not considered.
+//
+// To note, this is the style accepted in the function community.
+//
+// Example: Gram matrix is [2 0 2; 3 4 6; 0 0 2]. 
+//	graph.diag contains: 2 4 2 (squared norms, diagonal)
+//	graph.bin contains: 3 (number streamlines) 1 2 0 (number entries different from 0)
+//											2 (last column) 0 2 (first and last columns) (no value there are only zeros)
+//  graph.weights contains: 2 3 6 (the inner products different from zero)
+
 #include <cmath>
 #include <cstdio>
 #include <time.h>
@@ -49,32 +89,30 @@ int main(int argc, char** argv)
 {
 	if (argc < 6 )
 	{
-		std::cerr << "Usage: " << argv[0] << " FiberBundle dimension lambdaW Lambda_Start_(basal) Lambda_End_(cortical)" << std::endl;
+		std::cerr << "Usage: " << argv[0] << " FiberBundle dimension lambdaW Lambda_Start Lambda_End" << std::endl;
 		return -1;
 	}
-	
-	// Parameters to see how many threads there are
+
+	// Code to see how many threads there in the PC
 	int nThreads, tid;
 	#pragma omp parallel private(tid)
 	{
-
-		tid = omp_get_thread_num();	
-			
+		tid = omp_get_thread_num();
 		if (tid == 0)
 		{
 			nThreads = omp_get_num_threads();
-			printf("Total number of threads: %d\n", nThreads);  
+			printf("Total number of threads: %d\n", nThreads);
 		}
 	}
-	
-	omp_set_num_threads(nThreads); // in teoria non serve
-	
+
+	omp_set_num_threads(nThreads); // Code uses all threads available
+
 	// Reading Parameters
 	char* Bundle_name = argv[1];
 	int Dimension = atoi(argv[2]);
 	double lambdaW = atof(argv[3]);
 	double lambdaA = atof(argv[4]);
-	double lambdaB = atof(argv[5]);	
+	double lambdaB = atof(argv[5]);
 
 	cout << "Bundle to analyse: " << Bundle_name << endl;
 	cout << "Lambda geometry: " << lambdaW << "\nLambda Start (basal): " << lambdaA << "\nLambda End (cortical): " << lambdaB << endl;
@@ -85,10 +123,8 @@ int main(int argc, char** argv)
 	reader->Update();
 	vtkSmartPointer<vtkPolyData> polyData = reader->GetOutput();
 
-	// Variables used
-	//vector< vector<float> > links;	
-	vector<vector<pair<int,float> > > links;	
-	
+	// Initialisation variables
+	vector<vector<pair<int,float> > > links;
 	int NumFibers;
 	int NumberOfPoints;
 	vtkIdType *indices;
@@ -101,35 +137,29 @@ int main(int argc, char** argv)
 	vector< MatrixXf > ListPointsFibers;
 	vector< MatrixXf > Centers;
 	vector< MatrixXf > Tangents;
-		
 	MatrixXf First;
-	MatrixXf Last;	
-
+	MatrixXf Last;
 	MatrixXf c1; // Matrix of double
 	MatrixXf t1;
 	VectorXf f1; // Vector of double
 	VectorXf l1;
-
 	MatrixXf c2;
 	MatrixXf t2;
 	VectorXf f2;
 	VectorXf l2;
-	
 	RowVectorXf point;
 	RowVectorXf p0;
 	RowVectorXf p1;
 
-	//VectorXd Index;
-
 	// Reading the polydata
 	NumFibers = polyData->GetNumberOfLines();
 	cout << "Number fibers: " << NumFibers << endl;
-	
+
 	links.resize(NumFibers);
 
 	NumberOfPoints= polyData->GetNumberOfPoints();
-	cout << "Number points: " << NumberOfPoints << endl;	
-	
+	cout << "Number points: " << NumberOfPoints << endl;
+
 	Lines = polyData->GetLines();
 
 	NumberPointsPerFiber.resize(NumFibers);
@@ -141,54 +171,43 @@ int main(int argc, char** argv)
 		NumberPointsPerFiber(lineCount)=numberOfPoints;
 	}
 	//cout << "NumberPointsPerFiber: " << NumberPointsPerFiber << endl;
-	
+
 	if( NumberPointsPerFiber.sum() != NumberOfPoints )
-		throw runtime_error("Total Number of Points Mismatched!");	
-	
-	// Points
-	Points.resize(NumberOfPoints,Dimension);	
-	
+		throw runtime_error("Total Number of Points Mismatched!");
+
+	Points.resize(NumberOfPoints,Dimension);
+
 	for (unsigned int i = 0; i < NumberOfPoints; i++)
-	{	
-		 double p[3];	 		 
-		 polyData->GetPoint(i, p);		 			 	 
+	{
+		 double p[3];
+		 polyData->GetPoint(i, p);
 		 for (int dim = 0; dim < Dimension; dim++)
 		 {
-//cout << "p[dim]: " << p[dim] << endl;
 			float pf = (float)(p[dim]);
-//cout << "pf: " << pf << endl;
 		 	Points(i, dim) = pf;
 		 }
 	}
-	
+
 	// List Points per Fiber
 	unsigned int temp = 0;
-	ListPointsFibers.resize(NumFibers);	
-	
+	ListPointsFibers.resize(NumFibers);
+
 	for (unsigned int lineCount = 0; lineCount<NumFibers; lineCount++)
 	{
-		//cout << "Line " << lineCount << ": " << endl;
-		//cout << "NumberPointsPerFiber(lineCount) : " << NumberPointsPerFiber(lineCount) << endl;
-		//cout << "Dimension : " << Dimension << endl;
-		ListPointsFibers[lineCount].resize(NumberPointsPerFiber(lineCount), Dimension);			
- 
+		ListPointsFibers[lineCount].resize(NumberPointsPerFiber(lineCount), Dimension);
 		for (unsigned int i = 0; i < NumberPointsPerFiber(lineCount,0); i++)
 		{
 			point = Points.row(temp);
-			//cout << point << endl;						
 			ListPointsFibers[lineCount].row(i)=point;
-			temp++;			
+			temp++;
 		}
-		
-		//cout << "Points Line: \n" << ListPointsFibers[lineCount] << endl;
 	}
-	
+
 	// Computing centers, tangents, first and last points
 	Centers.resize(NumFibers);
 	Tangents.resize(NumFibers);
 	First.resize(NumFibers,Dimension);
 	Last.resize(NumFibers,Dimension);
-
 
 	for (unsigned int i = 0; i < NumFibers; i++)
 	{
@@ -197,10 +216,6 @@ int main(int argc, char** argv)
 
 		First.row(i)=ListPointsFibers[i].row(0);
 		Last.row(i)=ListPointsFibers[i].row(NumberPointsPerFiber(i)-1);
-			
-		//cout << "Line num: " << i << endl;		
-		//cout << "First:\n" << First.row(i) << endl;
-		//cout << "Last:\n" << Last.row(i) << endl;				
 
 		for (unsigned int j = 0; j < NumberPointsPerFiber(i)-1; j++)
 		{
@@ -209,19 +224,16 @@ int main(int argc, char** argv)
 			Centers[i].row(j) = (p0 + p1) / 2.0;
 			Tangents[i].row(j) = p1 - p0;
 		}
-	
-		//cout << "Centers:\n" << Centers[i] << endl;
-		//cout << "Tangents:\n" << Tangents[i] << endl;		
-	}	
-	
+	}
+
 	struct timeval start, end;
-	double delta;		
+	double delta;
 
 	VectorXf Diagonal;
 	Diagonal.resize(NumFibers);
 
 	// Multi-Threading
-	gettimeofday(&start, NULL);	
+	gettimeofday(&start, NULL);
 
 	for(unsigned int i=0; i<NumFibers; i++)
 	{
@@ -233,11 +245,11 @@ int main(int argc, char** argv)
 		c1 = Centers[i];
 		t1 = Tangents[i];
 		f1 = First.row(i);
-		l1 = Last.row(i);		
+		l1 = Last.row(i);
 
-		#pragma omp parallel for private(c2,t2,f2,l2) shared(links,Diagonal,i,t1,c1,f1,l1,lambdaW,lambdaA,lambdaB) // add private and public variables // add barrier otherwise	
+		#pragma omp parallel for private(c2,t2,f2,l2) shared(links,Diagonal,i,t1,c1,f1,l1,lambdaW,lambdaA,lambdaB)
 		for(unsigned int j=i; j<NumFibers; j++)
-		{				
+		{
 			c2.setZero(NumberPointsPerFiber(j)-1, Dimension);
 			t2.setZero(NumberPointsPerFiber(j)-1, Dimension);
 			f2.setZero(Dimension);
@@ -246,49 +258,50 @@ int main(int argc, char** argv)
 			c2 = Centers[j];
 			t2 = Tangents[j];
 			f2 = First.row(j);
-			l2 = Last.row(j);	
+			l2 = Last.row(j);
 
+			// Computation norm usual currents
 			float norm2 = 0;
 			float res_tang;
 			float res_center;
 			for (int p=0; p<NumberPointsPerFiber(i)-1; p++)
 			{
-				for (int q=0; q<NumberPointsPerFiber(j)-1; q++) 
-				{	
+				for (int q=0; q<NumberPointsPerFiber(j)-1; q++)
+				{
 					res_tang = t1.row(p)*t2.row(q).transpose();
 					res_center = ( c1.row(p)-c2.row(q) ) * ( (c1.row(p)-c2.row(q)).transpose() );
-					norm2 = norm2+res_tang*exp(-res_center/(lambdaW*lambdaW));  
+					norm2 = norm2+res_tang*exp(-res_center/(lambdaW*lambdaW));
 				}
-			}  
-			    
-			//cout << "norm2: " << norm2 << endl;		
+			}
 
+			// Computation of the other two kernels, only if the norm of usual currents
+			// is greater than 1e-7, otherwise it writes 0
 			float norm2_f = 0;
 			float res_f;
 			float res_l;
-			if (abs(norm2)>1e-7)	
-			{	
+			if (abs(norm2)>1e-7)
+			{
 				res_f = (f1-f2).transpose()*(f1-f2);
 				res_l = (l1-l2).transpose()*(l1-l2);
 				norm2_f = norm2 * exp(-res_f/(lambdaA*lambdaA) - res_l/(lambdaB*lambdaB));
-				//cout << "norm2_f: " << norm2_f << endl;	
-			
+
+				// If the norm is smaller than 1e-7, it writes 0
 				if (abs(norm2_f)>1e-7)
-				{					
-						
+				{
+
 					if (i==j)
-					{				
-						Diagonal[i]=norm2_f;							
+					{
+						Diagonal[i]=norm2_f;
 					}
 					else
 					{
-						#pragma omp critical // altrimenti fa Segmentation fault !!
+						#pragma omp critical // This is important, otherwise there is an error of Segmentation Fault
 						{
 							links[i].push_back(make_pair(j,norm2_f));
 							links[j].push_back(make_pair(i,norm2_f));
-						}															
-					}	
-				}							     
+						}
+					}
+				}
 			}
 
 		} // end for j
@@ -299,9 +312,9 @@ int main(int argc, char** argv)
 	} // end for i
 
 // Diagonal Element
-	
+
 	ofstream Diag;
-  	Diag.open("graph.diag", fstream::out | fstream::binary);
+  Diag.open("graph.diag", fstream::out | fstream::binary);
 	float element = 0;;
 	for(unsigned int i=0; i<NumFibers; i++)
 	{
@@ -328,15 +341,14 @@ int main(int argc, char** argv)
 
 	// outputs cumulative degree sequence
 	long tot=0;
-	for (unsigned int i=0 ; i<s ; i++) {		
+	for (unsigned int i=0 ; i<s ; i++) {
 		tot+=(long)links[i].size();
 		Gram.write((char *)(&tot),8);
-
 	}
 
 	// outputs links
 	for (unsigned int i=0 ; i<s ; i++) {
-		for (unsigned int j=0 ; j<links[i].size() ; j++) 
+		for (unsigned int j=0 ; j<links[i].size() ; j++)
 		{
 			int dest = links[i][j].first;
 			float weight = links[i][j].second;
@@ -346,8 +358,8 @@ int main(int argc, char** argv)
 	}
 
 	Gram.close();
-	Weights.close();	
-	
+	Weights.close();
+
 // TIMER
 	gettimeofday(&end, NULL);
 	delta = double(end.tv_sec  - start.tv_sec) + double(end.tv_usec - start.tv_usec) / 1.e6;
@@ -355,7 +367,3 @@ int main(int argc, char** argv)
 
 	return 0;
 }
-
-
-
-
