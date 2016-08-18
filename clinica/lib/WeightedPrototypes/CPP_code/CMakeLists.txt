@@ -6,13 +6,9 @@ If (COMMAND cmake_policy)
     cmake_policy(SET CMP0003 NEW)
 Endif (COMMAND cmake_policy)
 
-#
-# Find packages (ITK & VTK) :
-#
 # ITK :
 Find_Package(ITK)
 If (ITK_FOUND)
-    # Include (${USE_ITK_FILE})
     Include (${ITK_USE_FILE})
 Else (ITK_FOUND)
     Message (FATAL_ERROR "ITK not found. Please set ITK_DIR.")
@@ -23,10 +19,8 @@ Find_Package(VTK)
 If (VTK_FOUND)
     If ( "${VTK_MAJOR_VERSION}" LESS 6 )
         Message ("VTK ${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION} is used.")
-        #Include (${USE_VTK_FILE})
-	Include (${VTK_USE_FILE})
+	      Include (${VTK_USE_FILE})
     Else ( "${VTK_MAJOR_VERSION}" LESS 6 )
-        #Find_Package(VTK COMPONENTS vtkCommonCore vtkCommonDataModel vtkWrappingTools vtkIOLegacy vtkFiltersCore vtkFiltersGeneral vtkHybrid vtkWidgets NO_MODULE)
         Find_Package(VTK REQUIRED)
         If (VTK_FOUND)
             Message ("VTK ${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION} is used.")
@@ -39,24 +33,32 @@ Else (VTK_FOUND)
     Message (FATAL_ERROR "VTK not found. Please set VTK_DIR.")
 Endif (VTK_FOUND)
 
-Include_Directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}
-)
+# OpenMP
+If(UNIX AND NOT APPLE)
+  set(LINUX TRUE)
+endif (UNIX AND NOT APPLE)
 
-# OpenMP :
-Set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+If (LINUX)
+  message ("OS is Linux")
+  Set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+Elseif (APPLE)
+  message ("OS is MAC OS X")
+  Set(CMAKE_CXX_COMPILER "/usr/local/bin/clang-omp++")
+  Set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+Else ()
+  Message (FATAL_ERROR "Code works only on Linux or MAC OS X")
+Endif ()
 
 # Release version by default :
 If (NOT DEFINED CMAKE_BUILD_TYPE:STRING)
     Set (CMAKE_BUILD_TYPE:STRING Release)
 Endif (NOT DEFINED CMAKE_BUILD_TYPE:STRING)
 
+# Include Directories
+Include_Directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-################## EIGEN ##############################
-Include_Directories(
-    ../../Eigen
-)
-################################################################################
+# EIGEN
+Include_Directories(../../Eigen)
 
 #
 # Executable :
@@ -66,24 +68,16 @@ Add_Executable(Gramiam
 compute_gramiam.cpp
 )
 
-Add_Executable(Medoids
-Medoids.cpp
-)
-
-Add_Executable(MedoidsNormalisation
-Medoids_normalisation.cpp
-)
-
 Add_Executable(MedoidsFinale
 Medoids_Finale.cpp
 )
 
 Add_Executable(WriteTube
-Write_Tube.cxx
+Write_Tube.cpp
 )
 
-Add_Executable(WriteTubeColor
-Write_Tube_color.cxx
+Add_Executable(WriteTube2
+Write_Tube_2.cpp
 )
 
 Add_Executable(Density
@@ -113,16 +107,6 @@ Target_Link_Libraries(Gramiam
   ${VTK_DEPENDANCIES}
 )
 
-Target_Link_Libraries(Medoids
-  ${ITK_LIBRARIES}
-  ${VTK_DEPENDANCIES}
-)
-
-Target_Link_Libraries(MedoidsNormalisation
-  ${ITK_LIBRARIES}
-  ${VTK_DEPENDANCIES}
-)
-
 Target_Link_Libraries(MedoidsFinale
   ${ITK_LIBRARIES}
   ${VTK_DEPENDANCIES}
@@ -133,7 +117,7 @@ Target_Link_Libraries(WriteTube
   ${VTK_DEPENDANCIES}
 )
 
-Target_Link_Libraries(WriteTubeColor
+Target_Link_Libraries(WriteTube2
   ${ITK_LIBRARIES}
   ${VTK_DEPENDANCIES}
 )

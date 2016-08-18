@@ -68,6 +68,15 @@ int main(int argc, char** argv)
 		std::cerr << "Usage: " << argv[0] << " Points_filename Number_Points_Per_Curve_filename Radius_filename outfilename" << std::endl;
 		return -1;
 	}
+/*
+	//Creating polydata
+	vtkSmartPointer<vtkPolyDataReader> reader = vtkSmartPointer<vtkPolyDataReader>::New();
+	reader->SetFileName(Bundle_name);
+	reader->Update();
+	vtkSmartPointer<vtkPolyData> polyData = reader->GetOutput();
+
+
+
 
 	// Get Points
 	std::string Points_filename = argv[1];
@@ -184,4 +193,5 @@ int main(int argc, char** argv)
 		writer->SetInputData(appendAll->GetOutput());
 	#endif
 	writer->Update();
+	*/
 }
