@@ -1,6 +1,6 @@
 % Compute Streamline Weighted Prototypes of a bundle in VTK format
 %
-% Usage: weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
+% Usage: weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_CPP_code,path_Community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
 %
 % MANDATORY INPUTS:
 % - filename_bundle: filename of the fiber bundle which must be a .vtk file.
@@ -11,6 +11,9 @@
 % - lambda_g: geometric kernel bandidth (as in usual currents)
 % - lambda_a: kernel bandwidth of the STARTING structure
 % - lambda_b: kernel bandwidth of the ENDING structure
+% - path_matlab_functions
+% - path_CPP_code: absolute path to C++ code 
+% - path_Community_latest: absolute path to Community detection folder
 % To note: streamlines must have a consistent orientation, namely they must
 % have the same starting and ending ROIs
 % 
@@ -47,24 +50,24 @@
 %  Copyright Pietro GORI, Inria 
 %  Written 16/08/2016
     
-function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
+function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_CPP_code,path_Community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
     
-    addpath('Matlab_Functions')
-    
+   addpath(path_matlab_functions)
+   
     %% Check dependencies
-    if ~exist('CPP_code/bin/Gramiam','file') 
+    if ~exist([ path_CPP_code '/bin/Gramiam'],'file') 
         error('Compile C++ code in the folder bin inside CPP_code')
     end
-    if ~exist('CPP_code/bin/MedoidsFinale','file') 
+    if ~exist([ path_CPP_code '/bin/MedoidsFinale'],'file') 
         error('Compile C++ code in the folder bin inside CPP_code')
     end
-    if ~exist('CPP_code/bin/WriteTube','file') 
+    if ~exist([ path_CPP_code '/bin/WriteTube'],'file') 
         error('Compile C++ code in the folder bin inside CPP_code')
     end
-    if ~exist('Community_latest/community','file') 
+    if ~exist([ path_Community_latest '/community'],'file') 
         error('Compile C++ code in the folder Community_latest')
     end
-    if ~exist('Community_latest/hierarchy','file') 
+    if ~exist([ path_Community_latest '/hierarchy'],'file') 
         error('Compile C++ code in the folder Community_latest')
     end
         
@@ -72,7 +75,7 @@ function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bou
     %% Check input parameters    
     switch nargin
         
-        case 4            
+        case 7            
             bound_limit=1.5359; % 85=1.4835 , 86=1.5010 , 87=1.5184 , 87.5=1.5272 , 88=1.5359 , 89=1.5533
             degree_precision=0.15; % it will explain (1-degree_precision)*100 % of the norm of the bundle                     
             num_iter_modularity=10;  
@@ -80,7 +83,7 @@ function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bou
             minValueTau=1; 
             increase_radius=0.02; 
             
-        case 10  
+        case 13  
             
             if isempty(bound_limit_input)
                 bound_limit=1.5359; 
@@ -123,14 +126,14 @@ function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bou
             
     end        
 
-    disp(['Analysing bundle ' filename_bundle ' with parameters \lambda_g: ' num2str(lambda_g) ' \lambda_a:' num2str(lambda_a) ' \lambda_b' num2str(lambda_b) ])
+    disp(['Analysing bundle ' filename_bundle ' with parameters lambda_g: ' num2str(lambda_g) ' lambda_a:' num2str(lambda_a) ' lambda_b' num2str(lambda_b) ])
     disp(['Parameters: num_iter_modularity: ' num2str(num_iter_modularity) ', minValueTau: ' num2str(minValueTau) ', degree_precision: ' num2str(degree_precision) ', bound_limit: ' num2str(bound_limit) ])
     
-    filename_modularity=['Modularity_' filename_bundle(1:end-4) '.mat'];
-    filename_vtk_NoOutlier=['NoOutliers_' filename_bundle(1:end-4) '.vtk'];
-    filename_vtk_clusters=['Clusters_' filename_bundle(1:end-4) '.vtk'];
-    filename_medoids_tubes=['Medoids_Tubes_' filename_bundle(1:end-4) '.vtk'];
-    filename_Medoids_polyline=['Medoids_polyline_' filename_bundle(1:end-4) '.vtk'];
+%     filename_modularity='Modularity.mat';
+    filename_vtk_NoOutlier='NoOutliers.vtk';
+    filename_vtk_clusters='Clusters.vtk';
+    filename_medoids_tubes='Prototypes_tubes.vtk';
+    filename_Medoids_polyline='Prototypes.vtk';
     
     %% Loading bundle
     [Points,number_points_curve,] = VTK_Bundles_Polyline_Reader(filename_bundle);
@@ -138,8 +141,8 @@ function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bou
     %% Gramiam
     diary('Gramiam.log')
     diary on                   
-    eval(sprintf('! CPP_code/Gramiam %s %i %f %f %f',filename_bundle, 3, lambda_g, lambda_a, lambda_b))
-    pause(2);
+    eval(sprintf(['!' path_CPP_code '/bin/Gramiam %s %i %f %f %f'],filename_bundle, 3, lambda_g, lambda_a, lambda_b))
+    pause(1);
     diary off
 
     filename_graph_bin='graph.bin';
@@ -155,7 +158,7 @@ function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bou
         diary('diary')
         diary on
         disp('Community construction')   
-        eval(sprintf(['! Community_latest/community ' filename_graph_bin ' -l -1 -v -w ' filename_graph_weights ' > graph.tree']));
+        eval(sprintf(['! ' path_Community_latest '/community ' filename_graph_bin ' -l -1 -v -w ' filename_graph_weights ' > graph.tree']));
         diary off     
 
         fid = fopen('diary', 'r');
@@ -169,9 +172,9 @@ function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bou
         %disp(['Q: ' num2str(Q) ])
         delete('diary')     
 
-        pause(2);
+        pause(1);
 
-        eval(sprintf('! Community_latest/hierarchy graph.tree > hierarchy.log'));    
+        eval(sprintf(['! ' path_Community_latest '/hierarchy graph.tree > hierarchy.log']));    
 
         fid = fopen('hierarchy.log', 'r');
         if(fid==-1)
@@ -183,9 +186,9 @@ function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bou
 
         %disp(['Number of levels: ' num2str(num_level) ])
 
-        eval(sprintf('! Community_latest/hierarchy graph.tree -l %u > C.log', num_level-1));
+        eval(sprintf(['! ' path_Community_latest '/hierarchy graph.tree -l %u > C.log'], num_level-1));
 
-        pause(2);
+        pause(1);
 
         C = load('C.log', '-ascii'); % C starts from 0 !!!
         C=C+1;  
@@ -229,8 +232,8 @@ function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bou
     disp(['Number clusters AFTER number fiber constraint: ' num2str(length(Radius)) ])
     disp('')
 
-    disp('Saving Modularity, NoOutliers and Clusters')
-    save(filename_modularity, 'Ci', 'Q_max', 'Cluster_no_outlier', '-v7.3');
+%     disp('Saving Modularity, NoOutliers and Clusters')
+%     save(filename_modularity, 'Ci', 'Q_max', 'Cluster_no_outlier', '-v7.3');
 
     %% Prototypes  
       
@@ -255,7 +258,7 @@ function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bou
     diary('Medoids.log')
     diary on
     disp('Prototypes')            
-    eval(sprintf('! CPP_code/MedoidsFinale %s %s %s %f %f %f %d %s', filename_graph_bin, filename_graph_weights, filename_graph_diag, minValueTau, degree_precision, bound_limit, NClusters, filename_fibers_tot));
+    eval(sprintf(['! ' path_CPP_code '/bin/MedoidsFinale %s %s %s %f %f %f %d %s'], filename_graph_bin, filename_graph_weights, filename_graph_diag, minValueTau, degree_precision, bound_limit, NClusters, filename_fibers_tot));
     pause(1);   
     diary off
             
@@ -333,7 +336,7 @@ function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bou
     end		
     fclose(fid);
 
-    eval(sprintf('! CPP_code/WriteTube %s %s %s %s', 'Points.txt','Number_Points_Curve_Medoids.txt', 'Radius.txt', filename_medoids_tubes));
+    eval(sprintf(['! ' path_CPP_code '/bin/WriteTube %s %s %s %s'], 'Points.txt','Number_Points_Curve_Medoids.txt', 'Radius.txt', filename_medoids_tubes));
         
     % Writing Prototypes    
     Scalars_Medoids=zeros(size(Points_Medoids,1),1);
