@@ -1,4 +1,22 @@
-
+% Write weighted prototypes as lines in VTK format
+%
+% Usage: Write_vtk_bundles_polyline(Points,number_points_curve,Scalars, Colors, TextureCoordinates,filename)
+%
+% INPUTS:
+% - Points: Matrix [N,3] where N is the number of points. Each row
+% indicates the coordinates of a point.
+% - number_points_curve: vector [M,1] where M is the number of prototypes.
+% Each cell represents the number of points per prototype% 
+% - Scalars: vector [N,1]. Cell i indicates the weight of the prototype
+% to which point i belongs to.
+% - Colors: vector [N,x] where x can be 3 for RGB for instance. We usually
+% use the default value of Paraview, thus we usually set it to []
+% - TextureCoordinates: vector [N,y] where y is a int. We usually
+% use the default value of Paraview, thus we usually set it to []
+% - filename: filename in VTK format 
+%
+%  Copyright Pietro GORI, Inria 
+%  Written 16/08/2016
 
 function Write_vtk_bundles_polyline(Points,number_points_curve,Scalars, Colors, TextureCoordinates,filename)
 
