@@ -53,13 +53,13 @@ function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,bou
     
     %% Check dependencies
     if ~exist('CPP_code/bin/Gramiam','file') 
-        error('Compile C++ code in the folder CPP_code')
+        error('Compile C++ code in the folder bin inside CPP_code')
     end
     if ~exist('CPP_code/bin/MedoidsFinale','file') 
-        error('Compile C++ code in the folder CPP_code')
+        error('Compile C++ code in the folder bin inside CPP_code')
     end
     if ~exist('CPP_code/bin/WriteTube','file') 
-        error('Compile C++ code in the folder CPP_code')
+        error('Compile C++ code in the folder bin inside CPP_code')
     end
     if ~exist('Community_latest/community','file') 
         error('Compile C++ code in the folder Community_latest')
