@@ -614,6 +614,7 @@ int main(int argc, char** argv)
 				{
 					E=-sqrt(abs(E));
 					found = 1;
+					cout << "Cost function negative. Maybe there is a problem with the parameters" << endl;
 				}
 				else
 					E=sqrt(E);
@@ -629,7 +630,7 @@ int main(int argc, char** argv)
 					found=1;
 				}
 
-				if ( Medoids.size()>round(IF/3) )
+				if ((Medoids.size()>round(IF/3)) && (found==0))
 				{
 					cout << "Maxinum number of fibers! Explained " << 100 - E*100/InitialNorm << " % of the initial norm" << endl;
 					cout << "Norm Prototypes is " << ( sqrt(ExactTau.transpose()*reshape(Gramiam,Medoids,Medoids)*ExactTau) / InitialNorm)*100 << " % of the initial norm" << endl;
@@ -637,7 +638,7 @@ int main(int argc, char** argv)
 					found=1;
 				}
 
-				if ( iter ==  (IF-1) )
+				if ((iter== (IF-1)) && (found==0))
 				{
 					cout << "Maxinum number of iterations! Explained " << 100 - E*100/InitialNorm << " % of the initial norm" << endl;
 					cout << "Norm Prototypes is " << ( sqrt(ExactTau.transpose()*reshape(Gramiam,Medoids,Medoids)*ExactTau) / InitialNorm)*100 << " % of the initial norm" << endl;
