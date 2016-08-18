@@ -79,14 +79,6 @@ Add_Executable(WriteTube
 Write_Tube.cpp
 )
 
-Add_Executable(WriteTube2
-Write_Tube_2.cpp
-)
-
-Add_Executable(Density
-Density.cpp
-)
-
 #
 # Target link :
 #
@@ -116,16 +108,6 @@ Target_Link_Libraries(MedoidsFinale
 )
 
 Target_Link_Libraries(WriteTube
-  ${ITK_LIBRARIES}
-  ${VTK_DEPENDANCIES}
-)
-
-Target_Link_Libraries(WriteTube2
-  ${ITK_LIBRARIES}
-  ${VTK_DEPENDANCIES}
-)
-
-Target_Link_Libraries(Density
   ${ITK_LIBRARIES}
   ${VTK_DEPENDANCIES}
 )
