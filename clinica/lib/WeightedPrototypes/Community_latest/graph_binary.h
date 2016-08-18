@@ -1,7 +1,7 @@
 // File: graph_binary.h
 // -- graph handling header file
 //-----------------------------------------------------------------------------
-// Community detection 
+// Community detection
 // Based on the article "Fast unfolding of community hierarchies in large networks"
 // Copyright (C) 2008 V. Blondel, J.-L. Guillaume, R. Lambiotte, E. Lefebvre
 //
@@ -20,7 +20,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-#include <malloc.h>
+#ifdef linux
+  #include <malloc.h>
+#endif
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -37,7 +39,7 @@ class Graph {
  public:
   unsigned int nb_nodes;
   unsigned long nb_links;
-  double total_weight;  
+  double total_weight;
 
   vector<unsigned long> degrees;
   vector<unsigned int> links;
@@ -53,7 +55,7 @@ class Graph {
   // 4*(sum_degrees) bytes for the links
   // IF WEIGHTED 4*(sum_degrees) bytes for the weights in a separate file
   Graph(char *filename, char *filename_w, int type);
-  
+
   Graph(int nb_nodes, int nb_links, double total_weight, int *degrees, int *links, float *weights);
 
   void display(void);
@@ -95,7 +97,7 @@ Graph::nb_selfloops(unsigned int node) {
     if (*(p.first+i)==node) {
       if (weights.size()!=0)
 	return (double)*(p.second+i);
-      else 
+      else
 	return 1.;
     }
   }
