@@ -1,6 +1,25 @@
-function [Points,number_points_curve,curve_associated,Scalars] = VTK_Bundles_Polyline_Reader(filename)
+% Reads weighted prototypes as lines in VTK format
+%
+% Usage: [Points,number_points_curve,curve_associated,Scalars] = VTK_Bundles_Polyline_Reader(filename)
+%
+% INPUTS:
+% - filename: filename of the VTK file of the weighted prototypes saved as
+% lines
+%
+% OUTPUTS:
+% - Points: Matrix [N,3] where N is the number of points. Each row
+% indicates the coordinates of a point.
+% - number_points_curve: vector [M,1] where M is the number of prototypes.
+% Each cell represents the number of points per prototype
+% - curve_associated: vector [N,1]. Cell i indicates the prototype
+% associated to the point i.
+% - Scalars: vector [N,1]. Cell i indicates the weight of the prototype
+% to which point i belongs to.
+%
+%  Copyright Pietro GORI, Inria 
+%  Written 16/08/2016
 
-% Output:
+function [Points,number_points_curve,curve_associated,Scalars] = VTK_Bundles_Polyline_Reader(filename)
 
 fid = fopen(filename, 'r');
 if(fid==-1)

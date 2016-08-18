@@ -26,6 +26,5 @@ for j=1:length(INDEX)
     l=l+number_points;
 end
 
-%Write_vtk_bundles_segments(New_Points,New_number_points_curve,[],[],[],[new_filename(1:end-4) '_seg_' num2str(n_fibers) '.vtk'])
 Write_vtk_bundles_polyline(New_Points,New_number_points_curve,[],[],[],[new_filename(1:end-4) '_poly_' num2str(n_fibers) '.vtk'])
 
