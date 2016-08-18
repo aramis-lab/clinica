@@ -1,3 +1,5 @@
+
+
 function Write_vtk_bundles_polyline(Points,number_points_curve,Scalars, Colors, TextureCoordinates,filename)
 
 [R,C] = size(Points);
@@ -55,8 +57,7 @@ if (~isempty(Colors)) % write colors if any
     end
 
     nValues = size(Colors,2);
-
-    % fprintf(fid,'POINT_DATA %d\n',nPts);
+    
     fprintf(fid,'COLOR_SCALARS colors %d\n', nValues);
     for i=1:number_points
         for j=1:nValues
@@ -67,15 +68,14 @@ if (~isempty(Colors)) % write colors if any
 
 end
 
-if (~isempty(TextureCoordinates)) % write colors if any
+if (~isempty(TextureCoordinates)) 
 
     if (size(TextureCoordinates,1)~=number_points)
         disp('Warning: nb of columns in TextureCoordinates array does not match number of points!');
     end
 
     nValues = size(TextureCoordinates,2);
-
-    % fprintf(fid,'POINT_DATA %d\n',nPts);
+   
     fprintf(fid,'TEXTURE_COORDINATES TextureCoordinates %d float\n', nValues);
     for i=1:number_points
         for j=1:nValues
