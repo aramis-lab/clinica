@@ -22,6 +22,7 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
+#include <unistd.h>
 
 #include "graph_binary.h"
 #include "community.h"
