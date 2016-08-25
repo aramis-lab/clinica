@@ -64,10 +64,7 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
             print "Clinica will not work on your platform "
             
         MatlabCommand.set_default_matlab_cmd(get_matlab_command())#this is to set the matlab_path(os.environ) in your bashrc file, to choose which version of matlab do you wanna use     
-        print MatlabCommand.set_default_matlab_cmd(get_matlab_command())
-        print type(MatlabCommand.set_default_matlab_cmd(get_matlab_command()))
-        print get_matlab_command()
-        
+        # here, set_default_matlab_cmd is a @classmethod
         matlab = MatlabCommand()
         
         # add the dynamic traits
@@ -86,7 +83,7 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
         print "matlab logfile is located in the folder: %s" % matlab.inputs.logfile            
         print "matlab script command = %s" % matlab.inputs.script
         print "MatlabCommand inputs flag: single_comp_thread = %s" % matlab.inputs.single_comp_thread
-        print "MatlabCommand choose which matlab to use: %s" % get_matlab_command()
+        print "MatlabCommand choose which matlab to use(matlab_cmd): %s" % get_matlab_command()
         print "MatlabCommand inputs flag: nosoftwareopengl = %s" % matlab.inputs.args
 
         out = matlab.run()
