@@ -43,8 +43,6 @@ from os.path import realpath, split, join
 import tempfile
 import time
 
-print(__doc__)
-
 input_directory = join(split(realpath(__file__))[0], 'external-data/clinica_surfstat')
 csv_file  = join(split(realpath(__file__))[0], 'external-data/clinica_surfstat/csv_file/template.csv')
 str_format = '%s %s %s %f'

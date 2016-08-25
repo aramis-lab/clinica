@@ -50,8 +50,24 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
                   size_of_fwhm, threshold_uncorrected_pvalue, threshold_corrected_pvalue, cluster_threshold ):
         from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
         from os.path import join
-        
+        import sys, os
+        # here, we check out the os, basically, clinica works for linux and MAC OS X.
+        if sys.platform.startswith('linux'):
+            print "###Note: your platform is linux, the default command line for Matlab(matlab_cmd) is matlab, but you can also export a variable MATLABCMD,  which points to your matlab,  in your .bashrc to set matlab_cmd, this can help you to choose which Matlab to run when you have more than one Matlab. "
+        elif sys.platform.startswith('darwin'):
+            while True:
+                try:
+                    'MATLABCMD' in os.environ 
+                except ValueError:
+                    print "###Note: your platform is MAC OS X, the default command line for Matlab(matlab_cmd) is matlab, but it does not work on OS X, you mush export a variable MATLABCMD, which points to your matlab, in your .bashrc to set matlab_cmd."
+        else:
+            print "Clinica will not work on your platform "
+            
         MatlabCommand.set_default_matlab_cmd(get_matlab_command())#this is to set the matlab_path(os.environ) in your bashrc file, to choose which version of matlab do you wanna use     
+        print MatlabCommand.set_default_matlab_cmd(get_matlab_command())
+        print type(MatlabCommand.set_default_matlab_cmd(get_matlab_command()))
+        print get_matlab_command()
+        
         matlab = MatlabCommand()
         
         # add the dynamic traits
