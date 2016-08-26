@@ -1,8 +1,9 @@
 % Compute Streamline Weighted Prototypes of a bundle in VTK format
 %
-% Usage: weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_CPP_code,path_Community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
+% Usage: weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_CPP_code,path_Community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
 %
 % MANDATORY INPUTS:
+% - working_dir: directory where files are saved
 % - filename_bundle: filename of the fiber bundle which must be a .vtk file.
 % It must have a list of 3D points and then it should use te keyword
 % "LINES" for polygons. Each row describes a streamline. The first number
@@ -50,32 +51,12 @@
 %  Copyright Pietro GORI, Inria 
 %  Written 16/08/2016
     
-function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_CPP_code,path_Community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
-    
-   addpath(path_matlab_functions)
-   
-    %% Check dependencies
-    if ~exist([ path_CPP_code '/bin/Gramiam'],'file') 
-        error('Compile C++ code in the folder bin inside CPP_code')
-    end
-    if ~exist([ path_CPP_code '/bin/MedoidsFinale'],'file') 
-        error('Compile C++ code in the folder bin inside CPP_code')
-    end
-    if ~exist([ path_CPP_code '/bin/WriteTube'],'file') 
-        error('Compile C++ code in the folder bin inside CPP_code')
-    end
-    if ~exist([ path_Community_latest '/community'],'file') 
-        error('Compile C++ code in the folder Community_latest')
-    end
-    if ~exist([ path_Community_latest '/hierarchy'],'file') 
-        error('Compile C++ code in the folder Community_latest')
-    end
-        
-  
+function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_CPP_code,path_Community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
+ 
     %% Check input parameters    
     switch nargin
         
-        case 7            
+        case 8            
             bound_limit=1.5359; % 85=1.4835 , 86=1.5010 , 87=1.5184 , 87.5=1.5272 , 88=1.5359 , 89=1.5533
             degree_precision=0.15; % it will explain (1-degree_precision)*100 % of the norm of the bundle                     
             num_iter_modularity=10;  
@@ -83,7 +64,7 @@ function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,pat
             minValueTau=1; 
             increase_radius=0.02; 
             
-        case 13  
+        case 14  
             
             if isempty(bound_limit_input)
                 bound_limit=1.5359; 
@@ -124,11 +105,35 @@ function [] = weighted_prototypes(filename_bundle,lambda_g,lambda_a,lambda_b,pat
         otherwise
             error('Please insert either only lambda_g,lambda_a,lambda_b and filename_bundle or all parameters. If you want to use default parameter please use [] as input value')
             
-    end        
+    end   
+    
+    %% Matlab dependencies
+    addpath(path_matlab_functions)
+   
+    %% Working directory
+    cd(working_dir)
+   
+    %% Check dependencies
+    if ~exist([ path_CPP_code '/bin/Gramiam'],'file') 
+        error('Compile C++ code in the folder bin inside CPP_code')
+    end
+    if ~exist([ path_CPP_code '/bin/MedoidsFinale'],'file') 
+        error('Compile C++ code in the folder bin inside CPP_code')
+    end
+    if ~exist([ path_CPP_code '/bin/WriteTube'],'file') 
+        error('Compile C++ code in the folder bin inside CPP_code')
+    end
+    if ~exist([ path_Community_latest '/community'],'file') 
+        error('Compile C++ code in the folder Community_latest')
+    end
+    if ~exist([ path_Community_latest '/hierarchy'],'file') 
+        error('Compile C++ code in the folder Community_latest')
+    end
 
     disp(['Analysing bundle ' filename_bundle ' with parameters lambda_g: ' num2str(lambda_g) ' lambda_a:' num2str(lambda_a) ' lambda_b' num2str(lambda_b) ])
     disp(['Parameters: num_iter_modularity: ' num2str(num_iter_modularity) ', minValueTau: ' num2str(minValueTau) ', degree_precision: ' num2str(degree_precision) ', bound_limit: ' num2str(bound_limit) ])
     
+    %% Parameters
 %     filename_modularity='Modularity.mat';
     filename_vtk_NoOutlier='NoOutliers.vtk';
     filename_vtk_clusters='Clusters.vtk';
