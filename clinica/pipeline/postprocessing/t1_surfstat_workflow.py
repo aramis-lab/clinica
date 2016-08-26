@@ -55,11 +55,12 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
         if sys.platform.startswith('linux'):
             print "###Note: your platform is linux, the default command line for Matlab(matlab_cmd) is matlab, but you can also export a variable MATLABCMD,  which points to your matlab,  in your .bashrc to set matlab_cmd, this can help you to choose which Matlab to run when you have more than one Matlab. "
         elif sys.platform.startswith('darwin'):
-            while True:
-                try:
-                    'MATLABCMD' in os.environ 
-                except ValueError:
-                    print "###Note: your platform is MAC OS X, the default command line for Matlab(matlab_cmd) is matlab, but it does not work on OS X, you mush export a variable MATLABCMD, which points to your matlab, in your .bashrc to set matlab_cmd."
+            try:
+                if not 'MATLABCMD' in  os.environ:
+                    raise RuntimeError("###Note: your platform is MAC OS X, the default command line for Matlab(matlab_cmd) is matlab, but it does not work on OS X, you mush export a variable MATLABCMD, which points to your matlab, in your .bashrc to set matlab_cmd.")
+            except Exception as e:
+                print(str(e))
+                exit(1)            
         else:
             print "Clinica will not work on your platform "
             
