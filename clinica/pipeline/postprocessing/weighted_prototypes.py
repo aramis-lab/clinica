@@ -3,7 +3,7 @@
 """
 Created on 12/08/2016
 
-@author: Pietro Gori
+@author: pietro.gori
 """
 from __future__ import absolute_import
 
