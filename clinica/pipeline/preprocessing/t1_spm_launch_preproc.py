@@ -135,25 +135,25 @@ if __name__ == "__main__":
     parser.add_argument("-e","--experiment_dir", type=str, help="Path to the directory where to store the experiment data")
     parser.add_argument("-o","--output_dir", type=str, help="Path to the directory where the output should be saved")
     args = parser.parse_args()
-    
+
     if not args.data_dir or not args.experiment_dir or not args.output_dir:
         print 'Insufficient input arguments'
-        parser.print_help
+        parser.print_help()
         sys.exit(1)
-        
+
     # Experiment folders
     #data_dir = '/data/FAST_DRIVE2/samper/xnat_download'
     #experiment_dir = '/data/FAST_DRIVE2/samper/clinica/run'
     #output_dir = '/data/FAST_DRIVE2/samper/clinica/run/output'
 
-    
+
     # To test XNATSource
     # server = 'http://134.157.198.180:8080/xnat'
     # user = 'user'
     # password = 'pwd'
 
     launch_DataGrabber_example(args.data_dir, args.experiment_dir, args.output_dir)
-    
+
     sys.exit(0)
 
     #launch_XNATSource_example(server, user, password, experiment_dir, output_dir)
