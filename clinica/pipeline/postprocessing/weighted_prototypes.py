@@ -7,90 +7,82 @@ Created on 12/08/2016
 """
 from __future__ import absolute_import
 
-def weighted_prototypes(input_directory, output_directory, linear_model, contrast, csv_file, str_format):
+def weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input):
     """
-        This is to use surfstat to do the Group analysis for the reconAll outputs, after the reconAll pipeline, you should just define the paths to
-        surfstatGroupAnalysis, and create the CSV file, and run the pipeline, at last, you will get the results images.
-
-        Inputnode
-        ---------
-        surfstat
-        Inputs: input_directory:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
-                output_directory: the directory to contain the result images.
-                linear_model: string, the linear model that fit into the GLM, for example '1+Lable'.
-                contrast: string, the contrast matrix for GLM, if the factor you choose is categorized variable, clinica_surfstat will create two contrasts,
-                          for example, contrast = 'Label', this will create contrastpos = Label.AD - Label.CN, contrastneg = Label.CN - Label.AD; if the fac-
-                          tory that you choose is a continuous factor, clinica_surfstat will just create one contrast, for example, contrast = 'Age', but note,
-                          the string name that you choose should be exactly the same with the columns names in your csv_file.
-                csv_file: string, the path to your csv file.
-                str_format: string, the str_format which uses to read your csv file, the typy of the string should corresponds exactly with the columns in the csv file.
-                path_to_matscript: this is the path to find the matlabscript where we put it in clinica/lib/clinicasurfstat
-
-          For more infomation about SurfStat, please check:
-          http://www.math.mcgill.ca/keith/surfstat/
-
-        Outputnode:
-
-        :param: input_directory:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
-        :param: output_directory: the directory to contain the result images.
-        :param: linear_model: string, the linear model that fit into the GLM, for example '1+Lable'.
-        :param: contrast: string, the contrast matrix for GLM, if the factor you choose is categorized variable, clinica_surfstat will create two contrasts,
-                          for example, contrast = 'Label', this will create contrastpos = Label.AD - Label.CN, contrastneg = Label.CN - Label.AD; if the fac-
-                          tory that you choose is a continuous factor, clinica_surfstat will just create one contrast, for example, contrast = 'Age', but note,
-                          the string name that you choose should be exactly the same with the columns names in your csv_file.
-        :param: csv_file: string, the path to your csv file.
-        :param: str_format: string, the str_format which uses to read your csv file, the typy of the string should corresponds exactly with the columns in the csv file.
-
-        return images in output_directory
+        TODO
 
     """
 
     from nipype.interfaces.utility import Function
     import nipype.pipeline.engine as pe
-    from os.path import realpath, split, join, dirname
-
-    cwd_path = split(realpath(__file__))[0]
-    parent_path = dirname(dirname(cwd_path))
-    path_to_matscript = join(parent_path, 'lib/clinicasurfstat')
-
-    def runmatlab(input_directory, output_directory, linear_model, contrast, csv_file, str_format, path_to_matscript):
+    from os.path import realpath, split, join, dirname 
+    
+    cwd_path = split(realpath(__file__))[0] # current working directory path
+    parent_path = dirname(dirname(cwd_path)) # cd ../..
+    path_to_matscript = join(parent_path, 'lib/WeightedPrototypes') # concatenate parent directory path and 'lib/WeightedPrototypes'
+    path_matlab_functions = join(path_to_matscript, 'Matlab_Functions')
+    path_CPP_code = join(path_to_matscript, 'CPP_code')
+    path_Community_latest = join(path_to_matscript, 'Community_latest')
+      
+      
+    def runmatlab(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_CPP_code,path_Community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input):
+                      
         from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
         from os.path import join
-
-        MatlabCommand.set_default_matlab_cmd(get_matlab_command())#this is to set the matlab_path(os.environ) in your bashrc file, to choose which version of matlab do you wanna use
+        import sys, os
+        
+        # here, we check out the os, basically, clinica works for linux and MAC OS X.
+        if sys.platform.startswith('linux'):
+            print "###Note: your platform is linux, the default command line for Matlab(matlab_cmd) is matlab, but you can also export a variable MATLABCMD,  which points to your matlab,  in your .bashrc to set matlab_cmd, this can help you to choose which Matlab to run when you have more than one Matlab. "
+        elif sys.platform.startswith('darwin'):
+            try:
+                if not 'MATLABCMD' in  os.environ:
+                    raise RuntimeError("###Note: your platform is MAC OS X, the default command line for Matlab(matlab_cmd) is matlab, but it does not work on OS X, you mush export a variable MATLABCMD, which points to your matlab, in your .bashrc to set matlab_cmd.")
+            except Exception as e:
+                print(str(e))
+                exit(1)            
+        else:
+            print "Clinica will not work on your platform "
+            
+        MatlabCommand.set_default_matlab_cmd(get_matlab_command())#this is to set the matlab_path(os.environ) in your bashrc file, to choose which version of matlab do you wanna use     
+        # here, set_default_matlab_cmd is a @classmethod
         matlab = MatlabCommand()
-
+        
         # add the dynamic traits
         #openGL_trait = traits.Bool(True, argstr='-nosoftwareopengl', usedefault=True, desc='Switch on hardware openGL', nohash=True)
         #matlab.input_spec.add_trait(matlab.input_spec(), 'nosoftwareopengl', openGL_trait() )
-
-        matlab.inputs.args = '-nosoftwareopengl'
+        
+        matlab.inputs.args = '-nosoftwareopengl' # Bug, for my laptop, it does not work, but the command line does have the flag -nosoftwareopengl, we should try on other computer's matlab to check if this flag works!
         matlab.inputs.paths = path_to_matscript  #CLINICA_HOME, this is the path to add into matlab, addpath
-        matlab.inputs.script = """
-        clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s');
-        """%(input_directory, output_directory, linear_model, contrast, csv_file, str_format)  # here, we should define the inputs for the matlab function that you want to use
+                
+        matlab.inputs.script = """weighted_prototypes('%s','%s', '%f', '%f', '%f', '%s', '%s', '%s', '%f', '%f', '%d', '%d', '%f', '%f');"""%(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_CPP_code,path_Community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)  
         matlab.inputs.mfile = True # this will create a file: pyscript.m , the pyscript.m is the default name
-        matlab.inputs.single_comp_thread = False  #this will stop runing with single thread
+        matlab.inputs.single_comp_thread = False  #this will stop runing with single thread  
         matlab.inputs.logfile = join(output_directory, "matlab_output.log")
-        print "matlab logfile is located in the folder: %s" % matlab.inputs.logfile
+        print "matlab logfile is located in the folder: %s" % matlab.inputs.logfile            
         print "matlab script command = %s" % matlab.inputs.script
         print "MatlabCommand inputs flag: single_comp_thread = %s" % matlab.inputs.single_comp_thread
-        print "MatlabCommand choose which matlab to use: %s" % get_matlab_command()
+        print "MatlabCommand choose which matlab to use(matlab_cmd): %s" % get_matlab_command()
         print "MatlabCommand inputs flag: nosoftwareopengl = %s" % matlab.inputs.args
+
         out = matlab.run()
         return out
-
-    surfstat = pe.Node(name='surfstat',
-                   interface=Function(input_names=['input_directory', 'output_directory', 'linear_model',
-                                         'contrast', 'csv_file', 'str_format', 'path_to_matscript'],
-                                      output_names=[ ],
-                                      function=runmatlab))
-    surfstat.inputs.input_directory = input_directory
-    surfstat.inputs.output_directory = output_directory
-    surfstat.inputs.linear_model = linear_model
-    surfstat.inputs.contrast = contrast
-    surfstat.inputs.csv_file = csv_file
-    surfstat.inputs.str_format = str_format
-    surfstat.inputs.path_to_matscript = path_to_matscript
-
-    return surfstat
+    # end def runmatlab
+        
+    WP = pe.Node(name='WP', interface=Function(input_names=['working_dir','filename_bundle','lambda_g','lambda_a','lambda_b','path_matlab_functions','path_CPP_code','path_Community_latest','bound_limit_input','degree_precision_input','num_iter_modularity_input','minimum_number_fibers_cluster_input','minValueTau_input','increase_radius_input'], output_names=[ ], function=runmatlab))
+    WP.inputs.working_dir = working_dir
+    WP.inputs.filename_bundle = filename_bundle
+    WP.inputs.lambda_g = lambda_g
+    WP.inputs.lambda_a = lambda_a    
+    WP.inputs.lambda_b = lambda_b
+    WP.inputs.path_matlab_functions = path_matlab_functions
+    WP.inputs.path_CPP_code = path_CPP_code
+    WP.inputs.path_Community_latest = path_Community_latest
+    WP.inputs.bound_limit_input = bound_limit_input
+    WP.inputs.degree_precision_input = degree_precision_input
+    WP.inputs.num_iter_modularity_input = num_iter_modularity_input
+    WP.inputs.minimum_number_fibers_cluster_input = minimum_number_fibers_cluster_input
+    WP.inputs.minValueTau_input = minValueTau_input
+    WP.inputs.increase_radius_input = increase_radius_input
+    
+    return WP
