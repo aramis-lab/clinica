@@ -4,6 +4,8 @@ clc
 
 cd('/Users/pietro.gori/Softwares/clinica/examples/external-data/WeightedPrototypes')
 
+addpath('/Users/pietro.gori/Softwares/clinica/clinica/lib/WeightedPrototypes')
+
 filename_bundle='../Bundle_small.vtk';
 lambda_g=3;
 lambda_a=3;
