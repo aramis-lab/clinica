@@ -40,7 +40,7 @@ def t1_fsl_segmentation_pipeline(
             tissue type (0=CSF, 1=GM, 2=WM)
 
      Example:
-         >>> from clinica.pipeline.preprocessing.t1_fsl_pipeline import t1_fsl_segmentation_pipeline
+         >>> from clinica.pipeline.t1.t1_fsl_pipeline import t1_fsl_segmentation_pipeline
          >>> fsl_segmentation = tractography_pipeline(datasink_directory='/path/to/datasink/directory', is_bias_corrected=True)
          >>> fsl_segmentation.inputs.inputnode.in_t1 = 'subject_bias_corrected_t1.nii'
          >>> fsl_segmentation.run()

@@ -3,7 +3,7 @@
 
 """This module contains the DTI scalar analysis pipeline."""
 
-def create_DTI_atlas_scalar_analysis(
+def create_dti_atlas_scalar_analysis(
                 in_scalar_image, atlas_labels, atlas_scalar_image, working_directory, datasink_directory, name="create_dti_atlas_scalar_analysis")):
     """
     Perform tracts analysis according to a white matter atlas using a tensor-derived scalar image.
