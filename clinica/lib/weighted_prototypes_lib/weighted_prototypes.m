@@ -13,8 +13,8 @@
 % - lambda_a: kernel bandwidth of the STARTING structure
 % - lambda_b: kernel bandwidth of the ENDING structure
 % - path_matlab_functions
-% - path_CPP_code: absolute path to C++ code 
-% - path_Community_latest: absolute path to Community detection folder
+% - path_cpp_code: absolute path to C++ code 
+% - path_community_latest: absolute path to Community detection folder
 % To note: streamlines must have a consistent orientation, namely they must
 % have the same starting and ending ROIs
 % 
@@ -141,7 +141,7 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
     filename_medoids_polyline='Prototypes.vtk';
     
     %% Loading bundle
-    [Points,number_points_curve,] = VTK_Bundles_Polyline_Reader(filename_bundle);
+    [Points,number_points_curve,] = vtk_bundles_polyline_reader(filename_bundle);
 
     %% Gramiam
     diary('gramiam.log')
@@ -170,7 +170,7 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
         if(fid==-1)
             error('Error: file descriptor not valid, check the file name');    
         end
-        [~,~] = GoToKeyWord(fid, 'Total');    
+        [~,~] = go_to_key_word(fid, 'Total');    
         line = fgetl(fid);
         Q = sscanf(line,'%f');
         fclose(fid);
@@ -357,7 +357,7 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
         error('Error')
     end
 
-    Write_vtk_bundles_polyline(Points_Medoids,Number_points_curve_Medoids,Scalars_Medoids, [], [],filename_medoids_polyline)  
+    write_vtk_bundles_polyline(Points_Medoids,Number_points_curve_Medoids,Scalars_Medoids, [], [],filename_medoids_polyline)  
 
     % Writing NoOutliers and Clusters   
     Points_Basal=[];
@@ -396,8 +396,8 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
         error('Problem with outliers!')
     end  
 
-    Write_vtk_bundles_polyline(Points_finale,number_points_curve_final,[],[],[],filename_vtk_no_outlier)
-    Write_vtk_bundles_polyline(Points_finale,number_points_curve_final,Scalars_color,[],[],filename_vtk_clusters)
+    write_vtk_bundles_polyline(Points_finale,number_points_curve_final,[],[],[],filename_vtk_no_outlier)
+    write_vtk_bundles_polyline(Points_finale,number_points_curve_final,Scalars_color,[],[],filename_vtk_clusters)
     
 end
                     

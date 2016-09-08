@@ -1,5 +1,5 @@
-/Users/pietro.gori/Softwares/clinica/clinica/lib/WeightedPrototypes/CPP_code/bin/CMakeFiles/WriteTube.dir
-/Users/pietro.gori/Softwares/clinica/clinica/lib/WeightedPrototypes/CPP_code/bin/CMakeFiles/edit_cache.dir
-/Users/pietro.gori/Softwares/clinica/clinica/lib/WeightedPrototypes/CPP_code/bin/CMakeFiles/rebuild_cache.dir
-/Users/pietro.gori/Softwares/clinica/clinica/lib/WeightedPrototypes/CPP_code/bin/CMakeFiles/MedoidsFinale.dir
-/Users/pietro.gori/Softwares/clinica/clinica/lib/WeightedPrototypes/CPP_code/bin/CMakeFiles/Gramiam.dir
+/Users/pietro.gori/Softwares/clinica/clinica/lib/weighted_prototypes_lib/cpp_code/bin/CMakeFiles/write_tube.dir
+/Users/pietro.gori/Softwares/clinica/clinica/lib/weighted_prototypes_lib/cpp_code/bin/CMakeFiles/edit_cache.dir
+/Users/pietro.gori/Softwares/clinica/clinica/lib/weighted_prototypes_lib/cpp_code/bin/CMakeFiles/rebuild_cache.dir
+/Users/pietro.gori/Softwares/clinica/clinica/lib/weighted_prototypes_lib/cpp_code/bin/CMakeFiles/medoids.dir
+/Users/pietro.gori/Softwares/clinica/clinica/lib/weighted_prototypes_lib/cpp_code/bin/CMakeFiles/gramiam.dir

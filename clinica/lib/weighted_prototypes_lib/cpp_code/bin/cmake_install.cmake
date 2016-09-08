@@ -1,4 +1,4 @@
-# Install script for directory: /Users/pietro.gori/Softwares/clinica/clinica/lib/WeightedPrototypes/CPP_code
+# Install script for directory: /Users/pietro.gori/Softwares/clinica/clinica/lib/weighted_prototypes_lib/cpp_code
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -35,5 +35,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/Users/pietro.gori/Softwares/clinica/clinica/lib/WeightedPrototypes/CPP_code/bin/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/Users/pietro.gori/Softwares/clinica/clinica/lib/weighted_prototypes_lib/cpp_code/bin/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
