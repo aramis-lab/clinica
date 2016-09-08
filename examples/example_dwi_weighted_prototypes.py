@@ -16,8 +16,8 @@ Example of weighted_prototypes.py
 """
 
 #from __future__ import absolute_import # if you use a version of Python >= 2.7, the script will use the version of absolute_import of Python 2.7 ??
-from clinica.pipeline.postprocessing.weighted_prototypes import weighted_prototypes
-from os.path import realpath, split, join, isdir
+from clinica.pipeline.dwi.weighted_prototypes import weighted_prototypes
+from os.path import realpath, split, join
 from os import makedirs
 #import tempfile
 import time
@@ -29,7 +29,7 @@ cwd_path = split(realpath(__file__))[0]
 lambda_g=4.0
 lambda_a=3.0
 lambda_b=3.0
-type='smal' # It can be 'small' 'medium' or 'big'
+type='small' # It can be 'small' 'medium' or 'big'
 filename_bundle=join(cwd_path, 'external-data/WeightedPrototypes/Bundle_%s.vtk') % type
 
 ## OPTIONAL PARAMETERS ##

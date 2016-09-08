@@ -1,6 +1,6 @@
 % Reads weighted prototypes as lines in VTK format
 %
-% Usage: [New_Points,New_number_points_curve] = DownSampleBundlesVTK(filename,out_filename,n_fibers,data_p,data_n) 
+% Usage: [New_Points,New_number_points_curve] = downsample_bundles_vtk(filename,out_filename,n_fibers,data_p,data_n) 
 %
 % MANDATORY INPUTS:
 % - filename: filename of the VTK fiber bundle to downsample
@@ -18,7 +18,7 @@
 %  Copyright Pietro GORI, Inria 
 %  Written 16/08/2016
 
-function [New_Points,New_number_points_curve] = DownSampleBundlesVTK(filename,out_filename,n_fibers,data_p,data_n) 
+function [New_Points,New_number_points_curve] = downsample_bundles_vtk(filename,out_filename,n_fibers,data_p,data_n) 
 
 if nargin < 4
     disp('Downsampling - Reading Data')

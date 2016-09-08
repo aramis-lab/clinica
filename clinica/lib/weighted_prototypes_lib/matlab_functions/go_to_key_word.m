@@ -1,6 +1,6 @@
-function [out,LINE] = GoToKeyWord(fid, keyWord)
+function [out,LINE] = go_to_key_word(fid, keyWord)
   
-% Usage: [out, line] = GoToKeyWord( fid, keyWord)
+% Usage: [out, line] = go_to_key_word( fid, keyWord)
 %
 % Input: 
 %  - fid: file descriptor, as obtained with fopen();

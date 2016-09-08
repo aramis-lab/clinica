@@ -1,6 +1,6 @@
 % Reads weighted prototypes as lines in VTK format
 %
-% Usage: [Points,number_points_curve,curve_associated,Scalars] = VTK_Bundles_Polyline_Reader(filename)
+% Usage: [Points,number_points_curve,curve_associated,Scalars] = vtk_bundles_polyline_reader(filename)
 %
 % INPUTS:
 % - filename: filename of the VTK file of the weighted prototypes saved as
@@ -19,7 +19,7 @@
 %  Copyright Pietro GORI, Inria 
 %  Written 16/08/2016
 
-function [Points,number_points_curve,curve_associated,Scalars] = VTK_Bundles_Polyline_Reader(filename)
+function [Points,number_points_curve,curve_associated,Scalars] = vtk_bundles_polyline_reader(filename)
 
 fid = fopen(filename, 'r');
 if(fid==-1)
@@ -28,14 +28,14 @@ if(fid==-1)
 end
 
 keyWord = 'DATASET POLYDATA';
-newL = GoToKeyWord(fid, keyWord);
+newL = go_to_key_word(fid, keyWord);
 if(newL == -1)
     fprintf(1, 'Error: file is not a vtkPolyData.\n');
     return;
 end
 
 keyWord = 'POINTS';
-newL = GoToKeyWord(fid, keyWord);
+newL = go_to_key_word(fid, keyWord);
 if(newL==-1)
     fprintf(1, 'Cannot find flag: %s\n', keyWord);
 end
@@ -74,7 +74,7 @@ end
 
 % Read the polygons
 keyWord = 'LINES';
-newL = GoToKeyWord(fid, keyWord);
+newL = go_to_key_word(fid, keyWord);
 if(newL == -1)
     return;
 end
@@ -98,17 +98,17 @@ end
 % Read the scalars
 Scalars = []; % set of scalars
 keyWord = 'SCALARS';
-newL = GoToKeyWord(fid, keyWord);
+newL = go_to_key_word(fid, keyWord);
 if(newL == -1)
 %     fprintf(1, 'No scalar\n');
 else
         
     keyWord = 'LOOKUP_TABLE';
-    newL = GoToKeyWord(fid, keyWord);
+    newL = go_to_key_word(fid, keyWord);
     if(newL == -1)
         fprintf(1, 'No LUT\n');
         keyWord = 'SCALARS';
-        newL = GoToKeyWord(fid, keyWord);
+        newL = go_to_key_word(fid, keyWord);
     end
     
     count = 1;

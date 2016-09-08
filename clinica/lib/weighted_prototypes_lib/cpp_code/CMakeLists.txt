@@ -61,22 +61,22 @@ Endif (NOT DEFINED CMAKE_BUILD_TYPE:STRING)
 Include_Directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 # EIGEN
-Include_Directories(../../Eigen)
+Include_Directories(../../eigen)
 
 #
 # Executable :
 #
 
-Add_Executable(Gramiam
+Add_Executable(gramiam
 compute_gramiam.cpp
 )
 
-Add_Executable(MedoidsFinale
-Medoids_Finale.cpp
+Add_Executable(medoids
+medoids.cpp
 )
 
-Add_Executable(WriteTube
-Write_Tube.cpp
+Add_Executable(write_tube
+write_tube.cpp
 )
 
 #
@@ -97,17 +97,17 @@ Else ( "${VTK_MAJOR_VERSION}" LESS 6 )
     )
 Endif ( "${VTK_MAJOR_VERSION}" LESS 6 )
 
-Target_Link_Libraries(Gramiam
+Target_Link_Libraries(gramiam
   ${ITK_LIBRARIES}
   ${VTK_DEPENDANCIES}
 )
 
-Target_Link_Libraries(MedoidsFinale
+Target_Link_Libraries(medoids
   ${ITK_LIBRARIES}
   ${VTK_DEPENDANCIES}
 )
 
-Target_Link_Libraries(WriteTube
+Target_Link_Libraries(write_tube
   ${ITK_LIBRARIES}
   ${VTK_DEPENDANCIES}
 )

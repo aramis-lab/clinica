@@ -1,6 +1,6 @@
 % Write weighted prototypes as lines in VTK format
 %
-% Usage: Write_vtk_bundles_polyline(Points,number_points_curve,Scalars, Colors, TextureCoordinates,filename)
+% Usage: write_vtk_bundles_polyline(Points,number_points_curve,Scalars, Colors, TextureCoordinates,filename)
 %
 % INPUTS:
 % - Points: Matrix [N,3] where N is the number of points. Each row
@@ -18,7 +18,7 @@
 %  Copyright Pietro GORI, Inria 
 %  Written 16/08/2016
 
-function Write_vtk_bundles_polyline(Points,number_points_curve,Scalars, Colors, TextureCoordinates,filename)
+function write_vtk_bundles_polyline(Points,number_points_curve,Scalars, Colors, TextureCoordinates,filename)
 
 [R,C] = size(Points);
 
