@@ -52,7 +52,7 @@ def recon_all_pipeline(data_dir, output_dir,field_template, template_args, datas
     from nipype.interfaces.freesurfer.preprocess import ReconAll
     import nipype.interfaces.utility as niu
 
-    try:
+    try:# just try to check out the ReconAll version for nipype
         if ReconAll.version.fget.func_globals['__version__'].split(".") < ['0', '11', '0']:
             raise RuntimeError('ReconAll version should at least be version of 0.11.0')
     except Exception as e:
