@@ -38,7 +38,7 @@ Note: as we will use OpenGL to render the result images, and after Matlab2014, t
 """
 
 from __future__ import absolute_import
-from clinica.pipeline.postprocessing.t1_surfstat_workflow import clinica_surfstat
+from clinica.pipeline.statistics.t1_surfstat_workflow import clinica_surfstat
 from os.path import realpath, split, join
 import tempfile
 import time
