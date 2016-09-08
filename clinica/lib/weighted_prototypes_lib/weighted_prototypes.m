@@ -51,7 +51,7 @@
 %  Copyright Pietro GORI, Inria 
 %  Written 16/08/2016
     
-function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_CPP_code,path_Community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
+function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_cpp_code,path_community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
  
     %% Check input parameters    
     switch nargin
@@ -114,19 +114,19 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
     cd(working_dir)
    
     %% Check dependencies
-    if ~exist([ path_CPP_code '/bin/Gramiam'],'file') 
+    if ~exist([ path_cpp_code '/bin/gramiam'],'file') 
         error('Compile C++ code in the folder bin inside CPP_code')
     end
-    if ~exist([ path_CPP_code '/bin/MedoidsFinale'],'file') 
+    if ~exist([ path_cpp_code '/bin/medoids'],'file') 
         error('Compile C++ code in the folder bin inside CPP_code')
     end
-    if ~exist([ path_CPP_code '/bin/WriteTube'],'file') 
+    if ~exist([ path_cpp_code '/bin/write_tube'],'file') 
         error('Compile C++ code in the folder bin inside CPP_code')
     end
-    if ~exist([ path_Community_latest '/community'],'file') 
+    if ~exist([ path_community_latest '/community'],'file') 
         error('Compile C++ code in the folder Community_latest')
     end
-    if ~exist([ path_Community_latest '/hierarchy'],'file') 
+    if ~exist([ path_community_latest '/hierarchy'],'file') 
         error('Compile C++ code in the folder Community_latest')
     end
 
@@ -135,18 +135,18 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
     
     %% Parameters
 %     filename_modularity='Modularity.mat';
-    filename_vtk_NoOutlier='NoOutliers.vtk';
+    filename_vtk_no_outlier='NoOutliers.vtk';
     filename_vtk_clusters='Clusters.vtk';
     filename_medoids_tubes='Prototypes_tubes.vtk';
-    filename_Medoids_polyline='Prototypes.vtk';
+    filename_medoids_polyline='Prototypes.vtk';
     
     %% Loading bundle
     [Points,number_points_curve,] = VTK_Bundles_Polyline_Reader(filename_bundle);
 
     %% Gramiam
-    diary('Gramiam.log')
+    diary('gramiam.log')
     diary on                   
-    eval(sprintf(['!' path_CPP_code '/bin/Gramiam %s %i %f %f %f'],filename_bundle, 3, lambda_g, lambda_a, lambda_b))
+    eval(sprintf(['!' path_cpp_code '/bin/gramiam %s %i %f %f %f'],filename_bundle, 3, lambda_g, lambda_a, lambda_b))
     pause(1);
     diary off
 
@@ -163,7 +163,7 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
         diary('diary')
         diary on
         disp('Community construction')   
-        eval(sprintf(['! ' path_Community_latest '/community ' filename_graph_bin ' -l -1 -v -w ' filename_graph_weights ' > graph.tree']));
+        eval(sprintf(['! ' path_community_latest '/community ' filename_graph_bin ' -l -1 -v -w ' filename_graph_weights ' > graph.tree']));
         diary off     
 
         fid = fopen('diary', 'r');
@@ -179,7 +179,7 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
 
         pause(1);
 
-        eval(sprintf(['! ' path_Community_latest '/hierarchy graph.tree > hierarchy.log']));    
+        eval(sprintf(['! ' path_community_latest '/hierarchy graph.tree > hierarchy.log']));    
 
         fid = fopen('hierarchy.log', 'r');
         if(fid==-1)
@@ -191,7 +191,7 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
 
         %disp(['Number of levels: ' num2str(num_level) ])
 
-        eval(sprintf(['! ' path_Community_latest '/hierarchy graph.tree -l %u > C.log'], num_level-1));
+        eval(sprintf(['! ' path_community_latest '/hierarchy graph.tree -l %u > C.log'], num_level-1));
 
         pause(1);
 
@@ -263,7 +263,7 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
     diary('Medoids.log')
     diary on
     disp('Prototypes')            
-    eval(sprintf(['! ' path_CPP_code '/bin/MedoidsFinale %s %s %s %f %f %f %d %s'], filename_graph_bin, filename_graph_weights, filename_graph_diag, minValueTau, degree_precision, bound_limit, NClusters, filename_fibers_tot));
+    eval(sprintf(['! ' path_cpp_code '/bin/medoids %s %s %s %f %f %f %d %s'], filename_graph_bin, filename_graph_weights, filename_graph_diag, minValueTau, degree_precision, bound_limit, NClusters, filename_fibers_tot));
     pause(1);   
     diary off
             
@@ -341,7 +341,7 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
     end		
     fclose(fid);
 
-    eval(sprintf(['! ' path_CPP_code '/bin/WriteTube %s %s %s %s'], 'Points.txt','Number_Points_Curve_Medoids.txt', 'Radius.txt', filename_medoids_tubes));
+    eval(sprintf(['! ' path_cpp_code '/bin/write_tube %s %s %s %s'], 'Points.txt','Number_Points_Curve_Medoids.txt', 'Radius.txt', filename_medoids_tubes));
         
     % Writing Prototypes    
     Scalars_Medoids=zeros(size(Points_Medoids,1),1);
@@ -357,7 +357,7 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
         error('Error')
     end
 
-    Write_vtk_bundles_polyline(Points_Medoids,Number_points_curve_Medoids,Scalars_Medoids, [], [],filename_Medoids_polyline)  
+    Write_vtk_bundles_polyline(Points_Medoids,Number_points_curve_Medoids,Scalars_Medoids, [], [],filename_medoids_polyline)  
 
     % Writing NoOutliers and Clusters   
     Points_Basal=[];
@@ -396,7 +396,7 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
         error('Problem with outliers!')
     end  
 
-    Write_vtk_bundles_polyline(Points_finale,number_points_curve_final,[],[],[],filename_vtk_NoOutlier)
+    Write_vtk_bundles_polyline(Points_finale,number_points_curve_final,[],[],[],filename_vtk_no_outlier)
     Write_vtk_bundles_polyline(Points_finale,number_points_curve_final,Scalars_color,[],[],filename_vtk_clusters)
     
 end

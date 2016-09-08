@@ -19,10 +19,10 @@ def weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,b
     
     cwd_path = split(realpath(__file__))[0] # current working directory path
     parent_path = dirname(dirname(cwd_path)) # cd ../..
-    path_to_matscript = join(parent_path, 'lib/WeightedPrototypes') # concatenate parent directory path and 'lib/WeightedPrototypes'
-    path_matlab_functions = join(path_to_matscript, 'Matlab_Functions')
-    path_CPP_code = join(path_to_matscript, 'CPP_code')
-    path_Community_latest = join(path_to_matscript, 'Community_latest')
+    path_to_matscript = join(parent_path, 'lib/weighted_prototypes_lib') # concatenate parent directory path and 'lib/WeightedPrototypes'
+    path_matlab_functions = join(path_to_matscript, 'matlab_functions')
+    path_CPP_code = join(path_to_matscript, 'cpp_code')
+    path_Community_latest = join(path_to_matscript, 'community_latest')
       
       
     def runmatlab(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_CPP_code,path_Community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input):
