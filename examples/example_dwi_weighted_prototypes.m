@@ -2,17 +2,17 @@ close all
 clearvars
 clc
 
-cd('/Users/pietro.gori/Softwares/clinica/examples/external-data/WeightedPrototypes')
+cd('/Users/pietro.gori/Softwares/clinica/examples/external-data/dwi_weighted_prototypes')
 
-addpath('/Users/pietro.gori/Softwares/clinica/clinica/lib/WeightedPrototypes')
+addpath('/Users/pietro.gori/Softwares/clinica/clinica/lib/weighted_prototypes_lib')
 
 filename_bundle='../Bundle_small.vtk';
 lambda_g=3;
 lambda_a=3;
 lambda_b=3;
-path_matlab_functions='/Users/pietro.gori/Softwares/clinica/clinica/lib/WeightedPrototypes/Matlab_Functions';
-path_CPP_code='/Users/pietro.gori/Softwares/clinica/clinica/lib/WeightedPrototypes/CPP_code';
-path_Community_latest='/Users/pietro.gori/Softwares/clinica/clinica/lib/WeightedPrototypes/Community_latest';
+path_matlab_functions='/Users/pietro.gori/Softwares/clinica/clinica/lib/weighted_prototypes_lib/matlab_functions';
+path_cpp_code='/Users/pietro.gori/Softwares/clinica/clinica/lib/weighted_prototypes_lib/cpp_code';
+path_community_latest='/Users/pietro.gori/Softwares/clinica/clinica/lib/weighted_prototypes_lib/community_latest';
 bound_limit_input=[];
 degree_precision_input=[];
 num_iter_modularity_input=[];
@@ -30,6 +30,5 @@ mkdir(dossier)
 cd(dossier)
 
 working_dir=pwd;
-
-weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_CPP_code,path_Community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
+weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_cpp_code,path_community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
 

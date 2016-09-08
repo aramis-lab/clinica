@@ -30,7 +30,7 @@ lambda_g=4.0
 lambda_a=3.0
 lambda_b=3.0
 type='small' # It can be 'small' 'medium' or 'big'
-filename_bundle=join(cwd_path, 'external-data/WeightedPrototypes/Bundle_%s.vtk') % type
+filename_bundle=join(cwd_path, 'external-data/dwi_weighted_prototypes/bundle_%s.vtk') % type
 
 ## OPTIONAL PARAMETERS ##
 bound_limit_input=None
@@ -40,7 +40,7 @@ minimum_number_fibers_cluster_input=None
 minValueTau_input=None
 increase_radius_input=None
 
-working_dir = join(cwd_path, 'external-data/WeightedPrototypes/Example_bundle_%s_lambda_g_%.1f_lambda_a_%.1f_lambda_b_%.1f') % (type,lambda_g,lambda_a,lambda_b)
+working_dir = join(cwd_path, 'external-data/dwi_weighted_prototypes/example_bundle_%s_lambda_g_%.1f_lambda_a_%.1f_lambda_b_%.1f') % (type,lambda_g,lambda_a,lambda_b)
 try:
     makedirs(working_dir)
 except OSError as exc:

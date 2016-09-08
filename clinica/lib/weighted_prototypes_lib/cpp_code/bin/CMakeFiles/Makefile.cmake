@@ -363,7 +363,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/WriteTube.dir/DependInfo.cmake"
-  "CMakeFiles/MedoidsFinale.dir/DependInfo.cmake"
-  "CMakeFiles/Gramiam.dir/DependInfo.cmake"
+  "CMakeFiles/write_tube.dir/DependInfo.cmake"
+  "CMakeFiles/medoids.dir/DependInfo.cmake"
+  "CMakeFiles/gramiam.dir/DependInfo.cmake"
   )

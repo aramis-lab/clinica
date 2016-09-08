@@ -48,10 +48,10 @@ RM = /usr/local/Cellar/cmake/3.5.2/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/pietro.gori/Softwares/clinica/clinica/lib/WeightedPrototypes/CPP_code
+CMAKE_SOURCE_DIR = /Users/pietro.gori/Softwares/clinica/clinica/lib/weighted_prototypes_lib/cpp_code
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/pietro.gori/Softwares/clinica/clinica/lib/WeightedPrototypes/CPP_code/bin
+CMAKE_BINARY_DIR = /Users/pietro.gori/Softwares/clinica/clinica/lib/weighted_prototypes_lib/cpp_code/bin
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -80,9 +80,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/pietro.gori/Softwares/clinica/clinica/lib/WeightedPrototypes/CPP_code/bin/CMakeFiles /Users/pietro.gori/Softwares/clinica/clinica/lib/WeightedPrototypes/CPP_code/bin/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/pietro.gori/Softwares/clinica/clinica/lib/weighted_prototypes_lib/cpp_code/bin/CMakeFiles /Users/pietro.gori/Softwares/clinica/clinica/lib/weighted_prototypes_lib/cpp_code/bin/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/pietro.gori/Softwares/clinica/clinica/lib/WeightedPrototypes/CPP_code/bin/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/pietro.gori/Softwares/clinica/clinica/lib/weighted_prototypes_lib/cpp_code/bin/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -111,97 +111,43 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named WriteTube
+# Target rules for targets named write_tube
 
 # Build rule for target.
-WriteTube: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 WriteTube
-.PHONY : WriteTube
+write_tube: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 write_tube
+.PHONY : write_tube
 
 # fast build rule for target.
-WriteTube/fast:
-	$(MAKE) -f CMakeFiles/WriteTube.dir/build.make CMakeFiles/WriteTube.dir/build
-.PHONY : WriteTube/fast
+write_tube/fast:
+	$(MAKE) -f CMakeFiles/write_tube.dir/build.make CMakeFiles/write_tube.dir/build
+.PHONY : write_tube/fast
 
 #=============================================================================
-# Target rules for targets named MedoidsFinale
+# Target rules for targets named medoids
 
 # Build rule for target.
-MedoidsFinale: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 MedoidsFinale
-.PHONY : MedoidsFinale
+medoids: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 medoids
+.PHONY : medoids
 
 # fast build rule for target.
-MedoidsFinale/fast:
-	$(MAKE) -f CMakeFiles/MedoidsFinale.dir/build.make CMakeFiles/MedoidsFinale.dir/build
-.PHONY : MedoidsFinale/fast
+medoids/fast:
+	$(MAKE) -f CMakeFiles/medoids.dir/build.make CMakeFiles/medoids.dir/build
+.PHONY : medoids/fast
 
 #=============================================================================
-# Target rules for targets named Gramiam
+# Target rules for targets named gramiam
 
 # Build rule for target.
-Gramiam: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 Gramiam
-.PHONY : Gramiam
+gramiam: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 gramiam
+.PHONY : gramiam
 
 # fast build rule for target.
-Gramiam/fast:
-	$(MAKE) -f CMakeFiles/Gramiam.dir/build.make CMakeFiles/Gramiam.dir/build
-.PHONY : Gramiam/fast
-
-Medoids_Finale.o: Medoids_Finale.cpp.o
-
-.PHONY : Medoids_Finale.o
-
-# target to build an object file
-Medoids_Finale.cpp.o:
-	$(MAKE) -f CMakeFiles/MedoidsFinale.dir/build.make CMakeFiles/MedoidsFinale.dir/Medoids_Finale.cpp.o
-.PHONY : Medoids_Finale.cpp.o
-
-Medoids_Finale.i: Medoids_Finale.cpp.i
-
-.PHONY : Medoids_Finale.i
-
-# target to preprocess a source file
-Medoids_Finale.cpp.i:
-	$(MAKE) -f CMakeFiles/MedoidsFinale.dir/build.make CMakeFiles/MedoidsFinale.dir/Medoids_Finale.cpp.i
-.PHONY : Medoids_Finale.cpp.i
-
-Medoids_Finale.s: Medoids_Finale.cpp.s
-
-.PHONY : Medoids_Finale.s
-
-# target to generate assembly for a file
-Medoids_Finale.cpp.s:
-	$(MAKE) -f CMakeFiles/MedoidsFinale.dir/build.make CMakeFiles/MedoidsFinale.dir/Medoids_Finale.cpp.s
-.PHONY : Medoids_Finale.cpp.s
-
-Write_Tube.o: Write_Tube.cpp.o
-
-.PHONY : Write_Tube.o
-
-# target to build an object file
-Write_Tube.cpp.o:
-	$(MAKE) -f CMakeFiles/WriteTube.dir/build.make CMakeFiles/WriteTube.dir/Write_Tube.cpp.o
-.PHONY : Write_Tube.cpp.o
-
-Write_Tube.i: Write_Tube.cpp.i
-
-.PHONY : Write_Tube.i
-
-# target to preprocess a source file
-Write_Tube.cpp.i:
-	$(MAKE) -f CMakeFiles/WriteTube.dir/build.make CMakeFiles/WriteTube.dir/Write_Tube.cpp.i
-.PHONY : Write_Tube.cpp.i
-
-Write_Tube.s: Write_Tube.cpp.s
-
-.PHONY : Write_Tube.s
-
-# target to generate assembly for a file
-Write_Tube.cpp.s:
-	$(MAKE) -f CMakeFiles/WriteTube.dir/build.make CMakeFiles/WriteTube.dir/Write_Tube.cpp.s
-.PHONY : Write_Tube.cpp.s
+gramiam/fast:
+	$(MAKE) -f CMakeFiles/gramiam.dir/build.make CMakeFiles/gramiam.dir/build
+.PHONY : gramiam/fast
 
 compute_gramiam.o: compute_gramiam.cpp.o
 
@@ -209,7 +155,7 @@ compute_gramiam.o: compute_gramiam.cpp.o
 
 # target to build an object file
 compute_gramiam.cpp.o:
-	$(MAKE) -f CMakeFiles/Gramiam.dir/build.make CMakeFiles/Gramiam.dir/compute_gramiam.cpp.o
+	$(MAKE) -f CMakeFiles/gramiam.dir/build.make CMakeFiles/gramiam.dir/compute_gramiam.cpp.o
 .PHONY : compute_gramiam.cpp.o
 
 compute_gramiam.i: compute_gramiam.cpp.i
@@ -218,7 +164,7 @@ compute_gramiam.i: compute_gramiam.cpp.i
 
 # target to preprocess a source file
 compute_gramiam.cpp.i:
-	$(MAKE) -f CMakeFiles/Gramiam.dir/build.make CMakeFiles/Gramiam.dir/compute_gramiam.cpp.i
+	$(MAKE) -f CMakeFiles/gramiam.dir/build.make CMakeFiles/gramiam.dir/compute_gramiam.cpp.i
 .PHONY : compute_gramiam.cpp.i
 
 compute_gramiam.s: compute_gramiam.cpp.s
@@ -227,8 +173,62 @@ compute_gramiam.s: compute_gramiam.cpp.s
 
 # target to generate assembly for a file
 compute_gramiam.cpp.s:
-	$(MAKE) -f CMakeFiles/Gramiam.dir/build.make CMakeFiles/Gramiam.dir/compute_gramiam.cpp.s
+	$(MAKE) -f CMakeFiles/gramiam.dir/build.make CMakeFiles/gramiam.dir/compute_gramiam.cpp.s
 .PHONY : compute_gramiam.cpp.s
+
+medoids.o: medoids.cpp.o
+
+.PHONY : medoids.o
+
+# target to build an object file
+medoids.cpp.o:
+	$(MAKE) -f CMakeFiles/medoids.dir/build.make CMakeFiles/medoids.dir/medoids.cpp.o
+.PHONY : medoids.cpp.o
+
+medoids.i: medoids.cpp.i
+
+.PHONY : medoids.i
+
+# target to preprocess a source file
+medoids.cpp.i:
+	$(MAKE) -f CMakeFiles/medoids.dir/build.make CMakeFiles/medoids.dir/medoids.cpp.i
+.PHONY : medoids.cpp.i
+
+medoids.s: medoids.cpp.s
+
+.PHONY : medoids.s
+
+# target to generate assembly for a file
+medoids.cpp.s:
+	$(MAKE) -f CMakeFiles/medoids.dir/build.make CMakeFiles/medoids.dir/medoids.cpp.s
+.PHONY : medoids.cpp.s
+
+write_tube.o: write_tube.cpp.o
+
+.PHONY : write_tube.o
+
+# target to build an object file
+write_tube.cpp.o:
+	$(MAKE) -f CMakeFiles/write_tube.dir/build.make CMakeFiles/write_tube.dir/write_tube.cpp.o
+.PHONY : write_tube.cpp.o
+
+write_tube.i: write_tube.cpp.i
+
+.PHONY : write_tube.i
+
+# target to preprocess a source file
+write_tube.cpp.i:
+	$(MAKE) -f CMakeFiles/write_tube.dir/build.make CMakeFiles/write_tube.dir/write_tube.cpp.i
+.PHONY : write_tube.cpp.i
+
+write_tube.s: write_tube.cpp.s
+
+.PHONY : write_tube.s
+
+# target to generate assembly for a file
+write_tube.cpp.s:
+	$(MAKE) -f CMakeFiles/write_tube.dir/build.make CMakeFiles/write_tube.dir/write_tube.cpp.s
+.PHONY : write_tube.cpp.s
 
 # Help Target
 help:
@@ -236,20 +236,20 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
-	@echo "... WriteTube"
+	@echo "... write_tube"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... MedoidsFinale"
-	@echo "... Gramiam"
-	@echo "... Medoids_Finale.o"
-	@echo "... Medoids_Finale.i"
-	@echo "... Medoids_Finale.s"
-	@echo "... Write_Tube.o"
-	@echo "... Write_Tube.i"
-	@echo "... Write_Tube.s"
+	@echo "... medoids"
+	@echo "... gramiam"
 	@echo "... compute_gramiam.o"
 	@echo "... compute_gramiam.i"
 	@echo "... compute_gramiam.s"
+	@echo "... medoids.o"
+	@echo "... medoids.i"
+	@echo "... medoids.s"
+	@echo "... write_tube.o"
+	@echo "... write_tube.i"
+	@echo "... write_tube.s"
 .PHONY : help
 
 

@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/Users/pietro.gori/Softwares/clinica/clinica/lib/WeightedPrototypes/CPP_code/compute_gramiam.cpp" "/Users/pietro.gori/Softwares/clinica/clinica/lib/WeightedPrototypes/CPP_code/bin/CMakeFiles/Gramiam.dir/compute_gramiam.cpp.o"
+  "/Users/pietro.gori/Softwares/clinica/clinica/lib/weighted_prototypes_lib/cpp_code/compute_gramiam.cpp" "/Users/pietro.gori/Softwares/clinica/clinica/lib/weighted_prototypes_lib/cpp_code/bin/CMakeFiles/gramiam.dir/compute_gramiam.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "Clang")
 
@@ -398,7 +398,7 @@ set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "/Users/pietro.gori/Softwares/VTKb/Wrapping/Tools"
   "/Users/pietro.gori/Softwares/VTK-7.0.0/Wrapping/Tools"
   "../"
-  "../../../Eigen"
+  "../../../eigen"
   "/Users/pietro.gori/Softwares/VTKb/ThirdParty/hdf5/vtkhdf5/hl/src"
   "/Users/pietro.gori/Softwares/VTKb/ThirdParty/hdf5/vtkhdf5/src"
   )
