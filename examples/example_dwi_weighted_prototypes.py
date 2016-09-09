@@ -29,12 +29,12 @@ type='small' # It can be 'small' 'medium' or 'big'
 filename_bundle=join(cwd_path, 'external-data/dwi_weighted_prototypes/bundle_%s.vtk') % type
 
 ## OPTIONAL PARAMETERS ##
-bound_limit_input=0
-degree_precision_input=0
+bound_limit_input=0.0
+degree_precision_input=0.0
 num_iter_modularity_input=0
 minimum_number_fibers_cluster_input=1
-minValueTau_input=0
-increase_radius_input=0
+minValueTau_input=0.0
+increase_radius_input=0.0
 
 working_dir = join(cwd_path, 'external-data/dwi_weighted_prototypes/example_bundle_%s_lambda_g_%.1f_lambda_a_%.1f_lambda_b_%.1f') % (type,lambda_g,lambda_a,lambda_b)
 try:

@@ -47,7 +47,7 @@ def weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,b
         matlab = MatlabCommand()
         matlab.inputs.args = '-nosoftwareopengl' # Bug, for my laptop, it does not work, but the command line does have the flag -nosoftwareopengl, we should try on other computer's matlab to check if this flag works!
         matlab.inputs.paths = path_to_matscript
-        matlab.inputs.script = """weighted_prototypes('%s','%s', '%f', '%f', '%f', '%s', '%s', '%s', '%f', '%f', '%f', '%f', '%f', '%f');"""%(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_cpp_code,path_community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
+        matlab.inputs.script = """weighted_prototypes('%s','%s', '%f', '%f', '%f', '%s', '%s', '%s', '%f', '%f', '%d', '%d', '%f', '%f');"""%(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_cpp_code,path_community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
         matlab.inputs.mfile = True # this will create a file: pyscript.m , the pyscript.m is the default name
         matlab.inputs.single_comp_thread = False  #this will stop runing with single thread  
         matlab.inputs.logfile = "matlab_output.log"
