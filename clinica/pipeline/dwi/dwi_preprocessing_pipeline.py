@@ -112,7 +112,7 @@ def create_dwi_preproc_syb(in_dwi, in_T1, in_bvals, in_bvecs, working_directory,
     return wf
 
 
-@Visualize("freeview", "preprocessing/out_file/vol${subject_id}_maths_thresh_merged.nii.gz", "subject_id")
+@Visualize("freeview", "${subject_id}/preprocessing/out_file/vol0000_maths_thresh_merged.nii.gz", "subject_id")
 def diffusion_preprocessing_fieldmap_based(datasink_directory, num_b0s, name='diffusion_preprocessing_fieldmap_based'):
     """
     First extract the b0 volumes, co-registration and mean of the b0 volumes.

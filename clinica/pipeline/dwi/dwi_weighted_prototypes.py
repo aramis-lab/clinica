@@ -21,14 +21,13 @@ def weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,b
     parent_path = dirname(dirname(cwd_path)) # cd ../..
     path_to_matscript = join(parent_path, 'lib/weighted_prototypes_lib') # concatenate parent directory path and 'lib/WeightedPrototypes'
     path_matlab_functions = join(path_to_matscript, 'matlab_functions')
-    path_CPP_code = join(path_to_matscript, 'cpp_code')
-    path_Community_latest = join(path_to_matscript, 'community_latest')
+    path_cpp_code = join(path_to_matscript, 'cpp_code')
+    path_community_latest = join(path_to_matscript, 'community_latest')
       
       
-    def runmatlab(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_CPP_code,path_Community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input):
+    def runmatlab(path_to_matscript,working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_cpp_code,path_community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input):
                       
         from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
-        from os.path import join
         import sys, os
         
         # here, we check out the os, basically, clinica works for linux and MAC OS X.
@@ -45,21 +44,14 @@ def weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,b
             print "Clinica will not work on your platform "
             
         MatlabCommand.set_default_matlab_cmd(get_matlab_command())#this is to set the matlab_path(os.environ) in your bashrc file, to choose which version of matlab do you wanna use     
-        # here, set_default_matlab_cmd is a @classmethod
         matlab = MatlabCommand()
-        
-        # add the dynamic traits
-        #openGL_trait = traits.Bool(True, argstr='-nosoftwareopengl', usedefault=True, desc='Switch on hardware openGL', nohash=True)
-        #matlab.input_spec.add_trait(matlab.input_spec(), 'nosoftwareopengl', openGL_trait() )
-        
         matlab.inputs.args = '-nosoftwareopengl' # Bug, for my laptop, it does not work, but the command line does have the flag -nosoftwareopengl, we should try on other computer's matlab to check if this flag works!
-        matlab.inputs.paths = path_to_matscript  #CLINICA_HOME, this is the path to add into matlab, addpath
-                
-        matlab.inputs.script = """weighted_prototypes('%s','%s', '%f', '%f', '%f', '%s', '%s', '%s', '%f', '%f', '%d', '%d', '%f', '%f');"""%(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_CPP_code,path_Community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)  
+        matlab.inputs.paths = path_to_matscript
+        matlab.inputs.script = """weighted_prototypes('%s','%s', '%f', '%f', '%f', '%s', '%s', '%s', '%f', '%f', '%f', '%f', '%f', '%f');"""%(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_cpp_code,path_community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
         matlab.inputs.mfile = True # this will create a file: pyscript.m , the pyscript.m is the default name
         matlab.inputs.single_comp_thread = False  #this will stop runing with single thread  
-        matlab.inputs.logfile = join(output_directory, "matlab_output.log")
-        print "matlab logfile is located in the folder: %s" % matlab.inputs.logfile            
+        matlab.inputs.logfile = "matlab_output.log"
+        print "matlab logfile is located in : %s" % matlab.inputs.logfile
         print "matlab script command = %s" % matlab.inputs.script
         print "MatlabCommand inputs flag: single_comp_thread = %s" % matlab.inputs.single_comp_thread
         print "MatlabCommand choose which matlab to use(matlab_cmd): %s" % get_matlab_command()
@@ -69,15 +61,16 @@ def weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,b
         return out
     # end def runmatlab
         
-    WP = pe.Node(name='WP', interface=Function(input_names=['working_dir','filename_bundle','lambda_g','lambda_a','lambda_b','path_matlab_functions','path_CPP_code','path_Community_latest','bound_limit_input','degree_precision_input','num_iter_modularity_input','minimum_number_fibers_cluster_input','minValueTau_input','increase_radius_input'], output_names=[ ], function=runmatlab))
+    WP = pe.Node(name='WP', interface=Function(input_names=['path_to_matscript','working_dir','filename_bundle','lambda_g','lambda_a','lambda_b','path_matlab_functions','path_cpp_code','path_community_latest','bound_limit_input','degree_precision_input','num_iter_modularity_input','minimum_number_fibers_cluster_input','minValueTau_input','increase_radius_input'], output_names=[ ], function=runmatlab))
+    WP.inputs.path_to_matscript = path_to_matscript
     WP.inputs.working_dir = working_dir
     WP.inputs.filename_bundle = filename_bundle
     WP.inputs.lambda_g = lambda_g
     WP.inputs.lambda_a = lambda_a    
     WP.inputs.lambda_b = lambda_b
     WP.inputs.path_matlab_functions = path_matlab_functions
-    WP.inputs.path_CPP_code = path_CPP_code
-    WP.inputs.path_Community_latest = path_Community_latest
+    WP.inputs.path_cpp_code = path_cpp_code
+    WP.inputs.path_community_latest = path_community_latest
     WP.inputs.bound_limit_input = bound_limit_input
     WP.inputs.degree_precision_input = degree_precision_input
     WP.inputs.num_iter_modularity_input = num_iter_modularity_input
