@@ -66,37 +66,37 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
             
         case 14  
             
-            if isempty(bound_limit_input)
+            if bound_limit_input==0
                 bound_limit=1.5359; 
             else
                 bound_limit=bound_limit_input;
             end
             
-            if isempty(degree_precision_input)
+            if degree_precision_input==0
                 degree_precision=0.15; 
             else
                 degree_precision=degree_precision_input;
             end
             
-            if isempty(num_iter_modularity_input)
+            if num_iter_modularity_input==0
                 num_iter_modularity=10;  
             else
                 num_iter_modularity=num_iter_modularity_input;
             end
             
-            if isempty(minimum_number_fibers_cluster_input)
+            if minimum_number_fibers_cluster_input==0
                 minimum_number_fibers_cluster=10;
             else
                 minimum_number_fibers_cluster=minimum_number_fibers_cluster_input;
             end
             
-            if isempty(minValueTau_input)
+            if minValueTau_input==0
                 minValueTau=1;
             else
                 minValueTau=minValueTau_input;
             end 
             
-            if isempty(increase_radius_input)
+            if increase_radius_input==0
                 increase_radius=0.02;
             else
                 increase_radius=increase_radius_input;
