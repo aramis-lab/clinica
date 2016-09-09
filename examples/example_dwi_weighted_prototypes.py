@@ -3,23 +3,19 @@
 """
 Created on 12/08/2016
 
-@author: pietro.gori
-"""
-
-"""
 =================================================
 Example of weighted_prototypes.py
 =================================================
 
-???
+@author: pietro.gori
 
 """
 
-#from __future__ import absolute_import # if you use a version of Python >= 2.7, the script will use the version of absolute_import of Python 2.7 ??
-from clinica.pipeline.dwi.weighted_prototypes import weighted_prototypes
+from __future__ import absolute_import
+from clinica.pipeline.dwi.dwi_weighted_prototypes import weighted_prototypes
 from os.path import realpath, split, join
 from os import makedirs
-#import tempfile
+import tempfile
 import time
 import errno
 
@@ -33,12 +29,12 @@ type='small' # It can be 'small' 'medium' or 'big'
 filename_bundle=join(cwd_path, 'external-data/dwi_weighted_prototypes/bundle_%s.vtk') % type
 
 ## OPTIONAL PARAMETERS ##
-bound_limit_input=None
-degree_precision_input=None
-num_iter_modularity_input=None
-minimum_number_fibers_cluster_input=None
-minValueTau_input=None
-increase_radius_input=None
+bound_limit_input=0
+degree_precision_input=0
+num_iter_modularity_input=0
+minimum_number_fibers_cluster_input=1
+minValueTau_input=0
+increase_radius_input=0
 
 working_dir = join(cwd_path, 'external-data/dwi_weighted_prototypes/example_bundle_%s_lambda_g_%.1f_lambda_a_%.1f_lambda_b_%.1f') % (type,lambda_g,lambda_a,lambda_b)
 try:
