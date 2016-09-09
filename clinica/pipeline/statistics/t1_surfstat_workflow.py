@@ -57,7 +57,7 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
         elif sys.platform.startswith('darwin'):
             try:
                 if not 'MATLABCMD' in  os.environ:
-                    raise RuntimeError("###Note: your platform is MAC OS X, the default command line for Matlab(matlab_cmd) is matlab, but it does not work on OS X, you mush export a variable MATLABCMD, which points to your matlab, in your .bashrc to set matlab_cmd.")
+                    raise RuntimeError("###Note: your platform is MAC OS X, the default command line for Matlab(matlab_cmd) is matlab, but it does not work on OS X, you mush export a variable MATLABCMD, which points to your matlab, in your .bashrc to set matlab_cmd. Note, Mac os x will always choose to use OpengGl hardware mode.")
             except Exception as e:
                 print(str(e))
                 exit(1)            
@@ -71,9 +71,11 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
         # add the dynamic traits
         #openGL_trait = traits.Bool(True, argstr='-nosoftwareopengl', usedefault=True, desc='Switch on hardware openGL', nohash=True)
         #matlab.input_spec.add_trait(matlab.input_spec(), 'nosoftwareopengl', openGL_trait() )
-        
-        matlab.inputs.args = '-nosoftwareopengl' # Bug, for my laptop, it does not work, but the command line does have the flag -nosoftwareopengl, we should try on other computer's matlab to check if this flag works!
+        if sys.platform.startswith('linux'):
+            matlab.inputs.args = '-nosoftwareopengl' # Bug, for my laptop, it does not work, but the command line does have the flag -nosoftwareopengl, we should try on other computer's matlab to check if this flag works!
         matlab.inputs.paths = path_to_matscript  #CLINICA_HOME, this is the path to add into matlab, addpath
+        # there is a bug to transfer the diff type of inputs througn the interface to matlab script, they always make it to be a string, that is because .script is a Str trait. That is because here, we use the nipype existed intreface, if you write your own interface, I think you can choose the type of your 
+        # variables that you want to transfer to the matlab script.
         matlab.inputs.script = """
         clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%.3f', '%s', '%.3f', '%s', '%.3f');
         """%(input_directory, output_directory, linear_model, contrast, csv_file, str_format, 'sizeoffwhm', size_of_fwhm, 
@@ -85,7 +87,8 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
         print "matlab script command = %s" % matlab.inputs.script
         print "MatlabCommand inputs flag: single_comp_thread = %s" % matlab.inputs.single_comp_thread
         print "MatlabCommand choose which matlab to use(matlab_cmd): %s" % get_matlab_command()
-        print "MatlabCommand inputs flag: nosoftwareopengl = %s" % matlab.inputs.args
+        if sys.platform.startswith('linux'):        
+            print "MatlabCommand inputs flag: nosoftwareopengl = %s" % matlab.inputs.args
 
         out = matlab.run()
         return out

@@ -18,7 +18,8 @@ the parameter explanation is below:
               like 'age', which will return you 4 images.
       :param: output_directory: the directory to contain the result images. 
        Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
-      :param: size_of_fwhm: fwhm for the surface smoothing, default is 20, integer.
+      :param: size_o
+      f_fwhm: fwhm for the surface smoothing, default is 20, integer.
       :param: threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float.
       :param: threshold_corrected_pvalue: the threshold to display the corrected cluster, default is 0.05, float.
       :param: cluster_threshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float.
@@ -30,9 +31,10 @@ Outputs:
 
 Note: as we will use OpenGL to render the result images, and after Matlab2014, they changed the opengl algorithms to make rendering more flexible, 
       meanwhile, maybe a little slower than the older version(not always), and we always recommend using the hardware for OpenGL, which is default
-      mode in clinica_surfstat. To choose which matlab version that you want to use in your local machine, you should export an environment variable
+      mode in clinica_surfstat. If you have more than more matlab version in your system, to choose which matlab version that you want to use in your local machine, you should export an environment variable
       'MATLABCMD' in your bashrc file to point to the needed matlab version, if 'MATLABCMD' is not defined, clinica_surfstat will use default matlab
       command line 'matlab'.
+      For Mac os x, opengl software mode is not supported, so it will always be opengl hardware mode.
 
 @author: Junhao WEN
 """
