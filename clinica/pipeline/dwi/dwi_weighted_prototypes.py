@@ -3,6 +3,32 @@
 """
 Created on 12/08/2016
 
+This is to use surfstat to do the Group analysis for the reconAll outputs, after the reconAll pipeline, you should just define the paths to
+        surfstatGroupAnalysis, and create the CSV file, and run the pipeline, at last, you will get the results images.
+
+        Inputs
+        ---------
+        surfstat
+        Inputs: :param input_directory:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
+                :param output_directory: the directory to contain the result images.
+                :param linear_model: string, the linear model that fit into the GLM, for example '1+Lable'.
+                :param contrast: string, the contrast matrix for GLM, if the factor you choose is categorized variable, clinica_surfstat will create two contrasts,
+                          for example, contrast = 'Label', this will create contrastpos = Label.AD - Label.CN, contrastneg = Label.CN - Label.AD; if the fac-
+                          tory that you choose is a continuous factor, clinica_surfstat will just create one contrast, for example, contrast = 'Age', but note,
+                          the string name that you choose should be exactly the same with the columns names in your csv_file.
+                :param csv_file: string, the path to your csv file.
+                :param str_format: string, the str_format which uses to read your csv file, the typy of the string should corresponds exactly with the columns in the csv file.
+                 Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
+                :param size_of_fwhm: fwhm for the surface smoothing, default is 20, integer.
+                :param threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float.
+                :param threshold_corrected_pvalue: the threshold to display the corrected cluster, default is 0.05, float.
+                :param cluster_threshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float.
+          For more infomation about SurfStat, please check:
+          http://www.math.mcgill.ca/keith/surfstat/
+
+        Outputs:
+        return result images in output_directory
+
 @author: pietro.gori
 """
 from __future__ import absolute_import
@@ -28,6 +54,7 @@ def weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,b
     def runmatlab(path_to_matscript,working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_cpp_code,path_community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input):
                       
         from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
+        from os.path import join
         import sys, os
         
         # here, we check out the os, basically, clinica works for linux and MAC OS X.
@@ -45,12 +72,12 @@ def weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,b
             
         MatlabCommand.set_default_matlab_cmd(get_matlab_command())#this is to set the matlab_path(os.environ) in your bashrc file, to choose which version of matlab do you wanna use     
         matlab = MatlabCommand()
-        matlab.inputs.args = '-nosoftwareopengl' # Bug, for my laptop, it does not work, but the command line does have the flag -nosoftwareopengl, we should try on other computer's matlab to check if this flag works!
+        matlab.inputs.args = '-nosoftwareopengl'
         matlab.inputs.paths = path_to_matscript
-        matlab.inputs.script = """weighted_prototypes('%s','%s', '%f', '%f', '%f', '%s', '%s', '%s', '%f', '%f', '%d', '%d', '%f', '%f');"""%(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_cpp_code,path_community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
+        matlab.inputs.script = """weighted_prototypes('%s','%s', %f, %f, %f, '%s', '%s', '%s', %f, %f, %d, %d, %f, %f);"""%(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_cpp_code,path_community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
         matlab.inputs.mfile = True # this will create a file: pyscript.m , the pyscript.m is the default name
         matlab.inputs.single_comp_thread = False  #this will stop runing with single thread  
-        matlab.inputs.logfile = "matlab_output.log"
+        matlab.inputs.logfile = join(working_dir, "matlab_output.log")
         print "matlab logfile is located in : %s" % matlab.inputs.logfile
         print "matlab script command = %s" % matlab.inputs.script
         print "MatlabCommand inputs flag: single_comp_thread = %s" % matlab.inputs.single_comp_thread
