@@ -1,8 +1,13 @@
 build/
 dist/
+examples/external-data
 Clinica.egg-info
 *egg-info
 *.pyc
+*.o
+*.lib
+*.sys
+*.so
 .idea
 .coverage
 crash*
