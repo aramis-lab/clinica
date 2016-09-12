@@ -106,6 +106,8 @@ def execute():
 
     # exit(0)
     try:
+        def error(x): raise Exception('')
+        parser.error = error
         args = parser.parse_args()
     except:
         sys.stdout.flush()
