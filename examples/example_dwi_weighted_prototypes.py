@@ -7,38 +7,47 @@ Created on 12/08/2016
 Example of dwi_weighted_prototypes.py
 =================================================
 
-This example is to elaborate how to do some statistical analysis(GLM) for the preprocessed data, here, our null hypothesis is :
-The thickness between AD and CN is the same.
+Example about the approximation of a streamline bundle into weighted prototypes.
 
-the parameter explanation is below:
-      :param: linear_model: string, the linear model that fit into the GLM, for example '1 + Label + Gender + Age'.
-      :param: str_format: string, the format that you want to use for your CSV file column variables, it depends on your CSV file.
-      :param: csv_file: string, the path to your csv file.
-      :param: input_directory:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
-              we put in the directory 'data/Recon-all_Output'.
-      :param: contrast:  string, depending on what you want to do, there are two kinds of contrast, one is categorized facor contrast, like 'Label',
-              this will return you 8 images, including positive contrast results and negative contrast result; another is continuous factor result,
-              like 'age', which will return you 4 images.
-      :param: output_directory: the directory to contain the result images.
-       Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
-      :param: size_o
-      f_fwhm: fwhm for the surface smoothing, default is 20, integer.
-      :param: threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float.
-      :param: threshold_corrected_pvalue: the threshold to display the corrected cluster, default is 0.05, float.
-      :param: cluster_threshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float.
+ MANDATORY INPUTS:
+ - lambda_g: geometric kernel bandidth (as in usual currents)
+ - lambda_a: kernel bandwidth of the STARTING structure
+ - lambda_b: kernel bandwidth of the ENDING structure
+ - type: Type of bundle to approximate. It can be 'small' 'medium' or 'big'
 
+ OPTIONAL INPUTS:
+ - bound_limit_input: maximum average angle (in radians) that a streamline may have with the other streamlines in the
+                       framework of weighted currents. Default value is 1.5359 = 88 degrees
+ - degree_precision_input: percentage of the norm of the bundle explained by the weighted prototypes.
+                            Default value is 0.15, which means that the weighted prototypes will explain (1-0.15)*100
+                            of the norm of the bundle in the framework of weighted currents.
+ - num_iter_modularity_input: Modularity computation is based on a greedy approach. Results may differ between
+                               iterations. The greater number of iterations, the better. Default value is 10
+                               See "Fast unfolding of community hier archies in large networks", V. Blondel et al.
+ - minimum_number_fibers_cluster_input: Clustering based on modularity may result in unbalanced clusters.
+                                         We remove the clusters which have less than minimum_number_fibers_cluster_input
+                                         fibers. Default value is 10
+ - minValueTau_input: We remove the prototypes that approximate less than minValueTau_input fibers. Default value is 1
+ - increase_radius_input: All tubes are normalised such that the maximum radius is equal to 1mm. We then augment all
+                           radii of increase_radius_input. Default value is 0.02
 
 Outputs:
-      after the clinica_surfstat pipeline, we will get the results images in the output_directory, also, in the output_directory, we will also
-      have a log file 'matlab_output.log', which includes the matlab version information and the surfstat progress information.
+    - graph.* : Binary files containing the Gramiam
+    - Clusters.vtk: VTK file containing the original bundle divided in fascicles (clusters)
+    - NoOutlier.vtk: VTK file containing the original bundle without the streamlines considered as outliers
+    - Prototypes.vtk: VTK files containing the weighted prototypes
+    - Prototypes_tubes.vtk: VTK files containing the weighted prototypes represented as tubes
+    - *.log: Log files containing the outputs of the different steps
 
-Note: as we will use OpenGL to render the result images, and after Matlab2014, they changed the opengl algorithms to make rendering more flexible,
-      meanwhile, maybe a little slower than the older version(not always), and we always recommend using the hardware for OpenGL, which is default
-      mode in clinica_surfstat. If you have more than more matlab version in your system, to choose which matlab version that you want to use in your local machine, you should export an environment variable
-      'MATLABCMD' in your bashrc file to point to the needed matlab version, if 'MATLABCMD' is not defined, clinica_surfstat will use default matlab
-      command line 'matlab'.
-      For Mac os x, opengl software mode is not supported, so it will always be opengl hardware mode.
-
+This function requires:
+ - The binary files of the C++ functions in the folder cpp_code/bin
+ - CMake > 2.8
+ - VTK > 6
+ - ITK
+ - Louvain community detection (https://sites.google.com/site/findcommunities/newversion/community.tgz?attredirects=0)
+   which is already present, the user just needs to do 'make'
+ - Eigen (http://eigen.tuxfamily.org/index.php?title=Main_Page)
+   which is also already present
 
 @author: pietro.gori
 
@@ -48,7 +57,6 @@ from __future__ import absolute_import
 from clinica.pipeline.dwi.dwi_weighted_prototypes import weighted_prototypes
 from os.path import realpath, split, join
 from os import makedirs
-import tempfile
 import time
 import errno
 
