@@ -1,9 +1,10 @@
 from __future__ import print_function
-from optparse import OptionParser
+from argparse import ArgumentParser
 from clinica.engine.cworkflow import *
 import sys
 import os
 import subprocess
+from clinica.engine import cmdparser
 
 def visualize(clinicaWorkflow, ids, rebase=False):
     if not clinicaWorkflow.data.has_key('visualize'):
@@ -23,9 +24,10 @@ def visualize(clinicaWorkflow, ids, rebase=False):
     else:
         change_directory = chdir(rebase)
 
-    program, arguments, matchs = clinicaWorkflow.data['visualize']
+    print(clinicaWorkflow.data['visualize'])
+    program, arguments, matches = clinicaWorkflow.data['visualize']
 
-    def run_program(id): subprocess.Popen([program] + arguments.replace("${%s}" % matchs, id).strip().split(" "))
+    def run_program(id): subprocess.Popen([program] + arguments.replace("${%s}" % matches, id).strip().split(" "))
     [run_program(id) for id in ids]
 
 def shell(clinicaWorkflow):
@@ -80,27 +82,49 @@ def execute():
     $cd WorkingDir/
     $clinica visualize --id=1,2,3
     """
-    parser = OptionParser()
-    parser.add_option("-i", "--id", dest="id",
+    parser = ArgumentParser()
+    parser.add_argument("-i", "--id", dest="id",
                       default=False,
                       help="unique identifier")
-    parser.add_option("-r", "--rebase", dest="rebase",
+    parser.add_argument("-r", "--rebase", dest="rebase",
                       default=False,
                       help="unique identifier")
-    parser.add_option("-q", "--quiet",
+    parser.add_argument("-q", "--quiet",
                       action="store_false", dest="verbose", default=True,
                       help="don't print status messages to stdout")
 
-    (options, args) = parser.parse_args()
+
+
+    import sys, inspect
+    print(__name__)
+    import clinica.engine.cmdparser
+    for name, obj in inspect.getmembers(clinica.engine.cmdparser):
+        if name != 'CmdParser' and inspect.isclass(obj):
+            print(obj)
+            x = obj()
+            if isinstance(x, clinica.engine.cmdparser.CmdParser):
+                print('cool %s' % (x.name))
+                # x.options.usage = "Usage: %prog run " + x.name + "[options]"
+                x.options.print_help()
+
+    args = parser.parse_args()
+    print(args)
+
+    if args == 0:
+        parser.print_help()
+        exit(0)
 
     if args[0] == 'visualize':
-        if options.id is False:
+        if args.id is None:
             print("Missing --id")
             exit(0)
         visualize(load_conf(args[1:]), options.id.split(","), options.rebase)
 
     if args[0] == 'shell':
         shell(load_conf(args[1:]))
+
+    if args[0] == 'run':
+        print('run')
 
 
 if __name__ == '__main__':
