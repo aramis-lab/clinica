@@ -10,7 +10,7 @@ Created on 12/08/2016
 % MANDATORY INPUTS:
 % - working_dir: directory where files are saved
 % - filename_bundle: filename of the fiber bundle which must be a .vtk file.
-% It must have a list of 3D points and then it should use te keyword
+% It must have a list of 3D points and then it should use the keyword
 % "LINES" for polygons. Each row describes a streamline. The first number
 % is the number of points. The other numbers are the indexes of the points
 % previously listed.
