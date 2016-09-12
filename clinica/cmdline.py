@@ -83,6 +83,7 @@ def execute():
     $clinica visualize --id=1,2,3
     """
     parser = ArgumentParser()
+    parser.add_argument("cmd", choices=['run','visualize','shell'])
     parser.add_argument("-i", "--id", dest="id",
                       default=False,
                       help="unique identifier")
@@ -93,37 +94,35 @@ def execute():
                       action="store_false", dest="verbose", default=True,
                       help="don't print status messages to stdout")
 
+    def e():
+        import inspect
+        import clinica.engine.cmdparser
+        for name, obj in inspect.getmembers(clinica.engine.cmdparser):
+            if name != 'CmdParser' and inspect.isclass(obj):
+                x = obj()
+                if isinstance(x, clinica.engine.cmdparser.CmdParser):
+                    x.options.usage = "Usage: %s run %s [options]" % (x.options.prog, x.name)
+                    x.options.print_help()
 
-
-    import sys, inspect
-    print(__name__)
-    import clinica.engine.cmdparser
-    for name, obj in inspect.getmembers(clinica.engine.cmdparser):
-        if name != 'CmdParser' and inspect.isclass(obj):
-            print(obj)
-            x = obj()
-            if isinstance(x, clinica.engine.cmdparser.CmdParser):
-                print('cool %s' % (x.name))
-                # x.options.usage = "Usage: %prog run " + x.name + "[options]"
-                x.options.print_help()
-
-    args = parser.parse_args()
-    print(args)
-
-    if args == 0:
+    # exit(0)
+    try:
+        args = parser.parse_args()
+    except:
+        sys.stdout.flush()
         parser.print_help()
+        e()
         exit(0)
 
-    if args[0] == 'visualize':
+    if args.cmd == 'visualize':
         if args.id is None:
             print("Missing --id")
             exit(0)
-        visualize(load_conf(args[1:]), options.id.split(","), options.rebase)
+        visualize(load_conf(args[1:]), args.id.split(","), args.rebase)
 
-    if args[0] == 'shell':
+    if args.cmd == 'shell':
         shell(load_conf(args[1:]))
 
-    if args[0] == 'run':
+    if args.cmd == 'run':
         print('run')
 
 
