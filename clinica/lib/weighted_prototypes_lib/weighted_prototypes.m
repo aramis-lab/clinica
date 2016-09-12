@@ -40,10 +40,11 @@
 % increase_radius_input. Default value is 0.02
 %
 % This function requires:
-% - The binary files of the C++ functions in the folder CPP_code
+% - The binary files of the C++ functions in the folder cpp_code
 % - CMake > 2.8
 % - VTK > 6
-% - Louvain community detection (https://sourceforge.net/projects/louvain/)
+% - ITK
+% - Louvain community detection (https://sites.google.com/site/findcommunities/newversion/community.tgz?attredirects=0)
 % which is already present 
 % - Eigen (http://eigen.tuxfamily.org/index.php?title=Main_Page)
 % which is also already present
@@ -115,19 +116,19 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
    
     %% Check dependencies
     if ~exist([ path_cpp_code '/bin/gramiam'],'file') 
-        error('Compile C++ code in the folder bin inside cpp_code')
+        error(['Compile C++ code in the folder ' path_cpp_code '/bin inside cpp_code. Go to folder bin, type cmake ../ and then make. ITK and VTK are mandatory.'])
     end
     if ~exist([ path_cpp_code '/bin/medoids'],'file') 
-        error('Compile C++ code in the folder bin inside cpp_code')
+        error(['Compile C++ code in the folder ' path_cpp_code '/bin inside cpp_code. Go to folder bin, type cmake ../ and then make. ITK and VTK are mandatory.'])
     end
     if ~exist([ path_cpp_code '/bin/write_tube'],'file') 
-        error('Compile C++ code in the folder bin inside cpp_code')
+        error(['Compile C++ code in the folder ' path_cpp_code '/bin inside cpp_code. Go to folder bin, type cmake ../ and then make. ITK and VTK are mandatory.'])
     end
     if ~exist([ path_community_latest '/community'],'file') 
-        error('Compile C++ code in the folder community_latest')
+        error(['Compile C++ code in the folder community_latest. Just type make in the folder ' path_community_latest ])
     end
     if ~exist([ path_community_latest '/hierarchy'],'file') 
-        error('Compile C++ code in the folder community_latest')
+        error(['Compile C++ code in the folder community_latest. Just type make in the folder ' path_community_latest ])
     end
 
     disp(' ')
@@ -400,6 +401,7 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
     write_vtk_bundles_polyline(Points_finale,number_points_curve_final,[],[],[],filename_vtk_no_outlier)
     write_vtk_bundles_polyline(Points_finale,number_points_curve_final,Scalars_color,[],[],filename_vtk_clusters)
     
+    delete('C.log', 'graph.tree', 'index_fibers*', 'hierarchy.log', 'Medoids_global_normalised', 'Number_Points_Curve_Medoids.txt', 'Outliers_global', 'Points.txt', 'Radius.txt', 'Tau_global_normalised')
 end
                     
                  

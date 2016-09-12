@@ -3,41 +3,62 @@
 """
 Created on 12/08/2016
 
-This is to use surfstat to do the Group analysis for the reconAll outputs, after the reconAll pipeline, you should just define the paths to
-        surfstatGroupAnalysis, and create the CSV file, and run the pipeline, at last, you will get the results images.
-
-        Inputs
-        ---------
-        surfstat
-        Inputs: :param input_directory:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
-                :param output_directory: the directory to contain the result images.
-                :param linear_model: string, the linear model that fit into the GLM, for example '1+Lable'.
-                :param contrast: string, the contrast matrix for GLM, if the factor you choose is categorized variable, clinica_surfstat will create two contrasts,
-                          for example, contrast = 'Label', this will create contrastpos = Label.AD - Label.CN, contrastneg = Label.CN - Label.AD; if the fac-
-                          tory that you choose is a continuous factor, clinica_surfstat will just create one contrast, for example, contrast = 'Age', but note,
-                          the string name that you choose should be exactly the same with the columns names in your csv_file.
-                :param csv_file: string, the path to your csv file.
-                :param str_format: string, the str_format which uses to read your csv file, the typy of the string should corresponds exactly with the columns in the csv file.
-                 Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
-                :param size_of_fwhm: fwhm for the surface smoothing, default is 20, integer.
-                :param threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float.
-                :param threshold_corrected_pvalue: the threshold to display the corrected cluster, default is 0.05, float.
-                :param cluster_threshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float.
-          For more infomation about SurfStat, please check:
-          http://www.math.mcgill.ca/keith/surfstat/
-
-        Outputs:
-        return result images in output_directory
+% Compute Streamline Weighted Prototypes of a bundle in VTK format
+%
+% Usage: weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_CPP_code,path_Community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
+%
+% MANDATORY INPUTS:
+% - working_dir: directory where files are saved
+% - filename_bundle: filename of the fiber bundle which must be a .vtk file.
+% It must have a list of 3D points and then it should use te keyword
+% "LINES" for polygons. Each row describes a streamline. The first number
+% is the number of points. The other numbers are the indexes of the points
+% previously listed.
+% - lambda_g: geometric kernel bandidth (as in usual currents)
+% - lambda_a: kernel bandwidth of the STARTING structure
+% - lambda_b: kernel bandwidth of the ENDING structure
+% - path_matlab_functions
+% - path_cpp_code: absolute path to C++ code
+% - path_community_latest: absolute path to Community detection folder
+% To note: streamlines must have a consistent orientation, namely they must
+% have the same starting and ending ROIs
+%
+% OPTIONAL INPUTS:
+% - bound_limit_input: maximum average angle (in radians) that a streamline
+% may have with the other streamlines in the framework of weighted currents.
+% Default value is 1.5359 = 88 degrees
+% - degree_precision_input: percentage of the norm of the bundle explained by the
+% weighted prototypes. Default value is 0.15, which means that the weighted
+% prototypes will explain (1-0.15)*100 % of the norm of the bundle in the
+% framework of weighted currents.
+% - num_iter_modularity_input: Modularity computation is based on a greedy
+% approach. Results may differ between iterations. The greater number of
+% iterations, the better. Default value is 10
+% See "Fast unfolding of community hier archies in large networks", V. Blondel et al.
+% - minimum_number_fibers_cluster_input: Clustering based on modularity may
+% result in unbalanced clusters. We remove the clusters which have less
+% than minimum_number_fibers_cluster_input fibers. Default value is 10
+% - minValueTau_input: We remove the prototypes that approximate less than
+% minValueTau_input fibers. Default value is 1
+% - increase_radius_input: All tubes are normalised such that the maximum
+% radius is equal to 1mm. We then augment all radii of
+% increase_radius_input. Default value is 0.02
+%
+% This function requires:
+% - The binary files of the C++ functions in the folder cpp_code
+% - CMake > 2.8
+% - VTK > 6
+% - ITK
+% - Louvain community detection (https://sites.google.com/site/findcommunities/newversion/community.tgz?attredirects=0)
+% which is already present
+% - Eigen (http://eigen.tuxfamily.org/index.php?title=Main_Page)
+% which is also already present
 
 @author: pietro.gori
 """
 from __future__ import absolute_import
 
 def weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input):
-    """
-        TODO
-
-    """
 
     from nipype.interfaces.utility import Function
     import nipype.pipeline.engine as pe
