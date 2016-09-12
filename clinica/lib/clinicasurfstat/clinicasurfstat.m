@@ -42,19 +42,16 @@ while length(pp) >= 2,
     prop = pp{1};
     val = pp{2};
     pp = pp(3 : end);
-    if ischar(val)
-        newval = str2double(val);
-    end
-    if ischar(prop) && isnumeric(newval)
+    if ischar(prop) 
         switch prop
             case 'sizeoffwhm'
-                sizeoffwhm = newval;
+                sizeoffwhm = val;
             case 'thresholduncorrectedpvalue'
-                thresholduncorrectedpvalue = newval;
+                thresholduncorrectedpvalue = val;
             case 'thresholdcorrectedpvalue'
-                thresholdcorrectedpvalue = newval;
+                thresholdcorrectedpvalue = val;
             case 'clusterthreshold'
-                clusterthreshold = newval;
+                clusterthreshold = val;
             otherwise
                 error('Optional inputs are wrong, we do not have this optional input!')
         end
