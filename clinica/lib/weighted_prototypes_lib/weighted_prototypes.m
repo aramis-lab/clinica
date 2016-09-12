@@ -65,49 +65,17 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
             increase_radius=0.02; 
             
         case 14  
-            
-            if ischar(lambda_g)
-                disp(['bound_limit_input ' lambda_g ])
-                lambda_g = str2double(lambda_g);
-                disp(['bound_limit_input ' num2str(lambda_g) ])
-            end 
-            
-            if ischar(lambda_a)
-                disp(['bound_limit_input ' lambda_a ])
-                lambda_a = str2double(lambda_a);
-                disp(['bound_limit_input ' num2str(lambda_a) ])
-            end
-            
-            if ischar(lambda_b)
-                disp(['bound_limit_input ' lambda_b ])
-                lambda_b = str2double(lambda_b);
-                disp(['bound_limit_input ' num2str(lambda_b) ])
-            end
-            
-            if ischar(bound_limit_input)
-                disp(['bound_limit_input ' bound_limit_input ])
-                bound_limit_input = str2double(bound_limit_input);
-                disp(['bound_limit_input ' num2str(bound_limit_input) ])
-            end            
-            
+                         
             if bound_limit_input==0
                 bound_limit=1.5359; 
             else
                 bound_limit=bound_limit_input;
-            end
-            
-            if ischar(degree_precision_input)
-                degree_precision_input = str2double(degree_precision_input);
-            end
-            
+            end      
+    
             if degree_precision_input==0
                 degree_precision=0.15; 
             else
                 degree_precision=degree_precision_input;
-            end
-            
-            if ischar(num_iter_modularity_input)
-                num_iter_modularity_input = str2double(num_iter_modularity_input);
             end
             
             if num_iter_modularity_input==0
@@ -116,30 +84,18 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
                 num_iter_modularity=num_iter_modularity_input;
             end
             
-            if ischar(minimum_number_fibers_cluster_input)
-                minimum_number_fibers_cluster_input = str2double(minimum_number_fibers_cluster_input);
-            end
-            
             if minimum_number_fibers_cluster_input==0
                 minimum_number_fibers_cluster=10;
             else
                 minimum_number_fibers_cluster=minimum_number_fibers_cluster_input;
             end
-            
-            if ischar(minValueTau_input)
-                minValueTau_input = str2double(minValueTau_input);
-            end
-            
+
             if minValueTau_input==0
                 minValueTau=1;
             else
                 minValueTau=minValueTau_input;
-            end 
-            
-            if ischar(increase_radius_input)
-                increase_radius_input = str2double(increase_radius_input);
-            end
-            
+            end            
+   
             if increase_radius_input==0
                 increase_radius=0.02;
             else
@@ -147,7 +103,7 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
             end            
      
         otherwise
-            error('Please insert either only lambda_g,lambda_a,lambda_b and filename_bundle or all parameters. If you want to use default parameter please use [] as input value')
+            error('Please insert either only working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_cpp_code,path_community_latest or all parameters. If you want to use default parameter please use 0 as input value')
             
     end   
     
@@ -159,21 +115,22 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
    
     %% Check dependencies
     if ~exist([ path_cpp_code '/bin/gramiam'],'file') 
-        error('Compile C++ code in the folder bin inside CPP_code')
+        error('Compile C++ code in the folder bin inside cpp_code')
     end
     if ~exist([ path_cpp_code '/bin/medoids'],'file') 
-        error('Compile C++ code in the folder bin inside CPP_code')
+        error('Compile C++ code in the folder bin inside cpp_code')
     end
     if ~exist([ path_cpp_code '/bin/write_tube'],'file') 
-        error('Compile C++ code in the folder bin inside CPP_code')
+        error('Compile C++ code in the folder bin inside cpp_code')
     end
     if ~exist([ path_community_latest '/community'],'file') 
-        error('Compile C++ code in the folder Community_latest')
+        error('Compile C++ code in the folder community_latest')
     end
     if ~exist([ path_community_latest '/hierarchy'],'file') 
-        error('Compile C++ code in the folder Community_latest')
+        error('Compile C++ code in the folder community_latest')
     end
 
+    disp(' ')
     disp(['Analysing bundle ' filename_bundle ' with parameters lambda_g: ' num2str(lambda_g) ' lambda_a:' num2str(lambda_a) ' lambda_b' num2str(lambda_b) ])
     disp(['Parameters: num_iter_modularity: ' num2str(num_iter_modularity) ', minValueTau: ' num2str(minValueTau) ', degree_precision: ' num2str(degree_precision) ', bound_limit: ' num2str(bound_limit) ])
     
