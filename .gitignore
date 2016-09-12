@@ -8,3 +8,12 @@ Clinica.egg-info
 crash*
 .DS_Store
 clinica/lib/weighted_prototypes_lib/cpp_code/bin
+clinica/lib/weighted_prototypes_lib/community_latest/community
+clinica/lib/weighted_prototypes_lib/community_latest/community.o
+clinica/lib/weighted_prototypes_lib/community_latest/convert
+clinica/lib/weighted_prototypes_lib/community_latest/graph.o
+clinica/lib/weighted_prototypes_lib/community_latest/graph_binary.o
+clinica/lib/weighted_prototypes_lib/community_latest/hierarchy
+clinica/lib/weighted_prototypes_lib/community_latest/main_community.o
+clinica/lib/weighted_prototypes_lib/community_latest/main_convert.o
+clinica/lib/weighted_prototypes_lib/community_latest/main_hierarchy.o
