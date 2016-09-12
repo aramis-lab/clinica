@@ -77,7 +77,7 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
         # there is a bug to transfer the diff type of inputs througn the interface to matlab script, they always make it to be a string, that is because .script is a Str trait. That is because here, we use the nipype existed intreface, if you write your own interface, I think you can choose the type of your 
         # variables that you want to transfer to the matlab script.
         matlab.inputs.script = """
-        clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%.3f', '%s', '%.3f', '%s', '%.3f');
+        clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', %.3f, '%s', %.3f, '%s', %.3f);
         """%(input_directory, output_directory, linear_model, contrast, csv_file, str_format, 'sizeoffwhm', size_of_fwhm, 
              'thresholduncorrectedpvalue', threshold_uncorrected_pvalue, 'thresholdcorrectedpvalue', threshold_corrected_pvalue, 'clusterthreshold', cluster_threshold)  # here, we should define the inputs for the matlab function that you want to use
         matlab.inputs.mfile = True # this will create a file: pyscript.m , the pyscript.m is the default name
