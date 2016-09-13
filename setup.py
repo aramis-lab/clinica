@@ -32,7 +32,8 @@ setup(
     install_requires=[
         'nibabel>=2.0.2',
         'nipype>=0.11.0',
-        'dipy==0.6.0'
+        'dipy==0.6.0',
+        'argcomplete>=1.4.1'
     ],
     data_files=[('clinica', ['LICENSE.txt', 'clinica/VERSION'])],
 )
