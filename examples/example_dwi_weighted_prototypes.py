@@ -64,13 +64,13 @@ import errno
 lambda_g=7.0
 lambda_a=5.0
 lambda_b=10.0
-type='small' # It can be 'small' 'medium' or 'big'
+type='medium' # It can be 'small' 'medium' or 'big'
 
 ## OPTIONAL PARAMETERS ##
 bound_limit_input=0.0
 degree_precision_input=0.0
 num_iter_modularity_input=0
-minimum_number_fibers_cluster_input=1
+minimum_number_fibers_cluster_input=0
 minValueTau_input=0.0
 increase_radius_input=0.0
 

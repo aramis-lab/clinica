@@ -37,7 +37,7 @@
 % minValueTau_input fibers. Default value is 1
 % - increase_radius_input: All tubes are normalised such that the maximum
 % radius is equal to 1mm. We then augment all radii of
-% increase_radius_input. Default value is 0.02
+% increase_radius_input. Default value is 0.05
 %
 % This function requires:
 % - The binary files of the C++ functions in the folder cpp_code
@@ -63,7 +63,7 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
             num_iter_modularity=10;
             minimum_number_fibers_cluster=10;
             minValueTau=1;
-            increase_radius=0.02;
+            increase_radius=0.05;
 
         case 14
 
@@ -98,7 +98,7 @@ function [] = weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,
             end
 
             if increase_radius_input==0
-                increase_radius=0.02;
+                increase_radius=0.05;
             else
                 increase_radius=increase_radius_input;
             end
