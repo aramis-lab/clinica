@@ -8,6 +8,7 @@ Created on 12/08/2016
 % Usage: weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_CPP_code,path_Community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input)
 %
 % MANDATORY INPUTS:
+% - clinica_path: absolute path to clinica home
 % - working_dir: directory where files are saved
 % - filename_bundle: filename of the fiber bundle which must be a .vtk file.
 % It must have a list of 3D points and then it should use the keyword
@@ -58,19 +59,22 @@ Created on 12/08/2016
 """
 from __future__ import absolute_import
 
-def weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input):
+def weighted_prototypes(clinica_path,working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input):
 
     from nipype.interfaces.utility import Function
     import nipype.pipeline.engine as pe
-    from os.path import realpath, split, join, dirname 
-    
-    cwd_path = split(realpath(__file__))[0] # current working directory path
-    parent_path = dirname(dirname(cwd_path)) # cd ../..
-    path_to_matscript = join(parent_path, 'lib/weighted_prototypes_lib') # concatenate parent directory path and 'lib/WeightedPrototypes'
+    from os.path import realpath, split, join, dirname
+
+    path_to_matscript = join(clinica_path, 'clinica/lib/weighted_prototypes_lib') # concatenate parent directory path and 'lib/WeightedPrototypes'
     path_matlab_functions = join(path_to_matscript, 'matlab_functions')
     path_cpp_code = join(path_to_matscript, 'cpp_code')
     path_community_latest = join(path_to_matscript, 'community_latest')
-      
+
+    # DEBUG
+    print 'Folder of weighted_prototypes_lib is : %s' % path_to_matscript
+    print 'Folder of matlab_functions is : %s' % path_matlab_functions
+    print 'Folder of cpp_code is : %s' % path_cpp_code
+    print 'Folder of community_latest is : %s' % path_community_latest
       
     def runmatlab(path_to_matscript,working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,path_matlab_functions,path_cpp_code,path_community_latest,bound_limit_input,degree_precision_input,num_iter_modularity_input,minimum_number_fibers_cluster_input,minValueTau_input,increase_radius_input):
                       
@@ -83,7 +87,7 @@ def weighted_prototypes(working_dir,filename_bundle,lambda_g,lambda_a,lambda_b,b
             print "###Note: your platform is linux, the default command line for Matlab(matlab_cmd) is matlab, but you can also export a variable MATLABCMD,  which points to your matlab,  in your .bashrc to set matlab_cmd, this can help you to choose which Matlab to run when you have more than one Matlab. "
         elif sys.platform.startswith('darwin'):
             try:
-                if not 'MATLABCMD' in  os.environ:
+                if 'MATLABCMD' not in os.environ:
                     raise RuntimeError("###Note: your platform is MAC OS X, the default command line for Matlab(matlab_cmd) is matlab, but it does not work on OS X, you mush export a variable MATLABCMD, which points to your matlab, in your .bashrc to set matlab_cmd.")
             except Exception as e:
                 print(str(e))
