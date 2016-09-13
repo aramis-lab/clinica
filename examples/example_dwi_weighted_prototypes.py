@@ -55,15 +55,15 @@ This function requires:
 
 from __future__ import absolute_import
 from clinica.pipeline.dwi.dwi_weighted_prototypes import weighted_prototypes
-from os.path import realpath, split, join, dirname
+from os.path import realpath, join, dirname
 from os import makedirs
 import time
 import errno
 
 ## MANDATORY PARAMETERS ##
-lambda_g=4.0
-lambda_a=3.0
-lambda_b=3.0
+lambda_g=7.0
+lambda_a=5.0
+lambda_b=10.0
 type='small' # It can be 'small' 'medium' or 'big'
 
 ## OPTIONAL PARAMETERS ##
@@ -75,13 +75,13 @@ minValueTau_input=0.0
 increase_radius_input=0.0
 
 # CODE
-filename_bundle=join(dirname(__file__), 'external-data/dwi_weighted_prototypes/bundle_%s.vtk') % type
+filename_bundle=join(dirname(realpath(__file__)), 'external-data/dwi_weighted_prototypes/bundle_%s.vtk') % type
 print 'Chosen bundle is : %s' % filename_bundle
-clinica_path = dirname(dirname(__file__))
+clinica_path = dirname(dirname(realpath(__file__)))
 print 'Home of clinica is : %s' % clinica_path
 
 # Working_dir is where the code is run
-working_dir = join(dirname(__file__), 'external-data/dwi_weighted_prototypes/example_bundle_%s_lambda_g_%.1f_lambda_a_%.1f_lambda_b_%.1f') % (type,lambda_g,lambda_a,lambda_b)
+working_dir = join(dirname(realpath(__file__)), 'external-data/dwi_weighted_prototypes/example_bundle_%s_lambda_g_%.1f_lambda_a_%.1f_lambda_b_%.1f') % (type,lambda_g,lambda_a,lambda_b)
 try:
     makedirs(working_dir)
 except OSError as exc:
