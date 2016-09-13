@@ -5,10 +5,10 @@ class CmdParser:
     __metaclass__ = abc.ABCMeta
 
     def __init__(self):
+        self.reset()
         self.build()
 
     def build(self):
-        self.reset()
         self.define_name()
         self.define_options()
 
@@ -19,8 +19,14 @@ class CmdParser:
     @property
     def options(self): return self._args
 
+    @options.setter
+    def options(self, x): self._args = x
+
     @property
     def name(self): return self._name
+
+    @name.setter
+    def name(self, x): self._name = x
 
     @abc.abstractmethod
     def define_name(self): pass
@@ -29,7 +35,7 @@ class CmdParser:
     def define_options(self): pass
 
     @abc.abstractmethod
-    def parse_args(self): pass
+    def parse_args(self, args): pass
 
     @abc.abstractmethod
     def run_pipeline(self): pass
@@ -42,7 +48,21 @@ class CmdParserT1(CmdParser):
     def define_options(self):
         self._args.add_argument("-s", "--source")
 
-    def parse_args(self):
+    def parse_args(self, args):
+        print "parse args"
+
+    def run_pipeline(self):
+        print "run pipeline"
+
+class CmdParserT2(CmdParser):
+
+    def define_name(self):
+        self._name = 'T2'
+
+    def define_options(self):
+        self._args.add_argument("-s", "--source")
+
+    def parse_args(self, args):
         print "parse args"
 
     def run_pipeline(self):

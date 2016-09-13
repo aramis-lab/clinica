@@ -1,4 +1,5 @@
 from __future__ import print_function
+import argcomplete
 from argparse import ArgumentParser
 from clinica.engine.cworkflow import *
 import sys
@@ -83,7 +84,7 @@ def execute():
     $clinica visualize --id=1,2,3
     """
     parser = ArgumentParser()
-    parser.add_argument("cmd", choices=['run','visualize','shell'])
+    parser.add_argument("cmd", choices=['run','visualize','shell'], nargs=1)
     parser.add_argument("-i", "--id", dest="id",
                       default=False,
                       help="unique identifier")
@@ -93,6 +94,20 @@ def execute():
     parser.add_argument("-q", "--quiet",
                       action="store_false", dest="verbose", default=True,
                       help="don't print status messages to stdout")
+
+    sub = parser.add_subparsers()
+
+    import inspect
+    import clinica.engine.cmdparser
+    for name, obj in inspect.getmembers(clinica.engine.cmdparser):
+       if name != 'CmdParser' and inspect.isclass(obj):
+            x = obj()
+            if isinstance(x, clinica.engine.cmdparser.CmdParser):
+                run = sub.add_parser(name)
+                x.options = run
+                x.build()
+                # x.options.usage = "Usage: %s run %s [options]" % (x.options.prog, x.name)
+                # x.options.print_help()
 
     def e():
         import inspect
@@ -108,11 +123,12 @@ def execute():
     try:
         def error(x): raise Exception('')
         parser.error = error
+        argcomplete.autocomplete(parser)
         args = parser.parse_args()
     except:
         sys.stdout.flush()
         parser.print_help()
-        e()
+        # e()
         exit(0)
 
     if args.cmd == 'visualize':
