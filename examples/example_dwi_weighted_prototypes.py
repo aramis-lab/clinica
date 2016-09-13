@@ -65,10 +65,6 @@ lambda_g=4.0
 lambda_a=3.0
 lambda_b=3.0
 type='small' # It can be 'small' 'medium' or 'big'
-<<<<<<< 4ddf9ffd54b30ff50262476ab7439ac04a12ba09
-filename_bundle=join(cwd_path, 'external-data/dwi_weighted_prototypes/bundle_%s.vtk') % type
-=======
->>>>>>> Added clinica home path
 
 ## OPTIONAL PARAMETERS ##
 bound_limit_input=0.0
