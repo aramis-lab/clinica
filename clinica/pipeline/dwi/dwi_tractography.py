@@ -55,7 +55,7 @@ def whole_brain_tractography_pipeline(
         out_tracks (str): File containing the generated tracks.
 
     Example:
-        >>> from clinica.pipeline.processing.dwi_tractography import whole_brain_tractography_pipeline
+        >>> from clinica.pipeline.dwi.dwi_tractography import whole_brain_tractography_pipeline
         >>> tractography = tractography_pipeline('/path/to/datasink/directory')
         >>> tractorgraphy.inputs.inputnode.in_dwi = 'subject_dwi.nii'
         >>> tractography.inputs.inputnode.in_bvecs = 'subject_dwi.bvecs'
@@ -67,7 +67,7 @@ def whole_brain_tractography_pipeline(
     import nipype.interfaces.io as nio
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
-    from clinica.pipeline.processing.dwi_utils import *
+    from clinica.pipeline.dwi.dwi_tractography_utils import *
     from os.path import join
     import tempfile
 
