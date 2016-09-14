@@ -35,10 +35,30 @@ class CmdParser:
     def define_options(self): pass
 
     @abc.abstractmethod
-    def parse_args(self, args): pass
+    def run_pipeline(self, args): pass
 
-    @abc.abstractmethod
-    def run_pipeline(self): pass
+#Utils
+def get_cmdparser_objects():
+    import inspect
+    import clinica.engine.cmdparser
+    for name, obj in inspect.getmembers(clinica.engine.cmdparser):
+        if name != 'CmdParser' and inspect.isclass(obj):
+            x = obj()
+            if isinstance(x, clinica.engine.cmdparser.CmdParser):
+                yield x
+
+def init_cmdparser_objects(parser,objects=None):
+    def init(x):
+        x.options = parser.add_parser(x.name)
+        x.options.set_defaults(func=x.run_pipeline)
+        x.build()
+    if objects is None: objects = get_cmdparser_objects()
+    [init(x) for x in objects]
+
+def get_cmdparser_names(objects=None):
+    if objects is None: objects = get_cmdparser_objects()
+    for x in objects: yield x.name
+
 
 class CmdParserT1(CmdParser):
 
@@ -46,13 +66,10 @@ class CmdParserT1(CmdParser):
         self._name = 'T1'
 
     def define_options(self):
-        self._args.add_argument("-s", "--source")
+        self._args.add_argument("-s", "--source", dest='source')
 
-    def parse_args(self, args):
-        print "parse args"
-
-    def run_pipeline(self):
-        print "run pipeline"
+    def run_pipeline(self, args):
+        print "run pipeline %s" % args.source
 
 class CmdParserT2(CmdParser):
 
@@ -60,11 +77,7 @@ class CmdParserT2(CmdParser):
         self._name = 'T2'
 
     def define_options(self):
-        self._args.add_argument("-s", "--source")
+        self._args.add_argument("-s", "--source", dest='source')
 
-    def parse_args(self, args):
-        print "parse args"
-
-    def run_pipeline(self):
-        print "run pipeline"
-
+    def run_pipeline(self, args):
+        print "run pipeline %s" % args.source
