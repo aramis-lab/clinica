@@ -1,13 +1,35 @@
+"""
+The 'clinica' executable command line, installed with the clinica packages,
+call this module.
+
+The aim of this module is to execute pipeline from command line,
+and give to the user some other utils to works with the pipelines.
+
+"""
+
+
 from __future__ import print_function
-import argcomplete
-from argparse import ArgumentParser
-from clinica.engine.cworkflow import *
-import sys
-import os
-import subprocess
+import argcomplete, sys, os, subprocess
 from clinica.engine.cmdparser import *
 
+__author__ = "Michael Bacci"
+__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__credits__ = ["Michael Bacci", "YOU"]
+__license__ = "??"
+__version__ = "1.0.0"
+__maintainer__ = "Michael Bacci"
+__email__ = "michael.bacci@inira.fr"
+__status__ = "Development"
+
+
 def visualize(clinicaWorkflow, ids, rebase=False):
+    """Open a specific GUI program to display images made by pipeline
+
+    :param clinicaWorkflow: the main pipeline object
+    :param ids: list of id of patients
+    :param rebase: path to looking for configuration
+    """
+
     if not clinicaWorkflow.data.has_key('visualize'):
         print("No visualization was defined")
         exit(0)
@@ -31,7 +53,13 @@ def visualize(clinicaWorkflow, ids, rebase=False):
     def run_program(id): subprocess.Popen([program] + arguments.replace("${%s}" % matches, id).strip().split(" "))
     [run_program(id) for id in ids]
 
+
 def shell(clinicaWorkflow):
+    """Open a python/ipython shell and re-init the clinicaWorkflow object
+
+    :param clinicaWorkflow: the main pipeline object
+    """
+
     workflow = clinicaWorkflow
     __banner__ = "workflow variable is instantiated for you!"
     namespace = globals().copy()
@@ -56,6 +84,12 @@ def shell(clinicaWorkflow):
             print("Impossible to load ipython or python shell")
 
 def load_conf(args):
+    """Load a pipeline serialization
+
+    :param args: the path where looking for
+    :return: ClinicaWorkflow object
+    """
+
     import cPickle
 
     def load(path):
@@ -78,11 +112,9 @@ def load_conf(args):
 
 def execute():
     """
-    clinica <command> [path=current_directory] [options]
-    ex:
-    $cd WorkingDir/
-    $clinica visualize --id=1,2,3
+    Define and parse the command line argument
     """
+
     parser = ArgumentParser()
     sub_parser = parser.add_subparsers()
     parser.add_argument("-q", "--quiet",
@@ -111,28 +143,34 @@ def execute():
         shell(load_conf(args[1:]))
     shell_parser.set_defaults(func=shell_parser_fun)
 
+
+    """
+    pipelines-list option: show all available pipelines
+    """
+    pipeline_list_parser = sub_parser.add_parser('pipeline-list')
+    def pipeline_list_fun(args):
+        #display all available pipelines
+        print(*get_cmdparser_names())
+    pipeline_list_parser.set_defaults(func=pipeline_list_fun)
+
+
     """
     run option: run one of the available pipelines
     """
     run_parser = sub_parser.add_parser('run')
-    run_parser.add_argument("-l", dest="list",
-                            action="store_true", default=False,
-                            help="show all available pipelines")
     #adding the independent pipeline ArgumentParser objects
     init_cmdparser_objects(run_parser.add_subparsers())
 
     try:
         argcomplete.autocomplete(parser)
-        args = parser.parse_args("run T1 -s hey".split(" "))
+        args = parser.parse_args()
     except:
         sys.stdout.flush()
         parser.print_help()
         exit(0)
 
-    if args.list is True:
-        print(*get_cmdparser_names())
-    else:
-        args.func(args)
+    #Run the pipeline!
+    args.func(args)
 
 if __name__ == '__main__':
     execute()
