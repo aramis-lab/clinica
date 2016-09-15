@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module contains functions used for the registration pipeline."""
+"""This module contains functions used for the registration pipeline or other pipelines."""
 
 def convert_flirt_transformation_to_mrtrix_transformation(in_souce_image, in_reference_image, in_flirt_matrix, name_output_matrix=None):
     """
