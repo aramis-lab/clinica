@@ -7,7 +7,7 @@ Created on Mon Apr 25 15:04:17 2016
 """
 
 from __future__ import absolute_import
-from clinica.pipeline.t1.t1_freesurfer_workflow import recon_all_pipeline
+from clinica.pipeline.t1.t1_freesurfer import recon_all_pipeline
 from os.path import realpath,split,join
 import tempfile
 

@@ -307,7 +307,7 @@ def dartel_pipeline(experiment_dir, datasink_directory, name='dartel_wf', in_ite
     return wf
 
 
-def t1_spm_prep_pipeline(experiment_dir, datasink_directory, name='T1_SPM_prep_wf', class_images=[1, 2, 3],
+def t1_spm_full_pipeline(experiment_dir, datasink_directory, name='t1_spm_full_wf', class_images=[1, 2, 3],
                          dartel_class_images=[1], in_affine_regularization=None, in_channel_info=None,
                          in_sampling_distance=None, in_tissues_to_save=None, in_warping_regularization=None,
                          in_write_deformation_fields=None, in_iteration_parameters=None, in_optimization_parameters=None,
@@ -367,8 +367,8 @@ def t1_spm_prep_pipeline(experiment_dir, datasink_directory, name='T1_SPM_prep_w
     :param experiment_dir: Directory to run the workflow.
     :param datasink_directory: Directory to save the resulting images of segmentation and registration processes.
     :param name: Workflow name
-    :param class_images: TODO
-    :param dartel_class_images: TODO
+    :param class_images: Classes of images to obtain from segmentation. Ex: [1,2,3] is GM, WM and CSF
+    :param dartel_class_images: Classes of images to use for DARTEL template calculation. Ex: [1] is only GM'
 
     NewSegment parameters
     :param in_affine_regularization: ('mni' or 'eastern' or 'subj' or 'none')
@@ -445,7 +445,7 @@ def t1_spm_prep_pipeline(experiment_dir, datasink_directory, name='T1_SPM_prep_w
     wf = pe.Workflow(name=name)
     wf.base_dir = experiment_dir
     wf.connect([
-        (segmentation_wf, dartel_wf, [(('new_segment.native_space_images', get_class_images, class_images), 'dartel2mni_input.native_space_images'),
+        (segmentation_wf, dartel_wf, [(('new_segment.native_class_images', get_class_images, class_images), 'dartel2mni_input.native_space_images'),
                                       (('new_segment.dartel_input_images', get_class_images, dartel_class_images), 'dartelTemplate.image_files')]),
         (segmentation_wf, outputnode, [('outputnode.out_bias_corrected_images', 'out_bias_corrected_images'),
                                        ('outputnode.out_bias_field_images', 'out_bias_field_images'),
