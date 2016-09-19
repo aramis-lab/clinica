@@ -19,7 +19,7 @@ ______________________________________________________________
 """
 
 import abc
-from clinica.pipeline.t1.t1_spm import datagrabber_t1_spm_full_pipeline
+from clinica.pipeline.t1.t1_spm import datagrabber_t1_spm_full_pipeline, datagrabber_t1_spm_segment_pipeline
 from argparse import ArgumentParser
 
 class CmdParser:
@@ -191,3 +191,50 @@ class CmdParserT1SPMFullPrep(CmdParser):
                                           in_voxel_size=args.voxel_size)
 
         preproc_wf.run('MultiProc', plugin_args={'n_procs': args.n_procs})
+
+
+
+class CmdParserT1SPMSegment(CmdParser):
+
+    def define_name(self):
+        self._name = 't1-spm-segment'
+
+    def define_options(self):
+        self._args.add_argument("input_dir", help='Directory where the NIFTI images are stored')
+        self._args.add_argument("experiment_dir", help='Directory to run the workflow')
+        self._args.add_argument("datasink_dir",
+                                help='Directory to save the resulting images of segmentation and registration processes')
+        self._args.add_argument("-np", "--n_procs", type=int, default=4, help='Number of parallel process to run')
+        self._args.add_argument("-ci", "--class_images", type=list, default=[1, 2, 3],
+                                help='Classes of images to obtain from segmentation. Ex: [1,2,3] is GM, WM and CSF')
+        self._args.add_argument("-af", "--affine_regularization",
+                                help="('mni' or 'eastern' or 'subj' or 'none')")
+        self._args.add_argument("-chi", "--channel_info", type=tuple,
+                                help='''a tuple of the form: (a float, a float, a tuple of the form: (a boolean, a boolean)))
+        A tuple with the following fields:
+         - bias reguralisation (0-10)
+         - FWHM of Gaussian smoothness of bias
+         - which maps to save (Corrected, Field) - a tuple of two boolean values''')
+        self._args.add_argument("-sd", "--sampling_distance", type=float,
+                                help="Sampling distance on data for parameter estimation")
+        self._args.add_argument("-ts", "--tissues_to_save", type=list,
+                                help='''A list of tuples (one per tissue) of the form:
+        ((Native space, DARTEL input),(Warped Unmodulated, Warped Modulated)) with the boolen value for the type of images to save
+        Ex.: [((True, True), (False, False)),
+              ((True, False), (False, False))]''')
+        self._args.add_argument("-wr", "--warping_regularization", type=list,
+                                help='''(a list of from 5 to 5 items which are a float or a float)
+        Warping regularization parameter(s). Accepts float or list of floats (the latter is required by SPM12)''')
+        self._args.add_argument("-wdf", "--write_deformation_fields", type=list,
+                                help='''(a list of from 2 to 2 items which are a boolean)
+        Which deformation fields to write:[Inverse, Forward]''')
+
+    def run_pipeline(self, args):
+
+        segment_wf = datagrabber_t1_spm_segment_pipeline(args.input_dir, args.experiment_dir, args.datasink_dir,
+                                                         class_images=args.class_images, in_affine_regularization=args.affine_regularization,
+                                                         in_channel_info=args.channel_info, in_sampling_distance=args.sampling_distance,
+                                                         in_tissues_to_save=args.tissues_to_save, in_warping_regularization=args.warping_regularization,
+                                                         in_write_deformation_fields=args.write_deformation_fields,)
+
+        segment_wf.run('MultiProc', plugin_args={'n_procs': args.n_procs})

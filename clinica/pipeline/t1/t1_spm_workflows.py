@@ -278,6 +278,8 @@ def dartel_pipeline(experiment_dir, datasink_directory, name='dartel_wf', in_ite
     #Modulation
     dartel2mni.inputs.modulate = in_modulate
     #Smoothing
+    if in_fwhm == [0, 0, 0]:
+        in_fwhm = 0
     dartel2mni.inputs.fwhm = in_fwhm
 
     datasink_dartel = pe.Node(nio.DataSink(), name='datasink_dartel')
