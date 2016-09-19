@@ -44,10 +44,12 @@ def whole_brain_tractography_pipeline(
             within this mask.
 
     Outputnode:
-        out_dwi_mif
+        out_dwi_mif (str): Preprocessed DWI in MRtrix format.
         out_dti (str): Tensor fitted to the DWI dataset.
-        out_fa (str): FA map computed from DTI.
-        out_eroded_mask (str):
+        out_metrics (str): Maps of tensor-derived parameters namely fractional
+            anisotropy, mean diffusivity (also called mean apparent diffusion),
+            radial diffusivity and the first eigenvector modulated by the FA.
+        out_eroded_mask (str): Eroded b0 mask (for debug puproses)
         out_response_function (str): Text file containing response function
             coefficients.
         out_sh_coefficients_image (str): File containing the spherical
