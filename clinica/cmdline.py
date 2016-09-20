@@ -159,7 +159,8 @@ def execute():
     """
     run_parser = sub_parser.add_parser('run')
     #adding the independent pipeline ArgumentParser objects
-    init_cmdparser_objects(run_parser.add_subparsers())
+    # init_cmdparser_objects(run_parser.add_subparsers())
+    init_cmdparser_objects(run_parser.add_subparsers(),[CmdParserT1SPMFullPrep(),CmdParserT1SPMSegment()])
 
     try:
         argcomplete.autocomplete(parser)
