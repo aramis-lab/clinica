@@ -43,7 +43,7 @@ def create_dwi_preproc_syb(in_dwi, in_T1, in_bvals, in_bvecs, working_directory,
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
     import os.path as op
-    import clinica.pipeline.preprocessing.dwi_corrections as predifcorrect
+    import clinica.pipeline.dwi.dwi_preprocessing_utils as predifcorrect
 
 # Inputs existence checking
 
@@ -150,15 +150,15 @@ def diffusion_preprocessing_fieldmap_based(datasink_directory, num_b0s, name='di
       Output : The binary mask file.
 
     """
-    from clinica.pipeline.preprocessing.dwi_utils import b0_dwi_split
-    from clinica.pipeline.preprocessing.dwi_utils import b0_flirt_pipeline
-    from clinica.pipeline.preprocessing.dwi_utils import insert_b0_into_dwi
-    from clinica.pipeline.preprocessing.dwi_utils import b0_average
-    from clinica.pipeline.preprocessing.dwi_corrections import hmc_pipeline
-    from clinica.pipeline.preprocessing.dwi_corrections import sdc_fmb
-    from clinica.pipeline.preprocessing.dwi_corrections import ecc_pipeline
-    from clinica.pipeline.preprocessing.dwi_corrections import remove_bias
-    from clinica.pipeline.preprocessing.dwi_corrections import prepare_data
+    from clinica.pipeline.dwi.dwi_preprocessing_utils import b0_dwi_split
+    from clinica.pipeline.dwi.dwi_preprocessing_utils import b0_flirt_pipeline
+    from clinica.pipeline.dwi.dwi_preprocessing_utils import insert_b0_into_dwi
+    from clinica.pipeline.dwi.dwi_preprocessing_utils import b0_average
+    from clinica.pipeline.dwi.dwi_preprocessing_workflows import hmc_pipeline
+    from clinica.pipeline.dwi.dwi_preprocessing_workflows import sdc_fmb
+    from clinica.pipeline.dwi.dwi_preprocessing_workflows import ecc_pipeline
+    from clinica.pipeline.dwi.dwi_preprocessing_workflows import remove_bias
+    from clinica.pipeline.dwi.dwi_preprocessing_workflows import prepare_data
     from nipype.workflows.dmri.fsl.utils import apply_all_corrections
     import nipype.interfaces.fsl as fsl
     import nipype.interfaces.io as nio

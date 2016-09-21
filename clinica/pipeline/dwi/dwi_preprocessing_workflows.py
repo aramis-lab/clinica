@@ -20,7 +20,7 @@ from nipype.workflows.dmri.fsl.utils import demean_image
 from nipype.workflows.dmri.fsl.utils import cleanup_edge_pipeline
 from nipype.workflows.dmri.fsl.utils import add_empty_vol
 from nipype.workflows.dmri.fsl.utils import vsm2warp
-import clinica.pipeline.dwi.dwi_utils as predifutils
+import clinica.pipeline.dwi.dwi_preprocessing_utils as predifutils
 
 
 def prepare_data(datasink_directory, num_b0s, name='prepare_data', low_bval=5.0):
@@ -180,9 +180,9 @@ def hmc_pipeline(datasink_directory, name='motion_correct'):
 
     """
     from nipype.workflows.data import get_flirt_schedule
-    from clinica.pipeline.dwi.dwi_utils import merge_volumes_tdim
-    from clinica.pipeline.dwi.dwi_utils import hmc_split
-    from clinica.pipeline.dwi.dwi_corrections import dwi_flirt
+    from clinica.pipeline.dwi.dwi_preprocessing_utils import merge_volumes_tdim
+    from clinica.pipeline.dwi.dwi_preprocessing_utils import hmc_split
+    from clinica.pipeline.dwi.dwi_preprocessing_workflows import dwi_flirt
     import nipype.interfaces.io as nio
 
     params = dict(dof=6, interp='spline', cost='normmi', cost_func='normmi', bins=50, save_log=True, padding_size=10,
@@ -286,7 +286,7 @@ head-motion correction)
         outputnode.out_file - corrected dwi file
         outputnode.out_xfms - list of transformation matrices
     """
-    from clinica.pipeline.dwi.dwi_corrections import dwi_flirt
+    from clinica.pipeline.dwi.dwi_preprocessing_workflows import dwi_flirt
     from nipype.workflows.data import get_flirt_schedule
     from nipype.workflows.dmri.fsl.utils import extract_bval
     from nipype.workflows.dmri.fsl.utils import recompose_xfm
