@@ -27,7 +27,7 @@ from os.path import join
 from os import getcwd
 
 class CmdParser:
-    """Abstract class to exend in order to create your command line parser
+    """Abstract class to extend in order to create your command line parser
 
     Take a look to the CmdParserT1 example and write your own
     """
@@ -190,15 +190,16 @@ class CmdParserT1SPMFullPrep(CmdParser):
 
     def run_pipeline(self, args):
 
-        preproc_wf = datagrabber_t1_spm_full_pipeline(args.input_dir, args.experiment_dir, args.datasink_dir,
-                                          class_images=args.class_images, dartel_class_images=args.dartel_class_images,
-                                          in_affine_regularization=args.affine_regularization, in_channel_info=args.channel_info,
-                                          in_sampling_distance=args.sampling_distance, in_tissues_to_save=args.tissues_to_save,
-                                          in_warping_regularization=args.warping_regularization, in_write_deformation_fields=args.write_deformation_fields,
-                                          in_iteration_parameters=args.iteration_parameters, in_optimization_parameters=args.optimization_parameters,
-                                          in_regularization_form=args.regularization_form, in_template_prefix=args.template_prefix,
-                                          in_bounding_box=args.bounding_box, in_fwhm=args.fwhm, in_modulate=args.modulate,
-                                          in_voxel_size=args.voxel_size)
+        preproc_wf = datagrabber_t1_spm_full_pipeline(self.absolute_path(args.input_dir), self.absolute_path(args.experiment_dir),
+                                                      self.absolute_path(args.datasink_dir), class_images=args.class_images,
+                                                      dartel_class_images=args.dartel_class_images,
+                                                      in_affine_regularization=args.affine_regularization, in_channel_info=args.channel_info,
+                                                      in_sampling_distance=args.sampling_distance, in_tissues_to_save=args.tissues_to_save,
+                                                      in_warping_regularization=args.warping_regularization, in_write_deformation_fields=args.write_deformation_fields,
+                                                      in_iteration_parameters=args.iteration_parameters, in_optimization_parameters=args.optimization_parameters,
+                                                      in_regularization_form=args.regularization_form, in_template_prefix=args.template_prefix,
+                                                      in_bounding_box=args.bounding_box, in_fwhm=args.fwhm, in_modulate=args.modulate,
+                                                      in_voxel_size=args.voxel_size)
 
         preproc_wf.run('MultiProc', plugin_args={'n_procs': args.n_procs})
 
@@ -241,8 +242,9 @@ class CmdParserT1SPMSegment(CmdParser):
 
     def run_pipeline(self, args):
 
-        segment_wf = datagrabber_t1_spm_segment_pipeline(args.input_dir, args.experiment_dir, args.datasink_dir,
-                                                         class_images=args.class_images, in_affine_regularization=args.affine_regularization,
+        segment_wf = datagrabber_t1_spm_segment_pipeline(self.absolute_path(args.input_dir), self.absolute_path(args.experiment_dir),
+                                                         self.absolute_path(args.datasink_dir), class_images=args.class_images,
+                                                         in_affine_regularization=args.affine_regularization,
                                                          in_channel_info=args.channel_info, in_sampling_distance=args.sampling_distance,
                                                          in_tissues_to_save=args.tissues_to_save, in_warping_regularization=args.warping_regularization,
                                                          in_write_deformation_fields=args.write_deformation_fields,)
