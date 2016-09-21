@@ -2,8 +2,8 @@
 
 from __future__ import absolute_import
 
-from clinica.pipeline.preprocessing.dwi_launch_preproc import diffusion_preprocessing_fieldmap_based
-from clinica.pipeline.preprocessing.dwi_utils import count_b0s
+from clinica.pipeline.dwi.dwi_preprocessing import diffusion_preprocessing_fieldmap_based
+from clinica.pipeline.dwi.dwi_preprocessing_utils import count_b0s
 import nipype.interfaces.fsl as fsl
 
 import os

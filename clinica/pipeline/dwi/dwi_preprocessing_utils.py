@@ -258,7 +258,7 @@ def insert_b0_into_dwi(in_b0, in_dwi, in_bvals, in_bvecs):
       Output. B values update.
     out_bvecs. Directions of diffusion update.
     """
-    from clinica.pipeline.preprocessing.dwi_utils import merge_volumes_tdim
+    from clinica.pipeline.dwi.dwi_preprocessing_utils import merge_volumes_tdim
     import os.path as op
     import numpy as np
 
