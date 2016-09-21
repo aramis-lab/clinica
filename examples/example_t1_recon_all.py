@@ -13,7 +13,6 @@ import tempfile
 
 data_dir = join(split(realpath(__file__))[0], 'external-data/recon_all')
 output_dir = tempfile.mkdtemp()
-datasink_para = ['orig', 'white'] # here, for example, we just want to put the orig.mgh and .white file into datasinker
 
 print("Data Directory -> %s" % data_dir)
 print("Output Directory -> %s" % output_dir)
@@ -23,14 +22,14 @@ print("Running...")
 def recon_all_exampleA():
     field_templateA = '%s/%s.nii'
     template_argsA =   'struct'
-    return recon_all_pipeline(data_dir, output_dir, field_templateA, template_argsA, datasink_para)
+    return recon_all_pipeline(data_dir, output_dir, field_templateA, template_argsA)
 
 # this is to use structureB, grab all the nifti files with different name, like struct1.nii, struct2.nii....   
 def recon_all_exampleB():
    field_templateB = '%s/struct%d.nii'
    template_argsB = [['subject_id', 'dir']]
    #datasink_para is optional, is usend in order to etc...
-   return recon_all_pipeline(data_dir, output_dir, field_templateB, template_argsB, datasink_para)
+   return recon_all_pipeline(data_dir, output_dir, field_templateB, template_argsB)
 
 #Choose your A or B example
 if 'A' == 'A':

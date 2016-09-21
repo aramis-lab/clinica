@@ -20,7 +20,10 @@ ______________________________________________________________
 
 import abc
 from clinica.pipeline.t1.t1_spm import datagrabber_t1_spm_full_pipeline, datagrabber_t1_spm_segment_pipeline
+from clinica.pipeline.t1.t1_freesurfer import recon_all_pipeline
 from argparse import ArgumentParser
+from os.path import join
+from os import getcwd
 
 class CmdParser:
     """Abstract class to exend in order to create your command line parser
@@ -61,6 +64,12 @@ class CmdParser:
 
     @abc.abstractmethod
     def run_pipeline(self, args): pass
+
+    def absolute_path(self, arg):
+        return join(getcwd(), arg)
+
+
+
 
 
 def get_cmdparser_objects():
@@ -238,3 +247,23 @@ class CmdParserT1SPMSegment(CmdParser):
                                                          in_write_deformation_fields=args.write_deformation_fields,)
 
         segment_wf.run('MultiProc', plugin_args={'n_procs': args.n_procs})
+
+class CmdParserT1ReconAll(CmdParser):
+
+    def define_name(self):
+        self._name = 't1-reconall'
+    def define_options(self):
+        self._args.add_argument("input_dir", help='Directory where the NIFTI images are stored')
+        self._args.add_argument("output_dir", help='Directory to store the result of the pipeline')
+        self._args.add_argument("field_template", help='A list to define the input structure')
+        self._args.add_argument("template_args", type=str, help='A list of list to define the input structure, the name of the NIFTI images')
+        self._args.add_argument("-ifs", "--intermediate_files", type=list, default=['orig', 'white'], help='The intermediate files stored in datasinker')
+        self._args.add_argument("-ras", "--reconall_args", type=str, default='-qcache', help='additional flags for reconAll command line, default is -qcache')
+
+
+    def run_pipeline(self, args):
+
+        reconall_wf = recon_all_pipeline(self.absolute_path(args.input_dir), args.output_dir, args.field_template, args.template_args,
+                                         datasink_para=args.intermediate_files, recon_all_args=args.reconall_args)
+
+        reconall_wf.run("MultiProc", plugin_args={'n_procs':4})
