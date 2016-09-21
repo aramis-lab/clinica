@@ -21,6 +21,7 @@ ______________________________________________________________
 import abc
 from clinica.pipeline.t1.t1_spm import datagrabber_t1_spm_full_pipeline, datagrabber_t1_spm_segment_pipeline
 from clinica.pipeline.t1.t1_freesurfer import recon_all_pipeline
+from clinica.pipeline.statistics.t1_surfstat import clinica_surfstat
 from argparse import ArgumentParser
 from os.path import join
 from os import getcwd
@@ -256,10 +257,9 @@ class CmdParserT1ReconAll(CmdParser):
         self._args.add_argument("input_dir", help='Directory where the NIFTI images are stored')
         self._args.add_argument("output_dir", help='Directory to store the result of the pipeline')
         self._args.add_argument("field_template", help='A list to define the input structure')
-        self._args.add_argument("template_args", type=str, help='A list of list to define the input structure, the name of the NIFTI images')
+        self._args.add_argument("template_args", help='A list of list to define the input structure, the name of the NIFTI images')
         self._args.add_argument("-ifs", "--intermediate_files", type=list, default=['orig', 'white'], help='The intermediate files stored in datasinker')
         self._args.add_argument("-ras", "--reconall_args", type=str, default='-qcache', help='additional flags for reconAll command line, default is -qcache')
-
 
     def run_pipeline(self, args):
 
@@ -267,3 +267,28 @@ class CmdParserT1ReconAll(CmdParser):
                                          datasink_para=args.intermediate_files, recon_all_args=args.reconall_args)
 
         reconall_wf.run("MultiProc", plugin_args={'n_procs':4})
+
+class CmdParserStatisticcSurfStat(CmdParser):
+
+    def define_name(self):
+        self._name = 't1-surfstat'
+    def define_options(self):
+        self._args.add_argument("input_dir", help='Directory where the input files(output of reconAll pipeline) are stored')
+        self._args.add_argument("output_dir", help='Directory to store the result images of the pipeline')
+        self._args.add_argument("linear_model", help='A list to define the model that fits into GLM')
+        self._args.add_argument("contrast", help='A list to define the contrast matrix for GLM')
+        self._args.add_argument("csv_file", help='Directory where the csv files are stored')
+        self._args.add_argument("str_format", help='A list to define the format string for the csv files')
+        self._args.add_argument("-sof", "--size_of_fwhm", type=int, default=20, help='FWHM for the surface smoothing')
+        self._args.add_argument("-tup", "--threshold_uncorrected_pvalue", type=float, default='0.001', help='Threshold to display the uncorrected Pvalue')
+        self._args.add_argument("-tcp", "--threshold_corrected_pvalue", type=float, default=0.05, help='Threshold to display the corrected cluster')
+        self._args.add_argument("-ct", "--cluster_threshold", type=float, default=0.001, help='Threshold to define a cluster in the process of cluster-wise correction')
+
+    def run_pipeline(self, args):
+
+        surfstat_wf = clinica_surfstat(self.absolute_path(args.input_dir), args.output_dir, args.linear_model, args.contrast,
+                                         self.absolute_path(args.csv_file), args.str_format,
+                                         size_of_fwhm=args.size_of_fwhm, threshold_uncorrected_pvalue=args.threshold_uncorrected_pvalue,
+                                         threshold_corrected_pvalue=args.threshold_corrected_pvalue, cluster_threshold=args.cluster_threshold)
+
+        surfstat_wf.run()
