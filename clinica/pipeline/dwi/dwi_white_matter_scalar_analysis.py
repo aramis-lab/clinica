@@ -4,7 +4,7 @@
 """This module contains functions used for the post-processing pipeline."""
 
 def dti_atlas_scalar_analysis_pipeline(
-                in_scalar_image, atlas_labels, atlas_scalar_image, working_directory, datasink_directory, name="create_dti_atlas_scalar_analysis")):
+                in_scalar_image, atlas_labels, atlas_scalar_image, working_directory, datasink_directory, name="create_dti_atlas_scalar_analysis"):
     """
     Perform tracts analysis according to a white matter atlas using a tensor-derived scalar image.
 
