@@ -18,7 +18,7 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
         surfstat
         Inputs: :param input_directory:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
                 :param output_directory: the directory to contain the result images.
-                :param linear_model: string, the linear model that fit into the GLM, for example '1+Lable'.
+                :param linear_model: string, the linear model that fits into the GLM, for example '1+Lable'.
                 :param contrast: string, the contrast matrix for GLM, if the factor you choose is categorized variable, clinica_surfstat will create two contrasts,
                           for example, contrast = 'Label', this will create contrastpos = Label.AD - Label.CN, contrastneg = Label.CN - Label.AD; if the fac-
                           tory that you choose is a continuous factor, clinica_surfstat will just create one contrast, for example, contrast = 'Age', but note,
@@ -27,7 +27,7 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
                 :param str_format: string, the str_format which uses to read your csv file, the typy of the string should corresponds exactly with the columns in the csv file.
                  Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
                 :param size_of_fwhm: fwhm for the surface smoothing, default is 20, integer.
-                :param threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float.
+                :param threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float, default is 0.001.
                 :param threshold_corrected_pvalue: the threshold to display the corrected cluster, default is 0.05, float.
                 :param cluster_threshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float.             
           For more infomation about SurfStat, please check:
