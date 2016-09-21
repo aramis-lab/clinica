@@ -255,6 +255,7 @@ class CmdParserT1ReconAll(CmdParser):
 
     def define_name(self):
         self._name = 't1-reconall'
+
     def define_options(self):
         self._args.add_argument("input_dir", help='Directory where the NIFTI images are stored')
         self._args.add_argument("output_dir", help='Directory to store the result of the pipeline')
@@ -270,10 +271,11 @@ class CmdParserT1ReconAll(CmdParser):
 
         reconall_wf.run("MultiProc", plugin_args={'n_procs':4})
 
-class CmdParserStatisticcSurfStat(CmdParser):
+class CmdParserStatisticsSurfStat(CmdParser):
 
     def define_name(self):
         self._name = 't1-surfstat'
+
     def define_options(self):
         self._args.add_argument("input_dir", help='Directory where the input files(output of reconAll pipeline) are stored')
         self._args.add_argument("output_dir", help='Directory to store the result images of the pipeline')
