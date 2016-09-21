@@ -9,7 +9,7 @@ Created on Mon Apr 22 09:04:10 2016
 from clinica.engine.cworkflow import *
 
 @Visualize("freeview", "-v ${subject_id}/mri/T1.mgz -f ${subject_id}/surf/lh.white:edgecolor=blue ${subject_id}/surf/lh.pial:edgecolor=green ${subject_id}/surf/rh.white:edgecolor=blue ${subject_id}/surf/rh.pial:edgecolor=green", "subject_id")
-def recon_all_pipeline(data_dir, output_dir,field_template, template_args, datasink_para, recon_all_args='-qcache'):
+def recon_all_pipeline(data_dir, output_dir,field_template, template_args, datasink_para = ['orig', 'white'], recon_all_args='-qcache'):
 #def recon_all_pipeline(data_dir, output_dir, n_output, recon_all_args='-qcache'):
     
     """
@@ -36,12 +36,12 @@ def recon_all_pipeline(data_dir, output_dir,field_template, template_args, datas
             For more optional ReconAll inputs and  outputs check:
             http://nipy.org/nipype/interfaces/generated/nipype.interfaces.freesurfer.preprocess.html#reconall
 
-        :param: data_dir: the directory where to put the input images, eg, example1.nii, example2.nii
+        :param: data_dir: the directory where to put the input images, eg, example1.nii, example2.nii, this should be the absolute path
         :param: output_dir: the directory where to put the results of the pipeline, should be absolute path!
         :param: field_template: list, you should define it based on your input data structure       
-        :param: template_args: list containing list, you should define it based on your input data structure
-        :param: datasink_para: list containing string, optional, the container inside the datasink_folder, for datasinker to store the result that you want, you can define many container to store your result!
-        :param: recon_all_args, the default value will be set as '-qcache', which will get the result of the fsaverage.
+        :param: template_args: list, you should define it based on your input data structure
+        :param: datasink_para: list containing string, optional, the container inside the datasink_folder, for datasinker to store the result that you want, you can define many container to store your result, default is datasink_para = ['orig', 'white']
+        :param: recon_all_args, the additional flags for reconAll command line, the default value will be set as '-qcache', which will get the result of the fsaverage.
         return: Recon-all workflow
     """
 
@@ -60,10 +60,11 @@ def recon_all_pipeline(data_dir, output_dir,field_template, template_args, datas
         exit(1)
 
     subject_list = []
+    # in example_t1_reconall, the data_dir is defined as absolute path, if we should do there, or we should do it here????
     for dirpath, dirnames, filenames in os.walk(data_dir):
         subject_list = dirnames
         break
-    output_dir = os.path.expanduser(output_dir)
+    output_dir = os.path.expanduser(output_dir)# this is to add ~ before the out_dir, if it doesnt start with ~,just return the path
     try:
         os.makedirs(output_dir)
     except OSError as exception:
