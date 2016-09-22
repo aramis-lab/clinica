@@ -4,14 +4,14 @@
 """This module contains functions used for the post-processing pipeline."""
 
 def dti_atlas_scalar_analysis_pipeline(
-                in_scalar_image, atlas_labels, atlas_scalar_image, working_directory, datasink_directory, name="create_dti_atlas_scalar_analysis"):
+                in_scalar_image, atlas_labels, atlas_scalar_image, working_directory, datasink_directory, name="dti_atlas_scalar_analysis_pipeline"):
     """
     Perform tracts analysis according to a white matter atlas using a tensor-derived scalar image.
 
     This function perform the analysis of tracts using a white matter atlas and compute mean value of
     the scalar on each tracts of this atlas. The function first coregister the subject scalar image
-    on the equivalent scalar image of the atlas and then use the labels to computs the statistics of the
-    scalar on each tracks of the whie matter atlas.
+    on the equivalent scalar image of the atlas and then use the labels to computes the statistics of the
+    scalar on each tracks of the white matter atlas.
 
     Args:
         in_scalar_image (str): 3D image of the scalar obtained from the tensor
@@ -32,7 +32,7 @@ def dti_atlas_scalar_analysis_pipeline(
     import nipype.pipeline.engine as pe
     import os.path as op
     from clinica.pipeline.registration.mri_registration import antsRegistrationSyNQuick
-    from clinica.pipeline.postprocessing.dwi_utils import dti_atlas_scalar_analysis
+    from clinica.pipeline.dwi.dwi_white_matter_scalar_analysis import dti_atlas_scalar_analysis
     import tempfile
 
     if working_directory is None:
@@ -75,7 +75,7 @@ def dti_atlas_scalar_analysis_pipeline(
         name='outputnode')
 
     datasink = pe.Node(nio.DataSink(), name='datasink')
-    datasink.inputs.base_directory = op.join(datasink_directory,'dti_scalar_analysis/')
+    datasink.inputs.base_directory = op.join(datasink_directory, 'dti_scalar_analysis/')
 
 
     wf = pe.Workflow(name='dti_scalar_analysis')
@@ -129,7 +129,7 @@ def dti_atlas_scalar_analysis(input_image, atlas_labels_image, name_output_file=
     if name_output_file is None:
         outfile = op.abspath('scalar_stats.csv')
     else:
-        outfile = op.abspath(name_output_file);
+        outfile = op.abspath(name_output_file)
 
     dti_atlas = nib.load(atlas_labels_image)
     atlas_image_data = dti_atlas.get_data()
