@@ -11,7 +11,7 @@ def create_dwi_preproc_syb(in_dwi, in_T1, in_bvals, in_bvecs, working_directory,
         - Correction for Eddy Currents
         - Correction for EPI susceptibility induced distortions using the SyN algorithm (SyB)
         - Bias field correction
-    The outputs presented are tipically outputs necessary for further tractography.
+    The outputs presented are typically outputs necessary for further tractography.
 
     Inputs
     ---------
@@ -150,23 +150,16 @@ def diffusion_preprocessing_fieldmap_based(datasink_directory, num_b0s, name='di
       Output : The binary mask file.
 
     """
-    from clinica.pipeline.dwi.dwi_preprocessing_utils import b0_dwi_split
-    from clinica.pipeline.dwi.dwi_preprocessing_utils import b0_flirt_pipeline
-    from clinica.pipeline.dwi.dwi_preprocessing_utils import insert_b0_into_dwi
-    from clinica.pipeline.dwi.dwi_preprocessing_utils import b0_average
     from clinica.pipeline.dwi.dwi_preprocessing_workflows import hmc_pipeline
     from clinica.pipeline.dwi.dwi_preprocessing_workflows import sdc_fmb
     from clinica.pipeline.dwi.dwi_preprocessing_workflows import ecc_pipeline
     from clinica.pipeline.dwi.dwi_preprocessing_workflows import remove_bias
     from clinica.pipeline.dwi.dwi_preprocessing_workflows import prepare_data
     from nipype.workflows.dmri.fsl.utils import apply_all_corrections
-    import nipype.interfaces.fsl as fsl
     import nipype.interfaces.io as nio
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
     import os.path as op
-
-
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['in_file', 'in_bvals', 'in_bvecs', 'bmap_mag', 'bmap_pha']), name='inputnode')
 
@@ -185,37 +178,37 @@ def diffusion_preprocessing_fieldmap_based(datasink_directory, num_b0s, name='di
 
     wf = pe.Workflow(name=name,base_dir=datasink_directory)
     wf.connect([
-            (inputnode,            pre,                  [('in_file', 'inputnode.in_file'),
-                                                          ('in_bvals', 'inputnode.in_bvals'),
-                                                          ('in_bvecs', 'inputnode.in_bvecs')]),
-            (pre,                  hmc,                  [('outputnode.dwi_b0_merge', 'inputnode.in_file'),
-                                                          ('outputnode.out_bvals', 'inputnode.in_bval'),
-                                                          ('outputnode.out_bvecs', 'inputnode.in_bvec')]),
-            (pre,                  hmc,                  [('outputnode.mask_b0', 'inputnode.in_mask')]),
-            (hmc,                  sdc,                  [('outputnode.out_file', 'inputnode.in_file')]),
-            (pre,                  sdc,                  [('outputnode.mask_b0', 'inputnode.in_mask')]),
-            (inputnode,            sdc,                  [('bmap_mag', 'inputnode.bmap_mag')]),
-            (inputnode,            sdc,                  [('bmap_pha', 'inputnode.bmap_pha')]),
-            (hmc,                  ecc,                  [('outputnode.out_xfms', 'inputnode.in_xfms')]),
-            (pre,                  ecc,                  [('outputnode.out_bvals', 'inputnode.in_bval')]),
-            (sdc,                  ecc,                  [('outputnode.out_file', 'inputnode.in_file')]),
-            (pre,                  ecc,                  [('outputnode.mask_b0', 'inputnode.in_mask')]),
-            (pre,                  unwarp,               [('outputnode.dwi_b0_merge', 'inputnode.in_dwi')]),
-            (hmc,                  unwarp,               [('outputnode.out_xfms', 'inputnode.in_hmc')]),
-            (ecc,                  unwarp,               [('outputnode.out_xfms', 'inputnode.in_ecc')]),
-            (sdc,                  unwarp,               [('outputnode.out_warp', 'inputnode.in_sdc')]),
-            (unwarp,               remove_bias_pip,      [('outputnode.out_file', 'inputnode.in_file')]),
-#            (mask_b0,              remove_bias_pip,      [('mask_file', 'inputnode.in_mask')]),
-            (hmc,                  outputnode,           [('outputnode.out_bvec', 'out_bvecs')]),
-            (hmc,                  datasink,             [('outputnode.out_bvec', 'out_bvecs')]),
-            (pre,                  outputnode,           [('outputnode.out_bvals', 'out_bval')]),
-            (pre,                  datasink,             [('outputnode.out_bvals', 'out_bval')]),
-            (remove_bias_pip,      outputnode,           [('outputnode.out_file', 'out_file')]),
-            (remove_bias_pip,      datasink,             [('outputnode.out_file', 'out_file')]),
-            (remove_bias_pip,      outputnode,           [('outputnode.b0_mask','b0_mask')]),
-            (remove_bias_pip,      datasink,             [('outputnode.b0_mask','b0_mask')])
-#            (mask_b0,              outputnode,           [('mask_file', 'out_mask')]),
-#            (mask_b0,              datasink,             [('mask_file', 'out_mask')])
+            (inputnode,       pre,             [('in_file', 'inputnode.in_file'),
+                                                ('in_bvals', 'inputnode.in_bvals'),
+                                                ('in_bvecs', 'inputnode.in_bvecs')]),
+            (pre,             hmc,             [('outputnode.dwi_b0_merge', 'inputnode.in_file'),
+                                                ('outputnode.out_bvals', 'inputnode.in_bval'),
+                                                ('outputnode.out_bvecs', 'inputnode.in_bvec')]),
+            (pre,             hmc,             [('outputnode.mask_b0', 'inputnode.in_mask')]),
+            (hmc,             sdc,             [('outputnode.out_file', 'inputnode.in_file')]),
+            (pre,             sdc,             [('outputnode.mask_b0', 'inputnode.in_mask')]),
+            (inputnode,       sdc,             [('bmap_mag', 'inputnode.bmap_mag')]),
+            (inputnode,       sdc,             [('bmap_pha', 'inputnode.bmap_pha')]),
+            (hmc,             ecc,             [('outputnode.out_xfms', 'inputnode.in_xfms')]),
+            (pre,             ecc,             [('outputnode.out_bvals', 'inputnode.in_bval')]),
+            (sdc,             ecc,             [('outputnode.out_file', 'inputnode.in_file')]),
+            (pre,             ecc,             [('outputnode.mask_b0', 'inputnode.in_mask')]),
+            (pre,             unwarp,          [('outputnode.dwi_b0_merge', 'inputnode.in_dwi')]),
+            (hmc,             unwarp,          [('outputnode.out_xfms', 'inputnode.in_hmc')]),
+            (ecc,             unwarp,          [('outputnode.out_xfms', 'inputnode.in_ecc')]),
+            (sdc,             unwarp,          [('outputnode.out_warp', 'inputnode.in_sdc')]),
+            (unwarp,          remove_bias_pip, [('outputnode.out_file', 'inputnode.in_file')]),
+#            (mask_b0,         remove_bias_pip, [('mask_file', 'inputnode.in_mask')]),
+            (hmc,             outputnode,      [('outputnode.out_bvec', 'out_bvecs')]),
+            (hmc,             datasink,        [('outputnode.out_bvec', 'out_bvecs')]),
+            (pre,             outputnode,      [('outputnode.out_bvals', 'out_bval')]),
+            (pre,             datasink,        [('outputnode.out_bvals', 'out_bval')]),
+            (remove_bias_pip, outputnode,      [('outputnode.out_file', 'out_file')]),
+            (remove_bias_pip, datasink,        [('outputnode.out_file', 'out_file')]),
+            (remove_bias_pip, outputnode,      [('outputnode.b0_mask','b0_mask')]),
+            (remove_bias_pip, datasink,        [('outputnode.b0_mask','b0_mask')])
+#            (mask_b0,         outputnode,      [('mask_file', 'out_mask')]),
+#            (mask_b0,         datasink,        [('mask_file', 'out_mask')])
             ])
 
     return wf

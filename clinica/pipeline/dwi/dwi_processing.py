@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module contains the tractography pipeline."""
+"""This module contains pipelines for the processing of DWI dataset."""
 
-def whole_brain_tractography_pipeline(
+def tractography_and_dti_pipeline(
                 datasink_directory, working_directory=None, max_harmonic_order=None,
                 tractography_algorithm='iFOD2', tractography_nb_of_tracks="100K",
-                tractography_fod_treshold=None, tractography_step_size=None, tractography_angle=None,
+                tractography_fod_threshold=None, tractography_step_size=None, tractography_angle=None,
                 nthreads=2, name="whole_brain_tractography_pipeline"):
     """
-    Perform single-shell tractography.
+    Perform single-shell tractography and DTI.
 
-    This pipeline performs a whole-brain single-shell tractography on a
+    This pipeline performs a whole-brain single-shell tractography and DTI on a
     preprocessed DWI dataset. This Python implementation is using MRtrix3 and
     is based on the tutorial given by the MRtrix community during the ISMRM
     conference in 2015.
@@ -27,9 +27,9 @@ def whole_brain_tractography_pipeline(
             the b-vectors
         tractography_algorithm (Optional[str]): See streamlines_tractography
         tractography_nb_of_tracks (Optional[str]): See streamlines_tractography
-        tractography_fod_treshold (Optional[float]): See streamlines_tractography
-        step_size (Optional[int]): See streamlines_tractography
-        angle (Optional[int]): See streamlines_tractography
+        tractography_fod_threshold (Optional[float]): See streamlines_tractography
+        tractography_step_size (Optional[int]): See streamlines_tractography
+        tractography_angle (Optional[int]): See streamlines_tractography
         nthreads (Optional[int]): Number of threads used for the pipeline
             (default=2, 0 disables multi-threading).
 
@@ -49,7 +49,7 @@ def whole_brain_tractography_pipeline(
         out_metrics (str): Maps of tensor-derived parameters namely fractional
             anisotropy, mean diffusivity (also called mean apparent diffusion),
             radial diffusivity and the first eigenvector modulated by the FA.
-        out_eroded_mask (str): Eroded b0 mask (for debug puproses)
+        out_eroded_mask (str): Eroded b0 mask (for debug papooses)
         out_response_function (str): Text file containing response function
             coefficients.
         out_sh_coefficients_image (str): File containing the spherical
@@ -57,21 +57,27 @@ def whole_brain_tractography_pipeline(
         out_tracks (str): File containing the generated tracks.
 
     Example:
-        >>> from clinica.pipeline.dwi.dwi_tractography import whole_brain_tractography_pipeline
-        >>> tractography = tractography_pipeline('/path/to/datasink/directory')
-        >>> tractorgraphy.inputs.inputnode.in_dwi = 'subject_dwi.nii'
-        >>> tractography.inputs.inputnode.in_bvecs = 'subject_dwi.bvecs'
-        >>> tractography.inputs.inputnode.in_bvals = 'subject_dwi.bvals'
-        >>> tractography.inputs.inputnode.in_b0_mask = 'subject_b0_mask.nii'
-        >>> tractography.inputs.inputnode.white_matter_mask = 'subject_wm_mask.nii'
-        >>> tractography.run()
+        >>> from clinica.pipeline.dwi.dwi_processing import tractography_and_dti_pipeline
+        >>> tractography_and_dti = tractography_and_dti_pipeline('/path/to/datasink/directory')
+        >>> tractography_and_dti.inputs.inputnode.in_dwi = 'subject_dwi.nii'
+        >>> tractography_and_dti.inputs.inputnode.in_bvecs = 'subject_dwi.bvecs'
+        >>> tractography_and_dti.inputs.inputnode.in_bvals = 'subject_dwi.bvals'
+        >>> tractography_and_dti.inputs.inputnode.in_b0_mask = 'subject_b0_mask.nii'
+        >>> tractography_and_dti.inputs.inputnode.white_matter_mask = 'subject_wm_mask.nii'
+        >>> tractography_and_dti.run()
     """
+    from os.path import join
+    import tempfile
     import nipype.interfaces.io as nio
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
-    from clinica.pipeline.dwi.dwi_tractography_utils import *
-    from os.path import join
-    import tempfile
+    from clinica.pipeline.dwi.dwi_processing_utils import convert_nifti_to_mrtrix_format
+    from clinica.pipeline.dwi.dwi_processing_utils import dwi_to_tensor
+    from clinica.pipeline.dwi.dwi_processing_utils import tensor_to_metrics
+    from clinica.pipeline.dwi.dwi_processing_utils import erode_mask
+    from clinica.pipeline.dwi.dwi_processing_utils import estimate_response
+    from clinica.pipeline.dwi.dwi_processing_utils import estimate_fod
+    from clinica.pipeline.dwi.dwi_processing_utils import streamlines_tractography
 
     if working_directory is None:
         working_directory = tempfile.mkdtemp()
@@ -117,18 +123,18 @@ def whole_brain_tractography_pipeline(
 
     streamlines_tractography = pe.Node(interface=niu.Function(
         input_names=['in_source', 'in_white_matter_binary_mask', 'algorithm', 'number_of_tracks',
-                     'fod_treshold', 'step_size', 'angle', 'nthreads'],
+                     'fod_threshold', 'step_size', 'angle', 'nthreads'],
         output_names=['out_tracks'], function=streamlines_tractography), name='streamlines_tractography')
     streamlines_tractography.inputs.algorithm = tractography_algorithm
     streamlines_tractography.inputs.number_of_tracks = tractography_nb_of_tracks
-    streamlines_tractography.inputs.fod_treshold = tractography_fod_treshold
+    streamlines_tractography.inputs.fod_threshold = tractography_fod_threshold
     streamlines_tractography.inputs.step_size = tractography_step_size
     streamlines_tractography.inputs.angle = tractography_angle
     streamlines_tractography.inputs.nthreads = nthreads
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['out_dwi_mif', 'out_dti', 'out_metrics', 'out_fa', 'out_md', 'out_rd', 'out_ev',
-                'out_response_function','out_sh_coefficients_image', 'out_tracks']),
+                'out_response_function', 'out_sh_coefficients_image', 'out_tracks']),
         name='outputnode')
 
     datasink = pe.Node(nio.DataSink(), name='datasink')
@@ -147,7 +153,7 @@ def whole_brain_tractography_pipeline(
         (inputnode,     tensor_to_metrics, [('in_b0_mask', 'in_b0_mask')]),
         (dwi_to_tensor, tensor_to_metrics, [('out_dti', 'in_dti')]),
         # Erosion of the b0 mask for the estimation of the response function:
-        (inputnode, erode_mask, [('in_b0_mask','in_mask')]),
+        (inputnode, erode_mask, [('in_b0_mask', 'in_mask')]),
         # Estimation of the response function:
         (convert_nifti_to_mrtrix_format, estimate_response, [('out_dwi_mif', 'in_dwi_mif')]),
         (erode_mask,                     estimate_response, [('out_eroded_mask', 'in_b0_mask')]),
@@ -183,3 +189,6 @@ def whole_brain_tractography_pipeline(
     ])
 
     return wf
+
+
+
