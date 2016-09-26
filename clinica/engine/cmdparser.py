@@ -19,9 +19,6 @@ ______________________________________________________________
 """
 
 import abc
-from clinica.pipeline.t1.t1_spm import datagrabber_t1_spm_full_pipeline, datagrabber_t1_spm_segment_pipeline
-from clinica.pipeline.t1.t1_freesurfer import recon_all_pipeline
-from clinica.pipeline.statistics.t1_surfstat import clinica_surfstat
 from argparse import ArgumentParser
 from os.path import join
 from os import getcwd
@@ -190,6 +187,8 @@ class CmdParserT1SPMFullPrep(CmdParser):
 
     def run_pipeline(self, args):
 
+        from clinica.pipeline.t1.t1_spm import datagrabber_t1_spm_full_pipeline
+
         preproc_wf = datagrabber_t1_spm_full_pipeline(self.absolute_path(args.input_dir), self.absolute_path(args.experiment_dir),
                                                       self.absolute_path(args.datasink_dir), class_images=args.class_images,
                                                       dartel_class_images=args.dartel_class_images,
@@ -242,6 +241,7 @@ class CmdParserT1SPMSegment(CmdParser):
 
     def run_pipeline(self, args):
 
+        from clinica.pipeline.t1.t1_spm import datagrabber_t1_spm_segment_pipeline
         segment_wf = datagrabber_t1_spm_segment_pipeline(self.absolute_path(args.input_dir), self.absolute_path(args.experiment_dir),
                                                          self.absolute_path(args.datasink_dir), class_images=args.class_images,
                                                          in_affine_regularization=args.affine_regularization,
@@ -265,6 +265,8 @@ class CmdParserT1ReconAll(CmdParser):
         self._args.add_argument("-ras", "--reconall_args", type=str, default='-qcache', help='additional flags for reconAll command line, default is -qcache')
 
     def run_pipeline(self, args):
+
+        from clinica.pipeline.t1.t1_freesurfer import recon_all_pipeline
 
         reconall_wf = recon_all_pipeline(self.absolute_path(args.input_dir), args.output_dir, args.field_template, args.template_args,
                                          datasink_para=args.intermediate_files, recon_all_args=args.reconall_args)
@@ -290,6 +292,8 @@ class CmdParserStatisticsSurfStat(CmdParser):
 
     def run_pipeline(self, args):
 
+        from clinica.pipeline.statistics.t1_surfstat import clinica_surfstat
+        
         surfstat_wf = clinica_surfstat(self.absolute_path(args.input_dir), args.output_dir, args.linear_model, args.contrast,
                                          self.absolute_path(args.csv_file), args.str_format,
                                          size_of_fwhm=args.size_of_fwhm, threshold_uncorrected_pvalue=args.threshold_uncorrected_pvalue,
