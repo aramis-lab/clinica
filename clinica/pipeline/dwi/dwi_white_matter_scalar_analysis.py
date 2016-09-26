@@ -101,6 +101,7 @@ def dti_atlas_scalar_analysis_pipeline(
                                               ('inverse_warp', 'inverse_warp'),
                                               ('inverse_warped', 'inverse_warped')]),
         (scalar_analysis,          datasink, [('outfile', 'out_stats_file')])
+    ])
 
     return wf
 
