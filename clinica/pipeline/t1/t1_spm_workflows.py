@@ -5,17 +5,25 @@ import nipype.interfaces.matlab as mlab
 import nipype.pipeline.engine as pe
 import nipype.interfaces.io as nio
 import nipype.interfaces.utility as niu
-from t1_spm_utils import get_class_images
+from t1_spm_utils import get_tissue_tuples, get_class_images
 
 
-def segmentation_pipeline(experiment_dir, datasink_directory, name='segmentation_wf', class_images=[1,2,3],
-                          in_affine_regularization=None, in_channel_info=None, in_sampling_distance=None,
-                          in_tissues_to_save=None, in_warping_regularization=None, in_write_deformation_fields=None):
+def segmentation_pipeline(output_directory,
+                          working_directory=None,
+                          name='segmentation_wf',
+                          tissue_classes=[1, 2, 3],
+                          dartel_tissues=[1],
+                          save_warped_unmodulated=False,
+                          save_warped_modulated=False,
+                          in_affine_regularization=None,
+                          in_channel_info=None,
+                          in_sampling_distance=None,
+                          in_warping_regularization=None,
+                          in_write_deformation_fields=None):
     """
     Creates a pipeline that performs SPM unified segmentation.
     It takes a series of MRI T1 images and extracts gray matter(GM),
     white matter(WM) and cerebrospinal fluid(CSF) tissue images.
-
 
     new_segment node inputs:
 
@@ -36,7 +44,7 @@ def segmentation_pipeline(experiment_dir, datasink_directory, name='segmentation
     out_inverse_deformation_field: (a list of items which are an existing file name)
     out_modulated_class_images: (a list of items which are a list of items which are an existing file name)
             modulated+normalized class images
-    out_native_class_images: (a list of items which are a list of items which are an existing file name)
+    out_native_tissue_classes: (a list of items which are a list of items which are an existing file name)
             native space probability maps
     out_normalized_class_images: (a list of items which are a list of items which are an existing file name)
             normalized class images
@@ -46,28 +54,26 @@ def segmentation_pipeline(experiment_dir, datasink_directory, name='segmentation
     For more optional new_segment parameters and outputs check:
     http://www.mit.edu/~satra/nipype-nightly/interfaces/generated/nipype.interfaces.spm.preprocess.html#newsegment
 
-    :param experiment_dir: Directory to run the workflow.
-    :param datasink_directory: Directory to save the resulting images of the segmentation process.
+    :param output_directory: Directory to save the resulting images of the segmentation process.
+    :param working_directory: Directory to run the workflow.
     :param name: Workflow name
-    :param class_images: TODO
+    :param tissue_classes: Classes of images to obtain from segmentation. Ex: [1,2,3] is GM, WM and CSF
+    :param dartel_tissues: Classes of images to save for DARTEL template calculation. Ex: [1] is only GM'
+    :param save_warped_unmodulated: Save warped unmodulated images for tissues specified in --tissue_classes
+    :param save_warped_modulated: Save warped modulated images for tissues specified in --tissue_classes
     :param in_affine_regularization: ('mni' or 'eastern' or 'subj' or 'none')
     :param in_channel_info: a tuple of the form: (a float, a float, a tuple of the form: (a boolean, a boolean)))
-        A tuple with the following fields:
-         - bias reguralisation (0-10)
-         - FWHM of Gaussian smoothness of bias
-         - which maps to save (Corrected, Field) - a tuple of two boolean values
+            A tuple with the following fields:
+             - bias reguralisation (0-10)
+             - FWHM of Gaussian smoothness of bias
+             - which maps to save (Corrected, Field) - a tuple of two boolean values
     :param in_sampling_distance: (a float) Sampling distance on data for parameter estimation
-    :param in_tissues_to_save: A list of tuples (one per tissue) of the form:
-        ((Native space, DARTEL input),(Warped Unmodulated, Warped Modulated)) with the boolen value for the type of images to save
-        Ex.: [((True, True), (False, False)),
-              ((True, False), (False, False))]
     :param in_warping_regularization: (a list of from 5 to 5 items which are a float or a float)
         Warping regularization parameter(s). Accepts float or list of floats (the latter is required by SPM12)
-    :param in_write_deformation_fields: (a list of from 2 to 2 items which are a boolean)
-        Which deformation fields to write:[Inverse, Forward]
+    :param in_write_deformation_fields: Option to save the deformation fields from Unified Segmentation. Both inverse and forward fields can be saved. Format: a list of 2 booleans. [Inverse, Forward]
+
     :return: Segmentation workflow
     """
-
 
     spm_home = os.getenv("SPM_HOME")
     mlab_home = os.getenv("MATLABCMD")
@@ -97,59 +103,66 @@ def segmentation_pipeline(experiment_dir, datasink_directory, name='segmentation
     if in_write_deformation_fields is not None:
         new_segment.inputs.write_deformation_fields = in_write_deformation_fields
 
-    # Tissue images ((Native space, DARTEL input),(Warped Unmodulated, Warped Modulated))
-
-    tissues = [((tissue_map, 1), 2, (True, True), (False, False)),
-               ((tissue_map, 2), 2, (True, False), (False, False)),
-               ((tissue_map, 3), 2, (True, False), (False, False)),
-               ((tissue_map, 4), 3, (False, False), (False, False)),
-               ((tissue_map, 5), 4, (False, False), (False, False)),
-               ((tissue_map, 6), 2, (False, False), (False, False))]
-
-    if in_tissues_to_save is not None:
-        try:
-            for i in len(in_tissues_to_save):
-                t0 = tissues[i]
-                t = in_tissues_to_save[i]
-                tissues[i] = (t0[0], t0[1], t[0], t[1])
-        except:
-            print 'in_tissues_to_save parameter is not in the expected format.'
-
-
-    new_segment.inputs.tissues = tissues
+    new_segment.inputs.tissues = get_tissue_tuples(tissue_map, tissue_classes, dartel_tissues, save_warped_unmodulated, save_warped_modulated)
 
     datasink = pe.Node(nio.DataSink(), name='datasink')
     datasink.inputs.parameterization = False
-    datasink.inputs.base_directory = op.join(datasink_directory, 'segmentation')
+    datasink.inputs.base_directory = op.join(output_directory, 'segmentation')
 
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['out_bias_corrected_images', 'out_bias_field_images',
                                                        'out_dartel_input_images', 'out_forward_deformation_field',
                                                        'out_inverse_deformation_field', 'out_modulated_class_images',
                                                        'out_native_class_images', 'out_normalized_class_images',
-                                                       'out_transformation_mat']), name='outputnode')
+                                                       'out_transformation_mat']),
+                         name='outputnode')
 
     wf = pe.Workflow(name=name)
-    wf.base_dir = experiment_dir
+    if working_directory is not None:
+        wf.base_dir = working_directory
+
+    connections_new_segment_datasink = [(('native_class_images', get_class_images, tissue_classes), 'native_space'),
+                                        (('dartel_input_images', get_class_images, dartel_tissues), 'dartel_input')]
+
+    if save_warped_unmodulated:
+        connections_new_segment_datasink.append((('normalized_class_images', get_class_images, tissue_classes), 'normalized'))
+
+    if save_warped_modulated:
+        connections_new_segment_datasink.append((('modulated_class_images', get_class_images, tissue_classes), 'modulated_normalized'))
+
+    if in_write_deformation_fields is not None:
+        if in_write_deformation_fields[0]:
+            connections_new_segment_datasink.append(('inverse_deformation_field', 'inverse_deformation_field'))
+        if in_write_deformation_fields[1]:
+            connections_new_segment_datasink.append(('forward_deformation_field', 'forward_deformation_field'))
+
     wf.connect([
-        (new_segment, datasink, [(('native_class_images', get_class_images, class_images), 'native_space'),
-                                  (('dartel_input_images', get_class_images, class_images), 'dartel_input')]),
+        (new_segment, datasink, connections_new_segment_datasink),
         (new_segment, outputnode, [('bias_corrected_images','out_bias_corrected_images'),
                                    ('bias_field_images', 'out_bias_field_images'),
-                                   (('dartel_input_images', get_class_images, class_images), 'out_dartel_input_images'),
+                                   (('dartel_input_images', get_class_images, tissue_classes), 'out_dartel_input_images'),
                                    ('forward_deformation_field', 'out_forward_deformation_field'),
                                    ('inverse_deformation_field', 'out_inverse_deformation_field'),
-                                   (('modulated_class_images', get_class_images, class_images), 'out_modulated_class_images'),
-                                   (('native_class_images', get_class_images, class_images), 'out_native_class_images'),
-                                   (('normalized_class_images', get_class_images, class_images), 'out_normalized_class_images'),
-                                   ('transformation_mat','out_transformation_mat')])
+                                   (('modulated_class_images', get_class_images, tissue_classes), 'out_modulated_class_images'),
+                                   (('native_class_images', get_class_images, tissue_classes), 'out_native_class_images'),
+                                   (('normalized_class_images', get_class_images, tissue_classes), 'out_normalized_class_images'),
+                                   ('transformation_mat', 'out_transformation_mat')])
     ])
+
     return wf
 
 
-def dartel_pipeline(experiment_dir, datasink_directory, name='dartel_wf', in_iteration_parameters=None,
-                    in_optimization_parameters=None, in_regularization_form=None, in_template_prefix=None,
-                    in_bounding_box=None, in_fwhm=0, in_modulate=True, in_voxel_size=None):
+def dartel_pipeline(output_directory,
+                    working_directory=None,
+                    name='dartel_wf',
+                    in_iteration_parameters=None,
+                    in_optimization_parameters=None,
+                    in_regularization_form=None,
+                    in_template_prefix=None,
+                    in_bounding_box=None,
+                    in_fwhm=None,
+                    in_modulate=True,
+                    in_voxel_size=None):
     """
     Creates a pipeline that performs SPM DARTEL registration for T1 images.
 
@@ -191,8 +204,8 @@ def dartel_pipeline(experiment_dir, datasink_directory, name='dartel_wf', in_ite
     For more dartel2mni parameters and outputs check:
     http://www.mit.edu/~satra/nipype-nightly/interfaces/generated/nipype.interfaces.spm.preprocess.html#dartelnorm2mni
 
-    :param experiment_dir: Directory to run the workflow.
-    :param datasink_directory: Directory to save the resulting images of the registration process.
+    :param output_directory: Directory to save the resulting images of the registration process.
+    :param working_directory: Directory to run the workflow.
     :param name: Workflow name
 
     DARTEL parameters
@@ -242,7 +255,6 @@ def dartel_pipeline(experiment_dir, datasink_directory, name='dartel_wf', in_ite
         dartelTemplate.inputs.template_prefix = in_template_prefix
 
 
-
     def prepare_dartel2mni_input(native_space_images, flowfield_files):
         """
         Function receives a list of lists of native class images and a list of flow fields.
@@ -271,27 +283,30 @@ def dartel_pipeline(experiment_dir, datasink_directory, name='dartel_wf', in_ite
     dartel2mni = pe.MapNode(spm.DARTELNorm2MNI(), name='dartel2MNI', iterfield=['apply_to_files', 'flowfield_files'])
 
     if in_bounding_box is not None:
-        dartelTemplate.inputs.bounding_box = in_bounding_box
+        dartel2mni.inputs.bounding_box = in_bounding_box
     if in_voxel_size is not None:
-        dartelTemplate.inputs.voxel_size = in_voxel_size
+        dartel2mni.inputs.voxel_size = in_voxel_size
 
     #Modulation
     dartel2mni.inputs.modulate = in_modulate
+
     #Smoothing
-    if in_fwhm == [0, 0, 0]:
-        in_fwhm = 0
-    dartel2mni.inputs.fwhm = in_fwhm
+    if in_fwhm is not None:
+        if in_fwhm == [0, 0, 0]:
+            in_fwhm = 0
+        dartel2mni.inputs.fwhm = in_fwhm
 
     datasink_dartel = pe.Node(nio.DataSink(), name='datasink_dartel')
     datasink_dartel.inputs.parameterization = False
-    datasink_dartel.inputs.base_directory = op.join(datasink_directory, 'dartel')
+    datasink_dartel.inputs.base_directory = op.join(output_directory, 'dartel')
 
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['out_dartel_flow_fields', 'out_final_template_file', 'out_template_files',
                                                        'out_normalization_parameter_file', 'out_normalized_files']), name='outputnode')
 
     wf = pe.Workflow(name=name)
-    wf.base_dir = experiment_dir
+    if working_directory is not None:
+        wf.base_dir = working_directory
 
     wf.connect([(dartelTemplate, dartel2mni_input,[('dartel_flow_fields', 'flowfield_files')]),
                 (dartelTemplate, dartel2mni, [('final_template_file', 'template_file')]),
@@ -309,12 +324,26 @@ def dartel_pipeline(experiment_dir, datasink_directory, name='dartel_wf', in_ite
     return wf
 
 
-def t1_spm_full_pipeline(experiment_dir, datasink_directory, name='t1_spm_full_wf', class_images=[1, 2, 3],
-                         dartel_class_images=[1], in_affine_regularization=None, in_channel_info=None,
-                         in_sampling_distance=None, in_tissues_to_save=None, in_warping_regularization=None,
-                         in_write_deformation_fields=None, in_iteration_parameters=None, in_optimization_parameters=None,
-                         in_regularization_form=None, in_template_prefix=None, in_bounding_box=None,
-                         in_fwhm=0, in_modulate=True, in_voxel_size=None):
+def t1_spm_full_pipeline(output_directory,
+                         working_directory=None,
+                         name='segmentation_wf',
+                         tissue_classes=[1, 2, 3],
+                         dartel_tissues=[1],
+                         save_warped_unmodulated=False,
+                         save_warped_modulated=False,
+                         in_affine_regularization=None,
+                         in_channel_info=None,
+                         in_sampling_distance=None,
+                         in_warping_regularization=None,
+                         in_write_deformation_fields=None,
+                         in_iteration_parameters=None,
+                         in_optimization_parameters=None,
+                         in_regularization_form=None,
+                         in_template_prefix=None,
+                         in_bounding_box=None,
+                         in_fwhm=0,
+                         in_modulate=True,
+                         in_voxel_size=None):
     """
     Creates a pipeline that performs SPM preprocessing for T1 images.
     First unified segmentation is done and then a DARTEL registration.
@@ -366,28 +395,26 @@ def t1_spm_full_pipeline(experiment_dir, datasink_directory, name='t1_spm_full_w
     http://www.mit.edu/~satra/nipype-nightly/interfaces/generated/nipype.interfaces.spm.preprocess.html#dartel
     http://www.mit.edu/~satra/nipype-nightly/interfaces/generated/nipype.interfaces.spm.preprocess.html#dartelnorm2mni
 
-    :param experiment_dir: Directory to run the workflow.
-    :param datasink_directory: Directory to save the resulting images of segmentation and registration processes.
+    :param output_directory: Directory to save the resulting images of segmentation and registration processes.
+    :param working_directory: Directory to run the workflow.
     :param name: Workflow name
-    :param class_images: Classes of images to obtain from segmentation. Ex: [1,2,3] is GM, WM and CSF
-    :param dartel_class_images: Classes of images to use for DARTEL template calculation. Ex: [1] is only GM'
+    :param tissue_classes: Classes of images to obtain from segmentation. Ex: [1,2,3] is GM, WM and CSF
+    :param dartel_tissues: Classes of images to save for DARTEL template calculation. Ex: [1] is only GM'
 
     NewSegment parameters
+    :param save_warped_unmodulated: Save warped unmodulated images for tissues specified in --tissue_classes
+    :param save_warped_modulated: Save warped modulated images for tissues specified in --tissue_classes
     :param in_affine_regularization: ('mni' or 'eastern' or 'subj' or 'none')
     :param in_channel_info: a tuple of the form: (a float, a float, a tuple of the form: (a boolean, a boolean)))
-        A tuple with the following fields:
-         - bias reguralisation (0-10)
-         - FWHM of Gaussian smoothness of bias
-         - which maps to save (Corrected, Field) - a tuple of two boolean values
+            A tuple with the following fields:
+             - bias reguralisation (0-10)
+             - FWHM of Gaussian smoothness of bias
+             - which maps to save (Corrected, Field) - a tuple of two boolean values
     :param in_sampling_distance: (a float) Sampling distance on data for parameter estimation
-    :param in_tissues_to_save: A list of tuples (one per tissue) of the form:
-        ((Native space, DARTEL input),(Warped Unmodulated, Warped Modulated)) with the boolen value for the type of images to save
-        Ex.: [((True, True), (False, False)),
-              ((True, False), (False, False))]
     :param in_warping_regularization: (a list of from 5 to 5 items which are a float or a float)
         Warping regularization parameter(s). Accepts float or list of floats (the latter is required by SPM12)
-    :param in_write_deformation_fields: (a list of from 2 to 2 items which are a boolean)
-        Which deformation fields to write:[Inverse, Forward]
+    :param in_write_deformation_fields: Option to save the deformation fields from Unified Segmentation. Both inverse and forward fields can be saved. Format: a list of 2 booleans. [Inverse, Forward]
+
 
     DARTEL parameters
     :param in_iteration_parameters: (a list of from 3 to 12 items which are a tuple
@@ -423,18 +450,30 @@ def t1_spm_full_pipeline(experiment_dir, datasink_directory, name='t1_spm_full_w
     :return: Segmentation and registration workflow
     """
 
-    segmentation_wf = segmentation_pipeline(experiment_dir, datasink_directory, name='segmentation_wf',
-                                            class_images=class_images, in_affine_regularization=in_affine_regularization,
-                                            in_channel_info=in_channel_info, in_sampling_distance=in_sampling_distance,
-                                            in_tissues_to_save=in_tissues_to_save, in_warping_regularization=in_warping_regularization,
+    segmentation_wf = segmentation_pipeline(output_directory,
+                                            working_directory=working_directory,
+                                            name='segmentation_wf',
+                                            tissue_classes=tissue_classes,
+                                            dartel_tissues=dartel_tissues,
+                                            save_warped_unmodulated=save_warped_unmodulated,
+                                            save_warped_modulated=save_warped_modulated,
+                                            in_affine_regularization=in_affine_regularization,
+                                            in_channel_info=in_channel_info,
+                                            in_sampling_distance=in_sampling_distance,
+                                            in_warping_regularization=in_warping_regularization,
                                             in_write_deformation_fields=in_write_deformation_fields)
 
-    dartel_wf = dartel_pipeline(experiment_dir, datasink_directory, name='dartel_wf',
-                                in_iteration_parameters=in_iteration_parameters, in_optimization_parameters=in_optimization_parameters,
-                                in_regularization_form=in_regularization_form, in_template_prefix=in_template_prefix,
-                                in_bounding_box=in_bounding_box, in_fwhm=in_fwhm, in_modulate=in_modulate, in_voxel_size=in_voxel_size)
-
-
+    dartel_wf = dartel_pipeline(output_directory,
+                                working_directory=working_directory,
+                                name='dartel_wf',
+                                in_iteration_parameters=in_iteration_parameters,
+                                in_optimization_parameters=in_optimization_parameters,
+                                in_regularization_form=in_regularization_form,
+                                in_template_prefix=in_template_prefix,
+                                in_bounding_box=in_bounding_box,
+                                in_fwhm=in_fwhm,
+                                in_modulate=in_modulate,
+                                in_voxel_size=in_voxel_size)
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['out_bias_corrected_images', 'out_bias_field_images',
                                                        'out_dartel_input_images', 'out_forward_deformation_field',
@@ -442,13 +481,16 @@ def t1_spm_full_pipeline(experiment_dir, datasink_directory, name='t1_spm_full_w
                                                        'out_native_class_images', 'out_normalized_class_images',
                                                        'out_transformation_mat', 'out_dartel_flow_fields',
                                                        'out_final_template_file', 'out_template_files',
-                                                       'out_normalization_parameter_file', 'out_normalized_files']), name='outputnode')
+                                                       'out_normalization_parameter_file', 'out_normalized_files']),
+                         name='outputnode')
 
     wf = pe.Workflow(name=name)
-    wf.base_dir = experiment_dir
+    if working_directory is not None:
+        wf.base_dir = working_directory
+
     wf.connect([
-        (segmentation_wf, dartel_wf, [(('new_segment.native_class_images', get_class_images, class_images), 'dartel2mni_input.native_space_images'),
-                                      (('new_segment.dartel_input_images', get_class_images, dartel_class_images), 'dartelTemplate.image_files')]),
+        (segmentation_wf, dartel_wf, [(('new_segment.native_class_images', get_class_images, tissue_classes), 'dartel2mni_input.native_space_images'),
+                                      (('new_segment.dartel_input_images', get_class_images, dartel_tissues), 'dartelTemplate.image_files')]),
         (segmentation_wf, outputnode, [('outputnode.out_bias_corrected_images', 'out_bias_corrected_images'),
                                        ('outputnode.out_bias_field_images', 'out_bias_field_images'),
                                        ('outputnode.out_dartel_input_images', 'out_dartel_input_images'),

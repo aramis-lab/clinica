@@ -121,87 +121,56 @@ class CmdParserT1SPMFullPrep(CmdParser):
         self._name = 't1-spm-full-prep'
 
     def define_options(self):
-        self._args.add_argument("input_dir", help='Directory where the NIFTI images are stored')
-        self._args.add_argument("experiment_dir", help='Directory to run the workflow')
-        self._args.add_argument("datasink_dir",
-                                help='Directory to save the resulting images of segmentation and registration processes')
-        self._args.add_argument("-np", "--n_procs", type=int, default=4, help='Number of parallel process to run')
-        self._args.add_argument("-ci", "--class_images", type=list, default=[1, 2, 3],
-                                help='Classes of images to obtain from segmentation. Ex: [1,2,3] is GM, WM and CSF')
-        self._args.add_argument("-dci", "--dartel_class_images", type=list, default=[1],
-                                help='Classes of images to use for DARTEL template calculation. Ex: [1] is only GM')
-        self._args.add_argument("-af", "--affine_regularization",
-                                help="('mni' or 'eastern' or 'subj' or 'none')")
-        self._args.add_argument("-chi", "--channel_info", type=tuple,
-                                help='''a tuple of the form: (a float, a float, a tuple of the form: (a boolean, a boolean)))
-        A tuple with the following fields:
-         - bias reguralisation (0-10)
-         - FWHM of Gaussian smoothness of bias
-         - which maps to save (Corrected, Field) - a tuple of two boolean values''')
-        self._args.add_argument("-sd", "--sampling_distance", type=float,
-                                help="Sampling distance on data for parameter estimation")
-        self._args.add_argument("-ts", "--tissues_to_save", type=list,
-                                help='''A list of tuples (one per tissue) of the form:
-        ((Native space, DARTEL input),(Warped Unmodulated, Warped Modulated)) with the boolen value for the type of images to save
-        Ex.: [((True, True), (False, False)),
-              ((True, False), (False, False))]''')
-        self._args.add_argument("-wr", "--warping_regularization", type=list,
-                                help='''(a list of from 5 to 5 items which are a float or a float)
-        Warping regularization parameter(s). Accepts float or list of floats (the latter is required by SPM12)''')
-        self._args.add_argument("-wdf", "--write_deformation_fields", type=list,
-                                help='''(a list of from 2 to 2 items which are a boolean)
-        Which deformation fields to write:[Inverse, Forward]''')
-        self._args.add_argument("-ip", "--iteration_parameters", type=list,
-                                help='''(a list of from 3 to 12 items which are a tuple
-         of the form: (1 <= an integer <= 10, a tuple of the form: (a float,
-         a float, a float), 1 or 2 or 4 or 8 or 16 or 32 or 64 or 128 or 256
-         or 512, 0 or 0.5 or 1 or 2 or 4 or 8 or 16 or 32))
-        List of tuples for each iteration
-         - Inner iterations
-         - Regularization parameters
-         - Time points for deformation model
-         - smoothing parameter''')
-        self._args.add_argument("-op", "--optimization_parameters", type=tuple,
-                                help='''a tuple of the form: (a float, 1 <= an integer <= 8, 1 <= an integer <= 8))
-         Optimization settings a tuple
-         - LM regularization
-         - cycles of multigrid solver
-         - relaxation iterations''')
-        self._args.add_argument("-rf", "--regularization_form",
-                                help='''('Linear' or 'Membrane' or 'Bending')
-        Form of regularization energy term''')
-        self._args.add_argument("-tp", "--template_prefix",
-                                help='''(a string, nipype default value: Template)
-        Prefix for template''')
-        self._args.add_argument("-bb", "--bounding_box", type=tuple,
-                                help='''(a tuple of the form: (a float, a float, a float, a float, a float, a float))
-        Voxel sizes for output file''')
-        self._args.add_argument("-fwhm", "--fwhm", type=list, default=[0, 0, 0],
-                                help='''(a list of from 3 to 3 items which are a float or a float)
-        3-list of fwhm for each dimension''')
+        self._args.add_argument("input_directory",
+                                help='Directory where the input NIFTI images are stored')
+        self._args.add_argument("output_directory",
+                                help='Directory to save the resulting images')
+        self._args.add_argument("-wd", "--working_directory",
+                                help='Temporary directory to run the workflow')
+        self._args.add_argument("-np", "--n_procs", type=int, default=4,
+                                help='Number of parallel processes to run')
+        self._args.add_argument("-ti", "--tissue_classes", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
+                                help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to save. Up to 6 tissue classes can be saved. Ex: 1 2 3 is GM, WM and CSF")
+        self._args.add_argument("-dt", "--dartel_tissues", nargs='+', type=int, default=[1], choices=range(1, 7),
+                                help='Tissues to use for DARTEL template calculation. Ex: 1 is only GM')
+        self._args.add_argument("-swu", "--save_warped_unmodulated", action='store_true',
+                                help="Save warped unmodulated images for tissues specified in --tissue_classes")
+        self._args.add_argument("-swm", "--save_warped_modulated", action='store_true',
+                                help="Save warped modulated images for tissues specified in --tissue_classes")
+        self._args.add_argument("-wdf", "--write_deformation_fields", nargs=2, type=bool,
+                                help="Option to save the deformation fields from Unified Segmentation. Both inverse and forward fields can be saved. Format: a list of 2 booleans. [Inverse, Forward]")
+        # The default smoothing is 8mm isotropic, as in the Matlab version of SPM.
+        # This is recommended when using modulated images.
+        self._args.add_argument("-fwhm", "--fwhm", nargs=3, type=float, default=[8, 8, 8],
+                                help="A list of 3 floats specifying the FWHM for each dimension")
         self._args.add_argument("-m", "--modulate", type=bool, default=True,
-                                help='Modulate out images - no modulation preserves concentrations')
-        self._args.add_argument("-vs", "--voxel_size", type=tuple,
-                                help='''(a tuple of the form: (a float, a float, a float))
-        Voxel sizes for output file''')
+                                help='A boolean. Modulate output images - no modulation preserves concentrations')
+        self._args.add_argument("-vs", "--voxel_size", nargs=3, type=float,
+                                help="A list of 3 floats specifying voxel sizes for each dimension of output image")
+
 
     def run_pipeline(self, args):
 
         from clinica.pipeline.t1.t1_spm import datagrabber_t1_spm_full_pipeline
 
-        preproc_wf = datagrabber_t1_spm_full_pipeline(self.absolute_path(args.input_dir), self.absolute_path(args.experiment_dir),
-                                                      self.absolute_path(args.datasink_dir), class_images=args.class_images,
-                                                      dartel_class_images=args.dartel_class_images,
-                                                      in_affine_regularization=args.affine_regularization, in_channel_info=args.channel_info,
-                                                      in_sampling_distance=args.sampling_distance, in_tissues_to_save=args.tissues_to_save,
-                                                      in_warping_regularization=args.warping_regularization, in_write_deformation_fields=args.write_deformation_fields,
-                                                      in_iteration_parameters=args.iteration_parameters, in_optimization_parameters=args.optimization_parameters,
-                                                      in_regularization_form=args.regularization_form, in_template_prefix=args.template_prefix,
-                                                      in_bounding_box=args.bounding_box, in_fwhm=args.fwhm, in_modulate=args.modulate,
-                                                      in_voxel_size=args.voxel_size)
+        working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
 
+        voxel_size = tuple(args.voxel_size) if args.voxel_size is not None else None
+
+        preproc_wf = datagrabber_t1_spm_full_pipeline(self.absolute_path(args.input_directory),
+                                                      self.absolute_path(args.output_directory),
+                                                      working_directory=working_directory,
+                                                      tissue_classes=args.tissue_classes,
+                                                      dartel_tissues=args.dartel_tissues,
+                                                      save_warped_unmodulated=args.save_warped_unmodulated,
+                                                      save_warped_modulated=args.save_warped_modulated,
+                                                      in_write_deformation_fields=args.write_deformation_fields,
+                                                      in_fwhm=args.fwhm,
+                                                      in_modulate=args.modulate,
+                                                      in_voxel_size=voxel_size)
+
+        print 'Workflow set'
         preproc_wf.run('MultiProc', plugin_args={'n_procs': args.n_procs})
-
 
 
 class CmdParserT1SPMSegment(CmdParser):
@@ -210,45 +179,40 @@ class CmdParserT1SPMSegment(CmdParser):
         self._name = 't1-spm-segment'
 
     def define_options(self):
-        self._args.add_argument("input_dir", help='Directory where the NIFTI images are stored')
-        self._args.add_argument("experiment_dir", help='Directory to run the workflow')
-        self._args.add_argument("datasink_dir",
-                                help='Directory to save the resulting images of segmentation and registration processes')
-        self._args.add_argument("-np", "--n_procs", type=int, default=4, help='Number of parallel process to run')
-        self._args.add_argument("-ci", "--class_images", type=list, default=[1, 2, 3],
-                                help='Classes of images to obtain from segmentation. Ex: [1,2,3] is GM, WM and CSF')
-        self._args.add_argument("-af", "--affine_regularization",
-                                help="('mni' or 'eastern' or 'subj' or 'none')")
-        self._args.add_argument("-chi", "--channel_info", type=tuple,
-                                help='''a tuple of the form: (a float, a float, a tuple of the form: (a boolean, a boolean)))
-        A tuple with the following fields:
-         - bias reguralisation (0-10)
-         - FWHM of Gaussian smoothness of bias
-         - which maps to save (Corrected, Field) - a tuple of two boolean values''')
-        self._args.add_argument("-sd", "--sampling_distance", type=float,
-                                help="Sampling distance on data for parameter estimation")
-        self._args.add_argument("-ts", "--tissues_to_save", type=list,
-                                help='''A list of tuples (one per tissue) of the form:
-        ((Native space, DARTEL input),(Warped Unmodulated, Warped Modulated)) with the boolen value for the type of images to save
-        Ex.: [((True, True), (False, False)),
-              ((True, False), (False, False))]''')
-        self._args.add_argument("-wr", "--warping_regularization", type=list,
-                                help='''(a list of from 5 to 5 items which are a float or a float)
-        Warping regularization parameter(s). Accepts float or list of floats (the latter is required by SPM12)''')
-        self._args.add_argument("-wdf", "--write_deformation_fields", type=list,
-                                help='''(a list of from 2 to 2 items which are a boolean)
-        Which deformation fields to write:[Inverse, Forward]''')
+        self._args.add_argument("input_directory",
+                                help='Directory where the input NIFTI images are stored')
+        self._args.add_argument("output_directory",
+                                help='Directory to save the resulting images')
+        self._args.add_argument("-wd", "--working_directory",
+                                help='Temporary directory to run the workflow')
+        self._args.add_argument("-np", "--n_procs", type=int, default=4,
+                                help='Number of parallel processes to run')
+        self._args.add_argument("-ti", "--tissue_classes", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
+                                help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to save. Up to 6 tissue classes can be saved. Ex: 1 2 3 is GM, WM and CSF")
+        self._args.add_argument("-dt", "--dartel_tissues", nargs='+', type=int, default=[1], choices=range(1, 7),
+                                help='Tissues to use for DARTEL template calculation. Ex: 1 is only GM')
+        self._args.add_argument("-swu", "--save_warped_unmodulated", action='store_true',
+                                help="Save warped unmodulated images for tissues specified in --tissue_classes")
+        self._args.add_argument("-swm", "--save_warped_modulated", action='store_true',
+                                help="Save warped modulated images for tissues specified in --tissue_classes")
+        self._args.add_argument("-wdf", "--write_deformation_fields", nargs=2, type=bool,
+                                help="Option to save the deformation fields from Unified Segmentation. Both inverse and forward fields can be saved. Format: a list of 2 booleans. [Inverse, Forward]")
 
     def run_pipeline(self, args):
 
         from clinica.pipeline.t1.t1_spm import datagrabber_t1_spm_segment_pipeline
-        segment_wf = datagrabber_t1_spm_segment_pipeline(self.absolute_path(args.input_dir), self.absolute_path(args.experiment_dir),
-                                                         self.absolute_path(args.datasink_dir), class_images=args.class_images,
-                                                         in_affine_regularization=args.affine_regularization,
-                                                         in_channel_info=args.channel_info, in_sampling_distance=args.sampling_distance,
-                                                         in_tissues_to_save=args.tissues_to_save, in_warping_regularization=args.warping_regularization,
-                                                         in_write_deformation_fields=args.write_deformation_fields,)
 
+        working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
+        segment_wf = datagrabber_t1_spm_segment_pipeline(self.absolute_path(args.input_directory),
+                                                         self.absolute_path(args.output_directory),
+                                                         working_directory=working_directory,
+                                                         tissue_classes=args.tissue_classes,
+                                                         dartel_tissues=args.dartel_tissues,
+                                                         save_warped_unmodulated=args.save_warped_unmodulated,
+                                                         save_warped_modulated=args.save_warped_modulated,
+                                                         in_write_deformation_fields=args.write_deformation_fields)
+
+        print 'Workflow set'
         segment_wf.run('MultiProc', plugin_args={'n_procs': args.n_procs})
 
 class CmdParserT1ReconAll(CmdParser):
@@ -257,7 +221,7 @@ class CmdParserT1ReconAll(CmdParser):
         self._name = 't1-reconall'
 
     def define_options(self):
-        self._args.add_argument("input_dir", help='Directory where the NIFTI images are stored')
+        self._args.add_argument("input_directory", help='Directory where the NIFTI images are stored')
         self._args.add_argument("output_dir", help='Directory to store the result of the pipeline')
         self._args.add_argument("field_template", help='A list to define the input structure')
         self._args.add_argument("template_args", help='A list of list to define the input structure, the name of the NIFTI images')
@@ -268,7 +232,7 @@ class CmdParserT1ReconAll(CmdParser):
 
         from clinica.pipeline.t1.t1_freesurfer import recon_all_pipeline
 
-        reconall_wf = recon_all_pipeline(self.absolute_path(args.input_dir), args.output_dir, args.field_template, args.template_args,
+        reconall_wf = recon_all_pipeline(self.absolute_path(args.input_directory), args.output_dir, args.field_template, args.template_args,
                                          datasink_para=args.intermediate_files, recon_all_args=args.reconall_args)
 
         reconall_wf.run("MultiProc", plugin_args={'n_procs':4})
@@ -279,7 +243,7 @@ class CmdParserStatisticsSurfStat(CmdParser):
         self._name = 't1-surfstat'
 
     def define_options(self):
-        self._args.add_argument("input_dir", help='Directory where the input files(output of reconAll pipeline) are stored')
+        self._args.add_argument("input_directory", help='Directory where the input files(output of reconAll pipeline) are stored')
         self._args.add_argument("output_dir", help='Directory to store the result images of the pipeline')
         self._args.add_argument("linear_model", help='A list to define the model that fits into GLM')
         self._args.add_argument("contrast", help='A list to define the contrast matrix for GLM')
@@ -294,7 +258,7 @@ class CmdParserStatisticsSurfStat(CmdParser):
 
         from clinica.pipeline.statistics.t1_surfstat import clinica_surfstat
         
-        surfstat_wf = clinica_surfstat(self.absolute_path(args.input_dir), args.output_dir, args.linear_model, args.contrast,
+        surfstat_wf = clinica_surfstat(self.absolute_path(args.input_directory), args.output_dir, args.linear_model, args.contrast,
                                          self.absolute_path(args.csv_file), args.str_format,
                                          size_of_fwhm=args.size_of_fwhm, threshold_uncorrected_pvalue=args.threshold_uncorrected_pvalue,
                                          threshold_corrected_pvalue=args.threshold_corrected_pvalue, cluster_threshold=args.cluster_threshold)

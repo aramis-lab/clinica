@@ -1,3 +1,54 @@
+def get_tissue_tuples(tissue_map, tissue_classes, dartel_tissues, save_warped_unmodulated, save_warped_modulated):
+    '''
+    Method to obtain the list of tuples, one for each tissue class, with the following fields:
+         - tissue probability map (4D), 1-based index to frame
+         - number of gaussians
+         - which maps to save [Native, DARTEL] - a tuple of two boolean values
+         - which maps to save [Unmodulated, Modulated] - a tuple of two boolean values
+
+    :param tissue_map: Path to tissue maps
+    :param tissue_classes: Classes of images to obtain from segmentation. Ex: [1,2,3] is GM, WM and CSF
+    :param dartel_tissues: Classes of images to save for DARTEL template calculation. Ex: [1] is only GM'
+    :param save_warped_unmodulated: Save warped unmodulated images for tissues specified in --tissue_classes
+    :param save_warped_modulated: Save warped modulated images for tissues specified in --tissue_classes
+    :return: List of tuples according to NewSegment input por tissues
+    '''
+
+    tissues = []
+    # Tissue images ((Native space, DARTEL input),(Warped Unmodulated, Warped Modulated))
+    # Ex.:  tissues = [((tissue_map, 1), 2, (True, True), (False, False)),
+    #                   ((tissue_map, 2), 2, (True, False), (False, False)),
+    #                   ((tissue_map, 3), 2, (True, False), (False, False)),
+    #                   ((tissue_map, 4), 3, (False, False), (False, False)),
+    #                   ((tissue_map, 5), 4, (False, False), (False, False)),
+    #                   ((tissue_map, 6), 2, (False, False), (False, False))]
+
+    for i in range(1, 7):
+        n_gaussians = 2
+
+        if i == 4 or i == 5:
+            n_gaussians = i - 1
+
+        native_space = False
+        dartel_input = False
+        warped_unmodulated = False
+        warped_modulated = False
+
+        if i in tissue_classes:
+            native_space = True
+            if save_warped_unmodulated:
+                warped_unmodulated = True
+            if save_warped_modulated:
+                warped_modulated = True
+
+        if i in dartel_tissues:
+            dartel_input = True
+
+        tissues.append(((tissue_map, i), n_gaussians, (native_space, dartel_input), (warped_unmodulated, warped_modulated)))
+
+    return tissues
+
+
 def get_class_images(class_images,index_list):
     """
     utility method to extract class images
