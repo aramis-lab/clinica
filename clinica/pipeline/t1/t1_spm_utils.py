@@ -1,3 +1,5 @@
+
+
 def get_tissue_tuples(tissue_map, tissue_classes, dartel_tissues, save_warped_unmodulated, save_warped_modulated):
     '''
     Method to obtain the list of tuples, one for each tissue class, with the following fields:
@@ -15,13 +17,6 @@ def get_tissue_tuples(tissue_map, tissue_classes, dartel_tissues, save_warped_un
     '''
 
     tissues = []
-    # Tissue images ((Native space, DARTEL input),(Warped Unmodulated, Warped Modulated))
-    # Ex.:  tissues = [((tissue_map, 1), 2, (True, True), (False, False)),
-    #                   ((tissue_map, 2), 2, (True, False), (False, False)),
-    #                   ((tissue_map, 3), 2, (True, False), (False, False)),
-    #                   ((tissue_map, 4), 3, (False, False), (False, False)),
-    #                   ((tissue_map, 5), 4, (False, False), (False, False)),
-    #                   ((tissue_map, 6), 2, (False, False), (False, False))]
 
     for i in range(1, 7):
         n_gaussians = 2

@@ -69,7 +69,6 @@ class CmdParser:
 
 
 
-
 def get_cmdparser_objects():
     """UTIL: read all derived classes of CmdParser
 
