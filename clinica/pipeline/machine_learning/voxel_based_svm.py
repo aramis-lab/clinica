@@ -1,21 +1,12 @@
 from multiprocessing.pool import ThreadPool
 import numpy as np
-from voxel_based_utils import evaluate_prediction
+from os.path import join
 from sklearn.svm import SVC
 from sklearn.cross_validation import StratifiedKFold
-#
-#
-# def class_weights(y):
-#     ones = sum(y)
-#     zeros = len(y) - sum(y)
-#
-#     min_class = 0 if ones > zeros else 1
-#     proportion = (float(ones) / float(zeros)) if ones > zeros else (float(zeros) / float(ones))
-#
-#     cw = {int(min_class): proportion, int(((min_class - 1) * -1)): 1.0}
-#     # print cw
-#
-#     return cw
+from sklearn.preprocessing import scale
+from scipy.stats import mode
+from clinica.pipeline.machine_learning.voxel_based_io import load_data, revert_mask, weights_to_nifti
+from clinica.pipeline.machine_learning.voxel_based_utils import evaluate_prediction, gram_matrix_linear, save_subjects
 
 
 def launch_svc(kernel_train, x_test, y_train, y_test, c, balanced=False):
@@ -34,6 +25,7 @@ def launch_svc(kernel_train, x_test, y_train, y_test, c, balanced=False):
 
 
 def select_best(kernel_train, x_test, y_train, y_test, async_res, balanced=False):
+
     best_c = 0
     best_acc = 0
 
@@ -122,111 +114,100 @@ def nested_folds(gram_matrix, x, y, c_range, balanced=False, outer_folds=10, inn
 
     keys = outer_async_result.keys()
     keys.sort()
+
+    best_c_list = []
     for i in keys:
         train_index, test_index = outer_cv[i]
         res = outer_async_result[i].get()
         y_hat[test_index] = res['y_hat']
+        best_c_list.append(res['best_c'])
 
-        print '\nPartition: %d' %i
-        print 'Best c: ' + str(res['best_c'])
-        print 'Best accuracy for c: ' + str(res['best_acc'])
-        #print res['evaluation']
-
-    #print '\nPredicted labels: '
-    #print y_hat
-
-    evaluation = evaluate_prediction(y, y_hat)
-
-    print '\nTrue positive %0.2f' % len(evaluation['predictions'][0])
-    print 'True negative %0.2f' % len(evaluation['predictions'][1])
-    print 'False positive %0.2f' % len(evaluation['predictions'][2])
-    print 'False negative %0.2f' % len(evaluation['predictions'][3])
-
-    print 'Accuracy %0.2f' % evaluation['accuracy']
-    print 'Balanced accuracy %0.2f' % evaluation['balanced_accuracy']
-    print 'Sensitivity %0.2f' % evaluation['sensitivity']
-    print 'Specificity %0.2f' % evaluation['specificity']
-    print 'Positive predictive value %0.2f' % evaluation['ppv']
-    print 'Negative predictive value %0.2f' % evaluation['npv']
-    print
-
+    # Mode of best c for each iteration is selected
+    best_c = mode(best_c_list)[0][0]
     if balanced:
-        svc = SVC(C=c, kernel='linear', tol=1e-6, class_weight='balanced')
+        svc = SVC(C=best_c, kernel='linear', tol=1e-6, class_weight='balanced')
     else:
-        svc = SVC(C=c, kernel='linear', tol=1e-6)
+        svc = SVC(C=best_c, kernel='linear', tol=1e-6)
 
     svc.fit(x, y)
 
-    return y_hat, svc.coef_
+    return y_hat, svc.coef_, best_c
 
 
-def SVM_binary_classification(subject_list, diagnose_list, data_directory):
+def linear_svm_binary_classification(image_list, diagnose_list, output_directory, mask_zeros=True, balanced=False, n_threads=10, c_range=np.logspace(-6, 2, 17), save_gram_matrix=False, save_subject_classification=False, save_original_weights=False, save_features_image=True):
 
     results = dict()
+    dx_filter = np.unique(diagnose_list)
 
-    dx_filter = ['Depr', 'EOAD', 'LOAD', 'DCB', 'DCL', 'DFT', 'APPl', 'APPs']
-    subjects, labels = data_morin_all.get_all_subj_dx(diagnose_file, data_directory + smooth, dx_filter)
+    print 'Loading ' + str(len(image_list)) + ' subjects'
 
-    print str(len(subjects)) + ' Subjects'
-    # print data_directory + smooth
+    x0, orig_shape, data_mask = load_data(image_list, mask=mask_zeros)
 
-    x0, data_mask, orig_shape = load_data(subjects, data_directory + smooth, True)
+    print 'Subjects loaded'
+    print 'Calculating Gram matrix'
 
-    print '\nX0.shape: '
-    print x0.shape
-    print
-
-    x_all = preprocessing.scale(np.nan_to_num(x0))
+    x_all = scale(np.nan_to_num(x0))
     gram_matrix = gram_matrix_linear(x_all)
-    np.savetxt(output_directory + 'gram_matrix_smooth_' + smooth + '.txt', gram_matrix)
 
-    # gram_matrix = np.loadtxt(output_directory + 'gram_matrix_smooth_' + smooth + '.txt')
+    print 'Gram matrix calculated'
 
-    c_range = np.logspace(-6, 2, 17)
+    if save_gram_matrix:
+        np.savetxt(join(output_directory, 'gram_matrix.txt'), gram_matrix)
+
+    # Allow loading precalculated gram_matrix?
+    # gram_matrix = np.loadtxt(input_gram_matrix)
 
     for i in range(len(dx_filter)):
         for j in range(i + 1, len(dx_filter)):
             dx1 = dx_filter[i]
             dx2 = dx_filter[j]
 
-            ind1 = labels[dx1]
-            ind2 = labels[dx2]
+            ind1 = diagnose_list[dx1]
+            ind2 = diagnose_list[dx2]
 
             indices = ind1 + ind2
 
-            subj = [subjects[k] for k in indices]
+            current_subjects = [image_list[k] for k in indices]
+            current_diagnosis = [diagnose_list[k] for k in indices]
+
             x = [x_all[k] for k in indices]
             y = np.array([0] * len(ind1) + [1] * len(ind2))
             gm = gram_matrix[indices, :][:, indices]
 
-            # Balanced
-            class_str = dx1 + '_vs_' + dx2 + '_smooth_' + smooth + '_balanced'
-            print class_str
-            y_hat, w = nested_folds(gm, x, y, c_range, balanced=True, n_threads=25)
+            classification_str = dx1 + '_vs_' + dx2 + ('_balanced' if balanced else '_not_balanced')
+            print 'Running ' + dx1 + ' vs ' + dx2 + ' classification'
+
+            y_hat, w, c = nested_folds(gm, x, y, c_range, balanced=balanced, n_threads=n_threads)
+
+            evaluation = evaluate_prediction(y, y_hat)
+
+            print '\nTrue positive %0.2f' % len(evaluation['predictions'][0])
+            print 'True negative %0.2f' % len(evaluation['predictions'][1])
+            print 'False positive %0.2f' % len(evaluation['predictions'][2])
+            print 'False negative %0.2f' % len(evaluation['predictions'][3])
+
+            print 'Accuracy %0.2f' % evaluation['accuracy']
+            print 'Balanced accuracy %0.2f' % evaluation['balanced_accuracy']
+            print 'Sensitivity %0.2f' % evaluation['sensitivity']
+            print 'Specificity %0.2f' % evaluation['specificity']
+            print 'Positive predictive value %0.2f' % evaluation['ppv']
+            print 'Negative predictive value %0.2f \n' % evaluation['npv']
 
             weights_orig = revert_mask(w, data_mask, orig_shape)
-            np.save(output_directory + class_str + '__weights', weights_orig)
-            weights_to_nifti(weights_orig, template, output_directory + class_str + '__features_image.nii')
-            data_morin_all.save_subjects(subj, y, y_hat, diagnose_file, output_directory + class_str + '__subjects.csv')
 
-            results[class_str] = evaluate_prediction(y, y_hat)
+            if save_original_weights:
+                np.save(join(output_directory, classification_str + '__weights'), weights_orig)
 
-            # Not Balanced
-            class_str = dx1 + '_vs_' + dx2 + '_smooth_' + smooth + '_not_balanced'
-            print class_str
-            y_hat, w = nested_folds(gm, x, y, c_range, balanced=False, n_threads=25)
+            if save_features_image:
+                weights_to_nifti(weights_orig, image_list[0], join(output_directory, classification_str + '__features_image.nii'))
 
-            weights_orig = revert_mask(w, data_mask, orig_shape)
-            np.save(output_directory + class_str + '__weights', weights_orig)
-            weights_to_nifti(weights_orig, template, output_directory + class_str + '__features_image.nii')
-            data_morin_all.save_subjects(subj, y, y_hat, diagnose_file, output_directory + class_str + '__subjects.csv')
+            if save_subject_classification:
+                save_subjects(current_subjects, current_diagnosis, y, y_hat, join(output_directory, classification_str + '__subjects.csv'))
 
-            results[class_str] = evaluate_prediction(y, y_hat)
+            results[classification_str] = evaluate_prediction(y, y_hat)
 
-            # print str(datetime.now())
+    # TODO implement a method to store results in a readable way
+    # data_morin_all.save_all_results(results, output_directory + 'resume.csv')
 
-    data_morin_all.save_all_results(results, output_directory + 'resume.csv')
-
-    print str(datetime.now())
 
 
