@@ -4,9 +4,6 @@ Covert the CAPP dataset into the BIDS specification.
 ToDo:
 - Integrate a list that indicates, in case of rescan, what is the best version to consider
 - Provide support for the metadata
-- Improve the mergeDTI function merging the .bvec and .bval files with python instead that with bash
-- Fix the code style
-- Fix the problem with python logging and nipype
 
 @author: Sabrina Fontanella
 """
@@ -14,10 +11,7 @@ ToDo:
 from os import path
 from glob import glob
 import os
-from shutil import copy
-# import nipype
 import logging
-import nibabel as nib
 from missing_mods_tracker import MissingModsTracker
 import bids_utils as bids
 
@@ -38,20 +32,10 @@ def convert(source_dir, dest_dir):
     map_problems = ["13001PBA20150623M18B0MAPph_S016.nii.gz", "13002PRJ20150922M18B0MAPph_S014.nii.gz",
                     "11001PGM20130704M00B0MAPph_S010.bval","07002PPP20150116M18B0MAPph_S009.nii.gz",
                     "07003PGM20141217M18B0MAPph_S010.nii.gz"]
-    bids_suff = {
-        'T1': '_T1w',
-        'T2': '_T2w',
-        'Flair': '_FLAIR',
-        'MapPh': '_phasediff',
-        'Map': '_magnitude',
-        'fMRI': '_bold',
-        'dwi': '_dwi'
-    }
-
     mmt = MissingModsTracker()
     os.mkdir(dest_dir)
-    readme = open(path.join(dest_dir, 'README.txt'), 'w')
-    logging.basicConfig(filename=path.join(dest_dir, 'logfile.log'), format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, datefmt='%m/%d/%Y %I:%M' )
+    readme = open(path.join(dest_dir, 'conversion_summary.txt'), 'w')
+    logging.basicConfig(filename=path.join(dest_dir, 'conversion.log'), format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, datefmt='%m/%d/%Y %I:%M' )
     participants = open(path.join(dest_dir,'participants.tsv'), 'w')
     cities_folder = glob(path.join(source_dir, '*', '*', '*'))
 
@@ -93,35 +77,14 @@ def convert(source_dir, dest_dir):
                 session_path = path.join(sub_path,ses)
                 mods_folder_path = path.join(session_path, 'NIFTI')
 
-                # Convert the fieldmap data
-                map = bids.remove_rescan(glob(path.join(sub_path, ses, "NIFTI", "*MAP_*", '*.nii.gz')))
-                map_ph = bids.remove_rescan(glob(path.join(sub_path, ses, "NIFTI", "*MAPph_*", '*.nii.gz')))
-                if len(map) == 0:
-                    logging.warning('Missing magnitude image(s) for '+mods_folder_path)
-                    mmt.add_missing_mod('Map')
-                if len(map_ph) == 0:
-                    logging.warning('Missing phase image(s) for '+mods_folder_path)
-                    mmt.add_missing_mod('MapPh')
-                # If the information regarding the Fieldmap data are complete
-                if len(map) > 0 and len(map_ph) > 0:
-                    map_ph_name = map_ph[0].split(os.sep)[-1]
-                    map_name = map[0].split(os.sep)[-1]
-                    # toSolve: there are some files that produce an error when loaded with Nibabel!
-                    if (map_ph_name not in map_problems) and (map_name not in map_problems):
-                        # Open the files with Nibabel
-                        map_nib = nib.load(map[0])
-                        map_ph_nib = nib.load(map_ph[0])
-                        dim_map = (map_nib.header['dim'])[4]
-                        dim_map_ph = (map_ph_nib.header['dim'])[4]
-                        os.mkdir(path.join(ses_dir_bids, "fmap"))
-                        # Case 1: one phase difference image and at least one magnitude image
-                        if dim_map_ph ==1 and dim_map >0:
-                            copy(map_ph[0], path.join(ses_dir_bids, "fmap", bids_file_name + bids_suff['MapPh'] + '.nii.gz'))
-                            os.system('fslsplit ' + map[0]+ ' '+path.join(ses_dir_bids, "fmap/"+bids_file_name+bids_suff['Map']))
-                        # Case 2: two phase images and two magnitude images'
-                        elif dim_map_ph == 2 and dim_map == 2:
-                            os.system('fslsplit ' + map_ph[0] + ' ' + path.join(ses_dir_bids, "fmap/"+bids_file_name+bids_suff['MapPh']))
-                            os.system('fslsplit ' + map[0] + ' ' + path.join(ses_dir_bids,"fmap/" + bids_file_name + bids_suff['Map']))
+                # Extract and convert fieldmap data
+                out = bids.convert_fieldmap(mods_folder_path, path.join(ses_dir_bids,'fmap'), bids_file_name, map_problems)
+                if out ==-1:
+                    mmt.add_missing_mod('Fieldmap')
+                    logging.warning('No Map and MapPh found for ' + mods_folder_path)
+                elif out == 0:
+                    mmt.add_missing_mod('Fieldmap')
+                    logging.warning('No Map or no MapPh found for ' + mods_folder_path)
 
                 # Decide which T1 will be considered for the conversion
                 t1_selected = bids.choose_correction(mods_folder_path, t1_to_consider, 'T1')
@@ -139,6 +102,8 @@ def convert(source_dir, dest_dir):
                 out = bids.convert_flair(mods_folder_path, path.join(ses_dir_bids, "anat"), bids_file_name)
                 if out == -1:
                     mmt.add_missing_mod('FLAIR')
+                    logging.warning('No FLAIR found for '+ mods_folder_path)
+
 
                 # Merge and convert all valid DTI folders for the same subject
                 out = bids.merge_DTI(mods_folder_path, path.join(ses_dir_bids, 'dwi'), bids_file_name)
@@ -160,7 +125,7 @@ def convert(source_dir, dest_dir):
     # Printing the statistics about missing modalities into a file
     readme.write('Number of subjects converted: '+str(len(capp_spath))+'\n')
     readme.write('********************************\n')
-    readme.write('Number of missing files per modalities (more details inside the logfile):\n')
+    readme.write('Number of missing files per modalities (more details inside converter.log):\n')
     mmt.remove_mods_unused()
     missing_list = mmt.get_missing_list()
     for key in missing_list:

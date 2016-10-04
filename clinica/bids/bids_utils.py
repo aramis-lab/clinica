@@ -4,7 +4,7 @@ import logging
 from glob import glob
 import fileinput
 from shutil import copy
-import nibabel
+import nibabel as nib
 
 
 def remove_rescan(list_path):
@@ -20,12 +20,12 @@ def remove_rescan(list_path):
 
     """
     # Extract all the folders without the substring 'rescan'
-    noResc_lst = [s for s in list_path if 'rescan' not in s]
-    if len(noResc_lst) != len(list_path):
-         for r_file in list(set(list_path)-set(noResc_lst)):
-             logging.warning('Rescan found '+r_file+' Ignored.')
+    no_resc_lst = [s for s in list_path if 'rescan' not in s]
+    if len(no_resc_lst) != len(list_path):
+        for r_file in list(set(list_path)-set(no_resc_lst)):
+            logging.warning('Rescan found '+r_file+' Ignored.')
 
-    return noResc_lst
+    return no_resc_lst
 
 
 def choose_correction(dir, to_consider, mod):
@@ -48,7 +48,7 @@ def choose_correction(dir, to_consider, mod):
     """
     # extract all the files availabe for a certain modality
     correction_list = remove_rescan(glob(path.join(dir, '*' + mod + '*')))
-    if len(correction_list)==0:
+    if len(correction_list) == 0:
         return -1
     if len(correction_list) == 1:
         return correction_list[0].split(os.sep)[-1]
@@ -59,23 +59,96 @@ def choose_correction(dir, to_consider, mod):
         return 0
 
 
-def get_bids_suff():
+def get_bids_suff( mod):
     bids_suff = {
         'T1': '_T1w',
         'T2': '_T2w',
         'Flair': '_FLAIR',
-        'MapPh': '_phasediff',
+        'SingleMapPh': '_phasediff',
+        'MultiMapPh': '_phase',
         'Map': '_magnitude',
         'fMRI': '_bold',
         'dwi': '_dwi'
     }
-    return bids_suff
+    return bids_suff[mod]
 
 
-def convert_T1(t1_path, output_path, t1_bids_name, log=None):
+def convert_T1(t1_path, output_path, t1_bids_name):
     if not os.path.exists(output_path):
         os.mkdir(output_path)
-    copy(t1_path, path.join(output_path, t1_bids_name + (get_bids_suff())['T1'] + '.nii.gz'))
+    copy(t1_path, path.join(output_path, t1_bids_name + get_bids_suff('T1') + '.nii.gz'))
+
+
+def convert_fieldmap(folder_input, folder_output, name, files_to_skip=[]):
+    """
+    Extracts and converts into the BIDS specification fieldmap data.
+
+    Args:
+        folder_input: folder containing the fieldmap data.
+        folder_output: folder where store the converted files.
+        name: name of converted file.
+        files_to_skip:
+
+    Returns:
+         -1 if the modality is not available.
+         0 if the magnitude or the phase is missing (information incomplete).
+
+    """
+
+    map = remove_rescan(glob(path.join(folder_input, "*MAP_*",'*.nii.gz')))
+    map_ph = remove_rescan(glob(path.join(folder_input,"*MAPph_*", '*.nii.gz')))
+
+    if len(map) == 0:
+        logging.warning('Missing magnitude image(s) for ' + folder_input)
+        mag_missing = True
+    if len(map_ph) == 0:
+        logging.warning('Missing phase image(s) for ' + folder_input)
+        map_ph_missing = True
+    # If the information regarding the Fieldmap data are complete
+    if len(map) > 0 and len(map_ph) > 0:
+        map_ph_name = map_ph[0].split(os.sep)[-1]
+        map_name = map[0].split(os.sep)[-1]
+
+        # toSolve: there are some files that produce an error when loaded with Nibabel
+        if (map_ph_name not in files_to_skip) and (map_name not in files_to_skip):
+            # Open the files with Nibabel
+            map_nib = nib.load(map[0])
+            map_ph_nib = nib.load(map_ph[0])
+            dim_map = (map_nib.header['dim'])[4]
+            dim_map_ph = (map_ph_nib.header['dim'])[4]
+            os.mkdir(path.join(folder_output))
+            # Case 1: one phase difference image and at least one magnitude image
+            if dim_map_ph == 1 and dim_map > 0:
+                copy(map_ph[0], path.join(folder_output, name + get_bids_suff('SingleMapPh') + '.nii.gz'))
+                os.system('fslsplit ' + map[0] + ' ' + path.join(folder_output, name + get_bids_suff('Map')))
+                mag_list = glob(path.join(folder_output,name+get_bids_suff('Map')+'*'))
+                for i in range(0, len(mag_list)):
+                    old_mag_name = mag_list[i].split(os.sep)[-1]
+                    # Remove the extension and the number sequence of fslsplit
+                    new_mag_name = old_mag_name[:-11]+str(i+1)
+                    os.rename(mag_list[i], path.join(folder_output, new_mag_name+".nii.gz"))
+            # Case 2: two phase images and two magnitude images'
+            elif dim_map_ph == 2 and dim_map == 2:
+                bids_name_ph = name + get_bids_suff('MultiMapPh')
+                bids_name_mag = name + get_bids_suff('Map')
+                os.system('fslsplit ' + map_ph[0] + ' ' + path.join(folder_output, bids_name_ph))
+                os.system('fslsplit ' + map[0] + ' ' + path.join(folder_output, bids_name_mag))
+                # Fslsplit produces files with a name not comply with BIDS specification, a rename is needed
+                os.rename(path.join(folder_output, bids_name_mag + '0000.nii.gz'),
+                          path.join(folder_output, bids_name_mag+'1.nii.gz'))
+                os.rename(path.join(folder_output, bids_name_mag + '0001.nii.gz'),
+                          path.join(folder_output, bids_name_mag + '2.nii.gz'))
+                os.rename(path.join(folder_output, bids_name_ph + '0000.nii.gz'),
+                      path.join(folder_output, bids_name_ph + '1.nii.gz'))
+                os.rename(path.join(folder_output, bids_name_ph + '0001.nii.gz'),
+                      path.join(folder_output, bids_name_ph + '2.nii.gz'))
+    # The modalities is missing or incomplete
+    else:
+        if mag_missing == True and  map_ph_missing == True:
+            return -1
+        else:
+            return 0
+
 
 
 def convert_flair(folder_input, folder_output, name):
@@ -84,18 +157,18 @@ def convert_flair(folder_input, folder_output, name):
         if not os.path.exists(folder_output):
             os.mkdir(folder_output)
         flair_path = glob(path.join(flair_lst[0], '*.nii.gz*'))[0]
-        copy(flair_path, path.join(folder_output, name + (get_bids_suff())['Flair'] + '.nii.gz'))
+        copy(flair_path, path.join(folder_output, name + (get_bids_suff('Flair')) + '.nii.gz'))
     elif len(flair_lst) == 0:
             logging.info('No FLAIR found for ' + folder_input)
             return -1
     elif len(flair_lst)>1:
-            print('Impossible decide the FLAIR to convert. Computation aborted.')
-            raise
+            logging.fatal('Multiple FLAIR found, computation aborted.')
+            raise 'Multiple FLAIR found, computation aborted.'
 
 
 def convert_fmri(folder_input, folder_output, name):
     """
-    Look for fmri file(s) inside the input folder and convert it(them) into BIDS specification.
+    Extracts and converts into the BIDS specification fmri data.
     Args:
         folder_input: the folder containing the fmri to convert
         folder_output: the output folder
@@ -108,7 +181,7 @@ def convert_fmri(folder_input, folder_output, name):
     if len(fmri_lst) > 0:
         os.mkdir(folder_output)
         fmri_file_path = glob(path.join(fmri_lst[0], '*.nii*'))[0]
-        copy(fmri_file_path , path.join(folder_output, name + '_task-rest' + (get_bids_suff())['fMRI'] + '.nii.gz'))
+        copy(fmri_file_path , path.join(folder_output, name + '_task-rest' + get_bids_suff('fMRI') + '.nii.gz'))
     else:
         logging.info('Non fMRI found for ' + folder_input)
         return -1
@@ -151,20 +224,17 @@ def merge_DTI(folder_input, folder_output, name):
 
         # if it has been found at least a DTI folder complete with bvec, bval and nii.gz
         if len(img) > 0:
+            file_suff = get_bids_suff('dwi')
             #merge all the .nii.gz file with fslmerge
-            os.system('fslmerge -t '+path.join(folder_output,name+'.nii.gz')+' '+" ".join(img))
-            # merger.inputs.in_files = img
-            # merger.inputs.dimension = 't'
-            # merger.inputs.output_type = 'NIFTI_GZ'
-            # merger.cmdline
+            os.system('fslmerge -t '+path.join(folder_output,name+file_suff+'.nii.gz')+' '+" ".join(img))
             #merge all the .bval files
             fin = fileinput.input(bval)
-            fout = open(path.join(folder_output,name+'.bval'), 'w')
+            fout = open(path.join(folder_output,name+file_suff+'.bval'), 'w')
             for line in fin:
                 fout.write(line)
             #merge all the .bvec files
             fin = fileinput.input(bvec)
-            fout = open(path.join(folder_output, name + '.bvec'), 'w')
+            fout = open(path.join(folder_output, name + file_suff+ '.bvec'), 'w')
             for line in fin:
                 fout.write(line)
 
