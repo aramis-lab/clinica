@@ -99,10 +99,8 @@ def convert_fieldmap(folder_input, folder_output, name, files_to_skip=[]):
     map_ph = remove_rescan(glob(path.join(folder_input,"*MAPph_*", '*.nii.gz')))
 
     if len(map) == 0:
-        logging.warning('Missing magnitude image(s) for ' + folder_input)
         mag_missing = True
     if len(map_ph) == 0:
-        logging.warning('Missing phase image(s) for ' + folder_input)
         map_ph_missing = True
     # If the information regarding the Fieldmap data are complete
     if len(map) > 0 and len(map_ph) > 0:
@@ -152,6 +150,7 @@ def convert_fieldmap(folder_input, folder_output, name, files_to_skip=[]):
 
 
 def convert_flair(folder_input, folder_output, name):
+
     flair_lst = remove_rescan(glob(path.join(folder_input,'*T2FLAIR*')))
     if len(flair_lst) == 1:
         if not os.path.exists(folder_output):
@@ -159,11 +158,9 @@ def convert_flair(folder_input, folder_output, name):
         flair_path = glob(path.join(flair_lst[0], '*.nii.gz*'))[0]
         copy(flair_path, path.join(folder_output, name + (get_bids_suff('Flair')) + '.nii.gz'))
     elif len(flair_lst) == 0:
-            logging.info('No FLAIR found for ' + folder_input)
             return -1
     elif len(flair_lst)>1:
-            logging.fatal('Multiple FLAIR found, computation aborted.')
-            raise 'Multiple FLAIR found, computation aborted.'
+            logging.warning('Multiple FLAIR found.')
 
 
 def convert_fmri(folder_input, folder_output, name):
@@ -179,9 +176,10 @@ def convert_fmri(folder_input, folder_output, name):
     """
     fmri_lst = remove_rescan(glob(path.join(folder_input, '*fMRI*')))
     if len(fmri_lst) > 0:
-        os.mkdir(folder_output)
+        if not os.path.exists(folder_output):
+            os.mkdir(folder_output)
         fmri_file_path = glob(path.join(fmri_lst[0], '*.nii*'))[0]
-        copy(fmri_file_path , path.join(folder_output, name + '_task-rest' + get_bids_suff('fMRI') + '.nii.gz'))
+        copy(fmri_file_path, path.join(folder_output, name + '_task-rest' + get_bids_suff('fMRI') + '.nii.gz'))
     else:
         logging.info('Non fMRI found for ' + folder_input)
         return -1
@@ -201,11 +199,12 @@ def merge_DTI(folder_input, folder_output, name):
 
     Returns:
         -1 if the input folder doesn't contain any DTI folder.
+        The list of incomplete DTI folders if there is some folders without bvec/bval/nii
     """
     img = []
     bval = []
     bvec = []
-    #merger = Merge()
+
     dti_list = remove_rescan(glob(path.join(folder_input, '*DTI*')))
     incomp_folders = []
     nr_dti = len(dti_list)
@@ -225,9 +224,6 @@ def merge_DTI(folder_input, folder_output, name):
         # if it has been found at least a DTI folder complete with bvec, bval and nii.gz
         if len(img) > 0:
             file_suff = get_bids_suff('dwi')
-            #merge all the .nii.gz file with fslmerge
-            os.system('fslmerge -t '+path.join(folder_output,name+file_suff+'.nii.gz')+' '+" ".join(img))
-            #merge all the .bval files
             fin = fileinput.input(bval)
             fout = open(path.join(folder_output,name+file_suff+'.bval'), 'w')
             for line in fin:
@@ -240,5 +236,3 @@ def merge_DTI(folder_input, folder_output, name):
 
         if len(incomp_folders) > 0:
             return incomp_folders
-        else:
-            return None
