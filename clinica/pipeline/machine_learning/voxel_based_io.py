@@ -1,7 +1,11 @@
 
 import numpy as np
+import pandas as pd
 import nibabel as nib
 from numpy.linalg import norm
+import csv
+from ntpath import basename, splitext
+from scipy.spatial.distance import squareform
 
 
 def load_data(image_list, mask=True):
@@ -50,6 +54,8 @@ def weights_to_nifti(weights, template, output_filename):
     comparable_features = comparable_features.reshape(weights.shape)
 
     img = nib.load(template)
+
+    # Not recommendeed way
     img.get_data()[:] = comparable_features
     nib.save(img, output_filename)
 
@@ -59,3 +65,41 @@ def weights_to_nifti(weights, template, output_filename):
     # nib.save(new_img, output_filename)
 
 
+def save_subjects_prediction(subjects, diagnosis, y, y_hat, output_file):
+
+    with open(output_file, 'w') as csvfile:
+
+        fieldnames = ['Subject', 'Diagnose', 'Class_label', 'Predicted_label', 'Correct']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+
+        for i in range(len(subjects)):
+            s = splitext(basename(subjects[i]))[0]
+            dx = diagnosis[i]
+            writer.writerow({'NIP': s,
+                             'Diagnose': dx,
+                             'Class_label': y[i],
+                             'Predicted_label': int(y_hat[i]),
+                             'Correct': int(y[i] == y_hat[i])
+                             })
+
+
+def results_to_csv(results, diagnose_list, output_file):
+
+    print results
+
+    balanced_accuracy_list = [round(res[1]['balanced_accuracy'], 2) for res in sorted(results.items())]
+    df = pd.DataFrame(squareform(balanced_accuracy_list), index=diagnose_list, columns=diagnose_list)
+
+    print df
+
+    df.to_csv(output_file)
+
+            # writer.writerow({'Classification' : classif,
+            #                  'Smoothing': smooth,
+            #                  'Balanced': balanced,
+            #                  'Balanced Accuracy': round(results[c]['balanced_accuracy'], 2),
+            #                  'Accuracy': round(results[c]['accuracy'], 2),
+            #                  'Sensitivity': round(results[c]['sensitivity'], 2),
+            #                  'Specificity': round(results[c]['specificity'], 2)
+            #                  })
