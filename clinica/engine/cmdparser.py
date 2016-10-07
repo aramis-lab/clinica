@@ -83,15 +83,25 @@ def get_cmdparser_objects():
             if isinstance(x, clinica.engine.cmdparser.CmdParser):
                 yield x
 
-def init_cmdparser_objects(parser,objects=None):
+def init_cmdparser_objects(rootparser, parser, objects=None):
     """UTIL:Init all derived CmdParser instances with specific data
 
     :param parser: the ArgParser node
     :param objects: all CmpParser instances of this file
     :return: all CmpParser instances of this file
     """
+
     def init(x):
+        def silent_help(): pass
+        def error_message(p):
+            def error(x):
+                p.print_help()
+                rootparser.print_help = silent_help
+                exit(-1)
+            return error
+
         x.options = parser.add_parser(x.name)
+        x.options.error = error_message(x.options)
         x.options.set_defaults(func=x.run_pipeline)
         x.build()
     if objects is None: objects = get_cmdparser_objects()
