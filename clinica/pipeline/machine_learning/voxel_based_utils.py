@@ -1,7 +1,5 @@
 
 import numpy as np
-import csv
-from ntpath import basename, splitext
 
 def evaluate_prediction(y, y_hat):
 
@@ -57,25 +55,6 @@ def evaluate_prediction(y, y_hat):
                }
 
     return results
-
-
-def save_subjects(subjects, diagnosis, y, y_hat, output_file):
-
-    with open(output_file, 'w') as csvfile:
-
-        fieldnames = ['Subject', 'Diagnose', 'Class_label', 'Predicted_label', 'Correct']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-
-        for i in range(len(subjects)):
-            s = splitext(basename(subjects[i]))[0]
-            dx = diagnosis[i]
-            writer.writerow({'NIP': s,
-                             'Diagnose': dx,
-                             'Class_label': y[i],
-                             'Predicted_label': int(y_hat[i]),
-                             'Correct': int(y[i] == y_hat[i])
-                             })
 
 
 def gram_matrix_linear(data):
