@@ -160,19 +160,38 @@ def execute():
     run_parser = sub_parser.add_parser('run')
     #adding the independent pipeline ArgumentParser objects
     # init_cmdparser_objects(run_parser.add_subparsers())
-    init_cmdparser_objects(run_parser.add_subparsers(),[CmdParserT1SPMFullPrep(),CmdParserT1SPMSegment(),
-                                                        CmdParserT1ReconAll(), CmdParserStatisticsSurfStat()])
+    pipelines = [CmdParserT1SPMFullPrep(),CmdParserT1SPMSegment(),CmdParserT1ReconAll(), CmdParserStatisticsSurfStat()]
+    init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
 
+    def silent_help(): pass
+
+    def single_error_message(p):
+        def error(x):
+            p.print_help()
+            parser.print_help = silent_help
+            exit(-1)
+        return error
+    for p in [vis_parser, shell_parser, pipeline_list_parser, run_parser]: p.error = single_error_message(p)
+
+    #Do not want stderr message
+    def silent_msg(x): pass
+    parser.error = silent_msg
+
+    args = None
     try:
         argcomplete.autocomplete(parser)
         args = parser.parse_args()
     except:
-        sys.stdout.flush()
         parser.print_help()
-        exit(0)
+        exit(-1)
+
+    if args is None or hasattr(args,'func') is False:
+            parser.print_help()
+            exit(-1)
 
     #Run the pipeline!
     args.func(args)
+
 
 if __name__ == '__main__':
     execute()
