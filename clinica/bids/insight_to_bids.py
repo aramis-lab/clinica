@@ -17,6 +17,7 @@ import nibabel as nib
 from converter_utils import MissingModsTracker,print_statistics
 import bids_utils as bids
 import pandas as pd
+import numpy as np
 
 
 def converter(source_dir, dest_dir):
@@ -57,6 +58,7 @@ def converter(source_dir, dest_dir):
         subj_path = glob(path.join(source_dir, '*' + insight_ids[-1] + '*'))[0]
         subjs_paths.append(subj_path)
 
+
     # For each subject extract the list of files and convert them into BIDS specification
     for subj_path in subjs_paths:
         print "Converting:", subj_path
@@ -78,8 +80,6 @@ def converter(source_dir, dest_dir):
                 print 'Rescan of a session found: ' + ses + '. Ignored.'
                 continue
 
-
-
             # Extracting the index of the subject
             subj_index = subjs_paths.index(subj_path)
             os.mkdir(path.join(dest_dir, bids_ids[subj_index], 'ses-' + ses))
@@ -88,53 +88,56 @@ def converter(source_dir, dest_dir):
             session_path = path.join(subj_path, ses)
             mods_folder_path = path.join(session_path, 'NIFTI')
 
-            # # Convert the fieldmap data
-            # out = bids.convert_fieldmap(mods_folder_path, path.join(ses_dir_bids, "fmap"), bids_file_name)
-            # if out == -1:
-            #     mmt.add_missing_mod('Fieldmap', ses)
-            #     logging.warning("No Fieldmap found for "+mods_folder_path)
-            # elif out == 0:
-            #     logging.warning("Map or MapPh missing for "+mods_folder_path +': skipped')
-            #     mmt.add_incomplete_mod('Fieldmap', ses)
+            # Convert the fieldmap data
+            out = bids.convert_fieldmap(mods_folder_path, path.join(ses_dir_bids, "fmap"), bids_file_name)
+            if out == -1:
+                mmt.add_missing_mod('Fieldmap', ses)
+                logging.warning("No Fieldmap found for "+mods_folder_path)
+            elif out == 0:
+                logging.warning("Map or MapPh missing for "+mods_folder_path +': skipped.')
+                mmt.add_incomplete_mod('Fieldmap', ses)
 
-            # #Convert DTI data
-            # out = bids.merge_DTI(mods_folder_path, path.join(ses_dir_bids, 'dwi'), bids_file_name)
-            # if out != None:  # missing or incomplete DTI
-            #     if out == -1:
-            #         logging.info('No DTI found for ' + mods_folder_path)
-            #         mmt.add_missing_mod('DTI', ses)
-            #     else:
-            #         for e in out:
-            #             logging.warning('.bvec or .bval not found for DTI folder ' + e + ' Skipped')
-            #             mmt.add_incomplete_mod('DTI', ses)
+            #Convert DTI data
+            out = bids.merge_DTI(mods_folder_path, path.join(ses_dir_bids, 'dwi'), bids_file_name)
+            if out != None:  # missing or incomplete DTI
+                if out == -1:
+                    logging.info('No DTI found for ' + mods_folder_path)
+                    mmt.add_missing_mod('DTI', ses)
+                else:
+                    for e in out:
+                        logging.warning('.bvec or .bval not found for DTI folder ' + e + ': skipped.')
+                        mmt.add_incomplete_mod('DTI', ses)
 
-            # # Decide the best T1 to take and convert the file format into the BIDS standard
-            # t1_selected = bids.choose_correction(mods_folder_path, t1_priority, 'T1')
-            # if t1_selected != -1 and t1_selected != 0:
-            #     t1_sel_path = glob(path.join(mods_folder_path, '*' + t1_selected + '*', '*.nii*'))[0]
-            #     bids.convert_T1(t1_sel_path, path.join(ses_dir_bids, 'anat'), bids_file_name)
-            # else:
-            #     if t1_selected == -1:
-            #         logging.info('No T1 found for ' + mods_folder_path)
-            #         mmt.add_missing_mod('T1', ses)
-            #
-            #     else:
-            #         logging.warning('None of the desiderd T1 corrections is available for ' + mods_folder_path)
+            # Decide the best T1 to take and convert the file format into the BIDS standard
+            t1_selected = bids.choose_correction(mods_folder_path, t1_priority, 'T1')
+            if t1_selected != -1 and t1_selected != 0:
+                t1_sel_path = glob(path.join(mods_folder_path, '*' + t1_selected + '*', '*.nii*'))[0]
+                bids.convert_T1(t1_sel_path, path.join(ses_dir_bids, 'anat'), bids_file_name)
+            else:
+                if t1_selected == -1:
+                    logging.info('No T1 found for ' + mods_folder_path)
+                    mmt.add_missing_mod('T1', ses)
+
+                else:
+                    logging.warning('None of the desiderd T1 corrections is available for ' + mods_folder_path)
 
             # Convert T2FLAIR
             out = bids.convert_flair(mods_folder_path, path.join(ses_dir_bids, "anat"), bids_file_name)
             if out == -1:
+                logging.warning('No FLAIR found for '+ mods_folder_path)
                 mmt.add_missing_mod('FLAIR', ses)
 
-            # # Convert fMRI
-            # out = bids.convert_fmri(mods_folder_path, path.join(ses_dir_bids, "anat"), bids_file_name)
-            # if out == -1:
-            #         mmt.add_missing_mod('fMRI', ses)
+            # Convert fMRI
+            out = bids.convert_fmri(mods_folder_path, path.join(ses_dir_bids, "func"), bids_file_name)
+            if out == -1:
+                    mmt.add_missing_mod('fMRI', ses)
 
         logging.info("Conversion for the subject terminated.\n")
 
     # Printing the statistics about missing modalities into a file
     print_statistics(summary, len(subjs_paths), ses_available, mmt)
+    summary.close()
+    participants.close()
 
 
 

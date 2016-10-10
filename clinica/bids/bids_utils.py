@@ -225,6 +225,9 @@ def merge_DTI(folder_input, folder_output, name):
         if len(img) > 0:
             file_suff = get_bids_suff('dwi')
             fin = fileinput.input(bval)
+            # merge all the .nii.gz file with fslmerge
+            os.system('fslmerge -t ' + path.join(folder_output, name + file_suff + '.nii.gz') + ' ' + " ".join(img))
+            # merge all the .bval files
             fout = open(path.join(folder_output,name+file_suff+'.bval'), 'w')
             for line in fin:
                 fout.write(line)

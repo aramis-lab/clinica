@@ -55,7 +55,6 @@ class MissingModsTracker:
         if ses != '':
             self.ses= ses
             for s in ses:
-                print s
                 self.missing.update({s : {'session': 0,
                                           'DTI': [0,0],
                                           'fMRI': [0,0],
