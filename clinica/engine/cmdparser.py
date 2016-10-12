@@ -241,7 +241,7 @@ class CmdParserT1ReconAll(CmdParser):
 
         from clinica.pipeline.t1.t1_freesurfer import recon_all_pipeline
 
-        reconall_wf = recon_all_pipeline(self.absolute_path(args.input_directory), args.output_dir, args.field_template, args.template_args,
+        reconall_wf = recon_all_pipeline(self.absolute_path(args.input_directory), self.absolute_path(args.output_dir), args.field_template, args.template_args,
                                          datasink_para=args.intermediate_files, recon_all_args=args.reconall_args)
 
         reconall_wf.run("MultiProc", plugin_args={'n_procs':4})
@@ -267,7 +267,7 @@ class CmdParserStatisticsSurfStat(CmdParser):
 
         from clinica.pipeline.statistics.t1_surfstat import clinica_surfstat
         
-        surfstat_wf = clinica_surfstat(self.absolute_path(args.input_directory), args.output_dir, args.linear_model, args.contrast,
+        surfstat_wf = clinica_surfstat(self.absolute_path(args.input_directory), self.absolute_path(args.output_dir), args.linear_model, args.contrast,
                                          self.absolute_path(args.csv_file), args.str_format,
                                          size_of_fwhm=args.size_of_fwhm, threshold_uncorrected_pvalue=args.threshold_uncorrected_pvalue,
                                          threshold_corrected_pvalue=args.threshold_corrected_pvalue, cluster_threshold=args.cluster_threshold)
