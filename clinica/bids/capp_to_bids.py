@@ -36,7 +36,7 @@ def convert(source_dir, dest_dir):
     os.mkdir(dest_dir)
     summary_file = open(path.join(dest_dir, 'conversion_summary.txt'), 'w')
     logging.basicConfig(filename=path.join(dest_dir, 'conversion.log'), format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, datefmt='%m/%d/%Y %I:%M' )
-    participants = open(path.join(dest_dir,'participants.tsv'), 'w')
+    participants = open(path.join(dest_dir, 'participants.tsv'), 'w')
     cities_folder = glob(path.join(source_dir, '*', '*', '*'))
 
     # Create the lists of bids_ids extracting the list of the subjects from the dataset
@@ -95,12 +95,12 @@ def convert(source_dir, dest_dir):
                 mods_folder_path = path.join(session_path, 'NIFTI')
 
                 # Extract and convert fieldmap data
-                out = bids.convert_fieldmap(mods_folder_path, path.join(ses_dir_bids,'fmap'), bids_file_name, map_problems)
+                out = bids.convert_fieldmap(mods_folder_path, path.join(ses_dir_bids, 'fmap'), bids_file_name, map_problems)
                 if out == -1:
                     mmt.add_missing_mod('Fieldmap', ses)
                     logging.warning("No Fieldmap found for "+mods_folder_path)
                 elif out == 0:
-                    logging.warning("Map or MapPh missing for "+mods_folder_path +': skipped')
+                    logging.warning("Map or MapPh missing for " + mods_folder_path + ': skipped')
                     mmt.add_incomplete_mod('Fieldmap', ses)
 
 

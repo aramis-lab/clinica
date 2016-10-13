@@ -15,6 +15,7 @@ import bids_utils as bids
 from shutil import copy
 from converter_utils import MissingModsTracker, print_statistics
 
+
 def convert(source_dir, dest_dir):
     """
     Convert the PREVDEMALS dataset into the BIDS standard.
@@ -29,10 +30,13 @@ def convert(source_dir, dest_dir):
         'GENFI': path.join(source_dir, 'PREV_DEMALS_GENFI', 'convertData', 'study'),
         'ICM': path.join(source_dir, 'PREV_DEMALS_ICM', 'convertData', 'study')
     }
+    ses_available = ['M0', 'M24']
     mmt = MissingModsTracker(['M0', 'M24'])
     os.mkdir(dest_dir)
     os.mkdir(path.join(dest_dir, 'GENFI'))
     os.mkdir(path.join(dest_dir, 'ICM'))
+    summary_file_icm = open(path.join(dest_dir, 'ICM', 'conversion_summary.txt'), 'w')
+    summary_file_genfi = open(path.join(dest_dir, 'GENFI', 'conversion_summary.txt'), 'w')
     logging.basicConfig(filename=path.join(dest_dir, 'conversion.log'), format='%(asctime)s %(levelname)s:%(message)s',
                         datefmt='%m/%d/%Y %I:%M', level=logging.DEBUG)
     print "*******************************"
@@ -46,9 +50,7 @@ def convert(source_dir, dest_dir):
         bids_ids = []
         dest_dir_proj = path.join(dest_dir, proj)
         participants = open(path.join(dest_dir_proj, 'participants.tsv'), 'w')
-        participants.write("------------------------------\n")
         participants.write("participant_id   BIDS_id\n")
-        participants.write("------------------------------\n")
         for cf in cities_folder:
             for subj_path in glob(path.join(cf, "*")):
                 subj_id = subj_path.split(os.sep)[-1]
@@ -89,7 +91,7 @@ def convert(source_dir, dest_dir):
                     logging.info('DTI ignored for PREV_DEMALS_ICM.')
                 else:
                     out = bids.merge_DTI(mods_folder_path, path.join(ses_dir_bids, 'dwi'), bids_file_name)
-                    if out != None: #missing or incomplete DTI
+                    if out is not None:  # Missing or incomplete DTI
                         if out == -1:
                             logging.info('No DTI found for ' + mods_folder_path)
                             mmt.add_missing_mod('DTI', ses)
@@ -116,3 +118,11 @@ def convert(source_dir, dest_dir):
                     mmt.add_missing_mod('FLAIR', ses)
 
                 logging.info("Conversion for the subject terminated.\n")
+
+        # Printing the statistics about missing modalities into a file
+        if proj == 'ICM':
+            file_to_write = summary_file_icm
+        else:
+            file_to_write = summary_file_genfi
+        print_statistics(file_to_write, len(pda_ids), ses_available, mmt)
+        file_to_write.close()
