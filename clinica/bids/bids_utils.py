@@ -60,6 +60,14 @@ def choose_correction(dir, to_consider, mod):
 
 
 def get_bids_suff( mod):
+    """
+    Returns the BIDS suffix for a certain modality.
+
+    Args:
+        mod: modality.
+    Returns:
+        The suffix used in the BIDS standard for a certain modality.
+    """
     bids_suff = {
         'T1': '_T1w',
         'T2': '_T2w',
@@ -70,10 +78,20 @@ def get_bids_suff( mod):
         'fMRI': '_bold',
         'dwi': '_dwi'
     }
+
     return bids_suff[mod]
 
 
 def convert_T1(t1_path, output_path, t1_bids_name):
+    """
+    Convert into the BIDS specification a T1 image.
+
+    Args:
+        t1_path: the path of the T1 images to convert.
+        output_path: output folder path.
+        t1_bids_name: name to give to the file.
+
+    """
     if not os.path.exists(output_path):
         os.mkdir(output_path)
     copy(t1_path, path.join(output_path, t1_bids_name + get_bids_suff('T1') + '.nii.gz'))
@@ -92,11 +110,10 @@ def convert_fieldmap(folder_input, folder_output, name, files_to_skip=[]):
     Returns:
          -1 if the modality is not available.
          0 if the magnitude or the phase is missing (information incomplete).
-
     """
-
+    mag_missing = map_ph_missing = False
     map = remove_rescan(glob(path.join(folder_input, "*MAP_*",'*.nii.gz')))
-    map_ph = remove_rescan(glob(path.join(folder_input,"*MAPph_*", '*.nii.gz')))
+    map_ph = remove_rescan(glob(path.join(folder_input, "*MAPph_*", '*.nii.gz')))
 
     if len(map) == 0:
         mag_missing = True
@@ -120,11 +137,12 @@ def convert_fieldmap(folder_input, folder_output, name, files_to_skip=[]):
                 copy(map_ph[0], path.join(folder_output, name + get_bids_suff('SingleMapPh') + '.nii.gz'))
                 os.system('fslsplit ' + map[0] + ' ' + path.join(folder_output, name + get_bids_suff('Map')))
                 mag_list = glob(path.join(folder_output,name+get_bids_suff('Map')+'*'))
+
                 for i in range(0, len(mag_list)):
                     old_mag_name = mag_list[i].split(os.sep)[-1]
                     # Remove the extension and the number sequence of fslsplit
-                    new_mag_name = old_mag_name[:-11]+str(i+1)
-                    os.rename(mag_list[i], path.join(folder_output, new_mag_name+".nii.gz"))
+                    new_mag_name = old_mag_name[:-11] + str(i+1)
+                    os.rename(mag_list[i], path.join(folder_output, new_mag_name + ".nii.gz"))
             # Case 2: two phase images and two magnitude images'
             elif dim_map_ph == 2 and dim_map == 2:
                 bids_name_ph = name + get_bids_suff('MultiMapPh')
@@ -148,9 +166,18 @@ def convert_fieldmap(folder_input, folder_output, name, files_to_skip=[]):
             return 0
 
 
-
 def convert_flair(folder_input, folder_output, name):
+    """
+    Extracts and converts T2Flair data.
 
+    Args:
+        folder_input: folder containing T2Flair.
+        folder_output: output folder path.
+        name: name to give to the output file.
+
+    Returns:
+        -1 if no T2FLAIR is found in the input folder.
+    """
     flair_lst = remove_rescan(glob(path.join(folder_input,'*T2FLAIR*')))
     if len(flair_lst) == 1:
         if not os.path.exists(folder_output):
@@ -166,13 +193,14 @@ def convert_flair(folder_input, folder_output, name):
 def convert_fmri(folder_input, folder_output, name):
     """
     Extracts and converts into the BIDS specification fmri data.
+
     Args:
-        folder_input: the folder containing the fmri to convert
-        folder_output: the output folder
+        folder_input: the folder containing the fmri to convert.
+        folder_output: the output folder.
         name:
 
     Returns:
-        -1 in case that no fmri file is found within the folder
+        -1 if no fMRI file is found in the input folder.
     """
     fmri_lst = remove_rescan(glob(path.join(folder_input, '*fMRI*')))
     if len(fmri_lst) > 0:
@@ -214,7 +242,7 @@ def merge_DTI(folder_input, folder_output, name):
         if not os.path.exists(folder_output):
             os.mkdir(folder_output)
         for folder in dti_list:
-            if len(glob(path.join(folder,'*.bval'))) != 0 and len(glob(path.join(folder,'*.bvec'))) != 0:
+            if len(glob(path.join(folder, '*.bval'))) != 0 and len(glob(path.join(folder, '*.bvec'))) != 0:
                 img.append(glob(path.join(folder,'*.nii*'))[0])
                 bval.append(glob(path.join(folder,'*.bval'))[0])
                 bvec.append(glob(path.join(folder,'*.bvec'))[0])
@@ -233,7 +261,7 @@ def merge_DTI(folder_input, folder_output, name):
                 fout.write(line)
             #merge all the .bvec files
             fin = fileinput.input(bvec)
-            fout = open(path.join(folder_output, name + file_suff+ '.bvec'), 'w')
+            fout = open(path.join(folder_output, name + file_suff + '.bvec'), 'w')
             for line in fin:
                 fout.write(line)
 
