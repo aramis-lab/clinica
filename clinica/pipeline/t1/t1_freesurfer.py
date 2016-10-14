@@ -9,9 +9,8 @@ Created on Mon Apr 22 09:04:10 2016
 from clinica.engine.cworkflow import *
 
 @Visualize("freeview", "-v ${subject_id}/mri/T1.mgz -f ${subject_id}/surf/lh.white:edgecolor=blue ${subject_id}/surf/lh.pial:edgecolor=green ${subject_id}/surf/rh.white:edgecolor=blue ${subject_id}/surf/rh.pial:edgecolor=green", "subject_id")
-def recon_all_pipeline(data_dir, output_dir,field_template, template_args, datasink_para = ['orig', 'white'], recon_all_args='-qcache'):
-#def recon_all_pipeline(data_dir, output_dir, n_output, recon_all_args='-qcache'):
-    
+def recon_all_pipeline(data_dir, output_dir,tsv_file, dataset_name, recon_all_args='-qcache'):
+
     """
         Creates a pipeline that performs Freesurfer commander, recon-all,
         It takes the input files of MRI T1 images and executes the 31 steps to
@@ -38,14 +37,14 @@ def recon_all_pipeline(data_dir, output_dir,field_template, template_args, datas
 
         :param: data_dir: the directory where to put the input images, eg, example1.nii, example2.nii, this should be the absolute path
         :param: output_dir: the directory where to put the results of the pipeline, should be absolute path!
-        :param: field_template: list, you should define it based on your input data structure       
-        :param: template_args: list, you should define it based on your input data structure
-        :param: datasink_para: list containing string, optional, the container inside the datasink_folder, for datasinker to store the result that you want, you can define many container to store your result, default is datasink_para = ['orig', 'white']
+        :param: tsv_file: the path pointing to the tsv file
+        :param: dataset_name: string, the dataset name that you used
+        #:param: datasink_para: list containing string, optional, the container inside the datasink_folder, for datasinker to store the result that you want, you can define many container to store your result, default is datasink_para = ['orig', 'white']
         :param: recon_all_args, the additional flags for reconAll command line, the default value will be set as '-qcache', which will get the result of the fsaverage.
         return: Recon-all workflow
     """
 
-    import os
+    import os, csv
     import errno
     import nipype.pipeline.engine as pe
     import nipype.interfaces.io as nio
@@ -59,45 +58,73 @@ def recon_all_pipeline(data_dir, output_dir,field_template, template_args, datas
         print(str(e))
         exit(1)
 
-    subject_list = []
-    # in example_t1_reconall, the data_dir is defined as absolute path, if we should do there, or we should do it here????
-    for dirpath, dirnames, filenames in os.walk(data_dir):
-        subject_list = dirnames
-        break
-    output_dir = os.path.expanduser(output_dir)# this is to add ~ before the out_dir, if it doesnt start with ~,just return the path
-    try:
-        os.makedirs(output_dir)
-    except OSError as exception:
-        if exception.errno != errno.EEXIST:
-            raise
-    inputnode = pe.MapNode(interface = nio.DataGrabber(infields=['subject_id'], 
-                                                     outfields=['out_files']), name="inputnode",
-                                                     iterfield = ['subject_id'])   
-    recon_all = pe.MapNode(interface=ReconAll(),name='recon_all', iterfield=['subject_id', 'T1_files'])
+# new version for BIDS
+    def BIDS_input(output_dir, dataset_name):
+
+        subject_list = []
+        session_list = []
+        with open(tsv_file, 'rb') as tsvin:
+            tsv_reader = csv.reader(tsvin, delimiter='\t')
+
+            for row in tsv_reader:
+                subject_list.append(row[0])
+                session_list.append(row[1])
+
+        output_path = os.path.expanduser(output_dir)  # this is to add ~ before the out_dir, if it doesnt start with ~,just return the path
+        dataset_name += '_CAPS/analysis-series-default/subjects'
+        output_dir = output_path + '/' + dataset_name
+        try:
+            os.makedirs(output_dir)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
+        return subject_list, session_list, output_dir
+
+    subject_list, session_list, output_dir = BIDS_input(output_dir, dataset_name)
+
+    def BIDS_output(output_dir):
+        subject_dir = []
+        num_subject = len(subject_list)
+        for i in range(num_subject):
+            subject = output_dir + '/' + 'sub-' + subject_list[i] + '/' + 'sub-' + session_list[i] + '/' + 't1'
+            try:
+                os.makedirs(subject)
+            except OSError as exception:
+                if exception.errno != errno.EEXIST:
+                    raise
+            subject_dir.append(subject)
+        return subject_dir
+
+    inputnode = pe.Node(interface=nio.DataGrabber(infields=['subject_id', 'session', 'subject_repeat', 'session_repeat'],
+                                                outfields=['anat_t1']), name="inputnode")  # the best explanation for datagrabber http://nipy.org/nipype/interfaces/generated/nipype.interfaces.io.html#datagrabber
+
+    recon_all = pe.MapNode(interface=ReconAll(), name='recon_all', iterfield=['subject_id', 'T1_files', 'subjects_dir'])
     outputnode = pe.Node(niu.IdentityInterface(fields=['ReconAll_result']), name='outputnode')
-    datasink = pe.Node(nio.DataSink(), name="datasink")
-    datasink.inputs.base_directory = output_dir
-    datasink.inputs.container = 'datasink_folder'
-    
-    wf = pe.Workflow(name='reconall_workflow',base_dir=output_dir)
-   
+    #datasink = pe.Node(nio.DataSink(), name="datasink")
+    #datasink.inputs.base_directory = output_dir
+    #datasink.inputs.container = 'datasink_folder'
+
+    wf = pe.Workflow(name='reconall_workflow', base_dir=output_dir)
+
     inputnode.inputs.base_directory = data_dir
-    inputnode.inputs.template = '*'  
-    inputnode.inputs.field_template = dict(out_files=field_template)
-    inputnode.inputs.template_args = dict(out_files=[['subject_id', template_args]])
-
+    inputnode.inputs.template = '*'
+    inputnode.inputs.field_template = dict(anat_t1='sub-%s/ses-%s/anat/sub-%s_ses-%s_T1w.nii.gz')
+    inputnode.inputs.template_args = dict(anat_t1=[['subject_id', 'session', 'subject_repeat', 'session_repeat']]) # the same with dg.inputs.template_args['outfiles']=[['dicomdir','123456-1-1.dcm']]
     inputnode.inputs.subject_id = subject_list
-    inputnode.inputs.sort_filelist = True
+    inputnode.inputs.session = session_list
+    inputnode.inputs.subject_repeat = subject_list
+    inputnode.inputs.session_repeat = session_list
+    inputnode.inputs.sort_filelist = False
 
-    recon_all.inputs.subject_id = subject_list
-    recon_all.inputs.subjects_dir = output_dir
+
+    recon_all.inputs.subject_id = subject_list  #  here is the point of the problem, need to create the correspondant subfolder for the 4 subjects.
+    recon_all.inputs.subjects_dir = BIDS_output(output_dir)
     recon_all.inputs.directive = 'all'
     recon_all.inputs.args = recon_all_args
 
-    wf.connect(inputnode,'out_files', recon_all,'T1_files')
+    wf.connect(inputnode, 'anat_t1', recon_all, 'T1_files')
     wf.connect(recon_all, 'subject_id', outputnode, 'ReconAll_result')
-    for i in range(len(datasink_para)):
-        wf.connect([(recon_all, datasink, [(datasink_para[i], datasink_para[i])])])
+    #for i in range(len(datasink_para)):
+        #wf.connect([(recon_all, datasink, [(datasink_para[i], datasink_para[i])])])
 
     return wf
-
