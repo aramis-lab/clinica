@@ -12,27 +12,33 @@ from os.path import realpath,split,join
 import tempfile
 
 # Test for CAPP dataset
-data_dir = join(split(realpath(__file__))[0], 'external-data/CAPP_BIDSsource')
+data_dir_CAPP = join(split(realpath(__file__))[0], 'external-data/CAPP_BIDSsource')
 output_dir = tempfile.mkdtemp()
-tsv_file = join(split(realpath(__file__))[0], 'external-data/subjects_visits_list_CAPP.tsv')
+tsv_file_CAPP = join(split(realpath(__file__))[0], 'external-data/subjects_visits_list_CAPP.tsv')
 dataset_name = 'CAPP'
 
-print("Data Directory -> %s" % data_dir)
-print("Output Directory -> %s" % output_dir)
-print("Running...")
+data_dir_INSIGHT = join(split(realpath(__file__))[0], 'external-data/INSIGHT_BIDSsource')
+tsv_file_INSIGHT = join(split(realpath(__file__))[0], 'external-data/subjects_visits_list_INSIGHT.tsv')
+#dataset_name = 'INSIGHT'
 
 # this is the example to run CAPP dataset
 def recon_all_example_CAPP():
-    return recon_all_pipeline(data_dir, output_dir,tsv_file, dataset_name)
+    return recon_all_pipeline(data_dir_CAPP, output_dir,tsv_file_CAPP, dataset_name)
 
 # this is the example to run INSIGHT dataset
 def recon_all_example_INSIGHT():
-    return recon_all_pipeline(data_dir, output_dir,tsv_file, dataset_name)
+    return recon_all_pipeline(data_dir_INSIGHT, output_dir,tsv_file_INSIGHT, dataset_name)
 
 if dataset_name == 'CAPP':
+    print("Data Directory -> %s" % data_dir_CAPP)
+    print("Output Directory -> %s" % output_dir)
+    print("Running...")
     T1_recon_all = recon_all_example_CAPP()
     T1_recon_all.run("MultiProc", plugin_args={'n_procs':4})
 else:
+    print("Data Directory -> %s" % data_dir_INSIGHT)
+    print("Output Directory -> %s" % output_dir)
+    print("Running...")
     T1_recon_all = recon_all_example_INSIGHT()
     T1_recon_all.run("MultiProc", plugin_args={'n_procs':4})
 
