@@ -11,14 +11,15 @@ from clinica.pipeline.t1.t1_freesurfer import recon_all_pipeline
 from os.path import realpath,split,join
 import tempfile
 
-# Test for CAPP dataset
-data_dir_CAPP = join(split(realpath(__file__))[0], 'external-data/CAPP_BIDSsource')
+# Test for BIDS dataset(which is located in dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing, you should adjust the input path here on your own computer)
+# this example is run on my own Mac, so this path should be changed if you run on your own machine.
+data_dir_CAPP = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/CAPP_BIDSsource'
 output_dir = tempfile.mkdtemp()
-tsv_file_CAPP = join(split(realpath(__file__))[0], 'external-data/subjects_visits_list_CAPP.tsv')
+tsv_file_CAPP = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/subjects_visits_list_CAPP.tsv'
 dataset_name = 'CAPP'
 
-data_dir_INSIGHT = join(split(realpath(__file__))[0], 'external-data/INSIGHT_BIDSsource')
-tsv_file_INSIGHT = join(split(realpath(__file__))[0], 'external-data/subjects_visits_list_INSIGHT.tsv')
+data_dir_INSIGHT = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/INSIGHT_BIDSsource'
+tsv_file_INSIGHT = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/subjects_visits_list_INSIGHT.tsv'
 #dataset_name = 'INSIGHT'
 
 # this is the example to run CAPP dataset
