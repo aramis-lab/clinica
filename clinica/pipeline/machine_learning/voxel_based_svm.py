@@ -166,8 +166,13 @@ def linear_svm_binary_classification(image_list, diagnose_list, output_directory
             dx1 = dx_filter[i]
             dx2 = dx_filter[j]
 
-            ind1 = diagnose_list[dx1]
-            ind2 = diagnose_list[dx2]
+            ind1 = []
+            ind2 = []
+            for k in range(len(diagnose_list)):
+                if diagnose_list[k] == dx1:
+                    ind1.append(k)
+                if diagnose_list[k] == dx2:
+                    ind2.append(k)
 
             indices = ind1 + ind2
 
