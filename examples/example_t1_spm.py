@@ -58,8 +58,12 @@
 #
 # #launch_XNATSource_example(server, user, password, experiment_dir, output_dir)
 
+# clinica run t1-spm-full-prep /Users/jorge.samper/Workspace/test/full_pipeline_data /Users/jorge.samper/Workspace/test/full_pipeline_output -wd /Users/jorge.samper/Workspace/test/full_pipeline_temp -np 10 -ti 1 2 3 4 -dt 1 2 -swu -swm -wdf True True -fwhm 12 12 12 -m False -vs 3 3 3
+#
+# clinica run t1-spm-segment /Users/jorge.samper/Workspace/test/segment_data /Users/jorge.samper/Workspace/test/segment_output -wd /Users/jorge.samper/Workspace/test/segment_temp -np 10 -ti 1 2 3 4 -dt 1 2 -swu -swm -wdf True True
+
 clinica run t1-spm-full-prep /Users/jorge.samper/Workspace/test/full_pipeline_data /Users/jorge.samper/Workspace/test/full_pipeline_output -wd /Users/jorge.samper/Workspace/test/full_pipeline_temp -np 10 -ti 1 2 3 4 -dt 1 2 -swu -swm -wdf True True -fwhm 12 12 12 -m False -vs 3 3 3
 
-clinica run t1-spm-segment /Users/jorge.samper/Workspace/test/segment_data /Users/jorge.samper/Workspace/test/segment_output -wd /Users/jorge.samper/Workspace/test/segment_temp -np 10 -ti 1 2 3 4 -dt 1 2 -swu -swm -wdf True True
+clinica run t1-spm-segment /Users/jorge.samper/Workspace/datasets/BIDS/CAPP_BIDSsource /Users/jorge.samper/Workspace/datasets/BIDS/CAPP_CLINICAprocessed ALLSUBJECTSM0 GROUPTEST -wd /Users/jorge.samper/Workspace/test/segment_temp -np 10 -ti 1 2 3 4 -dt 1 2 -swu -swm -wdf True True
 
 
