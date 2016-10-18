@@ -76,7 +76,7 @@ def save_subjects_prediction(subjects, diagnosis, y, y_hat, output_file):
         for i in range(len(subjects)):
             s = splitext(basename(subjects[i]))[0]
             dx = diagnosis[i]
-            writer.writerow({'NIP': s,
+            writer.writerow({'Subject': s,
                              'Diagnose': dx,
                              'Class_label': y[i],
                              'Predicted_label': int(y_hat[i]),
@@ -86,20 +86,29 @@ def save_subjects_prediction(subjects, diagnosis, y, y_hat, output_file):
 
 def results_to_csv(results, diagnose_list, output_file):
 
-    print results
+    with open(output_file, 'w') as output:
+        s = 'Balanced Accuracy\n'
+        balanced_accuracy_list = [round(res[1]['balanced_accuracy'], 2) for res in sorted(results.items())]
+        df = pd.DataFrame(squareform(balanced_accuracy_list), index=diagnose_list, columns=diagnose_list)
+        print df
+        s += df.to_csv()
 
-    balanced_accuracy_list = [round(res[1]['balanced_accuracy'], 2) for res in sorted(results.items())]
-    df = pd.DataFrame(squareform(balanced_accuracy_list), index=diagnose_list, columns=diagnose_list)
+        s += '\nAccuracy\n'
+        accuracy_list = [round(res[1]['accuracy'], 2) for res in sorted(results.items())]
+        df = pd.DataFrame(squareform(accuracy_list), index=diagnose_list, columns=diagnose_list)
+        print df
+        s += df.to_csv()
 
-    print df
+        s += '\nSensitivity\n'
+        sensitivity_list = [round(res[1]['sensitivity'], 2) for res in sorted(results.items())]
+        df = pd.DataFrame(squareform(sensitivity_list), index=diagnose_list, columns=diagnose_list)
+        print df
+        s += df.to_csv()
 
-    df.to_csv(output_file)
+        s += '\nSpecificity\n'
+        specificity_list = [round(res[1]['specificity'], 2) for res in sorted(results.items())]
+        df = pd.DataFrame(squareform(specificity_list), index=diagnose_list, columns=diagnose_list)
+        print df
+        s += df.to_csv()
 
-            # writer.writerow({'Classification' : classif,
-            #                  'Smoothing': smooth,
-            #                  'Balanced': balanced,
-            #                  'Balanced Accuracy': round(results[c]['balanced_accuracy'], 2),
-            #                  'Accuracy': round(results[c]['accuracy'], 2),
-            #                  'Sensitivity': round(results[c]['sensitivity'], 2),
-            #                  'Specificity': round(results[c]['specificity'], 2)
-            #                  })
+        output.write(s)

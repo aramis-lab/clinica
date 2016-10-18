@@ -80,3 +80,7 @@ def get_class_images(class_images,index_list):
             result.append(class_n_images[idx])
 
     return result
+
+
+def group_images_by_subject(class_images):
+    return [[s for tissue in subject for s in tissue] for subject in class_images]
