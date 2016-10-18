@@ -26,20 +26,29 @@ def get_all_subj_dx(diagnose_file, data_dir, dx_filter=None):
             continue
         patient = res.iloc[0]
 
-        if patient.DX in dx_filter:
+        if dx_filter is not None:
+            if patient.DX in dx_filter:
+                new_subjects.append(subjects[i])
+                labels.append(patient.DX)
+        else:
             new_subjects.append(subjects[i])
             labels.append(patient.DX)
 
     return new_subjects, labels
 
 
-input_dir = '/aramis/dataARAMIS/users/alexandre.morin/Outputs/segment_spm12/smooth_0'
+input_dir = '/aramis/dataARAMIS/users/alexandre.morin/Outputs/segment_spm12/smooth_8'
 diag_file = '/aramis/dataARAMIS/users/jorge.samper/alex.morin/DX.csv'
-dx_filt = ['APPl', 'APPs', 'DCL']
+dx_filter = ['Depr', 'EOAD', 'LOAD', 'DCB', 'DCL', 'DFT', 'APPl', 'APPs']
 
-filenames, diagnose_list = get_all_subj_dx(diag_file, input_dir, dx_filt)
+filenames, diagnose_list = get_all_subj_dx(diag_file, input_dir, dx_filter)
 image_list = [join(input_dir, f) for f in filenames]
 output_dir = '/aramis/dataARAMIS/users/jorge.samper/test'
 
-linear_svm_binary_classification(image_list, diagnose_list, output_dir, balanced=True, outer_folds=3, inner_folds=3, n_threads=20, save_subject_classification=True)
+print 'Images: '
+print len(image_list)
+print 'Diagnosis'
+print len(diagnose_list)
+
+linear_svm_binary_classification(image_list, diagnose_list, output_dir, balanced=True, outer_folds=10, inner_folds=10, n_threads=40, save_subject_classification=True)
 
