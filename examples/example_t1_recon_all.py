@@ -9,6 +9,7 @@ Created on Mon Apr 25 15:04:17 2016
 from __future__ import absolute_import
 from clinica.pipeline.t1.t1_freesurfer import recon_all_pipeline
 from os.path import realpath,split,join
+import time
 import tempfile
 
 # Test for BIDS dataset(which is located in dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing, you should adjust the input path here on your own computer)
@@ -21,6 +22,8 @@ dataset_name = 'CAPP'
 data_dir_INSIGHT = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/INSIGHT_BIDSsource'
 tsv_file_INSIGHT = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/subjects_visits_list_INSIGHT.tsv'
 #dataset_name = 'INSIGHT'
+
+start = time.time()
 
 # this is the example to run CAPP dataset
 def recon_all_example_CAPP():
@@ -36,10 +39,14 @@ if dataset_name == 'CAPP':
     print("Running...")
     T1_recon_all = recon_all_example_CAPP()
     T1_recon_all.run("MultiProc", plugin_args={'n_procs':4})
+    time_consuming = time.time() - start
+    print 'END! time consuming is : %s' % time_consuming
 else:
     print("Data Directory -> %s" % data_dir_INSIGHT)
     print("Output Directory -> %s" % output_dir)
     print("Running...")
     T1_recon_all = recon_all_example_INSIGHT()
     T1_recon_all.run("MultiProc", plugin_args={'n_procs':4})
+    time_consuming = time.time() - start
+    print 'END! time consuming is : %s' % time_consuming
 
