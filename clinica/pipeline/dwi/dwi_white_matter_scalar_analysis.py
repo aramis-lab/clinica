@@ -32,7 +32,6 @@ def dti_atlas_scalar_analysis_pipeline(
     import nipype.pipeline.engine as pe
     import os.path as op
     from clinica.pipeline.registration.mri_registration import antsRegistrationSyNQuick
-    from clinica.pipeline.dwi.dwi_white_matter_scalar_analysis import dti_atlas_scalar_analysis
     import tempfile
 
     if working_directory is None:

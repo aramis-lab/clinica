@@ -35,7 +35,7 @@ def connection_wise_analysis_pipeline(list_of_connectome_1, list_of_connectome_2
     import nipype.pipeline.engine as pe
     import os.path as op
 
-    import clinica.pipeline.statistics.connection_wise_analysis as cwa
+    import connection_wise_analysis as cwa
 
 
     # Inputs checking
@@ -52,16 +52,16 @@ def connection_wise_analysis_pipeline(list_of_connectome_1, list_of_connectome_2
             raise IOError('file {} does not exist'.format(connectome))
 
     if type(nb_permutation)!=int:
-        raise IOError('nb_permutation shoul be a int.')
+        raise IOError('nb_permutation should be a int.')
 
     if test not in ['permutation','t test', 'mann-whitney']:
-        raise IOError('Set test parametter to "permutation","t test", or "mann-whitney".')
-    elif test=='permutation':
+        raise IOError('Set test parameter to "permutation","t test", or "mann-whitney".')
+    elif test == 'permutation':
         if nb_permutation<1:
-            raise IOError('nb_permutation shoul be > 0.')
+            raise IOError('nb_permutation should be > 0.')
 
     if tail!=1 and tail!=2:
-        raise IOError('Set tail parametter to 1 or 2.')
+        raise IOError('Set tail parameter to 1 or 2.')
 
     # Nodes definition
 
@@ -111,9 +111,9 @@ def connection_wise_analysis(list_of_connectome_1, list_of_connectome_2, test, F
     Args:
         list_of_connectome_1 (list): list of connectome path from the first group
         list_of_connectome_2 (list): list of connectome path from the second group
-        test (str) : statistical test to use. Sould be 'permutation', 't test' or 'mann-whitney'.
+        test (str) : statistical test to use. Should be 'permutation', 't test' or 'mann-whitney'.
         FDR_correction (bool): Perform an FDR correction if True. Default value is True
-        tail (int): Tail of the statistic test. 2 is recommanded (default value).
+        tail (int): Tail of the statistic test. 2 is recommended (default value).
         nb_permutation (int): number of permutation to perform.
 
     Returns:
@@ -121,37 +121,36 @@ def connection_wise_analysis(list_of_connectome_1, list_of_connectome_2, test, F
         p_values_corrected_path(str - optional): FDR corrected P value matrix (if FDR_correction set to True).
 
     """
-    from clinica.pipeline.postprocessing.connectome_stats import permutation_test, t_test, Mann_Whitney, fdr_correction_matrix
+    from clinica.utils.statistics import permutation_test, t_test, Mann_Whitney, fdr_correction_matrix
     import numpy as np
     import os
 
     # Inputs checking
-
     if len(list_of_connectome_1)<2 or len(list_of_connectome_2)<2:
         raise IOError('List of connectomes should be greater than 1')
 
     if test not in ['permutation','t test', 'mann-whitney']:
-        raise IOError('Set test parametter to "permutation","t test", or "mann-whitney".')
+        raise IOError('Set test parameter to "permutation","t test", or "mann-whitney".')
 
     if type(nb_permutation)!=int:
-        raise IOError('nb_permutation shoul be a int.')
+        raise IOError('nb_permutation should be a int.')
     elif test=="permutation" and nb_permutation<1:
-        raise IOError('nb_permutation shoul superior to 0.')
+        raise IOError('nb_permutation should superior to 0.')
 
     if type(FDR_correction)!=bool:
         raise IOError('Set FDR_correction parameter to True or False.')
 
     if tail!=1 and tail!=2:
-        raise IOError('Set tail parametter to 1 or 2.')
+        raise IOError('Set tail parameter to 1 or 2.')
 
 
     # initializing variables
 
     Concatenate_connectome_1 = np.recfromtxt(list_of_connectome_1[0], delimiter=' ', dtype=float)
 
-    if len(Concatenate_connectome_1)<2:
+    if len(Concatenate_connectome_1) < 2:
         raise IOError('Connectome matrix csv from first list file should be separated by a space ' '.')
-    if len(Concatenate_connectome_1)<2:
+    if len(Concatenate_connectome_1) < 2:
         raise IOError('Connectome matrix csv from second list file should be separated by a space ' '.')
 
     Concatenate_connectome_2 = np.recfromtxt(list_of_connectome_2[0], delimiter=' ', dtype=float)
@@ -176,16 +175,16 @@ def connection_wise_analysis(list_of_connectome_1, list_of_connectome_2, test, F
 
     for i in np.arange(0, Concatenate_connectome_1[0,:,0].shape[0]):
         for j in np.arange(0,i):
-            list_1 = Concatenate_connectome_1[j,i,:]
-            list_2 = Concatenate_connectome_2[j,i,:]
+            list_1 = Concatenate_connectome_1[j, i, :]
+            list_2 = Concatenate_connectome_2[j, i, :]
             if list_1.sum()!=0 or list_2.sum()!=0:
                 effected_test[j,i] = 1
                 if test=='permutation':
-                    p_value = permutation_test(list_1,list_2, nb_permutation, tails=tail)
+                    p_value = permutation_test(list_1, list_2, nb_permutation, tails=tail)
                 elif test=='t test':
-                    p_value = t_test(list_1,list_2, tails=tail)
+                    p_value = t_test(list_1, list_2, tails=tail)
                 else:
-                    p_value = Mann_Whitney(list_1,list_2, tails=tail)
+                    p_value = Mann_Whitney(list_1, list_2, tails=tail)
                 p_values[j,i] = p_value
 
     if FDR_correction:
