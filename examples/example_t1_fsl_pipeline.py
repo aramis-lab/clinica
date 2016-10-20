@@ -3,7 +3,7 @@
 """This module launches the T1-FSL pipeline."""
 
 from __future__ import absolute_import
-from clinica.pipeline.t1.t1_fsl_pipeline import t1_fsl_segmentation_pipeline
+from clinica.pipeline.t1.t1_fsl import t1_fsl_segmentation_pipeline
 
 
 from os.path import realpath,split,join

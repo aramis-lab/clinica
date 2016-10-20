@@ -95,30 +95,33 @@ def t1_b0_registration_pipeline(
         exit(1)
 
     try:
-        if fsl.Info.version().split(".") < ['5','0','5']:
+        if fsl.Info.version().split(".") < ['5', '0', '5']:
             raise RuntimeError('FSL version must be greater than 5.0.5')
     except Exception as e:
         print(str(e))
         exit(1)
 
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['in_bias_corrected_bet_t1', 'in_preprocessed_dwi', 'in_b0_mask', 'in_white_matter_binary_mask', 'in_desikan_parcellation', 'in_destrieux_parcellation']),
+        fields=['in_bias_corrected_bet_t1', 'in_preprocessed_dwi', 'in_b0_mask', 'in_white_matter_binary_mask',
+                'in_desikan_parcellation', 'in_destrieux_parcellation']),
         name='inputnode')
 
     get_b0 = pe.Node(fsl.ExtractROI(args='0 1'), name='get_b0')
 
-    upsample_b0 = pe.Node(MRIConvert(vox_size = (1,1,1), out_type = 'niigz'), name='upsample_b0')
+    upsample_b0 = pe.Node(MRIConvert(vox_size=(1,1,1), out_type='niigz'), name='upsample_b0')
 
-    upsample_b0_mask = pe.Node(MRIConvert(vox_size = (1,1,1), out_type = 'niigz'), name='upsample_b0_mask')
+    upsample_b0_mask = pe.Node(MRIConvert(vox_size=(1,1,1), out_type='niigz'), name='upsample_b0_mask')
 
-    registration_t1_to_b0 = pe.Node(fsl.FLIRT(dof=6, interp='spline', cost='normmi', cost_func='normmi'), name='registration_t1_to_b0')
+    registration_t1_to_b0 = pe.Node(fsl.FLIRT(dof=6, interp='spline', cost='normmi', cost_func='normmi'),
+                                    name='registration_t1_to_b0')
 
     apply_flirt_registration = pe.Node(fsl.ApplyXfm(apply_xfm=True, interp='spline'), name='apply_flirt_registration')
-    apply_flirt_registration.inputs.out_file='wm_mask_in_diffusion_space.nii.gz'
+    apply_flirt_registration.inputs.out_file = 'wm_mask_in_diffusion_space.nii.gz'
 
     convert_flirt_to_mrtrix = pe.Node(interface=niu.Function(
-        input_names=['in_souce_image', 'in_reference_image', 'in_flirt_matrix', 'name_output_matrix'],
-        output_names=['out_mrtrix_matrix'], function=convert_flirt_transformation_to_mrtrix_transformation), name='convert_flirt_to_mrtrix')
+        input_names=['in_source_image', 'in_reference_image', 'in_flirt_matrix', 'name_output_matrix'],
+        output_names=['out_mrtrix_matrix'], function=convert_flirt_transformation_to_mrtrix_transformation),
+        name='convert_flirt_to_mrtrix')
     convert_flirt_to_mrtrix.inputs.name_output_matrix = 'voxel_t1_to_diffusion_without_resampling.mat'
 
     desikan_in_native_space = pe.Node(interface=niu.Function(
@@ -130,15 +133,18 @@ def t1_b0_registration_pipeline(
 
     desikan_in_diffusion_space = pe.Node(interface=niu.Function(
         input_names=['in_image', 'in_mrtrix_matrix', 'name_output_image'],
-        output_names=['out_deformed_image'], function=apply_mrtrix_transform_without_resampling), name='desikan_in_diffusion_space')
+        output_names=['out_deformed_image'], function=apply_mrtrix_transform_without_resampling),
+        name='desikan_in_diffusion_space')
     desikan_in_diffusion_space.inputs.name_output_image = 'desikan_parcellation_in_diffusion_space.nii.gz'
     destrieux_in_diffusion_space = pe.Node(interface=niu.Function(
         input_names=['in_image', 'in_mrtrix_matrix', 'name_output_image'],
-        output_names=['out_deformed_image'], function=apply_mrtrix_transform_without_resampling), name='destrieux_in_diffusion_space')
+        output_names=['out_deformed_image'], function=apply_mrtrix_transform_without_resampling),
+        name='destrieux_in_diffusion_space')
     destrieux_in_diffusion_space.inputs.name_output_image = 'destrieux_parcellation_in_diffusion_space.nii.gz'
 
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['out_registered_t1', 'out_flirt_matrix', 'out_wm_mask_in_diffusion_space', 'out_mrtrix_matrix', 'out_desikan_in_diffusion_space', 'out_destrieux_in_diffusion_space']),
+        fields=['out_registered_t1', 'out_flirt_matrix', 'out_wm_mask_in_diffusion_space', 'out_mrtrix_matrix',
+                'out_desikan_in_diffusion_space', 'out_destrieux_in_diffusion_space']),
         name='outputnode')
 
     datasink = pe.Node(nio.DataSink(), name='datasink')
@@ -161,7 +167,7 @@ def t1_b0_registration_pipeline(
         (upsample_b0,           apply_flirt_registration, [('out_file', 'reference')]),
         (registration_t1_to_b0, apply_flirt_registration, [('out_matrix_file', 'in_matrix_file')]),
         # Convert flirt matrix to MRtrix matrix:
-        (inputnode,             convert_flirt_to_mrtrix, [('in_bias_corrected_bet_t1', 'in_souce_image')]),
+        (inputnode,             convert_flirt_to_mrtrix, [('in_bias_corrected_bet_t1', 'in_source_image')]),
         (upsample_b0,           convert_flirt_to_mrtrix, [('out_file', 'in_reference_image')]),
         (registration_t1_to_b0, convert_flirt_to_mrtrix, [('out_matrix_file', 'in_flirt_matrix')]),
         # Convert FreeSurfer parcellations into native space:
