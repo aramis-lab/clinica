@@ -88,7 +88,7 @@ def recon_all_pipeline(data_dir, output_dir,tsv_file, dataset_name, recon_all_ar
         subject_dir = []
         num_subject = len(subject_list)
         for i in range(num_subject):
-            subject = output_dir + '/' + 'sub-' + subject_list[i] + '/' + 'ses-' + session_list[i] + '/' + 't1' + '/' + 'freesurfer'
+            subject = output_dir + '/' + 'sub-' + subject_list[i] + '/' + 'ses-' + session_list[i] + '/' + 't1' + '/' + 'freesurfer-cross-sectional'
             try:
                 os.makedirs(subject)
             except OSError as exception:
