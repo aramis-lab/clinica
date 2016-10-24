@@ -82,5 +82,23 @@ def get_class_images(class_images,index_list):
     return result
 
 
-def group_images_by_subject(class_images):
+def group_nested_images_by_subject(class_images):
     return [[s for tissue in subject for s in tissue] for subject in class_images]
+
+
+def group_images_list_by_subject(images_list, tissue_classes):
+    if len(tissue_classes) == 0:
+        return []
+
+    n_tissue_classes = len(tissue_classes)
+    n_subjects = len(images_list)/n_tissue_classes
+    grouped_images = []
+
+    for subj in range(n_subjects):
+        subj_images = []
+        for tissue in range(n_tissue_classes):
+            subj_images.append(images_list[(tissue * n_subjects) + subj])
+        grouped_images.append(subj_images)
+
+    return grouped_images
+

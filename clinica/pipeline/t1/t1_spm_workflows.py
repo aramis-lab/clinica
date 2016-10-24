@@ -8,8 +8,7 @@ import nipype.interfaces.utility as niu
 from clinica.pipeline.t1.t1_spm_utils import get_tissue_tuples, get_class_images
 
 
-def segmentation_pipeline(output_directory,
-                          working_directory=None,
+def segmentation_pipeline(working_directory=None,
                           name='segmentation_wf',
                           tissue_classes=[1, 2, 3],
                           dartel_tissues=[1],
@@ -105,11 +104,6 @@ def segmentation_pipeline(output_directory,
 
     new_segment.inputs.tissues = get_tissue_tuples(tissue_map, tissue_classes, dartel_tissues, save_warped_unmodulated, save_warped_modulated)
 
-    datasink = pe.Node(nio.DataSink(), name='datasink')
-    datasink.inputs.parameterization = False
-    datasink.inputs.base_directory = op.join(output_directory, 'segmentation')
-
-
     outputnode = pe.Node(niu.IdentityInterface(fields=['out_bias_corrected_images', 'out_bias_field_images',
                                                        'out_dartel_input_images', 'out_forward_deformation_field',
                                                        'out_inverse_deformation_field', 'out_modulated_class_images',
@@ -121,23 +115,8 @@ def segmentation_pipeline(output_directory,
     if working_directory is not None:
         wf.base_dir = working_directory
 
-    connections_new_segment_datasink = [(('native_class_images', get_class_images, tissue_classes), 'native_space'),
-                                        (('dartel_input_images', get_class_images, dartel_tissues), 'dartel_input')]
-
-    if save_warped_unmodulated:
-        connections_new_segment_datasink.append((('normalized_class_images', get_class_images, tissue_classes), 'normalized'))
-
-    if save_warped_modulated:
-        connections_new_segment_datasink.append((('modulated_class_images', get_class_images, tissue_classes), 'modulated_normalized'))
-
-    if in_write_deformation_fields is not None:
-        if in_write_deformation_fields[0]:
-            connections_new_segment_datasink.append(('inverse_deformation_field', 'inverse_deformation_field'))
-        if in_write_deformation_fields[1]:
-            connections_new_segment_datasink.append(('forward_deformation_field', 'forward_deformation_field'))
 
     wf.connect([
-        (new_segment, datasink, connections_new_segment_datasink),
         (new_segment, outputnode, [('bias_corrected_images','out_bias_corrected_images'),
                                    ('bias_field_images', 'out_bias_field_images'),
                                    (('dartel_input_images', get_class_images, tissue_classes), 'out_dartel_input_images'),
@@ -152,8 +131,7 @@ def segmentation_pipeline(output_directory,
     return wf
 
 
-def dartel_pipeline(output_directory,
-                    working_directory=None,
+def dartel_pipeline(working_directory=None,
                     name='dartel_wf',
                     in_iteration_parameters=None,
                     in_optimization_parameters=None,
@@ -296,11 +274,6 @@ def dartel_pipeline(output_directory,
             in_fwhm = 0
         dartel2mni.inputs.fwhm = in_fwhm
 
-    datasink_dartel = pe.Node(nio.DataSink(), name='datasink_dartel')
-    datasink_dartel.inputs.parameterization = False
-    datasink_dartel.inputs.base_directory = op.join(output_directory, 'dartel')
-
-
     outputnode = pe.Node(niu.IdentityInterface(fields=['out_dartel_flow_fields', 'out_final_template_file', 'out_template_files',
                                                        'out_normalization_parameter_file', 'out_normalized_files']), name='outputnode')
 
@@ -312,9 +285,6 @@ def dartel_pipeline(output_directory,
                 (dartelTemplate, dartel2mni, [('final_template_file', 'template_file')]),
                 (dartel2mni_input, dartel2mni, [('native_files', 'apply_to_files'),
                                                 ('ffield_files', 'flowfield_files')]),
-                (dartelTemplate, datasink_dartel, [('dartel_flow_fields', 'flow_fields'),
-                                                   ('final_template_file', 'template')]),
-                (dartel2mni, datasink_dartel, [('normalized_files', 'final')]),
                 (dartelTemplate, outputnode, [('dartel_flow_fields','out_dartel_flow_fields'),
                                               ('final_template_file', 'out_final_template_file'),
                                               ('template_files', 'out_template_files')]),
@@ -324,8 +294,7 @@ def dartel_pipeline(output_directory,
     return wf
 
 
-def t1_spm_full_pipeline(output_directory,
-                         working_directory=None,
+def t1_spm_full_pipeline(working_directory=None,
                          name='segmentation_wf',
                          tissue_classes=[1, 2, 3],
                          dartel_tissues=[1],
@@ -450,8 +419,7 @@ def t1_spm_full_pipeline(output_directory,
     :return: Segmentation and registration workflow
     """
 
-    segmentation_wf = segmentation_pipeline(output_directory,
-                                            working_directory=working_directory,
+    segmentation_wf = segmentation_pipeline(working_directory=working_directory,
                                             name='segmentation_wf',
                                             tissue_classes=tissue_classes,
                                             dartel_tissues=dartel_tissues,
@@ -463,8 +431,7 @@ def t1_spm_full_pipeline(output_directory,
                                             in_warping_regularization=in_warping_regularization,
                                             in_write_deformation_fields=in_write_deformation_fields)
 
-    dartel_wf = dartel_pipeline(output_directory,
-                                working_directory=working_directory,
+    dartel_wf = dartel_pipeline(working_directory=working_directory,
                                 name='dartel_wf',
                                 in_iteration_parameters=in_iteration_parameters,
                                 in_optimization_parameters=in_optimization_parameters,

@@ -6,6 +6,23 @@ from numpy.linalg import norm
 import csv
 from ntpath import basename, splitext
 from scipy.spatial.distance import squareform
+from os.path import join
+
+
+def get_caps_image_list(input_directory, subjects_visits_tsv, analysis_series_id, group_id, prefix):
+
+    subjects = []
+    sessions = []
+    with open(subjects_visits_tsv, 'rb') as tsvin:
+        tsv_reader = csv.reader(tsvin, delimiter='\t')
+
+        for row in tsv_reader:
+            subjects.append(row[0])
+            sessions.append(row[1])
+
+    image_list = [join(input_directory, 'analysis-series-' + analysis_series_id + '/subjects/sub-' + subjects[i] + '/ses-' + sessions[i] + '/t1/spm/dartel/group-' + group_id + '/registered/' + prefix + 'sub-' + subjects[i] + '_ses-' + sessions[i] + '_T1w.nii') for i in range(len(subjects))]
+
+    return image_list
 
 
 def load_data(image_list, mask=True):
@@ -91,24 +108,24 @@ def results_to_csv(results, diagnose_list, output_file):
         balanced_accuracy_list = [round(res[1]['balanced_accuracy'], 2) for res in sorted(results.items())]
         df = pd.DataFrame(squareform(balanced_accuracy_list), index=diagnose_list, columns=diagnose_list)
         print df
-        s += df.to_csv()
+        s += df.to_csv(sep='\t')
 
         s += '\nAccuracy\n'
         accuracy_list = [round(res[1]['accuracy'], 2) for res in sorted(results.items())]
         df = pd.DataFrame(squareform(accuracy_list), index=diagnose_list, columns=diagnose_list)
         print df
-        s += df.to_csv()
+        s += df.to_csv(sep='\t')
 
         s += '\nSensitivity\n'
         sensitivity_list = [round(res[1]['sensitivity'], 2) for res in sorted(results.items())]
         df = pd.DataFrame(squareform(sensitivity_list), index=diagnose_list, columns=diagnose_list)
         print df
-        s += df.to_csv()
+        s += df.to_csv(sep='\t')
 
         s += '\nSpecificity\n'
         specificity_list = [round(res[1]['specificity'], 2) for res in sorted(results.items())]
         df = pd.DataFrame(squareform(specificity_list), index=diagnose_list, columns=diagnose_list)
         print df
-        s += df.to_csv()
+        s += df.to_csv(sep='\t')
 
         output.write(s)
