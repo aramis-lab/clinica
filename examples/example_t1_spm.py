@@ -66,4 +66,6 @@ clinica run t1-spm-full-prep /Users/jorge.samper/Workspace/test/full_pipeline_da
 
 clinica run t1-spm-segment /Users/jorge.samper/Workspace/datasets/BIDS/CAPP_BIDSsource /Users/jorge.samper/Workspace/datasets/BIDS/CAPP_CLINICAprocessed ALLSUBJECTSM0 GROUPTEST -wd /Users/jorge.samper/Workspace/test/segment_temp -np 10 -ti 1 2 3 4 -dt 1 2 -swu -swm -wdf True True
 
+clinica run t1-spm-segment-bids /Users/jorge.samper/Workspace/datasets/BIDS/CAPP_BIDS /Users/jorge.samper/Workspace/datasets/BIDS/CAPP_CAPS /Users/jorge.samper/Workspace/datasets/subjects_visits_list_1.tsv ALLSUBJECTSM0 GROUPTEST -wd /Users/jorge.samper/Workspace/test/segment_temp -np 10 -ti 1 2 3 4 -dt 1 2 -swu -swm -wdf True True
 
+subjects_visits_list_1.tsv

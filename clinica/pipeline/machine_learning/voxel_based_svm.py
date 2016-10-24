@@ -1,11 +1,13 @@
 from multiprocessing.pool import ThreadPool
 import numpy as np
-from os.path import join
+from os.path import join, isdir, dirname
+from os import makedirs
+import errno
 from sklearn.svm import SVC
 from sklearn.cross_validation import StratifiedKFold
 from sklearn.preprocessing import scale
 from scipy.stats import mode
-from clinica.pipeline.machine_learning.voxel_based_io import load_data, revert_mask, weights_to_nifti, save_subjects_prediction, results_to_csv
+from clinica.pipeline.machine_learning.voxel_based_io import get_caps_image_list, load_data, revert_mask, weights_to_nifti, save_subjects_prediction, results_to_csv
 from clinica.pipeline.machine_learning.voxel_based_utils import evaluate_prediction, gram_matrix_linear
 
 
@@ -218,4 +220,37 @@ def linear_svm_binary_classification(image_list, diagnose_list, output_directory
     results_to_csv(results, dx_filter, join(output_directory, 'resume.csv'))
 
 
+def linear_svm_binary_classification_bids(caps_directory,
+                                          subjects_visits_tsv,
+                                          analysis_series_id,
+                                          group_id,
+                                          diagnose_list,
+                                          prefix='smwc1',
+                                          mask_zeros=True,
+                                          balanced=False,
+                                          outer_folds=10,
+                                          inner_folds=10,
+                                          n_threads=10,
+                                          c_range=np.logspace(-6, 2, 17),
+                                          save_gram_matrix=False,
+                                          save_subject_classification=False,
+                                          save_original_weights=False,
+                                          save_features_image=True):
+
+    output_directory = join(caps_directory, 'analysis-series-' + analysis_series_id + '/group-' + group_id + '/machine_learning/voxel_based_svm/')
+    try:
+        makedirs(output_directory)
+
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and isdir(dirname(output_directory)):
+            pass
+        else:
+            raise
+
+    image_list = get_caps_image_list(caps_directory, subjects_visits_tsv, analysis_series_id, group_id, prefix)
+
+    linear_svm_binary_classification(image_list, diagnose_list, output_directory, mask_zeros, balanced,
+                                         outer_folds, inner_folds, n_threads, c_range,
+                                         save_gram_matrix, save_subject_classification,
+                                         save_original_weights, save_features_image):
 
