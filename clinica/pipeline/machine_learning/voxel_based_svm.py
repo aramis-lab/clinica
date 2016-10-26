@@ -220,11 +220,11 @@ def linear_svm_binary_classification(image_list, diagnose_list, output_directory
     results_to_csv(results, dx_filter, join(output_directory, 'resume.csv'))
 
 
-def linear_svm_binary_classification_bids(caps_directory,
+def linear_svm_binary_classification_caps(caps_directory,
                                           subjects_visits_tsv,
                                           analysis_series_id,
                                           group_id,
-                                          diagnose_list,
+                                          diagnoses_list,
                                           prefix='smwc1',
                                           mask_zeros=True,
                                           balanced=False,
@@ -249,8 +249,6 @@ def linear_svm_binary_classification_bids(caps_directory,
 
     image_list = get_caps_image_list(caps_directory, subjects_visits_tsv, analysis_series_id, group_id, prefix)
 
-    linear_svm_binary_classification(image_list, diagnose_list, output_directory, mask_zeros, balanced,
-                                         outer_folds, inner_folds, n_threads, c_range,
-                                         save_gram_matrix, save_subject_classification,
-                                         save_original_weights, save_features_image):
-
+    linear_svm_binary_classification(image_list, diagnoses_list, output_directory, mask_zeros, balanced, outer_folds,
+                                     inner_folds, n_threads, c_range, save_gram_matrix, save_subject_classification,
+                                     save_original_weights, save_features_image)
