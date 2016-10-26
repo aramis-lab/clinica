@@ -273,7 +273,10 @@ if iscell(csvdata{indexunique})
     tic;
     [ pval, ~, clus ] = SurfStatP( slm , mask, clusterthreshold);
     pval.thresh = thresholdcorrectedpvalue;
-    SurfStatView( pval, averagesurface, ['(ContrastNe-Corrected P-values )' factor1 '-' factor2 ' (clusterthreshold = ' num2str(clusterthreshold) ')']);
+    %SurfStatView( pval, averagesurface, ['(ContrastNe-Corrected P-values )' factor1 '-' factor2 ' (clusterthreshold = ' num2str(clusterthreshold) ')']);
+    % to change the background color(black), uncomment this line.
+    SurfStatView( pval, averagesurface, ['(ContrastNe-Corrected P-values )' factor1 '-' factor2 ' (clusterthreshold = ' num2str(clusterthreshold) ')'], 'black');
+
     save2jpeg(strcat('ClinicaSurfStatOutput/ContrastNegative-CorrectedPValue.jpg'));
     disp('Contrast Negative: Corrected Pvalue'); toc;
 
