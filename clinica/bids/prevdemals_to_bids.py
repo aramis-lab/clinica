@@ -56,7 +56,7 @@ def convert(source_dir, dest_dir):
                 subj_id = subj_path.split(os.sep)[-1]
                 pda_spath.append(subj_path)
                 pda_ids.append(subj_id)
-                bids_ids.append('sub-PREVDELMALS' + subj_id)
+                bids_ids.append('sub-PREVDEMALS' + subj_id)
                 # Create the subject folder in the BIDS converted dataset
                 os.mkdir(path.join(dest_dir_proj, bids_ids[-1]))
 
