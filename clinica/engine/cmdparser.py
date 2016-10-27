@@ -264,7 +264,7 @@ class CmdParserT1ReconAll(CmdParser):
 class CmdParserStatisticsSurfStat(CmdParser):
 
     def define_name(self):
-        self._name = 't1-surfstat'
+        self._name = 'statistics-surfstat'
 
     def define_options(self):
         self._args.add_argument("input_directory", help='Directory where the input files(output of reconAll pipeline) are stored')
@@ -280,7 +280,7 @@ class CmdParserStatisticsSurfStat(CmdParser):
 
     def run_pipeline(self, args):
 
-        from clinica.pipeline.statistics.t1_surfstat import clinica_surfstat
+        from clinica.pipeline.statistics.surfstat import clinica_surfstat
         
         surfstat_wf = clinica_surfstat(self.absolute_path(args.input_directory), self.absolute_path(args.output_dir), args.linear_model, args.contrast,
                                          self.absolute_path(args.csv_file), args.str_format,
