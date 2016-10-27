@@ -17,23 +17,21 @@ import tempfile
 data_dir_CAPP = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/CAPP_BIDSsource'
 output_dir = tempfile.mkdtemp()
 tsv_file_CAPP = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/subjects_visits_list_CAPP.tsv'
-dataset_name = 'CAPP'
 
 data_dir_INSIGHT = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/INSIGHT_BIDSsource'
 tsv_file_INSIGHT = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/subjects_visits_list_INSIGHT.tsv'
-#dataset_name = 'INSIGHT'
 
 start = time.time()
 
 # this is the example to run CAPP dataset
 def recon_all_example_CAPP():
-    return recon_all_pipeline(data_dir_CAPP, output_dir,tsv_file_CAPP, dataset_name)
+    return recon_all_pipeline(data_dir_CAPP, output_dir,tsv_file_CAPP)
 
 # this is the example to run INSIGHT dataset
 def recon_all_example_INSIGHT():
-    return recon_all_pipeline(data_dir_INSIGHT, output_dir,tsv_file_INSIGHT, dataset_name)
+    return recon_all_pipeline(data_dir_INSIGHT, output_dir,tsv_file_INSIGHT)
 
-if dataset_name == 'CAPP':
+if 2 > 1:
     print("Data Directory -> %s" % data_dir_CAPP)
     print("Output Directory -> %s" % output_dir)
     print("Running...")
