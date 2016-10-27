@@ -9,7 +9,7 @@ Created on Mon Apr 22 09:04:10 2016
 from clinica.engine.cworkflow import *
 
 @Visualize("freeview", "-v ${subject_id}/mri/T1.mgz -f ${subject_id}/surf/lh.white:edgecolor=blue ${subject_id}/surf/lh.pial:edgecolor=green ${subject_id}/surf/rh.white:edgecolor=blue ${subject_id}/surf/rh.pial:edgecolor=green", "subject_id")
-def recon_all_pipeline(data_dir, output_dir,tsv_file, dataset_name, recon_all_args='-qcache'):
+def recon_all_pipeline(data_dir, output_dir, tsv_file, recon_all_args='-qcache'):
 
     """
         Creates a pipeline that performs Freesurfer commander, recon-all,
@@ -38,8 +38,6 @@ def recon_all_pipeline(data_dir, output_dir,tsv_file, dataset_name, recon_all_ar
         :param: data_dir: the directory where to put the input images, eg, example1.nii, example2.nii, this should be the absolute path
         :param: output_dir: the directory where to put the results of the pipeline, should be absolute path!
         :param: tsv_file: the path pointing to the tsv file
-        :param: dataset_name: string, the dataset name that you used
-        #:param: datasink_para: list containing string, optional, the container inside the datasink_folder, for datasinker to store the result that you want, you can define many container to store your result, default is datasink_para = ['orig', 'white']
         :param: recon_all_args, the additional flags for reconAll command line, the default value will be set as '-qcache', which will get the result of the fsaverage.
         return: Recon-all workflow
     """
@@ -59,7 +57,9 @@ def recon_all_pipeline(data_dir, output_dir,tsv_file, dataset_name, recon_all_ar
         exit(1)
 
 # new version for BIDS
-    def BIDS_input(output_dir, dataset_name):
+    def BIDS_input(data_dir, output_dir):
+        base_dir = os.path.basename(data_dir)
+        dataset_name = base_dir.split('_')[0]
 
         subject_list = []
         session_list = []
@@ -73,8 +73,8 @@ def recon_all_pipeline(data_dir, output_dir,tsv_file, dataset_name, recon_all_ar
                 subject_session.append(row[0] + '_' + row[1])
 
         output_path = os.path.expanduser(output_dir)  # this is to add ~ before the out_dir, if it doesnt start with ~,just return the path
-        dataset_name += '_CAPS/analysis-series-default/subjects'
-        output_dir = output_path + '/' + dataset_name
+        output_base = dataset_name + '_CAPS/analysis-series-default/subjects'
+        output_dir = output_path + '/' + output_base
         try:
             os.makedirs(output_dir)
         except OSError as exception:
@@ -82,7 +82,7 @@ def recon_all_pipeline(data_dir, output_dir,tsv_file, dataset_name, recon_all_ar
                 raise
         return subject_list, session_list, output_dir, subject_session
 
-    subject_list, session_list, output_dir, subject_session = BIDS_input(output_dir, dataset_name)
+    subject_list, session_list, output_dir, subject_session = BIDS_input(data_dir, output_dir)
 
     def BIDS_output(output_dir):
         subject_dir = []
@@ -106,7 +106,11 @@ def recon_all_pipeline(data_dir, output_dir,tsv_file, dataset_name, recon_all_ar
     #datasink.inputs.base_directory = output_dir
     #datasink.inputs.container = 'datasink_folder'
 
-    wf = pe.Workflow(name='reconall_workflow', base_dir=output_dir)
+    # define the base_dir to get the reconall_workflow info, if not set, default=None, which results in the use of mkdtemp
+    # wf = pe.Workflow(name='reconall_workflow', base_dir=output_dir)
+    wf = pe.Workflow(name='reconall_workflow')
+
+
 
     inputnode.inputs.base_directory = data_dir
     inputnode.inputs.template = '*'
