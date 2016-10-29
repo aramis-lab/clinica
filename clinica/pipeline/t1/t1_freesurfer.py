@@ -48,6 +48,7 @@ def recon_all_pipeline(data_dir, output_dir, tsv_file, recon_all_args='-qcache')
     import nipype.interfaces.io as nio
     from nipype.interfaces.freesurfer.preprocess import ReconAll
     import nipype.interfaces.utility as niu
+    from tempfile import mkdtemp
 
     try:# just try to check out the ReconAll version for nipype
         if ReconAll.version.fget.func_globals['__version__'].split(".") < ['0', '11', '0']:
@@ -58,8 +59,8 @@ def recon_all_pipeline(data_dir, output_dir, tsv_file, recon_all_args='-qcache')
 
 # new version for BIDS
     def BIDS_input(data_dir, output_dir):
-        base_dir = os.path.basename(data_dir)
-        dataset_name = base_dir.split('_')[0]
+        last_dir = os.path.basename(data_dir)
+        dataset_name = last_dir.split('_')[0]
 
         subject_list = []
         session_list = []
@@ -108,7 +109,8 @@ def recon_all_pipeline(data_dir, output_dir, tsv_file, recon_all_args='-qcache')
 
     # define the base_dir to get the reconall_workflow info, if not set, default=None, which results in the use of mkdtemp
     # wf = pe.Workflow(name='reconall_workflow', base_dir=output_dir)
-    wf = pe.Workflow(name='reconall_workflow')
+    workflow_dir  = mkdtemp()# if the user want to keep this workflow infor, this can be set as an optional prarm, but if workflow is stopped manually, not finished, the workflow info seems to be in the current folder, should test it.
+    wf = pe.Workflow(name='reconall_workflow',base_dir=workflow_dir)
 
 
 
