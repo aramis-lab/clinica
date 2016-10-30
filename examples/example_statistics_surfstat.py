@@ -41,21 +41,24 @@ Note: as we will use OpenGL to render the result images, and after Matlab2014, t
 
 from __future__ import absolute_import
 from clinica.pipeline.statistics.surfstat import clinica_surfstat
-
-from os.path import realpath, split, join
 import tempfile
 import time
+# from os.path import realpath, split, join
 
-input_directory = join(split(realpath(__file__))[0], 'external-data/clinica_surfstat')
-csv_file  = join(split(realpath(__file__))[0], 'external-data/clinica_surfstat/csv_file/template.csv')
+# old version for external-data
+# input_dir = join(split(realpath(__file__))[0], 'external-data/clinica_surfstat')
+
+# CAPS version of surfstat
+input_dir = '/Users/junhao.wen/test/test_surfstat'
+output_dir = tempfile.mkdtemp()
+csv_file  = '/Users/junhao.wen/test/test_surfstat/CAPP_CAPS/analysis-series-default/subjects/template.csv'
 str_format = '%s %s %s %f'
 linear_model = '1 + Label + Gender + Age'
-output_directory = tempfile.mkdtemp()
 
-print 'Output dir %s' % output_directory
+print 'Output dir %s' % output_dir
 contrast = 'Label'
 start = time.time()
-surfstat = clinica_surfstat(input_directory,output_directory, linear_model, contrast, csv_file, str_format)
+surfstat = clinica_surfstat(input_dir, output_dir, csv_file, linear_model, contrast, str_format)
 surfstat.run()
 time_consuming = time.time() - start
 print 'END! time consuming is : %s' %time_consuming
