@@ -7,7 +7,7 @@ Created on Tue Jun 28 15:20:40 2016
 """
 from __future__ import absolute_import
 
-def clinica_surfstat(input_directory, output_directory, linear_model, contrast, csv_file, str_format, size_of_fwhm = 20, threshold_uncorrected_pvalue = 0.001,
+def clinica_surfstat(input_directory, output_directory, csv_file, linear_model, contrast, str_format, size_of_fwhm = 20, threshold_uncorrected_pvalue = 0.001,
                      threshold_corrected_pvalue = 0.050, cluster_threshold = 0.001):
     """
         This is to use surfstat to do the Group analysis for the reconAll outputs, after the reconAll pipeline, you should just define the paths to
@@ -44,9 +44,17 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
     
     cwd_path = split(realpath(__file__))[0]
     parent_path = dirname(dirname(cwd_path))
-    path_to_matscript = join(parent_path, 'lib/clinicasurfstat')     
+    path_to_matscript = join(parent_path, 'lib/clinicasurfstat')
+
+    def CAPS_input(input_directory):
+        from glob import glob
+        import os
+        input_inter_path = glob(os.path.join(input_directory, '*/*/*'))
+        return input_inter_path[0]
+
+    input_inter_path = CAPS_input(input_directory)
       
-    def runmatlab(input_directory, output_directory, linear_model, contrast, csv_file, str_format, path_to_matscript,
+    def runmatlab(input_directory, output_directory, csv_file, linear_model, contrast, str_format, path_to_matscript,
                   size_of_fwhm, threshold_uncorrected_pvalue, threshold_corrected_pvalue, cluster_threshold ):
         from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
         from os.path import join
@@ -78,7 +86,7 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
         # variables that you want to transfer to the matlab script.
         matlab.inputs.script = """
         clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', %.3f, '%s', %.3f, '%s', %.3f);
-        """%(input_directory, output_directory, linear_model, contrast, csv_file, str_format, 'sizeoffwhm', size_of_fwhm, 
+        """%(input_directory, output_directory, csv_file, linear_model, contrast, str_format, 'sizeoffwhm', size_of_fwhm,
              'thresholduncorrectedpvalue', threshold_uncorrected_pvalue, 'thresholdcorrectedpvalue', threshold_corrected_pvalue, 'clusterthreshold', cluster_threshold)  # here, we should define the inputs for the matlab function that you want to use
         matlab.inputs.mfile = True # this will create a file: pyscript.m , the pyscript.m is the default name
         matlab.inputs.single_comp_thread = False  #this will stop runing with single thread  
@@ -94,12 +102,12 @@ def clinica_surfstat(input_directory, output_directory, linear_model, contrast, 
         return out
 
     surfstat = pe.Node(name='surfstat',
-                   interface=Function(input_names=['input_directory', 'output_directory', 'linear_model',
-                                         'contrast', 'csv_file', 'str_format', 'path_to_matscript', 'size_of_fwhm', 'threshold_uncorrected_pvalue',
+                   interface=Function(input_names=['input_directory', 'output_directory', 'csv_file', 'linear_model',
+                                         'contrast', 'str_format', 'path_to_matscript', 'size_of_fwhm', 'threshold_uncorrected_pvalue',
                                          'threshold_corrected_pvalue', 'cluster_threshold'],
                                       output_names=[ ],
                                       function=runmatlab))
-    surfstat.inputs.input_directory = input_directory
+    surfstat.inputs.input_directory = input_inter_path
     surfstat.inputs.output_directory = output_directory
     surfstat.inputs.linear_model = linear_model    
     surfstat.inputs.contrast = contrast
