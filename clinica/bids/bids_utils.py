@@ -1,10 +1,62 @@
 from os import path
-import os
 import logging
 from glob import glob
 import fileinput
 from shutil import copy
 import nibabel as nib
+import pandas as pd
+import os
+
+
+def convert_clinical(dt_name, input_path, out_path, bids_ids, original_ids):
+    # open the file contained inside the clinica project and extracts the database fields information
+    curr_dir = os.getcwd()
+    fields_bids = ['participant_id']
+    fields_dataset = []
+
+    clinic_specs_path = path.join(curr_dir,'clinica', 'bids', 'clinical-specifications','clinical_specifications.xlsx')
+
+    # Creation of participant.tsv
+    participant = pd.read_excel(clinic_specs_path, sheetname='participant.tsv')
+    participant_fields_db = participant['INSIGHT']
+    field_location = participant['INSIGHT location']
+    participant_fields_bids = participant['BIDS CLINICA']
+
+
+    #create the list of column available
+    for i in range(0, len(participant_fields_db)):
+        if not pd.isnull(participant_fields_db[i]):
+            fields_bids.append(participant_fields_bids[i])
+            fields_dataset.append(participant_fields_db[i])
+
+    participant_df = pd.DataFrame(columns= fields_bids)
+
+    for i in range(0, len(participant_fields_db)):
+        # If a field not empty is found
+        if not pd.isnull(participant_fields_db[i]):
+            # Extract the file location of the field and read the value from the file
+            file_to_read_path = path.join(input_path, 'clinicalData', field_location[i]+'.xls')
+            file_to_read = pd.read_excel(file_to_read_path)
+            # for each row
+            # print file_to_read.loc[file_to_read['PAT_INSIGHT_ID'] == original_ids[0]]
+            # for subj in original_ids:
+            #     print file_to_read.loc[file_to_read['PAT_INSIGHT_ID'] == subj]
+    value_to_write = []
+    for f in range (0, len(fields_dataset)):
+        for i in range(0, len(file_to_read.values)):
+            value_to_write.append(file_to_read.get_value(i, fields_dataset[f]))
+            # dt_to_append = pd.DataFrame([value_to_write], columns=[fields_bids[f]])
+            # participant_df = participant_df.append(dt_to_append)
+            # participant_df.append(pd.DataFrame([value_to_write], columns=['alternative_id_1']))
+
+        participant_df[fields_bids[f+1]] = pd.Series(value_to_write)
+        value_to_write = []
+
+    participant_df['participant_id'] = pd.Series(bids_ids)
+    participant_df.to_csv(path.join(out_path,'participants.tsv'), sep='\t')
+
+
+
 
 
 def remove_rescan(list_path):
