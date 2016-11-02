@@ -95,9 +95,9 @@ end
 
 for indexsubject = 1 : nrsubject
     subjectname = csvdata{1}{indexsubject};
-    interpath = strcat(inputdir, '/', subjectname, '/*/*/*/*/surf' )
-    [surfsubdir, xuuu] = glob(interpath)
-    surfsubdir = char(surfsubdir)
+    interpath = strcat(inputdir, '/', subjectname, '/*/*/*/*/surf' );
+    [surfsubdir, xuuu] = glob(interpath);
+    surfsubdir = char(surfsubdir);
     Y = SurfStatReadData( { ...
         [ surfsubdir '/lh.thickness.fwhm' num2str(sizeoffwhm) '.fsaverage.mgh' ],...
         [ surfsubdir '/rh.thickness.fwhm' num2str(sizeoffwhm) '.fsaverage.mgh' ]} );

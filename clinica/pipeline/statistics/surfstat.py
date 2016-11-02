@@ -7,7 +7,7 @@ Created on Tue Jun 28 15:20:40 2016
 """
 from __future__ import absolute_import
 
-def clinica_surfstat(input_directory, output_directory, csv_file, linear_model, contrast, str_format, size_of_fwhm = 20, threshold_uncorrected_pvalue = 0.001,
+def clinica_surfstat(input_directory, csv_file, linear_model, contrast, str_format, size_of_fwhm = 20, threshold_uncorrected_pvalue = 0.001,
                      threshold_corrected_pvalue = 0.050, cluster_threshold = 0.001):
     """
         This is to use surfstat to do the Group analysis for the reconAll outputs, after the reconAll pipeline, you should just define the paths to
@@ -17,7 +17,6 @@ def clinica_surfstat(input_directory, output_directory, csv_file, linear_model, 
         ---------
         surfstat
         Inputs: :param input_directory:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
-                :param output_directory: the directory to contain the result images.
                 :param linear_model: string, the linear model that fits into the GLM, for example '1+Lable'.
                 :param contrast: string, the contrast matrix for GLM, if the factor you choose is categorized variable, clinica_surfstat will create two contrasts,
                           for example, contrast = 'Label', this will create contrastpos = Label.AD - Label.CN, contrastneg = Label.CN - Label.AD; if the fac-
@@ -34,26 +33,36 @@ def clinica_surfstat(input_directory, output_directory, csv_file, linear_model, 
           http://www.math.mcgill.ca/keith/surfstat/
 
         Outputs:
-        return result images in output_directory
+        return result images in output_directory of clinicasurfstat matlab script.
 
     """
     
     from nipype.interfaces.utility import Function
     import nipype.pipeline.engine as pe
-    from os.path import realpath, split, join, dirname 
+    from glob import glob
+    import os
     
-    cwd_path = split(realpath(__file__))[0]
-    parent_path = dirname(dirname(cwd_path))
-    path_to_matscript = join(parent_path, 'lib/clinicasurfstat')
+    cwd_path = os.path.split(os.path.realpath(__file__))[0]
+    parent_path = os.path.dirname(os.path.dirname(cwd_path))
+    path_to_matscript = os.path.join(parent_path, 'lib/clinicasurfstat')
 
     def CAPS_input(input_directory):
-        from glob import glob
-        import os
-        input_inter_path = glob(os.path.join(input_directory, '*/*/*'))
+        # from glob import glob
+        # import os
+        input_inter_path = glob(os.path.join(input_directory, '*/*/subjects'))
         return input_inter_path[0]
 
-    input_inter_path = CAPS_input(input_directory)
-      
+    def CAPS_output(input_directory):
+        intermediate_path = glob(os.path.join(input_directory, '*/*'))
+        grouplabel = 'group-' + str(size_of_fwhm) + '-' + str(threshold_uncorrected_pvalue) + '-' + str(threshold_corrected_pvalue) + '-' + str(cluster_threshold)
+        output_inter_path = os.path.join(intermediate_path[0], 'group', grouplabel, 'statistics/surfstat')
+        if not os.path.exists(output_inter_path):
+            try:
+                os.makedirs(output_inter_path)
+            except:
+                raise OSError("Surfstat: can't create destination directory (%s)!" % (output_inter_path))
+        return output_inter_path
+
     def runmatlab(input_directory, output_directory, csv_file, linear_model, contrast, str_format, path_to_matscript,
                   size_of_fwhm, threshold_uncorrected_pvalue, threshold_corrected_pvalue, cluster_threshold ):
         from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
@@ -107,8 +116,8 @@ def clinica_surfstat(input_directory, output_directory, csv_file, linear_model, 
                                          'threshold_corrected_pvalue', 'cluster_threshold'],
                                       output_names=[ ],
                                       function=runmatlab))
-    surfstat.inputs.input_directory = input_inter_path
-    surfstat.inputs.output_directory = output_directory
+    surfstat.inputs.input_directory = CAPS_input(input_directory)
+    surfstat.inputs.output_directory = CAPS_output(input_directory)
     surfstat.inputs.linear_model = linear_model    
     surfstat.inputs.contrast = contrast
     surfstat.inputs.csv_file = csv_file

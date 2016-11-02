@@ -49,16 +49,17 @@ import time
 # input_dir = join(split(realpath(__file__))[0], 'external-data/clinica_surfstat')
 
 # CAPS version of surfstat
-input_dir = '/Users/junhao.wen/test/test_surfstat'
-output_dir = tempfile.mkdtemp()
-csv_file  = '/Users/junhao.wen/test/test_surfstat/CAPP_CAPS/analysis-series-default/subjects/template.csv'
+input_dir = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat'
+# For the CAPS_surfstat, the output images should be in the same parent folder with the CAPS_input, like /group/group<group_label>, diff optional params will save into diff grouplabel folder.
+# output_dir = tempfile.mkdtemp()
+csv_file  = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat/CAPP_CAPS/analysis-series-default/subjects/template.csv'
 str_format = '%s %s %s %f'
 linear_model = '1 + Label + Gender + Age'
 
-print 'Output dir %s' % output_dir
+print 'Output dir is in the same CAPS folder with the input'
 contrast = 'Label'
 start = time.time()
-surfstat = clinica_surfstat(input_dir, output_dir, csv_file, linear_model, contrast, str_format)
+surfstat = clinica_surfstat(input_dir, csv_file, linear_model, contrast, str_format)
 surfstat.run()
 time_consuming = time.time() - start
 print 'END! time consuming is : %s' %time_consuming
