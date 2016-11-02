@@ -26,7 +26,7 @@ start = time.time()
 
 # this is the example to run CAPP dataset
 def recon_all_example_CAPP():
-    return recon_all_pipeline(data_dir_CAPP, output_dir,tsv_file_CAPP)
+    return recon_all_pipeline(data_dir_CAPP, output_dir, tsv_file_CAPP)
 
 # this is the example to run INSIGHT dataset
 def recon_all_example_INSIGHT():

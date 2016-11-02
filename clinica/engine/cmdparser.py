@@ -64,7 +64,10 @@ class CmdParser:
     def run_pipeline(self, args): pass
 
     def absolute_path(self, arg):
-        return join(getcwd(), arg)
+        if arg[:1] == '~':
+            return arg
+        else:
+            return join(getcwd(), arg)
 
 
 
@@ -249,14 +252,13 @@ class CmdParserT1ReconAll(CmdParser):
         self._args.add_argument("input_directory", help='Path to where the NIFTI images are stored')
         self._args.add_argument("output_dir", help='Path to store the result of the pipeline')
         self._args.add_argument("tsv_file", help='Path pointed to your tsv file')
-        self._args.add_argument("dataset_name", help='A list of the dataset name')
         self._args.add_argument("-ras", "--reconall_args", type=str, default='-qcache', help='additional flags for reconAll command line, default is -qcache')
 
     def run_pipeline(self, args):
 
         from clinica.pipeline.t1.t1_freesurfer import recon_all_pipeline
 
-        reconall_wf = recon_all_pipeline(self.absolute_path(args.input_directory), self.absolute_path(args.output_dir), self.absolute_path(args.tsv_file), args.dataset_name,
+        reconall_wf = recon_all_pipeline(self.absolute_path(args.input_directory), self.absolute_path(args.output_dir), self.absolute_path(args.tsv_file),
                                          recon_all_args=args.reconall_args)
 
         reconall_wf.run("MultiProc", plugin_args={'n_procs':4})
