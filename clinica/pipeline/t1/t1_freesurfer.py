@@ -57,7 +57,7 @@ def recon_all_pipeline(data_dir, output_dir, tsv_file, recon_all_args='-qcache')
         print(str(e))
         exit(1)
 
-# new version for BIDS
+    # new version for BIDS
     def BIDS_input(data_dir, output_dir):
         last_dir = os.path.basename(data_dir)
         dataset_name = last_dir.split('_')[0]
