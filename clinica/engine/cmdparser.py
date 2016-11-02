@@ -243,7 +243,7 @@ class CmdParserT1SPMSegment(CmdParser):
 class CmdParserT1ReconAll(CmdParser):
 
     def define_name(self):
-        self._name = 't1-reconall'
+        self._name = 't1-freesurfer'
 
     def define_options(self):
         self._args.add_argument("input_directory", help='Path to where the NIFTI images are stored')
