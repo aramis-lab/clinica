@@ -1,7 +1,7 @@
-function clinicasurfstat( inputdir, outputdir, linearmodel, contrast, csvfile, strformat, varargin)
+function clinicasurfstat( inputdir, outputdir, csvfile, linearmodel, contrast, strformat, varargin)
 % Saves all the output images for group analysis of T1 images smoothed data
 %
-% Usage: [some outputs] = clinicasurfstat( inputdir, outputdir, linearmodel, strformat, csvfilename, varargin)
+% Usage: [some outputs] = clinicasurfstat( inputdir, outputdir, csvfile, linearmodel, contrast, strformat, varargin)
 %
 % - inputdir:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
 % - outputdir: the directory to contain the result images.
@@ -92,11 +92,18 @@ csvheader = firstline;
 for indexsvheader = 2 : lencolumn
     csvheader{indexsvheader} = cell(1,3);
 end
+
 for indexsubject = 1 : nrsubject
     subjectname = csvdata{1}{indexsubject};
+    interpath = strcat(inputdir, '/', subjectname, '/*/*/*/*/surf' )
+    [surfsubdir, xuuu] = glob(interpath)
+    surfsubdir = char(surfsubdir)
     Y = SurfStatReadData( { ...
-        [ inputdir '/' subjectname '/surf/lh.thickness.fwhm' num2str(sizeoffwhm) '.fsaverage.mgh' ],...
-        [ inputdir '/' subjectname '/surf/rh.thickness.fwhm' num2str(sizeoffwhm) '.fsaverage.mgh' ]} );
+        [ surfsubdir '/lh.thickness.fwhm' num2str(sizeoffwhm) '.fsaverage.mgh' ],...
+        [ surfsubdir '/rh.thickness.fwhm' num2str(sizeoffwhm) '.fsaverage.mgh' ]} );
+    %Y = SurfStatReadData( { ...
+     %   [ inputdir '/' subjectname '/surf/lh.thickness.fwhm' num2str(sizeoffwhm) '.fsaverage.mgh' ],...
+      %  [ inputdir '/' subjectname '/surf/rh.thickness.fwhm' num2str(sizeoffwhm) '.fsaverage.mgh' ]} );
     if size(Y, 1) ~= 1
         error('Unexpected dimension of Y in SurfStatReadData')
     end
