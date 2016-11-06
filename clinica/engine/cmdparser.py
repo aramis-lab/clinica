@@ -281,17 +281,21 @@ class CmdParserStatisticsSurfStat(CmdParser):
         self._name = 'statistics-surfstat'
 
     def define_options(self):
-        self._args.add_argument("input_directory", help='Directory where the input files(output of reconAll pipeline) are stored')
+        self._args.add_argument("caps_dir", help='Directory where the input files(output of reconAll pipeline) are stored')
         # self._args.add_argument("output_dir", help='Directory to store the result images of the pipeline')
         self._args.add_argument("csv_file", help='Directory where the csv files are stored')
         self._args.add_argument("linear_model", help='A list to define the model that fits into GLM')
         self._args.add_argument("contrast", help='A list to define the contrast matrix for GLM')
         self._args.add_argument("str_format", help='A list to define the format string for the csv files')
         self._args.add_argument("-sof", "--size_of_fwhm", type=int, default=20, help='FWHM for the surface smoothing')
-        self._args.add_argument("-tup", "--threshold_uncorrected_pvalue", type=float, default='0.001', help='Threshold to display the uncorrected Pvalue')
-        self._args.add_argument("-tcp", "--threshold_corrected_pvalue", type=float, default=0.05, help='Threshold to display the corrected cluster')
-        self._args.add_argument("-ct", "--cluster_threshold", type=float, default=0.001, help='Threshold to define a cluster in the process of cluster-wise correction')
-
+        self._args.add_argument("-tup", "--threshold_uncorrected_pvalue", type=float, default='0.001',
+                                help='Threshold to display the uncorrected Pvalue')
+        self._args.add_argument("-tcp", "--threshold_corrected_pvalue", type=float, default=0.05,
+                                help='Threshold to display the corrected cluster')
+        self._args.add_argument("-ct", "--cluster_threshold", type=float, default=0.001,
+                                help='Threshold to define a cluster in the process of cluster-wise correction')
+        self._args.add_argument("-np", "--n_procs", type=int, default=4,
+                                help='Number of parallel processes to run')
     def run_pipeline(self, args):
 
         from clinica.pipeline.statistics.surfstat import clinica_surfstat
@@ -300,7 +304,7 @@ class CmdParserStatisticsSurfStat(CmdParser):
                                          args.str_format, size_of_fwhm=args.size_of_fwhm, threshold_uncorrected_pvalue=args.threshold_uncorrected_pvalue,
                                          threshold_corrected_pvalue=args.threshold_corrected_pvalue, cluster_threshold=args.cluster_threshold)
 
-        surfstat_wf.run()
+        surfstat_wf.run("MultiProc", plugin_args={'n_procs': args.n_procs})
 class CmdParserMachineLearningVBLinearSVM(CmdParser):
 
     def define_name(self):

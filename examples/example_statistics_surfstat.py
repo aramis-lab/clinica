@@ -11,7 +11,7 @@ the parameter explanation is below:
       :param: linear_model: string, the linear model that fit into the GLM, for example '1 + Label + Gender + Age'.
       :param: str_format: string, the format that you want to use for your CSV file column variables, it depends on your CSV file.
       :param: csv_file: string, the path to your csv file.
-      :param: input_directory:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
+      :param: caps_directory:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
               we put in the directory 'data/Recon-all_Output'.
       :param: contrast:  string, depending on what you want to do, there are two kinds of contrast, one is categorized facor contrast, like 'Label',
               this will return you 8 images, including positive contrast results and negative contrast result; another is continuous factor result, 
@@ -46,10 +46,10 @@ import time
 # from os.path import realpath, split, join
 
 # old version for external-data
-# input_dir = join(split(realpath(__file__))[0], 'external-data/clinica_surfstat')
+# caps_dir = join(split(realpath(__file__))[0], 'external-data/clinica_surfstat')
 
 # CAPS version of surfstat
-input_dir = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat'
+caps_dir = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat'
 # For the CAPS_surfstat, the output images should be in the same parent folder with the CAPS_input, like /group/group<group_label>, diff optional params will save into diff grouplabel folder.
 # output_dir = tempfile.mkdtemp()
 csv_file  = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat/CAPP_CAPS/analysis-series-default/subjects/template.csv'
@@ -59,7 +59,7 @@ linear_model = '1 + Label + Gender + Age'
 print 'Output dir is in the same CAPS folder with the input'
 contrast = 'Label'
 start = time.time()
-surfstat = clinica_surfstat(input_dir, csv_file, linear_model, contrast, str_format)
+surfstat = clinica_surfstat(caps_dir, csv_file, linear_model, contrast, str_format)
 surfstat.run()
 time_consuming = time.time() - start
 print 'END! time consuming is : %s' %time_consuming
