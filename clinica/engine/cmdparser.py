@@ -249,19 +249,31 @@ class CmdParserT1ReconAll(CmdParser):
         self._name = 't1-freesurfer'
 
     def define_options(self):
-        self._args.add_argument("input_directory", help='Path to where the NIFTI images are stored')
-        self._args.add_argument("output_dir", help='Path to store the result of the pipeline')
-        self._args.add_argument("tsv_file", help='Path pointed to your tsv file')
-        self._args.add_argument("-ras", "--reconall_args", type=str, default='-qcache', help='additional flags for reconAll command line, default is -qcache')
-
+        self._args.add_argument("bids_dir", help='Path to the BIDS directory')
+        self._args.add_argument("caps_dir", help='Path to the CAPS output directory')
+        self._args.add_argument("subjects_sessions",
+                                help='TSV file with subjects and sessions to be processed')
+        self._args.add_argument("analysis_series_id",
+                                help='Current analysis series name')
+        self._args.add_argument("-wd", "--working_directory",
+                                help='Temporary directory to run the workflow')
+        self._args.add_argument("-ras", "--reconall_args", type=str, default='-qcache',
+                                help='additional flags for reconAll command line, default is -qcache')
+        self._args.add_argument("-np", "--n_procs", type=int, default=4,
+                                help='Number of parallel processes to run')
     def run_pipeline(self, args):
 
         from clinica.pipeline.t1.t1_freesurfer import recon_all_pipeline
 
-        reconall_wf = recon_all_pipeline(self.absolute_path(args.input_directory), self.absolute_path(args.output_dir), self.absolute_path(args.tsv_file),
+        working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
+        reconall_wf = recon_all_pipeline(self.absolute_path(args.bids_dir),
+                                         self.absolute_path(args.caps_dir),
+                                         self.absolute_path(args.subjects_sessions),
+                                         analysis_series_id=args.analysis_series_id,
+                                         working_directory=working_directory,
                                          recon_all_args=args.reconall_args)
 
-        reconall_wf.run("MultiProc", plugin_args={'n_procs':4})
+        reconall_wf.run("MultiProc", plugin_args={'n_procs':args.n_procs})
 
 class CmdParserStatisticsSurfStat(CmdParser):
 

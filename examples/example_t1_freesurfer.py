@@ -18,19 +18,24 @@ data_dir_CAPP = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/
 output_dir = tempfile.mkdtemp()
 # output_dir = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat'
 tsv_file_CAPP = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/subjects_visits_list_CAPP.tsv'
+#
+# data_dir_INSIGHT = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/INSIGHT_BIDStesting'
+# tsv_file_INSIGHT = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/subjects_visits_list_INSIGHT.tsv'
 
-data_dir_INSIGHT = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/INSIGHT_BIDStesting'
-tsv_file_INSIGHT = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/subjects_visits_list_INSIGHT.tsv'
-
+# test in home
+# data_dir_CAPP = '/Users/junhao.wen/test/test-reconall-home'
+# output_dir = '/Users/junhao.wen/test/test-reconall-home-result'
+# tsv_file_CAPP = '/Users/junhao.wen/test/test-reconall-home/subjects_visits_list_CAPP.tsv'
+analysis_series_id = 'default'
 start = time.time()
 
 # this is the example to run CAPP dataset
 def recon_all_example_CAPP():
-    return recon_all_pipeline(data_dir_CAPP, output_dir, tsv_file_CAPP)
+    return recon_all_pipeline(data_dir_CAPP, output_dir, tsv_file_CAPP, analysis_series_id)
 
-# this is the example to run INSIGHT dataset
-def recon_all_example_INSIGHT():
-    return recon_all_pipeline(data_dir_INSIGHT, output_dir,tsv_file_INSIGHT)
+# # this is the example to run INSIGHT dataset
+# def recon_all_example_INSIGHT():
+#     return recon_all_pipeline(data_dir_INSIGHT, output_dir,tsv_file_INSIGHT)
 
 if 2 > 1:
     print("Data Directory -> %s" % data_dir_CAPP)
