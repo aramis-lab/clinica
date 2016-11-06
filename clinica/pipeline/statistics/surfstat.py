@@ -49,11 +49,11 @@ def clinica_surfstat(input_directory, csv_file, linear_model, contrast, str_form
     def CAPS_input(input_directory):
         # from glob import glob
         # import os
-        input_inter_path = glob(os.path.join(input_directory, '*/*/subjects'))
+        input_inter_path = glob(os.path.join(input_directory, '*/subjects'))
         return input_inter_path[0]
 
     def CAPS_output(input_directory):
-        intermediate_path = glob(os.path.join(input_directory, '*/*'))
+        intermediate_path = glob(os.path.join(input_directory, '*'))
         grouplabel = 'group-' + str(size_of_fwhm) + '-' + str(threshold_uncorrected_pvalue) + '-' + str(threshold_corrected_pvalue) + '-' + str(cluster_threshold)
         output_inter_path = os.path.join(intermediate_path[0], 'group', grouplabel, 'statistics/surfstat')
         if not os.path.exists(output_inter_path):
