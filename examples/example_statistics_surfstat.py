@@ -57,15 +57,13 @@ linear_model = '1 + Label + Gender + Age'
 
 print 'Output dir is in the same CAPS folder with the input'
 contrast = 'Label'
+group_label = 'test1'
 start = time.time()
-surfstat = clinica_surfstat(caps_dir, csv_file, linear_model, contrast, str_format)
-surfstat.run()
+surfstat = clinica_surfstat(caps_dir, csv_file, linear_model, contrast, str_format, group_label)
+surfstat.run("MultiProc", plugin_args={'n_procs':4})
 time_consuming = time.time() - start
 print 'END! time consuming is : %s' %time_consuming
 
 # command line example:
-output_dir = tempfile.mkdtemp() # just choose a resutl folder.
-linica run t1-freesurfer /Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/BIDS/PREVDEMALS_BIDS/GENFI
-output_dir
-/Volumes/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/Freesurfer/Reconall/reconall_GENFI/subjects_visits_list_PREVDEMALS.tsv
-'default'
+# clinica run statistics-surfstat /Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat /Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat/analysis-series-default/subjects/template.csv '1 + Label + Gender + Age' 'Label' '%s %s %s %f' 'test'
+

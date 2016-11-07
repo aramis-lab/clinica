@@ -54,3 +54,5 @@ else:
     time_consuming = time.time() - start
     print 'END! time consuming is : %s' % time_consuming
 
+# command line example:
+# clinica run t1-freesurfer /Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/BIDS/PREVDEMALS_BIDS/GENFI ~/test/test-reconall-lab/ /Volumes/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/Freesurfer/Reconall/reconall_GENFI/subjects_visits_list_PREVDEMALS.tsv 'default'
