@@ -7,8 +7,17 @@ Created on Tue Jun 28 15:20:40 2016
 """
 from __future__ import absolute_import
 
-def clinica_surfstat(input_directory, csv_file, linear_model, contrast, str_format, size_of_fwhm = 20, threshold_uncorrected_pvalue = 0.001,
-                     threshold_corrected_pvalue = 0.050, cluster_threshold = 0.001, working_directory=None):
+def clinica_surfstat(input_directory,
+                     csv_file,
+                     linear_model,
+                     contrast,
+                     str_format,
+                     group_label,
+                     size_of_fwhm = 20,
+                     threshold_uncorrected_pvalue = 0.001,
+                     threshold_corrected_pvalue = 0.050,
+                     cluster_threshold = 0.001,
+                     working_directory=None):
     """
         This is to use surfstat to do the Group analysis for the reconAll outputs, after the reconAll pipeline, you should just define the paths to
         surfstatGroupAnalysis, and create the CSV file, and run the pipeline, at last, you will get the results images.
@@ -28,7 +37,9 @@ def clinica_surfstat(input_directory, csv_file, linear_model, contrast, str_form
                 :param size_of_fwhm: fwhm for the surface smoothing, default is 20, integer.
                 :param threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float, default is 0.001.
                 :param threshold_corrected_pvalue: the threshold to display the corrected cluster, default is 0.05, float.
-                :param cluster_threshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float.             
+                :param cluster_threshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float.
+                :param: working_directory: define where to put the infomation of the nipype workflow.
+
           For more infomation about SurfStat, please check:
           http://www.math.mcgill.ca/keith/surfstat/
 
@@ -55,8 +66,9 @@ def clinica_surfstat(input_directory, csv_file, linear_model, contrast, str_form
 
     def CAPS_output(input_directory):
         intermediate_path = glob(os.path.join(input_directory, '*'))
-        grouplabel = 'group-' + str(size_of_fwhm) + '-' + str(threshold_uncorrected_pvalue) + '-' + str(threshold_corrected_pvalue) + '-' + str(cluster_threshold)
-        output_inter_path = os.path.join(intermediate_path[0], 'group', grouplabel, 'statistics/surfstat')
+        # analysis_id = 'group-' + str(size_of_fwhm) + '-' + str(threshold_uncorrected_pvalue) + '-' + str(threshold_corrected_pvalue) + '-' + str(cluster_threshold)
+        analysis_id = 'group-' + group_label
+        output_inter_path = os.path.join(intermediate_path[0], 'group', analysis_id, 'statistics/surfstat')
         if not os.path.exists(output_inter_path):
             try:
                 os.makedirs(output_inter_path)
