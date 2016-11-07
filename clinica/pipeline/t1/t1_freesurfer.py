@@ -179,9 +179,9 @@ def recon_all_pipeline(input_dir,
 
     inputnode.inputs.base_directory = input_dir
     inputnode.inputs.template = '*'
-    # inputnode.inputs.field_template = dict(anat_t1='sub-%s/ses-%s/anat/sub-%s_ses-%s_T1w.nii.gz')
+    inputnode.inputs.field_template = dict(anat_t1='sub-%s/ses-%s/anat/sub-%s_ses-%s_T1w.nii.gz')
     # just for test with my home nii files
-    inputnode.inputs.field_template = dict(anat_t1='sub-%s/ses-%s/anat/sub-%s_ses-%s_T1w.nii')
+    # inputnode.inputs.field_template = dict(anat_t1='sub-%s/ses-%s/anat/sub-%s_ses-%s_T1w.nii')
 
     inputnode.inputs.template_args = dict(anat_t1=[['subject_id', 'session', 'subject_repeat', 'session_repeat']]) # the same with dg.inputs.template_args['outfiles']=[['dicomdir','123456-1-1.dcm']]
     inputnode.inputs.subject_id = subject_list

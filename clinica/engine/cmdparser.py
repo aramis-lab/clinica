@@ -281,7 +281,7 @@ class CmdParserStatisticsSurfStat(CmdParser):
         self._name = 'statistics-surfstat'
 
     def define_options(self):
-        self._args.add_argument("caps_dir", help='Directory where the input files(output of reconAll pipeline) are stored')
+        self._args.add_argument("caps_dir", help='Directory where the input files(output of FreeSurfer pipeline) are stored')
         # self._args.add_argument("output_dir", help='Directory to store the result images of the pipeline')
         self._args.add_argument("csv_file", help='Directory where the csv files are stored')
         self._args.add_argument("linear_model", help='A list to define the model that fits into GLM')
@@ -300,11 +300,11 @@ class CmdParserStatisticsSurfStat(CmdParser):
 
         from clinica.pipeline.statistics.surfstat import clinica_surfstat
         
-        surfstat_wf = clinica_surfstat(self.absolute_path(args.input_directory), self.absolute_path(args.csv_file), args.linear_model, args.contrast,
+        surfstat_node = clinica_surfstat(self.absolute_path(args.caps_dir), self.absolute_path(args.csv_file), args.linear_model, args.contrast,
                                          args.str_format, size_of_fwhm=args.size_of_fwhm, threshold_uncorrected_pvalue=args.threshold_uncorrected_pvalue,
                                          threshold_corrected_pvalue=args.threshold_corrected_pvalue, cluster_threshold=args.cluster_threshold)
 
-        surfstat_wf.run("MultiProc", plugin_args={'n_procs': args.n_procs})
+        surfstat_node.run("MultiProc", plugin_args={'n_procs':args.n_procs})
 class CmdParserMachineLearningVBLinearSVM(CmdParser):
 
     def define_name(self):
