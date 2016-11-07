@@ -51,8 +51,7 @@ import time
 # CAPS version of surfstat
 caps_dir = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat'
 # For the CAPS_surfstat, the output images should be in the same parent folder with the CAPS_input, like /group/group<group_label>, diff optional params will save into diff grouplabel folder.
-# output_dir = tempfile.mkdtemp()
-csv_file  = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat/CAPP_CAPS/analysis-series-default/subjects/template.csv'
+csv_file  = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat/analysis-series-default/subjects/template.csv'
 str_format = '%s %s %s %f'
 linear_model = '1 + Label + Gender + Age'
 
@@ -63,3 +62,10 @@ surfstat = clinica_surfstat(caps_dir, csv_file, linear_model, contrast, str_form
 surfstat.run()
 time_consuming = time.time() - start
 print 'END! time consuming is : %s' %time_consuming
+
+# command line example:
+output_dir = tempfile.mkdtemp() # just choose a resutl folder.
+linica run t1-freesurfer /Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/BIDS/PREVDEMALS_BIDS/GENFI
+output_dir
+/Volumes/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/Freesurfer/Reconall/reconall_GENFI/subjects_visits_list_PREVDEMALS.tsv
+'default'

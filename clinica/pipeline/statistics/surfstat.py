@@ -8,7 +8,7 @@ Created on Tue Jun 28 15:20:40 2016
 from __future__ import absolute_import
 
 def clinica_surfstat(input_directory, csv_file, linear_model, contrast, str_format, size_of_fwhm = 20, threshold_uncorrected_pvalue = 0.001,
-                     threshold_corrected_pvalue = 0.050, cluster_threshold = 0.001):
+                     threshold_corrected_pvalue = 0.050, cluster_threshold = 0.001, working_directory=None):
     """
         This is to use surfstat to do the Group analysis for the reconAll outputs, after the reconAll pipeline, you should just define the paths to
         surfstatGroupAnalysis, and create the CSV file, and run the pipeline, at last, you will get the results images.
@@ -41,6 +41,7 @@ def clinica_surfstat(input_directory, csv_file, linear_model, contrast, str_form
     import nipype.pipeline.engine as pe
     from glob import glob
     import os
+    import nipype.interfaces.utility as niu
     
     cwd_path = os.path.split(os.path.realpath(__file__))[0]
     parent_path = os.path.dirname(os.path.dirname(cwd_path))
@@ -110,11 +111,12 @@ def clinica_surfstat(input_directory, csv_file, linear_model, contrast, str_form
         out = matlab.run()
         return out
 
+    outputnode = pe.Node(niu.IdentityInterface(fields=['surfstat_result']), name='outputnode')
     surfstat = pe.Node(name='surfstat',
                    interface=Function(input_names=['input_directory', 'output_directory', 'csv_file', 'linear_model',
                                          'contrast', 'str_format', 'path_to_matscript', 'size_of_fwhm', 'threshold_uncorrected_pvalue',
                                          'threshold_corrected_pvalue', 'cluster_threshold'],
-                                      output_names=[ ],
+                                      output_names=['out_images'],
                                       function=runmatlab))
     surfstat.inputs.input_directory = CAPS_input(input_directory)
     surfstat.inputs.output_directory = CAPS_output(input_directory)
@@ -127,5 +129,8 @@ def clinica_surfstat(input_directory, csv_file, linear_model, contrast, str_form
     surfstat.inputs.threshold_uncorrected_pvalue = threshold_uncorrected_pvalue
     surfstat.inputs.threshold_corrected_pvalue = threshold_corrected_pvalue
     surfstat.inputs.cluster_threshold = cluster_threshold
+
+    surfstat_wf = pe.Workflow(name='surfstat_workflow', base_dir=working_directory)
+    surfstat_wf.connect(surfstat, 'out_images', outputnode, 'surfstat_result')
     
-    return surfstat
+    return surfstat_wf
