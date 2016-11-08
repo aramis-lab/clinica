@@ -9,19 +9,14 @@ def convert_flirt_transformation_to_mrtrix_transformation(
     """
     Convert flirt matrix to mrtrix matrix.
 
-    This function converts converts a transformation matrix produced by FSL's
-    flirt command into a format usable by MRtrix. The output of this function
-    is usually for the mrtransform command.
+    This function converts converts a transformation matrix produced by FSL's flirt command into a format usable
+    by MRtrix. The output of this function is usually for the mrtransform command.
 
     Args:
-        in_source_image (str): File containing the source image used in FSL
-            flirt with the -in flag.
-        in_reference_image (str): File containing the reference image used in
-            FSL flirt with the -ref flag.
-        in_flirt_matrix (str): File containing the transformation matrix
-            obtained by FSL flirt.
-        name_output_matrix (Optional[str]): Name of the output matrix
-            (default=deformed_image.nii.gz).
+        in_source_image (str): File containing the source image used in FSL flirt with the -in flag.
+        in_reference_image (str): File containing the reference image used in FSL flirt with the -ref flag.
+        in_flirt_matrix (str): File containing the transformation matrix obtained by FSL flirt.
+        name_output_matrix (Optional[str]): Name of the output matrix (default=deformed_image.nii.gz).
 
     Returns:
         out_mrtrix_matrix (str): Transformation matrix in MRtrix format.
@@ -54,10 +49,8 @@ def apply_mrtrix_transform_without_resampling(in_image, in_mrtrix_matrix, name_o
 
     Args:
         in_image (str): File containing the input image to be transformed.
-        in_mrtrix_matrix (str): File containing the transformation matrix
-            obtained by the MRtrix transformconvert command.
-        name_output_image (Optional[str]): Name of the output image
-            (default=deformed_image.nii.gz).
+        in_mrtrix_matrix (str): File containing the transformation matrix obtained by the MRtrix transformconvert command.
+        name_output_image (Optional[str]): Name of the output image (default=deformed_image.nii.gz).
 
     Returns:
         out_deformed_image (str): File containing the deformed image according
@@ -90,17 +83,21 @@ def apply_ants_registration_syn_quick_transformation(
     """
     Apply a transformation obtained with antsRegistrationSyNQuick.sh.
 
-    This function applies a rigid & deformable B-Spline syn transformation which has been estimated previously with antsRegistrationSyNQuick script.
+    This function applies a rigid & deformable B-Spline syn transformation which has been estimated previously with
+    antsRegistrationSyNQuick script.
 
     Args:
         in_image (str): File containing the input image to be transformed.
         in_reference_image (str): File defining the spacing, origin, size, and direction of the output warped image.
-        in_affine_transformation (str): File containing the transformation matrix obtained by antsRegistrationSyNQuick (expected file: [Prefix]0GenericAffine.mat).
-        in_bspline_transformation (str): File containing the transformation matrix obtained by antsRegistrationSyNQuick (expected file: [Prefix]1Warp.nii.gz).
+        in_affine_transformation (str): File containing the transformation matrix obtained by antsRegistrationSyNQuick
+            (expected file: [Prefix]0GenericAffine.mat).
+        in_bspline_transformation (str): File containing the transformation matrix obtained by antsRegistrationSyNQuick
+            (expected file: [Prefix]1Warp.nii.gz).
         name_output_image (Optional[str]): Name of the output image (default=deformed_image.nii.gz).
 
     Returns:
-        out_deformed_image (str): File containing the deformed image according to in_affine_transformation and in_bspline_transformation transformations.
+        out_deformed_image (str): File containing the deformed image according to in_affine_transformation and
+            in_bspline_transformation transformations.
 
     Example:
         >>> from clinica.pipeline.registration.mri_utils import apply_ants_registration_syn_quick_transformation
@@ -134,12 +131,15 @@ def ants_registration_syn_quick(fixe_image, moving_image, prefix_output=None):
     Args:
         in_image (str): File containing the input image to be transformed.
         in_reference_image (str): File defining the spacing, origin, size, and direction of the output warped image.
-        in_affine_transformation (str): File containing the transformation matrix obtained by antsRegistrationSyNQuick (expected file: [Prefix]0GenericAffine.mat).
-        in_bspline_transformation (str): File containing the transformation matrix obtained by antsRegistrationSyNQuick (expected file: [Prefix]1Warp.nii.gz).
+        in_affine_transformation (str): File containing the transformation matrix obtained by antsRegistrationSyNQuick
+            (expected file: [Prefix]0GenericAffine.mat).
+        in_bspline_transformation (str): File containing the transformation matrix obtained by antsRegistrationSyNQuick
+            (expected file: [Prefix]1Warp.nii.gz).
         name_output_image (Optional[str]): Name of the output image (default=deformed_image.nii.gz).
 
     Returns:
-        out_deformed_image (str): File containing the deformed image according to in_affine_transformation and in_bspline_transformation transformations.
+        out_deformed_image (str): File containing the deformed image according to in_affine_transformation and
+            in_bspline_transformation transformations.
 
     Example:
         >>> from clinica.pipeline.registration.mri_utils import apply_ants_registration_syn_quick_transformation
@@ -165,17 +165,21 @@ def ants_combine_transform(in_file, transforms_list, reference):
     """
     Apply a transformation obtained with antsRegistrationSyNQuick.sh.
 
-    This function applies a rigid & deformable B-Spline syn transformation which has been estimated previously with antsRegistrationSyNQuick script.
+    This function applies a rigid & deformable B-Spline syn transformation which has been estimated previously with
+    antsRegistrationSyNQuick script.
 
     Args:
         in_image (str): File containing the input image to be transformed.
         in_reference_image (str): File defining the spacing, origin, size, and direction of the output warped image.
-        in_affine_transformation (str): File containing the transformation matrix obtained by antsRegistrationSyNQuick (expected file: [Prefix]0GenericAffine.mat).
-        in_bspline_transformation (str): File containing the transformation matrix obtained by antsRegistrationSyNQuick (expected file: [Prefix]1Warp.nii.gz).
+        in_affine_transformation (str): File containing the transformation matrix obtained by antsRegistrationSyNQuick
+            (expected file: [Prefix]0GenericAffine.mat).
+        in_bspline_transformation (str): File containing the transformation matrix obtained by antsRegistrationSyNQuick
+            (expected file: [Prefix]1Warp.nii.gz).
         name_output_image (Optional[str]): Name of the output image (default=deformed_image.nii.gz).
 
     Returns:
-        out_deformed_image (str): File containing the deformed image according to in_affine_transformation and in_bspline_transformation transformations.
+        out_deformed_image (str): File containing the deformed image according to in_affine_transformation and
+            in_bspline_transformation transformations.
 
     Example:
         >>> from clinica.pipeline.registration.mri_utils import apply_ants_registration_syn_quick_transformation

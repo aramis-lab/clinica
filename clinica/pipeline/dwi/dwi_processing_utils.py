@@ -106,7 +106,7 @@ def erode_mask(in_mask, npass=6, nthreads=2):
 
     assert(op.isfile(in_mask))
 
-    out_eroded_mask = op.abspath('eroded_mask.mif')
+    out_eroded_mask = op.abspath('eroded_mask.nii.gz')
     cmd = 'maskfilter -npass ' + str(npass) + ' -nthreads ' + str(nthreads) + ' ' + in_mask + ' erode ' + out_eroded_mask
     os.system(cmd)
     return out_eroded_mask
@@ -172,16 +172,18 @@ def tensor_to_metric(in_dti, in_b0_mask, metric='fa', nthreads=2):
 
     cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads)
     if metric in ("ADC", "adc", "MD", "md"):
-        out_metric = op.abspath('md.mif')
+        out_metric = op.abspath('md.nii.gz')
         cmd = cmd + ' -adc ' + out_metric
     elif metric in ("FA", "fa"):
-        out_metric = op.abspath('fa.mif')
+        out_metric = op.abspath('fa.nii.gz')
         cmd = cmd + ' -fa ' + out_metric
     else:
         raise ValueError('Invalid choice of metric in tensor2metric function')
     os.system(cmd)
 
     return out_metric
+
+
 
 def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2):
     """
@@ -196,10 +198,10 @@ def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2):
 
     Returns:
         out_fa (str): The tensor-derived parameter fractional anisotropy.
-        out_md (str): The tensor-derived parameter mean diffusivity (also
-            called mean apparent diffusion).
+        out_md (str): The tensor-derived parameter mean diffusivity (also called mean apparent diffusion).
+        out_ad (str): The tensor-derived parameter axial diffusivity.
         out_rd (str): The tensor-derived parameter radial diffusivity.
-        out_ev (str): The first eigenvector modulated by the FA.
+        out_ev (str): The directionally-encoded colour (DEC) fractional anisotropy map This corresponds to the first eigenvector modulated by the FA.
     """
     import os.path as op
     import os
@@ -207,19 +209,23 @@ def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2):
     assert(op.isfile(in_dti))
     assert(op.isfile(in_b0_mask))
 
-    out_fa = op.abspath('fractional_anisotropy_from_dti.nii')
+    out_fa = op.abspath('fa_map_from_dti.nii.gz')
     cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -fa ' + out_fa
     os.system(cmd)
 
-    out_md = op.abspath('mean_diffusivity_from_dti.nii')
+    out_md = op.abspath('fa_map_from_dti.nii.gz')
     cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -adc ' + out_md
     os.system(cmd)
 
-    out_rd = op.abspath('radial_diffusivity_from_dti.nii')
+    out_ad = op.abspath('ad_map_from_dti.nii.gz')
+    cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -ad ' + out_ad
+    os.system(cmd)
+
+    out_rd = op.abspath('rd_map_from_dti.nii.gz')
     cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -rd ' + out_rd
     os.system(cmd)
 
-    out_ev = op.abspath('ev_from_dti.nii')
+    out_ev = op.abspath('dec_fa_map_from_dti.nii.gz')
     cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -vector ' + out_ev
     os.system(cmd)
 
@@ -235,20 +241,14 @@ def estimate_response(in_dwi_mif, in_b0_mask, lmax=None, algorithm='tax', tmpdir
 
     Args:
         in_dwi_mif (str): DWI dataset in MRtrix image format.
-        in_b0_mask (str): Binary mask of the b0 image. Only perform computation
-            within this specified binary brain mask image. It is advised to
-            erode the mask (we assume that an eroded mask is given)
-        algorithm (Optional[str]): Used algorithm to derive the response
-            function. Currenly, choices are:
-            - tax (default): Use the Tax et al. (2014)
-            recursive calibration algorithm
-            - tournier: Use the Tournier et al. (2013) iterative RF
-            selection algorithm
-        lmax (Optional[int]): The maximum harmonic degree(s) of response
-            function estimation
+        in_b0_mask (str): Binary mask of the b0 image. Only perform computation within this specified binary brain
+            mask image. It is advised to erode the mask (we assume that an eroded mask is given)
+        algorithm (Optional[str]): Used algorithm to derive the response function. Currenly, choices are:
+            - tax (default): Use the Tax et al. (2014) recursive calibration algorithm
+            - tournier: Use the Tournier et al. (2013) iterative RF selection algorithm
+        lmax (Optional[int]): The maximum harmonic degree(s) of response function estimation
         tmpdir (Optional[str]): Path where the temporary results are stored.
-        nthreads (Optional[int]): Number of threads used in this function
-            (default=2, 0 disables multi-threading).
+        nthreads (Optional[int]): Number of threads used in this function (default=2, 0 disables multi-threading).
 
     Returns:
         out_response_function (str): Text file containing response function
@@ -270,7 +270,7 @@ def estimate_response(in_dwi_mif, in_b0_mask, lmax=None, algorithm='tax', tmpdir
     cmd = 'dwi2response ' + algorithm + ' -mask ' + in_b0_mask
     if lmax is not None:
         cmd = cmd + ' -lmax ' + str(lmax)
-    cmd = cmd + ' ' + in_dwi_mif + ' ' +  out_response_function
+    cmd = cmd + ' ' + in_dwi_mif + ' ' +  out_response_function + ' -nthreads ' + str(nthreads)
     os.system(cmd)
 
     return out_response_function
@@ -331,17 +331,17 @@ def estimate_fod(in_dwi_mif, in_b0_mask, in_response_function_coefficients, lmax
 
 def streamlines_tractography(
         in_source, in_white_matter_binary_mask, algorithm='iFOD2', number_of_tracks='100K',
-        fod_treshold=None, step_size=None, angle=None, nthreads=2):
+        fod_threshold=None, step_size=None, angle=None, nthreads=2):
     """
     Perform streamlines tractography.
 
-    This function performs whole-­brain tractograms, using the deterministic or
+    This function performs whole-brain tractograms, using the deterministic or
     probabilistic streamlines algorithm which can be coupled with the fibre
     orientations produced using CSD. The choice is given by the `algorithm`
     parameter.
 
     Args:
-        in_source (str): Image containging the source data. According to
+        in_source (str): Image containing the source data. According to
             `algorithm`, the type of data can be:
             - iFOD1, iFOD2 (default), Nulldist2: the spherical harmonics
             coefficients image resulting from CSD
@@ -355,7 +355,7 @@ def streamlines_tractography(
             been selected and written to the output file; set to 0 to ignore
             limit. ``number_of_tracks` expects values in string format e.g.
             100K for 100000.
-        fod_treshold (Optional[float]): FA or FOD amplitude cutoff for
+        fod_threshold (Optional[float]): FA or FOD amplitude cutoff for
             terminating tracks (default is 0.1) # TODO: -cutoff
         step_size (Optional[float]): Step size of the algorithm in mm (default
             is 0.1 x voxelsize; for iFOD2: 0.5 x voxelsize). # TODO: -step
