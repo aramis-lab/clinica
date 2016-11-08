@@ -34,6 +34,7 @@ def clinica_surfstat(input_directory,
                 :param subjects_visits_tsv: string, the path to your tsv file.
                 :param str_format: string, the str_format which uses to read your tsv file, the typy of the string should corresponds exactly with the columns in the tsv file.
                  Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
+                :param group_label: Current group name
                 :param size_of_fwhm: fwhm for the surface smoothing, default is 20, integer.
                 :param threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float, default is 0.001.
                 :param threshold_corrected_pvalue: the threshold to display the corrected cluster, default is 0.05, float.
@@ -55,7 +56,7 @@ def clinica_surfstat(input_directory,
     import nipype.interfaces.utility as niu
     from shutil import copy
     from tempfile import mkdtemp
-    
+
     cwd_path = os.path.split(os.path.realpath(__file__))[0]
     parent_path = os.path.dirname(os.path.dirname(cwd_path))
     path_to_matscript = os.path.join(parent_path, 'lib/clinicasurfstat')

@@ -57,8 +57,8 @@ linear_model = '1 + group_label + sex + age'
 
 print 'Output dir is in the same CAPS folder with the input'
 contrast = 'group_label'
-group_label = 'test1'
-working_directory='~/test'
+group_label = 'test'
+working_directory='.'
 start = time.time()
 surfstat = clinica_surfstat(caps_dir, csv_file, linear_model, contrast, str_format, group_label, working_directory=working_directory)
 surfstat.run("MultiProc", plugin_args={'n_procs': 4})
