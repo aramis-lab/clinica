@@ -65,7 +65,9 @@ class CmdParser:
     def run_pipeline(self, args): pass
 
     def absolute_path(self, arg):
-        if arg[:1] == '~':
+        if arg is None:
+            return None
+        elif arg[:1] == '~':
             return expanduser(arg)
         elif arg[:1] == '.':
             return getcwd()
@@ -270,15 +272,17 @@ class CmdParserT1ReconAll(CmdParser):
 
         from clinica.pipeline.t1.t1_freesurfer import recon_all_pipeline
 
-        working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
+        # working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
+        # working_directory = self.absolute_path(args.working_directory)
+
         reconall_wf = recon_all_pipeline(self.absolute_path(args.bids_dir),
                                          self.absolute_path(args.caps_dir),
                                          self.absolute_path(args.subjects_sessions),
                                          analysis_series_id=args.analysis_series_id,
-                                         working_directory=working_directory,
+                                         working_directory=self.absolute_path(args.working_directory),
                                          recon_all_args=args.reconall_args)
 
-        reconall_wf.run("MultiProc", plugin_args={'n_procs':args.n_procs})
+        reconall_wf.run("MultiProc", plugin_args={'n_procs': args.n_procs})
 
 class CmdParserStatisticsSurfStat(CmdParser):
 
@@ -307,12 +311,12 @@ class CmdParserStatisticsSurfStat(CmdParser):
                                 help='Threshold to define a cluster in the process of cluster-wise correction')
         self._args.add_argument("-np", "--n_procs", type=int, default=4,
                                 help='Number of parallel processes to run')
-        self._args.add_argument("-wd", "--working_directory",
+        self._args.add_argument("-wd", "--working_directory", type=str, default=None,
                                 help='Temporary directory to run the workflow')
     def run_pipeline(self, args):
 
         from clinica.pipeline.statistics.surfstat import clinica_surfstat
-        working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
+        # working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
         surfstat_wf = clinica_surfstat(self.absolute_path(args.caps_dir),
                                        self.absolute_path(args.subjects_visits_tsv),
                                        args.linear_model,
@@ -323,9 +327,9 @@ class CmdParserStatisticsSurfStat(CmdParser):
                                        threshold_uncorrected_pvalue=args.threshold_uncorrected_p_value,
                                        threshold_corrected_pvalue=args.threshold_corrected_p_value,
                                        cluster_threshold=args.cluster_threshold,
-                                       working_directory=working_directory,)
+                                       working_directory=self.absolute_path(args.working_directory))
 
-        surfstat_wf.run("MultiProc", plugin_args={'n_procs':args.n_procs})
+        surfstat_wf.run("MultiProc", plugin_args={'n_procs': args.n_procs})
 class CmdParserMachineLearningVBLinearSVM(CmdParser):
 
     def define_name(self):
