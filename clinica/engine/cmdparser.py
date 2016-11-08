@@ -268,6 +268,7 @@ class CmdParserT1ReconAll(CmdParser):
                                 help='additional flags for reconAll command line, default is -qcache')
         self._args.add_argument("-np", "--n_procs", type=int, default=4,
                                 help='Number of parallel processes to run')
+
     def run_pipeline(self, args):
 
         from clinica.pipeline.t1.t1_freesurfer import recon_all_pipeline
@@ -299,7 +300,7 @@ class CmdParserStatisticsSurfStat(CmdParser):
         self._args.add_argument("contrast",
                                 help='A list to define the contrast matrix for GLM, eg, group_label')
         self._args.add_argument("str_format",
-                                help='A list to define the format string for the tsv column , eg, %s %s %s %f')
+                                help='A list to define the format string for the tsv column , eg, %%s %%s %%s %%f')
         self._args.add_argument("group_id",
                                 help='Current group name')
         self._args.add_argument("-sof", "--size_of_fwhm", type=int, default=20, help='FWHM for the surface smoothing')
@@ -313,6 +314,7 @@ class CmdParserStatisticsSurfStat(CmdParser):
                                 help='Number of parallel processes to run')
         self._args.add_argument("-wd", "--working_directory", type=str, default=None,
                                 help='Temporary directory to run the workflow')
+
     def run_pipeline(self, args):
 
         from clinica.pipeline.statistics.surfstat import clinica_surfstat
@@ -330,6 +332,7 @@ class CmdParserStatisticsSurfStat(CmdParser):
                                        working_directory=self.absolute_path(args.working_directory))
 
         surfstat_wf.run("MultiProc", plugin_args={'n_procs': args.n_procs})
+
 class CmdParserMachineLearningVBLinearSVM(CmdParser):
 
     def define_name(self):
@@ -366,8 +369,8 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
                                 help="Save list of classification results for each subject for each classification")
         self._args.add_argument("-sw", "--save_original_weights", action='store_true',
                                 help="Save feature weights for each classification as a matrix")
-        self._args.add_argument("-sf", "--save_features_image", action='store_true',
-                                help="Save feature weights for each classification as an image")
+        # self._args.add_argument("-sf", "--save_features_image", action='store_true',
+        #                         help="Save feature weights for each classification as an image")
 
     def run_pipeline(self, args):
 
