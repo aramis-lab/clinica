@@ -4,8 +4,10 @@
 """This module contains the FSL-T1 pipeline."""
 
 def t1_fsl_segmentation_pipeline(
-                 datasink_directory, working_directory=None, is_bias_corrected=None,
-                 name="t1_fsl_segmentation_pipeline"):
+        subject_id, session_id, analysis_series_id,
+        caps_directory, working_directory=None,
+        is_bias_corrected=None,
+        name="t1_fsl_segmentation_pipeline"):
      """
      Perform segmentation of T1-weighted image by FSL.
 
@@ -27,22 +29,16 @@ def t1_fsl_segmentation_pipeline(
          in_t1 (str): File containing the T1-weighted image.
 
      Outputnode:
-         out_bet_binary_mask (str): File containing the binary image of the
-            brain extracted image.
-         out_brain_extracted (str): File containing the (bias-corrected) brain
-            extracted image.
-         out_bias_field (str): Estimated bias field. Present only if the input
-            image is not bias-corrected.
-         out_partial_volume_files: (list[str]): list of partial volume
-            estimations for each tissue type (0=CSF, 1=GM, 2=WM)
+         out_bet_binary_mask (str): File containing the binary image of the brain extracted image.
+         out_brain_extracted (str): File containing the (bias-corrected) brain extracted image.
+         out_bias_field (str): Estimated bias field. Present only if the input image is not bias-corrected.
+         out_partial_volume_files: (list[str]): list of partial volume estimations for each tissue type (0=CSF, 1=GM, 2=WM)
          out_probability_maps: (a list of items which are a file name)
-         out_tissue_class_files (list[str]): list of binary images for each
-            tissue type (0=CSF, 1=GM, 2=WM)
+         out_tissue_class_files (list[str]): list of binary images for each tissue type (0=CSF, 1=GM, 2=WM)
 
      Example:
          >>> from clinica.pipeline.t1.t1_fsl import t1_fsl_segmentation_pipeline
-         >>> fsl_segmentation = t1_fsl_segmentation_pipeline(datasink_directory='/path/to/datasink/directory', is_bias_corrected=True)
-         >>> fsl_segmentation.inputs.inputnode.in_t1 = 'subject_bias_corrected_t1.nii'
+         >>> fsl_segmentation = t1_fsl_segmentation_pipeline(caps_directory='/path/to/caps/directory', is_bias_corrected=True)
          >>> fsl_segmentation.run()
      """
      import os
@@ -50,11 +46,10 @@ def t1_fsl_segmentation_pipeline(
      import nipype.interfaces.io as nio
      import nipype.interfaces.utility as niu
      import nipype.pipeline.engine as pe
-     from os.path import join
+     from os.path import isfile, join
      import tempfile
      from clinica.utils.mrtrix import dilate_mask
      from clinica.utils.fsl import standard_space_roi
-
 
      if working_directory is None:
          working_directory = tempfile.mkdtemp()
@@ -105,7 +100,18 @@ def t1_fsl_segmentation_pipeline(
          name='outputnode')
 
      datasink = pe.Node(nio.DataSink(), name='datasink')
-     datasink.inputs.base_directory = join(datasink_directory, 'fsl_t1_segmentation/')
+     caps_identifier = 'sub-' + subject_id + '_ses­' + session_id
+     datasink.inputs.base_directory = join(caps_directory, 'analysis-series-' + analysis_series_id, 'sub-' + subject_id, 'ses-' + session_id, 't1')
+     datasink.inputs.substitutions = [('fast_pve_0.nii.gz', caps_identifier + '_binary-csf.nii.gz'),
+                                      ('fast_pve_1.nii.gz', caps_identifier + '_binary-gray-matter.nii.gz'),
+                                      ('fast_pve_2.nii.gz', caps_identifier + '_binary-white-matter.nii.gz'),
+                                      ('fast_seg_0.nii.gz', caps_identifier + '_partial-volume-csf.nii.gz'),
+                                      ('fast_seg_1.nii.gz', caps_identifier + '_partial-volume-gray-matter.nii.gz'),
+                                      ('fast_seg_2.nii.gz', caps_identifier + '_partial-volume-white-matter.nii.gz'),
+                                      ('fast_bias.nii.gz', caps_identifier + '_bias-field.nii.gz'),
+                                      ('fast_restore.nii.gz', caps_identifier + '_brain-extracted-T1w.nii.gz'),
+                                      ('T1_pre_bet_brain_mask.nii.gz', caps_identifier + '_pre-masked-brain-extracted_T1w.nii.gz')
+                                      ]
 
      wf = pe.Workflow(name=name)
      wf.connect([
@@ -121,10 +127,10 @@ def t1_fsl_segmentation_pipeline(
          # Outputnode:
          (fsl_bet,  outputnode, [('mask_file', 'out_bet_binary_mask')]),
          # Saving files with datasink:
-         (fsl_bet,   datasink, [('mask_file', 'out_bet_binary_mask')]),
-         (fsl_fast,  datasink, [('partial_volume_files', 'out_partial_volume_files')]),
-         (fsl_fast,  datasink, [('probability_maps', 'out_probability_maps')]),
-         (fsl_fast,  datasink, [('tissue_class_files', 'out_tissue_class_files')]),
+         (fsl_bet,   datasink, [('mask_file', 'fsl.@bet')]),
+         (fsl_fast,  datasink, [('partial_volume_files', 'fsl.@partial_volume_tissues')]),
+         (fsl_fast,  datasink, [('probability_maps', 'fsl.@wtf')]),
+         (fsl_fast,  datasink, [('tissue_class_files', 'fsl.@binary_tissues')]),
 #         (fsl_fast,  datasink, [('mixeltype', 'out_mixeltype')]),
 #         (fsl_first, datasink, [('bvars', 'out_bvars')]),
 #         (fsl_first, datasink, [('original_segmentations', 'out_original_segmentations')]),
@@ -135,13 +141,13 @@ def t1_fsl_segmentation_pipeline(
      if is_bias_corrected:
          wf.connect([
             (fsl_bet, outputnode, [('out_file', 'out_brain_extracted')]),
-            (fsl_bet, datasink, [('out_file', 'out_brain_extracted')])
+            (fsl_bet, datasink, [('out_file', 'fsl.@bias_corrected_t1')])
          ])
      else:
          wf.connect([
             (fsl_fast, outputnode, [('restored_image', 'out_brain_extracted')]),
-            (fsl_fast, datasink, [('restored_image', 'out_brain_extracted')]),
-            (fsl_fast, datasink, [('bias_field', 'out_bias_field')])
+            (fsl_fast, datasink, [('restored_image', 'fsl.@aaa')]),
+            (fsl_fast, datasink, [('bias_field', 'fsl.@bbb')])
          ])
 
      return wf

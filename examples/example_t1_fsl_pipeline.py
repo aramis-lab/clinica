@@ -14,7 +14,7 @@ data_path = join(split(realpath(__file__))[0], 'external-data/raw_data/subject_e
 output_directory = tempfile.mkdtemp()
 
 
-fsl_t1 = t1_fsl_segmentation_pipeline(datasink_directory=output_directory, is_bias_corrected=False)
+fsl_t1 = t1_fsl_segmentation_pipeline(caps_directory=output_directory, is_bias_corrected=False)
 fsl_t1.inputs.inputnode.in_t1 = join(data_path, 'T1/subject_example_t1.nii.gz')
 
 
