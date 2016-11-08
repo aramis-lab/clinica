@@ -8,7 +8,7 @@ Created on Tue Jun 28 15:20:40 2016
 from __future__ import absolute_import
 
 def clinica_surfstat(input_directory,
-                     csv_file,
+                     subjects_visits_tsv,
                      linear_model,
                      contrast,
                      str_format,
@@ -20,7 +20,7 @@ def clinica_surfstat(input_directory,
                      working_directory=None):
     """
         This is to use surfstat to do the Group analysis for the reconAll outputs, after the reconAll pipeline, you should just define the paths to
-        surfstatGroupAnalysis, and create the CSV file, and run the pipeline, at last, you will get the results images.
+        surfstatGroupAnalysis, and create the tsv file, and run the pipeline, at last, you will get the results images.
 
         Inputs
         ---------
@@ -30,9 +30,9 @@ def clinica_surfstat(input_directory,
                 :param contrast: string, the contrast matrix for GLM, if the factor you choose is categorized variable, clinica_surfstat will create two contrasts,
                           for example, contrast = 'Label', this will create contrastpos = Label.AD - Label.CN, contrastneg = Label.CN - Label.AD; if the fac-
                           tory that you choose is a continuous factor, clinica_surfstat will just create one contrast, for example, contrast = 'Age', but note,
-                          the string name that you choose should be exactly the same with the columns names in your csv_file.
-                :param csv_file: string, the path to your csv file.
-                :param str_format: string, the str_format which uses to read your csv file, the typy of the string should corresponds exactly with the columns in the csv file.
+                          the string name that you choose should be exactly the same with the columns names in your subjects_visits_tsv.
+                :param subjects_visits_tsv: string, the path to your tsv file.
+                :param str_format: string, the str_format which uses to read your tsv file, the typy of the string should corresponds exactly with the columns in the tsv file.
                  Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
                 :param size_of_fwhm: fwhm for the surface smoothing, default is 20, integer.
                 :param threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float, default is 0.001.
@@ -53,10 +53,21 @@ def clinica_surfstat(input_directory,
     from glob import glob
     import os
     import nipype.interfaces.utility as niu
+    from shutil import copy
+    from tempfile import mkdtemp
     
     cwd_path = os.path.split(os.path.realpath(__file__))[0]
     parent_path = os.path.dirname(os.path.dirname(cwd_path))
     path_to_matscript = os.path.join(parent_path, 'lib/clinicasurfstat')
+
+    #transfer any path to be absolute path.
+    def absolute_path(arg):
+        if arg[:1] == '~':
+            return os.path.expanduser(arg)
+        elif arg[:1] == '.':
+            return os.getcwd()
+        else:
+            return os.path.join(os.getcwd(), arg)
 
     def CAPS_input(input_directory):
         # from glob import glob
@@ -68,7 +79,7 @@ def clinica_surfstat(input_directory,
         intermediate_path = glob(os.path.join(input_directory, '*'))
         # analysis_id = 'group-' + str(size_of_fwhm) + '-' + str(threshold_uncorrected_pvalue) + '-' + str(threshold_corrected_pvalue) + '-' + str(cluster_threshold)
         analysis_id = 'group-' + group_label
-        output_inter_path = os.path.join(intermediate_path[0], 'group', analysis_id, 'statistics/surfstat')
+        output_inter_path = os.path.join(intermediate_path[0], 'group', analysis_id, 'statistics/surfstat/clinica-surfstat')
         if not os.path.exists(output_inter_path):
             try:
                 os.makedirs(output_inter_path)
@@ -76,7 +87,9 @@ def clinica_surfstat(input_directory,
                 raise OSError("Surfstat: can't create destination directory (%s)!" % (output_inter_path))
         return output_inter_path
 
-    def runmatlab(input_directory, output_directory, csv_file, linear_model, contrast, str_format, path_to_matscript,
+    output_directory= CAPS_output(input_directory)
+
+    def runmatlab(input_directory, output_directory, subjects_visits_tsv, linear_model, contrast, str_format, path_to_matscript,
                   size_of_fwhm, threshold_uncorrected_pvalue, threshold_corrected_pvalue, cluster_threshold ):
         from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
         from os.path import join
@@ -108,13 +121,13 @@ def clinica_surfstat(input_directory,
         # variables that you want to transfer to the matlab script.
         matlab.inputs.script = """
         clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', %.3f, '%s', %.3f, '%s', %.3f);
-        """%(input_directory, output_directory, csv_file, linear_model, contrast, str_format, 'sizeoffwhm', size_of_fwhm,
+        """%(input_directory, output_directory, subjects_visits_tsv, linear_model, contrast, str_format, 'sizeoffwhm', size_of_fwhm,
              'thresholduncorrectedpvalue', threshold_uncorrected_pvalue, 'thresholdcorrectedpvalue', threshold_corrected_pvalue, 'clusterthreshold', cluster_threshold)  # here, we should define the inputs for the matlab function that you want to use
         matlab.inputs.mfile = True # this will create a file: pyscript.m , the pyscript.m is the default name
         matlab.inputs.single_comp_thread = False  #this will stop runing with single thread  
         matlab.inputs.logfile = join(output_directory, "matlab_output.log")
-        print "matlab logfile is located in the folder: %s" % matlab.inputs.logfile            
-        print "matlab script command = %s" % matlab.inputs.script
+        print "Matlab logfile is located in the folder: %s" % matlab.inputs.logfile
+        print "Matlab script command = %s" % matlab.inputs.script
         print "MatlabCommand inputs flag: single_comp_thread = %s" % matlab.inputs.single_comp_thread
         print "MatlabCommand choose which matlab to use(matlab_cmd): %s" % get_matlab_command()
         if sys.platform.startswith('linux'):        
@@ -125,16 +138,16 @@ def clinica_surfstat(input_directory,
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['surfstat_result']), name='outputnode')
     surfstat = pe.Node(name='surfstat',
-                   interface=Function(input_names=['input_directory', 'output_directory', 'csv_file', 'linear_model',
+                   interface=Function(input_names=['input_directory', 'output_directory', 'subjects_visits_tsv', 'linear_model',
                                          'contrast', 'str_format', 'path_to_matscript', 'size_of_fwhm', 'threshold_uncorrected_pvalue',
                                          'threshold_corrected_pvalue', 'cluster_threshold'],
                                       output_names=['out_images'],
                                       function=runmatlab))
     surfstat.inputs.input_directory = CAPS_input(input_directory)
-    surfstat.inputs.output_directory = CAPS_output(input_directory)
+    surfstat.inputs.output_directory = output_directory
     surfstat.inputs.linear_model = linear_model    
     surfstat.inputs.contrast = contrast
-    surfstat.inputs.csv_file = csv_file
+    surfstat.inputs.subjects_visits_tsv = subjects_visits_tsv
     surfstat.inputs.str_format = str_format
     surfstat.inputs.path_to_matscript = path_to_matscript
     surfstat.inputs.size_of_fwhm = size_of_fwhm
@@ -142,7 +155,16 @@ def clinica_surfstat(input_directory,
     surfstat.inputs.threshold_corrected_pvalue = threshold_corrected_pvalue
     surfstat.inputs.cluster_threshold = cluster_threshold
 
+    # cp the subjects_visits_tsv to the result folder
+    copied_tsv = output_directory + '/subjects_group_list.tsv'
+    copy(subjects_visits_tsv, copied_tsv)
+
+    if working_directory is None:
+        working_directory = mkdtemp()
+    else:
+        working_directory = absolute_path(working_directory)
+
     surfstat_wf = pe.Workflow(name='surfstat_workflow', base_dir=working_directory)
     surfstat_wf.connect(surfstat, 'out_images', outputnode, 'surfstat_result')
-    
+
     return surfstat_wf

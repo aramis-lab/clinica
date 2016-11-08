@@ -22,6 +22,7 @@ import abc
 from argparse import ArgumentParser
 from os.path import join
 from os import getcwd
+from os.path import expanduser
 
 class CmdParser:
     """Abstract class to extend in order to create your command line parser
@@ -65,7 +66,9 @@ class CmdParser:
 
     def absolute_path(self, arg):
         if arg[:1] == '~':
-            return arg
+            return expanduser(arg)
+        elif arg[:1] == '.':
+            return getcwd()
         else:
             return join(getcwd(), arg)
 
@@ -249,13 +252,15 @@ class CmdParserT1ReconAll(CmdParser):
         self._name = 't1-freesurfer'
 
     def define_options(self):
-        self._args.add_argument("bids_dir", help='Path to the BIDS directory')
-        self._args.add_argument("caps_dir", help='Path to the CAPS output directory')
+        self._args.add_argument("bids_dir",
+                                help='Path to the BIDS directory')
+        self._args.add_argument("caps_dir",
+                                help='Path to the CAPS output directory')
         self._args.add_argument("subjects_sessions",
                                 help='TSV file with subjects and sessions to be processed')
-        self._args.add_argument("analysis_series_id",
+        self._args.add_argument("-asi", "--analysis_series_id", type=str, default='default',
                                 help='Current analysis series name')
-        self._args.add_argument("-wd", "--working_directory",
+        self._args.add_argument("-wd", "--working_directory", type=str, default=None,
                                 help='Temporary directory to run the workflow')
         self._args.add_argument("-ras", "--reconall_args", type=str, default='-qcache',
                                 help='additional flags for reconAll command line, default is -qcache')
@@ -269,7 +274,7 @@ class CmdParserT1ReconAll(CmdParser):
         reconall_wf = recon_all_pipeline(self.absolute_path(args.bids_dir),
                                          self.absolute_path(args.caps_dir),
                                          self.absolute_path(args.subjects_sessions),
-                                         args.analysis_series_id,
+                                         analysis_series_id=args.analysis_series_id,
                                          working_directory=working_directory,
                                          recon_all_args=args.reconall_args)
 
@@ -283,21 +288,20 @@ class CmdParserStatisticsSurfStat(CmdParser):
     def define_options(self):
         self._args.add_argument("caps_dir",
                                 help='Directory where the input files(output of FreeSurfer pipeline) are stored')
-        # self._args.add_argument("output_dir", help='Directory to store the result images of the pipeline')
-        self._args.add_argument("csv_file",
-                                help='Directory where the csv files are stored')
+        self._args.add_argument("subjects_visits_tsv",
+                                help='Directory where the tsv files are stored')
         self._args.add_argument("linear_model",
-                                help='A list to define the model that fits into GLM')
+                                help='A list to define the model that fits into GLM, eg, 1 + group_label + sex + age')
         self._args.add_argument("contrast",
-                                help='A list to define the contrast matrix for GLM')
+                                help='A list to define the contrast matrix for GLM, eg, group_label')
         self._args.add_argument("str_format",
-                                help='A list to define the format string for the csv files')
-        self._args.add_argument("analysis_series_id",
-                                help='Current analysis series name')
+                                help='A list to define the format string for the tsv column , eg, %s %s %s %f')
+        self._args.add_argument("group_id",
+                                help='Current group name')
         self._args.add_argument("-sof", "--size_of_fwhm", type=int, default=20, help='FWHM for the surface smoothing')
-        self._args.add_argument("-tup", "--threshold_uncorrected_pvalue", type=float, default='0.001',
+        self._args.add_argument("-tup", "--threshold_uncorrected_p_value", type=float, default='0.001',
                                 help='Threshold to display the uncorrected Pvalue')
-        self._args.add_argument("-tcp", "--threshold_corrected_pvalue", type=float, default=0.05,
+        self._args.add_argument("-tcp", "--threshold_corrected_p_value", type=float, default=0.05,
                                 help='Threshold to display the corrected cluster')
         self._args.add_argument("-ct", "--cluster_threshold", type=float, default=0.001,
                                 help='Threshold to define a cluster in the process of cluster-wise correction')
@@ -309,19 +313,19 @@ class CmdParserStatisticsSurfStat(CmdParser):
 
         from clinica.pipeline.statistics.surfstat import clinica_surfstat
         working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
-        surfstat_node = clinica_surfstat(self.absolute_path(args.caps_dir),
-                                         self.absolute_path(args.csv_file),
-                                         args.linear_model,
-                                         args.contrast,
-                                         args.str_format,
-                                         args.analysis_series_id,
-                                         size_of_fwhm=args.size_of_fwhm,
-                                         threshold_uncorrected_pvalue=args.threshold_uncorrected_pvalue,
-                                         threshold_corrected_pvalue=args.threshold_corrected_pvalue,
-                                         cluster_threshold=args.cluster_threshold,
-                                         working_directory=working_directory,)
+        surfstat_wf = clinica_surfstat(self.absolute_path(args.caps_dir),
+                                       self.absolute_path(args.subjects_visits_tsv),
+                                       args.linear_model,
+                                       args.contrast,
+                                       args.str_format,
+                                       args.group_id,
+                                       size_of_fwhm=args.size_of_fwhm,
+                                       threshold_uncorrected_pvalue=args.threshold_uncorrected_p_value,
+                                       threshold_corrected_pvalue=args.threshold_corrected_p_value,
+                                       cluster_threshold=args.cluster_threshold,
+                                       working_directory=working_directory,)
 
-        surfstat_node.run("MultiProc", plugin_args={'n_procs':args.n_procs})
+        surfstat_wf.run("MultiProc", plugin_args={'n_procs':args.n_procs})
 class CmdParserMachineLearningVBLinearSVM(CmdParser):
 
     def define_name(self):
