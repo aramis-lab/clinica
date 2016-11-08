@@ -12,7 +12,7 @@ from clinica.engine.cworkflow import *
 def recon_all_pipeline(input_dir,
                        output_dir,
                        subjects_visits_tsv,
-                       analysis_series_id,
+                       analysis_series_id='default',
                        working_directory=None,
                        recon_all_args='-qcache'):
 
@@ -43,7 +43,7 @@ def recon_all_pipeline(input_dir,
         :param: input_dir: the directory where to put the input images, eg, example1.nii, example2.nii, this should be the absolute path
         :param: output_dir: the directory where to put the results of the pipeline, should be absolute path!
         :param: subjects_visits_tsv: the path pointing to the tsv file
-        :param: analysis_series_id: the different rounds that you wanna apply this pipeline for your data.
+        :param: analysis_series_id: the different rounds that you wanna apply this pipeline for your data, the default value is 'default'
         :param: working_directory: define where to put the infomation of the nipype workflow.
         :param: recon_all_args: the additional flags for reconAll command line, the default value will be set as '-qcache', which will get the result of the fsaverage.
 
@@ -65,6 +65,15 @@ def recon_all_pipeline(input_dir,
     except Exception as e:
         print(str(e))
         exit(1)
+
+    #transfer any path to be absolute path.
+    def absolute_path(arg):
+        if arg[:1] == '~':
+            return os.path.expanduser(arg)
+        elif arg[:1] == '.':
+            return os.getcwd()
+        else:
+            return os.path.join(os.getcwd(), arg)
 
     # new version for BIDS
     def BIDS_output(output_dir):
@@ -173,6 +182,11 @@ def recon_all_pipeline(input_dir,
     # define the base_dir to get the reconall_workflow info, if not set, default=None, which results in the use of mkdtemp
     # wf = pe.Workflow(name='reconall_workflow', base_dir=output_dir)
     # if the user want to keep this workflow infor, this can be set as an optional prarm, but if workflow is stopped manually, not finished, the workflow info seems to be in the current folder, should test it.
+    if working_directory is None:
+        working_directory = mkdtemp()
+    else:
+        working_directory = absolute_path(working_directory)
+
     wf = pe.Workflow(name='reconall_workflow', base_dir=working_directory)
 
 

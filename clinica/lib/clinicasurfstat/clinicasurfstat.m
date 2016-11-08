@@ -78,8 +78,8 @@ lencolumn = length(firstline);
 if lencolumn <2
     error('requires at least 2 inputs')
 end
-if  strcmp(firstline{1},'ID') ~= 1
-    error('the first colomn of CSV file should always be named by ID')
+if  strcmp(firstline{1},'participant_id') ~= 1
+    error('the first colomn of CSV file should always be named by participant_id')
 end
 
 csvdata = textscan( fid, strformat, 'HeaderLines', 0);
@@ -191,9 +191,9 @@ end
 
 %% Create Images folder for output
 cd(outputdir)
-if exist('ClinicaSurfStatOutput', 'dir') ~= 7
-    mkdir ClinicaSurfStatOutput
-end
+%if exist('clinica-surfstat', 'dir') ~= 7
+ %   mkdir clinica-surfstat
+%end
 
 %% Convert the data into SurfStat
 
@@ -219,8 +219,8 @@ if iscell(csvdata{indexunique})
     tic;
     slm = SurfStatT( slmmodel, contrastpos );
     SurfStatView( slm.t .* mask, averagesurface, [ 'ContrastPo-value of the T-statistic for ' factor1 '-' factor2]);
-    save2jpeg(strcat(outputdir,'/ClinicaSurfStatOutput/ContrastPositive-TValue.jpg'));
-    disp('Contrast Positive: Tvalue'); toc;
+    save2jpeg('contrast_positive_t_value.jpg');
+    disp('Contrast Positive: t_value'); toc;
 
     % Computation of the uncorrected p-value:
     tic;
@@ -231,7 +231,7 @@ if iscell(csvdata{indexunique})
     uncorrectedpValues = 2*(1-tcdf(abs(slm.t),slm.df)); % here, we consider it to be 2-tailed t-distribution
     clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(ContrastPo-Uncorrected P-values)' factor1 '-' factor2 ]);
-    save2jpeg(strcat(outputdir, '/ClinicaSurfStatOutput/ContrastPositive-UncorrectedPValue.jpg'));   
+    save2jpeg('contrast_positive_uncorrected_p_value.jpg');
     disp('Contrast Positive: uncorrected Pvalue'); toc;
 
     % Computation of the corrected p-values: P-value threshold or statistic threshold for defining clusters, 0.001 by default
@@ -239,7 +239,7 @@ if iscell(csvdata{indexunique})
     [ pval, ~, clus ] = SurfStatP( slm , mask, clusterthreshold);
     pval.thresh = thresholdcorrectedpvalue;
     SurfStatView( pval, averagesurface, ['(ContrastPo-Corrected P-values) ' factor1 '-' factor2 ' (clusterthreshold = ' num2str(clusterthreshold) ')']);
-    save2jpeg(strcat('ClinicaSurfStatOutput/ContrastPositive-CorrectedPValue.jpg' ));
+    save2jpeg('contrast_positive_corrected_p_value.jpg' );
     disp('Contrast Positive: Corrected Pvalue'); toc;
 
     disp('###')
@@ -256,7 +256,7 @@ if iscell(csvdata{indexunique})
     tic;
     qval = SurfStatQ( slm , mask );
     SurfStatView( qval, averagesurface, ['ContrastPo-False discovery rate ' factor1 '-' factor2 ]);
-    save2jpeg(strcat('ClinicaSurfStatOutput/ContrastPositive-FalseDiscoveryRate.jpg')) ;
+    save2jpeg('contrast_positive_false_discovery_rate.jpg') ;
     disp('Contrast Positive: FDR'); toc;
     
     %% Contrast Negative:
@@ -264,15 +264,15 @@ if iscell(csvdata{indexunique})
     tic;
     slm = SurfStatT( slmmodel, contrasteffectgroupneg );
     SurfStatView( slm.t .* mask, averagesurface, [ 'ContrastNe-value of the T-statistic for ' factor1 '-' factor2 ]);
-    save2jpeg( strcat('ClinicaSurfStatOutput/ContrastNegative-TValue.jpg'));
-    disp('Contrast Negative: Tvalue'); toc;
+    save2jpeg( 'contrast_negative_t_value.jpg');
+    disp('Contrast Negative: t_value'); toc;
     
     % Computation of the uncorrected p-value:
     tic;
     uncorrectedpValues = 2*(1-tcdf(abs(slm.t),slm.df)); % here, we consider it to be 2-tailed t-distribution
     clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(ContrastNe-Uncorrected P-values )' factor1 '-' factor2]);
-    save2jpeg(strcat('ClinicaSurfStatOutput/ContrastNegative-UncorrectedPValue.jpg'));
+    save2jpeg('contrast_negative_uncorrected_p_value.jpg');
     disp('Contrast Negative: Uncorrected Pvalue'); toc;
     
 
@@ -284,7 +284,7 @@ if iscell(csvdata{indexunique})
     % to change the background color(black), uncomment this line.
     SurfStatView( pval, averagesurface, ['(ContrastNe-Corrected P-values )' factor1 '-' factor2 ' (clusterthreshold = ' num2str(clusterthreshold) ')'], 'black');
 
-    save2jpeg(strcat('ClinicaSurfStatOutput/ContrastNegative-CorrectedPValue.jpg'));
+    save2jpeg('contrast_negative_corrected_p_value.jpg');
     disp('Contrast Negative: Corrected Pvalue'); toc;
 
     disp('###')
@@ -301,7 +301,7 @@ if iscell(csvdata{indexunique})
     tic;
     qval = SurfStatQ( slm , mask );
     SurfStatView( qval, averagesurface, ['ContrastNe-False discovery rate ' factor1 '-' factor2 ]);
-    save2jpeg(strcat('ClinicaSurfStatOutput/ContrastNegative-FalseDiscoveryRate.jpg' ));
+    save2jpeg('contrast_negative_false_discovery_rate.jpg' );
     disp('Contrast Negative: FDR'); toc;
     
 else
@@ -319,15 +319,15 @@ else
     tic;
     slm = SurfStatT( slm, contrastpos );
     SurfStatView( slm.t .* mask, averagesurface, [ 'T-statistic for ' contrast ]);
-    save2jpeg(strcat(outputdir,'/ClinicaSurfStatOutput/TValue.jpg'));
-    disp('Tvalue'); toc;
+    save2jpeg('t_value.jpg');
+    disp('t_value'); toc;
 
     % Computation of the uncorrected p-value:
     tic;
     uncorrectedpValues = 2*(1-tcdf(abs(slm.t),slm.df)); % here, we consider it to be 2-tailed t-distribution
     clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(Uncorrected P-values)' contrast ]);
-    save2jpeg(strcat(outputdir, '/ClinicaSurfStatOutput/UncorrectedPValue.jpg'));
+    save2jpeg('uncorrected_p_value.jpg');
     disp('Uncorrected Pvalue'); toc;
 
     % Computation of the corrected p-values: P-value threshold or statistic threshold for defining clusters, 0.001 by default
@@ -335,7 +335,7 @@ else
     [ pval, ~, clus ] = SurfStatP( slm , mask, clusterthreshold);
     pval.thresh = thresholdcorrectedpvalue;
     SurfStatView( pval, averagesurface, ['(Corrected P-values) ' contrast ' (clusterthreshold = ' num2str(clusterthreshold) ')']);
-    save2jpeg(strcat('ClinicaSurfStatOutput/CorrectedPValue.jpg' ));
+    save2jpeg('corrected_p_value.jpg' );
     disp('Corrected Pvalue'); toc;
 
     disp('###')
@@ -352,7 +352,7 @@ else
     tic;
     qval = SurfStatQ( slm , mask );
     SurfStatView( qval, averagesurface, ['False discovery rate ' contrast ]);
-    save2jpeg(strcat('ClinicaSurfStatOutput/FalseDiscoveryRate.jpg')) ;
+    save2jpeg('false_discovery_rate.jpg') ;
     disp('FDR'); toc;
 
 end

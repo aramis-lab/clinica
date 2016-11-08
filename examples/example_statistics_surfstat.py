@@ -51,19 +51,20 @@ import time
 # CAPS version of surfstat
 caps_dir = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat'
 # For the CAPS_surfstat, the output images should be in the same parent folder with the CAPS_input, like /group/group<group_label>, diff optional params will save into diff grouplabel folder.
-csv_file  = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat/analysis-series-default/subjects/template.csv'
+csv_file  = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat/analysis-series-default/subjects/subjects_group_list.tsv'
 str_format = '%s %s %s %f'
-linear_model = '1 + Label + Gender + Age'
+linear_model = '1 + group_label + sex + age'
 
 print 'Output dir is in the same CAPS folder with the input'
-contrast = 'Label'
+contrast = 'group_label'
 group_label = 'test1'
+working_directory='~/test'
 start = time.time()
-surfstat = clinica_surfstat(caps_dir, csv_file, linear_model, contrast, str_format, group_label)
-surfstat.run("MultiProc", plugin_args={'n_procs':4})
+surfstat = clinica_surfstat(caps_dir, csv_file, linear_model, contrast, str_format, group_label, working_directory=working_directory)
+surfstat.run("MultiProc", plugin_args={'n_procs': 4})
 time_consuming = time.time() - start
 print 'END! time consuming is : %s' %time_consuming
 
 # command line example:
-# clinica run statistics-surfstat /Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat /Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat/analysis-series-default/subjects/template.csv '1 + Label + Gender + Age' 'Label' '%s %s %s %f' 'test'
+# clinica run statistics-surfstat /Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat /Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat/analysis-series-default/subjects/subjects_group_list.tsv '1 + group_label + sex + age' 'group_label' '%s %s %s %f' 'test'
 
