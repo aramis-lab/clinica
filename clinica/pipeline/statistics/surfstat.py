@@ -156,6 +156,9 @@ def clinica_surfstat(input_directory,
     surfstat.inputs.threshold_corrected_pvalue = threshold_corrected_pvalue
     surfstat.inputs.cluster_threshold = cluster_threshold
 
+    #just for test, basically, it returns nothing.
+    print surfstat.outputs.out_images
+
     # cp the subjects_visits_tsv to the result folder
     copied_tsv = output_directory + '/subjects_group_list.tsv'
     copy(subjects_visits_tsv, copied_tsv)
