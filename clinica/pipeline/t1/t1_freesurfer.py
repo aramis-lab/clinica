@@ -66,8 +66,8 @@ def recon_all_pipeline(input_dir,
         print(str(e))
         exit(1)
 
-    #transfer any path to be absolute path.
     def absolute_path(arg):
+        """Transfer any path to absolute path"""
         if arg[:1] == '~':
             return os.path.expanduser(arg)
         elif arg[:1] == '.':
@@ -75,11 +75,8 @@ def recon_all_pipeline(input_dir,
         else:
             return os.path.join(os.getcwd(), arg)
 
-    # new version for BIDS
-    def BIDS_output(output_dir):
-        # last_dir = os.path.basename(input_dir)
-        # dataset_name = last_dir.split('_')[0]
-
+    def CAPS_output(output_dir):
+        """Define and create the CAPS output """
         subject_list = []
         session_list = []
         subject_id=[]
@@ -113,10 +110,10 @@ def recon_all_pipeline(input_dir,
 
         return subject_dir, subject_id, subject_list, session_list
 
-    subject_dir, subject_id, subject_list, session_list = BIDS_output(output_dir)
+    subject_dir, subject_id, subject_list, session_list = CAPS_output(output_dir)
 
     def checkFOV(t1_list, recon_all_args):
-        """Verifying size of inputs"""
+        """Verifying size of inputs and FOV of each T1 image"""
 
         import sys
         import nibabel as nib
@@ -151,7 +148,6 @@ def recon_all_pipeline(input_dir,
 
         return output_flags
 
-    # the ReconAll interface input for flags takes in a string, so we need to convert the list of flags to a string
     def create_flags_str(input_flags):
         """
         Create a commandline string from a list of input flags
@@ -163,14 +159,16 @@ def recon_all_pipeline(input_dir,
 
         return output_str
 
-    inputnode = pe.Node(interface=nio.DataGrabber(infields=['subject_id', 'session', 'subject_repeat', 'session_repeat'],
-                                                outfields=['anat_t1']), name="inputnode")  # the best explanation for datagrabber http://nipy.org/nipype/interfaces/generated/nipype.interfaces.io.html#datagrabber
+    inputnode = pe.Node(interface=nio.DataGrabber(
+                        infields=['subject_id', 'session', 'subject_repeat', 'session_repeat'],
+                        outfields=['anat_t1']),
+                        name="inputnode")  # the best explanation for datagrabber http://nipy.org/nipype/interfaces/generated/nipype.interfaces.io.html#datagrabber
 
     internode = pe.MapNode(name='internode',
                            iterfield=['t1_list'],
                            interface=Function(
-                               input_names=['t1_list', 'recon_all_args'],
-                               output_names=['output_flags'], function=checkFOV))
+                           input_names=['t1_list', 'recon_all_args'],
+                           output_names=['output_flags'], function=checkFOV))
     internode.inputs.recon_all_args = recon_all_args
 
     create_flags = pe.MapNode(interface=Function(
@@ -180,13 +178,14 @@ def recon_all_pipeline(input_dir,
                               name='create_flags_string',
                               iterfield=['input_flags'])
 
-    recon_all = pe.MapNode(interface=ReconAll(), name='recon_all', iterfield=['subject_id', 'T1_files', 'subjects_dir', 'flags'])
-    # create a special identity interface for outputing the subject_id
-    outputnode = pe.Node(niu.IdentityInterface(fields=['ReconAll_result']), name='outputnode')
+    recon_all = pe.MapNode(interface=ReconAll(),
+                           name='recon_all',
+                           iterfield=['subject_id', 'T1_files', 'subjects_dir', 'flags'])
 
-    # define the base_dir to get the reconall_workflow info, if not set, default=None, which results in the use of mkdtemp
-    # wf = pe.Workflow(name='reconall_workflow', base_dir=output_dir)
-    # if the user want to keep this workflow infor, this can be set as an optional prarm, but if workflow is stopped manually, not finished, the workflow info seems to be in the current folder, should test it.
+    outputnode = pe.Node(niu.IdentityInterface(
+                         fields=['ReconAll_result']),
+                         name='outputnode')
+
     if working_directory is None:
         working_directory = mkdtemp()
     else:
