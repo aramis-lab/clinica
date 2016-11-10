@@ -115,69 +115,74 @@ def recon_all_pipeline(input_dir,
 
     subject_dir, subject_id, subject_list, session_list = BIDS_output(output_dir)
 
-    #
-    # def checkoutFOV(t1_list):
-    #     import nibabel as nib
-    #     output_flag = []
-    #     for i in t1_list:
-    #         f = nib.load(i)
-    #         voxel_size = f.header.get_zooms()
-    #         data_shape = f.header.get_data_shape()
-    #         if voxel_size[0] * data_shape[0] > 256 or voxel_size[1] * data_shape[1] or voxel_size[2] * data_shape[2]:
-    #             output_flag.append('cw256')
-    #         else:
-    #             output_flag.append('all')
-    #     print(output_flag)
-    #     return output_dir
-    #
-    # def checkFOV(T1_files):
-    #     """Verifying size of inputs"""
-    #
-    #     # modified from nipype.workflows.smri.freesurfer.autorecon1.checkT1s:
-    #     # https://github.com/nipy/nipype/blob/master/nipype/workflows/smri/freesurfer/autorecon1.py
-    #
-    #     import sys
-    #     import nibabel as nib
-    #     from nipype.utils.filemanip import filename_to_list
-    #
-    #     output_flags = []
-    #
-    #     T1_files = filename_to_list(T1_files)
-    #     if len(T1_files) == 0:
-    #         print("ERROR: No T1's Given")
-    #         sys.exit(-1)
-    #
-    #     shape = nib.load(T1_files[0]).shape
-    #     for t1 in T1_files[1:]:
-    #         if nib.load(t1).shape != shape:
-    #             print("ERROR: T1s not the same size. Cannot process {0} and {1} "
-    #                   "together".format(T1_files[0], t1))
-    #             sys.exit(-1)
-    #
-    #     # check if cw256 is set to crop the images if size is larger than 256
-    #     if any(dim > 256 for dim in shape):
-    #         print("Setting MRI Convert to crop images to 256 FOV")
-    #         output_flags.append('-cw256')
-    #     else:
-    #         print("No need to add -cw256 flag")
-    #         output_flags.append(None)
-    #
-    #     return output_flags
-    #
+    def checkFOV(t1_list, recon_all_args):
+        """Verifying size of inputs"""
+
+        import sys
+        import nibabel as nib
+        from nipype.utils.filemanip import filename_to_list
+
+        output_flags = []
+        num_t1 = len(t1_list)
+        t1_list = filename_to_list(t1_list)
+
+        if num_t1 == 0:
+            print("ERROR: No T1's Given")
+            sys.exit(-1)
+
+        shape = nib.load(t1_list[0]).shape
+        for t1 in t1_list:
+            f = nib.load(t1)
+            voxel_size = f.header.get_zooms()
+            t1_size = f.header.get_data_shape()
+            # not sure if we should constrain all the T1 file should have the same size
+            # if t1_size != shape:
+            #     print("ERROR: T1s not the same size. Cannot process {0} and {1} "
+            #           "together".format(t1_list[0], t1))
+            #     sys.exit(-1)
+            if voxel_size[0] * t1_size[0] > 256 or voxel_size[1] * t1_size[1] or voxel_size[2] * t1_size[2]:
+                print("Setting MRI Convert to crop images to 256 FOV")
+                optional_flag = '-cw256'
+            else:
+                print("No need to add -cw256 flag")
+                optional_flag = ''
+            flag = "{0} ".format(recon_all_args) + optional_flag
+            output_flags.append(flag)
+
+        return output_flags
+
+    # the ReconAll interface input for flags takes in a string, so we need to convert the list of flags to a string
+    def create_flags_str(input_flags):
+        """
+        Create a commandline string from a list of input flags
+        """
+        output_str = ""
+        for flag in input_flags:
+            output_str += "{0} ".format(flag)
+        output_str.strip() #stripped from the beginning and the end of the string (default whitespace characters).
+
+        return output_str
+
     inputnode = pe.Node(interface=nio.DataGrabber(infields=['subject_id', 'session', 'subject_repeat', 'session_repeat'],
                                                 outfields=['anat_t1']), name="inputnode")  # the best explanation for datagrabber http://nipy.org/nipype/interfaces/generated/nipype.interfaces.io.html#datagrabber
-    #
-    # internode = pe.Node(name='internode',
-    #                     interface=Function(
-    #                        input_names=['t1_list'],
-    #                        output_names=['output_flag'], function=checkFOV))
 
-    recon_all = pe.MapNode(interface=ReconAll(), name='recon_all', iterfield=['subject_id', 'T1_files', 'subjects_dir'])
+    internode = pe.MapNode(name='internode',
+                           iterfield=['t1_list'],
+                           interface=Function(
+                               input_names=['t1_list', 'recon_all_args'],
+                               output_names=['output_flags'], function=checkFOV))
+    internode.inputs.recon_all_args = recon_all_args
+
+    create_flags = pe.MapNode(interface=Function(
+                              input_names=['input_flags'],
+                              output_names=['output_str'],
+                              function=create_flags_str),
+                              name='create_flags_string',
+                              iterfield=['input_flags'])
+
+    recon_all = pe.MapNode(interface=ReconAll(), name='recon_all', iterfield=['subject_id', 'T1_files', 'subjects_dir', 'flags'])
     # create a special identity interface for outputing the subject_id
     outputnode = pe.Node(niu.IdentityInterface(fields=['ReconAll_result']), name='outputnode')
-    #datasink = pe.Node(nio.DataSink(), name="datasink")
-    #datasink.inputs.base_directory = output_dir
-    #datasink.inputs.container = 'datasink_folder'
 
     # define the base_dir to get the reconall_workflow info, if not set, default=None, which results in the use of mkdtemp
     # wf = pe.Workflow(name='reconall_workflow', base_dir=output_dir)
@@ -209,13 +214,11 @@ def recon_all_pipeline(input_dir,
     recon_all.inputs.subjects_dir = subject_dir # subject_dir is the path to contain the different subject folder for the output
     recon_all.inputs.directive = 'all'
     recon_all.inputs.args = recon_all_args
-    # recon_all.inputs.flags = internode.outputs.output_flag
-    # print("output flag are: %s" % internode.outputs.output_flag)
 
     wf.connect(inputnode, 'anat_t1', recon_all, 'T1_files')
-    # wf.connect(inputnode, 'anat_t1', internode, 't1_list')
+    wf.connect(inputnode, 'anat_t1', internode, 't1_list')
+    wf.connect(internode, 'output_flags', create_flags, 'input_flags')
+    wf.connect(create_flags, 'output_str', recon_all, 'flags')
     wf.connect(recon_all, 'subject_id', outputnode, 'ReconAll_result')
-    #for i in range(len(datasink_para)):
-        #wf.connect([(recon_all, datasink, [(datasink_para[i], datasink_para[i])])])
 
     return wf
