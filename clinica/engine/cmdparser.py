@@ -320,7 +320,7 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
                                 help="numpy logspace function arguments defining the range of search for SVM parameter C. Ex: -6 2 17")
         self._args.add_argument("-sgm", "--save_gram_matrix", action='store_true',
                                 help="Save feature weights for each classification as a matrix")
-        self._args.add_argument("-sf", "--save_subject_classification", action='store_true',
+        self._args.add_argument("-sc", "--save_subject_classification", action='store_true',
                                 help="Save list of classification results for each subject for each classification")
         self._args.add_argument("-sw", "--save_original_weights", action='store_true',
                                 help="Save feature weights for each classification as a matrix")
@@ -331,10 +331,6 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
 
         from clinica.pipeline.machine_learning.voxel_based_svm import linear_svm_binary_classification_caps
         from numpy import logspace
-
-        print args
-
-        return
 
         c_range = logspace(args.c_range_logspace[0], args.c_range_logspace[1], args.c_range_logspace[2])
 
