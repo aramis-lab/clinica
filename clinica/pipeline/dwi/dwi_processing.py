@@ -4,7 +4,7 @@
 """This module contains pipelines for the processing of DWI dataset."""
 
 def tractography_and_dti_pipeline(
-                datasink_directory, working_directory=None, max_harmonic_order=None,
+                output_directory, working_directory=None, max_harmonic_order=None,
                 tractography_algorithm='iFOD2', tractography_nb_of_tracks="100K",
                 tractography_fod_threshold=None, tractography_step_size=None, tractography_angle=None,
                 nthreads=2, name="whole_brain_tractography_pipeline"):
@@ -19,7 +19,7 @@ def tractography_and_dti_pipeline(
     .. warning :: This is not suited for multi-shell data at all.
 
     Args:
-        datasink_directory (str): Directory where the results are stored.
+        output_directory (str): Directory where the results are stored.
         working_directory (Optional[str]): Directory where the temporary
             results are stored. If not specified, it is automatically
             generated (generally in /tmp/).
@@ -137,8 +137,28 @@ def tractography_and_dti_pipeline(
                 'out_response_function', 'out_sh_coefficients_image', 'out_tracks']),
         name='outputnode')
 
+
+    analysis_series_id = '01'
+    subject_id = 'CLNC042'
+    session_id = 'M00'
+
     datasink = pe.Node(nio.DataSink(), name='datasink')
-    datasink.inputs.base_directory = join(datasink_directory, 'tractography/')
+    caps_identifier = 'sub-' + subject_id + '_ses­' + session_id
+    datasink.inputs.base_directory = join(output_directory, 'analysis-series-' + analysis_series_id,
+                                          'sub-' + subject_id, 'ses-' + session_id, 'dwi')
+    datasink.inputs.substitutions = [('dti.mif', caps_identifier + '_dti.mif'),
+                                     ('dwi.mif', caps_identifier + '_dwi.mif'),
+                                     ('eroded_mask.nii.gz', caps_identifier + '_eroded-b0-mask.nii.gz'),
+                                     ('dec_fa_map_from_dti.nii.gz', caps_identifier + '_dec-fa-map-from-dti.nii.gz'),
+                                     ('fa_map_from_dti.nii.gz', caps_identifier + '_fa-map-from-dti.nii.gz'),
+                                     ('md_map_from_dti.nii.gz', caps_identifier + '_md-map-from-dti.nii.gz'),
+                                     ('ad_map_from_dti.nii.gz', caps_identifier + '_ad-map-from-dti.nii.gz'),
+                                     ('rd_map_from_dti.nii.gz', caps_identifier + '_rd-map-from-dti.nii.gz'),
+                                     ('out_response_function_tax.txt', caps_identifier + '_response-function.txt'),
+                                     ('out_response_function_', caps_identifier + '_response-function_algo-'),
+                                     ('sh_coefficients_image.mif', caps_identifier + '_sh-coefficients-image.mif'),
+                                     ('out_tracks_', caps_identifier + '_fibers-')
+                                     ]
 
     wf = pe.Workflow(name=name)
     wf.connect([
@@ -176,16 +196,16 @@ def tractography_and_dti_pipeline(
         (estimate_fod,                   outputnode, [('out_sh_coefficients_image', 'out_sh_coefficients_image')]),
         (streamlines_tractography,       outputnode, [('out_tracks', 'out_tracks')]),
         # Saving files with datasink:
-        (convert_nifti_to_mrtrix_format, datasink, [('out_dwi_mif', 'out_dwi_mif')]),
-        (dwi_to_tensor,                  datasink, [('out_dti', 'out_dti')]),
-        (tensor_to_metrics,              datasink, [('out_fa', 'out_metrics.fa')]),
-        (tensor_to_metrics,              datasink, [('out_md', 'out_metrics.md')]),
-        (tensor_to_metrics,              datasink, [('out_rd', 'out_metrics.rd')]),
-        (tensor_to_metrics,              datasink, [('out_ev', 'out_metrics.ev')]),
-        (erode_mask,                     datasink, [('out_eroded_mask', 'out_eroded_mask')]),
-        (estimate_response,              datasink, [('out_response_function', 'out_response_function')]),
-        (estimate_fod,                   datasink, [('out_sh_coefficients_image', 'out_sh_coefficients_image')]),
-        (streamlines_tractography,       datasink, [('out_tracks', 'out_tracks')])
+        (convert_nifti_to_mrtrix_format, datasink, [('out_dwi_mif', 'mrtrix.@dwi_mif')]),
+        (dwi_to_tensor,                  datasink, [('out_dti', 'mrtrix.@dti')]),
+        (tensor_to_metrics,              datasink, [('out_fa', 'mrtrix.@metrics.@fa')]),
+        (tensor_to_metrics,              datasink, [('out_md', 'mrtrix.@metrics.@md')]),
+        (tensor_to_metrics,              datasink, [('out_rd', 'mrtrix.@metrics.@rd')]),
+        (tensor_to_metrics,              datasink, [('out_ev', 'mrtrix.@metrics.@ev')]),
+        (erode_mask,                     datasink, [('out_eroded_mask', 'mrtrix.@eroded_mask')]),
+        (estimate_response,              datasink, [('out_response_function', 'mrtrix.@response_function')]),
+        (estimate_fod,                   datasink, [('out_sh_coefficients_image', 'mrtrix.@sh_coefficients_image')]),
+        (streamlines_tractography,       datasink, [('out_tracks', 'mrtrix.@tracks')])
     ])
 
     return wf
