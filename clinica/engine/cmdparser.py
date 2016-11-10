@@ -1,3 +1,6 @@
+
+# -*- coding: utf-8 -*-
+
 """Define the command line parser for each pipeline
 
 Please, add your command line parser at the end of this file.
@@ -22,6 +25,7 @@ import abc
 from argparse import ArgumentParser
 from os.path import join
 from os import getcwd
+from os.path import expanduser
 
 class CmdParser:
     """Abstract class to extend in order to create your command line parser
@@ -64,7 +68,14 @@ class CmdParser:
     def run_pipeline(self, args): pass
 
     def absolute_path(self, arg):
-        return join(getcwd(), arg)
+        if arg is None:
+            return None
+        elif arg[:1] == '~':
+            return expanduser(arg)
+        elif arg[:1] == '.':
+            return getcwd()
+        else:
+            return join(getcwd(), arg)
 
 
 
@@ -243,23 +254,39 @@ class CmdParserT1SPMSegment(CmdParser):
 class CmdParserT1ReconAll(CmdParser):
 
     def define_name(self):
-        self._name = 't1-reconall'
+        self._name = 't1-freesurfer'
 
     def define_options(self):
-        self._args.add_argument("input_directory", help='Path to where the NIFTI images are stored')
-        self._args.add_argument("output_dir", help='Path to store the result of the pipeline')
-        self._args.add_argument("tsv_file", help='Path pointed to your tsv file')
-        self._args.add_argument("dataset_name", help='A list of the dataset name')
-        self._args.add_argument("-ras", "--reconall_args", type=str, default='-qcache', help='additional flags for reconAll command line, default is -qcache')
+        self._args.add_argument("bids_dir",
+                                help='Path to the BIDS directory')
+        self._args.add_argument("caps_dir",
+                                help='Path to the CAPS output directory')
+        self._args.add_argument("subjects_sessions",
+                                help='TSV file with subjects and sessions to be processed')
+        self._args.add_argument("-asi", "--analysis_series_id", type=str, default='default',
+                                help='Current analysis series name')
+        self._args.add_argument("-wd", "--working_directory", type=str, default=None,
+                                help='Temporary directory to run the workflow')
+        self._args.add_argument("-ras", "--reconall_args", type=str, default='-qcache',
+                                help='additional flags for reconAll command line, default is -qcache')
+        self._args.add_argument("-np", "--n_procs", type=int, default=4,
+                                help='Number of parallel processes to run')
 
     def run_pipeline(self, args):
 
         from clinica.pipeline.t1.t1_freesurfer import recon_all_pipeline
 
-        reconall_wf = recon_all_pipeline(self.absolute_path(args.input_directory), self.absolute_path(args.output_dir), self.absolute_path(args.tsv_file), args.dataset_name,
+        # working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
+        # working_directory = self.absolute_path(args.working_directory)
+
+        reconall_wf = recon_all_pipeline(self.absolute_path(args.bids_dir),
+                                         self.absolute_path(args.caps_dir),
+                                         self.absolute_path(args.subjects_sessions),
+                                         analysis_series_id=args.analysis_series_id,
+                                         working_directory=self.absolute_path(args.working_directory),
                                          recon_all_args=args.reconall_args)
 
-        reconall_wf.run("MultiProc", plugin_args={'n_procs':4})
+        reconall_wf.run("MultiProc", plugin_args={'n_procs': args.n_procs})
 
 class CmdParserStatisticsSurfStat(CmdParser):
 
@@ -267,27 +294,48 @@ class CmdParserStatisticsSurfStat(CmdParser):
         self._name = 'statistics-surfstat'
 
     def define_options(self):
-        self._args.add_argument("input_directory", help='Directory where the input files(output of reconAll pipeline) are stored')
-        self._args.add_argument("output_dir", help='Directory to store the result images of the pipeline')
-        self._args.add_argument("linear_model", help='A list to define the model that fits into GLM')
-        self._args.add_argument("contrast", help='A list to define the contrast matrix for GLM')
-        self._args.add_argument("csv_file", help='Directory where the csv files are stored')
-        self._args.add_argument("str_format", help='A list to define the format string for the csv files')
+        self._args.add_argument("caps_dir",
+                                help='Directory where the input files(output of FreeSurfer pipeline) are stored')
+        self._args.add_argument("subjects_visits_tsv",
+                                help='Directory where the tsv files are stored')
+        self._args.add_argument("linear_model",
+                                help='A list to define the model that fits into GLM, eg, 1 + group_label + sex + age')
+        self._args.add_argument("contrast",
+                                help='A list to define the contrast matrix for GLM, eg, group_label')
+        self._args.add_argument("str_format",
+                                help='A list to define the format string for the tsv column , eg, %%s %%s %%s %%f')
+        self._args.add_argument("group_id",
+                                help='Current group name')
         self._args.add_argument("-sof", "--size_of_fwhm", type=int, default=20, help='FWHM for the surface smoothing')
-        self._args.add_argument("-tup", "--threshold_uncorrected_pvalue", type=float, default='0.001', help='Threshold to display the uncorrected Pvalue')
-        self._args.add_argument("-tcp", "--threshold_corrected_pvalue", type=float, default=0.05, help='Threshold to display the corrected cluster')
-        self._args.add_argument("-ct", "--cluster_threshold", type=float, default=0.001, help='Threshold to define a cluster in the process of cluster-wise correction')
+        self._args.add_argument("-tup", "--threshold_uncorrected_p_value", type=float, default='0.001',
+                                help='Threshold to display the uncorrected Pvalue')
+        self._args.add_argument("-tcp", "--threshold_corrected_p_value", type=float, default=0.05,
+                                help='Threshold to display the corrected cluster')
+        self._args.add_argument("-ct", "--cluster_threshold", type=float, default=0.001,
+                                help='Threshold to define a cluster in the process of cluster-wise correction')
+        self._args.add_argument("-np", "--n_procs", type=int, default=4,
+                                help='Number of parallel processes to run')
+        self._args.add_argument("-wd", "--working_directory", type=str, default=None,
+                                help='Temporary directory to run the workflow')
 
     def run_pipeline(self, args):
 
         from clinica.pipeline.statistics.surfstat import clinica_surfstat
-        
-        surfstat_wf = clinica_surfstat(self.absolute_path(args.input_directory), self.absolute_path(args.output_dir), args.linear_model, args.contrast,
-                                         self.absolute_path(args.csv_file), args.str_format,
-                                         size_of_fwhm=args.size_of_fwhm, threshold_uncorrected_pvalue=args.threshold_uncorrected_pvalue,
-                                         threshold_corrected_pvalue=args.threshold_corrected_pvalue, cluster_threshold=args.cluster_threshold)
+        # working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
+        surfstat_wf = clinica_surfstat(self.absolute_path(args.caps_dir),
+                                       self.absolute_path(args.subjects_visits_tsv),
+                                       args.linear_model,
+                                       args.contrast,
+                                       args.str_format,
+                                       args.group_id,
+                                       size_of_fwhm=args.size_of_fwhm,
+                                       threshold_uncorrected_pvalue=args.threshold_uncorrected_p_value,
+                                       threshold_corrected_pvalue=args.threshold_corrected_p_value,
+                                       cluster_threshold=args.cluster_threshold,
+                                       working_directory=self.absolute_path(args.working_directory))
 
-        surfstat_wf.run()
+        surfstat_wf.run("MultiProc", plugin_args={'n_procs': args.n_procs})
+
 class CmdParserMachineLearningVBLinearSVM(CmdParser):
 
     def define_name(self):
@@ -324,8 +372,8 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
                                 help="Save list of classification results for each subject for each classification")
         self._args.add_argument("-sw", "--save_original_weights", action='store_true',
                                 help="Save feature weights for each classification as a matrix")
-        self._args.add_argument("-sf", "--save_features_image", action='store_true',
-                                help="Save feature weights for each classification as an image")
+        # self._args.add_argument("-sf", "--save_features_image", action='store_true',
+        #                         help="Save feature weights for each classification as an image")
 
     def run_pipeline(self, args):
 
@@ -350,3 +398,66 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
                                               save_subject_classification=args.save_subject_classification,
                                               save_original_weights=args.save_original_weights,
                                               save_features_image=args.save_features_image)
+
+
+
+class CmdParserT1FSL(CmdParser):
+
+    def define_name(self):
+        self._name = 't1-fsl'
+
+
+    def define_options(self):
+        self._args.add_argument("-bids_directory",
+                                help='Path to the BIDS directory.')
+        self._args.add_argument("-caps_directory",
+                                help='Path to the CAPS directory.')
+        self._args.add_argument("-working_directory",
+                                help='(Optional) Temporary directory to store intermediate results')
+        self._args.add_argument("-subjects_sessions",
+                                help='TSV file containing the subjects with their sessions.')
+        self._args.add_argument("-analysis_series_id", default='default',
+                                help='Label for analysis series id (default name is default)')
+        self._args.add_argument("-n_threads", type=int, default=0,
+                                help='Number of threads (default=0, which disables multi-threading).')
+        group = self._args.add_mutually_exclusive_group(required=True)
+        group.add_argument('-is_bias_corrected', action='store_true',
+                           help='Set this flag if your image are bias corrected (mutually exclusive with \'-is_not_bias_corrected\' flag).')
+        group.add_argument('-is_not_bias_corrected', action='store_false',
+                           help='Set this flag if your image are not bias corrected (mutually exclusive with \'-is_bias_corrected\' flag).')
+
+
+
+    def run_pipeline(self, args):
+        import csv
+        import os.path
+        from clinica.pipeline.t1.t1_fsl import t1_fsl_segmentation_pipeline
+
+        working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
+
+        with open(self.absolute_path(args.subjects_sessions), 'rb') as tsv_file:
+            tsv_reader = csv.reader(tsv_file, delimiter='\t')
+
+            # Check inputs:
+            for row in tsv_reader:
+                bids_path_to_t1 = os.path.join(self.absolute_path(args.bids_directory),
+                                               'sub-' + row[0], 'ses-' + row[1], 'anat',
+                                               'sub-' + row[0] + '_ses-' + row[1] + '_T1w.nii.gz')
+                print bids_path_to_t1
+                assert (os.path.isfile(bids_path_to_t1))
+
+                bids_path_to_t1 = os.path.join(self.absolute_path(args.bids_directory),
+                                               'sub-' + row[0], 'ses-' + row[1], 'anat',
+                                               'sub-' + row[0] + '_ses-' + row[1] + '_T1w.nii.gz')
+                t1_fsl_pipeline = t1_fsl_segmentation_pipeline(subject_id=row[0],
+                                                               session_id=row[1],
+                                                               analysis_series_id=args.analysis_series_id,
+                                                               caps_directory=self.absolute_path(args.caps_directory),
+                                                               working_directory=working_directory,
+                                                               is_bias_corrected=args.is_bias_corrected
+                                                               )
+                t1_fsl_pipeline.inputs.inputnode.in_t1 = bids_path_to_t1
+                print('Show !')
+                t1_fsl_pipeline.run('MultiProc', plugin_args={'n_procs': args.n_threads})
+
+

@@ -1,10 +1,11 @@
 from os import path
-import os
 import logging
 from glob import glob
 import fileinput
 from shutil import copy
 import nibabel as nib
+
+import os
 
 
 def remove_rescan(list_path):
@@ -46,7 +47,7 @@ def choose_correction(dir, to_consider, mod):
         0 if none of the desided corrections is available..
 
     """
-    # extract all the files availabe for a certain modality
+    # extract all the files available for a certain modality
     correction_list = remove_rescan(glob(path.join(dir, '*' + mod + '*')))
     if len(correction_list) == 0:
         return -1
@@ -59,7 +60,7 @@ def choose_correction(dir, to_consider, mod):
         return 0
 
 
-def get_bids_suff( mod):
+def get_bids_suff(mod):
     """
     Returns the BIDS suffix for a certain modality.
 
@@ -97,7 +98,7 @@ def convert_T1(t1_path, output_path, t1_bids_name):
     copy(t1_path, path.join(output_path, t1_bids_name + get_bids_suff('T1') + '.nii.gz'))
 
 
-def convert_fieldmap(folder_input, folder_output, name, files_to_skip=[]):
+def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False,False]):
     """
     Extracts and converts into the BIDS specification fieldmap data.
 
@@ -111,10 +112,26 @@ def convert_fieldmap(folder_input, folder_output, name, files_to_skip=[]):
          -1 if the modality is not available.
          0 if the magnitude or the phase is missing (information incomplete).
     """
-    mag_missing = map_ph_missing = False
-    map = remove_rescan(glob(path.join(folder_input, "*MAP_*",'*.nii.gz')))
-    map_ph = remove_rescan(glob(path.join(folder_input, "*MAPph_*", '*.nii.gz')))
 
+    mag_missing = map_ph_missing = False
+
+    # Check if there is a map or mapPh fixed to convert
+    if fixed_file[0] is False and fixed_file[1] is False:
+        map = remove_rescan(glob(path.join(folder_input, "*MAP_*",'*.nii.gz')))
+        map_ph = remove_rescan(glob(path.join(folder_input, "*MAPph_*", '*.nii.gz')))
+    elif fixed_file[0] is False and fixed_file[1] is not False:
+        map = remove_rescan(glob(path.join(folder_input, "*MAP_*",'*.nii.gz')))
+        map_ph = glob(path.join(folder_input, fixed_file[1], '*.nii.gz'))
+    elif fixed_file[0] is not False and fixed_file[1] is False:
+        map = glob(path.join(folder_input, fixed_file[0], '*.nii.gz'))
+        map_ph = remove_rescan(glob(path.join(folder_input, "*MAPph_*", '*.nii.gz')))
+    else:
+        map = glob(path.join(folder_input, fixed_file[0], '*.nii.gz'))
+        map_ph = glob(path.join(folder_input, fixed_file[1], '*.nii.gz'))
+
+    files_to_skip = ["13001PBA20150623M18B0MAPph_S016.nii.gz", "13002PRJ20150922M18B0MAPph_S014.nii.gz",
+                    "11001PGM20130704M00B0MAPph_S010.bval","07002PPP20150116M18B0MAPph_S009.nii.gz",
+                    "07003PGM20141217M18B0MAPph_S010.nii.gz"]
     if len(map) == 0:
         mag_missing = True
     if len(map_ph) == 0:
@@ -166,7 +183,7 @@ def convert_fieldmap(folder_input, folder_output, name, files_to_skip=[]):
             return 0
 
 
-def convert_flair(folder_input, folder_output, name):
+def convert_flair(folder_input, folder_output, name, fixed_file = False):
     """
     Extracts and converts T2Flair data.
 
@@ -178,19 +195,26 @@ def convert_flair(folder_input, folder_output, name):
     Returns:
         -1 if no T2FLAIR is found in the input folder.
     """
-    flair_lst = remove_rescan(glob(path.join(folder_input,'*T2FLAIR*')))
-    if len(flair_lst) == 1:
-        if not os.path.exists(folder_output):
-            os.mkdir(folder_output)
-        flair_path = glob(path.join(flair_lst[0], '*.nii.gz*'))[0]
-        copy(flair_path, path.join(folder_output, name + (get_bids_suff('Flair')) + '.nii.gz'))
-    elif len(flair_lst) == 0:
-            return -1
-    elif len(flair_lst)>1:
-            logging.warning('Multiple FLAIR found.')
+    # If a given T2FLAIR is given for the conversion use it
+    if fixed_file!=False:
+        fixed_flair_path = glob(path.join(folder_input,fixed_file,'*'))[0]
+        copy(fixed_flair_path, path.join(folder_output, name + (get_bids_suff('Flair')) + '.nii.gz'))
+    else:
+        list_path = glob(path.join(folder_input,'*T2FLAIR*'))
+        flair_lst = remove_rescan(list_path)
+        if len(flair_lst) == 1:
+            if not os.path.exists(folder_output):
+                os.mkdir(folder_output)
+            flair_path = glob(path.join(flair_lst[0], '*.nii.gz*'))[0]
+            copy(flair_path, path.join(folder_output, name + (get_bids_suff('Flair')) + '.nii.gz'))
+        elif len(flair_lst) == 0:
+                return -1
+        elif len(flair_lst)>1:
+                logging.warning('Multiple FLAIR found, computation aborted.')
+                raise
 
 
-def convert_fmri(folder_input, folder_output, name):
+def convert_fmri(folder_input, folder_output, name, fixed_fmri=False):
     """
     Extracts and converts into the BIDS specification fmri data.
 
@@ -202,7 +226,10 @@ def convert_fmri(folder_input, folder_output, name):
     Returns:
         -1 if no fMRI file is found in the input folder.
     """
-    fmri_lst = remove_rescan(glob(path.join(folder_input, '*fMRI*')))
+    if fixed_fmri is not False:
+        fmri_lst = glob(path.join(folder_input, fixed_fmri))
+    else:
+        fmri_lst = remove_rescan(glob(path.join(folder_input, '*fMRI*')))
     if len(fmri_lst) > 0:
         if not os.path.exists(folder_output):
             os.mkdir(folder_output)
@@ -213,7 +240,7 @@ def convert_fmri(folder_input, folder_output, name):
         return -1
 
 
-def merge_DTI(folder_input, folder_output, name):
+def merge_DTI(folder_input, folder_output, name, fixed_dti_list=False):
     """
     Merge all the DTI files of a given subject.
 
@@ -232,8 +259,13 @@ def merge_DTI(folder_input, folder_output, name):
     img = []
     bval = []
     bvec = []
+    dti_list = []
 
-    dti_list = remove_rescan(glob(path.join(folder_input, '*DTI*')))
+    if fixed_dti_list is not False:
+        for dti in fixed_dti_list:
+            dti_list.append(path.join(folder_input, dti))
+    else:
+        dti_list = remove_rescan(glob(path.join(folder_input, '*DTI*')))
     incomp_folders = []
     nr_dti = len(dti_list)
     if nr_dti == 0:
