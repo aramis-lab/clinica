@@ -53,10 +53,10 @@ caps_dir = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_
 # For the CAPS_surfstat, the output images should be in the same parent folder with the CAPS_input, like /group/group<group_label>, diff optional params will save into diff grouplabel folder.
 csv_file  = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat/analysis-series-default/subjects/subjects_group_list.tsv'
 str_format = '%s %s %s %f'
-linear_model = '1 + group_label + sex + age'
+linear_model = '1 + group + sex + age'
 
 print 'Output dir is in the same CAPS folder with the input'
-contrast = 'group_label'
+contrast = 'group'
 group_label = 'test'
 working_directory='.'
 start = time.time()
@@ -66,5 +66,5 @@ time_consuming = time.time() - start
 print 'END! time consuming is : %s' %time_consuming
 
 # command line example:
-# clinica run statistics-surfstat /Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat /Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat/analysis-series-default/subjects/subjects_group_list.tsv '1 + group_label + sex + age' 'group_label' '%s %s %s %f' 'test'
+# clinica run statistics-surfstat /Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat /Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat/analysis-series-default/subjects/subjects_group_list.tsv '1 + group + sex + age' 'group' '%s %s %s %f' 'test'
 
