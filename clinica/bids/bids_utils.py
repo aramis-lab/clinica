@@ -260,6 +260,10 @@ def merge_DTI(folder_input, folder_output, name, fixed_dti_list=False):
     bval = []
     bvec = []
     dti_list = []
+    # The bvec output file has three rows that are the concatenation of all the merged bvec files
+    lines_out_bvec = ['', '', '']
+    # The bval output file has only one row that is the concatenation of all the merged bval files
+    lines_out_bval = ['']
 
     if fixed_dti_list is not False:
         for dti in fixed_dti_list:
@@ -288,14 +292,26 @@ def merge_DTI(folder_input, folder_output, name, fixed_dti_list=False):
             # merge all the .nii.gz file with fslmerge
             os.system('fslmerge -t ' + path.join(folder_output, name + file_suff + '.nii.gz') + ' ' + " ".join(img))
             # merge all the .bval files
-            fout = open(path.join(folder_output,name+file_suff+'.bval'), 'w')
+            fout = open(path.join(folder_output, name+file_suff+'.bval'), 'w')
+            # Concatenate bval files
             for line in fin:
-                fout.write(line)
-            #merge all the .bvec files
+                if fileinput.isfirstline():
+                    line_no = 0
+                lines_out_bval[line_no] = lines_out_bval[line_no]+line.rstrip()
+                line_no +=1
+            for i in range (0, len(lines_out_bval)):
+                fout.write(lines_out_bval[i]+"\n")
+
+            # Concatenate bvec files
             fin = fileinput.input(bvec)
             fout = open(path.join(folder_output, name + file_suff + '.bvec'), 'w')
             for line in fin:
-                fout.write(line)
+                if fileinput.isfirstline():
+                    line_no = 0
+                lines_out_bvec[line_no] = lines_out_bvec[line_no]+line.rstrip()
+                line_no += 1
+            for i in range(0, len(lines_out_bvec)):
+                fout.write(lines_out_bvec[i] + "\n")
 
         if len(incomp_folders) > 0:
             return incomp_folders
