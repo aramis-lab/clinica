@@ -163,6 +163,13 @@ def execute():
     pipelines = [CmdParserT1SPMFullPrep(),CmdParserT1SPMSegment(),CmdParserT1ReconAll(), CmdParserT1FSL(), CmdParserStatisticsSurfStat(),CmdParserMachineLearningVBLinearSVM()]
     init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
 
+    """
+    convert option: convert one of the supported dataset to the BIDS specification
+    """
+    convert_parser = sub_parser.add_parser('convert')
+    converters = [CmdParserCappToBids()]
+    init_cmdparser_objects(parser, convert_parser.add_subparsers(), converters)
+
     def silent_help(): pass
 
     def single_error_message(p):
