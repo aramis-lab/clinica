@@ -16,6 +16,7 @@ from converter_utils import MissingModsTracker, print_statistics
 import bids_utils as bids
 import pandas as pd
 import json
+import pkg_resources as pkg
 
 
 def has_fixed(subj_id, ses, mod, special_list):
@@ -48,8 +49,7 @@ def convert_clinical(input_path, out_path, bids_ids):
     fields_dataset = []
     prev_location = ""
     prev_sheet = ""
-    capp_origin_ids = []
-    clinic_specs_path = path.join(os.path.dirname(__file__), 'bids-utils-docs', 'clinical_specifications.xlsx')
+    clinic_specs_path = pkg.resource_filename('clinica', 'bids/data/clinical_specifications.xlsx')
 
     # -- Creation of participant.tsv --
     participants_specs = pd.read_excel(clinic_specs_path, sheetname='participant.tsv')
@@ -180,7 +180,7 @@ def convert(source_dir, dest_dir, param=''):
     capp_spath = []
     capp_ids = []
     bids_ids = []
-    special_subjs_path = path.join(os.path.dirname(__file__), 'bids-utils-docs', 'special_subjs_CAPP.json')
+    special_subjs_path = pkg.resource_filename('clinica', 'bids/data/special_subjs_CAPP.json')
     special_subjs_file = open(special_subjs_path, 'r')
     special_subjs_json = json.load(special_subjs_file)
     t1_to_consider = ['3DT1_noPN_DIS', '3DT1_noSCIC_GW', '3DT1_noCLEAR_GEO', '3DT1_CLEAR_GEO', '3DT1_S']
