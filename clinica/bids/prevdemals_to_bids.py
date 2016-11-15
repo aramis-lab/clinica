@@ -3,7 +3,6 @@ Covert the PREVDEMALS dataset into the BIDS specification.
 
 ToDo:
 - Check if the subject list is the same for both projects
-- Implement the log file
 
 @author: Sabrina Fontanella
 """
