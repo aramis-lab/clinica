@@ -44,7 +44,7 @@ def CAPS_output(output_dir, subjects_visits_tsv, analysis_series_id):
 
     subject_dir = []
     num_subject = len(subject_list)
-    for i in range(num_subject):
+    for i in xrange(num_subject):
         subject = output_dir + '/' + subject_list[i] + '/' + session_list[i] + '/' + 't1' + '/' + 'freesurfer-cross-sectional'
         try:
             os.makedirs(subject)
@@ -134,16 +134,49 @@ def get_vars(subjects_visits_tsv):
     """fetch some necessary vars for this pipeline"""
     subject_list = []
     session_list = []
+    subject_id = []
     with open(subjects_visits_tsv, 'rb') as tsvin:
         tsv_reader = csv.reader(tsvin, delimiter='\t')
 
         for row in tsv_reader:
             subject_list.append(row[0])
             session_list.append(row[1])
+            subject_id.append(row[0] + '_' + row[1])
+    return subject_id, subject_list, session_list
 
-    return subject_list, session_list
+def log_summary(subject_list, session_list, subject_id, output_dir, analysis_series_id):
+    """
+    create the txt file to summarize the reconall result for all the subjects
+    """
+    import os, time
+
+    output_path = os.path.expanduser(output_dir)
+    dest_dir = output_path + '/analysis-series-' + analysis_series_id + '/subjects'
+    if not os.path.isdir(dest_dir):
+        print("ERROR: directory subjects does not exist, it should be CAPS directory after running recon_all_pipeline!!!")
+    else:
+        pass
+    log_name = os.path.join(dest_dir, 'recon_all_summary.log')
+    input_logs = []
+
+    for i in xrange(len(subject_list)):
+        input_log = os.path.join(dest_dir, subject_list[i], session_list[i], 't1', 'freesurfer-cross-sectional', subject_id[i], 'scripts', 'recon-all.log' )
+        input_logs.append(input_log)
+
+    with open(log_name, 'w') as f1:
+        line1 = time.strftime("%Y/%m/%d-%H:%M:%S")
+        line2 = 'Quality check: recon-all output summary'
+        line3 = 'Number of subjects: %s' % len(subject_list)
+        f1.write("%s \n%s \n%s \n \n" % (line1, line2, line3))
+        for log in input_logs:
+            with open(log, 'r') as f2:
+                line = f2.readlines()[-1]
+                f1.write(line)
+                f2.close()
+        f1.close()
 
 
+    return
 
 def freesurferstatas_to_tsv(subject,
                             all_seg_volume_tsv,
@@ -278,7 +311,8 @@ def write_statistics(subject_list, session_list, analysis_series_id, output_dir)
 
     subject_name = subject_list + '_' + session_list
     output_path = os.path.expanduser(output_dir)
-    cs_dir = output_path + '/' + 'analysis-series-' + analysis_series_id + '/subjects' + '/' + subject_list + '/' + session_list + '/t1/freesurfer-cross-sectional'
+
+    cs_dir = output_path + '/analysis-series-' + analysis_series_id + '/subjects/' + subject_list + '/' + session_list + '/t1/freesurfer-cross-sectional'
     if not os.path.isdir(cs_dir):
         print("ERROR: directory freesurfer-cross-sectional does not exist, it should be CAPS directory after running recon_all_pipeline!!!")
     else:
@@ -289,7 +323,6 @@ def write_statistics(subject_list, session_list, analysis_series_id, output_dir)
     except OSError as exception:
         if exception.errno != errno.EEXIST: # if dest_dir exists, go on, if its other error, raise
             raise
-
     subject = os.path.join(cs_dir, subject_name)
     all_seg_volume_tsv = os.path.join(dest_dir, all_seg_volume)
     aseg_volume_tsv = os.path.join(dest_dir, aseg_volume)
