@@ -105,7 +105,7 @@ def checkfov(t1_list, recon_all_args):
     f = nib.load(t1_list[0])
     voxel_size = f.header.get_zooms()
     t1_size = f.header.get_data_shape()
-    if voxel_size[0] * t1_size[0] > 256 or voxel_size[1] * t1_size[1] or voxel_size[2] * t1_size[2]:
+    if (voxel_size[0] * t1_size[0] > 256) or (voxel_size[1] * t1_size[1]> 256) or (voxel_size[2] * t1_size[2]> 256):
         print("Setting MRI Convert to crop images to 256 FOV")
         optional_flag = '-cw256'
     else:
@@ -149,6 +149,7 @@ def log_summary(subject_list, session_list, subject_id, output_dir, analysis_ser
     create the txt file to summarize the reconall result for all the subjects
     """
     import os, time
+    # from nipype import config, logging
 
     output_path = os.path.expanduser(output_dir)
     dest_dir = output_path + '/analysis-series-' + analysis_series_id + '/subjects'
@@ -163,20 +164,43 @@ def log_summary(subject_list, session_list, subject_id, output_dir, analysis_ser
         input_log = os.path.join(dest_dir, subject_list[i], session_list[i], 't1', 'freesurfer-cross-sectional', subject_id[i], 'scripts', 'recon-all.log' )
         input_logs.append(input_log)
 
+    bad_log = 0
     with open(log_name, 'w') as f1:
         line1 = time.strftime("%Y/%m/%d-%H:%M:%S")
         line2 = 'Quality check: recon-all output summary'
-        line3 = 'Number of subjects: %s' % len(subject_list)
-        f1.write("%s \n%s \n%s \n \n" % (line1, line2, line3))
+        f1.write("%s\n%s\n\n" % (line1, line2))
         for log in input_logs:
             with open(log, 'r') as f2:
                 line = f2.readlines()[-1]
+                if 'without error' not in line:
+                    bad_log += 1
+                else:
+                    pass
                 f1.write(line)
                 f2.close()
+        line3 = 'Number of subjects: %s \nNumber of bad recon-all is: %s ' % (len(subject_list), bad_log)
+        f1.write(line3)
         f1.close()
 
-
-    return
+    # logging.basicConfig(filename=log_name, format='%(asctime)s %(levelname)s:%(message)s',
+    #                     datefmt='%m/%d/%Y %I:%M', level=logging.DEBUG)
+    # config.update_config({'logging': {'log_directory': dest_dir,
+    #                                   'log_to_file': True, 'workflow_level': 'DEBUG'}})
+    # logging.update_logging(config)
+    # bad_log = 0
+    # line1 = 'Quality check: recon-all output summary'
+    # logging.info(line1)
+    # for log in input_logs:
+    #     with open(log, 'r') as f2:
+    #         line = f2.readlines()[-1]
+    #         if 'without error' in line:
+    #             logging.info(line)
+    #         else:
+    #             logging.warning(line)
+    #             bad_log += 1
+    #         f2.close()
+    # line2 = 'Number of subjects: %s \nNumber of bad recon-all is: %s ' % (len(subject_list), bad_log)
+    # logging.info(line2)
 
 def freesurferstatas_to_tsv(subject,
                             all_seg_volume_tsv,
