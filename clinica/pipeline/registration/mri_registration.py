@@ -139,9 +139,9 @@ def t1_b0_registration_pipeline(
     session_id = 'M00'
 
     datasink = pe.Node(nio.DataSink(), name='datasink')
-    datasink.inputs.base_directory = join(output_directory, 'analysis-series-' + analysis_series_id,
-                                          'sub-' + subject_id, 'ses-' + session_id, 't1')
-    caps_identifier = 'sub-' + subject_id + '_ses­' + session_id
+    datasink.inputs.base_directory = join(output_directory, 'analysis-series-' + analysis_series_id, 'subjects'
+                                          subject_id, session_id, 't1')
+    caps_identifier = subject_id + '_' + session_id
     datasink.inputs.substitutions = [('fast_pve_0.nii.gz', caps_identifier + '_binary-csf.nii.gz'),
                                      ('fast_pve_1.nii.gz', caps_identifier + '_binary-gray-matter.nii.gz'),
                                      ('fast_pve_2.nii.gz', caps_identifier + '_binary-white-matter.nii.gz'),
@@ -150,8 +150,7 @@ def t1_b0_registration_pipeline(
                                      ('fast_seg_2.nii.gz', caps_identifier + '_partial-volume-white-matter.nii.gz'),
                                      ('fast_bias.nii.gz', caps_identifier + '_bias-field.nii.gz'),
                                      ('fast_restore.nii.gz', caps_identifier + '_brain-extracted-T1w.nii.gz'),
-                                     ('T1_pre_bet_brain_mask.nii.gz',
-                                      caps_identifier + '_pre-masked-brain-extracted_T1w.nii.gz')
+                                     ('T1_pre_bet_brain_mask.nii.gz', caps_identifier + '_pre-masked-brain-extracted_T1w.nii.gz')
                                      ]
 
     wf = pe.Workflow(name=name)

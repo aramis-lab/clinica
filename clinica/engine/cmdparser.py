@@ -411,55 +411,90 @@ class CmdParserT1FSL(CmdParser):
 
 
     def define_options(self):
-        self._args.add_argument("-bids_directory",
+        self._args.add_argument("bids_directory",
                                 help='Path to the BIDS directory.')
-        self._args.add_argument("-caps_directory",
+        self._args.add_argument("caps_directory",
                                 help='Path to the CAPS directory.')
-        self._args.add_argument("-working_directory",
-                                help='(Optional) Temporary directory to store intermediate results')
-        self._args.add_argument("-subjects_sessions",
+        self._args.add_argument("subjects_sessions_tsv",
                                 help='TSV file containing the subjects with their sessions.')
+        self._args.add_argument("-working_directory", default=None,
+                                help='Temporary directory to store intermediate results')
         self._args.add_argument("-analysis_series_id", default='default',
-                                help='Label for analysis series id (default name is default)')
+                                help='Label for analysis series id (default name is \'default\')')
         self._args.add_argument("-n_threads", type=int, default=0,
                                 help='Number of threads (default=0, which disables multi-threading).')
         group = self._args.add_mutually_exclusive_group(required=True)
         group.add_argument('-is_bias_corrected', action='store_true',
-                           help='Set this flag if your image are bias corrected (mutually exclusive with \'-is_not_bias_corrected\' flag).')
+                           help='Set this flag if your images are bias corrected (mutually exclusive with \'-is_not_bias_corrected\').')
         group.add_argument('-is_not_bias_corrected', action='store_false',
-                           help='Set this flag if your image are not bias corrected (mutually exclusive with \'-is_bias_corrected\' flag).')
-
+                           help='Set this flag if your images are not bias corrected (mutually exclusive with \'-is_bias_corrected\').')
 
     def run_pipeline(self, args):
         import csv
         import os.path
         from clinica.pipeline.t1.t1_fsl import t1_fsl_segmentation_pipeline
 
-        working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
-
-        with open(self.absolute_path(args.subjects_sessions), 'rb') as tsv_file:
+        with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
             tsv_reader = csv.reader(tsv_file, delimiter='\t')
 
             # Check inputs:
             for row in tsv_reader:
-                bids_path_to_t1 = os.path.join(self.absolute_path(args.bids_directory),
-                                               'sub-' + row[0], 'ses-' + row[1], 'anat',
-                                               'sub-' + row[0] + '_ses-' + row[1] + '_T1w.nii.gz')
-                print bids_path_to_t1
-                assert (os.path.isfile(bids_path_to_t1))
-
-                bids_path_to_t1 = os.path.join(self.absolute_path(args.bids_directory),
-                                               'sub-' + row[0], 'ses-' + row[1], 'anat',
-                                               'sub-' + row[0] + '_ses-' + row[1] + '_T1w.nii.gz')
+                bids_path_to_t1 = os.path.join(self.absolute_path(args.bids_directory), row[0], row[1], 'anat',
+                                               row[0] + '_' + row[1] + '_T1w.nii.gz')
+                assert(os.path.isfile(bids_path_to_t1))
                 t1_fsl_pipeline = t1_fsl_segmentation_pipeline(subject_id=row[0],
                                                                session_id=row[1],
                                                                analysis_series_id=args.analysis_series_id,
                                                                caps_directory=self.absolute_path(args.caps_directory),
-                                                               working_directory=working_directory,
+                                                               working_directory=self.absolute_path(args.working_directory),
                                                                is_bias_corrected=args.is_bias_corrected
                                                                )
                 t1_fsl_pipeline.inputs.inputnode.in_t1 = bids_path_to_t1
-                print('Show !')
+                t1_fsl_pipeline.run('MultiProc', plugin_args={'n_procs': args.n_threads})
+
+
+
+
+class CmdParserDWIProcessing(CmdParser):
+
+    def define_name(self):
+        self._name = 'dwi-dti-and-tracto-for-the-moment'
+
+
+    def define_options(self):
+        self._args.add_argument("caps_directory",
+                                help='Path to the CAPS directory.')
+        self._args.add_argument("subjects_sessions_tsv",
+                                help='TSV file containing the subjects with their sessions.')
+        self._args.add_argument("-working_directory", default=None,
+                                help='Temporary directory to store intermediate results')
+        self._args.add_argument("-analysis_series_id", default='default',
+                                help='Label for analysis series id (default name is default)')
+        self._args.add_argument("-n_threads", type=int, default=0,
+                                help='Number of threads (default=0, which disables multi-threading).')
+        group = self._args.add_mutually_exclusive_group(required=True)
+        group.add_argument('-is_bias_corrected', action='store_true',
+                           help='Set this flag if your images are bias corrected (mutually exclusive with \'-is_not_bias_corrected\').')
+        group.add_argument('-is_not_bias_corrected', action='store_false',
+                           help='Set this flag if your images are not bias corrected (mutually exclusive with \'-is_bias_corrected\').')
+
+
+    def run_pipeline(self, args):
+        import csv
+        import os.path
+        from clinica.pipeline.dwi.dwi_processing import tractography_and_dti_pipeline
+
+        with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
+            tsv_reader = csv.reader(tsv_file, delimiter='\t')
+
+            # Check inputs:
+            for row in tsv_reader:
+                caps_path_to_preprocessed_dwi = os.path.join(self.absolute_path(args.caps_directory),
+                                               'sub-' + row[0], 'ses-' + row[1], 'anat',
+                                               'sub-' + row[0] + '_ses-' + row[1] + '_T1w.nii.gz')
+                assert(os.path.isfile(caps_path_to_preprocessed_dwi))
+                t1_fsl_pipeline = tractography_and_dti_pipeline()
+                t1_fsl_pipeline.inputs.inputnode.in_t1 = caps_path_to_preprocessed_dwi
                 t1_fsl_pipeline.run('MultiProc', plugin_args={'n_procs': args.n_threads})
 
 

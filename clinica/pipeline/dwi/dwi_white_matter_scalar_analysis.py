@@ -8,24 +8,17 @@ def dti_atlas_scalar_analysis_pipeline(
     """
     Perform tracts analysis according to a white matter atlas using a tensor-derived scalar image.
 
-    This function perform the analysis of tracts using a white matter atlas and compute mean value of
-    the scalar on each tracts of this atlas. The function first coregister the subject scalar image
-    on the equivalent scalar image of the atlas and then use the labels to computes the statistics of the
-    scalar on each tracks of the white matter atlas.
+    This function performs the analysis of tracts using a white matter atlas and compute mean value of the scalar on each tracts of this atlas. The function first coregister the subject scalar image on the equivalent scalar image of the atlas and then use the labels to computes the statistics of the scalar on each tracks of the white matter atlas.
 
     Args:
         in_scalar_image (str): 3D image of the scalar obtained from the tensor
         atlas_labels (str): 3D Image of the white matter labels from the atlas
         atlas_scalar_image (str): 3D image of the same scalar as in "in_scalar_image" but from the atlas
         datasink_directory (str): Directory where the results are stored.
-        working_directory (Optional[str]): Directory where the temporary
-            results are stored. If not specified, it is automatically
-            generated (generally in /tmp/).
-
+        working_directory (Optional[str]): Directory where the temporary results are stored. If not specified, it is automatically generated (generally in /tmp/).
 
     Outputnode:
-        out_stats_file (str): File containing for each tract, the mean value of the scalar, the standard deviation
-            and the nb of voxels.
+        out_stats_file (str): File containing for each tract, the mean value of the scalar, the standard deviation and the nb of voxels.
     """
     import nipype.interfaces.io as nio
     import nipype.interfaces.utility as niu
@@ -37,15 +30,11 @@ def dti_atlas_scalar_analysis_pipeline(
     if working_directory is None:
         working_directory = tempfile.mkdtemp()
 
-
-
     inputs=[in_scalar_image, atlas_labels, atlas_scalar_image, working_directory, datasink_directory]
 
     for input_file in inputs:
         if not op.exists(input_file):
             raise IOError('file {} does not exist'.format(input_file))
-
-
 
     datasource = pe.Node(interface=nio.DataGrabber(infields=[], outfields=['in_scalar_image', 'atlas_labels', 'atlas_scalar_image']), name='datasource')
     datasource.inputs.template = '*'
