@@ -12,7 +12,7 @@ from nipype.interfaces.freesurfer.preprocess import ReconAll
 from nipype.interfaces.utility import Function
 import nipype.interfaces.utility as niu
 from tempfile import mkdtemp
-from clinica.pipeline.t1.t1_freesurfer_utils import absolute_path, CAPS_output, write_statistics, checkfov, create_flags_str, get_vars
+from clinica.pipeline.t1.t1_freesurfer_utils import *
 from clinica.engine.cworkflow import *
 
 @Visualize("freeview", "-v ${subject_id}/mri/T1.mgz -f ${subject_id}/surf/lh.white:edgecolor=blue ${subject_id}/surf/lh.pial:edgecolor=green ${subject_id}/surf/rh.white:edgecolor=blue ${subject_id}/surf/rh.pial:edgecolor=green", "subject_id")
@@ -136,11 +136,11 @@ def recon_all_statistics_pipeline(output_dir,
     :return:
     """
 
-    subject_list, session_list = get_vars(subjects_visits_tsv)
-
-    infosource = pe.Node(niu.IdentityInterface(fields=['subject_id', 'session_id']), name="infosource")
-    infosource.inputs.subject_id = subject_list
-    infosource.inputs.session_id = session_list
+    subject_id, subject_list, session_list = get_vars(subjects_visits_tsv)
+    infosource = pe.Node(niu.IdentityInterface(fields=['subject_list', 'session_list', 'subject_id']), name="infosource")
+    infosource.inputs.subject_list = subject_list
+    infosource.inputs.session_list = session_list
+    infosource.inputs.subject_id = subject_id
 
     statisticsnode = pe.MapNode(name='statisticsnode',
                                 iterfield=['subject_list', 'session_list'],
@@ -151,14 +151,26 @@ def recon_all_statistics_pipeline(output_dir,
     statisticsnode.inputs.analysis_series_id = analysis_series_id
     statisticsnode.inputs.output_dir = output_dir
 
+    lognode = pe.Node(name='lognode',
+                      interface=Function(
+                          input_names=['subject_list', 'session_list', 'subject_id', 'output_dir', 'analysis_series_id'],
+                          output_names=[],
+                          function=log_summary))
+    lognode.inputs.output_dir = output_dir
+    lognode.inputs.analysis_series_id = analysis_series_id
+
+
+
     if working_directory is None:
         working_directory = mkdtemp()
     else:
         working_directory = absolute_path(working_directory)
 
     wf_recon_all_statistics = pe.Workflow(name='wf_recon_all_statistics', base_dir=working_directory)
-    wf_recon_all_statistics.connect(infosource, 'subject_id', statisticsnode, 'subject_list')
-    wf_recon_all_statistics.connect(infosource, 'session_id', statisticsnode, 'session_list')
-
+    wf_recon_all_statistics.connect(infosource, 'subject_list', statisticsnode, 'subject_list')
+    wf_recon_all_statistics.connect(infosource, 'session_list', statisticsnode, 'session_list')
+    wf_recon_all_statistics.connect(infosource, 'subject_list', lognode, 'subject_list')
+    wf_recon_all_statistics.connect(infosource, 'session_list', lognode, 'session_list')
+    wf_recon_all_statistics.connect(infosource, 'subject_id', lognode, 'subject_id')
 
     return wf_recon_all_statistics
