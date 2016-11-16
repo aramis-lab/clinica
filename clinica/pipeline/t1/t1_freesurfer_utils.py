@@ -161,26 +161,29 @@ def log_summary(subject_list, session_list, subject_id, output_dir, analysis_ser
     input_logs = []
 
     for i in xrange(len(subject_list)):
-        input_log = os.path.join(dest_dir, subject_list[i], session_list[i], 't1', 'freesurfer-cross-sectional', subject_id[i], 'scripts', 'recon-all.log' )
+        input_log = os.path.join(dest_dir, subject_list[i], session_list[i], 't1', 'freesurfer-cross-sectional', subject_id[i], 'scripts', 'recon-all-status.log' )
         input_logs.append(input_log)
 
     bad_log = 0
+    search_query = 'recon-all -s'
     with open(log_name, 'w') as f1:
         line1 = time.strftime("%Y/%m/%d-%H:%M:%S")
         line2 = 'Quality check: recon-all output summary'
         f1.write("%s\n%s\n\n" % (line1, line2))
         for log in input_logs:
             with open(log, 'r') as f2:
-                line = f2.readlines()[-1]
-                if 'without error' not in line:
-                    bad_log += 1
-                else:
-                    pass
-                f1.write(line)
-                f2.close()
+                lines = f2.readlines()
+                for line in lines:
+                    if (line.startswith(search_query)) and ('without error' not in line):
+                        f1.write(line)
+                        bad_log += 1
+                        break
+                    elif line.startswith(search_query):
+                            f1.write(line)
+                    else:
+                        pass
         line3 = 'Number of subjects: %s \nNumber of bad recon-all is: %s ' % (len(subject_list), bad_log)
         f1.write(line3)
-        f1.close()
 
     # logging.basicConfig(filename=log_name, format='%(asctime)s %(levelname)s:%(message)s',
     #                     datefmt='%m/%d/%Y %I:%M', level=logging.DEBUG)
