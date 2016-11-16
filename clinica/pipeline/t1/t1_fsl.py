@@ -18,12 +18,10 @@ def t1_fsl_segmentation_pipeline(
      TODO - Connect the output of FAST to FIRST when T1 is not bias-corrected.
 
      Args:
-         datasink_directory (str): Directory where the results are stored.
-         working_directory (Optional[str]): Directory where the temporary
-             results are stored. If not specified, it is automatically
-             generated (generally in /tmp/).
-         is_bias_corrected (boolean): Indicate if the image is bias-corrected
-            or not.
+         caps_directory (str): Directory where the results are stored in a CAPS hierarchy.
+         working_directory (Optional[str]): Directory where the temporary results are stored. If not specified, it is
+            automatically generated (generally in /tmp/).
+         is_bias_corrected (boolean): Indicate if the image is bias-corrected or not.
 
      Inputnode:
          in_t1 (str): File containing the T1-weighted image.
@@ -100,8 +98,9 @@ def t1_fsl_segmentation_pipeline(
          name='outputnode')
 
      datasink = pe.Node(nio.DataSink(), name='datasink')
-     caps_identifier = 'sub-' + subject_id + '_ses­' + session_id
-     datasink.inputs.base_directory = join(caps_directory, 'analysis-series-' + analysis_series_id, 'sub-' + subject_id, 'ses-' + session_id, 't1')
+     caps_identifier = subject_id + '_' + session_id
+     datasink.inputs.base_directory = join(caps_directory, 'analysis-series-' + analysis_series_id, 'subjects',
+                                           subject_id, session_id, 't1')
      datasink.inputs.substitutions = [('fast_pve_0.nii.gz', caps_identifier + '_binary-csf.nii.gz'),
                                       ('fast_pve_1.nii.gz', caps_identifier + '_binary-gray-matter.nii.gz'),
                                       ('fast_pve_2.nii.gz', caps_identifier + '_binary-white-matter.nii.gz'),

@@ -20,11 +20,8 @@ def tractography_and_dti_pipeline(
 
     Args:
         output_directory (str): Directory where the results are stored.
-        working_directory (Optional[str]): Directory where the temporary
-            results are stored. If not specified, it is automatically
-            generated (generally in /tmp/).
-        max_harmonic_order (Optional[int]): Maximum harmonic order according to
-            the b-vectors
+        working_directory (Optional[str]): Directory where the temporary results are stored. If not specified, it is automatically generated (generally in /tmp/).
+        max_harmonic_order (Optional[int]): Maximum harmonic order according to the b-vectors
         tractography_algorithm (Optional[str]): See streamlines_tractography
         tractography_nb_of_tracks (Optional[str]): See streamlines_tractography
         tractography_fod_threshold (Optional[float]): See streamlines_tractography
@@ -37,23 +34,16 @@ def tractography_and_dti_pipeline(
         in_dwi_nii (str): File containing DWI dataset in NIfTI format.
         in_bvals (str): File containing B-Value table in FSL format.
         in_bvecs (str): File containing Diffusion Gradient table in FSL format.
-        in_b0_mask (str): Binary mask of the b0 image. Only perform computation
-            within this specified binary brain mask image.
-        in_white_matter_binary_mask (str): Binary mask of the white matter
-            segmentation. Seed streamlines will be entirely generated at random
-            within this mask.
+        in_b0_mask (str): Binary mask of the b0 image. Only perform computation within this specified binary brain mask image.
+        in_white_matter_binary_mask (str): Binary mask of the white matter segmentation. Seed streamlines will be entirely generated at random within this mask.
 
     Outputnode:
         out_dwi_mif (str): Preprocessed DWI in MRtrix format.
         out_dti (str): Tensor fitted to the DWI dataset.
-        out_metrics (str): Maps of tensor-derived parameters namely fractional
-            anisotropy, mean diffusivity (also called mean apparent diffusion),
-            radial diffusivity and the first eigenvector modulated by the FA.
+        out_metrics (str): Maps of tensor-derived parameters namely fractional anisotropy, mean diffusivity (also called mean apparent diffusion), radial diffusivity and the first eigenvector modulated by the FA.
         out_eroded_mask (str): Eroded b0 mask (for debug papooses)
-        out_response_function (str): Text file containing response function
-            coefficients.
-        out_sh_coefficients_image (str): File containing the spherical
-            harmonics coefficients image
+        out_response_function (str): Text file containing response function coefficients.
+        out_sh_coefficients_image (str): File containing the spherical harmonics coefficients image
         out_tracks (str): File containing the generated tracks.
 
     Example:
