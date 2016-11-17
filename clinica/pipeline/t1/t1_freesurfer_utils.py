@@ -7,7 +7,12 @@ import os
 # Function for recon_all_pipeline()
 
 def absolute_path(arg):
-    """Transfer any path to absolute path"""
+    """
+    Transfer any path to absolute path
+
+    :param arg:
+    :return:
+    """
 
     if arg[:1] == '~':
         return os.path.expanduser(arg)
@@ -18,7 +23,14 @@ def absolute_path(arg):
 
 
 def get_dirs(output_dir, subjects_visits_tsv, analysis_series_id):
-    """Define and create the CAPS output for recon_all_pipeline()"""
+    """
+    Define and create the CAPS output for recon_all_pipeline()
+
+    :param output_dir:
+    :param subjects_visits_tsv:
+    :param analysis_series_id:
+    :return:
+    """
     import os, csv, errno
     subject_list = []
     session_list = []
@@ -60,10 +72,15 @@ def get_dirs(output_dir, subjects_visits_tsv, analysis_series_id):
     return subject_dir, subject_id, subject_list, session_list
 
 def checkfov(t1_list, recon_all_args):
-    """Verifying size of inputs and FOV of each T1 image
+    """
+    Verifying size of inputs and FOV of each T1 image
 
     Note:node2mapnode, so every subject is running in parallel, we dont have to check out if they have the same SIZE, but if you
     node2node, it will be serialized, so that we can compare their size.
+
+    :param t1_list:
+    :param recon_all_args:
+    :return:
     """
     import sys
     import nibabel as nib
@@ -124,6 +141,9 @@ def checkfov(t1_list, recon_all_args):
 def create_flags_str(input_flags):
     """
     Create a commandline string from a list of input flags
+
+    :param input_flags:
+    :return:
     """
     output_str = ""
     for flag in input_flags:
@@ -152,6 +172,13 @@ def get_vars(subjects_visits_tsv):
 def log_summary(subject_list, session_list, subject_id, output_dir, analysis_series_id):
     """
     create the txt file to summarize the reconall result for all the subjects
+
+    :param subject_list:
+    :param session_list:
+    :param subject_id:
+    :param output_dir:
+    :param analysis_series_id:
+    :return:
     """
     import os, time
     # from nipype import config, logging
@@ -238,10 +265,39 @@ def freesurferstatas_to_tsv(subject,
                             aparc_BA_lh_meancurv_tsv,
                             aparc_BA_rh_meancurv_tsv):
     """
-    wrapper FS command line freesurfer2table.
+       wrapper FS command line freesurfer2table.
 
     This script will generate text/ascii tables of freesurfer aseg stats data, aseg.stats.
     This can then be easily imported into a spreadsheet and/or stats program.
+
+    :param subject:
+    :param all_seg_volume_tsv:
+    :param aseg_volume_tsv:
+    :param aparc_desikan_lh_volume_tsv:
+    :param aparc_desikan_rh_volume_tsv:
+    :param aparc_desikan_lh_thickness_tsv:
+    :param aparc_desikan_rh_thickness_tsv:
+    :param aparc_desikan_lh_area_tsv:
+    :param aparc_desikan_rh_area_tsv:
+    :param aparc_desikan_lh_meancurv_tsv:
+    :param aparc_desikan_rh_meancurv_tsv:
+    :param aparc_destrieux_lh_volume_tsv:
+    :param aparc_destrieux_rh_volume_tsv:
+    :param aparc_destrieux_lh_thickness_tsv:
+    :param aparc_destrieux_rh_thickness_tsv:
+    :param aparc_destrieux_lh_area_tsv:
+    :param aparc_destrieux_rh_area_tsv:
+    :param aparc_destrieux_lh_meancurv_tsv:
+    :param aparc_destrieux_rh_meancurv_tsv:
+    :param aparc_BA_lh_volume_tsv:
+    :param aparc_BA_rh_volume_tsv:
+    :param aparc_BA_lh_thickness_tsv:
+    :param aparc_BA_rh_thickness_tsv:
+    :param aparc_BA_lh_area_tsv:
+    :param aparc_BA_rh_area_tsv:
+    :param aparc_BA_lh_meancurv_tsv:
+    :param aparc_BA_rh_meancurv_tsv:
+    :return:
     """
 
     cmd_all_seg = 'asegstats2table -s ' + subject + ' --meas volume --statsfile wmparc.stats --all-seg --tablefile ' + all_seg_volume_tsv
@@ -304,8 +360,16 @@ def freesurferstatas_to_tsv(subject,
 
 
 def write_statistics(subject_list, session_list, analysis_series_id, output_dir):
-    """wrapper for FS command line freesurferstats2table
+    """
+    wrapper for FS command line freesurferstats2table
+
     Note:node2mapnode, so every subject is running in parallel, this will be faster than node2node which is serialized.
+
+    :param subject_list:
+    :param session_list:
+    :param analysis_series_id:
+    :param output_dir:
+    :return:
     """
 
     import os, errno
