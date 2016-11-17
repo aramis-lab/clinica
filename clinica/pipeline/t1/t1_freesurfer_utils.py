@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """This module contains functions used for the recon_all_pipeline() and recon_all_statistics_pipeline()"""
-import os, errno, csv
+import os
 
 # Function for recon_all_pipeline()
 
@@ -17,8 +17,9 @@ def absolute_path(arg):
         return os.path.join(os.getcwd(), arg)
 
 
-def CAPS_output(output_dir, subjects_visits_tsv, analysis_series_id):
+def get_dirs(output_dir, subjects_visits_tsv, analysis_series_id):
     """Define and create the CAPS output for recon_all_pipeline()"""
+    import os, csv, errno
     subject_list = []
     session_list = []
     subject_id = []
@@ -41,6 +42,9 @@ def CAPS_output(output_dir, subjects_visits_tsv, analysis_series_id):
     except OSError as exception:
         if exception.errno != errno.EEXIST:  # if the error is not exist error, raise, otherwise, pass
             raise
+    # if not os.path.isdir(output_dir):
+    #     print 'shit stop'
+    #     exit(1)
 
     subject_dir = []
     num_subject = len(subject_list)
@@ -132,6 +136,7 @@ def create_flags_str(input_flags):
 
 def get_vars(subjects_visits_tsv):
     """fetch some necessary vars for this pipeline"""
+    import csv
     subject_list = []
     session_list = []
     subject_id = []
