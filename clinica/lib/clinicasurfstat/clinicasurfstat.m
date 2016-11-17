@@ -76,12 +76,14 @@ firstline = regexp(linevar,'\s+','split'); % in matlab2016, regexp is deprecated
 
 lencolumn = length(firstline);
 if lencolumn <2
-    error('requires at least 2 inputs')
+    error('requires at least 2 inputs columns')
 end
-if  strcmp(firstline{1},'participant_id') ~= 1
-    error('the first colomn of CSV file should always be named by participant_id')
+if  strcmp(firstline{1},'subject_id') ~= 1
+    error('the first colomn of TSV file should always be named by subject_id')
 end
-
+if  strcmp(firstline{2},'session_id') ~= 1
+    error('the first colomn of TSV file should always be named by session_id')
+end
 csvdata = textscan( fid, strformat, 'HeaderLines', 0);
 fclose(fid);
 
@@ -95,19 +97,17 @@ end
 
 for indexsubject = 1 : nrsubject
     subjectname = csvdata{1}{indexsubject};
-    interpath = strcat(inputdir, '/', subjectname, '/*/*/*/*/surf' );
-    [surfsubdir, xuuu] = glob(interpath);
-    surfsubdir = char(surfsubdir);
+    sessionname = csvdata{2}{indexsubject};
+    surfsubdir = strcat(inputdir, '/', subjectname, '/', sessionname, '/t1/freesurfer-cross-sectional/', subjectname, '_', sessionname, '/surf' );
+    %[surfsubdir, xuuu] = glob(interpath);
+    %surfsubdir = char(surfsubdir);
     Y = SurfStatReadData( { ...
         [ surfsubdir '/lh.thickness.fwhm' num2str(sizeoffwhm) '.fsaverage.mgh' ],...
         [ surfsubdir '/rh.thickness.fwhm' num2str(sizeoffwhm) '.fsaverage.mgh' ]} );
-    %Y = SurfStatReadData( { ...
-     %   [ inputdir '/' subjectname '/surf/lh.thickness.fwhm' num2str(sizeoffwhm) '.fsaverage.mgh' ],...
-      %  [ inputdir '/' subjectname '/surf/rh.thickness.fwhm' num2str(sizeoffwhm) '.fsaverage.mgh' ]} );
     if size(Y, 1) ~= 1
         error('Unexpected dimension of Y in SurfStatReadData')
     end
-    disp(['The subject ID is: ', subjectname] )
+    disp(['The subject ID is: ', subjectname, '_', sessionname] )
     if indexsubject == 1
         thicksubject = zeros(nrsubject, size(Y,2));
         indexunique = strfind(firstline, contrast);
@@ -120,63 +120,7 @@ for indexsubject = 1 : nrsubject
         end
     end
     thicksubject(indexsubject, :) = Y;
-         
-    % create the csvLabel to display the Population info, but if it is
-    % necessary to do it here?
-%     if  strcmp(csvdata{indexunique}{indexsubject},factor1)
-%         for indexlabel = 2 : (lencolumn)
-%             csvheader{indexlabel}{1}(end+1)  = csvdata{indexlabel}(indexsubject);
-%         end
-%         nrfactor1 = nrfactor1 + 1;
-%     elseif strcmp(csvdata{indexunique}{indexsubject}, factor2)
-%         for indexlabel = 2 : (lencolumn)
-%             csvheader{indexlabel}{1}(end+1)  = csvdata{indexlabel}(indexsubject);
-%         end
-%         nrfactor2   = nrfactor2 + 1;
-%     else
-%         error(['uniquelabels should be ' factor1 ' or ' factor2 '.'])
-%     end
 end
-
-% Sort our label and all the other columns
-% csvsorted = csvdata;
-% j = 1; k = 1;
-% for indexsorted= 1 : nrsubject
-%     if strcmp(csvdata{indexunique}{indexsorted},factor1)
-%         for index = 1 : lencolumn
-%             csvsorted{index}(j) = csvdata{index}(indexsorted);
-%         end
-%         j = j+1;
-%     elseif strcmp(csvdata{indexunique}{indexsorted},factor2)
-%         for index = 1 : lencolumn
-%             csvsorted{index}(k + nrfactor1) = csvdata{index}(indexsorted);
-%         end
-%         k = k+1;
-%     else
-%         error(['uniquelabels should be ' factor1 'or' factor2 ').'])
-%     end
-% end
-% 
-% %% Population info, here, we can have a if condition and create a function to cal the population info
-% disp('###')
-% disp(['The number of subjectes is: ' num2str(nrsubject) ])
-% disp(['The number of ' factor1 ' is: ' num2str(nrfactor1) ])
-% disp(['The number of ' factor2 ' is: ' num2str(nrfactor2) ])
-% 
-% for indexpop = 1 : lencolumn
-%     if  iscell(csvsorted{indexpop}) == 0 % the 2th cell contains the continue factor popInfo
-%         csvheader{indexpop}{2}(end+ 1) =  mean(csvsorted{indexpop}(1: nrfactor1));
-%         disp([factor1 ' : the mean of ' num2str(indexpop) 'th facor is ' num2str(csvheader{indexpop}{2}(end))])
-%         csvheader{indexpop}{2}(end+ 1) =  mean(csvsorted{indexpop}(nrfactor1 +1 : nrsubject));
-%         disp([ factor2 ' : the mean of ' num2str(indexpop) 'th facor is ' num2str(csvheader{indexpop}{2}(end))])
-%         csvheader{indexpop}{3}(end+ 1) =  std(csvsorted{indexpop}(1: nrfactor1));
-%         disp([factor1 ' : the sd of ' num2str(indexpop) 'th facor is ' num2str(csvheader{indexpop}{3}(end))])
-%         csvheader{indexpop}{3}(end+ 1) =  std(csvsorted{indexpop}(nrfactor1 +1 : nrsubject));
-%         disp([ factor2 ' : the sd of ' num2str(indexpop) 'th facor is ' num2str(csvheader{indexpop}{3}(end))])
-%         
-%     end
-% end
-% disp('###')
 
 %% Load average surface & creation of the mask :
 averagesurface = SurfStatReadSurf( { strcat(surfstathome,'/fsaverage/lh.pial') , strcat(surfstathome,'/fsaverage/rh.pial') } );

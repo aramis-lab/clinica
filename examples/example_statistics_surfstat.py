@@ -52,7 +52,7 @@ import time
 caps_dir = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat'
 # For the CAPS_surfstat, the output images should be in the same parent folder with the CAPS_input, like /group/group<group_label>, diff optional params will save into diff grouplabel folder.
 tsv_file  = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat/analysis-series-default/subjects/subjects_group_list.tsv'
-str_format = '%s %s %s %f'
+str_format = '%s %s %s %s %f'
 linear_model = '1 + group + sex + age'
 
 print 'Output dir is in the same CAPS folder with the input'
