@@ -304,8 +304,10 @@ class CmdParserStatisticsSurfStat(CmdParser):
                                 help='A list to define the contrast matrix for GLM, eg, group_label')
         self._args.add_argument("str_format",
                                 help='A list to define the format string for the tsv column , eg, %%s %%s %%s %%f')
-        self._args.add_argument("group_id",
+        self._args.add_argument("group_label",
                                 help='Current group name')
+        self._args.add_argument("analysis_series_id",
+                                help='an existed recon-alled series, correspondent to your former t1_freesurfer pipeline')
         self._args.add_argument("-sof", "--size_of_fwhm", type=int, default=20, help='FWHM for the surface smoothing')
         self._args.add_argument("-tup", "--threshold_uncorrected_p_value", type=float, default='0.001',
                                 help='Threshold to display the uncorrected Pvalue')
@@ -327,7 +329,8 @@ class CmdParserStatisticsSurfStat(CmdParser):
                                        args.linear_model,
                                        args.contrast,
                                        args.str_format,
-                                       args.group_id,
+                                       args.group_label,
+                                       args.analysis_series_id,
                                        size_of_fwhm=args.size_of_fwhm,
                                        threshold_uncorrected_pvalue=args.threshold_uncorrected_p_value,
                                        threshold_corrected_pvalue=args.threshold_corrected_p_value,
