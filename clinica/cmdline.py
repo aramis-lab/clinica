@@ -153,7 +153,6 @@ def execute():
         print(*get_cmdparser_names())
     pipeline_list_parser.set_defaults(func=pipeline_list_fun)
 
-
     """
     run option: run one of the available pipelines
     """
@@ -169,6 +168,13 @@ def execute():
     convert_parser = sub_parser.add_parser('convert')
     converters = [CmdParserCappToBids(), CmdParserInsightToBids(), CmdParserPrevDemAlsToBids()]
     init_cmdparser_objects(parser, convert_parser.add_subparsers(), converters)
+
+    """
+    io option
+    """
+    io_parser = sub_parser.add_parser('io')
+    io_tasks = [CmdParserSubsSess()]
+    init_cmdparser_objects(parser, io_parser.add_subparsers(), io_tasks)
 
     def silent_help(): pass
 
