@@ -251,7 +251,7 @@ class CmdParserT1SPMSegment(CmdParser):
         segment_wf.run('MultiProc', plugin_args={'n_procs': args.n_procs})
 
 
-class CmdParserT1ReconAll(CmdParser):
+class CmdParserT1FreeSurfer(CmdParser):
 
     def define_name(self):
         self._name = 't1-freesurfer'
@@ -268,18 +268,15 @@ class CmdParserT1ReconAll(CmdParser):
         self._args.add_argument("-wd", "--working_directory", type=str, default=None,
                                 help='Temporary directory to run the workflow')
         self._args.add_argument("-ras", "--reconall_args", type=str, default='-qcache',
-                                help='additional flags for reconAll command line, default is -qcache')
+                                help='additional flags for recon-all command line, default is -qcache')
         self._args.add_argument("-np", "--n_procs", type=int, default=4,
                                 help='Number of parallel processes to run')
 
     def run_pipeline(self, args):
 
-        from clinica.pipeline.t1.t1_freesurfer import recon_all_pipeline
+        from clinica.pipeline.t1.t1_freesurfer import t1_freesurfer_pipeline
 
-        # working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
-        # working_directory = self.absolute_path(args.working_directory)
-
-        reconall_wf = recon_all_pipeline(self.absolute_path(args.bids_dir),
+        reconall_wf = t1_freesurfer_pipeline(self.absolute_path(args.bids_dir),
                                          self.absolute_path(args.caps_dir),
                                          self.absolute_path(args.subjects_sessions),
                                          analysis_series_id=args.analysis_series_id,
@@ -304,8 +301,10 @@ class CmdParserStatisticsSurfStat(CmdParser):
                                 help='A list to define the contrast matrix for GLM, eg, group_label')
         self._args.add_argument("str_format",
                                 help='A list to define the format string for the tsv column , eg, %%s %%s %%s %%f')
-        self._args.add_argument("group_id",
+        self._args.add_argument("group_label",
                                 help='Current group name')
+        self._args.add_argument("analysis_series_id",
+                                help='an existed recon-alled series, correspondent to your former t1_freesurfer pipeline')
         self._args.add_argument("-sof", "--size_of_fwhm", type=int, default=20, help='FWHM for the surface smoothing')
         self._args.add_argument("-tup", "--threshold_uncorrected_p_value", type=float, default='0.001',
                                 help='Threshold to display the uncorrected Pvalue')
@@ -327,7 +326,8 @@ class CmdParserStatisticsSurfStat(CmdParser):
                                        args.linear_model,
                                        args.contrast,
                                        args.str_format,
-                                       args.group_id,
+                                       args.group_label,
+                                       args.analysis_series_id,
                                        size_of_fwhm=args.size_of_fwhm,
                                        threshold_uncorrected_pvalue=args.threshold_uncorrected_p_value,
                                        threshold_corrected_pvalue=args.threshold_corrected_p_value,
