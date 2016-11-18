@@ -7,7 +7,7 @@ Created on Mon Apr 25 15:04:17 2016
 """
 
 from __future__ import absolute_import
-from clinica.pipeline.t1.t1_freesurfer import recon_all_pipeline
+from clinica.pipeline.t1.t1_freesurfer import t1_freesurfer_pipeline
 from os.path import realpath,split,join
 import time
 import tempfile
@@ -24,7 +24,7 @@ working_directory='~/test/test-reconall-lab'
 
 # this is the example to run CAPP dataset
 def recon_all_example_CAPP():
-    return recon_all_pipeline(data_dir_CAPP, output_dir, tsv_file_CAPP, working_directory=working_directory)
+    return t1_freesurfer_pipeline(data_dir_CAPP, output_dir, tsv_file_CAPP, working_directory=working_directory)
 
 # # this is the example to run INSIGHT dataset
 # def recon_all_example_INSIGHT():

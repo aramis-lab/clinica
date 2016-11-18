@@ -251,7 +251,7 @@ class CmdParserT1SPMSegment(CmdParser):
         segment_wf.run('MultiProc', plugin_args={'n_procs': args.n_procs})
 
 
-class CmdParserT1ReconAll(CmdParser):
+class CmdParserT1FreeSurfer(CmdParser):
 
     def define_name(self):
         self._name = 't1-freesurfer'
@@ -268,18 +268,15 @@ class CmdParserT1ReconAll(CmdParser):
         self._args.add_argument("-wd", "--working_directory", type=str, default=None,
                                 help='Temporary directory to run the workflow')
         self._args.add_argument("-ras", "--reconall_args", type=str, default='-qcache',
-                                help='additional flags for reconAll command line, default is -qcache')
+                                help='additional flags for recon-all command line, default is -qcache')
         self._args.add_argument("-np", "--n_procs", type=int, default=4,
                                 help='Number of parallel processes to run')
 
     def run_pipeline(self, args):
 
-        from clinica.pipeline.t1.t1_freesurfer import recon_all_pipeline
+        from clinica.pipeline.t1.t1_freesurfer import t1_freesurfer_pipeline
 
-        # working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
-        # working_directory = self.absolute_path(args.working_directory)
-
-        reconall_wf = recon_all_pipeline(self.absolute_path(args.bids_dir),
+        reconall_wf = t1_freesurfer_pipeline(self.absolute_path(args.bids_dir),
                                          self.absolute_path(args.caps_dir),
                                          self.absolute_path(args.subjects_sessions),
                                          analysis_series_id=args.analysis_series_id,
