@@ -54,9 +54,6 @@ def get_dirs(output_dir, subjects_visits_tsv, analysis_series_id):
     except OSError as exception:
         if exception.errno != errno.EEXIST:  # if the error is not exist error, raise, otherwise, pass
             raise
-    # if not os.path.isdir(output_dir):
-    #     print 'shit stop'
-    #     exit(1)
 
     subject_dir = []
     num_subject = len(subject_list)
@@ -159,15 +156,15 @@ def get_vars(subjects_visits_tsv):
     import csv
     subject_list = []
     session_list = []
-    subject_id = []
+
     with open(subjects_visits_tsv, 'rb') as tsvin:
         tsv_reader = csv.reader(tsvin, delimiter='\t')
 
         for row in tsv_reader:
             subject_list.append(row[0])
             session_list.append(row[1])
-            subject_id.append(row[0] + '_' + row[1])
-    return subject_id, subject_list, session_list
+
+    return subject_list, session_list
 
 def log_summary(subject_list, session_list, subject_id, output_dir, analysis_series_id):
     """
@@ -359,7 +356,7 @@ def freesurferstatas_to_tsv(subject,
     print "Writing statistical data to tsv file for %s finished!" % subject
 
 
-def write_statistics(subject_list, session_list, analysis_series_id, output_dir):
+def write_statistics(subject_list, session_list, subject_id,analysis_series_id, output_dir):
     """
     wrapper for FS command line freesurferstats2table
 
@@ -375,35 +372,35 @@ def write_statistics(subject_list, session_list, analysis_series_id, output_dir)
     import os, errno
     from clinica.pipeline.t1.t1_freesurfer_utils import freesurferstatas_to_tsv
 
-    all_seg_volume = subject_list + '_' + session_list + '_all_seg.tsv'
-    aseg_volume = subject_list + '_' + session_list + '_aseg_volume.tsv'
+    all_seg_volume = subject_id + '_all_seg.tsv'
+    aseg_volume = subject_id + '_aseg_volume.tsv'
 
-    aparc_desikan_lh_volume = subject_list + '_' + session_list + '_lh_aparc_desikan_volume.tsv'
-    aparc_desikan_rh_volume = subject_list + '_' + session_list + '_rh_aparc_desikan_volume.tsv'
-    aparc_desikan_lh_thickness = subject_list + '_' + session_list + '_lh_aparc_desikan_thickness.tsv'
-    aparc_desikan_rh_thickness = subject_list + '_' + session_list + '_rh_aparc_desikan_thickness.tsv'
-    aparc_desikan_lh_area = subject_list + '_' + session_list + '_lh_aparc_desikan_area.tsv'
-    aparc_desikan_rh_area = subject_list + '_' + session_list + '_rh_aparc_desikan_area.tsv'
-    aparc_desikan_lh_meancurv = subject_list + '_' + session_list + '_lh_aparc_desikan_meancurv.tsv'
-    aparc_desikan_rh_meancurv = subject_list + '_' + session_list + '_rh_aparc_desikan_meancurv.tsv'
+    aparc_desikan_lh_volume = subject_id + '_lh_aparc_desikan_volume.tsv'
+    aparc_desikan_rh_volume = subject_id + '_rh_aparc_desikan_volume.tsv'
+    aparc_desikan_lh_thickness = subject_id + '_lh_aparc_desikan_thickness.tsv'
+    aparc_desikan_rh_thickness = subject_id + '_rh_aparc_desikan_thickness.tsv'
+    aparc_desikan_lh_area = subject_id + '_lh_aparc_desikan_area.tsv'
+    aparc_desikan_rh_area = subject_id + '_rh_aparc_desikan_area.tsv'
+    aparc_desikan_lh_meancurv = subject_id + '_lh_aparc_desikan_meancurv.tsv'
+    aparc_desikan_rh_meancurv = subject_id + '_rh_aparc_desikan_meancurv.tsv'
 
-    aparc_destrieux_lh_volume = subject_list + '_' + session_list + '_lh_aparc_destrieux_volume.tsv'
-    aparc_destrieux_rh_volume = subject_list + '_' + session_list + '_rh_aparc_destrieux_volume.tsv'
-    aparc_destrieux_lh_thickness = subject_list + '_' + session_list + '_lh_aparc_destrieux_thickness.tsv'
-    aparc_destrieux_rh_thickness = subject_list + '_' + session_list + '_rh_aparc_destrieux_thickness.tsv'
-    aparc_destrieux_lh_area = subject_list + '_' + session_list + '_lh_aparc_destrieux_area.tsv'
-    aparc_destrieux_rh_area = subject_list + '_' + session_list + '_rh_aparc_destrieux_area.tsv'
-    aparc_destrieux_lh_meancurv = subject_list + '_' + session_list + '_lh_aparc_destrieux_meancurv.tsv'
-    aparc_destrieux_rh_meancurv = subject_list + '_' + session_list + '_rh_aparc_destrieux_meancurv.tsv'
+    aparc_destrieux_lh_volume = subject_id + '_lh_aparc_destrieux_volume.tsv'
+    aparc_destrieux_rh_volume = subject_id + '_rh_aparc_destrieux_volume.tsv'
+    aparc_destrieux_lh_thickness = subject_id + '_lh_aparc_destrieux_thickness.tsv'
+    aparc_destrieux_rh_thickness = subject_id + '_rh_aparc_destrieux_thickness.tsv'
+    aparc_destrieux_lh_area = subject_id + '_lh_aparc_destrieux_area.tsv'
+    aparc_destrieux_rh_area = subject_id + '_rh_aparc_destrieux_area.tsv'
+    aparc_destrieux_lh_meancurv = subject_id + '_lh_aparc_destrieux_meancurv.tsv'
+    aparc_destrieux_rh_meancurv = subject_id + '_rh_aparc_destrieux_meancurv.tsv'
 
-    aparc_BA_lh_volume = subject_list + '_' + session_list + '_lh_aparc_BA_volume.tsv'
-    aparc_BA_rh_volume = subject_list + '_' + session_list + '_rh_aparc_BA_volume.tsv'
-    aparc_BA_lh_thickness = subject_list + '_' + session_list + '_lh_aparc_BA_thickness.tsv'
-    aparc_BA_rh_thickness = subject_list + '_' + session_list + '_rh_aparc_BA_thickness.tsv'
-    aparc_BA_lh_area = subject_list + '_' + session_list + '_lh_aparc_BA_area.tsv'
-    aparc_BA_rh_area = subject_list + '_' + session_list + '_rh_aparc_BA_area.tsv'
-    aparc_BA_lh_meancurv = subject_list + '_' + session_list + '_lh_aparc_BA_meancurv.tsv'
-    aparc_BA_rh_meancurv = subject_list + '_' + session_list + '_rh_aparc_BA_meancurv.tsv'
+    aparc_BA_lh_volume = subject_id + '_lh_aparc_BA_volume.tsv'
+    aparc_BA_rh_volume = subject_id + '_rh_aparc_BA_volume.tsv'
+    aparc_BA_lh_thickness = subject_id + '_lh_aparc_BA_thickness.tsv'
+    aparc_BA_rh_thickness = subject_id + '_rh_aparc_BA_thickness.tsv'
+    aparc_BA_lh_area = subject_id + '_lh_aparc_BA_area.tsv'
+    aparc_BA_rh_area = subject_id + '_rh_aparc_BA_area.tsv'
+    aparc_BA_lh_meancurv = subject_id + '_lh_aparc_BA_meancurv.tsv'
+    aparc_BA_rh_meancurv = subject_id + '_rh_aparc_BA_meancurv.tsv'
 
     subject_name = subject_list + '_' + session_list
     output_path = os.path.expanduser(output_dir)
@@ -413,7 +410,7 @@ def write_statistics(subject_list, session_list, analysis_series_id, output_dir)
         print("ERROR: directory freesurfer-cross-sectional does not exist, it should be CAPS directory after running recon_all_pipeline!!!")
     else:
         pass
-    dest_dir = cs_dir + '/statistics'
+    dest_dir = cs_dir + '/regional_measures'
     try:
         os.makedirs(dest_dir)
     except OSError as exception:
