@@ -11,7 +11,7 @@ import nipype.interfaces.io as nio
 from nipype.interfaces.freesurfer.preprocess import ReconAll
 from nipype.interfaces.utility import Function
 from tempfile import mkdtemp
-from clinica.pipeline.t1.t1_freesurfer_utils import create_flags_str, checkfov, absolute_path, write_statistics, log_summary, get_dirs, get_vars
+from clinica.pipeline.t1.t1_freesurfer_utils import create_flags_str, checkfov, absolute_path, write_statistics, log_summary, get_dirs
 from clinica.engine.cworkflow import *
 
 @Visualize("freeview", "-v ${subject_id}/mri/T1.mgz -f ${subject_id}/surf/lh.white:edgecolor=blue ${subject_id}/surf/lh.pial:edgecolor=green ${subject_id}/surf/rh.white:edgecolor=blue ${subject_id}/surf/rh.pial:edgecolor=green", "subject_id")
@@ -129,19 +129,11 @@ def t1_freesurfer_pipeline(input_dir,
     wf_recon_all.connect(flagnode, 'output_flags', create_flags, 'input_flags')
     wf_recon_all.connect(create_flags, 'output_str', recon_all, 'flags')
 
-
-    # Node to create the tsv folders
-    tsvinputnode = pe.Node(name='tsvinputnode',
-                          interface=Function(
-                          input_names=['subjects_visits_tsv'],
-                          output_names=['subject_list', 'session_list'],
-                          function=get_vars))
-    tsvinputnode.inputs.subjects_visits_tsv = subjects_visits_tsv
-
+    # Nodes for tsv and log summary files
     statisticsnode = pe.MapNode(name='statisticsnode',
-                                iterfield=['subject_list', 'session_list', 'subject_id'],
+                                iterfield=['wmparc', 'aparc_a2009s_stats', 'BA_stats', 'subject_list', 'session_list', 'subject_id'],
                                 interface=Function(
-                                 input_names=['subject_list', 'session_list', 'subject_id', 'analysis_series_id', 'output_dir'],
+                                 input_names=['wmparc', 'aparc_a2009s_stats', 'BA_stats', 'subject_list' 'session_list', 'subject_id', 'analysis_series_id', 'output_dir'],
                                  output_names=[],
                                  function=write_statistics))
     statisticsnode.inputs.analysis_series_id = analysis_series_id
@@ -157,16 +149,19 @@ def t1_freesurfer_pipeline(input_dir,
 
     wf_recon_all_tsvs = pe.Workflow(name='wf_recon_all_tsvs')
 
-    wf_recon_all_tsvs.connect(tsvinputnode, 'subject_list', statisticsnode, 'subject_list')
-    wf_recon_all_tsvs.connect(tsvinputnode, 'session_list', statisticsnode, 'session_list')
-    wf_recon_all_tsvs.connect(tsvinputnode, 'subject_list', lognode, 'subject_list')
-    wf_recon_all_tsvs.connect(tsvinputnode, 'session_list', lognode, 'session_list')
+    wf_recon_all_tsvs.connect(inputnode, 'subject_list', statisticsnode, 'subject_list')
+    wf_recon_all_tsvs.connect(inputnode, 'session_list', statisticsnode, 'session_list')
+    wf_recon_all_tsvs.connect(inputnode, 'subject_list', lognode, 'subject_list')
+    wf_recon_all_tsvs.connect(inputnode, 'session_list', lognode, 'session_list')
 
     metaflow = pe.Workflow(name='metaflow', base_dir=working_directory)
 
     # connect the two subworkflows
     metaflow.connect([(wf_recon_all, wf_recon_all_tsvs,[('recon_all.subject_id', 'lognode.subject_id'),
                                                         ('recon_all.subject_id', 'statisticsnode.subject_id'),
+                                                        ('recon_all.wmparc', 'statisticsnode.wmparc'),
+                                                        ('recon_all.aparc_a2009s_stats', 'statisticsnode.aparc_a2009s_stats'),
+                                                        ('recon_all.BA_stats', 'statisticsnode.BA_stats'),
                                                         ]),
                        ])
 
