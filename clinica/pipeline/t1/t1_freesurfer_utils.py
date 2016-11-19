@@ -160,7 +160,8 @@ def log_summary(subject_list, session_list, subject_id, output_dir, analysis_ser
     :param analysis_series_id:
     :return:
     """
-    import os, time
+    import os
+    from datetime import datetime
     # from nipype import config, logging
 
     output_path = os.path.expanduser(output_dir)
@@ -179,7 +180,7 @@ def log_summary(subject_list, session_list, subject_id, output_dir, analysis_ser
     bad_log = 0
     search_query = 'recon-all -s'
     with open(log_name, 'w') as f1:
-        line1 = time.strftime("%Y/%m/%d-%H:%M:%S")
+        line1 = datetime.now().isoformat()
         line2 = 'Quality check: recon-all output summary'
         f1.write("%s\n%s\n\n" % (line1, line2))
         for log in input_logs:
