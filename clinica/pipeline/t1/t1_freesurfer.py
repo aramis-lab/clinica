@@ -133,7 +133,8 @@ def t1_freesurfer_pipeline(input_dir,
     statisticsnode = pe.MapNode(name='statisticsnode',
                                 iterfield=['wmparc', 'aparc_a2009s_stats', 'BA_stats', 'subject_list', 'session_list', 'subject_id'],
                                 interface=Function(
-                                 input_names=['wmparc', 'aparc_a2009s_stats', 'BA_stats', 'subject_list' 'session_list', 'subject_id', 'analysis_series_id', 'output_dir'],
+                                 input_names=['wmparc', 'aparc_a2009s_stats', 'BA_stats', 'subject_list', 'session_list',
+                                              'subject_id', 'analysis_series_id', 'output_dir'],
                                  output_names=[],
                                  function=write_statistics))
     statisticsnode.inputs.analysis_series_id = analysis_series_id
