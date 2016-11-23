@@ -4,56 +4,53 @@
 """This module contains pipelines for the processing of DWI dataset."""
 
 def tractography_and_dti_pipeline(
-                output_directory, working_directory=None, max_harmonic_order=None,
-                tractography_algorithm='iFOD2', tractography_nb_of_tracks="100K",
-                tractography_fod_threshold=None, tractography_step_size=None, tractography_angle=None,
-                nthreads=2, name="whole_brain_tractography_pipeline"):
+        subject_id, session_id, analysis_series_id,
+        caps_directory, working_directory=None, max_harmonic_order=None,
+        tractography_algorithm='iFOD2', tractography_nb_of_tracks="100K",
+        tractography_fod_threshold=None, tractography_step_size=None, tractography_angle=None,
+        nthreads=2, name="whole_brain_tractography_pipeline"):
     """
     Perform single-shell tractography and DTI.
 
-    This pipeline performs a whole-brain single-shell tractography and DTI on a
-    preprocessed DWI dataset. This Python implementation is using MRtrix3 and
-    is based on the tutorial given by the MRtrix community during the ISMRM
+    This pipeline performs a whole-brain single-shell tractography and DTI on a preprocessed DWI dataset. This Python
+    implementation is using MRtrix3 and is based on the tutorial given by the MRtrix community during the ISMRM
     conference in 2015.
 
     .. warning :: This is not suited for multi-shell data at all.
 
     Args:
-        output_directory (str): Directory where the results are stored.
-        working_directory (Optional[str]): Directory where the temporary
-            results are stored. If not specified, it is automatically
-            generated (generally in /tmp/).
-        max_harmonic_order (Optional[int]): Maximum harmonic order according to
-            the b-vectors
+        subject_id (str): Subject ID in a BIDS format ('sub-<participant_label>').
+        session_id (str): Session ID in a BIDS format ('ses-<session_label>').
+        analysis_series_id (str): Analysis series ID (will create the 'analysis-series-<analysis_series_id>/' folder
+            for the CAPS hierarchy)
+        caps_directory (str): Directory where the results are stored in a CAPS hierarchy.
+        working_directory (Optional[str]): Directory where the temporary results are stored. If not specified, it is
+            automatically generated (generally in /tmp/).
+        max_harmonic_order (Optional[int]): Maximum harmonic order according to the b-vectors
         tractography_algorithm (Optional[str]): See streamlines_tractography
         tractography_nb_of_tracks (Optional[str]): See streamlines_tractography
         tractography_fod_threshold (Optional[float]): See streamlines_tractography
         tractography_step_size (Optional[int]): See streamlines_tractography
         tractography_angle (Optional[int]): See streamlines_tractography
-        nthreads (Optional[int]): Number of threads used for the pipeline
-            (default=2, 0 disables multi-threading).
+        nthreads (Optional[int]): Number of threads used for the pipeline (default=2, 0 disables multi-threading).
+        name (Optional[str]): Name of the pipeline.
 
     Inputnode:
         in_dwi_nii (str): File containing DWI dataset in NIfTI format.
         in_bvals (str): File containing B-Value table in FSL format.
         in_bvecs (str): File containing Diffusion Gradient table in FSL format.
-        in_b0_mask (str): Binary mask of the b0 image. Only perform computation
-            within this specified binary brain mask image.
-        in_white_matter_binary_mask (str): Binary mask of the white matter
-            segmentation. Seed streamlines will be entirely generated at random
-            within this mask.
+        in_b0_mask (str): Binary mask of the b0 image. Only perform computation within this specified binary brain mask image.
+        in_white_matter_binary_mask (str): Binary mask of the white matter segmentation. Seed streamlines will be
+            entirely generated at random within this mask.
 
     Outputnode:
         out_dwi_mif (str): Preprocessed DWI in MRtrix format.
         out_dti (str): Tensor fitted to the DWI dataset.
-        out_metrics (str): Maps of tensor-derived parameters namely fractional
-            anisotropy, mean diffusivity (also called mean apparent diffusion),
-            radial diffusivity and the first eigenvector modulated by the FA.
-        out_eroded_mask (str): Eroded b0 mask (for debug papooses)
-        out_response_function (str): Text file containing response function
-            coefficients.
-        out_sh_coefficients_image (str): File containing the spherical
-            harmonics coefficients image
+        out_metrics (str): Maps of tensor-derived parameters namely fractional anisotropy, mean diffusivity (also
+            called mean apparent diffusion), radial diffusivity and the first eigenvector modulated by the FA.
+        out_eroded_mask (str): Eroded b0 mask (for debug purposes)
+        out_response_function (str): Text file containing response function coefficients.
+        out_sh_coefficients_image (str): File containing the spherical harmonics coefficients image
         out_tracks (str): File containing the generated tracks.
 
     Example:
@@ -137,15 +134,10 @@ def tractography_and_dti_pipeline(
                 'out_response_function', 'out_sh_coefficients_image', 'out_tracks']),
         name='outputnode')
 
-
-    analysis_series_id = '01'
-    subject_id = 'CLNC042'
-    session_id = 'M00'
-
     datasink = pe.Node(nio.DataSink(), name='datasink')
     caps_identifier = 'sub-' + subject_id + '_ses­' + session_id
-    datasink.inputs.base_directory = join(output_directory, 'analysis-series-' + analysis_series_id,
-                                          'sub-' + subject_id, 'ses-' + session_id, 'dwi')
+    datasink.inputs.base_directory = join(caps_directory, 'analysis-series-' + analysis_series_id, 'subjects',
+                                          subject_id, session_id, 'dwi')
     datasink.inputs.substitutions = [('dti.mif', caps_identifier + '_dti.mif'),
                                      ('dwi.mif', caps_identifier + '_dwi.mif'),
                                      ('eroded_mask.nii.gz', caps_identifier + '_eroded-b0-mask.nii.gz'),
