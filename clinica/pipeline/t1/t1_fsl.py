@@ -11,19 +11,21 @@ def t1_fsl_segmentation_pipeline(
      """
      Perform segmentation of T1-weighted image by FSL.
 
-     This pipeline performs all the FSL commands than can be performed on a
-     T1-weighted image (BET for brain extraction, FAST for tissue segmentation,
-     FIRST for gray nuclei segmentation).
+     This pipeline performs all the FSL commands than can be performed on a T1-weighted image (BET for
+     brain extraction, FAST for tissue segmentation, FIRST for gray nuclei segmentation).
 
      TODO - Connect the output of FAST to FIRST when T1 is not bias-corrected.
 
      Args:
-         datasink_directory (str): Directory where the results are stored.
-         working_directory (Optional[str]): Directory where the temporary
-             results are stored. If not specified, it is automatically
-             generated (generally in /tmp/).
-         is_bias_corrected (boolean): Indicate if the image is bias-corrected
-            or not.
+         subject_id (str): Subject ID in a BIDS format ('sub-<participant_label>').
+         session_id (str): Session ID in a BIDS format ('ses-<session_label>').
+         analysis_series_id (str): Analysis series ID (will create the 'analysis-series-<analysis_series_id>/' folder
+            for the CAPS hierarchy)
+         caps_directory (str): Directory where the results are stored in a CAPS hierarchy.
+         working_directory (Optional[str]): Directory where the temporary results are stored. If not specified, it is
+            automatically generated (generally in /tmp/).
+         is_bias_corrected (boolean): Indicate if the image is bias-corrected or not.
+         name (Optional[str]): Name of the pipeline.
 
      Inputnode:
          in_t1 (str): File containing the T1-weighted image.
@@ -38,8 +40,13 @@ def t1_fsl_segmentation_pipeline(
 
      Example:
          >>> from clinica.pipeline.t1.t1_fsl import t1_fsl_segmentation_pipeline
-         >>> fsl_segmentation = t1_fsl_segmentation_pipeline(caps_directory='/path/to/caps/directory', is_bias_corrected=True)
-         >>> fsl_segmentation.run()
+         >>> t1_fsl_segmentation = t1_fsl_segmentation_pipeline(subject_id='sub-CLNC042',
+         >>>                                                    session_id='ses-M00',
+         >>>                                                    analysis_series_id= 'my_analysis',
+         >>>                                                    caps_directory= 'path/to/save/data',
+         >>>                                                    is_bias_corrected=True)
+         >>> t1_fsl_segmentation.inputs.inputnode.in_t1 = 'path/to/bias_corrected_image.nii'
+         >>> t1_fsl_segmentation.run()
      """
      import os
      import nipype.interfaces.fsl as fsl
@@ -100,8 +107,9 @@ def t1_fsl_segmentation_pipeline(
          name='outputnode')
 
      datasink = pe.Node(nio.DataSink(), name='datasink')
-     caps_identifier = 'sub-' + subject_id + '_ses­' + session_id
-     datasink.inputs.base_directory = join(caps_directory, 'analysis-series-' + analysis_series_id, 'sub-' + subject_id, 'ses-' + session_id, 't1')
+     caps_identifier = subject_id + '_' + session_id
+     datasink.inputs.base_directory = join(caps_directory, 'analysis-series-' + analysis_series_id, 'subjects',
+                                           subject_id, session_id, 't1')
      datasink.inputs.substitutions = [('fast_pve_0.nii.gz', caps_identifier + '_binary-csf.nii.gz'),
                                       ('fast_pve_1.nii.gz', caps_identifier + '_binary-gray-matter.nii.gz'),
                                       ('fast_pve_2.nii.gz', caps_identifier + '_binary-white-matter.nii.gz'),
@@ -114,6 +122,7 @@ def t1_fsl_segmentation_pipeline(
                                       ]
 
      wf = pe.Workflow(name=name)
+     wf.base_dir = working_directory
      wf.connect([
          # Pre-mask the T1-weighted image to standard space:
          (inputnode,   standard_space_roi, [('in_t1', 'in_t1')]),
