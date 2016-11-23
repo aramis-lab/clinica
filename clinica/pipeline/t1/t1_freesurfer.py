@@ -129,13 +129,10 @@ def t1_freesurfer_pipeline(input_dir,
     wf_recon_all.connect(flagnode, 'output_flags', create_flags, 'input_flags')
     wf_recon_all.connect(create_flags, 'output_str', recon_all, 'flags')
 
-    # Nodes for tsv and log summary files
-    statisticsnode = pe.MapNode(name='statisticsnode',
-                                iterfield=['wmparc', 'aparc_a2009s_stats', 'BA_stats', 'subject_list', 'session_list', 'subject_id'],
+    statisticsnode = pe.Node(name='statisticsnode',
                                 interface=Function(
-                                 input_names=['wmparc', 'aparc_a2009s_stats', 'BA_stats', 'subject_list', 'session_list',
-                                              'subject_id', 'analysis_series_id', 'output_dir'],
-                                 output_names=[],
+                                 input_names=['subject_dir', 'subject_id', 'analysis_series_id', 'output_dir'],
+                                 output_names=['analysis_series_id', 'output_dir'],
                                  function=write_statistics))
     statisticsnode.inputs.analysis_series_id = analysis_series_id
     statisticsnode.inputs.output_dir = output_dir
@@ -145,24 +142,19 @@ def t1_freesurfer_pipeline(input_dir,
                           input_names=['subject_list', 'session_list', 'subject_id', 'output_dir', 'analysis_series_id'],
                           output_names=[],
                           function=log_summary))
-    lognode.inputs.output_dir = output_dir
-    lognode.inputs.analysis_series_id = analysis_series_id
 
     wf_recon_all_tsvs = pe.Workflow(name='wf_recon_all_tsvs')
 
-    wf_recon_all_tsvs.connect(inputnode, 'subject_list', statisticsnode, 'subject_list')
-    wf_recon_all_tsvs.connect(inputnode, 'session_list', statisticsnode, 'session_list')
-    wf_recon_all_tsvs.connect(inputnode, 'subject_list', lognode, 'subject_list')
-    wf_recon_all_tsvs.connect(inputnode, 'session_list', lognode, 'session_list')
+    wf_recon_all_tsvs.connect(statisticsnode, 'analysis_series_id', lognode, 'analysis_series_id')
+    wf_recon_all_tsvs.connect(statisticsnode, 'output_dir', lognode, 'output_dir')
 
     metaflow = pe.Workflow(name='metaflow', base_dir=working_directory)
 
-    # connect the two subworkflows
     metaflow.connect([(wf_recon_all, wf_recon_all_tsvs,[('recon_all.subject_id', 'lognode.subject_id'),
                                                         ('recon_all.subject_id', 'statisticsnode.subject_id'),
-                                                        ('recon_all.wmparc', 'statisticsnode.wmparc'),
-                                                        ('recon_all.aparc_a2009s_stats', 'statisticsnode.aparc_a2009s_stats'),
-                                                        ('recon_all.BA_stats', 'statisticsnode.BA_stats'),
+                                                        ('recon_all.subject_dir', 'statisticsnode.subject_dir'),
+                                                        ('inputnode.subject_list', 'lognode.subject_list'),
+                                                        ('inputnode.session_list', 'lognode.session_list'),
                                                         ]),
                        ])
 
