@@ -312,60 +312,60 @@ def write_statistics(subject_dir, subject_id, analysis_series_id, output_dir):
         subject_path = (os.path.join(subject_dir[i], subject_id[i]))
         subjects += subject_path + ' '
 
-    cmd_all_seg = 'asegstats2table --subjects ' + subjects + '--transpose --meas volume --statsfile wmparc.stats --all-seg --tablefile ' + all_seg_volume_tsv
+    cmd_all_seg = 'asegstats2table --subjects ' + subjects + '--meas volume --statsfile wmparc.stats --all-seg --tablefile ' + all_seg_volume_tsv
     os.system(cmd_all_seg)
-    cmd_aseg = 'asegstats2table --subjects ' + subjects + '--transpose --meas volume --tablefile ' + aseg_volume_tsv
+    cmd_aseg = 'asegstats2table --subjects ' + subjects + '--meas volume --tablefile ' + aseg_volume_tsv
     os.system(cmd_aseg)
 
-    cmd_aparc_desikan_lh_volume = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi lh --meas volume --tablefile ' + aparc_desikan_lh_volume_tsv
+    cmd_aparc_desikan_lh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi lh --meas volume --tablefile ' + aparc_desikan_lh_volume_tsv
     os.system(cmd_aparc_desikan_lh_volume)
-    cmd_aparc_desikan_rh_volume = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi rh --meas volume --tablefile ' + aparc_desikan_rh_volume_tsv
+    cmd_aparc_desikan_rh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi rh --meas volume --tablefile ' + aparc_desikan_rh_volume_tsv
     os.system(cmd_aparc_desikan_rh_volume)
-    cmd_parc_desikan_lh_thickness = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi lh --meas thickness --tablefile ' + aparc_desikan_lh_thickness_tsv
+    cmd_parc_desikan_lh_thickness = 'aparcstats2table --subjects ' + subjects + '--hemi lh --meas thickness --tablefile ' + aparc_desikan_lh_thickness_tsv
     os.system(cmd_parc_desikan_lh_thickness)
-    cmd_parc_desikan_rh_thickness = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi rh --meas thickness --tablefile ' + aparc_desikan_rh_thickness_tsv
+    cmd_parc_desikan_rh_thickness = 'aparcstats2table --subjects ' + subjects + '--hemi rh --meas thickness --tablefile ' + aparc_desikan_rh_thickness_tsv
     os.system(cmd_parc_desikan_rh_thickness)
-    cmd_aparc_desikan_lh_area = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi lh --meas area --tablefile ' + aparc_desikan_lh_area_tsv
+    cmd_aparc_desikan_lh_area = 'aparcstats2table --subjects ' + subjects + '--hemi lh --meas area --tablefile ' + aparc_desikan_lh_area_tsv
     os.system(cmd_aparc_desikan_lh_area)
-    cmd_aparc_desikan_rh_area = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi rh --meas area --tablefile ' + aparc_desikan_rh_area_tsv
+    cmd_aparc_desikan_rh_area = 'aparcstats2table --subjects ' + subjects + '--hemi rh --meas area --tablefile ' + aparc_desikan_rh_area_tsv
     os.system(cmd_aparc_desikan_rh_area)
-    cmd_aparc_desikan_lh_meancurv = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi lh --meas meancurv --tablefile ' + aparc_desikan_lh_meancurv_tsv
+    cmd_aparc_desikan_lh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi lh --meas meancurv --tablefile ' + aparc_desikan_lh_meancurv_tsv
     os.system(cmd_aparc_desikan_lh_meancurv)
-    cmd_aparc_desikan_rh_meancurv = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi rh --meas meancurv --tablefile ' + aparc_desikan_rh_meancurv_tsv
+    cmd_aparc_desikan_rh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi rh --meas meancurv --tablefile ' + aparc_desikan_rh_meancurv_tsv
     os.system(cmd_aparc_desikan_rh_meancurv)
 
-    cmd_aparc_destrieux_lh_volume = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi lh --parc aparc.a2009s --meas volume --tablefile ' + aparc_destrieux_lh_volume_tsv
+    cmd_aparc_destrieux_lh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc aparc.a2009s --meas volume --tablefile ' + aparc_destrieux_lh_volume_tsv
     os.system(cmd_aparc_destrieux_lh_volume)
-    cmd_aparc_destrieux_rh_volume = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi rh --parc aparc.a2009s --meas volume --tablefile ' + aparc_destrieux_rh_volume_tsv
+    cmd_aparc_destrieux_rh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc aparc.a2009s --meas volume --tablefile ' + aparc_destrieux_rh_volume_tsv
     os.system(cmd_aparc_destrieux_rh_volume)
-    cmd_parc_destrieux_lh_thickness = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi lh --parc aparc.a2009s --meas thickness --tablefile ' + aparc_destrieux_lh_thickness_tsv
+    cmd_parc_destrieux_lh_thickness = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc aparc.a2009s --meas thickness --tablefile ' + aparc_destrieux_lh_thickness_tsv
     os.system(cmd_parc_destrieux_lh_thickness)
-    cmd_parc_destrieux_rh_thickness = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi rh --parc aparc.a2009s --meas thickness --tablefile ' + aparc_destrieux_rh_thickness_tsv
+    cmd_parc_destrieux_rh_thickness = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc aparc.a2009s --meas thickness --tablefile ' + aparc_destrieux_rh_thickness_tsv
     os.system(cmd_parc_destrieux_rh_thickness)
-    cmd_aparc_destrieux_lh_area = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi lh --parc aparc.a2009s --meas area --tablefile ' + aparc_destrieux_lh_area_tsv
+    cmd_aparc_destrieux_lh_area = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc aparc.a2009s --meas area --tablefile ' + aparc_destrieux_lh_area_tsv
     os.system(cmd_aparc_destrieux_lh_area)
-    cmd_aparc_destrieux_rh_area = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi rh --parc aparc.a2009s --meas area --tablefile ' + aparc_destrieux_rh_area_tsv
+    cmd_aparc_destrieux_rh_area = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc aparc.a2009s --meas area --tablefile ' + aparc_destrieux_rh_area_tsv
     os.system(cmd_aparc_destrieux_rh_area)
-    cmd_aparc_destrieux_lh_meancurv = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi lh --parc aparc.a2009s --meas meancurv --tablefile ' + aparc_destrieux_lh_meancurv_tsv
+    cmd_aparc_destrieux_lh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc aparc.a2009s --meas meancurv --tablefile ' + aparc_destrieux_lh_meancurv_tsv
     os.system(cmd_aparc_destrieux_lh_meancurv)
-    cmd_aparc_destrieux_rh_meancurv = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi rh --parc aparc.a2009s --meas meancurv --tablefile ' + aparc_destrieux_rh_meancurv_tsv
+    cmd_aparc_destrieux_rh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc aparc.a2009s --meas meancurv --tablefile ' + aparc_destrieux_rh_meancurv_tsv
     os.system(cmd_aparc_destrieux_rh_meancurv)
 
-    cmd_aparc_BA_lh_volume = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi lh --parc BA --meas volume --tablefile ' + aparc_BA_lh_volume_tsv
+    cmd_aparc_BA_lh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc BA --meas volume --tablefile ' + aparc_BA_lh_volume_tsv
     os.system(cmd_aparc_BA_lh_volume)
-    cmd_aparc_BA_rh_volume = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi rh --parc BA --meas volume --tablefile ' + aparc_BA_rh_volume_tsv
+    cmd_aparc_BA_rh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas volume --tablefile ' + aparc_BA_rh_volume_tsv
     os.system(cmd_aparc_BA_rh_volume)
-    cmd_parc_BA_lh_thickness = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi lh --parc BA --meas thickness --tablefile ' + aparc_BA_lh_thickness_tsv
+    cmd_parc_BA_lh_thickness = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc BA --meas thickness --tablefile ' + aparc_BA_lh_thickness_tsv
     os.system(cmd_parc_BA_lh_thickness)
-    cmd_parc_BA_rh_thickness = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi rh --parc BA --meas thickness --tablefile ' + aparc_BA_rh_thickness_tsv
+    cmd_parc_BA_rh_thickness = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas thickness --tablefile ' + aparc_BA_rh_thickness_tsv
     os.system(cmd_parc_BA_rh_thickness)
-    cmd_aparc_BA_lh_area = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi lh --parc BA --meas area --tablefile ' + aparc_BA_lh_area_tsv
+    cmd_aparc_BA_lh_area = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc BA --meas area --tablefile ' + aparc_BA_lh_area_tsv
     os.system(cmd_aparc_BA_lh_area)
-    cmd_aparc_BA_rh_area = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi rh --parc BA --meas area --tablefile ' + aparc_BA_rh_area_tsv
+    cmd_aparc_BA_rh_area = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas area --tablefile ' + aparc_BA_rh_area_tsv
     os.system(cmd_aparc_BA_rh_area)
-    cmd_aparc_BA_lh_meancurv = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi lh --parc BA --meas meancurv --tablefile ' + aparc_BA_lh_meancurv_tsv
+    cmd_aparc_BA_lh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc BA --meas meancurv --tablefile ' + aparc_BA_lh_meancurv_tsv
     os.system(cmd_aparc_BA_lh_meancurv)
-    cmd_aparc_BA_rh_meancurv = 'aparcstats2table --subjects ' + subjects + '--transpose --hemi rh --parc BA --meas meancurv --tablefile ' + aparc_BA_rh_meancurv_tsv
+    cmd_aparc_BA_rh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas meancurv --tablefile ' + aparc_BA_rh_meancurv_tsv
     os.system(cmd_aparc_BA_rh_meancurv)
 
     return analysis_series_id, output_dir
