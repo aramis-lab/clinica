@@ -10,13 +10,12 @@ import nipype.pipeline.engine as pe
 import nipype.interfaces.io as nio
 from nipype.interfaces.freesurfer.preprocess import ReconAll
 from nipype.interfaces.utility import Function
-import nipype.interfaces.utility as niu
 from tempfile import mkdtemp
-from clinica.pipeline.t1.t1_freesurfer_utils import create_flags_str, checkfov, absolute_path, get_vars, write_statistics, log_summary, get_dirs, get_vars
+from clinica.pipeline.t1.t1_freesurfer_utils import create_flags_str, checkfov, absolute_path, write_statistics, log_summary, get_dirs
 from clinica.engine.cworkflow import *
 
 @Visualize("freeview", "-v ${subject_id}/mri/T1.mgz -f ${subject_id}/surf/lh.white:edgecolor=blue ${subject_id}/surf/lh.pial:edgecolor=green ${subject_id}/surf/rh.white:edgecolor=blue ${subject_id}/surf/rh.pial:edgecolor=green", "subject_id")
-def recon_all_pipeline(input_dir,
+def t1_freesurfer_pipeline(input_dir,
                        output_dir,
                        subjects_visits_tsv,
                        analysis_series_id='default',
@@ -65,6 +64,11 @@ def recon_all_pipeline(input_dir,
         print(str(e))
         exit(1)
 
+    if working_directory is None:
+        working_directory = mkdtemp()
+    else:
+        working_directory = absolute_path(working_directory)
+
     # Node to get the input vars
     inputnode = pe.Node(name='inputnode',
                           interface=Function(
@@ -85,7 +89,8 @@ def recon_all_pipeline(input_dir,
     datagrabbernode.inputs.field_template = dict(anat_t1='%s/%s/anat/%s_%s_T1w.nii.gz')
     # just for test with my home nii files
     # datagrabbernode.inputs.field_template = dict(anat_t1='sub-%s/ses-%s/anat/sub-%s_ses-%s_T1w.nii')
-    datagrabbernode.inputs.template_args = dict(anat_t1=[['subject_list', 'session_list', 'subject_repeat', 'session_repeat']])
+    datagrabbernode.inputs.template_args = dict(anat_t1=[['subject_list', 'session_list', 'subject_repeat',
+                                                          'session_repeat']])
     datagrabbernode.inputs.sort_filelist = False
 
     # MapNode to check out if we need -cw256 for every subject, and -qcache is default for every subject.
@@ -111,16 +116,7 @@ def recon_all_pipeline(input_dir,
                            iterfield=['subject_id', 'T1_files', 'subjects_dir', 'flags'])
     recon_all.inputs.directive = 'all'
 
-    # Node to contain the output from reconall.
-    outputnode = pe.Node(niu.IdentityInterface(
-                         fields=['ReconAll_result']),
-                         name='outputnode')
-    if working_directory is None:
-        working_directory = mkdtemp()
-    else:
-        working_directory = absolute_path(working_directory)
-
-    wf_recon_all = pe.Workflow(name='reconall_workflow', base_dir=working_directory)
+    wf_recon_all = pe.Workflow(name='reconall_workflow')
 
     wf_recon_all.connect(inputnode, 'subject_list', datagrabbernode, 'subject_list')
     wf_recon_all.connect(inputnode, 'subject_list', datagrabbernode, 'subject_repeat')
@@ -132,41 +128,11 @@ def recon_all_pipeline(input_dir,
     wf_recon_all.connect(datagrabbernode, 'anat_t1', flagnode, 't1_list')
     wf_recon_all.connect(flagnode, 'output_flags', create_flags, 'input_flags')
     wf_recon_all.connect(create_flags, 'output_str', recon_all, 'flags')
-    wf_recon_all.connect(recon_all, 'subject_id', outputnode, 'ReconAll_result')
 
-    return wf_recon_all
-
-def recon_all_statistics_pipeline(output_dir,
-                                  subjects_visits_tsv,
-                                  analysis_series_id,
-                                  working_directory=None):
-    """
-    Write stats files into tsv files after running recon_all_pipeline() for your dataset.
-    :param output_dir:
-    :param subjects_visits_tsv:
-    :param analysis_series_id: must be the an existed folder(recon-alled output folder.
-    :param working_directory:
-    :return:
-    """
-
-    # Node to get the input vars
-    inputnode = pe.Node(name='inputnode',
-                          interface=Function(
-                          input_names=['subjects_visits_tsv'],
-                          output_names=['subject_id', 'subject_list', 'session_list'],
-                          function=get_vars))
-    inputnode.inputs.subjects_visits_tsv = subjects_visits_tsv
-
-    # infosource = pe.Node(niu.IdentityInterface(fields=['subject_list', 'session_list', 'subject_id']), name="infosource")
-    # infosource.inputs.subject_list = subject_list
-    # infosource.inputs.session_list = session_list
-    # infosource.inputs.subject_id = subject_id
-
-    statisticsnode = pe.MapNode(name='statisticsnode',
-                                iterfield=['subject_list', 'session_list'],
+    statisticsnode = pe.Node(name='statisticsnode',
                                 interface=Function(
-                                 input_names=['subject_list', 'session_list', 'analysis_series_id', 'output_dir'],
-                                 output_names=[],
+                                 input_names=['subject_dir', 'subject_id', 'analysis_series_id', 'output_dir'],
+                                 output_names=['analysis_series_id', 'output_dir'],
                                  function=write_statistics))
     statisticsnode.inputs.analysis_series_id = analysis_series_id
     statisticsnode.inputs.output_dir = output_dir
@@ -176,22 +142,20 @@ def recon_all_statistics_pipeline(output_dir,
                           input_names=['subject_list', 'session_list', 'subject_id', 'output_dir', 'analysis_series_id'],
                           output_names=[],
                           function=log_summary))
-    lognode.inputs.output_dir = output_dir
-    lognode.inputs.analysis_series_id = analysis_series_id
 
+    wf_recon_all_tsvs = pe.Workflow(name='wf_recon_all_tsvs')
 
+    wf_recon_all_tsvs.connect(statisticsnode, 'analysis_series_id', lognode, 'analysis_series_id')
+    wf_recon_all_tsvs.connect(statisticsnode, 'output_dir', lognode, 'output_dir')
 
-    if working_directory is None:
-        working_directory = mkdtemp()
-    else:
-        working_directory = absolute_path(working_directory)
+    metaflow = pe.Workflow(name='metaflow', base_dir=working_directory)
 
-    wf_recon_all_statistics = pe.Workflow(name='wf_recon_all_statistics', base_dir=working_directory)
+    metaflow.connect([(wf_recon_all, wf_recon_all_tsvs,[('recon_all.subject_id', 'lognode.subject_id'),
+                                                        ('recon_all.subject_id', 'statisticsnode.subject_id'),
+                                                        ('recon_all.subjects_dir', 'statisticsnode.subject_dir'),
+                                                        ('inputnode.subject_list', 'lognode.subject_list'),
+                                                        ('inputnode.session_list', 'lognode.session_list'),
+                                                        ]),
+                       ])
 
-    wf_recon_all_statistics.connect(inputnode, 'subject_list', statisticsnode, 'subject_list')
-    wf_recon_all_statistics.connect(inputnode, 'session_list', statisticsnode, 'session_list')
-    wf_recon_all_statistics.connect(inputnode, 'subject_list', lognode, 'subject_list')
-    wf_recon_all_statistics.connect(inputnode, 'session_list', lognode, 'session_list')
-    wf_recon_all_statistics.connect(inputnode, 'subject_id', lognode, 'subject_id')
-
-    return wf_recon_all_statistics
+    return metaflow

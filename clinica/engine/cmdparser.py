@@ -285,6 +285,8 @@ class CmdParserT1FreeSurfer(CmdParser):
 
         reconall_wf.run("MultiProc", plugin_args={'n_procs': args.n_procs})
 
+
+
 class CmdParserStatisticsSurfStat(CmdParser):
 
     def define_name(self):
@@ -335,6 +337,7 @@ class CmdParserStatisticsSurfStat(CmdParser):
                                        working_directory=self.absolute_path(args.working_directory))
 
         surfstat_wf.run("MultiProc", plugin_args={'n_procs': args.n_procs})
+
 
 class CmdParserMachineLearningVBLinearSVM(CmdParser):
 
@@ -404,6 +407,70 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
                                               save_features_image=args.save_features_image)
 
 
+class CmdParserT1DWIRegistration(CmdParser):
+
+    def define_name(self):
+        self._name = 't1-dwi-registration'
+
+
+    def define_options(self):
+        self._args.add_argument("bids_directory",
+                                help='Path to the BIDS directory.')
+        self._args.add_argument("caps_directory",
+                                help='Path to the CAPS directory.')
+        self._args.add_argument("subjects_sessions_tsv",
+                                help='TSV file containing the subjects with their sessions.')
+        self._args.add_argument("-working_directory", default=None,
+                                help='Temporary directory to store intermediate results')
+        self._args.add_argument("-analysis_series_id", default='default',
+                                help='Label for analysis series id (default name is \'default\')')
+        self._args.add_argument("-n_threads", type=int, default=0,
+                                help='Number of threads (default=0, which disables multi-threading).')
+        group = self._args.add_mutually_exclusive_group(required=True)
+        group.add_argument('-is_bias_corrected', action='store_true',
+                           help='Set this flag if your images are bias corrected (mutually exclusive with \'-is_not_bias_corrected\').')
+        group.add_argument('-is_not_bias_corrected', action='store_false',
+                           help='Set this flag if your images are not bias corrected (mutually exclusive with \'-is_bias_corrected\').')
+
+    def run_pipeline(self, args):
+        import csv
+        import os.path
+        from clinica.pipeline.registration.mri_registration import t1_b0_registration_pipeline
+
+        with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
+            tsv_reader = csv.reader(tsv_file, delimiter='\t')
+
+            for row in tsv_reader:
+                bids_path_to_t1 = os.path.join(self.absolute_path(args.bids_directory), row[0], row[1], 'anat',
+                                               row[0] + '_' + row[1] + '_T1w.nii.gz')
+                caps_path_to_bet_t1 = os.path.join(self.absolute_path(args.caps_directory), row[0], row[1], 't1',
+                                                   'fsl', row[0] + '_' + row[1] + '_brain-extracted-T1w.nii.gz')
+                caps_path_to_desikan_parcellation = os.path.join(self.absolute_path(args.caps_directory),
+                                                                 row[0], row[1], 'registration', row[0] + '_' + row[1] + '_desikan-parcellation.nii.gz')
+                caps_path_to_destrieux_parcellation = os.path.join(self.absolute_path(args.caps_directory),
+                                                                 row[0], row[1], 'registration', row[0] + '_' + row[1] + '_destrieux-parcellation.nii.gz')
+                caps_path_to_wm_mask = os.path.join(self.absolute_path(args.caps_directory),
+                                                    row[0], row[1], 'dwi', row[0] + '_' + row[1] + '_binary-white-matter-mask.nii.gz')
+                assert(os.path.isfile(caps_path_to_bet_t1))
+                assert(os.path.isfile(caps_path_to_desikan_parcellation))
+                assert(os.path.isfile(caps_path_to_destrieux_parcellation))
+                assert(os.path.isfile(caps_path_to_wm_mask))
+
+                t1_b0_registration = t1_b0_registration_pipeline(subject_id=row[0],
+                                                                 session_id=row[1],
+                                                                 analysis_series_id=args.analysis_series_id,
+                                                                 caps_directory=self.absolute_path(args.caps_directory),
+                                                                 working_directory=self.absolute_path(args.working_directory),
+                                                                 )
+                t1_b0_registration.inputs.inputnode.in_bias_corrected_bet_t1 = caps_path_to_bet_t1
+                t1_b0_registration.inputs.inputnode.in_preprocessed_dwi = 'subject_id_preprocessed_dwi.nii'
+                t1_b0_registration.inputs.inputnode.in_b0_mask = 'subject_id_b0_mask.nii'
+                t1_b0_registration.inputs.inputnode.in_white_matter_binary_mask = 'subject_id_wm_mask.nii'
+                t1_b0_registration.inputs.inputnode.in_desikan_parcellation = caps_path_to_desikan_parcellation
+                t1_b0_registration.inputs.inputnode.in_destrieux_parcellation = caps_path_to_destrieux_parcellation
+                t1_b0_registration.run('MultiProc', plugin_args={'n_procs': args.n_threads})
+
+
 class CmdParserT1FSL(CmdParser):
 
     def define_name(self):
@@ -411,56 +478,156 @@ class CmdParserT1FSL(CmdParser):
 
 
     def define_options(self):
-        self._args.add_argument("-bids_directory",
+        self._args.add_argument("bids_directory",
                                 help='Path to the BIDS directory.')
-        self._args.add_argument("-caps_directory",
+        self._args.add_argument("caps_directory",
                                 help='Path to the CAPS directory.')
-        self._args.add_argument("-working_directory",
-                                help='(Optional) Temporary directory to store intermediate results')
-        self._args.add_argument("-subjects_sessions",
+        self._args.add_argument("subjects_sessions_tsv",
                                 help='TSV file containing the subjects with their sessions.')
+        self._args.add_argument("-working_directory", default=None,
+                                help='Temporary directory to store intermediate results')
         self._args.add_argument("-analysis_series_id", default='default',
-                                help='Label for analysis series id (default name is default)')
+                                help='Label for analysis series id (default name is \'default\')')
         self._args.add_argument("-n_threads", type=int, default=0,
                                 help='Number of threads (default=0, which disables multi-threading).')
         group = self._args.add_mutually_exclusive_group(required=True)
         group.add_argument('-is_bias_corrected', action='store_true',
-                           help='Set this flag if your image are bias corrected (mutually exclusive with \'-is_not_bias_corrected\' flag).')
+                           help='Set this flag if your images are bias corrected (mutually exclusive with \'-is_not_bias_corrected\').')
         group.add_argument('-is_not_bias_corrected', action='store_false',
-                           help='Set this flag if your image are not bias corrected (mutually exclusive with \'-is_bias_corrected\' flag).')
-
+                           help='Set this flag if your images are not bias corrected (mutually exclusive with \'-is_bias_corrected\').')
 
     def run_pipeline(self, args):
         import csv
         import os.path
         from clinica.pipeline.t1.t1_fsl import t1_fsl_segmentation_pipeline
 
-        working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
-
-        with open(self.absolute_path(args.subjects_sessions), 'rb') as tsv_file:
+        with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
             tsv_reader = csv.reader(tsv_file, delimiter='\t')
 
             # Check inputs:
             for row in tsv_reader:
-                bids_path_to_t1 = os.path.join(self.absolute_path(args.bids_directory),
-                                               'sub-' + row[0], 'ses-' + row[1], 'anat',
-                                               'sub-' + row[0] + '_ses-' + row[1] + '_T1w.nii.gz')
-                print bids_path_to_t1
-                assert (os.path.isfile(bids_path_to_t1))
+                bids_path_to_t1 = os.path.join(self.absolute_path(args.bids_directory), row[0], row[1], 'anat',
+                                               row[0] + '_' + row[1] + '_T1w.nii.gz')
+                assert(os.path.isfile(bids_path_to_t1))
+                t1_fsl_segmentation = t1_fsl_segmentation_pipeline(
+                    subject_id=row[0],
+                    session_id=row[1],
+                    analysis_series_id=args.analysis_series_id,
+                    caps_directory=self.absolute_path(args.caps_directory),
+                    working_directory=self.absolute_path(args.working_directory),
+                    is_bias_corrected=args.is_bias_corrected
+                    )
+                t1_fsl_segmentation.inputs.inputnode.in_t1 = bids_path_to_t1
+                t1_fsl_segmentation.run('MultiProc', plugin_args={'n_procs': args.n_threads})
 
-                bids_path_to_t1 = os.path.join(self.absolute_path(args.bids_directory),
+
+
+class CmdParserDWIPreprocessingFieldmapBased(CmdParser):
+
+    def define_name(self):
+        self._name = 'dwi-preprocessing-fieldmap-based'
+
+
+    def define_options(self):
+        self._args.add_argument("caps_directory",
+                                help='Path to the CAPS directory.')
+        self._args.add_argument("subjects_sessions_tsv",
+                                help='TSV file containing the subjects with their sessions.')
+        self._args.add_argument("-working_directory", default=None,
+                                help='Temporary directory to store intermediate results')
+        self._args.add_argument("-analysis_series_id", default='default',
+                                help='Label for analysis series id (default name is default)')
+        self._args.add_argument("-n_threads", type=int, default=0,
+                                help='Number of threads (default=0, which disables multi-threading).')
+
+    def run_pipeline(self, args):
+        import csv
+        import os.path
+        from clinica.pipeline.dwi.dwi_preprocessing import diffusion_preprocessing_fieldmap_based
+
+        with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
+            tsv_reader = csv.reader(tsv_file, delimiter='\t')
+
+            # Check inputs:
+            for row in tsv_reader:
+                bids_path_to_dwi = os.path.join(self.absolute_path(args.caps_directory),
                                                'sub-' + row[0], 'ses-' + row[1], 'anat',
                                                'sub-' + row[0] + '_ses-' + row[1] + '_T1w.nii.gz')
-                t1_fsl_pipeline = t1_fsl_segmentation_pipeline(subject_id=row[0],
-                                                               session_id=row[1],
-                                                               analysis_series_id=args.analysis_series_id,
-                                                               caps_directory=self.absolute_path(args.caps_directory),
-                                                               working_directory=working_directory,
-                                                               is_bias_corrected=args.is_bias_corrected
-                                                               )
-                t1_fsl_pipeline.inputs.inputnode.in_t1 = bids_path_to_t1
-                print('Show !')
-                t1_fsl_pipeline.run('MultiProc', plugin_args={'n_procs': args.n_threads})
+                assert(os.path.isfile(bids_path_to_dwi))
+                dwi_preprocessing = diffusion_preprocessing_fieldmap_based(
+
+                )
+                dwi_preprocessing.inputs.inputnode.in_t1 = bids_path_to_dwi
+                dwi_preprocessing.run('MultiProc', plugin_args={'n_procs': args.n_threads})
+
+
+class CmdParserDWIProcessing(CmdParser):
+
+    def define_name(self):
+        self._name = 'dwi-dti-and-tracto-for-the-moment'
+
+
+    def define_options(self):
+        self._args.add_argument("caps_directory",
+                                help='Path to the CAPS directory.')
+        self._args.add_argument("subjects_sessions_tsv",
+                                help='TSV file containing the subjects with their sessions.')
+        self._args.add_argument("-working_directory", default=None,
+                                help='Temporary directory to store intermediate results')
+        self._args.add_argument("-analysis_series_id", default='default',
+                                help='Label for analysis series id (default name is default)')
+        self._args.add_argument("-n_threads", type=int, default=0,
+                                help='Number of threads (default=0, which disables multi-threading).')
+
+
+    def run_pipeline(self, args):
+        import csv
+        import os.path
+        from clinica.pipeline.dwi.dwi_processing import tractography_and_dti_pipeline
+
+        with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
+            tsv_reader = csv.reader(tsv_file, delimiter='\t')
+
+            # Check inputs:
+            for row in tsv_reader:
+                caps_path_to_dwi = os.path.join(
+                    self.absolute_path(args.caps_directory), 'sub-' + row[0], 'ses-' + row[1], 'dwi', 'preprocessing',
+                    'sub-' + row[0] + '_ses-' + row[1] + '_dwi')
+                caps_path_to_b0_mask = os.path.join(
+                    self.absolute_path(args.caps_directory), 'sub-' + row[0], 'ses-' + row[1], 'dwi',
+                    'sub-' + row[0] + '_ses-' + row[1] + '_dwi')
+                caps_path_to_white_matter_binary_mask = os.path.join(self.absolute_path(args.caps_directory),
+                                                   'sub-' + row[0], 'ses-' + row[1], 'dwi',
+                                                   'sub-' + row[0] + '_ses-' + row[1] + '_binary-white-matter-mask.nii.gz')
+
+                assert(os.path.isfile(caps_path_to_dwi + '.bval'))
+                assert(os.path.isfile(caps_path_to_dwi + '.bvec'))
+                assert(os.path.isfile(caps_path_to_dwi + '.nii.gz'))
+                assert(os.path.isfile(caps_path_to_b0_mask))
+
+                dwi_processing = tractography_and_dti_pipeline()
+                dwi_processing.inputs.inputnode.in_t1 = caps_path_to_dwi
+                dwi_processing.run('MultiProc', plugin_args={'n_procs': args.n_threads})
+
+                from clinica.pipeline.dwi.dwi_processing import tractography_and_dti_pipeline
+                tractography_and_dti = tractography_and_dti_pipeline(
+                    subject_id=row[0], session_id=row[1], analysis_series_id=args.analysis_series_id,
+                    caps_directory=self.absolute_path(args.caps_directory),
+                    working_directory=self.absolute_path(args.working_directory),
+                    max_harmonic_order=None,
+                    tractography_algorithm='iFOD2',
+                    tractography_nb_of_tracks="100K",
+                    tractography_fod_threshold=None,
+                    tractography_step_size=None,
+                    tractography_angle=None,
+                    nthreads=2
+                )
+                tractography_and_dti.inputs.inputnode.in_dwi = caps_path_to_dwi + '.nii.gz'
+                tractography_and_dti.inputs.inputnode.in_bvecs = caps_path_to_dwi + '.bvec'
+                tractography_and_dti.inputs.inputnode.in_bvals = caps_path_to_dwi + '.bval'
+                tractography_and_dti.inputs.inputnode.in_b0_mask = caps_path_to_b0_mask
+                tractography_and_dti.inputs.inputnode.in_white_matter_binary_mask = caps_path_to_white_matter_binary_mask
+                tractography_and_dti.run()
 
 
 class CmdParserCappToBids(CmdParser):
