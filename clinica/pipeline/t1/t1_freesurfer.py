@@ -137,7 +137,7 @@ def t1_freesurfer_pipeline(input_dir,
     statisticsnode.inputs.analysis_series_id = analysis_series_id
     statisticsnode.inputs.output_dir = output_dir
 
-    tsvmapnode = pe.MapNode(name='statisticsnode',
+    tsvmapnode = pe.MapNode(name='tsvmapnode',
                                    iterfield=['subject_id'],
                                  interface=Function(
                                  input_names=['subject_id', 'analysis_series_id', 'output_dir'],
