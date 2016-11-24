@@ -686,10 +686,10 @@ class CmdParserPrevDemAlsToBids(CmdParser):
 class CmdParserSubsSess(CmdParser):
 
     def define_name(self):
-        self._name = 'subjects_sessions_list'
+        self._name = 'create-subjects-visits'
 
     def define_options(self):
-        self._args.add_argument("bids_dataset_path",
+        self._args.add_argument("bids_dir",
                                help='Path to the BIDS dataset directory.')
         self._args.add_argument("out_directory",
                                 help='Path to the output directory.')
@@ -697,4 +697,4 @@ class CmdParserSubsSess(CmdParser):
 
     def run_pipeline(self, args):
         from clinica.bids.utils import data_handling as dt
-        dt.create_subs_sess_list(args.bids_dataset_path, args.out_directory)
+        dt.create_subs_sess_list(args.bids_dir, args.out_directory)
