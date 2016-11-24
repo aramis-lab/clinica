@@ -142,11 +142,13 @@ def convert_clinical(input_path, out_path, bids_ids):
     for bids_id in bids_ids:
         # Create the file
         tsv_name = bids_id+"_ses-M00_scans.tsv"
-        if os.path.exists(path.join(out_path,bids_id,'ses-M00',tsv_name)):
-            os.remove(path.join(out_path,bids_id,'ses-M00',tsv_name))
+        # If the file already exists, remove it
+        if os.path.exists(path.join(out_path,bids_id,'ses-M00', tsv_name)):
+            os.remove(path.join(out_path,bids_id,'ses-M00', tsv_name))
+
 
         scans_tsv = open(path.join(out_path,bids_id,'ses-M00', tsv_name), 'a')
-        scans_df.to_csv(scans_tsv, sep='\t')
+        scans_df.to_csv(scans_tsv, sep='\t', index= False)
         # Extract modalities available for each subject
         mod_available = glob(path.join(out_path, bids_id, 'ses-M00', '*'))
         for mod in mod_available:
@@ -160,12 +162,13 @@ def convert_clinical(input_path, out_path, bids_ids):
                     type = 'FDG'
 
                 if (scans_dict[bids_id][type]).has_key('acq_time'):
-                    scans_df = pd.DataFrame(scans_dict[bids_id][type], index=['i', ])
-                    scans_df['filename'] = path.join(mod_name,file_name)
+
+                    scans_df = pd.DataFrame(scans_dict[bids_id][type], index=[0])
+                    scans_df['filename'] = path.join(mod_name, file_name)
                     cols = scans_df.columns.tolist()
                     cols = cols[-1:] + cols[:-1]
                     scans_df = scans_df[cols]
-                    scans_df.to_csv(scans_tsv, header=False, sep='\t', index=False)
+                    scans_df.to_csv(scans_tsv, header=False, sep='\t', index = False)
 
 
 def convert(source_dir, dest_dir, param=''):
@@ -330,14 +333,20 @@ def convert(source_dir, dest_dir, param=''):
             logging.info("Conversion for the subject terminated.\n")
     else:
         print '** Conversion of clinical data only **'
-        logging.basicConfig(filename=path.join(dest_dir, 'conversion_clinical.log'),
-                            format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG,
-                            datefmt='%m/%d/%Y %I:%M')
+        if os.path.exists(path.join(dest_dir, 'conversion_clinical.log')):
+            os.remove(path.join(dest_dir, 'conversion_clinical.log'))
         if not os.path.exists(dest_dir):
             print dest_dir, ' not found.'
             raise
 
         bids_ids = [d for d in os.listdir(dest_dir) if os.path.isdir(path.join(dest_dir,d))]
+
+    if os.path.exists(path.join(dest_dir, 'conversion_clinical.log')):
+        os.remove(path.join(dest_dir, 'conversion_clinical.log'))
+
+    logging.basicConfig(filename=path.join(dest_dir, 'conversion_clinical.log'),
+                            format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG,
+                            datefmt='%m/%d/%Y %I:%M')
 
     print 'Converting clinical data...'
     logging.info('Converting clinical data...')
