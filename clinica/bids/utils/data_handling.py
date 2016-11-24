@@ -46,7 +46,17 @@ def find_mod_available(dataset_dir):
     print mods_dict
 
 def create_subs_sess_list(dataset_path, out_dir):
-    subjs_sess_tsv = open(path.join(out_dir, 'subjects_sessions_list.tsv'), 'w')
+    file_name = out_dir.split(os.sep)[-1]
+    if len(file_name) == 0:
+        file_name = 'subjects_sessions_list.tsv'
+    else:
+        # Extract the path of the file
+        out_dir = os.path.dirname(out_dir)
+
+    if '.' not in file_name:
+        file_name = file_name+'.tsv'
+
+    subjs_sess_tsv = open(path.join(out_dir, file_name), 'w')
     subjs_sess_tsv.write('participant_id' + '\t' + 'session_id' + '\n')
 
     subjects_paths = glob(path.join(dataset_path, '*sub-*'))
