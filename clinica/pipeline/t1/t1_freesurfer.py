@@ -152,7 +152,7 @@ def t1_freesurfer_pipeline(input_dir,
 
     metaflow.connect([(wf_recon_all, wf_recon_all_tsvs,[('recon_all.subject_id', 'lognode.subject_id'),
                                                         ('recon_all.subject_id', 'statisticsnode.subject_id'),
-                                                        ('recon_all.subject_dir', 'statisticsnode.subject_dir'),
+                                                        ('recon_all.subjects_dir', 'statisticsnode.subject_dir'),
                                                         ('inputnode.subject_list', 'lognode.subject_list'),
                                                         ('inputnode.session_list', 'lognode.session_list'),
                                                         ]),
