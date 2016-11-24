@@ -11,7 +11,7 @@ import nipype.interfaces.io as nio
 from nipype.interfaces.freesurfer.preprocess import ReconAll
 from nipype.interfaces.utility import Function
 from tempfile import mkdtemp
-from clinica.pipeline.t1.t1_freesurfer_utils import create_flags_str, checkfov, absolute_path, write_statistics, log_summary, get_dirs
+from clinica.pipeline.t1.t1_freesurfer_utils import create_flags_str, checkfov, absolute_path, write_statistics, log_summary, get_dirs, write_statistics_per_subject
 from clinica.engine.cworkflow import *
 
 @Visualize("freeview", "-v ${subject_id}/mri/T1.mgz -f ${subject_id}/surf/lh.white:edgecolor=blue ${subject_id}/surf/lh.pial:edgecolor=green ${subject_id}/surf/rh.white:edgecolor=blue ${subject_id}/surf/rh.pial:edgecolor=green", "subject_id")
@@ -137,6 +137,13 @@ def t1_freesurfer_pipeline(input_dir,
     statisticsnode.inputs.analysis_series_id = analysis_series_id
     statisticsnode.inputs.output_dir = output_dir
 
+    statisticsmapnode = pe.MapNode(name='statisticsnode',
+                                   iterfield=['subject_id'],
+                                 interface=Function(
+                                 input_names=['subject_id', 'analysis_series_id', 'output_dir'],
+                                 output_names=[],
+                                 function=write_statistics_per_subject))
+
     lognode = pe.Node(name='lognode',
                       interface=Function(
                           input_names=['subject_list', 'session_list', 'subject_id', 'output_dir', 'analysis_series_id'],
@@ -147,11 +154,14 @@ def t1_freesurfer_pipeline(input_dir,
 
     wf_recon_all_tsvs.connect(statisticsnode, 'analysis_series_id', lognode, 'analysis_series_id')
     wf_recon_all_tsvs.connect(statisticsnode, 'output_dir', lognode, 'output_dir')
+    wf_recon_all_tsvs.connect(statisticsnode, 'output_dir', statisticsmapnode, 'output_dir')
+    wf_recon_all_tsvs.connect(statisticsnode, 'analysis_series_id', statisticsmapnode, 'analysis_series_id')
 
     metaflow = pe.Workflow(name='metaflow', base_dir=working_directory)
 
     metaflow.connect([(wf_recon_all, wf_recon_all_tsvs,[('recon_all.subject_id', 'lognode.subject_id'),
                                                         ('recon_all.subject_id', 'statisticsnode.subject_id'),
+                                                        ('recon_all.subject_id', 'statisticsmapnode.subject_id'),
                                                         ('recon_all.subjects_dir', 'statisticsnode.subject_dir'),
                                                         ('inputnode.subject_list', 'lognode.subject_list'),
                                                         ('inputnode.session_list', 'lognode.session_list'),
