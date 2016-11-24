@@ -4,9 +4,7 @@ from glob import glob
 import fileinput
 from shutil import copy
 import nibabel as nib
-
 import os
-
 
 def remove_rescan(list_path):
     """
