@@ -4,8 +4,9 @@
 """This module contains pipelines for MRI registration."""
 
 def t1_b0_registration_pipeline(
-                 output_directory, working_directory=None,
-                 name="t1_b0_registration_pipeline"):
+        subject_id, session_id, analysis_series_id,
+        caps_directory, working_directory=None,
+        name="t1_b0_registration_pipeline"):
     """
     Perform rigid registration of the T1-weighted image onto the B0 image.
 
@@ -18,10 +19,14 @@ def t1_b0_registration_pipeline(
     These steps enable to prepare the data for the tractography & DTI pipeline.
 
     Args:
-        output_directory (str): Directory where the results are stored.
-        working_directory (Optional[str]): Directory where the temporary
-            results are stored. If not specified, it is automatically
-            generated (generally in /tmp/).
+         subject_id (str): Subject ID in a BIDS format ('sub-<participant_label>').
+         session_id (str): Session ID in a BIDS format ('ses-<session_label>').
+         analysis_series_id (str): Analysis series ID (will create the 'analysis-series-<analysis_series_id>/' folder
+            for the CAPS hierarchy)
+         caps_directory (str): Directory where the results are stored in a CAPS hierarchy.
+         working_directory (Optional[str]): Directory where the temporary results are stored. If not specified, it is
+            automatically generated (generally in /tmp/).
+         name (Optional[str]): Name of the pipeline.
 
     Inputnode:
         in_bias_corrected_bet_t1 (str): File containing the bias corrected brain extracted T1-weighted image.
@@ -49,7 +54,7 @@ def t1_b0_registration_pipeline(
 
     Example:
         >>> from clinica.pipeline.registration.mri_registration import t1_b0_registration_pipeline
-        >>> t1_b0_registration = t1_b0_registration_pipeline(output_directory='/path/to/output/results')
+        >>> t1_b0_registration = t1_b0_registration_pipeline(caps_directory='/path/to/output/results')
         >>> t1_b0_registration.inputs.inputnode.in_bias_corrected_bet_t1 = 'subject_id_bias_corrected_brain_extracted_t1.nii'
         >>> t1_b0_registration.inputs.inputnode.in_preprocessed_dwi = 'subject_id_preprocessed_dwi.nii'
         >>> t1_b0_registration.inputs.inputnode.in_b0_mask = 'subject_id_b0_mask.nii'
@@ -88,6 +93,8 @@ def t1_b0_registration_pipeline(
         print(str(e))
         exit(1)
 
+    caps_identifier = subject_id + '_' + session_id
+
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['in_bias_corrected_bet_t1', 'in_preprocessed_dwi', 'in_b0_mask', 'in_white_matter_binary_mask',
                 'in_desikan_parcellation', 'in_destrieux_parcellation']),
@@ -101,15 +108,17 @@ def t1_b0_registration_pipeline(
 
     registration_t1_to_b0 = pe.Node(fsl.FLIRT(dof=6, interp='spline', cost='normmi', cost_func='normmi'),
                                     name='registration_t1_to_b0')
+    registration_t1_to_b0.outputs.out_matrix_file = caps_identifier + '_t1-to-b0-with-resampling.mat'
+
 
     apply_flirt_registration = pe.Node(fsl.ApplyXfm(apply_xfm=True, interp='spline'), name='apply_flirt_registration')
-    apply_flirt_registration.inputs.out_file = 'wm_mask_in_diffusion_space.nii.gz'
+    apply_flirt_registration.inputs.out_file = caps_identifier + '_binary-white-matter-mask.nii.gz'
 
     convert_flirt_to_mrtrix = pe.Node(interface=niu.Function(
         input_names=['in_source_image', 'in_reference_image', 'in_flirt_matrix', 'name_output_matrix'],
         output_names=['out_mrtrix_matrix'], function=convert_flirt_transformation_to_mrtrix_transformation),
         name='convert_flirt_to_mrtrix')
-    convert_flirt_to_mrtrix.inputs.name_output_matrix = 'voxel_t1_to_diffusion_without_resampling.mat'
+    convert_flirt_to_mrtrix.inputs.name_output_matrix = caps_identifier + '_t1-to-b0-without-resampling.mat'
 
     desikan_in_native_space = pe.Node(interface=niu.Function(
         input_names=['freesurfer_volume', 'native_volume', 'name_output_volume'],
@@ -122,39 +131,25 @@ def t1_b0_registration_pipeline(
         input_names=['in_image', 'in_mrtrix_matrix', 'name_output_image'],
         output_names=['out_deformed_image'], function=apply_mrtrix_transform_without_resampling),
         name='desikan_in_diffusion_space')
-    desikan_in_diffusion_space.inputs.name_output_image = 'desikan_parcellation_in_diffusion_space.nii.gz'
+    desikan_in_diffusion_space.inputs.name_output_image = caps_identifier + '_desikan-parcellation.nii.gz'
     destrieux_in_diffusion_space = pe.Node(interface=niu.Function(
         input_names=['in_image', 'in_mrtrix_matrix', 'name_output_image'],
         output_names=['out_deformed_image'], function=apply_mrtrix_transform_without_resampling),
         name='destrieux_in_diffusion_space')
-    destrieux_in_diffusion_space.inputs.name_output_image = 'destrieux_parcellation_in_diffusion_space.nii.gz'
+    destrieux_in_diffusion_space.inputs.name_output_image = caps_identifier + '_destrieux-parcellation.nii.gz'
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['out_registered_t1', 'out_flirt_matrix', 'out_wm_mask_in_diffusion_space', 'out_mrtrix_matrix',
                 'out_desikan_in_diffusion_space', 'out_destrieux_in_diffusion_space']),
         name='outputnode')
 
-    analysis_series_id = '01'
-    subject_id = 'CLNC042'
-    session_id = 'M00'
-
     datasink = pe.Node(nio.DataSink(), name='datasink')
-    datasink.inputs.base_directory = join(output_directory, 'analysis-series-' + analysis_series_id,
-                                          'sub-' + subject_id, 'ses-' + session_id, 't1')
-    caps_identifier = 'sub-' + subject_id + '_ses­' + session_id
-    datasink.inputs.substitutions = [('fast_pve_0.nii.gz', caps_identifier + '_binary-csf.nii.gz'),
-                                     ('fast_pve_1.nii.gz', caps_identifier + '_binary-gray-matter.nii.gz'),
-                                     ('fast_pve_2.nii.gz', caps_identifier + '_binary-white-matter.nii.gz'),
-                                     ('fast_seg_0.nii.gz', caps_identifier + '_partial-volume-csf.nii.gz'),
-                                     ('fast_seg_1.nii.gz', caps_identifier + '_partial-volume-gray-matter.nii.gz'),
-                                     ('fast_seg_2.nii.gz', caps_identifier + '_partial-volume-white-matter.nii.gz'),
-                                     ('fast_bias.nii.gz', caps_identifier + '_bias-field.nii.gz'),
-                                     ('fast_restore.nii.gz', caps_identifier + '_brain-extracted-T1w.nii.gz'),
-                                     ('T1_pre_bet_brain_mask.nii.gz',
-                                      caps_identifier + '_pre-masked-brain-extracted_T1w.nii.gz')
-                                     ]
+    datasink.inputs.base_directory = join(caps_directory, 'analysis-series-' + analysis_series_id, 'subjects',
+                                          subject_id, session_id)
+#    datasink.inputs.substitutions = [('fast_pve_0.nii.gz', caps_identifier + '_binary-csf.nii.gz')]
 
     wf = pe.Workflow(name=name)
+    wf.base_dir = working_directory
     wf.connect([
         # Get b0 from DWI:
         (inputnode, get_b0, [('in_preprocessed_dwi', 'in_file')]),
@@ -175,10 +170,10 @@ def t1_b0_registration_pipeline(
         (upsample_b0,           convert_flirt_to_mrtrix, [('out_file', 'in_reference_image')]),
         (registration_t1_to_b0, convert_flirt_to_mrtrix, [('out_matrix_file', 'in_flirt_matrix')]),
         # Convert FreeSurfer parcellations into native space:
-        (inputnode, desikan_in_native_space, [('in_desikan_parcellation', 'freesurfer_volume')]),
-        (inputnode, desikan_in_native_space, [('in_bias_corrected_bet_t1', 'native_volume')]),
-        (inputnode, destrieux_in_native_space, [('in_destrieux_parcellation', 'freesurfer_volume')]),
-        (inputnode, destrieux_in_native_space, [('in_bias_corrected_bet_t1', 'native_volume')]),
+        (inputnode, desikan_in_native_space, [('in_desikan_parcellation', 'freesurfer_volume'),
+                                              ('in_bias_corrected_bet_t1', 'native_volume')]),
+        (inputnode, destrieux_in_native_space, [('in_destrieux_parcellation', 'freesurfer_volume'),
+                                                ('in_bias_corrected_bet_t1', 'native_volume')]),
         # Apply registration without resampling on Desikan & Destrieux parcellations:
         (desikan_in_native_space, desikan_in_diffusion_space, [('out_volume', 'in_image')]),
         (convert_flirt_to_mrtrix, desikan_in_diffusion_space, [('out_mrtrix_matrix', 'in_mrtrix_matrix')]),
@@ -192,12 +187,12 @@ def t1_b0_registration_pipeline(
         (desikan_in_diffusion_space,   outputnode, [('out_deformed_image', 'out_desikan_in_diffusion_space')]),
         (destrieux_in_diffusion_space, outputnode, [('out_deformed_image', 'out_destrieux_in_diffusion_space')]),
         # Datasink:
-        (registration_t1_to_b0,        datasink, [('out_file', 'out_registered_t1')]),
-        (registration_t1_to_b0,        datasink, [('out_matrix_file', 'out_flirt_matrix')]),
-        (apply_flirt_registration,     datasink, [('out_file', 'out_wm_mask_in_diffusion_space')]),
-        (convert_flirt_to_mrtrix,      datasink, [('out_mrtrix_matrix', 'out_mrtrix_matrix')]),
-        (desikan_in_diffusion_space,   datasink, [('out_deformed_image', 'out_desikan_in_diffusion_space')]),
-        (destrieux_in_diffusion_space, datasink, [('out_deformed_image', 'out_destrieux_in_diffusion_space')])
+        (registration_t1_to_b0,        datasink, [('out_file', 'dwi.@registered_t1')]),
+        (registration_t1_to_b0,        datasink, [('out_matrix_file', 'registration.@flirt_matrix')]),
+        (apply_flirt_registration,     datasink, [('out_file', 'dwi.@wm_mask_in_diffusion_mask')]),
+        (convert_flirt_to_mrtrix,      datasink, [('out_mrtrix_matrix', 'registration.@mrtrix_matrix')]),
+        (desikan_in_diffusion_space,   datasink, [('out_deformed_image', 'dwi.@desikan_in_diffusion_space')]),
+        (destrieux_in_diffusion_space, datasink, [('out_deformed_image', 'dwi.@destrieux_in_diffusion_space')])
     ])
     return wf
 
