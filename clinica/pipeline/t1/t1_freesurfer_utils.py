@@ -39,6 +39,8 @@ def get_dirs(output_dir, subjects_visits_tsv, analysis_series_id):
         tsv_reader = csv.reader(tsvin, delimiter='\t')
 
         for row in tsv_reader:
+            if row[0] == 'participant_id':
+                continue
             subject_list.append(row[0])
             session_list.append(row[1])
             subject_id.append(row[0] + '_' + row[1])
