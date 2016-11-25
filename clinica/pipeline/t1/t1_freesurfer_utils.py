@@ -368,8 +368,6 @@ def write_statistics(subject_dir, subject_id, analysis_series_id, output_dir):
     cmd_aparc_BA_rh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas meancurv --tablefile ' + aparc_BA_rh_meancurv_tsv
     os.system(cmd_aparc_BA_rh_meancurv)
 
-    return analysis_series_id, output_dir
-
 def write_statistics_per_subject(subject_id, analysis_series_id, output_dir):
 
     import os, errno
