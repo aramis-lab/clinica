@@ -32,7 +32,7 @@ def convert_clinical(input_path, out_path, bids_ids, original_ids, orig_ids_alph
 
     fields_bids = ['participant_id']
     fields_dataset = []
-    clinic_specs_path = path.join(os.path.dirname(__file__), 'clinical-specifications', 'clinical_specifications.xlsx')
+    clinic_specs_path = path.join(os.path.dirname(__file__), 'bids-utils-docs', 'clinical_specifications.xlsx')
 
     # -- Creation of participant.tsv --
     participants_specs = pd.read_excel(clinic_specs_path, sheetname='participant.tsv')
@@ -51,7 +51,6 @@ def convert_clinical(input_path, out_path, bids_ids, original_ids, orig_ids_alph
     participant_df = pd.DataFrame(columns= fields_bids)
 
     for i in range(0, len(participant_fields_db)):
-
          # If a field not empty is found
          if not pd.isnull(participant_fields_db[i]):
             # Extract the file location of the field and read the value from the file

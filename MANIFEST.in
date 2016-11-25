@@ -1,2 +1,3 @@
 include README.md
 recursive-include clinica/lib *
+recursive-include clinica/bids/data *
