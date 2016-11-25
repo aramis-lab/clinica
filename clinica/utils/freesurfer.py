@@ -16,12 +16,10 @@ def freesurfer_volume_to_native_volume(freesurfer_volume, native_volume, name_ou
     For further details: https://surfer.nmr.mgh.harvard.edu/fswiki/FsAnat-to-NativeAnat
 
     Args:
-        freesurfer_volume (str): Volume in FreeSurfer's conformed space (e.g.
-            aparc+aseg.mgz containing the Desikan parcellation)
-        native_volume (str): Volume in native space (You should choose
-            ${SUBJECTS_DIR}/subject_id/mri/rawavg.mgz).
-        name_output_volume (Optional[str]): Name of the output matrix
-            (default=volume_in_native_space.nii.gz).
+        freesurfer_volume (str): Volume in FreeSurfer's conformed space (e.g. aparc+aseg.mgz containing
+            the Desikan parcellation)
+        native_volume (str): Volume in native space (You should choose ${SUBJECTS_DIR}/subject_id/mri/rawavg.mgz).
+        name_output_volume (Optional[str]): Name of the output matrix (default=volume_in_native_space.nii.gz).
 
     Returns:
         out_volume (str): volume in native space (the file is saved here:

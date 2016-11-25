@@ -6,10 +6,16 @@ Created on Mon Apr 22 09:04:10 2016
 @author: Junhao WEN
 """
 
+import nipype.pipeline.engine as pe
+import nipype.interfaces.io as nio
+from nipype.interfaces.freesurfer.preprocess import ReconAll
+from nipype.interfaces.utility import Function
+from tempfile import mkdtemp
+from clinica.pipeline.t1.t1_freesurfer_utils import create_flags_str, checkfov, absolute_path, write_statistics, log_summary, get_dirs, write_statistics_per_subject
 from clinica.engine.cworkflow import *
 
 @Visualize("freeview", "-v ${subject_id}/mri/T1.mgz -f ${subject_id}/surf/lh.white:edgecolor=blue ${subject_id}/surf/lh.pial:edgecolor=green ${subject_id}/surf/rh.white:edgecolor=blue ${subject_id}/surf/rh.pial:edgecolor=green", "subject_id")
-def recon_all_pipeline(input_dir,
+def t1_freesurfer_pipeline(input_dir,
                        output_dir,
                        subjects_visits_tsv,
                        analysis_series_id='default',
@@ -23,7 +29,7 @@ def recon_all_pipeline(input_dir,
         and Volume-based piepeline, which including gray(GM)and white matter(WM)
         segementation, pial and white surface extraction!.
 
-        Inputnode
+        datagrabbernode
         ---------
         DataGrabber : FILE
           Mandatory inputs: the input images, should be a string.
@@ -50,172 +56,148 @@ def recon_all_pipeline(input_dir,
         return: Recon-all workflow
     """
 
-    import os, csv
-    import errno
-    import nipype.pipeline.engine as pe
-    import nipype.interfaces.io as nio
-    from nipype.interfaces.freesurfer.preprocess import ReconAll
-    from nipype.interfaces.utility import Function
-    import nipype.interfaces.utility as niu
-    from tempfile import mkdtemp
-
-    try:# just try to check out the ReconAll version for nipype
+    # check out ReconAll version
+    try:
         if ReconAll.version.fget.func_globals['__version__'].split(".") < ['0', '11', '0']:
             raise RuntimeError('ReconAll version should at least be version of 0.11.0')
     except Exception as e:
         print(str(e))
         exit(1)
 
-    #transfer any path to be absolute path.
-    def absolute_path(arg):
-        if arg[:1] == '~':
-            return os.path.expanduser(arg)
-        elif arg[:1] == '.':
-            return os.getcwd()
-        else:
-            return os.path.join(os.getcwd(), arg)
-
-    # new version for BIDS
-    def BIDS_output(output_dir):
-        # last_dir = os.path.basename(input_dir)
-        # dataset_name = last_dir.split('_')[0]
-
-        subject_list = []
-        session_list = []
-        subject_id=[]
-        with open(subjects_visits_tsv, 'rb') as tsvin:
-            tsv_reader = csv.reader(tsvin, delimiter='\t')
-
-            for row in tsv_reader:
-                subject_list.append(row[0])
-                session_list.append(row[1])
-                subject_id.append(row[0] + '_' + row[1])
-
-        output_path = os.path.expanduser(output_dir)  # this is to add ~ before the out_dir, if it doesnt start with ~,just return the path
-        output_base = 'analysis-series-' + analysis_series_id + '/subjects'
-        output_dir = output_path + '/' + output_base
-        try:
-            os.makedirs(output_dir)
-        except OSError as exception:
-            if exception.errno != errno.EEXIST:
-                raise
-
-        subject_dir = []
-        num_subject = len(subject_list)
-        for i in range(num_subject):
-            subject = output_dir + '/' + 'sub-' + subject_list[i] + '/' + 'ses-' + session_list[i] + '/' + 't1' + '/' + 'freesurfer-cross-sectional'
-            try:
-                os.makedirs(subject)
-            except OSError as exception:
-                if exception.errno != errno.EEXIST:
-                    raise
-            subject_dir.append(subject)
-
-        return subject_dir, subject_id, subject_list, session_list
-
-    subject_dir, subject_id, subject_list, session_list = BIDS_output(output_dir)
-
-    #
-    # def checkoutFOV(t1_list):
-    #     import nibabel as nib
-    #     output_flag = []
-    #     for i in t1_list:
-    #         f = nib.load(i)
-    #         voxel_size = f.header.get_zooms()
-    #         data_shape = f.header.get_data_shape()
-    #         if voxel_size[0] * data_shape[0] > 256 or voxel_size[1] * data_shape[1] or voxel_size[2] * data_shape[2]:
-    #             output_flag.append('cw256')
-    #         else:
-    #             output_flag.append('all')
-    #     print(output_flag)
-    #     return output_dir
-    #
-    # def checkFOV(T1_files):
-    #     """Verifying size of inputs"""
-    #
-    #     # modified from nipype.workflows.smri.freesurfer.autorecon1.checkT1s:
-    #     # https://github.com/nipy/nipype/blob/master/nipype/workflows/smri/freesurfer/autorecon1.py
-    #
-    #     import sys
-    #     import nibabel as nib
-    #     from nipype.utils.filemanip import filename_to_list
-    #
-    #     output_flags = []
-    #
-    #     T1_files = filename_to_list(T1_files)
-    #     if len(T1_files) == 0:
-    #         print("ERROR: No T1's Given")
-    #         sys.exit(-1)
-    #
-    #     shape = nib.load(T1_files[0]).shape
-    #     for t1 in T1_files[1:]:
-    #         if nib.load(t1).shape != shape:
-    #             print("ERROR: T1s not the same size. Cannot process {0} and {1} "
-    #                   "together".format(T1_files[0], t1))
-    #             sys.exit(-1)
-    #
-    #     # check if cw256 is set to crop the images if size is larger than 256
-    #     if any(dim > 256 for dim in shape):
-    #         print("Setting MRI Convert to crop images to 256 FOV")
-    #         output_flags.append('-cw256')
-    #     else:
-    #         print("No need to add -cw256 flag")
-    #         output_flags.append(None)
-    #
-    #     return output_flags
-    #
-    inputnode = pe.Node(interface=nio.DataGrabber(infields=['subject_id', 'session', 'subject_repeat', 'session_repeat'],
-                                                outfields=['anat_t1']), name="inputnode")  # the best explanation for datagrabber http://nipy.org/nipype/interfaces/generated/nipype.interfaces.io.html#datagrabber
-    #
-    # internode = pe.Node(name='internode',
-    #                     interface=Function(
-    #                        input_names=['t1_list'],
-    #                        output_names=['output_flag'], function=checkFOV))
-
-    recon_all = pe.MapNode(interface=ReconAll(), name='recon_all', iterfield=['subject_id', 'T1_files', 'subjects_dir'])
-    # create a special identity interface for outputing the subject_id
-    outputnode = pe.Node(niu.IdentityInterface(fields=['ReconAll_result']), name='outputnode')
-    #datasink = pe.Node(nio.DataSink(), name="datasink")
-    #datasink.inputs.base_directory = output_dir
-    #datasink.inputs.container = 'datasink_folder'
-
-    # define the base_dir to get the reconall_workflow info, if not set, default=None, which results in the use of mkdtemp
-    # wf = pe.Workflow(name='reconall_workflow', base_dir=output_dir)
-    # if the user want to keep this workflow infor, this can be set as an optional prarm, but if workflow is stopped manually, not finished, the workflow info seems to be in the current folder, should test it.
     if working_directory is None:
         working_directory = mkdtemp()
     else:
         working_directory = absolute_path(working_directory)
 
-    wf = pe.Workflow(name='reconall_workflow', base_dir=working_directory)
+    # Node to get the input vars
+    inputnode = pe.Node(name='inputnode',
+                          interface=Function(
+                          input_names=['output_dir', 'subjects_visits_tsv', 'analysis_series_id'],
+                          output_names=['subject_dir', 'subject_id', 'subject_list', 'session_list'],
+                          function=get_dirs))
+    inputnode.inputs.output_dir = output_dir
+    inputnode.inputs.subjects_visits_tsv = subjects_visits_tsv
+    inputnode.inputs.analysis_series_id = analysis_series_id
 
-
-
-    inputnode.inputs.base_directory = input_dir
-    inputnode.inputs.template = '*'
-    inputnode.inputs.field_template = dict(anat_t1='sub-%s/ses-%s/anat/sub-%s_ses-%s_T1w.nii.gz')
+    # Node to grab the BIDS input.
+    datagrabbernode = pe.Node(interface=nio.DataGrabber(
+                        infields=['subject_list', 'session_list', 'subject_repeat', 'session_repeat'],
+                        outfields=['anat_t1']),
+                        name="datagrabbernode")  # the best explanation for datagrabber http://nipy.org/nipype/interfaces/generated/nipype.interfaces.io.html#datagrabber
+    datagrabbernode.inputs.base_directory = input_dir
+    datagrabbernode.inputs.template = '*'
+    datagrabbernode.inputs.field_template = dict(anat_t1='%s/%s/anat/%s_%s_T1w.nii.gz')
     # just for test with my home nii files
-    # inputnode.inputs.field_template = dict(anat_t1='sub-%s/ses-%s/anat/sub-%s_ses-%s_T1w.nii')
+    # datagrabbernode.inputs.field_template = dict(anat_t1='sub-%s/ses-%s/anat/sub-%s_ses-%s_T1w.nii')
+    datagrabbernode.inputs.template_args = dict(anat_t1=[['subject_list', 'session_list', 'subject_repeat',
+                                                          'session_repeat']])
+    datagrabbernode.inputs.sort_filelist = False
 
-    inputnode.inputs.template_args = dict(anat_t1=[['subject_id', 'session', 'subject_repeat', 'session_repeat']]) # the same with dg.inputs.template_args['outfiles']=[['dicomdir','123456-1-1.dcm']]
-    inputnode.inputs.subject_id = subject_list
-    inputnode.inputs.session = session_list
-    inputnode.inputs.subject_repeat = subject_list
-    inputnode.inputs.session_repeat = session_list
-    inputnode.inputs.sort_filelist = False
+    # MapNode to check out if we need -cw256 for every subject, and -qcache is default for every subject.
+    flagnode = pe.MapNode(name='flagnode',
+                          iterfield=['t1_list'],
+                          interface=Function(
+                          input_names=['t1_list', 'recon_all_args'],
+                          output_names=['output_flags'],
+                          function=checkfov))
+    flagnode.inputs.recon_all_args = recon_all_args
 
+    # MapNode to transfer every subject's flag to string.
+    create_flags = pe.MapNode(interface=Function(
+                              input_names=['input_flags'],
+                              output_names=['output_str'],
+                              function=create_flags_str),
+                              name='create_flags_string',
+                              iterfield=['input_flags'])
 
-    recon_all.inputs.subject_id = subject_id  # subject_id is the name of every output_subject.
-    recon_all.inputs.subjects_dir = subject_dir # subject_dir is the path to contain the different subject folder for the output
+    # MapNode to implement recon-all.
+    recon_all = pe.MapNode(interface=ReconAll(),
+                           name='recon_all',
+                           iterfield=['subject_id', 'T1_files', 'subjects_dir', 'flags'])
     recon_all.inputs.directive = 'all'
-    recon_all.inputs.args = recon_all_args
-    # recon_all.inputs.flags = internode.outputs.output_flag
-    # print("output flag are: %s" % internode.outputs.output_flag)
 
-    wf.connect(inputnode, 'anat_t1', recon_all, 'T1_files')
-    # wf.connect(inputnode, 'anat_t1', internode, 't1_list')
-    wf.connect(recon_all, 'subject_id', outputnode, 'ReconAll_result')
-    #for i in range(len(datasink_para)):
-        #wf.connect([(recon_all, datasink, [(datasink_para[i], datasink_para[i])])])
+    statisticsnode = pe.Node(name='statisticsnode',
+                                interface=Function(
+                                 input_names=['subject_dir', 'subject_id', 'analysis_series_id', 'output_dir'],
+                                 output_names=[],
+                                 function=write_statistics))
+    statisticsnode.inputs.analysis_series_id = analysis_series_id
+    statisticsnode.inputs.output_dir = output_dir
 
-    return wf
+    tsvmapnode = pe.MapNode(name='tsvmapnode',
+                                   iterfield=['subject_id'],
+                                 interface=Function(
+                                 input_names=['subject_id', 'analysis_series_id', 'output_dir'],
+                                 output_names=[],
+                                 function=write_statistics_per_subject))
+    tsvmapnode.inputs.analysis_series_id = analysis_series_id
+    tsvmapnode.inputs.output_dir = output_dir
+
+    lognode = pe.Node(name='lognode',
+                      interface=Function(
+                          input_names=['subject_list', 'session_list', 'subject_id', 'output_dir', 'analysis_series_id'],
+                          output_names=[],
+                          function=log_summary))
+    lognode.inputs.analysis_series_id = analysis_series_id
+    lognode.inputs.output_dir = output_dir
+
+    wf_recon_all = pe.Workflow(name='reconall_workflow', base_dir=working_directory)
+
+    wf_recon_all.connect(inputnode, 'subject_list', datagrabbernode, 'subject_list')
+    wf_recon_all.connect(inputnode, 'subject_list', datagrabbernode, 'subject_repeat')
+    wf_recon_all.connect(inputnode, 'session_list', datagrabbernode, 'session_list')
+    wf_recon_all.connect(inputnode, 'session_list', datagrabbernode, 'session_repeat')
+    wf_recon_all.connect(inputnode, 'subject_dir', recon_all, 'subjects_dir')
+    wf_recon_all.connect(inputnode, 'subject_id', recon_all, 'subject_id')
+    wf_recon_all.connect(datagrabbernode, 'anat_t1', recon_all, 'T1_files')
+    wf_recon_all.connect(datagrabbernode, 'anat_t1', flagnode, 't1_list')
+    wf_recon_all.connect(flagnode, 'output_flags', create_flags, 'input_flags')
+    wf_recon_all.connect(create_flags, 'output_str', recon_all, 'flags')
+    wf_recon_all.connect(recon_all, 'subjects_dir', statisticsnode, 'subject_dir')
+    wf_recon_all.connect(recon_all, 'subject_id', statisticsnode, 'subject_id')
+    wf_recon_all.connect(recon_all, 'subject_id', tsvmapnode, 'subject_id')
+    wf_recon_all.connect(recon_all, 'subject_id', lognode, 'subject_id')
+    wf_recon_all.connect(inputnode, 'subject_list', lognode, 'subject_list')
+    wf_recon_all.connect(inputnode, 'session_list', lognode, 'session_list')
+
+
+    # statisticsnode = pe.Node(name='statisticsnode',
+    #                             interface=Function(
+    #                              input_names=['subject_dir', 'subject_id', 'analysis_series_id', 'output_dir'],
+    #                              output_names=['analysis_series_id', 'output_dir'],
+    #                              function=write_statistics))
+    # statisticsnode.inputs.analysis_series_id = analysis_series_id
+    # statisticsnode.inputs.output_dir = output_dir
+    #
+    # tsvmapnode = pe.MapNode(name='tsvmapnode',
+    #                                iterfield=['subject_id'],
+    #                              interface=Function(
+    #                              input_names=['subject_id', 'analysis_series_id', 'output_dir'],
+    #                              output_names=[],
+    #                              function=write_statistics_per_subject))
+    #
+    # lognode = pe.Node(name='lognode',
+    #                   interface=Function(
+    #                       input_names=['subject_list', 'session_list', 'subject_id', 'output_dir', 'analysis_series_id'],
+    #                       output_names=[],
+    #                       function=log_summary))
+    #
+    # wf_recon_all_tsvs = pe.Workflow(name='wf_recon_all_tsvs')
+    #
+    # wf_recon_all_tsvs.connect(statisticsnode, 'analysis_series_id', lognode, 'analysis_series_id')
+    # wf_recon_all_tsvs.connect(statisticsnode, 'output_dir', lognode, 'output_dir')
+    # wf_recon_all_tsvs.connect(statisticsnode, 'output_dir', tsvmapnode, 'output_dir')
+    # # wf_recon_all_tsvs.connect(statisticsnode, 'analysis_series_id', tsvmapnode, 'analysis_series_id')
+    #
+    # metaflow = pe.Workflow(name='metaflow', base_dir=working_directory)
+    #
+    # metaflow.connect([(wf_recon_all, wf_recon_all_tsvs,[('recon_all.subject_id', 'lognode.subject_id'),
+    #                                                     ('recon_all.subject_id', 'statisticsnode.subject_id'),
+    #                                                     ('recon_all.subject_id', 'tsvmapnode.subject_id'),
+    #                                                     ('recon_all.subjects_dir', 'statisticsnode.subject_dir'),
+    #                                                     ('inputnode.subject_list', 'lognode.subject_list'),
+    #                                                     ('inputnode.session_list', 'lognode.session_list'),
+    #                                                     ]),
+    #                    ])
+
+    return wf_recon_all

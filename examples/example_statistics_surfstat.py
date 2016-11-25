@@ -10,7 +10,7 @@ The thickness between AD and CN is the same.
 the parameter explanation is below:
       :param: linear_model: string, the linear model that fit into the GLM, for example '1 + Label + Gender + Age'.
       :param: str_format: string, the format that you want to use for your CSV file column variables, it depends on your CSV file.
-      :param: csv_file: string, the path to your csv file.
+      :param: tsv_file: string, the path to your csv file.
       :param: caps_directory:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
               we put in the directory 'data/Recon-all_Output'.
       :param: contrast:  string, depending on what you want to do, there are two kinds of contrast, one is categorized facor contrast, like 'Label',
@@ -51,20 +51,21 @@ import time
 # CAPS version of surfstat
 caps_dir = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat'
 # For the CAPS_surfstat, the output images should be in the same parent folder with the CAPS_input, like /group/group<group_label>, diff optional params will save into diff grouplabel folder.
-csv_file  = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat/analysis-series-default/subjects/subjects_group_list.tsv'
-str_format = '%s %s %s %f'
-linear_model = '1 + group_label + sex + age'
+tsv_file  = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat/analysis-series-default/subjects/subjects_group_list.tsv'
+str_format = '%s %s %s %s %f'
+linear_model = '1 + group + sex + age'
 
 print 'Output dir is in the same CAPS folder with the input'
-contrast = 'group_label'
+contrast = 'group'
 group_label = 'test'
-working_directory='.'
+analysis_series_id = 'default'
+working_directory='~/test'
 start = time.time()
-surfstat = clinica_surfstat(caps_dir, csv_file, linear_model, contrast, str_format, group_label, working_directory=working_directory)
+surfstat = clinica_surfstat(caps_dir, tsv_file, linear_model, contrast, str_format, group_label, working_directory=working_directory)
 surfstat.run("MultiProc", plugin_args={'n_procs': 4})
 time_consuming = time.time() - start
 print 'END! time consuming is : %s' %time_consuming
 
 # command line example:
-# clinica run statistics-surfstat /Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat /Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat/analysis-series-default/subjects/subjects_group_list.tsv '1 + group_label + sex + age' 'group_label' '%s %s %s %f' 'test'
+# clinica run statistics-surfstat /Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat /Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat/analysis-series-default/subjects/subjects_group_list.tsv '1 + group + sex + age' 'group' '%s %s %s %f' 'test'
 

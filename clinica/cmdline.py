@@ -153,19 +153,29 @@ def execute():
         print(*get_cmdparser_names())
     pipeline_list_parser.set_defaults(func=pipeline_list_fun)
 
-
     """
     run option: run one of the available pipelines
     """
     run_parser = sub_parser.add_parser('run')
     #adding the independent pipeline ArgumentParser objects
     # init_cmdparser_objects(run_parser.add_subparsers())
-    pipelines = [CmdParserT1SPMFullPrep(),
-                 CmdParserT1SPMSegment(),
-                 CmdParserT1ReconAll(),
-                 CmdParserStatisticsSurfStat(),
-                 CmdParserMachineLearningVBLinearSVM()]
+    pipelines = [ CmdParserT1SPMFullPrep(),CmdParserT1SPMSegment(),CmdParserT1FreeSurfer(), CmdParserT1FSL(),
+                  CmdParserT1DWIRegistration(), CmdParserStatisticsSurfStat(),CmdParserMachineLearningVBLinearSVM()]
     init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
+
+    """
+    convert option: convert one of the supported dataset to the BIDS specification
+    """
+    convert_parser = sub_parser.add_parser('convert')
+    converters = [CmdParserCappToBids(), CmdParserInsightToBids(), CmdParserPrevDemAlsToBids()]
+    init_cmdparser_objects(parser, convert_parser.add_subparsers(), converters)
+
+    """
+    io option
+    """
+    io_parser = sub_parser.add_parser('io')
+    io_tasks = [CmdParserSubsSess()]
+    init_cmdparser_objects(parser, io_parser.add_subparsers(), io_tasks)
 
     def silent_help(): pass
 
