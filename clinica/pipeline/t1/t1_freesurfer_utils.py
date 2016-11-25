@@ -41,9 +41,10 @@ def get_dirs(output_dir, subjects_visits_tsv, analysis_series_id):
         for row in tsv_reader:
             if row[0] == 'participant_id':
                 continue
-            subject_list.append(row[0])
-            session_list.append(row[1])
-            subject_id.append(row[0] + '_' + row[1])
+            else:
+                subject_list.append(row[0])
+                session_list.append(row[1])
+                subject_id.append(row[0] + '_' + row[1])
 
     output_path = os.path.expanduser(output_dir)  # change the relative path to be absolute path
     output_base = 'analysis-series-' + analysis_series_id + '/subjects'
