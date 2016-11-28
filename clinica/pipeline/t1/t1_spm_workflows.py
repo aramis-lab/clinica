@@ -5,7 +5,8 @@ import nipype.interfaces.matlab as mlab
 import nipype.pipeline.engine as pe
 import nipype.interfaces.io as nio
 import nipype.interfaces.utility as niu
-from clinica.pipeline.t1.t1_spm_utils import get_tissue_tuples, get_class_images
+from nipype.algorithms.misc import Gunzip
+from clinica.pipeline.t1.t1_spm_utils import get_tissue_tuples, get_class_images, unzip_nii
 
 
 def segmentation_pipeline(working_directory=None,
@@ -88,7 +89,14 @@ def segmentation_pipeline(working_directory=None,
             tissue_map = op.join(spm_path,'toolbox/Seg/TPM.nii')
         elif version['name'] == 'SPM12':
             tissue_map = op.join(spm_path,'tpm/TPM.nii')
-    
+
+
+
+    unzip = pe.MapNode(niu.Function(input_names=['in_file'],
+                                            output_names=['out_file'],
+                                            function=unzip_nii),
+                        name="unzip", iterfield=['in_file'])
+
     new_segment = pe.MapNode(spm.NewSegment(), name='new_segment', iterfield=['channel_files'])
 
     if in_affine_regularization is not None:
@@ -117,6 +125,7 @@ def segmentation_pipeline(working_directory=None,
 
 
     wf.connect([
+        (unzip, new_segment, [('out_file', 'channel_files')]),
         (new_segment, outputnode, [('bias_corrected_images','out_bias_corrected_images'),
                                    ('bias_field_images', 'out_bias_field_images'),
                                    (('dartel_input_images', get_class_images, tissue_classes), 'out_dartel_input_images'),

@@ -45,6 +45,7 @@ def datagrabber_t1_spm_segment_pipeline(input_directory,
     sessions = []
     with open(subjects_visits_tsv, 'rb') as tsvin:
         tsv_reader = csv.reader(tsvin, delimiter='\t')
+        next(tsv_reader)
 
         for row in tsv_reader:
             subjects.append(row[0])
@@ -53,7 +54,7 @@ def datagrabber_t1_spm_segment_pipeline(input_directory,
     # DataGrabber
     selectfiles = pe.Node(nio.DataGrabber(infields=['subject_id', 'session', 'subject_repeat', 'session_repeat'], outfields=['out_files']), name="selectfiles")
     selectfiles.inputs.base_directory = input_directory
-    selectfiles.inputs.template = 'sub-%s/ses-%s/anat/sub-%s_ses-%s_T1w.nii'
+    selectfiles.inputs.template = '%s/%s/anat/%s_%s_T1w.nii*'
     selectfiles.inputs.subject_id = subjects
     selectfiles.inputs.session = sessions
     selectfiles.inputs.subject_repeat = subjects
@@ -103,7 +104,7 @@ def datagrabber_t1_spm_segment_pipeline(input_directory,
     seg_wf = pe.Workflow(name='seg_wf')
     seg_wf.base_dir = working_directory
     seg_wf.connect([
-        (selectfiles, seg_prep_wf, [('out_files', 'new_segment.channel_files')]),
+        (selectfiles, seg_prep_wf, [('out_files', 'unzip.in_file')]),
         (seg_prep_wf, datasink, datasink_connections)
     ])
 
@@ -190,7 +191,7 @@ def datagrabber_t1_spm_full_pipeline(input_directory,
     # DataGrabber
     selectfiles = pe.Node(nio.DataGrabber(infields=['subject_id', 'session', 'subject_repeat', 'session_repeat'], outfields=['out_files']), name="selectfiles")
     selectfiles.inputs.base_directory = input_directory
-    selectfiles.inputs.template = 'sub-%s/ses-%s/anat/sub-%s_ses-%s_T1w.nii'
+    selectfiles.inputs.template = 'sub-%s/ses-%s/anat/sub-%s_ses-%s_T1w.nii*'
     selectfiles.inputs.subject_id = subjects
     selectfiles.inputs.session = sessions
     selectfiles.inputs.subject_repeat = subjects
@@ -255,7 +256,8 @@ def datagrabber_t1_spm_full_pipeline(input_directory,
         preproc_wf.base_dir = working_directory
 
     preproc_wf.connect([
-        (selectfiles, t1_spm_prep_wf, [('out_files', 'segmentation_wf.new_segment.channel_files')]),
+        (selectfiles, t1_spm_prep_wf, [('out_files', 'segmentation_wf.unzip.in_file')]),
+        # (selectfiles, t1_spm_prep_wf, [('out_files', 'segmentation_wf.new_segment.channel_files')]),
         (t1_spm_prep_wf, seg_datasink, seg_datasink_connections),
         (t1_spm_prep_wf, template_datasink, [('outputnode.out_final_template_file', 'template')]),
         (t1_spm_prep_wf, dartel_datasink, [('dartel_wf.dartelTemplate.dartel_flow_fields', 'flow_fields'),
