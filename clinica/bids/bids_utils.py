@@ -5,6 +5,35 @@ import fileinput
 from shutil import copy
 import nibabel as nib
 import os
+import gzip
+
+def get_ext(file_path):
+
+    root, ext = os.path.splitext(file_path)
+    if ext in '.gz':
+        file_ext = os.path.splitext(root)[1] + ext
+    else:
+        file_ext = ext
+    return file_ext
+
+
+def compress_nii(file_path):
+    '''
+    Compress .nii file
+    :param path:
+    :return:
+    '''
+
+    f_in = open(file_path)
+    f_out = gzip.open(path.join(file_path + '.gz'), 'wb')
+    f_out.writelines(f_in)
+    f_out.close()
+    f_in.close()
+
+    # Remove the original file
+    os.remove(file_path)
+
+
 
 def remove_rescan(list_path):
     """
@@ -93,7 +122,13 @@ def convert_T1(t1_path, output_path, t1_bids_name):
     """
     if not os.path.exists(output_path):
         os.mkdir(output_path)
-    copy(t1_path, path.join(output_path, t1_bids_name + get_bids_suff('T1') + '.nii.gz'))
+    #copy(t1_path, path.join(output_path, t1_bids_name + get_bids_suff('T1') + '.nii.gz'))
+    file_ext = get_ext(t1_path)
+    copy(t1_path, path.join(output_path, t1_bids_name + get_bids_suff('T1') + file_ext))
+    # If  the original image is not compress, compress it
+    if file_ext == '.nii':
+        compress_nii(path.join(output_path, t1_bids_name + get_bids_suff('T1') + file_ext))
+
 
 
 def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False,False]):
@@ -232,7 +267,11 @@ def convert_fmri(folder_input, folder_output, name, fixed_fmri=False):
         if not os.path.exists(folder_output):
             os.mkdir(folder_output)
         fmri_file_path = glob(path.join(fmri_lst[0], '*.nii*'))[0]
-        copy(fmri_file_path, path.join(folder_output, name + '_task-rest' + get_bids_suff('fMRI') + '.nii.gz'))
+        file_ext = get_ext(fmri_file_path)
+        copy(fmri_file_path, path.join(folder_output, name + '_task-rest' + get_bids_suff('fMRI') + file_ext))
+        if file_ext == '.nii':
+            logging.warning('Non compressed file found: '+fmri_file_path)
+            compress_nii(path.join(folder_output, name + '_task-rest' + get_bids_suff('fMRI') + file_ext))
     else:
         logging.info('Non fMRI found for ' + folder_input)
         return -1
