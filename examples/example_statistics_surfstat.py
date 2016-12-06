@@ -45,15 +45,12 @@ import tempfile
 import time
 # from os.path import realpath, split, join
 
-# old version for external-data
-# caps_dir = join(split(realpath(__file__))[0], 'external-data/clinica_surfstat')
+# TODO adapt my code to non-BIDS version , like in clinica-data
 
-# CAPS version of surfstat
-caps_dir = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat'
-# For the CAPS_surfstat, the output images should be in the same parent folder with the CAPS_input, like /group/group<group_label>, diff optional params will save into diff grouplabel folder.
-tsv_file  = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing/test_surfstat/analysis-series-default/subjects/subjects_group_list.tsv'
-str_format = '%s %s %s %s %f'
-linear_model = '1 + group + sex + age'
+caps_dir =''
+tsv_file  =''
+str_format =''
+linear_model =''
 
 print 'Output dir is in the same CAPS folder with the input'
 contrast = 'group'
