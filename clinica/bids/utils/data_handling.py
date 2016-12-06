@@ -3,6 +3,15 @@ from glob import glob
 import pandas as pd
 import os
 
+__author__ = "Sabrina Fontanella"
+__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__credits__ = ["Sabrina Fontanella"]
+__license__ = ""
+__version__ = "1.0.0"
+__maintainer__ = "Sabrina Fontanella"
+__email__ = "sabrina.fontanella@icm-institute.org"
+__status__ = "Development"
+
 
 def create_merge_file(bids_dir, out_dir):
     """
@@ -10,12 +19,14 @@ def create_merge_file(bids_dir, out_dir):
 
      Args:
         bids_directory: path of the dataset
-        out_directory
+        out_directory: output path
 
     """
-    print out_dir
     col_list = []
     scans_dict = {}
+
+    if not os.path.isfile(path.join(bids_dir, 'participants.tsv')):
+        raise 'participants.tsv not found'
     participants_df = pd.read_csv(path.join(bids_dir, 'participants.tsv'), sep='\t')
     subjs_paths = glob(path.join(bids_dir, '*sub-*'))
 
@@ -100,7 +111,6 @@ def create_merge_file(bids_dir, out_dir):
         scans_dict = {}
 
     merged_df = merged_df[col_list]
-    print path.join(out_dir, out_file_name)
     merged_df.to_csv(path.join(out_dir, out_file_name), sep='\t', index=False)
 
 
