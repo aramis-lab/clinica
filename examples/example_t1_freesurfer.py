@@ -13,11 +13,11 @@ import time
 import tempfile
 
 # TODO adapt my code to non-BIDS version , like in clinica-data
-data_dir_CAPP =
-output_dir =
-tsv_file_CAPP =
+data_dir_CAPP =''
+output_dir =''
+tsv_file_CAPP =''
 start = time.time()
-working_directory=
+working_directory=''
 
 # this is the example to run CAPP dataset
 def recon_all_example_CAPP():

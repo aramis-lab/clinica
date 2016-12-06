@@ -47,10 +47,10 @@ import time
 
 # TODO adapt my code to non-BIDS version , like in clinica-data
 
-caps_dir =
-tsv_file  =
-str_format =
-linear_model =
+caps_dir =''
+tsv_file  =''
+str_format =''
+linear_model =''
 
 print 'Output dir is in the same CAPS folder with the input'
 contrast = 'group'
