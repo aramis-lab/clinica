@@ -67,7 +67,6 @@ def convert_clinical(input_path, out_path, bids_ids):
     genfi_subjs = glob((path.join(out_path, 'GENFI', 'sub-*')))
     icm_subjs =  glob((path.join(out_path, 'ICM', 'sub-*' )))
 
-
     # Extract all the bids subjects pats
     subjs_bids_path = glob(path.join(out_path,"GENFI", '*'))
     subjs_bids_path.append(glob(path.join(out_path,"ICM", '*')))
@@ -76,6 +75,7 @@ def convert_clinical(input_path, out_path, bids_ids):
     logging.info("-- Creation of participants file --")
     print("-- Creation of participants file --")
     participants_specs = pd.read_excel(clinic_specs_path, sheetname='participant.tsv')
+
     # Extracts information regarding INSIGHT dataset
     participant_fields_db = participants_specs['PREVDEMALS']
     field_location = participants_specs['PREVDEMALS location']
@@ -220,8 +220,9 @@ def convert_clinical(input_path, out_path, bids_ids):
             value = value.replace('-', '')
             bids_id = [s for s in bids_ids if value in s]
             if len(bids_id) == 0:
-                print "Subject " + value + " not found in the BIDS converted version of PREVDEMALS."
-                logging.error("Subject " + value + " not found in the BIDS converted version of PREVDEMALS.")
+                if not value in subj_to_remove:
+                    print "Subject " + value + " not found in the BIDS converted version of PREVDEMALS."
+                    logging.error("Subject " + value + " not found in the BIDS converted version of PREVDEMALS.")
                 participant_df['participant_id'][i] = ''
             else:
                 participant_df['participant_id'][i] = bids_id[0]
@@ -231,7 +232,6 @@ def convert_clinical(input_path, out_path, bids_ids):
         index_to_remove.append(participant_df[ participant_df['alternative_id_1'] == s ].index.tolist()[0])
 
     participant_df = participant_df.drop(index_to_remove)
-
 
     # Split the participant.tsv files in two files: one containing the GENFI subjects and the other the ICM subjects
     genfi_participant_df = pd.DataFrame(columns=fields_bids_aval)
@@ -259,8 +259,8 @@ def convert_clinical(input_path, out_path, bids_ids):
     logging.info("Participants file created.\n")
 
     # -- Creation of sessions.tsv --
-    logging.info("-- Creation of sessions files. --")
-    print("-- Creation of sessions files. --")
+    logging.info("--Creation of sessions files. --")
+    print("\nCreation of sessions files...")
     # Load data
     sessions = pd.read_excel(clinic_specs_path, sheetname='sessions.tsv')
     sessions_fields = sessions['PREVDEMALS']
@@ -298,7 +298,9 @@ def convert_clinical(input_path, out_path, bids_ids):
                 # Extracts the correspondant BIDS id and create the output file if doesn't exist
                 subj_bids = [s for s in bids_ids if subj_id_alpha in s]
                 if len(subj_bids) == 0:
-                    print 'Subject '+subj_id+' not found in the BIDS converted version of PREVDEMALS.'
+                    # If the subject is not an exluded one
+                    if not subj_id in subj_to_remove:
+                        print sessions_fields[i]+' for '+subj_id+' not found in the BIDS converted.'
                 else:
                     subj_bids = subj_bids[0]
                     sessions_df[sessions_fields_bids[i]] = row[sessions_fields[i]]
@@ -322,17 +324,18 @@ def convert_clinical(input_path, out_path, bids_ids):
             session_df = session_df[cols]
             session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index = False)
         else:
-            logging.warning("No session data available for "+bids_id)
+            logging.warning("No session data available for "+ sp)
+            print "No session data available for " + sp
             session_df =  pd.DataFrame(columns=['session_id'])
             session_df['session_id'] = pd.Series('M00')
             session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False)
 
 
-    logging.info("Sessions files created for each BIDS subject.")
-    print("Sessions files created for each BIDS subject.")
+    logging.info("Sessions files created.")
+    print("Sessions files created.")
 
     # -- Creation of *_scans.tsv --
-    print '-- Creation of sessions files. --'
+    print 'Creation of scans files...'
     scans_dict = {}
 
     for bids_id in bids_ids:
@@ -349,9 +352,7 @@ def convert_clinical(input_path, out_path, bids_ids):
         if not pd.isnull(scans_fields_db[i]):
             fields_bids.append(scans_fields_bids[i])
 
-
     scans_df = pd.DataFrame(columns=(fields_bids))
-    #dir =  next(os.walk(out_path))[1]
 
     for bids_subj_path in subjs_bids_path:
         # Create the file
@@ -360,7 +361,6 @@ def convert_clinical(input_path, out_path, bids_ids):
         sessions_paths = glob(path.join(bids_subj_path, 'ses-*'))
         for session_path in sessions_paths:
             session_name = session_path.split(os.sep)[-1]
-
             tsv_name = bids_id + '_' + session_name + "_scans.tsv"
 
             # If the file already exists, remove it
@@ -384,6 +384,9 @@ def convert_clinical(input_path, out_path, bids_ids):
 
                     scans_df['filename'] = pd.Series(path.join(mod_name, file_name))
                     scans_df.to_csv(scans_tsv, header=False, sep='\t', index=False)
+
+            scans_df = pd.DataFrame(columns=(fields_bids))
+
     print '-- Scans files created for each subject. --'
 
 
