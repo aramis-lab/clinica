@@ -8,7 +8,6 @@ import os
 import gzip
 
 def get_ext(file_path):
-
     root, ext = os.path.splitext(file_path)
     if ext in '.gz':
         file_ext = os.path.splitext(root)[1] + ext
