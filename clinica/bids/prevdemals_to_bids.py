@@ -16,9 +16,9 @@ import logging
 import bids_utils as bids
 import pandas as pd
 import pkg_resources as pkg
-from converter_utils import MissingModsTracker, print_statistics
 import sys
 import re
+
 
 def remove_space_and_symbols(data):
     '''
@@ -35,6 +35,7 @@ def remove_space_and_symbols(data):
 
     return data
 
+
 def remove_chars(data):
     '''
     Remove characters from a list of strings.
@@ -50,6 +51,7 @@ def remove_chars(data):
 
     return data
 
+
 def convert_clinical(input_path, out_path, bids_ids):
     pd.options.mode.chained_assignment = None
     reload(sys)
@@ -62,11 +64,13 @@ def convert_clinical(input_path, out_path, bids_ids):
     prev_field = ""
     clinic_specs_path = pkg.resource_filename('clinica', 'bids/data/clinical_specifications.xlsx')
 
+    genfi_subjs = glob((path.join(out_path, 'GENFI', 'sub-*')))
+    icm_subjs =  glob((path.join(out_path, 'ICM', 'sub-*' )))
+
+
     # Extract all the bids subjects pats
     subjs_bids_path = glob(path.join(out_path,"GENFI", '*'))
     subjs_bids_path.append(glob(path.join(out_path,"ICM", '*')))
-
-
 
     # -- Creation of participants.tsv --
     logging.info("-- Creation of participants file --")
@@ -84,10 +88,8 @@ def convert_clinical(input_path, out_path, bids_ids):
             fields_bids_aval.append(participant_fields_bids[i])
             fields_aval.append(participant_fields_db[i])
 
-
     # Init the dataframe that will be saved in the file participant.tsv
     participant_df = pd.DataFrame(columns=fields_bids_aval)
-
 
     for i in range(0, len(participant_fields_db)):
             # If a field not empty is found
@@ -206,7 +208,6 @@ def convert_clinical(input_path, out_path, bids_ids):
                         # Add the extracted column to the participant_df
                         participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
 
-
     # Adding participant_id column with BIDS ids and remove blank row
     index_to_remove = []
     for i in range(0, len(participant_df)):
@@ -225,14 +226,39 @@ def convert_clinical(input_path, out_path, bids_ids):
             else:
                 participant_df['participant_id'][i] = bids_id[0]
 
-
     # Removes all subjects discarded from the study
     for s in subj_to_remove:
         index_to_remove.append(participant_df[ participant_df['alternative_id_1'] == s ].index.tolist()[0])
 
     participant_df = participant_df.drop(index_to_remove)
-    participant_df.to_csv(path.join(out_path, 'participants.tsv'), sep='\t', index=False)
+
+
+    # Split the participant.tsv files in two files: one containing the GENFI subjects and the other the ICM subjects
+    genfi_participant_df = pd.DataFrame(columns=fields_bids_aval)
+    icm_participant_df = pd.DataFrame(columns=fields_bids_aval)
+    for gsp in genfi_subjs:
+        genfi_sub_name = gsp.split(os.sep)[-1]
+        index_to_extract = participant_df[participant_df['participant_id'] == genfi_sub_name].index.tolist()
+        if len(index_to_extract) == 0:
+            print 'Subject '+genfi_sub_name+' not found in the list of subject available'
+        else:
+            genfi_participant_df = genfi_participant_df.append(participant_df.loc[index_to_extract[0]])
+
+    for isp in icm_subjs:
+        icm_sub_name = isp.split(os.sep)[-1]
+        index_to_extract = participant_df[participant_df['participant_id'] == icm_sub_name].index.tolist()
+        if len(index_to_extract) == 0:
+            print 'Subject '+icm_sub_name+' not found in the list of subject available'
+        else:
+            icm_participant_df = icm_participant_df.append(participant_df.loc[index_to_extract[0]])
+
+
+    icm_participant_df.to_csv(path.join(out_path,'ICM', 'participants.tsv'), sep='\t', index=False)
+    genfi_participant_df.to_csv(path.join(out_path, 'GENFI', 'participants.tsv'), sep='\t', index=False)
+
     logging.info("Participants file created.\n")
+
+
 
     # -- Creation of sessions.tsv --
     logging.info("-- Creation of sessions files. --")
@@ -298,7 +324,11 @@ def convert_clinical(input_path, out_path, bids_ids):
             session_df = session_df[cols]
             session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index = False)
         else:
-            pass
+            logging.warning("No session data available for "+bids_id)
+            session_df =  pd.DataFrame(columns=['session_id'])
+            session_df['session_id'] = pd.Series('M00')
+            session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False)
+
 
     logging.info("Sessions files created for each BIDS subject.")
     print("Sessions files created for each BIDS subject.")
@@ -359,7 +389,6 @@ def convert_clinical(input_path, out_path, bids_ids):
     print '-- Scans files created for each subject. --'
 
 
-
 def convert(source_dir, dest_dir, param=''):
     """
     Convert the PREVDEMALS dataset into the BIDS standard.
@@ -375,7 +404,7 @@ def convert(source_dir, dest_dir, param=''):
         'ICM': path.join(source_dir, 'PREV_DEMALS_ICM', 'convertData', 'study')
     }
     ses_available = ['M0', 'M24']
-    mmt = MissingModsTracker(['M0', 'M24'])
+    #mmt = MissingModsTracker(['M0', 'M24'])
     if param!='-c':
         os.mkdir(dest_dir)
         os.mkdir(path.join(dest_dir, 'GENFI'))
@@ -389,15 +418,14 @@ def convert(source_dir, dest_dir, param=''):
     print "*******************************"
     # Convert all the files contained in the two project folder PREV_DEMALS_GENFI and PREV_DEMALS_ICM
     if param != '-c':
-
         for proj in projects:
             cities_folder = glob(path.join(projects[proj], '*'))
+            print
+
             pda_spath = []
             pda_ids = []
             bids_ids = []
             dest_dir_proj = path.join(dest_dir, proj)
-            participants = open(path.join(dest_dir_proj, 'participants.tsv'), 'w')
-            participants.write("participant_id   BIDS_id\n")
             for cf in cities_folder:
                 for subj_path in glob(path.join(cf, "*")):
                     subj_id = subj_path.split(os.sep)[-1]
@@ -407,10 +435,6 @@ def convert(source_dir, dest_dir, param=''):
                     # Create the subject folder in the BIDS converted dataset
                     os.mkdir(path.join(dest_dir_proj, bids_ids[-1]))
 
-            for p_ids, b_ids in zip(pda_ids, bids_ids):
-                participants.writelines(p_ids + "     " + b_ids + '\n')
-
-            participants.close()
 
             # For each subject extract the list of files and convert them into BIDS specification
             for subj_path in pda_spath:
@@ -442,11 +466,11 @@ def convert(source_dir, dest_dir, param=''):
                         if out is not None:  # Missing or incomplete DTI
                             if out == -1:
                                 logging.info('No DTI found for ' + mods_folder_path)
-                                mmt.add_missing_mod('DTI', ses)
+                                #mmt.add_missing_mod('DTI', ses)
                             else:
                                 for e in out:
                                     logging.warning('.bvec or .bval not found for DTI folder ' + e + ' Skipped')
-                                    mmt.add_incomplete_mod('DTI', ses)
+                                    #mmt.add_incomplete_mod('DTI', ses)
 
                     # Decide the best T1 to take and convert the file format into the BIDS standard
                     t1_selected = bids.choose_correction(mods_folder_path, t1_priority, 'T1')
@@ -456,14 +480,15 @@ def convert(source_dir, dest_dir, param=''):
                     else:
                         if t1_selected == -1:
                             logging.info('No T1 found for ' + mods_folder_path)
-                            mmt.add_missing_mod('T1', ses)
+                            #mmt.add_missing_mod('T1', ses)
                         else:
                             logging.warning('None of the desiderd T1 corrections is available for ' + mods_folder_path)
 
                     # Extract and convert the T2 FLAIR modality if is available
                     out = bids.convert_flair(mods_folder_path, path.join(ses_dir_bids, "anat"), bids_file_name)
                     if out == -1:
-                        mmt.add_missing_mod('FLAIR', ses)
+                        logging.warning('No FLAIR found for '+ mods_folder_path)
+                        #mmt.add_missing_mod('FLAIR', ses)
 
                     logging.info("Conversion for the subject terminated.\n")
 
