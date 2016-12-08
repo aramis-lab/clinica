@@ -258,8 +258,6 @@ def convert_clinical(input_path, out_path, bids_ids):
 
     logging.info("Participants file created.\n")
 
-
-
     # -- Creation of sessions.tsv --
     logging.info("-- Creation of sessions files. --")
     print("-- Creation of sessions files. --")

@@ -711,3 +711,20 @@ class CmdParserMergeTsv(CmdParser):
     def run_pipeline(self, args):
         from clinica.bids.utils import data_handling as dt
         dt.create_merge_file(args.bids_dir, args.out_directory)
+
+
+class CmdParserMissingModalities(CmdParser):
+
+    def define_name(self):
+        self._name = 'compute-missing-mods'
+
+    def define_options(self):
+        self._args.add_argument("bids_dir",
+                               help='Path to the BIDS dataset directory.')
+        self._args.add_argument("out_directory",
+                                help='Path to the output directory.')
+
+
+    def run_pipeline(self, args):
+        from clinica.bids.utils import data_handling as dt
+        dt.compute_missing_mods(args.bids_dir, args.out_directory)
