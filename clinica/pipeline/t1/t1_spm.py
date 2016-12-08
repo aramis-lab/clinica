@@ -6,6 +6,7 @@ from clinica.pipeline.t1.t1_spm_utils import group_nested_images_by_subject, gro
 import nipype.pipeline.engine as pe
 import nipype.interfaces.io as nio
 import nipype.interfaces.utility as niu
+import pandas as pd
 import os.path as op
 from os import makedirs
 import errno
@@ -15,7 +16,7 @@ from shutil import copyfile
 def datagrabber_t1_spm_segment_pipeline(input_directory,
                                         output_directory,
                                         subjects_visits_tsv,
-                                        analysis_series_id,
+                                        analysis_series_id='default',
                                         working_directory=None,
                                         tissue_classes=[1, 2, 3],
                                         dartel_tissues=[1],
@@ -41,15 +42,10 @@ def datagrabber_t1_spm_segment_pipeline(input_directory,
     :return: SPM Segmentation workflow
     """
 
-    subjects = []
-    sessions = []
-    with open(subjects_visits_tsv, 'rb') as tsvin:
-        tsv_reader = csv.reader(tsvin, delimiter='\t')
-        next(tsv_reader)
+    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
+    subjects = list(subjects_visits.participant_id)
+    sessions = list(subjects_visits.session_id)
 
-        for row in tsv_reader:
-            subjects.append(row[0])
-            sessions.append(row[1])
 
     # DataGrabber
     selectfiles = pe.Node(nio.DataGrabber(infields=['subject_id', 'session', 'subject_repeat', 'session_repeat'], outfields=['out_files']), name="selectfiles")
@@ -114,8 +110,8 @@ def datagrabber_t1_spm_segment_pipeline(input_directory,
 def datagrabber_t1_spm_full_pipeline(input_directory,
                                      output_directory,
                                      subjects_visits_tsv,
-                                     analysis_series_id,
                                      group_id,
+                                     analysis_series_id='default',
                                      working_directory=None,
                                      tissue_classes=[1, 2, 3],
                                      dartel_tissues=[1],
@@ -148,15 +144,9 @@ def datagrabber_t1_spm_full_pipeline(input_directory,
     :return: SPM Segmentation and registration workflow
     """
 
-
-    subjects = []
-    sessions = []
-    with open(subjects_visits_tsv, 'rb') as tsvin:
-        tsv_reader = csv.reader(tsvin, delimiter='\t')
-
-        for row in tsv_reader:
-            subjects.append(row[0])
-            sessions.append(row[1])
+    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
+    subjects = list(subjects_visits.participant_id)
+    sessions = list(subjects_visits.session_id)
 
 
     dest_group_file = op.join(output_directory, 'analysis-series-' + analysis_series_id + '/group-' + group_id + '/group-' + group_id + '_subjects_visits_list.tsv')
@@ -187,11 +177,11 @@ def datagrabber_t1_spm_full_pipeline(input_directory,
 
         copyfile(subjects_visits_tsv, dest_group_file)
 
-
     # DataGrabber
-    selectfiles = pe.Node(nio.DataGrabber(infields=['subject_id', 'session', 'subject_repeat', 'session_repeat'], outfields=['out_files']), name="selectfiles")
+    selectfiles = pe.Node(nio.DataGrabber(infields=['subject_id', 'session', 'subject_repeat', 'session_repeat'],
+                                          outfields=['out_files']), name="selectfiles")
     selectfiles.inputs.base_directory = input_directory
-    selectfiles.inputs.template = 'sub-%s/ses-%s/anat/sub-%s_ses-%s_T1w.nii*'
+    selectfiles.inputs.template = '%s/%s/anat/%s_%s_T1w.nii*'
     selectfiles.inputs.subject_id = subjects
     selectfiles.inputs.session = sessions
     selectfiles.inputs.subject_repeat = subjects
@@ -259,7 +249,8 @@ def datagrabber_t1_spm_full_pipeline(input_directory,
         (selectfiles, t1_spm_prep_wf, [('out_files', 'segmentation_wf.unzip.in_file')]),
         # (selectfiles, t1_spm_prep_wf, [('out_files', 'segmentation_wf.new_segment.channel_files')]),
         (t1_spm_prep_wf, seg_datasink, seg_datasink_connections),
-        (t1_spm_prep_wf, template_datasink, [('outputnode.out_final_template_file', 'template')]),
+        (t1_spm_prep_wf, template_datasink, [('outputnode.out_final_template_file', 'final_template'),
+                                             ('outputnode.out_template_files', 'all_templates')]),
         (t1_spm_prep_wf, dartel_datasink, [('dartel_wf.dartelTemplate.dartel_flow_fields', 'flow_fields'),
                                            (('dartel_wf.dartel2MNI.normalized_files', group_images_list_by_subject, tissue_classes), 'registered')])
     ])
