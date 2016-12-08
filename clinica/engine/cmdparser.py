@@ -141,20 +141,20 @@ class CmdParserT1SPMFullPrep(CmdParser):
         self._name = 't1-spm-full-prep'
 
     def define_options(self):
-        self._args.add_argument("input_directory",
-                                help='Directory where the input NIFTI images are stored')
-        self._args.add_argument("output_directory",
-                                help='Directory to save the resulting images')
-        self._args.add_argument("subjects_visits_tsv",
-                                help='TSV file with subjects and sessions to be processed')
-        self._args.add_argument("analysis_series_id",
-                                help='Current analysis series name')
+        self._args.add_argument("bids_directory",
+                                help='Path to the BIDS directory.')
+        self._args.add_argument("caps_directory",
+                                help='Path to the CAPS directory.')
+        self._args.add_argument("subjects_sessions_tsv",
+                                help='TSV file containing the subjects with their sessions.')
         self._args.add_argument("group_id",
                                 help='Current group name')
+        self._args.add_argument("-as", "--analysis_series_id",
+                                help='Current analysis series name', default='default')
         self._args.add_argument("-wd", "--working_directory",
-                                help='Temporary directory to run the workflow')
-        self._args.add_argument("-np", "--n_procs", type=int, default=4,
-                                help='Number of parallel processes to run')
+                                help='Temporary directory to store pipeline intermediate results')
+        self._args.add_argument("-np", "--n_threads", type=int, default=4,
+                                help='Number of threads to run in parallel')
         self._args.add_argument("-ti", "--tissue_classes", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
                                 help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to save. Up to 6 tissue classes can be saved. Ex: 1 2 3 is GM, WM and CSF")
         self._args.add_argument("-dt", "--dartel_tissues", nargs='+', type=int, default=[1], choices=range(1, 7),
@@ -183,11 +183,11 @@ class CmdParserT1SPMFullPrep(CmdParser):
 
         voxel_size = tuple(args.voxel_size) if args.voxel_size is not None else None
 
-        preproc_wf = datagrabber_t1_spm_full_pipeline(self.absolute_path(args.input_directory),
-                                                      self.absolute_path(args.output_directory),
-                                                      self.absolute_path(args.subjects_visits_tsv),
-                                                      args.analysis_series_id,
+        preproc_wf = datagrabber_t1_spm_full_pipeline(self.absolute_path(args.bids_directory),
+                                                      self.absolute_path(args.caps_directory),
+                                                      self.absolute_path(args.subjects_sessions_tsv),
                                                       args.group_id,
+                                                      analysis_series_id=args.analysis_series_id,
                                                       working_directory=working_directory,
                                                       tissue_classes=args.tissue_classes,
                                                       dartel_tissues=args.dartel_tissues,
@@ -199,7 +199,7 @@ class CmdParserT1SPMFullPrep(CmdParser):
                                                       in_voxel_size=voxel_size)
 
         # print 'Workflow set'
-        preproc_wf.run('MultiProc', plugin_args={'n_procs': args.n_procs})
+        preproc_wf.run('MultiProc', plugin_args={'n_procs': args.n_threads})
 
 
 class CmdParserT1SPMSegment(CmdParser):
@@ -208,18 +208,18 @@ class CmdParserT1SPMSegment(CmdParser):
         self._name = 't1-spm-segment'
 
     def define_options(self):
-        self._args.add_argument("input_directory",
-                                help='Directory where the input NIFTI images are stored')
-        self._args.add_argument("output_directory",
-                                help='Directory to save the resulting images')
-        self._args.add_argument("subjects_visits_tsv",
-                                help='TSV file with subjects and sessions to be processed')
-        self._args.add_argument("analysis_series_id",
-                                help='Current analysis series name')
+        self._args.add_argument("bids_directory",
+                                help='Path to the BIDS directory.')
+        self._args.add_argument("caps_directory",
+                                help='Path to the CAPS directory.')
+        self._args.add_argument("subjects_sessions_tsv",
+                                help='TSV file containing the subjects with their sessions.')
+        self._args.add_argument("-as", "--analysis_series_id",
+                                help='Current analysis series name', default='default')
         self._args.add_argument("-wd", "--working_directory",
-                                help='Temporary directory to run the workflow')
-        self._args.add_argument("-np", "--n_procs", type=int, default=4,
-                                help='Number of parallel processes to run')
+                                help='Temporary directory to store pipeline intermediate results')
+        self._args.add_argument("-np", "--n_threads", type=int, default=4,
+                                help='Number of threads to run in parallel')
         self._args.add_argument("-ti", "--tissue_classes", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
                                 help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to save. Up to 6 tissue classes can be saved. Ex: 1 2 3 is GM, WM and CSF")
         self._args.add_argument("-dt", "--dartel_tissues", nargs='+', type=int, default=[1], choices=range(1, 7),
@@ -236,10 +236,10 @@ class CmdParserT1SPMSegment(CmdParser):
         from clinica.pipeline.t1.t1_spm import datagrabber_t1_spm_segment_pipeline
 
         working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
-        segment_wf = datagrabber_t1_spm_segment_pipeline(self.absolute_path(args.input_directory),
-                                                         self.absolute_path(args.output_directory),
-                                                         self.absolute_path(args.subjects_visits_tsv),
-                                                         args.analysis_series_id,
+        segment_wf = datagrabber_t1_spm_segment_pipeline(self.absolute_path(args.bids_directory),
+                                                         self.absolute_path(args.caps_directory),
+                                                         self.absolute_path(args.subjects_sessions_tsv),
+                                                         analysis_series_id=args.analysis_series_id,
                                                          working_directory=working_directory,
                                                          tissue_classes=args.tissue_classes,
                                                          dartel_tissues=args.dartel_tissues,
@@ -248,7 +248,7 @@ class CmdParserT1SPMSegment(CmdParser):
                                                          in_write_deformation_fields=args.write_deformation_fields)
 
         # print 'Workflow set'
-        segment_wf.run('MultiProc', plugin_args={'n_procs': args.n_procs})
+        segment_wf.run('MultiProc', plugin_args={'n_procs': args.n_threads})
 
 
 class CmdParserT1FreeSurfer(CmdParser):
