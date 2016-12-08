@@ -694,3 +694,20 @@ class CmdParserSubsSess(CmdParser):
     def run_pipeline(self, args):
         from clinica.bids.utils import data_handling as dt
         dt.create_subs_sess_list(args.bids_dir, args.out_directory)
+
+
+class CmdParserMergeTsv(CmdParser):
+
+    def define_name(self):
+        self._name = 'merge-tsv'
+
+    def define_options(self):
+        self._args.add_argument("bids_dir",
+                               help='Path to the BIDS dataset directory.')
+        self._args.add_argument("out_directory",
+                                help='Path to the output directory.')
+
+
+    def run_pipeline(self, args):
+        from clinica.bids.utils import data_handling as dt
+        dt.create_merge_file(args.bids_dir, args.out_directory)
