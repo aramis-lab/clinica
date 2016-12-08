@@ -174,7 +174,7 @@ def execute():
     io option
     """
     io_parser = sub_parser.add_parser('io')
-    io_tasks = [CmdParserSubsSess(), CmdParserMergeTsv()]
+    io_tasks = [CmdParserSubsSess(), CmdParserMergeTsv(), CmdParserMissingModalities()]
     init_cmdparser_objects(parser, io_parser.add_subparsers(), io_tasks)
 
     def silent_help(): pass
