@@ -12,23 +12,16 @@ from os.path import realpath,split,join
 import time
 import tempfile
 
-# Test for BIDS dataset(which is located in dataARAMIS/users/CLINICA/CLINICA_datasets/for_testing, you should adjust the input path here on your own computer)
-# this example is run on my own Mac, so this path should be changed if you run on your own machine.
-data_dir_CAPP = '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/BIDS/PREVDEMALS_BIDS/GENFI'
-# output_dir =
-output_dir = '~/test/test-reconall-lab/'
-tsv_file_CAPP = '/Volumes/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/Freesurfer/Reconall/reconall_GENFI/clinica_reconall_result/subjects_visits_list_PREVDEMALS.tsv'
-
+# TODO adapt my code to non-BIDS version , like in clinica-data
+data_dir_CAPP =''
+output_dir =''
+tsv_file_CAPP =''
 start = time.time()
-working_directory='~/test/test-reconall-lab'
+working_directory=''
 
 # this is the example to run CAPP dataset
 def recon_all_example_CAPP():
     return t1_freesurfer_pipeline(data_dir_CAPP, output_dir, tsv_file_CAPP, working_directory=working_directory)
-
-# # this is the example to run INSIGHT dataset
-# def recon_all_example_INSIGHT():
-#     return recon_all_pipeline(data_dir_INSIGHT, output_dir,tsv_file_INSIGHT)
 
 if 2 > 1:
     print("Data Directory -> %s" % data_dir_CAPP)

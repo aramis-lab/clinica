@@ -11,13 +11,13 @@ ToFix:
 from os import path
 from glob import glob
 import os
+from os.path import normpath
 import logging
 import bids_utils as bids
 import pandas as pd
 import pkg_resources as pkg
 from converter_utils import MissingModsTracker, print_statistics
 import sys
-import numpy as np
 import re
 
 def remove_space_and_symbols(data):
@@ -61,6 +61,12 @@ def convert_clinical(input_path, out_path, bids_ids):
     prev_sheet = ""
     prev_field = ""
     clinic_specs_path = pkg.resource_filename('clinica', 'bids/data/clinical_specifications.xlsx')
+
+    # Extract all the bids subjects pats
+    subjs_bids_path = glob(path.join(out_path,"GENFI", '*'))
+    subjs_bids_path.append(glob(path.join(out_path,"ICM", '*')))
+
+
 
     # -- Creation of participants.tsv --
     logging.info("-- Creation of participants file --")
@@ -153,16 +159,16 @@ def convert_clinical(input_path, out_path, bids_ids):
                                 if 'FTD' in value_to_split:
                                     field_col_values[0].append('Y')
                                 else:
-                                    field_col_values[0].append('F')
+                                    field_col_values[0].append('N')
                                 if 'ALS' in value_to_split:
                                     field_col_values[1].append('Y')
                                 else:
-                                    field_col_values[1].append('F')
+                                    field_col_values[1].append('N')
                             else:
                                 field_col_values[0].append('')
                                 field_col_values[1].append('')
-                        participant_df['familiar_phenotype_ftd'] = pd.Series(field_col_values[0])
-                        participant_df['familiar_phenotype_als'] = pd.Series(field_col_values[1])
+                        participant_df['family_phenotype_ftd'] = pd.Series(field_col_values[0])
+                        participant_df['family_phenotype_als'] = pd.Series(field_col_values[1])
                     elif participant_fields_db[i] == 'Genetic status (m=mutation, nm=no mutation)':
                         field_col_values = []
                         for j in range(0, len(file_to_read)):
@@ -175,12 +181,28 @@ def convert_clinical(input_path, out_path, bids_ids):
                             else:
                                 field_col_values.append('')
                         participant_df['prevdemals_genetic_status_mutated'] = pd.Series(field_col_values)
+                    elif participant_fields_db[i] == 'Status (A=patients, R=relatives)':
+                        field_col_values = []
+                        for j in range(0, len(file_to_read)):
+                            prevdemals_status = file_to_read.get_value(j, participant_fields_db[i])
+                            if type(prevdemals_status) != float:
+                                if 'A' in prevdemals_status:
+                                    field_col_values.append('P')
+                                elif 'R' in prevdemals_status:
+                                    field_col_values.append('R')
+                            else:
+                                field_col_values.append('')
+                        participant_df['prevdemals_status'] = pd.Series(field_col_values)
                     else:
                         for j in range(0, len(file_to_read)):
                             field_col_values.append(file_to_read.get_value(j, participant_fields_db[i]))
 
                         if field_type_bids[i] == 'int' or field_type_bids[i] == 'float':
                             field_col_values = remove_chars(field_col_values)
+                        # if participant_fields_bids[i] == 'aoo_mean_family' or participant_fields_bids[i] == 'expected_years_aoo_bl':
+                        #     field_col_values = [round(float(num)) for num in field_col_values ]
+
+
                         # Add the extracted column to the participant_df
                         participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
 
@@ -204,7 +226,7 @@ def convert_clinical(input_path, out_path, bids_ids):
                 participant_df['participant_id'][i] = bids_id[0]
 
 
-    # Remove all subjects discarded from the study
+    # Removes all subjects discarded from the study
     for s in subj_to_remove:
         index_to_remove.append(participant_df[ participant_df['alternative_id_1'] == s ].index.tolist()[0])
 
@@ -244,12 +266,12 @@ def convert_clinical(input_path, out_path, bids_ids):
 
             for r in range(0, len(file_to_read.values)):
                 row = file_to_read.iloc[r]
-                # Extract the subject ids columns from the dataframe
+                # Extracts the subject ids columns from the dataframe
                 id_ref = 'Référence patient'
                 subj_id = row[id_ref.decode('utf-8')]
-                # Remove all the - from
+                # Removes all the - from
                 subj_id_alpha = remove_space_and_symbols(subj_id)
-                #Extract the correspondant BIDS id and create the output file if doesn't exist
+                # Extracts the correspondant BIDS id and create the output file if doesn't exist
                 subj_bids = [s for s in bids_ids if subj_id_alpha in s]
                 if len(subj_bids) == 0:
                     print 'Subject '+subj_id+' not found in the BIDS converted version of PREVDEMALS.'
@@ -281,6 +303,61 @@ def convert_clinical(input_path, out_path, bids_ids):
     logging.info("Sessions files created for each BIDS subject.")
     print("Sessions files created for each BIDS subject.")
 
+    # -- Creation of *_scans.tsv --
+    print '-- Creation of sessions files. --'
+    scans_dict = {}
+
+    for bids_id in bids_ids:
+        scans_dict.update({bids_id: {'T1/DWI/fMRI': {}, 'FDG': {}}})
+
+    scans_specs = pd.read_excel(clinic_specs_path, sheetname='scans.tsv')
+    scans_fields_db = scans_specs['PREVDEMALS']
+    field_location = scans_specs['PREVDEMALS location']
+    scans_fields_bids = scans_specs['BIDS CLINICA']
+    scans_fields_mod = scans_specs['Modalities related']
+    fields_bids = ['filename']
+
+    for i in range(0, len(scans_fields_db)):
+        if not pd.isnull(scans_fields_db[i]):
+            fields_bids.append(scans_fields_bids[i])
+
+
+    scans_df = pd.DataFrame(columns=(fields_bids))
+    #dir =  next(os.walk(out_path))[1]
+
+    for bids_subj_path in subjs_bids_path:
+        # Create the file
+        bids_id = os.path.basename(normpath(bids_subj_path))
+
+        sessions_paths = glob(path.join(bids_subj_path, 'ses-*'))
+        for session_path in sessions_paths:
+            session_name = session_path.split(os.sep)[-1]
+
+            tsv_name = bids_id + '_' + session_name + "_scans.tsv"
+
+            # If the file already exists, remove it
+            if os.path.exists(path.join(session_path, tsv_name)):
+                os.remove(path.join(session_path, tsv_name))
+
+            scans_tsv = open(path.join(session_path, tsv_name), 'a')
+            scans_df.to_csv(scans_tsv, sep='\t', index=False)
+
+            # Extract modalities available for each subject
+            mod_available = glob(path.join(session_path, '*'))
+            for mod in mod_available:
+                mod_name = os.path.basename(mod)
+                files = glob(path.join(mod, '*'))
+                for file in files:
+                    file_name = os.path.basename(file)
+                    if mod == "anat" or mod == "dwi" or mod == "func":
+                        type_mod = 'T1/DWI/fMRI'
+                    else:
+                        type_mod = 'FDG'
+
+                    scans_df['filename'] = pd.Series(path.join(mod_name, file_name))
+                    scans_df.to_csv(scans_tsv, header=False, sep='\t', index=False)
+    print '-- Scans files created for each subject. --'
+
 
 
 def convert(source_dir, dest_dir, param=''):
@@ -303,9 +380,9 @@ def convert(source_dir, dest_dir, param=''):
         os.mkdir(dest_dir)
         os.mkdir(path.join(dest_dir, 'GENFI'))
         os.mkdir(path.join(dest_dir, 'ICM'))
-    summary_file_icm = open(path.join(dest_dir, 'ICM', 'conversion_summary.txt'), 'w')
-    summary_file_genfi = open(path.join(dest_dir, 'GENFI', 'conversion_summary.txt'), 'w')
-    logging.basicConfig(filename=path.join(dest_dir, 'conversion.log'), format='%(asctime)s %(levelname)s:%(message)s',
+    # summary_file_icm = open(path.join(dest_dir, 'ICM', 'conversion_summary.txt'), 'w')
+    # summary_file_genfi = open(path.join(dest_dir, 'GENFI', 'conversion_summary.txt'), 'w')
+    logging.basicConfig(filename=path.join(dest_dir, 'conversion_modalities.log'), format='%(asctime)s %(levelname)s:%(message)s',
                         datefmt='%m/%d/%Y %I:%M', level=logging.DEBUG)
     print "*******************************"
     print "PREVDEMALS to BIDS converter"
@@ -391,12 +468,12 @@ def convert(source_dir, dest_dir, param=''):
                     logging.info("Conversion for the subject terminated.\n")
 
             # Printing the statistics about missing modalities into a file
-            if proj == 'ICM':
-                file_to_write = summary_file_icm
-            else:
-                file_to_write = summary_file_genfi
-            print_statistics(file_to_write, len(pda_ids), ses_available, mmt)
-            file_to_write.close()
+            # if proj == 'ICM':
+            #     file_to_write = summary_file_icm
+            # else:
+            #     file_to_write = summary_file_genfi
+            # print_statistics(file_to_write, len(pda_ids), ses_available, mmt)
+            # file_to_write.close()
     else:
         print '** Conversion of clinical data only **'
         if not os.path.exists(dest_dir):
@@ -409,6 +486,7 @@ def convert(source_dir, dest_dir, param=''):
     logging.basicConfig(filename=path.join(dest_dir, 'conversion_clinical.log'),
                         format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG,
                         datefmt='%m/%d/%Y %I:%M')
+
     print 'Converting clinical data...'
     logging.info('Converting clinical data...')
     bids_ids = [d for d in os.listdir(path.join(dest_dir, 'GENFI')) if os.path.isdir(path.join(dest_dir, 'GENFI', d))]

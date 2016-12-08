@@ -3,6 +3,117 @@ from glob import glob
 import pandas as pd
 import os
 
+__author__ = "Sabrina Fontanella"
+__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__credits__ = ["Sabrina Fontanella"]
+__license__ = ""
+__version__ = "1.0.0"
+__maintainer__ = "Sabrina Fontanella"
+__email__ = "sabrina.fontanella@icm-institute.org"
+__status__ = "Development"
+
+
+def create_merge_file(bids_dir, out_dir):
+    """
+     Merge all the TSV files containing clinical data of BIDS compliant dataset
+
+     Args:
+        bids_directory: path of the dataset
+        out_directory: output path
+
+    """
+    col_list = []
+    scans_dict = {}
+
+    if not os.path.isfile(path.join(bids_dir, 'participants.tsv')):
+        raise 'participants.tsv not found'
+    participants_df = pd.read_csv(path.join(bids_dir, 'participants.tsv'), sep='\t')
+    subjs_paths = glob(path.join(bids_dir, '*sub-*'))
+
+    out_file_name = out_dir.split(os.sep)[-1]
+    if len(out_file_name) == 0 or out_dir == '.':
+        out_file_name = 'merge_tsv.tsv'
+    else:
+        # Extract the path of the file
+        out_dir = os.path.dirname(out_dir)
+
+    if '.' not in out_file_name:
+        out_file_name = out_file_name + '.tsv'
+    else:
+        extension = os.path.splitext(out_file_name)[1]
+        if extension != '.tsv':
+            raise 'Output file must be .tsv.'
+
+    if out_dir == '.':
+        out_dir = os.getcwd()
+
+    for col in participants_df.columns.values:
+        col_list.append(col)
+
+    merged_df = pd.DataFrame(columns=col_list)
+
+    for sub_path in subjs_paths:
+        sub_name = sub_path.split(os.sep)[-1]
+        # For each subject, extract the relative row from the dataframe
+        row_participant = participants_df[participants_df['participant_id'] == sub_name]
+        # Open the sessions file related to the subject
+        sessions_df = pd.read_csv(path.join(sub_path, sub_name+'_sessions.tsv'), sep='\t')
+
+        # For each session found extract the information contained in the scans files
+        for line in range(0, len(sessions_df)):
+            # Extract and convert to a dictonary information regarding the session
+            row_sessions = sessions_df.iloc[line]
+            row_session_df = pd.DataFrame([row_sessions])
+            new_cols = [s for s in row_session_df.columns.values if s not in col_list]
+            if len(new_cols)!=0:
+                for i in range(0, len(new_cols)):
+                    col_list.append(new_cols[i])
+
+            session_id = row_sessions['session_id']
+            if os.path.isfile(path.join(bids_dir, sub_name, 'ses-'+session_id, sub_name+'_'+'ses-'+session_id+'_scans.tsv')):
+                scans_df = pd.read_csv(path.join(bids_dir, sub_name, 'ses-'+session_id, sub_name+'_'+'ses-'+session_id+'_scans.tsv'), sep='\t')
+                for i in range(0, len(scans_df)):
+                    for col in scans_df.columns.values:
+                        if col == 'filename':
+                            pass
+                        else:
+                            file_scan = scans_df.iloc[i]['filename']
+                            file_name = file_scan.split('/')[1]
+                            # Remove the extension .nii.gz
+                            file_name = os.path.splitext(os.path.splitext(file_name)[0])[0]
+                            file_parts = file_name.split('_')
+                            last_pattern_index = len(file_parts) - 1
+                            mod_type = file_parts[last_pattern_index]
+                            value = scans_df.iloc[i][col]
+                            new_col_name = col+'_'+mod_type
+                            scans_dict.update({new_col_name:value})
+                row_scans = pd.DataFrame(scans_dict, index=[0])
+            else:
+                row_scans = pd.DataFrame()
+
+            new_cols = [s for s in row_scans.columns.values if s not in col_list]
+            if len(new_cols)!=0:
+                for i in range(0, len(new_cols)):
+                    col_list.append(new_cols[i])
+
+            row_to_append_df= pd.DataFrame(columns=row_participant.columns)
+            for col in row_participant:
+                row_to_append_df[col] = row_participant[col]
+
+            # Append all the data inside session_df
+            for col in row_session_df:
+                row_to_append_df[col] = row_session_df[col].values[0]
+
+            for col in row_scans:
+                row_to_append_df[col] = row_scans[col].values[0]
+
+            merged_df = merged_df.append(row_to_append_df)
+        scans_dict = {}
+
+    merged_df = merged_df[col_list]
+    merged_df.to_csv(path.join(out_dir, out_file_name), sep='\t', index=False)
+
+
 def find_mod_available(dataset_dir):
     '''
     Finds all the modalities available for a given dataset
@@ -49,7 +160,6 @@ def find_mod_available(dataset_dir):
 
 
     print mods_dict
-
 
 
 def missing_modalities(in_dir, out_dir):
@@ -103,6 +213,7 @@ def missing_modalities(in_dir, out_dir):
                             print missing_mods_df.index
                             missing_mods_df[anat_type] = pd.Series('-')
 
+
 def create_subs_sess_list(dataset_path, out_dir):
     file_name = out_dir.split(os.sep)[-1]
     if len(file_name) == 0 or out_dir=='.':
@@ -135,7 +246,6 @@ def create_subs_sess_list(dataset_path, out_dir):
             subjs_sess_tsv.write(subj_id+'\t'+session_name+'\n')
 
     subjs_sess_tsv.close()
-
 
 
 
