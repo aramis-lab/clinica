@@ -251,9 +251,9 @@ def compute_missing_mods(in_dir, out_dir):
                         task_avaL_list = glob(path.join(ses_path,'func' ,'*'+task_name+'*'))
 
                         if len(task_avaL_list) == 0:
-                            row_to_append_df[m] = pd.Series('-')
+                            row_to_append_df[m] = pd.Series('0')
                         else:
-                            row_to_append_df[m] = pd.Series('x')
+                            row_to_append_df[m] = pd.Series('1')
                 else:
                     if 'func' in mods_avail:
                         for m in mods_avail_dict['func']:
@@ -261,18 +261,18 @@ def compute_missing_mods(in_dir, out_dir):
                         mmt.add_missing_mod(ses, m)
 
                 if ['dwi' in m for m in mods_paths_folders]:
-                    row_to_append_df['dwi'] = pd.Series('x')
+                    row_to_append_df['dwi'] = pd.Series('1')
                 else:
-                    row_to_append_df['dwi'] = pd.Series('-')
+                    row_to_append_df['dwi'] = pd.Series('0')
                     mmt.add_missing_mod(ses, 'dwi')
 
                 if ['anat' in m for m in mods_paths_folders]:
                     for m in mods_avail_dict['anat']:
                         anat_aval_list = glob(path.join(ses_path, 'anat', '*.nii.gz'))
                         if len(anat_aval_list) > 0:
-                            row_to_append_df[m] = pd.Series('x')
+                            row_to_append_df[m] = pd.Series('1')
                         else:
-                            row_to_append_df[m] = pd.Series('-')
+                            row_to_append_df[m] = pd.Series('0')
                             mmt.add_missing_mod(ses, m)
 
             missing_mods_df = missing_mods_df.append(row_to_append_df)
