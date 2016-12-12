@@ -458,6 +458,12 @@ def convert(source_dir, dest_dir, param=''):
                     session_path = path.join(subj_path, ses)
                     mods_folder_path = path.join(session_path, 'NIFTI')
 
+                    # Extract and convert fieldmap data
+                    out = bids.convert_fieldmap(mods_folder_path, path.join(ses_dir_bids, 'fmap'), bids_file_name)
+                    if out == -1:
+                        logging.warning("No Fieldmap found for " + mods_folder_path)
+                    elif out == 0:
+                        logging.warning("Map or MapPh missing for " + mods_folder_path + ': skipped')
 
                     # Merge all the valid DTI folders for the same subject
                     if 'ICM' in projects[proj]:
