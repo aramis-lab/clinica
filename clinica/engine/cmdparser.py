@@ -188,7 +188,7 @@ class CmdParserT1SPMFullPrep(CmdParser):
                                                       self.absolute_path(args.subjects_sessions_tsv),
                                                       args.group_id,
                                                       analysis_series_id=args.analysis_series_id,
-                                                      working_directory=working_directory,
+                                                      working_directory=self.absolute_path(working_directory),
                                                       tissue_classes=args.tissue_classes,
                                                       dartel_tissues=args.dartel_tissues,
                                                       save_warped_unmodulated=args.save_warped_unmodulated,
@@ -240,7 +240,7 @@ class CmdParserT1SPMSegment(CmdParser):
                                                          self.absolute_path(args.caps_directory),
                                                          self.absolute_path(args.subjects_sessions_tsv),
                                                          analysis_series_id=args.analysis_series_id,
-                                                         working_directory=working_directory,
+                                                         working_directory=self.absolute_path(working_directory),
                                                          tissue_classes=args.tissue_classes,
                                                          dartel_tissues=args.dartel_tissues,
                                                          save_warped_unmodulated=args.save_warped_unmodulated,
@@ -706,11 +706,13 @@ class CmdParserMergeTsv(CmdParser):
                                help='Path to the BIDS dataset directory.')
         self._args.add_argument("out_directory",
                                 help='Path to the output directory.')
+        self._args.add_argument("-tf", '--true_false_mode', type= bool, default = False,
+                                help = '(Optional) Conver all the field with binary meaning into True and False values.')
 
 
     def run_pipeline(self, args):
         from clinica.bids.utils import data_handling as dt
-        dt.create_merge_file(args.bids_dir, args.out_directory)
+        dt.create_merge_file(args.bids_dir, args.out_directory, args.true_false_mode)
 
 
 class CmdParserMissingModalities(CmdParser):

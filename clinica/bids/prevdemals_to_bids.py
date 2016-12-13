@@ -19,6 +19,15 @@ import pkg_resources as pkg
 import sys
 import re
 
+__author__ = "Sabrina Fontanella"
+__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__credits__ = ["Sabrina Fontanella"]
+__license__ = ""
+__version__ = "1.0.0"
+__maintainer__ = "Sabrina Fontanella"
+__email__ = "sabrina.fontanella@icm-institute.org"
+__status__ = "Development"
+
 
 def remove_space_and_symbols(data):
     '''
@@ -146,7 +155,8 @@ def convert_clinical(input_path, out_path, bids_ids):
                                 field_col_values[0].append('')
                                 field_col_values[1].append('')
                                 field_col_values[2].append('')
-                        participant_df['parent_transmitting_fdt'] = pd.Series(field_col_values[0])
+
+                        participant_df['parent_transmitting_ftd'] = pd.Series(field_col_values[0])
                         participant_df['parent_transmitting_als'] = pd.Series(field_col_values[1])
                         participant_df['parent_transmitting'] = pd.Series(field_col_values[2])
                     elif participant_fields_db[i] == 'Family phenotype':
@@ -169,6 +179,7 @@ def convert_clinical(input_path, out_path, bids_ids):
                             else:
                                 field_col_values[0].append('')
                                 field_col_values[1].append('')
+
                         participant_df['family_phenotype_ftd'] = pd.Series(field_col_values[0])
                         participant_df['family_phenotype_als'] = pd.Series(field_col_values[1])
                     elif participant_fields_db[i] == 'Genetic status (m=mutation, nm=no mutation)':
@@ -203,7 +214,6 @@ def convert_clinical(input_path, out_path, bids_ids):
                             field_col_values = remove_chars(field_col_values)
                         # if participant_fields_bids[i] == 'aoo_mean_family' or participant_fields_bids[i] == 'expected_years_aoo_bl':
                         #     field_col_values = [round(float(num)) for num in field_col_values ]
-
 
                         # Add the extracted column to the participant_df
                         participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
@@ -305,9 +315,9 @@ def convert_clinical(input_path, out_path, bids_ids):
                     subj_bids = subj_bids[0]
                     sessions_df[sessions_fields_bids[i]] = row[sessions_fields[i]]
                     if sessions_dict.has_key(subj_bids):
-                        (sessions_dict[subj_bids]['M00']).update({sessions_fields_bids[i]: row[sessions_fields[i]]})
+                        (sessions_dict[subj_bids]['M0']).update({sessions_fields_bids[i]: row[sessions_fields[i]]})
                     else:
-                        sessions_dict.update({subj_bids: {'M00': {'session_id': 'M00', sessions_fields_bids[i]: row[sessions_fields[i]]}}})
+                        sessions_dict.update({subj_bids: {'M0': {'session_id': 'M0', sessions_fields_bids[i]: row[sessions_fields[i]]}}})
 
     subjs_bids_path = glob(path.join(out_path, 'GENFI','*/'))
     icm_subj = glob(path.join(out_path, 'ICM','*/'))
@@ -318,7 +328,7 @@ def convert_clinical(input_path, out_path, bids_ids):
         bids_id = sp.split(os.sep)[-1]
         sessions_df = pd.DataFrame(columns=fields_bids)
         if sessions_dict.has_key(bids_id):
-            session_df = pd.DataFrame(sessions_dict[bids_id]['M00'], index=['i', ])
+            session_df = pd.DataFrame(sessions_dict[bids_id]['M0'], index=['i', ])
             cols = session_df.columns.tolist()
             cols = cols[-1:] + cols[:-1]
             session_df = session_df[cols]
@@ -327,7 +337,7 @@ def convert_clinical(input_path, out_path, bids_ids):
             logging.warning("No session data available for "+ sp)
             print "No session data available for " + sp
             session_df =  pd.DataFrame(columns=['session_id'])
-            session_df['session_id'] = pd.Series('M00')
+            session_df['session_id'] = pd.Series('M0')
             session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False)
 
 
@@ -421,8 +431,6 @@ def convert(source_dir, dest_dir, param=''):
     if param != '-c':
         for proj in projects:
             cities_folder = glob(path.join(projects[proj], '*'))
-            print
-
             pda_spath = []
             pda_ids = []
             bids_ids = []
