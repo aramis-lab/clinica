@@ -2,6 +2,7 @@ from os import path
 from glob import glob
 import pandas as pd
 import os
+import numpy as np
 from ..converter_utils import MissingModsTracker, print_statistics
 
 __author__ = "Sabrina Fontanella"
@@ -52,6 +53,7 @@ def create_merge_file(bids_dir, out_dir):
         col_list.append(col)
 
     merged_df = pd.DataFrame(columns=col_list)
+
 
     for sub_path in subjs_paths:
         sub_name = sub_path.split(os.sep)[-1]
@@ -111,7 +113,51 @@ def create_merge_file(bids_dir, out_dir):
             merged_df = merged_df.append(row_to_append_df)
         scans_dict = {}
 
+    old_index = col_list.index('session_id')
+    col_list.insert(1, col_list.pop(old_index))
     merged_df = merged_df[col_list]
+    # Call the script for computing the missing modalities and append the result to the merged file
+
+
+    compute_missing_mods(bids_dir, path.join(out_dir,'tmpG7VIY0'))
+    tmp_ses = glob(path.join(out_dir, 'tmpG7VIY0*'))
+    for f in tmp_ses:
+        # Skip the summary file
+        if not 'summary' in f:
+            # Load the file
+            mss_df = pd.read_csv(f, sep='\t')
+            f_name = f.split(os.sep)[-1]
+            patterns = f_name.split('-')
+            ses_id = patterns[len(patterns)-1]
+            ses_id = ses_id.replace('.tsv', '')
+            cols = mss_df.columns.values
+
+            # If the file opened contains new columns, add them to the exstisting merged_df
+            for col_name in cols:
+                if not col_name in col_list:
+                    merged_df[col_name] = 0
+
+            for i in range(0, len(mss_df)):
+                row = mss_df.iloc[i]
+                subj_idx = merged_df[ (merged_df['participant_id'] == row['participant_id']) & (merged_df['session_id'] == ses_id)].index.tolist()
+
+                if len(subj_idx)>1:
+                    raise ValueError('Multiple row for the same visit in the merge-tsv file.')
+                elif len(subj_idx) ==0:
+                    print ' Line for subject:' + row['participant_id']+ ' visit:' + ses_id + ' not found in the merge file.'
+                    continue
+                else:
+                    subj_idx = subj_idx[0]
+
+                for col_name in cols:
+                    if not col_name=='participant_id':
+                        merged_df.iloc[subj_idx, merged_df.columns.get_loc(col_name)] = row[col_name]
+
+
+    # Remove all the temporary files created
+    for f in tmp_ses:
+        os.remove(f)
+
     merged_df.to_csv(path.join(out_dir, out_file_name), sep='\t', index=False)
 
 
@@ -197,7 +243,6 @@ def find_mods_and_sess(dataset_dir):
 def compute_missing_mods(in_dir, out_dir):
 
     # Find all the modalities and sessions available for the input dataset
-    summary_file = open(path.join(out_dir, 'missing_mods_sess_summary.txt'), 'w')
     mods_and_sess= find_mods_and_sess(in_dir)
     sessions_found = mods_and_sess['sessions']
     mods_and_sess.pop('sessions')
@@ -213,9 +258,11 @@ def compute_missing_mods(in_dir, out_dir):
         # Extract the path of the file
         out_dir = os.path.dirname(out_dir)
 
+
     if out_dir == '.':
         out_dir = os.getcwd()
 
+    summary_file = open(path.join(out_dir, out_file_name + '_summary.txt'), 'w')
     missing_mods_df = pd.DataFrame(columns=cols_dataframe)
     row_to_append_df = pd.DataFrame(columns=cols_dataframe)
     subjects_paths_lists = glob(path.join(in_dir, '*sub-*'))
@@ -282,7 +329,7 @@ def compute_missing_mods(in_dir, out_dir):
         missing_mods_df.to_csv(path.join(out_dir, out_file_name+ses+'.tsv'), sep='\t', index=False)
         missing_mods_df = pd.DataFrame(columns=cols_dataframe)
 
-    print_statistics(summary_file, len(subjects_paths_lists), sessions_found, mmt)
+    print_statistics(summary_file, len(subjects_paths_lists), sessions_found, mmt )
 
 
 def create_subs_sess_list(dataset_path, out_dir):
