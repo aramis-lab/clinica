@@ -706,11 +706,13 @@ class CmdParserMergeTsv(CmdParser):
                                help='Path to the BIDS dataset directory.')
         self._args.add_argument("out_directory",
                                 help='Path to the output directory.')
+        self._args.add_argument("-tf", '--true_false_mode', type= bool, default = False,
+                                help = '(Optional) Conver all the field with binary meaning into True and False values.')
 
 
     def run_pipeline(self, args):
         from clinica.bids.utils import data_handling as dt
-        dt.create_merge_file(args.bids_dir, args.out_directory)
+        dt.create_merge_file(args.bids_dir, args.out_directory, args.true_false_mode)
 
 
 class CmdParserMissingModalities(CmdParser):

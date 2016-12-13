@@ -15,7 +15,7 @@ __email__ = "sabrina.fontanella@icm-institute.org"
 __status__ = "Development"
 
 
-def create_merge_file(bids_dir, out_dir):
+def create_merge_file(bids_dir, out_dir, true_false_mode = False):
     """
      Merge all the TSV files containing clinical data of BIDS compliant dataset
 
@@ -144,11 +144,10 @@ def create_merge_file(bids_dir, out_dir):
                 if len(subj_idx)>1:
                     raise ValueError('Multiple row for the same visit in the merge-tsv file.')
                 elif len(subj_idx) ==0:
-                    print ' Line for subject:' + row['participant_id']+ ' visit:' + ses_id + ' not found in the merge file.'
+                    print 'Warning: Found modalities missing information for the subject:' + row['participant_id']+ ' visit:' + ses_id + ' but the subject is not included in the column participant_id.'
                     continue
                 else:
                     subj_idx = subj_idx[0]
-
                 for col_name in cols:
                     if not col_name=='participant_id':
                         merged_df.iloc[subj_idx, merged_df.columns.get_loc(col_name)] = row[col_name]
@@ -157,6 +156,9 @@ def create_merge_file(bids_dir, out_dir):
     # Remove all the temporary files created
     for f in tmp_ses:
         os.remove(f)
+
+    if true_false_mode == True:
+        merged_df = merged_df.replace(['Y','N'], [True, False])
 
     merged_df.to_csv(path.join(out_dir, out_file_name), sep='\t', index=False)
 
