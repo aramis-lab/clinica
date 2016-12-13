@@ -78,7 +78,7 @@ lencolumn = length(firstline);
 if lencolumn <2
     error('requires at least 2 inputs columns')
 end
-if  strcmp(firstline{1},'subject_id') ~= 1
+if  strcmp(firstline{1},'participant_id') ~= 1
     error('the first colomn of TSV file should always be named by subject_id')
 end
 if  strcmp(firstline{2},'session_id') ~= 1
