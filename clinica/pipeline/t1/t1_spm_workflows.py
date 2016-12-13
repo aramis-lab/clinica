@@ -3,9 +3,7 @@ import os.path as op
 import nipype.interfaces.spm as spm
 import nipype.interfaces.matlab as mlab
 import nipype.pipeline.engine as pe
-import nipype.interfaces.io as nio
 import nipype.interfaces.utility as niu
-from nipype.algorithms.misc import Gunzip
 from clinica.pipeline.t1.t1_spm_utils import get_tissue_tuples, get_class_images, unzip_nii
 
 
@@ -89,7 +87,10 @@ def segmentation_pipeline(working_directory=None,
             tissue_map = op.join(spm_path,'toolbox/Seg/TPM.nii')
         elif version['name'] == 'SPM12':
             tissue_map = op.join(spm_path,'tpm/TPM.nii')
-
+        else:
+            raise RuntimeError('SPM version 8 or 12 could not be found. Please upgrade your SPM toolbox.')
+    else:
+        raise RuntimeError('SPM could not be found. Please verify your SPM_HOME environment variable.')
 
 
     unzip = pe.MapNode(niu.Function(input_names=['in_file'],
@@ -228,6 +229,20 @@ def dartel_pipeline(working_directory=None,
         Voxel sizes for output file
     :return: Registration workflow
     """
+    spm_home = os.getenv("SPM_HOME")
+    mlab_home = os.getenv("MATLABCMD")
+    mlab.MatlabCommand.set_default_matlab_cmd(mlab_home)
+    mlab.MatlabCommand.set_default_paths(spm_home)
+
+    version = spm.Info.version()
+
+    if version:
+        if version['name'] == 'SPM8':
+            print 'You are using SPM version 8. The recommended version to use with Clinica is SPM 12. Please upgrade your SPM toolbox.'
+        elif version['name'] != 'SPM12':
+            raise RuntimeError('SPM version 8 or 12 could not be found. Please upgrade your SPM toolbox.')
+    else:
+        raise RuntimeError('SPM could not be found. Please verify your SPM_HOME environment variable.')
 
     # DARTEL Template creation node
     dartelTemplate = pe.Node(spm.DARTEL(), name='dartelTemplate')
