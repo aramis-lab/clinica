@@ -160,6 +160,8 @@ if iscell(csvdata{indexunique})
     clearvars csvsorted csvdata thicksubject
 
     % Contrast Positive:
+    % What kind of t-test does surfstat use??? a two-tailed 2-sample t-test can determine whether the difference between
+    % group 1 and group 2 is statistically significant in either the positive or negative direction.
     tic;
     slm = SurfStatT( slmmodel, contrastpos );
     SurfStatView( slm.t .* mask, averagesurface, [ 'ContrastPo-value of the T-statistic for ' factor1 '-' factor2]);
@@ -169,10 +171,10 @@ if iscell(csvdata{indexunique})
     % Computation of the uncorrected p-value:
     tic;
     %Method 1:
-    t = tpdf(abs(slm.t), slm.df);
-    uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
+    %t = tpdf(slm.t, slm.df);
+    %uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
     %Method 2:
-    %uncorrectedpValues = 2*(1-tcdf(abs(slm.t),slm.df)); % here, we consider it to be 2-tailed t-distribution
+    uncorrectedpValues = 1-tcdf(slm.t,slm.df);
     clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(ContrastPo-Uncorrected P-values)' factor1 '-' factor2 ]);
     save2jpeg('contrast_positive_uncorrected_p_value.jpg');
@@ -213,9 +215,9 @@ if iscell(csvdata{indexunique})
     
     % Computation of the uncorrected p-value:
     tic;
-    t = tpdf(abs(slm.t), slm.df);
-    uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
-    %uncorrectedpValues = 2*(1-tcdf(abs(slm.t),slm.df)); % here, we consider it to be 2-tailed t-distribution
+    %t = tpdf(abs(slm.t), slm.df);
+    %uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
+    uncorrectedpValues = 1-tcdf(slm.t,slm.df);
     clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(ContrastNe-Uncorrected P-values )' factor1 '-' factor2]);
     save2jpeg('contrast_negative_uncorrected_p_value.jpg');
@@ -270,9 +272,9 @@ else
 
     % Computation of the uncorrected p-value:
     tic;
-    t = tpdf(abs(slm.t), slm.df);
-    uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
-    %uncorrectedpValues = 2*(1-tcdf(abs(slm.t),slm.df)); % here, we consider it to be 2-tailed t-distribution
+    %t = tpdf(abs(slm.t), slm.df);
+    %uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
+    uncorrectedpValues = 1-tcdf(slm.t,slm.df);
     clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(Uncorrected P-values)' contrast ]);
     save2jpeg('uncorrected_p_value.jpg');
