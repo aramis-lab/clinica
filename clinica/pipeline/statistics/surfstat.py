@@ -67,7 +67,7 @@ def clinica_surfstat(input_directory,
     inputnode.inputs.analysis_series_id = analysis_series_id
     inputnode.inputs.group_label = group_label
 
-    # Node to wrap the surfstat matlab script.
+    # Node to wrap the surfstat matlab scrip t.
     surfstat = pe.Node(name='surfstat',
                        interface=Function(input_names=['input_directory', 'output_directory', 'subjects_visits_tsv', 'linear_model',
                                                        'contrast', 'str_format', 'path_to_matscript', 'size_of_fwhm', 'threshold_uncorrected_pvalue',
