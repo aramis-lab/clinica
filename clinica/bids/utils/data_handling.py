@@ -116,9 +116,9 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
     old_index = col_list.index('session_id')
     col_list.insert(1, col_list.pop(old_index))
     merged_df = merged_df[col_list]
+
+
     # Call the script for computing the missing modalities and append the result to the merged file
-
-
     compute_missing_mods(bids_dir, path.join(out_dir,'tmpG7VIY0'))
     tmp_ses = glob(path.join(out_dir, 'tmpG7VIY0*'))
     for f in tmp_ses:
@@ -157,7 +157,7 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
     for f in tmp_ses:
         os.remove(f)
 
-    if true_false_mode == True:
+    if true_false_mode:
         merged_df = merged_df.replace(['Y','N'], [True, False])
 
     merged_df.to_csv(path.join(out_dir, out_file_name), sep='\t', index=False)
@@ -242,7 +242,7 @@ def find_mods_and_sess(dataset_dir):
     return mods_dict
 
 
-def compute_missing_mods(in_dir, out_dir):
+def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
 
     # Find all the modalities and sessions available for the input dataset
     mods_and_sess= find_mods_and_sess(in_dir)
@@ -253,18 +253,24 @@ def compute_missing_mods(in_dir, out_dir):
     cols_dataframe = mods_avail[:]
     cols_dataframe.insert(0, 'participant_id')
     mmt = MissingModsTracker(sessions_found, mods_avail)
-    out_file_name = out_dir.split(os.sep)[-1]
-    if len(out_file_name) == 0 or out_dir == '.':
+
+    # if len(out_file_name) == 0 or out_dir == '.':
+    #     out_file_name = 'missing_mods_'
+    # else:
+    #     # Extract the path of the file
+    #     out_dir = os.path.dirname(out_dir)
+    #
+    #
+    # if out_dir == '.':
+    #     out_dir = os.getcwd()
+
+    if output_prefix == '':
         out_file_name = 'missing_mods_'
     else:
-        # Extract the path of the file
-        out_dir = os.path.dirname(out_dir)
+        out_file_name = output_prefix + '_'
 
 
-    if out_dir == '.':
-        out_dir = os.getcwd()
-
-    summary_file = open(path.join(out_dir, out_file_name + '_summary.txt'), 'w')
+    summary_file = open(path.join(out_dir, out_file_name + 'summary.txt'), 'w')
     missing_mods_df = pd.DataFrame(columns=cols_dataframe)
     row_to_append_df = pd.DataFrame(columns=cols_dataframe)
     subjects_paths_lists = glob(path.join(in_dir, '*sub-*'))
