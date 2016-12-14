@@ -169,10 +169,10 @@ if iscell(csvdata{indexunique})
     % Computation of the uncorrected p-value:
     tic;
     %Method 1:
-    %t = tpdf(abs(slm.t), slm.df);
-    %uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
+    t = tpdf(abs(slm.t), slm.df);
+    uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
     %Method 2:
-    uncorrectedpValues = 2*(1-tcdf(abs(slm.t),slm.df)); % here, we consider it to be 2-tailed t-distribution
+    %uncorrectedpValues = 2*(1-tcdf(abs(slm.t),slm.df)); % here, we consider it to be 2-tailed t-distribution
     clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(ContrastPo-Uncorrected P-values)' factor1 '-' factor2 ]);
     save2jpeg('contrast_positive_uncorrected_p_value.jpg');
@@ -213,7 +213,9 @@ if iscell(csvdata{indexunique})
     
     % Computation of the uncorrected p-value:
     tic;
-    uncorrectedpValues = 2*(1-tcdf(abs(slm.t),slm.df)); % here, we consider it to be 2-tailed t-distribution
+    t = tpdf(abs(slm.t), slm.df);
+    uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
+    %uncorrectedpValues = 2*(1-tcdf(abs(slm.t),slm.df)); % here, we consider it to be 2-tailed t-distribution
     clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(ContrastNe-Uncorrected P-values )' factor1 '-' factor2]);
     save2jpeg('contrast_negative_uncorrected_p_value.jpg');
@@ -268,7 +270,9 @@ else
 
     % Computation of the uncorrected p-value:
     tic;
-    uncorrectedpValues = 2*(1-tcdf(abs(slm.t),slm.df)); % here, we consider it to be 2-tailed t-distribution
+    t = tpdf(abs(slm.t), slm.df);
+    uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
+    %uncorrectedpValues = 2*(1-tcdf(abs(slm.t),slm.df)); % here, we consider it to be 2-tailed t-distribution
     clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(Uncorrected P-values)' contrast ]);
     save2jpeg('uncorrected_p_value.jpg');
