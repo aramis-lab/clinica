@@ -725,8 +725,11 @@ class CmdParserMissingModalities(CmdParser):
                                help='Path to the BIDS dataset directory.')
         self._args.add_argument("out_directory",
                                 help='Path to the output directory.')
+        self._args.add_argument("-op", '--output_prefix', type= str, default= '',
+                                help='Prefix for the name of output files.')
+
 
 
     def run_pipeline(self, args):
         from clinica.bids.utils import data_handling as dt
-        dt.compute_missing_mods(args.bids_dir, args.out_directory)
+        dt.compute_missing_mods(args.bids_dir, args.out_directory, args.output_prefix)
