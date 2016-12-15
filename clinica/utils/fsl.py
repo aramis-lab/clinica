@@ -3,7 +3,7 @@
 
 """This module contains FSL utilities."""
 
-def standard_space_roi(in_t1, in_mask=None):
+def  standard_space_roi(in_t1, in_mask=None):
     """
     Pre-mask the structural image to standard space.
 

@@ -55,6 +55,8 @@ def t1_freesurfer_pipeline(input_dir,
 
         return: Recon-all workflow
     """
+    ## TODO if we have new subjects to run recon-all, what do we do? just run the new subjects with a new tsv file, or rerun all the subjects, but check out if the subjects are recon-alled? .
+
 
     # check out ReconAll version
     try:
