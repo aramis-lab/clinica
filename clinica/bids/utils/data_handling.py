@@ -211,6 +211,12 @@ def find_mods_and_sess(dataset_dir):
                 if not 'dwi' in mods_list:
                     mods_list.append('dwi')
 
+            if 'fmap' in mods_aval:
+                if not mods_dict.has_key('fmap'):
+                    mods_dict.update({'fmap': ['fmap']})
+                if not 'fmap' in mods_list:
+                    mods_list.append('fmap')
+
             if 'anat' in mods_aval:
                 anat_files_paths = glob(path.join(session, 'anat', '*'))
 
@@ -315,13 +321,13 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
                             row_to_append_df[m] = pd.Series('-')
                         mmt.add_missing_mod(ses, m)
 
-                if ['dwi' in m for m in mods_paths_folders]:
+                if ['dwi' in mods_avail_bids]:
                     row_to_append_df['dwi'] = pd.Series('1')
                 else:
                     row_to_append_df['dwi'] = pd.Series('0')
                     mmt.add_missing_mod(ses, 'dwi')
 
-                if ['anat' in m for m in mods_paths_folders]:
+                if ['anat' in mods_avail_bids]:
                     for m in mods_avail_dict['anat']:
                         anat_aval_list = glob(path.join(ses_path, 'anat', '*.nii.gz'))
                         if len(anat_aval_list) > 0:
@@ -329,6 +335,13 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
                         else:
                             row_to_append_df[m] = pd.Series('0')
                             mmt.add_missing_mod(ses, m)
+
+                if ['fmap' in mods_avail_bids]:
+                    row_to_append_df['fmap'] = pd.Series('1')
+                else:
+                    row_to_append_df['fmap'] = pd.Series('0')
+                    mmt.add_missing_mod(ses, 'fmap')
+
 
             missing_mods_df = missing_mods_df.append(row_to_append_df)
             row_to_append_df = pd.DataFrame(columns=cols_dataframe)
