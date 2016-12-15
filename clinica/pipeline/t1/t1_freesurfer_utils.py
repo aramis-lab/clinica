@@ -163,6 +163,7 @@ def log_summary(subject_list, session_list, subject_id, output_dir, analysis_ser
     :param analysis_series_id:
     :return:
     """
+    ## TODO check if log file exits, if yes, add new info for new subjects, not to overwrite it.
     import os
     from datetime import datetime
     # from nipype import config, logging
@@ -230,6 +231,7 @@ def write_statistics(subject_dir, subject_id, analysis_series_id, output_dir):
     :param output_dir:
     :return:
     """
+    ## TODO check if summary_tsv exits, if yes, add new info for new subjects, not to overwrite it.
 
     import os, errno
 
