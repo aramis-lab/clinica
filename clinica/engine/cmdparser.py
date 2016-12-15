@@ -297,8 +297,8 @@ class CmdParserStatisticsSurfStat(CmdParser):
                                 help='Directory where the input files(output of FreeSurfer pipeline) are stored')
         self._args.add_argument("subjects_visits_tsv",
                                 help='Directory where the tsv files are stored')
-        self._args.add_argument("linear_model",
-                                help='A list to define the model that fits into GLM, eg, 1 + group_label + sex + age')
+        self._args.add_argument("design_matrix",
+                                help='A list to define the design matrix that fits into GLM, eg, 1 + group + sex + age')
         self._args.add_argument("contrast",
                                 help='A list to define the contrast matrix for GLM, eg, group_label')
         self._args.add_argument("str_format",
@@ -325,7 +325,7 @@ class CmdParserStatisticsSurfStat(CmdParser):
         # working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
         surfstat_wf = clinica_surfstat(self.absolute_path(args.caps_dir),
                                        self.absolute_path(args.subjects_visits_tsv),
-                                       args.linear_model,
+                                       args.design_matrix,
                                        args.contrast,
                                        args.str_format,
                                        args.group_label,

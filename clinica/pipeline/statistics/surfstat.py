@@ -15,7 +15,7 @@ from clinica.pipeline.statistics.surfstat_utils import absolute_path, get_vars, 
 
 def clinica_surfstat(input_directory,
                      subjects_visits_tsv,
-                     linear_model,
+                     design_matrix,
                      contrast,
                      str_format,
                      group_label,
@@ -33,7 +33,7 @@ def clinica_surfstat(input_directory,
         ---------
         surfstat
         Inputs: :param input_directory:  the output folder of recon-all which will contain nested files: ?h.thickness.fwhm**.mgh.
-                :param linear_model: string, the linear model that fits into the GLM, for example '1+Lable'.
+                :param design_matrix: string, the linear model that fits into the GLM, for example '1+Lable'.
                 :param contrast: string, the contrast matrix for GLM, if the factor you choose is categorized variable, clinica_surfstat will create two contrasts,
                           for example, contrast = 'Label', this will create contrastpos = Label.AD - Label.CN, contrastneg = Label.CN - Label.AD; if the fac-
                           tory that you choose is a continuous factor, clinica_surfstat will just create one contrast, for example, contrast = 'Age', but note,
@@ -69,12 +69,12 @@ def clinica_surfstat(input_directory,
 
     # Node to wrap the surfstat matlab scrip t.
     surfstat = pe.Node(name='surfstat',
-                       interface=Function(input_names=['input_directory', 'output_directory', 'subjects_visits_tsv', 'linear_model',
+                       interface=Function(input_names=['input_directory', 'output_directory', 'subjects_visits_tsv', 'design_matrix',
                                                        'contrast', 'str_format', 'path_to_matscript', 'size_of_fwhm', 'threshold_uncorrected_pvalue',
                                                        'threshold_corrected_pvalue', 'cluster_threshold'],
                                           output_names=['out_images'],
                                           function=runmatlab))
-    surfstat.inputs.linear_model = linear_model
+    surfstat.inputs.design_matrix = design_matrix
     surfstat.inputs.contrast = contrast
     surfstat.inputs.subjects_visits_tsv = subjects_visits_tsv
     surfstat.inputs.str_format = str_format
