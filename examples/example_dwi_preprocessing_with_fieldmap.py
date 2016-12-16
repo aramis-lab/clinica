@@ -17,20 +17,20 @@ except Exception as e:
     print(str(e))
     exit(1)
 
-data_path = join(split(realpath(__file__))[0], 'external-data/raw_data/subject_example')
+data_path = join(split(realpath(__file__))[0], 'BIDS-example/sub-CLNC01/ses-M00/')
 
 output_directory = tempfile.mkdtemp()
 
 print("Datasink Directory -> %s" % output_directory)
 
-preprocessing = diffusion_preprocessing_fieldmap_based(datasink_directory=output_directory,
-    num_b0s=count_b0s(join(data_path, 'DWI/subject_example_dwi.bval')))
+preprocessing = diffusion_preprocessing_fieldmap_based(caps_directory=output_directory,
+                                                       num_b0s=count_b0s(join(data_path, 'dwi/sub-CLNC01_ses-M00_dwi.bval')))
 
-preprocessing.inputs.inputnode.in_file   = join(data_path, 'DWI/subject_example_dwi.nii.gz')
-preprocessing.inputs.inputnode.in_bvals  = join(data_path, 'DWI/subject_example_dwi.bval')
-preprocessing.inputs.inputnode.in_bvecs  = join(data_path, 'DWI/subject_example_dwi.bvec')
-preprocessing.inputs.inputnode.bmap_mag  = join(data_path, 'B0MAP/subject_example_b0map_echo1.nii.gz')
-preprocessing.inputs.inputnode.bmap_pha  = join(data_path, 'B0MAPph/subject_example_b0mapph.nii.gz')
+preprocessing.inputs.inputnode.in_file   = join(data_path, 'dwi/sub-CLNC01_ses-M00_dwi.nii.gz')
+preprocessing.inputs.inputnode.in_bvals  = join(data_path, 'dwi/sub-CLNC01_ses-M00_dwi.bval')
+preprocessing.inputs.inputnode.in_bvecs  = join(data_path, 'dwi/sub-CLNC01_ses-M00_dwi.bvec')
+preprocessing.inputs.inputnode.bmap_mag  = join(data_path, 'fmap/sub-CLNC01_ses-M00_magnitude1.nii.gz')
+preprocessing.inputs.inputnode.bmap_pha  = join(data_path, 'fmap/sub-CLNC01_ses-M00_phasediff.nii.gz')
 
 preprocessing.run()
 
