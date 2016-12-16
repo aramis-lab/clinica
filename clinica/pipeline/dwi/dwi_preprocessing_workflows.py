@@ -189,8 +189,9 @@ def hmc_pipeline(datasink_directory, name='motion_correct'):
                   schedule=get_flirt_schedule('hmc'),
                   searchr_x=[-4, 4], searchr_y=[-4, 4], searchr_z=[-4, 4], fine_search=1, coarse_search=10 )
 
-    inputnode = pe.Node(niu.IdentityInterface(fields=['in_file',
-                        'in_bvec', 'in_bval', 'in_mask', 'ref_num']), name='inputnode')
+    inputnode = pe.Node(niu.IdentityInterface(
+        fields=['in_file', 'in_bvec', 'in_bval', 'in_mask', 'ref_num']),
+        name='inputnode')
 
     split = pe.Node(niu.Function(function=hmc_split,
                     input_names=['in_file', 'in_bval', 'ref_num'],
@@ -207,9 +208,6 @@ def hmc_pipeline(datasink_directory, name='motion_correct'):
                        name='Rotate_Bvec')
 
     merged_volumes = pe.Node(niu.Function(input_names=['in_file1', 'in_file2'], output_names=['out_file'], function=merge_volumes_tdim), name='merge_reference_moving')
-
-    datasink = pe.Node(nio.DataSink(), name='datasink')
-    datasink.inputs.base_directory = op.join(datasink_directory, 'hmc_correction/')
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['out_file',
                          'out_bvec', 'out_xfms']), name='outputnode')
@@ -231,10 +229,7 @@ def hmc_pipeline(datasink_directory, name='motion_correct'):
         (flirt,            merged_volumes,   [('outputnode.out_ref', 'in_file1'),
                                               ('outputnode.out_file', 'in_file2')]),
         (merged_volumes,   outputnode,       [('out_file', 'out_file')]),
-        (insmat,           outputnode,       [('out', 'out_xfms')]),
-        (merged_volumes,   datasink,         [('out_file', 'out_file')]),
-        (insmat,           datasink,         [('out', 'out_xfms')]),
-        (rot_bvec,         datasink,         [('out_file', 'out_bvec')])
+        (insmat,           outputnode,       [('out', 'out_xfms')])
     ])
     return wf
 
@@ -572,8 +567,8 @@ def sdc_syb_pipeline(datasink_directory, name='sdc_syb_correct'):
     flirt_b0_2_T1.inputs.cost = 'normmi'
     flirt_b0_2_T1.inputs.cost_func = 'normmi'
 
-    invertxfm = pe.Node(interface=fsl.ConvertXFM(), name='invert_xfm')
-    invertxfm.inputs.invert_xfm = True
+    invert_xfm = pe.Node(interface=fsl.ConvertXFM(), name='invert_xfm')
+    invert_xfm.inputs.invert_xfm = True
 
     apply_xfm = pe.Node(interface=fsl.ApplyXfm(), name='apply_xfm')
     apply_xfm.inputs.apply_xfm = True
@@ -614,8 +609,8 @@ def sdc_syb_pipeline(datasink_directory, name='sdc_syb_correct'):
     wf.connect([(split, pick_ref, [('out_files','inlist')])])
     wf.connect([(pick_ref, flirt_b0_2_T1, [('out','in_file')])])
     wf.connect([(inputnode, flirt_b0_2_T1, [('T1','reference')])])
-    wf.connect([(flirt_b0_2_T1, invertxfm, [('out_matrix_file','in_file')])])
-    wf.connect([(invertxfm, apply_xfm, [('out_file','in_matrix_file')])])
+    wf.connect([(flirt_b0_2_T1, invert_xfm, [('out_matrix_file','in_file')])])
+    wf.connect([(invert_xfm, apply_xfm, [('out_file','in_matrix_file')])])
     wf.connect([(inputnode, apply_xfm, [('T1','in_file')])])
     wf.connect([(pick_ref, apply_xfm, [('out','reference')])])
     wf.connect([(apply_xfm, antsRegistrationSyNQuick, [('out_file','fixe_image')])])
@@ -635,14 +630,14 @@ def sdc_syb_pipeline(datasink_directory, name='sdc_syb_correct'):
     wf.connect([(thres, merge, [('out_file','in_files')])])
     wf.connect([(merge, outputnode, [('merged_file','out_dwi')])])
     wf.connect([(flirt_b0_2_T1, outputnode, [('out_matrix_file','B0_2_T1_rigid_body_matrix')])])
-    wf.connect([(invertxfm, outputnode, [('out_file', 'T1_2_B0_rigid_body_matrix')])])
+    wf.connect([(invert_xfm, outputnode, [('out_file', 'T1_2_B0_rigid_body_matrix')])])
     wf.connect([(apply_xfm, outputnode, [('out_file','T1_coregistered_2_B0')])])
     wf.connect([(antsRegistrationSyNQuick, outputnode, [('warp','B0_2_T1_SyN_defomation_field'),
                                                         ('affine_matrix','B0_2_T1_affine_matrix')])])
     wf.connect([(fsl_transf, outputnode, [('out_file','out_warp')])])
     wf.connect([(merge, datasink, [('merged_file','out_dwi')])])
     wf.connect([(flirt_b0_2_T1, datasink, [('out_matrix_file','B0_2_T1_rigid_body_matrix')])])
-    wf.connect([(invertxfm, datasink, [('out_file', 'T1_2_B0_rigid_body_matrix')])])
+    wf.connect([(invert_xfm, datasink, [('out_file', 'T1_2_B0_rigid_body_matrix')])])
     wf.connect([(apply_xfm, datasink, [('out_file','T1_coregistered_2_B0')])])
     wf.connect([(antsRegistrationSyNQuick, datasink, [('warp','B0_2_T1_SyN_defomation_field'),
                                                       ('affine_matrix','B0_2_T1_affine_matrix'),
@@ -807,13 +802,13 @@ def dwi_flirt(name='DWICoregistration', excl_nodiff=False,
         (flirt,      thres,      [('out_file', 'in_file')]),
         (thres,      merge,      [('out_file', 'in_files')]),
         (merge,      outputnode, [('merged_file', 'out_file')]),
-        (inputnode,      outputnode, [('reference', 'out_ref')]),
+        (inputnode,  outputnode, [('reference', 'out_ref')]),
         (flirt,      outputnode, [('out_matrix_file', 'out_xfms')])
     ])
     return wf
 
 
-def remove_bias(datasink_directory, name='bias_correct'):
+def remove_bias(name='bias_correct'):
     """
     This workflow estimates a single multiplicative bias field from the
     averaged *b0* image, as suggested in [Jeurissen2014]_.
@@ -852,9 +847,6 @@ def remove_bias(datasink_directory, name='bias_correct'):
                        name='RemoveNegative')
     merge = pe.Node(fsl.utils.Merge(dimension='t'), name='MergeDWIs')
 
-    datasink = pe.Node(nio.DataSink(), name='datasink')
-    datasink.inputs.base_directory = op.join(datasink_directory, 'bias_correction/')
-
     wf = pe.Workflow(name=name)
     wf.connect([
         (inputnode,    getb0,          [('in_file', 'in_file')]),
@@ -867,8 +859,6 @@ def remove_bias(datasink_directory, name='bias_correct'):
         (mult,         thres,          [('out_file', 'in_file')]),
         (thres,        merge,          [('out_file', 'in_files')]),
         (merge,        outputnode,     [('merged_file', 'out_file')]),
-        (mask_b0,    outputnode,       [('mask_file', 'b0_mask')]),
-        (merge,        datasink,       [('merged_file', 'out_file')]),
-        (mask_b0,    datasink,         [('mask_file', 'b0_mask')]),
+        (mask_b0,    outputnode,       [('mask_file', 'b0_mask')])
     ])
     return wf

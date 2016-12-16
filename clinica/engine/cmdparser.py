@@ -403,10 +403,10 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
                                               save_features_image=args.save_features_image)
 
 
-class CmdParserT1DWIRegistration(CmdParser):
+class CmdParserDWIT1Registration(CmdParser):
 
     def define_name(self):
-        self._name = 't1-dwi-registration'
+        self._name = 'dwi-t1-registration'
 
 
     def define_options(self):
@@ -437,20 +437,19 @@ class CmdParserT1DWIRegistration(CmdParser):
             tsv_reader = csv.reader(tsv_file, delimiter='\t')
 
             for row in tsv_reader:
-                bids_path_to_t1 = os.path.join(self.absolute_path(args.bids_directory), row[0], row[1], 'anat',
-                                               row[0] + '_' + row[1] + '_T1w.nii.gz')
-                caps_path_to_bet_t1 = os.path.join(self.absolute_path(args.caps_directory), row[0], row[1], 't1',
-                                                   'fsl', row[0] + '_' + row[1] + '_brain-extracted-T1w.nii.gz')
-                caps_path_to_desikan_parcellation = os.path.join(self.absolute_path(args.caps_directory),
-                                                                 row[0], row[1], 'registration', row[0] + '_' + row[1] + '_desikan-parcellation.nii.gz')
-                caps_path_to_destrieux_parcellation = os.path.join(self.absolute_path(args.caps_directory),
-                                                                 row[0], row[1], 'registration', row[0] + '_' + row[1] + '_destrieux-parcellation.nii.gz')
-                caps_path_to_wm_mask = os.path.join(self.absolute_path(args.caps_directory),
-                                                    row[0], row[1], 'dwi', row[0] + '_' + row[1] + '_binary-white-matter-mask.nii.gz')
+                caps_identifier = row[0] + '_' + row[1]
+                caps_path_to_preprocessed_dwi = os.path.join(self.absolute_path(args.bids_directory), row[0], row[1], 'dwi', 'preprocessing', caps_identifier + '_dwi.nii.gz')
+                caps_path_to_bet_t1 = os.path.join(self.absolute_path(args.caps_directory), row[0], row[1], 't1', 'fsl', caps_identifier + '_brain-extracted-T1w.nii.gz')
+                caps_path_to_desikan_parcellation = os.path.join(self.absolute_path(args.caps_directory), row[0], row[1], 'registration', caps_identifier + '_desikan-parcellation.nii.gz')
+                caps_path_to_destrieux_parcellation = os.path.join(self.absolute_path(args.caps_directory), row[0], row[1], 'registration', caps_identifier + '_destrieux-parcellation.nii.gz')
+                caps_path_to_wm_mask = os.path.join(self.absolute_path(args.caps_directory), row[0], row[1], 'dwi', caps_identifier + '_binary-white-matter-mask.nii.gz')
+                caps_path_to_b0_mask = os.path.join(self.absolute_path(args.caps_directory), row[0], row[1], 'dwi', caps_identifier + '_b0-mask.nii.gz')
+                assert(os.path.isfile(caps_path_to_preprocessed_dwi))
                 assert(os.path.isfile(caps_path_to_bet_t1))
                 assert(os.path.isfile(caps_path_to_desikan_parcellation))
                 assert(os.path.isfile(caps_path_to_destrieux_parcellation))
                 assert(os.path.isfile(caps_path_to_wm_mask))
+                assert(os.path.isfile(caps_path_to_b0_mask))
 
                 t1_b0_registration = t1_b0_registration_pipeline(subject_id=row[0],
                                                                  session_id=row[1],
@@ -459,9 +458,9 @@ class CmdParserT1DWIRegistration(CmdParser):
                                                                  working_directory=self.absolute_path(args.working_directory),
                                                                  )
                 t1_b0_registration.inputs.inputnode.in_bias_corrected_bet_t1 = caps_path_to_bet_t1
-                t1_b0_registration.inputs.inputnode.in_preprocessed_dwi = 'subject_id_preprocessed_dwi.nii'
-                t1_b0_registration.inputs.inputnode.in_b0_mask = 'subject_id_b0_mask.nii'
-                t1_b0_registration.inputs.inputnode.in_white_matter_binary_mask = 'subject_id_wm_mask.nii'
+                t1_b0_registration.inputs.inputnode.in_preprocessed_dwi = caps_path_to_preprocessed_dwi
+                t1_b0_registration.inputs.inputnode.in_b0_mask =caps_path_to_b0_mask
+                t1_b0_registration.inputs.inputnode.in_white_matter_binary_mask = caps_path_to_wm_mask
                 t1_b0_registration.inputs.inputnode.in_desikan_parcellation = caps_path_to_desikan_parcellation
                 t1_b0_registration.inputs.inputnode.in_destrieux_parcellation = caps_path_to_destrieux_parcellation
                 t1_b0_registration.run('MultiProc', plugin_args={'n_procs': args.n_threads})
@@ -495,26 +494,107 @@ class CmdParserT1FSL(CmdParser):
     def run_pipeline(self, args):
         import csv
         import os.path
-        from clinica.pipeline.t1.t1_fsl import t1_fsl_segmentation_pipeline
+        from clinica.pipeline.t1.t1_fsl import caps_t1_fsl_segmentation_pipeline
 
-        with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
-            tsv_reader = csv.reader(tsv_file, delimiter='\t')
+        import nipype.pipeline.engine as pe
+        import nipype.interfaces.utility as niu
+        import nipype.interfaces.io as nio
 
-            # Check inputs:
-            for row in tsv_reader:
-                bids_path_to_t1 = os.path.join(self.absolute_path(args.bids_directory), row[0], row[1], 'anat',
-                                               row[0] + '_' + row[1] + '_T1w.nii.gz')
-                assert(os.path.isfile(bids_path_to_t1))
-                t1_fsl_segmentation = t1_fsl_segmentation_pipeline(
-                    subject_id=row[0],
-                    session_id=row[1],
-                    analysis_series_id=args.analysis_series_id,
-                    caps_directory=self.absolute_path(args.caps_directory),
-                    working_directory=self.absolute_path(args.working_directory),
-                    is_bias_corrected=args.is_bias_corrected
-                    )
-                t1_fsl_segmentation.inputs.inputnode.in_t1 = bids_path_to_t1
-                t1_fsl_segmentation.run('MultiProc', plugin_args={'n_procs': args.n_threads})
+
+#        fsl_node = pe.Node(interface=t1_fsl_segmentation_pipeline(
+#            subject_id='CLNC001',
+#            session_id='M00',
+#            analysis_series_id='default',
+#            caps_directory='/tmp/MapNode',
+#            working_directory=None,
+#            is_bias_corrected=False), name="fsl_node")
+#        fsl_node = pe.Node(interface=niu.Function(
+#            input_names=['path_to_t1', 'subject_id', 'session_id', 'analysis_series_id', 'caps_directory', 'working_directory', 'is_bias_corrected'],
+#            output_names=['out_response_function'], function=caps_t1_fsl_segmentation_pipeline), name='fsl_node')
+
+        list_path_to_t1 = [
+            '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/BIDS/CAPP_BIDS/sub-CAPP01001PMC/ses-M00/anat/sub-CAPP01001PMC_ses-M00_T1w.nii.gz',
+            '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/BIDS/CAPP_BIDS/sub-CAPP01001PMC/ses-M18/anat/sub-CAPP01001PMC_ses-M18_T1w.nii.gz',
+            '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/BIDS/CAPP_BIDS/sub-CAPP01001TMM/ses-M00/anat/sub-CAPP01001TMM_ses-M00_T1w.nii.gz']
+        list_caps_directory = [
+            '/tmp/Output1',
+            '/tmp/Output2',
+            '/tmp/Output3']
+        list_sessions = [
+            'M00',
+            'M18',
+            'M00']
+        list_subjects= [
+            'CAPP01001PMC',
+            'CAPP01001PMC',
+            'CAPP01001TMM']
+
+        datasource = pe.Node(nio.DataGrabber(infields=['subject_id', 'session', 'subject_repeat', 'session_repeat'],
+                                              outfields=['out_files']), name="selectfiles")
+        datasource.inputs.base_directory = input_directory
+        datasource.inputs.template = 'sub-%s/ses-%s/anat/sub-%s_ses-%s_T1w.nii'
+        datasource.inputs.subject_id = list_subjects
+        datasource.inputs.session = list_sessions
+        datasource.inputs.subject_repeat = subjects
+        datasource.inputs.session_repeat = sessions
+        datasource.inputs.sort_filelist = False
+
+        datasource = pe.Node(interface=nio.DataGrabber(infields=['subject_id'],
+                                                       outfields=['func', 'struct']),
+                             name='datasource')
+        datasource.inputs.base_directory = '/'
+        datasource.inputs.template = '%s/%s.nii'
+        datasource.inputs.template_args = info
+        datasource.inputs.sort_filelist = True
+        datasource.iterables = [('fwhm', fwhmlist),
+                              ('con', contrast_ids)]
+        datasource.inputs.sort_filelist = True
+
+        fsl_node = pe.Node(interface=niu.Function(
+            input_names=['path_to_t1', 'subject_id', 'session_id', 'analysis_series_id', 'caps_directory', 'working_directory', 'is_bias_corrected'],
+            output_names=['out_response_function'], iterfield=['path_to_t1', 'caps_directory'],  function=caps_t1_fsl_segmentation_pipeline), name='fsl_node')
+        fsl_node.inputs.subject_id = 'CLNC001'
+        fsl_node.inputs.session_id = 'M00'
+        fsl_node.inputs.analysis_series_id = 'default'
+        fsl_node.inputs.working_directory = None
+        fsl_node.inputs.is_bias_corrected = False
+
+        fsl_node.inputs.path_to_t1 = list_path_to_t1
+        fsl_node.inputs.caps_directory = list_caps_directory
+
+#        fsl_node.iterables = ("path_to_t1", [
+#            '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/BIDS/CAPP_BIDS/sub-CAPP01001PMC/ses-M00/anat/sub-CAPP01001PMC_ses-M00_T1w.nii.gz',
+#            '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/BIDS/CAPP_BIDS/sub-CAPP01001PMC/ses-M18/anat/sub-CAPP01001PMC_ses-M18_T1w.nii.gz',
+#            '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/BIDS/CAPP_BIDS/sub-CAPP01001TMM/ses-M00/anat/sub-CAPP01001TMM_ses-M00_T1w.nii.gz'])
+#        fsl_node.iterables = ("caps_directory", [
+#            '/tmp/Output1',
+#            '/tmp/Output2',
+#            '/tmp/Output3'])
+
+        wf = pe.Workflow(name='my_workflow')
+        wf.base_dir = '/tmp/'
+        wf.add_nodes([fsl_node])
+        wf.run('MultiProc', plugin_args={'n_procs': 4})
+
+
+#        with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
+#            tsv_reader = csv.reader(tsv_file, delimiter='\t')
+#
+#            # Check inputs:
+#            for row in tsv_reader:
+#                bids_path_to_t1 = os.path.join(self.absolute_path(args.bids_directory), row[0], row[1], 'anat',
+#                                               row[0] + '_' + row[1] + '_T1w.nii.gz')
+#                assert(os.path.isfile(bids_path_to_t1))
+#                t1_fsl_segmentation = t1_fsl_segmentation_pipeline(
+#                    subject_id=row[0],
+#                    session_id=row[1],
+#                    analysis_series_id=args.analysis_series_id,
+#                    caps_directory=self.absolute_path(args.caps_directory),
+#                    working_directory=self.absolute_path(args.working_directory),
+#                    is_bias_corrected=args.is_bias_corrected
+#                    )
+#                t1_fsl_segmentation.inputs.inputnode.in_t1 = bids_path_to_t1
+#                t1_fsl_segmentation.run('MultiProc', plugin_args={'n_procs': args.n_threads})
 
 
 
@@ -560,7 +640,7 @@ class CmdParserDWIPreprocessingFieldmapBased(CmdParser):
 class CmdParserDWIProcessing(CmdParser):
 
     def define_name(self):
-        self._name = 'dwi-dti-and-tracto-for-the-moment'
+        self._name = 'dwi-processing'
 
 
     def define_options(self):
@@ -601,10 +681,6 @@ class CmdParserDWIProcessing(CmdParser):
                 assert(os.path.isfile(caps_path_to_dwi + '.nii.gz'))
                 assert(os.path.isfile(caps_path_to_b0_mask))
 
-                dwi_processing = tractography_and_dti_pipeline()
-                dwi_processing.inputs.inputnode.in_t1 = caps_path_to_dwi
-                dwi_processing.run('MultiProc', plugin_args={'n_procs': args.n_threads})
-
                 from clinica.pipeline.dwi.dwi_processing import tractography_and_dti_pipeline
                 tractography_and_dti = tractography_and_dti_pipeline(
                     subject_id=row[0], session_id=row[1], analysis_series_id=args.analysis_series_id,
@@ -623,7 +699,7 @@ class CmdParserDWIProcessing(CmdParser):
                 tractography_and_dti.inputs.inputnode.in_bvals = caps_path_to_dwi + '.bval'
                 tractography_and_dti.inputs.inputnode.in_b0_mask = caps_path_to_b0_mask
                 tractography_and_dti.inputs.inputnode.in_white_matter_binary_mask = caps_path_to_white_matter_binary_mask
-                tractography_and_dti.run()
+                tractography_and_dti.run('MultiProc', plugin_args={'n_procs': args.n_threads})
 
 
 class CmdParserCappToBids(CmdParser):
