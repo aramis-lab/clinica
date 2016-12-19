@@ -1,21 +1,25 @@
 """
 Covert the INSIGHT dataset into the BIDS specification.
 
-ToDo:
-- Subjects missing problems and multiple t2flairs
 
 @author: Sabrina Fontanella
 """
 
-
 from os import path
 from glob import glob
-import os, sys
+import os
 import logging
-from converter_utils import MissingModsTracker, print_statistics
 import bids_utils as bids
 import pandas as pd
 
+__author__ = "Sabrina Fontanella"
+__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__credits__ = ["Sabrina Fontanella"]
+__license__ = ""
+__version__ = "1.0.0"
+__maintainer__ = "Sabrina Fontanella"
+__email__ = "sabrina.fontanella@icm-institute.org"
+__status__ = "Development"
 
 def convert_clinical(input_path, out_path, bids_ids, original_ids, orig_ids_alpha):
     '''
@@ -32,7 +36,7 @@ def convert_clinical(input_path, out_path, bids_ids, original_ids, orig_ids_alph
 
     fields_bids = ['participant_id']
     fields_dataset = []
-    clinic_specs_path = path.join(os.path.dirname(__file__), 'bids-utils-docs', 'clinical_specifications.xlsx')
+    clinic_specs_path = path.join(os.path.dirname(__file__), 'data', 'clinical_specifications.xlsx')
 
     # -- Creation of participant.tsv --
     participants_specs = pd.read_excel(clinic_specs_path, sheetname='participant.tsv')
@@ -77,7 +81,7 @@ def convert_clinical(input_path, out_path, bids_ids, original_ids, orig_ids_alph
         # Check if the id is contained in bids_ids
         if not any(value in id for id in bids_ids):
             # Get the index of the element to delete
-            # TOFix: it works but maybe there a way much more elegant!
+            # ToDO: it works but maybe there a way much more elegant!
             index_to_delete.append((participant_df[participant_df['alternative_id_1'] == participant_df['alternative_id_1'][i]].index.tolist())[0])
         else:
             bid = [s for s in bids_ids if value in s][0]
@@ -86,10 +90,10 @@ def convert_clinical(input_path, out_path, bids_ids, original_ids, orig_ids_alph
     # Remove all the informations regarding the subjects not included from the dataframe
     participant_df = participant_df.drop(index_to_delete)
 
+
     participant_df.to_csv(path.join(out_path,'participants.tsv'), sep='\t', index = False)
 
-
-    # Creation of sub-<subject_label>_sessions.tsv
+    # --Creation sessions.tsv--
     sessions = pd.read_excel(clinic_specs_path, sheetname='sessions.tsv')
     sessions_fields_db = sessions['INSIGHT']
     field_location = sessions['INSIGHT location']
@@ -108,7 +112,6 @@ def convert_clinical(input_path, out_path, bids_ids, original_ids, orig_ids_alph
     for i in range(0, len(sessions_fields_db)):
         # If a field not empty is found
         if not pd.isnull(sessions_fields_db[i]):
-            # Estrae il corrispettivo valore della locazione dove si trova il campo
             tmp = field_location[i].split('/')
             location = tmp[0]
             sheet = tmp[1]
@@ -144,16 +147,68 @@ def convert_clinical(input_path, out_path, bids_ids, original_ids, orig_ids_alph
             session_df = session_df[cols]
             session_df.to_csv(path.join(out_path,bids_id, bids_id + '_sessions.tsv'), sep='\t', index = False)
         else:
-            print bids_id, ' not found into clinical datas'
+            print bids_id, ' not found into clinical data'
+
+    # -- Creation of scans.tsv --
+    scans = pd.read_excel(clinic_specs_path, sheetname='scans.tsv')
+    scans_fields_db = scans['INSIGHT']
+    field_location = scans['INSIGHT location']
+    scans_fields_bids = scans['BIDS CLINICA']
+    fields_dataset = []
+    fields_bids = ['filename']
+
+    for i in range(0, len(scans_fields_db)):
+        if not pd.isnull(scans_fields_db[i]):
+            fields_bids.append(scans_fields_bids[i])
+            fields_dataset.append(scans_fields_db[i])
+
+    scans_df = pd.DataFrame(columns=(fields_bids))
+
+    for bids_id in bids_ids:
+        sessions_paths = glob(path.join(out_path, bids_id, 'ses-*'))
+
+        for session_path in sessions_paths:
+            session_name = session_path.split(os.sep)[-1]
+            tsv_name = bids_id + '_' + session_name + "_scans.tsv"
+
+            # If the file already exists, remove it
+            if os.path.exists(path.join(session_path, tsv_name)):
+                os.remove(path.join(session_path, tsv_name))
+
+            scans_tsv = open(path.join(session_path, tsv_name), 'a')
+            scans_df.to_csv(scans_tsv, sep='\t', index=False)
+
+            # Extract modalities available for each subject
+            mod_available = glob(path.join(session_path, '*'))
+            for mod in mod_available:
+                mod_name = os.path.basename(mod)
+                files = glob(path.join(mod, '*'))
+                for file in files:
+                    file_name = os.path.basename(file)
+                    if mod == "anat" or mod == "dwi" or mod == "func":
+                        type_mod = 'T1/DWI/fMRI'
+                    else:
+                        type_mod = 'FDG'
+
+                    scans_df['filename'] = pd.Series(path.join(mod_name, file_name))
+                    scans_df.to_csv(scans_tsv, header=False, sep='\t', index=False)
+
+            scans_df = pd.DataFrame(columns=(fields_bids))
+
+    print '-- Scans files created for each subject. --'
 
 
-def converter(source_dir, dest_dir, mod=''):
+
+
+
+
+def convert(source_dir, dest_dir, mod=''):
     # List of the all the subjects to take in consideration for the conversion
-    subjs_list = path.join(source_dir, '_INSIGHT-AD_IDs_INCLUDED__Status-07-06-2016.xlsx')
+    subjs_list = path.join(source_dir,'clinicalData', '_INSIGHT-AD_IDs_INCLUDED__Status-07-06-2016.xlsx')
 
     data_dir = path.join(source_dir, 'convertData', 'study', 'Paris') # Folder where data are stored
     t1_priority = ['3DT1_noPN_DIS', '3DT1_noSCIC_GW', '3DT1_noCLEAR_GEO', '3DT1_CLEAR_GEO', '3DT1_S']
-    mmt = MissingModsTracker(['M0', 'M24'])
+    #mmt = MissingModsTracker(['M0', 'M24'])
     ses_available = ['M0', 'M24']
 
     insight_ids = []
@@ -164,11 +219,12 @@ def converter(source_dir, dest_dir, mod=''):
     bids_ids = []
     subjs_included = pd.read_excel(subjs_list, sheetname='IDs INCLUDED')
 
-    os.mkdir(dest_dir)
-    summary = open(path.join(dest_dir, 'conversion_summary.txt'), 'w')
-    logging.basicConfig(filename=path.join(dest_dir, 'conversion'
-                                                     '.log'), format='%(asctime)s %(levelname)s:%(message)s',
-                        datefmt='%m/%d/%Y %I:%M', level=logging.DEBUG)
+    if mod!='-c':
+        os.mkdir(dest_dir)
+        #summary = open(path.join(dest_dir, 'conversion_summary.txt'), 'w')
+        logging.basicConfig(filename=path.join(dest_dir, 'conversion'
+                                                         '.log'), format='%(asctime)s %(levelname)s:%(message)s',
+                            datefmt='%m/%d/%Y %I:%M', level=logging.DEBUG)
 
     print "*******************************"
     print "INSIGHT to BIDS converter"
@@ -183,91 +239,92 @@ def converter(source_dir, dest_dir, mod=''):
         memento_ids.append(str(subjs_included['MEMENTO IDs'][i]).replace("-", ""))
         # The BIDS specification allows only numbers and letter inside the subject id
         bids_ids.append('sub-INSIGHT'+insight_ids[-1].replace("-", ""))
-        os.mkdir(path.join(dest_dir, bids_ids[-1]))
+        if mod!='-c':
+            os.mkdir(path.join(dest_dir, bids_ids[-1]))
         # In the INSIGHT cati organized the subject is is the insight id without the character -
         subj_path = glob(path.join(data_dir, '*' + insight_ids[-1] + '*'))[0]
         subjs_paths.append(subj_path)
 
 
     # For each subject extract the list of files and convert them into BIDS specification
-    for subj_path in subjs_paths:
-        if mod!='-c':
-            print "Converting:", subj_path
-        logging.info('Converting:' + subj_path)
-        # Extract the session(s) available
-        sessions = glob(path.join(subj_path, "*"))
+    if mod!='c':
+        for subj_path in subjs_paths:
+            logging.info('Converting:' + subj_path)
+            # Extract the session(s) available
+            sessions = glob(path.join(subj_path, "*"))
 
-        # Check if the subject has some missing session
-        for s in ses_available:
-            if not any(s in ses_found for ses_found in sessions ):
-                mmt.incr_missing_session(s)
+            # Check if the subject has some missing session
+            #for s in ses_available:
+                # if not any(s in ses_found for ses_found in sessions ):
+                #     mmt.incr_missing_session(s)
 
-        # For each sub-session
-        for ses_path in sessions:
-            ses = ses_path.split(os.sep)[-1]
+            # For each sub-session
+            for ses_path in sessions:
+                ses = ses_path.split(os.sep)[-1]
 
-            if 'rescan' in ses:
-                logging.warning('Rescan of a session found: ' + ses + 'for ' + subj_path + '. Ignored.')
-                print 'Rescan of a session found: ' + ses + '. Ignored.'
-                continue
+                if 'rescan' in ses:
+                    logging.warning('Rescan of a session found: ' + ses + 'for ' + subj_path + '. Ignored.')
+                    print 'Rescan of a session found: ' + ses + '. Ignored.'
+                    continue
 
-            # Extracting the index of the subject
-            subj_index = subjs_paths.index(subj_path)
-            os.mkdir(path.join(dest_dir, bids_ids[subj_index], 'ses-' + ses))
-            ses_dir_bids = path.join(dest_dir, bids_ids[subj_index], 'ses-' + ses)
-            bids_file_name = bids_ids[subj_index] + '_ses-' + ses
-            session_path = path.join(subj_path, ses)
-            mods_folder_path = path.join(session_path, 'NIFTI')
+                # Extracting the index of the subject
+                subj_index = subjs_paths.index(subj_path)
+                if mod!='-c':
+                    os.mkdir(path.join(dest_dir, bids_ids[subj_index], 'ses-' + ses))
+                ses_dir_bids = path.join(dest_dir, bids_ids[subj_index], 'ses-' + ses)
+                bids_file_name = bids_ids[subj_index] + '_ses-' + ses
+                session_path = path.join(subj_path, ses)
+                mods_folder_path = path.join(session_path, 'NIFTI')
 
-            if mod != "-c":
-                # Convert the fieldmap data
-                out = bids.convert_fieldmap(mods_folder_path, path.join(ses_dir_bids, "fmap"), bids_file_name)
-                if out == -1:
-                    mmt.add_missing_mod('Fieldmap', ses)
-                    logging.warning("No Fieldmap found for "+mods_folder_path)
-                elif out == 0:
-                    logging.warning("Map or MapPh missing for "+mods_folder_path +': skipped.')
-                    mmt.add_incomplete_mod('Fieldmap', ses)
-
-                #Convert DTI data
-                out = bids.merge_DTI(mods_folder_path, path.join(ses_dir_bids, 'dwi'), bids_file_name)
-                if out != None:  # missing or incomplete DTI
+                if mod != "-c":
+                    # Convert the fieldmap data
+                    out = bids.convert_fieldmap(mods_folder_path, path.join(ses_dir_bids, "fmap"), bids_file_name)
                     if out == -1:
-                        logging.info('No DTI found for ' + mods_folder_path)
-                        mmt.add_missing_mod('DTI', ses)
+
+                        logging.warning("No Fieldmap found for "+mods_folder_path)
+                    elif out == 0:
+                        logging.warning("Map or MapPh missing for "+mods_folder_path +': skipped.')
+
+
+                    #Convert DTI data
+                    out = bids.merge_DTI(mods_folder_path, path.join(ses_dir_bids, 'dwi'), bids_file_name)
+                    if out != None:  # missing or incomplete DTI
+                        if out == -1:
+                            logging.info('No DTI found for ' + mods_folder_path)
+
+                        else:
+                            for e in out:
+                                logging.warning('.bvec or .bval not found for DTI folder ' + e + ': skipped.')
+
+
+                    # Decide the best T1 to take and convert the file format into the BIDS standard
+                    t1_selected = bids.choose_correction(mods_folder_path, t1_priority, 'T1')
+                    if t1_selected != -1 and t1_selected != 0:
+                        t1_sel_path = glob(path.join(mods_folder_path, '*' + t1_selected + '*', '*.nii*'))[0]
+                        bids.convert_T1(t1_sel_path, path.join(ses_dir_bids, 'anat'), bids_file_name)
                     else:
-                        for e in out:
-                            logging.warning('.bvec or .bval not found for DTI folder ' + e + ': skipped.')
-                            mmt.add_incomplete_mod('DTI', ses)
+                        if t1_selected == -1:
+                            logging.info('No T1 found for ' + mods_folder_path)
 
-                # Decide the best T1 to take and convert the file format into the BIDS standard
-                t1_selected = bids.choose_correction(mods_folder_path, t1_priority, 'T1')
-                if t1_selected != -1 and t1_selected != 0:
-                    t1_sel_path = glob(path.join(mods_folder_path, '*' + t1_selected + '*', '*.nii*'))[0]
-                    bids.convert_T1(t1_sel_path, path.join(ses_dir_bids, 'anat'), bids_file_name)
-                else:
-                    if t1_selected == -1:
-                        logging.info('No T1 found for ' + mods_folder_path)
-                        mmt.add_missing_mod('T1', ses)
 
-                    else:
-                        logging.warning('None of the desiderd T1 corrections is available for ' + mods_folder_path)
+                        else:
+                            logging.warning('None of the desiderd T1 corrections is available for ' + mods_folder_path)
 
-                # Convert T2FLAIR
-                out = bids.convert_flair(mods_folder_path, path.join(ses_dir_bids, "anat"), bids_file_name)
-                if out == -1:
-                    logging.warning('No FLAIR found for '+ mods_folder_path)
-                    mmt.add_missing_mod('FLAIR', ses)
+                    # Convert T2FLAIR
+                    out = bids.convert_flair(mods_folder_path, path.join(ses_dir_bids, "anat"), bids_file_name)
+                    if out == -1:
+                        logging.warning('No FLAIR found for '+ mods_folder_path)
 
-                # Convert fMRI
-                out = bids.convert_fmri(mods_folder_path, path.join(ses_dir_bids, "func"), bids_file_name)
-                if out == -1:
-                        mmt.add_missing_mod('fMRI', ses)
 
-        logging.info("Conversion for the subject terminated.\n")
+                    # Convert fMRI
+                    out = bids.convert_fmri(mods_folder_path, path.join(ses_dir_bids, "func"), bids_file_name)
+                    if out == -1:
+                        logging.warning('No fMRI found for ' + mods_folder_path)
+
+
+            logging.info("Conversion for the subject terminated.\n")
 
     print 'Converting the clinical data...'
     convert_clinical(source_dir, dest_dir, bids_ids, original_insight_ids, original_insight_ids_alpha)
-    # Printing the statistics about missing modalities into a file
-    print_statistics(summary, len(subjs_paths), ses_available, mmt)
-    summary.close()
+
+
