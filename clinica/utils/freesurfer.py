@@ -44,3 +44,38 @@ def freesurfer_volume_to_native_volume(freesurfer_volume, native_volume, name_ou
     os.system(cmd)
 
     return out_volume
+
+
+def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv, analysis_series_id):
+    """
+    This function is to transfer caps recon-all output structure to standard freesurfer recon-all output structure.
+    :param caps_dir:
+    :param dest_dir:
+    :param subjects_visits_tsv:
+    :param analysis_series_id:
+    :return:
+    """
+    import os, csv
+    from shutil import copytree
+
+    subject_list = []
+    session_list = []
+    with open(subjects_visits_tsv, 'rb') as tsvin:
+        tsv_reader = csv.reader(tsvin, delimiter='\t')
+
+        for row in tsv_reader:
+            if row[0] == 'participant_id':
+                continue
+            else:
+                subject_list.append(row[0])
+                session_list.append(row[1])
+
+    output_path = os.path.expanduser(caps_dir)  # change the relative path to be absolute path
+    output_base = 'analysis-series-' + analysis_series_id + '/subjects'
+    if output_path[-1] == '/':
+        caps_dir = output_path + output_base
+    else:
+        caps_dir = output_path + '/' + output_base
+
+    for i in range(len(subject_list)):
+        copytree(os.path.join(caps_dir, subject_list[i], session_list[i], 't1/freesurfer-cross-sectional', subject_list[i] + '_' + session_list[i]), os.path.join(dest_dir, subject_list[i] + '_' + session_list[i]))

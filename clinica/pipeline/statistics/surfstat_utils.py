@@ -59,7 +59,7 @@ def get_vars(input_directory, subjects_visits_tsv, analysis_series_id, group_lab
 def runmatlab(input_directory,
               output_directory,
               subjects_visits_tsv,
-              linear_model, contrast,
+              design_matrix, contrast,
               str_format,
               path_to_matscript,
               size_of_fwhm,
@@ -72,7 +72,7 @@ def runmatlab(input_directory,
     :param input_directory:
     :param output_directory:
     :param subjects_visits_tsv:
-    :param linear_model:
+    :param design_matrix:
     :param contrast:
     :param str_format:
     :param path_to_matscript:
@@ -113,7 +113,7 @@ def runmatlab(input_directory,
 
     matlab.inputs.script = """
     clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', %.3f, '%s', %.3f, '%s', %.3f);
-    """ % (input_directory, output_directory, subjects_visits_tsv, linear_model, contrast, str_format, 'sizeoffwhm',
+    """ % (input_directory, output_directory, subjects_visits_tsv, design_matrix, contrast, str_format, 'sizeoffwhm',
            size_of_fwhm,
            'thresholduncorrectedpvalue', threshold_uncorrected_pvalue, 'thresholdcorrectedpvalue',
            threshold_corrected_pvalue, 'clusterthreshold',
