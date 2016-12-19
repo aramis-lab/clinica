@@ -6,12 +6,6 @@ Created on Mon Apr 22 09:04:10 2016
 @author: Junhao WEN
 """
 
-import nipype.pipeline.engine as pe
-import nipype.interfaces.io as nio
-from nipype.interfaces.freesurfer.preprocess import ReconAll
-from nipype.interfaces.utility import Function
-from tempfile import mkdtemp
-from clinica.pipeline.t1.t1_freesurfer_utils import create_flags_str, checkfov, absolute_path, write_statistics, log_summary, get_dirs, write_statistics_per_subject
 from clinica.engine.cworkflow import *
 
 @Visualize("freeview", "-v ${subject_id}/mri/T1.mgz -f ${subject_id}/surf/lh.white:edgecolor=blue ${subject_id}/surf/lh.pial:edgecolor=green ${subject_id}/surf/rh.white:edgecolor=blue ${subject_id}/surf/rh.pial:edgecolor=green", "subject_id")
@@ -56,7 +50,13 @@ def t1_freesurfer_pipeline(input_dir,
         return: Recon-all workflow
     """
     ## TODO if we have new subjects to run recon-all, what do we do? just run the new subjects with a new tsv file, or rerun all the subjects, but check out if the subjects are recon-alled? .
-
+    import nipype.pipeline.engine as pe
+    import nipype.interfaces.io as nio
+    from nipype.interfaces.freesurfer.preprocess import ReconAll
+    from nipype.interfaces.utility import Function
+    from tempfile import mkdtemp
+    from clinica.pipeline.t1.t1_freesurfer_utils import create_flags_str, checkfov, absolute_path, write_statistics, \
+        log_summary, get_dirs, write_statistics_per_subject
 
     # check out ReconAll version
     try:

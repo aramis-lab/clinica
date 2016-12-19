@@ -1,12 +1,12 @@
-function clinicasurfstat( inputdir, outputdir, csvfile, linearmodel, contrast, strformat, varargin)
+function clinicasurfstat( inputdir, outputdir, csvfile, designmatrix, contrast, strformat, varargin)
 % Saves all the output images for group analysis of T1 images smoothed data
 %
-% Usage: [some outputs] = clinicasurfstat( inputdir, outputdir, csvfile, linearmodel, contrast, strformat, varargin)
+% Usage: [some outputs] = clinicasurfstat( inputdir, outputdir, csvfile, designmatrix, contrast, strformat, varargin)
 %
 % - inputdir:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
 % - outputdir: the directory to contain the result images.
-% - linearmodel: string, the linear model that fit into the GLM, for example '1+Lable'
-% - contrast: string, the contrast that you want to use in the GLM, but the contrast should be inclued into the linearmodel, otherwise, you will get errors.
+% - designmatrix: string, the linear model that fit into the GLM, for example '1+Lable'
+% - contrast: string, the contrast that you want to use in the GLM, but the contrast should be inclued into the designmatrix, otherwise, you will get errors.
 % - csvfile: string, the path to your csv file
 % - strstrformat: string, the strstrformat that you want to use for your CSV file column variables, it depends on the CSV file.
 
@@ -153,8 +153,8 @@ if iscell(csvdata{indexunique})
 
     thicksubject = thicksubject';
 
-    slmmodel  = SurfStatLinMod(thicksubject, eval(linearmodel), averagesurface);
-    disp(['The GLM linear model is: ', linearmodel])
+    slmmodel  = SurfStatLinMod(thicksubject, eval(designmatrix), averagesurface);
+    disp(['The GLM linear model is: ', designmatrix])
 
     %% Clear the variables which will not be used later
     clearvars csvsorted csvdata thicksubject
@@ -257,8 +257,8 @@ else
     
     thicksubject = thicksubject';
 
-    slm  = SurfStatLinMod(thicksubject, eval(linearmodel), averagesurface);
-    disp(['The GLM linear model is: ', linearmodel])
+    slm  = SurfStatLinMod(thicksubject, eval(designmatrix), averagesurface);
+    disp(['The GLM linear model is: ', designmatrix])
 
     %% Clear the variables which will not be used later
     clearvars csvsorted csvdata thicksubject
