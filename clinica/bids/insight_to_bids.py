@@ -11,6 +11,7 @@ import os
 import logging
 import bids_utils as bids
 import pandas as pd
+from converter_utils import  remove_space_and_symbols
 
 __author__ = "Sabrina Fontanella"
 __copyright__ = "Copyright 2016, The Aramis Lab Team"
@@ -21,7 +22,7 @@ __maintainer__ = "Sabrina Fontanella"
 __email__ = "sabrina.fontanella@icm-institute.org"
 __status__ = "Development"
 
-def convert_clinical(input_path, out_path, bids_ids, original_ids, orig_ids_alpha):
+def convert_clinical(input_path, out_path, bids_ids, original_ids, orig_ids_alpha, memento_ids):
     '''
     Convert clinical data of INSIGHT (CATI organized) dataset (subject included only).
 
@@ -34,6 +35,8 @@ def convert_clinical(input_path, out_path, bids_ids, original_ids, orig_ids_alph
 
     '''
 
+    memento_ids_alpha = remove_space_and_symbols(memento_ids)
+    use_memento = False
     fields_bids = ['participant_id']
     fields_dataset = []
     clinic_specs_path = path.join(os.path.dirname(__file__), 'data', 'clinical_specifications.xlsx')
@@ -88,9 +91,9 @@ def convert_clinical(input_path, out_path, bids_ids, original_ids, orig_ids_alph
             participant_df['participant_id'][i] = bid
 
     # Remove all the informations regarding the subjects not included from the dataframe
+    index_to_delete.append((participant_df[participant_df['alternative_id_2'] == '0040052_HEPH'].index.tolist())[0])
     participant_df = participant_df.drop(index_to_delete)
-
-
+    # Remove the row with for subject 0040052_HEPH (non included in the list of available)
     participant_df.to_csv(path.join(out_path,'participants.tsv'), sep='\t', index = False)
 
     # --Creation sessions.tsv--
@@ -115,35 +118,60 @@ def convert_clinical(input_path, out_path, bids_ids, original_ids, orig_ids_alph
             tmp = field_location[i].split('/')
             location = tmp[0]
             sheet = tmp[1]
-            file_to_read_path = path.join(input_path, 'clinicalData', location + '.xlsx')
+            file_to_read_path = path.join(input_path, 'clinicalData', location)
             file_to_read = pd.read_excel(file_to_read_path, sheetname=sheet)
 
             for r in range(0, len(file_to_read.values)):
                 row = file_to_read.iloc[r]
+
                 # Extract the subject id
-                subj_id = row['Subject']
+                if 'Subject' in row:
+                    subj_id = row['Subject']
+                    use_memento = False
+                if 'PAT_ID' in row:
+                    subj_id = row['PAT_ID']
+                    subj_id = remove_space_and_symbols(subj_id)
+                    use_memento = True
+                if 'subject' in row:
+                    subj_id = row['subject']
+                    use_memento = True
+
+
                 # Extract the correspondant BIDS id and create the output file if doesn't exist
-                subj = [s for s in orig_ids_alpha if s in subj_id]
+                if use_memento:
+                    subj = [s for s in memento_ids_alpha if s in subj_id]
+                else:
+                    subj = [s for s in orig_ids_alpha if s in subj_id]
+
 
                 # If the ID is an included one
                 if len(subj) != 0:
                     subj = subj[0]
-                    subj_index = orig_ids_alpha.index(subj)
+                    if use_memento:
+                        subj_index = memento_ids_alpha.index(subj)
+                    else:
+                        subj_index = orig_ids_alpha.index(subj)
                     sessions_df[sessions_fields_bids[i]] = row[sessions_fields_db[i]]
+
                     # Create the files
                     if sessions_dict.has_key(bids_ids[subj_index]):
                         (sessions_dict[bids_ids[subj_index]]['M0']).update({sessions_fields_bids[i]: row[sessions_fields_db[i]]})
                     else:
                         sessions_dict.update({bids_ids[subj_index]: {'M0' : {'session_id': 'M0', sessions_fields_bids[i]: row[sessions_fields_db[i]]}}})
 
+
+
     # Create the several sessions.tsv file extracting data from the dictionary
+    fields_bids.insert(0, 'session_id')
+    cols = []
     for bids_id in bids_ids:
         sessions_df = pd.DataFrame(columns=fields_bids)
 
         if sessions_dict.has_key(bids_id):
             session_df = pd.DataFrame(sessions_dict[bids_id]['M0'], index=['i', ])
             cols = session_df.columns.tolist()
-            cols = cols[-1:] + cols[:-1]
+            cols.remove('session_id')
+            cols.insert(0, 'session_id')
             session_df = session_df[cols]
             session_df.to_csv(path.join(out_path,bids_id, bids_id + '_sessions.tsv'), sep='\t', index = False)
         else:
@@ -196,8 +224,6 @@ def convert_clinical(input_path, out_path, bids_ids, original_ids, orig_ids_alph
             scans_df = pd.DataFrame(columns=(fields_bids))
 
     print '-- Scans files created for each subject. --'
-
-
 
 
 
@@ -291,11 +317,9 @@ def convert(source_dir, dest_dir, mod=''):
                     if out != None:  # missing or incomplete DTI
                         if out == -1:
                             logging.info('No DTI found for ' + mods_folder_path)
-
                         else:
                             for e in out:
                                 logging.warning('.bvec or .bval not found for DTI folder ' + e + ': skipped.')
-
 
                     # Decide the best T1 to take and convert the file format into the BIDS standard
                     t1_selected = bids.choose_correction(mods_folder_path, t1_priority, 'T1')
@@ -325,6 +349,6 @@ def convert(source_dir, dest_dir, mod=''):
             logging.info("Conversion for the subject terminated.\n")
 
     print 'Converting the clinical data...'
-    convert_clinical(source_dir, dest_dir, bids_ids, original_insight_ids, original_insight_ids_alpha)
+    convert_clinical(source_dir, dest_dir, bids_ids, original_insight_ids, original_insight_ids_alpha, memento_ids)
 
 

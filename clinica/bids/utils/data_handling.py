@@ -115,6 +115,7 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
     old_index = col_list.index('session_id')
     col_list.insert(1, col_list.pop(old_index))
     merged_df = merged_df[col_list]
+    merged_df.to_csv(path.join(out_dir, out_file_name), sep='\t', index=False)
 
 
     # Call the script for computing the missing modalities and append the result to the merged file
@@ -139,6 +140,7 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
             for i in range(0, len(mss_df)):
                 row = mss_df.iloc[i]
                 subj_idx = merged_df[ (merged_df['participant_id'] == row['participant_id']) & (merged_df['session_id'] == ses_id)].index.tolist()
+
 
                 if len(subj_idx)>1:
                     raise ValueError('Multiple row for the same visit in the merge-tsv file.')
@@ -318,7 +320,7 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
                 else:
                     if 'func' in mods_avail:
                         for m in mods_avail_dict['func']:
-                            row_to_append_df[m] = pd.Series('-')
+                            row_to_append_df[m] = pd.Series('0')
                         mmt.add_missing_mod(ses, m)
 
                 if 'dwi' in mods_avail_bids:
