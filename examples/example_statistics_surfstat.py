@@ -47,18 +47,18 @@ import time
 
 # TODO adapt my code to non-BIDS version , like in clinica-data
 
-caps_dir =''
-tsv_file  =''
-str_format =''
-linear_model =''
+caps_dir ='/Volumes/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/Freesurfer/Reconall/reconall_GENFI/clinica_reconall_result/prevdemals_67subjs'
+tsv_file  ='/Volumes/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/group_wise_stat_analysis/PS_CN/20PS-17CN.tsv'
+str_format ='%s %s %s %s %f'
+design_matrix ='1+group+age'
 
 print 'Output dir is in the same CAPS folder with the input'
 contrast = 'group'
-group_label = 'test'
+group_label = 'shit'
 analysis_series_id = 'default'
 working_directory='~/test'
 start = time.time()
-surfstat = clinica_surfstat(caps_dir, tsv_file, linear_model, contrast, str_format, group_label, working_directory=working_directory)
+surfstat = clinica_surfstat(caps_dir, tsv_file, design_matrix, contrast, str_format, group_label,analysis_series_id, working_directory=working_directory)
 surfstat.run("MultiProc", plugin_args={'n_procs': 4})
 time_consuming = time.time() - start
 print 'END! time consuming is : %s' %time_consuming
