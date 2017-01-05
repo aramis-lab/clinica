@@ -18,6 +18,8 @@ import pandas as pd
 import pkg_resources as pkg
 import sys
 import re
+import numpy as np
+import shutil
 
 __author__ = "Sabrina Fontanella"
 __copyright__ = "Copyright 2016, The Aramis Lab Team"
@@ -152,9 +154,9 @@ def convert_clinical(input_path, out_path, bids_ids):
                                 else:
                                     field_col_values[2].append('father')
                             else:
-                                field_col_values[0].append('')
-                                field_col_values[1].append('')
-                                field_col_values[2].append('')
+                                field_col_values[0].append(np.NaN)
+                                field_col_values[1].append(np.NaN)
+                                field_col_values[2].append(np.NaN)
 
                         participant_df['parent_transmitting_ftd'] = pd.Series(field_col_values[0])
                         participant_df['parent_transmitting_als'] = pd.Series(field_col_values[1])
@@ -177,8 +179,8 @@ def convert_clinical(input_path, out_path, bids_ids):
                                 else:
                                     field_col_values[1].append('N')
                             else:
-                                field_col_values[0].append('')
-                                field_col_values[1].append('')
+                                field_col_values[0].append(np.NaN)
+                                field_col_values[1].append(np.NaN)
 
                         participant_df['family_phenotype_ftd'] = pd.Series(field_col_values[0])
                         participant_df['family_phenotype_als'] = pd.Series(field_col_values[1])
@@ -192,7 +194,7 @@ def convert_clinical(input_path, out_path, bids_ids):
                                 else:
                                     field_col_values.append('Y')
                             else:
-                                field_col_values.append('')
+                                field_col_values.append(np.NaN)
                         participant_df['prevdemals_genetic_status_mutated'] = pd.Series(field_col_values)
                     elif participant_fields_db[i] == 'Status (A=patients, R=relatives)':
                         field_col_values = []
@@ -204,7 +206,7 @@ def convert_clinical(input_path, out_path, bids_ids):
                                 elif 'R' in prevdemals_status:
                                     field_col_values.append('R')
                             else:
-                                field_col_values.append('')
+                                field_col_values.append(np.NaN)
                         participant_df['prevdemals_status'] = pd.Series(field_col_values)
                     else:
                         for j in range(0, len(file_to_read)):
@@ -250,7 +252,11 @@ def convert_clinical(input_path, out_path, bids_ids):
         genfi_sub_name = gsp.split(os.sep)[-1]
         index_to_extract = participant_df[participant_df['participant_id'] == genfi_sub_name].index.tolist()
         if len(index_to_extract) == 0:
-            print 'Subject '+genfi_sub_name+' not found in the list of subject available'
+            print '(GENFI) Subject '+genfi_sub_name+' not found inside the clinical data'
+            row_to_append = s = pd.Series(genfi_sub_name, ['participant_id'])
+            genfi_participant_df = genfi_participant_df.append(row_to_append, ignore_index=True)
+
+
         else:
             genfi_participant_df = genfi_participant_df.append(participant_df.loc[index_to_extract[0]])
 
@@ -258,7 +264,9 @@ def convert_clinical(input_path, out_path, bids_ids):
         icm_sub_name = isp.split(os.sep)[-1]
         index_to_extract = participant_df[participant_df['participant_id'] == icm_sub_name].index.tolist()
         if len(index_to_extract) == 0:
-            print 'Subject '+icm_sub_name+' not found in the list of subject available'
+            row_to_append = s = pd.Series(icm_sub_name, ['participant_id'])
+            icm_participant_df = icm_participant_df.append(row_to_append, ignore_index=True)
+            print '(ICM) Subject '+icm_sub_name+' not found inside the clinical data'
         else:
             icm_participant_df = icm_participant_df.append(participant_df.loc[index_to_extract[0]])
 
@@ -400,7 +408,7 @@ def convert_clinical(input_path, out_path, bids_ids):
     print '-- Scans files created for each subject. --'
 
 
-def convert(source_dir, dest_dir, param=''):
+def convert(source_dir, dest_dir, param='', mod_to_update=''):
     """
     Convert the PREVDEMALS dataset into the BIDS standard.
 
@@ -416,7 +424,7 @@ def convert(source_dir, dest_dir, param=''):
     }
     ses_available = ['M0', 'M24']
     #mmt = MissingModsTracker(['M0', 'M24'])
-    if param!='-c':
+    if param!='-c' and mod_to_update=='':
         os.mkdir(dest_dir)
         os.mkdir(path.join(dest_dir, 'GENFI'))
         os.mkdir(path.join(dest_dir, 'ICM'))
@@ -429,6 +437,8 @@ def convert(source_dir, dest_dir, param=''):
     print "*******************************"
     # Convert all the files contained in the two project folder PREV_DEMALS_GENFI and PREV_DEMALS_ICM
     if param != '-c':
+        if mod_to_update!='':
+            print 'Updating or adding modality: '+mod_to_update
         for proj in projects:
             cities_folder = glob(path.join(projects[proj], '*'))
             pda_spath = []
@@ -442,7 +452,8 @@ def convert(source_dir, dest_dir, param=''):
                     pda_ids.append(subj_id)
                     bids_ids.append('sub-PREVDEMALS' + subj_id)
                     # Create the subject folder in the BIDS converted dataset
-                    os.mkdir(path.join(dest_dir_proj, bids_ids[-1]))
+                    if len(mod_to_update)=='':
+                        os.mkdir(path.join(dest_dir_proj, bids_ids[-1]))
 
 
             # For each subject extract the list of files and convert them into BIDS specification
@@ -460,50 +471,67 @@ def convert(source_dir, dest_dir, param=''):
 
                     # Extracting the index of the subject that is the same for the PREVDEMALS list and BIDS list
                     subj_index = pda_spath.index(subj_path)
-                    os.mkdir(path.join(dest_dir_proj, bids_ids[subj_index], 'ses-' + ses))
+                    if len(mod_to_update) == '':
+                        os.mkdir(path.join(dest_dir_proj, bids_ids[subj_index], 'ses-' + ses))
                     ses_dir_bids = path.join(dest_dir_proj, bids_ids[subj_index], 'ses-' + ses)
                     bids_file_name = bids_ids[subj_index] + '_ses-' + ses
                     session_path = path.join(subj_path, ses)
                     mods_folder_path = path.join(session_path, 'NIFTI')
 
                     # Extract and convert fieldmap data
-                    out = bids.convert_fieldmap(mods_folder_path, path.join(ses_dir_bids, 'fmap'), bids_file_name)
-                    if out == -1:
-                        logging.warning("No Fieldmap found for " + mods_folder_path)
-                    elif out == 0:
-                        logging.warning("Map or MapPh missing for " + mods_folder_path + ': skipped')
-
-                    # Merge all the valid DTI folders for the same subject
-                    if 'ICM' in projects[proj]:
-                        logging.info('DTI ignored for PREV_DEMALS_ICM.')
+                    if mod_to_update!='' and 'fmap' not in mod_to_update:
+                        pass
                     else:
-                        out = bids.merge_DTI(mods_folder_path, path.join(ses_dir_bids, 'dwi'), bids_file_name)
-                        if out is not None:  # Missing or incomplete DTI
-                            if out == -1:
-                                logging.info('No DTI found for ' + mods_folder_path)
-                                #mmt.add_missing_mod('DTI', ses)
-                            else:
-                                for e in out:
-                                    logging.warning('.bvec or .bval not found for DTI folder ' + e + ' Skipped')
-                                    #mmt.add_incomplete_mod('DTI', ses)
+                        if os.path.isdir(path.join(ses_dir_bids,'fmap')):
+                            shutil.rmtree(path.join(ses_dir_bids,'fmap'), ignore_errors=True)
+
+                        out = bids.convert_fieldmap(mods_folder_path, path.join(ses_dir_bids, 'fmap'), bids_file_name)
+                        if out == -1:
+                            logging.warning("No Fieldmap found for " + mods_folder_path)
+                        elif out == 0:
+                            logging.warning("Map or MapPh missing for " + mods_folder_path + ': skipped')
+
+                    # Merge all the valid DWI folders for the same subject
+                    if mod_to_update != '' and 'dwi' not in mod_to_update:
+                        pass
+                    else:
+                        if os.path.isdir(path.join(ses_dir_bids, 'dwi')):
+                            shutil.rmtree(path.join(ses_dir_bids, 'dwi'), ignore_errors=True)
+                        if 'ICM' in projects[proj]:
+                            logging.info('DTI ignored for PREV_DEMALS_ICM.')
+                        else:
+                            out = bids.merge_DTI(mods_folder_path, path.join(ses_dir_bids, 'dwi'), bids_file_name)
+                            if out is not None:  # Missing or incomplete DTI
+                                if out == -1:
+                                    logging.info('No DTI found for ' + mods_folder_path)
+                                    #mmt.add_missing_mod('DTI', ses)
+                                else:
+                                    for e in out:
+                                        logging.warning('.bvec or .bval not found for DTI folder ' + e + ' Skipped')
+                                        #mmt.add_incomplete_mod('DTI', ses)
 
                     # Decide the best T1 to take and convert the file format into the BIDS standard
-                    t1_selected = bids.choose_correction(mods_folder_path, t1_priority, 'T1')
-                    if t1_selected != -1 and t1_selected != 0:
-                        t1_sel_path = glob(path.join(mods_folder_path, '*' + t1_selected + '*', '*.nii*'))[0]
-                        bids.convert_T1(t1_sel_path, path.join(ses_dir_bids, 'anat'), bids_file_name)
+                    if mod_to_update!='' and 'anat' not in mod_to_update:
+                        pass
                     else:
-                        if t1_selected == -1:
-                            logging.info('No T1 found for ' + mods_folder_path)
-                            #mmt.add_missing_mod('T1', ses)
+                        if os.path.isdir(path.join(ses_dir_bids, 'anat')):
+                            shutil.rmtree(path.join(ses_dir_bids, 'anat'), ignore_errors=True)
+                        t1_selected = bids.choose_correction(mods_folder_path, t1_priority, 'T1')
+                        if t1_selected != -1 and t1_selected != 0:
+                            t1_sel_path = glob(path.join(mods_folder_path, '*' + t1_selected + '*', '*.nii*'))[0]
+                            bids.convert_T1(t1_sel_path, path.join(ses_dir_bids, 'anat'), bids_file_name)
                         else:
-                            logging.warning('None of the desiderd T1 corrections is available for ' + mods_folder_path)
+                            if t1_selected == -1:
+                                logging.info('No T1 found for ' + mods_folder_path)
+                                #mmt.add_missing_mod('T1', ses)
+                            else:
+                                logging.warning('None of the desiderd T1 corrections is available for ' + mods_folder_path)
 
-                    # Extract and convert the T2 FLAIR modality if is available
-                    out = bids.convert_flair(mods_folder_path, path.join(ses_dir_bids, "anat"), bids_file_name)
-                    if out == -1:
-                        logging.warning('No FLAIR found for '+ mods_folder_path)
-                        #mmt.add_missing_mod('FLAIR', ses)
+                        # Extract and convert the T2 FLAIR modality if is available
+                        out = bids.convert_flair(mods_folder_path, path.join(ses_dir_bids, "anat"), bids_file_name)
+                        if out == -1:
+                            logging.warning('No FLAIR found for '+ mods_folder_path)
+                            #mmt.add_missing_mod('FLAIR', ses)
 
                     logging.info("Conversion for the subject terminated.\n")
 
