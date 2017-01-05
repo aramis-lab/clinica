@@ -345,9 +345,11 @@ def merge_DTI(folder_input, folder_output, name, fixed_dti_list=False):
             for line in fin:
                 if fileinput.isfirstline():
                     line_no = 0
-                lines_out_bvec[line_no] = lines_out_bvec[line_no]+line.rstrip()
+
+                lines_out_bvec[line_no] = lines_out_bvec[line_no]+" "+line.rstrip()
                 line_no += 1
             for i in range(0, len(lines_out_bvec)):
+                lines_out_bvec[i] = lines_out_bvec[i].lstrip()
                 fout.write(lines_out_bvec[i] + "\n")
 
         if len(incomp_folders) > 0:
