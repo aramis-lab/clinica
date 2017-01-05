@@ -2,6 +2,8 @@
 
 from clinica.engine.cworkflow import *
 
+
+
 @RunDecorator(Dump)
 def create_dwi_preproc_syb(in_dwi, in_T1, in_bvals, in_bvecs, working_directory, num_b0s, datasink_directory):
     """
@@ -43,7 +45,12 @@ def create_dwi_preproc_syb(in_dwi, in_T1, in_bvals, in_bvecs, working_directory,
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
     import os.path as op
-    import clinica.pipeline.dwi.dwi_preprocessing_utils as predifcorrect
+    from clinica.pipeline.dwi.dwi_preprocessing_workflows import prepare_data
+    from clinica.pipeline.dwi.dwi_preprocessing_workflows import ecc_pipeline
+    from clinica.pipeline.dwi.dwi_preprocessing_workflows import hmc_pipeline
+    from clinica.pipeline.dwi.dwi_preprocessing_workflows import sdc_syb_pipeline
+    from clinica.pipeline.dwi.dwi_preprocessing_workflows import apply_all_corrections_syb
+    from clinica.pipeline.dwi.dwi_preprocessing_workflows import remove_bias
 
 # Inputs existence checking
 
@@ -67,17 +74,17 @@ def create_dwi_preproc_syb(in_dwi, in_T1, in_bvals, in_bvecs, working_directory,
 
     inputnode = pe.Node(interface=niu.IdentityInterface(fields=["dwi_image", "bvectors_directions", "bvalues", 'T1_image']), name="inputnode")
 
-    pre = predifcorrect.prepare_data(datasink_directory)
+    pre = prepare_data(datasink_directory=datasink_directory, num_b0s=num_b0s)
 
-    hmc = predifcorrect.hmc_pipeline(datasink_directory)
+    hmc = hmc_pipeline(datasink_directory)
 
-    ecc = predifcorrect.ecc_pipeline(datasink_directory)
+    ecc = ecc_pipeline(datasink_directory)
 
-    sdc = predifcorrect.sdc_syb_pipeline(datasink_directory)
+    sdc = sdc_syb_pipeline(datasink_directory)
 
-    bias = predifcorrect.remove_bias(datasink_directory)
+    bias = remove_bias()
 
-    aac = predifcorrect.apply_all_corrections_syb(datasink_directory)
+    aac = apply_all_corrections_syb(datasink_directory)
 
     datasink = pe.Node(nio.DataSink(), name='datasink_tracto')
     datasink.inputs.base_directory = op.join(datasink_directory, 'Outputs_for_Tractography/')
@@ -113,7 +120,10 @@ def create_dwi_preproc_syb(in_dwi, in_T1, in_bvals, in_bvecs, working_directory,
 
 
 @Visualize("freeview", "${subject_id}/preprocessing/out_file/vol0000_maths_thresh_merged.nii.gz", "subject_id")
-def diffusion_preprocessing_fieldmap_based(datasink_directory, num_b0s, name='diffusion_preprocessing_fieldmap_based'):
+def diffusion_preprocessing_fieldmap_based(
+        subject_id, session_id, analysis_series_id,
+        caps_directory, num_b0s, working_directory=None,
+        name='diffusion_preprocessing_fieldmap_based'):
     """
     First extract the b0 volumes, co-registration and mean of the b0 volumes.
     See :func:`dwi_utils.b0_dwi_split`, :func:`dwi_utils.b0_flirt_pipeline`, :func:`dwi_utils.b0_average`.
@@ -165,18 +175,32 @@ def diffusion_preprocessing_fieldmap_based(datasink_directory, num_b0s, name='di
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['out_file', 'out_bvecs', 'out_bvals',  'out_mask']), name='outputnode')
 
-    remove_bias_pip = remove_bias(name='remove_bias', datasink_directory=datasink_directory)
-    hmc = hmc_pipeline(name='motion_correct', datasink_directory=datasink_directory)
+    remove_bias_pip = remove_bias(name='remove_bias')
+    hmc = hmc_pipeline(name='motion_correct', datasink_directory=caps_directory)
     hmc.inputs.inputnode.ref_num = 0
-    sdc = sdc_fmb(name='fmb_correction', datasink_directory=datasink_directory)
-    ecc = ecc_pipeline(name='eddy_correct', datasink_directory=datasink_directory)
-    pre = prepare_data(datasink_directory=datasink_directory, num_b0s=num_b0s)
+    sdc = sdc_fmb(name='fmb_correction', datasink_directory=caps_directory)
+    ecc = ecc_pipeline(name='eddy_correct', datasink_directory=caps_directory)
+    pre = prepare_data(datasink_directory=caps_directory, num_b0s=num_b0s)
     unwarp = apply_all_corrections()
 
-    datasink = pe.Node(nio.DataSink(), name='datasink_preprocessing')
-    datasink.inputs.base_directory = op.join(datasink_directory, 'preprocessing/')
+    datasink = pe.Node(nio.DataSink(), name='datasink')
+    caps_identifier = subject_id + '_' + session_id
+    datasink.inputs.base_directory = op.join(caps_directory, 'analysis-series-' + analysis_series_id, 'subjects', subject_id, session_id, 'dwi')
+    datasink.inputs.substitutions = [('vol0000_warp_maths_thresh_merged_roi_brain_mask.nii.gz', caps_identifier + '_b0-mask.nii.gz'),
+                                     ('vol0000_maths_thresh_merged.nii.gz', caps_identifier + '_dwi.nii.gz'),
+                                     ('bvecs_rotated.bvec', caps_identifier + '_dwi.nii.gz'),
+                                     ('bvals', caps_identifier + '_dwi.bval'),
+                                     ('fast_seg_1.nii.gz', caps_identifier + '_partial-volume-gray-matter.nii.gz'),
+                                     ('fast_seg_2.nii.gz', caps_identifier + '_partial-volume-white-matter.nii.gz'),
+                                     ('fast_bias.nii.gz', caps_identifier + '_bias-field.nii.gz'),
+                                     ('fast_restore.nii.gz', caps_identifier + '_brain-extracted-T1w.nii.gz'),
+                                     ('T1_pre_bet_brain_mask.nii.gz', caps_identifier + '_pre-masked-brain-extracted_T1w.nii.gz')
+                                     ]
+    datasink.inputs.regexp_substitutions = [('vol*_flirt.mat', caps_identifier + '_hmc-dwi-*.mat')]
 
-    wf = pe.Workflow(name=name,base_dir=datasink_directory)
+
+
+    wf = pe.Workflow(name=name, base_dir=caps_directory)
     wf.connect([
             (inputnode,       pre,             [('in_file', 'inputnode.in_file'),
                                                 ('in_bvals', 'inputnode.in_bvals'),
@@ -199,6 +223,7 @@ def diffusion_preprocessing_fieldmap_based(datasink_directory, num_b0s, name='di
             (sdc,             unwarp,          [('outputnode.out_warp', 'inputnode.in_sdc')]),
             (unwarp,          remove_bias_pip, [('outputnode.out_file', 'inputnode.in_file')]),
 #            (mask_b0,         remove_bias_pip, [('mask_file', 'inputnode.in_mask')]),
+            # Outputnode:
             (hmc,             outputnode,      [('outputnode.out_bvec', 'out_bvecs')]),
             (hmc,             datasink,        [('outputnode.out_bvec', 'out_bvecs')]),
             (pre,             outputnode,      [('outputnode.out_bvals', 'out_bval')]),
@@ -206,7 +231,12 @@ def diffusion_preprocessing_fieldmap_based(datasink_directory, num_b0s, name='di
             (remove_bias_pip, outputnode,      [('outputnode.out_file', 'out_file')]),
             (remove_bias_pip, datasink,        [('outputnode.out_file', 'out_file')]),
             (remove_bias_pip, outputnode,      [('outputnode.b0_mask','b0_mask')]),
-            (remove_bias_pip, datasink,        [('outputnode.b0_mask','b0_mask')])
+            # Datasink:
+            (remove_bias_pip, datasink,        [('outputnode.b0_mask','b0_mask')]),
+
+            (merged_volumes, datasink, [('out_file', 'out_file')]),
+            (insmat, datasink, [('out', 'out_xfms')]),
+            (rot_bvec, datasink, [('out_file', 'out_bvec')])
 #            (mask_b0,         outputnode,      [('mask_file', 'out_mask')]),
 #            (mask_b0,         datasink,        [('mask_file', 'out_mask')])
             ])

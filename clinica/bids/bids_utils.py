@@ -7,6 +7,7 @@ import nibabel as nib
 import os
 import gzip
 
+
 def get_ext(file_path):
     root, ext = os.path.splitext(file_path)
     if ext in '.gz':
@@ -31,7 +32,6 @@ def compress_nii(file_path):
 
     # Remove the original file
     os.remove(file_path)
-
 
 
 def remove_rescan(list_path):
@@ -127,7 +127,6 @@ def convert_T1(t1_path, output_path, t1_bids_name):
     # If  the original image is not compress, compress it
     if file_ext == '.nii':
         compress_nii(path.join(output_path, t1_bids_name + get_bids_suff('T1') + file_ext))
-
 
 
 def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False,False]):
@@ -333,9 +332,11 @@ def merge_DTI(folder_input, folder_output, name, fixed_dti_list=False):
             for line in fin:
                 if fileinput.isfirstline():
                     line_no = 0
-                lines_out_bval[line_no] = lines_out_bval[line_no]+line.rstrip()
+                lines_out_bval[line_no] = lines_out_bval[line_no]+" "+line.rstrip()
                 line_no +=1
             for i in range (0, len(lines_out_bval)):
+                lines_out_bval[i] = lines_out_bval[i].lstrip()
+
                 fout.write(lines_out_bval[i]+"\n")
 
             # Concatenate bvec files

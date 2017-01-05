@@ -66,7 +66,8 @@ def datagrabber_t1_spm_segment_pipeline(input_directory,
                                         in_write_deformation_fields=in_write_deformation_fields)
 
     datasink_infields = ['native_space', 'dartel_input']
-    datasink_connections = [(('new_segment.native_class_images', group_nested_images_by_subject), 'native_space'), (('new_segment.dartel_input_images', group_nested_images_by_subject), 'dartel_input')]
+    datasink_connections = [(('new_segment.native_class_images', group_nested_images_by_subject), 'native_space'),
+                            (('new_segment.dartel_input_images', group_nested_images_by_subject), 'dartel_input')]
 
     if save_warped_unmodulated:
         datasink_connections.append((('new_segment.normalized_class_images', group_nested_images_by_subject), 'normalized'))
