@@ -29,7 +29,8 @@ def get_dirs(output_dir, subjects_visits_tsv, analysis_series_id):
     :param output_dir:
     :param subjects_visits_tsv:
     :param analysis_series_id:
-    :return:
+    :return: return the lists contaings CAPS version for subject_id, and also the Freesurfer version subject_id, also
+    return the subject_id, session_id in the tsv fils
     """
     import os, csv, errno
     subject_list = []
