@@ -2,7 +2,6 @@ from os import path
 from glob import glob
 import pandas as pd
 import os
-import numpy as np
 from ..converter_utils import MissingModsTracker, print_statistics
 
 __author__ = "Sabrina Fontanella"
@@ -116,10 +115,11 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
     old_index = col_list.index('session_id')
     col_list.insert(1, col_list.pop(old_index))
     merged_df = merged_df[col_list]
+    merged_df.to_csv(path.join(out_dir, out_file_name), sep='\t', index=False)
 
 
     # Call the script for computing the missing modalities and append the result to the merged file
-    compute_missing_mods(bids_dir, path.join(out_dir,'tmpG7VIY0'))
+    compute_missing_mods(bids_dir, out_dir, 'tmpG7VIY0')
     tmp_ses = glob(path.join(out_dir, 'tmpG7VIY0*'))
     for f in tmp_ses:
         # Skip the summary file
@@ -141,6 +141,7 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
                 row = mss_df.iloc[i]
                 subj_idx = merged_df[ (merged_df['participant_id'] == row['participant_id']) & (merged_df['session_id'] == ses_id)].index.tolist()
 
+
                 if len(subj_idx)>1:
                     raise ValueError('Multiple row for the same visit in the merge-tsv file.')
                 elif len(subj_idx) ==0:
@@ -158,7 +159,7 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
         os.remove(f)
 
     if true_false_mode:
-        merged_df = merged_df.replace(['Y','N'], [True, False])
+        merged_df = merged_df.replace(['Y','N'], ['0', '1'])
 
     merged_df.to_csv(path.join(out_dir, out_file_name), sep='\t', index=False)
 
@@ -287,6 +288,7 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
     for ses in sessions_found:
         mods_avail_bids = []
         for sub_path in subjects_paths_lists:
+            mods_avail_bids = []
             subj_id = sub_path.split(os.sep)[-1]
             row_to_append_df['participant_id'] = pd.Series(subj_id)
             ses_path_avail = glob(path.join(sub_path, ses))
@@ -318,16 +320,16 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
                 else:
                     if 'func' in mods_avail:
                         for m in mods_avail_dict['func']:
-                            row_to_append_df[m] = pd.Series('-')
+                            row_to_append_df[m] = pd.Series('0')
                         mmt.add_missing_mod(ses, m)
 
-                if ['dwi' in mods_avail_bids]:
+                if 'dwi' in mods_avail_bids:
                     row_to_append_df['dwi'] = pd.Series('1')
                 else:
                     row_to_append_df['dwi'] = pd.Series('0')
                     mmt.add_missing_mod(ses, 'dwi')
 
-                if ['anat' in mods_avail_bids]:
+                if 'anat' in mods_avail_bids:
                     for m in mods_avail_dict['anat']:
                         anat_aval_list = glob(path.join(ses_path, 'anat', '*.nii.gz'))
                         if len(anat_aval_list) > 0:
@@ -336,9 +338,10 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
                             row_to_append_df[m] = pd.Series('0')
                             mmt.add_missing_mod(ses, m)
 
-                if ['fmap' in mods_avail_bids]:
+                if 'fmap' in mods_avail_bids:
                     row_to_append_df['fmap'] = pd.Series('1')
                 else:
+
                     row_to_append_df['fmap'] = pd.Series('0')
                     mmt.add_missing_mod(ses, 'fmap')
 
@@ -362,7 +365,7 @@ def create_subs_sess_list(dataset_path, out_dir):
         out_dir = os.path.dirname(out_dir)
 
     if '.' not in file_name:
-        file_name = file_name+'.tsv'
+        file_name = file_name + '.tsv'
     else:
         extension = os.path.splitext(file_name)[1]
         if extension != '.tsv':

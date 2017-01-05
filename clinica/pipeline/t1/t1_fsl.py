@@ -3,6 +3,33 @@
 
 """This module contains the FSL-T1 pipeline."""
 
+
+def caps_t1_fsl_segmentation_pipeline(
+        path_to_t1,
+        subject_id, session_id, analysis_series_id,
+        caps_directory, working_directory=None,
+        is_bias_corrected=None,
+        name="t1_fsl_segmentation_pipeline"):
+    """
+    Perform CAPS
+    """
+    import nipype.pipeline.engine as pe
+    import nipype.interfaces.utility as niu
+    from clinica.pipeline.t1.t1_fsl import t1_fsl_segmentation_pipeline
+    t1_fsl_segmentation = t1_fsl_segmentation_pipeline(subject_id=subject_id,
+                                                       session_id=session_id,
+                                                       analysis_series_id=analysis_series_id,
+                                                       caps_directory=caps_directory,
+                                                       is_bias_corrected=is_bias_corrected)
+    t1_fsl_segmentation.inputs.inputnode.in_t1 = path_to_t1
+
+    wf = pe.Workflow(name='my_workflow')
+    wf.add_nodes([t1_fsl_segmentation])
+
+    return wf
+
+
+
 def t1_fsl_segmentation_pipeline(
         subject_id, session_id, analysis_series_id,
         caps_directory, working_directory=None,

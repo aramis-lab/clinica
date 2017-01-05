@@ -160,7 +160,8 @@ def execute():
     #adding the independent pipeline ArgumentParser objects
     # init_cmdparser_objects(run_parser.add_subparsers())
     pipelines = [ CmdParserT1SPMFullPrep(),CmdParserT1SPMSegment(),CmdParserT1FreeSurfer(), CmdParserT1FSL(),
-                  CmdParserT1DWIRegistration(), CmdParserStatisticsSurfStat(),CmdParserMachineLearningVBLinearSVM()]
+                  CmdParserDWIT1Registration(), CmdParserDWIProcessing(),
+                  CmdParserStatisticsSurfStat(),CmdParserMachineLearningVBLinearSVM()]
     init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
 
     """
