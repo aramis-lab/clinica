@@ -292,17 +292,18 @@ class CmdParserStatisticsSurfStat(CmdParser):
     def define_name(self):
         self._name = 'statistics-surfstat'
 
+    ## TODO find out the bug for contrast '-age', just can not work with command line
     def define_options(self):
         self._args.add_argument("caps_dir",
                                 help='Directory where the input files(output of FreeSurfer pipeline) are stored')
         self._args.add_argument("subjects_visits_tsv",
                                 help='Directory where the tsv files are stored')
         self._args.add_argument("design_matrix",
-                                help='A list to define the design matrix that fits into GLM, eg, 1 + group + sex + age')
-        self._args.add_argument("contrast",
-                                help='A list to define the contrast matrix for GLM, eg, group_label')
+                                help='A str to define the design matrix that fits into GLM, eg, 1 + group + sex + age')
+        self._args.add_argument("contrast", type=str,
+                                help='A str to define the contrast matrix for GLM, eg, group_label')
         self._args.add_argument("str_format",
-                                help='A list to define the format string for the tsv column , eg, %%s %%s %%s %%f')
+                                help='A str to define the format string for the tsv column , eg, %%s %%s %%s %%f')
         self._args.add_argument("group_label",
                                 help='Current group name')
         self._args.add_argument("analysis_series_id",
