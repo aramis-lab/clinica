@@ -110,7 +110,13 @@ for indexsubject = 1 : nrsubject
     disp(['The subject ID is: ', subjectname, '_', sessionname] )
     if indexsubject == 1
         thicksubject = zeros(nrsubject, size(Y,2));
-        indexunique = strfind(firstline, contrast);
+        %if startsWith(contrast, '-') this works for matlab2016b
+        if strfind(contrast, '-')
+            abscontrast = contrast(2:end);
+        else
+            abscontrast = contrast
+        end
+        indexunique = strfind(firstline, abscontrast);
         indexunique = find(not(cellfun('isempty', indexunique)));
         if iscell(csvdata{indexunique})
             uniquelabels = unique(csvdata{indexunique}); factor1 = char(uniquelabels(1)); factor2 = char(uniquelabels(2));
@@ -253,19 +259,24 @@ if iscell(csvdata{indexunique})
     disp('Contrast Negative: FDR'); toc;
     
 else
-    contrastpos    = eval(contrast);
-    
+    %% if the contrast is continuous variable, dont use term, just use double to fit in the test!!!
+    contrastpos    = csvdata{indexunique};
+
     thicksubject = thicksubject';
 
     slm  = SurfStatLinMod(thicksubject, eval(designmatrix), averagesurface);
     disp(['The GLM linear model is: ', designmatrix])
 
     %% Clear the variables which will not be used later
-    clearvars csvsorted csvdata thicksubject
+    clearvars csvsorted thicksubject
 
     % Contrast Positive:
     tic;
-    slm = SurfStatT( slm, contrastpos );
+    if strfind(contrast, '-')
+            slm = SurfStatT( slm, -contrastpos );
+    else
+            slm = SurfStatT( slm, contrastpos );
+    end
     SurfStatView( slm.t .* mask, averagesurface, [ 'T-statistic for ' contrast ]);
     save2jpeg('t_value.jpg');
     disp('t_value'); toc;
