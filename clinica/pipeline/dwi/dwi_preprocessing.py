@@ -188,13 +188,8 @@ def diffusion_preprocessing_fieldmap_based(
     datasink.inputs.base_directory = op.join(caps_directory, 'analysis-series-' + analysis_series_id, 'subjects', subject_id, session_id, 'dwi')
     datasink.inputs.substitutions = [('vol0000_warp_maths_thresh_merged_roi_brain_mask.nii.gz', caps_identifier + '_b0-mask.nii.gz'),
                                      ('vol0000_maths_thresh_merged.nii.gz', caps_identifier + '_dwi.nii.gz'),
-                                     ('bvecs_rotated.bvec', caps_identifier + '_dwi.nii.gz'),
-                                     ('bvals', caps_identifier + '_dwi.bval'),
-                                     ('fast_seg_1.nii.gz', caps_identifier + '_partial-volume-gray-matter.nii.gz'),
-                                     ('fast_seg_2.nii.gz', caps_identifier + '_partial-volume-white-matter.nii.gz'),
-                                     ('fast_bias.nii.gz', caps_identifier + '_bias-field.nii.gz'),
-                                     ('fast_restore.nii.gz', caps_identifier + '_brain-extracted-T1w.nii.gz'),
-                                     ('T1_pre_bet_brain_mask.nii.gz', caps_identifier + '_pre-masked-brain-extracted_T1w.nii.gz')
+                                     ('bvecs_rotated.bvec', caps_identifier + '_dwi.bvec'),
+                                     ('bvals', caps_identifier + '_dwi.bval')
                                      ]
     datasink.inputs.regexp_substitutions = [('vol*_flirt.mat', caps_identifier + '_hmc-dwi-*.mat')]
 
@@ -202,13 +197,13 @@ def diffusion_preprocessing_fieldmap_based(
 
     wf = pe.Workflow(name=name, base_dir=caps_directory)
     wf.connect([
-            (inputnode,       pre,             [('in_file', 'inputnode.in_file'),
-                                                ('in_bvals', 'inputnode.in_bvals'),
-                                                ('in_bvecs', 'inputnode.in_bvecs')]),
-            (pre,             hmc,             [('outputnode.dwi_b0_merge', 'inputnode.in_file'),
-                                                ('outputnode.out_bvals', 'inputnode.in_bval'),
-                                                ('outputnode.out_bvecs', 'inputnode.in_bvec')]),
-            (pre,             hmc,             [('outputnode.mask_b0', 'inputnode.in_mask')]),
+            (inputnode, pre, [('in_file', 'inputnode.in_file'),
+                              ('in_bvals', 'inputnode.in_bvals'),
+                              ('in_bvecs', 'inputnode.in_bvecs')]),
+            (pre, hmc, [('outputnode.dwi_b0_merge', 'inputnode.in_file'),
+                        ('outputnode.out_bvals', 'inputnode.in_bval'),
+                        ('outputnode.out_bvecs', 'inputnode.in_bvec')]),
+            (pre, hmc, [('outputnode.mask_b0', 'inputnode.in_mask')]),
             (hmc,             sdc,             [('outputnode.out_file', 'inputnode.in_file')]),
             (pre,             sdc,             [('outputnode.mask_b0', 'inputnode.in_mask')]),
             (inputnode,       sdc,             [('bmap_mag', 'inputnode.bmap_mag')]),
@@ -225,20 +220,14 @@ def diffusion_preprocessing_fieldmap_based(
 #            (mask_b0,         remove_bias_pip, [('mask_file', 'inputnode.in_mask')]),
             # Outputnode:
             (hmc,             outputnode,      [('outputnode.out_bvec', 'out_bvecs')]),
-            (hmc,             datasink,        [('outputnode.out_bvec', 'out_bvecs')]),
             (pre,             outputnode,      [('outputnode.out_bvals', 'out_bval')]),
-            (pre,             datasink,        [('outputnode.out_bvals', 'out_bval')]),
             (remove_bias_pip, outputnode,      [('outputnode.out_file', 'out_file')]),
-            (remove_bias_pip, datasink,        [('outputnode.out_file', 'out_file')]),
             (remove_bias_pip, outputnode,      [('outputnode.b0_mask','b0_mask')]),
             # Datasink:
+            (pre,             datasink,        [('outputnode.out_bvals', 'out_bval')]),
+            (hmc,             datasink,        [('outputnode.out_bvec', 'out_bvecs')]),
             (remove_bias_pip, datasink,        [('outputnode.b0_mask','b0_mask')]),
-
-            (merged_volumes, datasink, [('out_file', 'out_file')]),
-            (insmat, datasink, [('out', 'out_xfms')]),
-            (rot_bvec, datasink, [('out_file', 'out_bvec')])
-#            (mask_b0,         outputnode,      [('mask_file', 'out_mask')]),
-#            (mask_b0,         datasink,        [('mask_file', 'out_mask')])
+            (remove_bias_pip, datasink, [('outputnode.out_file', 'out_file')]),
             ])
 
     return wf
