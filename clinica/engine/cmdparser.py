@@ -286,7 +286,6 @@ class CmdParserT1FreeSurfer(CmdParser):
         reconall_wf.run("MultiProc", plugin_args={'n_procs': args.n_procs})
 
 
-
 class CmdParserStatisticsSurfStat(CmdParser):
 
     def define_name(self):
@@ -421,8 +420,8 @@ class CmdParserDWIT1Registration(CmdParser):
                                 help='Temporary directory to store intermediate results')
         self._args.add_argument("-analysis_series_id", default='default',
                                 help='Label for analysis series id (default name is \'default\')')
-        self._args.add_argument("-n_threads", type=int, default=0,
-                                help='Number of threads (default=0, which disables multi-threading).')
+        self._args.add_argument("-n_threads", type=int, default=1,
+                                help='Number of threads (default=1, which disables multi-threading).')
         group = self._args.add_mutually_exclusive_group(required=True)
         group.add_argument('-is_bias_corrected', action='store_true',
                            help='Set this flag if your images are bias corrected (mutually exclusive with \'-is_not_bias_corrected\').')
@@ -484,8 +483,8 @@ class CmdParserT1FSL(CmdParser):
                                 help='Temporary directory to store intermediate results')
         self._args.add_argument("-analysis_series_id", default='default',
                                 help='Label for analysis series id (default name is \'default\')')
-        self._args.add_argument("-n_threads", type=int, default=0,
-                                help='Number of threads (default=0, which disables multi-threading).')
+        self._args.add_argument("-n_threads", type=int, default=1,
+                                help='Number of threads (default=1, which disables multi-threading).')
         group = self._args.add_mutually_exclusive_group(required=True)
         group.add_argument('-is_bias_corrected', action='store_true',
                            help='Set this flag if your images are bias corrected (mutually exclusive with \'-is_not_bias_corrected\').')
@@ -614,8 +613,8 @@ class CmdParserDWIPreprocessingFieldmapBased(CmdParser):
                                 help='Temporary directory to store intermediate results')
         self._args.add_argument("-analysis_series_id", default='default',
                                 help='Label for analysis series id (default name is default)')
-        self._args.add_argument("-n_threads", type=int, default=0,
-                                help='Number of threads (default=0, which disables multi-threading).')
+        self._args.add_argument("-n_threads", type=int, default=1,
+                                help='Number of threads (default=1, which disables multi-threading).')
 
     def run_pipeline(self, args):
         import csv
@@ -653,8 +652,8 @@ class CmdParserDWIProcessing(CmdParser):
                                 help='Temporary directory to store intermediate results')
         self._args.add_argument("-analysis_series_id", default='default',
                                 help='Label for analysis series id (default name is default)')
-        self._args.add_argument("-n_threads", type=int, default=0,
-                                help='Number of threads (default=0, which disables multi-threading).')
+        self._args.add_argument("-n_threads", type=int, default=1,
+                                help='Number of threads (default=1, which disables multi-threading).')
 
 
     def run_pipeline(self, args):
