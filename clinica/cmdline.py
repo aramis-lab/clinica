@@ -168,6 +168,8 @@ def execute():
     convert option: convert one of the supported dataset to the BIDS specification
     """
     convert_parser = sub_parser.add_parser('convert')
+    #import clinica.bids.load_cmdline_converter
+    #converters = load_cmdline()
     converters = [CmdParserCappToBids(), CmdParserInsightToBids(), CmdParserPrevDemAlsToBids()]
     init_cmdparser_objects(parser, convert_parser.add_subparsers(), converters)
 
