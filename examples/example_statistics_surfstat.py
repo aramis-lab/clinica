@@ -45,20 +45,19 @@ import tempfile
 import time
 # from os.path import realpath, split, join
 
-# TODO adapt my code to non-BIDS version , like in clinica-data
+# TODO change the colorbar words, to dig into surfstat source code
 
-caps_dir ='/Volumes/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/Freesurfer/Reconall/reconall_GENFI/clinica_reconall_result/prevdemals_67subjs'
-tsv_file  ='/Volumes/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/group_wise_stat_analysis/PS_CN/20PS-17CN.tsv'
+caps_dir ='/aramis/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/Freesurfer/Reconall/reconall_GENFI/clinica_reconall_result/prevdemals_67subjs'
+tsv_file  ='/aramis/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/group_wise_stat_analysis/CN/16CN.tsv'
 str_format ='%s %s %s %s %f'
-design_matrix ='1+group+age'
+design_matrix ='1+age'
 
 print 'Output dir is in the same CAPS folder with the input'
-contrast = 'group'
-group_label = 'shit'
+contrast = '-age'
+group_label = '16CN-neg-age-nocovariate'
 analysis_series_id = 'default'
-working_directory='~/test'
 start = time.time()
-surfstat = clinica_surfstat(caps_dir, tsv_file, design_matrix, contrast, str_format, group_label,analysis_series_id, working_directory=working_directory)
+surfstat = clinica_surfstat(caps_dir, tsv_file, design_matrix, contrast, str_format, group_label, analysis_series_id)
 surfstat.run("MultiProc", plugin_args={'n_procs': 4})
 time_consuming = time.time() - start
 print 'END! time consuming is : %s' %time_consuming

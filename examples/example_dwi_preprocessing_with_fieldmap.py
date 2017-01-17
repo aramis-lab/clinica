@@ -17,15 +17,16 @@ except Exception as e:
     print(str(e))
     exit(1)
 
-data_path = join(split(realpath(__file__))[0], 'BIDS-example/sub-CLNC01/ses-M00/')
+data_path = join(split(realpath(__file__))[0], 'external-data/BIDS-example/sub-CLNC01/ses-M00/')
 
 output_directory = tempfile.mkdtemp()
 
 print("Datasink Directory -> %s" % output_directory)
 
-preprocessing = diffusion_preprocessing_fieldmap_based(caps_directory=output_directory,
-                                                       num_b0s=count_b0s(join(data_path, 'dwi/sub-CLNC01_ses-M00_dwi.bval')))
-
+preprocessing = diffusion_preprocessing_fieldmap_based(subject_id='sub-CLNC01', session_id='ses-M00',
+                                                       analysis_series_id='default', caps_directory=output_directory,
+                                                       num_b0s=count_b0s(join(data_path, 'dwi/sub-CLNC01_ses-M00_dwi.bval'))
+                                                       )
 preprocessing.inputs.inputnode.in_file   = join(data_path, 'dwi/sub-CLNC01_ses-M00_dwi.nii.gz')
 preprocessing.inputs.inputnode.in_bvals  = join(data_path, 'dwi/sub-CLNC01_ses-M00_dwi.bval')
 preprocessing.inputs.inputnode.in_bvecs  = join(data_path, 'dwi/sub-CLNC01_ses-M00_dwi.bvec')
