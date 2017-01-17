@@ -168,7 +168,7 @@ def execute():
     convert option: convert one of the supported dataset to the BIDS specification
     """
     convert_parser = sub_parser.add_parser('convert')
-    converters = [CmdParserCappToBids(), CmdParserInsightToBids(), CmdParserPrevDemAlsToBids()]
+    converters = [CmdParserHmtcToBids(), CmdParserCappToBids(), CmdParserInsightToBids(), CmdParserPrevDemAlsToBids()]
     init_cmdparser_objects(parser, convert_parser.add_subparsers(), converters)
 
     """

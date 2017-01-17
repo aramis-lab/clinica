@@ -756,6 +756,23 @@ class CmdParserPrevDemAlsToBids(CmdParser):
         from clinica.bids import prevdemals_to_bids
         prevdemals_to_bids.convert(args.dataset_directory, args.bids_directory)
 
+
+class CmdParserHmtcToBids(CmdParser):
+
+    def define_name(self):
+        self._name = 'hmtc-to-bids'
+
+    def define_options(self):
+        self._args.add_argument("dataset_directory",
+                               help='Path of the unorganized HMTC directory.')
+        self._args.add_argument("bids_directory",
+                                help='Path to the BIDS directory.')
+
+    def run_pipeline(self, args):
+        from clinica.bids import hmtc_to_bids
+        hmtc_to_bids.convert(args.dataset_directory, args.bids_directory)
+
+
 class CmdParserSubsSess(CmdParser):
 
     def define_name(self):
