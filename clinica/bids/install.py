@@ -8,7 +8,7 @@ def add_bids_converter(src):
     dst = join(converter_path, src_name)
     try:
         copyfile(src, dst)
-    except PermissionError:
+    except:
         print('re-run with sudo permision')
 
-    print('copy done')
+    print('Installation of %s done' % basename(src))
