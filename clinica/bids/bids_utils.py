@@ -8,6 +8,22 @@ import os
 import gzip
 
 
+def remove_space_and_symbols(data):
+    '''
+    Remove spaces and  - _ from a list (or a single) of strings
+    :param data: list of strings or a single string to clean
+    :return:
+        data: list of strings or a string without space and symbols _ and -
+    '''
+    if type(data) is list:
+        for i in range(0, len(data)):
+            data[i] = re.sub('[-_ ]', '', data[i])
+    else:
+        data = re.sub('[-_ ]', '', data)
+
+    return data
+
+
 def get_ext(file_path):
     root, ext = os.path.splitext(file_path)
     if ext in '.gz':
@@ -119,6 +135,7 @@ def convert_T1(t1_path, output_path, t1_bids_name):
         t1_bids_name: name to give to the file.
 
     """
+
     if not os.path.exists(output_path):
         os.mkdir(output_path)
     #copy(t1_path, path.join(output_path, t1_bids_name + get_bids_suff('T1') + '.nii.gz'))
