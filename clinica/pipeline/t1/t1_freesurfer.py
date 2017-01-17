@@ -5,78 +5,59 @@ Created on Mon Apr 22 09:04:10 2016
 
 @author: Junhao WEN
 """
-### TODO change the parameters of the name for pipeline and wiki for BIDS, and think about rerun pipeline for the new added subjs, and google docs
-from clinica.engine.cworkflow import *
+### TODO change the parameters of the name for pipeline and wiki for BIDS
 
-@Visualize("freeview", "-v ${subject_id}/mri/T1.mgz -f ${subject_id}/surf/lh.white:edgecolor=blue ${subject_id}/surf/lh.pial:edgecolor=green ${subject_id}/surf/rh.white:edgecolor=blue ${subject_id}/surf/rh.pial:edgecolor=green", "subject_id")
-def t1_freesurfer_pipeline(input_dir,
+__author__ = "Junhao WEN"
+__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__credits__ = ["Michael Bacci", "Junhao WEN"]
+__license__ = "??"
+__version__ = "1.0.0"
+__maintainer__ = "Junhao WEN"
+__email__ = "junhao.wen@inria.fr"
+__status__ = "Development"
+
+def datagrabber_t1_freesurfer_pipeline(input_dir,
                        output_dir,
-                       subjects_visits_tsv,
+                       subjects_visits_tsv=None,
                        analysis_series_id='default',
                        working_directory=None,
                        recon_all_args='-qcache'):
 
     """
-        Creates a pipeline that performs Freesurfer commander, recon-all,
-        It takes the input files of MRI T1 images and executes the 31 steps to
-        reconstruct the surface of the brain, this progress includes surface-based
-        and Volume-based piepeline, which including gray(GM)and white matter(WM)
-        segementation, pial and white surface extraction!.
+        Creates a pipeline for the dataset preparation for "t1_freesurfer_pipeline", this script is based on BIDS dataset,
+        if your have non-BIDS dataset which can not use the command line, please adapt them into this pipeline.
 
-        datagrabbernode
-        ---------
-        DataGrabber : FILE
-          Mandatory inputs: the input images, should be a string.
+        :param: input_dir: str, the path to the directory(default is BIDS) for your dataset.
+        :param: output_dir: str, the path to the directory(CAPS) where to put the results of the pipeline.
+        :param: subjects_visits_tsv: str, the path pointing to subjects-visit-list tsv file, default behavior is None,
+            and this pipeline will run all the subjects in your dataset, if you want to run a sub-group of your dataset,
+            please create a separate tsv file for this.
+        :param: analysis_series_id: str, the different rounds that you wanna apply this pipeline for your data, the default value is 'default'
+        :param: working_directory: str, path to contain the detail information about your workflow, the default value
+            is None, nipype will create a temporary folder to create the pipeline.
+        :param: recon_all_args: str, the additional flags for reconAll command line, the default value will be set as
+            '-qcache', which will run numerous back-to-back mris_preproc processes for your subjects.
 
-        Outputnode
-        ----------
-        ReconAll
-          Optional inputs: T1_files: name of T1 file to process,(a list of items which are an existing file name)
-                          args: Additional parameters to the command, (a string)
-                          directive: ('all' or 'autorecon1' or 'autorecon2' or 'autorecon2-cp' or 'autorecon2-wm'
-                          or 'autorecon2-inflate1' or 'autorecon2-perhemi'
-                          or 'autorecon3' or 'localGI' or 'qcache', nipype default value: all)
-
-            For more optional ReconAll inputs and  outputs check:
-            http://nipy.org/nipype/interfaces/generated/nipype.interfaces.freesurfer.preprocess.html#reconall
-
-        :param: input_dir: the directory where to put the input images, eg, example1.nii, example2.nii, this should be the absolute path
-        :param: output_dir: the directory where to put the results of the pipeline, should be absolute path!
-        :param: subjects_visits_tsv: the path pointing to the tsv file
-        :param: analysis_series_id: the different rounds that you wanna apply this pipeline for your data, the default value is 'default'
-        :param: working_directory: define where to put the infomation of the nipype workflow.
-        :param: recon_all_args: the additional flags for reconAll command line, the default value will be set as '-qcache', which will get the result of the fsaverage.
-
-        return: Recon-all workflow
+        return: Recon-wf_recon_all_with_datagrabber workflow
     """
-    ## TODO if we have new subjects to run recon-all, what do we do? just run the new subjects with a new tsv file, or rerun all the subjects, but check out if the subjects are recon-alled? .
     import nipype.pipeline.engine as pe
     import nipype.interfaces.io as nio
-    from nipype.interfaces.freesurfer.preprocess import ReconAll
     from nipype.interfaces.utility import Function
-    from tempfile import mkdtemp
-    from clinica.pipeline.t1.t1_freesurfer_utils import create_flags_str, checkfov, absolute_path, write_statistics, \
-        log_summary, get_dirs, write_statistics_per_subject
+    from clinica.pipeline.t1.t1_freesurfer_utils import get_dirs_check_reconalled
+    from clinica.pipeline.t1.t1_freesurfer_workflows import  t1_freesurfer_pipeline
+    from clinica.bids.utils.data_handling import create_subs_sess_list
+    import os
 
-    # check out ReconAll version
-    try:
-        if ReconAll.version.fget.func_globals['__version__'].split(".") < ['0', '11', '0']:
-            raise RuntimeError('ReconAll version should at least be version of 0.11.0')
-    except Exception as e:
-        print(str(e))
-        exit(1)
-
-    if working_directory is None:
-        working_directory = mkdtemp()
-    else:
-        working_directory = absolute_path(working_directory)
+    if subjects_visits_tsv is None:
+        create_subs_sess_list(input_dir, output_dir)
+        subjects_visits_tsv = os.path.join(output_dir, 'subjects_sessions_list.tsv')
 
     # Node to get the input vars
     inputnode = pe.Node(name='inputnode',
                           interface=Function(
                           input_names=['output_dir', 'subjects_visits_tsv', 'analysis_series_id'],
                           output_names=['subject_dir', 'subject_id', 'subject_list', 'session_list'],
-                          function=get_dirs))
+                          function=get_dirs_check_reconalled))
     inputnode.inputs.output_dir = output_dir
     inputnode.inputs.subjects_visits_tsv = subjects_visits_tsv
     inputnode.inputs.analysis_series_id = analysis_series_id
@@ -95,71 +76,23 @@ def t1_freesurfer_pipeline(input_dir,
                                                           'session_repeat']])
     datagrabbernode.inputs.sort_filelist = False
 
-    # MapNode to check out if we need -cw256 for every subject, and -qcache is default for every subject.
-    flagnode = pe.MapNode(name='flagnode',
-                          iterfield=['t1_list'],
-                          interface=Function(
-                          input_names=['t1_list', 'recon_all_args'],
-                          output_names=['output_flags'],
-                          function=checkfov))
-    flagnode.inputs.recon_all_args = recon_all_args
+    datagrabber_recon_all = t1_freesurfer_pipeline(output_dir,
+                           analysis_series_id=analysis_series_id,
+                           working_directory=working_directory,
+                           recon_all_args=recon_all_args)
 
-    # MapNode to transfer every subject's flag to string.
-    create_flags = pe.MapNode(interface=Function(
-                              input_names=['input_flags'],
-                              output_names=['output_str'],
-                              function=create_flags_str),
-                              name='create_flags_string',
-                              iterfield=['input_flags'])
 
-    # MapNode to implement recon-all.
-    recon_all = pe.MapNode(interface=ReconAll(),
-                           name='recon_all',
-                           iterfield=['subject_id', 'T1_files', 'subjects_dir', 'flags'])
-    recon_all.inputs.directive = 'all'
+    wf_recon_all_with_datagrabber = pe.Workflow(name='reconall_workflow', base_dir=working_directory)
 
-    statisticsnode = pe.Node(name='statisticsnode',
-                                interface=Function(
-                                 input_names=['subject_dir', 'subject_id', 'analysis_series_id', 'output_dir'],
-                                 output_names=[],
-                                 function=write_statistics))
-    statisticsnode.inputs.analysis_series_id = analysis_series_id
-    statisticsnode.inputs.output_dir = output_dir
+    wf_recon_all_with_datagrabber.connect(inputnode, 'subject_list', datagrabbernode, 'subject_list')
+    wf_recon_all_with_datagrabber.connect(inputnode, 'subject_list', datagrabbernode, 'subject_repeat')
+    wf_recon_all_with_datagrabber.connect(inputnode, 'session_list', datagrabbernode, 'session_list')
+    wf_recon_all_with_datagrabber.connect(inputnode, 'session_list', datagrabbernode, 'session_repeat')
+    wf_recon_all_with_datagrabber.connect(inputnode, 'subject_dir', datagrabber_recon_all, 'recon_all.subjects_dir')
+    wf_recon_all_with_datagrabber.connect(inputnode, 'subject_id', datagrabber_recon_all, 'recon_all.subject_id')
+    wf_recon_all_with_datagrabber.connect(datagrabbernode, 'anat_t1', datagrabber_recon_all, 'recon_all.T1_files')
+    wf_recon_all_with_datagrabber.connect(datagrabbernode, 'anat_t1', datagrabber_recon_all, 'flagnode.t1_list')
+    wf_recon_all_with_datagrabber.connect(inputnode, 'subject_list', datagrabber_recon_all, 'lognode.subject_list')
+    wf_recon_all_with_datagrabber.connect(inputnode, 'session_list', datagrabber_recon_all, 'lognode.session_list')
 
-    tsvmapnode = pe.MapNode(name='tsvmapnode',
-                                   iterfield=['subject_id'],
-                                 interface=Function(
-                                 input_names=['subject_id', 'analysis_series_id', 'output_dir'],
-                                 output_names=[],
-                                 function=write_statistics_per_subject))
-    tsvmapnode.inputs.analysis_series_id = analysis_series_id
-    tsvmapnode.inputs.output_dir = output_dir
-
-    lognode = pe.Node(name='lognode',
-                      interface=Function(
-                          input_names=['subject_list', 'session_list', 'subject_id', 'output_dir', 'analysis_series_id'],
-                          output_names=[],
-                          function=log_summary))
-    lognode.inputs.analysis_series_id = analysis_series_id
-    lognode.inputs.output_dir = output_dir
-
-    wf_recon_all = pe.Workflow(name='reconall_workflow', base_dir=working_directory)
-
-    wf_recon_all.connect(inputnode, 'subject_list', datagrabbernode, 'subject_list')
-    wf_recon_all.connect(inputnode, 'subject_list', datagrabbernode, 'subject_repeat')
-    wf_recon_all.connect(inputnode, 'session_list', datagrabbernode, 'session_list')
-    wf_recon_all.connect(inputnode, 'session_list', datagrabbernode, 'session_repeat')
-    wf_recon_all.connect(inputnode, 'subject_dir', recon_all, 'subjects_dir')
-    wf_recon_all.connect(inputnode, 'subject_id', recon_all, 'subject_id')
-    wf_recon_all.connect(datagrabbernode, 'anat_t1', recon_all, 'T1_files')
-    wf_recon_all.connect(datagrabbernode, 'anat_t1', flagnode, 't1_list')
-    wf_recon_all.connect(flagnode, 'output_flags', create_flags, 'input_flags')
-    wf_recon_all.connect(create_flags, 'output_str', recon_all, 'flags')
-    wf_recon_all.connect(recon_all, 'subjects_dir', statisticsnode, 'subject_dir')
-    wf_recon_all.connect(recon_all, 'subject_id', statisticsnode, 'subject_id')
-    wf_recon_all.connect(recon_all, 'subject_id', tsvmapnode, 'subject_id')
-    wf_recon_all.connect(recon_all, 'subject_id', lognode, 'subject_id')
-    wf_recon_all.connect(inputnode, 'subject_list', lognode, 'subject_list')
-    wf_recon_all.connect(inputnode, 'session_list', lognode, 'session_list')
-
-    return wf_recon_all
+    return wf_recon_all_with_datagrabber
