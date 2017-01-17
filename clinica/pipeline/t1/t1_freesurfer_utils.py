@@ -4,7 +4,14 @@
 """This module contains functions used for the recon_all_pipeline() and recon_all_statistics_pipeline()"""
 import os
 
-# Function for recon_all_pipeline()
+__author__ = "Junhao WEN"
+__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__credits__ = ["Michael Bacci", "Junhao WEN"]
+__license__ = "??"
+__version__ = "1.0.0"
+__maintainer__ = "Junhao WEN"
+__email__ = "junhao.wen@inria.fr"
+__status__ = "Development"
 
 def absolute_path(arg):
     """
@@ -22,30 +29,41 @@ def absolute_path(arg):
         return os.path.join(os.getcwd(), arg)
 
 
-def get_dirs(output_dir, subjects_visits_tsv, analysis_series_id):
+def get_dirs_check_reconalled(output_dir, subjects_visits_tsv, analysis_series_id):
     """
-    Define and create the CAPS output for recon_all_pipeline()
+    Get the info from subjects_visits_tsv, like subject_dir, subject_id, subject_list, session_list
+    Also, this func is also to check out the rerun of the dataset, if the subject result folder has been created, you should
+    check out the result and decide if you are going to rerun it or just ignore it.
 
     :param output_dir:
     :param subjects_visits_tsv:
     :param analysis_series_id:
-    :return: return the lists contaings CAPS version for subject_id, and also the Freesurfer version subject_id, also
+    :return: return the lists containing CAPS version for subject_id, and also the Freesurfer version subject_id, also
     return the subject_id, session_id in the tsv fils
     """
-    import os, csv, errno
-    subject_list = []
-    session_list = []
-    subject_id = []
-    with open(subjects_visits_tsv, 'rb') as tsvin:
-        tsv_reader = csv.reader(tsvin, delimiter='\t')
-
-        for row in tsv_reader:
-            if row[0] == 'participant_id':
-                continue
-            else:
-                subject_list.append(row[0])
-                session_list.append(row[1])
-                subject_id.append(row[0] + '_' + row[1])
+    import os, errno
+    import pandas as pd
+    from copy import deepcopy as cp
+    # subject_list = []
+    # session_list = []
+    # subject_id = []
+    # with open(subjects_visits_tsv, 'rb') as tsvin:
+    #     tsv_reader = csv.reader(tsvin, delimiter='\t')
+    #
+    #     for row in tsv_reader:
+    #         if row[0] == 'participant_id':
+    #             continue
+    #         else:
+    #             subject_list.append(row[0])
+    #             session_list.append(row[1])
+    #             subject_id.append(row[0] + '_' + row[1])
+    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
+    subject_list = list(subjects_visits.participant_id)
+    session_list = list(subjects_visits.session_id)
+    subject_id = list(subject_list[i] + '_' + session_list[i] for i in range(len(subject_list)))
+    subject_id_cp = cp(subject_id)
+    subject_list_cp = cp(subject_list)
+    session_list_cp = cp(session_list)
 
     output_path = os.path.expanduser(output_dir)  # change the relative path to be absolute path
     output_base = 'analysis-series-' + analysis_series_id + '/subjects'
@@ -60,17 +78,34 @@ def get_dirs(output_dir, subjects_visits_tsv, analysis_series_id):
             raise
 
     subject_dir = []
-    num_subject = len(subject_list)
-    for i in xrange(num_subject):
+
+    for i in range(len(subject_list)):
         subject = output_dir + '/' + subject_list[i] + '/' + session_list[i] + '/' + 't1' + '/' + 'freesurfer-cross-sectional'
         try:
             os.makedirs(subject)
         except OSError as exception:
             if exception.errno != errno.EEXIST:
                 raise
-        subject_dir.append(subject)
+        subject_path = os.path.join(subject, subject_id[i])
+        subject_path_abs = os.path.expanduser(subject_path)
+        if os.path.exists(subject_path_abs):
+            print "Note: subject %s seems to be already recon-alled or being runing, please check out the result folder and" \
+                  "recon-all sumarry log, in case that the processing of recon-all has been killed accidentally, please" \
+                  "delete the result foder and rerun it; In case that the subject has been run successfully with recon-all," \
+                  "just ignore this message and  continue to run the new-added or non-recon-alled subjects!!! " % subject_id[i]
+            subject_id_cp.remove(subject_id[i])
+            subject_list_cp.remove(subject_list[i])
+            session_list_cp.remove(session_list[i])
+        else:
+            subject_dir.append(subject)
+    try:
+        if len(subject_dir) == 0:
+            raise RuntimeError('This round for your dataset has no new added subject, please check out your dataset')
+    except Exception as e:
+        print(str(e))
+        exit(1)
 
-    return subject_dir, subject_id, subject_list, session_list
+    return subject_dir, subject_id_cp, subject_list_cp, session_list_cp
 
 def checkfov(t1_list, recon_all_args):
     """
@@ -167,7 +202,6 @@ def log_summary(subject_list, session_list, subject_id, output_dir, analysis_ser
     ## TODO check if log file exits, if yes, add new info for new subjects, not to overwrite it.
     import os
     from datetime import datetime
-    # from nipype import config, logging
 
     output_path = os.path.expanduser(output_dir)
     dest_dir = output_path + '/analysis-series-' + analysis_series_id + '/subjects'
