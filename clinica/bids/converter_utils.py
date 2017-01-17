@@ -47,6 +47,15 @@ def print_statistics(summary_file, num_subjs, ses_aval, mmt):
     #             summary_file.write(mod+': ' + str(num_miss_mod) + ' ('+str(percentage_missing)+'%) \n')
 
 
+def has_one_index(index_list):
+    if len(index_list) == 1:
+        return index_list[0]
+    if len(index_list)==0:
+        return -1
+    if len(index_list)>1:
+        raise 'multiple indexes found'
+
+
 class MissingModsTracker:
     """
     Class used for tracking the number of missing modalities in a database
