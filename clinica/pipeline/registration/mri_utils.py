@@ -9,8 +9,8 @@ def convert_flirt_transformation_to_mrtrix_transformation(
     """
     Convert flirt matrix to mrtrix matrix.
 
-    This function converts converts a transformation matrix produced by FSL's flirt command into a format usable
-    by MRtrix. The output of this function is usually for the mrtransform command.
+    This function converts a transformation matrix produced by FSL's flirt command into a format usable by MRtrix.
+    The output of this function is usually for the mrtransform command.
 
     Args:
         in_source_image (str): File containing the source image used in FSL flirt with the -in flag.
@@ -124,22 +124,13 @@ def apply_ants_registration_syn_quick_transformation(
 
 def ants_registration_syn_quick(fixe_image, moving_image, prefix_output=None):
     """
-    Apply a transformation obtained with antsRegistrationSyNQuick.sh.
+    TODO.
 
-    This function applies a rigid & deformable B-Spline syn transformation which has been estimated previously with antsRegistrationSyNQuick script.
+    TODO
 
     Args:
-        in_image (str): File containing the input image to be transformed.
-        in_reference_image (str): File defining the spacing, origin, size, and direction of the output warped image.
-        in_affine_transformation (str): File containing the transformation matrix obtained by antsRegistrationSyNQuick
-            (expected file: [Prefix]0GenericAffine.mat).
-        in_bspline_transformation (str): File containing the transformation matrix obtained by antsRegistrationSyNQuick
-            (expected file: [Prefix]1Warp.nii.gz).
-        name_output_image (Optional[str]): Name of the output image (default=deformed_image.nii.gz).
 
     Returns:
-        out_deformed_image (str): File containing the deformed image according to in_affine_transformation and
-            in_bspline_transformation transformations.
 
     Example:
         >>> from clinica.pipeline.registration.mri_utils import apply_ants_registration_syn_quick_transformation
