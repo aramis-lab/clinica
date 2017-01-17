@@ -261,12 +261,12 @@ class CmdParserT1FreeSurfer(CmdParser):
                                 help='Path to the BIDS directory')
         self._args.add_argument("caps_dir",
                                 help='Path to the CAPS output directory')
-        self._args.add_argument("subjects_sessions",
-                                help='TSV file with subjects and sessions to be processed')
+        self._args.add_argument("-svt", "--subjects_visits_tsv", type=str, default=None,
+                                help=' the path to the tsv file, which by default contains all the subjects in your BIDS dataset')
         self._args.add_argument("-asi", "--analysis_series_id", type=str, default='default',
-                                help='Current analysis series name')
+                                help='Current analysis series name, in case you have different rounds analysis for the same data')
         self._args.add_argument("-wd", "--working_directory", type=str, default=None,
-                                help='Temporary directory to run the workflow')
+                                help='Path to contain the information about your workflow')
         self._args.add_argument("-ras", "--reconall_args", type=str, default='-qcache',
                                 help='additional flags for recon-all command line, default is -qcache')
         self._args.add_argument("-np", "--n_procs", type=int, default=4,
@@ -274,17 +274,16 @@ class CmdParserT1FreeSurfer(CmdParser):
 
     def run_pipeline(self, args):
 
-        from clinica.pipeline.t1.t1_freesurfer import t1_freesurfer_pipeline
+        from clinica.pipeline.t1.t1_freesurfer import datagrabber_t1_freesurfer_pipeline
 
-        reconall_wf = t1_freesurfer_pipeline(self.absolute_path(args.bids_dir),
+        reconall_wf = datagrabber_t1_freesurfer_pipeline(self.absolute_path(args.bids_dir),
                                          self.absolute_path(args.caps_dir),
-                                         self.absolute_path(args.subjects_sessions),
+                                         subjects_visits_tsv=self.absolute_path(args.subjects_visits_tsv),
                                          analysis_series_id=args.analysis_series_id,
                                          working_directory=self.absolute_path(args.working_directory),
                                          recon_all_args=args.reconall_args)
 
         reconall_wf.run("MultiProc", plugin_args={'n_procs': args.n_procs})
-
 
 
 class CmdParserStatisticsSurfStat(CmdParser):
@@ -300,7 +299,7 @@ class CmdParserStatisticsSurfStat(CmdParser):
                                 help='Directory where the tsv files are stored')
         self._args.add_argument("design_matrix",
                                 help='A str to define the design matrix that fits into GLM, eg, 1 + group + sex + age')
-        self._args.add_argument("contrast", type=str,
+        self._args.add_argument("contrast",
                                 help='A str to define the contrast matrix for GLM, eg, group_label')
         self._args.add_argument("str_format",
                                 help='A str to define the format string for the tsv column , eg, %%s %%s %%s %%f')
@@ -421,8 +420,8 @@ class CmdParserDWIT1Registration(CmdParser):
                                 help='Temporary directory to store intermediate results')
         self._args.add_argument("-analysis_series_id", default='default',
                                 help='Label for analysis series id (default name is \'default\')')
-        self._args.add_argument("-n_threads", type=int, default=0,
-                                help='Number of threads (default=0, which disables multi-threading).')
+        self._args.add_argument("-n_threads", type=int, default=1,
+                                help='Number of threads (default=1, which disables multi-threading).')
         group = self._args.add_mutually_exclusive_group(required=True)
         group.add_argument('-is_bias_corrected', action='store_true',
                            help='Set this flag if your images are bias corrected (mutually exclusive with \'-is_not_bias_corrected\').')
@@ -484,8 +483,8 @@ class CmdParserT1FSL(CmdParser):
                                 help='Temporary directory to store intermediate results')
         self._args.add_argument("-analysis_series_id", default='default',
                                 help='Label for analysis series id (default name is \'default\')')
-        self._args.add_argument("-n_threads", type=int, default=0,
-                                help='Number of threads (default=0, which disables multi-threading).')
+        self._args.add_argument("-n_threads", type=int, default=1,
+                                help='Number of threads (default=1, which disables multi-threading).')
         group = self._args.add_mutually_exclusive_group(required=True)
         group.add_argument('-is_bias_corrected', action='store_true',
                            help='Set this flag if your images are bias corrected (mutually exclusive with \'-is_not_bias_corrected\').')
@@ -614,8 +613,8 @@ class CmdParserDWIPreprocessingFieldmapBased(CmdParser):
                                 help='Temporary directory to store intermediate results')
         self._args.add_argument("-analysis_series_id", default='default',
                                 help='Label for analysis series id (default name is default)')
-        self._args.add_argument("-n_threads", type=int, default=0,
-                                help='Number of threads (default=0, which disables multi-threading).')
+        self._args.add_argument("-n_threads", type=int, default=1,
+                                help='Number of threads (default=1, which disables multi-threading).')
 
     def run_pipeline(self, args):
         import csv
@@ -653,8 +652,8 @@ class CmdParserDWIProcessing(CmdParser):
                                 help='Temporary directory to store intermediate results')
         self._args.add_argument("-analysis_series_id", default='default',
                                 help='Label for analysis series id (default name is default)')
-        self._args.add_argument("-n_threads", type=int, default=0,
-                                help='Number of threads (default=0, which disables multi-threading).')
+        self._args.add_argument("-n_threads", type=int, default=1,
+                                help='Number of threads (default=1, which disables multi-threading).')
 
 
     def run_pipeline(self, args):
