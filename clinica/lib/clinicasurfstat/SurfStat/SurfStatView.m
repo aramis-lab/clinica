@@ -69,7 +69,7 @@ else
         cb = SurfStatColLim( [0 255]*struct.thresh );%  Sets the colour limits for SurfStatView. cb is the new colorbar
 
         set(cb,'XLim',[0 255]*struct.thresh);%Set object properties., here to set the x axis limitations
-        h=get(cb,'Children'); %Get object properties, get all the children images from handle cb, (GroupSix_analysis_Thomas.m/uncorrected Pvalue! the cb and h value is randomly, cuz i put the images in anywhere
+%         h=get(cb,'Children'); %Get object properties, get all the children images from handle cb, (GroupSix_analysis_Thomas.m/uncorrected Pvalue! the cb and h value is randomly, cuz i put the images in anywhere
 %         set(h,'XData',[0 255]*struct.thresh);
         set(cb,'XTick',[1 64 127 129 192 255]*struct.thresh);% randamly, we get the error, Error using set Invalid property found. Object Name :  text Property Name :  'XData'.
 
@@ -97,7 +97,7 @@ else
         cb = SurfStatColLim( [0 255]*struct.thresh );
 
         set(cb,'XLim',[0 255]*struct.thresh);
-        h=get(cb,'Children');
+%         h=get(cb,'Children');
 %         set(h,'XData',[0 255]*struct.thresh); % Xdata is just the
 %         propertiy of an image, here cb is the colorbar, so maybe it is
 %         cuz matlab advanced, before, XData can be used for colorbar
