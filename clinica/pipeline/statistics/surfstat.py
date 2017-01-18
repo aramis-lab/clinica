@@ -3,13 +3,21 @@
 """
 Created on Tue Jun 28 15:20:40 2016
 
-@author: Junhao WEN
+@author: Junhao WEN, Alexandre Routier
 """
-
+### TODO save the probability map volume to be .nii(pysurfer) format or .mat(SurfStatView) format, so that in the future can be used clinica visualize.
 from __future__ import absolute_import
+__author__ = "Junhao WEN, Alexandre Routier"
+__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__credits__ = ["Michael Bacci", "Junhao WEN"]
+__license__ = "??"
+__version__ = "1.0.0"
+__maintainer__ = "Junhao WEN"
+__email__ = "junhao.wen@inria.fr"
+__status__ = "Development"
+
 from nipype.interfaces.utility import Function
 import nipype.pipeline.engine as pe
-import nipype.interfaces.utility as niu
 from tempfile import mkdtemp
 from clinica.pipeline.statistics.surfstat_utils import absolute_path, get_vars, runmatlab
 
@@ -26,34 +34,30 @@ def clinica_surfstat(input_directory,
                      cluster_threshold = 0.001,
                      working_directory=None):
     """
-        This is to use surfstat to do the Group analysis for the reconAll outputs, after the reconAll pipeline, you should just define the paths to
-        surfstatGroupAnalysis, and create the tsv file, and run the pipeline, at last, you will get the results images.
+        This is to use surfstat to do the Group analysis for the reconAll outputs from CAPS, after the reconAll pipeline,
+         you should just create the tsv file, and run the pipeline, at last, you will get the results images.
 
-        Inputs
-        ---------
-        surfstat
-        Inputs: :param input_directory:  the output folder of recon-all which will contain nested files: ?h.thickness.fwhm**.mgh.
-                :param design_matrix: string, the linear model that fits into the GLM, for example '1+Lable'.
-                :param contrast: string, the contrast matrix for GLM, if the factor you choose is categorized variable, clinica_surfstat will create two contrasts,
-                          for example, contrast = 'Label', this will create contrastpos = Label.AD - Label.CN, contrastneg = Label.CN - Label.AD; if the fac-
-                          tory that you choose is a continuous factor, clinica_surfstat will just create one contrast, for example, contrast = 'Age', but note,
-                          the string name that you choose should be exactly the same with the columns names in your subjects_visits_tsv.
-                :param subjects_visits_tsv: string, the path to your tsv file.
-                :param analysis_series_id: string, must be the an existed folder(recon-alled output folder.
-                :param str_format: string, the str_format which uses to read your tsv file, the typy of the string should corresponds exactly with the columns in the tsv file.
-                 Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
-                :param group_label: Current group name
-                :param size_of_fwhm: fwhm for the surface smoothing, default is 20, integer.
-                :param threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float, default is 0.001.
-                :param threshold_corrected_pvalue: the threshold to display the corrected cluster, default is 0.05, float.
-                :param cluster_threshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float.
-                :param: working_directory: define where to put the infomation of the nipype workflow.
+        :param input_directory: str, the output folder of recon-all which will contain the result files: ?h.thickness.fwhm**.mgh.
+        :param design_matrix: str, the linear model that fits into the GLM, for example '1+Lable'.
+        :param contrast: string, the contrast matrix for GLM, if the factor you choose is categorized variable, clinica_surfstat will create two contrasts,
+                  for example, contrast = 'Label', this will create contrastpos = Label.AD - Label.CN, contrastneg = Label.CN - Label.AD; if the fac-
+                  tory that you choose is a continuous factor, clinica_surfstat will just create one contrast, for example, contrast = 'Age', but note,
+                  the string name that you choose should be exactly the same with the columns names in your subjects_visits_tsv.
+        :param subjects_visits_tsv: string, the path to your tsv file.
+        :param analysis_series_id: string, must be the an existed folder(recon-alled output folder.
+        :param str_format: string, the str_format which uses to read your tsv file, the typy of the string should corresponds exactly with the columns in the tsv file.
+            Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
+        :param group_label: Current group name
+        :param size_of_fwhm: fwhm for the surface smoothing, default is 20, integer.
+        :param threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float, default is 0.001.
+        :param threshold_corrected_pvalue: the threshold to display the corrected cluster, default is 0.05, float.
+        :param cluster_threshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float.
+        :param: working_directory: define where to put the infomation of the nipype workflow.
 
           For more infomation about SurfStat, please check:
           http://www.math.mcgill.ca/keith/surfstat/
 
-        Outputs:
-        return result images in output_directory of clinicasurfstat matlab script.
+        return: result images in output_directory of clinicasurfstat matlab script.
 
     """
     # Node to fetch the input vars.

@@ -171,7 +171,8 @@ if iscell(csvdata{indexunique})
     tic;
     slm = SurfStatT( slmmodel, contrastpos );
     SurfStatView( slm.t .* mask, averagesurface, [ 'ContrastPo-value of the T-statistic for ' factor1 '-' factor2]);
-    save2jpeg('contrast_positive_t_value.jpg');
+    set(gcf,'PaperPositionMode','auto');
+    print('contrast_positive_t_value','-djpeg','-r0'); close
     disp('Contrast Positive: t_value'); toc;
 
     % Computation of the uncorrected p-value:
@@ -183,7 +184,8 @@ if iscell(csvdata{indexunique})
     uncorrectedpValues = 1-tcdf(slm.t,slm.df);
     clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(ContrastPo-Uncorrected P-values)' factor1 '-' factor2 ]);
-    save2jpeg('contrast_positive_uncorrected_p_value.jpg');
+    set(gcf,'PaperPositionMode','auto');
+    print('contrast_positive_uncorrected_p_value','-djpeg','-r0'); close
     disp('Contrast Positive: uncorrected Pvalue'); toc;
 
     % Computation of the corrected p-values: P-value threshold or statistic threshold for defining clusters, 0.001 by default
@@ -191,7 +193,8 @@ if iscell(csvdata{indexunique})
     [ pval, ~, clus ] = SurfStatP( slm , mask, clusterthreshold);
     pval.thresh = thresholdcorrectedpvalue;
     SurfStatView( pval, averagesurface, ['(ContrastPo-Corrected P-values) ' factor1 '-' factor2 ' (clusterthreshold = ' num2str(clusterthreshold) ')']);
-    save2jpeg('contrast_positive_corrected_p_value.jpg' );
+    set(gcf,'PaperPositionMode','auto');
+    print('contrast_positive_corrected_p_value','-djpeg','-r0'); close
     disp('Contrast Positive: Corrected Pvalue'); toc;
 
     disp('###')
@@ -208,7 +211,8 @@ if iscell(csvdata{indexunique})
     tic;
     qval = SurfStatQ( slm , mask );
     SurfStatView( qval, averagesurface, ['ContrastPo-False discovery rate ' factor1 '-' factor2 ]);
-    save2jpeg('contrast_positive_false_discovery_rate.jpg') ;
+    set(gcf,'PaperPositionMode','auto');
+    print('contrast_positive_false_discovery_rate','-djpeg','-r0'); close
     disp('Contrast Positive: FDR'); toc;
     
     %% Contrast Negative:
@@ -216,7 +220,8 @@ if iscell(csvdata{indexunique})
     tic;
     slm = SurfStatT( slmmodel, contrasteffectgroupneg );
     SurfStatView( slm.t .* mask, averagesurface, [ 'ContrastNe-value of the T-statistic for ' factor1 '-' factor2 ]);
-    save2jpeg( 'contrast_negative_t_value.jpg');
+    set(gcf,'PaperPositionMode','auto');
+    print('contrast_negative_t_value','-djpeg','-r0'); close    
     disp('Contrast Negative: t_value'); toc;
     
     % Computation of the uncorrected p-value:
@@ -226,7 +231,8 @@ if iscell(csvdata{indexunique})
     uncorrectedpValues = 1-tcdf(slm.t,slm.df);
     clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(ContrastNe-Uncorrected P-values )' factor1 '-' factor2]);
-    save2jpeg('contrast_negative_uncorrected_p_value.jpg');
+    set(gcf,'PaperPositionMode','auto');
+    print('contrast_negative_uncorrected_p_value','-djpeg','-r0'); close
     disp('Contrast Negative: Uncorrected Pvalue'); toc;
     
 
@@ -237,8 +243,8 @@ if iscell(csvdata{indexunique})
     SurfStatView( pval, averagesurface, ['(ContrastNe-Corrected P-values )' factor1 '-' factor2 ' (clusterthreshold = ' num2str(clusterthreshold) ')']);
     % to change the background color(black), uncomment this line.
     %SurfStatView( pval, averagesurface, ['(ContrastNe-Corrected P-values )' factor1 '-' factor2 ' (clusterthreshold = ' num2str(clusterthreshold) ')'], 'black');
-
-    save2jpeg('contrast_negative_corrected_p_value.jpg');
+    set(gcf,'PaperPositionMode','auto');
+    print('contrast_negative_corrected_p_value','-djpeg','-r0'); close
     disp('Contrast Negative: Corrected Pvalue'); toc;
 
     disp('###')
@@ -255,7 +261,8 @@ if iscell(csvdata{indexunique})
     tic;
     qval = SurfStatQ( slm , mask );
     SurfStatView( qval, averagesurface, ['ContrastNe-False discovery rate ' factor1 '-' factor2 ]);
-    save2jpeg('contrast_negative_false_discovery_rate.jpg' );
+    set(gcf,'PaperPositionMode','auto');
+    print('contrast_negative_false_discovery_rate','-djpeg','-r0'); close
     disp('Contrast Negative: FDR'); toc;
     
 else
@@ -278,7 +285,8 @@ else
             slm = SurfStatT( slm, contrastpos );
     end
     SurfStatView( slm.t .* mask, averagesurface, [ 'T-statistic for ' contrast ]);
-    save2jpeg('t_value.jpg');
+    set(gcf,'PaperPositionMode','auto');
+    print('t_value','-djpeg','-r0'); close
     disp('t_value'); toc;
 
     % Computation of the uncorrected p-value:
@@ -288,7 +296,8 @@ else
     uncorrectedpValues = 1-tcdf(slm.t,slm.df);
     clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(Uncorrected P-values)' contrast ]);
-    save2jpeg('uncorrected_p_value.jpg');
+    set(gcf,'PaperPositionMode','auto');
+    print('uncorrected_p_value','-djpeg','-r0'); close
     disp('Uncorrected Pvalue'); toc;
 
     % Computation of the corrected p-values: P-value threshold or statistic threshold for defining clusters, 0.001 by default
@@ -296,7 +305,8 @@ else
     [ pval, ~, clus ] = SurfStatP( slm , mask, clusterthreshold);
     pval.thresh = thresholdcorrectedpvalue;
     SurfStatView( pval, averagesurface, ['(Corrected P-values) ' contrast ' (clusterthreshold = ' num2str(clusterthreshold) ')']);
-    save2jpeg('corrected_p_value.jpg' );
+    set(gcf,'PaperPositionMode','auto');
+    print('corrected_p_value','-djpeg','-r0'); close
     disp('Corrected Pvalue'); toc;
 
     disp('###')
@@ -313,7 +323,8 @@ else
     tic;
     qval = SurfStatQ( slm , mask );
     SurfStatView( qval, averagesurface, ['False discovery rate ' contrast ]);
-    save2jpeg('false_discovery_rate.jpg') ;
+    set(gcf,'PaperPositionMode','auto');
+    print('false_discovery_rate','-djpeg','-r0'); close
     disp('FDR'); toc;
 
 end
