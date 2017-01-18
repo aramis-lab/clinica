@@ -75,8 +75,6 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                     # Convert the image using dcm2nii
                     print 'Dicom found, needs to be converted'
 
-
-
     def compute_t1_paths(source_dir):
         """
         Select the T1 to use for each subject.
