@@ -174,20 +174,24 @@ if iscell(csvdata{indexunique})
     set(gcf,'PaperPositionMode','auto');
     print('contrast_positive_t_value','-djpeg','-r0'); close
     disp('Contrast Positive: t_value'); toc;
-
+    tvaluewithmask = slm.t .* mask; 
+    save('positivenegativetvaluewithmask.mat','tvaluewithmask');
+    
     % Computation of the uncorrected p-value:
     tic;
     %Method 1:
     %t = tpdf(slm.t, slm.df);
-    %uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
+    %uncorrectedpvalues = double(t<=0.05).*t+double(t>0.05);
     %Method 2:
-    uncorrectedpValues = 1-tcdf(slm.t,slm.df);
-    clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
+    uncorrectedpvalues = 1-tcdf(slm.t,slm.df);
+    clearvars struct; struct.P = uncorrectedpvalues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(ContrastPo-Uncorrected P-values)' factor1 '-' factor2 ]);
     set(gcf,'PaperPositionMode','auto');
     print('contrast_positive_uncorrected_p_value','-djpeg','-r0'); close
     disp('Contrast Positive: uncorrected Pvalue'); toc;
-
+    uncorrectedpvaluesstruct = struct; 
+    save('positiveuncorrectedpvaluesstruct.mat','uncorrectedpvaluesstruct');
+    
     % Computation of the corrected p-values: P-value threshold or statistic threshold for defining clusters, 0.001 by default
     tic;
     [ pval, ~, clus ] = SurfStatP( slm , mask, clusterthreshold);
@@ -196,7 +200,9 @@ if iscell(csvdata{indexunique})
     set(gcf,'PaperPositionMode','auto');
     print('contrast_positive_corrected_p_value','-djpeg','-r0'); close
     disp('Contrast Positive: Corrected Pvalue'); toc;
-
+    correctedpvaluesstruct = pval; 
+    save('positivecorrectedpvaluesstruct.mat','correctedpvaluesstruct');
+    
     disp('###')
     disp('After correction(Clusterwise Correction for Multiple Comparisons): ')
     if isempty(clus) ~= 1
@@ -214,6 +220,8 @@ if iscell(csvdata{indexunique})
     set(gcf,'PaperPositionMode','auto');
     print('contrast_positive_false_discovery_rate','-djpeg','-r0'); close
     disp('Contrast Positive: FDR'); toc;
+    qvaluesstruct = qval; 
+    save('positiveqvaluesstruct.mat','qvaluesstruct');
     
     %% Contrast Negative:
     % Computation of the T-statistic̣:  T statistics for a contrast in a univariate or multivariate model.
@@ -222,20 +230,23 @@ if iscell(csvdata{indexunique})
     SurfStatView( slm.t .* mask, averagesurface, [ 'ContrastNe-value of the T-statistic for ' factor1 '-' factor2 ]);
     set(gcf,'PaperPositionMode','auto');
     print('contrast_negative_t_value','-djpeg','-r0'); close    
-    disp('Contrast Negative: t_value'); toc;
+    disp('Contrast Negative: t_value'); toc;    
+    tvaluewithmask = slm.t .* mask; 
+    save('negativetvaluewithmask.mat','tvaluewithmask');
     
     % Computation of the uncorrected p-value:
     tic;
     %t = tpdf(abs(slm.t), slm.df);
-    %uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
-    uncorrectedpValues = 1-tcdf(slm.t,slm.df);
-    clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
+    %uncorrectedpvalues = double(t<=0.05).*t+double(t>0.05);
+    uncorrectedpvalues = 1-tcdf(slm.t,slm.df);
+    clearvars struct; struct.P = uncorrectedpvalues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(ContrastNe-Uncorrected P-values )' factor1 '-' factor2]);
     set(gcf,'PaperPositionMode','auto');
     print('contrast_negative_uncorrected_p_value','-djpeg','-r0'); close
     disp('Contrast Negative: Uncorrected Pvalue'); toc;
+    uncorrectedpvaluesstruct = struct; 
+    save('negativeuncorrectedpvaluesstruct.mat','uncorrectedpvaluesstruct');
     
-
     % Computation of the corrected p-values: P-value threshold or statistic threshold for defining clusters, 0.001 by default
     tic;
     [ pval, ~, clus ] = SurfStatP( slm , mask, clusterthreshold);
@@ -246,6 +257,8 @@ if iscell(csvdata{indexunique})
     set(gcf,'PaperPositionMode','auto');
     print('contrast_negative_corrected_p_value','-djpeg','-r0'); close
     disp('Contrast Negative: Corrected Pvalue'); toc;
+    correctedpvaluesstruct = pval; 
+    save('negativecorrectedpvaluesstruct.mat','correctedpvaluesstruct');
 
     disp('###')
     disp('After correction(Clusterwise Correction for Multiple Comparisons): ')
@@ -264,6 +277,8 @@ if iscell(csvdata{indexunique})
     set(gcf,'PaperPositionMode','auto');
     print('contrast_negative_false_discovery_rate','-djpeg','-r0'); close
     disp('Contrast Negative: FDR'); toc;
+    qvaluesstruct = qval; 
+    save('negativeqvaluesstruct.mat','qvaluesstruct');
     
 else
     %% if the contrast is continuous variable, dont use term, just use double to fit in the test!!!
@@ -288,17 +303,22 @@ else
     set(gcf,'PaperPositionMode','auto');
     print('t_value','-djpeg','-r0'); close
     disp('t_value'); toc;
+    % to save the T value map as a .mat file for visualize
+    tvaluewithmask = slm.t .* mask; 
+    save('tvaluewithmask.mat','tvaluewithmask');
 
     % Computation of the uncorrected p-value:
     tic;
     %t = tpdf(abs(slm.t), slm.df);
-    %uncorrectedpValues = double(t<=0.05).*t+double(t>0.05);
-    uncorrectedpValues = 1-tcdf(slm.t,slm.df);
-    clearvars struct; struct.P = uncorrectedpValues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
+    %uncorrectedpvalues = double(t<=0.05).*t+double(t>0.05);
+    uncorrectedpvalues = 1-tcdf(slm.t,slm.df);
+    clearvars struct; struct.P = uncorrectedpvalues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
     SurfStatView( struct, averagesurface, [ '(Uncorrected P-values)' contrast ]);
     set(gcf,'PaperPositionMode','auto');
     print('uncorrected_p_value','-djpeg','-r0'); close
     disp('Uncorrected Pvalue'); toc;
+    uncorrectedpvaluesstruct = struct; 
+    save('uncorrectedpvaluesstruct.mat','uncorrectedpvaluesstruct');
 
     % Computation of the corrected p-values: P-value threshold or statistic threshold for defining clusters, 0.001 by default
     tic;
@@ -308,7 +328,9 @@ else
     set(gcf,'PaperPositionMode','auto');
     print('corrected_p_value','-djpeg','-r0'); close
     disp('Corrected Pvalue'); toc;
-
+    correctedpvaluesstruct = pval; 
+    save('correctedpvaluesstruct.mat','correctedpvaluesstruct');
+    
     disp('###')
     disp('After correction(Clusterwise Correction for Multiple Comparisons): ')
     if isempty(clus) ~= 1
@@ -326,6 +348,9 @@ else
     set(gcf,'PaperPositionMode','auto');
     print('false_discovery_rate','-djpeg','-r0'); close
     disp('FDR'); toc;
+    qvaluesstruct = qval; 
+    save('qvaluesstruct.mat','qvaluesstruct');
+    
 
 end
 
