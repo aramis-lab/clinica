@@ -145,10 +145,10 @@ else
     magic = bitshift(b1, 16) + bitshift(b2,8) + b3 ;
     if magic==16777214
         fgets(fid);
-        fgets(fid);
-        v = fread(fid, 1, 'int32') ;
-        t = fread(fid, 1, 'int32') ;
-        surf.coord = fread(fid, [3 v], 'float32') ;
+        fgets(fid);% read the first two lines
+        v = fread(fid, 1, 'int32') ; % number of vertex %FS pial, 163842
+        t = fread(fid, 1, 'int32') ;% number of triangles %FS pial, 327680
+        surf.coord = fread(fid, [3 v], 'float32') ; % the coordinate for all the vertex
         if numfields==4
             surf.tri = fread(fid, [3 t], 'int32')' + 1 ;
         end

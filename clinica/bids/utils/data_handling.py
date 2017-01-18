@@ -169,7 +169,7 @@ def find_mods_and_sess(dataset_dir):
     Finds all the modalities available for a given dataset
 
     Args:
-        dataset_dir: bids input path
+        dataset_dir: path to the bids directory
     '''
     mods_dict = {}
     mods_list = []
@@ -250,6 +250,14 @@ def find_mods_and_sess(dataset_dir):
 
 
 def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
+    """
+    Compute the list of missing modalities for each subject in a database.
+
+    :param in_dir:
+    :param out_dir:
+    :param output_prefix:
+    :return:
+    """
 
     # Find all the modalities and sessions available for the input dataset
     mods_and_sess= find_mods_and_sess(in_dir)
@@ -261,21 +269,10 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
     cols_dataframe.insert(0, 'participant_id')
     mmt = MissingModsTracker(sessions_found, mods_avail)
 
-    # if len(out_file_name) == 0 or out_dir == '.':
-    #     out_file_name = 'missing_mods_'
-    # else:
-    #     # Extract the path of the file
-    #     out_dir = os.path.dirname(out_dir)
-    #
-    #
-    # if out_dir == '.':
-    #     out_dir = os.getcwd()
-
     if output_prefix == '':
         out_file_name = 'missing_mods_'
     else:
         out_file_name = output_prefix + '_'
-
 
     summary_file = open(path.join(out_dir, out_file_name + 'summary.txt'), 'w')
     missing_mods_df = pd.DataFrame(columns=cols_dataframe)
@@ -303,7 +300,6 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
                 for p in mods_paths_folders:
                     p = p[:-1]
                     mods_avail_bids.append(p.split('/').pop())
-
 
                 # Check if each modalities is available or missing
                 if 'func' in mods_avail_bids:
@@ -356,33 +352,46 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
     print_statistics(summary_file, len(subjects_paths_lists), sessions_found, mmt )
 
 
-def create_subs_sess_list(dataset_path, out_dir):
-    file_name = out_dir.split(os.sep)[-1]
-    if len(file_name) == 0 or out_dir=='.':
+def create_subs_sess_list(dataset_path, out_dir, file_name = ''):
+    """
+    Create the file subject_session_list.tst that contains the list of the visits for each subject
+
+    :param dataset_path:
+    :param out_dir:
+    :param file_name: name of the output file
+    :return:
+    """
+    # file_name = out_dir.split(os.sep)[-1]
+    # if len(file_name) == 0 or out_dir == '.':
+    #     file_name = 'subjects_sessions_list.tsv'
+    # else:
+    #     # Extract the path of the file
+    #     out_dir = os.path.dirname(out_dir)
+    #
+    # if '.' not in file_name:
+    #     file_name = file_name + '.tsv'
+    # else:
+    #     extension = os.path.splitext(file_name)[1]
+    #     if extension != '.tsv':
+    #         raise 'Output file must be .tsv.'
+    #
+    # if out_dir == '.':
+    #     out_dir = os.getcwd()
+
+    if file_name == '':
         file_name = 'subjects_sessions_list.tsv'
-    else:
-        # Extract the path of the file
-        out_dir = os.path.dirname(out_dir)
-
-    if '.' not in file_name:
-        file_name = file_name + '.tsv'
-    else:
-        extension = os.path.splitext(file_name)[1]
-        if extension != '.tsv':
-            raise 'Output file must be .tsv.'
-
-    if out_dir ==  '.':
-        out_dir = os.getcwd()
 
     subjs_sess_tsv = open(path.join(out_dir, file_name), 'w')
     subjs_sess_tsv.write('participant_id' + '\t' + 'session_id' + '\n')
-
     subjects_paths = glob(path.join(dataset_path, '*sub-*'))
+
     if len(subjects_paths) == 0:
         raise 'Dataset empty or not BIDS-compliant.'
+
     for sub_path in subjects_paths:
         subj_id = sub_path.split(os.sep)[-1]
         sess_list = glob(path.join(sub_path, '*ses-*'))
+
         for ses_path in sess_list:
             session_name = ses_path.split(os.sep)[-1]
             subjs_sess_tsv.write(subj_id+'\t'+session_name+'\n')
