@@ -71,6 +71,30 @@ def remove_rescan(list_path):
     return no_resc_lst
 
 
+def has_fixed(subj_id, ses, mod, special_list):
+    """
+    Check if a certain subject has some fixed folder name to convert for a certain modality.
+
+    Args:
+        subj_id: the subject to check
+        ses: the session
+        mod: the modality
+        special_list: json file that contains the list of subjects and modality to convert
+
+    Returns:
+         False: if the fixed modality to convert is not available for the specified subject
+         file_to_convert: name of the folder to choosefor the conversion
+    """
+    if subj_id in special_list:
+        if mod in special_list[subj_id]:
+            if ses in special_list[subj_id][mod]:
+                file_to_convert = special_list[subj_id][mod]
+                return file_to_convert
+            else:
+                return False
+    return False
+
+
 def choose_correction(dir, to_consider, mod):
     """
     Decides what is the best file type to choose depending on a priority list.
