@@ -51,8 +51,8 @@ end
 
 % clf; clf deletes from the current figure all graphics objects whose 
 % handles are not hidden (i.e., their HandleVisibility property is set to on).
-figure('Visible','off', 'position', [0, 0, 1650, 1050]);
-% figure('Visible','on', 'position', [0, 0, 1650, 1050]); % this is to
+figure('Visible','off', 'position', get(groot,'ScreenSize'));
+% figure('Visible','on', 'position', get(groot,'ScreenSize')); % this is to
 %display the image, make it visible
 %here, we should find a way not to display the figure, but still got the
 %same result that we want
