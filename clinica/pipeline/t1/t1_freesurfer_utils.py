@@ -44,20 +44,10 @@ def get_dirs_check_reconalled(output_dir, subjects_visits_tsv, analysis_series_i
     import os, errno
     import pandas as pd
     from copy import deepcopy as cp
-    # subject_list = []
-    # session_list = []
-    # subject_id = []
-    # with open(subjects_visits_tsv, 'rb') as tsvin:
-    #     tsv_reader = csv.reader(tsvin, delimiter='\t')
-    #
-    #     for row in tsv_reader:
-    #         if row[0] == 'participant_id':
-    #             continue
-    #         else:
-    #             subject_list.append(row[0])
-    #             session_list.append(row[1])
-    #             subject_id.append(row[0] + '_' + row[1])
+
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
+    if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
+        raise Exception('Subjects and visits file is not in the correct format.')
     subject_list = list(subjects_visits.participant_id)
     session_list = list(subjects_visits.session_id)
     subject_id = list(subject_list[i] + '_' + session_list[i] for i in range(len(subject_list)))
