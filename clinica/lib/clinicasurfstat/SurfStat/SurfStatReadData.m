@@ -51,7 +51,7 @@ end
 data=[];
 vs=zeros(1,k);
 for j=1:k
-    data1=SurfStatReadData1(filenames{1,j});
+    data1=SurfStatReadData1(filenames{1,j});% this is to read the data from .txt/.thickness/.mgh 
     if size(data1,1)==1
         data=[data data1];
     else
