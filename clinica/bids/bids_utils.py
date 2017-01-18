@@ -6,6 +6,7 @@ from shutil import copy
 import nibabel as nib
 import os
 import gzip
+import re
 
 
 def remove_space_and_symbols(data):

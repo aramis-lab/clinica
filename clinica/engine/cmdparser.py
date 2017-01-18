@@ -291,12 +291,11 @@ class CmdParserStatisticsSurfStat(CmdParser):
     def define_name(self):
         self._name = 'statistics-surfstat'
 
-    ## TODO find out the bug for contrast '-age', just can not work with command line
     def define_options(self):
         self._args.add_argument("caps_dir",
                                 help='Directory where the input files(output of FreeSurfer pipeline) are stored')
         self._args.add_argument("subjects_visits_tsv",
-                                help='Directory where the tsv files are stored')
+                                help='Directory where the tsv files are stored, this is based on your GLM')
         self._args.add_argument("design_matrix",
                                 help='A str to define the design matrix that fits into GLM, eg, 1 + group + sex + age')
         self._args.add_argument("contrast",
@@ -701,23 +700,6 @@ class CmdParserDWIProcessing(CmdParser):
                 tractography_and_dti.inputs.inputnode.in_white_matter_binary_mask = caps_path_to_white_matter_binary_mask
                 tractography_and_dti.run('MultiProc', plugin_args={'n_procs': args.n_threads})
 
-
-class CmdParserCappToBids(CmdParser):
-
-    def define_name(self):
-        self._name = 'capp-to-bids'
-
-    def define_options(self):
-        self._args.add_argument("dataset_directory",
-                               help='Path of the unorganized CAPP directory.')
-        self._args.add_argument("bids_directory",
-                                help='Path to the BIDS directory.')
-        self._args.add_argument("-co", type=bool, default=False,
-                                help='(Optional) Given an already existing BIDS output folder, convert only the clinical data.')
-
-    def run_pipeline(self, args):
-        from clinica.bids import capp_to_bids
-        capp_to_bids.convert(args.dataset_directory, args.bids_directory)
 
 
 class CmdParserInsightToBids(CmdParser):
