@@ -46,15 +46,19 @@ vr=(cuv+1):v;
 
 clim=[min(data),max(data)];
 if clim(1)==clim(2)
-    clim=clim(1)+[-1 0];
+    clim=clim(1)+[-1 0]; % in case all the data is the same
 end
 
-% clf;
+% clf; clf deletes from the current figure all graphics objects whose 
+% handles are not hidden (i.e., their HandleVisibility property is set to on).
 figure('Visible','off', 'position', [0, 0, 1650, 1050]);
+% figure('Visible','on', 'position', [0, 0, 1650, 1050]); % this is to
+%display the image, make it visible
 %here, we should find a way not to display the figure, but still got the
 %same result that we want
 
-colormap(spectral(256));
+colormap(spectral(256)); % this is the colormap that surfstat uses, set the
+% figure's colormap to spectral(256)
 
 h=0.39;
 w=0.4;
@@ -63,12 +67,17 @@ r=max(surf.coord,[],2)-min(surf.coord,[],2);
 w1=h/r(2)*r(1)*3/4;
 h1=h/r(2)*r(1); % h/r(2)*r(3)
 
-a(1)=axes('position',[0.055 0.62 h*3/4 w]);
+a(1)=axes('position',[0.055 0.62 h*3/4 w]);% defient gcf's axes propertities 
 trisurf(surf.tri(tl,:),surf.coord(1,vl),surf.coord(2,vl),surf.coord(3,vl),...
-    double(data(vl)),'EdgeColor','none');
-view(-90,0); 
-daspect([1 1 1]); axis tight; camlight; axis vis3d off;
-lighting phong; material shiny; shading interp;
+    double(data(vl)),'EdgeColor','none'); % define the first trisurf image
+view(-90,0); % This is to define the first trisurface displace angular 
+daspect([1 1 1]); % sets the data aspect ratio.
+axis tight; % Plot a surface. Set the axis limits to equal the range of the data so that the plot extends to the edges of the axes.
+camlight; % define the direction where the light is from 
+axis vis3d off; % not dispaly the axis
+lighting phong; % control the lighting of SURFACE & PATCH objects, here, phong is a method for lighting 
+material shiny; % sets the reflectance properties so that the object has a high specular reflectance relative to the diffuse and ambient light, and the color of the specular light depends only on the color of the light source
+shading interp; % varies the color in each line segment and face by interpolating the colormap index or true color value across the line or face.
 
 a(2)=axes('position',[0.3 0.58 w h]);
 trisurf(surf.tri,surf.coord(1,:),surf.coord(2,:),surf.coord(3,:),...
@@ -140,13 +149,13 @@ end
 id0=[0 0 cuv 0 0 cuv 0 0];
 for i=1:length(a)
     set(a(i),'CLim',clim);
-    set(a(i),'Tag',['SurfStatView ' num2str(i) ' ' num2str(id0(i))]);
+    set(a(i),'Tag',['SurfStatView ' num2str(i) ' ' num2str(id0(i))]); %User-specified tag to associate with the axes, specified as a character vector. Tags provide a way to identify graphics objects. Use this property to find all objects with a specific tag within a plotting hierarchy, for example, searching for the tag using findobj.
 end
 
-cb=colorbar('location','South');
-set(cb,'Position',[0.35 0.085 0.3 0.03]);
-set(cb,'XAxisLocation','bottom');
-h=get(cb,'Title');
+cb=colorbar('location','South'); % define the colorbar location
+set(cb,'Position',[0.35 0.085 0.3 0.03]); % define the colorbar specific position 
+set(cb,'XAxisLocation','bottom'); % display the xaxis of the colorbar
+h=get(cb,'Title'); % get the Title property
 set(h,'String',title);
 
 whitebg(gcf,background);

@@ -18,7 +18,7 @@ __credits__ = ["Michael Bacci", "YOU"]
 __license__ = "??"
 __version__ = "1.0.0"
 __maintainer__ = "Michael Bacci"
-__email__ = "michael.bacci@inira.fr"
+__email__ = "michael.bacci@inria.fr"
 __status__ = "Development"
 
 
@@ -168,10 +168,8 @@ def execute():
     convert option: convert one of the supported dataset to the BIDS specification
     """
     convert_parser = sub_parser.add_parser('convert')
-    #import clinica.bids.load_cmdline_converter
-    #converters = load_cmdline()
-    converters = [CmdParserCappToBids(), CmdParserInsightToBids(), CmdParserPrevDemAlsToBids()]
-    init_cmdparser_objects(parser, convert_parser.add_subparsers(), converters)
+    from clinica.bids.load_cmdline_converter import load_cmdline_converters
+    init_cmdparser_objects(parser, convert_parser.add_subparsers(), load_cmdline_converters())
 
     """
     io option

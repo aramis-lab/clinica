@@ -21,8 +21,8 @@ __status__ = "Development"
 
 class ADNI_TO_BIDS(Converter, CmdParser) :
 
-    def __init__(self):
-        super(ADNI_TO_BIDS, self).__init__()
+    #def __init__(self):
+    #    super(ADNI_TO_BIDS, self).__init__()
 
     def define_name(self):
         self._name = 'adni-to-bids'
@@ -32,8 +32,8 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                                help='Path of the unorganized ADNI directory.')
         self._args.add_argument("bids_directory",
                                 help='Path to the BIDS directory.')
-        self._args.add_argument("-c", type=bool, default=False,
-                                name='modality',
+        self._args.add_argument("--clinical-only", type=bool, default=False,
+                                dest='clinical_only',
                                 help='(Optional) Given an already existing BIDS output folder, convert only the clinical data.')
 
     def convert_clinical_data(self, src, dest_dir):pass
