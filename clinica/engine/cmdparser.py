@@ -702,23 +702,6 @@ class CmdParserDWIProcessing(CmdParser):
                 tractography_and_dti.run('MultiProc', plugin_args={'n_procs': args.n_threads})
 
 
-class CmdParserCappToBids(CmdParser):
-
-    def define_name(self):
-        self._name = 'capp-to-bids'
-
-    def define_options(self):
-        self._args.add_argument("dataset_directory",
-                               help='Path of the unorganized CAPP directory.')
-        self._args.add_argument("bids_directory",
-                                help='Path to the BIDS directory.')
-        self._args.add_argument("-co", type=bool, default=False,
-                                help='(Optional) Given an already existing BIDS output folder, convert only the clinical data.')
-
-    def run_pipeline(self, args):
-        from clinica.bids import capp_to_bids
-        capp_to_bids.convert(args.dataset_directory, args.bids_directory)
-
 
 class CmdParserInsightToBids(CmdParser):
 
