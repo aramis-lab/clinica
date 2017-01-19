@@ -1,3 +1,8 @@
+"""
+Function used by BIDS converters.
+"""
+
+
 from os import path
 import logging
 from glob import glob
@@ -7,6 +12,15 @@ import nibabel as nib
 import os
 import gzip
 import re
+
+__author__ = "Sabrina Fontanella"
+__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__credits__ = ["Sabrina Fontanella"]
+__license__ = ""
+__version__ = "1.0.0"
+__maintainer__ = "Sabrina Fontanella"
+__email__ = "sabrina.fontanella@icm-institute.org"
+__status__ = "Development"
 
 
 def remove_space_and_symbols(data):
