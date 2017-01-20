@@ -1,3 +1,8 @@
+"""
+Function used by BIDS converters.
+"""
+
+
 from os import path
 import logging
 from glob import glob
@@ -7,6 +12,15 @@ import nibabel as nib
 import os
 import gzip
 import re
+
+__author__ = "Sabrina Fontanella"
+__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__credits__ = ["Sabrina Fontanella"]
+__license__ = ""
+__version__ = "1.0.0"
+__maintainer__ = "Sabrina Fontanella"
+__email__ = "sabrina.fontanella@icm-institute.org"
+__status__ = "Development"
 
 
 def remove_space_and_symbols(data):
@@ -70,6 +84,30 @@ def remove_rescan(list_path):
             logging.warning('Rescan found '+r_file+' Ignored.')
 
     return no_resc_lst
+
+
+def has_fixed(subj_id, ses, mod, special_list):
+    """
+    Check if a certain subject has some fixed folder name to convert for a certain modality.
+
+    Args:
+        subj_id: the subject to check
+        ses: the session
+        mod: the modality
+        special_list: json file that contains the list of subjects and modality to convert
+
+    Returns:
+         False: if the fixed modality to convert is not available for the specified subject
+         file_to_convert: name of the folder to choosefor the conversion
+    """
+    if subj_id in special_list:
+        if mod in special_list[subj_id]:
+            if ses in special_list[subj_id][mod]:
+                file_to_convert = special_list[subj_id][mod]
+                return file_to_convert
+            else:
+                return False
+    return False
 
 
 def choose_correction(dir, to_consider, mod):
