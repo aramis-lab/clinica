@@ -69,7 +69,7 @@ def datagrabber_t1_freesurfer_pipeline(input_dir,
                         name="datagrabbernode")  # the best explanation for datagrabber http://nipy.org/nipype/interfaces/generated/nipype.interfaces.io.html#datagrabber
     datagrabbernode.inputs.base_directory = input_dir
     datagrabbernode.inputs.template = '*'
-    datagrabbernode.inputs.field_template = dict(anat_t1='%s/%s/anat/%s_%s_T1w.nii.gz')
+    datagrabbernode.inputs.field_template = dict(anat_t1='%s/%s/anat/%s_%s_T1w.nii.gz') # This is just to adapt to the output anat_t1
     # just for test with my home nii files
     # datagrabbernode.inputs.field_template = dict(anat_t1='sub-%s/ses-%s/anat/sub-%s_ses-%s_T1w.nii')
     datagrabbernode.inputs.template_args = dict(anat_t1=[['subject_list', 'session_list', 'subject_repeat',
