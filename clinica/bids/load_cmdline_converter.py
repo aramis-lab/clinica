@@ -20,6 +20,6 @@ def load_cmdline_converters():
             for name, obj in inspect.getmembers(mod):
                 if name != 'CmdParser' and name != 'Converter' and inspect.isclass(obj):
                     x = obj()
-                    if isinstance(x, clinica.engine.cmdparser.CmdParser):
+                    if isinstance(x, clinica.engine.cmdparser.CmdParser) and isinstance(x, clinica.bids.abstract_converter.Converter):
                         yield x
 

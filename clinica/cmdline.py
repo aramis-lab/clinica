@@ -13,9 +13,9 @@ import argcomplete, sys, os, subprocess
 from clinica.engine.cmdparser import *
 
 __author__ = "Michael Bacci"
-__copyright__ = "Copyright 2016, The Aramis Lab Team"
-__credits__ = ["Michael Bacci", "YOU"]
-__license__ = "??"
+__copyright__ = "Copyright 2016,2017 The Aramis Lab Team"
+__credits__ = ["Michael Bacci"]
+__license__ = "see LICENSE.txt file"
 __version__ = "1.0.0"
 __maintainer__ = "Michael Bacci"
 __email__ = "michael.bacci@inria.fr"
