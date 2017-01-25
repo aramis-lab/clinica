@@ -23,7 +23,7 @@ from nipype.workflows.dmri.fsl.utils import vsm2warp
 import clinica.pipeline.dwi.dwi_preprocessing_utils as predifutils
 
 
-def prepare_data(datasink_directory, num_b0s, name='prepare_data', low_bval=5.0):
+def prepare_data(num_b0s, name='prepare_data', low_bval=5.0):
     """
     Create a pipeline that prepare the data for further corrections. This pipeline coregister the B0 images and then average it in order
     to obtain only one average B0 images. The bvectors and bvales are update according to the modifications.
@@ -65,36 +65,27 @@ def prepare_data(datasink_directory, num_b0s, name='prepare_data', low_bval=5.0)
     insert_b0_into_dwi = pe.Node(niu.Function(input_names=['in_b0', 'in_dwi', 'in_bvals', 'in_bvecs'], output_names=['out_dwi', 'out_bvals', 'out_bvecs'],
                                               function=predifutils.insert_b0_into_dwi), name='insert_b0avg_into_dwi')
 
-    datasink = pe.Node(nio.DataSink(), name='datasink_prep')
-    datasink.inputs.base_directory = op.join(datasink_directory, 'pre_preprocess/')
-
     outputnode = pe.Node(niu.IdentityInterface(fields=['mask_b0', 'b0_reference','out_bvecs', 'dwi_b0_merge', 'out_bvals'  ]), name='outputnode')
-
 
     wf = pe.Workflow(name=name)
 
     if num_b0s > 1:
         wf.connect([
-            (inputnode,             b0_dwi_split,       [('in_bvals', 'in_bvals'),
-                                                         ('in_bvecs', 'in_bvecs'),
-                                                         ('in_file', 'in_file')]),
-            (b0_dwi_split,          b0_flirt,           [('out_b0', 'inputnode.in_file')]),
-            (b0_flirt,              b0_avg,             [('outputnode.out_file', 'in_file')]),
-            (b0_avg,                insert_b0_into_dwi, [('out_file', 'in_b0')]),
-            (b0_avg,                mask_b0,            [('out_file', 'in_file')]),
-            (b0_dwi_split,          insert_b0_into_dwi, [('out_dwi','in_dwi'),
-                                                         ('out_bvals','in_bvals'),
-                                                         ('out_bvecs','in_bvecs')]),
-            (insert_b0_into_dwi,    outputnode,         [('out_dwi','dwi_b0_merge'),
-                                                         ('out_bvals','out_bvals'),
-                                                         ('out_bvecs','out_bvecs')]),
-            (mask_b0,               outputnode,         [('mask_file','mask_b0')]),
-            (b0_avg,                outputnode,         [('out_file','b0_reference')]),
-            (insert_b0_into_dwi,    datasink,           [('out_dwi','dwi_b0_merge'),
-                                                         ('out_bvals','out_bvals'),
-                                                         ('out_bvecs','out_bvecs')]),
-            (mask_b0,               datasink,           [('mask_file','mask_b0')]),
-            (b0_avg,                datasink,           [('out_file','b0_reference')])
+            (inputnode,    b0_dwi_split, [('in_bvals', 'in_bvals'),
+                                          ('in_bvecs', 'in_bvecs'),
+                                          ('in_file', 'in_file')]),
+            (b0_dwi_split, b0_flirt,           [('out_b0', 'inputnode.in_file')]),
+            (b0_flirt,     b0_avg,             [('outputnode.out_file', 'in_file')]),
+            (b0_avg,       insert_b0_into_dwi, [('out_file', 'in_b0')]),
+            (b0_avg,       mask_b0,            [('out_file', 'in_file')]),
+            (b0_dwi_split, insert_b0_into_dwi, [('out_dwi','in_dwi'),
+                                                ('out_bvals','in_bvals'),
+                                                ('out_bvecs','in_bvecs')]),
+            (insert_b0_into_dwi, outputnode, [('out_dwi','dwi_b0_merge'),
+                                              ('out_bvals','out_bvals'),
+                                              ('out_bvecs','out_bvecs')]),
+            (mask_b0,            outputnode, [('mask_file','mask_b0')]),
+            (b0_avg,             outputnode, [('out_file','b0_reference')])
             ])
     elif num_b0s == 1:
         wf.connect([
@@ -110,13 +101,8 @@ def prepare_data(datasink_directory, num_b0s, name='prepare_data', low_bval=5.0)
                                                          ('out_bvals','out_bvals'),
                                                          ('out_bvecs','out_bvecs')]),
             (mask_b0,               outputnode,         [('mask_file','mask_b0')]),
-            (insert_b0_into_dwi,    outputnode,         [('out_dwi','b0_reference')]),
-            (insert_b0_into_dwi,    datasink,           [('out_dwi','dwi_b0_merge'),
-                                                         ('out_bvals','out_bvals'),
-                                                         ('out_bvecs','out_bvecs')]),
-            (mask_b0,               datasink,           [('mask_file','mask_b0')]),
-            (insert_b0_into_dwi,    datasink,           [('out_dwi','b0_reference')])
-            ])
+            (insert_b0_into_dwi,    outputnode,         [('out_dwi','b0_reference')])
+        ])
     else:
         raise()
 
@@ -124,7 +110,7 @@ def prepare_data(datasink_directory, num_b0s, name='prepare_data', low_bval=5.0)
 
 
 
-def hmc_pipeline(datasink_directory, name='motion_correct'):
+def hmc_pipeline(name='motion_correct'):
     """
     HMC stands for head-motion correction.
 
@@ -236,7 +222,7 @@ def hmc_pipeline(datasink_directory, name='motion_correct'):
 
 
 
-def ecc_pipeline(datasink_directory, name='eddy_correct'):
+def ecc_pipeline(name='eddy_correct'):
     """
     ECC stands for Eddy currents correction.
     Creates a pipeline that corrects for artifacts induced by Eddy currents in
@@ -320,9 +306,6 @@ head-motion correction)
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['out_file', 'out_xfms']), name='outputnode')
 
-    datasink = pe.Node(nio.DataSink(), name='datasink')
-    datasink.inputs.base_directory = op.join(datasink_directory, 'ecc_correction/')
-
     wf = pe.Workflow(name=name)
     wf.connect([
         (inputnode,  getb0,        [('in_file', 'in_file')]),
@@ -344,15 +327,13 @@ head-motion correction)
         (mult,       thres,        [('out_file', 'in_file')]),
         (thres,      merge,        [('out_file', 'in_corrected')]),
         (get_mat,    outputnode,   [('out_files', 'out_xfms')]),
-        (merge,      outputnode,   [('out_file', 'out_file')]),
-        (get_mat,    datasink,     [('out_files', 'out_xfms')]),
-        (merge,      datasink,     [('out_file', 'out_file')])
+        (merge,      outputnode,   [('out_file', 'out_file')])
     ])
     return wf
 
 
 
-def sdc_fmb(datasink_directory, name='fmb_correction',
+def sdc_fmb(name='fmb_correction',
             fugue_params=dict(smooth3d=2.0),
             bmap_params=dict(delta_te=2.46e-3),
             epi_params=dict(echospacing=0.39e-3,
@@ -416,9 +397,6 @@ def sdc_fmb(datasink_directory, name='fmb_correction',
                          'out_warp']),
                          name='outputnode')
 
-    datasink = pe.Node(nio.DataSink(), name='datasink')
-    datasink.inputs.base_directory = op.join(datasink_directory,'sdc_correction/')
-
     getb0 = pe.Node(fsl.ExtractROI(t_min=0, t_size=1), name='get_b0')
     n4 = pe.Node(ants.N4BiasFieldCorrection(dimension=3), name='n4_magnitude')
     bet = pe.Node(fsl.BET(frac=0.4, mask=True), name='bet_n4_magnitude')
@@ -467,44 +445,41 @@ def sdc_fmb(datasink_directory, name='fmb_correction',
 
     wf = pe.Workflow(name=name)
     wf.connect([
-        (inputnode,   pha2rads,     [('bmap_pha', 'in_file')]),
-        (inputnode,   getb0,        [('in_file', 'in_file')]),
-        (inputnode,   n4,           [('bmap_mag', 'input_image')]),
-        (n4,          bet,          [('output_image', 'in_file')]),
-        (bet,         dilate,       [('mask_file', 'in_file')]),
-        (pha2rads,    prelude,      [('out_file', 'phase_file')]),
-        (n4,          prelude,      [('output_image', 'magnitude_file')]),
-        (dilate,      prelude,      [('out_file', 'mask_file')]),
-        (prelude,     rad2rsec,     [('unwrapped_phase_file', 'in_file')]),
-        (getb0,       flirt,        [('roi_file', 'reference')]),
-        (inputnode,   flirt,        [('in_mask', 'ref_weight')]),
-        (n4,          flirt,        [('output_image', 'in_file')]),
-        (dilate,      flirt,        [('out_file', 'in_weight')]),
-        (getb0,       applyxfm,     [('roi_file', 'reference')]),
-        (rad2rsec,    applyxfm,     [('out_file', 'in_file')]),
-        (flirt,       applyxfm,     [('out_matrix_file', 'in_matrix_file')]),
-        (applyxfm,    pre_fugue,    [('out_file', 'fmap_in_file')]),
-        (inputnode,   pre_fugue,    [('in_mask', 'mask_file')]),
-        (pre_fugue,   demean,       [('fmap_out_file', 'in_file')]),
-        (inputnode,   demean,       [('in_mask', 'in_mask')]),
-        (demean,      cleanup,      [('out_file', 'inputnode.in_file')]),
-        (inputnode,   cleanup,      [('in_mask', 'inputnode.in_mask')]),
-        (cleanup,     addvol,       [('outputnode.out_file', 'in_file')]),
-        (inputnode,   vsm,          [('in_mask', 'mask_file')]),
-        (addvol,      vsm,          [('out_file', 'fmap_in_file')]),
-        (inputnode,   split,        [('in_file', 'in_file')]),
-        (split,       unwarp,       [('out_files', 'in_file')]),
-        (vsm,         unwarp,       [('shift_out_file', 'shift_in_file')]),
-        (unwarp,      thres,        [('unwarped_file', 'in_file')]),
-        (thres,       merge,        [('out_file', 'in_files')]),
-        (merge,       vsm2dfm,      [('merged_file', 'inputnode.in_ref')]),
-        (vsm,         vsm2dfm,      [('shift_out_file', 'inputnode.in_vsm')]),
-        (merge,       outputnode,   [('merged_file', 'out_file')]),
-        (vsm,         outputnode,   [('shift_out_file', 'out_vsm')]),
-        (vsm2dfm,     outputnode,   [('outputnode.out_warp', 'out_warp')]),
-        (merge,       datasink,     [('merged_file', 'out_file')]),
-        (vsm,         datasink,     [('shift_out_file', 'out_vsm')]),
-        (vsm2dfm,     datasink,     [('outputnode.out_warp', 'out_warp')])
+        (inputnode, pha2rads, [('bmap_pha', 'in_file')]),
+        (inputnode, getb0, [('in_file', 'in_file')]),
+        (inputnode, n4, [('bmap_mag', 'input_image')]),
+        (n4, bet, [('output_image', 'in_file')]),
+        (bet, dilate, [('mask_file', 'in_file')]),
+        (pha2rads, prelude, [('out_file', 'phase_file')]),
+        (n4,       prelude, [('output_image', 'magnitude_file')]),
+        (dilate,   prelude, [('out_file', 'mask_file')]),
+        (prelude, rad2rsec, [('unwrapped_phase_file', 'in_file')]),
+        (getb0,     flirt, [('roi_file', 'reference')]),
+        (inputnode, flirt, [('in_mask', 'ref_weight')]),
+        (n4,        flirt, [('output_image', 'in_file')]),
+        (dilate,    flirt, [('out_file', 'in_weight')]),
+        (getb0,    applyxfm, [('roi_file', 'reference')]),
+        (rad2rsec, applyxfm, [('out_file', 'in_file')]),
+        (flirt,    applyxfm, [('out_matrix_file', 'in_matrix_file')]),
+        (applyxfm,  pre_fugue, [('out_file', 'fmap_in_file')]),
+        (inputnode, pre_fugue, [('in_mask', 'mask_file')]),
+        (pre_fugue, demean, [('fmap_out_file', 'in_file')]),
+        (inputnode, demean, [('in_mask', 'in_mask')]),
+        (demean,    cleanup, [('out_file', 'inputnode.in_file')]),
+        (inputnode, cleanup, [('in_mask', 'inputnode.in_mask')]),
+        (cleanup, addvol, [('outputnode.out_file', 'in_file')]),
+        (inputnode, vsm, [('in_mask', 'mask_file')]),
+        (addvol,    vsm, [('out_file', 'fmap_in_file')]),
+        (inputnode, split, [('in_file', 'in_file')]),
+        (split, unwarp, [('out_files', 'in_file')]),
+        (vsm,   unwarp, [('shift_out_file', 'shift_in_file')]),
+        (unwarp, thres, [('unwarped_file', 'in_file')]),
+        (thres,  merge, [('out_file', 'in_files')]),
+        (merge, vsm2dfm, [('merged_file', 'inputnode.in_ref')]),
+        (vsm,   vsm2dfm, [('shift_out_file', 'inputnode.in_vsm')]),
+        (merge,   outputnode, [('merged_file', 'out_file')]),
+        (vsm,     outputnode, [('shift_out_file', 'out_vsm')]),
+        (vsm2dfm, outputnode, [('outputnode.out_warp', 'out_warp')])
     ])
     return wf
 
@@ -849,16 +824,16 @@ def remove_bias(name='bias_correct'):
 
     wf = pe.Workflow(name=name)
     wf.connect([
-        (inputnode,    getb0,          [('in_file', 'in_file')]),
-        (getb0,       n4,              [('roi_file', 'input_image')]),
-        (getb0,       mask_b0,         [('roi_file', 'in_file')]),
-        (mask_b0,    n4,               [('mask_file', 'mask_image')]),
-        (inputnode,    split,          [('in_file', 'in_file')]),
-        (n4,           mult,           [('bias_image', 'operand_files')]),
-        (split,        mult,           [('out_files', 'in_file')]),
-        (mult,         thres,          [('out_file', 'in_file')]),
-        (thres,        merge,          [('out_file', 'in_files')]),
-        (merge,        outputnode,     [('merged_file', 'out_file')]),
-        (mask_b0,    outputnode,       [('mask_file', 'b0_mask')])
+        (inputnode, getb0, [('in_file', 'in_file')]),
+        (getb0,   n4, [('roi_file', 'input_image')]),
+        (getb0, mask_b0, [('roi_file', 'in_file')]),
+        (mask_b0, n4, [('mask_file', 'mask_image')]),
+        (inputnode, split, [('in_file', 'in_file')]),
+        (n4,    mult, [('bias_image', 'operand_files')]),
+        (split, mult, [('out_files', 'in_file')]),
+        (mult, thres, [('out_file', 'in_file')]),
+        (thres, merge, [('out_file', 'in_files')]),
+        (merge,   outputnode, [('merged_file', 'out_file')]),
+        (mask_b0, outputnode, [('mask_file', 'b0_mask')])
     ])
     return wf

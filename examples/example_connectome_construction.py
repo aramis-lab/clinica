@@ -5,7 +5,7 @@ Created on Tue Mar 22 15:56:18 2016
 @author: jacquemont
 """
 from __future__ import absolute_import
-from clinica.pipeline.postprocessing.connectome_construction import Connectome_construction_pipeline
+from clinica.pipeline.dwi.dwi_connectome_construction import connectome_construction_pipeline
 import os
 from os.path import realpath,split,join
 import tempfile
@@ -28,7 +28,7 @@ print("Working Directory -> %s" % working_directory)
 print("Datasink Directory -> %s" % datasink_directory)
 
 print("Running connectome construction")
-connectome =  Connectome_construction_pipeline(in_parcellation, configuration_file, lut_type, lut_path, in_tracks, connectome_metric, working_directory, datasink_directory, in_scalar_image='', zeros_diagonal=True)
+connectome =  connectome_construction_pipeline(in_parcellation, configuration_file, lut_type, lut_path, in_tracks, connectome_metric, working_directory, datasink_directory, in_scalar_image='', zeros_diagonal=True)
 connectome.run()
 print("connectome construction done")
 

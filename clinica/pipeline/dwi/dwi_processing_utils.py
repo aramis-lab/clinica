@@ -229,7 +229,7 @@ def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2):
     cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -vector ' + out_ev
     os.system(cmd)
 
-    return out_fa, out_md, out_rd, out_ev
+    return out_fa, out_ad, out_md, out_rd, out_ev
 
 
 def estimate_response(in_dwi_mif, in_b0_mask, lmax=None, algorithm='tax', tmpdir='/tmp/', nthreads=2):
