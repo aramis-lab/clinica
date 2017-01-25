@@ -5,7 +5,9 @@ Created on Wed Jun  1 10:05:42 2016
 @author: jacquemont
 """
 
-def Connectome_construction_pipeline(in_parcellation, configuration_file, lut_type, lut_path, in_tracks, connectome_metric, working_directory, datasink_directory, in_scalar_image='', zeros_diagonal=True):
+def connectome_construction_pipeline(
+        in_parcellation, configuration_file, lut_type, lut_path, in_tracks, connectome_metric,
+        working_directory, datasink_directory, in_scalar_image='', zeros_diagonal=True):
     
     """
     Perform the construction of the subject connectome.
@@ -125,20 +127,24 @@ def Connectome_construction_pipeline(in_parcellation, configuration_file, lut_ty
     datasource.inputs.sort_filelist = True
     
         
-    inputnode = pe.Node(niu.IdentityInterface(fields=['in_parcellation', 'configuration_file', 'lut_path', 'in_tracks']),
-                        name='inputnode')
+    inputnode = pe.Node(niu.IdentityInterface(
+        fields=['in_parcellation', 'configuration_file', 'lut_path', 'in_tracks']),
+        name='inputnode')
     
-    label_config = pe.Node(interface=niu.Function(input_names=['input_parcellation', 'config_in', 'lut_type', 'lut_path'], output_names=['out_image'],
-                                                              function=labelconfig), name='label_config')
+    label_config = pe.Node(interface=niu.Function(
+        input_names=['input_parcellation', 'config_in', 'lut_type', 'lut_path'], output_names=['out_image'],
+        function=labelconfig), name='label_config')
     label_config.inputs.lut_type = lut_type
     
-    tck_to_connectome = pe.Node(interface=niu.Function(input_names=['in_parcellation', 'in_tracks', 'metric', 'scalar_image', 'zero_diagonal'], output_names=['out_connectome'],
-                                                              function=tck2connectome), name='tck_to_connectome')
+    tck_to_connectome = pe.Node(interface=niu.Function(
+        input_names=['in_parcellation', 'in_tracks', 'metric', 'scalar_image', 'zero_diagonal'], output_names=['out_connectome'],
+        function=tck2connectome), name='tck_to_connectome')
     tck_to_connectome.inputs.zeros_diagonal = zeros_diagonal
     tck_to_connectome.inputs.scalar_image = in_scalar_image
     tck_to_connectome.inputs.metric = connectome_metric
                                                               
-    outputnode = pe.Node(niu.IdentityInterface(fields=['out_connectome']), name='outputnode')
+    outputnode = pe.Node(niu.IdentityInterface(
+        fields=['out_connectome']), name='outputnode')
 
     datasink = pe.Node(nio.DataSink(), name='datasink')
     datasink.inputs.base_directory = op.join(datasink_directory,'connectome/')
@@ -146,16 +152,18 @@ def Connectome_construction_pipeline(in_parcellation, configuration_file, lut_ty
     wf = pe.Workflow(name='compute_connectome')
     wf.base_dir = working_directory
     
-    wf.connect([(datasource, inputnode, [('in_parcellation','in_parcellation'), 
-                                         ('configuration_file','configuration_file'),
-                                         ('lut_path','lut_path'),
-                                         ('in_tracks','in_tracks')])])
-    wf.connect([(inputnode, label_config, [('in_parcellation','input_parcellation'),
-                                           ('configuration_file','config_in'),
-                                           ('lut_path','lut_path')])])
-    wf.connect([(inputnode, tck_to_connectome, [('in_tracks','in_tracks')])])
-    wf.connect([(label_config, tck_to_connectome, [('out_image','in_parcellation')])])
-    wf.connect([(tck_to_connectome, outputnode, [('out_connectome','out_connectome')])])
-    wf.connect([(tck_to_connectome, datasink, [('out_connectome','out_connectome')])])
+    wf.connect([
+        (datasource, inputnode, [('in_parcellation','in_parcellation'),
+                                 ('configuration_file','configuration_file'),
+                                 ('lut_path','lut_path'),
+                                 ('in_tracks','in_tracks')]),
+        (inputnode, label_config, [('in_parcellation','input_parcellation'),
+                                   ('configuration_file','config_in'),
+                                   ('lut_path','lut_path')]),
+        (inputnode,    tck_to_connectome, [('in_tracks','in_tracks')]),
+        (label_config, tck_to_connectome, [('out_image','in_parcellation')]),
+        (tck_to_connectome, outputnode, [('out_connectome','out_connectome')]),
+        (tck_to_connectome, datasink, [('out_connectome','out_connectome')])
+    ])
     
     return wf

@@ -11,7 +11,7 @@ def create_dwi_preproc_syb(in_dwi, in_T1, in_bvals, in_bvecs, working_directory,
         - Preparation of the dataset
         - Correction for Head Motion
         - Correction for Eddy Currents
-        - Correction for EPI susceptibility induced distortions using the SyN algorithm (SyB)
+        - Correction for EPI susceptibility induced distortions using the SyN algorithm (SyB) from ANTS
         - Bias field correction
     The outputs presented are typically outputs necessary for further tractography.
 
@@ -72,49 +72,164 @@ def create_dwi_preproc_syb(in_dwi, in_T1, in_bvals, in_bvecs, working_directory,
                                            T1_image=[[]])
     datasource.inputs.sort_filelist = True
 
-    inputnode = pe.Node(interface=niu.IdentityInterface(fields=["dwi_image", "bvectors_directions", "bvalues", 'T1_image']), name="inputnode")
+    inputnode = pe.Node(interface=niu.IdentityInterface(
+        fields=["dwi_image", "bvectors_directions", "bvalues", 'T1_image']), name="inputnode")
 
-    pre = prepare_data(datasink_directory=datasink_directory, num_b0s=num_b0s)
-
-    hmc = hmc_pipeline(datasink_directory)
-
-    ecc = ecc_pipeline(datasink_directory)
-
-    sdc = sdc_syb_pipeline(datasink_directory)
-
+    pre = prepare_data(num_b0s=num_b0s)
+    hmc = hmc_pipeline()
+    ecc = ecc_pipeline()
+    sdc = sdc_syb_pipeline(datasink_directory=datasink_directory)
     bias = remove_bias()
-
     aac = apply_all_corrections_syb(datasink_directory)
 
     datasink = pe.Node(nio.DataSink(), name='datasink_tracto')
     datasink.inputs.base_directory = op.join(datasink_directory, 'Outputs_for_Tractography/')
 
-    wf = pe.Workflow(name='preprocess',base_dir=datasink_directory)
-    wf.base_dir = working_directory
+    wf = pe.Workflow(name='preprocess',base_dir=working_directory)
+    wf.connect([
+        (datasource, inputnode, [('dwi_image','dwi_image'),
+                                 ('bvalues','bvalues'),
+                                 ('bvectors_directions','bvectors_directions'),
+                                 ('T1_image','T1_image')]),
+        (inputnode, pre, [('dwi_image', 'inputnode.in_file'),
+                          ('bvalues', 'inputnode.in_bvals'),
+                          ('bvectors_directions', 'inputnode.in_bvecs')]),
+        (pre, hmc, [('outputnode.dwi_b0_merge','inputnode.in_file'),
+                    ('outputnode.out_bvals','inputnode.in_bval'),
+                    ('outputnode.out_bvecs','inputnode.in_bvec'),
+                    ('outputnode.mask_b0','inputnode.in_mask')]),
+        (hmc, ecc, [('outputnode.out_xfms','inputnode.in_xfms'),
+                    ('outputnode.out_file','inputnode.in_file')]),
+        (pre, ecc, [('outputnode.out_bvals','inputnode.in_bval')]),
+        (pre, ecc, [('outputnode.mask_b0','inputnode.in_mask')]),
+        (ecc, sdc, [('outputnode.out_file','inputnode.DWI')]),
+        (inputnode, sdc, [('T1_image','inputnode.T1')]),
+        (pre,       aac, [('outputnode.dwi_b0_merge', 'inputnode.in_dwi')]),
+        (hmc,       aac, [('outputnode.out_xfms', 'inputnode.in_hmc')]),
+        (ecc,       aac, [('outputnode.out_xfms', 'inputnode.in_ecc')]),
+        (sdc,       aac, [('outputnode.out_warp', 'inputnode.in_sdc_syb')]),
+        (inputnode, aac, [('T1_image','inputnode.T1')]),
+        (aac, bias, [('outputnode.out_file','inputnode.in_file')]),
+        (bias, datasink, [('outputnode.out_file','DWI_hmc_ecc_sdc_bias_corrected')]),
+        (hmc,  datasink, [('outputnode.out_bvec','out_bvecs')]),
+        (pre,  datasink, [('outputnode.out_bvals','out_bvals')]),
+        (bias, datasink, [('outputnode.b0_mask','b0_mask')])
+    ])
 
-    wf.connect([(datasource, inputnode, [('dwi_image','dwi_image'), ('bvalues','bvalues'), ('bvectors_directions','bvectors_directions'), ('T1_image','T1_image')])])
-    wf.connect([(inputnode, pre, [('dwi_image', 'inputnode.in_file'),
-                                  ('bvalues', 'inputnode.in_bvals'),
-                                  ('bvectors_directions', 'inputnode.in_bvecs')])])
-    wf.connect([(pre, hmc,[('outputnode.dwi_b0_merge','inputnode.in_file'), ('outputnode.out_bvals','inputnode.in_bval'), ('outputnode.out_bvecs','inputnode.in_bvec')])])
-    wf.connect([(pre, hmc, [('outputnode.mask_b0','inputnode.in_mask')])])
-    wf.connect([(hmc, ecc, [('outputnode.out_xfms','inputnode.in_xfms'),('outputnode.out_file','inputnode.in_file')])])
-    wf.connect([(pre, ecc, [('outputnode.out_bvals','inputnode.in_bval')])])
-    wf.connect([(pre, ecc, [('outputnode.mask_b0','inputnode.in_mask')])])
-    wf.connect([(ecc, sdc, [('outputnode.out_file','inputnode.DWI')])])
-    wf.connect([(inputnode, sdc, [('T1_image','inputnode.T1')])])
-    wf.connect([(pre, aac, [('outputnode.dwi_b0_merge', 'inputnode.in_dwi')])])
-    wf.connect([(hmc, aac, [('outputnode.out_xfms', 'inputnode.in_hmc')])])
-    wf.connect([(ecc, aac, [('outputnode.out_xfms', 'inputnode.in_ecc')])])
-    wf.connect([(sdc, aac, [('outputnode.out_warp', 'inputnode.in_sdc_syb')])])
-    wf.connect([(inputnode, aac, [('T1_image','inputnode.T1')])])
+    return wf
 
-    wf.connect([(aac, bias, [('outputnode.out_file','inputnode.in_file')])])
+def diffusion_preprocessing_t1_based(subject_id, session_id, analysis_series_id,
+    caps_directory, num_b0s, working_directory = None,
+    name = 'diffusion_preprocessing_t1_based'):
+    """
+    Create and run a high level pipeline to preprocess the DWI Images :
+        - Preparation of the dataset
+        - Correction for Head Motion
+        - Correction for Eddy Currents
+        - Correction for EPI susceptibility induced distortions using the SyN algorithm (SyB) from ANTS
+        - Bias field correction
+    The outputs presented are typically outputs necessary for further tractography.
 
-    wf.connect([(bias, datasink, [('outputnode.out_file','DWI_hmc_ecc_sdc_bias_corrected')])])
-    wf.connect([(hmc, datasink, [('outputnode.out_bvec','out_bvecs')])])
-    wf.connect([(pre, datasink, [('outputnode.out_bvals','out_bvals')])])
-    wf.connect([(bias, datasink, [('outputnode.b0_mask','b0_mask')])])
+    Inputs
+    ---------
+    in_dwi : STRING
+      Path to the DWI image.
+    in_T1: STRING
+      Path to the T1 image.
+    in_bvals: STRING
+      Path to the b-vals text file.
+    in_bvecs: STRING
+      Path to the b-vecs text file.
+    working_directory : STRING
+      Directory to use as tmp for all the temporary files generated by the workflow.
+    num_b0s : INT
+      Number of B0 images.
+    datasink_directory : STRING
+      Base directory of the datasink.
+
+    Outputs
+    ----------
+        DWI_hmc_ecc_sdc_bias_corrected - DWI corrected for Head motion, Eddy currents, EPI susceptibility induced distortions (syb) and bias field
+        out_bvecs - updated and corrected gradient vectors table
+        out_bvals - updated gradient values table
+        mask_b0 - Binary mask obtained from the average of the B0 images
+
+    """
+
+    import nipype.interfaces.io as nio
+    import nipype.interfaces.utility as niu
+    import nipype.pipeline.engine as pe
+    import os.path as op
+    from clinica.pipeline.dwi.dwi_preprocessing_workflows import prepare_data
+    from clinica.pipeline.dwi.dwi_preprocessing_workflows import ecc_pipeline
+    from clinica.pipeline.dwi.dwi_preprocessing_workflows import hmc_pipeline
+    from clinica.pipeline.dwi.dwi_preprocessing_workflows import sdc_syb_pipeline
+    from clinica.pipeline.dwi.dwi_preprocessing_workflows import apply_all_corrections_syb
+    from clinica.pipeline.dwi.dwi_preprocessing_workflows import remove_bias
+
+#    inputnode = pe.Node(interface=niu.IdentityInterface(
+#        fields=["dwi_image", "bvectors_directions", "bvalues", 'T1_image']), name="inputnode")
+
+    inputnode = pe.Node(niu.IdentityInterface(
+        fields=['in_dwi', 'in_bvals', 'in_bvecs', 'in_t1']), name='inputnode')
+
+    pre = prepare_data(num_b0s=num_b0s)
+    hmc = hmc_pipeline()
+    ecc = ecc_pipeline()
+    sdc = sdc_syb_pipeline(caps_directory)
+    bias = remove_bias()
+    aac = apply_all_corrections_syb()
+
+#    datasink = pe.Node(nio.DataSink(), name='datasink_tracto')
+#    datasink.inputs.base_directory = op.join(caps_directory, 'Outputs_for_Tractography/')
+#
+    datasink = pe.Node(nio.DataSink(), name='datasink')
+    caps_identifier = subject_id + '_' + session_id
+    datasink.inputs.base_directory = op.join(caps_directory, 'analysis-series-' + analysis_series_id, 'subjects', subject_id, session_id, 'dwi')
+    datasink.inputs.substitutions = [('vol0000_warp_maths_thresh_merged_roi_brain_mask.nii.gz', caps_identifier + '_b0-mask.nii.gz'),
+                                     ('vol0000_maths_thresh_merged.nii.gz', caps_identifier + '_dwi.nii.gz'),
+                                     ('bvecs_rotated.bvec', caps_identifier + '_dwi.bvec'),
+                                     ('bvals', caps_identifier + '_dwi.bval'),
+                                     ('merged_files.nii.gz', caps_identifier + '_dwi.nii.gz'),
+                                     ('merged_files.nii.gz', caps_identifier + '_dwi.nii.gz'),
+                                     ('merged_files.nii.gz', caps_identifier + '_dwi.nii.gz'),
+                                     ('vol0', caps_identifier + '_hmc-dwi-0'),
+                                     ('_flirt.mat', '.mat')
+                                     ]
+
+    wf = pe.Workflow(name='preprocess',base_dir=working_directory)
+    wf.connect([
+        # Preliminary step (computation of a mean b0):
+        (inputnode, pre, [('in_dwi', 'inputnode.in_file'),
+                          ('in_bvals', 'inputnode.in_bvals'),
+                          ('in_bvecs', 'inputnode.in_bvecs')]),
+        # Head-motion correction:
+        (pre, hmc, [('outputnode.dwi_b0_merge','inputnode.in_file'),
+                    ('outputnode.out_bvals','inputnode.in_bval'),
+                    ('outputnode.out_bvecs','inputnode.in_bvec'),
+                    ('outputnode.mask_b0','inputnode.in_mask')]),
+        # Eddy-current correction:
+        (hmc, ecc, [('outputnode.out_xfms','inputnode.in_xfms'),
+                    ('outputnode.out_file','inputnode.in_file')]),
+        (pre, ecc, [('outputnode.out_bvals','inputnode.in_bval'),
+                    ('outputnode.mask_b0','inputnode.in_mask')]),
+        # Magnetic susceptibility correction:
+        (ecc,       sdc, [('outputnode.out_file','inputnode.DWI')]),
+        (inputnode, sdc, [('T1_image','inputnode.T1')]),
+        # Apply all corrections:
+        (pre,       aac, [('outputnode.dwi_b0_merge', 'inputnode.in_dwi')]),
+        (hmc,       aac, [('outputnode.out_xfms', 'inputnode.in_hmc')]),
+        (ecc,       aac, [('outputnode.out_xfms', 'inputnode.in_ecc')]),
+        (sdc,       aac, [('outputnode.out_warp', 'inputnode.in_sdc_syb')]),
+        (inputnode, aac, [('in_t1','inputnode.T1')]),
+        # Bias correction:
+        (aac, bias, [('outputnode.out_file','inputnode.in_file')]),
+        # Datasink:
+        (bias, datasink, [('outputnode.out_file','DWI_hmc_ecc_sdc_bias_corrected')]),
+        (hmc,  datasink, [('outputnode.out_bvec','out_bvecs')]),
+        (pre,  datasink, [('outputnode.out_bvals','out_bvals')]),
+        (bias, datasink, [('outputnode.b0_mask','b0_mask')])
+    ])
 
     return wf
 
@@ -171,16 +286,22 @@ def diffusion_preprocessing_fieldmap_based(
     import nipype.pipeline.engine as pe
     import os.path as op
 
-    inputnode = pe.Node(niu.IdentityInterface(fields=['in_file', 'in_bvals', 'in_bvecs', 'bmap_mag', 'bmap_pha']), name='inputnode')
+    inputnode = pe.Node(niu.IdentityInterface(
+        fields=['in_file', 'in_bvals', 'in_bvecs', 'bmap_mag', 'bmap_pha']), name='inputnode')
 
-    outputnode = pe.Node(niu.IdentityInterface(fields=['out_file', 'out_bvecs', 'out_bvals',  'out_mask']), name='outputnode')
+    outputnode = pe.Node(niu.IdentityInterface(
+        fields=['out_file', 'out_bvecs', 'out_bvals',  'out_mask']), name='outputnode')
 
     remove_bias_pip = remove_bias(name='remove_bias')
-    hmc = hmc_pipeline(name='motion_correct', datasink_directory=caps_directory)
+    hmc = hmc_pipeline(name='motion_correct')
     hmc.inputs.inputnode.ref_num = 0
-    sdc = sdc_fmb(name='fmb_correction', datasink_directory=caps_directory)
-    ecc = ecc_pipeline(name='eddy_correct', datasink_directory=caps_directory)
-    pre = prepare_data(datasink_directory=caps_directory, num_b0s=num_b0s)
+    sdc = sdc_fmb(name='fmb_correction',
+                  fugue_params=dict(smooth3d=2.0),
+                  bmap_params=dict(delta_te=2.46e-3),
+                  epi_params=dict(echospacing=0.39e-3, enc_dir='y')
+                  )
+    ecc = ecc_pipeline(name='eddy_correct')
+    pre = prepare_data(num_b0s=num_b0s)
     unwarp = apply_all_corrections()
 
     datasink = pe.Node(nio.DataSink(), name='datasink')
@@ -189,45 +310,59 @@ def diffusion_preprocessing_fieldmap_based(
     datasink.inputs.substitutions = [('vol0000_warp_maths_thresh_merged_roi_brain_mask.nii.gz', caps_identifier + '_b0-mask.nii.gz'),
                                      ('vol0000_maths_thresh_merged.nii.gz', caps_identifier + '_dwi.nii.gz'),
                                      ('bvecs_rotated.bvec', caps_identifier + '_dwi.bvec'),
-                                     ('bvals', caps_identifier + '_dwi.bval')
+                                     ('bvals', caps_identifier + '_dwi.bval'),
+                                     ('merged_files.nii.gz', caps_identifier + '_dwi.nii.gz'),
+                                     ('merged_files.nii.gz', caps_identifier + '_dwi.nii.gz'),
+                                     ('merged_files.nii.gz', caps_identifier + '_dwi.nii.gz'),
+                                     ('vol0', caps_identifier + '_hmc-dwi-0'),
+                                     ('_flirt.mat', '.mat')
                                      ]
-    datasink.inputs.regexp_substitutions = [('vol*_flirt.mat', caps_identifier + '_hmc-dwi-*.mat')]
+#    datasink.inputs.regexp_substitutions = [('vol\d_flirt.mat', caps_identifier + '_hmc-dwi-\d{1,3}.mat')]
 
-
-
-    wf = pe.Workflow(name=name, base_dir=caps_directory)
+    wf = pe.Workflow(name=name, base_dir=working_directory)
     wf.connect([
-            (inputnode, pre, [('in_file', 'inputnode.in_file'),
-                              ('in_bvals', 'inputnode.in_bvals'),
-                              ('in_bvecs', 'inputnode.in_bvecs')]),
-            (pre, hmc, [('outputnode.dwi_b0_merge', 'inputnode.in_file'),
-                        ('outputnode.out_bvals', 'inputnode.in_bval'),
-                        ('outputnode.out_bvecs', 'inputnode.in_bvec')]),
-            (pre, hmc, [('outputnode.mask_b0', 'inputnode.in_mask')]),
-            (hmc,             sdc,             [('outputnode.out_file', 'inputnode.in_file')]),
-            (pre,             sdc,             [('outputnode.mask_b0', 'inputnode.in_mask')]),
-            (inputnode,       sdc,             [('bmap_mag', 'inputnode.bmap_mag')]),
-            (inputnode,       sdc,             [('bmap_pha', 'inputnode.bmap_pha')]),
-            (hmc,             ecc,             [('outputnode.out_xfms', 'inputnode.in_xfms')]),
-            (pre,             ecc,             [('outputnode.out_bvals', 'inputnode.in_bval')]),
-            (sdc,             ecc,             [('outputnode.out_file', 'inputnode.in_file')]),
-            (pre,             ecc,             [('outputnode.mask_b0', 'inputnode.in_mask')]),
-            (pre,             unwarp,          [('outputnode.dwi_b0_merge', 'inputnode.in_dwi')]),
-            (hmc,             unwarp,          [('outputnode.out_xfms', 'inputnode.in_hmc')]),
-            (ecc,             unwarp,          [('outputnode.out_xfms', 'inputnode.in_ecc')]),
-            (sdc,             unwarp,          [('outputnode.out_warp', 'inputnode.in_sdc')]),
-            (unwarp,          remove_bias_pip, [('outputnode.out_file', 'inputnode.in_file')]),
-#            (mask_b0,         remove_bias_pip, [('mask_file', 'inputnode.in_mask')]),
-            # Outputnode:
-            (hmc,             outputnode,      [('outputnode.out_bvec', 'out_bvecs')]),
-            (pre,             outputnode,      [('outputnode.out_bvals', 'out_bval')]),
-            (remove_bias_pip, outputnode,      [('outputnode.out_file', 'out_file')]),
-            (remove_bias_pip, outputnode,      [('outputnode.b0_mask','b0_mask')]),
-            # Datasink:
-            (pre,             datasink,        [('outputnode.out_bvals', 'out_bval')]),
-            (hmc,             datasink,        [('outputnode.out_bvec', 'out_bvecs')]),
-            (remove_bias_pip, datasink,        [('outputnode.b0_mask','b0_mask')]),
-            (remove_bias_pip, datasink, [('outputnode.out_file', 'out_file')]),
-            ])
+        # Preliminary step (computation of a mean b0):
+        (inputnode, pre, [('in_file', 'inputnode.in_file'),
+                          ('in_bvals', 'inputnode.in_bvals'),
+                          ('in_bvecs', 'inputnode.in_bvecs')]),
+
+        (pre, hmc, [('outputnode.dwi_b0_merge', 'inputnode.in_file'),
+                    ('outputnode.out_bvals', 'inputnode.in_bval'),
+                    ('outputnode.out_bvecs', 'inputnode.in_bvec')]),
+        (pre, hmc, [('outputnode.mask_b0', 'inputnode.in_mask')]),
+        (hmc,       sdc, [('outputnode.out_file', 'inputnode.in_file')]),
+        (pre,       sdc, [('outputnode.mask_b0', 'inputnode.in_mask')]),
+        (inputnode, sdc, [('bmap_mag', 'inputnode.bmap_mag')]),
+        (inputnode, sdc, [('bmap_pha', 'inputnode.bmap_pha')]),
+        # Eddy-currents correction:
+        (hmc, ecc, [('outputnode.out_xfms', 'inputnode.in_xfms')]),
+        (pre, ecc, [('outputnode.out_bvals', 'inputnode.in_bval')]),
+        (sdc, ecc, [('outputnode.out_file', 'inputnode.in_file')]),
+        (pre, ecc, [('outputnode.mask_b0', 'inputnode.in_mask')]),
+        # Apply all corrections:
+        (pre, unwarp, [('outputnode.dwi_b0_merge', 'inputnode.in_dwi')]),
+        (hmc, unwarp, [('outputnode.out_xfms', 'inputnode.in_hmc')]),
+        (ecc, unwarp, [('outputnode.out_xfms', 'inputnode.in_ecc')]),
+        (sdc, unwarp, [('outputnode.out_warp', 'inputnode.in_sdc')]),
+        (unwarp, remove_bias_pip, [('outputnode.out_file', 'inputnode.in_file')]),
+#        (mask_b0,         remove_bias_pip, [('mask_file', 'inputnode.in_mask')]),
+        # Outputnode:
+        (hmc,             outputnode,      [('outputnode.out_bvec', 'out_bvecs')]),
+        (pre,             outputnode,      [('outputnode.out_bvals', 'out_bval')]),
+        (remove_bias_pip, outputnode,      [('outputnode.out_file', 'out_file')]),
+        (remove_bias_pip, outputnode,      [('outputnode.b0_mask','b0_mask')]),
+        # Datasink:
+        (hmc,             datasink, [('outputnode.out_xfms', 'head-motion-correction.@out_matrices')]),
+        (pre,             datasink, [('outputnode.out_bvals', 'head-motion-correction.@out_bval')]),
+        (hmc,             datasink, [('outputnode.out_bvec', 'head-motion-correction.@out_bvec')]),
+        (hmc,             datasink, [('outputnode.out_file', 'head-motion-correction.@out_file')]),
+        (sdc,             datasink, [('outputnode.out_file', 'sdc.@out_file')]),
+        (sdc,             datasink, [('outputnode.out_vsm', 'sdc.@out_vsm')]),
+        (sdc,             datasink, [('outputnode.out_warp', 'sdc.@out_warp')]),
+        (pre,             datasink, [('outputnode.out_bvals', 'preprocessing.@out_bval')]),
+        (hmc,             datasink, [('outputnode.out_bvec', 'preprocessing.@out_bvecs')]),
+        (remove_bias_pip, datasink, [('outputnode.b0_mask','preprocessing.@b0_mask')]),
+        (remove_bias_pip, datasink, [('outputnode.out_file', 'preprocessing.@out_file')]),
+        ])
 
     return wf
