@@ -644,9 +644,9 @@ class CmdParserDWIProcessing(CmdParser):
 
     def define_options(self):
         self._args.add_argument("caps_directory",
-                                help='Path to the CAPS directory.')
+                                help='Path to the output/input directory in a CAPS format.')
         self._args.add_argument("subjects_sessions_tsv",
-                                help='TSV file containing the subjects with their sessions.')
+                                help='TSV file containing the subjects/sessions list to be processed.')
         self._args.add_argument("-working_directory", default=None,
                                 help='Temporary directory to store intermediate results')
         self._args.add_argument("-analysis_series_id", default='default',
@@ -658,7 +658,6 @@ class CmdParserDWIProcessing(CmdParser):
     def run_pipeline(self, args):
         import csv
         import os.path
-        from clinica.pipeline.dwi.dwi_processing import tractography_and_dti_pipeline
 
         with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
             tsv_reader = csv.reader(tsv_file, delimiter='\t')
@@ -666,22 +665,22 @@ class CmdParserDWIProcessing(CmdParser):
             # Check inputs:
             for row in tsv_reader:
                 caps_path_to_dwi = os.path.join(
-                    self.absolute_path(args.caps_directory), 'sub-' + row[0], 'ses-' + row[1], 'dwi', 'preprocessing',
-                    'sub-' + row[0] + '_ses-' + row[1] + '_dwi')
+                    self.absolute_path(args.caps_directory), row[0], row[1], 'dwi', 'preprocessing',
+                    row[0] + '_' + row[1] + '_dwi')
                 caps_path_to_b0_mask = os.path.join(
                     self.absolute_path(args.caps_directory), 'sub-' + row[0], 'ses-' + row[1], 'dwi',
-                    'sub-' + row[0] + '_ses-' + row[1] + '_dwi')
-                caps_path_to_white_matter_binary_mask = os.path.join(self.absolute_path(args.caps_directory),
-                                                   'sub-' + row[0], 'ses-' + row[1], 'dwi',
-                                                   'sub-' + row[0] + '_ses-' + row[1] + '_binary-white-matter-mask.nii.gz')
+                    row[0] + '_' + row[1] + '_dwi')
+                caps_path_to_white_matter_binary_mask = os.path.join(
+                    self.absolute_path(args.caps_directory), + row[0], row[1], 'dwi',
+                    row[0] + '_' + row[1] + '_binary-white-matter-mask.nii.gz')
 
                 assert(os.path.isfile(caps_path_to_dwi + '.bval'))
                 assert(os.path.isfile(caps_path_to_dwi + '.bvec'))
                 assert(os.path.isfile(caps_path_to_dwi + '.nii.gz'))
                 assert(os.path.isfile(caps_path_to_b0_mask))
 
-                from clinica.pipeline.dwi.dwi_processing import tractography_and_dti_pipeline
-                tractography_and_dti = tractography_and_dti_pipeline(
+                from clinica.pipeline.dwi.dwi_processing import dwi_processing_pipeline
+                dwi_processing = dwi_processing_pipeline(
                     subject_id=row[0], session_id=row[1], analysis_series_id=args.analysis_series_id,
                     caps_directory=self.absolute_path(args.caps_directory),
                     working_directory=self.absolute_path(args.working_directory),
@@ -693,12 +692,12 @@ class CmdParserDWIProcessing(CmdParser):
                     tractography_angle=None,
                     nthreads=2
                 )
-                tractography_and_dti.inputs.inputnode.in_dwi = caps_path_to_dwi + '.nii.gz'
-                tractography_and_dti.inputs.inputnode.in_bvecs = caps_path_to_dwi + '.bvec'
-                tractography_and_dti.inputs.inputnode.in_bvals = caps_path_to_dwi + '.bval'
-                tractography_and_dti.inputs.inputnode.in_b0_mask = caps_path_to_b0_mask
-                tractography_and_dti.inputs.inputnode.in_white_matter_binary_mask = caps_path_to_white_matter_binary_mask
-                tractography_and_dti.run('MultiProc', plugin_args={'n_procs': args.n_threads})
+                dwi_processing.inputs.inputnode.in_dwi = caps_path_to_dwi + '.nii.gz'
+                dwi_processing.inputs.inputnode.in_bvecs = caps_path_to_dwi + '.bvec'
+                dwi_processing.inputs.inputnode.in_bvals = caps_path_to_dwi + '.bval'
+                dwi_processing.inputs.inputnode.in_b0_mask = caps_path_to_b0_mask
+                dwi_processing.inputs.inputnode.in_white_matter_binary_mask = caps_path_to_white_matter_binary_mask
+                dwi_processing.run('MultiProc', plugin_args={'n_procs': args.n_threads})
 
 
 

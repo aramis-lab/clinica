@@ -7,6 +7,11 @@ Created on Tue Jun 28 15:20:40 2016
 """
 ### TODO save the probability map volume to be .nii(pysurfer) format or .mat(SurfStatView) format, so that in the future can be used clinica visualize.
 from __future__ import absolute_import
+from nipype.interfaces.utility import Function
+import nipype.pipeline.engine as pe
+from tempfile import mkdtemp
+from clinica.pipeline.statistics.surfstat_utils import absolute_path, get_vars, runmatlab
+
 __author__ = "Junhao WEN, Alexandre Routier"
 __copyright__ = "Copyright 2016, The Aramis Lab Team"
 __credits__ = ["Michael Bacci", "Junhao WEN"]
@@ -15,11 +20,6 @@ __version__ = "1.0.0"
 __maintainer__ = "Junhao WEN"
 __email__ = "junhao.wen@inria.fr"
 __status__ = "Development"
-
-from nipype.interfaces.utility import Function
-import nipype.pipeline.engine as pe
-from tempfile import mkdtemp
-from clinica.pipeline.statistics.surfstat_utils import absolute_path, get_vars, runmatlab
 
 def clinica_surfstat(input_directory,
                      subjects_visits_tsv,
