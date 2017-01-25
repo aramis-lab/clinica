@@ -5,8 +5,8 @@ Created on Tue Mar 22 15:56:18 2016
 @author: jacquemont
 """
 from __future__ import absolute_import
-from clinica.pipeline.postprocessing.connection_wise_analysis_pipeline import create_connection_wise_analysis_pipeline
-from clinica.pipeline.postprocessing.NBS_pipeline import create_network_based_statistic_pipeline
+from clinica.pipeline.statistics.connection_wise_analysis_pipeline import create_connection_wise_analysis_pipeline
+from clinica.pipeline.statistics.NBS_pipeline import create_network_based_statistic_pipeline
 import os
 from os.path import realpath,split,join
 import tempfile

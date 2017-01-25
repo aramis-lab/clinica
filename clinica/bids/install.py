@@ -19,3 +19,4 @@ def copy_data(src, dest):
         exit(-1)
 
     print('Installation of %s done' % basename(src))
+

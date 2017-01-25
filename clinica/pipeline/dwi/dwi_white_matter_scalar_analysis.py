@@ -120,12 +120,11 @@ def dti_based_analysis_pipeline(subject_id, session_id, caps_directory, analysis
 #        name='outputnode')
 
     datasink = pe.Node(nio.DataSink(), name='datasink')
-    caps_identifier = 'sub-' + subject_id + '_ses­' + session_id
-    datasink.inputs.base_directory = os.path.join(caps_directory, 'analysis-series-' + analysis_series_id, 'subjects',
-                                          subject_id, session_id, 'dwi')
-#                                          subject_id, session_id, 'dwi', atlas_name + '-registration')
+    caps_identifier = subject_id + '_' + session_id
+    datasink.inputs.base_directory = os.path.join(
+        caps_directory, 'analysis-series-' + analysis_series_id, 'subjects', subject_id, session_id, 'dwi')
     datasink.inputs.substitutions = [('SyN_Quick0GenericAffine.mat', caps_identifier + '_affine-transform.mat'),
-                                     ('SyN_Quick1Warp.nii.gz', caps_identifier + '_affine-transform.mat'),
+                                     ('SyN_Quick1Warp.nii.gz', caps_identifier + '_deformable-b-spline syn-transform.nii.gz'),
                                      ('SyN_QuickWarped.nii.gz', caps_identifier + '_fa-map-to-' + atlas_name + '.nii.gz'),
                                      ('md_map_registered_to_atlas.nii.gz', caps_identifier + '_md-map-to-' + atlas_name + '.nii.gz'),
                                      ('ad_map_registered_to_atlas.nii.gz', caps_identifier + '_ad-map-to-' + atlas_name + '.nii.gz'),
@@ -152,12 +151,14 @@ def dti_based_analysis_pipeline(subject_id, session_id, caps_directory, analysis
         (ants_registration, apply_ants_registration_for_md, [('warp', 'in_bspline_transformation')]),
         (inputnode,                      scalar_analysis_md, [('in_atlas_labels', 'atlas_labels_image')]),
         (apply_ants_registration_for_md, scalar_analysis_md, [('out_deformed_image', 'input_image')]),
+
         (inputnode,         apply_ants_registration_for_ad, [('in_ad', 'in_image')]),
         (inputnode,         apply_ants_registration_for_ad, [('in_atlas_scalar_image', 'in_reference_image')]),
         (ants_registration, apply_ants_registration_for_ad, [('affine_matrix', 'in_affine_transformation')]),
         (ants_registration, apply_ants_registration_for_ad, [('warp', 'in_bspline_transformation')]),
         (inputnode,                      scalar_analysis_ad, [('in_atlas_labels', 'atlas_labels_image')]),
         (apply_ants_registration_for_ad, scalar_analysis_ad, [('out_deformed_image', 'input_image')]),
+
         (inputnode,         apply_ants_registration_for_rd, [('in_rd', 'in_image')]),
         (inputnode,         apply_ants_registration_for_rd, [('in_atlas_scalar_image', 'in_reference_image')]),
         (ants_registration, apply_ants_registration_for_rd, [('affine_matrix', 'in_affine_transformation')]),
@@ -165,24 +166,31 @@ def dti_based_analysis_pipeline(subject_id, session_id, caps_directory, analysis
         (inputnode,                      scalar_analysis_rd, [('in_atlas_labels', 'atlas_labels_image')]),
         (apply_ants_registration_for_rd, scalar_analysis_rd, [('out_deformed_image', 'input_image')]),
         # Outputnode:
-        (ants_registration,  outputnode, [('image_warped', 'image_warped'),
-                                          ('affine_matrix', 'affine_matrix'),
-                                          ('warp', 'warp'),
-                                          ('inverse_warp', 'inverse_warp'),
-                                          ('inverse_warped', 'inverse_warped')]),
-        (scalar_analysis_fa, outputnode, [('outfile', 'out_stats_file')]),
+        (ants_registration,              outputnode, [('image_warped', 'out_image_warped'),
+                                                      ('affine_matrix', 'out_affine_matrix'),
+                                                      ('warp', 'out_warp'),
+                                                      ('inverse_warp', 'out_inverse_warp'),
+                                                      ('inverse_warped', 'out_inverse_warped')]),
+        (apply_ants_registration_for_md, outputnode, [('out_deformed_image', 'atlas-registration.@out_deformed_md')]),
+        (apply_ants_registration_for_ad, outputnode, [('out_deformed_image', 'atlas-registration.@out_deformed_ad')]),
+        (apply_ants_registration_for_rd, outputnode, [('out_deformed_image', 'atlas-registration.@out_deformed_rd')]),
+        (scalar_analysis_fa,             outputnode, [('outfile', 'atlas-registration.@out_stats_file_fa')]),
+        (scalar_analysis_md,             outputnode, [('outfile', 'atlas-registration.@out_stats_file_md')]),
+        (scalar_analysis_ad,             outputnode, [('outfile', 'atlas-registration.@out_stats_file_ad')]),
+        (scalar_analysis_rd,             outputnode, [('outfile', 'atlas-registration.@out_stats_file_rd')]),
         # Saving files with datasink:
-        (ants_registration,  datasink, [('image_warped', 'atlas-registration.@image_warped'),
-                                        ('affine_matrix', 'atlas-registration.@affine_matrix'),
-                                        ('warp', 'atlas-registration.@warp'),
-                                        ('inverse_warp', 'inverse_warp'),
-                                        ('inverse_warped', 'inverse_warped')]),
+        (ants_registration,              datasink, [('image_warped', 'atlas-registration.@image_warped'),
+                                                   ('affine_matrix', 'atlas-registration.@affine_matrix'),
+                                                   ('warp', 'atlas-registration.@warp'),
+                                                   ('inverse_warp', 'inverse_warp'),
+                                                   ('inverse_warped', 'inverse_warped')]),
         (apply_ants_registration_for_md, datasink, [('out_deformed_image', 'atlas-registration.@out_deformed_md')]),
         (apply_ants_registration_for_ad, datasink, [('out_deformed_image', 'atlas-registration.@out_deformed_ad')]),
         (apply_ants_registration_for_rd, datasink, [('out_deformed_image', 'atlas-registration.@out_deformed_rd')]),
-        (scalar_analysis_fa, datasink, [('outfile', 'atlas-registration.@out_stats_file_fa')]),
-        (scalar_analysis_md, datasink, [('outfile', 'atlas-registration.@out_stats_file_md')]),
-        (scalar_analysis_ad, datasink, [('outfile', 'atlas-registration.@out_stats_file_ad')])
+        (scalar_analysis_fa,             datasink, [('outfile', 'atlas-registration.@out_stats_file_fa')]),
+        (scalar_analysis_md,             datasink, [('outfile', 'atlas-registration.@out_stats_file_md')]),
+        (scalar_analysis_ad,             datasink, [('outfile', 'atlas-registration.@out_stats_file_ad')]),
+        (scalar_analysis_rd,             datasink, [('outfile', 'atlas-registration.@out_stats_file_rd')])
     ])
 
     return wf
@@ -195,14 +203,18 @@ def dti_atlas_scalar_analysis_pipeline(
     """
     Perform tracts analysis according to a white matter atlas using a tensor-derived scalar image.
 
-    This function performs the analysis of tracts using a white matter atlas and compute mean value of the scalar on each tracts of this atlas. The function first coregister the subject scalar image on the equivalent scalar image of the atlas and then use the labels to computes the statistics of the scalar on each tracks of the white matter atlas.
+    This function performs the analysis of tracts using a white matter atlas and compute mean value of the scalar
+    on each tracts of this atlas. The function first coregister the subject scalar image on the equivalent scalar
+    image of the atlas and then use the labels to computes the statistics of the scalar on each tracks of
+    the white matter atlas.
 
     Args:
         in_scalar_image (str): 3D image of the scalar obtained from the tensor
         atlas_labels (str): 3D Image of the white matter labels from the atlas
         atlas_scalar_image (str): 3D image of the same scalar as in "in_scalar_image" but from the atlas
         datasink_directory (str): Directory where the results are stored.
-        working_directory (Optional[str]): Directory where the temporary results are stored. If not specified, it is automatically generated (generally in /tmp/).
+        working_directory (Optional[str]): Directory where the temporary results are stored. If not specified, it is
+            automatically generated (generally in /tmp/).
 
     Outputnode:
         out_stats_file (str): File containing for each tract, the mean value of the scalar, the standard deviation and the nb of voxels.
@@ -253,8 +265,7 @@ def dti_atlas_scalar_analysis_pipeline(
     datasink.inputs.base_directory = op.join(datasink_directory, 'dti_scalar_analysis/')
 
 
-    wf = pe.Workflow(name='dti_scalar_analysis')
-    wf.base_dir = working_directory
+    wf = pe.Workflow(name='dti_scalar_analysis', base_dir=working_directory)
 
     wf.connect([
         (datasource, inputnode, [('in_scalar_image', 'in_scalar_image'),
