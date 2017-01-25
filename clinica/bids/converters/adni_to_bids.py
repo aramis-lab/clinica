@@ -6,7 +6,6 @@ from clinica.bids.bids_utils import  remove_space_and_symbols
 import clinica.bids.bids_utils as bids
 import pandas as pd
 import csv
-from clinica.bids.converter_utils import  remove_space_and_symbols
 from clinica.bids.abstract_converter import Converter
 from clinica.engine.cmdparser import CmdParser
 
@@ -39,8 +38,12 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
     def convert_clinical_data(self, src, dest_dir):pass
 
     def convert_images(self, source_dir, dest_dir):
-        t1_paths = compute_t1_paths(source_dir)
-        # print t1_table
+        """
+        :param source_dir:
+        :param dest_dir:
+        :return:
+        """
+        t1_paths = self.compute_t1_paths(source_dir)
         subjs_list_path = path.join(source_dir, 'clinicalData', 'subjects_list_from_adnimerge.xlsx')
         subjs_list_excel = pd.read_excel(subjs_list_path)
         subjs_list = subjs_list_excel['PTID']
@@ -75,14 +78,16 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                     # Convert the image using dcm2nii
                     print 'Dicom found, needs to be converted'
 
-    def compute_t1_paths(source_dir):
+    def compute_t1_paths(self, source_dir):
         """
         Select the T1 to use for each subject.
 
         Adapted from a script of Jorge Samper
         :param source_dir:
         :return: Dictionary that has the following structure
-        { subj_id1 : {session1 : {modality: file_name, ...}, subj_id2 : ....}
+        { subj_id1 : { session1 : { modality: file_name, ...},
+                       session2 : {...}}
+          subj_id2 : ....}
         """
         t1_dict = {}
         t1_col_df = ['subj_id', 'session','filename', 'date', 'series_id']
