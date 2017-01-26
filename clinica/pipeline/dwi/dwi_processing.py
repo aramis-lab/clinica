@@ -248,9 +248,9 @@ def tractography_and_dti_pipeline(
         name='outputnode')
 
     datasink = pe.Node(nio.DataSink(), name='datasink')
-    caps_identifier = 'sub-' + subject_id + '_ses­' + session_id
-    datasink.inputs.base_directory = join(caps_directory, 'analysis-series-' + analysis_series_id, 'subjects',
-                                          subject_id, session_id, 'dwi')
+    caps_identifier = subject_id + '_' + session_id
+    datasink.inputs.base_directory = join(
+        caps_directory, 'analysis-series-' + analysis_series_id, 'subjects', subject_id, session_id, 'dwi')
     datasink.inputs.substitutions = [('dti.mif', caps_identifier + '_dti.mif'),
                                      ('dwi.mif', caps_identifier + '_dwi.mif'),
                                      ('eroded_mask.nii.gz', caps_identifier + '_eroded-b0-mask.nii.gz'),
