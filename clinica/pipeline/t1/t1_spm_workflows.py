@@ -4,7 +4,7 @@ import nipype.interfaces.spm as spm
 import nipype.interfaces.matlab as mlab
 import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as niu
-from clinica.pipeline.t1.t1_spm_utils import get_tissue_tuples, get_class_images, unzip_nii
+from clinica.pipeline.t1.t1_spm_utils import get_tissue_tuples, get_class_images, unzip_nii, DARTELExistingTemplate
 
 
 def segmentation_pipeline(working_directory=None,
@@ -96,7 +96,7 @@ def segmentation_pipeline(working_directory=None,
     unzip = pe.MapNode(niu.Function(input_names=['in_file'],
                                             output_names=['out_file'],
                                             function=unzip_nii),
-                        name="unzip", iterfield=['in_file'])
+                        name='unzip', iterfield=['in_file'])
 
     new_segment = pe.MapNode(spm.NewSegment(), name='new_segment', iterfield=['channel_files'])
 
@@ -151,6 +151,183 @@ def dartel_pipeline(working_directory=None,
                     in_fwhm=None,
                     in_modulate=True,
                     in_voxel_size=None):
+    """
+    Creates a pipeline that performs SPM DARTEL registration for T1 images.
+
+    It takes a series of DARTEL input images and gray matter(GM),
+    white matter(WM) and cerebrospinal fluid(CSF) tissue images in native space
+    and returns the registered images into a DARTEL template obtained for the group.
+
+    dartelTemplate node inputs:
+
+    [Mandatory]
+    dartelTemplate.image_files: (a list of items which are a list of items which are an existing file name)
+        A list of files to be registered
+
+    dartel2mni_input node inputs:
+
+    [Mandatory]
+    dartel2mni_input.native_class_images: (a list of items which are an existing file name)
+        Files to apply the transform to
+
+
+    outputnode node outputs:
+
+    out_dartel_flow_fields: (a list of items which are an existing file name)
+        DARTEL flow fields
+    out_final_template_file: (an existing file name)
+            final DARTEL template
+    out_template_files: (a list of items which are an existing file name)
+            Templates from different stages of iteration
+    out_normalization_parameter_file: (an existing file name)
+        Transform parameters to MNI space
+    out_normalized_files: (a list of items which are an existing file name)
+        Normalized files in MNI space
+
+
+
+    For more dartelTemplate parameters and outputs check:
+    http://www.mit.edu/~satra/nipype-nightly/interfaces/generated/nipype.interfaces.spm.preprocess.html#dartel
+
+    For more dartel2mni parameters and outputs check:
+    http://www.mit.edu/~satra/nipype-nightly/interfaces/generated/nipype.interfaces.spm.preprocess.html#dartelnorm2mni
+
+    :param output_directory: Directory to save the resulting images of the registration process.
+    :param working_directory: Directory to run the workflow.
+    :param name: Workflow name
+
+    DARTEL parameters
+    :param in_iteration_parameters: (a list of from 3 to 12 items which are a tuple
+         of the form: (1 <= an integer <= 10, a tuple of the form: (a float,
+         a float, a float), 1 or 2 or 4 or 8 or 16 or 32 or 64 or 128 or 256
+         or 512, 0 or 0.5 or 1 or 2 or 4 or 8 or 16 or 32))
+        List of tuples for each iteration
+         - Inner iterations
+         - Regularization parameters
+         - Time points for deformation model
+         - smoothing parameter
+    :param in_optimization_parameters: (a tuple of the form: (a float, 1 <= an
+         integer <= 8, 1 <= an integer <= 8))
+         Optimization settings a tuple
+         - LM regularization
+         - cycles of multigrid solver
+         - relaxation iterations
+    :param in_regularization_form: ('Linear' or 'Membrane' or 'Bending')
+        Form of regularization energy term
+    :param in_template_prefix: (a string, nipype default value: Template)
+        Prefix for template
+
+    DARTELNorm2MNI parameters
+    :param in_bounding_box: (a tuple of the form: (a float, a float, a float, a
+         float, a float, a float))
+        Voxel sizes for output file
+    :param in_fwhm: (a list of from 3 to 3 items which are a float or a float)
+        3-list of fwhm for each dimension
+    :param in_modulate: (a boolean)
+        Modulate out images - no modulation preserves concentrations
+    :param in_voxel_size: (a tuple of the form: (a float, a float, a float))
+        Voxel sizes for output file
+    :return: Registration workflow
+    """
+    spm_home = os.getenv("SPM_HOME")
+    mlab_home = os.getenv("MATLABCMD")
+    mlab.MatlabCommand.set_default_matlab_cmd(mlab_home)
+    mlab.MatlabCommand.set_default_paths(spm_home)
+
+    version = spm.Info.version()
+
+    if version:
+        if version['name'] == 'SPM8':
+            print 'You are using SPM version 8. The recommended version to use with Clinica is SPM 12. Please upgrade your SPM toolbox.'
+        elif version['name'] != 'SPM12':
+            raise RuntimeError('SPM version 8 or 12 could not be found. Please upgrade your SPM toolbox.')
+    else:
+        raise RuntimeError('SPM could not be found. Please verify your SPM_HOME environment variable.')
+
+    # DARTEL Template creation node
+    dartelTemplate = pe.Node(spm.DARTEL(), name='dartelTemplate')
+
+    if in_iteration_parameters is not None:
+        dartelTemplate.inputs.iteration_parameters = in_iteration_parameters
+    if in_optimization_parameters is not None:
+        dartelTemplate.inputs.optimization_parameters = in_optimization_parameters
+    if in_regularization_form is not None:
+        dartelTemplate.inputs.regularization_form = in_regularization_form
+    if in_template_prefix is not None:
+        dartelTemplate.inputs.template_prefix = in_template_prefix
+
+
+    def prepare_dartel2mni_input(native_space_images, flowfield_files):
+        """
+        Function receives a list of lists of native class images and a list of flow fields.
+        It returns two lists of the same length to give as input to DARTEL2MNI
+        This will allow to process each pair of files in parallel.
+        :param native_space_images: list of lists of native space images
+        :param flowfield_files: list of flow fields files
+        :return: expanded list of native images,list of flow fields files of the same length
+        """
+
+        native_files = [image for nat_class in native_space_images for image in nat_class]
+
+        if len(native_files)%len(flowfield_files) != 0:
+            raise ValueError('Length of the list of native space images is not a multiple of the length of the list of flow fields images')
+
+        ffield_files = flowfield_files * (len(native_files)/len(flowfield_files))
+
+        return native_files, ffield_files
+
+    dartel2mni_input = pe.Node(niu.Function(input_names=['native_space_images', 'flowfield_files'],
+                         output_names=['native_files', 'ffield_files'],
+                         function=prepare_dartel2mni_input),
+                name='dartel2mni_input')
+
+    # DARTEL2MNI
+    dartel2mni = pe.MapNode(spm.DARTELNorm2MNI(), name='dartel2MNI', iterfield=['apply_to_files', 'flowfield_files'])
+
+    if in_bounding_box is not None:
+        dartel2mni.inputs.bounding_box = in_bounding_box
+    if in_voxel_size is not None:
+        dartel2mni.inputs.voxel_size = in_voxel_size
+
+    #Modulation
+    dartel2mni.inputs.modulate = in_modulate
+
+    #Smoothing
+    if in_fwhm is not None:
+        if in_fwhm == [0, 0, 0]:
+            in_fwhm = 0
+        dartel2mni.inputs.fwhm = in_fwhm
+
+    outputnode = pe.Node(niu.IdentityInterface(fields=['out_dartel_flow_fields', 'out_final_template_file', 'out_template_files',
+                                                       'out_normalization_parameter_file', 'out_normalized_files']), name='outputnode')
+
+    wf = pe.Workflow(name=name)
+    if working_directory is not None:
+        wf.base_dir = working_directory
+
+    wf.connect([(dartelTemplate, dartel2mni_input,[('dartel_flow_fields', 'flowfield_files')]),
+                (dartelTemplate, dartel2mni, [('final_template_file', 'template_file')]),
+                (dartel2mni_input, dartel2mni, [('native_files', 'apply_to_files'),
+                                                ('ffield_files', 'flowfield_files')]),
+                (dartelTemplate, outputnode, [('dartel_flow_fields','out_dartel_flow_fields'),
+                                              ('final_template_file', 'out_final_template_file'),
+                                              ('template_files', 'out_template_files')]),
+                (dartel2mni, outputnode, [('normalization_parameter_file', 'out_normalization_parameter_file'),
+                                          ('normalized_files', 'out_normalized_files')])
+                ])
+    return wf
+
+
+def dartel_existing_template_pipeline(working_directory=None,
+                                      name='dartel_existing_template_wf',
+                                      in_iteration_parameters=None,
+                                      in_optimization_parameters=None,
+                                      in_regularization_form=None,
+                                      in_template_prefix=None,
+                                      in_bounding_box=None,
+                                      in_fwhm=None,
+                                      in_modulate=True,
+                                      in_voxel_size=None):
     """
     Creates a pipeline that performs SPM DARTEL registration for T1 images.
 
