@@ -43,6 +43,8 @@ def datagrabber_t1_spm_segment_pipeline(input_directory,
     """
 
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
+    if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
+        raise Exception('Subjects and visits file is not in the correct format.')
     subjects = list(subjects_visits.participant_id)
     sessions = list(subjects_visits.session_id)
 
@@ -87,16 +89,10 @@ def datagrabber_t1_spm_segment_pipeline(input_directory,
 
     datasink_iterfields = ['container'] + datasink_infields
 
-    print 'Datasink infields'
-    print datasink_infields
-    print
-    print 'Datasink iterfields'
-    print datasink_iterfields
-
     datasink = pe.MapNode(nio.DataSink(infields=datasink_infields), name='datasink', iterfield=datasink_iterfields)
     datasink.inputs.parameterization = False
     datasink.inputs.base_directory = output_directory
-    datasink.inputs.container = ['analysis-series-' + analysis_series_id + '/subjects/sub-' + subjects[i] + '/ses-' + sessions[i] + '/t1/spm/segmentation' for i in range(len(subjects))]
+    datasink.inputs.container = ['analysis-series-' + analysis_series_id + '/subjects/' + subjects[i] + '/' + sessions[i] + '/t1/spm/segmentation' for i in range(len(subjects))]
 
     seg_wf = pe.Workflow(name='seg_wf')
     seg_wf.base_dir = working_directory
@@ -221,16 +217,10 @@ def datagrabber_t1_spm_full_pipeline(input_directory,
 
     seg_datasink_iterfields = ['container'] + seg_datasink_infields
 
-    print 'Datasink infields'
-    print seg_datasink_infields
-    print
-    print 'Datasink iterfields'
-    print seg_datasink_iterfields
-
     seg_datasink = pe.MapNode(nio.DataSink(infields=seg_datasink_infields), name='datasink', iterfield=seg_datasink_iterfields)
     seg_datasink.inputs.parameterization = False
     seg_datasink.inputs.base_directory = output_directory
-    seg_datasink.inputs.container = ['analysis-series-' + analysis_series_id + '/subjects/sub-' + subjects[i] + '/ses-' + sessions[i] + '/t1/spm/segmentation' for i in range(len(subjects))]
+    seg_datasink.inputs.container = ['analysis-series-' + analysis_series_id + '/subjects/' + subjects[i] + '/' + sessions[i] + '/t1/spm/segmentation' for i in range(len(subjects))]
 
     template_datasink = pe.Node(nio.DataSink(), name='template_datasink')
     template_datasink.inputs.parameterization = False
@@ -240,7 +230,7 @@ def datagrabber_t1_spm_full_pipeline(input_directory,
     dartel_datasink = pe.MapNode(nio.DataSink(infields=['flow_fields', 'registered']), name='dartel_datasink', iterfield=['container', 'flow_fields', 'registered'])
     dartel_datasink.inputs.parameterization = False
     dartel_datasink.inputs.base_directory = output_directory
-    dartel_datasink.inputs.container = ['analysis-series-' + analysis_series_id + '/subjects/sub-' + subjects[i] + '/ses-' + sessions[i] + '/t1/spm/dartel/group-' + group_id for i in range(len(subjects))]
+    dartel_datasink.inputs.container = ['analysis-series-' + analysis_series_id + '/subjects/' + subjects[i] + '/' + sessions[i] + '/t1/spm/dartel/group-' + group_id for i in range(len(subjects))]
 
     preproc_wf = pe.Workflow(name='preproc_wf')
     if working_directory is not None:
@@ -255,7 +245,5 @@ def datagrabber_t1_spm_full_pipeline(input_directory,
         (t1_spm_prep_wf, dartel_datasink, [('dartel_wf.dartelTemplate.dartel_flow_fields', 'flow_fields'),
                                            (('dartel_wf.dartel2MNI.normalized_files', group_images_list_by_subject, tissue_classes), 'registered')])
     ])
-
-    print seg_datasink.outputs
 
     return preproc_wf

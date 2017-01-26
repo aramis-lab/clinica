@@ -251,6 +251,54 @@ class CmdParserT1SPMSegment(CmdParser):
         segment_wf.run('MultiProc', plugin_args={'n_procs': args.n_threads})
 
 
+class CmdParserPETPreprocessing(CmdParser):
+
+    def define_name(self):
+        self._name = 'pet-preprocessing'
+
+    def define_options(self):
+        self._args.add_argument("bids_directory",
+                                help='Path to the BIDS directory.')
+        self._args.add_argument("caps_directory",
+                                help='Path to the CAPS directory.')
+        self._args.add_argument("subjects_sessions_tsv",
+                                help='TSV file containing the subjects with their sessions.')
+        self._args.add_argument("group_id",
+                                help='Current group name. Used to obtain t1 images template and transformation.')
+        self._args.add_argument("-as", "--analysis_series_id",
+                                help='Current analysis series name', default='default')
+        self._args.add_argument("-wd", "--working_directory",
+                                help='Temporary directory to store pipeline intermediate results')
+        self._args.add_argument("-np", "--n_threads", type=int, default=4,
+                                help='Number of threads to run in parallel')
+        self._args.add_argument("-pt", "--pet_type", default='FDG', choices=['FDG', 'AV45'],
+                                help="Type of PET scan. Possible values are FDG or AV45.")
+        self._args.add_argument("-pvc", "--pvc", action='store_true',
+                                help="To apply or not partial value correction to the scan. If yes, FWHM is required.")
+        self._args.add_argument("-fwhm", "--pvc_fwhm", nargs=3, type=float, default=[6, 6, 6],
+                                help="A list of 3 floats specifying the FWHM for each dimension X, Y, Z")
+
+    def run_pipeline(self, args):
+
+        from clinica.pipeline.pet.pet import bids_caps_pet_pipeline
+
+        working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
+
+        pet_wf = bids_caps_pet_pipeline(self.absolute_path(args.bids_directory),
+                                        self.absolute_path(args.caps_directory),
+                                        self.absolute_path(args.subjects_sessions_tsv),
+                                        args.group_id,
+                                        analysis_series_id=args.analysis_series_id,
+                                        pet_type=args.pet_type,
+                                        working_directory=self.absolute_path(working_directory),
+                                        pvc=args.pvc,
+                                        fwhm_x=args.pvc_fwhm[0],
+                                        fwhm_y=args.pvc_fwhm[1],
+                                        fwhm_z=args.pvc_fwhm[2])
+
+        pet_wf.run('MultiProc', plugin_args={'n_procs': args.n_threads})
+
+
 class CmdParserT1FreeSurfer(CmdParser):
 
     def define_name(self):
