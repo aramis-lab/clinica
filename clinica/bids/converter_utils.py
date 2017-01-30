@@ -116,18 +116,3 @@ class MissingModsTracker:
         """
         return self.missing
 
-
-def remove_space_and_symbols(data):
-    '''
-    Remove spaces and  - _ from a list (or a single) of strings
-    :param data: list of strings or a single string to clean
-    :return:
-        data: list of strings or a string without space and symbols _ and -
-    '''
-    if type(data) is list:
-        for i in range(0, len(data)):
-            data[i] = re.sub('[-_ ]', '', data[i])
-    else:
-        data = re.sub('[-_ ]', '', data)
-
-    return data

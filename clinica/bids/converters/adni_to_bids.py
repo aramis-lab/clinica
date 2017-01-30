@@ -1,11 +1,3 @@
-from os import path, walk, remove, makedirs
-from glob import glob
-import os
-import logging
-from clinica.bids.bids_utils import  remove_space_and_symbols
-import clinica.bids.bids_utils as bids
-import pandas as pd
-import csv
 from clinica.bids.abstract_converter import Converter
 from clinica.engine.cmdparser import CmdParser
 
@@ -18,10 +10,8 @@ __maintainer__ = "Sabrina Fontanella"
 __email__ = "sabrina.fontanella@icm-institute.org"
 __status__ = "Development"
 
-class ADNI_TO_BIDS(Converter, CmdParser) :
 
-    #def __init__(self):
-    #    super(ADNI_TO_BIDS, self).__init__()
+class ADNI_TO_BIDS(Converter, CmdParser) :
 
     def define_name(self):
         self._name = 'adni-to-bids'
@@ -37,12 +27,35 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
 
     def convert_clinical_data(self, src, dest_dir):pass
 
+    def convert_t1_from_dicom(self, t1_path, output_path, bids_name):
+        """
+
+        :param t1_path:
+        :param output_path:
+        :param bids_name:
+        :return:
+        """
+
+        import os
+        import clinica.bids.bids_utils as bids
+
+        if not os.path.exists(output_path):
+            os.mkdir(output_path)
+        os.system('dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name + bids.get_bids_suff('T1') + ' ' + t1_path )
+
+
     def convert_images(self, source_dir, dest_dir):
         """
         :param source_dir:
         :param dest_dir:
         :return:
         """
+
+        import clinica.bids.bids_utils as bids
+        import os
+        from os import path
+        import pandas as pd
+
         t1_paths = self.compute_t1_paths(source_dir)
         subjs_list_path = path.join(source_dir, 'clinicalData', 'subjects_list_from_adnimerge.xlsx')
         subjs_list_excel = pd.read_excel(subjs_list_path)
@@ -52,9 +65,11 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         bids_ids = []
         alpha_ids = []
 
+        os.mkdir(dest_dir)
+
         for subj in subjs_list:
-            alpha_id = remove_space_and_symbols(subj)
-            bids_id = 'sub-' + alpha_id
+            alpha_id = bids.remove_space_and_symbols(subj)
+            bids_id = 'sub-ADNI' + alpha_id
             alpha_ids.append(alpha_id)
             bids_ids.append(bids_id)
             os.mkdir(path.join(dest_dir, bids_id))
@@ -73,10 +88,17 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                     if len(t1_path) == 0:
                         print 'No path'
                     else:
+                        os.mkdir(path.join(ses_path, 'anat'))
                         bids.convert_T1(t1_path, path.join(ses_path, 'anat'), bids_file_name)
                 else:
                     # Convert the image using dcm2nii
                     print 'Dicom found, needs to be converted'
+                    os.mkdir(path.join(ses_path, 'anat'))
+                    t1_path = (t1_info['path'].values[0]).replace(' ', '\ ')
+                    if len(t1_path)!=0:
+                        self.convert_t1_from_dicom(t1_path, path.join(ses_path, 'anat'), bids_file_name)
+                    else:
+                        print 'No path for dicom'
 
     def compute_t1_paths(self, source_dir):
         """
@@ -89,7 +111,10 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                        session2 : {...}}
           subj_id2 : ....}
         """
-        t1_dict = {}
+
+        import pandas as pd
+        from os import path
+
         t1_col_df = ['subj_id', 'session','filename', 'date', 'series_id']
         sessions_list = ['bl']
 
@@ -119,8 +144,8 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                 original = True
 
                 if subject.ORIGPROT == 'ADNI1':
-                    # If the subject came from ADNI1, 1.5T image will be selected
 
+                    # If the subject came from ADNI1, 1.5T image will be selected
                     filtered_screening = adni1_screening[adni1_screening.PTID == subj_id]
                     if filtered_screening.shape[0] < 1:
                         print 'NO Screening: ' + subj_id
@@ -216,12 +241,13 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
             subjects.loc[:, 'path'] = pd.Series(nifti_paths, index=subjects.index)
 
         return subjects
+        print subjects
 
     def run_pipeline(self, args):
         if args.modality is True:
             self.convert_clinical_data(args.dataset_directory, args.bids_directory)
 
-        #self.convert_images(args.xx)
+
 
 
 
