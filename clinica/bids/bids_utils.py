@@ -2,17 +2,6 @@
 Function used by BIDS converters.
 """
 
-
-from os import path
-import logging
-from glob import glob
-import fileinput
-from shutil import copy
-import nibabel as nib
-import os
-import gzip
-import re
-
 __author__ = "Sabrina Fontanella"
 __copyright__ = "Copyright 2016, The Aramis Lab Team"
 __credits__ = ["Sabrina Fontanella"]
@@ -24,7 +13,6 @@ __status__ = "Development"
 
 
 def compute_new_subjects(original_ids, bids_ids):
-
     """
     Check for new subject to convert.
 
@@ -35,6 +23,7 @@ def compute_new_subjects(original_ids, bids_ids):
     :param bids_ids: list of all the BIDS ids contained inside the bids converted version of the dataset
     :return: a list containing the original_ids of the subjects that are not available in the bids converted version
     """
+
     to_return = []
     original_ids = remove_space_and_symbols(original_ids)
 
@@ -51,6 +40,9 @@ def remove_space_and_symbols(data):
     :return:
         data: list of strings or a string without space and symbols _ and -
     '''
+
+    import re
+
     if type(data) is list:
         for i in range(0, len(data)):
             data[i] = re.sub('[-_ ]', '', data[i])
@@ -61,6 +53,9 @@ def remove_space_and_symbols(data):
 
 
 def get_ext(file_path):
+
+    import os
+
     root, ext = os.path.splitext(file_path)
     if ext in '.gz':
         file_ext = os.path.splitext(root)[1] + ext
@@ -75,6 +70,10 @@ def compress_nii(file_path):
     :param path:
     :return:
     '''
+
+    from os import path
+    import os
+    import gzip
 
     f_in = open(file_path)
     f_out = gzip.open(path.join(file_path + '.gz'), 'wb')
@@ -98,6 +97,9 @@ def remove_rescan(list_path):
         The list of non rescanned folders.
 
     """
+
+    import logging
+
     # Extract all the folders without the substring 'rescan'
     no_resc_lst = [s for s in list_path if 'rescan' not in s]
     if len(no_resc_lst) != len(list_path):
@@ -121,6 +123,7 @@ def has_fixed(subj_id, ses, mod, special_list):
          False: if the fixed modality to convert is not available for the specified subject
          file_to_convert: name of the folder to choosefor the conversion
     """
+
     if subj_id in special_list:
         if mod in special_list[subj_id]:
             if ses in special_list[subj_id][mod]:
@@ -149,7 +152,12 @@ def choose_correction(dir, to_consider, mod):
         0 if none of the desided corrections is available..
 
     """
-    # extract all the files available for a certain modality
+
+    from os import path
+    from glob import glob
+    import os
+
+    # Extract all the files available for a certain modality
     correction_list = remove_rescan(glob(path.join(dir, '*' + mod + '*')))
     if len(correction_list) == 0:
         return -1
@@ -171,6 +179,7 @@ def get_bids_suff(mod):
     Returns:
         The suffix used in the BIDS standard for a certain modality.
     """
+
     bids_suff = {
         'T1': '_T1w',
         'T2': '_T2w',
@@ -196,6 +205,10 @@ def convert_T1(t1_path, output_path, t1_bids_name):
 
     """
 
+    from os import path
+    from shutil import copy
+    import os
+
     if not os.path.exists(output_path):
         os.mkdir(output_path)
     #copy(t1_path, path.join(output_path, t1_bids_name + get_bids_suff('T1') + '.nii.gz'))
@@ -220,6 +233,12 @@ def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False,False]
          -1 if the modality is not available.
          0 if the magnitude or the phase is missing (information incomplete).
     """
+
+    from os import path
+    from glob import glob
+    from shutil import copy
+    import nibabel as nib
+    import os
 
     mag_missing = map_ph_missing = False
 
@@ -303,6 +322,13 @@ def convert_flair(folder_input, folder_output, name, fixed_file = False):
     Returns:
         -1 if no T2FLAIR is found in the input folder.
     """
+
+    from os import path
+    import logging
+    from glob import glob
+    from shutil import copy
+    import os
+
     # If a given T2FLAIR is given for the conversion use it
     if fixed_file!=False:
         fixed_flair_path = glob(path.join(folder_input,fixed_file,'*'))[0]
@@ -334,6 +360,13 @@ def convert_fmri(folder_input, folder_output, name, fixed_fmri=False):
     Returns:
         -1 if no fMRI file is found in the input folder.
     """
+
+    from os import path
+    import logging
+    from glob import glob
+    from shutil import copy
+    import os
+
     if fixed_fmri is not False:
         fmri_lst = glob(path.join(folder_input, fixed_fmri))
     else:
@@ -368,6 +401,12 @@ def merge_DTI(folder_input, folder_output, name, fixed_dti_list=False):
         -1 if the input folder doesn't contain any DTI folder.
         The list of incomplete DTI folders if there is some folders without bvec/bval/nii
     """
+
+    from os import path
+    from glob import glob
+    import fileinput
+    import os
+
     img = []
     bval = []
     bvec = []
