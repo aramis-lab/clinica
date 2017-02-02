@@ -56,7 +56,7 @@ def datagrabber_t1_freesurfer_pipeline(input_dir,
     inputnode = pe.Node(name='inputnode',
                           interface=Function(
                           input_names=['output_dir', 'subjects_visits_tsv', 'analysis_series_id'],
-                          output_names=['subject_dir', 'subject_id', 'subject_list', 'session_list'],
+                          output_names=['subject_dir', 'nouse0', 'nouse1', 'nouse2', 'subject_id', 'subject_list', 'session_list'],
                           function=get_dirs_check_reconalled))
     inputnode.inputs.output_dir = output_dir
     inputnode.inputs.subjects_visits_tsv = subjects_visits_tsv
