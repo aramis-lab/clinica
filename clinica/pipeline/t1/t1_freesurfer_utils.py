@@ -88,12 +88,12 @@ def get_dirs_check_reconalled(output_dir, subjects_visits_tsv, analysis_series_i
             session_list_without_reconalled.remove(session_list[i])
         else:
             subject_dir.append(subject)
-    try:
-        if len(subject_dir) == 0:
-            raise RuntimeError('This round for your dataset has no new added subject, please check out your dataset')
-    except Exception as e:
-        print(str(e))
-        exit(1)
+    # try:
+    #     if len(subject_dir) == 0:
+    #         raise RuntimeError('This round for your dataset has no new added subject, please check out your dataset')
+    # except Exception as e:
+    #     print(str(e))
+    #     exit(1)
 
     return subject_dir, subject_id, subject_list, session_list, subject_id_without_reconalled, subject_list_without_reconalled, session_list_without_reconalled
 
