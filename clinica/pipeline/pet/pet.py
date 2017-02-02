@@ -11,6 +11,7 @@ def bids_caps_pet_pipeline(bids_directory,
                            pet_type='FDG',
                            working_directory=None,
                            pvc=False,
+                           mask_tissues=[1, 2, 3],
                            fwhm_x=6,
                            fwhm_y=6,
                            fwhm_z=6):
@@ -28,13 +29,14 @@ def bids_caps_pet_pipeline(bids_directory,
                       pet_type,
                       working_directory,
                       pvc,
+                      mask_tissues,
                       fwhm_x,
                       fwhm_y,
                       fwhm_z,
                       index,
                       subject_session):
 
-        from clinica.pipeline.pet.pet_utils import create_datagrabber
+        from clinica.pipeline.pet.pet_utils import create_datagrabber, create_tissues_datagrabber
         import os
         import os.path as op
         import nipype.pipeline.engine as pe
@@ -61,7 +63,6 @@ def bids_caps_pet_pipeline(bids_directory,
                                                   't1/spm/final_template/Template_6.nii')
         dartel_template.inputs.sort_filelist = False
 
-        # TODO put reference masks somewhere in clinica
         reference_mask = pe.Node(nio.DataGrabber(outfields=['out_files']), name='reference_mask')
         clinica_home = os.getenv("CLINICA_HOME")
         base_directory = op.join(clinica_home, 'clinica', 'resources')
@@ -69,15 +70,22 @@ def bids_caps_pet_pipeline(bids_directory,
         reference_mask.inputs.sort_filelist = False
         # TODO DIFFERENT PET TYPES TO PROCESS
         if pet_type == 'FDG':
-            reference_mask.inputs.template = 'mask_pons_eroded_6mm.nii'
+            reference_mask.inputs.template = 'mask_pons_eroded_6mm.nii*'
         elif pet_type == 'AV45':
-            reference_mask.inputs.template = 'mask_cerebellum+pons_eroded_6mm.nii'
+            reference_mask.inputs.template = 'mask_cerebellum+pons_eroded_6mm.nii*'
         else:
             raise NotImplementedError
 
-        suvr_datasink = pe.Node(nio.DataSink(), name='suvr_datasink')
-        suvr_datasink.inputs.parameterization = False
-        suvr_datasink.inputs.base_directory = op.join(caps_directory, 'analysis-series-' + analysis_series_id + '/subjects/' + subject + '/' + session + '/pet/preprocessing')
+        c_base_dir = op.join(caps_directory, 'analysis-series-' + analysis_series_id, 'subjects')
+
+        mask_tissues_template = '%s/%s/t1/spm/dartel/group-' + group_id +'/registered/*wc%s%s_%s_T1w.nii*'
+
+        mask_tissues_dg = create_tissues_datagrabber('mask_tissues_dg', subject, session, mask_tissues, c_base_dir,
+                                                     mask_tissues_template)
+
+        pet_datasink = pe.Node(nio.DataSink(), name='pet_datasink')
+        pet_datasink.inputs.parameterization = False
+        pet_datasink.inputs.base_directory = op.join(caps_directory, 'analysis-series-' + analysis_series_id + '/subjects/' + subject + '/' + session + '/pet/preprocessing')
 
         pet_wf = pet_pipeline(working_directory=op.join(working_directory, 'individual_pipelines', subject + '-' + session), pvc=pvc)
         inputnode = pet_wf.get_node('inputnode')
@@ -88,22 +96,19 @@ def bids_caps_pet_pipeline(bids_directory,
                         (flow_fields, inputnode, [('out_files', 'flow_fields')]),
                         (dartel_template, inputnode, [('out_files', 'dartel_template')]),
                         (reference_mask, inputnode, [('out_files', 'reference_mask')]),
-                        (outputnode, suvr_datasink, [('suvr_pet_path', 'suvr')])]) # TODO Add a rename function
+                        (mask_tissues_dg, inputnode, [('out_files', 'mask_tissues')])
+                        ])
+
+        for output in outputnode.outputs.items():
+            pet_wf.connect(outputnode, output[0], pet_datasink, output[0])
 
         if pvc:
             c_base_dir = op.join(caps_directory, 'analysis-series-' + analysis_series_id, 'subjects')
-            c1_template = '%s/%s/t1/spm/segmentation/native_space/c1%s_%s_T1w_Template.nii*'
-            c1_files = create_datagrabber('c1_files', [subject], [session], c_base_dir, c1_template)
+            native_pvc_tissues_template = '%s/%s/t1/spm/segmentation/native_space/c%s%s_%s_T1w.nii*'
+            pvc_tissues = create_tissues_datagrabber('pvc_tissues', subject, session, [1, 2, 3], c_base_dir,
+                                                     native_pvc_tissues_template)
 
-            c2_template = '%s/%s/t1/spm/segmentation/native_space/c2%s_%s_T1w_Template.nii*'
-            c2_files = create_datagrabber('c2_files', [subject], [session], c_base_dir, c2_template)
-
-            c3_template = '%s/%s/t1/spm/segmentation/native_space/c3%s_%s_T1w_Template.nii*'
-            c3_files = create_datagrabber('c3_files', [subject], [session], c_base_dir, c3_template)
-
-            pet_wf.connect([(c1_files, inputnode, [('out_files', 'gm_image')]),
-                            (c2_files, inputnode, [('out_files', 'wm_image')]),
-                            (c3_files, inputnode, [('out_files', 'csf_image')])])
+            pet_wf.connect(pvc_tissues, 'out_files', inputnode, 'pvc_mask_tissues')
 
             inputnode.inputs.fwhm_x = fwhm_x
             inputnode.inputs.fwhm_y = fwhm_y
@@ -119,6 +124,7 @@ def bids_caps_pet_pipeline(bids_directory,
                                                                  'pet_type',
                                                                  'working_directory',
                                                                  'pvc',
+                                                                 'mask_tissues',
                                                                  'fwhm_x',
                                                                  'fwhm_y',
                                                                  'fwhm_z',
@@ -133,6 +139,7 @@ def bids_caps_pet_pipeline(bids_directory,
     infosource.inputs.pet_type = pet_type
     infosource.inputs.working_directory = working_directory
     infosource.inputs.pvc = pvc
+    infosource.inputs.mask_tissues = mask_tissues
     infosource.inputs.fwhm_x = fwhm_x
     infosource.inputs.fwhm_y = fwhm_y
     infosource.inputs.fwhm_z = fwhm_z
@@ -148,6 +155,7 @@ def bids_caps_pet_pipeline(bids_directory,
                                                   'pet_type',
                                                   'working_directory',
                                                   'pvc',
+                                                  'mask_tissues',
                                                   'fwhm_x',
                                                   'fwhm_y',
                                                   'fwhm_z',
@@ -168,6 +176,7 @@ def bids_caps_pet_pipeline(bids_directory,
                                                   ('pet_type', 'pet_type'),
                                                   ('working_directory', 'working_directory'),
                                                   ('pvc', 'pvc'),
+                                                  ('mask_tissues', 'mask_tissues'),
                                                   ('fwhm_x', 'fwhm_x'),
                                                   ('fwhm_y', 'fwhm_y'),
                                                   ('fwhm_z', 'fwhm_z'),
@@ -175,5 +184,3 @@ def bids_caps_pet_pipeline(bids_directory,
                                                   ('subject_session', 'subject_session')])
                          ])
     return iter_pet_wf
-
-
