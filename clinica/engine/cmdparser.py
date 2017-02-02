@@ -277,6 +277,8 @@ class CmdParserPETPreprocessing(CmdParser):
                                 help="To apply or not partial value correction to the scan. If yes, FWHM is required.")
         self._args.add_argument("-fwhm", "--pvc_fwhm", nargs=3, type=float, default=[6, 6, 6],
                                 help="A list of 3 floats specifying the FWHM for each dimension X, Y, Z")
+        self._args.add_argument("-ti", "--tissue_classes", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
+                                help="Tissue classes to compose the final mask to apply (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...). Default is GM, WM, CSF. Up to 6 tissue classes previously obtained can be used. Ex: 1 2 3 is GM, WM and CSF")
 
     def run_pipeline(self, args):
 
@@ -294,7 +296,8 @@ class CmdParserPETPreprocessing(CmdParser):
                                         pvc=args.pvc,
                                         fwhm_x=args.pvc_fwhm[0],
                                         fwhm_y=args.pvc_fwhm[1],
-                                        fwhm_z=args.pvc_fwhm[2])
+                                        fwhm_z=args.pvc_fwhm[2],
+                                        mask_tissues=args.tissue_classes)
 
         pet_wf.run('MultiProc', plugin_args={'n_procs': args.n_threads})
 

@@ -104,21 +104,6 @@ class DARTELExistingTemplate(SPMCommand):
         return outputs
 
 
-def unzip_nii(in_file):
-    from nipype.utils.filemanip import split_filename
-    from nipype.algorithms.misc import Gunzip
-
-    _, base, ext = split_filename(in_file)
-
-    # Not compressed
-    if ext[-3:].lower() != ".gz":
-        return in_file
-    # Compressed
-    gunzip = Gunzip(in_file=in_file)
-    gunzip.run()
-    return gunzip.aggregate_outputs().out_file
-
-
 def get_tissue_tuples(tissue_map, tissue_classes, dartel_tissues, save_warped_unmodulated, save_warped_modulated):
     '''
     Method to obtain the list of tuples, one for each tissue class, with the following fields:

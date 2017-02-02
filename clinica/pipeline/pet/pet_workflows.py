@@ -3,8 +3,8 @@ import nipype.interfaces.spm.utils as spmu
 import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as niu
 from nipype.interfaces.petpvc import PETPVC
-from clinica.pipeline.pet.pet_utils import normalize_to_reference, create_mask
-from clinica.pipeline.t1.t1_spm_utils import unzip_nii
+from clinica.pipeline.pet.pet_utils import normalize_to_reference, create_binary_mask, apply_binary_mask, create_pvc_mask
+from clinica.utils.io import zip_nii, unzip_nii
 
 
 def pet_pipeline(working_directory=None,
@@ -36,21 +36,54 @@ def pet_pipeline(working_directory=None,
                                                 function=unzip_nii),
                                    name='unzip_reference_mask')
 
+    unzip_mask_tissues = pe.MapNode(niu.Function(input_names=['in_file'],
+                                                 output_names=['out_file'],
+                                                 function=unzip_nii),
+                                    name='unzip_mask_tissues',
+                                    iterfield=['in_file'])
 
-    coreg_pet_t1 = pe.Node(spm.Coregister(), name='coreg_pet_t1')
+    coreg_pet_t1 = pe.Node(spm.Coregister(), name='coreg_pet_t1', copyfiles=True)
 
-    dartel_mni_reg = pe.Node(spm.DARTELNorm2MNI(), name='dartel_mni_reg')
+    dartel_mni_reg = pe.Node(spm.DARTELNorm2MNI(), name='dartel_mni_reg', copyfiles=True)
     dartel_mni_reg.inputs.modulate = False
     dartel_mni_reg.inputs.fwhm = 0
 
-    reslice = pe.Node(spmu.Reslice(), name='reslice')
+    reslice = pe.Node(spmu.Reslice(), name='reslice', copyfiles=True)
 
     norm_to_ref = pe.Node(niu.Function(input_names=['pet_image', 'region_mask'],
                                        output_names=['suvr_pet_path'],
                                        function=normalize_to_reference),
                           name='norm_to_ref')
 
-    outputnode = pe.Node(niu.IdentityInterface(fields=['suvr_pet_path']), name='outputnode')
+    binary_mask = pe.Node(niu.Function(input_names=['tissues'],
+                                       output_names=['out_mask'],
+                                       function=create_binary_mask),
+                          name='binary_mask')
+
+    apply_mask = pe.Node(niu.Function(input_names=['image', 'binary_mask'],
+                                      output_names=['masked_image_path'],
+                                      function=apply_binary_mask),
+                         name='apply_mask')
+
+    zip_pet_t1_native = pe.Node(niu.Function(input_names=['in_file'],
+                                           output_names=['out_file'],
+                                           function=zip_nii),
+                              name='zip_pet_t1_native')
+
+    zip_pet_mni = pe.Node(niu.Function(input_names=['in_file'],
+                                                 output_names=['out_file'],
+                                                 function=zip_nii),
+                                    name='zip_pet_mni')
+
+    zip_pet_suvr = pe.Node(niu.Function(input_names=['in_file'],
+                                             output_names=['out_file'],
+                                             function=zip_nii),
+                                name='zip_pet_suvr')
+
+    zip_masked_pet_suvr = pe.Node(niu.Function(input_names=['in_file'],
+                                               output_names=['out_file'],
+                                               function=zip_nii),
+                                  name='zip_masked_pet_suvr')
 
     wf = pe.Workflow(name=name)
     if working_directory is not None:
@@ -58,45 +91,41 @@ def pet_pipeline(working_directory=None,
 
     if pvc:
         inputnode = pe.Node(niu.IdentityInterface(
-            fields=['pet_image', 't1_image_native', 'gm_image', 'wm_image', 'csf_image', 'fwhm_x', 'fwhm_y', 'fwhm_z',
+            fields=['pet_image', 't1_image_native', 'mask_tissues', 'pvc_mask_tissues', 'fwhm_x', 'fwhm_y', 'fwhm_z',
                     'flow_fields', 'dartel_template', 'reference_mask']),
                             name='inputnode', mandatory_inputs=True)
 
-        unzip_gm_image = pe.Node(niu.Function(input_names=['in_file'],
-                                              output_names=['out_file'],
-                                              function=unzip_nii),
-                                 name='unzip_gm_image')
+        unzip_pvc_mask_tissues = pe.MapNode(niu.Function(input_names=['in_file'],
+                                                     output_names=['out_file'],
+                                                     function=unzip_nii),
+                                        name='unzip_pvc_mask_tissues',
+                                        iterfield=['in_file'])
 
-        unzip_wm_image = pe.Node(niu.Function(input_names=['in_file'],
-                                              output_names=['out_file'],
-                                              function=unzip_nii),
-                                 name='unzip_wm_image')
-
-        unzip_csf_image = pe.Node(niu.Function(input_names=['in_file'],
-                                               output_names=['out_file'],
-                                               function=unzip_nii),
-                                  name='unzip_csf_image')
-
-        mask = pe.Node(niu.Function(input_names=['c1', 'c2', 'c3'],
+        pvc_mask = pe.Node(niu.Function(input_names=['tissues'],
                                     output_names=['out_mask'],
-                                    function=create_mask),
-                       name='mask')
+                                    function=create_pvc_mask),
+                       name='pvc_mask')
 
         petpvc = pe.Node(PETPVC(), name='pvc')
         petpvc.inputs.pvc = 'RBV'
         petpvc.inputs.out_file = 'pvc.nii'
+
+        zip_pet_pvc = pe.Node(niu.Function(input_names=['in_file'],
+                                           output_names=['out_file'],
+                                           function=zip_nii),
+                              name='zip_pet_pvc')
+
+        outputnode = pe.Node(niu.IdentityInterface(fields=['pet_t1_native', 'pvc_pet', 'pvc_pet_mni',
+                                                           'suvr_pvc_pet', 'masked_suvr_pvc_pet']),
+                             name='outputnode')
 
         wf.connect([(inputnode, unzip_pet_image, [('pet_image', 'in_file')]),
                     (unzip_pet_image, coreg_pet_t1, [('out_file', 'source')]),
                     (inputnode, unzip_t1_image_native, [('t1_image_native', 'in_file')]),
                     (unzip_t1_image_native, coreg_pet_t1, [('out_file', 'target')]),
 
-                    (inputnode, unzip_gm_image, [('gm_image', 'in_file')]),
-                    (unzip_gm_image, mask, [('out_file', 'c1')]),
-                    (inputnode, unzip_wm_image, [('wm_image', 'in_file')]),
-                    (unzip_wm_image, mask, [('out_file', 'c2')]),
-                    (inputnode, unzip_csf_image, [('csf_image', 'in_file')]),
-                    (unzip_csf_image, mask, [('out_file', 'c3')]),
+                    (inputnode, unzip_pvc_mask_tissues, [('pvc_mask_tissues', 'in_file')]),
+                    (unzip_pvc_mask_tissues, pvc_mask, [('out_file', 'tissues')]),
                     (inputnode, petpvc, [('fwhm_x', 'fwhm_x'),
                                          ('fwhm_y', 'fwhm_y'),
                                          ('fwhm_z', 'fwhm_z')]),
@@ -107,17 +136,38 @@ def pet_pipeline(working_directory=None,
                     (inputnode, unzip_reference_mask, [('reference_mask', 'in_file')]),
                     (unzip_reference_mask, reslice, [('out_file', 'in_file')]),
                     (coreg_pet_t1, petpvc, [('coregistered_source', 'in_file')]),
-                    (mask, petpvc, [('out_mask', 'mask_file')]),
+                    (pvc_mask, petpvc, [('out_mask', 'mask_file')]),
                     (petpvc, dartel_mni_reg, [('out_file', 'apply_to_files')]),
                     (dartel_mni_reg, reslice, [('normalized_files', 'space_defining')]),
                     (dartel_mni_reg, norm_to_ref, [('normalized_files', 'pet_image')]),
                     (reslice, norm_to_ref, [('out_file', 'region_mask')]),
-                    (norm_to_ref, outputnode, [('suvr_pet_path', 'suvr_pet_path')])
+
+                    (coreg_pet_t1, zip_pet_t1_native, [('coregistered_source', 'in_file')]),
+                    (petpvc, zip_pet_pvc, [('out_file', 'in_file')]),
+                    (dartel_mni_reg, zip_pet_mni, [('normalized_files', 'in_file')]),
+                    (norm_to_ref, zip_pet_suvr, [('suvr_pet_path', 'in_file')]),
+
+                    (inputnode, unzip_mask_tissues, [('mask_tissues', 'in_file')]),
+                    (unzip_mask_tissues, binary_mask, [('out_file', 'tissues')]),
+
+                    (norm_to_ref, apply_mask, [('suvr_pet_path', 'image')]),
+                    (binary_mask, apply_mask, [('out_mask', 'binary_mask')]),
+
+                    (apply_mask, zip_masked_pet_suvr, [('masked_image_path', 'in_file')]),
+
+                    (zip_pet_t1_native, outputnode, [('out_file', 'pet_t1_native')]),
+                    (zip_pet_pvc, outputnode, [('out_file', 'pvc_pet')]),
+                    (zip_pet_mni, outputnode, [('out_file', 'pvc_pet_mni')]),
+                    (zip_pet_suvr, outputnode, [('out_file', 'suvr_pvc_pet')]),
+                    (zip_masked_pet_suvr, outputnode, [('out_file', 'masked_suvr_pvc_pet')])
                     ])
     else:
         inputnode = pe.Node(niu.IdentityInterface(
-            fields=['pet_image', 't1_image_native', 'flow_fields', 'dartel_template', 'reference_mask']),
+            fields=['pet_image', 't1_image_native', 'mask_tissues', 'flow_fields', 'dartel_template', 'reference_mask']),
             name='inputnode', mandatory_inputs=True)
+
+        outputnode = pe.Node(niu.IdentityInterface(fields=['pet_t1_native', 'pet_mni', 'suvr_pet', 'masked_suvr_pet']),
+                             name='outputnode')
 
         wf.connect([(inputnode, unzip_pet_image, [('pet_image', 'in_file')]),
                     (unzip_pet_image, coreg_pet_t1, [('out_file', 'source')]),
@@ -133,7 +183,22 @@ def pet_pipeline(working_directory=None,
                     (dartel_mni_reg, reslice, [('normalized_files', 'space_defining')]),
                     (dartel_mni_reg, norm_to_ref, [('normalized_files', 'pet_image')]),
                     (reslice, norm_to_ref, [('out_file', 'region_mask')]),
-                    (norm_to_ref, outputnode, [('suvr_pet_path', 'suvr_pet_path')])
+
+                    (coreg_pet_t1, zip_pet_t1_native, [('coregistered_source', 'in_file')]),
+                    (dartel_mni_reg, zip_pet_mni, [('normalized_files', 'in_file')]),
+                    (norm_to_ref, zip_pet_suvr, [('suvr_pet_path', 'in_file')]),
+
+                    (inputnode, unzip_mask_tissues, [('mask_tissues', 'in_file')]),
+                    (unzip_mask_tissues, binary_mask, [('out_file', 'tissues')]),
+
+                    (norm_to_ref, apply_mask, [('suvr_pet_path', 'image')]),
+                    (binary_mask, apply_mask, [('out_mask', 'binary_mask')]),
+                    (apply_mask, zip_masked_pet_suvr, [('masked_image_path', 'in_file')]),
+
+                    (zip_pet_t1_native, outputnode, [('out_file', 'pet_t1_native')]),
+                    (zip_pet_mni, outputnode, [('out_file', 'pet_mni')]),
+                    (zip_pet_suvr, outputnode, [('out_file', 'suvr_pet')]),
+                    (zip_masked_pet_suvr, outputnode, [('out_file', 'masked_suvr_pet')])
                     ])
 
     return wf

@@ -4,7 +4,8 @@ import nipype.interfaces.spm as spm
 import nipype.interfaces.matlab as mlab
 import nipype.pipeline.engine as pe
 import nipype.interfaces.utility as niu
-from clinica.pipeline.t1.t1_spm_utils import get_tissue_tuples, get_class_images, unzip_nii, DARTELExistingTemplate
+from clinica.pipeline.t1.t1_spm_utils import get_tissue_tuples, get_class_images, DARTELExistingTemplate
+from clinica.utils.io import unzip_nii
 
 
 def segmentation_pipeline(working_directory=None,
