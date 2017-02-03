@@ -68,6 +68,7 @@ def get_dirs_check_reconalled(output_dir, subjects_visits_tsv, analysis_series_i
             raise
 
     subject_dir = []
+    subject_dir_without_reconalled = []
 
     for i in range(len(subject_list)):
         subject = output_dir + '/' + subject_list[i] + '/' + session_list[i] + '/' + 't1' + '/' + 'freesurfer-cross-sectional'
@@ -76,6 +77,7 @@ def get_dirs_check_reconalled(output_dir, subjects_visits_tsv, analysis_series_i
         except OSError as exception:
             if exception.errno != errno.EEXIST:
                 raise
+        subject_dir.append(subject)
         subject_path = os.path.join(subject, subject_id[i])
         subject_path_abs = os.path.expanduser(subject_path)
         if os.path.exists(subject_path_abs):
@@ -87,7 +89,7 @@ def get_dirs_check_reconalled(output_dir, subjects_visits_tsv, analysis_series_i
             subject_list_without_reconalled.remove(subject_list[i])
             session_list_without_reconalled.remove(session_list[i])
         else:
-            subject_dir.append(subject)
+            subject_dir_without_reconalled.append(subject)
     # try:
     #     if len(subject_dir) == 0:
     #         raise RuntimeError('This round for your dataset has no new added subject, please check out your dataset')
@@ -95,7 +97,7 @@ def get_dirs_check_reconalled(output_dir, subjects_visits_tsv, analysis_series_i
     #     print(str(e))
     #     exit(1)
 
-    return subject_dir, subject_id, subject_list, session_list, subject_id_without_reconalled, subject_list_without_reconalled, session_list_without_reconalled
+    return subject_dir, subject_id, subject_list, session_list, subject_dir_without_reconalled, subject_id_without_reconalled, subject_list_without_reconalled, session_list_without_reconalled
 
 def checkfov(t1_list, recon_all_args):
     """
