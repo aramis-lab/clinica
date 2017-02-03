@@ -280,9 +280,9 @@ def diffusion_preprocessing_fieldmap_based(
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
     import os.path as op
-    from clinica.utils.check_dependency import check_fsl
+    from clinica.utils.check_dependency import check_ants, check_fsl
 
-    check_fsl()
+    check_ants(); check_fsl()
 
     if delta_te is None:
         raise ValueError('Invalid value for the difference of echo time.')

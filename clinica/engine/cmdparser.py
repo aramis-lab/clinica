@@ -559,16 +559,15 @@ class CmdParserT1FSL(CmdParser):
 
 
         with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
-            tsv_reader = csv.reader(tsv_file, delimiter='\t')
-
-            # Check inputs:
-            for row in tsv_reader:
-                bids_path_to_t1 = os.path.join(self.absolute_path(args.bids_directory), row[0], row[1], 'anat',
-                                               row[0] + '_' + row[1] + '_T1w.nii.gz')
+            for index in xrange(len(subjects)):
+                subject_id=subjects[index]
+                session_id=sessions[index]
+                bids_path_to_t1 = os.path.join(self.absolute_path(args.bids_directory), subject_id, session_id, 'ant',
+                                               subject_id + '_' + session_id + '_T1w.nii.gz')
                 assert(os.path.isfile(bids_path_to_t1))
                 t1_fsl_segmentation = t1_fsl_segmentation_pipeline(
-                    subject_id=row[0],
-                    session_id=row[1],
+                    subject_id=subject_id,
+                    session_id=session_id,
                     analysis_series_id=args.analysis_series_id,
                     caps_directory=self.absolute_path(args.caps_directory),
                     working_directory=self.absolute_path(args.working_directory),
@@ -585,10 +584,16 @@ class CmdParserDWIPreprocessingFieldmapBased(CmdParser):
 
 
     def define_options(self):
+        self._args.add_argument("bids_directory",
+                                help='Path to the BIDS directory.')
         self._args.add_argument("caps_directory",
                                 help='Path to the CAPS directory.')
         self._args.add_argument("subjects_sessions_tsv",
                                 help='TSV file containing the subjects with their sessions.')
+        self._args.add_argument("echo_spacing",
+                                help='@TODO.')
+        self._args.add_argument("delta_te",
+                                help='@TODO.')
         self._args.add_argument("-working_directory", default=None,
                                 help='Temporary directory to store intermediate results')
         self._args.add_argument("-analysis_series_id", default='default',
@@ -600,21 +605,52 @@ class CmdParserDWIPreprocessingFieldmapBased(CmdParser):
         import csv
         import os.path
         from clinica.pipeline.dwi.dwi_preprocessing import diffusion_preprocessing_fieldmap_based
+        from clinica.pipeline.dwi.dwi_preprocessing_utils import count_b0s
+        import pandas
+
+        subjects_visits = pandas.io.parsers.read_csv(self.absolute_path(args.subjects_sessions_tsv), sep='\t')
+        if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
+            raise Exception('Subjects and visits file is not in the correct format.')
+        subjects = list(subjects_visits.participant_id)
+        sessions = list(subjects_visits.session_id)
+
 
         with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
-            tsv_reader = csv.reader(tsv_file, delimiter='\t')
+            for index in xrange(len(subjects)):
+                subject_id=subjects[index]
+                session_id=sessions[index]
 
-            # Check inputs:
-            for row in tsv_reader:
-                bids_path_to_dwi = os.path.join(self.absolute_path(args.caps_directory),
-                                               'sub-' + row[0], 'ses-' + row[1], 'anat',
-                                               'sub-' + row[0] + '_ses-' + row[1] + '_T1w.nii.gz')
+                print('Echo-spacing: ' + args.echo_spacing)
+                print('Detla TE: ' + args.delta_te)
+                bids_path_to_dwi = os.path.join(self.absolute_path(args.bids_directory), subject_id, session_id, 'dwi',
+                                               subject_id + '_' + session_id + '_dwi.nii.gz')
+                bids_path_to_bval = os.path.join(self.absolute_path(args.bids_directory), subject_id, session_id, 'dwi',
+                                               subject_id + '_' + session_id + '_dwi.bval')
+                bids_path_to_bvec = os.path.join(self.absolute_path(args.bids_directory), subject_id, session_id, 'dwi',
+                                               subject_id + '_' + session_id + '_dwi.bvec')
+                bids_path_to_fmap_magnitude = os.path.join(self.absolute_path(args.bids_directory), subject_id, session_id, 'fmap',
+                                               subject_id + '_' + session_id + '_magnitude1.nii.gz')
+                bids_path_to_fmap_phase = os.path.join(self.absolute_path(args.bids_directory), subject_id, session_id, 'fmap',
+                                               subject_id + '_' + session_id + '_phasediff.nii.gz')
                 assert(os.path.isfile(bids_path_to_dwi))
-                dwi_preprocessing = diffusion_preprocessing_fieldmap_based(
-
+                assert(os.path.isfile(bids_path_to_bval))
+                assert(os.path.isfile(bids_path_to_bvec))
+                assert(os.path.isfile(bids_path_to_fmap_magnitude))
+                assert(os.path.isfile(bids_path_to_fmap_phase))
+                preprocessing = diffusion_preprocessing_fieldmap_based(
+                    subject_id=subject_id, session_id=session_id,
+                    analysis_series_id=args.analysis_series_id,
+                    caps_directory=self.absolute_path(args.caps_directory),
+                    delta_te=args.delta_te, echo_spacing=args.echo_spacing,
+                    num_b0s=count_b0s(bids_path_to_bval)
                 )
-                dwi_preprocessing.inputs.inputnode.in_t1 = bids_path_to_dwi
-                dwi_preprocessing.run('MultiProc', plugin_args={'n_procs': args.n_threads})
+                preprocessing.inputs.inputnode.in_dwi = bids_path_to_dwi
+                preprocessing.inputs.inputnode.in_bvals = bids_path_to_bval
+                preprocessing.inputs.inputnode.in_bvecs = bids_path_to_bvec
+                preprocessing.inputs.inputnode.in_fmap_mag = bids_path_to_fmap_magnitude
+                preprocessing.inputs.inputnode.in_fmap_pha = bids_path_to_fmap_phase
+
+                preprocessing.run('MultiProc', plugin_args={'n_procs': args.n_threads})
 
 
 class CmdParserDWIProcessing(CmdParser):

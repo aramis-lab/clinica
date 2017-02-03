@@ -213,6 +213,7 @@ def execute():
     # init_cmdparser_objects(run_parser.add_subparsers())
     pipelines = [CmdParserT1SPMFullPrep(), CmdParserT1SPMSegment(), CmdParserPETPreprocessing(),
                  CmdParserT1FreeSurfer(), CmdParserT1FSL(),
+                 CmdParserDWIPreprocessingFieldmapBased(),
                  CmdParserDWIT1Registration(), CmdParserDWIProcessing(),
                  CmdParserStatisticsSurfStat(), CmdParserMachineLearningVBLinearSVM()]
     init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
