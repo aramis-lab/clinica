@@ -84,24 +84,14 @@ def t1_fsl_segmentation_pipeline(
      import tempfile
      from clinica.utils.mrtrix import dilate_mask
      from clinica.utils.fsl import standard_space_roi
+     from clinica.utils.check_dependency import check_fsl
+
+     check_fsl()
 
      if working_directory is None:
          working_directory = tempfile.mkdtemp()
 
-     try:
-         fsl_dir = os.environ.get('FSLDIR', '')
-         if not fsl_dir:
-             raise RuntimeError('FSLDIR variable is not set')
-     except Exception as e:
-         print(str(e))
-         exit(1)
-
-     try:
-         if fsl.Info.version().split(".") < ['5','0','5']:
-             raise RuntimeError('FSL version must be greater than 5.0.5')
-     except Exception as e:
-         print(str(e))
-         exit(1)
+     fsl_dir = os.environ.get('FSLDIR', '')
 
      inputnode = pe.Node(niu.IdentityInterface(fields=['in_t1']), name='inputnode')
 

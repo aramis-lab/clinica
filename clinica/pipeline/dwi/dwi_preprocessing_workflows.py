@@ -485,7 +485,7 @@ def sdc_fmb(name='fmb_correction',
 
 
 
-def sdc_syb_pipeline(datasink_directory, name='sdc_syb_correct'):
+def sdc_syb_pipeline(name='sdc_syb_correct'):
 
     """
     SDC stands for susceptibility distortion correction and SYB stand for SyN based. This workflow
@@ -519,8 +519,8 @@ def sdc_syb_pipeline(datasink_directory, name='sdc_syb_correct'):
     Example
     -------
     >>> epi = epi_pipeline()
-    >>> epi.inputs.inputnode.DWI = 'DWI.nii'
-    >>> epi.inputs.inputnode.T1 = 'T1.nii'
+    >>> epi.inputs.inputnode.in_dwi = 'DWI.nii'
+    >>> epi.inputs.inputnode.in_t1 = 'T1.nii'
     >>> epi.run() # doctest: +SKIP
     """
 
@@ -531,7 +531,7 @@ def sdc_syb_pipeline(datasink_directory, name='sdc_syb_correct'):
     import nipype.interfaces.fsl as fsl
     from clinica.pipeline.registration.mri_registration import antsRegistrationSyNQuick, antscombintransform
 
-    inputnode = pe.Node(niu.IdentityInterface(fields=['T1', 'DWI']), name='inputnode')
+    inputnode = pe.Node(niu.IdentityInterface(fields=['in_t1', 'in_dwi']), name='inputnode')
 
     split = pe.Node(fsl.Split(dimension='t'), name='SplitDWIs')
     pick_ref = pe.Node(niu.Select(), name='Pick_b0')
@@ -551,13 +551,17 @@ def sdc_syb_pipeline(datasink_directory, name='sdc_syb_correct'):
     apply_xfm.inputs.cost = 'normmi'
     apply_xfm.inputs.cost_func = 'normmi'
 
-    antsRegistrationSyNQuick = pe.Node(interface=niu.Function(input_names=['fixe_image', 'moving_image'], output_names=['image_warped', 'affine_matrix', 'warp', 'inverse_warped', 'inverse_warp'],
-                                                              function=antsRegistrationSyNQuick), name='antsRegistrationSyNQuick')
+    antsRegistrationSyNQuick = pe.Node(interface=niu.Function(
+        input_names=['fixe_image', 'moving_image'],
+        output_names=['image_warped', 'affine_matrix', 'warp', 'inverse_warped', 'inverse_warp'],
+        function=antsRegistrationSyNQuick), name='antsRegistrationSyNQuick')
 
     merge_transform = pe.Node(niu.Merge(2), name='MergeTransforms')
 
-    combin_warp = pe.Node(interface=niu.Function(input_names=['in_file', 'transforms_list', 'reference'], output_names=['out_warp'],
-                                                    function=antscombintransform), name='combin_warp')
+    combin_warp = pe.Node(interface=niu.Function(
+        input_names=['in_file', 'transforms_list', 'reference'],
+        output_names=['out_warp'],
+        function=antscombintransform), name='combin_warp')
 
     coeffs = pe.Node(fsl.WarpUtils(out_format='spline'), name='CoeffComp')
 
@@ -571,59 +575,81 @@ def sdc_syb_pipeline(datasink_directory, name='sdc_syb_correct'):
 
     merge = pe.Node(fsl.Merge(dimension='t'), name='MergeDWIs')
 
-    outputnode = pe.Node(niu.IdentityInterface(fields=['B0_2_T1_rigid_body_matrix', 'T1_2_B0_rigid_body_matrix',
-                                                       'T1_coregistered_2_B0', 'B0_2_T1_SyN_defomation_field',
-                                                       'B0_2_T1_affine_matrix', 'out_dwi', 'out_warp']), name='outputnode')
-
-    datasink = pe.Node(nio.DataSink(), name='datasink')
-    datasink.inputs.base_directory = op.join(datasink_directory,'epi_correction/')
+    outputnode = pe.Node(niu.IdentityInterface(
+        fields=['B0_2_T1_rigid_body_matrix', 'T1_2_B0_rigid_body_matrix', 'T1_coregistered_2_B0',
+                'B0_2_T1_SyN_defomation_field', 'B0_2_T1_affine_matrix', 'out_dwi', 'out_warp']),
+        name='outputnode')
 
     wf = pe.Workflow(name='sdc_syb_pipeline')
-
-    wf.connect([(inputnode, split,[('DWI','in_file')])])
-    wf.connect([(split, pick_ref, [('out_files','inlist')])])
-    wf.connect([(pick_ref, flirt_b0_2_T1, [('out','in_file')])])
-    wf.connect([(inputnode, flirt_b0_2_T1, [('T1','reference')])])
-    wf.connect([(flirt_b0_2_T1, invert_xfm, [('out_matrix_file','in_file')])])
-    wf.connect([(invert_xfm, apply_xfm, [('out_file','in_matrix_file')])])
-    wf.connect([(inputnode, apply_xfm, [('T1','in_file')])])
-    wf.connect([(pick_ref, apply_xfm, [('out','reference')])])
-    wf.connect([(apply_xfm, antsRegistrationSyNQuick, [('out_file','fixe_image')])])
-    wf.connect([(pick_ref, antsRegistrationSyNQuick,[('out','moving_image')])])
-    wf.connect([(antsRegistrationSyNQuick, merge_transform, [('affine_matrix','in2'), ('warp','in1')])])
-    wf.connect([(pick_ref, combin_warp, [('out','in_file')])])
-    wf.connect([(merge_transform, combin_warp, [('out','transforms_list')])])
-    wf.connect([(apply_xfm, combin_warp, [('out_file','reference')])])
-    wf.connect([(apply_xfm, coeffs, [('out_file', 'reference')])])
-    wf.connect([(combin_warp, coeffs, [('out_warp', 'in_file')])])
-    wf.connect([(coeffs, fsl_transf, [('out_file', 'in_file')])])
-    wf.connect([(apply_xfm, fsl_transf, [('out_file', 'reference')])])
-    wf.connect([(fsl_transf, apply_warp, [('out_file','field_file')])])
-    wf.connect([(split, apply_warp, [('out_files','in_file')])])
-    wf.connect([(apply_xfm, apply_warp, [('out_file','ref_file')])])
-    wf.connect([(apply_warp, thres, [('out_file','in_file')])])
-    wf.connect([(thres, merge, [('out_file','in_files')])])
-    wf.connect([(merge, outputnode, [('merged_file','out_dwi')])])
-    wf.connect([(flirt_b0_2_T1, outputnode, [('out_matrix_file','B0_2_T1_rigid_body_matrix')])])
-    wf.connect([(invert_xfm, outputnode, [('out_file', 'T1_2_B0_rigid_body_matrix')])])
-    wf.connect([(apply_xfm, outputnode, [('out_file','T1_coregistered_2_B0')])])
-    wf.connect([(antsRegistrationSyNQuick, outputnode, [('warp','B0_2_T1_SyN_defomation_field'),
-                                                        ('affine_matrix','B0_2_T1_affine_matrix')])])
-    wf.connect([(fsl_transf, outputnode, [('out_file','out_warp')])])
-    wf.connect([(merge, datasink, [('merged_file','out_dwi')])])
-    wf.connect([(flirt_b0_2_T1, datasink, [('out_matrix_file','B0_2_T1_rigid_body_matrix')])])
-    wf.connect([(invert_xfm, datasink, [('out_file', 'T1_2_B0_rigid_body_matrix')])])
-    wf.connect([(apply_xfm, datasink, [('out_file','T1_coregistered_2_B0')])])
-    wf.connect([(antsRegistrationSyNQuick, datasink, [('warp','B0_2_T1_SyN_defomation_field'),
-                                                      ('affine_matrix','B0_2_T1_affine_matrix'),
-                                                      ('image_warped','b0_warped_image')])])
-    wf.connect([(fsl_transf, datasink, [('out_file','out_warp')])])
+    wf.connect([
+        (inputnode, split, [('in_dwi', 'in_file')]),
+        (split, pick_ref, [('out_files', 'inlist')]),
+        (pick_ref, flirt_b0_2_T1, [('out', 'in_file')]),
+        (inputnode, flirt_b0_2_T1, [('in_t1', 'reference')]),
+        (flirt_b0_2_T1, invert_xfm, [('out_matrix_file', 'in_file')]),
+        (invert_xfm, apply_xfm, [('out_file', 'in_matrix_file')]),
+        (inputnode, apply_xfm, [('in_t1', 'in_file')]),
+        (pick_ref, apply_xfm, [('out', 'reference')]),
+        (apply_xfm, antsRegistrationSyNQuick, [('out_file', 'fixe_image')]),
+        (pick_ref, antsRegistrationSyNQuick, [('out', 'moving_image')]),
+        (antsRegistrationSyNQuick, merge_transform, [('affine_matrix', 'in2'),
+                                                     ('warp', 'in1')]),
+        (pick_ref, combin_warp, [('out', 'in_file')]),
+        (merge_transform, combin_warp, [('out', 'transforms_list')]),
+        (apply_xfm, combin_warp, [('out_file', 'reference')]),
+        (apply_xfm, coeffs, [('out_file', 'reference')]),
+        (combin_warp, coeffs, [('out_warp', 'in_file')]),
+        (coeffs, fsl_transf, [('out_file', 'in_file')]),
+        (apply_xfm, fsl_transf, [('out_file', 'reference')]),
+        (fsl_transf, apply_warp, [('out_file', 'field_file')]),
+        (split, apply_warp, [('out_files', 'in_file')]),
+        (apply_xfm, apply_warp, [('out_file', 'ref_file')]),
+        (apply_warp, thres, [('out_file', 'in_file')]),
+        (thres, merge, [('out_file', 'in_files')]),
+        (merge,                    outputnode, [('merged_file', 'out_dwi')]),
+        (flirt_b0_2_T1,            outputnode, [('out_matrix_file', 'B0_2_T1_rigid_body_matrix')]),
+        (invert_xfm,               outputnode, [('out_file', 'T1_2_B0_rigid_body_matrix')]),
+        (apply_xfm,                outputnode, [('out_file', 'T1_coregistered_2_B0')]),
+        (antsRegistrationSyNQuick, outputnode, [('warp', 'B0_2_T1_SyN_defomation_field'),
+                                                ('affine_matrix', 'B0_2_T1_affine_matrix')]),
+        (fsl_transf,               outputnode, [('out_file', 'out_warp')])
+    ])
+#    wf.connect([(inputnode, split,[('DWI','in_file')])])
+#    wf.connect([(split, pick_ref, [('out_files','inlist')])])
+#    wf.connect([(pick_ref, flirt_b0_2_T1, [('out','in_file')])])
+#    wf.connect([(inputnode, flirt_b0_2_T1, [('T1','reference')])])
+#    wf.connect([(flirt_b0_2_T1, invert_xfm, [('out_matrix_file','in_file')])])
+#    wf.connect([(invert_xfm, apply_xfm, [('out_file','in_matrix_file')])])
+#    wf.connect([(inputnode, apply_xfm, [('T1','in_file')])])
+#    wf.connect([(pick_ref, apply_xfm, [('out','reference')])])
+#    wf.connect([(apply_xfm, antsRegistrationSyNQuick, [('out_file','fixe_image')])])
+#    wf.connect([(pick_ref, antsRegistrationSyNQuick,[('out','moving_image')])])
+#    wf.connect([(antsRegistrationSyNQuick, merge_transform, [('affine_matrix','in2'), ('warp','in1')])])
+#    wf.connect([(pick_ref, combin_warp, [('out','in_file')])])
+#    wf.connect([(merge_transform, combin_warp, [('out','transforms_list')])])
+#    wf.connect([(apply_xfm, combin_warp, [('out_file','reference')])])
+#    wf.connect([(apply_xfm, coeffs, [('out_file', 'reference')])])
+#    wf.connect([(combin_warp, coeffs, [('out_warp', 'in_file')])])
+#    wf.connect([(coeffs, fsl_transf, [('out_file', 'in_file')])])
+#    wf.connect([(apply_xfm, fsl_transf, [('out_file', 'reference')])])
+#    wf.connect([(fsl_transf, apply_warp, [('out_file','field_file')])])
+#    wf.connect([(split, apply_warp, [('out_files','in_file')])])
+#    wf.connect([(apply_xfm, apply_warp, [('out_file','ref_file')])])
+#    wf.connect([(apply_warp, thres, [('out_file','in_file')])])
+#    wf.connect([(thres, merge, [('out_file','in_files')])])
+#    wf.connect([(merge, outputnode, [('merged_file','out_dwi')])])
+#    wf.connect([(flirt_b0_2_T1, outputnode, [('out_matrix_file','B0_2_T1_rigid_body_matrix')])])
+#    wf.connect([(invert_xfm, outputnode, [('out_file', 'T1_2_B0_rigid_body_matrix')])])
+#    wf.connect([(apply_xfm, outputnode, [('out_file','T1_coregistered_2_B0')])])
+#    wf.connect([(antsRegistrationSyNQuick, outputnode, [('warp','B0_2_T1_SyN_defomation_field'),
+#                                                        ('affine_matrix','B0_2_T1_affine_matrix')])])
+#    wf.connect([(fsl_transf, outputnode, [('out_file','out_warp')])])
 
     return wf
 
 
 
-def apply_all_corrections_syb(datasink_directory, name='UnwarpArtifacts'):
+def apply_all_corrections_syb(name='UnwarpArtifacts'):
     """
     Combines two lists of linear transforms with the deformation field
     map obtained epi_correction by Ants.
@@ -632,7 +658,7 @@ def apply_all_corrections_syb(datasink_directory, name='UnwarpArtifacts'):
     """
 
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['in_sdc_syb', 'in_hmc','in_ecc', 'in_dwi', 'T1']), name='inputnode')
+        fields=['in_sdc_syb', 'in_hmc','in_ecc', 'in_dwi', 'in_t1']), name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['out_file', 'out_warp', 'out_coeff', 'out_jacobian']),
         name='outputnode')
@@ -676,8 +702,8 @@ def apply_all_corrections_syb(datasink_directory, name='UnwarpArtifacts'):
                        name='RemoveNegative')
     merge = pe.Node(fsl.Merge(dimension='t'), name='MergeDWIs')
 
-    datasink = pe.Node(nio.DataSink(), name='datasink')
-    datasink.inputs.base_directory = op.join(datasink_directory, 'apply_all_correction/')
+#    datasink = pe.Node(nio.DataSink(), name='datasink')
+#    datasink.inputs.base_directory = op.join(datasink_directory, 'apply_all_correction/')
 
     wf = pe.Workflow(name=name)
     wf.connect([(inputnode, concat_hmc_ecc, [('in_ecc','in_file2')]),
@@ -687,10 +713,10 @@ def apply_all_corrections_syb(datasink_directory, name='UnwarpArtifacts'):
                 (inputnode, split, [('in_dwi', 'in_file')]),
                 (split, pick_ref, [('out_files','inlist')]),
                 (pick_ref, flirt_b0_2_T1, [('out','in_file')]),
-                (inputnode, flirt_b0_2_T1, [('T1','reference')]),
+                (inputnode, flirt_b0_2_T1, [('in_t1','reference')]),
                 (flirt_b0_2_T1, invertxfm, [('out_matrix_file','in_file')]),
                 (invertxfm, apply_xfm, [('out_file','in_matrix_file')]),
-                (inputnode, apply_xfm, [('T1','in_file')]),
+                (inputnode, apply_xfm, [('in_t1','in_file')]),
                 (pick_ref, apply_xfm, [('out','reference')]),
                 (apply_xfm, warps, [('out_file','reference')]),
                 (warps, unwarp, [('out_file', 'field_file')]),
@@ -710,10 +736,10 @@ def apply_all_corrections_syb(datasink_directory, name='UnwarpArtifacts'):
                 (merge, outputnode, [('merged_file', 'out_file')])
                 ])
 
-    wf.connect([(warps, datasink, [('out_file', 'out_warp')]),
-                (coeffs, datasink, [('out_file', 'out_coeff')]),
-                (jacobian, datasink, [('out_jacobian', 'out_jacobian')]),
-                (merge, datasink, [('merged_file', 'out_file')])])
+#    wf.connect([(warps, datasink, [('out_file', 'out_warp')]),
+#                (coeffs, datasink, [('out_file', 'out_coeff')]),
+#                (jacobian, datasink, [('out_jacobian', 'out_jacobian')]),
+#                (merge, datasink, [('merged_file', 'out_file')])])
 
     return wf
 
@@ -767,18 +793,18 @@ def dwi_flirt(name='DWICoregistration', excl_nodiff=False,
         (inputnode,   n4,        [('reference', 'input_image'),
                                   ('ref_mask', 'mask_image')]),
 #        (inputnode,  flirt,      [('ref_mask', 'reference')]),
-        (n4,         flirt,      [('output_image', 'reference')]),
-        (inputnode,  initmat,    [('in_xfms', 'in_xfms'),
-                                  ('in_bval', 'in_bval')]),
-        (dilate,     flirt,      [('out_file', 'ref_weight'),
-                                  ('out_file', 'in_weight')]),
-        (split,      flirt,      [('out_files', 'in_file')]),
-        (initmat,    flirt,      [('init_xfms', 'in_matrix_file')]),
+        (n4,      flirt, [('output_image', 'reference')]),
+        (inputnode, initmat, [('in_xfms', 'in_xfms'),
+                              ('in_bval', 'in_bval')]),
+        (dilate,  flirt, [('out_file', 'ref_weight'),
+                          ('out_file', 'in_weight')]),
+        (split,   flirt, [('out_files', 'in_file')]),
+        (initmat, flirt, [('init_xfms', 'in_matrix_file')]),
         (flirt,      thres,      [('out_file', 'in_file')]),
         (thres,      merge,      [('out_file', 'in_files')]),
-        (merge,      outputnode, [('merged_file', 'out_file')]),
-        (inputnode,  outputnode, [('reference', 'out_ref')]),
-        (flirt,      outputnode, [('out_matrix_file', 'out_xfms')])
+        (merge,     outputnode, [('merged_file', 'out_file')]),
+        (inputnode, outputnode, [('reference', 'out_ref')]),
+        (flirt,     outputnode, [('out_matrix_file', 'out_xfms')])
     ])
     return wf
 
