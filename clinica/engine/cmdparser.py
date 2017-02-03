@@ -544,108 +544,38 @@ class CmdParserT1FSL(CmdParser):
     def run_pipeline(self, args):
         import csv
         import os.path
-        from clinica.pipeline.t1.t1_fsl import caps_t1_fsl_segmentation_pipeline
+        from clinica.pipeline.t1.t1_fsl import t1_fsl_segmentation_pipeline
+        import pandas
 
         import nipype.pipeline.engine as pe
         import nipype.interfaces.utility as niu
         import nipype.interfaces.io as nio
 
-
-#        fsl_node = pe.Node(interface=t1_fsl_segmentation_pipeline(
-#            subject_id='CLNC001',
-#            session_id='M00',
-#            analysis_series_id='default',
-#            caps_directory='/tmp/MapNode',
-#            working_directory=None,
-#            is_bias_corrected=False), name="fsl_node")
-#        fsl_node = pe.Node(interface=niu.Function(
-#            input_names=['path_to_t1', 'subject_id', 'session_id', 'analysis_series_id', 'caps_directory', 'working_directory', 'is_bias_corrected'],
-#            output_names=['out_response_function'], function=caps_t1_fsl_segmentation_pipeline), name='fsl_node')
-
-        list_path_to_t1 = [
-            '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/BIDS/CAPP_BIDS/sub-CAPP01001PMC/ses-M00/anat/sub-CAPP01001PMC_ses-M00_T1w.nii.gz',
-            '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/BIDS/CAPP_BIDS/sub-CAPP01001PMC/ses-M18/anat/sub-CAPP01001PMC_ses-M18_T1w.nii.gz',
-            '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/BIDS/CAPP_BIDS/sub-CAPP01001TMM/ses-M00/anat/sub-CAPP01001TMM_ses-M00_T1w.nii.gz']
-        list_caps_directory = [
-            '/tmp/Output1',
-            '/tmp/Output2',
-            '/tmp/Output3']
-        list_sessions = [
-            'M00',
-            'M18',
-            'M00']
-        list_subjects= [
-            'CAPP01001PMC',
-            'CAPP01001PMC',
-            'CAPP01001TMM']
-
-        datasource = pe.Node(nio.DataGrabber(infields=['subject_id', 'session', 'subject_repeat', 'session_repeat'],
-                                              outfields=['out_files']), name="selectfiles")
-        datasource.inputs.base_directory = input_directory
-        datasource.inputs.template = 'sub-%s/ses-%s/anat/sub-%s_ses-%s_T1w.nii'
-        datasource.inputs.subject_id = list_subjects
-        datasource.inputs.session = list_sessions
-        datasource.inputs.subject_repeat = subjects
-        datasource.inputs.session_repeat = sessions
-        datasource.inputs.sort_filelist = False
-
-        datasource = pe.Node(interface=nio.DataGrabber(infields=['subject_id'],
-                                                       outfields=['func', 'struct']),
-                             name='datasource')
-        datasource.inputs.base_directory = '/'
-        datasource.inputs.template = '%s/%s.nii'
-        datasource.inputs.template_args = info
-        datasource.inputs.sort_filelist = True
-        datasource.iterables = [('fwhm', fwhmlist),
-                              ('con', contrast_ids)]
-        datasource.inputs.sort_filelist = True
-
-        fsl_node = pe.Node(interface=niu.Function(
-            input_names=['path_to_t1', 'subject_id', 'session_id', 'analysis_series_id', 'caps_directory', 'working_directory', 'is_bias_corrected'],
-            output_names=['out_response_function'], iterfield=['path_to_t1', 'caps_directory'],  function=caps_t1_fsl_segmentation_pipeline), name='fsl_node')
-        fsl_node.inputs.subject_id = 'CLNC001'
-        fsl_node.inputs.session_id = 'M00'
-        fsl_node.inputs.analysis_series_id = 'default'
-        fsl_node.inputs.working_directory = None
-        fsl_node.inputs.is_bias_corrected = False
-
-        fsl_node.inputs.path_to_t1 = list_path_to_t1
-        fsl_node.inputs.caps_directory = list_caps_directory
-
-#        fsl_node.iterables = ("path_to_t1", [
-#            '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/BIDS/CAPP_BIDS/sub-CAPP01001PMC/ses-M00/anat/sub-CAPP01001PMC_ses-M00_T1w.nii.gz',
-#            '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/BIDS/CAPP_BIDS/sub-CAPP01001PMC/ses-M18/anat/sub-CAPP01001PMC_ses-M18_T1w.nii.gz',
-#            '/Volumes/dataARAMIS/users/CLINICA/CLINICA_datasets/BIDS/CAPP_BIDS/sub-CAPP01001TMM/ses-M00/anat/sub-CAPP01001TMM_ses-M00_T1w.nii.gz'])
-#        fsl_node.iterables = ("caps_directory", [
-#            '/tmp/Output1',
-#            '/tmp/Output2',
-#            '/tmp/Output3'])
-
-        wf = pe.Workflow(name='my_workflow')
-        wf.base_dir = '/tmp/'
-        wf.add_nodes([fsl_node])
-        wf.run('MultiProc', plugin_args={'n_procs': 4})
+        subjects_visits = pandas.io.parsers.read_csv(self.absolute_path(args.subjects_sessions_tsv), sep='\t')
+        if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
+            raise Exception('Subjects and visits file is not in the correct format.')
+        subjects = list(subjects_visits.participant_id)
+        sessions = list(subjects_visits.session_id)
 
 
-#        with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
-#            tsv_reader = csv.reader(tsv_file, delimiter='\t')
-#
-#            # Check inputs:
-#            for row in tsv_reader:
-#                bids_path_to_t1 = os.path.join(self.absolute_path(args.bids_directory), row[0], row[1], 'anat',
-#                                               row[0] + '_' + row[1] + '_T1w.nii.gz')
-#                assert(os.path.isfile(bids_path_to_t1))
-#                t1_fsl_segmentation = t1_fsl_segmentation_pipeline(
-#                    subject_id=row[0],
-#                    session_id=row[1],
-#                    analysis_series_id=args.analysis_series_id,
-#                    caps_directory=self.absolute_path(args.caps_directory),
-#                    working_directory=self.absolute_path(args.working_directory),
-#                    is_bias_corrected=args.is_bias_corrected
-#                    )
-#                t1_fsl_segmentation.inputs.inputnode.in_t1 = bids_path_to_t1
-#                t1_fsl_segmentation.run('MultiProc', plugin_args={'n_procs': args.n_threads})
+        with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
+            tsv_reader = csv.reader(tsv_file, delimiter='\t')
 
+            # Check inputs:
+            for row in tsv_reader:
+                bids_path_to_t1 = os.path.join(self.absolute_path(args.bids_directory), row[0], row[1], 'anat',
+                                               row[0] + '_' + row[1] + '_T1w.nii.gz')
+                assert(os.path.isfile(bids_path_to_t1))
+                t1_fsl_segmentation = t1_fsl_segmentation_pipeline(
+                    subject_id=row[0],
+                    session_id=row[1],
+                    analysis_series_id=args.analysis_series_id,
+                    caps_directory=self.absolute_path(args.caps_directory),
+                    working_directory=self.absolute_path(args.working_directory),
+                    is_bias_corrected=args.is_bias_corrected
+                    )
+                t1_fsl_segmentation.inputs.inputnode.in_t1 = bids_path_to_t1
+                t1_fsl_segmentation.run('MultiProc', plugin_args={'n_procs': args.n_threads})
 
 
 class CmdParserDWIPreprocessingFieldmapBased(CmdParser):

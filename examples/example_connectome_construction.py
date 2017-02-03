@@ -31,10 +31,7 @@ connectome =  connectome_construction_pipeline(
     in_parcellation=in_parcellation, configuration_file=configuration_file, lut_type=lut_type, lut_path=lut_path, in_tracks=in_tracks, connectome_metric=connectome_metric,
     working_directory=working_directory, datasink_directory=datasink_directory,in_scalar_image=None, zero_diagonal=zero_diagonal
 )
-
-#connectome_construction_pipeline(in_parcellation, configuration_file, lut_type, lut_path, in_tracks, connectome_metric, working_directory, datasink_directory, in_scalar_image='', zeros_diagonal=True)
 connectome.run()
-print("connectome construction done")
 
 print("Working Directory -> %s" % working_directory)
 print("Datasink Directory -> %s" % datasink_directory)
