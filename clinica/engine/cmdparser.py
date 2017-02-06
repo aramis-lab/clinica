@@ -642,7 +642,8 @@ class CmdParserDWIPreprocessingFieldmapBased(CmdParser):
                     analysis_series_id=args.analysis_series_id,
                     caps_directory=self.absolute_path(args.caps_directory),
                     delta_te=args.delta_te, echo_spacing=args.echo_spacing,
-                    num_b0s=count_b0s(bids_path_to_bval)
+                    num_b0s=count_b0s(bids_path_to_bval),
+                    working_directory=self.absolute_path(args.working_directory)
                 )
                 preprocessing.inputs.inputnode.in_dwi = bids_path_to_dwi
                 preprocessing.inputs.inputnode.in_bvals = bids_path_to_bval
