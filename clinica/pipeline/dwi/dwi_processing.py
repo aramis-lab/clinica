@@ -52,13 +52,16 @@ def dwi_processing_pipeline(
         >>> dwi_processing= dwi_processing_pipeline(subject_id='sub-CLNC01', session_id='ses-M00', caps_directory='/path/to/output/folder')
         >>> dwi_processing.run()
     """
-    from os.path import join
     import tempfile
     import nipype.interfaces.io as nio
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
     from clinica.pipeline.dwi.dwi_processing import tractography_and_dti_pipeline
     from clinica.pipeline.dwi.dwi_white_matter_scalar_analysis import dti_based_analysis_pipeline
+    from clinica.utils.check_dependency import check_ants, check_mrtrix
+
+
+    check_ants(); check_mrtrix()
 
     if working_directory is None:
         working_directory = tempfile.mkdtemp()
@@ -188,6 +191,9 @@ def tractography_and_dti_pipeline(
     from clinica.pipeline.dwi.dwi_processing_utils import estimate_response
     from clinica.pipeline.dwi.dwi_processing_utils import estimate_fod
     from clinica.pipeline.dwi.dwi_processing_utils import streamlines_tractography
+    from clinica.utils.check_dependency import check_mrtrix
+
+    check_mrtrix()
 
     if working_directory is None:
         working_directory = tempfile.mkdtemp()

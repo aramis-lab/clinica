@@ -74,24 +74,12 @@ def t1_b0_registration_pipeline(
     from clinica.pipeline.registration.mri_utils import convert_flirt_transformation_to_mrtrix_transformation
     from clinica.pipeline.registration.mri_utils import apply_mrtrix_transform_without_resampling
     import tempfile
+    from clinica.utils.check_dependency import check_freesurfer, check_fsl, check_mrtrix
 
     if working_directory is None:
         working_directory = tempfile.mkdtemp()
 
-    try:
-        fsl_dir = os.environ.get('FSLDIR', '')
-        if not fsl_dir:
-            raise RuntimeError('FSLDIR variable is not set')
-    except Exception as e:
-        print(str(e))
-        exit(1)
-
-    try:
-        if fsl.Info.version().split(".") < ['5', '0', '5']:
-            raise RuntimeError('FSL version must be greater than 5.0.5')
-    except Exception as e:
-        print(str(e))
-        exit(1)
+    check_freesurfer(); check_fsl(); check_mrtrix()
 
     caps_identifier = subject_id + '_' + session_id
 
