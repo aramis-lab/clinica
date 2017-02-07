@@ -47,14 +47,14 @@ import time
 
 # TODO change the colorbar words, to dig into surfstat source code
 
-caps_dir ='/aramis/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/Freesurfer/Reconall/reconall_GENFI/clinica_reconall_result/prevdemals_67subjs'
-tsv_file  ='/aramis/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/group_wise_stat_analysis/CN/16CN.tsv'
+caps_dir ='/Volumes/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/Freesurfer/Reconall/reconall_GENFI/clinica_reconall_result/prevdemals_66subjs_2newsubjs'
+tsv_file  ='/Volumes/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/group_wise_stat_analysis/CN/16CN.tsv'
 str_format ='%s %s %s %s %f'
 design_matrix ='1+age'
 
 print 'Output dir is in the same CAPS folder with the input'
 contrast = '-age'
-group_label = '16CN-neg-age-nocovariate'
+group_label = 'test-nouse'
 analysis_series_id = 'default'
 start = time.time()
 surfstat = clinica_surfstat(caps_dir, tsv_file, design_matrix, contrast, str_format, group_label, analysis_series_id)
