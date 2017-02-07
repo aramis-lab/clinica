@@ -25,7 +25,109 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                                 dest='clinical_only',
                                 help='(Optional) Given an already existing BIDS output folder, convert only the clinical data.')
 
-    def convert_clinical_data(self, src, dest_dir):pass
+    def convert_clinical_data(self, input_path, out_path):
+        """
+
+        Convert clinical data of ADNI dataset.
+
+        :param src:
+        :param out_path:
+        :return:
+
+        {'sub-ADNI009S1354': { 'bl': {u'diagnosis': 'Dementia', 'session_id': 'ses-bl'},
+                              'm06': {u'diagnosis': 'Dementia', 'session_id': 'ses-m06'}},...
+         ....
+         }
+        """
+        from os import path
+        import os
+        import logging
+        import clinica.bids.bids_utils as bids
+        import pandas as pd
+
+        logging.basicConfig(filename=path.join(out_path, 'conversion_clinical.log'),
+                            format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG,
+                            datefmt='%m/%d/%Y %I:%M')
+
+        clinic_specs_path = path.join(os.path.dirname(os.path.dirname(__file__)), 'data',
+                                      'clinical_specifications_adni.xlsx')
+
+
+        try:
+            os.path.exists(out_path)
+        except IOError:
+            print 'BIDS folder not found.'
+            raise
+
+        bids_ids = bids.get_bids_subjs_list(out_path)
+        bids_subjs_paths = bids.get_bids_subjs_pats(out_path)
+
+        # -- Creation of participant.tsv --
+        bids.create_participants(input_path, out_path, 'ADNI', 'clinical_specifications_adni.xlsx', bids_ids)
+
+        # -- Creation of sessions.tsv --
+        logging.info("--Creation of sessions files. --")
+        print("\nCreation of sessions files...")
+        # Load data
+        sessions = pd.read_excel(clinic_specs_path, sheetname='sessions.tsv')
+        sessions_fields = sessions['ADNI']
+        field_location = sessions['ADNI location']
+        sessions_fields_bids = sessions['BIDS CLINICA']
+        file_to_read = pd.read_csv(path.join(input_path, 'clinicalData', 'ADNIMERGE.csv'))
+        fields_dataset = []
+        fields_bids = []
+        sessions_dict = {}
+        subj_to_remove = []
+
+        for i in range(0, len(sessions_fields)):
+            if not pd.isnull(sessions_fields[i]):
+                fields_bids.append(sessions_fields_bids[i])
+                fields_dataset.append(sessions_fields[i])
+
+        sessions_df = pd.DataFrame(columns=fields_bids)
+
+        # For each line of ADNIMERGE check if the subjects is available in the BIDS dataset and extract the information
+        for r in range(0, len(file_to_read.values)):
+            row = file_to_read.iloc[r]
+            id_ref = 'PTID'
+            subj_id = row[id_ref.decode('utf-8')]
+            # Removes all the - from
+            subj_id_alpha = bids.remove_space_and_symbols(subj_id)
+            subj_bids = [s for s in bids_ids if subj_id_alpha in s]
+            if len(subj_bids) == 0:
+                pass
+            else:
+                subj_bids = subj_bids[0]
+                for i in range(0, len(sessions_fields)):
+                    # If the i-th field is available
+                    if not pd.isnull(sessions_fields[i]):
+                        sessions_df[sessions_fields_bids[i]] = row[sessions_fields[i]]
+                        visit_id = row['VISCODE']
+                        # If the dictionary already contain the subject add or update information regarding a specific session,
+                        # otherwise create the enty
+                        if sessions_dict.has_key(subj_bids):
+                            sess_available = sessions_dict[subj_bids].keys()
+                            if visit_id in sess_available:
+                                sessions_dict[subj_bids][visit_id].update({sessions_fields_bids[i]: row[sessions_fields[i]]})
+                            else:
+                                sessions_dict[subj_bids].update({visit_id: {'session_id': 'ses-'+visit_id,
+                                                                            sessions_fields_bids[i]: row[sessions_fields[i]]}})
+                        else:
+                            sessions_dict.update({subj_bids: {visit_id: {'session_id': 'ses-'+visit_id,
+                                                                         sessions_fields_bids[i]: row[sessions_fields[i]]}}})
+
+        # Write the information contained inside the dictionary to the proper session file
+        for sp in bids_subjs_paths:
+            bids_id = sp.split(os.sep)[-1]
+            sessions_df = pd.DataFrame(columns=fields_bids)
+            if sessions_dict.has_key(bids_id):
+                sess_aval = sessions_dict[bids_id].keys()
+                sessions_df = pd.DataFrame(sessions_dict[bids_id]['bl'], index=['i', ])
+                for ses in sess_aval:
+                    sessions_df = sessions_df.append(pd.DataFrame(sessions_dict[bids_id][ses], index=['i', ]))
+
+                sessions_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False)
+
 
     def convert_t1_from_dicom(self, t1_path, output_path, bids_name):
         """

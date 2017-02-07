@@ -11,6 +11,126 @@ __maintainer__ = "Sabrina Fontanella"
 __email__ = "sabrina.fontanella@icm-institute.org"
 __status__ = "Development"
 
+# @ToDo:test this function
+def create_participants(input_path,out_path, study_name, clinical_spec_path, bids_ids, delete_non_bids_info = True):
+    """
+    Create the file participant.tsv
+
+    :param input_path: path to the original dataset
+    :param out_path: path to the bids folder
+    :param study_name: name of the study (Ex. ADNI)
+    :param clinical_spec_path:
+    :param bids_ids:
+    :param delete_non_bids_info:
+    :return:
+    """
+    import pandas as pd
+    import os
+    from os import path
+    import logging
+
+    fields_bids = ['participant_id']
+    fields_dataset = []
+    prev_location = ''
+    index_to_drop=[]
+
+    location_name = study_name + ' location'
+
+    participants_specs = pd.read_excel(path.join(os.path.dirname(os.path.dirname(__file__)),'bids', 'data', clinical_spec_path) , sheetname='participant.tsv')
+    participant_fields_db = participants_specs[study_name]
+    field_location = participants_specs[location_name]
+    participant_fields_bids = participants_specs['BIDS CLINICA']
+
+    # Extract the list of the available fields for the dataset (and the corresponding BIDS version)
+    for i in range(0, len(participant_fields_db)):
+        if not pd.isnull(participant_fields_db[i]):
+            fields_bids.append(participant_fields_bids[i])
+            fields_dataset.append(participant_fields_db[i])
+
+    # Init the dataframe that will be saved in the file participant.tsv
+    participant_df = pd.DataFrame(columns=fields_bids)
+
+    for i in range(0, len(participant_fields_db)):
+    # If a field not empty is found
+        if not pd.isnull(participant_fields_db[i]):
+            # Extract the file location of the field and read the value from the file
+            tmp = field_location[i].split('/')
+            location = tmp[0]
+            # If a sheet is available
+            if len(tmp) > 1:
+                sheet = tmp[1]
+            else:
+                sheet = ''
+            # Check if the file to open for a certain field it's the same of the previous field
+            if location == prev_location and sheet == prev_sheet:
+                pass
+            else:
+                file_ext = os.path.splitext(location)[1]
+                file_to_read_path = path.join(input_path, 'clinicalData', location)
+
+                if file_ext == '.xlsx':
+                    file_to_read = pd.read_excel(file_to_read_path, sheetname=sheet)
+                elif file_ext == '.csv':
+                    file_to_read = pd.read_csv(file_to_read_path)
+                prev_location = location
+                prev_sheet = sheet
+
+            field_col_values = []
+            # For each field in fields_dataset extract all the column values
+            for j in range(0, len(file_to_read)):
+                field_col_values.append(file_to_read.get_value(j, participant_fields_db[i]))
+            # Add the extracted column to the participant_df
+            participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
+
+    if study_name == 'ADNI':
+        # ADNImerge contains one row for each visits so there are duplicates
+        participant_df = participant_df.drop_duplicates(subset=['alternative_id_1'], keep='first')
+    participant_df.reset_index(inplace=True, drop=True)
+
+    # Adding participant_id column with BIDS ids
+    for i in range(0, len(participant_df)):
+        print participant_df['alternative_id_1'][i]
+        value = remove_space_and_symbols(participant_df['alternative_id_1'][i])
+        bids_id = [s for s in bids_ids if value in s]
+        if len(bids_id) == 0:
+            print "Subject " + value + " not found in the BIDS converted version of the dataset."
+            logging.error("Subject " + value + " not found in the BIDS converted version of the dataset.")
+            index_to_drop.append(i)
+        else:
+            participant_df['participant_id'][i] = bids_id[0]
+
+    # Delete all the rows of the subjects that are not available in the BIDS dataset
+    if delete_non_bids_info == True:
+        participant_df = participant_df.drop(index_to_drop)
+
+    participant_df.to_csv(path.join(out_path, 'participants.tsv'), sep='\t', index=False)
+
+
+def get_bids_subjs_list(bids_path):
+    """
+    Given a BIDS compliant dataset, returns the list of all the subjects available
+
+    :param bids_path: path to the BIDS folder
+    :return:
+    """
+    import os
+    from os import path
+
+    return [d for d in os.listdir(bids_path) if os.path.isdir(path.join(bids_path, d))]
+
+
+def get_bids_subjs_pats(bids_path):
+    """
+    Given a BIDS compliant dataset, returns the list of all paths to the subjects folders
+
+    :param bids_path: path to the BIDS folder
+    :return:
+    """
+    import os
+    from os import path
+
+    return [path.join(bids_path,d) for d in os.listdir(bids_path) if os.path.isdir(path.join(bids_path, d))]
+
 
 def compute_new_subjects(original_ids, bids_ids):
     """
@@ -32,6 +152,7 @@ def compute_new_subjects(original_ids, bids_ids):
             to_return.append(s)
 
     return to_return
+
 
 def remove_space_and_symbols(data):
     '''
