@@ -1,14 +1,14 @@
-function clinicasurfstat( inputdir, outputdir, csvfile, designmatrix, contrast, strformat, varargin)
+function clinicasurfstat( inputdir, outputdir, tsvfile, designmatrix, contrast, strformat, varargin)
 % Saves all the output images for group analysis of T1 images smoothed data
 %
-% Usage: [some outputs] = clinicasurfstat( inputdir, outputdir, csvfile, designmatrix, contrast, strformat, varargin)
+% Usage: [some outputs] = clinicasurfstat( inputdir, outputdir, tsvfile, designmatrix, contrast, strformat, varargin)
 %
 % - inputdir:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
 % - outputdir: the directory to contain the result images.
 % - designmatrix: string, the linear model that fit into the GLM, for example '1+Lable'
 % - contrast: string, the contrast that you want to use in the GLM, but the contrast should be inclued into the designmatrix, otherwise, you will get errors.
-% - csvfile: string, the path to your csv file
-% - strstrformat: string, the strstrformat that you want to use for your CSV file column variables, it depends on the CSV file.
+% - tsvfile: string, the path to your tsv file
+% - strstrformat: string, the strstrformat that you want to use for your tsv file column variables, it depends on the tsv file.
 
 
 
@@ -70,7 +70,7 @@ addpath(strcat(fileparts(which(mfilename())), '/matlab-freesurfer-5.3'));
 addpath(strcat(fileparts(which(mfilename())), '/tools'));
 surfstathome = fileparts(which(mfilename()));
 %% Load the data
-fid = fopen(csvfile, 'r');
+fid = fopen(tsvfile, 'r');
 linevar = fgetl(fid);
 firstline = regexp(linevar,'\s+','split'); % in matlab2016, regexp is deprecated, we use strsplit;
 
@@ -79,16 +79,16 @@ if lencolumn <2
     error('requires at least 2 inputs columns')
 end
 if  strcmp(firstline{1},'participant_id') ~= 1
-    error('the first colomn of TSV file should always be named by subject_id')
+    error('the first colomn of TSV file should always be named by participant_id')
 end
 if  strcmp(firstline{2},'session_id') ~= 1
     error('the first colomn of TSV file should always be named by session_id')
 end
-csvdata = textscan( fid, strformat, 'HeaderLines', 0);
+tsvdata = textscan( fid, strformat, 'HeaderLines', 0);
 fclose(fid);
 
 %% read the thickness for all the subjects!
-nrsubject = length(csvdata{1});
+nrsubject = length(tsvdata{1});
 % nrfactor1 = 0; nrfactor2 = 0;
 csvheader = firstline;
 for indexsvheader = 2 : lencolumn
@@ -96,8 +96,8 @@ for indexsvheader = 2 : lencolumn
 end
 
 for indexsubject = 1 : nrsubject
-    subjectname = csvdata{1}{indexsubject};
-    sessionname = csvdata{2}{indexsubject};
+    subjectname = tsvdata{1}{indexsubject};
+    sessionname = tsvdata{2}{indexsubject};
     surfsubdir = strcat(inputdir, '/', subjectname, '/', sessionname, '/t1/freesurfer-cross-sectional/', subjectname, '_', sessionname, '/surf' );
     %[surfsubdir, xuuu] = glob(interpath);
     %surfsubdir = char(surfsubdir);
@@ -118,8 +118,8 @@ for indexsubject = 1 : nrsubject
         end
         indexunique = strfind(firstline, abscontrast);
         indexunique = find(not(cellfun('isempty', indexunique)));
-        if iscell(csvdata{indexunique})
-            uniquelabels = unique(csvdata{indexunique}); factor1 = char(uniquelabels(1)); factor2 = char(uniquelabels(2));
+        if iscell(tsvdata{indexunique})
+            uniquelabels = unique(tsvdata{indexunique}); factor1 = char(uniquelabels(1)); factor2 = char(uniquelabels(2));
             if length(uniquelabels) ~= 2
                 error('there should be just 2 different groups!')
             end
@@ -135,8 +135,8 @@ mask = thicksubject(:,1)>0;
 mask = mask';
 
 % create the Term that will be defined as contrast
-for i = 1:length(csvdata)-1
-    eval([firstline{i+1} '= term(csvdata{i+1});'])
+for i = 1:length(tsvdata)-1
+    eval([firstline{i+1} '= term(tsvdata{i+1});'])
 end
 
 %% Create Images folder for output
@@ -147,7 +147,7 @@ cd(outputdir)
 
 %% Convert the data into SurfStat
 
-if iscell(csvdata{indexunique})
+if iscell(tsvdata{indexunique})
     factorname = char(eval(contrast));
     if factor1 == factorname{1}
         contrastpos    = eval([contrast '(1)']) - eval([ contrast '(2)']); % use char(eval(contrast))
@@ -163,7 +163,7 @@ if iscell(csvdata{indexunique})
     disp(['The GLM linear model is: ', designmatrix])
 
     %% Clear the variables which will not be used later
-    clearvars csvsorted csvdata thicksubject
+    clearvars csvsorted tsvdata thicksubject
 
     % Contrast Positive:
     % What kind of t-test does surfstat use??? a two-tailed 2-sample t-test can determine whether the difference between
@@ -282,7 +282,7 @@ if iscell(csvdata{indexunique})
     
 else
     %% if the contrast is continuous variable, dont use term, just use double to fit in the test!!!
-    contrastpos    = csvdata{indexunique};
+    contrastpos    = tsvdata{indexunique};
 
     thicksubject = thicksubject';
 
