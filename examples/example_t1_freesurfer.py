@@ -9,25 +9,35 @@ Example to lanch freesurfer-recon-all pipeline
 """
 
 from __future__ import absolute_import
-from clinica.pipeline.t1.t1_freesurfer import datagrabber_t1_freesurfer_pipeline
-import time
+from clinica.pipeline.t1.t1_freesurfer_workflows import t1_freesurfer_pipeline
+import os
+from os.path import realpath,split,join
+import tempfile, errno
 
-BIDS_dir ='path to your BIDS dataset'
-output_dir ='path to your CAPS dataset'
-start = time.time()
+output_dir = tempfile.mkdtemp()
+data_path = join(split(realpath(__file__))[0], 'external-data/BIDS-example/sub-CLNC01/ses-M00/')
+anat_t1 = os.path.join(data_path, 'anat/sub-CLNC01_ses-M00_T1w.nii.gz')
+subject_list = 'sub-CLNC01'
+session_list = 'ses-M00'
+output_directory = tempfile.mkdtemp()
+subjects_dir = os.path.join(output_dir + '/' + subject_list + '/' + session_list + '/' + 't1' + '/' + 'freesurfer-cross-sectional')
+try:
+    os.makedirs(subjects_dir)
+except OSError as exception:
+    if exception.errno != errno.EEXIST:
+        raise
 
-# this is the example to run CAPP dataset
-def recon_all_example_CAPP():
-    return datagrabber_t1_freesurfer_pipeline(BIDS_dir, output_dir)
 
-if 2 > 1:
-    print("Data Directory -> %s" % BIDS_dir)
-    print("Output Directory -> %s" % output_dir)
-    print("Running...")
-    T1_recon_all = recon_all_example_CAPP()
-    T1_recon_all.run("MultiProc", plugin_args={'n_procs':4})
-    time_consuming = time.time() - start
-    print 'END! time consuming is : %s' % time_consuming
+freesurfer_t1 = t1_freesurfer_pipeline(output_dir, 'default', output_dir, '-qcache')
 
-    # command line example:
-# clinica run t1-freesurfer /aramis/dataARAMIS/users/CLINICA/CLINICA_datasets/BIDS/PREVDEMALS_BIDS/GENFI ~/test/test-reconall-lab/ /aramis/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/Freesurfer/Reconall/reconall_GENFI/clinica_reconall_result/subjects_visits_list_PREVDEMALS.tsv 'default'
+freesurfer_t1.inputs.recon_all.subjects_dir = subjects_dir
+freesurfer_t1.inputs.recon_all.subject_id = subject_list + '_' + session_list
+freesurfer_t1.inputs.recon_all.T1_files = anat_t1
+freesurfer_t1.inputs.flagnode.t1_list = anat_t1
+freesurfer_t1.inputs.lognode.subject_list = subject_list
+freesurfer_t1.inputs.lognode.session_list = session_list
+
+print("Results will be stored in the following path: %s" % output_directory)
+freesurfer_t1.run()
+print("Results are stored here: %s" % output_directory)
+
