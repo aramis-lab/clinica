@@ -114,35 +114,6 @@ def checkfov(t1_list, recon_all_args):
     import nibabel as nib
     from nipype.utils.filemanip import filename_to_list
 
-    # # this is the old version for node2node connection.
-    # output_flags = []
-    # num_t1 = len(t1_list)
-    # t1_list = filename_to_list(t1_list)
-    #
-    # if num_t1 == 0:
-    #     print("ERROR: No T1's Given")
-    #     sys.exit(-1)
-    #
-    # # shape = nib.load(t1_list[0]).shape
-    # for t1 in t1_list:
-    #     f = nib.load(t1)
-    #     voxel_size = f.header.get_zooms()
-    #     t1_size = f.header.get_data_shape()
-    #     # not sure if we should constrain all the T1 file should have the same size
-    #     # if t1_size != shape:
-    #     #     print("ERROR: T1s not the same size. Cannot process {0} and {1} "
-    #     #           "together".format(t1_list[0], t1))
-    #     #     sys.exit(-1)
-    #     if voxel_size[0] * t1_size[0] > 256 or voxel_size[1] * t1_size[1] or voxel_size[2] * t1_size[2]:
-    #         print("Setting MRI Convert to crop images to 256 FOV")
-    #         optional_flag = '-cw256'
-    #     else:
-    #         print("No need to add -cw256 flag")
-    #         optional_flag = ''
-    #     flag = "{0} ".format(recon_all_args) + optional_flag
-    #     output_flags.append(flag)
-
-
     output_flags = []
     num_t1 = len(t1_list)
     t1_list = filename_to_list(t1_list)
