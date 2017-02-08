@@ -19,7 +19,6 @@ data_path = join(split(realpath(__file__))[0], 'external-data/BIDS-example/sub-C
 anat_t1 = os.path.join(data_path, 'anat/sub-CLNC01_ses-M00_T1w.nii.gz')
 subject_list = 'sub-CLNC01'
 session_list = 'ses-M00'
-output_directory = tempfile.mkdtemp()
 subjects_dir = os.path.join(output_dir + '/' + subject_list + '/' + session_list + '/' + 't1' + '/' + 'freesurfer-cross-sectional')
 try:
     os.makedirs(subjects_dir)
@@ -37,7 +36,7 @@ freesurfer_t1.inputs.flagnode.t1_list = anat_t1
 freesurfer_t1.inputs.lognode.subject_list = subject_list
 freesurfer_t1.inputs.lognode.session_list = session_list
 
-print("Results will be stored in the following path: %s" % output_directory)
+print("Results will be stored in the following path: %s" % output_dir)
 freesurfer_t1.run()
-print("Results are stored here: %s" % output_directory)
+print("Results are stored here: %s" % output_dir)
 
