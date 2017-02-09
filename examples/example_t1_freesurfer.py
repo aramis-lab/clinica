@@ -19,7 +19,7 @@ data_path = join(split(realpath(__file__))[0], 'external-data/BIDS-example/sub-C
 anat_t1 = os.path.join(data_path, 'anat/sub-CLNC01_ses-M00_T1w.nii.gz')
 subject_list = 'sub-CLNC01'
 session_list = 'ses-M00'
-subjects_dir = os.path.join(output_dir + 'analysis-series-default/subjects/' + subject_list + '/' + session_list + '/' + 't1' + '/' + 'freesurfer-cross-sectional')
+subjects_dir = os.path.join(output_dir + '/analysis-series-default/subjects/' + subject_list + '/' + session_list + '/' + 't1' + '/' + 'freesurfer-cross-sectional')
 try:
     os.makedirs(subjects_dir)
 except OSError as exception:
