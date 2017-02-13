@@ -16,13 +16,15 @@ __status__ = "Development"
 
 def create_merge_file(bids_dir, out_dir, true_false_mode = False):
     """
-     Merge all the TSV files containing clinical data of BIDS compliant dataset
+    Merge all the .tsv files containing clinical data of a BIDS compliant dataset and store
+    the result inside a .tsv file
 
-     Args:
-        bids_directory: path of the dataset
-        out_directory: output path
+    :param bids_dir: path to the BIDS folder
+    :param out_dir: path to the output foler
+    :param true_false_mode: if True convert all the binary values to True/False
 
     """
+
     col_list = []
     scans_dict = {}
 
@@ -52,7 +54,6 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
         col_list.append(col)
 
     merged_df = pd.DataFrame(columns=col_list)
-
 
     for sub_path in subjs_paths:
         sub_name = sub_path.split(os.sep)[-1]
@@ -117,7 +118,6 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
     merged_df = merged_df[col_list]
     merged_df.to_csv(path.join(out_dir, out_file_name), sep='\t', index=False)
 
-
     # Call the script for computing the missing modalities and append the result to the merged file
     compute_missing_mods(bids_dir, out_dir, 'tmpG7VIY0')
     tmp_ses = glob(path.join(out_dir, 'tmpG7VIY0*'))
@@ -153,7 +153,6 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
                     if not col_name=='participant_id':
                         merged_df.iloc[subj_idx, merged_df.columns.get_loc(col_name)] = row[col_name]
 
-
     # Remove all the temporary files created
     for f in tmp_ses:
         os.remove(f)
@@ -165,12 +164,21 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
 
 
 def find_mods_and_sess(dataset_dir):
-    '''
-    Finds all the modalities available for a given dataset
+    """
+    Finds all the modalities and sessions available for a given BIDS dataset
 
-    Args:
-        dataset_dir: path to the bids directory
-    '''
+    :param dataset_dir:
+    :return: a dictionary that stores the sessions and modalities found and has the following structure.
+    Example:
+    {
+        'sessions': ['ses-M00', 'ses-M18'],
+        'fmap': ['fmap'],
+        'anat': ['flair', 't1w'],
+        'func': ['func_task-rest'],
+        'dwi': ['dwi']
+    }
+    """
+
     mods_dict = {}
     mods_list = []
     mods_aval = []
@@ -234,8 +242,7 @@ def find_mods_and_sess(dataset_dir):
 
                     if anat_ext != 'json':
                         file_parts = anat_name.split("_")
-                        anat_type = file_parts[len(file_parts) - 1]
-
+                        anat_type = str.lower(file_parts[len(file_parts) - 1])
                         if mods_dict.has_key('anat'):
                             if anat_type not in mods_dict['anat']:
                                 anat_aval = mods_dict['anat']
@@ -251,12 +258,12 @@ def find_mods_and_sess(dataset_dir):
 
 def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
     """
-    Compute the list of missing modalities for each subject in a database.
+    Compute the list of missing modalities for each subject in a BIDS compliant dataset.
 
-    :param in_dir:
-    :param out_dir:
-    :param output_prefix:
-    :return:
+    :param in_dir: path to the BIDS directory
+    :param out_dir: path to the output directory
+    :param output_prefix: string that replace the default prefix ('missing_mods_') in the name of all the output files
+    created
     """
 
     # Find all the modalities and sessions available for the input dataset
@@ -292,8 +299,9 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
             if len(ses_path_avail)==0:
                 mmt.increase_missing_ses(ses)
                 for mod in mods_avail:
-                    row_to_append_df[mod] = pd.Series('-')
+                    row_to_append_df[mod] = pd.Series('0')
             else:
+
                 ses_path = ses_path_avail[0]
                 mods_paths_folders = glob(path.join(ses_path, '*/'))
 
@@ -301,7 +309,7 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
                     p = p[:-1]
                     mods_avail_bids.append(p.split('/').pop())
 
-                # Check if each modalities is available or missing
+                # Check if a modality folder is available and if is empty
                 if 'func' in mods_avail_bids:
                     # Extract all the task available
                     for m in mods_avail_dict['func']:
@@ -313,8 +321,9 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
                             row_to_append_df[m] = pd.Series('0')
                         else:
                             row_to_append_df[m] = pd.Series('1')
+                # If the folder is not available but the modality is in the list of the available one mark it as missing
                 else:
-                    if 'func' in mods_avail:
+                    if 'func' in mods_avail_dict:
                         for m in mods_avail_dict['func']:
                             row_to_append_df[m] = pd.Series('0')
                         mmt.add_missing_mod(ses, m)
@@ -322,8 +331,9 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
                 if 'dwi' in mods_avail_bids:
                     row_to_append_df['dwi'] = pd.Series('1')
                 else:
-                    row_to_append_df['dwi'] = pd.Series('0')
-                    mmt.add_missing_mod(ses, 'dwi')
+                    if 'dwi' in mods_avail:
+                        row_to_append_df['dwi'] = pd.Series('0')
+                        mmt.add_missing_mod(ses, 'dwi')
 
                 if 'anat' in mods_avail_bids:
                     for m in mods_avail_dict['anat']:
@@ -333,13 +343,18 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
                         else:
                             row_to_append_df[m] = pd.Series('0')
                             mmt.add_missing_mod(ses, m)
+                else:
+                    if mods_avail_dict.has_key('anat'):
+                        for m in mods_avail_dict['anat']:
+                            row_to_append_df[m] = pd.Series('0')
+                            mmt.add_missing_mod(ses, m)
 
                 if 'fmap' in mods_avail_bids:
                     row_to_append_df['fmap'] = pd.Series('1')
                 else:
-
-                    row_to_append_df['fmap'] = pd.Series('0')
-                    mmt.add_missing_mod(ses, 'fmap')
+                    if 'fmap' in mods_avail:
+                        row_to_append_df['fmap'] = pd.Series('0')
+                        mmt.add_missing_mod(ses, 'fmap')
 
 
             missing_mods_df = missing_mods_df.append(row_to_append_df)
@@ -354,12 +369,14 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
 
 def create_subs_sess_list(dataset_path, out_dir, file_name = ''):
     """
-    Create the file subject_session_list.tst that contains the list of the visits for each subject
+    Create the file subject_session_list.tsv that contains the list of the visits for each subject for a BIDS compliant
+    dataset.
 
-    :param dataset_path:
-    :param out_dir:
+
+    :param dataset_path: path to the BIDS directory
+    :param out_dir: path to the output directory
     :param file_name: name of the output file
-    :return:
+
     """
     # file_name = out_dir.split(os.sep)[-1]
     # if len(file_name) == 0 or out_dir == '.':

@@ -34,18 +34,6 @@ def print_statistics(summary_file, num_subjs, ses_aval, mmt):
                 percentage_missing = round((num_miss_mod*100/float(num_subjs - missing_list[ses]['session'])),2)
                 summary_file.write(mod+': '+ str(num_miss_mod) + ' ('+str(percentage_missing) + '%) \n')
 
-    # summary_file.write('\n\nNumber of incomplete modalities for each session (more details inside converter.log):\n')
-    # for ses in ses_aval:
-    #     summary_file.write('\n-'+ses+'-\n')
-    #     for mod in missing_list[ses]:
-    #         if mod != 'session':
-    #             num_miss_mod = missing_list[ses][mod][1]
-    #             if num_miss_mod != 0:
-    #                 percentage_missing = round((num_miss_mod*100/float(num_subjs - missing_list[ses]['session'])), 2)
-    #             else:
-    #                 percentage_missing = 0
-    #             summary_file.write(mod+': ' + str(num_miss_mod) + ' ('+str(percentage_missing)+'%) \n')
-
 
 def has_one_index(index_list):
     if len(index_list) == 1:
@@ -71,11 +59,11 @@ class MissingModsTracker:
         else:
             for s in ses:
                 self.missing.update({s: {'session': 0,
-                                            'Dwi': 0,
-                                            'Func': 0,
-                                            'Fieldmap': 0,
-                                            'FLAIR': 0,
-                                            'T1w': 0}
+                                            'dwi': 0,
+                                            'func': 0,
+                                            'fieldmap': 0,
+                                            'flair': 0,
+                                            't1w': 0}
                                     })
 
     def add_missing_mod(self, ses, mod):
@@ -91,20 +79,6 @@ class MissingModsTracker:
 
     def increase_missing_ses(self, ses):
         self.missing[ses]['session'] += 1
-
-    # def add_incomplete_mod(self, mod, ses):
-    #     (self.missing[ses][mod])[1] = (self.missing[ses][mod][1]) + 1
-
-
-    #
-    # def remove_mods_unused(self):
-    #     """
-    #     Remove all the modalities not included into the list mods_used
-    #     """
-    #     keys = self.mods_missing.keys()
-    #     for key in keys:
-    #         if key not in self.mods_used:
-    #             del self.mods_missing[key]
 
     def get_missing_list(self):
         """
