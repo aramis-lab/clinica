@@ -36,7 +36,7 @@ Note: as we will use OpenGL to render the result images, and after Matlab2014, t
       command line 'matlab'.
       For Mac os x, opengl software mode is not supported, so it will always be opengl hardware mode.
 
-@author: Junhao WEN
+@author: Junhao Wen
 """
 
 from __future__ import absolute_import
@@ -47,8 +47,8 @@ import time
 
 # TODO change the colorbar words, to dig into surfstat source code
 
-caps_dir ='/Volumes/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/Freesurfer/Reconall/reconall_GENFI/clinica_reconall_result/prevdemals_66subjs_2newsubjs'
-tsv_file  ='/Volumes/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/group_wise_stat_analysis/CN/16CN.tsv'
+caps_dir ='/Volumes/dataARAMIS/users/junhao.Wen/PhD/PREVDEMALS/Freesurfer/Reconall/reconall_GENFI/clinica_reconall_result/prevdemals_66subjs_2newsubjs'
+tsv_file  ='/Volumes/dataARAMIS/users/junhao.Wen/PhD/PREVDEMALS/group_wise_stat_analysis/CN/16CN.tsv'
 str_format ='%s %s %s %s %f'
 design_matrix ='1+age'
 

@@ -3,7 +3,7 @@
 """
 Created on Mon Apr 25 15:04:17 2016
 
-@author: Junhao WEN
+@author: Junhao Wen
 
 Example to lanch freesurfer-recon-all pipeline
 """

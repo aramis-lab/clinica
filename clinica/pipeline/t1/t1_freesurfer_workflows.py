@@ -4,17 +4,17 @@
 """
 Created on Mon Apr 22 09:04:10 2016
 
-@author: Junhao WEN
+@author: Junhao Wen
 """
 from clinica.engine.cworkflow import *
 
-__author__ = "Junhao WEN"
+__author__ = "Junhao Wen"
 __copyright__ = "Copyright 2016, The Aramis Lab Team"
-__credits__ = ["Michael Bacci", "Junhao WEN"]
+__credits__ = ["Michael Bacci", "Junhao Wen"]
 __license__ = "??"
 __version__ = "1.0.0"
-__maintainer__ = "Junhao WEN"
-__email__ = "junhao.wen@inria.fr"
+__maintainer__ = "Junhao Wen"
+__email__ = "junhao.Wen@inria.fr"
 __status__ = "Development"
 
 
