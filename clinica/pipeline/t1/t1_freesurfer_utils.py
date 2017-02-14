@@ -4,13 +4,13 @@
 """This module contains functions used for the recon_all_pipeline() and recon_all_statistics_pipeline()"""
 import os
 
-__author__ = "Junhao WEN"
+__author__ = "Junhao Wen"
 __copyright__ = "Copyright 2016, The Aramis Lab Team"
-__credits__ = ["Michael Bacci", "Junhao WEN"]
+__credits__ = ["Michael Bacci", "Junhao Wen"]
 __license__ = "??"
 __version__ = "1.0.0"
-__maintainer__ = "Junhao WEN"
-__email__ = "junhao.wen@inria.fr"
+__maintainer__ = "Junhao Wen"
+__email__ = "junhao.Wen@inria.fr"
 __status__ = "Development"
 
 def absolute_path(arg):
