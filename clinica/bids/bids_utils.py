@@ -11,6 +11,7 @@ __maintainer__ = "Sabrina Fontanella"
 __email__ = "sabrina.fontanella@icm-institute.org"
 __status__ = "Development"
 
+
 # @ToDo:test this function
 def create_participants(input_path,out_path, study_name, clinical_spec_path, bids_ids, delete_non_bids_info = True):
     """
@@ -106,6 +107,12 @@ def create_participants(input_path,out_path, study_name, clinical_spec_path, bid
     participant_df.to_csv(path.join(out_path, 'participants.tsv'), sep='\t', index=False)
 
 
+def create_empty_sessions_tsv(): pass
+
+
+def create_empy_scans_tsv(): pass
+
+
 def get_bids_subjs_list(bids_path):
     """
     Given a BIDS compliant dataset, returns the list of all the subjects available
@@ -119,7 +126,7 @@ def get_bids_subjs_list(bids_path):
     return [d for d in os.listdir(bids_path) if os.path.isdir(path.join(bids_path, d))]
 
 
-def get_bids_subjs_pats(bids_path):
+def get_bids_subjs_paths(bids_path):
     """
     Given a BIDS compliant dataset, returns the list of all paths to the subjects folders
 
@@ -309,7 +316,8 @@ def get_bids_suff(mod):
         'MultiMapPh': '_phase',
         'Map': '_magnitude',
         'fMRI': '_bold',
-        'dwi': '_dwi'
+        'dwi': '_dwi',
+        'pet': '_pet'
     }
 
     return bids_suff[mod]
