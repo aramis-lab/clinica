@@ -46,7 +46,7 @@ def get_dirs_check_reconalled(output_dir, subjects_visits_tsv, analysis_series_i
     from copy import deepcopy as cp
 
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
-    if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
+    if (list(subjects_visits.columns.values)[0] != 'participant_id') and (list(subjects_visits.columns.values)[1] != 'session_id'):
         raise Exception('Subjects and visits file is not in the correct format.')
     subject_list = list(subjects_visits.participant_id)
     session_list = list(subjects_visits.session_id)
