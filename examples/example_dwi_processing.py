@@ -6,13 +6,13 @@ from clinica.pipeline.dwi.dwi_processing import dwi_processing_pipeline
 
 from os.path import join
 
-#data_path = join(split(realpath(__file__))[0], 'data/subject_example')
+#path_to_data = join(split(realpath(__file__))[0], 'data/subject_example')
 
 data_path = '/Users/alexandre.routier/Data/subject_example'
 output_directory = "/tmp/subject_example"
 
 dwi_processing = dwi_processing_pipeline(
-    subject_id='CLNC01', session_id='M00', analysis_series_id='default',
+    participant_id='CLNC01', session_id='M00',
     caps_directory=output_directory, tractography_nb_of_tracks="100K" , nthreads=2)
 dwi_processing.inputs.inputnode.in_dwi_nii                  = join(data_path, 'dwi_preprocessing/preprocessing/out_file/vol0000_maths_thresh_merged.nii.gz')
 dwi_processing.inputs.inputnode.in_bvecs                    = join(data_path, 'dwi_preprocessing/preprocessing/out_bvecs/bvecs_rotated.bvec')

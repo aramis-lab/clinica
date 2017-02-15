@@ -23,7 +23,7 @@ function clinicasurfstat( inputdir, outputdir, tsvfile, designmatrix, contrast, 
 %
 % Note: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-%  (c) Alexandre ROUTIER, Junhao WEN 
+%  (c) Alexandre ROUTIER, Junhao Wen
 %  Written 16/06/2016
 
 %% define the default value for inputs
