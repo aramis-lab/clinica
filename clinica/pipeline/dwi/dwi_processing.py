@@ -69,6 +69,10 @@ def dwi_processing_pipeline(
         fields=['in_dwi_nii', 'in_bvecs', 'in_bvals', 'in_b0_mask', 'in_white_matter_binary_mask']),
         name='inputnode')
 
+    t1_b0_registration = t1_b0_registration_pipeline(
+        participant_id=participant_id, session_id=session_id,
+        caps_directory=caps_directory, working_directory=working_directory)
+
     tractography_and_dti = tractography_and_dti_pipeline(
         participant_id=participant_id, session_id=session_id,
         caps_directory=caps_directory, working_directory=working_directory,

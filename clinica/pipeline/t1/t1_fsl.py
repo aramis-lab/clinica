@@ -105,7 +105,7 @@ def t1_fsl_segmentation_pipeline(
                                      ('fast_seg_0.nii.gz', caps_identifier + '_tissue-csf_binaryMask.nii.gz'),
                                      ('fast_seg_1.nii.gz', caps_identifier + '_tissue-graymatter_binaryMask.nii.gz'),
                                      ('fast_seg_2.nii.gz', caps_identifier + '_tissue-whitematter_binaryMask.nii.gz'),
-                                     ('fast_bias.nii.gz', caps_identifier + '_bias-field.nii.gz'),
+                                     ('fast_bias.nii.gz', caps_identifier + '_biasField.nii.gz'),
                                      ('T1_pre_bet_brain.nii.gz', caps_identifier + '_brainExtractedT1w.nii.gz'),
                                      ('fast_restore.nii.gz', caps_identifier + '_brainExtractedT1w.nii.gz'),
                                      ('T1_pre_bet_brain_mask.nii.gz', caps_identifier + '_preMaskedBrainExtractedT1w.nii.gz')
