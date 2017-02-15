@@ -1,26 +1,19 @@
 #!/usr/bin/python
 
-import os
-import os.path as op
-import numpy as np
+import nipype.interfaces.ants as ants
+import nipype.interfaces.fsl as fsl
 import nipype.interfaces.utility as niu
 import nipype.pipeline.engine as pe
-import nipype.interfaces.fsl as fsl
-import nipype.interfaces.io as nio
-import nipype.interfaces.ants as ants
-from nipype.workflows.dmri.fsl.artifacts import _xfm_jacobian
+from nipype.workflows.dmri.fsl.utils import add_empty_vol
+from nipype.workflows.dmri.fsl.utils import cleanup_edge_pipeline
+from nipype.workflows.dmri.fsl.utils import demean_image
 from nipype.workflows.dmri.fsl.utils import insert_mat
-from nipype.workflows.dmri.fsl.utils import recompose_xfm
-from nipype.workflows.dmri.fsl.utils import recompose_dwi
-from nipype.workflows.dmri.fsl.utils import extract_bval
+from nipype.workflows.dmri.fsl.utils import rads2radsec
 from nipype.workflows.dmri.fsl.utils import rotate_bvecs
 from nipype.workflows.dmri.fsl.utils import siemens2rads
-from nipype.workflows.dmri.fsl.utils import rads2radsec
-from nipype.workflows.dmri.fsl.utils import demean_image
-from nipype.workflows.dmri.fsl.utils import cleanup_edge_pipeline
-from nipype.workflows.dmri.fsl.utils import add_empty_vol
 from nipype.workflows.dmri.fsl.utils import vsm2warp
-import clinica.pipeline.dwi.dwi_preprocessing_utils as predifutils
+
+
 
 
 def prepare_data(num_b0s, name='prepare_data', low_bval=5.0):
@@ -52,18 +45,20 @@ def prepare_data(num_b0s, name='prepare_data', low_bval=5.0):
         outputnode.mask_b0 - Binary mask obtained from the average of the B0 images
 
     """
+    import clinica.pipeline.dwi.dwi_preprocessing_utils as dwi_utils
+
     inputnode = pe.Node(interface=niu.IdentityInterface(fields=["in_file", "in_bvecs", "in_bvals"]), name="inputnode")
 
-    b0_dwi_split = pe.Node(niu.Function(input_names=['in_file', 'in_bvals', 'in_bvecs'], output_names=['out_b0', 'out_dwi', 'out_bvals', 'out_bvecs'], function=predifutils.b0_dwi_split), name='b0_dwi_split')
+    b0_dwi_split = pe.Node(niu.Function(input_names=['in_file', 'in_bvals', 'in_bvecs'], output_names=['out_b0', 'out_dwi', 'out_bvals', 'out_bvecs'], function=dwi_utils.b0_dwi_split), name='b0_dwi_split')
 
-    b0_flirt = predifutils.b0_flirt_pipeline(name='b0_co_registration')
+    b0_flirt = dwi_utils.b0_flirt_pipeline(name='b0_co_registration')
 
-    b0_avg = pe.Node(niu.Function(input_names=['in_file'], output_names=['out_file'], function=predifutils.b0_average), name='b0_average')
+    b0_avg = pe.Node(niu.Function(input_names=['in_file'], output_names=['out_file'], function=dwi_utils.b0_average), name='b0_average')
 
     mask_b0 = pe.Node(fsl.BET(frac=0.3, mask=True, robust=True), name='mask_b0')
 
     insert_b0_into_dwi = pe.Node(niu.Function(input_names=['in_b0', 'in_dwi', 'in_bvals', 'in_bvecs'], output_names=['out_dwi', 'out_bvals', 'out_bvecs'],
-                                              function=predifutils.insert_b0_into_dwi), name='insert_b0avg_into_dwi')
+                                              function=dwi_utils.insert_b0_into_dwi), name='insert_b0avg_into_dwi')
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['mask_b0', 'b0_reference','out_bvecs', 'dwi_b0_merge', 'out_bvals'  ]), name='outputnode')
 
@@ -169,7 +164,6 @@ def hmc_pipeline(name='motion_correct'):
     from clinica.pipeline.dwi.dwi_preprocessing_utils import merge_volumes_tdim
     from clinica.pipeline.dwi.dwi_preprocessing_utils import hmc_split
     from clinica.pipeline.dwi.dwi_preprocessing_workflows import dwi_flirt
-    import nipype.interfaces.io as nio
 
     params = dict(dof=6, interp='spline', cost='normmi', cost_func='normmi', bins=50, save_log=True, padding_size=10,
                   schedule=get_flirt_schedule('hmc'),
@@ -200,17 +194,17 @@ def hmc_pipeline(name='motion_correct'):
 
     wf = pe.Workflow(name=name)
     wf.connect([
-        (inputnode,        split,            [('in_file', 'in_file'),
-                                              ('in_bval', 'in_bval'),
-                                              ('ref_num', 'ref_num')]),
-        (inputnode,        flirt,            [('in_mask', 'inputnode.ref_mask')]),
-        (split,            flirt,            [('out_ref', 'inputnode.reference'),
-                                              ('out_mov', 'inputnode.in_file'),
-                                              ('out_bval', 'inputnode.in_bval')]),
-        (flirt,            insmat,           [('outputnode.out_xfms', 'inlist')]),
-        (split,            insmat,           [('volid', 'volid')]),
-        (inputnode,        rot_bvec,         [('in_bvec', 'in_bvec')]),
-        (insmat,           rot_bvec,         [('out', 'in_matrix')]),
+        (inputnode, split, [('in_file', 'in_file'),
+                            ('in_bval', 'in_bval'),
+                            ('ref_num', 'ref_num')]),
+        (inputnode, flirt, [('in_mask', 'inputnode.ref_mask')]),
+        (split,     flirt, [('out_ref', 'inputnode.reference'),
+                            ('out_mov', 'inputnode.in_file'),
+                            ('out_bval', 'inputnode.in_bval')]),
+        (flirt,     insmat, [('outputnode.out_xfms', 'inlist')]),
+        (split,     insmat, [('volid', 'volid')]),
+        (inputnode, rot_bvec, [('in_bvec', 'in_bvec')]),
+        (insmat,    rot_bvec, [('out', 'in_matrix')]),
         (rot_bvec,         outputnode,       [('out_file', 'out_bvec')]),
         (flirt,            merged_volumes,   [('outputnode.out_ref', 'in_file1'),
                                               ('outputnode.out_file', 'in_file2')]),
@@ -273,7 +267,6 @@ head-motion correction)
     from nipype.workflows.dmri.fsl.utils import recompose_xfm
     from nipype.workflows.dmri.fsl.utils import recompose_dwi
     from nipype.workflows.dmri.fsl.artifacts import _xfm_jacobian
-    import nipype.interfaces.io as nio
 
     params = dict(dof=12, no_search=True, interp='spline', bgvalue=0,
                   schedule=get_flirt_schedule('ecc'))
@@ -388,7 +381,6 @@ def sdc_fmb(name='fmb_correction',
 
     echo_spacing = 1/(BandwidthPerPixelPhaseEncode x (AcquisitionMatrixText component #1))
     """
-    import nipype.interfaces.io as nio
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['in_file',
                         'in_mask', 'bmap_pha', 'bmap_mag']),
@@ -510,10 +502,10 @@ def sdc_syb_pipeline(name='sdc_syb_correct'):
 
     outputnode.out_dwi - corrected dwi file
     outputnode.out_bvec - rotated gradient vectors table
-    outputnode.B0_2_T1_rigid_body_matrix - B0 to T1 image FLIRT rigid body fsl coregistration matrix
-    outputnode.T1_coregistered_2_B0 - T1 image rigid body coregistered to the B0 image
-    outputnode.B0_2_T1_affine_matrix - B0 to T1 image ANTs affine itk coregistration matrix
-    outputnode.B0_2_T1_SyN_defomation_field - B0 to T1 image ANTs SyN itk warp
+    outputnode.out_b0_to_t1_rigid_body_matrix - B0 to T1 image FLIRT rigid body fsl coregistration matrix
+    outputnode.out_t1_coregistered_to_b0 - T1 image rigid body coregistered to the B0 image
+    outputnode.out_b0_to_t1_affine_matrix - B0 to T1 image ANTs affine itk coregistration matrix
+    outputnode.out_b0_to_t1_syn_defomation_field - B0 to T1 image ANTs SyN itk warp
     outputnode.out_warp - Out warp allowing DWI to T1 registration and susceptibilty induced artifacts correction
 
     Example
@@ -524,12 +516,10 @@ def sdc_syb_pipeline(name='sdc_syb_correct'):
     >>> epi.run() # doctest: +SKIP
     """
 
-    import nipype.interfaces.io as nio
-    import nipype.interfaces.ants as ants
     import nipype.pipeline.engine as pe
     import nipype.interfaces.utility as niu
     import nipype.interfaces.fsl as fsl
-    from clinica.pipeline.registration.mri_registration import antsRegistrationSyNQuick, antscombintransform
+    from clinica.pipeline.dwi.dwi_registration import ants_registration_syn_quick, antscombintransform
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['in_t1', 'in_dwi']), name='inputnode')
 
@@ -537,10 +527,10 @@ def sdc_syb_pipeline(name='sdc_syb_correct'):
     pick_ref = pe.Node(niu.Select(), name='Pick_b0')
     pick_ref.inputs.index = [0]
 
-    flirt_b0_2_T1 = pe.Node(interface=fsl.FLIRT(dof=6), name = 'flirt_B0_2_T1')
-    flirt_b0_2_T1.inputs.interp = "spline"
-    flirt_b0_2_T1.inputs.cost = 'normmi'
-    flirt_b0_2_T1.inputs.cost_func = 'normmi'
+    flirt_b0_to_t1 = pe.Node(interface=fsl.FLIRT(dof=6), name = 'flirt_b0_to_t1')
+    flirt_b0_to_t1.inputs.interp = "spline"
+    flirt_b0_to_t1.inputs.cost = 'normmi'
+    flirt_b0_to_t1.inputs.cost_func = 'normmi'
 
     invert_xfm = pe.Node(interface=fsl.ConvertXFM(), name='invert_xfm')
     invert_xfm.inputs.invert_xfm = True
@@ -551,10 +541,10 @@ def sdc_syb_pipeline(name='sdc_syb_correct'):
     apply_xfm.inputs.cost = 'normmi'
     apply_xfm.inputs.cost_func = 'normmi'
 
-    antsRegistrationSyNQuick = pe.Node(interface=niu.Function(
+    ants_registration_syn_quick = pe.Node(interface=niu.Function(
         input_names=['fixe_image', 'moving_image'],
         output_names=['image_warped', 'affine_matrix', 'warp', 'inverse_warped', 'inverse_warp'],
-        function=antsRegistrationSyNQuick), name='antsRegistrationSyNQuick')
+        function=ants_registration_syn_quick), name='ants_registration_syn_quick')
 
     merge_transform = pe.Node(niu.Merge(2), name='MergeTransforms')
 
@@ -576,23 +566,23 @@ def sdc_syb_pipeline(name='sdc_syb_correct'):
     merge = pe.Node(fsl.Merge(dimension='t'), name='MergeDWIs')
 
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['B0_2_T1_rigid_body_matrix', 'T1_2_B0_rigid_body_matrix', 'T1_coregistered_2_B0',
-                'B0_2_T1_SyN_defomation_field', 'B0_2_T1_affine_matrix', 'out_dwi', 'out_warp']),
+        fields=['out_b0_to_t1_rigid_body_matrix', 'out_t1_to_b0_rigid_body_matrix', 'out_t1_coregistered_to_b0',
+                'out_b0_to_t1_syn_defomation_field', 'out_b0_to_t1_affine_matrix', 'out_dwi', 'out_warp']),
         name='outputnode')
 
     wf = pe.Workflow(name='sdc_syb_pipeline')
     wf.connect([
         (inputnode, split, [('in_dwi', 'in_file')]),
         (split, pick_ref, [('out_files', 'inlist')]),
-        (pick_ref, flirt_b0_2_T1, [('out', 'in_file')]),
-        (inputnode, flirt_b0_2_T1, [('in_t1', 'reference')]),
-        (flirt_b0_2_T1, invert_xfm, [('out_matrix_file', 'in_file')]),
+        (pick_ref, flirt_b0_to_t1, [('out', 'in_file')]),
+        (inputnode, flirt_b0_to_t1, [('in_t1', 'reference')]),
+        (flirt_b0_to_t1, invert_xfm, [('out_matrix_file', 'in_file')]),
         (invert_xfm, apply_xfm, [('out_file', 'in_matrix_file')]),
         (inputnode, apply_xfm, [('in_t1', 'in_file')]),
         (pick_ref, apply_xfm, [('out', 'reference')]),
-        (apply_xfm, antsRegistrationSyNQuick, [('out_file', 'fixe_image')]),
-        (pick_ref, antsRegistrationSyNQuick, [('out', 'moving_image')]),
-        (antsRegistrationSyNQuick, merge_transform, [('affine_matrix', 'in2'),
+        (apply_xfm, ants_registration_syn_quick, [('out_file', 'fixe_image')]),
+        (pick_ref, ants_registration_syn_quick, [('out', 'moving_image')]),
+        (ants_registration_syn_quick, merge_transform, [('affine_matrix', 'in2'),
                                                      ('warp', 'in1')]),
         (pick_ref, combin_warp, [('out', 'in_file')]),
         (merge_transform, combin_warp, [('out', 'transforms_list')]),
@@ -607,43 +597,13 @@ def sdc_syb_pipeline(name='sdc_syb_correct'):
         (apply_warp, thres, [('out_file', 'in_file')]),
         (thres, merge, [('out_file', 'in_files')]),
         (merge,                    outputnode, [('merged_file', 'out_dwi')]),
-        (flirt_b0_2_T1,            outputnode, [('out_matrix_file', 'B0_2_T1_rigid_body_matrix')]),
-        (invert_xfm,               outputnode, [('out_file', 'T1_2_B0_rigid_body_matrix')]),
-        (apply_xfm,                outputnode, [('out_file', 'T1_coregistered_2_B0')]),
-        (antsRegistrationSyNQuick, outputnode, [('warp', 'B0_2_T1_SyN_defomation_field'),
-                                                ('affine_matrix', 'B0_2_T1_affine_matrix')]),
+        (flirt_b0_to_t1,            outputnode, [('out_matrix_file', 'out_b0_to_t1_rigid_body_matrix')]),
+        (invert_xfm,               outputnode, [('out_file', 'out_t1_to_b0_rigid_body_matrix')]),
+        (apply_xfm,                outputnode, [('out_file', 'out_t1_coregistered_to_b0')]),
+        (ants_registration_syn_quick, outputnode, [('warp', 'out_b0_to_t1_syn_defomation_field'),
+                                                ('affine_matrix', 'out_b0_to_t1_affine_matrix')]),
         (fsl_transf,               outputnode, [('out_file', 'out_warp')])
     ])
-#    wf.connect([(inputnode, split,[('DWI','in_file')])])
-#    wf.connect([(split, pick_ref, [('out_files','inlist')])])
-#    wf.connect([(pick_ref, flirt_b0_2_T1, [('out','in_file')])])
-#    wf.connect([(inputnode, flirt_b0_2_T1, [('T1','reference')])])
-#    wf.connect([(flirt_b0_2_T1, invert_xfm, [('out_matrix_file','in_file')])])
-#    wf.connect([(invert_xfm, apply_xfm, [('out_file','in_matrix_file')])])
-#    wf.connect([(inputnode, apply_xfm, [('T1','in_file')])])
-#    wf.connect([(pick_ref, apply_xfm, [('out','reference')])])
-#    wf.connect([(apply_xfm, antsRegistrationSyNQuick, [('out_file','fixe_image')])])
-#    wf.connect([(pick_ref, antsRegistrationSyNQuick,[('out','moving_image')])])
-#    wf.connect([(antsRegistrationSyNQuick, merge_transform, [('affine_matrix','in2'), ('warp','in1')])])
-#    wf.connect([(pick_ref, combin_warp, [('out','in_file')])])
-#    wf.connect([(merge_transform, combin_warp, [('out','transforms_list')])])
-#    wf.connect([(apply_xfm, combin_warp, [('out_file','reference')])])
-#    wf.connect([(apply_xfm, coeffs, [('out_file', 'reference')])])
-#    wf.connect([(combin_warp, coeffs, [('out_warp', 'in_file')])])
-#    wf.connect([(coeffs, fsl_transf, [('out_file', 'in_file')])])
-#    wf.connect([(apply_xfm, fsl_transf, [('out_file', 'reference')])])
-#    wf.connect([(fsl_transf, apply_warp, [('out_file','field_file')])])
-#    wf.connect([(split, apply_warp, [('out_files','in_file')])])
-#    wf.connect([(apply_xfm, apply_warp, [('out_file','ref_file')])])
-#    wf.connect([(apply_warp, thres, [('out_file','in_file')])])
-#    wf.connect([(thres, merge, [('out_file','in_files')])])
-#    wf.connect([(merge, outputnode, [('merged_file','out_dwi')])])
-#    wf.connect([(flirt_b0_2_T1, outputnode, [('out_matrix_file','B0_2_T1_rigid_body_matrix')])])
-#    wf.connect([(invert_xfm, outputnode, [('out_file', 'T1_2_B0_rigid_body_matrix')])])
-#    wf.connect([(apply_xfm, outputnode, [('out_file','T1_coregistered_2_B0')])])
-#    wf.connect([(antsRegistrationSyNQuick, outputnode, [('warp','B0_2_T1_SyN_defomation_field'),
-#                                                        ('affine_matrix','B0_2_T1_affine_matrix')])])
-#    wf.connect([(fsl_transf, outputnode, [('out_file','out_warp')])])
 
     return wf
 
@@ -668,13 +628,13 @@ def apply_all_corrections_syb(name='UnwarpArtifacts'):
     pick_ref = pe.Node(niu.Select(), name='Pick_b0')
     pick_ref.inputs.index = [0]
 
-    flirt_b0_2_T1 = pe.Node(interface=fsl.FLIRT(dof=6), name = 'flirt_B0_2_T1')
-    flirt_b0_2_T1.inputs.interp = "spline"
-    flirt_b0_2_T1.inputs.cost = 'normmi'
-    flirt_b0_2_T1.inputs.cost_func = 'normmi'
+    flirt_b0_to_t1 = pe.Node(interface=fsl.FLIRT(dof=6), name = 'flirt_b0_to_t1')
+    flirt_b0_to_t1.inputs.interp = "spline"
+    flirt_b0_to_t1.inputs.cost = 'normmi'
+    flirt_b0_to_t1.inputs.cost_func = 'normmi'
 
-    invertxfm = pe.Node(interface=fsl.ConvertXFM(), name='invert_xfm')
-    invertxfm.inputs.invert_xfm = True
+    invert_xfm = pe.Node(interface=fsl.ConvertXFM(), name='invert_xfm')
+    invert_xfm.inputs.invert_xfm = True
 
     apply_xfm = pe.Node(interface=fsl.ApplyXfm(), name='apply_xfm')
     apply_xfm.inputs.apply_xfm = True
@@ -712,10 +672,10 @@ def apply_all_corrections_syb(name='UnwarpArtifacts'):
                 (inputnode, warps, [('in_sdc_syb','warp1')]),
                 (inputnode, split, [('in_dwi', 'in_file')]),
                 (split, pick_ref, [('out_files','inlist')]),
-                (pick_ref, flirt_b0_2_T1, [('out','in_file')]),
-                (inputnode, flirt_b0_2_T1, [('in_t1','reference')]),
-                (flirt_b0_2_T1, invertxfm, [('out_matrix_file','in_file')]),
-                (invertxfm, apply_xfm, [('out_file','in_matrix_file')]),
+                (pick_ref, flirt_b0_to_t1, [('out','in_file')]),
+                (inputnode, flirt_b0_to_t1, [('in_t1','reference')]),
+                (flirt_b0_to_t1, invert_xfm, [('out_matrix_file','in_file')]),
+                (invert_xfm, apply_xfm, [('out_file','in_matrix_file')]),
                 (inputnode, apply_xfm, [('in_t1','in_file')]),
                 (pick_ref, apply_xfm, [('out','reference')]),
                 (apply_xfm, warps, [('out_file','reference')]),

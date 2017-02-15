@@ -5,26 +5,24 @@
 
 
 def dwi_processing_pipeline(
-        subject_id, session_id, caps_directory,
-        analysis_series_id='default', working_directory=None,
+        participant_id, session_id, caps_directory, working_directory=None,
         atlas_name=None,
         max_harmonic_order=None, tractography_algorithm='iFOD2', tractography_nb_of_tracks="100K",
         tractography_fod_threshold=None, tractography_step_size=None, tractography_angle=None,
-        nthreads=2, name="whole_brain_tractography_pipeline"):
+        nthreads=2, name="dwi_processing_pipeline"):
     """
     Process corrected DWI dataset.
 
     This pipeline is the main DWI processing pipeline combining these different pipeline:
+        - First the registration of the T1-weighted features onto the B0 image
         - (Single-shell) tractography, DTI & DTI-scalar measures pipeline
         - DTI-based analysis pipeline
 
     .. warning :: This is not suited for multi-shell data at all.
 
     Args:
-        subject_id (str): Subject ID in a BIDS format ('sub-<participant_label>').
+        participant_id (str): Subject (participant) ID in a BIDS format ('sub-<participant_label>').
         session_id (str): Session ID in a BIDS format ('ses-<session_label>').
-        analysis_series_id (str): Analysis series ID (will create the 'analysis-series-<analysis_series_id>/' folder
-            for the CAPS hierarchy)
         caps_directory (str): Directory where the results are stored in a CAPS hierarchy.
         working_directory (Optional[str]): Directory where the temporary results are stored. If not specified, it is
             automatically generated (generally in /tmp/).
@@ -34,7 +32,7 @@ def dwi_processing_pipeline(
         tractography_fod_threshold (Optional[float]): See dti_and_tractography_pipeline::tractography_fod_threshold
         tractography_step_size (Optional[int]): See dti_and_tractography_pipeline::tractography_step_size
         tractography_angle (Optional[int]): See dti_and_tractography_pipeline::tractography_angle
-        nthreads (Optional[int]): Number of threads used for the pipeline (default=2, 0 disables multi-threading).
+        nthreads (Optional[int]): Number of threads used for the pipeline (default=2, 1 disables multi-threading).
         name (Optional[str]): Name of the pipeline.
 
     Inputnode:
@@ -49,13 +47,14 @@ def dwi_processing_pipeline(
 
     Example:
         >>> from clinica.pipeline.dwi.dwi_processing import dwi_processing_pipeline
-        >>> dwi_processing= dwi_processing_pipeline(subject_id='sub-CLNC01', session_id='ses-M00', caps_directory='/path/to/output/folder')
+        >>> dwi_processing= dwi_processing_pipeline(participant_id='sub-CLNC01', session_id='ses-M00', caps_directory='/path/to/output/folder')
         >>> dwi_processing.run()
     """
     import tempfile
     import nipype.interfaces.io as nio
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
+    from clinica.pipeline.dwi.dwi_registration import t1_b0_registration_pipeline
     from clinica.pipeline.dwi.dwi_processing import tractography_and_dti_pipeline
     from clinica.pipeline.dwi.dwi_white_matter_scalar_analysis import dti_based_analysis_pipeline
     from clinica.utils.check_dependency import check_ants, check_mrtrix
@@ -71,16 +70,16 @@ def dwi_processing_pipeline(
         name='inputnode')
 
     tractography_and_dti = tractography_and_dti_pipeline(
-        subject_id=subject_id, session_id=session_id, caps_directory=caps_directory,
-        analysis_series_id=analysis_series_id, working_directory=working_directory,
+        participant_id=participant_id, session_id=session_id,
+        caps_directory=caps_directory, working_directory=working_directory,
         max_harmonic_order=max_harmonic_order, tractography_algorithm=tractography_algorithm,
         tractography_nb_of_tracks=tractography_nb_of_tracks, tractography_fod_threshold=tractography_fod_threshold,
         tractography_step_size=tractography_step_size, tractography_angle=tractography_angle,
         nthreads=nthreads)
 
     dti_based_analysis = dti_based_analysis_pipeline(
-        subject_id=subject_id, session_id=session_id, caps_directory=caps_directory,
-        analysis_series_id=analysis_series_id, working_directory=None, atlas_name=atlas_name)
+        participant_id=participant_id, session_id=session_id,
+        caps_directory=caps_directory, working_directory=None, atlas_name=atlas_name)
 
 
     outputnode = pe.Node(niu.IdentityInterface(
@@ -120,8 +119,7 @@ def dwi_processing_pipeline(
 
 
 def tractography_and_dti_pipeline(
-        subject_id, session_id, caps_directory,
-        analysis_series_id = 'default', working_directory=None,
+        participant_id, session_id, caps_directory, working_directory=None,
         max_harmonic_order=None, tractography_algorithm='iFOD2', tractography_nb_of_tracks="100K",
         tractography_fod_threshold=None, tractography_step_size=None, tractography_angle=None,
         nthreads=2, name="tractography_and_dti_pipeline"):
@@ -135,10 +133,8 @@ def tractography_and_dti_pipeline(
     .. warning :: This is not suited for multi-shell data at all.
 
     Args:
-        subject_id (str): Subject ID in a BIDS format ('sub-<participant_label>').
+        participant_id (str): Subject (participant) ID in a BIDS format ('sub-<participant_label>').
         session_id (str): Session ID in a BIDS format ('ses-<session_label>').
-        analysis_series_id (str): Analysis series ID (will create the 'analysis-series-<analysis_series_id>/' folder
-            for the CAPS hierarchy)
         caps_directory (str): Directory where the results are stored in a CAPS hierarchy.
         working_directory (Optional[str]): Directory where the temporary results are stored. If not specified, it is
             automatically generated (generally in /tmp/).
@@ -152,9 +148,9 @@ def tractography_and_dti_pipeline(
         name (Optional[str]): Name of the pipeline.
 
     Inputnode:
-        in_dwi_nii (str): File containing DWI dataset in NIfTI format.
-        in_bvals (str): File containing B-Value table in FSL format.
-        in_bvecs (str): File containing Diffusion Gradient table in FSL format.
+        in_dwi_nii (str): Preprocessed DWI dataset in NIfTI format.
+        in_bvals (str): B-Value table in FSL format.
+        in_bvecs (str): Diffusion Gradient table in FSL format.
         in_b0_mask (str): Binary mask of the b0 image. Only perform computation within this specified binary brain mask image.
         in_white_matter_binary_mask (str): Binary mask of the white matter segmentation. Seed streamlines will be
             entirely generated at random within this mask.
@@ -166,17 +162,17 @@ def tractography_and_dti_pipeline(
             called mean apparent diffusion), radial diffusivity and the first eigenvector modulated by the FA.
         out_eroded_mask (str): Eroded b0 mask (for debug purposes)
         out_response_function (str): Text file containing response function coefficients.
-        out_sh_coefficients_image (str): File containing the spherical harmonics coefficients image
-        out_tracks (str): File containing the generated tracks.
+        out_sh_coefficients_image (str): Spherical harmonics coefficients image.
+        out_tracks (str): Whole-brain tractogram of <tractography_nb_of_tracks> streamlines.
 
     Example:
         >>> from clinica.pipeline.dwi.dwi_processing import tractography_and_dti_pipeline
-        >>> tractography_and_dti = tractography_and_dti_pipeline(subject_id='sub-CLNC01', session_id='ses-M00', caps_directory='/path/to/output/folder')
-        >>> tractography_and_dti.inputs.inputnode.in_dwi = 'subject_dwi.nii'
-        >>> tractography_and_dti.inputs.inputnode.in_bvecs = 'subject_dwi.bvecs'
-        >>> tractography_and_dti.inputs.inputnode.in_bvals = 'subject_dwi.bvals'
-        >>> tractography_and_dti.inputs.inputnode.in_b0_mask = 'subject_b0_mask.nii'
-        >>> tractography_and_dti.inputs.inputnode.white_matter_mask = 'subject_wm_mask.nii'
+        >>> tractography_and_dti = tractography_and_dti_pipeline(participant_id='sub-CLNC01', session_id='ses-M00', caps_directory='/path/to/output/folder')
+        >>> tractography_and_dti.inputs.inputnode.in_dwi = 'sub-CLNC01_ses-M00_dwi.nii'
+        >>> tractography_and_dti.inputs.inputnode.in_bvecs = 'sub-CLNC01_ses-M00_dwi.bvecs'
+        >>> tractography_and_dti.inputs.inputnode.in_bvals = 'sub-CLNC01_ses-M00_dwi.bvals'
+        >>> tractography_and_dti.inputs.inputnode.in_b0_mask = 'sub-CLNC01_ses-M00_b0_mask.nii'
+        >>> tractography_and_dti.inputs.inputnode.white_matter_mask = 'sub-CLNC01_ses-M00_wm_mask.nii'
         >>> tractography_and_dti.run()
     """
     from os.path import join
@@ -254,9 +250,9 @@ def tractography_and_dti_pipeline(
         name='outputnode')
 
     datasink = pe.Node(nio.DataSink(), name='datasink')
-    caps_identifier = subject_id + '_' + session_id
+    caps_identifier = participant_id + '_' + session_id
     datasink.inputs.base_directory = join(
-        caps_directory, 'analysis-series-' + analysis_series_id, 'subjects', subject_id, session_id, 'dwi')
+        caps_directory, 'subjects', participant_id, session_id, 'dwi')
     datasink.inputs.substitutions = [('dti.mif', caps_identifier + '_dti.mif'),
                                      ('dwi.mif', caps_identifier + '_dwi.mif'),
                                      ('eroded_mask.nii.gz', caps_identifier + '_eroded-b0-mask.nii.gz'),
@@ -322,6 +318,3 @@ def tractography_and_dti_pipeline(
     ])
 
     return wf
-
-
-

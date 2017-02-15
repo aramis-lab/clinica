@@ -57,9 +57,8 @@ def check_freesurfer():
     This function checks if FreeSurfer is present (FREESURFER_HOME & binaries).
     """
     import os
-    from nipype.workflows.smri.freesurfer.utils import checkenv
-
-    checkenv(True)
+    #from nipype.workflows.smri.freesurfer.utils import checkenv
+    #checkenv(True)
 
     try:
         freesurfer_home = os.environ.get('FREESURFER_HOME', '')
