@@ -57,7 +57,7 @@ def apply_mrtrix_transform_without_resampling(in_image, in_mrtrix_matrix, name_o
             to in_mrtrix_matrix transformation.
 
     Example:
-        >>> from clinica.pipeline.registration.mri_utils import apply_mrtrix_transform_without_resampling
+        >>> from clinica.utils.mri_registration import apply_mrtrix_transform_without_resampling
         >>> apply_mrtrix_transform_without_resampling('t1_image.nii', 't1_to_diffusion.txt', 't1_in_diffusion_space.nii')
     """
     import os.path as op
@@ -100,7 +100,7 @@ def apply_ants_registration_syn_quick_transformation(
             in_bspline_transformation transformations.
 
     Example:
-        >>> from clinica.pipeline.registration.mri_utils import apply_ants_registration_syn_quick_transformation
+        >>> from clinica.utils.mri_registration import apply_ants_registration_syn_quick_transformation
         >>> apply_ants_registration_syn_quick_transformation('my_image.nii.gz', 'output0GenericAffine.mat', 'output1Warp.nii.gz', 'my_deformed_image.nii.gz')
     """
     import os.path as op
@@ -133,7 +133,7 @@ def ants_registration_syn_quick(fixe_image, moving_image, prefix_output=None):
     Returns:
 
     Example:
-        >>> from clinica.pipeline.registration.mri_utils import apply_ants_registration_syn_quick_transformation
+        >>> from clinica.utils.mri_registration import apply_ants_registration_syn_quick_transformation
         >>> apply_ants_registration_syn_quick_transformation('my_image.nii.gz', 'output0GenericAffine.mat', 'output1Warp.nii.gz', 'my_deformed_image.nii.gz')
     """
     import subprocess
@@ -162,9 +162,9 @@ def ants_combine_transform(in_file, transforms_list, reference):
     Args:
         in_image (str): File containing the input image to be transformed.
         in_reference_image (str): File defining the spacing, origin, size, and direction of the output warped image.
-        in_affine_transformation (str): File containing the transformation matrix obtained by antsRegistrationSyNQuick
+        in_affine_transformation (str): File containing the affine transformation matrix obtained by antsRegistrationSyNQuick
             (expected file: [Prefix]0GenericAffine.mat).
-        in_bspline_transformation (str): File containing the transformation matrix obtained by antsRegistrationSyNQuick
+        in_bspline_transformation (str): File containing the BSpline transformation obtained by antsRegistrationSyNQuick
             (expected file: [Prefix]1Warp.nii.gz).
         name_output_image (Optional[str]): Name of the output image (default=deformed_image.nii.gz).
 
@@ -173,7 +173,7 @@ def ants_combine_transform(in_file, transforms_list, reference):
             in_bspline_transformation transformations.
 
     Example:
-        >>> from clinica.pipeline.registration.mri_utils import apply_ants_registration_syn_quick_transformation
+        >>> from clinica.utils.mri_registration import apply_ants_registration_syn_quick_transformation
         >>> apply_ants_registration_syn_quick_transformation('my_image.nii.gz', 'output0GenericAffine.mat', 'output1Warp.nii.gz', 'my_deformed_image.nii.gz')
     """
     import os

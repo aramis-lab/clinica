@@ -20,7 +20,7 @@ def convert_nifti_to_mrtrix_format(in_dwi_nii, in_bvals, in_bvecs, nthreads=2):
         in_bvals (str): File containing B-Value table in FSL format.
         in_bvecs (str): File containing Diffusion Gradient table in FSL format.
         nthreads (Optional[int]): Number of threads used in this function
-            (default=2, 0 disables multi-threading).
+            (default=2, 1 disables multi-threading).
 
     Returns:
         out_dwi_mif (str): DWI dataset in MRtrix format (the diffusion gradient
@@ -95,7 +95,7 @@ def erode_mask(in_mask, npass=6, nthreads=2):
         npass (Optional[int]): Number of times to repeatedly apply the erosion
             (default=6 which is used in MRtrix community).
         nthreads (Optional[int]): Number of threads used in this function
-            (default=2, 0 disables multi-threading).
+            (default=2, 1 disables multi-threading).
 
     Returns:
         out_eroded_mask : FILE
@@ -124,7 +124,7 @@ def dwi_to_tensor(in_dwi_mif, in_b0_mask, nthreads=2):
         in_b0_mask (str): Binary mask of the b0 image. Only perform computation
             within this specified binary brain mask image.
         nthreads (Optional[int]): Number of threads used in this function
-            (default=2, 0 disables multi-threading).
+            (default=2, 1 disables multi-threading).
 
     Returns:
         out_dti (str):
@@ -159,7 +159,7 @@ def tensor_to_metric(in_dti, in_b0_mask, metric='fa', nthreads=2):
             mean diffusivity)
             - fa(default): fractional anisotropy
         nthreads (Optional[int]): Number of threads used in this function
-            (default=2, 0 disables multi-threading).
+            (default=2, 1 disables multi-threading).
 
     Returns:
         out_metric (str): The tensor-derived parameter `metric`.
@@ -194,7 +194,7 @@ def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2):
         in_b0_mask (str): Binary mask of the b0 image. Only perform computation
             within this specified binary brain mask image.
         nthreads (Optional[int]): Number of threads used in this function
-            (default=2, 0 disables multi-threading).
+            (default=2, 1 disables multi-threading).
 
     Returns:
         out_fa (str): The tensor-derived parameter fractional anisotropy.
@@ -248,7 +248,7 @@ def estimate_response(in_dwi_mif, in_b0_mask, lmax=None, algorithm='tax', tmpdir
             - tournier: Use the Tournier et al. (2013) iterative RF selection algorithm
         lmax (Optional[int]): The maximum harmonic degree(s) of response function estimation
         tmpdir (Optional[str]): Path where the temporary results are stored.
-        nthreads (Optional[int]): Number of threads used in this function (default=2, 0 disables multi-threading).
+        nthreads (Optional[int]): Number of threads used in this function (default=2, 1 disables multi-threading).
 
     Returns:
         out_response_function (str): Text file containing response function
@@ -295,7 +295,7 @@ def estimate_fod(in_dwi_mif, in_b0_mask, in_response_function_coefficients, lmax
             the program will use the highest possible `lmax` given the number
             of DWI, up to a maximum of 8.
         nthreads (Optional[int]): Number of threads used in this function
-            (default=2, 0 disables multi-threading).
+            (default=2, 1 disables multi-threading).
 
     Returns:
         out_sh_coefficients_image (str): Spherical harmonics coefficients
@@ -362,7 +362,7 @@ def streamlines_tractography(
         angle (Optional[int]): Maximum angle between successive steps
             (default is 90deg x stepsize / voxelsize). # TODO: -angle
         nthreads (Optional[int]): Number of threads used in this function
-            (default=2, 0 disables multi-threading).
+            (default=2, 1 disables multi-threading).
 
     Returns:
         out_tracks (str): File containing the tracks generated in *.tck format.
