@@ -1,9 +1,9 @@
 from clinica.bids.abstract_converter import Converter
 from clinica.engine.cmdparser import CmdParser
 
-__author__ = "Sabrina Fontanella"
+__author__ = "Jorge Samper and Sabrina Fontanella"
 __copyright__ = "Copyright 2017, The Aramis Lab Team"
-__credits__ = ["Jorge Samper"]
+__credits__ = [""]
 __license__ = ""
 __version__ = "1.0.0"
 __maintainer__ = "Sabrina Fontanella"
@@ -44,6 +44,8 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         import logging
         import clinica.bids.bids_utils as bids
         import pandas as pd
+        from glob import glob
+        from os.path import normpath
 
         logging.basicConfig(filename=path.join(out_path, 'conversion_clinical.log'),
                             format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG,
@@ -60,7 +62,7 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
             raise
 
         bids_ids = bids.get_bids_subjs_list(out_path)
-        bids_subjs_paths = bids.get_bids_subjs_pats(out_path)
+        bids_subjs_paths = bids.get_bids_subjs_paths(out_path)
 
         # -- Creation of participant.tsv --
         bids.create_participants(input_path, out_path, 'ADNI', 'clinical_specifications_adni.xlsx', bids_ids)
@@ -122,14 +124,66 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
             sessions_df = pd.DataFrame(columns=fields_bids)
             if sessions_dict.has_key(bids_id):
                 sess_aval = sessions_dict[bids_id].keys()
-                sessions_df = pd.DataFrame(sessions_dict[bids_id]['bl'], index=['i', ])
                 for ses in sess_aval:
                     sessions_df = sessions_df.append(pd.DataFrame(sessions_dict[bids_id][ses], index=['i', ]))
 
                 sessions_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False)
 
+        # -- Creation of scans files --
+        print 'Creation of scans files...'
+        scans_dict = {}
 
-    def convert_t1_from_dicom(self, t1_path, output_path, bids_name):
+        for bids_id in bids_ids:
+            scans_dict.update({bids_id: {'T1/DWI/fMRI': {}, 'FDG': {}}})
+
+        scans_specs = pd.read_excel(clinic_specs_path, sheetname='scans.tsv')
+        scans_fields_db = scans_specs['ADNI']
+        scans_fields_bids = scans_specs['BIDS CLINICA']
+        scans_fields_mod = scans_specs['Modalities related']
+        fields_bids = ['filename']
+
+        for i in range(0, len(scans_fields_db)):
+            if not pd.isnull(scans_fields_db[i]):
+                fields_bids.append(scans_fields_bids[i])
+
+        scans_df = pd.DataFrame(columns=(fields_bids))
+
+        for bids_subj_path in bids_subjs_paths:
+            # Create the file
+            bids_id = os.path.basename(normpath(bids_subj_path))
+
+            sessions_paths = glob(path.join(bids_subj_path, 'ses-*'))
+            for session_path in sessions_paths:
+                session_name = session_path.split(os.sep)[-1]
+                tsv_name = bids_id + '_' + session_name + "_scans.tsv"
+
+                # If the file already exists, remove it
+                if os.path.exists(path.join(session_path, tsv_name)):
+                    os.remove(path.join(session_path, tsv_name))
+
+                scans_tsv = open(path.join(session_path, tsv_name), 'a')
+                scans_df.to_csv(scans_tsv, sep='\t', index=False)
+
+                # Extract modalities available for each subject
+                mod_available = glob(path.join(session_path, '*'))
+                for mod in mod_available:
+                    mod_name = os.path.basename(mod)
+                    files = glob(path.join(mod, '*'))
+                    for file in files:
+                        file_name = os.path.basename(file)
+                        if mod == "anat" or mod == "dwi" or mod == "func":
+                            type_mod = 'T1/DWI/fMRI'
+                        else:
+                            type_mod = 'FDG'
+
+                        scans_df['filename'] = pd.Series(path.join(mod_name, file_name))
+                        scans_df.to_csv(scans_tsv, header=False, sep='\t', index=False)
+
+                scans_df = pd.DataFrame(columns=(fields_bids))
+
+        print '-- Scans files created for each subject. --'
+
+    def convert_from_dicom(self, input_path, output_path, bids_name, mod_type):
         """
 
         :param t1_path:
@@ -140,13 +194,28 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
 
         import os
         import clinica.bids.bids_utils as bids
+        from os import path
+        from glob import glob
 
         if not os.path.exists(output_path):
             os.mkdir(output_path)
-        os.system('dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name + bids.get_bids_suff('T1') + ' ' + t1_path )
+        os.system('dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name + bids.get_bids_suff(mod_type) + ' ' + input_path)
+
+        # If dcm2niix didn't work use dcm2nii
+        if not os.path.exists(path.join(output_path, bids_name + bids.get_bids_suff(mod_type) + '.nii.gz')):
+            print 'Conversion with dcm2niix failed, trying with dcm2nii'
+            #os.system('dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path')
+
+        # If the conversion failed with both tools
+        if not os.path.exists(path.join(output_path, bids_name + bids.get_bids_suff(mod_type) + '.nii.gz')):
+            print 'Conversion of the dicom failed for ', input_path
 
 
-    def convert_images(self, source_dir, dest_dir):
+
+    def fill_zeros(self, s, length):
+        return ('0' * (length - len(str(s)))) + str(s)
+
+    def convert_images(self, source_dir, dest_dir, mod_to_add = '', mod_to_update = ''):
         """
         :param source_dir:
         :param dest_dir:
@@ -157,50 +226,98 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         import os
         from os import path
         import pandas as pd
+        import shutil
 
-        t1_paths = self.compute_t1_paths(source_dir)
+        # Compute the path to the t1 images
+        if (mod_to_add == '' or mod_to_add == 't1') and ( mod_to_update == '' or mod_to_update == 't1' ):
+            t1_paths = self.compute_t1_paths(source_dir)
+
+
         subjs_list_path = path.join(source_dir, 'clinicalData', 'subjects_list_from_adnimerge.xlsx')
         subjs_list_excel = pd.read_excel(subjs_list_path)
         subjs_list = subjs_list_excel['PTID']
         adni_merge_path = path.join(source_dir, 'clinicalData', 'ADNIMERGE.csv')
+        adni_merge = pd.read_csv(adni_merge_path)
+        # Extract the list of sessions from VISCODE column of adnimerge file, remove duplicate and convert to a list
+        session_list = adni_merge['VISCODE'].drop_duplicates().tolist()
+        print session_list
         sess_list = ['bl']
         bids_ids = []
         alpha_ids = []
 
-        os.mkdir(dest_dir)
+        pet_fdg_paths = self.compute_fdg_pet_paths(source_dir, subjs_list)
+
+        if mod_to_add == '' and mod_to_update=='':
+            os.mkdir(dest_dir)
 
         for subj in subjs_list:
             alpha_id = bids.remove_space_and_symbols(subj)
             bids_id = 'sub-ADNI' + alpha_id
             alpha_ids.append(alpha_id)
             bids_ids.append(bids_id)
-            os.mkdir(path.join(dest_dir, bids_id))
+            if mod_to_add == '' and mod_to_update=='':
+                os.mkdir(path.join(dest_dir, bids_id))
 
         for i in range(0, len(subjs_list)):
             for ses in sess_list:
                 bids_file_name = bids_ids[i] + '_ses-' + ses
                 bids_ses_id = 'ses-' + ses
                 ses_path = path.join(dest_dir, bids_ids[i], bids_ses_id)
-                os.mkdir(ses_path)
+                if mod_to_add == '' and mod_to_update=='':
+                    os.mkdir(ses_path)
 
-                # Convert T1
-                t1_info = t1_paths[(t1_paths['subj_id'] == subjs_list[i]) & (t1_paths['session'] == ses)]
-                if t1_info['dicom'].values[0] == False:
-                    t1_path = t1_info['path'].values[0]
-                    if len(t1_path) == 0:
-                        print 'No path'
+                if mod_to_add != '' and mod_to_add !='t1':
+                    pass
+                elif (mod_to_add=='' and mod_to_update=='') or mod_to_add == 't1' or mod_to_update == 't1':
+                    # Convert T1
+                    t1_info = t1_paths[(t1_paths['subj_id'] == subjs_list[i]) & (t1_paths['session'] == ses)]
+                    if t1_info['dicom'].values[0] == False:
+                        t1_path = t1_info['path'].values[0]
+                        if len(t1_path) == 0:
+                            print 'No path'
+                        else:
+                            os.mkdir(path.join(ses_path, 'anat'))
+                            bids.convert_T1(t1_path, path.join(ses_path, 'anat'), bids_file_name)
                     else:
+                        # Convert the image using dcm2nii
+                        print 'Dicom found, needs to be converted'
                         os.mkdir(path.join(ses_path, 'anat'))
-                        bids.convert_T1(t1_path, path.join(ses_path, 'anat'), bids_file_name)
-                else:
-                    # Convert the image using dcm2nii
-                    print 'Dicom found, needs to be converted'
-                    os.mkdir(path.join(ses_path, 'anat'))
-                    t1_path = (t1_info['path'].values[0]).replace(' ', '\ ')
-                    if len(t1_path)!=0:
-                        self.convert_t1_from_dicom(t1_path, path.join(ses_path, 'anat'), bids_file_name)
+                        t1_path = (t1_info['path'].values[0]).replace(' ', '\ ')
+                        if len(t1_path)!=0:
+                            self.convert_from_dicom(t1_path, path.join(ses_path, 'anat'), bids_file_name, 'T1')
+                        else:
+                            print 'No path for dicom'
+
+                if mod_to_add != '' and mod_to_add !='pet_fdg' and mod_to_update!='pet_fdg':
+                    pass
+                elif mod_to_add=='' or mod_to_add == 'pet_fdg' or mod_to_update == 'pet_fdg':
+                    pet_fdg_info = pet_fdg_paths
+                    visit_session = {'ADNI Baseline': 'bl', 'ADNI2 Baseline-New Pt': 'bl'}
+
+
+                    images = pet_fdg_info
+                    count = 0
+                    total = images.shape[0]
+
+                    # Check if the pet folder already exist
+                    if os.path.isdir(path.join(ses_path, 'pet')):
+                        if mod_to_add != '':
+                            raise IOError('PET modality found. For updating the dataset use the flag -updated_mod')
+
+                        print 'Removing the old PET folder...'
+                        shutil.rmtree(path.join(ses_path, 'pet'))
+
+
+                    pet_fdg_info = pet_fdg_paths[(pet_fdg_paths['Subject_ID'] == subjs_list[i])]
+                    original = pet_fdg_info['Original'].values
+                    if len(original) > 0:
+                        if pet_fdg_info['Original'].values[0] == True:
+                            print 'is original'
+                        else:
+                            pet_path = pet_fdg_info['Path'].values[0].replace(' ', '\ ')
+                            self.convert_from_dicom(pet_path,  path.join(ses_path, 'pet'), bids_file_name, 'pet')
                     else:
-                        print 'No path for dicom'
+                        print 'Original not found for ', subjs_list[i]
 
     def compute_t1_paths(self, source_dir):
         """
@@ -215,7 +332,7 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         """
 
         import pandas as pd
-        from os import path
+        from os import path, walk
 
         t1_col_df = ['subj_id', 'session','filename', 'date', 'series_id']
         sessions_list = ['bl']
@@ -343,7 +460,125 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
             subjects.loc[:, 'path'] = pd.Series(nifti_paths, index=subjects.index)
 
         return subjects
-        print subjects
+
+    def compute_fdg_pet_paths(self, source_dir, subjs_list):
+        import pandas as pd
+        import csv
+        from os import walk, path
+
+        pet_fdg_col = ['Subject_ID', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
+                                                             'Series_ID', 'Image_ID', 'Original']
+        pet_fdg_df = pd.DataFrame(columns=pet_fdg_col)
+        petqc_path = path.join(source_dir, 'clinicalData', 'PETQC.csv')
+        pet_meta_list_path = path.join(source_dir,'clinicalData', 'PET_META_LIST.csv')
+        out_images_filename = '/Users/sabrina.fontanella/clinica_io/phase1_pet.csv'
+        output_paths_list = '/Users/sabrina.fontanella/clinica_io/phase2_pet.csv'
+
+        try:
+            petqc = pd.io.parsers.read_csv(petqc_path, sep=',')
+        except IOError:
+            print ('File PETQC.csv not found in folder clinicalData of ADNI.')
+
+        baseline = petqc[
+            (petqc.VISCODE2 == 'bl') & (petqc.PASS == 1) & petqc.RID.isin([int(s[-4:]) for s in subjs_list])]
+
+        try:
+            pet_meta_list = pd.io.parsers.read_csv(pet_meta_list_path, sep=',')
+        except IOError:
+            print ('File PET_META_LIST.csv not found in folder clinicalData of ADNI.')
+
+        pet_meta_list = pet_meta_list[pet_meta_list.Visit.map(lambda x: x.find('Baseline') > -1)]
+
+
+        for row in baseline.iterrows():
+            subject = row[1]
+            zeros_rid = self.fill_zeros(subject.RID, 4)
+            int_image_id = int(subject.LONIUID[1:])
+            filtered_pet_meta = pet_meta_list[pet_meta_list['Subject'].map(lambda x: x.endswith(zeros_rid))]
+
+            if filtered_pet_meta.shape[0] < 1:
+                print 'NO Screening: RID - ' + subject.RID
+                continue
+
+            original_pet_meta = filtered_pet_meta[
+                (filtered_pet_meta['Orig/Proc'] == 'Original') & (filtered_pet_meta['Image ID'] == int_image_id)]
+            if original_pet_meta.shape[0] < 1:
+                print 'NO Screening: RID - ' + subject.RID
+                continue
+
+            original_image = original_pet_meta.iloc[0]
+
+            averaged_pet_meta = filtered_pet_meta[(filtered_pet_meta['Sequence'] == 'Co-registered, Averaged') & (
+            filtered_pet_meta['Series ID'] == original_image['Series ID'])]
+            if averaged_pet_meta.shape[0] < 1:
+                sel_image = original_image
+                original = True
+            else:
+                sel_image = averaged_pet_meta.iloc[0]
+                original = False
+
+            subj_id = sel_image.Subject
+            visit = sel_image.Visit
+            sequence = sel_image.Sequence
+            sequence = sequence.replace(' ', '_').replace('/', '_').replace(';', '_').replace('*', '_').replace('(',
+                                                                                                                    '_').replace(
+                ')', '_').replace(':', '_')
+            date = sel_image['Scan Date']
+            study_id = sel_image['Study ID']
+            series_id = sel_image['Series ID']
+            image_id = sel_image['Image ID']
+
+
+            row_to_append = pd.DataFrame([[subj_id, str(visit), sequence, date, study_id, str(series_id), str(image_id), original]], columns=pet_fdg_col)
+            #print row_to_append
+            pet_fdg_df = pet_fdg_df.append(row_to_append, ignore_index=True)
+
+
+        pet_fdg_df.to_csv(out_images_filename, '\t', index=False)
+        subjects = pet_fdg_df
+        count = 0
+        total = subjects.shape[0]
+
+        image_folders = []
+        for row in subjects.iterrows():
+
+            subject = row[1]
+            seq_path = path.join(source_dir, str(subject.Subject_ID), subject.Sequence)
+            print seq_path
+
+            count += 1
+            print 'Processing subject ' + str(subject.Subject_ID) + ', ' + str(count) + ' / ' + str(total)
+
+            image_path = ''
+            for (dirpath, dirnames, filenames) in walk(seq_path):
+                found = False
+                for d in dirnames:
+                    # print 'd =', d
+                    # print 'image ID', subject.Image_ID
+                    if d == 'I' + str(subject.Image_ID):
+                        image_path = path.join(dirpath, d)
+                        found = True
+                        break
+                if found:
+                    break
+
+            if subject.Original:
+                for (dirpath, dirnames, filenames) in walk(image_path):
+                    for f in filenames:
+                        if f.endswith(".nii"):
+                            image_path = path.join(dirpath, f)
+                            break
+
+            image_folders.append(image_path)
+
+            if image_path == '':
+                 print 'Not found ' + str(subject.Subject_ID)
+
+        subjects.loc[:, 'Path'] = pd.Series(image_folders, index=subjects.index)
+                #subjects.to_csv(output_paths_list, sep='\t', index=False)
+
+        subjects.to_csv(output_paths_list, sep='\t', index=False)
+        return subjects
 
     def run_pipeline(self, args):
         if args.modality is True:
