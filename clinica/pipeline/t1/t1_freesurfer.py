@@ -19,7 +19,6 @@ __status__ = "Development"
 def datagrabber_t1_freesurfer_pipeline(input_dir,
                        output_dir,
                        subjects_visits_tsv=None,
-                       analysis_series_id='default',
                        working_directory=None,
                        recon_all_args='-qcache'):
 
@@ -32,7 +31,6 @@ def datagrabber_t1_freesurfer_pipeline(input_dir,
         :param: subjects_visits_tsv: str, the path pointing to subjects-visit-list tsv file, default behavior is None,
             and this pipeline will run all the subjects in your dataset, if you want to run a sub-group of your dataset,
             please create a separate tsv file for this.
-        :param: analysis_series_id: str, the different rounds that you wanna apply this pipeline for your data, the default value is 'default'
         :param: working_directory: str, path to contain the detail information about your workflow, the default value
             is None, nipype will create a temporary folder to create the pipeline.
         :param: recon_all_args: str, the additional flags for reconAll command line, the default value will be set as
@@ -55,12 +53,11 @@ def datagrabber_t1_freesurfer_pipeline(input_dir,
     # Node to get the input vars
     inputnode = pe.Node(name='inputnode',
                           interface=Function(
-                          input_names=['output_dir', 'subjects_visits_tsv', 'analysis_series_id'],
+                          input_names=['output_dir', 'subjects_visits_tsv'],
                           output_names=['nouse0', 'nouse1', 'nouse2', 'nouse3', 'subject_dir', 'subject_id', 'subject_list', 'session_list'],
                           function=get_dirs_check_reconalled))
     inputnode.inputs.output_dir = output_dir
     inputnode.inputs.subjects_visits_tsv = subjects_visits_tsv
-    inputnode.inputs.analysis_series_id = analysis_series_id
 
     # Node to grab the BIDS input.
     datagrabbernode = pe.Node(interface=nio.DataGrabber(
@@ -77,7 +74,6 @@ def datagrabber_t1_freesurfer_pipeline(input_dir,
     datagrabbernode.inputs.sort_filelist = False
 
     datagrabber_recon_all = t1_freesurfer_pipeline(output_dir,
-                           analysis_series_id=analysis_series_id,
                            working_directory=working_directory,
                            recon_all_args=recon_all_args)
 

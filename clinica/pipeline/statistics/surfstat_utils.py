@@ -28,13 +28,12 @@ def absolute_path(arg):
         return os.path.join(os.getcwd(), arg)
 
 
-def get_vars(input_directory, subjects_visits_tsv, analysis_series_id, group_label):
+def get_vars(input_directory, subjects_visits_tsv, group_label):
     """
     Fetch all the intermedial variables for this workflow
 
     :param input_directory:
     :param subjects_visits_tsv:
-    :param analysis_series_id:
     :param group_label:
     :return:
     """
@@ -47,12 +46,10 @@ def get_vars(input_directory, subjects_visits_tsv, analysis_series_id, group_lab
 
     # CAPS input and output vars
     input_directory = os.path.expanduser(input_directory)
-    subjects_path = 'analysis-series-' + analysis_series_id + '/subjects'
-    surfstat_input_dir = glob(os.path.join(input_directory, subjects_path))[0]
+    surfstat_input_dir = os.path.join(input_directory, 'subjects')
 
-    group_path = glob(os.path.join(input_directory, ('analysis-series-' + analysis_series_id)))[0]
     group_id = 'group-' + group_label
-    output_directory = os.path.join(group_path, 'groups', group_id, 'statistics/surfstat/clinica-surfstat')
+    output_directory = os.path.join(input_directory, 'groups', group_id, 'statistics/surfstat/clinica-surfstat')
     if not os.path.exists(output_directory):
         try:
             os.makedirs(output_directory)

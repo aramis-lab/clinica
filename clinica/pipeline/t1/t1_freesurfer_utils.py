@@ -29,7 +29,7 @@ def absolute_path(arg):
         return os.path.join(os.getcwd(), arg)
 
 
-def get_dirs_check_reconalled(output_dir, subjects_visits_tsv, analysis_series_id):
+def get_dirs_check_reconalled(output_dir, subjects_visits_tsv):
     """
     Get the info from subjects_visits_tsv, like subject_dir, subject_id, subject_list, session_list
     Also, this func is also to check out the rerun of the dataset, if the subject result folder has been created, you should
@@ -37,7 +37,6 @@ def get_dirs_check_reconalled(output_dir, subjects_visits_tsv, analysis_series_i
 
     :param output_dir:
     :param subjects_visits_tsv:
-    :param analysis_series_id:
     :return: return the lists containing CAPS version for subject_id, and also the Freesurfer version subject_id, also
     return the subject_id, session_id in the tsv fils
     """
@@ -56,11 +55,8 @@ def get_dirs_check_reconalled(output_dir, subjects_visits_tsv, analysis_series_i
     session_list_without_reconalled = cp(session_list)
 
     output_path = os.path.expanduser(output_dir)  # change the relative path to be absolute path
-    output_base = 'analysis-series-' + analysis_series_id + '/subjects'
-    if output_path[-1] == '/':
-        output_dir = output_path + output_base
-    else:
-        output_dir = output_path + '/' + output_base
+    output_dir = os.path.join(output_path, 'subjects')
+
     try:
         os.makedirs(output_dir)
     except OSError as exception:
@@ -151,7 +147,7 @@ def create_flags_str(input_flags):
 
     return output_str
 
-def log_summary(subject_list, session_list, subject_id, output_dir, analysis_series_id):
+def log_summary(subject_list, session_list, subject_id, output_dir):
     """
     create the txt file to summarize the reconall result for all the subjects
 
@@ -159,7 +155,6 @@ def log_summary(subject_list, session_list, subject_id, output_dir, analysis_ser
     :param session_list:
     :param subject_id:
     :param output_dir:
-    :param analysis_series_id:
     :return:
     """
     ## TODO check if log file exits, if yes, add new info for new subjects, not to overwrite it.
@@ -167,7 +162,7 @@ def log_summary(subject_list, session_list, subject_id, output_dir, analysis_ser
     from datetime import datetime
 
     output_path = os.path.expanduser(output_dir)
-    dest_dir = output_path + '/analysis-series-' + analysis_series_id + '/subjects'
+    dest_dir = os.path.join(output_path, 'subjects')
     if not os.path.isdir(dest_dir):
         print("ERROR: directory subjects does not exist, it should be CAPS directory after running recon_all_pipeline!!!")
     else:
@@ -220,12 +215,11 @@ def log_summary(subject_list, session_list, subject_id, output_dir, analysis_ser
     # line2 = 'Number of subjects: %s \nNumber of bad recon-all is: %s ' % (len(subject_list), bad_log)
     # logging.info(line2)
 
-def write_statistics(subject_dir, subject_id, analysis_series_id, output_dir):
+def write_statistics(subject_dir, subject_id, output_dir):
     """
 
     :param subject_dir:
     :param subject_id:
-    :param analysis_series_id:
     :param output_dir:
     :return:
     """
@@ -266,7 +260,7 @@ def write_statistics(subject_dir, subject_id, analysis_series_id, output_dir):
 
     output_path = os.path.expanduser(output_dir)
 
-    cs_dir = output_path + '/analysis-series-' + analysis_series_id + '/subjects'
+    cs_dir = os.path.join(output_path, 'subjects')
     if not os.path.isdir(cs_dir):
         print("ERROR: directory freesurfer-cross-sectional does not exist, it should be CAPS directory after running recon_all_pipeline!!!")
     else:
@@ -371,7 +365,7 @@ def write_statistics(subject_dir, subject_id, analysis_series_id, output_dir):
     cmd_aparc_BA_rh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas meancurv --tablefile ' + aparc_BA_rh_meancurv_tsv
     os.system(cmd_aparc_BA_rh_meancurv)
 
-def write_statistics_per_subject(subject_id, analysis_series_id, output_dir):
+def write_statistics_per_subject(subject_id, output_dir):
 
     import os, errno
 
@@ -410,8 +404,7 @@ def write_statistics_per_subject(subject_id, analysis_series_id, output_dir):
 
     # subject_name = subject_list + '_' + session_list
     output_path = os.path.expanduser(output_dir)
-
-    cs_dir = output_path + '/analysis-series-' + analysis_series_id + '/subjects/' + subject_list + '/' + session_list + '/t1/freesurfer-cross-sectional'
+    cs_dir = os.path.join(output_path, 'subjects', subject_list, session_list, 't1', 'freesurfer-cross-sectional')
     if not os.path.isdir(cs_dir):
         print("ERROR: directory freesurfer-cross-sectional does not exist, it should be CAPS directory after running recon_all_pipeline!!!")
     else:
