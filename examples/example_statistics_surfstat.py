@@ -55,9 +55,8 @@ design_matrix ='1+age'
 print 'Output dir is in the same CAPS folder with the input'
 contrast = '-age'
 group_label = 'test-nouse'
-analysis_series_id = 'default'
 start = time.time()
-surfstat = clinica_surfstat(caps_dir, tsv_file, design_matrix, contrast, str_format, group_label, analysis_series_id)
+surfstat = clinica_surfstat(caps_dir, tsv_file, design_matrix, contrast, str_format, group_label)
 surfstat.run("MultiProc", plugin_args={'n_procs': 4})
 time_consuming = time.time() - start
 print 'END! time consuming is : %s' %time_consuming

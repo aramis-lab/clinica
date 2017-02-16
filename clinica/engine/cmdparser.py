@@ -312,10 +312,8 @@ class CmdParserT1FreeSurfer(CmdParser):
                                 help='Path to the BIDS directory')
         self._args.add_argument("caps_dir",
                                 help='Path to the CAPS output directory')
-        self._args.add_argument("-svt", "--subjects_visits_tsv", type=str, default=None,
-                                help=' the path to the tsv file, which by default contains all the subjects in your BIDS dataset')
-        self._args.add_argument("-asi", "--analysis_series_id", type=str, default='default',
-                                help='Current analysis series name, in case you have different rounds analysis for the same data')
+        self._args.add_argument("-tsv", "--subjects_visits_tsv", type=str, default=None,
+                                help='The path to the tsv file, which by default contains all the subjects in your BIDS dataset')
         self._args.add_argument("-wd", "--working_directory", type=str, default=None,
                                 help='Path to contain the information about your workflow')
         self._args.add_argument("-ras", "--reconall_args", type=str, default='-qcache',
@@ -330,7 +328,6 @@ class CmdParserT1FreeSurfer(CmdParser):
         reconall_wf = datagrabber_t1_freesurfer_pipeline(self.absolute_path(args.bids_dir),
                                          self.absolute_path(args.caps_dir),
                                          subjects_visits_tsv=self.absolute_path(args.subjects_visits_tsv),
-                                         analysis_series_id=args.analysis_series_id,
                                          working_directory=self.absolute_path(args.working_directory),
                                          recon_all_args=args.reconall_args)
 
@@ -355,8 +352,6 @@ class CmdParserStatisticsSurfStat(CmdParser):
                                 help='A str to define the format string for the tsv column , eg, %%s %%s %%s %%f')
         self._args.add_argument("group_label",
                                 help='Current group name')
-        self._args.add_argument("analysis_series_id",
-                                help='an existed recon-alled series, correspondent to your former t1_freesurfer pipeline')
         self._args.add_argument("-sof", "--size_of_fwhm", type=int, default=20, help='FWHM for the surface smoothing')
         self._args.add_argument("-tup", "--threshold_uncorrected_p_value", type=float, default='0.001',
                                 help='Threshold to display the uncorrected Pvalue')
@@ -379,7 +374,6 @@ class CmdParserStatisticsSurfStat(CmdParser):
                                        args.contrast,
                                        args.str_format,
                                        args.group_label,
-                                       args.analysis_series_id,
                                        size_of_fwhm=args.size_of_fwhm,
                                        threshold_uncorrected_pvalue=args.threshold_uncorrected_p_value,
                                        threshold_corrected_pvalue=args.threshold_corrected_p_value,

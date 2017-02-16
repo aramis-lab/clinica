@@ -27,7 +27,6 @@ def clinica_surfstat(input_directory,
                      contrast,
                      str_format,
                      group_label,
-                     analysis_series_id,
                      size_of_fwhm = 20,
                      threshold_uncorrected_pvalue = 0.001,
                      threshold_corrected_pvalue = 0.050,
@@ -44,7 +43,6 @@ def clinica_surfstat(input_directory,
                   tory that you choose is a continuous factor, clinica_surfstat will just create one contrast, for example, contrast = 'Age', but note,
                   the string name that you choose should be exactly the same with the columns names in your subjects_visits_tsv.
         :param subjects_visits_tsv: string, the path to your tsv file.
-        :param analysis_series_id: string, must be the an existed folder(recon-alled output folder.
         :param str_format: string, the str_format which uses to read your tsv file, the typy of the string should corresponds exactly with the columns in the tsv file.
             Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
         :param group_label: Current group name
@@ -63,12 +61,11 @@ def clinica_surfstat(input_directory,
     # Node to fetch the input vars.
     inputnode = pe.Node(name='inputnode',
                         interface=Function(
-                            input_names=['input_directory', 'subjects_visits_tsv', 'analysis_series_id', 'group_label'],
+                            input_names=['input_directory', 'subjects_visits_tsv', 'group_label'],
                             output_names=['path_to_matscript', 'surfstat_input_dir', 'output_directory'],
                             function=get_vars))
     inputnode.inputs.input_directory = input_directory
     inputnode.inputs.subjects_visits_tsv = subjects_visits_tsv
-    inputnode.inputs.analysis_series_id = analysis_series_id
     inputnode.inputs.group_label = group_label
 
     # Node to wrap the surfstat matlab script.

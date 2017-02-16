@@ -20,7 +20,6 @@ __status__ = "Development"
 
 @Visualize("freeview", "-v ${subject_id}/mri/T1.mgz -f ${subject_id}/surf/lh.white:edgecolor=blue ${subject_id}/surf/lh.pial:edgecolor=green ${subject_id}/surf/rh.white:edgecolor=blue ${subject_id}/surf/rh.pial:edgecolor=green", "subject_id")
 def t1_freesurfer_pipeline(output_dir,
-                           analysis_series_id,
                            working_directory,
                            recon_all_args):
     """
@@ -29,7 +28,6 @@ def t1_freesurfer_pipeline(output_dir,
         piepeline, which including gray(GM)and white matter(WM) segementation, pial and white surface extraction!.
 
         :param: output_dir: str, path to the directory(CAPS) where to put the results of the pipeline.
-        :param: analysis_series_id: str, the different rounds that you wanna apply this pipeline for your data, the
             default value is 'default'
         :param: working_directory: str, path to contain the detail information about your workflow, the default value
             is None, nipype will create a temporary folder to create the pipeline.
@@ -86,28 +84,24 @@ def t1_freesurfer_pipeline(output_dir,
 
     statisticsnode = pe.Node(name='statisticsnode',
                              interface=Function(
-                                 input_names=['subject_dir', 'subject_id', 'analysis_series_id', 'output_dir'],
+                                 input_names=['subject_dir', 'subject_id', 'output_dir'],
                                  output_names=[],
                                  function=write_statistics))
-    statisticsnode.inputs.analysis_series_id = analysis_series_id
     statisticsnode.inputs.output_dir = output_dir
 
     tsvmapnode = pe.MapNode(name='tsvmapnode',
                             iterfield=['subject_id'],
                             interface=Function(
-                                input_names=['subject_id', 'analysis_series_id', 'output_dir'],
+                                input_names=['subject_id', 'output_dir'],
                                 output_names=[],
                                 function=write_statistics_per_subject))
-    tsvmapnode.inputs.analysis_series_id = analysis_series_id
     tsvmapnode.inputs.output_dir = output_dir
 
     lognode = pe.Node(name='lognode',
                       interface=Function(
-                          input_names=['subject_list', 'session_list', 'subject_id', 'output_dir',
-                                       'analysis_series_id'],
+                          input_names=['subject_list', 'session_list', 'subject_id', 'output_dir'],
                           output_names=[],
                           function=log_summary))
-    lognode.inputs.analysis_series_id = analysis_series_id
     lognode.inputs.output_dir = output_dir
 
     wf_recon_all = pe.Workflow(name='reconall_workflow', base_dir=working_directory)
