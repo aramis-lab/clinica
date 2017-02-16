@@ -16,7 +16,7 @@ print("Output directory: %s" % output_directory)
 
 print("Running...")
 dwi_preprocessing = diffusion_preprocessing_t1_based(
-    subject_id='ses-CLNC01', session_id='sub-M00', analysis_series_id='default',
+    participant_id='ses-CLNC01', session_id='sub-M00',
     caps_directory=output_directory, num_b0s=count_b0s(join(data_path, 'dwi/sub-CLNC01_ses-M00_dwi.bval')),
     working_directory=working_directory)
 dwi_preprocessing.inputs.inputnode.in_t1   = join(data_path, 'anat/sub-CLNC01_ses-M00_T1w.nii.gz')

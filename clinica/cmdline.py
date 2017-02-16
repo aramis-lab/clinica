@@ -15,7 +15,7 @@ from clinica.engine.cmdparser import *
 __author__ = "Michael Bacci"
 __copyright__ = "Copyright 2016,2017 The Aramis Lab Team"
 __credits__ = ["Michael Bacci"]
-__license__ = "see LICENSE.txt file"
+__license__ = "See LICENSE.txt file"
 __version__ = "1.0.0"
 __maintainer__ = "Michael Bacci"
 __email__ = "michael.bacci@inria.fr"
@@ -213,8 +213,8 @@ def execute():
     # init_cmdparser_objects(run_parser.add_subparsers())
     pipelines = [CmdParserT1SPMFullPrep(), CmdParserT1SPMSegment(), CmdParserPETPreprocessing(),
                  CmdParserT1FreeSurfer(), CmdParserT1FSL(),
-                 CmdParserDWIPreprocessingFieldmapBased(),
-                 CmdParserDWIT1Registration(), CmdParserDWIProcessing(),
+                 CmdParserDWIPreprocessingFieldmapBased(), CmdParserDWIPreprocessingT1Based(),
+                 CmdParserDWIProcessing(),
                  CmdParserStatisticsSurfStat(), CmdParserMachineLearningVBLinearSVM()]
     init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
 
