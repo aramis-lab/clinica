@@ -251,6 +251,44 @@ class CmdParserT1SPMSegment(CmdParser):
         segment_wf.run('MultiProc', plugin_args={'n_procs': args.n_threads})
 
 
+class CmdParserT1SPMDartelTemplate(CmdParser):
+
+    def define_name(self):
+        self._name = 't1-spm-dartel-template'
+
+    def define_options(self):
+        self._args.add_argument("caps_directory",
+                                help='Path to the CAPS directory.')
+        self._args.add_argument("subjects_sessions_tsv",
+                                help='TSV file containing the subjects with their sessions.')
+        self._args.add_argument("group_id",
+                                help='Current group name')
+        self._args.add_argument("-as", "--analysis_series_id",
+                                help='Current analysis series name', default='default')
+        self._args.add_argument("-wd", "--working_directory",
+                                help='Temporary directory to store pipeline intermediate results')
+        self._args.add_argument("-np", "--n_threads", type=int, default=4,
+                                help='Number of threads to run in parallel')
+        self._args.add_argument("-dt", "--dartel_tissues", nargs='+', type=int, default=[1], choices=range(1, 7),
+                                help='Tissues to use for DARTEL template calculation. Ex: 1 is only GM')
+
+    def run_pipeline(self, args):
+
+        from clinica.pipeline.t1.t1_spm import datagrabber_t1_spm_dartel_template
+
+        working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
+
+        dartel_template_wf = datagrabber_t1_spm_dartel_template(self.absolute_path(args.caps_directory),
+                                                                self.absolute_path(args.subjects_sessions_tsv),
+                                                                args.group_id,
+                                                                analysis_series_id=args.analysis_series_id,
+                                                                working_directory=self.absolute_path(working_directory),
+                                                                dartel_tissues=args.dartel_tissues)
+
+        # print 'Workflow set'
+        dartel_template_wf.run('MultiProc', plugin_args={'n_procs': args.n_threads})
+
+
 class CmdParserPETPreprocessing(CmdParser):
 
     def define_name(self):

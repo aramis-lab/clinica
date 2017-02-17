@@ -2,25 +2,39 @@
 import numpy as np
 import pandas as pd
 import nibabel as nib
-from numpy.linalg import norm
+# from numpy.linalg import norm
 import csv
 from ntpath import basename, splitext
 from scipy.spatial.distance import squareform
 from os.path import join
 
 
-def get_caps_image_list(input_directory, subjects_visits_tsv, analysis_series_id, group_id, prefix):
+def get_caps_t1_list(input_directory, subjects_visits_tsv, analysis_series_id, group_id, prefix, tissue):
 
-    subjects = []
-    sessions = []
-    with open(subjects_visits_tsv, 'rb') as tsvin:
-        tsv_reader = csv.reader(tsvin, delimiter='\t')
+    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
+    if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
+        raise Exception('Subjects and visits file is not in the correct format.')
+    subjects = list(subjects_visits.participant_id)
+    sessions = list(subjects_visits.session_id)
 
-        for row in tsv_reader:
-            subjects.append(row[0])
-            sessions.append(row[1])
+    image_list = [join(input_directory, 'analysis-series-' + analysis_series_id + '/subjects/' + subjects[i] + '/'
+                       + sessions[i] + '/t1/spm/dartel/group-' + group_id + '/registered/' + prefix + tissue
+                       + subjects[i] + '_' + sessions[i] + '_T1w.nii.gz') for i in range(len(subjects))]
 
-    image_list = [join(input_directory, 'analysis-series-' + analysis_series_id + '/subjects/sub-' + subjects[i] + '/ses-' + sessions[i] + '/t1/spm/dartel/group-' + group_id + '/registered/' + prefix + 'sub-' + subjects[i] + '_ses-' + sessions[i] + '_T1w.nii') for i in range(len(subjects))]
+    return image_list
+
+
+def get_caps_pet_list(input_directory, subjects_visits_tsv, analysis_series_id, prefix, pet_type):
+
+    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
+    if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
+        raise Exception('Subjects and visits file is not in the correct format.')
+    subjects = list(subjects_visits.participant_id)
+    sessions = list(subjects_visits.session_id)
+
+    image_list = [join(input_directory, 'analysis-series-' + analysis_series_id + '/subjects/' + subjects[i] + '/'
+                       + sessions[i] + '/pet/preprocessing/masked_suvr_pet/masked_suvr_' + prefix + subjects[i]
+                       + '_' + sessions[i] + '_task-rest_acq-' + pet_type + '_pet.nii.gz') for i in range(len(subjects))]
 
     return image_list
 
@@ -33,7 +47,7 @@ def load_data(image_list, mask=True):
 
     for i in range(len(image_list)):
         subj = nib.load(image_list[i])
-        subj_data = subj.get_data().flatten()
+        subj_data = np.nan_to_num(subj.get_data().flatten())
 
         # Memory allocation for ndarray containing all data to avoid copying the array for each new subject
         if first:
@@ -60,26 +74,48 @@ def revert_mask(weights, mask, shape):
     return new_weights
 
 
-def weights_to_nifti(weights, template, output_filename):
+def features_weights(image_list, dual_coefficients, sv_indices):
+
+    if len(sv_indices) != len(dual_coefficients):
+        print "Length dual coefficients: " + str(len(dual_coefficients))
+        print "Length indices: " + str(len(sv_indices))
+        raise ValueError('The number of support vectors indices and the number of coefficients must be the same.')
+
+    if len(image_list) == 0:
+        raise ValueError('The number of images must be greater than 0.')
+
+    sv_images = [image_list[i] for i in sv_indices]
+
+    shape = nib.load(sv_images[0]).get_data().shape
+    weights = np.zeros(shape)
+
+    for i in range(len(sv_images)):
+        subj = nib.load(sv_images[i])
+        subj_data = np.nan_to_num(subj.get_data())
+        weights += dual_coefficients[i] * subj_data
+
+    return weights
+
+
+def weights_to_nifti(weights, image, output_filename):
 
     # Normalize with 2-norm
-    # comparable_features = 2 * weights.flatten() / np.power(norm(weights.flatten(), 2), 2)
+    # comparable_features = 2 * weights / np.power(norm(weights.flatten(), 2), 2)
 
     # Normalize inf-norm
-    comparable_features = weights.flatten() / max(abs(weights.flatten()))
+    features = weights / abs(weights).max()
 
-    comparable_features = comparable_features.reshape(weights.shape)
+    img = nib.load(image)
+    canonical_img = nib.as_closest_canonical(img)
+    hd = canonical_img.header
+    qform = np.zeros((4, 4))
 
-    img = nib.load(template)
+    for i in range(1, 4):
+        qform[i-1, i-1] = hd['pixdim'][i]
+        qform[i-1, 3] = -1.0 * hd['pixdim'][i] * hd['dim'][i] / 2.0
 
-    # Not recommendeed way
-    img.get_data()[:] = comparable_features
-    nib.save(img, output_filename)
-
-    # Recommended way, resulting images not working with Anatomist on Linux.
-    # affine = img.get_affine()
-    # new_img = nib.Nifti1Image(comparable_features, affine)
-    # nib.save(new_img, output_filename)
+    new_img = nib.Nifti1Image(features, qform)
+    nib.save(new_img, output_filename)
 
 
 def save_subjects_prediction(subjects, diagnosis, y, y_hat, output_file):

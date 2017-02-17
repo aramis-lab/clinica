@@ -42,13 +42,13 @@ def pet_pipeline(working_directory=None,
                                     name='unzip_mask_tissues',
                                     iterfield=['in_file'])
 
-    coreg_pet_t1 = pe.Node(spm.Coregister(), name='coreg_pet_t1', copyfiles=True)
+    coreg_pet_t1 = pe.Node(spm.Coregister(), name='coreg_pet_t1', copyfile=True)
 
-    dartel_mni_reg = pe.Node(spm.DARTELNorm2MNI(), name='dartel_mni_reg', copyfiles=True)
+    dartel_mni_reg = pe.Node(spm.DARTELNorm2MNI(), name='dartel_mni_reg', copyfile=True)
     dartel_mni_reg.inputs.modulate = False
     dartel_mni_reg.inputs.fwhm = 0
 
-    reslice = pe.Node(spmu.Reslice(), name='reslice', copyfiles=True)
+    reslice = pe.Node(spmu.Reslice(), name='reslice', copyfile=True)
 
     norm_to_ref = pe.Node(niu.Function(input_names=['pet_image', 'region_mask'],
                                        output_names=['suvr_pet_path'],
