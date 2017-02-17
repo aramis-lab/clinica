@@ -60,7 +60,7 @@ def bids_caps_pet_pipeline(bids_directory,
         dartel_template = pe.Node(nio.DataGrabber(outfields=['out_files']), name='dartel_template')
         dartel_template.inputs.base_directory = caps_directory
         dartel_template.inputs.template = op.join('analysis-series-' + analysis_series_id, 'group-' + group_id,
-                                                  't1/spm/final_template/Template_6.nii')
+                                                  't1/spm/final_template/Template_6.nii*')
         dartel_template.inputs.sort_filelist = False
 
         reference_mask = pe.Node(nio.DataGrabber(outfields=['out_files']), name='reference_mask')

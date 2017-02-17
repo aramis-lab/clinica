@@ -211,7 +211,8 @@ def execute():
     run_parser = sub_parser.add_parser('run')
     #adding the independent pipeline ArgumentParser objects
     # init_cmdparser_objects(run_parser.add_subparsers())
-    pipelines = [CmdParserT1SPMFullPrep(), CmdParserT1SPMSegment(), CmdParserPETPreprocessing(),
+    pipelines = [CmdParserT1SPMFullPrep(), CmdParserT1SPMSegment(),
+                 CmdParserT1SPMDartelTemplate(), CmdParserPETPreprocessing(),
                  CmdParserT1FreeSurfer(), CmdParserT1FSL(),
                  CmdParserDWIPreprocessingFieldmapBased(), CmdParserDWIPreprocessingT1Based(),
                  CmdParserDWIProcessing(),
