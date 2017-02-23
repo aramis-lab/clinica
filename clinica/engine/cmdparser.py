@@ -390,15 +390,15 @@ class CmdParserStatisticsSurfStat(CmdParser):
                                 help='A str to define the format string for the tsv column , eg, %%s %%s %%s %%f')
         self._args.add_argument("group_label",
                                 help='Current group name')
-        self._args.add_argument("-sof", "--size_of_fwhm", type=int, default=20, help='FWHM for the surface smoothing')
-        self._args.add_argument("-tup", "--threshold_uncorrected_p_value", type=float, default='0.001',
-                                help='Threshold to display the uncorrected Pvalue')
+        self._args.add_argument("-fwhm", "--full_width_at_half_maximum", type=int, default=20, help='FWHM for the surface smoothing (default=20)')
+        self._args.add_argument("-tup", "--threshold_uncorrected_p_value", type=float, default=0.001,
+                                help='Threshold to display the uncorrected Pvalue (default=0.001)')
         self._args.add_argument("-tcp", "--threshold_corrected_p_value", type=float, default=0.05,
-                                help='Threshold to display the corrected cluster')
+                                help='Threshold to display the corrected cluster (default=0.05)')
         self._args.add_argument("-ct", "--cluster_threshold", type=float, default=0.001,
-                                help='Threshold to define a cluster in the process of cluster-wise correction')
+                                help='Threshold to define a cluster in the process of cluster-wise correction (default=0.001)')
         self._args.add_argument("-np", "--n_procs", type=int, default=4,
-                                help='Number of parallel processes to run')
+                                help='Number of parallel processes to run (default=4)')
         self._args.add_argument("-wd", "--working_directory", type=str, default=None,
                                 help='Temporary directory to run the workflow')
 
