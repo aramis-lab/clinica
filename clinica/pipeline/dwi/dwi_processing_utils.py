@@ -384,3 +384,30 @@ def streamlines_tractography(
     os.system(cmd)
 
     return out_tracks
+
+
+def tcksift(in_tracks, in_fod):
+    """
+    Perform filtering of tractograms.
+
+    This function filters a whole-brain fibre-tracking data set such that the streamline
+    densities match the FOD lobe integrals.
+
+    Args:
+        in_source (str): Input track file.
+        in_fod (str): Input image containing the spherical harmonics of the fibre orientation distributions.
+
+    Returns:
+        out_tracks (str): Output filtered tracks file in *.tck format.
+    """
+    import os.path as op
+    import os
+
+    assert(op.isfile(in_tracks))
+    assert(op.isfile(in_fod))
+    out_tracks = op.abspath('out_tracks_sift1.tck')
+
+    cmd = 'tcksift ' + in_tracks+ ' ' + in_fod + ' ' + out_tracks
+    os.system(cmd)
+
+    return out_tracks

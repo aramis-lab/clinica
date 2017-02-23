@@ -512,7 +512,10 @@ class CmdParserT1FSL(CmdParser):
         import os.path
         from clinica.pipeline.t1.t1_fsl import t1_fsl_segmentation_pipeline
         import pandas
+        import os.path
 
+        if not os.path.isfile(self.absolute_path(args.participants_sessions_tsv)):
+            raise Exception('The TSV file does not exist.')
         subjects_visits = pandas.io.parsers.read_csv(self.absolute_path(args.participants_sessions_tsv), sep='\t')
         if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
             raise Exception('Subjects and visits file is not in the correct format.')
@@ -680,54 +683,111 @@ class CmdParserDWIProcessing(CmdParser):
     def define_options(self):
         self._args.add_argument("caps_directory",
                                 help='Path to the output/input directory in a CAPS format.')
-        self._args.add_argument("subjects_sessions_tsv",
+        self._args.add_argument("participants_sessions_tsv",
                                 help='TSV file containing the subjects/sessions list to be processed.')
         self._args.add_argument("-working_directory", default=None,
                                 help='Temporary directory to store intermediate results')
-        self._args.add_argument("-analysis_series_id", default='default',
-                                help='Label for analysis series id (default name is default)')
         self._args.add_argument("-n_threads", type=int, default=1,
                                 help='Number of threads (default=1, which disables multi-threading).')
+        self._args.add_argument("number_of_tracks",
+                                help="Set the desired number of tracks (e.g. 100K, 1M, ...).")
+        self._args.add_argument("-max_harmonic_order", default=None,
+                                help="@TODO")
+        self._args.add_argument("-tractography_algorithm", default='iFOD2',
+                                help="@TODO")
+        self._args.add_argument("-tractography_fod_threshold", default=None,
+                                help="@TODO")
+        self._args.add_argument("-tractography_step_size", default=None,
+                                help="@TODO")
+        self._args.add_argument("-tractography_angle", default=None,
+                                help="@TODO")
 
 
     def run_pipeline(self, args):
+        import pandas
         import os.path
+        from clinica.pipeline.dwi.dwi_processing import dwi_processing_pipeline
 
-#        for row in tsv_reader:
-#            caps_path_to_dwi = os.path.join(
-#                self.absolute_path(args.caps_directory), row[0], row[1], 'dwi', 'preprocessing',
-#                row[0] + '_' + row[1] + '_dwi')
-#            caps_path_to_b0_mask = os.path.join(
-#                self.absolute_path(args.caps_directory), 'sub-' + row[0], 'ses-' + row[1], 'dwi',
-#                row[0] + '_' + row[1] + '_dwi')
-#            caps_path_to_white_matter_binary_mask = os.path.join(
-#                self.absolute_path(args.caps_directory), + row[0], row[1], 'dwi',
-#                row[0] + '_' + row[1] + '_binary-white-matter-mask.nii.gz')
-#
-#            assert(os.path.isfile(caps_path_to_dwi + '.bval'))
-#            assert(os.path.isfile(caps_path_to_dwi + '.bvec'))
-#            assert(os.path.isfile(caps_path_to_dwi + '.nii.gz'))
-#            assert(os.path.isfile(caps_path_to_b0_mask))
-#
-#            from clinica.pipeline.dwi.dwi_processing import dwi_processing_pipeline
-#            dwi_processing = dwi_processing_pipeline(
-#                participant_id=row[0], session_id=row[1],
-#                caps_directory=self.absolute_path(args.caps_directory),
-#                working_directory=self.absolute_path(args.working_directory),
-#                max_harmonic_order=None,
-#                tractography_algorithm='iFOD2',
-#                tractography_nb_of_tracks="100K",
-#                tractography_fod_threshold=None,
-#                tractography_step_size=None,
-#                tractography_angle=None,
-#                nthreads=2
-#            )
-#            dwi_processing.inputs.inputnode.in_dwi = caps_path_to_dwi + '.nii.gz'
-#            dwi_processing.inputs.inputnode.in_bvecs = caps_path_to_dwi + '.bvec'
-#            dwi_processing.inputs.inputnode.in_bvals = caps_path_to_dwi + '.bval'
-#            dwi_processing.inputs.inputnode.in_b0_mask = caps_path_to_b0_mask
-#            dwi_processing.inputs.inputnode.in_white_matter_binary_mask = caps_path_to_white_matter_binary_mask
-#            dwi_processing.run('MultiProc', plugin_args={'n_procs': args.n_threads})
+        if not os.path.isfile(self.absolute_path(args.participants_sessions_tsv)):
+            raise Exception('The TSV file does not exist.')
+        subjects_visits = pandas.io.parsers.read_csv(self.absolute_path(args.participants_sessions_tsv), sep='\t')
+        if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
+            raise Exception('Subjects and visits file is not in the correct format.')
+        subjects = list(subjects_visits.participant_id)
+        sessions = list(subjects_visits.session_id)
+
+        for index in xrange(len(subjects)):
+            participant_id = subjects[index]
+            session_id = sessions[index]
+
+            # DWI-Preprocessing:
+            caps_path_to_preprocessed_dwi = os.path.join(self.absolute_path(args.caps_directory), 'subjects',
+                                                         participant_id, session_id, 'dwi', 'preprocessing',
+                                                         participant_id + '_' + session_id + '_dwi.nii.gz')
+            caps_path_to_bvecs = os.path.join(self.absolute_path(args.caps_directory), 'subjects', participant_id,
+                                              session_id, 'dwi', 'preprocessing',
+                                              participant_id + '_' + session_id + '_dwi.bvec')
+            caps_path_to_bvals = os.path.join(self.absolute_path(args.caps_directory), 'subjects', participant_id,
+                                              session_id, 'dwi', 'preprocessing',
+                                              participant_id + '_' + session_id + '_dwi.bval')
+            caps_path_to_b0_mask = os.path.join(self.absolute_path(args.caps_directory), 'subjects', participant_id,
+                                                session_id, 'dwi', 'preprocessing',
+                                                participant_id + '_' + session_id + '_b0Mask.nii.gz')
+            # T1-FSL:
+            caps_path_to_bias_corrected_bet_t1 = os.path.join(self.absolute_path(args.caps_directory), 'subjects',
+                                                              participant_id, session_id, 't1', 'fsl',
+                                                              participant_id + '_' + session_id + '_brainExtractedT1w.nii.gz')
+            caps_path_to_white_matter_binary_mask = os.path.join(self.absolute_path(args.caps_directory), 'subjects',
+                                                                 participant_id, session_id, 't1', 'fsl',
+                                                                 participant_id + '_' + session_id + '_tissue-whitematter_binaryMask.nii.gz')
+            # T1-FreeSurfer:
+            caps_path_to_desikan_parcellation = os.path.join(self.absolute_path(args.caps_directory), 'subjects',
+                                                             participant_id, session_id, 't1',
+                                                             'freesurfer-cross-sectional',
+                                                             participant_id + '_' + session_id, 'mri', 'aparc+aseg.mgz')
+            print(caps_path_to_desikan_parcellation)
+            caps_path_to_destrieux_parcellation = os.path.join(self.absolute_path(args.caps_directory), 'subjects',
+                                                               participant_id, session_id, 't1',
+                                                               'freesurfer-cross-sectional',
+                                                               participant_id + '_' + session_id, 'mri',
+                                                               'aparc.a2009s+aseg.mgz')
+            print(caps_path_to_destrieux_parcellation)
+
+            assert (os.path.isfile(caps_path_to_preprocessed_dwi))
+            assert (os.path.isfile(caps_path_to_bvecs))
+            assert (os.path.isfile(caps_path_to_bvals))
+            assert (os.path.isfile(caps_path_to_bias_corrected_bet_t1))
+            assert (os.path.isfile(caps_path_to_b0_mask))
+            assert (os.path.isfile(caps_path_to_white_matter_binary_mask))
+            assert (os.path.isfile(caps_path_to_desikan_parcellation))
+            assert (os.path.isfile(caps_path_to_destrieux_parcellation))
+
+            dwi_processing = dwi_processing_pipeline(
+                participant_id=participant_id,
+                session_id=session_id,
+                caps_directory=self.absolute_path(args.caps_directory),
+                working_directory=self.absolute_path(args.working_directory),
+                atlas_name='JHU-ICBM-tracts-maxprob-thr25',
+                max_harmonic_order=args.max_harmonic_order,
+                tractography_algorithm=args.tractography_algorithm,
+                tractography_nb_of_tracks=args.number_of_tracks,
+                tractography_fod_threshold=args.tractography_fod_threshold,
+                tractography_step_size=args.tractography_step_size,
+                tractography_angle=args.tractography_angle,
+                nthreads=args.n_threads,
+                zero_diagonal=True
+            )
+            dwi_processing.inputs.inputnode.in_preprocessed_dwi = caps_path_to_preprocessed_dwi
+            dwi_processing.inputs.inputnode.in_bvecs = caps_path_to_bvecs
+            dwi_processing.inputs.inputnode.in_bvals = caps_path_to_bvals
+            dwi_processing.inputs.inputnode.in_bias_corrected_bet_t1 = caps_path_to_bias_corrected_bet_t1
+            dwi_processing.inputs.inputnode.in_b0_mask = caps_path_to_b0_mask
+            dwi_processing.inputs.inputnode.in_white_matter_binary_mask = caps_path_to_white_matter_binary_mask
+            dwi_processing.inputs.inputnode.in_desikan_parcellation = caps_path_to_desikan_parcellation
+            dwi_processing.inputs.inputnode.in_destrieux_parcellation = caps_path_to_destrieux_parcellation
+
+            dwi_processing.run('MultiProc', plugin_args={'n_procs': args.n_threads})
+
 
 
 
