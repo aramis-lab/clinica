@@ -173,12 +173,12 @@ def t1_b0_registration_pipeline(
         (desikan_in_diffusion_space,   outputnode, [('out_deformed_image', 'out_desikan_in_diffusion_space')]),
         (destrieux_in_diffusion_space, outputnode, [('out_deformed_image', 'out_destrieux_in_diffusion_space')]),
         # Datasink:
-        (registration_t1_to_b0,        datasink, [('out_file', 'dwi.@registered_t1')]),
-        (registration_t1_to_b0,        datasink, [('out_matrix_file', 'dwi.@flirt_matrix')]),
-        (apply_flirt_registration,     datasink, [('out_file', 'dwi.@wm_mask_in_diffusion_mask')]),
-        (convert_flirt_to_mrtrix,      datasink, [('out_mrtrix_matrix', 'dwi.@mrtrix_matrix')]),
-        (desikan_in_diffusion_space,   datasink, [('out_deformed_image', 'dwi.@desikan_in_diffusion_space')]),
-        (destrieux_in_diffusion_space, datasink, [('out_deformed_image', 'dwi.@destrieux_in_diffusion_space')])
+        (registration_t1_to_b0,        datasink, [('out_file', 'dwi.@out_registered_t1')]),
+        (registration_t1_to_b0,        datasink, [('out_matrix_file', 'dwi.@out_flirt_matrix')]),
+        (apply_flirt_registration,     datasink, [('out_file', 'dwi.@out_wm_mask_in_diffusion_mask')]),
+        (convert_flirt_to_mrtrix,      datasink, [('out_mrtrix_matrix', 'dwi.@out_mrtrix_matrix')]),
+        (desikan_in_diffusion_space,   datasink, [('out_deformed_image', 'dwi.@out_desikan_in_diffusion_space')]),
+        (destrieux_in_diffusion_space, datasink, [('out_deformed_image', 'dwi.@out_destrieux_in_diffusion_space')])
     ])
     return wf
 
