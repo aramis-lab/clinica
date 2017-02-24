@@ -1,6 +1,7 @@
 
 import numpy as np
 
+
 def evaluate_prediction(y, y_hat):
 
     true_positive = 0.0

@@ -3,10 +3,6 @@
 
 """This module contains the FSL-T1 pipeline."""
 
-
-
-
-
 def t1_fsl_segmentation_pipeline(
         participant_id, session_id, caps_directory, working_directory=None,
         is_bias_corrected=None,
