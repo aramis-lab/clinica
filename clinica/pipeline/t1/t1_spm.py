@@ -2,7 +2,7 @@
 
 import csv
 from clinica.pipeline.t1.t1_spm_workflows import segmentation_pipeline, dartel_pipeline, t1_spm_full_pipeline
-from clinica.pipeline.t1.t1_spm_utils import group_nested_images_by_subject, group_images_list_by_subject
+from clinica.pipeline.t1.t1_spm_utils import group_nested_images_by_subject, group_images_list_by_subject, group_images_list_by_tissue
 import nipype.pipeline.engine as pe
 import nipype.interfaces.io as nio
 import nipype.interfaces.utility as niu
@@ -11,6 +11,7 @@ import os.path as op
 from os import makedirs
 import errno
 from shutil import copyfile
+import nipype.interfaces.spm as spm
 
 
 def datagrabber_t1_spm_segment_pipeline(input_directory,
@@ -102,6 +103,90 @@ def datagrabber_t1_spm_segment_pipeline(input_directory,
     ])
 
     return seg_wf
+
+
+def datagrabber_t1_spm_dartel_template(output_directory,
+                                       subjects_visits_tsv,
+                                       group_id,
+                                       analysis_series_id='default',
+                                       working_directory=None,
+                                       dartel_tissues=[1]):
+
+    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
+    subjects = list(subjects_visits.participant_id)
+    sessions = list(subjects_visits.session_id)
+
+
+    # dest_group_file = op.join(output_directory, 'analysis-series-' + analysis_series_id + '/group-' + group_id + '/group-' + group_id + '_subjects_visits_list.tsv')
+    #
+    # if op.isfile(dest_group_file):
+    #
+    #     existing_subjects = []
+    #     existing_sessions = []
+    #     with open(dest_group_file, 'rb') as tsvin:
+    #         tsv_reader = csv.reader(tsvin, delimiter='\t')
+    #
+    #         for row in tsv_reader:
+    #             existing_subjects.append(row[0])
+    #             existing_sessions.append(row[1])
+    #
+    #     if subjects != existing_subjects or sessions != existing_sessions:
+    #         raise Exception('A different list of subjects and visits already exists for the same group definition: ' + group_id)
+    #
+    # else:
+    #     try:
+    #         makedirs(op.dirname(dest_group_file))
+    #
+    #     except OSError as exc:
+    #         if exc.errno == errno.EEXIST and op.isdir(op.dirname(dest_group_file)):
+    #             pass
+    #         else:
+    #             raise
+    #
+    #     copyfile(subjects_visits_tsv, dest_group_file)
+
+    # DataGrabber
+    selectfiles = pe.Node(nio.DataGrabber(infields=['subject_id', 'session', 'tissue', 'subject_repeat', 'session_repeat'],
+                                          outfields=['out_files']), name="selectfiles")
+    selectfiles.inputs.base_directory = output_directory
+    selectfiles.inputs.template = 'analysis-series-' + analysis_series_id + '/subjects/%s/%s/t1/spm/segmentation/dartel_input/rc%s%s_%s_T1w.nii*'
+
+    l = [[sub] * len(dartel_tissues) for sub in subjects]
+    dg_subjects = [item for sublist in l for item in sublist]
+    l = [[ses] * len(dartel_tissues) for ses in sessions]
+    dg_sessions = [item for sublist in l for item in sublist]
+
+    selectfiles.inputs.subject_id = dg_subjects
+    selectfiles.inputs.session = dg_sessions
+    selectfiles.inputs.tissue = dartel_tissues * len(subjects)
+    selectfiles.inputs.subject_repeat = dg_subjects
+    selectfiles.inputs.session_repeat = dg_sessions
+    selectfiles.inputs.sort_filelist = False
+
+    dartel_template = pe.Node(spm.DARTEL(), name='dartel_template')
+
+    template_datasink = pe.Node(nio.DataSink(), name='template_datasink')
+    template_datasink.inputs.parameterization = False
+    template_datasink.inputs.base_directory = op.join(output_directory, 'analysis-series-' + analysis_series_id + '/group-' + group_id + '/t1/spm')
+    # template_datasink.container = 'analysis-series-' + analysis_series_id + '/group-' + group_id + '/t1/spm'
+
+    dartel_datasink = pe.MapNode(nio.DataSink(infields=['flow_fields', 'registered']), name='dartel_datasink', iterfield=['container', 'flow_fields', 'registered'])
+    dartel_datasink.inputs.parameterization = False
+    dartel_datasink.inputs.base_directory = output_directory
+    dartel_datasink.inputs.container = ['analysis-series-' + analysis_series_id + '/subjects/' + subjects[i] + '/' + sessions[i] + '/t1/spm/dartel/group-' + group_id for i in range(len(subjects))]
+
+    dartel_wf = pe.Workflow(name='dartel_wf')
+    if working_directory is not None:
+        dartel_wf.base_dir = working_directory
+
+    dartel_wf.connect([
+        (selectfiles, dartel_template, [(('out_files', group_images_list_by_tissue, dartel_tissues), 'image_files')]),
+        (dartel_template, template_datasink, [('final_template_file', 'final_template'),
+                                             ('template_files', 'all_templates')]),
+        (dartel_template, dartel_datasink, [('dartel_flow_fields', 'flow_fields')])
+    ])
+
+    return dartel_wf
 
 
 def datagrabber_t1_spm_full_pipeline(input_directory,

@@ -158,6 +158,9 @@ class CmdlineHelper():
 
         return self.cmdline_cache
 
+
+
+
 def execute():
 
     cmdline_helper = CmdlineHelper()
@@ -211,7 +214,8 @@ def execute():
     run_parser = sub_parser.add_parser('run')
     #adding the independent pipeline ArgumentParser objects
     # init_cmdparser_objects(run_parser.add_subparsers())
-    pipelines = [CmdParserT1SPMFullPrep(), CmdParserT1SPMSegment(), CmdParserPETPreprocessing(),
+    pipelines = [CmdParserT1SPMFullPrep(), CmdParserT1SPMSegment(),
+                 CmdParserT1SPMDartelTemplate(), CmdParserPETPreprocessing(),
                  CmdParserT1FreeSurfer(), CmdParserT1FSL(),
                  CmdParserDWIPreprocessingFieldmapBased(), CmdParserDWIPreprocessingT1Based(),
                  CmdParserDWIProcessing(),
@@ -224,6 +228,13 @@ def execute():
     convert_parser = sub_parser.add_parser('convert')
     from clinica.bids.load_cmdline_converter import load_cmdline_converters
     init_cmdparser_objects(parser, convert_parser.add_subparsers(), load_cmdline_converters())
+
+    """
+    generate option: template
+    """
+    convert_parser = sub_parser.add_parser('generate')
+    from clinica.engine.template import CmdGenerateTemplates
+    init_cmdparser_objects(parser, convert_parser.add_subparsers(), [CmdGenerateTemplates()])
 
     """
     io option

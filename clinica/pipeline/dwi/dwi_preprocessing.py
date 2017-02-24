@@ -182,7 +182,7 @@ def diffusion_preprocessing_t1_based(participant_id, session_id, caps_directory,
     caps_identifier = participant_id + '_' + session_id
     datasink.inputs.base_directory = op.join(
         caps_directory, 'subjects', participant_id, session_id, 'dwi')
-    datasink.inputs.substitutions = [('vol0000_warp_maths_thresh_merged_roi_brain_mask.nii.gz', caps_identifier + '_b0-mask.nii.gz'),
+    datasink.inputs.substitutions = [('vol0000_warp_maths_thresh_merged_roi_brain_mask.nii.gz', caps_identifier + '_b0Mask.nii.gz'),
                                      ('vol0000_maths_thresh_merged.nii.gz', caps_identifier + '_dwi.nii.gz'),
                                      ('bvecs_rotated.bvec', caps_identifier + '_dwi.bvec'),
                                      ('bvals', caps_identifier + '_dwi.bval'),
@@ -314,7 +314,7 @@ def diffusion_preprocessing_fieldmap_based(
     datasink = pe.Node(nio.DataSink(), name='datasink')
     caps_identifier = participant_id + '_' + session_id
     datasink.inputs.base_directory = op.join(caps_directory, 'subjects', participant_id, session_id, 'dwi')
-    datasink.inputs.substitutions = [('vol0000_warp_maths_thresh_merged_roi_brain_mask.nii.gz', caps_identifier + '_b0-mask.nii.gz'),
+    datasink.inputs.substitutions = [('vol0000_warp_maths_thresh_merged_roi_brain_mask.nii.gz', caps_identifier + '_b0Mask.nii.gz'),
                                      ('vol0000_maths_thresh_merged.nii.gz', caps_identifier + '_dwi.nii.gz'),
                                      ('bvecs_rotated.bvec', caps_identifier + '_dwi.bvec'),
                                      ('bvals', caps_identifier + '_dwi.bval'),

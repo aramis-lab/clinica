@@ -148,7 +148,7 @@ def get_tissue_tuples(tissue_map, tissue_classes, dartel_tissues, save_warped_un
     return tissues
 
 
-def get_class_images(class_images,index_list):
+def get_class_images(class_images, index_list):
     """
     utility method to extract class images
     from a multi session class_images set:
@@ -203,6 +203,23 @@ def group_images_list_by_subject(images_list, tissue_classes):
         for tissue in range(n_tissue_classes):
             subj_images.append(images_list[(tissue * n_subjects) + subj])
         grouped_images.append(subj_images)
+
+    return grouped_images
+
+
+def group_images_list_by_tissue(images_list, tissue_classes):
+    if len(tissue_classes) == 0:
+        return []
+
+    n_tissue_classes = len(tissue_classes)
+    n_subjects = len(images_list)/n_tissue_classes
+    grouped_images = []
+
+    for tissue in range(n_tissue_classes):
+        tissue_images = []
+        for subj in range(n_subjects):
+            tissue_images.append(images_list[(subj * n_tissue_classes) + tissue])
+        grouped_images.append(tissue_images)
 
     return grouped_images
 

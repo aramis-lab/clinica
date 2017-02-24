@@ -1,0 +1,14 @@
+"""
+This file is generated automatically using Clinica $clinica_major_version.$clinica_minor_version.$clinica_patch_version
+Please read the documentation at http....
+"""
+import nipype.pipeline.engine as npe
+
+class ${pipeline_name}Pipeline(npe.Pipeline):
+
+ def build(self):
+    """
+    Pipeline must be put here
+    """
+    pass
+

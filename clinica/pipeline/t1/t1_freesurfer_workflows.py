@@ -43,7 +43,7 @@ def t1_freesurfer_pipeline(output_dir,
     from nipype.interfaces.freesurfer.preprocess import ReconAll
     from nipype.interfaces.utility import Function
     from tempfile import mkdtemp
-    from clinica.pipeline.t1.t1_freesurfer_utils import create_flags_str, checkfov, absolute_path, write_statistics, \
+    from clinica.pipeline.t1.t1_freesurfer_utils import create_flags_str, checkfov, absolute_path, \
         log_summary, write_statistics_per_subject
 
     # check out ReconAll version
@@ -82,13 +82,6 @@ def t1_freesurfer_pipeline(output_dir,
                            iterfield=['subject_id', 'T1_files', 'subjects_dir', 'flags'])
     recon_all.inputs.directive = 'all'
 
-    statisticsnode = pe.Node(name='statisticsnode',
-                             interface=Function(
-                                 input_names=['subject_dir', 'subject_id', 'output_dir'],
-                                 output_names=[],
-                                 function=write_statistics))
-    statisticsnode.inputs.output_dir = output_dir
-
     tsvmapnode = pe.MapNode(name='tsvmapnode',
                             iterfield=['subject_id'],
                             interface=Function(
@@ -108,8 +101,6 @@ def t1_freesurfer_pipeline(output_dir,
 
     wf_recon_all.connect(flagnode, 'output_flags', create_flags, 'input_flags')
     wf_recon_all.connect(create_flags, 'output_str', recon_all, 'flags')
-    wf_recon_all.connect(recon_all, 'subjects_dir', statisticsnode, 'subject_dir')
-    wf_recon_all.connect(recon_all, 'subject_id', statisticsnode, 'subject_id')
     wf_recon_all.connect(recon_all, 'subject_id', tsvmapnode, 'subject_id')
     wf_recon_all.connect(recon_all, 'subject_id', lognode, 'subject_id')
 
