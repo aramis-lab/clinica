@@ -158,6 +158,9 @@ class CmdlineHelper():
 
         return self.cmdline_cache
 
+
+
+
 def execute():
 
     cmdline_helper = CmdlineHelper()
@@ -225,6 +228,13 @@ def execute():
     convert_parser = sub_parser.add_parser('convert')
     from clinica.bids.load_cmdline_converter import load_cmdline_converters
     init_cmdparser_objects(parser, convert_parser.add_subparsers(), load_cmdline_converters())
+
+    """
+    generate option: template
+    """
+    convert_parser = sub_parser.add_parser('generate')
+    from clinica.engine.template import CmdGenerateTemplates
+    init_cmdparser_objects(parser, convert_parser.add_subparsers(), [CmdGenerateTemplates()])
 
     """
     io option
