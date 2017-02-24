@@ -13,7 +13,7 @@ __status__ = "Development"
 
 
 # @ToDo:test this function
-def create_participants(input_path,out_path, study_name, clinical_spec_path, bids_ids, delete_non_bids_info = True):
+def create_participants(input_path,out_path, study_name, clinical_spec_path, bids_ids, delete_non_bids_info=True):
     """
     Create the file participant.tsv
 
@@ -23,12 +23,13 @@ def create_participants(input_path,out_path, study_name, clinical_spec_path, bid
     :param clinical_spec_path:
     :param bids_ids:
     :param delete_non_bids_info:
-    :return:
+    :return: a pandas dataframe that contains the participants data
     """
     import pandas as pd
     import os
     from os import path
     import logging
+    import numpy as np
 
     fields_bids = ['participant_id']
     fields_dataset = []
@@ -37,7 +38,7 @@ def create_participants(input_path,out_path, study_name, clinical_spec_path, bid
 
     location_name = study_name + ' location'
 
-    participants_specs = pd.read_excel(path.join(os.path.dirname(os.path.dirname(__file__)),'bids', 'data', clinical_spec_path) , sheetname='participant.tsv')
+    participants_specs = pd.read_excel(clinical_spec_path , sheetname='participant.tsv')
     participant_fields_db = participants_specs[study_name]
     field_location = participants_specs[location_name]
     participant_fields_bids = participants_specs['BIDS CLINICA']
@@ -79,7 +80,16 @@ def create_participants(input_path,out_path, study_name, clinical_spec_path, bid
             field_col_values = []
             # For each field in fields_dataset extract all the column values
             for j in range(0, len(file_to_read)):
-                field_col_values.append(file_to_read.get_value(j, participant_fields_db[i]))
+                # Convert the alternative_id_1 to string if is an integer/float
+                if participant_fields_bids[i] == 'alternative_id_1' and\
+                        (file_to_read[participant_fields_db[i]].dtype == np.float64 or file_to_read[participant_fields_db[i]].dtype == np.int64) :
+                    if not pd.isnull(file_to_read.get_value(j, participant_fields_db[i])):
+                        value_to_append = str(file_to_read.get_value(j, participant_fields_db[i])).rstrip('.0')
+                    else:
+                        value_to_append = np.NaN
+                else:
+                    value_to_append = file_to_read.get_value(j, participant_fields_db[i])
+                field_col_values.append(value_to_append)
             # Add the extracted column to the participant_df
             participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
 
@@ -90,7 +100,6 @@ def create_participants(input_path,out_path, study_name, clinical_spec_path, bid
 
     # Adding participant_id column with BIDS ids
     for i in range(0, len(participant_df)):
-        print participant_df['alternative_id_1'][i]
         value = remove_space_and_symbols(participant_df['alternative_id_1'][i])
         bids_id = [s for s in bids_ids if value in s]
         if len(bids_id) == 0:
@@ -104,7 +113,7 @@ def create_participants(input_path,out_path, study_name, clinical_spec_path, bid
     if delete_non_bids_info == True:
         participant_df = participant_df.drop(index_to_drop)
 
-    participant_df.to_csv(path.join(out_path, 'participants.tsv'), sep='\t', index=False)
+    return participant_df
 
 
 def create_empty_sessions_tsv(): pass
@@ -385,9 +394,7 @@ def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False,False]
         map = glob(path.join(folder_input, fixed_file[0], '*.nii.gz'))
         map_ph = glob(path.join(folder_input, fixed_file[1], '*.nii.gz'))
 
-    files_to_skip = ["13001PBA20150623M18B0MAPph_S016.nii.gz", "13002PRJ20150922M18B0MAPph_S014.nii.gz",
-                    "11001PGM20130704M00B0MAPph_S010.bval","07002PPP20150116M18B0MAPph_S009.nii.gz",
-                    "07003PGM20141217M18B0MAPph_S010.nii.gz"]
+    files_to_skip = []
     if len(map) == 0:
         mag_missing = True
     if len(map_ph) == 0:
