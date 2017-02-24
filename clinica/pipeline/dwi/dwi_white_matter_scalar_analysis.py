@@ -277,22 +277,22 @@ def dti_based_analysis_pipeline(
         input_names=['input_image', 'atlas_labels_image', 'name_output_file'],
         output_names=['outfile'],
         function=dti_atlas_scalar_analysis), name='scalar_analysis_fa')
-    scalar_analysis_fa.inputs.name_output_file = 'stats_fa.csv'
+    scalar_analysis_fa.inputs.name_output_file = 'stats_fa.tsv'
     scalar_analysis_md = pe.Node(interface=niu.Function(
         input_names=['input_image', 'atlas_labels_image', 'name_output_file'],
         output_names=['outfile'],
         function=dti_atlas_scalar_analysis), name='scalar_analysis_md')
-    scalar_analysis_md.inputs.name_output_file = 'stats_md.csv'
+    scalar_analysis_md.inputs.name_output_file = 'stats_md.tsv'
     scalar_analysis_ad = pe.Node(interface=niu.Function(
         input_names=['input_image', 'atlas_labels_image', 'name_output_file'],
         output_names=['outfile'],
         function=dti_atlas_scalar_analysis), name='scalar_analysis_ad')
-    scalar_analysis_ad.inputs.name_output_file = 'stats_ad.csv'
+    scalar_analysis_ad.inputs.name_output_file = 'stats_ad.tsv'
     scalar_analysis_rd = pe.Node(interface=niu.Function(
         input_names=['input_image', 'atlas_labels_image', 'name_output_file'],
         output_names=['outfile'],
         function=dti_atlas_scalar_analysis), name='scalar_analysis_rd')
-    scalar_analysis_rd.inputs.name_output_file = 'stats_rd.csv'
+    scalar_analysis_rd.inputs.name_output_file = 'stats_rd.tsv'
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['out_fa_statistics', 'out_md_statistics', 'out_ad_statistics', 'out_rd_statistics',
@@ -309,10 +309,10 @@ def dti_based_analysis_pipeline(
                                      ('md_map_registered_to_atlas.nii.gz', caps_identifier + '_map-md_registeredOn' + atlas_name + '.nii.gz'),
                                      ('ad_map_registered_to_atlas.nii.gz', caps_identifier + '_map-ad_registeredOn' + atlas_name + '.nii.gz'),
                                      ('rd_map_registered_to_atlas.nii.gz', caps_identifier + '_map-rd_registeredOn' + atlas_name + '.nii.gz'),
-                                     ('stats_fa.csv', caps_identifier + '_map-fa_statisticsOn' + atlas_name + '.csv'),
-                                     ('stats_md.csv', caps_identifier + '_map-md_statisticsOn' + atlas_name + '.csv'),
-                                     ('stats_ad.csv', caps_identifier + '_map-ad_statisticsOn' + atlas_name + '.csv'),
-                                     ('stats_rd.csv', caps_identifier + '_map-rd_statisticsOn' + atlas_name + '.csv')
+                                     ('stats_fa.csv', caps_identifier + '_map-fa_statisticsOn' + atlas_name + '.tsv'),
+                                     ('stats_md.csv', caps_identifier + '_map-md_statisticsOn' + atlas_name + '.tsv'),
+                                     ('stats_ad.csv', caps_identifier + '_map-ad_statisticsOn' + atlas_name + '.tsv'),
+                                     ('stats_rd.csv', caps_identifier + '_map-rd_statisticsOn' + atlas_name + '.tsv')
                                      ]
 
     wf = pe.Workflow(name=name, base_dir=working_directory)
@@ -479,10 +479,10 @@ def dti_atlas_scalar_analysis(input_image, atlas_labels_image, name_output_file=
     Args:
         input_image (str): File containing a scalar image (e.g. FA, MD, etc.).
         atlas_labels_image (str): File containing labels. These labels are used to compute statistics
-        name_output_file (Optional[str]): Name of the output statistics file (default=scalar_stats.csv).
+        name_output_file (Optional[str]): Name of the output statistics file (default=scalar_stats.tsv).
 
     Returns:
-        outfile (str): CSV files containing the statistics (content of the columns:
+        outfile (str): TSV files containing the statistics (content of the columns:
             label, mean scalar, std of the scalar', number of voxels).
     """
 
@@ -492,7 +492,7 @@ def dti_atlas_scalar_analysis(input_image, atlas_labels_image, name_output_file=
     import os.path as op
 
     if name_output_file is None:
-        outfile = op.abspath('scalar_stats.csv')
+        outfile = op.abspath('scalar_stats.tsv')
     else:
         outfile = op.abspath(name_output_file)
 
