@@ -296,15 +296,15 @@ def tractography_and_dti_pipeline(
     datasink.inputs.base_directory = join(caps_directory, 'subjects', participant_id, session_id, 'dwi')
     datasink.inputs.substitutions = [('dti.mif', caps_identifier + '_dti.mif'),
                                      ('dwi.mif', caps_identifier + '_dwi.mif'),
-                                     ('eroded_mask.nii.gz', caps_identifier + '_eroded-b0-mask.nii.gz'),
+                                     ('eroded_mask.nii.gz', caps_identifier + '_erodedB0Mask.nii.gz'),
                                      ('dec_fa_map_from_dti.nii.gz', caps_identifier + '_map-decfa_dti.nii.gz'),
                                      ('fa_map_from_dti.nii.gz', caps_identifier + '_map-fa_dti.nii.gz'),
                                      ('md_map_from_dti.nii.gz', caps_identifier + '_map-md_dti.nii.gz'),
                                      ('ad_map_from_dti.nii.gz', caps_identifier + '_map-ad_dti.nii.gz'),
                                      ('rd_map_from_dti.nii.gz', caps_identifier + '_map-rd_dti.nii.gz'),
-                                     ('out_response_function_tax.txt', caps_identifier + '_response-function.txt'),
+                                     ('out_response_function_tax.txt', caps_identifier + '_responseFunction.txt'),
                                      ('out_response_function_', caps_identifier + '_response-function_algo-'),
-                                     ('sh_coefficients_image.mif', caps_identifier + '_sh-coefficients-image.mif'),
+                                     ('sh_coefficients_image.mif', caps_identifier + '_SHCoefficientsImage.mif'),
                                      ('out_tracks_' + tractography_nb_of_tracks + '.tck', caps_identifier + '_fibers-' + tractography_nb_of_tracks + '_tracks.tck'),
                                      ('out_tracks_sift1.tck', caps_identifier + '_fibers-' + tractography_nb_of_tracks + '_tracksAfterSift1.tck')
                                      ]

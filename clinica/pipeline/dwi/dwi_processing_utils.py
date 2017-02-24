@@ -213,7 +213,7 @@ def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2):
     cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -fa ' + out_fa
     os.system(cmd)
 
-    out_md = op.abspath('fa_map_from_dti.nii.gz')
+    out_md = op.abspath('md_map_from_dti.nii.gz')
     cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -adc ' + out_md
     os.system(cmd)
 
