@@ -6,6 +6,7 @@ Created on Tue Jun 28 15:20:40 2016
 @author: Junhao Wen, Alexandre Routier
 """
 ### TODO save the probability map volume to be .nii(pysurfer) format or .mat(SurfStatView) format, so that in the future can be used clinica visualize.
+### TODO implement the correlation for surfstat
 from __future__ import absolute_import
 from nipype.interfaces.utility import Function
 import nipype.pipeline.engine as pe

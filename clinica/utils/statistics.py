@@ -140,3 +140,20 @@ def fdr_correction_matrix(p_value_matrix, template=None):
     else:
          raise IOError('template input should be an numpy array or None.') 
     return reject_test, p_value_corrected
+
+def create_new_feature_tsv(subjects_visits_tsv, bids_dir, dest_tsv, added_features):
+    """This func is to add new features(columns) from the subjects_visits_list tsv file, and use the generated file in the statistical analysis"""
+    import pandas as pd
+    from os.path import join, isfile
+
+    if not isfile(join(bids_dir, 'participants.tsv')):
+        raise 'participants.tsv not found'
+    sub_set = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
+    all_set = pd.io.parsers.read_csv(join(bids_dir, 'participants.tsv'), sep='\t')
+    selected_subj = all_set[all_set.participant_id.isin(list(sub_set.participant_id))]
+    new_features = selected_subj[added_features]
+    new_features.to_csv(dest_tsv, sep='\t', index=False)
+
+
+
+
