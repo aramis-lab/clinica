@@ -93,19 +93,19 @@ def t1_b0_registration_pipeline(
 
     registration_t1_to_b0 = pe.Node(fsl.FLIRT(
         dof=6, interp='spline', cost='normmi', cost_func='normmi',
-        out_matrix_file=caps_identifier + '_t1-to-b0-with-resampling.mat'),
+        out_matrix_file=caps_identifier + '_t1-to-b0_withResampling.mat'),
         name='registration_t1_to_b0')
     #registration_t1_to_b0.outputs.out_matrix_file = caps_identifier + '_t1-to-b0-with-resampling.mat'
 
 
     apply_flirt_registration = pe.Node(fsl.ApplyXfm(apply_xfm=True, interp='spline'), name='apply_flirt_registration')
-    apply_flirt_registration.inputs.out_file = caps_identifier + '_binary-white-matter-mask.nii.gz'
+    apply_flirt_registration.inputs.out_file = caps_identifier + '_binarymask-whitematter_reslicedOnDiffusionSpace.nii.gz'
 
     convert_flirt_to_mrtrix = pe.Node(interface=niu.Function(
         input_names=['in_source_image', 'in_reference_image', 'in_flirt_matrix', 'name_output_matrix'],
         output_names=['out_mrtrix_matrix'], function=convert_flirt_transformation_to_mrtrix_transformation),
         name='convert_flirt_to_mrtrix')
-    convert_flirt_to_mrtrix.inputs.name_output_matrix = caps_identifier + '_t1-to-b0-without-resampling.mat'
+    convert_flirt_to_mrtrix.inputs.name_output_matrix = caps_identifier + '_t1-to-b0_withoutResampling.mat'
 
     desikan_in_native_space = pe.Node(interface=niu.Function(
         input_names=['freesurfer_volume', 'native_volume', 'name_output_volume'],
@@ -118,12 +118,12 @@ def t1_b0_registration_pipeline(
         input_names=['in_image', 'in_mrtrix_matrix', 'name_output_image'],
         output_names=['out_deformed_image'], function=apply_mrtrix_transform_without_resampling),
         name='desikan_in_diffusion_space')
-    desikan_in_diffusion_space.inputs.name_output_image = caps_identifier + '_desikan-parcellation.nii.gz'
+    desikan_in_diffusion_space.inputs.name_output_image = caps_identifier + '_parcellation-desikan_onDiffusionSpace.nii.gz'
     destrieux_in_diffusion_space = pe.Node(interface=niu.Function(
         input_names=['in_image', 'in_mrtrix_matrix', 'name_output_image'],
         output_names=['out_deformed_image'], function=apply_mrtrix_transform_without_resampling),
         name='destrieux_in_diffusion_space')
-    destrieux_in_diffusion_space.inputs.name_output_image = caps_identifier + '_destrieux-parcellation.nii.gz'
+    destrieux_in_diffusion_space.inputs.name_output_image = caps_identifier + '_parcellation-destrieux_onDiffusionSpace.nii.gz'
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['out_registered_t1', 'out_flirt_matrix', 'out_wm_mask_in_diffusion_space', 'out_mrtrix_matrix',
@@ -173,12 +173,12 @@ def t1_b0_registration_pipeline(
         (desikan_in_diffusion_space,   outputnode, [('out_deformed_image', 'out_desikan_in_diffusion_space')]),
         (destrieux_in_diffusion_space, outputnode, [('out_deformed_image', 'out_destrieux_in_diffusion_space')]),
         # Datasink:
-        (registration_t1_to_b0,        datasink, [('out_file', 'dwi.@registered_t1')]),
-        (registration_t1_to_b0,        datasink, [('out_matrix_file', 'dwi.@flirt_matrix')]),
-        (apply_flirt_registration,     datasink, [('out_file', 'dwi.@wm_mask_in_diffusion_mask')]),
-        (convert_flirt_to_mrtrix,      datasink, [('out_mrtrix_matrix', 'dwi.@mrtrix_matrix')]),
-        (desikan_in_diffusion_space,   datasink, [('out_deformed_image', 'dwi.@desikan_in_diffusion_space')]),
-        (destrieux_in_diffusion_space, datasink, [('out_deformed_image', 'dwi.@destrieux_in_diffusion_space')])
+        (registration_t1_to_b0,        datasink, [('out_file', 'dwi.@out_registered_t1')]),
+        (registration_t1_to_b0,        datasink, [('out_matrix_file', 'dwi.@out_flirt_matrix')]),
+        (apply_flirt_registration,     datasink, [('out_file', 'dwi.@out_wm_mask_in_diffusion_mask')]),
+        (convert_flirt_to_mrtrix,      datasink, [('out_mrtrix_matrix', 'dwi.@out_mrtrix_matrix')]),
+        (desikan_in_diffusion_space,   datasink, [('out_deformed_image', 'dwi.@out_desikan_in_diffusion_space')]),
+        (destrieux_in_diffusion_space, datasink, [('out_deformed_image', 'dwi.@out_destrieux_in_diffusion_space')])
     ])
     return wf
 
