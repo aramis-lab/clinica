@@ -213,7 +213,7 @@ def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2):
     cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -fa ' + out_fa
     os.system(cmd)
 
-    out_md = op.abspath('fa_map_from_dti.nii.gz')
+    out_md = op.abspath('md_map_from_dti.nii.gz')
     cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -adc ' + out_md
     os.system(cmd)
 
@@ -381,6 +381,33 @@ def streamlines_tractography(
         ' ' + in_source + ' ' + out_tracks +  ' -nthreads ' + str(nthreads) #+ ' -rk4'
     # cmd = cmd + ' -step ' + str(step_size)
 
+    os.system(cmd)
+
+    return out_tracks
+
+
+def tcksift(in_tracks, in_fod):
+    """
+    Perform filtering of tractograms.
+
+    This function filters a whole-brain fibre-tracking data set such that the streamline
+    densities match the FOD lobe integrals.
+
+    Args:
+        in_source (str): Input track file.
+        in_fod (str): Input image containing the spherical harmonics of the fibre orientation distributions.
+
+    Returns:
+        out_tracks (str): Output filtered tracks file in *.tck format.
+    """
+    import os.path as op
+    import os
+
+    assert(op.isfile(in_tracks))
+    assert(op.isfile(in_fod))
+    out_tracks = op.abspath('out_tracks_sift1.tck')
+
+    cmd = 'tcksift ' + in_tracks+ ' ' + in_fod + ' ' + out_tracks
     os.system(cmd)
 
     return out_tracks
