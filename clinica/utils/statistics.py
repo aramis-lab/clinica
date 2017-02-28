@@ -158,6 +158,7 @@ def create_new_feature_tsv(subjects_visits_tsv, bids_dir, dest_tsv, added_featur
         msg = "The missing subjects are %s" % list(missing_subj)
         logging.info(msg)
         raise Exception('There are subjects which are not included in full dataset, please check it out')
-
-    new_features = selected_subj[['participant_id'].extend(added_features)]
+    part_list = ['participant_id']
+    part_list.extend(added_features)
+    new_features = selected_subj[part_list]
     new_features.to_csv(dest_tsv, sep='\t', index=False)
