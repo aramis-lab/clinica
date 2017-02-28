@@ -145,15 +145,19 @@ def create_new_feature_tsv(subjects_visits_tsv, bids_dir, dest_tsv, added_featur
     """This func is to add new features(columns) from the subjects_visits_list tsv file, and use the generated file in the statistical analysis"""
     import pandas as pd
     from os.path import join, isfile
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
 
     if not isfile(join(bids_dir, 'participants.tsv')):
-        raise 'participants.tsv not found'
+        raise Exception('participants.tsv not found')
     sub_set = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
     all_set = pd.io.parsers.read_csv(join(bids_dir, 'participants.tsv'), sep='\t')
     selected_subj = all_set[all_set.participant_id.isin(list(sub_set.participant_id))]
+    if len(sub_set.participant_id) != len(selected_subj.participant_id):
+        missing_subj = set(list(sub_set.participant_id)) - set(list(selected_subj.participant_id))
+        msg = "The missing subjects are %s" % list(missing_subj)
+        logging.info(msg)
+        raise Exception('There are subjects which are not included in full dataset, please check it out')
+
     new_features = selected_subj[added_features]
     new_features.to_csv(dest_tsv, sep='\t', index=False)
-
-
-
-
