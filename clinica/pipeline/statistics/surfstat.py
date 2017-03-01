@@ -28,7 +28,7 @@ def clinica_surfstat(input_directory,
                      contrast,
                      str_format,
                      group_label,
-                     size_of_fwhm = 20,
+                     full_width_at_half_maximum = 20,
                      threshold_uncorrected_pvalue = 0.001,
                      threshold_corrected_pvalue = 0.050,
                      cluster_threshold = 0.001,
@@ -47,7 +47,7 @@ def clinica_surfstat(input_directory,
         :param str_format: string, the str_format which uses to read your tsv file, the typy of the string should corresponds exactly with the columns in the tsv file.
             Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
         :param group_label: Current group name
-        :param size_of_fwhm: fwhm for the surface smoothing, default is 20, integer.
+        :param full_width_at_half_maximum: fwhm for the surface smoothing, default is 20, integer.
         :param threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float, default is 0.001.
         :param threshold_corrected_pvalue: the threshold to display the corrected cluster, default is 0.05, float.
         :param cluster_threshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float.
@@ -72,7 +72,7 @@ def clinica_surfstat(input_directory,
     # Node to wrap the surfstat matlab script.
     surfstat = pe.Node(name='surfstat',
                        interface=Function(input_names=['input_directory', 'output_directory', 'subjects_visits_tsv', 'design_matrix',
-                                                       'contrast', 'str_format', 'path_to_matscript', 'size_of_fwhm', 'threshold_uncorrected_pvalue',
+                                                       'contrast', 'str_format', 'path_to_matscript', 'full_width_at_half_maximum', 'threshold_uncorrected_pvalue',
                                                        'threshold_corrected_pvalue', 'cluster_threshold'],
                                           output_names=['out_images'],
                                           function=runmatlab))
@@ -80,7 +80,7 @@ def clinica_surfstat(input_directory,
     surfstat.inputs.contrast = contrast
     surfstat.inputs.subjects_visits_tsv = subjects_visits_tsv
     surfstat.inputs.str_format = str_format
-    surfstat.inputs.size_of_fwhm = size_of_fwhm
+    surfstat.inputs.full_width_at_half_maximum = full_width_at_half_maximum
     surfstat.inputs.threshold_uncorrected_pvalue = threshold_uncorrected_pvalue
     surfstat.inputs.threshold_corrected_pvalue = threshold_corrected_pvalue
     surfstat.inputs.cluster_threshold = cluster_threshold
