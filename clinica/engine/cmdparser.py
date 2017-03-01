@@ -412,7 +412,7 @@ class CmdParserStatisticsSurfStat(CmdParser):
                                        args.contrast,
                                        args.str_format,
                                        args.group_label,
-                                       size_of_fwhm=args.size_of_fwhm,
+                                       full_width_at_half_maximum=args.full_width_at_half_maximum,
                                        threshold_uncorrected_pvalue=args.threshold_uncorrected_p_value,
                                        threshold_corrected_pvalue=args.threshold_corrected_p_value,
                                        cluster_threshold=args.cluster_threshold,
