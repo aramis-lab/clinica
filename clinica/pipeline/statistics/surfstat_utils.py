@@ -68,7 +68,7 @@ def runmatlab(input_directory,
               design_matrix, contrast,
               str_format,
               path_to_matscript,
-              size_of_fwhm,
+              full_width_at_half_maximum,
               threshold_uncorrected_pvalue,
               threshold_corrected_pvalue,
               cluster_threshold):
@@ -82,7 +82,7 @@ def runmatlab(input_directory,
     :param contrast:
     :param str_format:
     :param path_to_matscript:
-    :param size_of_fwhm:
+    :param full_width_at_half_maximum:
     :param threshold_uncorrected_pvalue:
     :param threshold_corrected_pvalue:
     :param cluster_threshold:
@@ -120,7 +120,7 @@ def runmatlab(input_directory,
     matlab.inputs.script = """
     clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', %.3f, '%s', %.3f, '%s', %.3f);
     """ % (input_directory, output_directory, subjects_visits_tsv, design_matrix, contrast, str_format, 'sizeoffwhm',
-           size_of_fwhm,
+           full_width_at_half_maximum,
            'thresholduncorrectedpvalue', threshold_uncorrected_pvalue, 'thresholdcorrectedpvalue',
            threshold_corrected_pvalue, 'clusterthreshold',
            cluster_threshold)  # here, we should define the inputs for the matlab function that you want to use
