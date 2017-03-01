@@ -119,7 +119,7 @@ for indexsubject = 1 : nrsubject
         indexunique = strfind(firstline, abscontrast);
         indexunique = find(not(cellfun('isempty', indexunique)));
         if iscell(tsvdata{indexunique})
-            uniquelabels = unique(tsvdata{indexunique}); factor1 = char(uniquelabels(1)); factor2 = char(uniquelabels(2));
+            uniquelabels = unique(tsvdata{indexunique});
             if length(uniquelabels) ~= 2
                 error('there should be just 2 different groups!')
             end
@@ -148,14 +148,10 @@ cd(outputdir)
 %% Convert the data into SurfStat
 
 if iscell(tsvdata{indexunique})
-    factorname = char(eval(contrast));
-    if factor1 == factorname{1}
-        contrastpos    = eval([contrast '(1)']) - eval([ contrast '(2)']); % use char(eval(contrast))
-        contrasteffectgroupneg    = -contrastpos;
-    else
-        contrastpos    = eval([contrast '(2)']) - eval([ contrast '(1)']); % use char(eval(contrast))
-        contrasteffectgroupneg    = -contrastpos;
-    end
+    contrastpos    = eval([contrast '(1)']) - eval([ contrast '(2)']); % use char(eval(contrast))
+    contrasteffectgroupneg    = eval([contrast '(2)']) - eval([ contrast '(1)']); % use char(eval(contrast))
+    factor1 = char(group){1};
+    factor2 = char(group){2};
 
     thicksubject = thicksubject';
 
@@ -227,7 +223,7 @@ if iscell(tsvdata{indexunique})
     % Computation of the T-statistic̣:  T statistics for a contrast in a univariate or multivariate model.
     tic;
     slm = SurfStatT( slmmodel, contrasteffectgroupneg );
-    SurfStatView( slm.t .* mask, averagesurface, [ 'ContrastNe-value of the T-statistic for ' factor1 '-' factor2 ]);
+    SurfStatView( slm.t .* mask, averagesurface, [ 'ContrastNe-value of the T-statistic for ' factor2 '-' factor1 ]);
     set(gcf,'PaperPositionMode','auto');
     print('contrast_negative_t_value','-djpeg','-r0'); close    
     disp('Contrast Negative: t_value'); toc;    
@@ -240,7 +236,7 @@ if iscell(tsvdata{indexunique})
     %uncorrectedpvalues = double(t<=0.05).*t+double(t>0.05);
     uncorrectedpvalues = 1-tcdf(slm.t,slm.df);
     clearvars struct; struct.P = uncorrectedpvalues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
-    SurfStatView( struct, averagesurface, [ '(ContrastNe-Uncorrected P-values )' factor1 '-' factor2]);
+    SurfStatView( struct, averagesurface, [ '(ContrastNe-Uncorrected P-values )' factor2 '-' factor1]);
     set(gcf,'PaperPositionMode','auto');
     print('contrast_negative_uncorrected_p_value','-djpeg','-r0'); close
     disp('Contrast Negative: Uncorrected Pvalue'); toc;
@@ -251,9 +247,9 @@ if iscell(tsvdata{indexunique})
     tic;
     [ pval, ~, clus ] = SurfStatP( slm , mask, clusterthreshold);
     pval.thresh = thresholdcorrectedpvalue;
-    SurfStatView( pval, averagesurface, ['(ContrastNe-Corrected P-values )' factor1 '-' factor2 ' (clusterthreshold = ' num2str(clusterthreshold) ')']);
+    SurfStatView( pval, averagesurface, ['(ContrastNe-Corrected P-values )' factor2 '-' factor1 ' (clusterthreshold = ' num2str(clusterthreshold) ')']);
     % to change the background color(black), uncomment this line.
-    %SurfStatView( pval, averagesurface, ['(ContrastNe-Corrected P-values )' factor1 '-' factor2 ' (clusterthreshold = ' num2str(clusterthreshold) ')'], 'black');
+    %SurfStatView( pval, averagesurface, ['(ContrastNe-Corrected P-values )' factor2 '-' factor1 ' (clusterthreshold = ' num2str(clusterthreshold) ')'], 'black');
     set(gcf,'PaperPositionMode','auto');
     print('contrast_negative_corrected_p_value','-djpeg','-r0'); close
     disp('Contrast Negative: Corrected Pvalue'); toc;
@@ -273,7 +269,7 @@ if iscell(tsvdata{indexunique})
     % Computation of the false discovery rate :
     tic;
     qval = SurfStatQ( slm , mask );
-    SurfStatView( qval, averagesurface, ['ContrastNe-False discovery rate ' factor1 '-' factor2 ]);
+    SurfStatView( qval, averagesurface, ['ContrastNe-False discovery rate ' factor2 '-' factor1 ]);
     set(gcf,'PaperPositionMode','auto');
     print('contrast_negative_false_discovery_rate','-djpeg','-r0'); close
     disp('Contrast Negative: FDR'); toc;
