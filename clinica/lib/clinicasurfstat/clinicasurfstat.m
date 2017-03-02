@@ -236,7 +236,7 @@ if iscell(tsvdata{indexunique})
     %uncorrectedpvalues = double(t<=0.05).*t+double(t>0.05);
     uncorrectedpvalues = 1-tcdf(slm.t,slm.df);
     clearvars struct; struct.P = uncorrectedpvalues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
-    SurfStatView( struct, averagesurface, [ 'ContrastNe-Uncorrected P-values( 'thresholduncorrectedpvalue ')' factor2 '-' factor1]);
+    SurfStatView( struct, averagesurface, [ 'ContrastNe-Uncorrected P-values(' thresholduncorrectedpvalue ')' factor2 '-' factor1]);
     set(gcf,'PaperPositionMode','auto');
     print('contrast_negative_uncorrected_p_value','-djpeg','-r0'); close
     disp('Contrast Negative: Uncorrected Pvalue'); toc;
@@ -309,7 +309,7 @@ else
     %uncorrectedpvalues = double(t<=0.05).*t+double(t>0.05);
     uncorrectedpvalues = 1-tcdf(slm.t,slm.df);
     clearvars struct; struct.P = uncorrectedpvalues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
-    SurfStatView( struct, averagesurface, [ 'Uncorrected P-values( 'thresholduncorrectedpvalue ')' contrast ]);
+    SurfStatView( struct, averagesurface, [ 'Uncorrected P-values(' thresholduncorrectedpvalue ')' contrast ]);
     set(gcf,'PaperPositionMode','auto');
     print('uncorrected_p_value','-djpeg','-r0'); close
     disp('Uncorrected Pvalue'); toc;
