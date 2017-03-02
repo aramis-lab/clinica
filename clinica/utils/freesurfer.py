@@ -273,10 +273,10 @@ def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
     subject_id = list(subject_list[i] + '_' + session_list[i] for i in range(len(subject_list)))
 
     fs_tsv_subject = pe.MapNode(name='volumetric_summary_node',
-                            interface=Function(
+                                iterfield=['subject_id'],
+                                interface=Function(
                                 input_names=['subject_id', 'output_dir'],
                                 output_names=[],
-                                iterfield=['subject_id'],
                                 function=write_statistics_per_subject))
     fs_tsv_subject.inputs.subject_id = subject_id
     fs_tsv_subject.inputs.output_dir = caps_dir
