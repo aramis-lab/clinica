@@ -76,48 +76,47 @@ def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv):
     for i in range(len(subject_list)):
         copytree(os.path.join(caps_dir, subject_list[i], session_list[i], 't1/freesurfer-cross-sectional', subject_list[i] + '_' + session_list[i]), os.path.join(dest_dir, subject_list[i] + '_' + session_list[i]))
 
-def write_statistics_summary(subject_dir, subject_id, output_dir):
+def volumetric_summary(subject_dir, subject_id, output_dir):
     """
-    To write statistics summary for all the subjects after reconall
+    To write statistics summary for all the subjects after reconall pipeline.
     :param subject_dir:
-    :param subject_id:
+    :param subject_id: this is a list for all the subjects
     :param output_dir:
     :return:
+    Note: this function should be connected with get_dirs_check_reconalled in a workflow.
     """
-    ## TODO check if summary_tsv exits, if yes, add new info for new subjects, not to overwrite it.
-
     import os, errno
 
     # name all the 26 tsv output files.
     all_seg_volume = 'measure_all-seg.tsv'
     aseg_volume = 'measure_aseg-volume.tsv'
 
-    aparc_desikan_lh_volume = 'hemisphere-lh_parcellation-desikan_measure-volume.tsv'
-    aparc_desikan_rh_volume = 'hemisphere-rh_parcellation-desikan_measure-volume.tsv'
-    aparc_desikan_lh_thickness = 'hemisphere-lh_parcellation-desikan_measure-thickness.tsv'
-    aparc_desikan_rh_thickness = 'hemisphere-rh_parcellation-desikan_measure-thickness.tsv'
-    aparc_desikan_lh_area = 'hemisphere-lh_parcellation-desikan_measure-area.tsv'
-    aparc_desikan_rh_area = 'hemisphere-rh_parcellation-desikan_measure-area.tsv'
-    aparc_desikan_lh_meancurv = 'hemisphere-lh_parcellation-desikan_measure-meancurv.tsv'
-    aparc_desikan_rh_meancurv = 'hemisphere-rh_parcellation-desikan_measure-meancurv.tsv'
+    aparc_desikan_lh_volume = 'hemi-lh_parcellation-desikan_measure-volume.tsv'
+    aparc_desikan_rh_volume = 'hemi-rh_parcellation-desikan_measure-volume.tsv'
+    aparc_desikan_lh_thickness = 'hemi-lh_parcellation-desikan_measure-thickness.tsv'
+    aparc_desikan_rh_thickness = 'hemi-rh_parcellation-desikan_measure-thickness.tsv'
+    aparc_desikan_lh_area = 'hemi-lh_parcellation-desikan_measure-area.tsv'
+    aparc_desikan_rh_area = 'hemi-rh_parcellation-desikan_measure-area.tsv'
+    aparc_desikan_lh_meancurv = 'hemi-lh_parcellation-desikan_measure-meancurv.tsv'
+    aparc_desikan_rh_meancurv = 'hemi-rh_parcellation-desikan_measure-meancurv.tsv'
 
-    aparc_destrieux_lh_volume = 'hemisphere-lh_parcellation-destrieux_measure-volume.tsv'
-    aparc_destrieux_rh_volume = 'hemisphere-rh_parcellation-destrieux_measure-volume.tsv'
-    aparc_destrieux_lh_thickness = 'hemisphere-lh_parcellation-destrieux_measure-thickness.tsv'
-    aparc_destrieux_rh_thickness = 'hemisphere-rh_parcellation-destrieux_measure-thickness.tsv'
-    aparc_destrieux_lh_area = 'hemisphere-lh_parcellation-destrieux_measure-area.tsv'
-    aparc_destrieux_rh_area = 'hemisphere-rh_parcellation-destrieux_measure-area.tsv'
-    aparc_destrieux_lh_meancurv = 'hemisphere-lh_parcellation-destrieux_measure-meancurv.tsv'
-    aparc_destrieux_rh_meancurv = 'hemisphere-rh_parcellation-destrieux_measure-meancurv.tsv'
+    aparc_destrieux_lh_volume = 'hemi-lh_parcellation-destrieux_measure-volume.tsv'
+    aparc_destrieux_rh_volume = 'hemi-rh_parcellation-destrieux_measure-volume.tsv'
+    aparc_destrieux_lh_thickness = 'hemi-lh_parcellation-destrieux_measure-thickness.tsv'
+    aparc_destrieux_rh_thickness = 'hemi-rh_parcellation-destrieux_measure-thickness.tsv'
+    aparc_destrieux_lh_area = 'hemi-lh_parcellation-destrieux_measure-area.tsv'
+    aparc_destrieux_rh_area = 'hemi-rh_parcellation-destrieux_measure-area.tsv'
+    aparc_destrieux_lh_meancurv = 'hemi-lh_parcellation-destrieux_measure-meancurv.tsv'
+    aparc_destrieux_rh_meancurv = 'hemi-rh_parcellation-destrieux_measure-meancurv.tsv'
 
-    aparc_BA_lh_volume = 'hemisphere-lh_parcellation-BA_measure-volume.tsv'
-    aparc_BA_rh_volume = 'hemisphere-rh_parcellation-BA_measure-volume.tsv'
-    aparc_BA_lh_thickness = 'hemisphere-lh_parcellation-BA_measure-thickness.tsv'
-    aparc_BA_rh_thickness = 'hemisphere-rh_parcellation-BA_measure-thickness.tsv'
-    aparc_BA_lh_area = 'hemisphere-lh_parcellation-BA_measure-area.tsv'
-    aparc_BA_rh_area = 'hemisphere-rh_parcellation-BA_measure-area.tsv'
-    aparc_BA_lh_meancurv = 'hemisphere-lh_parcellation-BA_measure-meancurv.tsv'
-    aparc_BA_rh_meancurv = 'hemisphere-rh_parcellation-BA_measure-meancurv.tsv'
+    aparc_BA_lh_volume = 'hemi-lh_parcellation-BA_measure-volume.tsv'
+    aparc_BA_rh_volume = 'hemi-rh_parcellation-BA_measure-volume.tsv'
+    aparc_BA_lh_thickness = 'hemi-lh_parcellation-BA_measure-thickness.tsv'
+    aparc_BA_rh_thickness = 'hemi-rh_parcellation-BA_measure-thickness.tsv'
+    aparc_BA_lh_area = 'hemi-lh_parcellation-BA_measure-area.tsv'
+    aparc_BA_rh_area = 'hemi-rh_parcellation-BA_measure-area.tsv'
+    aparc_BA_lh_meancurv = 'hemi-lh_parcellation-BA_measure-meancurv.tsv'
+    aparc_BA_rh_meancurv = 'hemi-rh_parcellation-BA_measure-meancurv.tsv'
 
     output_path = os.path.expanduser(output_dir)
 
@@ -225,3 +224,99 @@ def write_statistics_summary(subject_dir, subject_id, output_dir):
     os.system(cmd_aparc_BA_lh_meancurv)
     cmd_aparc_BA_rh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas meancurv --tablefile ' + aparc_BA_rh_meancurv_tsv
     os.system(cmd_aparc_BA_rh_meancurv)
+
+def write_volumetric_summary(output_dir, subjects_visits_tsv):
+    """
+    This func is to write the volumetric measurement after recon-all pipeline for all the subjects
+    :param subjects_visits_tsv:
+    :return:
+    """
+    import nipype.pipeline.engine as pe
+    from nipype.interfaces.utility import Function
+    import pandas as pd
+
+    # get the list for subject_ids
+    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
+    if (list(subjects_visits.columns.values)[0] != 'participant_id') and (list(subjects_visits.columns.values)[1] != 'session_id'):
+        raise Exception('Subjects and visits file is not in the correct format.')
+    subject_list = list(subjects_visits.participant_id)
+    session_list = list(subjects_visits.session_id)
+    subject_id = list(subject_list[i] + '_' + session_list[i] for i in range(len(subject_list)))
+
+    fs_tsv_summary = pe.Node(name='volumetric_summary_node',
+                            interface=Function(
+                                input_names=['subject_id', 'output_dir'],
+                                output_names=[],
+                                function=volumetric_summary))
+    fs_tsv_summary.inputs.subject_id = subject_id
+    fs_tsv_summary.inputs.output_dir = output_dir
+
+    return fs_tsv_summary
+
+def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
+    """
+    This func is to write the volumetric measurement after recon-all pipeline for each subjects in the subjects_visits_tsv
+    :param subjects_visits_tsv:
+    :return:
+    """
+    import nipype.pipeline.engine as pe
+    from nipype.interfaces.utility import Function
+    import pandas as pd
+    from clinica.pipeline.t1.t1_freesurfer_utils import write_statistics_per_subject
+
+    # get the list for subject_ids
+    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
+    if (list(subjects_visits.columns.values)[0] != 'participant_id') and (list(subjects_visits.columns.values)[1] != 'session_id'):
+        raise Exception('Subjects and visits file is not in the correct format.')
+    subject_list = list(subjects_visits.participant_id)
+    session_list = list(subjects_visits.session_id)
+    subject_id = list(subject_list[i] + '_' + session_list[i] for i in range(len(subject_list)))
+
+    fs_tsv_subject = pe.MapNode(name='volumetric_summary_node',
+                            interface=Function(
+                                input_names=['subject_id', 'output_dir'],
+                                output_names=[],
+                                iterfield=['subject_id'],
+                                function=write_statistics_per_subject))
+    fs_tsv_subject.inputs.subject_id = subject_id
+    fs_tsv_subject.inputs.output_dir = caps_dir
+
+    return fs_tsv_subject
+
+def write_reconall_log_summary(caps_dir, subjects_visits_tsv):
+    """
+       This func is to write the recon_all.log summary for all the subjects, the first step quality check
+       :param :
+       :return:
+       """
+    import nipype.pipeline.engine as pe
+    from nipype.interfaces.utility import Function
+    import pandas as pd
+    from clinica.pipeline.t1.t1_freesurfer_utils import log_summary
+
+    # get the list for subject_ids
+    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
+    if (list(subjects_visits.columns.values)[0] != 'participant_id') and (
+        list(subjects_visits.columns.values)[1] != 'session_id'):
+        raise Exception('Subjects and visits file is not in the correct format.')
+    subject_list = list(subjects_visits.participant_id)
+    session_list = list(subjects_visits.session_id)
+    subject_id = list(subject_list[i] + '_' + session_list[i] for i in range(len(subject_list)))
+
+    lognode = pe.Node(name='lognode',
+                      interface=Function(
+                          input_names=['subject_list', 'session_list', 'subject_id', 'output_dir'],
+                          output_names=[],
+                          function=log_summary))
+    lognode.inputs.subject_list = subject_list
+    lognode.inputs.session_list = session_list
+    lognode.inputs.subject_id = subject_id
+    lognode.inputs.output_dir = caps_dir
+
+    return lognode
+
+
+caps_dir = '/Volumes/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/Freesurfer/Reconall/reconall_GENFI/clinica_reconall_result/prevdemals_77_subjects_reconall_49dwi_fsl'
+subjects_visits_tsv = '/Volumes/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/Freesurfer/Reconall/reconall_GENFI/clinica_reconall_result/prevdemals_77_subjects_reconall_49dwi_fsl/subjects_sessions_list.tsv'
+node = write_reconall_log_summary(caps_dir, subjects_visits_tsv)
+
