@@ -13,9 +13,9 @@ __status__ = "Development"
 
 
 # @ToDo:test this function
-def create_participants(input_path,out_path, study_name, clinical_spec_path, bids_ids, delete_non_bids_info=True):
+def create_participants_df(input_path,out_path, study_name, clinical_spec_path, bids_ids, delete_non_bids_info=True):
     """
-    Create the file participant.tsv
+
 
     :param input_path: path to the original dataset
     :param out_path: path to the bids folder
@@ -114,6 +114,105 @@ def create_participants(input_path,out_path, study_name, clinical_spec_path, bid
         participant_df = participant_df.drop(index_to_drop)
 
     return participant_df
+
+def create_sessions_dict(input_path, study_name, clinical_spec_path, bids_ids, name_column_ids, subj_to_remove = []):
+    """
+    Extract the information regarding the sessions and store them in a dictionary (session M0 only)
+
+    :param input_path:
+    :param study_name: name of the study (Ex: ADNI)
+    :param clinical_spec_path:
+    :param bids_ids:
+    :param name_column_ids:
+    :param subj_to_remove:
+    :return:
+    """
+    import pandas as pd
+    from os import path
+    import numpy as np
+
+    # Load data
+    location = study_name + ' location'
+    sessions = pd.read_excel(clinical_spec_path, sheetname='sessions.tsv')
+    sessions_fields = sessions[study_name]
+    field_location = sessions[location]
+    sessions_fields_bids = sessions['BIDS CLINICA']
+    fields_dataset = []
+    fields_bids = []
+    sessions_dict = {}
+
+    for i in range(0, len(sessions_fields)):
+        if not pd.isnull(sessions_fields[i]):
+            fields_bids.append(sessions_fields_bids[i])
+            fields_dataset.append(sessions_fields[i])
+
+    sessions_df = pd.DataFrame(columns=fields_bids)
+
+    for i in range(0, len(sessions_fields)):
+        # If the i-th field is available
+        if not pd.isnull(sessions_fields[i]):
+            # Load the file
+            tmp = field_location[i].split('/')
+            location = tmp[0]
+            sheet = tmp[1]
+            file_to_read_path = path.join(input_path, 'clinicalData', location)
+            file_to_read = pd.read_excel(file_to_read_path, sheetname=sheet)
+
+            for r in range(0, len(file_to_read.values)):
+                row = file_to_read.iloc[r]
+                # Extracts the subject ids columns from the dataframe
+                subj_id = row[name_column_ids.decode('utf-8')]
+                if subj_id.dtype == np.int64:
+                    subj_id = str(subj_id)
+                # Removes all the - from
+                subj_id_alpha = remove_space_and_symbols(subj_id)
+
+                # Extract the corresponding BIDS id and create the output file if doesn't exist
+                subj_bids = [s for s in bids_ids if subj_id_alpha in s]
+                if len(subj_bids) == 0:
+                    # If the subject is not an excluded one
+                    if not subj_id in subj_to_remove:
+                        print sessions_fields[i] + ' for ' + subj_id + ' not found in the BIDS converted.'
+                else:
+                    subj_bids = subj_bids[0]
+                    sessions_df[sessions_fields_bids[i]] = row[sessions_fields[i]]
+                    if sessions_dict.has_key(subj_bids):
+                        (sessions_dict[subj_bids]['M0']).update({sessions_fields_bids[i]: row[sessions_fields[i]]})
+                    else:
+                        sessions_dict.update({subj_bids: {
+                            'M0': {'session_id': 'ses-M0', sessions_fields_bids[i]: row[sessions_fields[i]]}}})
+
+    return sessions_dict
+
+def write_sessions_tsv(out_path, bids_paths, sessions_dict, fields_bids, sessions_list = 'M0'):
+    """
+
+    :param out_path:
+    :param bids_paths:
+    :param sessions_dict:
+    :param fields_bids:
+    :param sessions_list:
+    :return:
+    """
+    import os
+    import pandas as pd
+    from os import path
+
+    for sp in bids_paths:
+        sp = sp[:-1]
+        bids_id = sp.split(os.sep)[-1]
+        sessions_df = pd.DataFrame(columns=fields_bids)
+        if sessions_dict.has_key(bids_id):
+            session_df = pd.DataFrame(sessions_dict[bids_id]['M0'], index=['i', ])
+            cols = session_df.columns.tolist()
+            cols = cols[-1:] + cols[:-1]
+            session_df = session_df[cols]
+            session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False)
+        else:
+            print "No session data available for " + sp
+            session_df = pd.DataFrame(columns=['session_id'])
+            session_df['session_id'] = pd.Series('M0')
+            session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False)
 
 
 def create_empty_sessions_tsv(): pass
@@ -359,7 +458,7 @@ def convert_T1(t1_path, output_path, t1_bids_name):
 
 def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False,False]):
     """
-    Extracts and converts into the BIDS specification fieldmap data.
+    Extract and convert into the BIDS specification fieldmap data.
 
     Args:
         folder_input: folder containing the fieldmap data.
