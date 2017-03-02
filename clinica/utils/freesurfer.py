@@ -316,7 +316,3 @@ def write_reconall_log_summary(caps_dir, subjects_visits_tsv):
     return lognode
 
 
-caps_dir = '/Volumes/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/Freesurfer/Reconall/reconall_GENFI/clinica_reconall_result/prevdemals_77_subjects_reconall_49dwi_fsl'
-subjects_visits_tsv = '/Volumes/dataARAMIS/users/junhao.wen/PhD/PREVDEMALS/Freesurfer/Reconall/reconall_GENFI/clinica_reconall_result/prevdemals_77_subjects_reconall_49dwi_fsl/subjects_sessions_list.tsv'
-node = write_reconall_log_summary(caps_dir, subjects_visits_tsv)
-
