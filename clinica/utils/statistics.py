@@ -146,6 +146,7 @@ def create_new_feature_tsv(subjects_visits_tsv, bids_dir, dest_tsv, added_featur
     import pandas as pd
     from os.path import join, isfile
     import logging
+    from pandas import concat
     logging.basicConfig(level=logging.DEBUG)
 
     if not isfile(join(bids_dir, 'participants.tsv')):
@@ -158,7 +159,7 @@ def create_new_feature_tsv(subjects_visits_tsv, bids_dir, dest_tsv, added_featur
         msg = "The missing subjects are %s" % list(missing_subj)
         logging.info(msg)
         raise Exception('There are subjects which are not included in full dataset, please check it out')
-    part_list = ['participant_id']
-    part_list.extend(added_features)
-    new_features = selected_subj[part_list]
-    new_features.to_csv(dest_tsv, sep='\t', index=False)
+
+    new_features = selected_subj[added_features]
+    all_features = concat([sub_set, new_features], axis=1)
+    all_features.to_csv(dest_tsv, sep='\t', index=False)
