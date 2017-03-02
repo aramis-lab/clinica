@@ -1,3 +1,4 @@
+
 from clinica.bids.abstract_converter import Converter
 from clinica.engine.cmdparser import CmdParser
 
@@ -10,7 +11,7 @@ __maintainer__ = "Sabrina Fontanella"
 __email__ = "sabrina.fontanella@icm-institute.org"
 __status__ = "Development"
 
-
+#@ToDo: !!!refactoring the code!!!
 class ADNI_TO_BIDS(Converter, CmdParser) :
 
     def define_name(self):
@@ -210,10 +211,14 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         if not os.path.exists(path.join(output_path, bids_name + bids.get_bids_suff(mod_type) + '.nii.gz')):
             print 'Conversion of the dicom failed for ', input_path
 
-
-
     def fill_zeros(self, s, length):
         return ('0' * (length - len(str(s)))) + str(s)
+
+    def days_between(self, d1, d2):
+        from datetime import datetime
+        d1 = datetime.strptime(d1, "%Y-%m-%d")
+        d2 = datetime.strptime(d2, "%Y-%m-%d")
+        return abs((d2 - d1).days)
 
     def convert_images(self, source_dir, dest_dir, mod_to_add = '', mod_to_update = ''):
         """
@@ -228,24 +233,27 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         import pandas as pd
         import shutil
 
-        # Compute the path to the t1 images
-        if (mod_to_add == '' or mod_to_add == 't1') and ( mod_to_update == '' or mod_to_update == 't1' ):
-            t1_paths = self.compute_t1_paths(source_dir)
 
-
-        subjs_list_path = path.join(source_dir, 'clinicalData', 'subjects_list_from_adnimerge.xlsx')
+        subjs_list_path = path.join(source_dir, 'clinicalData', 'subjects_list.xlsx')
         subjs_list_excel = pd.read_excel(subjs_list_path)
         subjs_list = subjs_list_excel['PTID']
         adni_merge_path = path.join(source_dir, 'clinicalData', 'ADNIMERGE.csv')
         adni_merge = pd.read_csv(adni_merge_path)
         # Extract the list of sessions from VISCODE column of adnimerge file, remove duplicate and convert to a list
-        session_list = adni_merge['VISCODE'].drop_duplicates().tolist()
-        print session_list
+        #session_list = adni_merge['VISCODE'].drop_duplicates().tolist()
+        session_list = 'bl'
         sess_list = ['bl']
         bids_ids = []
         alpha_ids = []
 
-        pet_fdg_paths = self.compute_fdg_pet_paths(source_dir, subjs_list)
+        # Compute anat paths
+        if (mod_to_add == '' or mod_to_add == 'anat') and (mod_to_update == '' or mod_to_update == 'anat'):
+            t1_paths = self.compute_t1_paths(source_dir, subjs_list)
+
+        # Compute pet paths
+        if (mod_to_add == '' or mod_to_add == 'pet') and (mod_to_update == '' or mod_to_update == 'pet'):
+            pet_fdg_paths = self.compute_fdg_pet_paths(source_dir, subjs_list)
+            pet_av45_paths = self.compute_av45_pet_paths(source_dir, subjs_list)
 
         if mod_to_add == '' and mod_to_update=='':
             os.mkdir(dest_dir)
@@ -266,13 +274,13 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                 if mod_to_add == '' and mod_to_update=='':
                     os.mkdir(ses_path)
 
-                if mod_to_add != '' and mod_to_add !='t1':
+                if mod_to_add != '' and mod_to_add !='anat':
                     pass
-                elif (mod_to_add=='' and mod_to_update=='') or mod_to_add == 't1' or mod_to_update == 't1':
+                elif (mod_to_add=='' and mod_to_update=='') or mod_to_add == 'anat' or mod_to_update == 'anat':
                     # Convert T1
-                    t1_info = t1_paths[(t1_paths['subj_id'] == subjs_list[i]) & (t1_paths['session'] == ses)]
-                    if t1_info['dicom'].values[0] == False:
-                        t1_path = t1_info['path'].values[0]
+                    t1_info = t1_paths[(t1_paths['Subject_ID'] == subjs_list[i]) & (t1_paths['VISCODE'] == ses)]
+                    if t1_info['Is_Dicom'].values[0] == False:
+                        t1_path = t1_info['Path'].values[0]
                         if len(t1_path) == 0:
                             print 'No path'
                         else:
@@ -282,19 +290,18 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                         # Convert the image using dcm2nii
                         print 'Dicom found, needs to be converted'
                         os.mkdir(path.join(ses_path, 'anat'))
-                        t1_path = (t1_info['path'].values[0]).replace(' ', '\ ')
+                        t1_path = (t1_info['Path'].values[0]).replace(' ', '\ ')
                         if len(t1_path)!=0:
                             self.convert_from_dicom(t1_path, path.join(ses_path, 'anat'), bids_file_name, 'T1')
                         else:
                             print 'No path for dicom'
-
-                if mod_to_add != '' and mod_to_add !='pet_fdg' and mod_to_update!='pet_fdg':
+                # Convert pet (fdg and av45)
+                print "Converting fdg and av45"
+                if mod_to_add != '' and mod_to_add !='pet' and mod_to_update!='pet':
                     pass
-                elif mod_to_add=='' or mod_to_add == 'pet_fdg' or mod_to_update == 'pet_fdg':
+                elif mod_to_add=='' or mod_to_add == 'pet' or mod_to_update == 'pet':
                     pet_fdg_info = pet_fdg_paths
                     visit_session = {'ADNI Baseline': 'bl', 'ADNI2 Baseline-New Pt': 'bl'}
-
-
                     images = pet_fdg_info
                     count = 0
                     total = images.shape[0]
@@ -312,18 +319,302 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                     original = pet_fdg_info['Original'].values
                     if len(original) > 0:
                         if pet_fdg_info['Original'].values[0] == True:
-                            print 'is original'
+                            os.mkdir(path.join(ses_path, 'pet'))
+                            pet_path = pet_fdg_info['Path'].values[0]
+
+                            self.center_nifti_origin(pet_path,
+                                                path.join(path.join(ses_path, 'pet'), bids_file_name + '_task-rest_acq-fdg_pet.nii.gz'))
                         else:
                             pet_path = pet_fdg_info['Path'].values[0].replace(' ', '\ ')
-                            self.convert_from_dicom(pet_path,  path.join(ses_path, 'pet'), bids_file_name, 'pet')
+                            self.convert_from_dicom(pet_path,  path.join(ses_path, 'pet'), bids_file_name+'_task-rest_acq-fdg', 'pet')
                     else:
                         print 'Original not found for ', subjs_list[i]
 
-    def compute_t1_paths(self, source_dir):
+                 # Convert pet_av45
+                    pet_av45_info = pet_av45_paths
+                    visit_session = {'ADNI Baseline': 'bl', 'ADNI2 Baseline-New Pt': 'bl'}
+                    images = pet_av45_info
+                    count = 0
+                    total = images.shape[0]
+
+                    # Check if the pet folder already exist
+                    if os.path.isdir(path.join(ses_path, 'pet')):
+                        if mod_to_add != '':
+                            raise IOError('PET modality found. For updating the dataset use the flag -updated_mod')
+
+
+                    pet_av45_info = pet_av45_paths[(pet_av45_paths['Subject_ID'] == subjs_list[i])]
+                    original = pet_av45_info['Original'].values
+                    if len(original) > 0:
+                        if pet_av45_info['Original'].values[0] == True:
+                            if not os.path.exists(path.join(ses_path, 'pet')):
+                                os.mkdir(path.join(ses_path, 'pet'))
+                            pet_path = pet_av45_info['Path'].values[0]
+
+                            self.center_nifti_origin(pet_path,
+                                                     path.join(path.join(ses_path, 'pet'),
+                                                               bids_file_name + '_task-rest_acq-av45_pet.nii.gz'))
+                        else:
+                            pet_path = pet_av45_info['Path'].values[0].replace(' ', '\ ')
+                            self.convert_from_dicom(pet_path, path.join(ses_path, 'pet'), bids_file_name+'_task-rest_acq-av45', 'pet')
+                    else:
+                        print 'Original not found for ', subjs_list[i]
+
+    def center_nifti_origin(self, input_image, output_image):
+        import nibabel as nib
+        import numpy as np
+
+        img = nib.load(input_image)
+        canonical_img = nib.as_closest_canonical(img)
+        hd = canonical_img.header
+        # if hd['quatern_b'] != 0 or hd['quatern_c'] != 0 or hd['quatern_d'] != 0:
+        #     print 'Warning: Not all values in quatern are equal to zero'
+
+        qform = np.zeros((4, 4))
+
+        for i in range(1, 4):
+            qform[i - 1, i - 1] = hd['pixdim'][i]
+            qform[i - 1, 3] = -1.0 * hd['pixdim'][i] * hd['dim'][i] / 2.0
+
+        new_img = nib.Nifti1Image(canonical_img.get_data(caching='unchanged'), qform)
+        nib.save(new_img, output_image)
+
+    def adni1_image(self, subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_subj):
+
+        # Get the preferred scan (image series that has been Scaled)
+        filtered_mprage = mprage_meta_subj[(mprage_meta_subj['Orig/Proc'] == 'Processed')
+                                           & (mprage_meta_subj.Visit == visit_str)
+                                           & (mprage_meta_subj.Sequence.map(lambda x: x.endswith('Scaled')))]
+
+        # If there is not a preferred image we use ADNI2 processing (get the original) preferring 1.5T images
+        if filtered_mprage.shape[0] < 1:
+            mprage_meta_subj_orig = mprage_meta_subj[mprage_meta_subj['Orig/Proc'] == 'Original']
+            return self.adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig, preferred_field_strength=1.5)
+
+        filtered_mprage_mag = filtered_mprage
+        if len(filtered_mprage.MagStrength.unique()) > 1:
+            filtered_mprage_mag = filtered_mprage[filtered_mprage.MagStrength == 1.5]  # Select 1.5T images
+
+        scan = filtered_mprage_mag.iloc[0]
+        series_id = scan.SeriesID
+
+        filtered_scan = ida_meta_subj[ida_meta_subj.LONIUID == series_id]
+
+        if filtered_scan.shape[0] < 1:
+            # If no IDA_META for 1.5T try for 3T
+            filtered_mprage_mag = filtered_mprage[filtered_mprage.MagStrength == 3.0]
+            scan = filtered_mprage_mag.iloc[0]
+            series_id = scan.SeriesID
+
+            filtered_scan = ida_meta_subj[ida_meta_subj.LONIUID == series_id]
+
+            if filtered_scan.shape[0] < 1:
+                print 'NO IDA Meta: ' + subject_id + ' for visit ' + timepoint + ' - ' + visit_str
+                return None
+
+        original = True
+        ida_scan = filtered_scan.iloc[0]
+        if ida_scan.Scanner.find('Philips') > -1:
+
+            scan = (mprage_meta_subj[
+                        (mprage_meta_subj['Orig/Proc'] == 'Original') & (mprage_meta_subj.SeriesID == series_id)]).iloc[
+                0]
+            sequence = scan.Sequence
+
+        else:  # scan already selected above
+            sequence = scan.Sequence[:scan.Sequence.find('N3') - 2]
+            original = False
+
+        sequence = sequence.replace(' ', '_').replace('/', '_').replace(';', '_').replace('*', '_').replace('(',
+                                                                                                            '_').replace(
+            ')', '_').replace(':', '_')
+
+        return {'Subject_ID': subject_id,
+                'VISCODE': timepoint,
+                'Visit': visit_str,
+                'Sequence': sequence,
+                'Scan_Date': scan.ScanDate,
+                'Study_ID': str(scan.StudyID),
+                'Series_ID': str(scan.SeriesID),
+                'Field_Strength': scan.MagStrength,
+                'Original': original}
+
+    def adni2_image(self, subject_id, timepoint, visit_str, mprage_meta_subj_orig, preferred_field_strength=3.0):
+
+        cond_mprage = ((mprage_meta_subj_orig.Visit == visit_str) & mprage_meta_subj_orig.Sequence.map(lambda x: ((
+                                                                                                                  x.lower().find(
+                                                                                                                      'mprage') > -1) | (
+                                                                                                                  x.lower().find(
+                                                                                                                      'mp-rage') > -1) | (
+                                                                                                                  x.lower().find(
+                                                                                                                      'mp rage') > -1)) & (
+                                                                                                                 x.find(
+                                                                                                                     '2') < 0) & (
+                                                                                                                 x.lower().find(
+                                                                                                                     'repeat') < 0)))
+
+        cond_spgr = ((mprage_meta_subj_orig.Visit == visit_str) & mprage_meta_subj_orig.Sequence.map(
+            lambda x: (x.lower().find('spgr') > -1) & (x.lower().find('acc') < 0) & (x.lower().find('repeat') < 0)))
+
+        filtered_scan = mprage_meta_subj_orig[cond_mprage | cond_spgr]
+        if filtered_scan.shape[0] < 1:
+
+            # TODO Improve this code. Don't make a double verification for the whole condition.
+            # Invert order of filtering: less to more restrictive, check for the repeated as for the MagStrength
+            cond_mprage_rep = ((mprage_meta_subj_orig.Visit == visit_str) & mprage_meta_subj_orig.Sequence.map(
+                lambda x: ((x.lower().find('mprage') > -1) | (x.lower().find('mp-rage') > -1) | (
+                x.lower().find('mp rage') > -1)) & (x.find('2') < 0)))
+
+            cond_spgr_rep = ((mprage_meta_subj_orig.Visit == visit_str) & mprage_meta_subj_orig.Sequence.map(
+                lambda x: (x.lower().find('spgr') > -1) & (x.lower().find('acc') < 0)))
+
+            filtered_scan = mprage_meta_subj_orig[cond_mprage_rep | cond_spgr_rep]
+            if filtered_scan.shape[0] < 1:
+                print 'NO MPRAGE Meta2: ' + subject_id + ' for visit ' + timepoint + ' - ' + visit_str
+                return None
+
+        if len(filtered_scan.MagStrength.unique()) > 1:
+            filtered_scan = filtered_scan[
+                filtered_scan.MagStrength == preferred_field_strength]  # Select preferred_field_strength images
+
+        scan = filtered_scan.iloc[0]
+
+        sequence = scan.Sequence.replace(' ', '_').replace('/', '_').replace(';', '_').replace('*', '_').replace('(',
+                                                                                                                 '_').replace(
+            ')', '_').replace(':', '_')
+
+        return {'Subject_ID': subject_id,
+                'VISCODE': timepoint,
+                'Visit': visit_str,
+                'Sequence': sequence,
+                'Scan_Date': scan.ScanDate,
+                'Study_ID': str(scan.StudyID),
+                'Series_ID': str(scan.SeriesID),
+                'Field_Strength': scan.MagStrength,
+                'Original': True}
+
+    def adnigo_image(self,subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_subj, original_phase):
+
+        if original_phase == 'ADNI1':
+            filtered_mprage = mprage_meta_subj[(mprage_meta_subj['Orig/Proc'] == 'Processed')
+                                               & (mprage_meta_subj.MagStrength == 1.5)
+                                               & (mprage_meta_subj.Visit == visit_str)
+                                               & (mprage_meta_subj.Sequence.map(lambda x: x.endswith('Scaled')))]
+            if filtered_mprage.shape[0] > 0:
+                return self.adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_subj)
+
+        mprage_meta_subj_orig = mprage_meta_subj[mprage_meta_subj['Orig/Proc'] == 'Original']
+        return self.adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig)
+
+    def visits_to_timepoints(self, subject, mprage_meta_subj_orig, adnimerge_subj):
+        from datetime import datetime
+
+        mprage_meta_subj_orig = mprage_meta_subj_orig[mprage_meta_subj_orig['Visit'] != 'ADNI Baseline']
+
+        visits = dict()
+
+        unique_visits = list(mprage_meta_subj_orig.Visit.unique())
+
+        pending_timepoints = []
+
+        # We try to obtain the corresponding image Visit for a given VISCODE
+        for adni_row in adnimerge_subj.iterrows():  # (adnimerge_subj[adnimerge_subj.FLDSTRENG.map(lambda x: x is not '')]).iterrows():
+            visit = adni_row[1]
+            if visit.ORIGPROT == 'ADNI2':
+                if visit.VISCODE == 'bl':
+                    preferred_visit_name = 'ADNI2 Screening MRI-New Pt'
+                elif visit.VISCODE == 'm03':
+                    preferred_visit_name = 'ADNI2 Month 3 MRI-New Pt'
+                elif visit.VISCODE == 'm06':
+                    preferred_visit_name = 'ADNI2 Month 6-New Pt'
+                else:
+                    year = str(int(visit.VISCODE[1:]) / 12)
+                    preferred_visit_name = 'ADNI2 Year ' + year + ' Visit'
+            else:
+                if visit.VISCODE == 'bl':
+                    if visit.ORIGPROT == 'ADNI1':
+                        preferred_visit_name = 'ADNI Screening'
+                    else:  # ADNIGO
+                        preferred_visit_name = 'ADNIGO Screening MRI'
+                elif visit.VISCODE == 'm03':  # Only for ADNIGO Month 3
+                    preferred_visit_name = 'ADNIGO Month 3 MRI'
+                else:
+                    month = int(visit.VISCODE[1:])
+                    if month < 54:
+                        preferred_visit_name = 'ADNI1/GO Month ' + str(month)
+                    else:
+                        preferred_visit_name = 'ADNIGO Month ' + str(month)
+
+            if preferred_visit_name in unique_visits:
+                key_preferred_visit = (visit.VISCODE, visit.COLPROT, visit.ORIGPROT)
+                if key_preferred_visit not in visits.keys():
+                    visits[key_preferred_visit] = preferred_visit_name
+                elif visits[key_preferred_visit] != preferred_visit_name:
+                    print 'Multiple visits for one timepoint!'
+                    print subject
+                    print key_preferred_visit
+                    print visits[key_preferred_visit]
+                    print visit
+                unique_visits.remove(preferred_visit_name)
+                continue
+
+            pending_timepoints.append(visit)
+
+        # Then for images.Visit non matching the expected labels we find the closest date in visits list
+        for visit in unique_visits:
+            image = (mprage_meta_subj_orig[mprage_meta_subj_orig.Visit == visit]).iloc[0]
+            min_db = 100000
+            min_db2 = 0
+            min_visit = None
+            min_visit2 = None
+
+            for timepoint in pending_timepoints:
+                db = self.days_between(image.ScanDate, timepoint.EXAMDATE)
+                if db < min_db:
+                    min_db2 = min_db
+                    min_visit2 = min_visit
+
+                    min_db = db
+                    min_visit = timepoint
+
+            if min_visit is None:
+                print 'No corresponding timepoint in ADNIMERGE for subject ' + subject + ' in visit ' + image.Visit
+                print image
+                continue
+
+            if min_visit2 is not None and min_db > 90:
+                print 'More than 60 days for corresponding timepoint in ADNIMERGE for subject ' + subject + ' in visit ' + image.Visit + ' on ' + image.ScanDate
+                print 'Timepoint 1: ' + min_visit.VISCODE + ' - ' + min_visit.ORIGPROT + ' on ' + min_visit.EXAMDATE + ' (Distance: ' + str(
+                    min_db) + ' days)'
+                print 'Timepoint 2: ' + min_visit2.VISCODE + ' - ' + min_visit2.ORIGPROT + ' on ' + min_visit2.EXAMDATE + ' (Distance: ' + str(
+                    min_db2) + ' days)'
+
+                # If image is too close to the date between two visits we prefer the earlier visit
+                if (datetime.strptime(min_visit.EXAMDATE, "%Y-%m-%d")
+                        > datetime.strptime(image.ScanDate, "%Y-%m-%d")
+                        > datetime.strptime(min_visit2.EXAMDATE, "%Y-%m-%d")):
+                    dif = self.days_between(min_visit.EXAMDATE, min_visit2.EXAMDATE)
+                    if abs((dif / 2.0) - min_db) < 30:
+                        min_visit = min_visit2
+
+                print 'We prefer ' + min_visit.VISCODE
+
+            key_min_visit = (min_visit.VISCODE, min_visit.COLPROT, min_visit.ORIGPROT)
+            if key_min_visit not in visits.keys():
+                visits[key_min_visit] = image.Visit
+            elif visits[key_min_visit] != image.Visit:
+                print 'Multiple visits for one timepoint!'
+                print subject
+                print key_min_visit
+                print visits[key_min_visit]
+                print image.Visit
+
+        return visits
+
+    def compute_t1_paths(self, source_dir, subj_list):
         """
         Select the T1 to use for each subject.
 
-        Adapted from a script of Jorge Samper
         :param source_dir:
         :return: Dictionary that has the following structure
         { subj_id1 : { session1 : { modality: file_name, ...},
@@ -335,11 +626,13 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         from os import path, walk
 
         t1_col_df = ['subj_id', 'session','filename', 'date', 'series_id']
+        t1_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
+                                                         'Study_ID', 'Field_Strength', 'Series_ID', 'Original']
         sessions_list = ['bl']
 
         t1_df = pd.DataFrame(columns = t1_col_df)
         row_to_append = pd.DataFrame(columns = t1_col_df)
-        subjs_list_path = path.join(source_dir, 'clinicalData', 'subjects_list_from_adnimerge.xlsx')
+        subjs_list_path = path.join(source_dir, 'clinicalData', 'subjects_list.xlsx')
         adni_merge_path = path.join(source_dir, 'clinicalData', 'ADNIMERGE.csv')
         adni_screening_path = path.join(source_dir, 'clinicalData', 'ADNI_ScreeningList_8_22_12.csv')
         ida_meta_path = path.join(source_dir, 'clinicalData', 'IDA_MR_METADATA_Listing.csv')
@@ -353,117 +646,97 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         ida_meta = pd.io.parsers.read_csv(ida_meta_path, sep=',')
         mprage_meta = pd.io.parsers.read_csv(mprage_meta_path, sep=',')
 
+        for subj in subjs_list:
+            adnimerge_subj = adni_merge[adni_merge.PTID == subj]
+            # sort the values by examination date
+            adnimerge_subj = adnimerge_subj.sort_values('EXAMDATE')
 
-        for ses in sessions_list:
-            adni_subj = adni_merge[(adni_merge.VISCODE == ses) & adni_merge.PTID.isin(subjs_list)]
+            mprage_meta_subj = mprage_meta[mprage_meta.SubjectID == subj]
+            mprage_meta_subj = mprage_meta_subj.sort_values('ScanDate')
 
-            for row in adni_subj.iterrows():
-                subject = row[1]
-                subj_id = subject.PTID
-                original = True
+            ida_meta_subj = ida_meta[ida_meta.Subject == subj]
 
-                if subject.ORIGPROT == 'ADNI1':
+            mprage_meta_subj_orig = mprage_meta_subj[mprage_meta_subj['Orig/Proc'] == 'Original']
+            visits = self.visits_to_timepoints(subj, mprage_meta_subj, adnimerge_subj)
 
-                    # If the subject came from ADNI1, 1.5T image will be selected
-                    filtered_screening = adni1_screening[adni1_screening.PTID == subj_id]
-                    if filtered_screening.shape[0] < 1:
-                        print 'NO Screening: ' + subj_id
-                        continue
+            keys = visits.keys()
+            keys.sort()
+            for visit_info in visits.keys():
+                if visit_info[1] == 'ADNI1':
+                    image_dict = self.adni1_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj, ida_meta_subj)
+                elif visit_info[1] == 'ADNIGO':
+                    image_dict = self.adnigo_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj, ida_meta_subj,
+                                              visit_info[2])
+                else:  # ADNI2
+                    image_dict = self.adni2_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj_orig)
 
-                    sel_image = filtered_screening.iloc[0]
-                    series_id = sel_image['Series.ID']
+                if image_dict is None:
+                    image_dict = {'Subject_ID': subj,
+                                  'VISCODE': visit_info[0],
+                                  'Visit': visits[visit_info],
+                                  'Sequence': '',
+                                  'Scan_Date': '',
+                                  'Study_ID': '',
+                                  'Series_ID': '',
+                                  'Field_Strength': '',
+                                  'Original': True}
 
-                    filtered_scan = ida_meta[ida_meta.LONIUID == series_id]
-                    if filtered_scan.shape[0] < 1:
-                        print 'NO IDA Meta: ' + subj_id
-                        continue
-                    ida_scan = filtered_scan.iloc[0]
-
-                    if ida_scan.Scanner.find('Philips') > -1:
-
-                        scan = \
-                            (mprage_meta[(mprage_meta['Orig/Proc'] == 'Original') & (mprage_meta.SeriesID == series_id)]).iloc[
-                                0]
-                        sequence = scan.Sequence
-
-                    else:
-                        scan = \
-                            (mprage_meta[(mprage_meta['Orig/Proc'] == 'Processed') & (mprage_meta.SeriesID == series_id)]).iloc[
-                                0]
-                        sequence = scan.Sequence[:scan.Sequence.find('N3') - 2]
-                        original = False
-                else:
-                    visits = ('ADNIGO Screening MRI', 'ADNI2 Screening MRI-New Pt')
-
-                    cond_mprage = ((mprage_meta.SubjectID == subj_id) & mprage_meta.Visit.isin(visits) & (
-                    mprage_meta['Orig/Proc'] == 'Original')
-                                   & (mprage_meta.Sequence.map(lambda x: x.find('MPRAGE') > -1) & mprage_meta.Sequence.map(
-                        lambda x: x.find('2') < 0)))
-
-                    cond_spgr = ((mprage_meta.SubjectID == subj_id) & (mprage_meta.Visit.isin(visits)) & (
-                    mprage_meta['Orig/Proc'] == 'Original')
-                                 & (mprage_meta.Sequence.map(lambda x: x.find('SPGR') > -1) & mprage_meta.Sequence.map(
-                        lambda x: x.lower().find('acc') < 0) & mprage_meta.Sequence.map(lambda x: x.find('REPEAT') < 0)))
-
-                    filtered_scan = mprage_meta[cond_mprage | cond_spgr]
-                    if filtered_scan.shape[0] < 1:
-                        print 'NO MPRAGE Meta: ' + subj_id
-                        continue
-
-                    scan = filtered_scan.iloc[0]
-                    sequence = scan.Sequence
-                    series_id = scan.SeriesID
-
-                date = scan.ScanDate
-                sequence = sequence.replace(' ', '_').replace('/', '_').replace(';', '_').replace('*', '_')
-                row_to_append = pd.DataFrame([[subj_id, ses, sequence, date, str(series_id)]], columns= t1_col_df)
+                row_to_append = pd.DataFrame(image_dict, index=['i', ])
                 t1_df = t1_df.append(row_to_append, ignore_index=True)
 
-            subjects = t1_df
-            is_dicom = []
-            nifti_paths = []
+        images = t1_df
 
-            for row in subjects.iterrows():
-                    subject = row[1]
+        is_dicom = []
+        nifti_paths = []
+        count = 0
+        total = images.shape[0]
 
-                    seq_path = path.join(source_dir, subject['subj_id'], subject['filename'])
+        for row in images.iterrows():
 
-                    series_path = ''
-                    for (dirpath, dirnames, filenames) in walk(seq_path):
-                        found = False
-                        for d in dirnames:
+            image = row[1]
+            seq_path = path.join(source_dir, str(image.Subject_ID), image.Sequence)
 
-                            if d == 'S' + str(subject['series_id']):
-                                series_path = path.join(dirpath, d)
-                                found = True
-                                break
-                        if found:
-                            break
+            count += 1
+            print 'Processing Subject ' + str(image.Subject_ID) + ' - Session ' + image.VISCODE + ', ' + str(
+                count) + ' / ' + str(total)
 
-                    nifti_path = series_path
-                    dicom = True
+            series_path = ''
+            for (dirpath, dirnames, filenames) in walk(seq_path):
+                found = False
+                for d in dirnames:
+                    if d == 'S' + str(image.Series_ID):
+                        series_path = path.join(dirpath, d)
+                        found = True
+                        break
+                if found:
+                    break
 
-                    for (dirpath, dirnames, filenames) in walk(series_path):
-                        for f in filenames:
-                            if f.endswith(".nii"):
-                                dicom = False
-                                nifti_path = path.join(dirpath, f)
-                                break
+            nifti_path = series_path
+            dicom = True
 
-                    is_dicom.append(dicom)
-                    nifti_paths.append(nifti_path)
+            for (dirpath, dirnames, filenames) in walk(series_path):
+                for f in filenames:
+                    if f.endswith(".nii"):
+                        dicom = False
+                        nifti_path = path.join(dirpath, f)
+                        break
 
-                    if nifti_path == '':
-                        print 'Not found ' + str(subject['subj_id'])
+            is_dicom.append(dicom)
+            nifti_paths.append(nifti_path)
 
-            subjects.loc[:, 'dicom'] = pd.Series(is_dicom, index=subjects.index)
-            subjects.loc[:, 'path'] = pd.Series(nifti_paths, index=subjects.index)
+            if nifti_path == '':
+                print 'No image found for ' + str(image.Subject_ID) + ' - session ' + image.VISCODE
 
-        return subjects
+        images.loc[:, 'Is_Dicom'] = pd.Series(is_dicom, index=images.index)
+        images.loc[:, 'Path'] = pd.Series(nifti_paths, index=images.index)
+
+        # Store the paths inside a file called t1_path inside the input directory
+        images.to_csv(path.join(source_dir,'path', 't1_path.tsv'), sep='\t', index=False)
+
+        return images
 
     def compute_fdg_pet_paths(self, source_dir, subjs_list):
         import pandas as pd
-        import csv
         from os import walk, path
 
         pet_fdg_col = ['Subject_ID', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
@@ -471,8 +744,6 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         pet_fdg_df = pd.DataFrame(columns=pet_fdg_col)
         petqc_path = path.join(source_dir, 'clinicalData', 'PETQC.csv')
         pet_meta_list_path = path.join(source_dir,'clinicalData', 'PET_META_LIST.csv')
-        out_images_filename = '/Users/sabrina.fontanella/clinica_io/phase1_pet.csv'
-        output_paths_list = '/Users/sabrina.fontanella/clinica_io/phase2_pet.csv'
 
         try:
             petqc = pd.io.parsers.read_csv(petqc_path, sep=',')
@@ -528,13 +799,9 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
             series_id = sel_image['Series ID']
             image_id = sel_image['Image ID']
 
-
-            row_to_append = pd.DataFrame([[subj_id, str(visit), sequence, date, study_id, str(series_id), str(image_id), original]], columns=pet_fdg_col)
-            #print row_to_append
+            row_to_append = pd.DataFrame([[subj_id, str(visit), sequence, date, str(study_id), str(series_id), str(image_id), original]], columns=pet_fdg_col)
             pet_fdg_df = pet_fdg_df.append(row_to_append, ignore_index=True)
 
-
-        pet_fdg_df.to_csv(out_images_filename, '\t', index=False)
         subjects = pet_fdg_df
         count = 0
         total = subjects.shape[0]
@@ -575,9 +842,120 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                  print 'Not found ' + str(subject.Subject_ID)
 
         subjects.loc[:, 'Path'] = pd.Series(image_folders, index=subjects.index)
-                #subjects.to_csv(output_paths_list, sep='\t', index=False)
 
-        subjects.to_csv(output_paths_list, sep='\t', index=False)
+
+        return subjects
+
+    def compute_av45_pet_paths(self, source_dir, subjs_list):
+        import pandas as pd
+        from os import walk, path
+        import os
+
+        pet_av45_col = ['Subject_ID', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
+                       'Series_ID', 'Image_ID', 'Original']
+
+        pet_av45_df = pd.DataFrame(columns=pet_av45_col)
+
+        total = len(subjs_list)
+        av45qc_path = path.join(source_dir, 'clinicalData', 'AV45QC.csv')
+        av45qc = pd.io.parsers.read_csv(av45qc_path, sep=',')
+        baseline = av45qc[(av45qc.VISCODE2 == 'bl') & (av45qc.PASS == 1) & av45qc.RID.isin(
+            [int(s[-4:]) for s in subjs_list])]
+
+        pet_meta_list_path = path.join(source_dir, 'clinicalData', 'PET_META_LIST.csv')
+        pet_meta_list = pd.io.parsers.read_csv(pet_meta_list_path, sep=',')
+        pet_meta_list = pet_meta_list[pet_meta_list.Visit.map(lambda x: x.find('Baseline') > -1)]
+
+        for row in baseline.iterrows():
+            subject = row[1]
+            zeros_rid = self.fill_zeros(subject.RID, 4)
+            int_image_id = int(subject.LONIUID[1:])
+            filtered_pet_meta = pet_meta_list[pet_meta_list['Subject'].map(lambda x: x.endswith(zeros_rid))]
+
+            if filtered_pet_meta.shape[0] < 1:
+                print 'NO Screening: RID - ' + subject.RID
+                continue
+
+            original_pet_meta = filtered_pet_meta[
+                (filtered_pet_meta['Orig/Proc'] == 'Original') & (filtered_pet_meta['Image ID'] == int_image_id)]
+            if original_pet_meta.shape[0] < 1:
+                print 'NO Screening: RID - ' + subject.RID
+                continue
+
+            original_image = original_pet_meta.iloc[0]
+
+            # It is an early scan and there will be another image for the subject
+            if original_image.Sequence.lower().find('early') > -1:
+                continue
+
+            averaged_pet_meta = filtered_pet_meta[(filtered_pet_meta['Sequence'] == 'AV45 Co-registered, Averaged') & (
+            filtered_pet_meta['Series ID'] == original_image['Series ID'])]
+            if averaged_pet_meta.shape[0] < 1:
+                sel_image = original_image
+                original = True
+            else:
+                sel_image = averaged_pet_meta.iloc[0]
+                original = False
+
+            subj_id = sel_image.Subject
+            visit = sel_image.Visit
+            sequence = sel_image.Sequence
+            sequence = sequence.replace(' ', '_').replace('/', '_').replace(';', '_').replace('*', '_').replace('(',
+                                                                                                                '_').replace(
+                ')', '_').replace(':', '_')
+            date = sel_image['Scan Date']
+            study_id = sel_image['Study ID']
+            series_id = sel_image['Series ID']
+            image_id = sel_image['Image ID']
+
+            row_to_append = pd.DataFrame(
+                [[subj_id, str(visit), sequence, date, str(study_id), str(series_id), str(image_id), original]],
+                columns=pet_av45_col)
+            pet_av45_df = pet_av45_df.append(row_to_append, ignore_index=True)
+
+        subjects = pet_av45_df
+        count = 0
+        total = subjects.shape[0]
+
+        image_folders = []
+        for row in subjects.iterrows():
+
+            subject = row[1]
+            seq_path = path.join(source_dir, str(subject.Subject_ID), subject.Sequence)
+
+            count += 1
+            print 'Processing subject ' + str(subject.Subject_ID) + ', ' + str(count) + ' / ' + str(total)
+
+            image_path = ''
+            for (dirpath, dirnames, filenames) in walk(seq_path):
+                found = False
+                for d in dirnames:
+                    if d == 'I' + str(subject.Image_ID):
+                        image_path = path.join(dirpath, d)
+                        found = True
+                        break
+                if found:
+                    break
+
+            if subject.Original:
+                for (dirpath, dirnames, filenames) in walk(image_path):
+                    for f in filenames:
+                        if f.endswith(".nii"):
+                            image_path = path.join(dirpath, f)
+                            break
+
+            image_folders.append(image_path)
+
+            if image_path == '':
+                print 'Not found ' + str(subject.Subject_ID)
+
+        subjects.loc[:, 'Path'] = pd.Series(image_folders, index=subjects.index)
+
+        av45_csv_path = path.join(source_dir, 'path')
+        if not os.path.exists(av45_csv_path):
+            os.mkdir(av45_csv_path)
+        #subjects.to_csv(path.join(av45_csv_path, 'av45_pet_paths.csv'), sep='\t', index=False)
+
         return subjects
 
     def run_pipeline(self, args):
