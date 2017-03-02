@@ -157,7 +157,6 @@ def log_summary(subject_list, session_list, subject_id, output_dir):
     :param output_dir:
     :return:
     """
-    ## TODO check if log file exits, if yes, add new info for new subjects, not to overwrite it.
     import os
     from datetime import datetime
 
@@ -225,32 +224,32 @@ def write_statistics_per_subject(subject_id, output_dir):
     all_seg_volume = subject_id + '_measure-all-seg.tsv'
     aseg_volume = subject_id + '_measure-aseg-volume.tsv'
 
-    aparc_desikan_lh_volume = subject_id + '_hemisphere-lh_parcellation-desikan_measure-volume.tsv'
-    aparc_desikan_rh_volume = subject_id + '_hemisphere-rh_parcellation-desikan_measure-volume.tsv'
-    aparc_desikan_lh_thickness = subject_id + '_hemisphere-lh_parcellation-desikan_measure-thickness.tsv'
-    aparc_desikan_rh_thickness = subject_id + '_hemisphere-rh_parcellation-desikan_measure-thickness.tsv'
-    aparc_desikan_lh_area = subject_id + '_hemisphere-lh_parcellation-desikan_measure-area.tsv'
-    aparc_desikan_rh_area = subject_id + '_hemisphere-rh_parcellation-desikan_measure-area.tsv'
-    aparc_desikan_lh_meancurv = subject_id + '_hemisphere-lh_parcellation-desikan_measure-meancurv.tsv'
-    aparc_desikan_rh_meancurv = subject_id + '_hemisphere-rh_parcellation-desikan_measure-meancurv.tsv'
+    aparc_desikan_lh_volume = subject_id + '_hemi-lh_parcellation-desikan_measure-volume.tsv'
+    aparc_desikan_rh_volume = subject_id + '_hemi-rh_parcellation-desikan_measure-volume.tsv'
+    aparc_desikan_lh_thickness = subject_id + '_hemi-lh_parcellation-desikan_measure-thickness.tsv'
+    aparc_desikan_rh_thickness = subject_id + '_hemi-rh_parcellation-desikan_measure-thickness.tsv'
+    aparc_desikan_lh_area = subject_id + '_hemi-lh_parcellation-desikan_measure-area.tsv'
+    aparc_desikan_rh_area = subject_id + '_hemi-rh_parcellation-desikan_measure-area.tsv'
+    aparc_desikan_lh_meancurv = subject_id + '_hemi-lh_parcellation-desikan_measure-meancurv.tsv'
+    aparc_desikan_rh_meancurv = subject_id + '_hemi-rh_parcellation-desikan_measure-meancurv.tsv'
 
-    aparc_destrieux_lh_volume = subject_id + '_hemisphere-lh_parcellation-destrieux_measure-volume.tsv'
-    aparc_destrieux_rh_volume = subject_id + '_hemisphere-rh_parcellation-destrieux_measure-volume.tsv'
-    aparc_destrieux_lh_thickness = subject_id + '_hemisphere-lh_parcellation-destrieux_measure-thickness.tsv'
-    aparc_destrieux_rh_thickness = subject_id + '_hemisphere-rh_parcellation-destrieux_measure-thickness.tsv'
-    aparc_destrieux_lh_area = subject_id + '_hemisphere-lh_parcellation-destrieux_measure-area.tsv'
-    aparc_destrieux_rh_area = subject_id + '_hemisphere-rh_parcellation-destrieux_measure-area.tsv'
-    aparc_destrieux_lh_meancurv = subject_id + '_hemisphere-lh_parcellation-destrieux_measure-meancurv.tsv'
-    aparc_destrieux_rh_meancurv = subject_id + '_hemisphere-rh_parcellation-destrieux_measure-meancurv.tsv'
+    aparc_destrieux_lh_volume = subject_id + '_hemi-lh_parcellation-destrieux_measure-volume.tsv'
+    aparc_destrieux_rh_volume = subject_id + '_hemi-rh_parcellation-destrieux_measure-volume.tsv'
+    aparc_destrieux_lh_thickness = subject_id + '_hemi-lh_parcellation-destrieux_measure-thickness.tsv'
+    aparc_destrieux_rh_thickness = subject_id + '_hemi-rh_parcellation-destrieux_measure-thickness.tsv'
+    aparc_destrieux_lh_area = subject_id + '_hemi-lh_parcellation-destrieux_measure-area.tsv'
+    aparc_destrieux_rh_area = subject_id + '_hemi-rh_parcellation-destrieux_measure-area.tsv'
+    aparc_destrieux_lh_meancurv = subject_id + '_hemi-lh_parcellation-destrieux_measure-meancurv.tsv'
+    aparc_destrieux_rh_meancurv = subject_id + '_hemi-rh_parcellation-destrieux_measure-meancurv.tsv'
 
-    aparc_BA_lh_volume = subject_id + '_hemisphere-lh_parcellation-BA_measure-volume.tsv'
-    aparc_BA_rh_volume = subject_id + '_hemisphere-rh_parcellation-BA_measure-volume.tsv'
-    aparc_BA_lh_thickness = subject_id + '_hemisphere-lh_parcellation-BA_measure-thickness.tsv'
-    aparc_BA_rh_thickness = subject_id + '_hemisphere-rh_parcellation-BA_measure-thickness.tsv'
-    aparc_BA_lh_area = subject_id + '_hemisphere-lh_parcellation-BA_measure-area.tsv'
-    aparc_BA_rh_area = subject_id + '_hemisphere-rh_parcellation-BA_measure-area.tsv'
-    aparc_BA_lh_meancurv = subject_id + '_hemisphere-lh_parcellation-BA_measure-meancurv.tsv'
-    aparc_BA_rh_meancurv = subject_id + '_hemisphere-rh_parcellation-BA_measure-meancurv.tsv'
+    aparc_BA_lh_volume = subject_id + '_hemi-lh_parcellation-BA_measure-volume.tsv'
+    aparc_BA_rh_volume = subject_id + '_hemi-rh_parcellation-BA_measure-volume.tsv'
+    aparc_BA_lh_thickness = subject_id + '_hemi-lh_parcellation-BA_measure-thickness.tsv'
+    aparc_BA_rh_thickness = subject_id + '_hemi-rh_parcellation-BA_measure-thickness.tsv'
+    aparc_BA_lh_area = subject_id + '_hemi-lh_parcellation-BA_measure-area.tsv'
+    aparc_BA_rh_area = subject_id + '_hemi-rh_parcellation-BA_measure-area.tsv'
+    aparc_BA_lh_meancurv = subject_id + '_hemi-lh_parcellation-BA_measure-meancurv.tsv'
+    aparc_BA_rh_meancurv = subject_id + '_hemi-rh_parcellation-BA_measure-meancurv.tsv'
 
     # subject_name = subject_list + '_' + session_list
     output_path = os.path.expanduser(output_dir)
