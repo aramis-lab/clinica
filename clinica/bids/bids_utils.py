@@ -115,6 +115,7 @@ def create_participants_df(input_path,out_path, study_name, clinical_spec_path, 
 
     return participant_df
 
+
 def create_sessions_dict(input_path, study_name, clinical_spec_path, bids_ids, name_column_ids, subj_to_remove = []):
     """
     Extract the information regarding the sessions and store them in a dictionary (session M0 only)
@@ -184,6 +185,7 @@ def create_sessions_dict(input_path, study_name, clinical_spec_path, bids_ids, n
 
     return sessions_dict
 
+
 def write_sessions_tsv(out_path, bids_paths, sessions_dict, fields_bids, sessions_list = 'M0'):
     """
 
@@ -215,10 +217,35 @@ def write_sessions_tsv(out_path, bids_paths, sessions_dict, fields_bids, session
             session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False)
 
 
-def create_empty_sessions_tsv(): pass
+def convert_dicom(self, input_path, output_path, bids_name):
+    """
 
+    Convert DICOM images using dcm2niix or dcm2nii
 
-def create_empy_scans_tsv(): pass
+    :param t1_path:
+    :param output_path:
+    :param bids_name:
+    :return:
+    """
+
+    import os
+    import clinica.bids.bids_utils as bids
+    from os import path
+    from glob import glob
+
+    if not os.path.exists(output_path):
+        os.mkdir(output_path)
+    os.system(
+        'dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name + ' ' + input_path)
+
+    # If dcm2niix didn't work use dcm2nii
+    if not os.path.exists(path.join(output_path, bids_name  + '.nii.gz')):
+        print 'Conversion with dcm2niix failed, trying with dcm2nii'
+        # os.system('dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path')
+
+    # If the conversion failed with both tools
+    if not os.path.exists(path.join(output_path, bids_name + '.nii.gz')):
+        print 'Conversion of the dicom failed for ', input_path
 
 
 def get_bids_subjs_list(bids_path):
