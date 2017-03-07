@@ -80,6 +80,11 @@ def pet_pipeline(working_directory=None,
                                              function=zip_nii),
                                 name='zip_pet_suvr')
 
+    zip_binary_mask = pe.Node(niu.Function(input_names=['in_file'],
+                                             output_names=['out_file'],
+                                             function=zip_nii),
+                                name='zip_binary_mask')
+
     zip_masked_pet_suvr = pe.Node(niu.Function(input_names=['in_file'],
                                                output_names=['out_file'],
                                                function=zip_nii),
@@ -116,7 +121,7 @@ def pet_pipeline(working_directory=None,
                               name='zip_pet_pvc')
 
         outputnode = pe.Node(niu.IdentityInterface(fields=['pet_t1_native', 'pvc_pet', 'pvc_pet_mni',
-                                                           'suvr_pvc_pet', 'masked_suvr_pvc_pet']),
+                                                           'suvr_pvc_pet', 'binary_mask', 'masked_suvr_pvc_pet']),
                              name='outputnode')
 
         wf.connect([(inputnode, unzip_pet_image, [('pet_image', 'in_file')]),
@@ -152,6 +157,7 @@ def pet_pipeline(working_directory=None,
 
                     (norm_to_ref, apply_mask, [('suvr_pet_path', 'image')]),
                     (binary_mask, apply_mask, [('out_mask', 'binary_mask')]),
+                    (binary_mask, zip_binary_mask, [('out_mask', 'in_file')]),
 
                     (apply_mask, zip_masked_pet_suvr, [('masked_image_path', 'in_file')]),
 
@@ -159,6 +165,7 @@ def pet_pipeline(working_directory=None,
                     (zip_pet_pvc, outputnode, [('out_file', 'pvc_pet')]),
                     (zip_pet_mni, outputnode, [('out_file', 'pvc_pet_mni')]),
                     (zip_pet_suvr, outputnode, [('out_file', 'suvr_pvc_pet')]),
+                    (zip_binary_mask, outputnode, [('out_file', 'binary_mask')]),
                     (zip_masked_pet_suvr, outputnode, [('out_file', 'masked_suvr_pvc_pet')])
                     ])
     else:
@@ -166,7 +173,7 @@ def pet_pipeline(working_directory=None,
             fields=['pet_image', 't1_image_native', 'mask_tissues', 'flow_fields', 'dartel_template', 'reference_mask']),
             name='inputnode', mandatory_inputs=True)
 
-        outputnode = pe.Node(niu.IdentityInterface(fields=['pet_t1_native', 'pet_mni', 'suvr_pet', 'masked_suvr_pet']),
+        outputnode = pe.Node(niu.IdentityInterface(fields=['pet_t1_native', 'pet_mni', 'suvr_pet', 'binary_mask', 'masked_suvr_pet']),
                              name='outputnode')
 
         wf.connect([(inputnode, unzip_pet_image, [('pet_image', 'in_file')]),
@@ -193,11 +200,13 @@ def pet_pipeline(working_directory=None,
 
                     (norm_to_ref, apply_mask, [('suvr_pet_path', 'image')]),
                     (binary_mask, apply_mask, [('out_mask', 'binary_mask')]),
+                    (binary_mask, zip_binary_mask, [('out_mask', 'in_file')]),
                     (apply_mask, zip_masked_pet_suvr, [('masked_image_path', 'in_file')]),
 
                     (zip_pet_t1_native, outputnode, [('out_file', 'pet_t1_native')]),
                     (zip_pet_mni, outputnode, [('out_file', 'pet_mni')]),
                     (zip_pet_suvr, outputnode, [('out_file', 'suvr_pet')]),
+                    (zip_binary_mask, outputnode, [('out_file', 'binary_mask')]),
                     (zip_masked_pet_suvr, outputnode, [('out_file', 'masked_suvr_pet')])
                     ])
 
