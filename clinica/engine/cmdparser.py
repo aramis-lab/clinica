@@ -389,7 +389,9 @@ class CmdParserStatisticsSurfStat(CmdParser):
         self._args.add_argument("str_format",
                                 help='A str to define the format string for the tsv column , eg, %%s %%s %%s %%f')
         self._args.add_argument("group_label",
-                                help='Current group name')
+                                help='A str for current group name')
+        self._args.add_argument("glm_type",
+                                help='A str based on glm type for the hypothesis, one between group_comparison and correlation' )
         self._args.add_argument("-fwhm", "--full_width_at_half_maximum", type=int, default=20, help='FWHM for the surface smoothing (default=20)')
         self._args.add_argument("-tup", "--threshold_uncorrected_p_value", type=float, default=0.001,
                                 help='Threshold to display the uncorrected Pvalue (default=0.001)')
@@ -412,6 +414,7 @@ class CmdParserStatisticsSurfStat(CmdParser):
                                        args.contrast,
                                        args.str_format,
                                        args.group_label,
+                                       args.glm_type,
                                        full_width_at_half_maximum=args.full_width_at_half_maximum,
                                        threshold_uncorrected_pvalue=args.threshold_uncorrected_p_value,
                                        threshold_corrected_pvalue=args.threshold_corrected_p_value,

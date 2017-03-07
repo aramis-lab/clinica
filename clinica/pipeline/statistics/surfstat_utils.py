@@ -67,6 +67,7 @@ def runmatlab(input_directory,
               subjects_visits_tsv,
               design_matrix, contrast,
               str_format,
+              glm_type,
               path_to_matscript,
               full_width_at_half_maximum,
               threshold_uncorrected_pvalue,
@@ -118,8 +119,8 @@ def runmatlab(input_directory,
     matlab.inputs.paths = path_to_matscript  # CLINICA_HOME, this is the path to add into matlab, addpath
 
     matlab.inputs.script = """
-    clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', %.3f, '%s', %.3f, '%s', %.3f);
-    """ % (input_directory, output_directory, subjects_visits_tsv, design_matrix, contrast, str_format, 'sizeoffwhm',
+    clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', %.3f, '%s', %.3f, '%s', %.3f);
+    """ % (input_directory, output_directory, subjects_visits_tsv, design_matrix, contrast, str_format, glm_type, 'sizeoffwhm',
            full_width_at_half_maximum,
            'thresholduncorrectedpvalue', threshold_uncorrected_pvalue, 'thresholdcorrectedpvalue',
            threshold_corrected_pvalue, 'clusterthreshold',
