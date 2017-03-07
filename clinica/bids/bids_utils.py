@@ -116,6 +116,23 @@ def create_participants_df(input_path,out_path, study_name, clinical_spec_path, 
     return participant_df
 
 
+def contain_dicom(folder_path):
+    """
+    Check if a folder contains DICOM images
+
+    :param folder_path:
+    :return: True if dicom files are found inside the folder, False otherwise
+    """
+    from glob import glob
+    from os import path
+
+    dcm_files = glob(path.join(folder_path, '*.dcm'))
+    if len(dcm_files) > 0:
+        return True
+
+    return False
+
+
 def create_sessions_dict(input_path, study_name, clinical_spec_path, bids_ids, name_column_ids, subj_to_remove = []):
     """
     Extract the information regarding the sessions and store them in a dictionary (session M0 only)
@@ -217,11 +234,8 @@ def write_sessions_tsv(out_path, bids_paths, sessions_dict, fields_bids, session
             session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False)
 
 
-def convert_dicom(self, input_path, output_path, bids_name):
+def dcm_to_nii(input_path, output_path, bids_name, mod_type):
     """
-
-    Convert DICOM images using dcm2niix or dcm2nii
-
     :param t1_path:
     :param output_path:
     :param bids_name:
@@ -236,16 +250,18 @@ def convert_dicom(self, input_path, output_path, bids_name):
     if not os.path.exists(output_path):
         os.mkdir(output_path)
     os.system(
-        'dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name + ' ' + input_path)
+        'dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name + bids.get_bids_suff(mod_type) + ' ' + input_path)
 
     # If dcm2niix didn't work use dcm2nii
-    if not os.path.exists(path.join(output_path, bids_name  + '.nii.gz')):
+    if not os.path.exists(path.join(output_path, bids_name + bids.get_bids_suff(mod_type) + '.nii.gz')):
         print 'Conversion with dcm2niix failed, trying with dcm2nii'
         # os.system('dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path')
 
     # If the conversion failed with both tools
-    if not os.path.exists(path.join(output_path, bids_name + '.nii.gz')):
+    if not os.path.exists(path.join(output_path, bids_name + bids.get_bids_suff(mod_type) + '.nii.gz')):
         print 'Conversion of the dicom failed for ', input_path
+
+
 
 
 def get_bids_subjs_list(bids_path):
@@ -473,14 +489,17 @@ def convert_T1(t1_path, output_path, t1_bids_name):
     from shutil import copy
     import os
 
-    if not os.path.exists(output_path):
-        os.mkdir(output_path)
-    #copy(t1_path, path.join(output_path, t1_bids_name + get_bids_suff('T1') + '.nii.gz'))
-    file_ext = get_ext(t1_path)
-    copy(t1_path, path.join(output_path, t1_bids_name + get_bids_suff('T1') + file_ext))
-    # If  the original image is not compress, compress it
-    if file_ext == '.nii':
-        compress_nii(path.join(output_path, t1_bids_name + get_bids_suff('T1') + file_ext))
+    if contain_dicom(t1_path):
+        print 'DICOM found for t1 in ' + t1_path
+        dcm_to_nii(t1_path, output_path, t1_bids_name, 'T1')
+    else:
+        if not os.path.exists(output_path):
+            os.mkdir(output_path)
+        file_ext = get_ext(t1_path)
+        copy(t1_path, path.join(output_path, t1_bids_name + get_bids_suff('T1') + file_ext))
+        # If  the original image is not compress, compress it
+        if file_ext == '.nii':
+            compress_nii(path.join(output_path, t1_bids_name + get_bids_suff('T1') + file_ext))
 
 
 def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False,False]):
