@@ -794,40 +794,40 @@ class CmdParserDWIProcessing(CmdParser):
 
 
 
-class CmdParserInsightToBids(CmdParser):
+# class CmdParserInsightToBids(CmdParser):
+#
+#     def define_name(self):
+#         self._name = 'insight-to-bids'
+#
+#     def define_options(self):
+#         self._args.add_argument("dataset_directory",
+#                                help='Path of the unorganized INSIGHT directory.')
+#         self._args.add_argument("bids_directory",
+#                                 help='Path to the BIDS directory.')
+#         self._args.add_argument("-co", type=bool, default=False,
+#                                 help='(Optional) Given an already existing BIDS output folder, convert only the clinical data.')
+#
+#     def run_pipeline(self, args):
+#         from clinica.bids import insight_to_bids
+#         insight_to_bids.convert(args.dataset_directory, args.bids_directory)
 
-    def define_name(self):
-        self._name = 'insight-to-bids'
 
-    def define_options(self):
-        self._args.add_argument("dataset_directory",
-                               help='Path of the unorganized INSIGHT directory.')
-        self._args.add_argument("bids_directory",
-                                help='Path to the BIDS directory.')
-        self._args.add_argument("-co", type=bool, default=False,
-                                help='(Optional) Given an already existing BIDS output folder, convert only the clinical data.')
-
-    def run_pipeline(self, args):
-        from clinica.bids import insight_to_bids
-        insight_to_bids.convert(args.dataset_directory, args.bids_directory)
-
-
-class CmdParserPrevDemAlsToBids(CmdParser):
-
-    def define_name(self):
-        self._name = 'prevdemals-to-bids'
-
-    def define_options(self):
-        self._args.add_argument("dataset_directory",
-                               help='Path of the unorganized INSIGHT directory.')
-        self._args.add_argument("bids_directory",
-                                help='Path to the BIDS directory.')
-        self._args.add_argument("-co", type=bool, default=False,
-                                help='(Optional) Given an already existing BIDS output folder, convert only the clinical data.')
-
-    def run_pipeline(self, args):
-        from clinica.bids import prevdemals_to_bids
-        prevdemals_to_bids.convert(args.dataset_directory, args.bids_directory)
+# class CmdParserPrevDemAlsToBids(CmdParser):
+#
+#     def define_name(self):
+#         self._name = 'prevdemals-to-bids'
+#
+#     def define_options(self):
+#         self._args.add_argument("dataset_directory",
+#                                help='Path of the unorganized INSIGHT directory.')
+#         self._args.add_argument("bids_directory",
+#                                 help='Path to the BIDS directory.')
+#         self._args.add_argument("-co", type=bool, default=False,
+#                                 help='(Optional) Given an already existing BIDS output folder, convert only the clinical data.')
+#
+#     def run_pipeline(self, args):
+#         from clinica.bids import prevdemals_to_bids
+#         prevdemals_to_bids.convert(args.dataset_directory, args.bids_directory)
 
 
 class CmdParserHmtcToBids(CmdParser):
@@ -884,7 +884,7 @@ class CmdParserMergeTsv(CmdParser):
 class CmdParserMissingModalities(CmdParser):
 
     def define_name(self):
-        self._name = 'compute-missing-mods'
+        self._name = 'check-missing-mods'
 
     def define_options(self):
         self._args.add_argument("bids_dir",
