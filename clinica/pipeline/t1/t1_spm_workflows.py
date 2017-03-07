@@ -273,7 +273,7 @@ def dartel_pipeline(working_directory=None,
         if len(native_files)%len(flowfield_files) != 0:
             raise ValueError('Length of the list of native space images is not a multiple of the length of the list of flow fields images')
 
-        ffield_files = flowfield_files * (len(native_files)/len(flowfield_files))
+        ffield_files = flowfield_files * int(len(native_files)/len(flowfield_files))
 
         return native_files, ffield_files
 

@@ -30,7 +30,8 @@ def create_tissues_datagrabber(name, subject, session, tissues, base_directory, 
     dg.inputs.sort_filelist = False
     return dg
 
-def create_binary_mask(tissues, threshold=0.5):
+
+def create_binary_mask(tissues, threshold=0.3):
     import nibabel as nib
     import numpy as np
     from os import getcwd
@@ -40,7 +41,7 @@ def create_binary_mask(tissues, threshold=0.5):
         raise RuntimeError('The length of the list of tissues must be greater than zero.')
 
     img_0 = nib.load(tissues[0])
-    shape = img_0.get_data().shape
+    shape = list(img_0.get_data().shape)
 
     data = np.zeros(shape=shape)
 
@@ -57,7 +58,6 @@ def create_binary_mask(tissues, threshold=0.5):
 
 def apply_binary_mask(image, binary_mask):
     import nibabel as nib
-    import numpy as np
     from os import getcwd
     from os.path import join, basename
 
@@ -83,7 +83,7 @@ def create_pvc_mask(tissues):
         raise RuntimeError('The length of the list of tissues must be greater than zero.')
 
     img_0 = nib.load(tissues[0])
-    shape = list(img_0.get_data().shape)
+    shape = img_0.get_data().shape
     background = np.zeros(shape=shape)
 
     shape.append(len(tissues) + 1)
