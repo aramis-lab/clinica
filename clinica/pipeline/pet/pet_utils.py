@@ -30,7 +30,8 @@ def create_tissues_datagrabber(name, subject, session, tissues, base_directory, 
     dg.inputs.sort_filelist = False
     return dg
 
-def create_binary_mask(tissues, threshold=0.5):
+
+def create_binary_mask(tissues, threshold=0.3):
     import nibabel as nib
     import numpy as np
     from os import getcwd
@@ -57,7 +58,6 @@ def create_binary_mask(tissues, threshold=0.5):
 
 def apply_binary_mask(image, binary_mask):
     import nibabel as nib
-    import numpy as np
     from os import getcwd
     from os.path import join, basename
 
