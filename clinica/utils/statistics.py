@@ -161,5 +161,6 @@ def create_new_feature_tsv(subjects_visits_tsv, bids_dir, dest_tsv, added_featur
         raise Exception('There are subjects which are not included in full dataset, please check it out')
 
     new_features = selected_subj[added_features]
+    new_features.reset_index(inplace=True, drop=True)
     all_features = concat([sub_set, new_features], axis=1)
     all_features.to_csv(dest_tsv, sep='\t', index=False)
