@@ -147,7 +147,7 @@ cd(outputdir)
 
 %% Convert the data into SurfStat
 
-if glm_type == 'group_comparison'
+if strcmp(glm_type, 'group_comparison')
     contrastpos    = eval([contrast '(1)']) - eval([ contrast '(2)']); % use char(eval(contrast))
     contrasteffectgroupneg    = eval([contrast '(2)']) - eval([ contrast '(1)']); % use char(eval(contrast))
     factor1 = char(group){1};
@@ -276,7 +276,7 @@ if glm_type == 'group_comparison'
     qvaluesstruct = qval; 
     save('negativeqvaluesstruct.mat','qvaluesstruct');
     
-elif glm_type == 'correlation'
+elif strcmp(glm_type, 'correlation')
     %% if the contrast is continuous variable, dont use term, just use double to fit in the test!!!
     contrastpos    = tsvdata{indexunique};
 
@@ -348,7 +348,7 @@ elif glm_type == 'correlation'
     save('qvaluesstruct.mat','qvaluesstruct');
 
 else
-    disp('Define your own General linear model, e,g MGLM')
+    disp('Check out if you define the glm_type flag correctly, or define your own general linear model, e,g MGLM')
     
 
 end
