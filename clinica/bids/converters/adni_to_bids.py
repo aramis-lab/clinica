@@ -66,7 +66,8 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         bids_subjs_paths = bids.get_bids_subjs_paths(out_path)
 
         # -- Creation of participant.tsv --
-        bids.create_participants(input_path, out_path, 'ADNI', 'clinical_specifications_adni.xlsx', bids_ids)
+        participants_df = bids.create_participants_df(input_path, out_path, 'ADNI', 'clinical_specifications_adni.xlsx', bids_ids)
+        participants_df.to_csv(path.join(out_path, 'participant.tsv'), sep='\t', index=False)
 
         # -- Creation of sessions.tsv --
         logging.info("--Creation of sessions files. --")
@@ -222,6 +223,7 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
 
     def convert_images(self, source_dir, dest_dir, mod_to_add = '', mod_to_update = ''):
         """
+        The function first computes the paths of the right image to be converted and
         :param source_dir:
         :param dest_dir:
         :return:
@@ -235,16 +237,19 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
 
 
         subjs_list_path = path.join(source_dir, 'clinicalData', 'subjects_list.xlsx')
+        pet_visits_corr = {'ADNI Baseline': 'bl', 'ADNI2 Baseline-New Pt': 'bl'}
         subjs_list_excel = pd.read_excel(subjs_list_path)
         subjs_list = subjs_list_excel['PTID']
         adni_merge_path = path.join(source_dir, 'clinicalData', 'ADNIMERGE.csv')
         adni_merge = pd.read_csv(adni_merge_path)
         # Extract the list of sessions from VISCODE column of adnimerge file, remove duplicate and convert to a list
-        #session_list = adni_merge['VISCODE'].drop_duplicates().tolist()
-        session_list = 'bl'
-        sess_list = ['bl']
+        sess_list = adni_merge['VISCODE'].drop_duplicates().tolist()
+
         bids_ids = []
         alpha_ids = []
+
+        if mod_to_add == '' and mod_to_update == '':
+            os.mkdir(dest_dir)
 
         # Compute anat paths
         if (mod_to_add == '' or mod_to_add == 'anat') and (mod_to_update == '' or mod_to_update == 'anat'):
@@ -255,8 +260,7 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
             pet_fdg_paths = self.compute_fdg_pet_paths(source_dir, subjs_list)
             pet_av45_paths = self.compute_av45_pet_paths(source_dir, subjs_list)
 
-        if mod_to_add == '' and mod_to_update=='':
-            os.mkdir(dest_dir)
+
 
         for subj in subjs_list:
             alpha_id = bids.remove_space_and_symbols(subj)
@@ -279,32 +283,25 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                 elif (mod_to_add=='' and mod_to_update=='') or mod_to_add == 'anat' or mod_to_update == 'anat':
                     # Convert T1
                     t1_info = t1_paths[(t1_paths['Subject_ID'] == subjs_list[i]) & (t1_paths['VISCODE'] == ses)]
-                    if t1_info['Is_Dicom'].values[0] == False:
-                        t1_path = t1_info['Path'].values[0]
-                        if len(t1_path) == 0:
-                            print 'No path'
-                        else:
-                            os.mkdir(path.join(ses_path, 'anat'))
-                            bids.convert_T1(t1_path, path.join(ses_path, 'anat'), bids_file_name)
+                    t1_path = t1_info['Path'].values[0]
+                    if t1_path == '':
+                        print 'No path found for subject: ' + subj + ' visit: ' + ses
                     else:
-                        # Convert the image using dcm2nii
-                        print 'Dicom found, needs to be converted'
-                        os.mkdir(path.join(ses_path, 'anat'))
                         t1_path = (t1_info['Path'].values[0]).replace(' ', '\ ')
-                        if len(t1_path)!=0:
+                        os.mkdir(path.join(ses_path, 'anat'))
+                        # Check if is a DICOM
+                        if t1_info['Is_Dicom'].values[0]:
                             self.convert_from_dicom(t1_path, path.join(ses_path, 'anat'), bids_file_name, 'T1')
                         else:
-                            print 'No path for dicom'
+                            bids.convert_T1(t1_path, path.join(ses_path, 'anat'), bids_file_name)
+
                 # Convert pet (fdg and av45)
-                print "Converting fdg and av45"
                 if mod_to_add != '' and mod_to_add !='pet' and mod_to_update!='pet':
+                    print 'Pet skipped...'
                     pass
                 elif mod_to_add=='' or mod_to_add == 'pet' or mod_to_update == 'pet':
                     pet_fdg_info = pet_fdg_paths
-                    visit_session = {'ADNI Baseline': 'bl', 'ADNI2 Baseline-New Pt': 'bl'}
                     images = pet_fdg_info
-                    count = 0
-                    total = images.shape[0]
 
                     # Check if the pet folder already exist
                     if os.path.isdir(path.join(ses_path, 'pet')):
@@ -315,50 +312,53 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                         shutil.rmtree(path.join(ses_path, 'pet'))
 
 
-                    pet_fdg_info = pet_fdg_paths[(pet_fdg_paths['Subject_ID'] == subjs_list[i])]
-                    original = pet_fdg_info['Original'].values
-                    if len(original) > 0:
-                        if pet_fdg_info['Original'].values[0] == True:
-                            os.mkdir(path.join(ses_path, 'pet'))
-                            pet_path = pet_fdg_info['Path'].values[0]
+                    pet_fdg_info = pet_fdg_paths[(pet_fdg_paths['Subject_ID'] == subjs_list[i]) & (pet_fdg_paths['Visit'] == ses)]
+                    if len(pet_fdg_info['Path']) != 0:
+                        original = pet_fdg_info['Original'].values
+                        if len(original) > 0:
+                            if pet_fdg_info['Original'].values[0]:
+                                os.mkdir(path.join(ses_path, 'pet'))
+                                pet_path = pet_fdg_info['Path'].values[0]
 
-                            self.center_nifti_origin(pet_path,
-                                                path.join(path.join(ses_path, 'pet'), bids_file_name + '_task-rest_acq-fdg_pet.nii.gz'))
+                                self.center_nifti_origin(pet_path,
+                                                    path.join(path.join(ses_path, 'pet'), bids_file_name + '_task-rest_acq-fdg_pet.nii.gz'))
+                            else:
+                                pet_path = pet_fdg_info['Path'].values[0].replace(' ', '\ ')
+                                self.convert_from_dicom(pet_path,  path.join(ses_path, 'pet'), bids_file_name+'_task-rest_acq-fdg', 'pet')
                         else:
-                            pet_path = pet_fdg_info['Path'].values[0].replace(' ', '\ ')
-                            self.convert_from_dicom(pet_path,  path.join(ses_path, 'pet'), bids_file_name+'_task-rest_acq-fdg', 'pet')
+                            print 'Original not found for ', subjs_list[i]
                     else:
-                        print 'Original not found for ', subjs_list[i]
+                        print 'No pet_fdg path found for subject: ' + subj + ' visit: ' + ses
+
 
                  # Convert pet_av45
                     pet_av45_info = pet_av45_paths
-                    visit_session = {'ADNI Baseline': 'bl', 'ADNI2 Baseline-New Pt': 'bl'}
                     images = pet_av45_info
-                    count = 0
-                    total = images.shape[0]
 
                     # Check if the pet folder already exist
                     if os.path.isdir(path.join(ses_path, 'pet')):
                         if mod_to_add != '':
                             raise IOError('PET modality found. For updating the dataset use the flag -updated_mod')
 
-
-                    pet_av45_info = pet_av45_paths[(pet_av45_paths['Subject_ID'] == subjs_list[i])]
+                    pet_av45_info = pet_av45_paths[(pet_av45_paths['Subject_ID'] == subjs_list[i]) & (pet_av45_paths['Visit'] == ses)]
                     original = pet_av45_info['Original'].values
-                    if len(original) > 0:
-                        if pet_av45_info['Original'].values[0] == True:
-                            if not os.path.exists(path.join(ses_path, 'pet')):
-                                os.mkdir(path.join(ses_path, 'pet'))
-                            pet_path = pet_av45_info['Path'].values[0]
+                    if len(pet_av45_info['Path']) != 0:
+                        if len(original) > 0:
+                            if pet_av45_info['Original'].values[0] == True:
+                                if not os.path.exists(path.join(ses_path, 'pet')):
+                                    os.mkdir(path.join(ses_path, 'pet'))
+                                pet_path = pet_av45_info['Path'].values[0]
 
-                            self.center_nifti_origin(pet_path,
-                                                     path.join(path.join(ses_path, 'pet'),
-                                                               bids_file_name + '_task-rest_acq-av45_pet.nii.gz'))
+                                self.center_nifti_origin(pet_path,
+                                                         path.join(path.join(ses_path, 'pet'),
+                                                                   bids_file_name + '_task-rest_acq-av45_pet.nii.gz'))
+                            else:
+                                pet_path = pet_av45_info['Path'].values[0].replace(' ', '\ ')
+                                self.convert_from_dicom(pet_path, path.join(ses_path, 'pet'), bids_file_name+'_task-rest_acq-av45', 'pet')
                         else:
-                            pet_path = pet_av45_info['Path'].values[0].replace(' ', '\ ')
-                            self.convert_from_dicom(pet_path, path.join(ses_path, 'pet'), bids_file_name+'_task-rest_acq-av45', 'pet')
+                            print 'Original not found for ', subjs_list[i]
                     else:
-                        print 'Original not found for ', subjs_list[i]
+                        print 'No pet av45 path found for subject: ' + subj + ' visit: ' + ses
 
     def center_nifti_origin(self, input_image, output_image):
         import nibabel as nib
@@ -625,13 +625,10 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         import pandas as pd
         from os import path, walk
 
-        t1_col_df = ['subj_id', 'session','filename', 'date', 'series_id']
         t1_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
                                                          'Study_ID', 'Field_Strength', 'Series_ID', 'Original']
-        sessions_list = ['bl']
 
         t1_df = pd.DataFrame(columns = t1_col_df)
-        row_to_append = pd.DataFrame(columns = t1_col_df)
         subjs_list_path = path.join(source_dir, 'clinicalData', 'subjects_list.xlsx')
         adni_merge_path = path.join(source_dir, 'clinicalData', 'ADNIMERGE.csv')
         adni_screening_path = path.join(source_dir, 'clinicalData', 'ADNI_ScreeningList_8_22_12.csv')
@@ -648,7 +645,7 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
 
         for subj in subjs_list:
             adnimerge_subj = adni_merge[adni_merge.PTID == subj]
-            # sort the values by examination date
+            # Sort the values by examination date
             adnimerge_subj = adnimerge_subj.sort_values('EXAMDATE')
 
             mprage_meta_subj = mprage_meta[mprage_meta.SubjectID == subj]
@@ -744,6 +741,7 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         pet_fdg_df = pd.DataFrame(columns=pet_fdg_col)
         petqc_path = path.join(source_dir, 'clinicalData', 'PETQC.csv')
         pet_meta_list_path = path.join(source_dir,'clinicalData', 'PET_META_LIST.csv')
+        pet_visits_corr = {'ADNI Baseline': 'bl', 'ADNI2 Baseline-New Pt': 'bl'}
 
         try:
             petqc = pd.io.parsers.read_csv(petqc_path, sep=',')
@@ -789,7 +787,7 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                 original = False
 
             subj_id = sel_image.Subject
-            visit = sel_image.Visit
+            visit = pet_visits_corr[sel_image.Visit]
             sequence = sel_image.Sequence
             sequence = sequence.replace(' ', '_').replace('/', '_').replace(';', '_').replace('*', '_').replace('(',
                                                                                                                     '_').replace(
@@ -843,7 +841,6 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
 
         subjects.loc[:, 'Path'] = pd.Series(image_folders, index=subjects.index)
 
-
         return subjects
 
     def compute_av45_pet_paths(self, source_dir, subjs_list):
@@ -857,6 +854,7 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         pet_av45_df = pd.DataFrame(columns=pet_av45_col)
 
         total = len(subjs_list)
+        pet_visits_corr = {'ADNI Baseline': 'bl', 'ADNI2 Baseline-New Pt': 'bl'}
         av45qc_path = path.join(source_dir, 'clinicalData', 'AV45QC.csv')
         av45qc = pd.io.parsers.read_csv(av45qc_path, sep=',')
         baseline = av45qc[(av45qc.VISCODE2 == 'bl') & (av45qc.PASS == 1) & av45qc.RID.isin(
@@ -898,7 +896,7 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                 original = False
 
             subj_id = sel_image.Subject
-            visit = sel_image.Visit
+            visit = pet_visits_corr[sel_image.Visit]
             sequence = sel_image.Sequence
             sequence = sequence.replace(' ', '_').replace('/', '_').replace(';', '_').replace('*', '_').replace('(',
                                                                                                                 '_').replace(
