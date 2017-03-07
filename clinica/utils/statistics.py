@@ -153,8 +153,9 @@ def create_new_feature_tsv(subjects_visits_tsv, bids_dir, dest_tsv, added_featur
         raise Exception('participants.tsv not found')
     sub_set = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
     all_set = pd.io.parsers.read_csv(join(bids_dir, 'participants.tsv'), sep='\t')
-    selected_subj = all_set[all_set.participant_id.isin(list(sub_set.participant_id))]
-    if len(sub_set.participant_id) != len(selected_subj.participant_id):
+    all_set.set_index("participant_id", inplace=True)
+    selected_subj = all_set.loc[list(sub_set.participant_id)]
+    if sub_set.shape[0] != selected_subj.shape[0]:
         missing_subj = set(list(sub_set.participant_id)) - set(list(selected_subj.participant_id))
         msg = "The missing subjects are %s" % list(missing_subj)
         logging.info(msg)
