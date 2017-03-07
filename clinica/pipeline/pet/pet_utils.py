@@ -40,7 +40,7 @@ def create_binary_mask(tissues, threshold=0.5):
         raise RuntimeError('The length of the list of tissues must be greater than zero.')
 
     img_0 = nib.load(tissues[0])
-    shape = img_0.get_data().shape
+    shape = list(img_0.get_data().shape)
 
     data = np.zeros(shape=shape)
 
@@ -83,7 +83,7 @@ def create_pvc_mask(tissues):
         raise RuntimeError('The length of the list of tissues must be greater than zero.')
 
     img_0 = nib.load(tissues[0])
-    shape = list(img_0.get_data().shape)
+    shape = img_0.get_data().shape
     background = np.zeros(shape=shape)
 
     shape.append(len(tissues) + 1)

@@ -72,7 +72,7 @@ def nested_folds(gram_matrix, y, c_range, balanced=False, outer_folds=10, inner_
 
     inner_pool = ThreadPool(n_threads)
 
-    skf = StratifiedKFold(y, n_folds=outer_folds, shuffle=True)
+    skf = StratifiedKFold(y, n_folds=outer_folds, shuffle=True, random_state=12346)
     outer_cv = list(skf)
 
     #print 'Launching inner threads'
@@ -137,10 +137,10 @@ def nested_folds(gram_matrix, y, c_range, balanced=False, outer_folds=10, inner_
 
     svc.fit(gram_matrix, y)
 
-    return y_hat, svc.dual_coef_, svc.support_, best_c
+    return y_hat, svc.dual_coef_, svc.support_, svc.intercept_, best_c
 
 
-def svm_binary_classification(image_list, diagnosis_list, output_directory, kernel_function=None, existing_gram_matrix=None, mask_zeros=True, scale_data=False, balanced=False, outer_folds=10, inner_folds=10, n_threads=10, c_range=np.logspace(-6, 2, 17), save_gram_matrix=False, save_subject_classification=False, save_dual_coefficients=False, save_original_weights=False, save_features_image=True):
+def svm_binary_classification(image_list, diagnosis_list, output_directory, kernel_function=None, existing_gram_matrix=None, mask_zeros=True, scale_data=False, balanced=False, outer_folds=10, inner_folds=10, n_threads=10, c_range=np.logspace(-6, 2, 17), save_gram_matrix=False, save_subject_classification=False, save_dual_coefficients=False, scaler=None, data_mask=None, save_original_weights=False, save_features_image=True):
 
     if (kernel_function is None and existing_gram_matrix is None) | (kernel_function is not None and existing_gram_matrix is not None):
         raise ValueError('Kernel_function and existing_gram_matrix are mutually exclusive parameters.')
@@ -194,7 +194,7 @@ def svm_binary_classification(image_list, diagnosis_list, output_directory, kern
             classification_str = dx1 + '_vs_' + dx2 + ('_balanced' if balanced else '_not_balanced')
             print 'Running ' + dx1 + ' vs ' + dx2 + ' classification'
 
-            y_hat, dual_coefficients, sv_indices, c = nested_folds(gm, y, c_range, balanced=balanced, outer_folds=outer_folds, inner_folds=inner_folds, n_threads=n_threads)
+            y_hat, dual_coefficients, sv_indices, intersect, c = nested_folds(gm, y, c_range, balanced=balanced, outer_folds=outer_folds, inner_folds=inner_folds, n_threads=n_threads)
 
             evaluation = evaluate_prediction(y, y_hat)
 
@@ -213,8 +213,10 @@ def svm_binary_classification(image_list, diagnosis_list, output_directory, kern
             if save_dual_coefficients:
                 np.save(join(output_directory, classification_str + '__dual_coefficients'), dual_coefficients[0])
                 np.save(join(output_directory, classification_str + '__sv_indices'), sv_indices)
+                np.save(join(output_directory, classification_str + '__intersect'), intersect)
 
-            weights_orig = features_weights(current_subjects, dual_coefficients[0], sv_indices)
+            if save_original_weights or save_features_image:
+                weights_orig = features_weights(current_subjects, dual_coefficients[0], sv_indices, scaler, data_mask)
 
             if save_original_weights:
                 np.save(join(output_directory, classification_str + '__weights'), weights_orig)
