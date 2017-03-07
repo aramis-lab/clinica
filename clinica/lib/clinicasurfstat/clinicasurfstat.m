@@ -1,7 +1,7 @@
-function clinicasurfstat( inputdir, outputdir, tsvfile, designmatrix, contrast, strformat, varargin)
+function clinicasurfstat( inputdir, outputdir, tsvfile, designmatrix, contrast, strformat, glm_type, varargin)
 % Saves all the output images for group analysis of T1 images smoothed data
 %
-% Usage: [some outputs] = clinicasurfstat( inputdir, outputdir, tsvfile, designmatrix, contrast, strformat, varargin)
+% Usage: [some outputs] = clinicasurfstat( inputdir, outputdir, tsvfile, designmatrix, contrast, strformat, glm_type, varargin)
 %
 % - inputdir:  the output file from recon-all pipeline,specifically, files: ?h.thickness.fwhm**.mgh.
 % - outputdir: the directory to contain the result images.
@@ -27,10 +27,10 @@ function clinicasurfstat( inputdir, outputdir, tsvfile, designmatrix, contrast, 
 %  Written 16/06/2016
 
 %% define the default value for inputs
-if nargin < 6
-    error('the function at least has 5 required inputs!');
+if nargin < 7
+    error('the function at least has 7 required inputs!');
 end
-if nargin == 7
+if nargin == 8
     error('Number of inputs is wrong!')
 end
 sizeoffwhm = 20;
@@ -114,14 +114,14 @@ for indexsubject = 1 : nrsubject
         if strfind(contrast, '-')
             abscontrast = contrast(2:end);
         else
-            abscontrast = contrast
+            abscontrast = contrast;
         end
         indexunique = strfind(firstline, abscontrast);
         indexunique = find(not(cellfun('isempty', indexunique)));
         if iscell(tsvdata{indexunique})
             uniquelabels = unique(tsvdata{indexunique});
             if length(uniquelabels) ~= 2
-                error('there should be just 2 different groups!')
+                error('For group comparison, there should be just 2 different groups!')
             end
         end
     end
@@ -131,7 +131,7 @@ end
 %% Load average surface & creation of the mask :
 averagesurface = SurfStatReadSurf( { strcat(surfstathome,'/fsaverage/lh.pial') , strcat(surfstathome,'/fsaverage/rh.pial') } );
 thicksubject = thicksubject';
-mask = thicksubject(:,1)>0;
+mask = thicksubject(:,1)>0;  % alternatively, we can use SurfStatMaskCut to extract the mask too, but this mask includes still the brain stem
 mask = mask';
 
 % create the Term that will be defined as contrast
@@ -147,7 +147,7 @@ cd(outputdir)
 
 %% Convert the data into SurfStat
 
-if iscell(tsvdata{indexunique})
+if glm_type == 'group_comparison'
     contrastpos    = eval([contrast '(1)']) - eval([ contrast '(2)']); % use char(eval(contrast))
     contrasteffectgroupneg    = eval([contrast '(2)']) - eval([ contrast '(1)']); % use char(eval(contrast))
     factor1 = char(group){1};
@@ -276,7 +276,7 @@ if iscell(tsvdata{indexunique})
     qvaluesstruct = qval; 
     save('negativeqvaluesstruct.mat','qvaluesstruct');
     
-else
+elif glm_type == 'correlation'
     %% if the contrast is continuous variable, dont use term, just use double to fit in the test!!!
     contrastpos    = tsvdata{indexunique};
 
@@ -346,6 +346,9 @@ else
     disp('FDR'); toc;
     qvaluesstruct = qval; 
     save('qvaluesstruct.mat','qvaluesstruct');
+
+else
+    disp('Define your own General linear model, e,g MGLM')
     
 
 end

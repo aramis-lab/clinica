@@ -231,6 +231,7 @@ def write_volumetric_summary(output_dir, subjects_visits_tsv):
     :param subjects_visits_tsv:
     :return:
     """
+    ### TODO, this should be done after we define the name of the tsv file for each subject, otherwise this will be changed often....
     import nipype.pipeline.engine as pe
     from nipype.interfaces.utility import Function
     import pandas as pd
