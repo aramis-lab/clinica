@@ -234,6 +234,7 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         from os import path
         import pandas as pd
         import shutil
+        import numpy as np
 
 
         subjs_list_path = path.join(source_dir, 'clinicalData', 'subjects_list.xlsx')
@@ -283,25 +284,28 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                 elif (mod_to_add=='' and mod_to_update=='') or mod_to_add == 'anat' or mod_to_update == 'anat':
                     # Convert T1
                     t1_info = t1_paths[(t1_paths['Subject_ID'] == subjs_list[i]) & (t1_paths['VISCODE'] == ses)]
-                    t1_path = t1_info['Path'].values[0]
-                    if t1_path == '':
-                        print 'No path found for subject: ' + subj + ' visit: ' + ses
+
+                    if len(t1_info)==0:
+                        print 'No t1 found for subject: ' + subj + ' visit: ' + ses
                     else:
                         t1_path = (t1_info['Path'].values[0]).replace(' ', '\ ')
+
+                        # Check if the pet folder already exist
+                        if os.path.isdir(path.join(ses_path, 'anat')):
+                            if mod_to_add != '':
+                                raise IOError('anat modality found. For updating the dataset use the flag -updated_mod')
+
+                            print 'Removing the old anat folder...'
+                            shutil.rmtree(path.join(ses_path, 'anat'))
+
                         os.mkdir(path.join(ses_path, 'anat'))
-                        # Check if is a DICOM
-                        if t1_info['Is_Dicom'].values[0]:
-                            self.convert_from_dicom(t1_path, path.join(ses_path, 'anat'), bids_file_name, 'T1')
-                        else:
-                            bids.convert_T1(t1_path, path.join(ses_path, 'anat'), bids_file_name)
+                        bids.convert_T1(t1_path, path.join(ses_path, 'anat'), bids_file_name)
 
                 # Convert pet (fdg and av45)
-                if mod_to_add != '' and mod_to_add !='pet' and mod_to_update!='pet':
-                    print 'Pet skipped...'
-                    pass
-                elif mod_to_add=='' or mod_to_add == 'pet' or mod_to_update == 'pet':
+                if mod_to_add != '' and mod_to_add != 'pet':
+                        pass
+                elif (mod_to_add == '' and mod_to_update == '') or mod_to_add == 'pet' or mod_to_update == 'pet':
                     pet_fdg_info = pet_fdg_paths
-                    images = pet_fdg_info
 
                     # Check if the pet folder already exist
                     if os.path.isdir(path.join(ses_path, 'pet')):
@@ -310,7 +314,6 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
 
                         print 'Removing the old PET folder...'
                         shutil.rmtree(path.join(ses_path, 'pet'))
-
 
                     pet_fdg_info = pet_fdg_paths[(pet_fdg_paths['Subject_ID'] == subjs_list[i]) & (pet_fdg_paths['Visit'] == ses)]
                     if len(pet_fdg_info['Path']) != 0:
@@ -333,7 +336,6 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
 
                  # Convert pet_av45
                     pet_av45_info = pet_av45_paths
-                    images = pet_av45_info
 
                     # Check if the pet folder already exist
                     if os.path.isdir(path.join(ses_path, 'pet')):
@@ -616,14 +618,12 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         Select the T1 to use for each subject.
 
         :param source_dir:
-        :return: Dictionary that has the following structure
-        { subj_id1 : { session1 : { modality: file_name, ...},
-                       session2 : {...}}
-          subj_id2 : ....}
+        :return: A Pandas dataframe
         """
 
         import pandas as pd
         from os import path, walk
+        import numpy as np
 
         t1_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
                                                          'Study_ID', 'Field_Strength', 'Series_ID', 'Original']
@@ -725,10 +725,14 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                 print 'No image found for ' + str(image.Subject_ID) + ' - session ' + image.VISCODE
 
         images.loc[:, 'Is_Dicom'] = pd.Series(is_dicom, index=images.index)
+
         images.loc[:, 'Path'] = pd.Series(nifti_paths, index=images.index)
 
-        # Store the paths inside a file called t1_path inside the input directory
-        images.to_csv(path.join(source_dir,'path', 't1_path.tsv'), sep='\t', index=False)
+        # Drop all the lines that have the Path section empty
+        images = images.drop(images[images.Path == ''].index)
+
+        # Store the paths inside a file called t1_paths inside the input directory
+        images.to_csv(path.join(source_dir,'path', 't1_paths.tsv'), sep='\t', index=False)
 
         return images
 
