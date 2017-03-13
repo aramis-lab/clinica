@@ -262,8 +262,6 @@ def dcm_to_nii(input_path, output_path, bids_name, mod_type):
         print 'Conversion of the dicom failed for ', input_path
 
 
-
-
 def get_bids_subjs_list(bids_path):
     """
     Given a BIDS compliant dataset, returns the list of all the subjects available
@@ -500,6 +498,36 @@ def convert_T1(t1_path, output_path, t1_bids_name):
         # If  the original image is not compress, compress it
         if file_ext == '.nii':
             compress_nii(path.join(output_path, t1_bids_name + get_bids_suff('T1') + file_ext))
+
+
+def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name , acquisition = ''):
+    from os import path
+    from shutil import copy
+    import os
+
+    if acquisition!='':
+        pet_name = bids_name+'_task-'+task_name+'_acq-',acquisition
+    else:
+        pet_name = bids_name+'_task-'+task_name
+
+    if contain_dicom(folder_input):
+        dcm_to_nii(folder_input, folder_output, pet_name, 'pet')
+    else:
+        if not os.path.exists(folder_output):
+            os.mkdir(folder_output)
+
+            #If a prefixed pet is chosen for the conversion use it, otherwise extracts the pet file available into the folder
+            if pet_name!='':
+                pet_path = path.join(folder_input, pet_name)
+            else:
+                print 'WARNING: feature to be implemented'
+
+            file_ext = get_ext(pet_path)
+            copy(pet_path, path.join(folder_output, pet_name + get_bids_suff('pet') + file_ext))
+            # If  the original image is not compress, compress it
+            if file_ext == '.nii':
+                compress_nii(path.join(folder_output, pet_name + get_bids_suff('pet') + file_ext))
+
 
 
 def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False,False]):

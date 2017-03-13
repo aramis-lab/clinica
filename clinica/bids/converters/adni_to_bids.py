@@ -11,7 +11,7 @@ __maintainer__ = "Sabrina Fontanella"
 __email__ = "sabrina.fontanella@icm-institute.org"
 __status__ = "Development"
 
-#@ToDo: !!!refactoring the code!!!
+
 class ADNI_TO_BIDS(Converter, CmdParser) :
 
     def define_name(self):
@@ -221,7 +221,7 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         d2 = datetime.strptime(d2, "%Y-%m-%d")
         return abs((d2 - d1).days)
 
-    def convert_images(self, source_dir, dest_dir, mod_to_add = '', mod_to_update = ''):
+    def convert_images(self, source_dir, dest_dir, paths_files_dir,  mod_to_add = '', mod_to_update = ''):
         """
         The function first computes the paths of the right image to be converted and
         :param source_dir:
@@ -234,11 +234,9 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         from os import path
         import pandas as pd
         import shutil
-        import numpy as np
-
+        from glob import glob
 
         subjs_list_path = path.join(source_dir, 'clinicalData', 'subjects_list.xlsx')
-        pet_visits_corr = {'ADNI Baseline': 'bl', 'ADNI2 Baseline-New Pt': 'bl'}
         subjs_list_excel = pd.read_excel(subjs_list_path)
         subjs_list = subjs_list_excel['PTID']
         adni_merge_path = path.join(source_dir, 'clinicalData', 'ADNIMERGE.csv')
@@ -248,6 +246,10 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
 
         bids_ids = []
         alpha_ids = []
+
+        print "*******************************"
+        print "ADNI to BIDS converter"
+        print "*******************************"
 
         if mod_to_add == '' and mod_to_update == '':
             os.mkdir(dest_dir)
@@ -261,8 +263,6 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
             pet_fdg_paths = self.compute_fdg_pet_paths(source_dir, subjs_list)
             pet_av45_paths = self.compute_av45_pet_paths(source_dir, subjs_list)
 
-
-
         for subj in subjs_list:
             alpha_id = bids.remove_space_and_symbols(subj)
             bids_id = 'sub-ADNI' + alpha_id
@@ -272,6 +272,7 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                 os.mkdir(path.join(dest_dir, bids_id))
 
         for i in range(0, len(subjs_list)):
+            print 'Converting subject ' + subjs_list[i]
             for ses in sess_list:
                 bids_file_name = bids_ids[i] + '_ses-' + ses
                 bids_ses_id = 'ses-' + ses
@@ -284,12 +285,10 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                 elif (mod_to_add=='' and mod_to_update=='') or mod_to_add == 'anat' or mod_to_update == 'anat':
                     # Convert T1
                     t1_info = t1_paths[(t1_paths['Subject_ID'] == subjs_list[i]) & (t1_paths['VISCODE'] == ses)]
-
                     if len(t1_info)==0:
-                        print 'No t1 found for subject: ' + subj + ' visit: ' + ses
+                        print 'No T1 found for the visit '+ ses
                     else:
                         t1_path = (t1_info['Path'].values[0]).replace(' ', '\ ')
-
                         # Check if the pet folder already exist
                         if os.path.isdir(path.join(ses_path, 'anat')):
                             if mod_to_add != '':
@@ -297,10 +296,13 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
 
                             print 'Removing the old anat folder...'
                             shutil.rmtree(path.join(ses_path, 'anat'))
+                            print 'Removed!'
 
                         os.mkdir(path.join(ses_path, 'anat'))
                         bids.convert_T1(t1_path, path.join(ses_path, 'anat'), bids_file_name)
-
+                        t1_bids_path = glob(path.join(path.join(ses_path, 'anat'), bids_file_name+bids.get_bids_suff('T1')+'.nii.gz'))[0]
+                        # Correct the t1 image and overwrite the previous one
+                        self.center_nifti_origin(t1_bids_path, t1_bids_path)
                 # Convert pet (fdg and av45)
                 if mod_to_add != '' and mod_to_add != 'pet':
                         pass
@@ -332,7 +334,6 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                             print 'Original not found for ', subjs_list[i]
                     else:
                         print 'No pet_fdg path found for subject: ' + subj + ' visit: ' + ses
-
 
                  # Convert pet_av45
                     pet_av45_info = pet_av45_paths
@@ -369,15 +370,12 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         img = nib.load(input_image)
         canonical_img = nib.as_closest_canonical(img)
         hd = canonical_img.header
-        # if hd['quatern_b'] != 0 or hd['quatern_c'] != 0 or hd['quatern_d'] != 0:
-        #     print 'Warning: Not all values in quatern are equal to zero'
-
+        if hd['quatern_b'] != 0 or hd['quatern_c'] != 0 or hd['quatern_d'] != 0:
+            print 'Warning: Not all values in quatern are equal to zero'
         qform = np.zeros((4, 4))
-
         for i in range(1, 4):
             qform[i - 1, i - 1] = hd['pixdim'][i]
             qform[i - 1, 3] = -1.0 * hd['pixdim'][i] * hd['dim'][i] / 2.0
-
         new_img = nib.Nifti1Image(canonical_img.get_data(caching='unchanged'), qform)
         nib.save(new_img, output_image)
 
@@ -623,7 +621,6 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
 
         import pandas as pd
         from os import path, walk
-        import numpy as np
 
         t1_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
                                                          'Study_ID', 'Field_Strength', 'Series_ID', 'Original']
@@ -639,7 +636,6 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         subjs_list = subjs_list_excel['PTID']
 
         adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
-        adni1_screening = pd.io.parsers.read_csv(adni_screening_path, sep=',')
         ida_meta = pd.io.parsers.read_csv(ida_meta_path, sep=',')
         mprage_meta = pd.io.parsers.read_csv(mprage_meta_path, sep=',')
 
@@ -682,11 +678,9 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                 t1_df = t1_df.append(row_to_append, ignore_index=True)
 
         images = t1_df
-
         is_dicom = []
         nifti_paths = []
         count = 0
-        total = images.shape[0]
 
         for row in images.iterrows():
 
@@ -694,8 +688,8 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
             seq_path = path.join(source_dir, str(image.Subject_ID), image.Sequence)
 
             count += 1
-            print 'Processing Subject ' + str(image.Subject_ID) + ' - Session ' + image.VISCODE + ', ' + str(
-                count) + ' / ' + str(total)
+            # print 'Processing Subject ' + str(image.Subject_ID) + ' - Session ' + image.VISCODE + ', ' + str(
+            #     count) + ' / ' + str(total)
 
             series_path = ''
             for (dirpath, dirnames, filenames) in walk(seq_path):
@@ -721,16 +715,11 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
             is_dicom.append(dicom)
             nifti_paths.append(nifti_path)
 
-            if nifti_path == '':
-                print 'No image found for ' + str(image.Subject_ID) + ' - session ' + image.VISCODE
-
         images.loc[:, 'Is_Dicom'] = pd.Series(is_dicom, index=images.index)
-
         images.loc[:, 'Path'] = pd.Series(nifti_paths, index=images.index)
 
         # Drop all the lines that have the Path section empty
         images = images.drop(images[images.Path == ''].index)
-
         # Store the paths inside a file called t1_paths inside the input directory
         images.to_csv(path.join(source_dir,'path', 't1_paths.tsv'), sep='\t', index=False)
 
@@ -738,114 +727,129 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
 
     def compute_fdg_pet_paths(self, source_dir, subjs_list):
         import pandas as pd
+        import os
         from os import walk, path
+        from numpy import nan, argsort
 
-        pet_fdg_col = ['Subject_ID', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
-                                                             'Series_ID', 'Image_ID', 'Original']
+        pet_fdg_col = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
+                       'Series_ID', 'Image_ID', 'Original']
+
         pet_fdg_df = pd.DataFrame(columns=pet_fdg_col)
         petqc_path = path.join(source_dir, 'clinicalData', 'PETQC.csv')
-        pet_meta_list_path = path.join(source_dir,'clinicalData', 'PET_META_LIST.csv')
-        pet_visits_corr = {'ADNI Baseline': 'bl', 'ADNI2 Baseline-New Pt': 'bl'}
-
-        try:
-            petqc = pd.io.parsers.read_csv(petqc_path, sep=',')
-        except IOError:
-            print ('File PETQC.csv not found in folder clinicalData of ADNI.')
-
-        baseline = petqc[
-            (petqc.VISCODE2 == 'bl') & (petqc.PASS == 1) & petqc.RID.isin([int(s[-4:]) for s in subjs_list])]
-
-        try:
-            pet_meta_list = pd.io.parsers.read_csv(pet_meta_list_path, sep=',')
-        except IOError:
-            print ('File PET_META_LIST.csv not found in folder clinicalData of ADNI.')
-
-        pet_meta_list = pet_meta_list[pet_meta_list.Visit.map(lambda x: x.find('Baseline') > -1)]
+        pet_meta_list_path = path.join(source_dir, 'clinicalData', 'PET_META_LIST.csv')
+        petqc = pd.io.parsers.read_csv(petqc_path, sep=',')
+        pet_meta_list = pd.io.parsers.read_csv(pet_meta_list_path, sep=',')
 
 
-        for row in baseline.iterrows():
-            subject = row[1]
-            zeros_rid = self.fill_zeros(subject.RID, 4)
-            int_image_id = int(subject.LONIUID[1:])
-            filtered_pet_meta = pet_meta_list[pet_meta_list['Subject'].map(lambda x: x.endswith(zeros_rid))]
-
-            if filtered_pet_meta.shape[0] < 1:
-                print 'NO Screening: RID - ' + subject.RID
+        for subj in subjs_list:
+            pet_qc_subj = petqc[(petqc.PASS == 1) & (petqc.RID == int(subj[-4:]))]
+            subject_pet_meta = pet_meta_list[pet_meta_list['Subject'] == subj]
+            if subject_pet_meta.shape[0] < 1:
+                # print 'NO Screening: Subject - ' + subject + ' for visit ' + qc_visit.VISCODE2
                 continue
-
-            original_pet_meta = filtered_pet_meta[
-                (filtered_pet_meta['Orig/Proc'] == 'Original') & (filtered_pet_meta['Image ID'] == int_image_id)]
-            if original_pet_meta.shape[0] < 1:
-                print 'NO Screening: RID - ' + subject.RID
-                continue
-
-            original_image = original_pet_meta.iloc[0]
-
-            averaged_pet_meta = filtered_pet_meta[(filtered_pet_meta['Sequence'] == 'Co-registered, Averaged') & (
-            filtered_pet_meta['Series ID'] == original_image['Series ID'])]
-            if averaged_pet_meta.shape[0] < 1:
-                sel_image = original_image
-                original = True
-            else:
-                sel_image = averaged_pet_meta.iloc[0]
-                original = False
-
-            subj_id = sel_image.Subject
-            visit = pet_visits_corr[sel_image.Visit]
-            sequence = sel_image.Sequence
-            sequence = sequence.replace(' ', '_').replace('/', '_').replace(';', '_').replace('*', '_').replace('(',
+            for visit in list(pet_qc_subj.VISCODE2.unique()):
+                pet_qc_visit = pet_qc_subj[pet_qc_subj.VISCODE2 == visit]
+                if pet_qc_visit.shape[0] > 1:
+                    normal_images = []
+                    normal_meta = []
+                    for row in pet_qc_visit.iterrows():
+                        image = row[1]
+                        pet_meta_image = \
+                        subject_pet_meta[(subject_pet_meta['Image ID'] == int(image.LONIUID[1:]))].iloc[0]
+                        if pet_meta_image.Sequence.lower().find('early') < 0:
+                            normal_images.append(image)
+                            normal_meta.append(pet_meta_image)
+                    if len(normal_images) == 0:
+                        print 'No regular FDG-PET image: Subject - ' + subj + ' for visit ' + visit
+                        continue
+                    if len(normal_images) == 1:
+                        qc_visit = normal_images[0]
+                    else:
+                        qc_visit = None
+                        index = argsort([x['Series ID'] for x in normal_meta])
+                        for i in index[::-1]:
+                            coreg_avg = subject_pet_meta[(subject_pet_meta['Sequence'] == 'Co-registered, Averaged')
+                                                         & (
+                                                         subject_pet_meta['Series ID'] == normal_meta[i]['Series ID'])]
+                            if coreg_avg.shape[0] > 0:
+                                qc_visit = normal_images[i]
+                                break
+                        if qc_visit is None:
+                            qc_visit = normal_images[index[len(index) - 1]]
+                else:
+                    qc_visit = pet_qc_visit.iloc[0]
+                int_image_id = int(qc_visit.LONIUID[1:])
+                original_pet_meta = subject_pet_meta[
+                    (subject_pet_meta['Orig/Proc'] == 'Original') & (subject_pet_meta['Image ID'] == int_image_id)]
+                if original_pet_meta.shape[0] < 1:
+                    original_pet_meta = subject_pet_meta[(subject_pet_meta['Orig/Proc'] == 'Original')
+                                                         & (subject_pet_meta.Sequence.map(
+                        lambda x: (x.lower().find('fdg') > -1)))
+                                                         & (subject_pet_meta['Scan Date'] == qc_visit.EXAMDATE)]
+                    if original_pet_meta.shape[0] < 1:
+                        print 'NO Screening: Subject - ' + subj + ' for visit ' + qc_visit.VISCODE2
+                        continue
+                original_image = original_pet_meta.iloc[0]
+                averaged_pet_meta = subject_pet_meta[(subject_pet_meta['Sequence'] == 'Co-registered, Averaged') & (
+                subject_pet_meta['Series ID'] == original_image['Series ID'])]
+                if averaged_pet_meta.shape[0] < 1:
+                    sel_image = original_image
+                    original = True
+                else:
+                    sel_image = averaged_pet_meta.iloc[0]
+                    original = False
+                visit = sel_image.Visit
+                sequence = sel_image.Sequence
+                sequence = sequence.replace(' ', '_').replace('/', '_').replace(';', '_').replace('*', '_').replace('(',
                                                                                                                     '_').replace(
-                ')', '_').replace(':', '_')
-            date = sel_image['Scan Date']
-            study_id = sel_image['Study ID']
-            series_id = sel_image['Series ID']
-            image_id = sel_image['Image ID']
+                    ')', '_').replace(':', '_')
+                date = sel_image['Scan Date']
+                study_id = sel_image['Study ID']
+                series_id = sel_image['Series ID']
+                image_id = sel_image['Image ID']
 
-            row_to_append = pd.DataFrame([[subj_id, str(visit), sequence, date, str(study_id), str(series_id), str(image_id), original]], columns=pet_fdg_col)
-            pet_fdg_df = pet_fdg_df.append(row_to_append, ignore_index=True)
+                row_to_append = pd.DataFrame(
+                    [[subj, qc_visit.VISCODE2, str(visit), sequence, date, str(study_id), str(series_id), str(image_id), original]],
+                    columns=pet_fdg_col)
+                pet_fdg_df = pet_fdg_df.append(row_to_append, ignore_index=True)
 
-        subjects = pet_fdg_df
+        images = pet_fdg_df
         count = 0
-        total = subjects.shape[0]
-
+        total = images.shape[0]
         image_folders = []
-        for row in subjects.iterrows():
-
-            subject = row[1]
-            seq_path = path.join(source_dir, str(subject.Subject_ID), subject.Sequence)
-            print seq_path
-
+        for row in images.iterrows():
+            image = row[1]
+            seq_path = path.join(source_dir, str(image.Subject_ID), image.Sequence)
             count += 1
-            print 'Processing subject ' + str(subject.Subject_ID) + ', ' + str(count) + ' / ' + str(total)
-
+            print 'Processing Subject ' + str(image.Subject_ID) + ' - Session ' + image.VISCODE + ', ' + str(
+                count) + ' / ' + str(total)
             image_path = ''
             for (dirpath, dirnames, filenames) in walk(seq_path):
                 found = False
                 for d in dirnames:
-                    # print 'd =', d
-                    # print 'image ID', subject.Image_ID
-                    if d == 'I' + str(subject.Image_ID):
+                    if d == 'I' + str(image.Image_ID):
                         image_path = path.join(dirpath, d)
                         found = True
                         break
                 if found:
                     break
-
-            if subject.Original:
+            if image.Original:
                 for (dirpath, dirnames, filenames) in walk(image_path):
                     for f in filenames:
                         if f.endswith(".nii"):
                             image_path = path.join(dirpath, f)
                             break
-
             image_folders.append(image_path)
-
             if image_path == '':
-                 print 'Not found ' + str(subject.Subject_ID)
+                print 'Not found ' + str(image.Subject_ID)
+        images.loc[:, 'Path'] = pd.Series(image_folders, index=images.index)
 
-        subjects.loc[:, 'Path'] = pd.Series(image_folders, index=subjects.index)
+        fdg_csv_path = path.join(source_dir, 'path')
+        if not os.path.exists(fdg_csv_path):
+            os.mkdir(fdg_csv_path)
+        images.to_csv(path.join(fdg_csv_path, 'fdg_pet_paths.tsv'), sep='\t', index=False)
 
-        return subjects
+        return images
 
     def compute_av45_pet_paths(self, source_dir, subjs_list):
         import pandas as pd
