@@ -303,7 +303,7 @@ title(title1);
 whitebg(gcf,background);
 set(gcf,'Color',background,'InvertHardcopy','off');
 
-set(gcf,'PaperPosition',[0.25 2.5 6 4.5]);
-
+%set(gcf,'PaperPosition',[0.25 2.5 6 4.5]);
+set(gcf,'PaperPositionMode','auto')% changed by hao, to dispaly the img based on the full size of screen 
 return
 end

@@ -74,7 +74,7 @@ def revert_mask(weights, mask, shape):
     return new_weights
 
 
-def features_weights(image_list, dual_coefficients, sv_indices):
+def features_weights(image_list, dual_coefficients, sv_indices, scaler=None, mask=None):
 
     if len(sv_indices) != len(dual_coefficients):
         print "Length dual coefficients: " + str(len(dual_coefficients))
@@ -92,6 +92,10 @@ def features_weights(image_list, dual_coefficients, sv_indices):
     for i in range(len(sv_images)):
         subj = nib.load(sv_images[i])
         subj_data = np.nan_to_num(subj.get_data())
+        if scaler is not None and mask is not None:
+            subj_data = subj_data.flatten()[mask]
+            subj_data = scaler.transform(subj_data)
+            subj_data = revert_mask(subj_data, mask, shape)
         weights += dual_coefficients[i] * subj_data
 
     return weights
