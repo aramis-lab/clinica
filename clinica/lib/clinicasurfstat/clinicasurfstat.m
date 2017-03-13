@@ -21,7 +21,7 @@ function clinicasurfstat( inputdir, outputdir, tsvfile, designmatrix, contrast, 
 %
 % Saves output images to outputdir as .jpg format.
 %
-% Note: !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% Note: the default threshold for RFT(corrected pvalue) is 0.001 and for FDR is 0.05. The RFT one is extremely strict, and Boris Bernhardt and Keith Worsley have suggested that it may be loosened to 0.01, maybe up to to 0.025.
 
 %  (c) Alexandre ROUTIER, Junhao Wen
 %  Written 16/06/2016
