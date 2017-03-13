@@ -13,9 +13,9 @@ __status__ = "Development"
 
 
 # @ToDo:test this function
-def create_participants(input_path,out_path, study_name, clinical_spec_path, bids_ids, delete_non_bids_info=True):
+def create_participants_df(input_path,out_path, study_name, clinical_spec_path, bids_ids, delete_non_bids_info=True):
     """
-    Create the file participant.tsv
+
 
     :param input_path: path to the original dataset
     :param out_path: path to the bids folder
@@ -116,10 +116,150 @@ def create_participants(input_path,out_path, study_name, clinical_spec_path, bid
     return participant_df
 
 
-def create_empty_sessions_tsv(): pass
+def contain_dicom(folder_path):
+    """
+    Check if a folder contains DICOM images
+
+    :param folder_path:
+    :return: True if dicom files are found inside the folder, False otherwise
+    """
+    from glob import glob
+    from os import path
+
+    dcm_files = glob(path.join(folder_path, '*.dcm'))
+    if len(dcm_files) > 0:
+        return True
+
+    return False
 
 
-def create_empy_scans_tsv(): pass
+def create_sessions_dict(input_path, study_name, clinical_spec_path, bids_ids, name_column_ids, subj_to_remove = []):
+    """
+    Extract the information regarding the sessions and store them in a dictionary (session M0 only)
+
+    :param input_path:
+    :param study_name: name of the study (Ex: ADNI)
+    :param clinical_spec_path:
+    :param bids_ids:
+    :param name_column_ids:
+    :param subj_to_remove:
+    :return:
+    """
+    import pandas as pd
+    from os import path
+    import numpy as np
+
+    # Load data
+    location = study_name + ' location'
+    sessions = pd.read_excel(clinical_spec_path, sheetname='sessions.tsv')
+    sessions_fields = sessions[study_name]
+    field_location = sessions[location]
+    sessions_fields_bids = sessions['BIDS CLINICA']
+    fields_dataset = []
+    fields_bids = []
+    sessions_dict = {}
+
+    for i in range(0, len(sessions_fields)):
+        if not pd.isnull(sessions_fields[i]):
+            fields_bids.append(sessions_fields_bids[i])
+            fields_dataset.append(sessions_fields[i])
+
+    sessions_df = pd.DataFrame(columns=fields_bids)
+
+    for i in range(0, len(sessions_fields)):
+        # If the i-th field is available
+        if not pd.isnull(sessions_fields[i]):
+            # Load the file
+            tmp = field_location[i].split('/')
+            location = tmp[0]
+            sheet = tmp[1]
+            file_to_read_path = path.join(input_path, 'clinicalData', location)
+            file_to_read = pd.read_excel(file_to_read_path, sheetname=sheet)
+
+            for r in range(0, len(file_to_read.values)):
+                row = file_to_read.iloc[r]
+                # Extracts the subject ids columns from the dataframe
+                subj_id = row[name_column_ids.decode('utf-8')]
+                if subj_id.dtype == np.int64:
+                    subj_id = str(subj_id)
+                # Removes all the - from
+                subj_id_alpha = remove_space_and_symbols(subj_id)
+
+                # Extract the corresponding BIDS id and create the output file if doesn't exist
+                subj_bids = [s for s in bids_ids if subj_id_alpha in s]
+                if len(subj_bids) == 0:
+                    # If the subject is not an excluded one
+                    if not subj_id in subj_to_remove:
+                        print sessions_fields[i] + ' for ' + subj_id + ' not found in the BIDS converted.'
+                else:
+                    subj_bids = subj_bids[0]
+                    sessions_df[sessions_fields_bids[i]] = row[sessions_fields[i]]
+                    if sessions_dict.has_key(subj_bids):
+                        (sessions_dict[subj_bids]['M0']).update({sessions_fields_bids[i]: row[sessions_fields[i]]})
+                    else:
+                        sessions_dict.update({subj_bids: {
+                            'M0': {'session_id': 'ses-M0', sessions_fields_bids[i]: row[sessions_fields[i]]}}})
+
+    return sessions_dict
+
+
+def write_sessions_tsv(out_path, bids_paths, sessions_dict, fields_bids, sessions_list = 'M0'):
+    """
+
+    :param out_path:
+    :param bids_paths:
+    :param sessions_dict:
+    :param fields_bids:
+    :param sessions_list:
+    :return:
+    """
+    import os
+    import pandas as pd
+    from os import path
+
+    for sp in bids_paths:
+        sp = sp[:-1]
+        bids_id = sp.split(os.sep)[-1]
+        sessions_df = pd.DataFrame(columns=fields_bids)
+        if sessions_dict.has_key(bids_id):
+            session_df = pd.DataFrame(sessions_dict[bids_id]['M0'], index=['i', ])
+            cols = session_df.columns.tolist()
+            cols = cols[-1:] + cols[:-1]
+            session_df = session_df[cols]
+            session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False)
+        else:
+            print "No session data available for " + sp
+            session_df = pd.DataFrame(columns=['session_id'])
+            session_df['session_id'] = pd.Series('M0')
+            session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False)
+
+
+def dcm_to_nii(input_path, output_path, bids_name, mod_type):
+    """
+    :param t1_path:
+    :param output_path:
+    :param bids_name:
+    :return:
+    """
+
+    import os
+    import clinica.bids.bids_utils as bids
+    from os import path
+    from glob import glob
+
+    if not os.path.exists(output_path):
+        os.mkdir(output_path)
+    os.system(
+        'dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name + bids.get_bids_suff(mod_type) + ' ' + input_path)
+
+    # If dcm2niix didn't work use dcm2nii
+    if not os.path.exists(path.join(output_path, bids_name + bids.get_bids_suff(mod_type) + '.nii.gz')):
+        print 'Conversion with dcm2niix failed, trying with dcm2nii'
+        # os.system('dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path')
+
+    # If the conversion failed with both tools
+    if not os.path.exists(path.join(output_path, bids_name + bids.get_bids_suff(mod_type) + '.nii.gz')):
+        print 'Conversion of the dicom failed for ', input_path
 
 
 def get_bids_subjs_list(bids_path):
@@ -347,19 +487,52 @@ def convert_T1(t1_path, output_path, t1_bids_name):
     from shutil import copy
     import os
 
-    if not os.path.exists(output_path):
-        os.mkdir(output_path)
-    #copy(t1_path, path.join(output_path, t1_bids_name + get_bids_suff('T1') + '.nii.gz'))
-    file_ext = get_ext(t1_path)
-    copy(t1_path, path.join(output_path, t1_bids_name + get_bids_suff('T1') + file_ext))
-    # If  the original image is not compress, compress it
-    if file_ext == '.nii':
-        compress_nii(path.join(output_path, t1_bids_name + get_bids_suff('T1') + file_ext))
+    if contain_dicom(t1_path):
+        print 'DICOM found for t1 in ' + t1_path
+        dcm_to_nii(t1_path, output_path, t1_bids_name, 'T1')
+    else:
+        if not os.path.exists(output_path):
+            os.mkdir(output_path)
+        file_ext = get_ext(t1_path)
+        copy(t1_path, path.join(output_path, t1_bids_name + get_bids_suff('T1') + file_ext))
+        # If  the original image is not compress, compress it
+        if file_ext == '.nii':
+            compress_nii(path.join(output_path, t1_bids_name + get_bids_suff('T1') + file_ext))
+
+
+def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name , acquisition = ''):
+    from os import path
+    from shutil import copy
+    import os
+
+    if acquisition!='':
+        pet_name = bids_name+'_task-'+task_name+'_acq-',acquisition
+    else:
+        pet_name = bids_name+'_task-'+task_name
+
+    if contain_dicom(folder_input):
+        dcm_to_nii(folder_input, folder_output, pet_name, 'pet')
+    else:
+        if not os.path.exists(folder_output):
+            os.mkdir(folder_output)
+
+            #If a prefixed pet is chosen for the conversion use it, otherwise extracts the pet file available into the folder
+            if pet_name!='':
+                pet_path = path.join(folder_input, pet_name)
+            else:
+                print 'WARNING: feature to be implemented'
+
+            file_ext = get_ext(pet_path)
+            copy(pet_path, path.join(folder_output, pet_name + get_bids_suff('pet') + file_ext))
+            # If  the original image is not compress, compress it
+            if file_ext == '.nii':
+                compress_nii(path.join(folder_output, pet_name + get_bids_suff('pet') + file_ext))
+
 
 
 def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False,False]):
     """
-    Extracts and converts into the BIDS specification fieldmap data.
+    Extract and convert into the BIDS specification fieldmap data.
 
     Args:
         folder_input: folder containing the fieldmap data.

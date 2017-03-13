@@ -85,7 +85,7 @@ background='white';
 whitebg(gcf,background);
 set(gcf,'Color',background,'InvertHardcopy','off');
 
-set(gcf,'PaperPosition',[0.25 2.5 6 4.5]);
+set(gcf,'PaperPosition',[0.25 2.5 20 20]);%% here, you can define the image's positon and size
 
 return
 end
