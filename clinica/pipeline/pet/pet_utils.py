@@ -90,9 +90,9 @@ def create_pvc_mask(tissues):
     data = np.empty(shape, dtype=np.float64)
 
     for i in range(len(tissues)):
-        image = tissues[i]
+        image = nib.load(tissues[i])
         data[..., i] = np.array(image.get_data())
-        background = background + nib.load(image).get_data()
+        background = background + image.get_data()
 
     background = 1.0 - background
     data[..., len(tissues)] = np.array(background)
