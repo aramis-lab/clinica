@@ -32,6 +32,7 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
         raise 'participants.tsv not found'
     participants_df = pd.read_csv(path.join(bids_dir, 'participants.tsv'), sep='\t')
     subjs_paths = glob(path.join(bids_dir, '*sub-*'))
+    subjs_paths.sort()
 
     out_file_name = out_dir.split(os.sep)[-1]
     if len(out_file_name) == 0 or out_dir == '.':
@@ -181,8 +182,8 @@ def find_mods_and_sess(dataset_dir):
 
     mods_dict = {}
     mods_list = []
-    mods_aval = []
     subjects_paths_lists = glob(path.join(dataset_dir, '*sub-*'))
+
     for sub_path in subjects_paths_lists:
         ses_paths = glob(path.join(sub_path, '*ses-*'))
         for session in ses_paths:
@@ -226,6 +227,12 @@ def find_mods_and_sess(dataset_dir):
                 if not 'fmap' in mods_list:
                     mods_list.append('fmap')
 
+            if 'pet' in mods_aval:
+                if not mods_dict.has_key('pet'):
+                    mods_dict.update({'pet': ['pet']})
+                if not 'pet' in mods_list:
+                    mods_list.append('pet')
+
             if 'anat' in mods_aval:
                 anat_files_paths = glob(path.join(session, 'anat', '*'))
 
@@ -253,6 +260,7 @@ def find_mods_and_sess(dataset_dir):
 
                         if anat_type not in mods_list:
                             mods_list.append(anat_type)
+
     return mods_dict
 
 
@@ -285,6 +293,7 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
     missing_mods_df = pd.DataFrame(columns=cols_dataframe)
     row_to_append_df = pd.DataFrame(columns=cols_dataframe)
     subjects_paths_lists = glob(path.join(in_dir, '*sub-*'))
+    subjects_paths_lists.sort()
 
     if len(subjects_paths_lists) == 0:
         raise "No subjects found or dataset not BIDS complaint."
@@ -355,6 +364,12 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
                     if 'fmap' in mods_avail:
                         row_to_append_df['fmap'] = pd.Series('0')
                         mmt.add_missing_mod(ses, 'fmap')
+                if 'pet' in mods_avail_bids:
+                    row_to_append_df['pet'] = pd.Series('1')
+                else:
+                    if 'pet' in mods_avail:
+                        row_to_append_df['pet'] = pd.Series('0')
+                        mmt.add_missing_mod(ses, 'pet')
 
 
             missing_mods_df = missing_mods_df.append(row_to_append_df)
@@ -378,22 +393,6 @@ def create_subs_sess_list(dataset_path, out_dir, file_name = ''):
     :param file_name: name of the output file
 
     """
-    # file_name = out_dir.split(os.sep)[-1]
-    # if len(file_name) == 0 or out_dir == '.':
-    #     file_name = 'subjects_sessions_list.tsv'
-    # else:
-    #     # Extract the path of the file
-    #     out_dir = os.path.dirname(out_dir)
-    #
-    # if '.' not in file_name:
-    #     file_name = file_name + '.tsv'
-    # else:
-    #     extension = os.path.splitext(file_name)[1]
-    #     if extension != '.tsv':
-    #         raise 'Output file must be .tsv.'
-    #
-    # if out_dir == '.':
-    #     out_dir = os.getcwd()
 
     if file_name == '':
         file_name = 'subjects_sessions_list.tsv'
@@ -401,6 +400,8 @@ def create_subs_sess_list(dataset_path, out_dir, file_name = ''):
     subjs_sess_tsv = open(path.join(out_dir, file_name), 'w')
     subjs_sess_tsv.write('participant_id' + '\t' + 'session_id' + '\n')
     subjects_paths = glob(path.join(dataset_path, '*sub-*'))
+    # Sort the subjects list
+    subjects_paths.sort()
 
     if len(subjects_paths) == 0:
         raise 'Dataset empty or not BIDS-compliant.'
