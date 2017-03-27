@@ -1,7 +1,5 @@
 __all__ = ['__version__']
 
-def test():
-    print "ok"
 
 # Load the Clinica package version
 import pkgutil
