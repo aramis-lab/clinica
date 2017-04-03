@@ -63,6 +63,7 @@ class BrainExtractionWorkflow(npe.Workflow):
         mask_node = npe.MapNode(name="ApplyMask",
                             iterfield=["in_file", "mask_file"],
                             interface=fsl.ApplyMask())
+        mask_node.inputs.output_type = 'NIFTI'
 
         self.connect([
             (seg_node   , add1_node   , [('native_gm_image' , 'in_file'     )]),
@@ -99,7 +100,7 @@ class FMRIPreprocessing(cpe.Pipeline):
     def build(self):
 
         # Data grabbing
-        # ================
+        # =============
         dg_node = npe.Node(name='DataGrabbing',
                            interface=nio.DataGrabber(infields=['sessions', 'subjects'],
                                                      outfields=[ 'mag1_nii', 'mag1_json', 't1_nii', 't1_json', 'mag2_nii', 'mag2_json', 'pdif_nii', 'pdif_json', 'bold_nii', 'bold_json']))
@@ -130,13 +131,15 @@ class FMRIPreprocessing(cpe.Pipeline):
         dg_node.inputs.sessions = ['ses-M00', 'ses-M00'] # self.sessions
         dg_node.inputs.subjects = ['sub-HMTC2010_07_15_MEMEP_Sujet20',
                                    'sub-HMTC2011_05_13_MEMEP_PAT29'] #self.subjects
-        # NOTE: This is going to work only when nipype team will have solved this issue
+        # NOTE: The data grabber is going to work only when nipype team will have solved this issue
         #   (https://github.com/nipy/nipype/issues/1783), I removed l.1183-1184.
+        # NOTE: The Fieldmap node is still under revision as a pull request
+        # NOTE: The RealingUnwarp node is still under revision as a pull request
         # TODO: Parametrize input templates for the DataGrabbing node.
-        # TODO: Use spm.RealignAndUnwarp instead of spm.Realign.
+        # TODO: [DONE] Use spm.RealignAndUnwarp instead of spm.Realign.
 
         # Data filtering
-        # =============
+        # ==============
         filter_node = npe.Node(name='DataFiltering',
                                interface=nutil.Function(input_names=['file_list'],
                                                         output_names=['new_file_list'],
@@ -172,8 +175,8 @@ class FMRIPreprocessing(cpe.Pipeline):
         # Motion correction and unwarping
         # ===============================
         mc_node = npe.MapNode(name="MotionCorrectionUnwarping",
-                              iterfield="in_files",
-                           interface=spm.Realign())
+                              iterfield=["scans", "pmscan"],
+                              interface=spm.RealignUnwarp())
         mc_node.inputs.register_to_mean = True
         mc_node.inputs.write_mask = True
 
@@ -183,17 +186,21 @@ class FMRIPreprocessing(cpe.Pipeline):
 
         # Registration
         # ============
-        reg_node = npe.MapNode(interface=spm.Coregister(), name="Registration",
-                               iterfield=["apply_to_files", "source", "target"])
+        reg_node = npe.MapNode(interface=spm.Coregister(),
+                               iterfield=["apply_to_files", "source", "target"],
+                               name="Registration")
 
         # Normalization
         # =============
-        norm_node = npe.MapNode(spm.Normalize12(),
-                                    iterfield=['image_to_align', 'apply_to_files'],
-                                    name='Normalization')
+        norm_node = npe.MapNode(interface=spm.Normalize12(),
+                                iterfield=['image_to_align', 'apply_to_files'],
+                                name='Normalization')
 
         # Smoothing
         # =========
+        smooth_node = npe.MapNode(interface=spm.Smooth(),
+                                  iterfield=['in_files'],
+                                  name='Smoothing')
 
         # Zipping
         # =======
@@ -206,28 +213,27 @@ class FMRIPreprocessing(cpe.Pipeline):
         # Connection
         # ==========
         self.connect([
-            # (dg_node,       filter_node,    [('bold_nii',                    'file_list')]),
             # FieldMap calculation
-            (dg_node,        fm_node,     [('mag1_nii',               'magnitude')]),
-            (dg_node,        fm_node,     [('pdif_nii',                   'phase')]),
-            (dg_node,        fm_node,     [('bold_nii',                     'epi')]),
+            (dg_node,        fm_node,    [('mag1_nii',                'magnitude')]),
+            (dg_node,        fm_node,    [('pdif_nii',                    'phase')]),
+            (dg_node,        fm_node,    [('bold_nii',                      'epi')]),
             # Brain extraction
-            (dg_node,        bet_node,    [('t1_nii',         'Segmentation.data')]),
-            (dg_node,        bet_node,    [('t1_nii',         'ApplyMask.in_file')]),
+            (dg_node,       bet_node,    [('t1_nii',          'Segmentation.data')]),
+            (dg_node,       bet_node,    [('t1_nii',          'ApplyMask.in_file')]),
             # Slice timing correction
-            (dg_node,         st_node,    [('bold_nii',                'in_files')]),
+            (dg_node,        st_node,    [('bold_nii',                 'in_files')]),
             # Motion correction and unwarping
-            (st_node,         mc_node,    [('timecorrected_files',     'in_files')]),
-            # Unzipping
-            (bet_node,     unzip_node,    [('ApplyMask.out_file',        'in_file')]),
+            (st_node,        mc_node,    [('timecorrected_files',         'scans')]),
+            (fm_node,        mc_node,    [('vdm',                        'pmscan')]),
             # Registration
-            (mc_node,        reg_node,    [('mean_image',                'source')]),
-            (mc_node,        reg_node,    [('realigned_files',   'apply_to_files')]),
-            (unzip_node,     reg_node,    [('out_file',                  'target')]),
+            (mc_node,       reg_node,    [('mean_image',                 'source')]),
+            (mc_node,       reg_node,    [('runwarped_files',    'apply_to_files')]),
+            (bet_node,      reg_node,    [('ApplyMask.out_file',         'target')]),
             # Normalization
-            (dg_node,       norm_node,    [('t1_nii',            'image_to_align')]),
-            (reg_node,      norm_node,    [('coregistered_files','apply_to_files')]),
+            (dg_node,      norm_node,    [('t1_nii',             'image_to_align')]),
+            (reg_node,     norm_node,    [('coregistered_files', 'apply_to_files')]),
             # Smoothing
+            (norm_node,  smooth_node,    [('normalized_files',         'in_files')]),
         ])
 
         self.write_graph()
