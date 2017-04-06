@@ -1,2 +1,1 @@
-def test():
-    print "ok"
+

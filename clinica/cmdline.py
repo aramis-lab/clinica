@@ -217,7 +217,8 @@ def execute():
     pipelines = [CmdParserT1SPMFullPrep(), CmdParserT1SPMSegment(),
                  CmdParserT1SPMDartelTemplate(), CmdParserPETPreprocessing(),
                  CmdParserT1FreeSurfer(), CmdParserT1FSL(),
-                 CmdParserDWIPreprocessingFieldmapBased(), CmdParserDWIPreprocessingT1Based(),
+                 CmdParserDWIPreprocessingPhaseDifferenceFieldmap(), CmdParserDWIPreprocessingTwoPhaseImagesFieldmap(),
+                 CmdParserDWIPreprocessingT1Based(),
                  CmdParserDWIProcessing(),
                  CmdParserStatisticsSurfStat(), CmdParserMachineLearningVBLinearSVM()]
     init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)

@@ -185,6 +185,14 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
 
         print '-- Scans files created for each subject. --'
 
+    def replace_sequence_chars(self, sequence_name):
+        sequence = sequence_name.replace(' ', '_').replace('/', '_').replace(';', '_').replace('*', '_').replace(
+                        '(',
+                        '_').replace(
+                        ')', '_').replace(':', '_')
+
+        return sequence
+
     def convert_from_dicom(self, input_path, output_path, bids_name, mod_type):
         """
 
@@ -221,7 +229,7 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         d2 = datetime.strptime(d2, "%Y-%m-%d")
         return abs((d2 - d1).days)
 
-    def convert_images(self, source_dir, dest_dir, paths_files_dir,  mod_to_add = '', mod_to_update = ''):
+    def convert_images(self, source_dir, clinical_dir, dest_dir, subjs_list_path = '',  mod_to_add = '', mod_to_update = '', add_subjs = False):
         """
         The function first computes the paths of the right image to be converted and
         :param source_dir:
@@ -236,10 +244,18 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         import shutil
         from glob import glob
 
-        subjs_list_path = path.join(source_dir, 'clinicalData', 'subjects_list.xlsx')
-        subjs_list_excel = pd.read_excel(subjs_list_path)
-        subjs_list = subjs_list_excel['PTID']
-        adni_merge_path = path.join(source_dir, 'clinicalData', 'ADNIMERGE.csv')
+        print "*******************************"
+        print "ADNI to BIDS converter"
+        print "*******************************"
+
+        # Load a file with subjects list or compute all the subjects
+        if subjs_list_path != '':
+            subjs_list_excel = pd.read_excel(subjs_list_path)
+            subjs_list = subjs_list_excel['PTID']
+        else:
+            subjs_list = glob(path.join(source_dir, '*_S_*'))
+
+        adni_merge_path = path.join(clinical_dir, 'ADNIMERGE.csv')
         adni_merge = pd.read_csv(adni_merge_path)
         # Extract the list of sessions from VISCODE column of adnimerge file, remove duplicate and convert to a list
         sess_list = adni_merge['VISCODE'].drop_duplicates().tolist()
@@ -247,12 +263,10 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         bids_ids = []
         alpha_ids = []
 
-        print "*******************************"
-        print "ADNI to BIDS converter"
-        print "*******************************"
-
         if mod_to_add == '' and mod_to_update == '':
             os.mkdir(dest_dir)
+            os.mkdir(path.join(dest_dir, ''))
+
 
         # Compute anat paths
         if (mod_to_add == '' or mod_to_add == 'anat') and (mod_to_update == '' or mod_to_update == 'anat'):
@@ -262,6 +276,12 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         if (mod_to_add == '' or mod_to_add == 'pet') and (mod_to_update == '' or mod_to_update == 'pet'):
             pet_fdg_paths = self.compute_fdg_pet_paths(source_dir, subjs_list)
             pet_av45_paths = self.compute_av45_pet_paths(source_dir, subjs_list)
+
+        # Compute func paths
+        if (mod_to_add == '' or mod_to_add == 'func') and (mod_to_update == '' or mod_to_update == 'func'):
+            fmri_paths = self.compute_fmri_path(source_dir, dest_dir, subjs_list)
+
+        # Compute dwi paths
 
         for subj in subjs_list:
             alpha_id = bids.remove_space_and_symbols(subj)
@@ -362,6 +382,18 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
                             print 'Original not found for ', subjs_list[i]
                     else:
                         print 'No pet av45 path found for subject: ' + subj + ' visit: ' + ses
+
+                # Convert func
+                if mod_to_add != '' and mod_to_add != 'func':
+                    pass
+                elif (mod_to_add == '' and mod_to_update == '') or mod_to_add == 'func' or mod_to_update == 'func':
+
+                    if os.path.isdir(path.join(ses_path, 'func')):
+                        if mod_to_add != '':
+                            raise IOError('Func modality found. For updating the dataset use the flag -updated_mod')
+
+                        print 'Removing the old func folder...'
+                        shutil.rmtree(path.join(ses_path, 'func'))
 
     def center_nifti_origin(self, input_image, output_image):
         import nibabel as nib
@@ -740,7 +772,6 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         petqc = pd.io.parsers.read_csv(petqc_path, sep=',')
         pet_meta_list = pd.io.parsers.read_csv(pet_meta_list_path, sep=',')
 
-
         for subj in subjs_list:
             pet_qc_subj = petqc[(petqc.PASS == 1) & (petqc.RID == int(subj[-4:]))]
             subject_pet_meta = pet_meta_list[pet_meta_list['Subject'] == subj]
@@ -853,6 +884,7 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
 
     def compute_av45_pet_paths(self, source_dir, subjs_list):
         import pandas as pd
+        from numpy import nan
         from os import walk, path
         import os
 
@@ -861,7 +893,6 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
 
         pet_av45_df = pd.DataFrame(columns=pet_av45_col)
 
-        total = len(subjs_list)
         pet_visits_corr = {'ADNI Baseline': 'bl', 'ADNI2 Baseline-New Pt': 'bl'}
         av45qc_path = path.join(source_dir, 'clinicalData', 'AV45QC.csv')
         av45qc = pd.io.parsers.read_csv(av45qc_path, sep=',')
@@ -872,52 +903,128 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         pet_meta_list = pd.io.parsers.read_csv(pet_meta_list_path, sep=',')
         pet_meta_list = pet_meta_list[pet_meta_list.Visit.map(lambda x: x.find('Baseline') > -1)]
 
-        for row in baseline.iterrows():
-            subject = row[1]
-            zeros_rid = self.fill_zeros(subject.RID, 4)
-            int_image_id = int(subject.LONIUID[1:])
-            filtered_pet_meta = pet_meta_list[pet_meta_list['Subject'].map(lambda x: x.endswith(zeros_rid))]
+        for subject in subjs_list:
+            pet_qc_subj = av45qc[(av45qc.PASS == 1) & (av45qc.RID == int(subject[-4:]))]
+            subject_pet_meta = pet_meta_list[pet_meta_list['Subject'] == subject]
 
-            if filtered_pet_meta.shape[0] < 1:
-                print 'NO Screening: RID - ' + subject.RID
+            if subject_pet_meta.shape[0] < 1:
+                # print 'NO Screening: Subject - ' + subject + ' for visit ' + qc_visit.VISCODE2
                 continue
 
-            original_pet_meta = filtered_pet_meta[
-                (filtered_pet_meta['Orig/Proc'] == 'Original') & (filtered_pet_meta['Image ID'] == int_image_id)]
-            if original_pet_meta.shape[0] < 1:
-                print 'NO Screening: RID - ' + subject.RID
-                continue
+            for visit in list(pet_qc_subj.VISCODE2.unique()):
+                pet_qc_visit = pet_qc_subj[pet_qc_subj.VISCODE2 == visit]
+                if pet_qc_visit.shape[0] > 1:
+                    normal_images = []
+                    normal_meta = []
+                    for row in pet_qc_visit.iterrows():
+                        image = row[1]
+                        pet_meta_image = \
+                        subject_pet_meta[(subject_pet_meta['Image ID'] == int(image.LONIUID[1:]))].iloc[0]
+                        if pet_meta_image.Sequence.lower().find('early') < 0:
+                            normal_images.append(image)
+                            normal_meta.append(pet_meta_image)
+                    if len(normal_images) == 0:
+                        print 'No regular AV45-PET image: Subject - ' + subject + ' for visit ' + visit
+                        continue
+                    if len(normal_images) == 1:
+                        qc_visit = normal_images[0]
+                    else:
+                        qc_visit = None
+                        index = nan.argsort([x['Series ID'] for x in normal_meta])
+                        for i in index[::-1]:
+                            coreg_avg = subject_pet_meta[
+                                (subject_pet_meta['Sequence'] == 'AV45 Co-registered, Averaged')
+                                & (subject_pet_meta['Series ID'] == normal_meta[i]['Series ID'])]
+                            if coreg_avg.shape[0] > 0:
+                                qc_visit = normal_images[i]
+                                break
+                        if qc_visit is None:
+                            qc_visit = normal_images[index[len(index) - 1]]
+                else:
+                    qc_visit = pet_qc_visit.iloc[0]
+                int_image_id = int(qc_visit.LONIUID[1:])
+                original_pet_meta = subject_pet_meta[
+                    (subject_pet_meta['Orig/Proc'] == 'Original') & (subject_pet_meta['Image ID'] == int_image_id)]
+                if original_pet_meta.shape[0] < 1:
+                    original_pet_meta = subject_pet_meta[(subject_pet_meta['Orig/Proc'] == 'Original')
+                                                         & (subject_pet_meta.Sequence.map(
+                        lambda x: (x.lower().find('av45') > -1)))
+                                                         & (subject_pet_meta['Scan Date'] == qc_visit.EXAMDATE)]
+                    if original_pet_meta.shape[0] < 1:
+                        print 'NO Screening: Subject - ' + subject + ' for visit ' + qc_visit.VISCODE2
+                        continue
+                original_image = original_pet_meta.iloc[0]
+                averaged_pet_meta = subject_pet_meta[
+                    (subject_pet_meta['Sequence'] == 'AV45 Co-registered, Averaged') & (
+                    subject_pet_meta['Series ID'] == original_image['Series ID'])]
+                if averaged_pet_meta.shape[0] < 1:
+                    sel_image = original_image
+                    original = True
+                else:
+                    sel_image = averaged_pet_meta.iloc[0]
+                    original = False
+                visit = sel_image.Visit
+                sequence = sel_image.Sequence
+                sequence = sequence.replace(' ', '_').replace('/', '_').replace(';', '_').replace('*', '_').replace('(',
+                                                                                                                    '_').replace(
+                    ')', '_').replace(':', '_')
+                date = sel_image['Scan Date']
+                study_id = sel_image['Study ID']
+                series_id = sel_image['Series ID']
+                image_id = sel_image['Image ID']
 
-            original_image = original_pet_meta.iloc[0]
+                row_to_append = pd.DataFrame(
+                         [[subject, str(visit), sequence, date, str(study_id), str(series_id), str(image_id), original]],
+                         columns=pet_av45_col)
+                pet_av45_df = pet_av45_df.append(row_to_append, ignore_index=True)
 
-            # It is an early scan and there will be another image for the subject
-            if original_image.Sequence.lower().find('early') > -1:
-                continue
 
-            averaged_pet_meta = filtered_pet_meta[(filtered_pet_meta['Sequence'] == 'AV45 Co-registered, Averaged') & (
-            filtered_pet_meta['Series ID'] == original_image['Series ID'])]
-            if averaged_pet_meta.shape[0] < 1:
-                sel_image = original_image
-                original = True
-            else:
-                sel_image = averaged_pet_meta.iloc[0]
-                original = False
 
-            subj_id = sel_image.Subject
-            visit = pet_visits_corr[sel_image.Visit]
-            sequence = sel_image.Sequence
-            sequence = sequence.replace(' ', '_').replace('/', '_').replace(';', '_').replace('*', '_').replace('(',
-                                                                                                                '_').replace(
-                ')', '_').replace(':', '_')
-            date = sel_image['Scan Date']
-            study_id = sel_image['Study ID']
-            series_id = sel_image['Series ID']
-            image_id = sel_image['Image ID']
 
-            row_to_append = pd.DataFrame(
-                [[subj_id, str(visit), sequence, date, str(study_id), str(series_id), str(image_id), original]],
-                columns=pet_av45_col)
-            pet_av45_df = pet_av45_df.append(row_to_append, ignore_index=True)
+            # zeros_rid = self.fill_zeros(subject.RID, 4)
+            # int_image_id = int(subject.LONIUID[1:])
+            # filtered_pet_meta = pet_meta_list[pet_meta_list['Subject'].map(lambda x: x.endswith(zeros_rid))]
+            #
+            # if filtered_pet_meta.shape[0] < 1:
+            #     print 'NO Screening: RID - ' + subject.RID
+            #     continue
+            #
+            # original_pet_meta = filtered_pet_meta[
+            #     (filtered_pet_meta['Orig/Proc'] == 'Original') & (filtered_pet_meta['Image ID'] == int_image_id)]
+            # if original_pet_meta.shape[0] < 1:
+            #     print 'NO Screening: RID - ' + subject.RID
+            #     continue
+            #
+            # original_image = original_pet_meta.iloc[0]
+            #
+            # # It is an early scan and there will be another image for the subject
+            # if original_image.Sequence.lower().find('early') > -1:
+            #     continue
+            #
+            # averaged_pet_meta = filtered_pet_meta[(filtered_pet_meta['Sequence'] == 'AV45 Co-registered, Averaged') & (
+            # filtered_pet_meta['Series ID'] == original_image['Series ID'])]
+            # if averaged_pet_meta.shape[0] < 1:
+            #     sel_image = original_image
+            #     original = True
+            # else:
+            #     sel_image = averaged_pet_meta.iloc[0]
+            #     original = False
+            #
+            # subj_id = sel_image.Subject
+            # visit = pet_visits_corr[sel_image.Visit]
+            # sequence = sel_image.Sequence
+            # sequence = sequence.replace(' ', '_').replace('/', '_').replace(';', '_').replace('*', '_').replace('(',
+            #                                                                                                     '_').replace(
+            #     ')', '_').replace(':', '_')
+            # date = sel_image['Scan Date']
+            # study_id = sel_image['Study ID']
+            # series_id = sel_image['Series ID']
+            # image_id = sel_image['Image ID']
+            #
+            # row_to_append = pd.DataFrame(
+            #     [[subj_id, str(visit), sequence, date, str(study_id), str(series_id), str(image_id), original]],
+            #     columns=pet_av45_col)
+            # pet_av45_df = pet_av45_df.append(row_to_append, ignore_index=True)
 
         subjects = pet_av45_df
         count = 0
@@ -963,6 +1070,73 @@ class ADNI_TO_BIDS(Converter, CmdParser) :
         #subjects.to_csv(path.join(av45_csv_path, 'av45_pet_paths.csv'), sep='\t', index=False)
 
         return subjects
+
+    def compute_fmri_path(self, source_dir, dest_dir, subjs_list):
+        from os import path
+        from os import walk
+        import pandas as pd
+
+        fmri_col = ['Subject_id', 'VISCODE', 'Visit', 'IMAGEUID', 'Sequence', 'Scan Date', 'LONIUID', 'Scanner', 'MagStregth', 'Path']
+
+
+        fmri_df = pd.DataFrame(columns=fmri_col)
+        mayo_mri_fmri_path = path.join(source_dir, 'MAYOADIRL_MRI_FMRI_09_15_16.csv')
+        mayo_mri_imageqc_path = path.join(source_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
+        ida_mr_metadata_path = path.join(source_dir, 'IDA_MR_Metadata_Listing.csv')
+
+        mayo_mri_fmri = pd.io.parsers.read_csv(mayo_mri_fmri_path, sep=',')
+        ida_mr_metadata = pd.io.parsers.read_csv(ida_mr_metadata_path, sep=',')
+        mayo_mri_imageqc = pd.io.parsers.read_csv(mayo_mri_imageqc_path, sep=',')
+
+        for subj in subjs_list:
+            fmri_subjs_info = mayo_mri_fmri[(mayo_mri_fmri.RID == int(subj[-4:]))]
+
+            # Extract visits available
+            visits_list = fmri_subjs_info['VISCODE2'].tolist()
+            if len(visits_list)!=0:
+                for viscode in visits_list:
+                    fmri_subj = fmri_subjs_info[fmri_subjs_info['VISCODE2']==viscode].iloc[0]
+                    fmri_imageuid = fmri_subj['IMAGEUID']
+
+                    # Discard scans made with non Philips scanner
+                    fmri_metadata = ida_mr_metadata[ida_mr_metadata['IMAGEUID'] == fmri_imageuid].iloc[0]
+                    if not 'Philips' in fmri_metadata['Scanner']:
+                        print 'No Philips scanner for ', subj, 'visit', viscode
+                        pass
+
+                    elif 4 in mayo_mri_imageqc[mayo_mri_imageqc['loni_image'] == 'I'+ str(fmri_imageuid)]['series_quality'].values :
+                        print 'Bad scan quality'
+                        pass
+
+                    scan_date = fmri_subj.SCANDATE
+                    sequence = self.replace_sequence_chars(fmri_subj.SERDESC)
+
+                    scanner = fmri_metadata['Scanner']
+                    loni_uid = fmri_metadata['LONIUID']
+                    visit = fmri_metadata['Visit']
+                    mag_strenght = fmri_metadata['MagStrength']
+
+                    # Calculate the path
+                    seq_path = path.join(source_dir, str(subj), sequence)
+                    image_path = ''
+                    for (dirpath, dirnames, filenames) in walk(seq_path):
+                        found = False
+                        for d in dirnames:
+                            if d == 'S' + str(loni_uid):
+                                image_path = path.join(dirpath, d)
+                                found = True
+                                break
+                        if found:
+                            break
+
+                    if viscode == 'scmri':
+                        viscode = 'bl'
+                    row_to_append = pd.DataFrame([[subj, str(viscode), visit, str(fmri_imageuid), sequence, scan_date, str(loni_uid),
+                                                   scanner, mag_strenght, image_path]], columns=fmri_col)
+                    fmri_df = fmri_df.append(row_to_append, ignore_index=True)
+
+        fmri_df.to_csv(path.join(dest_dir, 'fmri_paths.tsv'), sep='\t', index=False)
+        return fmri_df
 
     def run_pipeline(self, args):
         if args.modality is True:
