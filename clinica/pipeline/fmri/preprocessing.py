@@ -16,13 +16,6 @@ def filter_data(file_list):
     new_file_list = filter(None, file_list)
     return new_file_list
 
-# Local imports
-from nipype.interfaces.base import (OutputMultiPath, TraitedSpec, isdefined,
-                    traits, InputMultiPath, File)
-from nipype.interfaces.spm.base import (SPMCommand, SPMCommandInputSpec, scans_for_fnames, scans_for_fname)
-from nipype.utils.filemanip import (fname_presuffix, filename_to_list,
-                                list_to_filename, split_filename)
-
 class BrainExtractionWorkflow(npe.Workflow):
 
     def __init__(self, name, base_dir=None):
@@ -82,7 +75,10 @@ class FMRIPreprocessing(cpe.Pipeline):
     """Create fMRI preprocessing pipeline object.
 
     TODO:
-        - Replace reg_node target image by the brain only using c1 + c2 + c3 dilated-eroded-filled.
+        - [x] Replace reg_node target image by the brain only using c1 + c2 + c3 dilated-eroded-filled.
+        - [x] Develop SPM Realign and Unwarp wrapper and integrate it.
+        - [x] Develop SPM Fieldmap Calculation Tool wrapper and integrate it.
+        - [ ] Replace standard DataGrabber by a BIDS tree finder.
 
     Args:
         input_dir: A BIDS directory.
@@ -99,38 +95,6 @@ class FMRIPreprocessing(cpe.Pipeline):
     @cpe.postset('is_built', True)
     def build(self):
 
-        # Data grabbing
-        # =============
-        dg_node = npe.Node(name='DataGrabbing',
-                           interface=nio.DataGrabber(infields=['sessions', 'subjects'],
-                                                     outfields=[ 'mag1_nii', 'mag1_json', 't1_nii', 't1_json', 'mag2_nii', 'mag2_json', 'pdif_nii', 'pdif_json', 'bold_nii', 'bold_json']))
-        dg_node.inputs.base_directory=self.input_dir
-        dg_node.inputs.template='*'
-        dg_node.inputs.raise_on_empty=False
-        dg_node.inputs.sort_filelist=True
-        dg_node.inputs.field_template=dict(mag1_nii='%s/%s/fmap/%s_%s_magnitude1.nii',
-                                           mag1_json='%s/%s/fmap/%s_%s_magnitude1.json',
-                                           t1_nii='%s/%s/anat/%s_%s_run-1_T1w.nii',
-                                           t1_json='%s/%s/anat/%s_%s_run-1_T1w.json',
-                                           mag2_nii='%s/%s/fmap/%s_%s_magnitude2.nii',
-                                           mag2_json='%s/%s/fmap/%s_%s_magnitude2.json',
-                                           pdif_nii='%s/%s/fmap/%s_%s_phasediff.nii',
-                                           pdif_json='%s/%s/fmap/%s_%s_phasediff.json',
-                                           bold_nii='%s/%s/func/%s_%s_bold.nii',
-                                           bold_json='%s/%s/func/%s_%s_bold.json')
-        dg_node.inputs.template_args=dict(mag1_nii=[['subjects', 'sessions', 'subjects', 'sessions']],
-                                          mag1_json=[['subjects', 'sessions', 'subjects', 'sessions']],
-                                          t1_nii=[['subjects', 'sessions', 'subjects', 'sessions']],
-                                          t1_json=[['subjects', 'sessions', 'subjects', 'sessions']],
-                                          mag2_nii=[['subjects', 'sessions', 'subjects', 'sessions']],
-                                          mag2_json=[['subjects', 'sessions', 'subjects', 'sessions']],
-                                          pdif_nii=[['subjects', 'sessions', 'subjects', 'sessions']],
-                                          pdif_json=[['subjects', 'sessions', 'subjects', 'sessions']],
-                                          bold_nii=[['subjects', 'sessions', 'subjects', 'sessions']],
-                                          bold_json=[['subjects', 'sessions', 'subjects', 'sessions']])
-        dg_node.inputs.sessions = ['ses-M00', 'ses-M00'] # self.sessions
-        dg_node.inputs.subjects = ['sub-HMTC2010_07_15_MEMEP_Sujet20',
-                                   'sub-HMTC2011_05_13_MEMEP_PAT29'] #self.subjects
         # NOTE: The data grabber is going to work only when nipype team will have solved this issue
         #   (https://github.com/nipy/nipype/issues/1783), I removed l.1183-1184.
         # NOTE: The Fieldmap node is still under revision as a pull request
@@ -138,25 +102,14 @@ class FMRIPreprocessing(cpe.Pipeline):
         # TODO: Parametrize input templates for the DataGrabbing node.
         # TODO: [DONE] Use spm.RealignAndUnwarp instead of spm.Realign.
 
-        # Data filtering
-        # ==============
-        filter_node = npe.Node(name='DataFiltering',
-                               interface=nutil.Function(input_names=['file_list'],
-                                                        output_names=['new_file_list'],
-                                                        function=filter_data))
-        # Unzipping
-        # =========
-        unzip_node = npe.MapNode(name='Unzipping',
-                                 iterfield=['in_file'],
-                                 interface=nutil.Function(input_names=['in_file'],
-                                                          output_names=['out_file'],
-                                                          function=unzip_nii))
-
         # FieldMap calculation
         # ====================
         fm_node = npe.MapNode(name="FieldMapCalculation",
                               iterfield=['phase', 'magnitude', 'epi'],
                               interface=spm.FieldMap())
+        fm_node.inputs.magnitude = self.bids_layout.get(return_type='file', type='magnitude1', extensions='nii')
+        fm_node.inputs.phase = self.bids_layout.get(return_type='file', type='phasediff', extensions='nii')
+        fm_node.inputs.epi = self.bids_layout.get(return_type='file', type='bold', extensions='nii')
         fm_node.inputs.et = self.parameters['echo_times']
         fm_node.inputs.blipdir = self.parameters['blip_direction']
         fm_node.inputs.tert = self.parameters['total_readout_time']
@@ -165,6 +118,7 @@ class FMRIPreprocessing(cpe.Pipeline):
         # =======================
         st_node = npe.Node(name="SliceTimingCorrection",
                            interface=spm.SliceTiming())
+        st_node.inputs.in_files = self.bids_layout.get(return_type='file', type='bold', extensions='nii')
         st_node.inputs.time_repetition = self.parameters['time_repetition']
         st_node.inputs.slice_order = range(1, self.parameters['num_slices']+1)
         st_node.inputs.num_slices = self.parameters['num_slices']
@@ -178,11 +132,13 @@ class FMRIPreprocessing(cpe.Pipeline):
                               iterfield=["scans", "pmscan"],
                               interface=spm.RealignUnwarp())
         mc_node.inputs.register_to_mean = True
-        mc_node.inputs.write_mask = True
+        mc_node.inputs.write_mask = False
 
         # Brain extraction
         # ================
         bet_node = BrainExtractionWorkflow(name="BrainExtraction")
+        bet_node.get_node('Segmentation').inputs.data = self.bids_layout.get(return_type='file', run='[1]', type='T1w', extensions='nii')
+        bet_node.get_node('ApplyMask').inputs.in_file = self.bids_layout.get(return_type='file', run='[1]', type='T1w', extensions='nii')
 
         # Registration
         # ============
@@ -195,6 +151,7 @@ class FMRIPreprocessing(cpe.Pipeline):
         norm_node = npe.MapNode(interface=spm.Normalize12(),
                                 iterfield=['image_to_align', 'apply_to_files'],
                                 name='Normalization')
+        norm_node.inputs.image_to_align = self.bids_layout.get(return_type='file', run='[1]', type='T1w', extensions='nii')
 
         # Smoothing
         # =========
@@ -214,14 +171,14 @@ class FMRIPreprocessing(cpe.Pipeline):
         # ==========
         self.connect([
             # FieldMap calculation
-            (dg_node,        fm_node,    [('mag1_nii',                'magnitude')]),
-            (dg_node,        fm_node,    [('pdif_nii',                    'phase')]),
-            (dg_node,        fm_node,    [('bold_nii',                      'epi')]),
+            # (dg_node,        fm_node,    [('mag1_nii',                'magnitude')]),
+            # (dg_node,        fm_node,    [('pdif_nii',                    'phase')]),
+            # (dg_node,        fm_node,    [('bold_nii',                      'epi')]),
             # Brain extraction
-            (dg_node,       bet_node,    [('t1_nii',          'Segmentation.data')]),
-            (dg_node,       bet_node,    [('t1_nii',          'ApplyMask.in_file')]),
+            # (dg_node,       bet_node,    [('t1_nii',          'Segmentation.data')]),
+            # (dg_node,       bet_node,    [('t1_nii',          'ApplyMask.in_file')]),
             # Slice timing correction
-            (dg_node,        st_node,    [('bold_nii',                 'in_files')]),
+            # (dg_node,        st_node,    [('bold_nii',                 'in_files')]),
             # Motion correction and unwarping
             (st_node,        mc_node,    [('timecorrected_files',         'scans')]),
             (fm_node,        mc_node,    [('vdm',                        'pmscan')]),
@@ -230,7 +187,7 @@ class FMRIPreprocessing(cpe.Pipeline):
             (mc_node,       reg_node,    [('runwarped_files',    'apply_to_files')]),
             (bet_node,      reg_node,    [('ApplyMask.out_file',         'target')]),
             # Normalization
-            (dg_node,      norm_node,    [('t1_nii',             'image_to_align')]),
+            # (dg_node,      norm_node,    [('t1_nii',             'image_to_align')]),
             (reg_node,     norm_node,    [('coregistered_files', 'apply_to_files')]),
             # Smoothing
             (norm_node,  smooth_node,    [('normalized_files',         'in_files')]),
