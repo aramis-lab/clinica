@@ -132,6 +132,9 @@ def contain_dicom(folder_path):
 
     return False
 
+def get_supported_dataset():
+    return ['ADNI', 'CLINAD', 'PREVDEMALS', 'INSIGHT']
+
 
 def create_sessions_dict(input_path, study_name, clinical_spec_path, bids_ids, name_column_ids, subj_to_remove = []):
     """
@@ -203,7 +206,71 @@ def create_sessions_dict(input_path, study_name, clinical_spec_path, bids_ids, n
     return sessions_dict
 
 
-def write_sessions_tsv(out_path, bids_paths, sessions_dict, fields_bids, sessions_list = 'M0'):
+def create_scans_dict(input_path, study_name, clinic_specs_path, bids_ids, name_column_ids):
+    import pandas as pd
+    from os import path
+    scans_dict = {}
+    prev_file = ''
+    prev_sheet = ''
+
+    if not study_name in get_supported_dataset():
+        raise Exception('Dataset not supported. Supported datasets are:', get_supported_dataset())
+
+    # Init the dictionary with the subject ids
+    for bids_id in bids_ids:
+        scans_dict.update({bids_id: {'T1/DWI/fMRI/FMAP': {}, 'FDG': {}}})
+
+    scans_specs = pd.read_excel(clinic_specs_path, sheetname='scans.tsv')
+    fields_dataset = []
+    fields_location = []
+    fields_bids = []
+    fields_mod = []
+
+    # Extract the fields available and the corresponding bids name, location and type
+    for i in range(0, len(scans_specs[study_name])):
+        field = scans_specs[study_name][i]
+        if not pd.isnull(field):
+            fields_dataset.append(field)
+            fields_bids.append(scans_specs['BIDS CLINICA'][i])
+            fields_location.append(scans_specs[study_name +' location'][i])
+            fields_mod.append(scans_specs['Modalities related'][i])
+
+    # For each field available extract the original name, extract from the file all the values and fill a data structure
+    for i in range(0, len(fields_dataset)):
+        # Location is composed by file/sheet
+        location = fields_location[i].split('/')
+        file_name = location[0]
+        if len(location) > 1:
+            sheet = location[1]
+        else:
+            sheet = ''
+        # Check if the file to read is already opened
+        if file_name == prev_file and sheet == prev_sheet:
+            pass
+        else:
+            file_to_read_path = path.join(input_path, 'clinicalData', file_name)
+            if sheet != '':
+                file_to_read = pd.read_excel(file_to_read_path, sheetname=sheet)
+            else:
+                file_to_read = pd.read_excel(file_to_read_path)
+            prev_file = file_name
+            prev_sheet = sheet
+
+        for bids_id in bids_ids:
+            original_id = bids_id.replace('sub-'+study_name, '')
+            row_to_extract = file_to_read[file_to_read[name_column_ids] == int(original_id)].index.tolist()
+            if len(row_to_extract) > 0:
+                row_to_extract = row_to_extract[0]
+                # Fill the dictionary with all the information
+                (scans_dict[bids_id][fields_mod[i]]).update(
+                    {fields_bids[i]: file_to_read.iloc[row_to_extract][fields_dataset[i]]})
+            else:
+                print " Scans information for " + bids_id + " not found."
+
+    return scans_dict
+
+
+def write_sessions_tsv(bids_paths, sessions_dict):
     """
 
     :param out_path:
@@ -218,20 +285,60 @@ def write_sessions_tsv(out_path, bids_paths, sessions_dict, fields_bids, session
     from os import path
 
     for sp in bids_paths:
-        sp = sp[:-1]
         bids_id = sp.split(os.sep)[-1]
-        sessions_df = pd.DataFrame(columns=fields_bids)
+
         if sessions_dict.has_key(bids_id):
             session_df = pd.DataFrame(sessions_dict[bids_id]['M0'], index=['i', ])
             cols = session_df.columns.tolist()
             cols = cols[-1:] + cols[:-1]
             session_df = session_df[cols]
-            session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False)
+            session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf8')
         else:
             print "No session data available for " + sp
             session_df = pd.DataFrame(columns=['session_id'])
             session_df['session_id'] = pd.Series('M0')
-            session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False)
+            session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf8')
+
+
+def write_scans_tsv(out_path, bids_ids, scans_dict):
+    """
+    Write the scans dict into tsv files.
+    :param out_path:
+    :param bids_ids:
+    :param scans_dict:
+    :return:
+    """
+    import pandas as pd
+    from os import path
+    import os
+    from glob import glob
+
+    for bids_id in bids_ids:
+        scans_df = pd.DataFrame()
+        bids_id = bids_id.split(os.sep)[-1]
+        # Create the file
+        tsv_name = bids_id + "_ses-M0_scans.tsv"
+        # If the file already exists, remove it
+        if os.path.exists(path.join(out_path, bids_id, 'ses-M0', tsv_name)):
+            os.remove(path.join(out_path, bids_id, 'ses-M0', tsv_name))
+
+        mod_available = glob(path.join(out_path, bids_id, 'ses-M0', '*'))
+        for mod in mod_available:
+            mod_name = os.path.basename(mod)
+            files = glob(path.join(mod, '*'))
+            for file in files:
+                file_name = os.path.basename(file)
+                if mod_name == "anat" or mod_name == "dwi" or mod_name == "func":
+                    f_type = 'T1/DWI/fMRI/FMAP'
+                elif mod_name == 'pet':
+                    f_type = 'FDG'
+
+                row_to_append = pd.DataFrame(scans_dict[bids_id][f_type], index=[0])
+                # Insert the column filename as first value
+                row_to_append.insert(0, 'filename', path.join(mod_name, file_name))
+                scans_df = scans_df.append(row_to_append)
+
+            scans_df.to_csv(path.join(out_path, bids_id, 'ses-M0', tsv_name), sep='\t', index=False, encoding='utf8')
 
 
 def dcm_to_nii(input_path, output_path, bids_name, mod_type):
@@ -527,7 +634,6 @@ def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name , ac
             # If  the original image is not compress, compress it
             if file_ext == '.nii':
                 compress_nii(path.join(folder_output, pet_name + get_bids_suff('pet') + file_ext))
-
 
 
 def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False,False]):
