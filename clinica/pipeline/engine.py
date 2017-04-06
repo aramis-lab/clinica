@@ -3,7 +3,9 @@
 """
 
 import nipype.pipeline.engine as npe
+import nipype.interfaces.utility as nutil
 import abc
+from bids.grabbids import BIDSLayout
 
 
 def postset(attribute, value):
@@ -33,24 +35,23 @@ def get_subject_session_list(input_dir, ss_file=None):
 
     return sessions, subjects
 
-
 class Pipeline(npe.Workflow):
     """
     """
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, bids_dir, caps_dir, ss_file=None):
+    def __init__(self, bids_dir, caps_dir, tsv_file=None):
         """
         """
         self._is_built = False
         self._input_dir = bids_dir
         self._output_dir = caps_dir
         self._verbosity = 'debug'
-        self._ss_file = ss_file
+        self._tsv_file = tsv_file
         self._name = self.__class__.__name__
         self._parameters = {}
-        self._sessions, self._subjects = get_subject_session_list(bids_dir, ss_file)
+        self._sessions, self._subjects = get_subject_session_list(bids_dir, tsv_file)
         npe.Workflow.__init__(self, self.__class__.__name__)
 
     def run(self, plugin=None, plugin_args=None, update_hash=False):
@@ -83,7 +84,10 @@ class Pipeline(npe.Workflow):
     def sessions(self): return self._sessions
 
     @property
-    def ss_file(self): return self._ss_file
+    def tsv_file(self): return self._tsv_file
+
+    @property
+    def bids_layout(self): return BIDSLayout(self.input_dir)
 
     @abc.abstractmethod
     def build(self): pass

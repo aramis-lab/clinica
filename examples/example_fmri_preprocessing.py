@@ -3,11 +3,14 @@
 
 from clinica.pipeline.fmri.preprocessing import FMRIPreprocessing
 
-pipeline = FMRIPreprocessing('/Volumes/dataARAMIS/users/jeremy.guillon/multiconproject/data/HMTC_BIDS',
-                             '/Volumes/dataARAMIS/users/jeremy.guillon/multiconproject/data/HMTC_CAPS')
+pipeline = FMRIPreprocessing('/Users/jeremy.guillon/Repositories/multiconproject/data/HMTC_BIDS',
+                             '/Users/jeremy.guillon/Repositories/multiconproject/data/HMTC_CAPS')
 pipeline.parameters = {
     'num_slices': 45,
-    'time_repetition': 2.4
+    'time_repetition': 2.4,
+    'echo_times': [5.19, 7.65],
+    'blip_direction': 1,
+    'total_readout_time': 15.6799
 }
-pipeline.base_dir = '/Users/jeremy.guillon/Tmp'
-pipeline.run()
+pipeline.base_dir = '/Users/jeremy.guillon/Tmp2'
+pipeline.run(plugin='MultiProc', plugin_args={'n_procs' : 2})
