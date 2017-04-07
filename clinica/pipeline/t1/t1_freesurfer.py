@@ -16,6 +16,35 @@ __maintainer__ = "Junhao Wen"
 __email__ = "junhao.Wen@inria.fr"
 __status__ = "Development"
 
+def bids_datagrabber(input_dir, subjects_list, sessions_list):
+    """Fetches files from a BIDS directory, subjects list and a sessions list
+
+    :param input_dir:
+    :param subjects_list:
+    :param sessions_list:
+    :return: A list of paths to the desired files.
+    """
+    from bids.grabbids import BIDSLayout
+
+    layout = BIDSLayout(input_dir)
+
+    # if there exists multiple run, we take the first one
+    if not layout.get(target='run', return_type='id', type='T1w'):
+        anat_t1 = layout.get(return_type='file',
+                             type='T1w',
+                             extensions='nii|nii.gz',
+                             session='|'.join(sessions_list).replace('ses-',''),
+                             subject='|'.join(subjects_list).replace('sub-',''))
+    else:
+        anat_t1 = layout.get(return_type='file',
+                             type='T1w',
+                             extensions='nii|nii.gz',
+                             session='|'.join(sessions_list).replace('ses-',''),
+                             subject='|'.join(subjects_list).replace('sub-',''),
+                             run='1')
+
+    return anat_t1
+
 def datagrabber_t1_freesurfer_pipeline(input_dir,
                        output_dir,
                        subjects_visits_tsv=None,
@@ -59,19 +88,30 @@ def datagrabber_t1_freesurfer_pipeline(input_dir,
     inputnode.inputs.output_dir = output_dir
     inputnode.inputs.subjects_visits_tsv = subjects_visits_tsv
 
-    # Node to grab the BIDS input.
-    datagrabbernode = pe.Node(interface=nio.DataGrabber(
-                        infields=['subject_list', 'session_list', 'subject_repeat', 'session_repeat'],
-                        outfields=['anat_t1']),
-                        name="datagrabbernode")  # the best explanation for datagrabber http://nipy.org/nipype/interfaces/generated/nipype.interfaces.io.html#datagrabber
-    datagrabbernode.inputs.base_directory = input_dir
-    datagrabbernode.inputs.template = '*'
-    datagrabbernode.inputs.field_template = dict(anat_t1='%s/%s/anat/%s_%s_T1w.nii.gz') # This is just to adapt to the output anat_t1
-    # just for test with my home nii files
-    # datagrabbernode.inputs.field_template = dict(anat_t1='sub-%s/ses-%s/anat/sub-%s_ses-%s_T1w.nii')
-    datagrabbernode.inputs.template_args = dict(anat_t1=[['subject_list', 'session_list', 'subject_repeat',
-                                                          'session_repeat']])
-    datagrabbernode.inputs.sort_filelist = False
+
+    # BIDS DataGabber
+    # ===============
+    datagrabbernode = pe.Node(name='datagrabbernode',
+                              interface=Function(
+                                  function=bids_datagrabber,
+                                  input_names=['input_dir', 'subjects_list', 'sessions_list'],
+                                  output_names=['anat_t1']))
+    datagrabbernode.inputs.input_dir = input_dir
+
+
+    # # Node to grab the BIDS input.
+    # datagrabbernode = pe.Node(interface=nio.DataGrabber(
+    #                     infields=['subject_list', 'session_list', 'subject_repeat', 'session_repeat'],
+    #                     outfields=['anat_t1']),
+    #                     name="datagrabbernode")  # the best explanation for datagrabber http://nipy.org/nipype/interfaces/generated/nipype.interfaces.io.html#datagrabber
+    # datagrabbernode.inputs.base_directory = input_dir
+    # datagrabbernode.inputs.template = '*'
+    # datagrabbernode.inputs.field_template = dict(anat_t1='%s/%s/anat/%s_%s_T1w.nii.gz') # This is just to adapt to the output anat_t1
+    # # just for test with my home nii files
+    # # datagrabbernode.inputs.field_template = dict(anat_t1='sub-%s/ses-%s/anat/sub-%s_ses-%s_T1w.nii')
+    # datagrabbernode.inputs.template_args = dict(anat_t1=[['subject_list', 'session_list', 'subject_repeat',
+    #                                                       'session_repeat']])
+    # datagrabbernode.inputs.sort_filelist = False
 
     datagrabber_recon_all = t1_freesurfer_pipeline(output_dir,
                            working_directory=working_directory,
@@ -80,10 +120,8 @@ def datagrabber_t1_freesurfer_pipeline(input_dir,
 
     wf_recon_all_with_datagrabber = pe.Workflow(name='reconall_workflow', base_dir=working_directory)
 
-    wf_recon_all_with_datagrabber.connect(inputnode, 'subject_list', datagrabbernode, 'subject_list')
-    wf_recon_all_with_datagrabber.connect(inputnode, 'subject_list', datagrabbernode, 'subject_repeat')
-    wf_recon_all_with_datagrabber.connect(inputnode, 'session_list', datagrabbernode, 'session_list')
-    wf_recon_all_with_datagrabber.connect(inputnode, 'session_list', datagrabbernode, 'session_repeat')
+    wf_recon_all_with_datagrabber.connect(inputnode, 'subject_list', datagrabbernode, 'subjects_list')
+    wf_recon_all_with_datagrabber.connect(inputnode, 'session_list', datagrabbernode, 'sessions_list')
     wf_recon_all_with_datagrabber.connect(inputnode, 'subject_dir', datagrabber_recon_all, 'recon_all.subjects_dir')
     wf_recon_all_with_datagrabber.connect(inputnode, 'subject_id', datagrabber_recon_all, 'recon_all.subject_id')
     wf_recon_all_with_datagrabber.connect(datagrabbernode, 'anat_t1', datagrabber_recon_all, 'recon_all.T1_files')
