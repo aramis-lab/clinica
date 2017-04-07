@@ -79,6 +79,7 @@ class FMRIPreprocessing(cpe.Pipeline):
         - [x] Develop SPM Realign and Unwarp wrapper and integrate it.
         - [x] Develop SPM Fieldmap Calculation Tool wrapper and integrate it.
         - [ ] Replace standard DataGrabber by a BIDS tree finder.
+        - [ ] Add support of gzipped nifti inputs.
 
     Args:
         input_dir: A BIDS directory.
@@ -90,6 +91,19 @@ class FMRIPreprocessing(cpe.Pipeline):
 
     Raises:
         IOError:
+
+    Example:
+        >>> from clinica.pipeline.fmri.preprocessing import FMRIPreprocessing
+        >>> pipeline = FMRIPreprocessing('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
+        >>> pipeline.parameters = {
+        >>>     'num_slices': 45,
+        >>>     'time_repetition': 2.4,
+        >>>     'echo_times': [5.19, 7.65],
+        >>>     'blip_direction': 1,
+        >>>     'total_readout_time': 15.6799
+        >>> }
+        >>> pipeline.base_dir = '/tmp/'
+        >>> pipeline.run()
     """
 
     @cpe.postset('is_built', True)
