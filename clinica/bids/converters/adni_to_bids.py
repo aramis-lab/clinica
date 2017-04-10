@@ -812,29 +812,27 @@ class ADNI_TO_BIDS(Converter, CmdParser):
 
         return visits
 
-    def compute_t1_paths(self, source_dir, subj_list):
+    def compute_t1_paths(self, source_dir, clinical_dir, dest_dir, subjs_list):
         """
-        Select the T1 to use for each subject.
 
         :param source_dir:
-        :return: A Pandas dataframe
+        :param clinical_dir:
+        :param dest_dir:
+        :param subjs_list:
+        :return:
         """
 
         import pandas as pd
         from os import path, walk
 
         t1_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
-                                                         'Study_ID', 'Field_Strength', 'Series_ID', 'Original']
+                     'Study_ID', 'Field_Strength', 'Series_ID', 'Original']
 
-        t1_df = pd.DataFrame(columns = t1_col_df)
-        subjs_list_path = path.join(source_dir, 'clinicalData', 'subjects_list.xlsx')
-        adni_merge_path = path.join(source_dir, 'clinicalData', 'ADNIMERGE.csv')
-        adni_screening_path = path.join(source_dir, 'clinicalData', 'ADNI_ScreeningList_8_22_12.csv')
-        ida_meta_path = path.join(source_dir, 'clinicalData', 'IDA_MR_METADATA_Listing.csv')
-        mprage_meta_path = path.join(source_dir, 'clinicalData', 'MPRAGEMETA.csv')
-
-        subjs_list_excel = pd.read_excel(subjs_list_path)
-        subjs_list = subjs_list_excel['PTID']
+        t1_df = pd.DataFrame(columns=t1_col_df)
+        adni_merge_path = path.join(clinical_dir, 'ADNIMERGE.csv')
+        adni_screening_path = path.join(clinical_dir, 'ADNI_ScreeningList_8_22_12.csv')
+        ida_meta_path = path.join(clinical_dir, 'IDA_MR_METADATA_Listing.csv')
+        mprage_meta_path = path.join(clinical_dir, 'MPRAGEMETA.csv')
 
         adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
         ida_meta = pd.io.parsers.read_csv(ida_meta_path, sep=',')
@@ -851,16 +849,18 @@ class ADNI_TO_BIDS(Converter, CmdParser):
             ida_meta_subj = ida_meta[ida_meta.Subject == subj]
 
             mprage_meta_subj_orig = mprage_meta_subj[mprage_meta_subj['Orig/Proc'] == 'Original']
-            visits = self.visits_to_timepoints_t1(subj, mprage_meta_subj, adnimerge_subj)
+            visits = self.visits_to_timepoints(subj, mprage_meta_subj, adnimerge_subj)
 
             keys = visits.keys()
             keys.sort()
             for visit_info in visits.keys():
                 if visit_info[1] == 'ADNI1':
-                    image_dict = self.adni1_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj, ida_meta_subj)
+                    image_dict = self.adni1_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
+                                                  ida_meta_subj)
                 elif visit_info[1] == 'ADNIGO':
-                    image_dict = self.adnigo_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj, ida_meta_subj,
-                                              visit_info[2])
+                    image_dict = self.adnigo_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
+                                                   ida_meta_subj,
+                                                   visit_info[2])
                 else:  # ADNI2
                     image_dict = self.adni2_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj_orig)
 
@@ -921,12 +921,13 @@ class ADNI_TO_BIDS(Converter, CmdParser):
 
         # Drop all the lines that have the Path section empty
         images = images.drop(images[images.Path == ''].index)
-        # Store the paths inside a file called t1_paths inside the input directory
-        images.to_csv(path.join(source_dir,'path', 't1_paths.tsv'), sep='\t', index=False)
+
+        # Store the paths inside a file called conversion_info inside the input directory
+        images.to_csv(path.join(dest_dir, 'conversion_info', 't1_paths.tsv'), sep='\t', index=False)
 
         return images
 
-    def compute_fdg_pet_paths(self, source_dir, subjs_list):
+    def compute_fdg_pet_paths(self, source_dir, clinical_dir, dest_dir, subjs_list):
         import pandas as pd
         import os
         from os import walk, path
@@ -936,8 +937,8 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                        'Series_ID', 'Image_ID', 'Original']
 
         pet_fdg_df = pd.DataFrame(columns=pet_fdg_col)
-        petqc_path = path.join(source_dir, 'clinicalData', 'PETQC.csv')
-        pet_meta_list_path = path.join(source_dir, 'clinicalData', 'PET_META_LIST.csv')
+        petqc_path = path.join(clinical_dir, 'PETQC.csv')
+        pet_meta_list_path = path.join(clinical_dir, 'PET_META_LIST.csv')
         petqc = pd.io.parsers.read_csv(petqc_path, sep=',')
         pet_meta_list = pd.io.parsers.read_csv(pet_meta_list_path, sep=',')
 
@@ -955,7 +956,7 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                     for row in pet_qc_visit.iterrows():
                         image = row[1]
                         pet_meta_image = \
-                        subject_pet_meta[(subject_pet_meta['Image ID'] == int(image.LONIUID[1:]))].iloc[0]
+                            subject_pet_meta[(subject_pet_meta['Image ID'] == int(image.LONIUID[1:]))].iloc[0]
                         if pet_meta_image.Sequence.lower().find('early') < 0:
                             normal_images.append(image)
                             normal_meta.append(pet_meta_image)
@@ -970,7 +971,8 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                         for i in index[::-1]:
                             coreg_avg = subject_pet_meta[(subject_pet_meta['Sequence'] == 'Co-registered, Averaged')
                                                          & (
-                                                         subject_pet_meta['Series ID'] == normal_meta[i]['Series ID'])]
+                                                             subject_pet_meta['Series ID'] == normal_meta[i][
+                                                                 'Series ID'])]
                             if coreg_avg.shape[0] > 0:
                                 qc_visit = normal_images[i]
                                 break
@@ -991,7 +993,7 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                         continue
                 original_image = original_pet_meta.iloc[0]
                 averaged_pet_meta = subject_pet_meta[(subject_pet_meta['Sequence'] == 'Co-registered, Averaged') & (
-                subject_pet_meta['Series ID'] == original_image['Series ID'])]
+                    subject_pet_meta['Series ID'] == original_image['Series ID'])]
                 if averaged_pet_meta.shape[0] < 1:
                     sel_image = original_image
                     original = True
@@ -1009,7 +1011,8 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                 image_id = sel_image['Image ID']
 
                 row_to_append = pd.DataFrame(
-                    [[subj, qc_visit.VISCODE2, str(visit), sequence, date, str(study_id), str(series_id), str(image_id), original]],
+                    [[subj, qc_visit.VISCODE2, str(visit), sequence, date, str(study_id), str(series_id), str(image_id),
+                      original]],
                     columns=pet_fdg_col)
                 pet_fdg_df = pet_fdg_df.append(row_to_append, ignore_index=True)
 
@@ -1044,31 +1047,31 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                 print 'Not found ' + str(image.Subject_ID)
         images.loc[:, 'Path'] = pd.Series(image_folders, index=images.index)
 
-        fdg_csv_path = path.join(source_dir, 'path')
+        fdg_csv_path = path.join(dest_dir, 'conversion_info')
         if not os.path.exists(fdg_csv_path):
             os.mkdir(fdg_csv_path)
         images.to_csv(path.join(fdg_csv_path, 'fdg_pet_paths.tsv'), sep='\t', index=False)
 
         return images
 
-    def compute_av45_pet_paths(self, source_dir, subjs_list):
+    def compute_av45_pet_paths(self, source_dir, clinical_dir, dest_dir, subjs_list):
         import pandas as pd
         from numpy import nan
         from os import walk, path
         import os
 
-        pet_av45_col = ['Subject_ID', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
-                       'Series_ID', 'Image_ID', 'Original']
+        pet_av45_col = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
+                        'Study_ID', 'Series_ID', 'Image_ID', 'Original']
 
         pet_av45_df = pd.DataFrame(columns=pet_av45_col)
 
         pet_visits_corr = {'ADNI Baseline': 'bl', 'ADNI2 Baseline-New Pt': 'bl'}
-        av45qc_path = path.join(source_dir, 'clinicalData', 'AV45QC.csv')
+        av45qc_path = path.join(clinical_dir, 'AV45QC.csv')
         av45qc = pd.io.parsers.read_csv(av45qc_path, sep=',')
         baseline = av45qc[(av45qc.VISCODE2 == 'bl') & (av45qc.PASS == 1) & av45qc.RID.isin(
             [int(s[-4:]) for s in subjs_list])]
 
-        pet_meta_list_path = path.join(source_dir, 'clinicalData', 'PET_META_LIST.csv')
+        pet_meta_list_path = path.join(clinical_dir, 'PET_META_LIST.csv')
         pet_meta_list = pd.io.parsers.read_csv(pet_meta_list_path, sep=',')
         pet_meta_list = pet_meta_list[pet_meta_list.Visit.map(lambda x: x.find('Baseline') > -1)]
 
@@ -1088,10 +1091,11 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                     for row in pet_qc_visit.iterrows():
                         image = row[1]
                         pet_meta_image = \
-                        subject_pet_meta[(subject_pet_meta['Image ID'] == int(image.LONIUID[1:]))].iloc[0]
+                            subject_pet_meta[(subject_pet_meta['Image ID'] == int(image.LONIUID[1:]))].iloc[0]
                         if pet_meta_image.Sequence.lower().find('early') < 0:
                             normal_images.append(image)
                             normal_meta.append(pet_meta_image)
+
                     if len(normal_images) == 0:
                         print 'No regular AV45-PET image: Subject - ' + subject + ' for visit ' + visit
                         continue
@@ -1125,7 +1129,7 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                 original_image = original_pet_meta.iloc[0]
                 averaged_pet_meta = subject_pet_meta[
                     (subject_pet_meta['Sequence'] == 'AV45 Co-registered, Averaged') & (
-                    subject_pet_meta['Series ID'] == original_image['Series ID'])]
+                        subject_pet_meta['Series ID'] == original_image['Series ID'])]
                 if averaged_pet_meta.shape[0] < 1:
                     sel_image = original_image
                     original = True
@@ -1137,63 +1141,17 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                 sequence = sequence.replace(' ', '_').replace('/', '_').replace(';', '_').replace('*', '_').replace('(',
                                                                                                                     '_').replace(
                     ')', '_').replace(':', '_')
+                viscode = qc_visit['VISCODE2']
                 date = sel_image['Scan Date']
                 study_id = sel_image['Study ID']
                 series_id = sel_image['Series ID']
                 image_id = sel_image['Image ID']
 
                 row_to_append = pd.DataFrame(
-                         [[subject, str(visit), sequence, date, str(study_id), str(series_id), str(image_id), original]],
-                         columns=pet_av45_col)
+                    [[subject, viscode, str(visit), sequence, date, str(study_id), str(series_id), str(image_id),
+                      original]],
+                    columns=pet_av45_col)
                 pet_av45_df = pet_av45_df.append(row_to_append, ignore_index=True)
-
-
-
-
-            # zeros_rid = self.fill_zeros(subject.RID, 4)
-            # int_image_id = int(subject.LONIUID[1:])
-            # filtered_pet_meta = pet_meta_list[pet_meta_list['Subject'].map(lambda x: x.endswith(zeros_rid))]
-            #
-            # if filtered_pet_meta.shape[0] < 1:
-            #     print 'NO Screening: RID - ' + subject.RID
-            #     continue
-            #
-            # original_pet_meta = filtered_pet_meta[
-            #     (filtered_pet_meta['Orig/Proc'] == 'Original') & (filtered_pet_meta['Image ID'] == int_image_id)]
-            # if original_pet_meta.shape[0] < 1:
-            #     print 'NO Screening: RID - ' + subject.RID
-            #     continue
-            #
-            # original_image = original_pet_meta.iloc[0]
-            #
-            # # It is an early scan and there will be another image for the subject
-            # if original_image.Sequence.lower().find('early') > -1:
-            #     continue
-            #
-            # averaged_pet_meta = filtered_pet_meta[(filtered_pet_meta['Sequence'] == 'AV45 Co-registered, Averaged') & (
-            # filtered_pet_meta['Series ID'] == original_image['Series ID'])]
-            # if averaged_pet_meta.shape[0] < 1:
-            #     sel_image = original_image
-            #     original = True
-            # else:
-            #     sel_image = averaged_pet_meta.iloc[0]
-            #     original = False
-            #
-            # subj_id = sel_image.Subject
-            # visit = pet_visits_corr[sel_image.Visit]
-            # sequence = sel_image.Sequence
-            # sequence = sequence.replace(' ', '_').replace('/', '_').replace(';', '_').replace('*', '_').replace('(',
-            #                                                                                                     '_').replace(
-            #     ')', '_').replace(':', '_')
-            # date = sel_image['Scan Date']
-            # study_id = sel_image['Study ID']
-            # series_id = sel_image['Series ID']
-            # image_id = sel_image['Image ID']
-            #
-            # row_to_append = pd.DataFrame(
-            #     [[subj_id, str(visit), sequence, date, str(study_id), str(series_id), str(image_id), original]],
-            #     columns=pet_av45_col)
-            # pet_av45_df = pet_av45_df.append(row_to_append, ignore_index=True)
 
         subjects = pet_av45_df
         count = 0
@@ -1233,78 +1191,132 @@ class ADNI_TO_BIDS(Converter, CmdParser):
 
         subjects.loc[:, 'Path'] = pd.Series(image_folders, index=subjects.index)
 
-        av45_csv_path = path.join(source_dir, 'path')
+        av45_csv_path = path.join(dest_dir, 'conversion_info')
         if not os.path.exists(av45_csv_path):
             os.mkdir(av45_csv_path)
-        #subjects.to_csv(path.join(av45_csv_path, 'av45_pet_paths.csv'), sep='\t', index=False)
+        subjects.to_csv(path.join(av45_csv_path, 'av45_pet_paths.tsv'), sep='\t', index=False)
 
         return subjects
 
-    def compute_fmri_path(self, source_dir, dest_dir, subjs_list):
+    def compute_fmri_path(self, source_dir, clinical_dir, dest_dir, subjs_list):
+        '''
+        Compute the path for fmri images following the criteria described in the document Bids for AramisLab.
+
+        :param source_dir: path to the ADNI image folder
+        :param clinical_dir: path to the directory with all the clinical data od ADNI
+        :param dest_dir: path to the output_folder
+        :param subjs_list: subjects list
+        :return: pandas Dataframe containing the path for each fmri
+        '''
+        import os
         from os import path
         from os import walk
         import pandas as pd
 
-        fmri_col = ['Subject_id', 'VISCODE', 'Visit', 'IMAGEUID', 'Sequence', 'Scan Date', 'LONIUID', 'Scanner', 'MagStregth', 'Path']
-
+        fmri_col = ['Subject_ID', 'VISCODE', 'Visit', 'IMAGEUID', 'Sequence', 'Scan Date', 'LONIUID', 'Scanner',
+                    'MagStregth', 'Path']
 
         fmri_df = pd.DataFrame(columns=fmri_col)
-        mayo_mri_fmri_path = path.join(source_dir, 'MAYOADIRL_MRI_FMRI_09_15_16.csv')
-        mayo_mri_imageqc_path = path.join(source_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
-        ida_mr_metadata_path = path.join(source_dir, 'IDA_MR_Metadata_Listing.csv')
+
+        # Load the requested clinical data
+        mayo_mri_fmri_path = path.join(clinical_dir, 'MAYOADIRL_MRI_FMRI_09_15_16.csv')
+        mayo_mri_imageqc_path = path.join(clinical_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
+        ida_mr_metadata_path = path.join(clinical_dir, 'IDA_MR_Metadata_Listing.csv')
 
         mayo_mri_fmri = pd.io.parsers.read_csv(mayo_mri_fmri_path, sep=',')
         ida_mr_metadata = pd.io.parsers.read_csv(ida_mr_metadata_path, sep=',')
         mayo_mri_imageqc = pd.io.parsers.read_csv(mayo_mri_imageqc_path, sep=',')
 
         for subj in subjs_list:
+            print subj
             fmri_subjs_info = mayo_mri_fmri[(mayo_mri_fmri.RID == int(subj[-4:]))]
-
             # Extract visits available
             visits_list = fmri_subjs_info['VISCODE2'].tolist()
-            if len(visits_list)!=0:
+            # Removing duplicates
+            visits_list = list(set(visits_list))
+
+            if len(visits_list) != 0:
                 for viscode in visits_list:
-                    fmri_subj = fmri_subjs_info[fmri_subjs_info['VISCODE2']==viscode].iloc[0]
-                    fmri_imageuid = fmri_subj['IMAGEUID']
-
-                    # Discard scans made with non Philips scanner
-                    fmri_metadata = ida_mr_metadata[ida_mr_metadata['IMAGEUID'] == fmri_imageuid].iloc[0]
-                    if not 'Philips' in fmri_metadata['Scanner']:
-                        print 'No Philips scanner for ', subj, 'visit', viscode
-                        pass
-
-                    elif 4 in mayo_mri_imageqc[mayo_mri_imageqc['loni_image'] == 'I'+ str(fmri_imageuid)]['series_quality'].values :
-                        print 'Bad scan quality'
-                        pass
-
-                    scan_date = fmri_subj.SCANDATE
-                    sequence = self.replace_sequence_chars(fmri_subj.SERDESC)
-
-                    scanner = fmri_metadata['Scanner']
-                    loni_uid = fmri_metadata['LONIUID']
-                    visit = fmri_metadata['Visit']
-                    mag_strenght = fmri_metadata['MagStrength']
-
-                    # Calculate the path
-                    seq_path = path.join(source_dir, str(subj), sequence)
+                    scan_date = ''
+                    sequence = ''
+                    loni_uid = ''
+                    visit = ''
+                    mag_strenght = ''
                     image_path = ''
-                    for (dirpath, dirnames, filenames) in walk(seq_path):
-                        found = False
-                        for d in dirnames:
-                            if d == 'S' + str(loni_uid):
-                                image_path = path.join(dirpath, d)
-                                found = True
-                                break
-                        if found:
-                            break
 
-                    if viscode == 'scmri':
-                        viscode = 'bl'
-                    row_to_append = pd.DataFrame([[subj, str(viscode), visit, str(fmri_imageuid), sequence, scan_date, str(loni_uid),
-                                                   scanner, mag_strenght, image_path]], columns=fmri_col)
-                    fmri_df = fmri_df.append(row_to_append, ignore_index=True)
+                    fmri_subj = fmri_subjs_info[fmri_subjs_info['VISCODE2'] == viscode]
 
-        fmri_df.to_csv(path.join(dest_dir, 'fmri_paths.tsv'), sep='\t', index=False)
+                    if not fmri_subj.empty:
+                        # If there are multiple scans for the same session, check what is the one selected for the usage (field 'series_selected') or
+                        # choose the one with the best quality
+                        if len(fmri_subj) > 1:
+                            fmri_imageuid = fmri_subj['IMAGEUID'].tolist()
+                            loni_uid = ['I' + str(imageuid) for imageuid in fmri_imageuid]
+                            images_qc = mayo_mri_imageqc[mayo_mri_imageqc.loni_image.isin(loni_uid)]
+                            series_selected_values = images_qc['series_selected'].tolist()
+                            sum_series_selected = sum(series_selected_values)
+                            if sum_series_selected == 1:
+                                imageuid_to_select = images_qc[images_qc['series_selected'] > 0]['loni_image'].iloc[
+                                    0].replace('I', '')
+                            else:
+                                imageuid_to_select = self.select_image_qc(fmri_imageuid, images_qc)
+
+                            fmri_subj = fmri_subj[fmri_subj['IMAGEUID'] == int(imageuid_to_select)].iloc[0]
+                        else:
+                            fmri_subj = fmri_subj.iloc[0]
+
+                        fmri_imageuid = fmri_subj['IMAGEUID']
+
+                        # Discard scans made with non Philips scanner and with a bad quality
+                        fmri_metadata = ida_mr_metadata[ida_mr_metadata['IMAGEUID'] == fmri_imageuid]
+                        if not fmri_metadata.empty:
+                            fmri_metadata = fmri_metadata.iloc[0]
+
+                            if not 'Philips' in fmri_metadata['Scanner']:
+                                print 'No Philips scanner for ', subj, 'visit', viscode, '. Skipped.'
+                                continue
+
+                            elif 4 in mayo_mri_imageqc[mayo_mri_imageqc['loni_image'] == 'I' + str(fmri_imageuid)][
+                                'series_quality'].values:
+                                print 'Bad scan quality for ', subj, 'visit', viscode, '. Skipped.'
+                                continue
+
+                            scan_date = fmri_subj.SCANDATE
+                            sequence = self.replace_sequence_chars(fmri_subj.SERDESC)
+                            scanner = fmri_metadata['Scanner']
+                            loni_uid = fmri_metadata['LONIUID']
+                            visit = fmri_metadata['Visit']
+                            mag_strenght = fmri_metadata['MagStrength']
+
+                            # Calculate the path
+                            seq_path = path.join(source_dir, str(subj), sequence)
+                            for (dirpath, dirnames, filenames) in walk(seq_path):
+                                found = False
+                                for d in dirnames:
+                                    if d == 'S' + str(loni_uid):
+                                        image_path = path.join(dirpath, d)
+                                        # Check if the path exists
+                                        if not os.path.isdir(image_path):
+                                            print 'Path not existing for subject:', subj, 'visit:', visit
+                                        found = True
+                                        break
+                                if found:
+                                    break
+
+                            # The session scmri correspond to the baseline
+                            if viscode == 'scmri':
+                                viscode = 'bl'
+                        else:
+                            logging.info('Missing visit, sequence, scan date and loniuid for ', subj, 'visit', visit)
+                        row_to_append = pd.DataFrame(
+                            [[subj, str(viscode), visit, str(fmri_imageuid), sequence, scan_date, str(loni_uid),
+                              scanner, mag_strenght, image_path]], columns=fmri_col)
+
+                        fmri_df = fmri_df.append(row_to_append, ignore_index=True)
+                    else:
+                        logging.info('Missing fMRI for ', subj, 'visit', visit)
+
+        fmri_df.to_csv(path.join(dest_dir, 'conversion_info', 'fmri_paths.tsv'), sep='\t', index=False)
         return fmri_df
 
     def compute_dti_paths(self, csv_dir, adni_dir, subjs_list):
