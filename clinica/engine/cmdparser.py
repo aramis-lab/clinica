@@ -149,8 +149,6 @@ class CmdParserT1SPMFullPrep(CmdParser):
                                 help='TSV file containing the subjects with their sessions.')
         self._args.add_argument("group_id",
                                 help='Current group name')
-        self._args.add_argument("-as", "--analysis_series_id",
-                                help='Current analysis series name', default='default')
         self._args.add_argument("-wd", "--working_directory",
                                 help='Temporary directory to store pipeline intermediate results')
         self._args.add_argument("-np", "--n_threads", type=int, default=4,
@@ -187,7 +185,6 @@ class CmdParserT1SPMFullPrep(CmdParser):
                                                       self.absolute_path(args.caps_directory),
                                                       self.absolute_path(args.subjects_sessions_tsv),
                                                       args.group_id,
-                                                      analysis_series_id=args.analysis_series_id,
                                                       working_directory=self.absolute_path(working_directory),
                                                       tissue_classes=args.tissue_classes,
                                                       dartel_tissues=args.dartel_tissues,
@@ -214,8 +211,6 @@ class CmdParserT1SPMSegment(CmdParser):
                                 help='Path to the CAPS directory.')
         self._args.add_argument("subjects_sessions_tsv",
                                 help='TSV file containing the subjects with their sessions.')
-        self._args.add_argument("-as", "--analysis_series_id",
-                                help='Current analysis series name', default='default')
         self._args.add_argument("-wd", "--working_directory",
                                 help='Temporary directory to store pipeline intermediate results')
         self._args.add_argument("-np", "--n_threads", type=int, default=4,
@@ -239,7 +234,6 @@ class CmdParserT1SPMSegment(CmdParser):
         segment_wf = datagrabber_t1_spm_segment_pipeline(self.absolute_path(args.bids_directory),
                                                          self.absolute_path(args.caps_directory),
                                                          self.absolute_path(args.subjects_sessions_tsv),
-                                                         analysis_series_id=args.analysis_series_id,
                                                          working_directory=self.absolute_path(working_directory),
                                                          tissue_classes=args.tissue_classes,
                                                          dartel_tissues=args.dartel_tissues,
@@ -263,8 +257,6 @@ class CmdParserT1SPMDartelTemplate(CmdParser):
                                 help='TSV file containing the subjects with their sessions.')
         self._args.add_argument("group_id",
                                 help='Current group name')
-        self._args.add_argument("-as", "--analysis_series_id",
-                                help='Current analysis series name', default='default')
         self._args.add_argument("-wd", "--working_directory",
                                 help='Temporary directory to store pipeline intermediate results')
         self._args.add_argument("-np", "--n_threads", type=int, default=4,
@@ -281,7 +273,6 @@ class CmdParserT1SPMDartelTemplate(CmdParser):
         dartel_template_wf = datagrabber_t1_spm_dartel_template(self.absolute_path(args.caps_directory),
                                                                 self.absolute_path(args.subjects_sessions_tsv),
                                                                 args.group_id,
-                                                                analysis_series_id=args.analysis_series_id,
                                                                 working_directory=self.absolute_path(working_directory),
                                                                 dartel_tissues=args.dartel_tissues)
 
@@ -303,8 +294,6 @@ class CmdParserPETPreprocessing(CmdParser):
                                 help='TSV file containing the subjects with their sessions.')
         self._args.add_argument("group_id",
                                 help='Current group name. Used to obtain t1 images template and transformation.')
-        self._args.add_argument("-as", "--analysis_series_id",
-                                help='Current analysis series name', default='default')
         self._args.add_argument("-wd", "--working_directory",
                                 help='Temporary directory to store pipeline intermediate results')
         self._args.add_argument("-np", "--n_threads", type=int, default=4,
@@ -328,7 +317,6 @@ class CmdParserPETPreprocessing(CmdParser):
                                         self.absolute_path(args.caps_directory),
                                         self.absolute_path(args.subjects_sessions_tsv),
                                         args.group_id,
-                                        analysis_series_id=args.analysis_series_id,
                                         pet_type=args.pet_type,
                                         working_directory=self.absolute_path(working_directory),
                                         pvc=args.pvc,
@@ -434,8 +422,6 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
                                 help='Directory where the input NIFTI images are stored')
         self._args.add_argument("subjects_visits_tsv",
                                 help='TSV file with subjects and sessions to be processed')
-        self._args.add_argument("analysis_series_id",
-                                help='Current analysis series name')
         self._args.add_argument("group_id",
                                 help='Current group name')
         self._args.add_argument("diagnoses_tsv",
@@ -472,7 +458,6 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
 
         linear_svm_binary_classification_caps(self.absolute_path(args.caps_directory),
                                               self.absolute_path(args.subjects_visits_tsv),
-                                              args.analysis_series_id,
                                               args.group_id,
                                               self.absolute_path(args.diagnoses_tsv),
                                               prefix=args.prefix,

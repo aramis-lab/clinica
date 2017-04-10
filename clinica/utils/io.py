@@ -13,7 +13,9 @@ def zip_nii(in_file):
     if ext[-3:].lower() == ".gz":
         return in_file
     # Not compressed
+
     out_file = abspath(join(getcwd(), base + ext + '.gz'))
+
     with open(in_file, 'rb') as f_in, gzip.open(out_file, 'wb') as f_out:
         shutil.copyfileobj(f_in, f_out)
 
