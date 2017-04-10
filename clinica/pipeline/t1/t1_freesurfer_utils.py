@@ -28,6 +28,35 @@ def absolute_path(arg):
     else:
         return os.path.join(os.getcwd(), arg)
 
+def bids_datagrabber(input_dir, subjects_list, sessions_list):
+    """Fetches files from a BIDS directory, subjects list and a sessions list
+
+    :param input_dir:
+    :param subjects_list:
+    :param sessions_list:
+    :return: A list of paths to the desired files.
+    """
+    from bids.grabbids import BIDSLayout
+
+    layout = BIDSLayout(input_dir)
+
+    # if there exists multiple run, we take the first one
+    if not layout.get(target='run', return_type='id', type='T1w'):
+        anat_t1 = layout.get(return_type='file',
+                             type='T1w',
+                             extensions='nii|nii.gz',
+                             session='|'.join(sessions_list).replace('ses-',''),
+                             subject='|'.join(subjects_list).replace('sub-',''))
+    else:
+        anat_t1 = layout.get(return_type='file',
+                             type='T1w',
+                             extensions='nii|nii.gz',
+                             session='|'.join(sessions_list).replace('ses-',''),
+                             subject='|'.join(subjects_list).replace('sub-',''),
+                             run='1')
+
+    return anat_t1
+
 
 def get_dirs_check_reconalled(output_dir, subjects_visits_tsv):
     """
