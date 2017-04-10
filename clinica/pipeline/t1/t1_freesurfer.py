@@ -16,34 +16,6 @@ __maintainer__ = "Junhao Wen"
 __email__ = "junhao.Wen@inria.fr"
 __status__ = "Development"
 
-def bids_datagrabber(input_dir, subjects_list, sessions_list):
-    """Fetches files from a BIDS directory, subjects list and a sessions list
-
-    :param input_dir:
-    :param subjects_list:
-    :param sessions_list:
-    :return: A list of paths to the desired files.
-    """
-    from bids.grabbids import BIDSLayout
-
-    layout = BIDSLayout(input_dir)
-
-    # if there exists multiple run, we take the first one
-    if not layout.get(target='run', return_type='id', type='T1w'):
-        anat_t1 = layout.get(return_type='file',
-                             type='T1w',
-                             extensions='nii|nii.gz',
-                             session='|'.join(sessions_list).replace('ses-',''),
-                             subject='|'.join(subjects_list).replace('sub-',''))
-    else:
-        anat_t1 = layout.get(return_type='file',
-                             type='T1w',
-                             extensions='nii|nii.gz',
-                             session='|'.join(sessions_list).replace('ses-',''),
-                             subject='|'.join(subjects_list).replace('sub-',''),
-                             run='1')
-
-    return anat_t1
 
 def datagrabber_t1_freesurfer_pipeline(input_dir,
                        output_dir,
@@ -74,6 +46,7 @@ def datagrabber_t1_freesurfer_pipeline(input_dir,
     from clinica.pipeline.t1.t1_freesurfer_workflows import  t1_freesurfer_pipeline
     from clinica.bids.utils.data_handling import create_subs_sess_list
     import os
+    from clinica.pipeline.t1.t1_freesurfer_utils import bids_datagrabber
 
     if subjects_visits_tsv is None:
         create_subs_sess_list(input_dir, output_dir)
@@ -89,7 +62,7 @@ def datagrabber_t1_freesurfer_pipeline(input_dir,
     inputnode.inputs.subjects_visits_tsv = subjects_visits_tsv
 
 
-    # BIDS DataGabber
+    # BIDS DataGrabber
     # ===============
     datagrabbernode = pe.Node(name='datagrabbernode',
                               interface=Function(
