@@ -142,7 +142,10 @@ def fdr_correction_matrix(p_value_matrix, template=None):
     return reject_test, p_value_corrected
 
 def create_new_feature_tsv(subjects_visits_tsv, bids_dir, dest_tsv, added_features):
-    """This func is to add new features(columns) from the subjects_visits_list tsv file, and use the generated file in the statistical analysis"""
+    """This func is to add new features(columns) from the subjects_visits_list tsv file, and use the generated file in the statistical analysis
+        added_features : list of str, the added features that you want to write into the tsv file, e.g. ['age_bl', 'sex']
+
+    """
     import pandas as pd
     from os.path import join, isfile
     import logging

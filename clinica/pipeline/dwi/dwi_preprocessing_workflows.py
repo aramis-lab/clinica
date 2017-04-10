@@ -476,6 +476,199 @@ def sdc_fmb(name='fmb_correction',
     return wf
 
 
+def sdc_fmb_twophase(name='fmb_correction',
+            fugue_params=dict(smooth3d=2.0),
+            fmap_params=dict(delta_te=2.46e-3),
+            epi_params=dict(echospacing=0.39e-3,
+                            enc_dir='y')):
+    """
+    SDC stands for susceptibility distortion correction. FMB stands for
+    fieldmap-based.
+
+    The fieldmap based method (FMB) implements SDC by using a mapping of the
+    B0 field as proposed by [Jezzard95]_. This workflow uses the implementation
+    of FSL (`FUGUE <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FUGUE>`_). Phase
+    unwrapping is performed using `PRELUDE
+    <http://fsl.fmrib.ox.ac.uk/fsl/fsl-4.1.9/fugue/prelude.html>`_
+    [Jenkinson03]_. Preparation of the fieldmap is performed reproducing the
+    script in FSL `fsl_prepare_fieldmap
+    <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FUGUE/Guide#SIEMENS_data>`_.
+
+    Parameters
+    ----------
+    in_file : FILE
+      Mandatory input. Dwi dataset.
+    in_bval : FILE
+      Mandatory input. Bval file.
+    in_mask : FILE
+      Mandatory input. Mask file.
+    bmap_mag : FILE
+      Mandatory input. Grefield map. Magnitude.
+    bmap_pha : FILE
+      Mandatory input. Grefield map. Phase.
+
+    Outputs
+    ------
+    out_file : FILE
+      Output.
+    out_vsm : FILE
+      Output. The set of dwi volumes.
+    out_warp : FILE
+      Output. The bvalues corresponding to the out_dwi.
+
+    .. warning:: Only SIEMENS format fieldmaps are supported.
+
+    .. admonition:: References
+<
+      .. [Jezzard95] Jezzard P, and Balaban RS, `Correction for geometric
+        distortion in echo planar images from B0 field variations
+        <http://dx.doi.org/10.1002/mrm.1910340111>`_,
+        MRM 34(1):65-73. (1995). doi: 10.1002/mrm.1910340111.
+
+      .. [Jenkinson03] Jenkinson M., `Fast, automated, N-dimensional
+        phase-unwrapping algorithm <http://dx.doi.org/10.1002/mrm.10354>`_,
+        MRM 49(1):193-197, 2003, doi: 10.1002/mrm.10354.
+
+    echo_spacing = 1/(BandwidthPerPixelPhaseEncode x (AcquisitionMatrixText component #1))
+    """
+    from clinica.pipeline.dwi.dwi_preprocessing_utils import convert_phase_in_radians
+    from clinica.pipeline.dwi.dwi_preprocessing_utils import create_phase_in_radsec
+
+    inputnode = pe.Node(niu.IdentityInterface(
+        fields=['in_file', 'in_mask', 'in_fmap_phase1', 'in_fmap_phase2', 'in_fmap_magnitude1', 'in_fmap_magnitude2']),
+        name='inputnode')
+    outputnode = pe.Node(niu.IdentityInterface(
+        fields=['out_file', 'out_vsm', 'out_warp']),
+        name='outputnode')
+
+    getb0 = pe.Node(fsl.ExtractROI(t_min=0, t_size=1), name='get_b0')
+#    n4 = pe.Node(ants.N4BiasFieldCorrection(dimension=3), name='n4_magnitude')
+    n4_1 = pe.Node(ants.N4BiasFieldCorrection(dimension=3), name='n4_magnitude1')
+    n4_2 = pe.Node(ants.N4BiasFieldCorrection(dimension=3), name='n4_magnitude2')
+
+#    bet = pe.Node(fsl.BET(frac=0.4, mask=True), name='bet_n4_magnitude')
+    bet_1 = pe.Node(fsl.BET(frac=0.4, mask=True), name='bet_n4_magnitude1')
+    bet_2 = pe.Node(fsl.BET(frac=0.4, mask=True), name='bet_n4_magnitude2')
+#    dilate = pe.Node(fsl.maths.MathsCommand(nan2zeros=True,
+#                     args='-kernel sphere 5 -dilM'), name='dilate_bet')
+    dilate_1 = pe.Node(fsl.maths.MathsCommand(nan2zeros=True,
+                     args='-kernel sphere 5 -dilM'), name='dilate_bet_1')
+    dilate_2 = pe.Node(fsl.maths.MathsCommand(nan2zeros=True,
+                     args='-kernel sphere 5 -dilM'), name='dilate_bet_2')
+
+    phase1_in_rad = pe.Node(niu.Function(input_names=['in_file', 'name_output_file'], output_names=['out_file'],
+                       function=convert_phase_in_radians), name='Phase1InRad')
+    phase2_in_rad = pe.Node(niu.Function(input_names=['in_file', 'name_output_file'], output_names=['out_file'],
+                       function=convert_phase_in_radians), name='Phase2InRad')
+
+    phase1_unwarp = pe.Node(fsl.PRELUDE(process3d=True), name='Phase1Unwarp')
+    phase2_unwarp = pe.Node(fsl.PRELUDE(process3d=True), name='Phase2Unwarp')
+
+    phase_in_rsec =pe.Node(niu.Function(input_names=['in_phase1', 'in_phase2', 'delta_te', 'out_file'], output_names=['out_file'],
+                       function=create_phase_in_radsec), name='PhaseInRadSec')
+    phase_in_rsec.inputs.delta_te = fmap_params['delta_te']
+
+#    pha2rads = pe.Node(niu.Function(input_names=['in_file'], output_names=['out_file'],
+#                       function=siemens2rads), name='PreparePhase')
+#    prelude = pe.Node(fsl.PRELUDE(process3d=True), name='PhaseUnwrap')
+#    rad2rsec = pe.Node(niu.Function(input_names=['in_file', 'delta_te'],
+#                       output_names=['out_file'], function=rads2radsec), name='ToRadSec')
+#    rad2rsec.inputs.delta_te = fmap_params['delta_te']
+
+    flirt = pe.Node(fsl.FLIRT(interp='spline', cost='normmi', cost_func='normmi',
+                    dof=6, bins=64, save_log=True, padding_size=10,
+                    searchr_x=[-4, 4], searchr_y=[-4, 4], searchr_z=[-4, 4],
+                    fine_search=1, coarse_search=10),
+                    name='BmapMag2B0')
+    applyxfm = pe.Node(fsl.ApplyXfm(interp='spline', padding_size=10, apply_xfm=True),
+                       name='BmapPha2B0')
+
+    pre_fugue = pe.Node(fsl.FUGUE(save_fmap=True), name='PreliminaryFugue')
+    demean = pe.Node(niu.Function(input_names=['in_file', 'in_mask'],
+                     output_names=['out_file'], function=demean_image),
+                     name='DemeanFmap')
+
+    cleanup = cleanup_edge_pipeline()
+
+    addvol = pe.Node(niu.Function(input_names=['in_file'], output_names=['out_file'],
+                     function=add_empty_vol), name='AddEmptyVol')
+
+    vsm = pe.Node(fsl.FUGUE(save_shift=True, **fugue_params),
+                  name="ComputeVSM")
+    vsm.inputs.asym_se_time = fmap_params['delta_te']
+    vsm.inputs.dwell_time = epi_params['echospacing']
+
+    split = pe.Node(fsl.Split(dimension='t'), name='SplitDWIs')
+    merge = pe.Node(fsl.Merge(dimension='t'), name='MergeDWIs')
+    unwarp = pe.MapNode(fsl.FUGUE(icorr=True, forward_warping=False),
+                        iterfield=['in_file'], name='UnwarpDWIs')
+    unwarp.inputs.unwarp_direction = epi_params['enc_dir']
+    thres = pe.MapNode(fsl.Threshold(thresh=0.0), iterfield=['in_file'],
+                       name='RemoveNegative')
+    vsm2dfm = vsm2warp()
+    vsm2dfm.inputs.inputnode.scaling = 1.0
+    vsm2dfm.inputs.inputnode.enc_dir = epi_params['enc_dir']
+
+    wf = pe.Workflow(name=name)
+    wf.connect([
+#        (inputnode, pha2rads, [('bmap_pha', 'in_file')]),
+        (inputnode, phase1_in_rad, [('in_fmap_phase1', 'in_file')]),
+        (inputnode, phase2_in_rad, [('in_fmap_phase2', 'in_file')]),
+        (inputnode, getb0, [('in_file', 'in_file')]),
+#        (inputnode, n4, [('bmap_mag', 'input_image')]),
+        (inputnode, n4_1, [('in_fmap_magnitude1', 'input_image')]),
+        (inputnode, n4_2, [('in_fmap_magnitude2', 'input_image')]),
+#        (n4, bet, [('output_image', 'in_file')]),
+        (n4_1, bet_1, [('output_image', 'in_file')]),
+        (n4_2, bet_2, [('output_image', 'in_file')]),
+#        (bet, dilate, [('mask_file', 'in_file')]),
+        (bet_1, dilate_1, [('mask_file', 'in_file')]),
+        (bet_2, dilate_2, [('mask_file', 'in_file')]),
+        #        (pha2rads, prelude, [('out_file', 'phase_file')]),
+#        (n4,       prelude, [('output_image', 'magnitude_file')]),
+#        (dilate,   prelude, [('out_file', 'mask_file')]),
+        (phase1_in_rad, phase1_unwarp, [('out_file', 'phase_file')]),
+        (n4_1,          phase1_unwarp, [('output_image', 'magnitude_file')]),
+        (dilate_1,      phase1_unwarp, [('out_file', 'mask_file')]),
+        (phase2_in_rad, phase2_unwarp, [('out_file', 'phase_file')]),
+        (n4_2,          phase2_unwarp, [('output_image', 'magnitude_file')]),
+        (dilate_2,      phase2_unwarp, [('out_file', 'mask_file')]),
+#        (prelude, rad2rsec, [('unwrapped_phase_file', 'in_file')]),
+        (phase1_unwarp, phase_in_rsec, [('unwrapped_phase_file', 'in_phase1')]),
+        (phase2_unwarp, phase_in_rsec, [('unwrapped_phase_file', 'in_phase2')]),
+
+        (getb0,     flirt, [('roi_file', 'reference')]),
+        (inputnode, flirt, [('in_mask', 'ref_weight')]),
+#        (n4,        flirt, [('output_image', 'in_file')]),
+#        (dilate,    flirt, [('out_file', 'in_weight')]),
+        (n4_1,      flirt, [('output_image', 'in_file')]),
+        (dilate_1,  flirt, [('out_file', 'in_weight')]),
+        (getb0,    applyxfm, [('roi_file', 'reference')]),
+#        (rad2rsec, applyxfm, [('out_file', 'in_file')]),
+        (phase_in_rsec, applyxfm, [('out_file', 'in_file')]),
+        (flirt,    applyxfm, [('out_matrix_file', 'in_matrix_file')]),
+        (applyxfm,  pre_fugue, [('out_file', 'fmap_in_file')]),
+        (inputnode, pre_fugue, [('in_mask', 'mask_file')]),
+        (pre_fugue, demean, [('fmap_out_file', 'in_file')]),
+        (inputnode, demean, [('in_mask', 'in_mask')]),
+        (demean,    cleanup, [('out_file', 'inputnode.in_file')]),
+        (inputnode, cleanup, [('in_mask', 'inputnode.in_mask')]),
+        (cleanup, addvol, [('outputnode.out_file', 'in_file')]),
+        (inputnode, vsm, [('in_mask', 'mask_file')]),
+        (addvol,    vsm, [('out_file', 'fmap_in_file')]),
+        (inputnode, split, [('in_file', 'in_file')]),
+        (split, unwarp, [('out_files', 'in_file')]),
+        (vsm,   unwarp, [('shift_out_file', 'shift_in_file')]),
+        (unwarp, thres, [('unwarped_file', 'in_file')]),
+        (thres,  merge, [('out_file', 'in_files')]),
+        (merge, vsm2dfm, [('merged_file', 'inputnode.in_ref')]),
+        (vsm,   vsm2dfm, [('shift_out_file', 'inputnode.in_vsm')]),
+        (merge,   outputnode, [('merged_file', 'out_file')]),
+        (vsm,     outputnode, [('shift_out_file', 'out_vsm')]),
+        (vsm2dfm, outputnode, [('outputnode.out_warp', 'out_warp')])
+    ])
+    return wf
+
 
 def sdc_syb_pipeline(name='sdc_syb_correct'):
 
