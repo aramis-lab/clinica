@@ -1,5 +1,5 @@
 """
-Function used by BIDS converters.
+Methods used by BIDS converters.
 """
 
 __author__ = "Sabrina Fontanella"
@@ -15,8 +15,6 @@ __status__ = "Development"
 # @ToDo:test this function
 def create_participants_df(input_path,out_path, study_name, clinical_spec_path, bids_ids, delete_non_bids_info=True):
     """
-
-
     :param input_path: path to the original dataset
     :param out_path: path to the bids folder
     :param study_name: name of the study (Ex. ADNI)
@@ -131,6 +129,7 @@ def contain_dicom(folder_path):
         return True
 
     return False
+
 
 def get_supported_dataset():
     return ['ADNI', 'CLINAD', 'PREVDEMALS', 'INSIGHT']
@@ -341,7 +340,7 @@ def write_scans_tsv(out_path, bids_ids, scans_dict):
             scans_df.to_csv(path.join(out_path, bids_id, 'ses-M0', tsv_name), sep='\t', index=False, encoding='utf8')
 
 
-def dcm_to_nii(input_path, output_path, bids_name, mod_type):
+def dcm_to_nii(input_path, output_path, bids_name):
     """
     :param t1_path:
     :param output_path:
@@ -357,15 +356,15 @@ def dcm_to_nii(input_path, output_path, bids_name, mod_type):
     if not os.path.exists(output_path):
         os.mkdir(output_path)
     os.system(
-        'dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name + bids.get_bids_suff(mod_type) + ' ' + input_path)
+        'dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name  + ' ' + input_path)
 
     # If dcm2niix didn't work use dcm2nii
-    if not os.path.exists(path.join(output_path, bids_name + bids.get_bids_suff(mod_type) + '.nii.gz')):
+    if not os.path.exists(path.join(output_path, bids_name  + '.nii.gz')):
         print 'Conversion with dcm2niix failed, trying with dcm2nii'
         # os.system('dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path')
 
     # If the conversion failed with both tools
-    if not os.path.exists(path.join(output_path, bids_name + bids.get_bids_suff(mod_type) + '.nii.gz')):
+    if not os.path.exists(path.join(output_path, bids_name + '.nii.gz')):
         print 'Conversion of the dicom failed for ', input_path
 
 
@@ -579,6 +578,19 @@ def get_bids_suff(mod):
     return bids_suff[mod]
 
 
+def create_path_corr_file(out_dir):
+    import os
+    from os import path
+
+    path_corr = path.join(out_dir, 'conversion_info', 'filename_correspondance.tsv' )
+    if os.path.exists(path_corr):
+        os.remove(path_corr)
+
+
+    f = open(path_corr, 'a')
+    return f
+
+
 def convert_T1(t1_path, output_path, t1_bids_name):
     """
     Convert into the BIDS specification a T1 image.
@@ -589,22 +601,25 @@ def convert_T1(t1_path, output_path, t1_bids_name):
         t1_bids_name: name to give to the file.
 
     """
-
     from os import path
     from shutil import copy
     import os
 
+    bids_name = path.join(output_path, t1_bids_name + get_bids_suff('T1'))
+
     if contain_dicom(t1_path):
         print 'DICOM found for t1 in ' + t1_path
-        dcm_to_nii(t1_path, output_path, t1_bids_name, 'T1')
+        dcm_to_nii(t1_path, output_path, t1_bids_name + get_bids_suff('T1'))
     else:
         if not os.path.exists(output_path):
             os.mkdir(output_path)
         file_ext = get_ext(t1_path)
-        copy(t1_path, path.join(output_path, t1_bids_name + get_bids_suff('T1') + file_ext))
+        bids_file = bids_name + file_ext
+        print bids_file
+        copy(t1_path, bids_file)
         # If  the original image is not compress, compress it
         if file_ext == '.nii':
-            compress_nii(path.join(output_path, t1_bids_name + get_bids_suff('T1') + file_ext))
+            compress_nii(path.join(bids_file))
 
 
 def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name , acquisition = ''):
@@ -763,7 +778,7 @@ def convert_flair(folder_input, folder_output, name, fixed_file = False):
                 raise
 
 
-def convert_fmri(folder_input, folder_output, name, fixed_fmri=False):
+def convert_fmri(folder_input, folder_output, name, fixed_fmri=False, task_name = 'rest'):
     """
     Extracts and converts into the BIDS specification fmri data.
 
@@ -782,22 +797,28 @@ def convert_fmri(folder_input, folder_output, name, fixed_fmri=False):
     from shutil import copy
     import os
 
-    if fixed_fmri is not False:
-        fmri_lst = glob(path.join(folder_input, fixed_fmri))
+    bids_name = name + '_task-'+ task_name + get_bids_suff('fMRI')
+    print bids_name
+
+    if contain_dicom(folder_input):
+        dcm_to_nii(folder_input, folder_output, bids_name)
     else:
-        fmri_lst = remove_rescan(glob(path.join(folder_input, '*fMRI*')))
-    if len(fmri_lst) > 0:
-        if not os.path.exists(folder_output):
-            os.mkdir(folder_output)
-        fmri_file_path = glob(path.join(fmri_lst[0], '*.nii*'))[0]
-        file_ext = get_ext(fmri_file_path)
-        copy(fmri_file_path, path.join(folder_output, name + '_task-rest' + get_bids_suff('fMRI') + file_ext))
-        if file_ext == '.nii':
-            logging.warning('Non compressed file found: '+fmri_file_path)
-            compress_nii(path.join(folder_output, name + '_task-rest' + get_bids_suff('fMRI') + file_ext))
-    else:
-        logging.info('Non fMRI found for ' + folder_input)
-        return -1
+        if fixed_fmri is not False:
+            fmri_lst = glob(path.join(folder_input, fixed_fmri))
+        else:
+            fmri_lst = remove_rescan(glob(path.join(folder_input, '*fMRI*')))
+        if len(fmri_lst) > 0:
+            if not os.path.exists(folder_output):
+                os.mkdir(folder_output)
+            fmri_file_path = glob(path.join(fmri_lst[0], '*.nii*'))[0]
+            file_ext = get_ext(fmri_file_path)
+            copy(fmri_file_path, path.join(folder_output, bids_name + file_ext))
+            if file_ext == '.nii':
+                logging.warning('Non compressed file found: '+fmri_file_path)
+                compress_nii(path.join(folder_output, bids_name + file_ext))
+        else:
+            logging.info('Non fMRI found for ' + folder_input)
+            return -1
 
 
 def merge_DTI(folder_input, folder_output, name, fixed_dti_list=False):
