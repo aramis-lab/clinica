@@ -1505,6 +1505,43 @@ class ADNI_TO_BIDS(Converter, CmdParser):
 
 
 
+    #TODO To integrate
+    def viscode_to_session(viscode):
+        if viscode == 'bl':
+            return 'M00'
+        else:
+            return viscode.capitalize()
+
+    def dti_to_bids(self, dti_paths, bids_dir):
+
+        #TODO Remove imports from here?
+        from clinica.bids.bids_utils import remove_space_and_symbols, dcm_to_nii
+        import pandas as pd
+        from os import path, makedirs
+        from numpy import nan
+
+        dti_images = pd.io.parsers.read_csv(dti_paths, sep='\t')
+
+        for row in dti_images.iterrows():
+            image = row[1]
+            if image.Path is nan:
+                continue
+
+            subject = 'sub-' + remove_space_and_symbols(image.Subject_ID)
+            session = 'ses-' + viscode_to_session(image.VISCODE)
+
+            output_path = path.join(bids_dir, subject, session, 'dwi')
+            #TODO Define the standard notation for acquisition name: axial and axialEnhanced? Or enhancedAxial?
+            bids_name = subject + '_' + session + '_acq-' + ('axialEnhanced' if image.Enhanced else 'axial') + '_dwi'
+
+            try:
+                makedirs(output_path)
+            except OSError:
+                if not path.isdir(output_path):
+                    raise
+            dcm_to_nii(image.Path, output_path, bids_name)
+
+
 
 
 
