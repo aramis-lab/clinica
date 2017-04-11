@@ -906,3 +906,77 @@ def merge_DTI(folder_input, folder_output, name, fixed_dti_list=False):
 
         if len(incomp_folders) > 0:
             return incomp_folders
+
+def concatenate_bvec_bval(files_list, output_file, type):
+    import fileinput
+    if type == 'bval':
+        lines_out = ['']
+    else:
+        lines_out= ['', '', '']
+
+    for line in files_list:
+        if fileinput.isfirstline():
+            line_no = 0
+        lines_out[line_no] = lines_out[line_no] + " " + line.rstrip()
+        line_no += 1
+    for i in range(0, len(lines_out)):
+        lines_out[i] = lines_out[i].lstrip()
+
+        output_file.write(lines_out[i] + "\n")
+
+def merge_noddi_dti(folder_input, folder_output, name):
+    '''
+    Merge NODDI dti CATI organised following these rules:
+
+       - DTI1, DTI3 and DTI5 are always Posterior to Anterior
+       - DTI2, DTI4, DTI6 are always Anterior to Posterior
+
+    :param folder_input: path to the folder where are the DTI
+    :param folder_output: path to the BIDS folder
+    :param name: BIDS id of the file
+    '''
+    from glob import glob
+    from os import path
+    import fileinput
+    import os
+
+    dti_pa_nii = []
+    dti_ap_nii = []
+    dti_pa_bvec = []
+    dti_ap_bvec = []
+    dti_pa_bval = []
+    dti_ap_bval = []
+
+    dti_list = remove_rescan(glob(path.join(folder_input, '*DTI*')))
+
+    if len(dti_list)!=6:
+        raise Exception('Number of DTI found different from 6')
+
+    if not os.path.exists(folder_output):
+        os.mkdir(folder_output)
+
+    out_file_name_pa = path.join(folder_output, name + '_seq-mshellPA' + get_bids_suff('dwi'))
+    out_file_name_ap = path.join(folder_output, name + '_seq-mshellAP' + get_bids_suff('dwi'))
+
+    dti_pa_paths = glob(path.join(folder_input, '*DTI[1,3,5]*'))
+    dti_ap_paths = glob(path.join(folder_input, '*DTI[2,4,6]*'))
+
+    for f in dti_pa_paths:
+        dti_pa_nii.append(glob(path.join(f, '*.nii*'))[0])
+        dti_pa_bvec.append(glob(path.join(f, '*.bvec'))[0])
+        dti_pa_bval.append(glob(path.join(f, '*.bval'))[0])
+
+    for f in dti_ap_paths:
+        dti_ap_nii.append(glob(path.join(f, '*.nii*'))[0])
+        dti_ap_bvec.append(glob(path.join(f, '*.bvec'))[0])
+        dti_ap_bval.append(glob(path.join(f, '*.bval'))[0])
+
+    # Merge all the nii files
+    os.system('fslmerge -t ' + (out_file_name_pa + '.nii.gz') + ' ' + " ".join(dti_pa_nii))
+    os.system('fslmerge -t ' + (out_file_name_ap + '.nii.gz') + ' ' + " ".join(dti_ap_nii))
+
+    # Concatenate all the bvec/bval files
+    concatenate_bvec_bval(fileinput.input(dti_pa_bval), open(path.join(out_file_name_pa + '.bval'), 'w'), 'bval')
+    concatenate_bvec_bval(fileinput.input(dti_pa_bvec), open(path.join(out_file_name_pa + '.bvec'), 'w'), 'bvec')
+    concatenate_bvec_bval(fileinput.input(dti_ap_bval), open(path.join(out_file_name_ap + '.bval'), 'w'), 'bval')
+    concatenate_bvec_bval(fileinput.input(dti_ap_bvec), open(path.join(out_file_name_ap + '.bvec'), 'w'), 'bvec')
