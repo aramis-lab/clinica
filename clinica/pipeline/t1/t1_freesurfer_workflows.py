@@ -68,6 +68,9 @@ def t1_freesurfer_pipeline(output_dir,
                               function=checkfov))
     flagnode.inputs.recon_all_args = recon_all_args
 
+    ## TODO: before launch the reconall pipeline, should verify if the number of output_flags equals the number of 'subject_id' from inpurnode, because pybids datagrabber does not return error if the files do not exist
+
+
     # MapNode to transfer every subject's flag to string.
     create_flags = pe.MapNode(interface=Function(
         input_names=['input_flags'],
