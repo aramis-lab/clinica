@@ -37,6 +37,8 @@ def bids_datagrabber(input_dir, subjects_list, sessions_list):
     :return: A list of paths to the desired files.
     """
     from bids.grabbids import BIDSLayout
+    from os.path import isfile
+    import sys
 
     layout = BIDSLayout(input_dir)
 
@@ -54,6 +56,15 @@ def bids_datagrabber(input_dir, subjects_list, sessions_list):
                              session='|'.join(sessions_list).replace('ses-',''),
                              subject='|'.join(subjects_list).replace('sub-',''),
                              run='1')
+    ### Checkout if the anat_t1 file exist
+    for t1 in anat_t1:
+        try:
+            isfile(t1)
+        except:
+            print "It seems that pybids can not validate the existence of the required file: %s, please check it out!" % t1
+            raise
+    if len(anat_t1) == 0:
+             raise ValueError("you have to grap at least on image, but the result is empty, please check it out!")
 
     return anat_t1
 
