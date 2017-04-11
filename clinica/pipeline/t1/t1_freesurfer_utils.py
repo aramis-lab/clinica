@@ -28,6 +28,14 @@ def absolute_path(arg):
     else:
         return os.path.join(os.getcwd(), arg)
 
+
+class BadFileError(Exception):
+    def __init__(self, filename):
+        self.filename = filename
+
+    def __str__(self):
+        return self.filename
+
 def bids_datagrabber(input_dir, subjects_list, sessions_list):
     """Fetches files from a BIDS directory, subjects list and a sessions list
 
@@ -58,11 +66,9 @@ def bids_datagrabber(input_dir, subjects_list, sessions_list):
                              run='1')
     ### Checkout if the anat_t1 file exist
     for t1 in anat_t1:
-        try:
-            isfile(t1)
-        except:
-            print "It seems that pybids can not validate the existence of the required file: %s, please check it out!" % t1
-            raise
+        if not isfile(t1):
+            raise BadFileError(t1)
+
     if len(anat_t1) == 0:
              raise ValueError("you have to grap at least on image, but the result is empty, please check it out!")
 
