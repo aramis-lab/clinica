@@ -256,6 +256,8 @@ class ADNI_TO_BIDS(Converter, CmdParser):
 
         # Options to use
         convert_func = (mod_to_add == '' and mod_to_update == '') or mod_to_add == 'func' or mod_to_update == 'func'
+        convert_func = (mod_to_add == '' or mod_to_add == 'func') and (mod_to_update == '' or mod_to_update == 'func')
+        convert_dwi = (mod_to_add == '' or mod_to_add == 'dwi') and (mod_to_update == '' or mod_to_update == 'dwi')
         print convert_func
 
 
@@ -278,26 +280,27 @@ class ADNI_TO_BIDS(Converter, CmdParser):
             print 'Creating the output folder'
             os.mkdir(dest_dir)
             os.mkdir(path.join(dest_dir, 'conversion_info'))
-        #
-        # # Compute anat paths
-        # if (mod_to_add == '' or mod_to_add == 'anat') and (mod_to_update == '' or mod_to_update == 'anat'):
-        #     t1_paths = self.compute_t1_paths(source_dir, clinical_dir, dest_dir, subjs_list)
-        #
-        # # Compute pet paths
-        # if (mod_to_add == '' or mod_to_add == 'pet') and (mod_to_update == '' or mod_to_update == 'pet'):
-        #     print 'Calculating paths for PET FDG...'
-        #     pet_fdg_paths = self.compute_fdg_pet_paths(source_dir, clinical_dir, dest_dir, subjs_list)
-        #     print 'Done!'
-        #     pet_av45_paths = self.compute_av45_pet_paths(source_dir, clinical_dir, dest_dir, subjs_list)
+
+        # Compute anat paths
+        if (mod_to_add == '' or mod_to_add == 'anat') and (mod_to_update == '' or mod_to_update == 'anat'):
+            t1_paths = self.compute_t1_paths(source_dir, clinical_dir, dest_dir, subjs_list)
+
+        # Compute pet paths
+        if (mod_to_add == '' or mod_to_add == 'pet') and (mod_to_update == '' or mod_to_update == 'pet'):
+            print 'Calculating paths for PET FDG...'
+            pet_fdg_paths = self.compute_fdg_pet_paths(source_dir, clinical_dir, dest_dir, subjs_list)
+            print 'Done!'
+            pet_av45_paths = self.compute_av45_pet_paths(source_dir, clinical_dir, dest_dir, subjs_list)
 
         # Compute func paths
-        if (mod_to_add == '' or mod_to_add == 'func') and (mod_to_update == '' or mod_to_update == 'func'):
+        if convert_func:
             print 'Calculating paths for FMRI...'
             print subjs_list
             fmri_paths = self.compute_fmri_path(source_dir, clinical_dir, dest_dir, subjs_list)
-            #fmri_paths = pd.read_csv(path.join(dest_dir,'paths','fmri_paths.tsv'), sep='\t')
+            #fmri_paths = pd.read_csv(path.join(dest_dir,'conversion_info','fmri_paths.tsv'), sep='\t')
             print 'Done!'
 
+        # Compute dwi paths
 
         # Create subjects folders
         for subj in subjs_list:
@@ -318,11 +321,16 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                 # Extract the list of sessions available
                 sess_list = mri_info = fmri_paths[(fmri_paths['Subject_ID'] == subjs_list[i])]['VISCODE'].values
 
-                # For each session available, create the folder is doesn't exist and convert them
+                # For each session available, create the folder if doesn't exist and convert the files
                 for ses in sess_list:
                     bids_ses_id = 'ses-' + ses
                     bids_file_name = bids_ids[i] + '_ses-' + ses
                     ses_path = path.join(dest_dir, bids_ids[i], bids_ses_id)
+
+                    if mod_to_add == 'func':
+                        if os.path.exists(path.join(ses_path, 'dwi')):
+                            print 'dwi already existing, skipped'
+                            continue
 
                     if not os.path.exists(ses_path):
                         os.mkdir(ses_path)
