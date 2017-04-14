@@ -349,19 +349,18 @@ def dcm_to_nii(input_path, output_path, bids_name):
     """
 
     import os
-    import clinica.bids.bids_utils as bids
     from os import path
-    from glob import glob
+
+    print input_path
 
     if not os.path.exists(output_path):
         os.mkdir(output_path)
-    os.system(
-        'dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name  + ' ' + input_path)
+    os.system('dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name  + ' ' + input_path)
 
     # If dcm2niix didn't work use dcm2nii
     if not os.path.exists(path.join(output_path, bids_name  + '.nii.gz')):
         print 'Conversion with dcm2niix failed, trying with dcm2nii'
-        os.system('dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + input_path)
+        #os.system('dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + input_path)
 
     # If the conversion failed with both tools
     if not os.path.exists(path.join(output_path, bids_name + '.nii.gz')):
@@ -907,6 +906,11 @@ def merge_DTI(folder_input, folder_output, name, fixed_dti_list=False):
         if len(incomp_folders) > 0:
             return incomp_folders
 
+#
+# def convert_dwi(folder_input, folder_output, name, acq=''):
+#     if coi
+
+
 def concatenate_bvec_bval(files_list, output_file, type):
     import fileinput
     if type == 'bval':
@@ -923,6 +927,7 @@ def concatenate_bvec_bval(files_list, output_file, type):
         lines_out[i] = lines_out[i].lstrip()
 
         output_file.write(lines_out[i] + "\n")
+
 
 def merge_noddi_dti(folder_input, folder_output, name):
     '''
