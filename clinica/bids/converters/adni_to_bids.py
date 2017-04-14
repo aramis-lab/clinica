@@ -248,9 +248,14 @@ class ADNI_TO_BIDS(Converter, CmdParser):
 
         print "*******************************"
         print "ADNI to BIDS converter"
+
+        if mod_to_update != '':
+            print 'Updating: ', mod_to_update
         print "*******************************"
 
-        subjs_list = []
+
+        bids_ids = []
+        alpha_ids = []
         adni_merge_path = path.join(clinical_dir, 'ADNIMERGE.csv')
         adni_merge = pd.read_csv(adni_merge_path)
 
@@ -258,8 +263,6 @@ class ADNI_TO_BIDS(Converter, CmdParser):
         convert_func = (mod_to_add == '' and mod_to_update == '') or mod_to_add == 'func' or mod_to_update == 'func'
         convert_func = (mod_to_add == '' or mod_to_add == 'func') and (mod_to_update == '' or mod_to_update == 'func')
         convert_dwi = (mod_to_add == '' or mod_to_add == 'dwi') and (mod_to_update == '' or mod_to_update == 'dwi')
-        print convert_func
-
 
         # Load a file with subjects list or compute all the subjects
         if subjs_list_path != '':
@@ -269,12 +272,6 @@ class ADNI_TO_BIDS(Converter, CmdParser):
             subjs_list = adni_merge['PTID'].unique()
 
         print 'Subjects found:', len(subjs_list)
-
-        # Extract the list of sessions from VISCODE column of adnimerge file, remove duplicate and convert to a list
-        sess_list = adni_merge['VISCODE'].drop_duplicates().tolist()
-
-        bids_ids = []
-        alpha_ids = []
 
         if (mod_to_add == '' and mod_to_update == '') or (mod_to_add != '' and os.path.exists(dest_dir) == False):
             print 'Creating the output folder'
@@ -295,12 +292,13 @@ class ADNI_TO_BIDS(Converter, CmdParser):
         # Compute func paths
         if convert_func:
             print 'Calculating paths for FMRI...'
-            print subjs_list
             fmri_paths = self.compute_fmri_path(source_dir, clinical_dir, dest_dir, subjs_list)
             #fmri_paths = pd.read_csv(path.join(dest_dir,'conversion_info','fmri_paths.tsv'), sep='\t')
             print 'Done!'
 
         # Compute dwi paths
+        if convert_dwi:
+            dwi_paths = self.compute_dti_paths(source_dir, clinical_dir, dest_dir, subjs_list)
 
         # Create subjects folders
         for subj in subjs_list:
@@ -312,14 +310,13 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                     mod_to_add != '' and not os.path.exists(path.join(dest_dir, bids_id))):
                 os.mkdir(path.join(dest_dir, bids_id))
 
-
         # For each subject, extract the info from the paths files and convert the modalities
         for i in range(0, len(subjs_list)):
             print 'Converting ', subjs_list[i]
 
             if convert_func:
                 # Extract the list of sessions available
-                sess_list = mri_info = fmri_paths[(fmri_paths['Subject_ID'] == subjs_list[i])]['VISCODE'].values
+                sess_list = fmri_paths[(fmri_paths['Subject_ID'] == subjs_list[i])]['VISCODE'].values
 
                 # For each session available, create the folder if doesn't exist and convert the files
                 for ses in sess_list:
@@ -329,8 +326,12 @@ class ADNI_TO_BIDS(Converter, CmdParser):
 
                     if mod_to_add == 'func':
                         if os.path.exists(path.join(ses_path, 'dwi')):
-                            print 'dwi already existing, skipped'
+                            print 'Func folder already existing. Skipped.'
                             continue
+
+                    if mod_to_update == 'func' and os.path.exists(path.join(ses_path, 'func')):
+                        print 'Removing the old func folder...'
+                        shutil.rmtree(path.join(ses_path, 'func'))
 
                     if not os.path.exists(ses_path):
                         os.mkdir(ses_path)
@@ -343,8 +344,6 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                                 fmri_path = fmri_info['Path'].values[0]
                                 bids.convert_fmri(fmri_path, path.join(ses_path, 'func'), bids_file_name)
 
-
-        #
         # for i in range(0, len(subjs_list)):
         #     print 'Converting ', subjs_list[i]
         #     for ses in sess_list:
@@ -463,6 +462,37 @@ class ADNI_TO_BIDS(Converter, CmdParser):
         #                         os.mkdir(path.join(ses_path, 'func'))
         #                     fmri_path = fmri_info['Path'].values[0]
         #                     bids.convert_fmri(fmri_path, path.join(ses_path, 'func'), bids_file_name)
+            if convert_dwi:
+                sess_list = dwi_paths[(dwi_paths['Subject_ID'] == subjs_list[i])]['VISCODE'].values
+
+                # For each session available, create the folder if doesn't exist and convert the files
+                for ses in sess_list:
+                    print ses
+                    bids_ses_id = 'ses-' + ses
+                    bids_file_name = bids_ids[i] + '_ses-' + ses
+                    ses_path = path.join(dest_dir, bids_ids[i], bids_ses_id)
+
+                    if mod_to_add == 'dwi':
+                        if os.path.exists(path.join(ses_path, 'dwi')):
+                            print 'DWI folder already existing. Skipped.'
+                            continue
+
+                    if mod_to_update == 'dwi' and os.path.exists(path.join(ses_path, 'dwi')):
+                        print 'Removing the old dwi folder...'
+                        shutil.rmtree(path.join(ses_path, 'func'))
+
+                    if not os.path.exists(ses_path):
+                        os.mkdir(ses_path)
+
+                    dwi_info = dwi_paths[(dwi_paths['Subject_ID'] == subjs_list[i]) & (dwi_paths['VISCODE'] == ses)]
+                    if not dwi_info['Path'].empty:
+                        if type(dwi_info['Path'].values[0]) != float:
+                            if not os.path.exists(path.join(ses_path, 'dwi')):
+                                os.mkdir(path.join(ses_path, 'dwi'))
+                                dwi_path = dwi_info['Path'].values[0]
+                                print dwi_path
+
+
 
     def center_nifti_origin(self, input_image, output_image):
         import nibabel as nib
@@ -1269,7 +1299,18 @@ class ADNI_TO_BIDS(Converter, CmdParser):
 
     def compute_fmri_path(self, source_dir, clinical_dir, dest_dir, subjs_list):
         '''
-        Compute the path for fmri images following the criteria described in the document Bids for AramisLab.
+        Compute the paths to fmri images.
+
+        The fmri images to convert into BIDS are chosen in the following way:
+            - Extract the list of subjects from MAYOADIRL_MRI_FMRI_09_15_16.csv
+            - Select the only the scans that came from PHILIPS machine (field Scanner from IDA_MR_Metadata_Listing.csv)
+            - Discard all the subjects with column  series_quality = 4  (4 means that the scan is not usable) in MAYOADIRL_MRI_IMAGEQC_12_08_15.csv
+
+        In case of multiple scans for the same session, same date the one to convert is chosen with the following criteria:
+            - Check if in the file MAYOADIRL_MRI_IMAGEQC_12_08_15.csv there is a single scan with the field series_selected == 1
+            - If yes choose the one with series_selected == 1
+            - If no choose the scan with the best quality
+
 
         :param source_dir: path to the ADNI image folder
         :param clinical_dir: path to the directory with all the clinical data od ADNI
@@ -1316,12 +1357,13 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                     fmri_subj = fmri_subjs_info[fmri_subjs_info['VISCODE2'] == viscode]
 
                     if not fmri_subj.empty:
-                        # If there are multiple scans for the same session, check what is the one selected for the usage (field 'series_selected') or
+
+                        # If there are multiple scans for the same session same subject, check what is the one selected for the usage (field 'series_selected') or
                         # choose the one with the best quality
                         if len(fmri_subj) > 1:
                             fmri_imageuid = fmri_subj['IMAGEUID'].tolist()
-                            loni_uid = ['I' + str(imageuid) for imageuid in fmri_imageuid]
-                            images_qc = mayo_mri_imageqc[mayo_mri_imageqc.loni_image.isin(loni_uid)]
+                            loni_uid_list = ['I' + str(imageuid) for imageuid in fmri_imageuid]
+                            images_qc = mayo_mri_imageqc[mayo_mri_imageqc.loni_image.isin(loni_uid_list)]
                             series_selected_values = images_qc['series_selected'].tolist()
                             sum_series_selected = sum(series_selected_values)
                             if sum_series_selected == 1:
@@ -1338,6 +1380,7 @@ class ADNI_TO_BIDS(Converter, CmdParser):
 
                         # Discard scans made with non Philips scanner and with a bad quality
                         fmri_metadata = ida_mr_metadata[ida_mr_metadata['IMAGEUID'] == fmri_imageuid]
+
                         if not fmri_metadata.empty:
                             fmri_metadata = fmri_metadata.iloc[0]
 
@@ -1376,7 +1419,9 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                             if viscode == 'scmri':
                                 viscode = 'bl'
                         else:
-                            logging.info('Missing visit, sequence, scan date and loniuid for ', subj, 'visit', visit)
+                            print 'Missing visit, sequence, scan date and loniuid for ', subj, 'visit', visit
+                            continue
+
                         row_to_append = pd.DataFrame(
                             [[subj, str(viscode), visit, str(fmri_imageuid), sequence, scan_date, str(loni_uid),
                               scanner, mag_strenght, image_path]], columns=fmri_col)
@@ -1388,8 +1433,7 @@ class ADNI_TO_BIDS(Converter, CmdParser):
         fmri_df.to_csv(path.join(dest_dir, 'conversion_info', 'fmri_paths.tsv'), sep='\t', index=False)
         return fmri_df
 
-    def compute_dti_paths(self, csv_dir, adni_dir, subjs_list):
-
+    def compute_dti_paths(self, adni_dir, csv_dir, dest_dir, subjs_list):
         import pandas as pd
         from os import path, walk
 
@@ -1397,18 +1441,10 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                       'Study_ID', 'Series_ID', 'Image_ID', 'Field_Strength', 'Scanner', 'Enhanced']
 
         dti_df = pd.DataFrame(columns=dti_col_df)
-        # subjs_list_path = path.join(source_dir, 'clinicalData', 'subjects_list.xlsx')
 
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
         ida_meta_path = path.join(csv_dir, 'IDA_MR_METADATA_Listing.csv')
         mri_qc_path = path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
-
-        # adni_merge_path = path.join(source_dir, 'clinicalData', 'ADNIMERGE.csv')
-        # ida_meta_path = path.join(source_dir, 'clinicalData', 'IDA_MR_METADATA_Listing.csv')
-        # mri_qc_path = path.join(source_dir, 'clinicalData', 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
-
-        # subjs_list_excel = pd.read_excel(subjs_list_path)
-        # subjs_list = subjs_list_excel['PTID']
 
         adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
         ida_meta = pd.io.parsers.read_csv(ida_meta_path, sep=',')
@@ -1420,15 +1456,11 @@ class ADNI_TO_BIDS(Converter, CmdParser):
         for subj in subjs_list:
 
             adnimerge_subj = adni_merge[adni_merge.PTID == subj]
+
             # Sort the values by examination date
             adnimerge_subj = adnimerge_subj.sort_values('EXAMDATE')
-
             ida_meta_subj = ida_meta[ida_meta.Subject == subj]
             ida_meta_subj = ida_meta_subj.sort_values('Scan Date')
-
-            # print subj
-            # print type(subj)
-
             mri_qc_subj = mri_qc[mri_qc.RID == int(subj[-4:])]
 
             visits = self.visits_to_timepoints_dti(subj, ida_meta_subj, adnimerge_subj)
@@ -1449,6 +1481,7 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                 axial = self.dti_image(subj, visit_info[0], visits[visit_info], axial_ida_meta, mri_qc_subj, False)
                 enhanced = self.dti_image(subj, visit_info[0], visits[visit_info], enhanced_ida_meta, mri_qc_subj, True)
 
+
                 if axial is not None:
                     row_to_append = pd.DataFrame(axial, index=['i', ])
                     dti_df = dti_df.append(row_to_append, ignore_index=True)
@@ -1463,7 +1496,6 @@ class ADNI_TO_BIDS(Converter, CmdParser):
         count = 0
 
         for row in images.iterrows():
-
             image = row[1]
             seq_path = path.join(adni_dir, str(image.Subject_ID), image.Sequence)
 
@@ -1503,14 +1535,12 @@ class ADNI_TO_BIDS(Converter, CmdParser):
         # Drop all the lines that have the Path section empty
         # images = images.drop(images[images.Path == ''].index)
         # Store the paths inside a file called t1_paths inside the input directory
-        images.to_csv(path.join('/Users/jorge.samper/Workspace', 'dti_paths.tsv'), sep='\t', index=False)
-
+        images.to_csv(path.join(dest_dir, 'conversion_info', 'dwi_paths.tsv'), sep='\t', index=False)
         return images
 
     def run_pipeline(self, args):
         if args.modality is True:
             self.convert_clinical_data(args.dataset_directory, args.bids_directory)
-
 
 
     #TODO To integrate
@@ -1521,8 +1551,6 @@ class ADNI_TO_BIDS(Converter, CmdParser):
             return viscode.capitalize()
 
     def dti_to_bids(self, dti_paths, bids_dir):
-
-        #TODO Remove imports from here?
         from clinica.bids.bids_utils import remove_space_and_symbols, dcm_to_nii
         import pandas as pd
         from os import path, makedirs
@@ -1536,7 +1564,7 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                 continue
 
             subject = 'sub-' + remove_space_and_symbols(image.Subject_ID)
-            session = 'ses-' + viscode_to_session(image.VISCODE)
+            session = 'ses-' + self.viscode_to_session(image.VISCODE)
 
             output_path = path.join(bids_dir, subject, session, 'dwi')
             #TODO Define the standard notation for acquisition name: axial and axialEnhanced? Or enhancedAxial?
