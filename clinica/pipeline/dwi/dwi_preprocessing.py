@@ -234,7 +234,8 @@ def diffusion_preprocessing_t1_based(participant_id, session_id, caps_directory,
 def diffusion_preprocessing_phasediff_fieldmap(
         participant_id, session_id,
         caps_directory, num_b0s,
-        delta_te=None, echo_spacing=None, working_directory=None,
+        delta_echo_time=None, effective_echo_spacing=None, phase_encoding_direction=None,
+        working_directory=None,
         name='diffusion_preprocessing_phasediff_fieldmap'):
     """
     first extract the b0 volumes, co-registration and mean of the b0 volumes.
@@ -286,11 +287,12 @@ def diffusion_preprocessing_phasediff_fieldmap(
 
     check_ants(); check_fsl()
 
-    if delta_te is None:
+    if delta_echo_time is None:
         raise ValueError('Invalid value for the difference of echo time.')
-    if echo_spacing is None:
-        raise ValueError('Invalid value for the echo spacing parameter.')
-
+    if effective_echo_spacing is None:
+        raise ValueError('Invalid value for the effective echo spacing parameter.')
+    if phase_encoding_direction is None:
+        raise ValueError('Invalid value for the phase encoding direction.')
 
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['in_dwi', 'in_bvals', 'in_bvecs', 'in_fmap_magnitude', 'in_fmap_phase']),
@@ -299,10 +301,11 @@ def diffusion_preprocessing_phasediff_fieldmap(
     bias = remove_bias(name='remove_bias')
     hmc = hmc_pipeline(name='motion_correct')
     hmc.inputs.inputnode.ref_num = 0
-    sdc = sdc_fmb(name='fmb_correction',
+    sdc = sdc_fmb(name='sdc_fmb',
                   fugue_params=dict(smooth3d=2.0),
-                  fmap_params=dict(delta_te=2.46e-3),
-                  epi_params=dict(echospacing=0.39e-3, enc_dir='y')
+                  fmap_params=dict(delta_te=delta_echo_time),
+                  epi_params=dict(echospacing=effective_echo_spacing,
+                  enc_dir=phase_encoding_direction)
                   )
     ecc = ecc_pipeline(name='eddy_correct')
     pre = prepare_data(num_b0s=num_b0s)
@@ -384,7 +387,8 @@ def diffusion_preprocessing_phasediff_fieldmap(
 def diffusion_preprocessing_twophase_fieldmap(
         participant_id, session_id,
         caps_directory, num_b0s,
-        delta_te=None, echo_spacing=None, working_directory=None,
+        delta_echo_time=None, effective_echo_spacing=None, phase_encoding_direction=None,
+        working_directory=None,
         name='diffusion_preprocessing_twophase_fieldmap'):
     """
     first extract the b0 volumes, co-registration and mean of the b0 volumes.
@@ -436,11 +440,12 @@ def diffusion_preprocessing_twophase_fieldmap(
 
     check_ants(); check_fsl()
 
-    if delta_te is None:
+    if delta_echo_time is None:
         raise ValueError('Invalid value for the difference of echo time.')
-    if echo_spacing is None:
-        raise ValueError('Invalid value for the echo spacing parameter.')
-
+    if effective_echo_spacing is None:
+        raise ValueError('Invalid value for the effective echo spacing parameter.')
+    if phase_encoding_direction is None:
+        raise ValueError('Invalid value for the phase encoding direction.')
 
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['in_dwi', 'in_bvals', 'in_bvecs',
@@ -450,10 +455,11 @@ def diffusion_preprocessing_twophase_fieldmap(
     bias = remove_bias(name='remove_bias')
     hmc = hmc_pipeline(name='motion_correct')
     hmc.inputs.inputnode.ref_num = 0
-    sdc = sdc_fmb_twophase(name='fmb_correction',
+    sdc = sdc_fmb_twophase(name='sdc_fmb_twophase',
                   fugue_params=dict(smooth3d=2.0),
-                  fmap_params=dict(delta_te=2.46e-3),
-                  epi_params=dict(echospacing=0.39e-3, enc_dir='y')
+                  fmap_params=dict(delta_te=delta_echo_time),
+                  epi_params=dict(echospacing=effective_echo_spacing,
+                  enc_dir=phase_encoding_direction)
                   )
     ecc = ecc_pipeline(name='eddy_correct')
     pre = prepare_data(num_b0s=num_b0s)
