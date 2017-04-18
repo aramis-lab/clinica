@@ -554,12 +554,15 @@ class CmdParserDWIPreprocessingPhaseDifferenceFieldmap(CmdParser):
         import pandas
 
         subjects_visits = pandas.io.parsers.read_csv(self.absolute_path(args.subjects_sessions_tsv), sep='\t')
-        if list(subjects_visits.columns.values) != ['participant_id', 'session_id', 'dwi_effective_echo_spacing', 'delta_echo_time' ]:
-            raise Exception('The TSV file should contain the following columns: participant_id, session_id, dwi_effective_echo_spacing (in seconds), delta_echo_time (in seconds).')
+        if list(subjects_visits.columns.values) != ['participant_id', 'session_id', 'dwi_effective_echo_spacing',
+                                                    'delta_echo_time', 'dwi_phase_encoding_direction']:
+            raise Exception(
+                'The TSV file should contain the following columns: participant_id, session_id, dwi_effective_echo_spacing (in seconds), dwi_phase_encoding_direction (x/x-/y/y-/z/z-), delta_echo_time (in seconds).')
         subjects = list(subjects_visits.participant_id)
         sessions = list(subjects_visits.session_id)
         delta_echo_times = list(subjects_visits.delta_echo_time)
         echo_spacings = list(subjects_visits.dwi_effective_echo_spacing)
+        phase_encoding_directions = list(subjects_visits.dwi_phase_encoding_direction)
 
 #        with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
         for index in xrange(len(subjects)):
@@ -567,6 +570,7 @@ class CmdParserDWIPreprocessingPhaseDifferenceFieldmap(CmdParser):
             session_id = sessions[index]
             delta_echo_time = delta_echo_times[index]
             echo_spacing = echo_spacings[index]
+            phase_encoding_direction = phase_encoding_directions[index]
 
             bids_path_to_dwi = os.path.join(self.absolute_path(args.bids_directory), participant_id, session_id, 'dwi',
                                            participant_id + '_' + session_id + '_dwi.nii.gz')
@@ -586,7 +590,9 @@ class CmdParserDWIPreprocessingPhaseDifferenceFieldmap(CmdParser):
             preprocessing = diffusion_preprocessing_phasediff_fieldmap(
                 participant_id=participant_id, session_id=session_id,
                 caps_directory=self.absolute_path(args.caps_directory),
-                delta_te=delta_echo_time, echo_spacing=echo_spacing,
+                delta_echo_time=delta_echo_time,
+                effective_echo_spacing=echo_spacing,
+                phase_encoding_direction=phase_encoding_direction,
                 num_b0s=count_b0s(bids_path_to_bval),
                 working_directory=self.absolute_path(args.working_directory)
             )
@@ -623,19 +629,21 @@ class CmdParserDWIPreprocessingTwoPhaseImagesFieldmap(CmdParser):
 
         subjects_visits = pandas.io.parsers.read_csv(self.absolute_path(args.subjects_sessions_tsv), sep='\t')
         if list(subjects_visits.columns.values) != ['participant_id', 'session_id', 'dwi_effective_echo_spacing',
-                                                    'delta_echo_time']:
+                                                    'delta_echo_time', 'dwi_phase_encoding_direction']:
             raise Exception(
-                'The TSV file should contain the following columns: participant_id, session_id, dwi_effective_echo_spacing (in seconds), delta_echo_time (in seconds).')
+                'The TSV file should contain the following columns: participant_id, session_id, dwi_effective_echo_spacing (in seconds), dwi_phase_encoding_direction (x/x-/y/y-/z/z-), delta_echo_time (in seconds).')
         subjects = list(subjects_visits.participant_id)
         sessions = list(subjects_visits.session_id)
         delta_echo_times = list(subjects_visits.delta_echo_time)
         echo_spacings = list(subjects_visits.dwi_effective_echo_spacing)
+        phase_encoding_directions = list(subjects_visits.dwi_phase_encoding_direction)
 
         #        with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
         for index in xrange(len(subjects)):
             participant_id = subjects[index]
             session_id = sessions[index]
             delta_echo_time = delta_echo_times[index]
+            phase_encoding_direction = phase_encoding_directions[index]
             echo_spacing = echo_spacings[index]
 
             bids_path_to_dwi = os.path.join(self.absolute_path(args.bids_directory), participant_id, session_id, 'dwi',
@@ -664,7 +672,9 @@ class CmdParserDWIPreprocessingTwoPhaseImagesFieldmap(CmdParser):
             preprocessing = diffusion_preprocessing_twophase_fieldmap(
                 participant_id=participant_id, session_id=session_id,
                 caps_directory=self.absolute_path(args.caps_directory),
-                delta_te=delta_echo_time, echo_spacing=echo_spacing,
+                delta_echo_time=delta_echo_time,
+                effective_echo_spacing=echo_spacing,
+                phase_encoding_direction=phase_encoding_direction,
                 num_b0s=count_b0s(bids_path_to_bval),
                 working_directory=self.absolute_path(args.working_directory)
             )

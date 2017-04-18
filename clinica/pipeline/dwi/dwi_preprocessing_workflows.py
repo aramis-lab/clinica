@@ -556,13 +556,17 @@ def sdc_fmb_twophase(name='fmb_correction',
     dilate_2 = pe.Node(fsl.maths.MathsCommand(nan2zeros=True,
                      args='-kernel sphere 5 -dilM'), name='dilate_bet_2')
 
-    phase1_in_rad = pe.Node(niu.Function(input_names=['in_file', 'name_output_file'], output_names=['out_file'],
-                       function=convert_phase_in_radians), name='Phase1InRad')
-    phase2_in_rad = pe.Node(niu.Function(input_names=['in_file', 'name_output_file'], output_names=['out_file'],
-                       function=convert_phase_in_radians), name='Phase2InRad')
+#    phase1_in_rad = pe.Node(niu.Function(input_names=['in_file', 'name_output_file'], output_names=['out_file'],
+#                       function=convert_phase_in_radians), name='Phase1InRad')
+#    phase2_in_rad = pe.Node(niu.Function(input_names=['in_file', 'name_output_file'], output_names=['out_file'],
+#                       function=convert_phase_in_radians), name='Phase2InRad')
+    phase1_in_rad = pe.Node(niu.Function(input_names=['in_file'], output_names=['out_file'],
+                       function=siemens2rads), name='Phase1InRad')
+    phase2_in_rad = pe.Node(niu.Function(input_names=['in_file'], output_names=['out_file'],
+                       function=siemens2rads), name='Phase2InRad')
 
-    phase1_unwarp = pe.Node(fsl.PRELUDE(process3d=True), name='Phase1Unwarp')
-    phase2_unwarp = pe.Node(fsl.PRELUDE(process3d=True), name='Phase2Unwarp')
+#    phase1_unwarp = pe.Node(fsl.PRELUDE(process3d=True), name='Phase1Unwarp')
+#    phase2_unwarp = pe.Node(fsl.PRELUDE(process3d=True), name='Phase2Unwarp')
 
     phase_in_rsec =pe.Node(niu.Function(input_names=['in_phase1', 'in_phase2', 'delta_te', 'out_file'], output_names=['out_file'],
                        function=create_phase_in_radsec), name='PhaseInRadSec')
@@ -627,15 +631,17 @@ def sdc_fmb_twophase(name='fmb_correction',
         #        (pha2rads, prelude, [('out_file', 'phase_file')]),
 #        (n4,       prelude, [('output_image', 'magnitude_file')]),
 #        (dilate,   prelude, [('out_file', 'mask_file')]),
-        (phase1_in_rad, phase1_unwarp, [('out_file', 'phase_file')]),
-        (n4_1,          phase1_unwarp, [('output_image', 'magnitude_file')]),
-        (dilate_1,      phase1_unwarp, [('out_file', 'mask_file')]),
-        (phase2_in_rad, phase2_unwarp, [('out_file', 'phase_file')]),
-        (n4_2,          phase2_unwarp, [('output_image', 'magnitude_file')]),
-        (dilate_2,      phase2_unwarp, [('out_file', 'mask_file')]),
+#        (phase1_in_rad, phase1_unwarp, [('out_file', 'phase_file')]),
+#        (n4_1,          phase1_unwarp, [('output_image', 'magnitude_file')]),
+#        (dilate_1,      phase1_unwarp, [('out_file', 'mask_file')]),
+#        (phase2_in_rad, phase2_unwarp, [('out_file', 'phase_file')]),
+#        (n4_2,          phase2_unwarp, [('output_image', 'magnitude_file')]),
+#        (dilate_2,      phase2_unwarp, [('out_file', 'mask_file')]),
 #        (prelude, rad2rsec, [('unwrapped_phase_file', 'in_file')]),
-        (phase1_unwarp, phase_in_rsec, [('unwrapped_phase_file', 'in_phase1')]),
-        (phase2_unwarp, phase_in_rsec, [('unwrapped_phase_file', 'in_phase2')]),
+        (phase1_in_rad, phase_in_rsec, [('out_file', 'in_phase1')]),
+        (phase2_in_rad, phase_in_rsec, [('out_file', 'in_phase2')]),
+#        (phase1_unwarp, phase_in_rsec, [('unwrapped_phase_file', 'in_phase1')]),
+#        (phase2_unwarp, phase_in_rsec, [('unwrapped_phase_file', 'in_phase2')]),
 
         (getb0,     flirt, [('roi_file', 'reference')]),
         (inputnode, flirt, [('in_mask', 'ref_weight')]),
