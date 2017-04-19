@@ -328,7 +328,7 @@ head-motion correction)
 
 def sdc_fmb(name='fmb_correction',
             fugue_params=dict(smooth3d=2.0),
-            bmap_params=dict(delta_te=2.46e-3),
+            fmap_params=dict(delta_te=2.46e-3),
             epi_params=dict(echospacing=0.39e-3,
                             enc_dir='y')):
     """
@@ -383,7 +383,7 @@ def sdc_fmb(name='fmb_correction',
     """
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['in_file',
-                        'in_mask', 'bmap_pha', 'bmap_mag']),
+                        'in_mask', 'in_fmap_phasediff', 'in_fmap_magnitude']),
                         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(fields=['out_file', 'out_vsm',
                          'out_warp']),
@@ -399,7 +399,7 @@ def sdc_fmb(name='fmb_correction',
     prelude = pe.Node(fsl.PRELUDE(process3d=True), name='PhaseUnwrap')
     rad2rsec = pe.Node(niu.Function(input_names=['in_file', 'delta_te'],
                        output_names=['out_file'], function=rads2radsec), name='ToRadSec')
-    rad2rsec.inputs.delta_te = bmap_params['delta_te']
+    rad2rsec.inputs.delta_te = fmap_params['delta_te']
 
     flirt = pe.Node(fsl.FLIRT(interp='spline', cost='normmi', cost_func='normmi',
                     dof=6, bins=64, save_log=True, padding_size=10,
@@ -421,7 +421,7 @@ def sdc_fmb(name='fmb_correction',
 
     vsm = pe.Node(fsl.FUGUE(save_shift=True, **fugue_params),
                   name="ComputeVSM")
-    vsm.inputs.asym_se_time = bmap_params['delta_te']
+    vsm.inputs.asym_se_time = fmap_params['delta_te']
     vsm.inputs.dwell_time = epi_params['echospacing']
 
     split = pe.Node(fsl.Split(dimension='t'), name='SplitDWIs')
@@ -437,9 +437,9 @@ def sdc_fmb(name='fmb_correction',
 
     wf = pe.Workflow(name=name)
     wf.connect([
-        (inputnode, pha2rads, [('bmap_pha', 'in_file')]),
+        (inputnode, pha2rads, [('in_fmap_phasediff', 'in_file')]),
         (inputnode, getb0, [('in_file', 'in_file')]),
-        (inputnode, n4, [('bmap_mag', 'input_image')]),
+        (inputnode, n4, [('in_fmap_magnitude', 'input_image')]),
         (n4, bet, [('output_image', 'in_file')]),
         (bet, dilate, [('mask_file', 'in_file')]),
         (pha2rads, prelude, [('out_file', 'phase_file')]),
