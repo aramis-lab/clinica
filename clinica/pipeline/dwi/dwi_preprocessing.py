@@ -295,7 +295,7 @@ def diffusion_preprocessing_phasediff_fieldmap(
         raise ValueError('Invalid value for the phase encoding direction.')
 
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['in_dwi', 'in_bvals', 'in_bvecs', 'in_fmap_magnitude', 'in_fmap_phase']),
+        fields=['in_dwi', 'in_bvals', 'in_bvecs', 'in_fmap_magnitude', 'in_fmap_phasediff']),
         name='inputnode')
 
     bias = remove_bias(name='remove_bias')
@@ -346,8 +346,8 @@ def diffusion_preprocessing_phasediff_fieldmap(
         # Susceptibility distortion correction:
         (hmc,       sdc, [('outputnode.out_file', 'inputnode.in_file')]),
         (pre,       sdc, [('outputnode.mask_b0', 'inputnode.in_mask')]),
-        (inputnode, sdc, [('in_fmap_mag', 'inputnode.bmap_mag')]),
-        (inputnode, sdc, [('in_fmap_pha', 'inputnode.bmap_pha')]),
+        (inputnode, sdc, [('in_fmap_magnitude', 'inputnode.in_fmap_magnitude')]),
+        (inputnode, sdc, [('in_fmap_phasediff', 'inputnode.in_fmap_phasediff')]),
         # Eddy-currents correction:
         (hmc, ecc, [('outputnode.out_xfms', 'inputnode.in_xfms')]),
         (pre, ecc, [('outputnode.out_bvals', 'inputnode.in_bval')]),
