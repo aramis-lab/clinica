@@ -7,7 +7,6 @@ def bids_caps_pet_pipeline(bids_directory,
                            caps_directory,
                            subjects_visits_tsv,
                            group_id,
-                           analysis_series_id='default',
                            pet_type='FDG',
                            working_directory=None,
                            pvc=False,
@@ -25,7 +24,6 @@ def bids_caps_pet_pipeline(bids_directory,
     def create_pet_wf(bids_directory,
                       caps_directory,
                       group_id,
-                      analysis_series_id,
                       pet_type,
                       working_directory,
                       pvc,
@@ -53,13 +51,13 @@ def bids_caps_pet_pipeline(bids_directory,
         t1_template = '%s/%s/anat/%s_%s_T1w.nii*'
         t1_files = create_datagrabber('t1_files', [subject], [session], bids_directory, t1_template)
 
-        ff_base_dir = op.join(caps_directory, 'analysis-series-' + analysis_series_id, 'subjects')
+        ff_base_dir = op.join(caps_directory, 'subjects')
         ff_template = '%s/%s/t1/spm/dartel/group-' + group_id + '/flow_fields/u_rc1%s_%s_T1w_Template.nii*'
         flow_fields = create_datagrabber('flow_fields', [subject], [session], ff_base_dir, ff_template)
 
         dartel_template = pe.Node(nio.DataGrabber(outfields=['out_files']), name='dartel_template')
         dartel_template.inputs.base_directory = caps_directory
-        dartel_template.inputs.template = op.join('analysis-series-' + analysis_series_id, 'group-' + group_id,
+        dartel_template.inputs.template = op.join('group-' + group_id,
                                                   't1/spm/final_template/Template_6.nii*')
         dartel_template.inputs.sort_filelist = False
 
@@ -76,7 +74,7 @@ def bids_caps_pet_pipeline(bids_directory,
         else:
             raise NotImplementedError
 
-        c_base_dir = op.join(caps_directory, 'analysis-series-' + analysis_series_id, 'subjects')
+        c_base_dir = op.join(caps_directory, 'subjects')
 
         mask_tissues_template = '%s/%s/t1/spm/dartel/group-' + group_id +'/registered/*wc%s%s_%s_T1w.nii*'
 
@@ -85,7 +83,7 @@ def bids_caps_pet_pipeline(bids_directory,
 
         pet_datasink = pe.Node(nio.DataSink(), name='pet_datasink')
         pet_datasink.inputs.parameterization = False
-        pet_datasink.inputs.base_directory = op.join(caps_directory, 'analysis-series-' + analysis_series_id + '/subjects/' + subject + '/' + session + '/pet/preprocessing')
+        pet_datasink.inputs.base_directory = op.join(caps_directory, 'subjects/' + subject + '/' + session + '/pet/preprocessing')
 
         pet_wf = pet_pipeline(working_directory=op.join(working_directory, 'individual_pipelines', subject + '-' + session), pvc=pvc)
         inputnode = pet_wf.get_node('inputnode')
@@ -103,7 +101,7 @@ def bids_caps_pet_pipeline(bids_directory,
             pet_wf.connect(outputnode, output[0], pet_datasink, output[0])
 
         if pvc:
-            c_base_dir = op.join(caps_directory, 'analysis-series-' + analysis_series_id, 'subjects')
+            c_base_dir = op.join(caps_directory, 'subjects')
             native_pvc_tissues_template = '%s/%s/t1/spm/segmentation/native_space/c%s%s_%s_T1w.nii*'
             pvc_tissues = create_tissues_datagrabber('pvc_tissues', subject, session, [1, 2, 3], c_base_dir,
                                                      native_pvc_tissues_template)
@@ -135,7 +133,6 @@ def bids_caps_pet_pipeline(bids_directory,
     infosource.inputs.bids_directory = bids_directory
     infosource.inputs.caps_directory = caps_directory
     infosource.inputs.group_id = group_id
-    infosource.inputs.analysis_series_id = analysis_series_id
     infosource.inputs.pet_type = pet_type
     infosource.inputs.working_directory = working_directory
     infosource.inputs.pvc = pvc

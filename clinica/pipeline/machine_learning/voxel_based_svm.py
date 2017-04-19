@@ -244,7 +244,6 @@ def linear_svm_binary_classification(image_list, diagnosis_list, output_director
 
 def linear_svm_binary_classification_caps(caps_directory,
                                           subjects_visits_tsv,
-                                          analysis_series_id,
                                           group_id,
                                           diagnosis_list,
                                           prefix,
@@ -262,7 +261,7 @@ def linear_svm_binary_classification_caps(caps_directory,
                                           save_original_weights=False,
                                           save_features_image=True):
 
-    output_directory = join(caps_directory, 'analysis-series-' + analysis_series_id + '/group-' + group_id + '/machine_learning/voxel_based_svm/')
+    output_directory = join(caps_directory, 'group-' + group_id + '/machine_learning/voxel_based_svm/')
     try:
         makedirs(output_directory)
 
@@ -272,7 +271,7 @@ def linear_svm_binary_classification_caps(caps_directory,
         else:
             raise
 
-    image_list = get_caps_t1_list(caps_directory, subjects_visits_tsv, analysis_series_id, group_id, prefix, tissue)
+    image_list = get_caps_t1_list(caps_directory, subjects_visits_tsv, group_id, prefix, tissue)
 
     linear_svm_binary_classification(image_list, diagnosis_list, output_directory, mask_zeros=mask_zeros,
                                      scale_data=scale_data, balanced=balanced, outer_folds=outer_folds,

@@ -11,7 +11,7 @@ from clinica.utils.io import unzip_nii
 def segmentation_pipeline(working_directory=None,
                           name='segmentation_wf',
                           tissue_classes=[1, 2, 3],
-                          dartel_tissues=[1],
+                          dartel_tissues=[1, 2, 3],
                           save_warped_unmodulated=False,
                           save_warped_modulated=False,
                           in_affine_regularization=None,
