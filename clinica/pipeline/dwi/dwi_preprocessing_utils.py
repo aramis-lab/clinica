@@ -392,28 +392,31 @@ def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
     return out_ref, out_mov, out_bval, volid
 
 
-def convert_phase_in_radians(in_file, name_output_file=None):
+def convert_phase_in_radians(in_file, out_file=None):
     """
     Convert phase image in radians.
     """
     import math
-    import nibabel as nib
+    import nibabel as nb
     import numpy as np
     import os.path as op
     import os
 
     assert(op.isfile(in_file))
 
-    img = nib.load(in_file)
+    img = nb.load(in_file)
+    imin = np.amin(img.get_data())
     imax = np.amax(img.get_data())
 
-    if name_output_file is None:
+    if out_file is None:
         out_file = op.abspath('phase_in_rad.nii.gz')
-    else:
-        out_file = op.abspath(name_output_file)
 
-    cmd = 'fslmaths '+in_file+ ' -mul '+str(math.pi)+" -div "+str(imax)+" "+out_file+' -odt float'
+
+    cmd = 'fslmaths '+in_file+ ' -mul '+str(2.0*math.pi)+" -div "+str(imax)+" "+out_file+' -odt float'
     os.system(cmd)
+
+    data = (img2.get_data().astype(np.float32)-img1.get_data().astype(np.float32)) * (1.0/delta_te)
+    nb.Nifti1Image(data, img.get_affine(), img.get_header()).to_filename(out_file)
 
     return out_file
 
@@ -421,7 +424,7 @@ def convert_phase_in_radians(in_file, name_output_file=None):
 
 def create_phase_in_radsec(in_phase1, in_phase2, delta_te, out_file=None):
     """
-    Converts input phase1 and phase1 map to into a fieldmap in rads. (delta_te should be in seconds)
+    Converts input (unwarpped) phase1 and phase2 map to into a fieldmap in rads. (delta_te should be in seconds)
     """
     import numpy as np
     import nibabel as nb
@@ -433,7 +436,6 @@ def create_phase_in_radsec(in_phase1, in_phase2, delta_te, out_file=None):
     img1 = nb.load(in_phase1)
     img2 = nb.load(in_phase2)
     data = (img2.get_data().astype(np.float32)-img1.get_data().astype(np.float32)) * (1.0/delta_te)
-    nb.Nifti1Image(data, img1.get_affine(),
-                   img1.get_header()).to_filename(out_file)
+    nb.Nifti1Image(data, img1.get_affine(), img1.get_header()).to_filename(out_file)
     return out_file
 
