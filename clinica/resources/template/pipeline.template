@@ -6,6 +6,12 @@ import nipype.pipeline.engine as npe
 
 class ${pipeline_name}Pipeline(npe.Pipeline):
 
+ def default_input_node(self):
+    pass
+
+ def default_output_node(self):
+    pass
+
  def build(self):
     """
     Pipeline must be put here
