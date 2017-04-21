@@ -45,6 +45,10 @@ class Pipeline(npe.Workflow):
         """
         """
         self._is_built = False
+        self._has_input_node = False
+        self._has_output_node = False
+        self._input_node = None
+        self._output_node = None
         self._input_dir = bids_dir
         self._output_dir = caps_dir
         self._verbosity = 'debug'
@@ -66,10 +70,36 @@ class Pipeline(npe.Workflow):
     def is_built(self, value): self._is_built = value
 
     @property
+    def has_input_node(self): return self._has_input_node
+
+    @has_input_node.setter
+    def has_input_node(self, value): self._has_input_node = value
+
+    @property
+    def has_output_node(self): return self._has_output_node
+
+    @has_output_node.setter
+    def has_output_node(self, value): self._has_output_node = value
+
+    @property
     def parameters(self): return self._parameters
 
     @parameters.setter
     def parameters(self, value): self._parameters = value
+
+    @property
+    def input_node(self): return self._input_node
+
+    @input_node.setter
+    @postset('has_input_node', True)
+    def input_node(self, value): self._input_node = value
+
+    @property
+    def output_node(self): return self._output_node
+
+    @output_node.setter
+    @postset('has_output_node', True)
+    def output_node(self, value): self._output_node = value
 
     @property
     def input_dir(self): return self._input_dir
@@ -91,6 +121,12 @@ class Pipeline(npe.Workflow):
 
     @abc.abstractmethod
     def build(self): pass
+
+    @abc.abstractmethod
+    def default_input_node(self): pass
+
+    @abc.abstractmethod
+    def default_output_node(self): pass
 
     # @abc.abstractmethod
     # def check_dependencies(self): pass

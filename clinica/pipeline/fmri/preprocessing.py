@@ -74,6 +74,12 @@ class BrainExtractionWorkflow(npe.Workflow):
 class FMRIPreprocessing(cpe.Pipeline):
     """Create fMRI preprocessing pipeline object.
 
+    Warnings:
+        - The data grabber is going to work only when nipype team will have solved this issue
+          (https://github.com/nipy/nipype/issues/1783), I removed l.1183-1184.
+        - The Fieldmap node is still under revision as a pull request
+        - The RealingUnwarp node is still under revision as a pull request
+
     TODO:
         - [x] Replace reg_node target image by the brain only using c1 + c2 + c3 dilated-eroded-filled.
         - [x] Develop SPM Realign and Unwarp wrapper and integrate it.
@@ -106,15 +112,34 @@ class FMRIPreprocessing(cpe.Pipeline):
         >>> pipeline.run()
     """
 
+    def default_input_node(self):
+        input_node = npe.Node(name="Input",
+                              interface=nutil.IdentityInterface(fields=['magnitude1',
+                                                                        'phasediff',
+                                                                        'bold',
+                                                                        'T1w'],
+                                                                mandatory_inputs=True))
+        input_node.inputs.magnitude1 = self.bids_layout.get(return_type='file', type='magnitude1', extensions='nii')
+        input_node.inputs.phasediff = self.bids_layout.get(return_type='file', type='phasediff', extensions='nii')
+        input_node.inputs.bold = self.bids_layout.get(return_type='file', type='bold', extensions='nii')
+        input_node.inputs.T1w = self.bids_layout.get(return_type='file', run='[1]', type='T1w', extensions='nii')
+        return input_node
+
+    def default_output_node(self):
+        output_node = npe.Node(name="Input",
+                               interface=nutil.IdentityInterface(fields=['a', 'b'],
+                                                                 mandatory_inputs=False))
+        return output_node
+
     @cpe.postset('is_built', True)
     def build(self):
 
-        # NOTE: The data grabber is going to work only when nipype team will have solved this issue
-        #   (https://github.com/nipy/nipype/issues/1783), I removed l.1183-1184.
-        # NOTE: The Fieldmap node is still under revision as a pull request
-        # NOTE: The RealingUnwarp node is still under revision as a pull request
-        # TODO: Parametrize input templates for the DataGrabbing node.
-        # TODO: [DONE] Use spm.RealignAndUnwarp instead of spm.Realign.
+        # Input/output
+        # ============
+        if not self.has_input_node:
+            self.input_node = self.default_input_node()
+        if not self.has_output_node:
+            self.output_node = self.default_output_node()
 
         # FieldMap calculation
         # ====================
@@ -185,28 +210,29 @@ class FMRIPreprocessing(cpe.Pipeline):
         # ==========
         self.connect([
             # FieldMap calculation
-            # (dg_node,        fm_node,    [('mag1_nii',                'magnitude')]),
-            # (dg_node,        fm_node,    [('pdif_nii',                    'phase')]),
-            # (dg_node,        fm_node,    [('bold_nii',                      'epi')]),
+            (self.input_node,   fm_node,     [('magnitude1',              'magnitude')]),
+            (self.input_node,   fm_node,     [('phasediff',                   'phase')]),
+            (self.input_node,   fm_node,     [('bold',                          'epi')]),
             # Brain extraction
-            # (dg_node,       bet_node,    [('t1_nii',          'Segmentation.data')]),
-            # (dg_node,       bet_node,    [('t1_nii',          'ApplyMask.in_file')]),
+            (self.input_node,  bet_node,     [('T1w',             'Segmentation.data')]),
+            (self.input_node,  bet_node,     [('T1w',             'ApplyMask.in_file')]),
             # Slice timing correction
-            # (dg_node,        st_node,    [('bold_nii',                 'in_files')]),
+            (self.input_node,   st_node,     [('bold',                     'in_files')]),
             # Motion correction and unwarping
-            (st_node,        mc_node,    [('timecorrected_files',         'scans')]),
-            (fm_node,        mc_node,    [('vdm',                        'pmscan')]),
+            (st_node,           mc_node,     [('timecorrected_files',         'scans')]),
+            (fm_node,           mc_node,     [('vdm',                        'pmscan')]),
             # Registration
-            (mc_node,       reg_node,    [('mean_image',                 'source')]),
-            (mc_node,       reg_node,    [('runwarped_files',    'apply_to_files')]),
-            (bet_node,      reg_node,    [('ApplyMask.out_file',         'target')]),
+            (mc_node,           reg_node,    [('mean_image',                 'source')]),
+            (mc_node,           reg_node,    [('runwarped_files',    'apply_to_files')]),
+            (bet_node,          reg_node,    [('ApplyMask.out_file',         'target')]),
             # Normalization
-            # (dg_node,      norm_node,    [('t1_nii',             'image_to_align')]),
-            (reg_node,     norm_node,    [('coregistered_files', 'apply_to_files')]),
+            (self.input_node, norm_node,     [('T1w',                'image_to_align')]),
+            (reg_node,          norm_node,   [('coregistered_files', 'apply_to_files')]),
             # Smoothing
-            (norm_node,  smooth_node,    [('normalized_files',         'in_files')]),
+            (norm_node,         smooth_node, [('normalized_files',         'in_files')]),
+            # Returning output
+            # (norm_node,    self.output_node, [('normalized_files',         'in_files')]),
+            # (smooth_node,  self.output_node, [('normalized_files',         'in_files')]),
         ])
-
-        self.write_graph()
 
         return self
