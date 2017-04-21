@@ -360,7 +360,7 @@ def dcm_to_nii(input_path, output_path, bids_name):
     # If dcm2niix didn't work use dcm2nii
     if not os.path.exists(path.join(output_path, bids_name  + '.nii.gz')):
         print 'Conversion with dcm2niix failed, trying with dcm2nii'
-        #os.system('dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + input_path)
+        os.system('dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + input_path)
 
     # If the conversion failed with both tools
     if not os.path.exists(path.join(output_path, bids_name + '.nii.gz')):
@@ -797,7 +797,6 @@ def convert_fmri(folder_input, folder_output, name, fixed_fmri=False, task_name 
     import os
 
     bids_name = name + '_task-'+ task_name + get_bids_suff('fMRI')
-    print bids_name
 
     if contain_dicom(folder_input):
         dcm_to_nii(folder_input, folder_output, bids_name)
