@@ -485,7 +485,8 @@ class ADNI_TO_BIDS(Converter, CmdParser):
         #                     fmri_path = fmri_info['Path'].values[0]
         #                     bids.convert_fmri(fmri_path, path.join(ses_path, 'func'), bids_file_name)
             if convert_dwi:
-                sess_list = dwi_paths[(dwi_paths['Subject_ID'] == subjs_list[i])]['VISCODE'].values
+                # Extract the list of sessions available from the dwi paths files, removing the duplicates
+                sess_list = dwi_paths[(dwi_paths['Subject_ID'] == subjs_list[i])]['VISCODE'].drop_duplicates().values
 
                 # For each session available, create the folder if doesn't exist and convert the files
                 for ses in sess_list:
@@ -500,27 +501,29 @@ class ADNI_TO_BIDS(Converter, CmdParser):
 
                     if mod_to_update == 'dwi' and os.path.exists(path.join(ses_path, 'dwi')):
                         print 'Removing the old dwi folder...'
-                        shutil.rmtree(path.join(ses_path, 'func'))
+                        shutil.rmtree(path.join(ses_path, 'dwi'))
 
                     if not os.path.exists(ses_path):
                         os.mkdir(ses_path)
 
                     dwi_info = dwi_paths[(dwi_paths['Subject_ID'] == subjs_list[i]) & (dwi_paths['VISCODE'] == ses)]
 
-                    # For the same subject, same session there could be multiple dwi with different acq labe
+                    # For the same subject, same session there could be multiple dwi with different acq label
                     for j in range(0, len(dwi_info)):
                         dwi_subj = dwi_info.iloc[j]
                         if type(dwi_subj['Path']) != float and dwi_subj['Path']!='':
                             if not os.path.exists(path.join(ses_path, 'dwi')):
                                 os.mkdir(path.join(ses_path, 'dwi'))
-                                dwi_path = dwi_subj['Path']
-                                bids_name = bids_file_name + '_acq-' + (
-                                'axialEnhanced' if dwi_subj['Enhanced'] else 'axial') + '_dwi'
-                                bids.dcm_to_nii(dwi_path, path.join(ses_path, 'dwi'), bids_name)
+                            dwi_path = dwi_subj['Path']
+                            bids_name = bids_file_name + '_acq-' + (
+                            'axialEnhanced' if dwi_subj['Enhanced'] else 'axial') + '_dwi'
+                            bids.dcm_to_nii(dwi_path, path.join(ses_path, 'dwi'), bids_name)
             if convert_anat:
                 pass
             if convert_pet:
                 pass
+
+        print '\n'
 
     def center_nifti_origin(self, input_image, output_image):
         import nibabel as nib
