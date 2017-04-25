@@ -3,6 +3,175 @@
 
 """This module contains pipelines for the processing of DWI dataset."""
 
+def dti_processing_pipeline(
+        participant_id, session_id, caps_directory, working_directory=None,
+        atlas_name=None,
+        max_harmonic_order=None, tractography_algorithm='iFOD2', tractography_nb_of_tracks="100K",
+        tractography_fod_threshold=None, tractography_step_size=None, tractography_angle=None,
+        nthreads=2,
+        zero_diagonal=True,
+        name="DTIProcessingPipeline"):
+    """
+    Compute tensor and derivative metrics from the corrected DWI dataset.
+
+    This pipeline is the main DWI processing pipeline combining these different pipelines:
+        - First the registration of the T1-weighted features onto the B0 image
+        - (Single-shell) tractography, DTI & DTI-scalar measures pipeline
+        - Construction of the Desikan & Destrieux connectome for further analysis
+        - DTI-based analysis pipeline on <atlas_name>
+
+    .. warning :: This is not suited for multi-shell data at all.
+
+    Args:
+        participant_id (str): Subject (participant) ID in a BIDS format ('sub-<participant_label>').
+        session_id (str): Session ID in a BIDS format ('ses-<session_label>').
+        caps_directory (str): Directory where the results are stored in a CAPS hierarchy.
+        working_directory (Optional[str]): Directory where the temporary results are stored. If not specified, it is
+            automatically generated (generally in /tmp/).
+        max_harmonic_order (Optional[int]): See dti_and_tractography_pipeline::max_harmonic_order
+        tractography_algorithm (Optional[str]): See dti_and_tractography_pipeline::tractography_algorithm
+        tractography_nb_of_tracks (Optional[str]): See dti_and_tractography_pipeline::tractography_nb_of_tracks
+        tractography_fod_threshold (Optional[float]): See dti_and_tractography_pipeline::tractography_fod_threshold
+        tractography_step_size (Optional[int]): See dti_and_tractography_pipeline::tractography_step_size
+        tractography_angle (Optional[int]): See dti_and_tractography_pipeline::tractography_angle
+        nthreads (Optional[int]): Number of threads used for the pipeline (default=2, 1 disables multi-threading).
+        name (Optional[str]): Name of the pipeline.
+
+    Inputnode:
+        in_preprocessed_dwi (str): File containing DWI dataset in NIfTI format.
+        in_bvals (str): File containing B-Value table in FSL format.
+        in_bvecs (str): File containing Diffusion Gradient table in FSL format.
+        in_b0_mask (str): Binary mask of the b0 image. Only perform computation within this specified binary brain mask image.
+        in_white_matter_binary_mask (str): Binary mask of the white matter segmentation. Seed streamlines will be
+            entirely generated at random within this mask.
+
+    Outputnode:
+
+    Example:
+        >>> from clinica.pipeline.dwi.dwi_processing import dwi_processing_pipeline
+        >>> dwi_processing= dti_processing_pipeline(participant_id='sub-CLNC01', session_id='ses-M00', caps_directory='/path/to/output/folder')
+        >>> dwi_processing.run()
+    """
+
+
+    from os.path import join
+    import nipype.interfaces.io as nio
+    import nipype.interfaces.utility as niu
+    import nipype.pipeline.engine as pe
+    from clinica.pipeline.dwi.dwi_processing_utils import convert_nifti_to_mrtrix_format
+    from clinica.pipeline.dwi.dwi_processing_utils import dwi_to_tensor
+    from clinica.pipeline.dwi.dwi_processing_utils import tensor_to_metrics
+    import tempfile
+    from clinica.pipeline.dwi.dwi_white_matter_scalar_analysis import dti_based_analysis_pipeline
+    from clinica.utils.check_dependency import check_ants, check_mrtrix
+
+
+    check_ants(); check_mrtrix()
+
+    if working_directory is None:
+        working_directory = tempfile.mkdtemp()
+
+    inputnode = pe.Node(niu.IdentityInterface(
+        fields=['in_preprocessed_dwi', 'in_bvecs', 'in_bvals', 'in_bias_corrected_bet_t1',
+                'in_b0_mask', 'in_white_matter_binary_mask',
+                'in_desikan_parcellation', 'in_destrieux_parcellation']),
+        name='inputnode')
+
+    inputnode = pe.Node(niu.IdentityInterface(
+        fields=['in_dwi_nii', 'in_bvecs', 'in_bvals', 'in_b0_mask', 'in_white_matter_binary_mask']),
+        name='inputnode')
+
+    convert_nifti_to_mrtrix_format = pe.Node(interface=niu.Function(
+        input_names=['in_dwi_nii', 'in_bvals', 'in_bvecs', 'nthreads'],
+        output_names=['out_dwi_mif'],
+        function=convert_nifti_to_mrtrix_format), name='convert_nifti_to_mrtrix_format')
+    convert_nifti_to_mrtrix_format.inputs.nthreads = nthreads
+
+    dwi_to_tensor = pe.Node(interface=niu.Function(
+        input_names=['in_dwi_mif', 'in_b0_mask', 'nthreads'],
+        output_names=['out_dti'],
+        function=dwi_to_tensor), name='dwi_to_tensor')
+    dwi_to_tensor.inputs.nthreads = nthreads
+
+    tensor_to_metrics = pe.Node(interface=niu.Function(
+        input_names=['in_dti', 'in_b0_mask', 'nthreads'],
+        output_names=['out_fa', 'out_md', 'out_ad', 'out_rd', 'out_ev'],
+        function=tensor_to_metrics), name='tensor_to_metrics')
+
+
+
+
+    dti_based_analysis = dti_based_analysis_pipeline(
+        participant_id=participant_id, session_id=session_id,
+        caps_directory=caps_directory, working_directory=None, atlas_name=atlas_name)
+
+
+    outputnode = pe.Node(niu.IdentityInterface(
+        fields=['out_dwi_mif', 'out_dti', 'out_metrics', 'out_fa', 'out_md', 'out_ad', 'out_rd', 'out_ev',
+                'out_response_function', 'out_sh_coefficients_image', 'out_tracks', 'out_sift1_tracks']),
+        name='outputnode')
+
+
+
+
+
+
+    outputnode = pe.Node(niu.IdentityInterface(
+        fields=['out_dwi_mif', 'out_dti', 'out_metrics', 'out_fa', 'out_md', 'out_ad', 'out_rd', 'out_ev',
+                'out_eroded_mask', 'out_response_function', 'out_sh_coefficients_image',
+                'out_tracks', 'out_sift1_tracks']),
+        name='outputnode')
+
+    datasink = pe.Node(nio.DataSink(), name='datasink')
+    caps_identifier = participant_id + '_' + session_id
+    datasink.inputs.base_directory = join(caps_directory, 'subjects', participant_id, session_id, 'dwi')
+    datasink.inputs.substitutions = [('dti.mif', caps_identifier + '_dti.mif'),
+                                     ('dwi.mif', caps_identifier + '_dwi.mif'),
+                                     ('dec_fa_map_from_dti.nii.gz', caps_identifier + '_map-decfa_dti.nii.gz'),
+                                     ('fa_map_from_dti.nii.gz', caps_identifier + '_map-fa_dti.nii.gz'),
+                                     ('md_map_from_dti.nii.gz', caps_identifier + '_map-md_dti.nii.gz'),
+                                     ('ad_map_from_dti.nii.gz', caps_identifier + '_map-ad_dti.nii.gz'),
+                                     ('rd_map_from_dti.nii.gz', caps_identifier + '_map-rd_dti.nii.gz')
+                                     ]
+
+    wf = pe.Workflow(name=name)
+    wf.connect([
+        # Conversion to MRtrix format:
+        (inputnode, convert_nifti_to_mrtrix_format, [('in_dwi_nii', 'in_dwi_nii'),
+                                                     ('in_bvals', 'in_bvals'),
+                                                     ('in_bvecs', 'in_bvecs')]),
+        # Computation of the DTI:
+        (inputnode,                      dwi_to_tensor, [('in_b0_mask', 'in_b0_mask')]),
+        (convert_nifti_to_mrtrix_format, dwi_to_tensor, [('out_dwi_mif', 'in_dwi_mif')]),
+        # Computation of the different metrics from the DTI:
+        (inputnode,     tensor_to_metrics, [('in_b0_mask', 'in_b0_mask')]),
+        (dwi_to_tensor, tensor_to_metrics, [('out_dti', 'in_dti')]),
+        # DTI scalar analysis
+        (tensor_to_metrics, dti_based_analysis, [('out_fa', 'inputnode.in_fa'),
+                                                 ('out_md', 'inputnode.in_md'),
+                                                 ('out_ad', 'inputnode.in_ad'),
+                                                 ('out_rd', 'inputnode.in_rd')]),
+        # Outputnode:
+        (convert_nifti_to_mrtrix_format, outputnode, [('out_dwi_mif', 'out_dwi_mif')]),
+        (dwi_to_tensor,                  outputnode, [('out_dti', 'out_dti')]),
+        (tensor_to_metrics,              outputnode, [('out_fa', 'out_fa'),
+                                                      ('out_md', 'out_md'),
+                                                      ('out_ad', 'out_ad'),
+                                                      ('out_rd', 'out_rd'),
+                                                      ('out_ev', 'out_ev')]),
+        # Saving files with datasink:
+        (convert_nifti_to_mrtrix_format, datasink, [('out_dwi_mif', 'mrtrix.@dwi_mif')]),
+        (dwi_to_tensor,                  datasink, [('out_dti', 'mrtrix.@dti')]),
+        (tensor_to_metrics,              datasink, [('out_fa', 'mrtrix.@metrics.@fa'),
+                                                    ('out_ad', 'mrtrix.@metrics.@ad'),
+                                                    ('out_md', 'mrtrix.@metrics.@md'),
+                                                    ('out_rd', 'mrtrix.@metrics.@rd'),
+                                                    ('out_ev', 'mrtrix.@metrics.@ev')])
+    ])
+
+    return wf
+
+
 
 def dwi_processing_pipeline(
         participant_id, session_id, caps_directory, working_directory=None,
