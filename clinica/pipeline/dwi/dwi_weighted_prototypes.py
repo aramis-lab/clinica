@@ -15,7 +15,7 @@ Created on 12/08/2016
 % "LINES" for polygons. Each row describes a streamline. The first number
 % is the number of points. The other numbers are the indexes of the points
 % previously listed.
-% - lambda_g: geometric kernel bandidth (as in usual currents)
+% - lambda_g: geometric kernel bandwidth (as in usual currents)
 % - lambda_a: kernel bandwidth of the STARTING structure
 % - lambda_b: kernel bandwidth of the ENDING structure
 % - path_matlab_functions
@@ -35,7 +35,7 @@ Created on 12/08/2016
 % - num_iter_modularity_input: Modularity computation is based on a greedy
 % approach. Results may differ between iterations. The greater number of
 % iterations, the better. Default value is 10
-% See "Fast unfolding of community hier archies in large networks", V. Blondel et al.
+% See "Fast unfolding of community hierarchies in large networks", V. Blondel et al.
 % - minimum_number_fibers_cluster_input: Clustering based on modularity may
 % result in unbalanced clusters. We remove the clusters which have less
 % than minimum_number_fibers_cluster_input fibers. Default value is 10

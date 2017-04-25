@@ -298,18 +298,19 @@ def diffusion_preprocessing_phasediff_fieldmap(
         fields=['in_dwi', 'in_bvals', 'in_bvecs', 'in_fmap_magnitude', 'in_fmap_phasediff']),
         name='inputnode')
 
-    bias = remove_bias(name='remove_bias')
-    hmc = hmc_pipeline(name='motion_correct')
+    hmc = hmc_pipeline(name='HeadMotionCorrection')
     hmc.inputs.inputnode.ref_num = 0
-    sdc = sdc_fmb(name='sdc_fmb',
+    sdc = sdc_fmb(name='EPICorrectionWithPhaseDiffFmap',
                   fugue_params=dict(smooth3d=2.0),
                   fmap_params=dict(delta_te=delta_echo_time),
                   epi_params=dict(echospacing=effective_echo_spacing,
                   enc_dir=phase_encoding_direction)
                   )
-    ecc = ecc_pipeline(name='eddy_correct')
+    ecc = ecc_pipeline(name='EddyCurrentCorrection')
     pre = prepare_data(num_b0s=num_b0s)
-    unwarp = apply_all_corrections()
+    unwarp = apply_all_corrections(name='ApplyAllCorrections')
+
+    bias = remove_bias(name='RemoveBias')
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['out_preprocessed_dwi', 'out_bvecs', 'out_bvals',  'out_b0_mask']),
@@ -371,13 +372,15 @@ def diffusion_preprocessing_phasediff_fieldmap(
         (pre,  datasink, [('outputnode.out_bvals', 'preprocessing.head-motion-correction.@out_bval')]),
         (hmc,  datasink, [('outputnode.out_bvec', 'preprocessing.head-motion-correction.@out_bvec')]),
         (hmc,  datasink, [('outputnode.out_file', 'preprocessing.head-motion-correction.@out_file')]),
+        (ecc,  datasink, [('outputnode.out_file', 'preprocessing.eddy-currents-correction.@out_file')]),
         (sdc,  datasink, [('outputnode.out_file', 'preprocessing.susceptibility-distortion-correction.@out_file')]),
         (sdc,  datasink, [('outputnode.out_vsm', 'preprocessing.susceptibility-distortion-correction.@out_vsm')]),
         (sdc,  datasink, [('outputnode.out_warp', 'preprocessing.susceptibility-distortion-correction.@out_warp')]),
+        (sdc,  datasink, [('outputnode.out_registered_fmap', 'preprocessing.susceptibility-distortion-correction.@out_registered_fmap')]),
         (pre,  datasink, [('outputnode.out_bvals', 'preprocessing.@out_bvals')]),
         (hmc,  datasink, [('outputnode.out_bvec', 'preprocessing.@out_bvecs')]),
         (bias, datasink, [('outputnode.b0_mask','preprocessing.@out_b0_mask')]),
-        (bias, datasink, [('outputnode.out_file', 'preprocessing.@out_preprocessed_dwi')]),
+        (bias, datasink, [('outputnode.out_file', 'preprocessing.@out_preprocessed_dwi')])
         ])
 
     return wf
@@ -452,18 +455,18 @@ def diffusion_preprocessing_twophase_fieldmap(
                 'in_fmap_magnitude1', 'in_fmap_phase1', 'in_fmap_magnitude2', 'in_fmap_phase2']),
         name='inputnode')
 
-    bias = remove_bias(name='remove_bias')
-    hmc = hmc_pipeline(name='motion_correct')
+    bias = remove_bias(name='RemoveBias')
+    hmc = hmc_pipeline(name='HeadMotionCorrection')
     hmc.inputs.inputnode.ref_num = 0
-    sdc = sdc_fmb_twophase(name='sdc_fmb_twophase',
+    sdc = sdc_fmb_twophase(name='EPICorrectionWithTwoPhaseFmap',
                   fugue_params=dict(smooth3d=2.0),
                   fmap_params=dict(delta_te=delta_echo_time),
                   epi_params=dict(echospacing=effective_echo_spacing,
                   enc_dir=phase_encoding_direction)
                   )
-    ecc = ecc_pipeline(name='eddy_correct')
+    ecc = ecc_pipeline(name='EddyCurrentCorrection')
     pre = prepare_data(num_b0s=num_b0s)
-    unwarp = apply_all_corrections()
+    unwarp = apply_all_corrections(name="ApplyAllCorrections")
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['out_preprocessed_dwi', 'out_bvecs', 'out_bvals',  'out_b0_mask']),
