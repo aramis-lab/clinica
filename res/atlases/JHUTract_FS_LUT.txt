@@ -1,0 +1,24 @@
+# ColorLUT for JHU White-Matter Tractography Atlas
+
+#No. Label Name:                                          R   G   B   A
+0   Unknown                                               0   0   0   0
+1   Anterior-thalamic-radiation-L                         98  117 75  0
+2   Anterior-thalamic-radiation-R                         83  117 76  0
+3   Corticospinal-tract-L                                 96  99  36  0
+4   Corticospinal-tract-R                                 69  98  130 0
+5   Cingulum-(cingulate-gyrus)-L                          99  156 90  0
+6   Cingulum-(cingulate-gyrus)-R                          80  89  104 0
+7   Cingulum-(hippocampus)-L                              115 106 46  0
+8   Cingulum-(hippocampus)-R                              65  111 43  0
+9   Forceps-major                                         62  69  85  0
+10  Forceps-minor                                         89  153 79  0
+11  Inferior-fronto-occipital-fasciculus-L                118 54  70  0
+12  Inferior-fronto-occipital-fasciculus-R                61  164 75  0
+13  Inferior-longitudinal-fasciculus-L                    120 57  69  0
+14  Inferior-longitudinal-fasciculus-R                    59  57  69  0
+15  Superior-longitudinal-fasciculus-L                    129 112 102 0
+16  Superior-longitudinal-fasciculus-R                    40  121 99  0
+17  Uncinate-fasciculus-L                                 129 125 52  0
+18  Uncinate-fasciculus-R                                 63  139 65  0
+19  Superior-longitudinal-fasciculus-(temporal-part)-L    140 89  61  0
+20  Superior-longitudinal-fasciculus-(temporal-part)-R    52  116 103 0

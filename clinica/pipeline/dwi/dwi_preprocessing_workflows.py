@@ -386,7 +386,7 @@ def sdc_fmb(name='fmb_correction',
                         'in_mask', 'in_fmap_phasediff', 'in_fmap_magnitude']),
                         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(fields=['out_file', 'out_vsm',
-                         'out_warp']),
+                         'out_warp', 'out_registered_fmap']),
                          name='outputnode')
 
     getb0 = pe.Node(fsl.ExtractROI(t_min=0, t_size=1), name='get_b0')
@@ -469,9 +469,10 @@ def sdc_fmb(name='fmb_correction',
         (thres,  merge, [('out_file', 'in_files')]),
         (merge, vsm2dfm, [('merged_file', 'inputnode.in_ref')]),
         (vsm,   vsm2dfm, [('shift_out_file', 'inputnode.in_vsm')]),
-        (merge,   outputnode, [('merged_file', 'out_file')]),
-        (vsm,     outputnode, [('shift_out_file', 'out_vsm')]),
-        (vsm2dfm, outputnode, [('outputnode.out_warp', 'out_warp')])
+        (applyxfm, outputnode, [('out_file', 'out_registered_fmap')]),
+        (merge,    outputnode, [('merged_file', 'out_file')]),
+        (vsm,      outputnode, [('shift_out_file', 'out_vsm')]),
+        (vsm2dfm,  outputnode, [('outputnode.out_warp', 'out_warp')])
     ])
     return wf
 
@@ -669,6 +670,7 @@ def sdc_fmb_twophase(name='fmb_correction',
         (thres,  merge, [('out_file', 'in_files')]),
         (merge, vsm2dfm, [('merged_file', 'inputnode.in_ref')]),
         (vsm,   vsm2dfm, [('shift_out_file', 'inputnode.in_vsm')]),
+        (applyxfm, outputnode, [('out_file', 'out_registered_fmap')]),
         (merge,   outputnode, [('merged_file', 'out_file')]),
         (vsm,     outputnode, [('shift_out_file', 'out_vsm')]),
         (vsm2dfm, outputnode, [('outputnode.out_warp', 'out_warp')])
