@@ -3,7 +3,6 @@
 """
 
 import nipype.pipeline.engine as npe
-import nipype.interfaces.utility as nutil
 import abc
 from bids.grabbids import BIDSLayout
 

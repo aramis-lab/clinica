@@ -9,6 +9,7 @@ import nipype.interfaces.spm as spm
 import nipype.interfaces.fsl as fsl
 import nipype.interfaces.utility as nutil
 import clinica.pipeline.engine as cpe
+import os.path as op
 from clinica.utils.io import zip_nii, unzip_nii
 
 
@@ -126,9 +127,35 @@ class FMRIPreprocessing(cpe.Pipeline):
         return input_node
 
     def default_output_node(self):
-        output_node = npe.Node(name="Input",
-                               interface=nutil.IdentityInterface(fields=['a', 'b'],
-                                                                 mandatory_inputs=False))
+        io_fileds = ['t1_brain_mask', 'mc_params', 'native_fmri', 't1_fmri', 'mni_fmri', 'mni_smoothed_fmri']
+        output_node = npe.MapNode(name='Output',
+                                  iterfield=['container'] + io_fileds,
+                                  interface=nio.DataSink(infields=io_fileds))
+        output_node.inputs.base_directory = self.output_dir
+        output_node.inputs.parameterization = False
+        output_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
+                                        '/fmri/preprocessing' for i in range(len(self.subjects))]
+        output_node.inputs.remove_dest_dir = True
+        output_node.inputs.regexp_substitutions = [
+            (r't1_brain_mask/c3(.+)_maths_dil_ero_thresh_fillh\.nii\.gz$',  r'\1_brainmask.nii.gz'),
+            (r'mc_params/rp_a(.+)\.txt$',                                   r'\1_motionparams.txt'),
+            (r'native_fmri/ua(.+)\.nii$',                                   r'\1_space-native.nii'),
+            (r't1_fmri/rua(.+)\.nii$',                                          r'\1_space-t1.nii'),
+            (r'mni_fmri/wrua(.+)\.nii$',                                       r'\1_space-mni.nii'),
+            (r'mni_smoothed_fmri/swrua(.+)\.nii$',                    r'\1_space-mni_smoothed.nii'),
+            # I don't know why it's adding this empty folder, so I remove it:
+            (r'trait_added',                                                                   r''),
+        ]
+
+        # brain mask ?
+        # computed fieldmap ?
+        # motion quantities
+
+        # corrected frmi in native space
+        # corrected frmi in T1 space (after coregistration)
+        # corrected frmi in MNI space (after normalization)
+        # corrected and smoothed frmi in MNI space (after normalization)
+
         return output_node
 
     @cpe.postset('is_built', True)
@@ -146,9 +173,6 @@ class FMRIPreprocessing(cpe.Pipeline):
         fm_node = npe.MapNode(name="FieldMapCalculation",
                               iterfield=['phase', 'magnitude', 'epi'],
                               interface=spm.FieldMap())
-        fm_node.inputs.magnitude = self.bids_layout.get(return_type='file', type='magnitude1', extensions='nii')
-        fm_node.inputs.phase = self.bids_layout.get(return_type='file', type='phasediff', extensions='nii')
-        fm_node.inputs.epi = self.bids_layout.get(return_type='file', type='bold', extensions='nii')
         fm_node.inputs.et = self.parameters['echo_times']
         fm_node.inputs.blipdir = self.parameters['blip_direction']
         fm_node.inputs.tert = self.parameters['total_readout_time']
@@ -157,7 +181,6 @@ class FMRIPreprocessing(cpe.Pipeline):
         # =======================
         st_node = npe.Node(name="SliceTimingCorrection",
                            interface=spm.SliceTiming())
-        st_node.inputs.in_files = self.bids_layout.get(return_type='file', type='bold', extensions='nii')
         st_node.inputs.time_repetition = self.parameters['time_repetition']
         st_node.inputs.slice_order = range(1, self.parameters['num_slices']+1)
         st_node.inputs.num_slices = self.parameters['num_slices']
@@ -176,8 +199,6 @@ class FMRIPreprocessing(cpe.Pipeline):
         # Brain extraction
         # ================
         bet_node = BrainExtractionWorkflow(name="BrainExtraction")
-        bet_node.get_node('Segmentation').inputs.data = self.bids_layout.get(return_type='file', run='[1]', type='T1w', extensions='nii')
-        bet_node.get_node('ApplyMask').inputs.in_file = self.bids_layout.get(return_type='file', run='[1]', type='T1w', extensions='nii')
 
         # Registration
         # ============
@@ -190,7 +211,6 @@ class FMRIPreprocessing(cpe.Pipeline):
         norm_node = npe.MapNode(interface=spm.Normalize12(),
                                 iterfield=['image_to_align', 'apply_to_files'],
                                 name='Normalization')
-        norm_node.inputs.image_to_align = self.bids_layout.get(return_type='file', run='[1]', type='T1w', extensions='nii')
 
         # Smoothing
         # =========
@@ -210,29 +230,33 @@ class FMRIPreprocessing(cpe.Pipeline):
         # ==========
         self.connect([
             # FieldMap calculation
-            (self.input_node,   fm_node,     [('magnitude1',              'magnitude')]),
-            (self.input_node,   fm_node,     [('phasediff',                   'phase')]),
-            (self.input_node,   fm_node,     [('bold',                          'epi')]),
+            (self.input_node,      fm_node,    [('magnitude1',              'magnitude')]),
+            (self.input_node,      fm_node,    [('phasediff',                   'phase')]),
+            (self.input_node,      fm_node,    [('bold',                          'epi')]),
             # Brain extraction
-            (self.input_node,  bet_node,     [('T1w',             'Segmentation.data')]),
-            (self.input_node,  bet_node,     [('T1w',             'ApplyMask.in_file')]),
+            (self.input_node,     bet_node,    [('T1w',             'Segmentation.data')]),
+            (self.input_node,     bet_node,    [('T1w',             'ApplyMask.in_file')]),
             # Slice timing correction
-            (self.input_node,   st_node,     [('bold',                     'in_files')]),
+            (self.input_node,      st_node,    [('bold',                     'in_files')]),
             # Motion correction and unwarping
-            (st_node,           mc_node,     [('timecorrected_files',         'scans')]),
-            (fm_node,           mc_node,     [('vdm',                        'pmscan')]),
+            (st_node,              mc_node,    [('timecorrected_files',         'scans')]),
+            (fm_node,              mc_node,    [('vdm',                        'pmscan')]),
             # Registration
-            (mc_node,           reg_node,    [('mean_image',                 'source')]),
-            (mc_node,           reg_node,    [('runwarped_files',    'apply_to_files')]),
-            (bet_node,          reg_node,    [('ApplyMask.out_file',         'target')]),
+            (mc_node,             reg_node,    [('mean_image',                 'source')]),
+            (mc_node,             reg_node,    [('runwarped_files',    'apply_to_files')]),
+            (bet_node,            reg_node,    [('ApplyMask.out_file',         'target')]),
             # Normalization
-            (self.input_node, norm_node,     [('T1w',                'image_to_align')]),
-            (reg_node,          norm_node,   [('coregistered_files', 'apply_to_files')]),
+            (self.input_node,    norm_node,    [('T1w',                'image_to_align')]),
+            (reg_node,           norm_node,    [('coregistered_files', 'apply_to_files')]),
             # Smoothing
-            (norm_node,         smooth_node, [('normalized_files',         'in_files')]),
+            (norm_node,        smooth_node,    [('normalized_files',         'in_files')]),
             # Returning output
-            # (norm_node,    self.output_node, [('normalized_files',         'in_files')]),
-            # (smooth_node,  self.output_node, [('normalized_files',         'in_files')]),
+            (bet_node,    self.output_node,    [('Fill.out_file',       't1_brain_mask')]),
+            (mc_node,     self.output_node,    [('realignment_parameters',  'mc_params')]),
+            (mc_node,     self.output_node,    [('runwarped_files',       'native_fmri')]),
+            (reg_node,    self.output_node,    [('coregistered_files',        't1_fmri')]),
+            (norm_node,   self.output_node,    [('normalized_files',         'mni_fmri')]),
+            (smooth_node, self.output_node,    [('smoothed_files',  'mni_smoothed_fmri')]),
         ])
 
         return self
