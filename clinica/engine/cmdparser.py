@@ -542,6 +542,8 @@ class CmdParserDWIPreprocessingPhaseDifferenceFieldmap(CmdParser):
                                 help='Path to the CAPS directory.')
         self._args.add_argument("subjects_sessions_tsv",
                                 help='TSV file containing the subjects with their sessions.')
+        self._args.add_argument("--register_fmap_on_b0", type=bool, default=True,
+                                help='(Optional) Choose to register fmap on b0 or not. --register_fmap_on_b0 False if the preprocessing was incorrect')
         self._args.add_argument("-working_directory", default=None,
                                 help='Temporary directory to store intermediate results')
         self._args.add_argument("-n_threads", type=int, default=1,
