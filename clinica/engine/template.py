@@ -8,7 +8,7 @@ from os.path import realpath,split,join,isdir
 from os import mkdir, getcwd
 
 
-def CamelCase(text):
+def to_camel_case(text):
     return ''.join(x for x in text.title() if not x.isspace())
 
 class AbstractTemplate:
@@ -73,21 +73,21 @@ class CmdGenerateTemplates(CmdParser):
         self._args.add_argument("--name",
                                required=True,
                                help='The pipeline name')
-        self._args.add_argument("--generate_dir",
+        self._args.add_argument("-d", "--output_dir",
                                 help='Define the path where generate the directory')
 
     def run_pipeline(self, args):
         args.name = args.name.strip()
 
-        if args.generate_dir is None:
-            args.generate_dir = join(getcwd(), 'Clinica%s' % args.name)
+        if args.output_dir is None:
+            args.output_dir = join(getcwd(), '%s' % args.name)
 
-        if isdir(args.generate_dir) is False:
-            mkdir(args.generate_dir)
+        if isdir(args.output_dir) is False:
+            mkdir(args.output_dir)
 
         for template in self.template :
             with open(join(template.path_template(),template.file_template()),'r') as file_to_read:
-                with open(join(args.generate_dir, template.file_to_generate(args)), 'w') as file_to_write:
+                with open(join(args.output_dir, template.file_to_generate(args)), 'w') as file_to_write:
                     print "Generating template %s" % file_to_write.name
                     file_to_write.write(string.Template(file_to_read.read()).substitute(template.dictionary(args)))
 
