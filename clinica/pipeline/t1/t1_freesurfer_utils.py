@@ -65,7 +65,11 @@ def bids_datagrabber(input_dir, subjects_list, sessions_list):
                              subject='|'.join(subjects_list).replace('sub-',''),
                              run='1')
     if len(anat_t1) == 0:
-             raise ValueError("you have to grap at least one image, but the result is empty, please check it out!")
+        raise ValueError("you have to grap at least one image, but the result is empty, please check it out!")
+
+    ### NOTE: pybids seems to not give error if the file is not there, so we should check it out manually
+    if len(anat_t1) != len(subjects_list) or len(anat_t1) != len(sessions_list):
+        raise ValueError("Pybids found some missing files, you should remove them out from your analysis!!!")
 
     return anat_t1
 
@@ -127,12 +131,11 @@ def get_dirs_check_reconalled(output_dir, subjects_visits_tsv):
             session_list_without_reconalled.remove(session_list[i])
         else:
             subject_dir_without_reconalled.append(subject)
-    # try:
-    #     if len(subject_dir) == 0:
-    #         raise RuntimeError('This round for your dataset has no new added subject, please check out your dataset')
-    # except Exception as e:
-    #     print(str(e))
-    #     exit(1)
+
+    # # Make sure the subject_id, subject_list and session list have the same length
+    # if len(set([len(subject_dir), len(subject_id), len(subject_list), len(session_list)])) != 1 or len(set([len(subject_dir_without_reconalled), len(subject_id_without_reconalled), len(subject_list_without_reconalled), len(session_list_without_reconalled)])) != 1:
+    #     raise RuntimeError('It seems that')
+
 
     return subject_dir, subject_id, subject_list, session_list, subject_dir_without_reconalled, subject_id_without_reconalled, subject_list_without_reconalled, session_list_without_reconalled
 
