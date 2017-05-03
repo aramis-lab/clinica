@@ -804,12 +804,27 @@ def select_image_qc(id_list, mri_qc_subj):
     return int(selected_image)
 
 
+def replace_sequence_chars(sequence_name):
+    import re
+    return re.sub('[ /;*():]', '_', sequence_name)
+
+
+def fill_zeros(s, length):
+    return ('0' * (length - len(str(s)))) + str(s)
+
+
 def days_between(d1, d2):
     from datetime import datetime
     d1 = datetime.strptime(d1, "%Y-%m-%d")
     d2 = datetime.strptime(d2, "%Y-%m-%d")
     return abs((d2 - d1).days)
 
+
+def viscode_to_session(viscode):
+    if viscode == 'bl':
+        return 'M00'
+    else:
+        return viscode.capitalize()
 
 # Images correction methods
 def center_nifti_origin(input_image, output_image):
