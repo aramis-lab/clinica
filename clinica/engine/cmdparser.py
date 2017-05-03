@@ -497,7 +497,6 @@ class CmdParserT1FSL(CmdParser):
                            help='Set this flag if your images are not bias corrected (mutually exclusive with \'-is_bias_corrected\').')
 
     def run_pipeline(self, args):
-        import os.path
         from clinica.pipeline.t1.t1_fsl import t1_fsl_segmentation_pipeline
         import pandas
         import os.path
@@ -542,12 +541,17 @@ class CmdParserDWIPreprocessingPhaseDifferenceFieldmap(CmdParser):
                                 help='Path to the CAPS directory.')
         self._args.add_argument("subjects_sessions_tsv",
                                 help='TSV file containing the subjects with their sessions.')
-        self._args.add_argument("--register_fmap_on_b0", type=bool, default=True,
-                                help='(Optional) Choose to register fmap on b0 or not. --register_fmap_on_b0 False if the preprocessing was incorrect')
         self._args.add_argument("-working_directory", default=None,
                                 help='Temporary directory to store intermediate results')
         self._args.add_argument("-n_threads", type=int, default=1,
                                 help='Number of threads (default=1, which disables multi-threading).')
+        registration = self._args.add_mutually_exclusive_group(required=True)
+        registration.add_argument('-register_fmap_on_b0', action='store_true',
+                           help='Choose to register fmap on b0. (mutually exclusive with \'-do_not_register_fmap_on_b0\').')
+        registration.add_argument('-do_not_register_fmap_on_b0', action='store_false',
+                           help='Choose not to register fmap on b0. (mutually exclusive with \'-register_fmap_on_b0\').')
+
+
 
     def run_pipeline(self, args):
         import os.path
@@ -565,6 +569,12 @@ class CmdParserDWIPreprocessingPhaseDifferenceFieldmap(CmdParser):
         delta_echo_times = list(subjects_visits.delta_echo_time)
         echo_spacings = list(subjects_visits.dwi_effective_echo_spacing)
         phase_encoding_directions = list(subjects_visits.dwi_phase_encoding_direction)
+
+        if args.register_fmap_on_b0:
+            print("The fieldmap will be registered on the B0")
+        else:
+            print("The fieldmap will NOT be registered on the B0")
+
 
 #        with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
         for index in xrange(len(subjects)):
