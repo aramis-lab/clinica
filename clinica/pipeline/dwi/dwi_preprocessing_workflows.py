@@ -170,8 +170,9 @@ def hmc_pipeline(name='motion_correct'):
 #                  searchr_x=[-4, 4], searchr_y=[-4, 4], searchr_z=[-4, 4], fine_search=1, coarse_search=10 )
 
     params = dict(dof=6, interp='spline', cost='normmi', cost_func='normmi', save_log=True,
+                  no_search=True, bgvalue=0, padding_size=10,
                   schedule=get_flirt_schedule('hmc'),
-                  searchr_x=[-30, 30], searchr_y=[-30, 30], searchr_z=[-30, 30])
+                  searchr_x=[-5, 5], searchr_y=[-5, 5], searchr_z=[-25, 25])
 
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['in_file', 'in_bvec', 'in_bval', 'in_mask', 'ref_num']),
@@ -276,8 +277,9 @@ head-motion correction)
 #                  schedule=get_flirt_schedule('ecc'))
 
     params = dict(dof=12, interp='spline', cost='normmi', cost_func='normmi', save_log=True,
+                  no_search=True, bgvalue=0, padding_size=10,
                   schedule=get_flirt_schedule('ecc'),
-                  searchr_x=[-30, 30], searchr_y=[-30, 30], searchr_z=[-30, 30])
+                  searchr_x=[-5, 5], searchr_y=[-5, 5], searchr_z=[-25, 25])
 
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['in_file', 'in_bval', 'in_mask', 'in_xfms']), name='inputnode')
