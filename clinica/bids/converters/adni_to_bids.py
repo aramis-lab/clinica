@@ -187,12 +187,17 @@ class ADNI_TO_BIDS(Converter, CmdParser):
         print '-- Scans files created for each subject. --'
 
     def replace_sequence_chars(self, sequence_name):
-        sequence = sequence_name.replace(' ', '_').replace('/', '_').replace(';', '_').replace('*', '_').replace(
-                        '(',
-                        '_').replace(
-                        ')', '_').replace(':', '_')
 
-        return sequence
+        import re
+        return re.sub('[ \;*():]', '_', sequence_name)
+
+
+        # sequence = sequence_name.replace(' ', '_').replace('/', '_').replace(';', '_').replace('*', '_').replace(
+        #                 '(',
+        #                 '_').replace(
+        #                 ')', '_').replace(':', '_')
+        #
+        # return sequence
 
     # def convert_from_dicom(self, input_path, output_path, bids_name, mod_type):
     #     """
