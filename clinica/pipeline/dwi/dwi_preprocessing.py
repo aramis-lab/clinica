@@ -235,6 +235,7 @@ def diffusion_preprocessing_phasediff_fieldmap(
         participant_id, session_id,
         caps_directory, num_b0s,
         delta_echo_time=None, effective_echo_spacing=None, phase_encoding_direction=None,
+        register_fmap_on_b0=True,
         working_directory=None,
         name='diffusion_preprocessing_phasediff_fieldmap'):
     """
@@ -304,7 +305,8 @@ def diffusion_preprocessing_phasediff_fieldmap(
                   fugue_params=dict(smooth3d=2.0),
                   fmap_params=dict(delta_te=delta_echo_time),
                   epi_params=dict(echospacing=effective_echo_spacing,
-                  enc_dir=phase_encoding_direction)
+                  enc_dir=phase_encoding_direction,
+                  register_fmap_on_b0=register_fmap_on_b0)
                   )
     ecc = ecc_pipeline(name='EddyCurrentCorrection')
     pre = prepare_data(num_b0s=num_b0s)
