@@ -41,6 +41,7 @@ def datagrabber_t1_freesurfer_pipeline(input_dir,
     """
     import nipype.pipeline.engine as pe
     import nipype.interfaces.io as nio
+    import errno
     from nipype.interfaces.utility import Function
     from clinica.pipeline.t1.t1_freesurfer_utils import get_dirs_check_reconalled
     from clinica.pipeline.t1.t1_freesurfer_workflows import  t1_freesurfer_pipeline
@@ -49,6 +50,11 @@ def datagrabber_t1_freesurfer_pipeline(input_dir,
     from clinica.pipeline.t1.t1_freesurfer_utils import bids_datagrabber
 
     if subjects_visits_tsv is None:
+        try:
+            os.makedirs(output_dir)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:  # if the error is not exist error, raise, otherwise, pass
+                raise
         create_subs_sess_list(input_dir, output_dir)
         subjects_visits_tsv = os.path.join(output_dir, 'subjects_sessions_list.tsv')
 

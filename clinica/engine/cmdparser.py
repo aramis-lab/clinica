@@ -542,6 +542,8 @@ class CmdParserDWIPreprocessingPhaseDifferenceFieldmap(CmdParser):
                                 help='Path to the CAPS directory.')
         self._args.add_argument("subjects_sessions_tsv",
                                 help='TSV file containing the subjects with their sessions.')
+        self._args.add_argument("--register_fmap_on_b0", type=bool, default=True,
+                                help='(Optional) Choose to register fmap on b0 or not. --register_fmap_on_b0 False if the preprocessing was incorrect')
         self._args.add_argument("-working_directory", default=None,
                                 help='Temporary directory to store intermediate results')
         self._args.add_argument("-n_threads", type=int, default=1,
@@ -594,6 +596,7 @@ class CmdParserDWIPreprocessingPhaseDifferenceFieldmap(CmdParser):
                 effective_echo_spacing=echo_spacing,
                 phase_encoding_direction=phase_encoding_direction,
                 num_b0s=count_b0s(bids_path_to_bval),
+                register_fmap_on_b0=args.register_fmap_on_b0,
                 working_directory=self.absolute_path(args.working_directory)
             )
             preprocessing.inputs.inputnode.in_dwi = bids_path_to_dwi

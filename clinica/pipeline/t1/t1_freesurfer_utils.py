@@ -65,7 +65,7 @@ def bids_datagrabber(input_dir, subjects_list, sessions_list):
                              subject='|'.join(subjects_list).replace('sub-',''),
                              run='1')
     if len(anat_t1) == 0:
-             raise ValueError("you have to grap at least on image, but the result is empty, please check it out!")
+             raise ValueError("you have to grap at least one image, but the result is empty, please check it out!")
 
     return anat_t1
 
