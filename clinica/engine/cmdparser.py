@@ -596,6 +596,7 @@ class CmdParserDWIPreprocessingPhaseDifferenceFieldmap(CmdParser):
                 effective_echo_spacing=echo_spacing,
                 phase_encoding_direction=phase_encoding_direction,
                 num_b0s=count_b0s(bids_path_to_bval),
+                register_fmap_on_b0=args.register_fmap_on_b0,
                 working_directory=self.absolute_path(args.working_directory)
             )
             preprocessing.inputs.inputnode.in_dwi = bids_path_to_dwi
