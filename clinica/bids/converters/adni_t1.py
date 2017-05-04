@@ -1,6 +1,7 @@
 
 def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_subj, mri_quality_subj):
 
+    from adni_utils import replace_sequence_chars
     # Get the preferred scan (image series that has been Scaled)
     filtered_mprage = mprage_meta_subj[(mprage_meta_subj['Orig/Proc'] == 'Processed')
                                        & (mprage_meta_subj.Visit == visit_str)
@@ -10,8 +11,6 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
     if filtered_mprage.shape[0] < 1:
         mprage_meta_subj_orig = mprage_meta_subj[mprage_meta_subj['Orig/Proc'] == 'Original']
         return adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig, preferred_field_strength=1.5)
-
-
 
     filtered_mprage_mag = filtered_mprage
     if len(filtered_mprage.MagStrength.unique()) > 1:
@@ -36,12 +35,11 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
                                                      & (mprage_meta_subj.Visit == visit_str)
                                                      & (mprage_meta_subj.SeriesID != series_id)]
             print mprage_meta_subj_alt.shape[0]
+
+            qc_prev_sequence = scan.Sequence
             scan = mprage_meta_subj_alt.iloc[0]
             series_id = scan.SeriesID
             qc_passed = False
-
-
-
 
     filtered_scan = ida_meta_subj[ida_meta_subj.LONIUID == series_id]
 
@@ -72,9 +70,12 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
 
     if not qc_passed:
         if scan.Sequence == 'MP-RAGE':
-            sequence = 'MPR; GradWarp; B1 Correction'
+            original_img_seq = 'MPR'
         else: # 'MP-RAGE REPEAT'
-            sequence = 'MPR-R; GradWarp; B1 Correction'
+            original_img_seq = 'MPR-R'
+
+        processing_seq = qc_prev_sequence[qc_prev_sequence.find(';'):qc_prev_sequence.find('N3') - 2]
+        sequence = original_img_seq + processing_seq
         print sequence
 
 
@@ -98,6 +99,7 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
 
 def adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig, preferred_field_strength=3.0):
 
+    from adni_utils import replace_sequence_chars
     cond_mprage = ((mprage_meta_subj_orig.Visit == visit_str) & mprage_meta_subj_orig.Sequence.map(lambda x: ((
                                                                                                               x.lower().find(
                                                                                                                   'mprage') > -1) | (
@@ -271,29 +273,29 @@ def visits_to_timepoints_t1(subject, mprage_meta_subj_orig, adnimerge_subj):
         return visits
 
 
-def compute_t1_paths(source_dir, clinical_dir, dest_dir, subjs_list):
+def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
     """
 
     :param source_dir:
-    :param clinical_dir:
+    :param csv_dir:
     :param dest_dir:
     :param subjs_list:
     :return:
     """
 
     import pandas as pd
-    from os import path, walk
+    from os import path, walk, mkdir
 
     t1_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
                  'Study_ID', 'Field_Strength', 'Series_ID', 'Original']
 
     t1_df = pd.DataFrame(columns=t1_col_df)
-    adni_merge_path = path.join(clinical_dir, 'ADNIMERGE.csv')
+    adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
     # adni_screening_path = path.join(clinical_dir, 'ADNI_ScreeningList_8_22_12.csv')
-    ida_meta_path = path.join(clinical_dir, 'IDA_MR_METADATA_Listing.csv')
-    mprage_meta_path = path.join(clinical_dir, 'MPRAGEMETA.csv')
-    mri_quality_path = path.join(clinical_dir, 'MRIQUALITY.csv')
-    mayo_mri_qc_path = path.join(clinical_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
+    ida_meta_path = path.join(csv_dir, 'IDA_MR_METADATA_Listing.csv')
+    mprage_meta_path = path.join(csv_dir, 'MPRAGEMETA.csv')
+    mri_quality_path = path.join(csv_dir, 'MRIQUALITY.csv')
+    mayo_mri_qc_path = path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
 
     adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
     ida_meta = pd.io.parsers.read_csv(ida_meta_path, sep=',')
@@ -360,14 +362,24 @@ def compute_t1_paths(source_dir, clinical_dir, dest_dir, subjs_list):
         #     count) + ' / ' + str(total)
 
         series_path = ''
+
+        print image.VISCODE
+        print seq_path
+        print 'S' + str(image.Series_ID)
+
         for (dirpath, dirnames, filenames) in walk(seq_path):
             found = False
             for d in dirnames:
+                print d
                 if d == 'S' + str(image.Series_ID):
                     series_path = path.join(dirpath, d)
                     found = True
+                    print series_path
+                    print 'FOUND FOUND'
+
                     break
             if found:
+                print 'BREAKING!!!'
                 break
 
         nifti_path = series_path
@@ -391,7 +403,10 @@ def compute_t1_paths(source_dir, clinical_dir, dest_dir, subjs_list):
     # images = images.drop(images[images.Path == ''].index)
 
     # Store the paths inside a file called conversion_info inside the input directory
-    images.to_csv(path.join(dest_dir, 't1_paths.tsv'), sep='\t', index=False)
+    t1_tsv_path = path.join(dest_dir, 'conversion_info')
+    if not path.exists(t1_tsv_path):
+        mkdir(t1_tsv_path)
+    images.to_csv(path.join(t1_tsv_path, 't1_paths.tsv'), sep='\t', index=False)
 
     return images
 
@@ -408,12 +423,11 @@ def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
     for row in images.iterrows():
         image = row[1]
         subject = image.Subject_ID
+        count += 1
 
         if image.Path is nan:
             print 'No path specified for ' + image.Subject_ID + ' in session ' + image.VISCODE
             continue
-
-        count += 1
         print 'Processing subject ' + str(subject) + ' - session ' + image.VISCODE + ', ' + str(count) + ' / ' + str(total)
 
         session = viscode_to_session(image.VISCODE)
