@@ -186,7 +186,7 @@ class ADNI_TO_BIDS(Converter, CmdParser):
 
         print '-- Scans files created for each subject. --'
 
-    def convert_images(self, source_dir, clinical_dir, dest_dir, subjs_list_path='', mod_to_add='', mod_to_update='', add_subjs=False):
+    def convert_images(self, source_dir, clinical_dir, dest_dir, subjs_list_path='', mod_to_add='', mod_to_update='', compute_paths = True):
         """
         The function first computes the paths of the right image to be converted and
         :param source_dir:
@@ -243,11 +243,11 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                             datefmt='%m/%d/%Y %I:%M', level=logging.DEBUG)
 
         # Compute anat paths
-        if (mod_to_add == '' or mod_to_add == 'anat') and (mod_to_update == '' or mod_to_update == 'anat'):
+        if convert_anat:
             t1_paths = adni_utils.compute_t1_paths(source_dir, clinical_dir, dest_dir, subjs_list)
 
         # Compute pet paths
-        if (mod_to_add == '' or mod_to_add == 'pet') and (mod_to_update == '' or mod_to_update == 'pet'):
+        if convert_pet:
             print 'Calculating paths for PET FDG...'
             logging.info('Calculating paths for PET FDG...')
             pet_fdg_paths = adni_utils.compute_fdg_pet_paths(source_dir, clinical_dir, dest_dir, subjs_list)
@@ -266,8 +266,11 @@ class ADNI_TO_BIDS(Converter, CmdParser):
 
         # Compute dwi paths
         if convert_dwi:
-            dwi_paths = adni_utils.compute_dti_paths(source_dir, clinical_dir, dest_dir, subjs_list)
-            #dwi_paths = pd.read_csv(path.join(dest_dir, 'conversion_info', 'dwi_paths.tsv'), sep='\t')
+            if compute_paths:
+                dwi_paths = adni_dwi.compute_dti_paths(source_dir, clinical_dir, dest_dir, subjs_list)
+            else:
+                print 'Loading the old dwi_paths file...'
+                dwi_paths = pd.read_csv(path.join(dest_dir, 'conversion_info', 'dwi_paths.tsv'), sep='\t')
 
         # Create subjects folders
         for subj in subjs_list:

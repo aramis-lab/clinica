@@ -34,7 +34,7 @@ def compute_dti_paths(adni_dir, csv_dir, dest_dir, subjs_list):
     dti_df = pd.DataFrame(columns=dti_col_df)
 
     adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
-    ida_meta_path = path.join(csv_dir, 'IDA_MR_METADATA_Listing.csv')
+    ida_meta_path = path.join(csv_dir, 'IDA_MR_Metadata_Listing.csv')
     mri_qc_path = path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
 
     adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
