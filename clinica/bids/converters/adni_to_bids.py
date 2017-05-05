@@ -186,33 +186,6 @@ class ADNI_TO_BIDS(Converter, CmdParser):
 
         print '-- Scans files created for each subject. --'
 
-    # def convert_from_dicom(self, input_path, output_path, bids_name, mod_type):
-    #     """
-    #
-    #     :param t1_path:
-    #     :param output_path:
-    #     :param bids_name:
-    #     :return:
-    #     """
-    #
-    #     import os
-    #     import clinica.bids.bids_utils as bids
-    #     from os import path
-    #     from glob import glob
-    #
-    #     if not os.path.exists(output_path):
-    #         os.mkdir(output_path)
-    #     os.system('dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name + bids.get_bids_suff(mod_type) + ' ' + input_path)
-    #
-    #     # If dcm2niix didn't work use dcm2nii
-    #     if not os.path.exists(path.join(output_path, bids_name + bids.get_bids_suff(mod_type) + '.nii.gz')):
-    #         print 'Conversion with dcm2niix failed, trying with dcm2nii'
-    #         #os.system('dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path')
-    #
-    #     # If the conversion failed with both tools
-    #     if not os.path.exists(path.join(output_path, bids_name + bids.get_bids_suff(mod_type) + '.nii.gz')):
-    #         print 'Conversion of the dicom failed for ', input_path
-
     def convert_images(self, source_dir, clinical_dir, dest_dir, subjs_list_path='', mod_to_add='', mod_to_update='', add_subjs=False):
         """
         The function first computes the paths of the right image to be converted and
@@ -225,11 +198,11 @@ class ADNI_TO_BIDS(Converter, CmdParser):
         import os
         from os import path
         import pandas as pd
-        import shutil
-        import adni_utils as utils
         import logging
         from datetime import datetime
         import adni_utils
+        import adni_modalities.adni_dwi as adni_dwi
+        import adni_modalities.adni_fmri as adni_fmri
 
         print "*******************************"
         print "ADNI to BIDS converter"
@@ -306,205 +279,19 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                     mod_to_add != '' and not os.path.exists(path.join(dest_dir, bids_id))):
                 os.mkdir(path.join(dest_dir, bids_id))
 
-        # For each subject, extract the info from the paths files and convert the modalities
-        for i in range(0, len(subjs_list)):
-            print 'Converting ', subjs_list[i]
-            logging.info('Converting:' + subjs_list[i])
+        if convert_func:
+            if mod_to_update == 'func':
+                adni_fmri.convert_fmri(dest_dir, subjs_list, fmri_paths, mod_to_add=False, mod_to_update=True)
 
-            # Convert func
-            if convert_func:
-                # Extract the list of sessions available
-                sess_list = fmri_paths[(fmri_paths['Subject_ID'] == subjs_list[i])]['VISCODE'].values
-
-                # For each session available, create the folder if doesn't exist and convert the files
-                for ses in sess_list:
-                    bids_ses_id = 'ses-' + ses
-                    bids_file_name = bids_ids[i] + '_ses-' + ses
-                    ses_path = path.join(dest_dir, bids_ids[i], bids_ses_id)
-
-                    if mod_to_add == 'func':
-
-                        if os.path.exists(path.join(ses_path, 'dwi')):
-                            print 'Func folder already existing. Skipped.'
-                            continue
-
-                    if mod_to_update == 'func' and os.path.exists(path.join(ses_path, 'func')):
-                        print 'Removing the old func folder...'
-                        shutil.rmtree(path.join(ses_path, 'func'))
-
-                    if not os.path.exists(ses_path):
-                        os.mkdir(ses_path)
-
-                    fmri_info = fmri_paths[(fmri_paths['Subject_ID'] == subjs_list[i]) & (fmri_paths['VISCODE'] == ses)]
-                    if not fmri_info['Path'].empty:
-                        if type(fmri_info['Path'].values[0]) != float:
-                            if not os.path.exists(path.join(ses_path, 'func')):
-                                os.mkdir(path.join(ses_path, 'func'))
-                                fmri_path = fmri_info['Path'].values[0]
-                                dcm_to_convert = utils.check_two_dcm_folder(fmri_path, dest_dir, fmri_info['IMAGEUID'].values[0])
-                                bids.convert_fmri(dcm_to_convert, path.join(ses_path, 'func'), bids_file_name)
-
-                                # Delete the temporary folder used for copying fmri
-                                if os.path.exists(path.join(dest_dir, 'tmp_dcm_folder')):
-                                    shutil.rmtree(path.join(dest_dir, 'tmp_dcm_folder'))
+        if convert_dwi:
+            if mod_to_update == 'dwi':
+                adni_dwi.convert_dwi(dest_dir, subjs_list, dwi_paths, mod_to_add=False, mod_to_update=True)
+            elif mod_to_add == 'dwi':
+                adni_dwi.convert_dwi(dest_dir, subjs_list, dwi_paths, mod_to_add=True, mod_to_update=False)
 
 
-        # for i in range(0, len(subjs_list)):
-        #     print 'Converting ', subjs_list[i]
-        #     for ses in sess_list:
-        #         bids_file_name = bids_ids[i] + '_ses-' + ses
-        #         bids_ses_id = 'ses-' + ses
-        #         ses_path = path.join(dest_dir, bids_ids[i], bids_ses_id)
-        #         # if (mod_to_add == '' and mod_to_update == '') or (mod_to_add != '' and not os.path.exists(ses_path)):
-        #         #     print 'Creating ses folder'
-        #         #     os.mkdir(ses_path)
-        #         if not os.path.exists(ses_path):
-        #             os.mkdir(ses_path)
-        #
-        #         if mod_to_add != '' and mod_to_add != 'anat':
-        #             pass
-        #         elif (mod_to_add == '' and mod_to_update == '') or mod_to_add == 'anat' or mod_to_update == 'anat':
-        #             # Convert T1
-        #             t1_info = t1_paths[(t1_paths['Subject_ID'] == subjs_list[i]) & (t1_paths['VISCODE'] == ses)]
-        #             if len(t1_info) == 0:
-        #                 print 'No T1 found for the visit ' + ses
-        #             else:
-        #                 t1_path = (t1_info['Path'].values[0]).replace(' ', '\ ')
-        #                 # Check if the pet folder already exist
-        #                 if os.path.isdir(path.join(ses_path, 'anat')):
-        #                     if mod_to_add != '':
-        #                         raise IOError('anat modality found. For updating the dataset use the flag -updated_mod')
-        #
-        #                     print 'Removing the old anat folder...'
-        #                     shutil.rmtree(path.join(ses_path, 'anat'))
-        #                     print 'Removed!'
-        #
-        #                 os.mkdir(path.join(ses_path, 'anat'))
-        #                 bids.convert_T1(t1_path, path.join(ses_path, 'anat'), bids_file_name)
-        #                 t1_bids_path = glob(path.join(path.join(ses_path, 'anat'),
-        #                                               bids_file_name + bids.get_bids_suff('T1') + '.nii.gz'))[0]
-        #                 # Correct the t1 image and overwrite the previous one
-        #                 self.center_nifti_origin(t1_bids_path, t1_bids_path)
-        #         # Convert pet (fdg and av45)
-        #         if mod_to_add != '' and mod_to_add != 'pet':
-        #             pass
-        #         elif (mod_to_add == '' and mod_to_update == '') or mod_to_add == 'pet' or mod_to_update == 'pet':
-        #             pet_fdg_info = pet_fdg_paths
-        #             # Check if the pet folder already exist
-        #             if os.path.isdir(path.join(ses_path, 'pet')):
-        #                 if mod_to_add != '':
-        #                     raise IOError('PET modality found. For updating the dataset use the flag -updated_mod')
-        #
-        #                 print 'Removing the old PET folder...'
-        #                 shutil.rmtree(path.join(ses_path, 'pet'))
-        #
-        #             pet_fdg_info = pet_fdg_paths[
-        #                 (pet_fdg_paths['Subject_ID'] == subjs_list[i]) & (pet_fdg_paths['VISCODE'] == ses)]
-        #             print pet_fdg_info
-        #             if len(pet_fdg_info['Path']) != 0:
-        #                 original = pet_fdg_info['Original'].values
-        #                 if len(original) > 0:
-        #                     if pet_fdg_info['Original'].values[0]:
-        #                         os.mkdir(path.join(ses_path, 'pet'))
-        #                         pet_path = pet_fdg_info['Path'].values[0]
-        #
-        #                         self.center_nifti_origin(pet_path,
-        #                                                  path.join(path.join(ses_path, 'pet'),
-        #                                                            bids_file_name + '_task-rest_acq-fdg_pet.nii.gz'))
-        #                     else:
-        #                         pet_path = pet_fdg_info['Path'].values[0].replace(' ', '\ ')
-        #                         self.convert_from_dicom(pet_path, path.join(ses_path, 'pet'),
-        #                                                 bids_file_name + '_task-rest_acq-fdg', 'pet')
-        #                 else:
-        #                     print 'Original not found for ', subjs_list[i]
-        #             else:
-        #                 print 'No pet_fdg path found for subject: ' + subj + ' visit: ' + ses
-        #
-        #                 # Convert pet_av45
-        #             pet_av45_info = pet_av45_paths
-        #
-        #             # Check if the pet folder already exist
-        #             if os.path.isdir(path.join(ses_path, 'pet')):
-        #                 if mod_to_add != '':
-        #                     raise IOError('PET modality found. For updating the dataset use the flag -updated_mod')
-        #
-        #             pet_av45_info = pet_av45_paths[
-        #                 (pet_av45_paths['Subject_ID'] == subjs_list[i]) & (pet_av45_paths['VISCODE'] == ses)]
-        #             original = pet_av45_info['Original'].values
-        #             if len(pet_av45_info['Path']) != 0:
-        #                 if len(original) > 0:
-        #                     if pet_av45_info['Original'].values[0] == True:
-        #                         if not os.path.exists(path.join(ses_path, 'pet')):
-        #                             os.mkdir(path.join(ses_path, 'pet'))
-        #                         pet_path = pet_av45_info['Path'].values[0]
-        #
-        #                         self.center_nifti_origin(pet_path,
-        #                                                  path.join(path.join(ses_path, 'pet'),
-        #                                                            bids_file_name + '_task-rest_acq-av45_pet.nii.gz'))
-        #                     else:
-        #                         pet_path = pet_av45_info['Path'].values[0].replace(' ', '\ ')
-        #                         self.convert_from_dicom(pet_path, path.join(ses_path, 'pet'),
-        #                                                 bids_file_name + '_task-rest_acq-av45', 'pet')
-        #                 else:
-        #                     print 'Original not found for ', subjs_list[i]
-        #             else:
-        #                 print 'No pet av45 path found for subject: ' + subj + ' visit: ' + ses
-        #
-        #         # Convert func
-        #         if mod_to_add != '' and mod_to_add != 'func':
-        #             pass
-        #         elif (mod_to_add == '' and mod_to_update == '') or mod_to_add == 'func' or mod_to_update == 'func':
-        #             if os.path.isdir(path.join(ses_path, 'func')):
-        #                 if mod_to_add != '':
-        #                     raise IOError('Func modality found. For updating the dataset use the flag -updated_mod')
-        #
-        #                 print 'Removing the old func folder...'
-        #                 shutil.rmtree(path.join(ses_path, 'func'))
-        #             fmri_info = fmri_paths[(fmri_paths['Subject_ID'] == subjs_list[i]) & (fmri_paths['VISCODE'] == ses)]
-        #             if not fmri_info['Path'].empty:
-        #                 if type(fmri_info['Path'].values[0]) != float:
-        #                     if not os.path.exists(path.join(ses_path, 'func')):
-        #                         os.mkdir(path.join(ses_path, 'func'))
-        #                     fmri_path = fmri_info['Path'].values[0]
-        #                     bids.convert_fmri(fmri_path, path.join(ses_path, 'func'), bids_file_name)
-            if convert_dwi:
-                # Extract the list of sessions available from the dwi paths files, removing the duplicates
-                sess_list = dwi_paths[(dwi_paths['Subject_ID'] == subjs_list[i])]['VISCODE'].drop_duplicates().values
 
-                # For each session available, create the folder if doesn't exist and convert the files
-                for ses in sess_list:
-                    bids_ses_id = 'ses-' + ses
-                    bids_file_name = bids_ids[i] + '_ses-' + ses
-                    ses_path = path.join(dest_dir, bids_ids[i], bids_ses_id)
 
-                    if mod_to_add == 'dwi':
-                        if os.path.exists(path.join(ses_path, 'dwi')):
-                            print 'DWI folder already existing. Skipped.'
-                            continue
-
-                    if mod_to_update == 'dwi' and os.path.exists(path.join(ses_path, 'dwi')):
-                        print 'Removing the old dwi folder...'
-                        shutil.rmtree(path.join(ses_path, 'dwi'))
-
-                    if not os.path.exists(ses_path):
-                        os.mkdir(ses_path)
-
-                    dwi_info = dwi_paths[(dwi_paths['Subject_ID'] == subjs_list[i]) & (dwi_paths['VISCODE'] == ses)]
-
-                    # For the same subject, same session there could be multiple dwi with different acq label
-                    for j in range(0, len(dwi_info)):
-                        dwi_subj = dwi_info.iloc[j]
-                        if type(dwi_subj['Path']) != float and dwi_subj['Path']!='':
-                            if not os.path.exists(path.join(ses_path, 'dwi')):
-                                os.mkdir(path.join(ses_path, 'dwi'))
-                            dwi_path = dwi_subj['Path']
-                            bids_name = bids_file_name + '_acq-' + (
-                            'axialEnhanced' if dwi_subj['Enhanced'] else 'axial') + '_dwi'
-                            bids.dcm_to_nii(dwi_path, path.join(ses_path, 'dwi'), bids_name)
-            if convert_anat:
-                pass
-            if convert_pet:
-                pass
 
         print '\n'
 
