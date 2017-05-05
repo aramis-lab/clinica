@@ -4,7 +4,7 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     import os
     from os import walk, path
     from numpy import argsort
-    from adni_utils import replace_sequence_chars
+    from clinica.bids.converters.adni_utils import replace_sequence_chars
 
     pet_fdg_col = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
                    'Series_ID', 'Image_ID', 'Original']
@@ -130,7 +130,7 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
 
 def fdg_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
-    from adni_utils import center_nifti_origin, viscode_to_session
+    from clinica.bids.converters.adni_utils import center_nifti_origin, viscode_to_session
     from os import path, makedirs, system, remove
     from numpy import nan
 
