@@ -25,6 +25,7 @@ def compute_dti_paths(adni_dir, csv_dir, dest_dir, subjs_list):
     :param subjs_list: a list containing the subjects to process
     :return: a pandas dataframe
     '''
+
     import pandas as pd
     from os import path, walk
 
@@ -231,6 +232,9 @@ def convert_dwi(dest_dir, subjs_list, dwi_paths, mod_to_add=False, mod_to_update
 
 
 def dti_image(subject_id, timepoint, visit_str, ida_meta_scans, mri_qc_subj, enhanced):
+
+    from clinica.bids.converters.adni_utils import replace_sequence_chars
+
     sel_image = select_image_qc(list(ida_meta_scans.IMAGEUID), mri_qc_subj)
     if sel_image is None:
         return None
@@ -238,9 +242,7 @@ def dti_image(subject_id, timepoint, visit_str, ida_meta_scans, mri_qc_subj, enh
     sel_scan = ida_meta_scans[ida_meta_scans.IMAGEUID == sel_image].iloc[0]
 
     sequence = sel_scan.Sequence
-    sequence = sequence.replace(' ', '_').replace('/', '_').replace(';', '_').replace('*', '_').replace('(',
-                                                                                                        '_').replace(
-        ')', '_').replace(':', '_')
+    sequence = replace_sequence_chars(sequence)
 
     image_dict = {'Subject_ID': subject_id,
                   'VISCODE': timepoint,
@@ -303,6 +305,7 @@ def select_image_qc(id_list, mri_qc_subj):
 
 def visits_to_timepoints_dti(subject, ida_meta_subj, adnimerge_subj):
     from datetime import datetime
+    from clinica.bids.converters.adni_utils import days_between
 
     visits = dict()
     unique_visits = list(ida_meta_subj.Visit.unique())
@@ -384,7 +387,7 @@ def visits_to_timepoints_dti(subject, ida_meta_subj, adnimerge_subj):
             if (datetime.strptime(min_visit.EXAMDATE, "%Y-%m-%d")
                     > datetime.strptime(image.ScanDate, "%Y-%m-%d")
                     > datetime.strptime(min_visit2.EXAMDATE, "%Y-%m-%d")):
-                dif = self.days_between(min_visit.EXAMDATE, min_visit2.EXAMDATE)
+                dif = days_between(min_visit.EXAMDATE, min_visit2.EXAMDATE)
                 if abs((dif / 2.0) - min_db) < 30:
                     min_visit = min_visit2
 
