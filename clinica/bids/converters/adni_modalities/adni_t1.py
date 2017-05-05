@@ -1,3 +1,198 @@
+def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
+    """
+
+    Compute paths to t1 images of ADNI.
+
+    :param source_dir:
+    :param csv_dir:
+    :param dest_dir:
+    :param subjs_list:
+    :return: a pandas dataframe
+    """
+
+    import pandas as pd
+    from os import path, walk, mkdir
+
+    t1_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
+                 'Study_ID', 'Field_Strength', 'Series_ID', 'Original']
+
+    t1_df = pd.DataFrame(columns=t1_col_df)
+    adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
+    # adni_screening_path = path.join(clinical_dir, 'ADNI_ScreeningList_8_22_12.csv')
+    ida_meta_path = path.join(csv_dir, 'IDA_MR_METADATA_Listing.csv')
+    mprage_meta_path = path.join(csv_dir, 'MPRAGEMETA.csv')
+    mri_quality_path = path.join(csv_dir, 'MRIQUALITY.csv')
+    mayo_mri_qc_path = path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
+
+    adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
+    ida_meta = pd.io.parsers.read_csv(ida_meta_path, sep=',')
+    mprage_meta = pd.io.parsers.read_csv(mprage_meta_path, sep=',')
+    mri_quality = pd.io.parsers.read_csv(mri_quality_path, sep=',')
+    mayo_mri_qc = pd.io.parsers.read_csv(mayo_mri_qc_path, sep=',')
+    mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == 'T1']
+
+
+    for subj in subjs_list:
+        adnimerge_subj = adni_merge[adni_merge.PTID == subj]
+        # Sort the values by examination date
+        adnimerge_subj = adnimerge_subj.sort_values('EXAMDATE')
+
+        mprage_meta_subj = mprage_meta[mprage_meta.SubjectID == subj]
+        mprage_meta_subj = mprage_meta_subj.sort_values('ScanDate')
+
+        ida_meta_subj = ida_meta[ida_meta.Subject == subj]
+
+        mri_quality_subj = mri_quality[mri_quality.RID == int(subj[-4:])]
+        mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(subj[-4:])]
+
+        mprage_meta_subj_orig = mprage_meta_subj[mprage_meta_subj['Orig/Proc'] == 'Original']
+        visits = visits_to_timepoints_t1(subj, mprage_meta_subj, adnimerge_subj)
+
+        keys = visits.keys()
+        keys.sort()
+        for visit_info in visits.keys():
+            if visit_info[1] == 'ADNI1':
+                image_dict = adni1_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
+                                              ida_meta_subj, mri_quality_subj)
+            elif visit_info[1] == 'ADNIGO':
+                image_dict = adnigo_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
+                                               ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj, visit_info[2])
+            else:  # ADNI2
+                image_dict = adni2_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj_orig)
+
+            if image_dict is None:
+                image_dict = {'Subject_ID': subj,
+                              'VISCODE': visit_info[0],
+                              'Visit': visits[visit_info],
+                              'Sequence': '',
+                              'Scan_Date': '',
+                              'Study_ID': '',
+                              'Series_ID': '',
+                              'Field_Strength': '',
+                              'Original': True}
+
+            row_to_append = pd.DataFrame(image_dict, index=['i', ])
+            t1_df = t1_df.append(row_to_append, ignore_index=True)
+
+    images = t1_df
+    is_dicom = []
+    nifti_paths = []
+    count = 0
+
+    for row in images.iterrows():
+
+        image = row[1]
+        seq_path = path.join(source_dir, str(image.Subject_ID), image.Sequence)
+
+        count += 1
+        # print 'Processing Subject ' + str(image.Subject_ID) + ' - Session ' + image.VISCODE + ', ' + str(
+        #     count) + ' / ' + str(total)
+
+        series_path = ''
+
+        print image.VISCODE
+        print seq_path
+        print 'S' + str(image.Series_ID)
+
+        for (dirpath, dirnames, filenames) in walk(seq_path):
+            found = False
+            for d in dirnames:
+                print d
+                if d == 'S' + str(image.Series_ID):
+                    series_path = path.join(dirpath, d)
+                    found = True
+                    print series_path
+                    print 'FOUND FOUND'
+
+                    break
+            if found:
+                print 'BREAKING!!!'
+                break
+
+        nifti_path = series_path
+        dicom = True
+
+        for (dirpath, dirnames, filenames) in walk(series_path):
+            for f in filenames:
+                if f.endswith(".nii"):
+                    dicom = False
+                    nifti_path = path.join(dirpath, f)
+                    break
+
+        is_dicom.append(dicom)
+        nifti_paths.append(nifti_path)
+
+    images.loc[:, 'Is_Dicom'] = pd.Series(is_dicom, index=images.index)
+    images.loc[:, 'Path'] = pd.Series(nifti_paths, index=images.index)
+
+    # TODO NEVER DO THIS, with empty paths is how we find errors
+    # Drop all the lines that have the Path section empty
+    # images = images.drop(images[images.Path == ''].index)
+
+    # Store the paths inside a file called conversion_info inside the input directory
+    t1_tsv_path = path.join(dest_dir, 'conversion_info')
+    if not path.exists(t1_tsv_path):
+        mkdir(t1_tsv_path)
+    images.to_csv(path.join(t1_tsv_path, 't1_paths.tsv'), sep='\t', index=False)
+
+    return images
+
+
+def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
+
+    from ..adni_utils import center_nifti_origin, viscode_to_session
+    from os import path, makedirs, system, remove
+    from numpy import nan
+
+    count = 0
+    total = images.shape[0]
+
+    for row in images.iterrows():
+        image = row[1]
+        subject = image.Subject_ID
+        count += 1
+
+        if image.Path is nan:
+            print 'No path specified for ' + image.Subject_ID + ' in session ' + image.VISCODE
+            continue
+        print 'Processing subject ' + str(subject) + ' - session ' + image.VISCODE + ', ' + str(count) + ' / ' + str(total)
+
+        session = viscode_to_session(image.VISCODE)
+        image_path = image.Path
+        bids_subj = subject.replace('_', '')
+        output_path = path.join(bids_dir, 'sub-ADNI' + bids_subj, 'ses-' + session, 'anat')
+        output_filename = 'sub-ADNI' + bids_subj + '_ses-' + session + '_T1w'
+
+        try:
+            makedirs(output_path)
+        except OSError:
+            if not path.isdir(output_path):
+                raise
+
+        if image.Is_Dicom:
+            command = dcm2niix + ' -b n -z n -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
+            system(command)
+            nifti_file = path.join(output_path, output_filename + '.nii')
+            output_image = nifti_file + '.gz'
+
+            # Check if conversion worked (output file exists?)
+            if not path.isfile(nifti_file):
+                command = dcm2nii + ' -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
+                system(command)
+                nifti_file = path.join(output_path, subject.replace('_', '') + '.nii')
+                output_image = path.join(output_path, output_filename + '.nii.gz')
+
+                if not path.isfile(nifti_file):
+                    print 'DICOM to NIFTI conversion error for ' + image_path
+                    continue
+
+            center_nifti_origin(nifti_file, output_image)
+            remove(nifti_file)
+
+        else:
+            output_image = path.join(output_path, output_filename + '.nii.gz')
+            center_nifti_origin(image_path, output_image)
+
 
 def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_subj, mri_quality_subj):
 
@@ -273,195 +468,4 @@ def visits_to_timepoints_t1(subject, mprage_meta_subj_orig, adnimerge_subj):
         return visits
 
 
-def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
-    """
 
-    :param source_dir:
-    :param csv_dir:
-    :param dest_dir:
-    :param subjs_list:
-    :return:
-    """
-
-    import pandas as pd
-    from os import path, walk, mkdir
-
-    t1_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
-                 'Study_ID', 'Field_Strength', 'Series_ID', 'Original']
-
-    t1_df = pd.DataFrame(columns=t1_col_df)
-    adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
-    # adni_screening_path = path.join(clinical_dir, 'ADNI_ScreeningList_8_22_12.csv')
-    ida_meta_path = path.join(csv_dir, 'IDA_MR_METADATA_Listing.csv')
-    mprage_meta_path = path.join(csv_dir, 'MPRAGEMETA.csv')
-    mri_quality_path = path.join(csv_dir, 'MRIQUALITY.csv')
-    mayo_mri_qc_path = path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
-
-    adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
-    ida_meta = pd.io.parsers.read_csv(ida_meta_path, sep=',')
-    mprage_meta = pd.io.parsers.read_csv(mprage_meta_path, sep=',')
-    mri_quality = pd.io.parsers.read_csv(mri_quality_path, sep=',')
-    mayo_mri_qc = pd.io.parsers.read_csv(mayo_mri_qc_path, sep=',')
-    mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == 'T1']
-
-
-    for subj in subjs_list:
-        adnimerge_subj = adni_merge[adni_merge.PTID == subj]
-        # Sort the values by examination date
-        adnimerge_subj = adnimerge_subj.sort_values('EXAMDATE')
-
-        mprage_meta_subj = mprage_meta[mprage_meta.SubjectID == subj]
-        mprage_meta_subj = mprage_meta_subj.sort_values('ScanDate')
-
-        ida_meta_subj = ida_meta[ida_meta.Subject == subj]
-
-        mri_quality_subj = mri_quality[mri_quality.RID == int(subj[-4:])]
-        mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(subj[-4:])]
-
-        mprage_meta_subj_orig = mprage_meta_subj[mprage_meta_subj['Orig/Proc'] == 'Original']
-        visits = visits_to_timepoints_t1(subj, mprage_meta_subj, adnimerge_subj)
-
-        keys = visits.keys()
-        keys.sort()
-        for visit_info in visits.keys():
-            if visit_info[1] == 'ADNI1':
-                image_dict = adni1_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
-                                              ida_meta_subj, mri_quality_subj)
-            elif visit_info[1] == 'ADNIGO':
-                image_dict = adnigo_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
-                                               ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj, visit_info[2])
-            else:  # ADNI2
-                image_dict = adni2_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj_orig)
-
-            if image_dict is None:
-                image_dict = {'Subject_ID': subj,
-                              'VISCODE': visit_info[0],
-                              'Visit': visits[visit_info],
-                              'Sequence': '',
-                              'Scan_Date': '',
-                              'Study_ID': '',
-                              'Series_ID': '',
-                              'Field_Strength': '',
-                              'Original': True}
-
-            row_to_append = pd.DataFrame(image_dict, index=['i', ])
-            t1_df = t1_df.append(row_to_append, ignore_index=True)
-
-    images = t1_df
-    is_dicom = []
-    nifti_paths = []
-    count = 0
-
-    for row in images.iterrows():
-
-        image = row[1]
-        seq_path = path.join(source_dir, str(image.Subject_ID), image.Sequence)
-
-        count += 1
-        # print 'Processing Subject ' + str(image.Subject_ID) + ' - Session ' + image.VISCODE + ', ' + str(
-        #     count) + ' / ' + str(total)
-
-        series_path = ''
-
-        print image.VISCODE
-        print seq_path
-        print 'S' + str(image.Series_ID)
-
-        for (dirpath, dirnames, filenames) in walk(seq_path):
-            found = False
-            for d in dirnames:
-                print d
-                if d == 'S' + str(image.Series_ID):
-                    series_path = path.join(dirpath, d)
-                    found = True
-                    print series_path
-                    print 'FOUND FOUND'
-
-                    break
-            if found:
-                print 'BREAKING!!!'
-                break
-
-        nifti_path = series_path
-        dicom = True
-
-        for (dirpath, dirnames, filenames) in walk(series_path):
-            for f in filenames:
-                if f.endswith(".nii"):
-                    dicom = False
-                    nifti_path = path.join(dirpath, f)
-                    break
-
-        is_dicom.append(dicom)
-        nifti_paths.append(nifti_path)
-
-    images.loc[:, 'Is_Dicom'] = pd.Series(is_dicom, index=images.index)
-    images.loc[:, 'Path'] = pd.Series(nifti_paths, index=images.index)
-
-    # TODO NEVER DO THIS, with empty paths is how we find errors
-    # Drop all the lines that have the Path section empty
-    # images = images.drop(images[images.Path == ''].index)
-
-    # Store the paths inside a file called conversion_info inside the input directory
-    t1_tsv_path = path.join(dest_dir, 'conversion_info')
-    if not path.exists(t1_tsv_path):
-        mkdir(t1_tsv_path)
-    images.to_csv(path.join(t1_tsv_path, 't1_paths.tsv'), sep='\t', index=False)
-
-    return images
-
-
-def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
-
-    from adni_utils import center_nifti_origin, viscode_to_session
-    from os import path, makedirs, system, remove
-    from numpy import nan
-
-    count = 0
-    total = images.shape[0]
-
-    for row in images.iterrows():
-        image = row[1]
-        subject = image.Subject_ID
-        count += 1
-
-        if image.Path is nan:
-            print 'No path specified for ' + image.Subject_ID + ' in session ' + image.VISCODE
-            continue
-        print 'Processing subject ' + str(subject) + ' - session ' + image.VISCODE + ', ' + str(count) + ' / ' + str(total)
-
-        session = viscode_to_session(image.VISCODE)
-        image_path = image.Path
-        bids_subj = subject.replace('_', '')
-        output_path = path.join(bids_dir, 'sub-ADNI' + bids_subj, 'ses-' + session, 'anat')
-        output_filename = 'sub-ADNI' + bids_subj + '_ses-' + session + '_T1w'
-
-        try:
-            makedirs(output_path)
-        except OSError:
-            if not path.isdir(output_path):
-                raise
-
-        if image.Is_Dicom:
-            command = dcm2niix + ' -b n -z n -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
-            system(command)
-            nifti_file = path.join(output_path, output_filename + '.nii')
-            output_image = nifti_file + '.gz'
-
-            # Check if conversion worked (output file exists?)
-            if not path.isfile(nifti_file):
-                command = dcm2nii + ' -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
-                system(command)
-                nifti_file = path.join(output_path, subject.replace('_', '') + '.nii')
-                output_image = path.join(output_path, output_filename + '.nii.gz')
-
-                if not path.isfile(nifti_file):
-                    print 'DICOM to NIFTI conversion error for ' + image_path
-                    continue
-
-            center_nifti_origin(nifti_file, output_image)
-            remove(nifti_file)
-
-        else:
-            output_image = path.join(output_path, output_filename + '.nii.gz')
-            center_nifti_origin(image_path, output_image)
