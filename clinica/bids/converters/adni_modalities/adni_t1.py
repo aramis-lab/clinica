@@ -58,7 +58,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
                 image_dict = adnigo_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
                                                ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj, visit_info[2])
             else:  # ADNI2
-                image_dict = adni2_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj_orig)
+                image_dict = adni2_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj_orig, mayo_mri_qc_subj)
 
             if image_dict is None:
                 image_dict = {'Subject_ID': subj,
@@ -89,24 +89,14 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
         #     count) + ' / ' + str(total)
 
         series_path = ''
-
-        print image.VISCODE
-        print seq_path
-        print 'S' + str(image.Series_ID)
-
         for (dirpath, dirnames, filenames) in walk(seq_path):
             found = False
             for d in dirnames:
-                print d
                 if d == 'S' + str(image.Series_ID):
                     series_path = path.join(dirpath, d)
                     found = True
-                    print series_path
-                    print 'FOUND FOUND'
-
                     break
             if found:
-                print 'BREAKING!!!'
                 break
 
         nifti_path = series_path
@@ -140,7 +130,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
 def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
 
-    from ..adni_utils import center_nifti_origin, viscode_to_session
+    from clinica.bids.converters.adni_utils import center_nifti_origin, viscode_to_session
     from os import path, makedirs, system, remove
     from numpy import nan
 
@@ -194,18 +184,18 @@ def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
             center_nifti_origin(image_path, output_image)
 
 
-def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_subj, mri_quality_subj):
+def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj):
 
-    from adni_utils import replace_sequence_chars
+    from clinica.bids.converters.adni_utils import replace_sequence_chars
     # Get the preferred scan (image series that has been Scaled)
     filtered_mprage = mprage_meta_subj[(mprage_meta_subj['Orig/Proc'] == 'Processed')
                                        & (mprage_meta_subj.Visit == visit_str)
                                        & (mprage_meta_subj.Sequence.map(lambda x: x.endswith('Scaled')))]
 
-    # If there is not a preferred image we use ADNI2 processing (get the original) preferring 1.5T images
+    # If there is not a preferred image we use ADNI2 processing (get the best qc if available, otherwise the original) preferring 1.5T images
     if filtered_mprage.shape[0] < 1:
         mprage_meta_subj_orig = mprage_meta_subj[mprage_meta_subj['Orig/Proc'] == 'Original']
-        return adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig, preferred_field_strength=1.5)
+        return adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig, mayo_mri_qc_subj, preferred_field_strength=1.5)
 
     filtered_mprage_mag = filtered_mprage
     if len(filtered_mprage.MagStrength.unique()) > 1:
@@ -215,26 +205,19 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
     series_id = scan.SeriesID
 
     qc_passed = True
-
     qc = mri_quality_subj[mri_quality_subj.LONIUID == 'S' + str(scan.SeriesID)]
-    if qc.shape[0] < 1:
-        print 'QC ADNI 1 not found'
+    if qc.shape[0] > 0 and qc.iloc[0].PASS != 1:
+        print 'QC found but NOT passed'
         print 'Subject ' + subject_id + ' - Series: ' + str(scan.SeriesID) + ' - Study: ' + str(scan.StudyID)
-    else:
-        if qc.iloc[0].PASS == 1:
-            print 'QC found and passed'
-        else:
-            print 'QC found but NOT passed, NONONONO'
-            print 'Subject ' + subject_id + ' - Series: ' + str(scan.SeriesID) + ' - Study: ' + str(scan.StudyID)
-            mprage_meta_subj_alt = mprage_meta_subj[(mprage_meta_subj['Orig/Proc'] == 'Original')
-                                                     & (mprage_meta_subj.Visit == visit_str)
-                                                     & (mprage_meta_subj.SeriesID != series_id)]
-            print mprage_meta_subj_alt.shape[0]
+        mprage_meta_subj_alt = mprage_meta_subj[(mprage_meta_subj['Orig/Proc'] == 'Original')
+                                                 & (mprage_meta_subj.Visit == visit_str)
+                                                 & (mprage_meta_subj.SeriesID != series_id)]
+        print mprage_meta_subj_alt.shape[0]
 
-            qc_prev_sequence = scan.Sequence
-            scan = mprage_meta_subj_alt.iloc[0]
-            series_id = scan.SeriesID
-            qc_passed = False
+        qc_prev_sequence = scan.Sequence
+        scan = mprage_meta_subj_alt.iloc[0]
+        series_id = scan.SeriesID
+        qc_passed = False
 
     filtered_scan = ida_meta_subj[ida_meta_subj.LONIUID == series_id]
 
@@ -247,6 +230,7 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
         filtered_scan = ida_meta_subj[ida_meta_subj.LONIUID == series_id]
 
         if filtered_scan.shape[0] < 1:
+            # TODO - LOG THIS
             print 'NO IDA Meta: ' + subject_id + ' for visit ' + timepoint + ' - ' + visit_str
             return None
 
@@ -266,18 +250,18 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
     if not qc_passed:
         if scan.Sequence == 'MP-RAGE':
             original_img_seq = 'MPR'
-        else: # 'MP-RAGE REPEAT'
+        else:  # 'MP-RAGE REPEAT'
             original_img_seq = 'MPR-R'
 
         processing_seq = qc_prev_sequence[qc_prev_sequence.find(';'):qc_prev_sequence.find('N3') - 2]
         sequence = original_img_seq + processing_seq
         print sequence
 
-
     sequence = replace_sequence_chars(sequence)
 
     qc = mri_quality_subj[mri_quality_subj.LONIUID == 'S' + str(scan.SeriesID)]
     if qc.shape[0] > 0 and qc.iloc[0].PASS != 1:
+        # TODO - LOG THIS
         print 'QC found but NOT passed, NONONONO'
         print 'Subject ' + subject_id + ' - Series: ' + str(scan.SeriesID) + ' - Study: ' + str(scan.StudyID)
 
@@ -292,46 +276,52 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
             'Original': original}
 
 
-def adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig, preferred_field_strength=3.0):
+def adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig, mayo_mri_qc_subj, preferred_field_strength=3.0):
 
-    from adni_utils import replace_sequence_chars
-    cond_mprage = ((mprage_meta_subj_orig.Visit == visit_str) & mprage_meta_subj_orig.Sequence.map(lambda x: ((
-                                                                                                              x.lower().find(
-                                                                                                                  'mprage') > -1) | (
-                                                                                                              x.lower().find(
-                                                                                                                  'mp-rage') > -1) | (
-                                                                                                              x.lower().find(
-                                                                                                                  'mp rage') > -1)) & (
-                                                                                                             x.find(
-                                                                                                                 '2') < 0) & (
-                                                                                                             x.lower().find(
-                                                                                                                 'repeat') < 0)))
+    from clinica.bids.converters.adni_utils import replace_sequence_chars
 
-    cond_spgr = ((mprage_meta_subj_orig.Visit == visit_str) & mprage_meta_subj_orig.Sequence.map(
-        lambda x: (x.lower().find('spgr') > -1) & (x.lower().find('acc') < 0) & (x.lower().find('repeat') < 0)))
-
-    filtered_scan = mprage_meta_subj_orig[cond_mprage | cond_spgr]
-    if filtered_scan.shape[0] < 1:
+    # cond_mprage = ((mprage_meta_subj_orig.Visit == visit_str) & mprage_meta_subj_orig.Sequence.map(
+    #     lambda x: ((x.lower().find('mprage') > -1) | (x.lower().find('mp-rage') > -1) | (x.lower().find('mp rage') > -1))
+    #               & (x.find('2') < 0) & (x.lower().find('repeat') < 0)))
+    #
+    # cond_spgr = ((mprage_meta_subj_orig.Visit == visit_str) & mprage_meta_subj_orig.Sequence.map(
+    #     lambda x: (x.lower().find('spgr') > -1) & (x.lower().find('acc') < 0) & (x.lower().find('repeat') < 0)))
+    #
+    # filtered_scan = mprage_meta_subj_orig[cond_mprage | cond_spgr]
+    # if filtered_scan.shape[0] < 1:
 
         # TODO Improve this code. Don't make a double verification for the whole condition.
         # Invert order of filtering: less to more restrictive, check for the repeated as for the MagStrength
-        cond_mprage_rep = ((mprage_meta_subj_orig.Visit == visit_str) & mprage_meta_subj_orig.Sequence.map(
-            lambda x: ((x.lower().find('mprage') > -1) | (x.lower().find('mp-rage') > -1) | (
-            x.lower().find('mp rage') > -1)) & (x.find('2') < 0)))
 
-        cond_spgr_rep = ((mprage_meta_subj_orig.Visit == visit_str) & mprage_meta_subj_orig.Sequence.map(
-            lambda x: (x.lower().find('spgr') > -1) & (x.lower().find('acc') < 0)))
+    cond_mprage = ((mprage_meta_subj_orig.Visit == visit_str) & mprage_meta_subj_orig.Sequence.map(
+        lambda x: ((x.lower().find('mprage') > -1) | (x.lower().find('mp-rage') > -1) | (
+        x.lower().find('mp rage') > -1)) & (x.find('2') < 0)))
 
-        filtered_scan = mprage_meta_subj_orig[cond_mprage_rep | cond_spgr_rep]
-        if filtered_scan.shape[0] < 1:
-            print 'NO MPRAGE Meta2: ' + subject_id + ' for visit ' + timepoint + ' - ' + visit_str
-            return None
+    cond_spgr = ((mprage_meta_subj_orig.Visit == visit_str) & mprage_meta_subj_orig.Sequence.map(
+        lambda x: (x.lower().find('spgr') > -1) & (x.lower().find('acc') < 0)))
 
+    filtered_scan = mprage_meta_subj_orig[cond_mprage | cond_spgr]
+
+    if filtered_scan.shape[0] < 1:
+        # TODO - LOG THIS
+        print 'NO MPRAGE Meta2: ' + subject_id + ' for visit ' + timepoint + ' - ' + visit_str
+        return None
+
+    # Select preferred_field_strength images
     if len(filtered_scan.MagStrength.unique()) > 1:
-        filtered_scan = filtered_scan[
-            filtered_scan.MagStrength == preferred_field_strength]  # Select preferred_field_strength images
+        multiple_mag_strength = True
+        filtered_scan = filtered_scan[filtered_scan.MagStrength == preferred_field_strength]
+        not_preferred_scan = filtered_scan[filtered_scan.MagStrength != preferred_field_strength]
 
-    scan = filtered_scan.iloc[0]
+    if filtered_scan.MagStrength.unique()[0] == 1.5:
+        selected_scan = filtered_scan[filtered_scan.Sequence.map(
+            lambda x: (x.lower().find('repeat') < 0))]
+        if selected_scan.shape[0] < 1:
+            selected_scan = filtered_scan
+    else:  # 3.0
+        selected_scan = select_scan_qc_adni2(filtered_scan, mayo_mri_qc_subj)
+
+    scan = selected_scan.iloc[0]
 
     sequence = replace_sequence_chars(scan.Sequence)
 
@@ -358,12 +348,12 @@ def adnigo_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_su
             return adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_subj, mri_quality_subj)
 
     mprage_meta_subj_orig = mprage_meta_subj[mprage_meta_subj['Orig/Proc'] == 'Original']
-    return adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig)
+    return adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig, mayo_mri_qc_subj)
 
 
 def visits_to_timepoints_t1(subject, mprage_meta_subj_orig, adnimerge_subj):
         from datetime import datetime
-        from adni_utils import days_between
+        from clinica.bids.converters.adni_utils import days_between
 
         mprage_meta_subj_orig = mprage_meta_subj_orig[mprage_meta_subj_orig['Visit'] != 'ADNI Baseline']
 
@@ -468,4 +458,48 @@ def visits_to_timepoints_t1(subject, mprage_meta_subj_orig, adnimerge_subj):
         return visits
 
 
+def select_scan_qc_adni2(scans_meta, mayo_mri_qc_subj):
+    import numpy as np
+
+    id_list = scans_meta.ImageUID.unique()
+    if len(id_list) == 0:
+        return None
+
+    selected_image = None
+    image_ids = ['I' + str(imageuid) for imageuid in id_list]
+    int_ids = [int(imageuid) for imageuid in id_list]
+    images_qc = mayo_mri_qc_subj[mayo_mri_qc_subj.loni_image.isin(image_ids)]
+
+    if images_qc.shape[0] < 1:
+        #TODO return original
+        return min(int_ids)
+
+    if np.sum(images_qc.series_selected) == 1:
+        selected_image = images_qc[images_qc.series_selected == 1].iloc[0].loni_image[1:]
+    else:
+        images_not_rejected = images_qc[images_qc.series_quality < 4]
+
+        if images_not_rejected.shape[0] < 1:
+
+            # There are no images that passed the qc
+            # so we'll try to see if there are other images without qc,
+            # otherwise return None
+            qc_ids = set([int(qc_id[1:]) for qc_id in images_qc.loni_image.unique()])
+            no_qc_ids = list(set(int_ids) - qc_ids)
+
+            if len(no_qc_ids) == 0:
+                return None
+            else:
+                return min(no_qc_ids)
+
+        series_quality = [q if q > 0 else 4 for q in list(images_not_rejected.series_quality)]
+        best_q = np.amin(series_quality)
+
+        images_best_qc = images_not_rejected[images_not_rejected.series_quality == best_q]
+        if images_best_qc.shape[0] == 1:
+            selected_image = images_best_qc.iloc[0].loni_image[1:]
+        else:
+            selected_image = min(int_ids)
+
+    return int(selected_image)
 
