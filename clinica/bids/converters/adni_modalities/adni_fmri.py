@@ -25,6 +25,7 @@ def compute_fmri_path( source_dir, clinical_dir, dest_dir, subjs_list):
     import pandas as pd
     import logging
 
+
     fmri_col = ['Subject_ID', 'VISCODE', 'Visit', 'IMAGEUID', 'Sequence', 'Scan Date', 'LONIUID', 'Scanner',
                 'MagStregth', 'Path']
 
@@ -49,11 +50,7 @@ def compute_fmri_path( source_dir, clinical_dir, dest_dir, subjs_list):
 
         if len(visits_list) != 0:
             for viscode in visits_list:
-                scan_date = ''
-                sequence = ''
-                loni_uid = ''
                 visit = ''
-                mag_strenght = ''
                 image_path = ''
 
                 fmri_subj = fmri_subjs_info[fmri_subjs_info['VISCODE2'] == viscode]
@@ -72,7 +69,7 @@ def compute_fmri_path( source_dir, clinical_dir, dest_dir, subjs_list):
                             imageuid_to_select = images_qc[images_qc['series_selected'] > 0]['loni_image'].iloc[
                                 0].replace('I', '')
                         else:
-                            imageuid_to_select = self.select_image_qc(fmri_imageuid, images_qc)
+                            imageuid_to_select = select_image_qc(fmri_imageuid, images_qc)
 
                         fmri_subj = fmri_subj[fmri_subj['IMAGEUID'] == int(imageuid_to_select)].iloc[0]
                     else:
@@ -96,7 +93,7 @@ def compute_fmri_path( source_dir, clinical_dir, dest_dir, subjs_list):
                             continue
 
                         scan_date = fmri_subj.SCANDATE
-                        sequence = self.replace_sequence_chars(fmri_subj.SERDESC)
+                        sequence = adni_utils.replace_sequence_chars(fmri_subj.SERDESC)
                         scanner = fmri_metadata['Scanner']
                         loni_uid = fmri_metadata['LONIUID']
                         visit = fmri_metadata['Visit']
@@ -134,6 +131,7 @@ def compute_fmri_path( source_dir, clinical_dir, dest_dir, subjs_list):
 
     fmri_df.to_csv(path.join(dest_dir, 'conversion_info', 'fmri_paths.tsv'), sep='\t', index=False)
     return fmri_df
+
 
 def convert_fmri(dest_dir, subjs_list, fmri_paths, mod_to_add=False, mod_to_update=False):
 
@@ -198,6 +196,7 @@ def convert_fmri(dest_dir, subjs_list, fmri_paths, mod_to_add=False, mod_to_upda
                     if os.path.exists(path.join(dest_dir, 'tmp_dcm_folder')):
                         shutil.rmtree(path.join(dest_dir, 'tmp_dcm_folder'))
 
+
 def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
     '''
     Check if a folder contains more than one DICOM and if yes, copy the DICOM related to image id passed as parameter into
@@ -233,3 +232,47 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
         return dest_path
     else:
         return dicom_path
+
+
+def select_image_qc(id_list, mri_qc_subj):
+    import numpy as np
+
+    if len(id_list) == 0:
+        return None
+
+    selected_image = None
+    image_ids = ['I' + str(imageuid) for imageuid in id_list]
+    int_ids = [int(imageuid) for imageuid in id_list]
+    images_qc = mri_qc_subj[mri_qc_subj.loni_image.isin(image_ids)]
+
+    if images_qc.shape[0] < 1:
+        return min(int_ids)
+
+    if np.sum(images_qc.series_selected) == 1:
+        selected_image = images_qc[images_qc.series_selected == 1].iloc[0].loni_image[1:]
+    else:
+        images_not_rejected = images_qc[images_qc.series_quality < 4]
+
+        if images_not_rejected.shape[0] < 1:
+
+            # There are no images that passed the qc
+            # so we'll try to see if there are other images without qc,
+            # otherwise return None
+            qc_ids = set([int(qc_id[1:]) for qc_id in images_qc.loni_image.unique()])
+            no_qc_ids = list(set(int_ids) - qc_ids)
+
+            if len(no_qc_ids) == 0:
+                return None
+            else:
+                return min(no_qc_ids)
+
+        series_quality = [q if q > 0 else 4 for q in list(images_not_rejected.series_quality)]
+        best_q = np.amin(series_quality)
+
+        images_best_qc = images_not_rejected[images_not_rejected.series_quality == best_q]
+        if images_best_qc.shape[0] == 1:
+            selected_image = images_best_qc.iloc[0].loni_image[1:]
+        else:
+            selected_image = min(int_ids)
+
+    return int(selected_image)
