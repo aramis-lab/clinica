@@ -181,4 +181,3 @@ def fdg_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2ni
 
             center_nifti_origin(nifti_file, output_image)
             remove(nifti_file)
-

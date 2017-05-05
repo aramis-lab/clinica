@@ -209,7 +209,7 @@ class ADNI_TO_BIDS(Converter, CmdParser):
 
         if mod_to_update != '':
             print 'Updating: ', mod_to_update
-        print "*******************************"
+
 
 
         bids_ids = []
@@ -232,6 +232,7 @@ class ADNI_TO_BIDS(Converter, CmdParser):
             subjs_list = adni_merge['PTID'].unique()
 
         print 'Subjects found:', len(subjs_list)
+        print "*******************************"
 
         if (mod_to_add == '' and mod_to_update == '') or (mod_to_add != '' and os.path.exists(dest_dir) == False):
             print 'Creating the output folder'
@@ -291,9 +292,6 @@ class ADNI_TO_BIDS(Converter, CmdParser):
                 adni_dwi.convert_dwi(dest_dir, subjs_list, dwi_paths, mod_to_add=False, mod_to_update=True)
             elif mod_to_add == 'dwi':
                 adni_dwi.convert_dwi(dest_dir, subjs_list, dwi_paths, mod_to_add=True, mod_to_update=False)
-
-
-
 
 
         print '\n'

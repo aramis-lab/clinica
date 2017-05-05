@@ -44,8 +44,10 @@ def compute_dti_paths(adni_dir, csv_dir, dest_dir, subjs_list):
 
     mri_qc = pd.io.parsers.read_csv(mri_qc_path, sep=',')
     mri_qc = mri_qc[mri_qc.series_type == 'DTI']
+    print '=================================================='
 
     for subj in subjs_list:
+        print 'Computing path for subj', subj
 
         adnimerge_subj = adni_merge[adni_merge.PTID == subj]
 
@@ -126,7 +128,10 @@ def compute_dti_paths(adni_dir, csv_dir, dest_dir, subjs_list):
     # Drop all the lines that have the Path section empty
     # images = images.drop(images[images.Path == ''].index)
     # Store the paths inside a file called t1_paths inside the input directory
+    print '\nDone! Saving the results into',path.join(dest_dir, 'conversion_info', 'dwi_paths.tsv')
     images.to_csv(path.join(dest_dir, 'conversion_info', 'dwi_paths.tsv'), sep='\t', index=False)
+    print '=================================================='
+
     return images
 
 
@@ -172,8 +177,11 @@ def convert_dwi(dest_dir, subjs_list, dwi_paths, mod_to_add=False, mod_to_update
                     continue
 
             if mod_to_update:
-                print 'Removing the old dwi folder'
-                shutil.rmtree(path.join(ses_path, 'dwi'))
+                if os.path.exists(path.join(ses_path, 'dwi')):
+                    print 'Removing the old dwi file for session', ses
+                    shutil.rmtree(path.join(ses_path, 'dwi'))
+                else:
+                    print 'Adding a new dwi file for session', ses
 
             if not os.path.exists(ses_path):
                 os.mkdir(ses_path)
@@ -226,7 +234,7 @@ def convert_dwi(dest_dir, subjs_list, dwi_paths, mod_to_add=False, mod_to_update
                         if os.path.exists(nii_file):
                             os.rename(nii_file, path.join(bids_dest_dir, bids_name + '.nii.gz'))
                         else:
-                            print 'WARNING: conversion failed even with dcm2nii...'
+                            print 'WARNING: CONVERSION FAILED...'
 
         print '--Conversion finished--\n'
 

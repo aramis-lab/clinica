@@ -502,4 +502,3 @@ def select_scan_qc_adni2(scans_meta, mayo_mri_qc_subj):
             selected_image = min(int_ids)
 
     return int(selected_image)
-
