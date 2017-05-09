@@ -1,0 +1,38 @@
+Hammers atlas:
+--------------------------------------------------------------------------------
+This atlas, based on Alexander Hammers' brain atlas, made available for the 
+Euripides project, Nov 2009 (A). 
+
+CAT12 was used to segment the T1 data and estimate Dartel normalization to the
+VBM IXI550 template for each subject. Dartel mapping was then applied for label
+map. A 3D median filter was used to remove outliers in the label map. ROI-IDs 
+were reseted to guaranty that left side ROIs were described by odd numbers, 
+whereas right-hand side ROIs only have even numbers. ROIs without side-alignment 
+in the original atlas like the brainstem were broken into a right and left part.
+Therefore, a Laplace filter was used to estimate the potential field of unaligned
+regions between the left an right potential. If most or no side alignment in the
+original map was available, a side label map from the anatomy toolbox of SPM was
+used.
+
+If you use these atlases, please cite the references below.
+
+
+Websites:    
+A) http://biomedic.doc.ic.ac.uk/brain-development/index.php?n=Main.Atlases
+
+
+References:
+1) Hammers A, Allom R, Koepp MJ, Free SL, Myers R, Lemieux L, Mitchell TN, 
+Brooks DJ, Duncan JS. Three-dimensional maximum probability atlas of the human 
+brain, with particular reference to the temporal lobe. Hum Brain Mapp 2003, 19: 
+224-247. 
+(for the region definitions #01-49 including protocols)
+
+2) Gousias IS, Rueckert D, Heckemann RA, Dyet LE, Boardman JP, Edwards AD, 
+Hammers A. Automatic segmentation of brain MRIs of 2-year-olds into 83 regions 
+of interest. Neuroimage 2008 Apr 1;40(2):672-684. 
+(for region names #50-67 and access to protocols: www.brain-development.org)
+
+
+--------------------------------------------------------------------------------
+$Id: hammers.txt 909 2016-03-21 14:56:45Z gaser $
