@@ -298,7 +298,10 @@ def select_image_qc(id_list, mri_qc_subj):
         if images_best_qc.shape[0] == 1:
             selected_image = images_best_qc.iloc[0].loni_image[1:]
         else:
-            selected_image = min(int_ids)
+            best_ids = [int(x[1:]) for x in images_best_qc.loni_image.unique()]
+            selected_image = min(best_ids)
+            # TODO verify if new code above works. Previously we had this:
+            # selected_image = min(int_ids)
 
     return int(selected_image)
 

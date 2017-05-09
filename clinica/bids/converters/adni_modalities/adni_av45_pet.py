@@ -1,5 +1,5 @@
 
-def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
+def compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     import pandas as pd
     import os
     from os import walk, path

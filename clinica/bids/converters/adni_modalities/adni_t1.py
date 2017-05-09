@@ -53,7 +53,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
         for visit_info in visits.keys():
             if visit_info[1] == 'ADNI1':
                 image_dict = adni1_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
-                                              ida_meta_subj, mri_quality_subj)
+                                              ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj)
             elif visit_info[1] == 'ADNIGO':
                 image_dict = adnigo_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
                                                ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj, visit_info[2])
@@ -115,10 +115,6 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
     images.loc[:, 'Is_Dicom'] = pd.Series(is_dicom, index=images.index)
     images.loc[:, 'Path'] = pd.Series(nifti_paths, index=images.index)
 
-    # TODO NEVER DO THIS, with empty paths is how we find errors
-    # Drop all the lines that have the Path section empty
-    # images = images.drop(images[images.Path == ''].index)
-
     # Store the paths inside a file called conversion_info inside the input directory
     t1_tsv_path = path.join(dest_dir, 'conversion_info')
     if not path.exists(t1_tsv_path):
@@ -173,6 +169,7 @@ def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
                 output_image = path.join(output_path, output_filename + '.nii.gz')
 
                 if not path.isfile(nifti_file):
+                    # TODO - LOG THIS
                     print 'DICOM to NIFTI conversion error for ' + image_path
                     continue
 
@@ -207,12 +204,11 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
     qc_passed = True
     qc = mri_quality_subj[mri_quality_subj.LONIUID == 'S' + str(scan.SeriesID)]
     if qc.shape[0] > 0 and qc.iloc[0].PASS != 1:
-        print 'QC found but NOT passed'
-        print 'Subject ' + subject_id + ' - Series: ' + str(scan.SeriesID) + ' - Study: ' + str(scan.StudyID)
+        # print 'QC found but NOT passed'
+        # print 'Subject ' + subject_id + ' - Series: ' + str(scan.SeriesID) + ' - Study: ' + str(scan.StudyID)
         mprage_meta_subj_alt = mprage_meta_subj[(mprage_meta_subj['Orig/Proc'] == 'Original')
                                                  & (mprage_meta_subj.Visit == visit_str)
                                                  & (mprage_meta_subj.SeriesID != series_id)]
-        print mprage_meta_subj_alt.shape[0]
 
         qc_prev_sequence = scan.Sequence
         scan = mprage_meta_subj_alt.iloc[0]
@@ -280,19 +276,6 @@ def adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig, mayo_mr
 
     from clinica.bids.converters.adni_utils import replace_sequence_chars
 
-    # cond_mprage = ((mprage_meta_subj_orig.Visit == visit_str) & mprage_meta_subj_orig.Sequence.map(
-    #     lambda x: ((x.lower().find('mprage') > -1) | (x.lower().find('mp-rage') > -1) | (x.lower().find('mp rage') > -1))
-    #               & (x.find('2') < 0) & (x.lower().find('repeat') < 0)))
-    #
-    # cond_spgr = ((mprage_meta_subj_orig.Visit == visit_str) & mprage_meta_subj_orig.Sequence.map(
-    #     lambda x: (x.lower().find('spgr') > -1) & (x.lower().find('acc') < 0) & (x.lower().find('repeat') < 0)))
-    #
-    # filtered_scan = mprage_meta_subj_orig[cond_mprage | cond_spgr]
-    # if filtered_scan.shape[0] < 1:
-
-        # TODO Improve this code. Don't make a double verification for the whole condition.
-        # Invert order of filtering: less to more restrictive, check for the repeated as for the MagStrength
-
     cond_mprage = ((mprage_meta_subj_orig.Visit == visit_str) & mprage_meta_subj_orig.Sequence.map(
         lambda x: ((x.lower().find('mprage') > -1) | (x.lower().find('mp-rage') > -1) | (
         x.lower().find('mp rage') > -1)) & (x.find('2') < 0)))
@@ -307,21 +290,7 @@ def adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig, mayo_mr
         print 'NO MPRAGE Meta2: ' + subject_id + ' for visit ' + timepoint + ' - ' + visit_str
         return None
 
-    # Select preferred_field_strength images
-    if len(filtered_scan.MagStrength.unique()) > 1:
-        multiple_mag_strength = True
-        filtered_scan = filtered_scan[filtered_scan.MagStrength == preferred_field_strength]
-        not_preferred_scan = filtered_scan[filtered_scan.MagStrength != preferred_field_strength]
-
-    if filtered_scan.MagStrength.unique()[0] == 1.5:
-        selected_scan = filtered_scan[filtered_scan.Sequence.map(
-            lambda x: (x.lower().find('repeat') < 0))]
-        if selected_scan.shape[0] < 1:
-            selected_scan = filtered_scan
-    else:  # 3.0
-        selected_scan = select_scan_qc_adni2(filtered_scan, mayo_mri_qc_subj)
-
-    scan = selected_scan.iloc[0]
+    scan = select_scan_qc_adni2(filtered_scan, mayo_mri_qc_subj, preferred_field_strength)
 
     sequence = replace_sequence_chars(scan.Sequence)
 
@@ -344,8 +313,7 @@ def adnigo_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_su
                                            & (mprage_meta_subj.Visit == visit_str)
                                            & (mprage_meta_subj.Sequence.map(lambda x: x.endswith('Scaled')))]
         if filtered_mprage.shape[0] > 0:
-            print 'Calling ADNI1 from ADNIGO'
-            return adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_subj, mri_quality_subj)
+            return adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj)
 
     mprage_meta_subj_orig = mprage_meta_subj[mprage_meta_subj['Orig/Proc'] == 'Original']
     return adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig, mayo_mri_qc_subj)
@@ -458,48 +426,69 @@ def visits_to_timepoints_t1(subject, mprage_meta_subj_orig, adnimerge_subj):
         return visits
 
 
-def select_scan_qc_adni2(scans_meta, mayo_mri_qc_subj):
+def select_scan_no_qc(scans_meta):
+
+    selected_scan = scans_meta[scans_meta.Sequence.map(
+        lambda x: (x.lower().find('repeat') < 0))]
+    if selected_scan.shape[0] < 1:
+        selected_scan = scans_meta
+
+    scan = selected_scan.iloc[0]
+    return scan
+
+
+def select_scan_qc_adni2(scans_meta, mayo_mri_qc_subj, preferred_field_strength):
     import numpy as np
 
-    id_list = scans_meta.ImageUID.unique()
-    if len(id_list) == 0:
-        return None
+    multiple_mag_strength = False
+    # Select preferred_field_strength images
+    if len(scans_meta.MagStrength.unique()) > 1:
+        multiple_mag_strength = True
+        not_preferred_scan = scans_meta[scans_meta.MagStrength != preferred_field_strength]
+        scans_meta = scans_meta[scans_meta.MagStrength == preferred_field_strength]
 
-    selected_image = None
-    image_ids = ['I' + str(imageuid) for imageuid in id_list]
-    int_ids = [int(imageuid) for imageuid in id_list]
-    images_qc = mayo_mri_qc_subj[mayo_mri_qc_subj.loni_image.isin(image_ids)]
+    if scans_meta.MagStrength.unique()[0] == 3.0:
 
-    if images_qc.shape[0] < 1:
-        #TODO return original
-        return min(int_ids)
+        id_list = scans_meta.ImageUID.unique()
+        image_ids = ['I' + str(imageuid) for imageuid in id_list]
+        int_ids = [int(imageuid) for imageuid in id_list]
+        images_qc = mayo_mri_qc_subj[mayo_mri_qc_subj.loni_image.isin(image_ids)]
 
-    if np.sum(images_qc.series_selected) == 1:
-        selected_image = images_qc[images_qc.series_selected == 1].iloc[0].loni_image[1:]
-    else:
-        images_not_rejected = images_qc[images_qc.series_quality < 4]
-
-        if images_not_rejected.shape[0] < 1:
-
-            # There are no images that passed the qc
-            # so we'll try to see if there are other images without qc,
-            # otherwise return None
-            qc_ids = set([int(qc_id[1:]) for qc_id in images_qc.loni_image.unique()])
-            no_qc_ids = list(set(int_ids) - qc_ids)
-
-            if len(no_qc_ids) == 0:
-                return None
+        if images_qc.shape[0] > 0:
+            selected_image = None
+            if np.sum(images_qc.series_selected) == 1:
+                selected_image = images_qc[images_qc.series_selected == 1].iloc[0].loni_image[1:]
             else:
-                return min(no_qc_ids)
+                images_not_rejected = images_qc[images_qc.series_quality < 4]
 
-        series_quality = [q if q > 0 else 4 for q in list(images_not_rejected.series_quality)]
-        best_q = np.amin(series_quality)
+                if images_not_rejected.shape[0] < 1:
+                    # There are no images that passed the qc
+                    # so we'll try to see if there are other images without qc,
+                    # otherwise return None
+                    qc_ids = set([int(qc_id[1:]) for qc_id in images_qc.loni_image.unique()])
+                    no_qc_ids = list(set(int_ids) - qc_ids)
+                    # If none of images passed qc the scan is None, otherwise:
+                    if len(no_qc_ids) > 0:
+                        no_qc_scans_meta = scans_meta[scans_meta.ImageUID.isin(no_qc_ids)]
+                        return select_scan_no_qc(no_qc_scans_meta)
+                else:
+                    series_quality = [q if q > 0 else 4 for q in list(images_not_rejected.series_quality)]
+                    best_q = np.amin(series_quality)
+                    if best_q == 4:
+                        best_q = -1
+                    images_best_qc = images_not_rejected[images_not_rejected.series_quality == best_q]
+                    if images_best_qc.shape[0] == 1:
+                        selected_image = images_best_qc.iloc[0].loni_image[1:]
+                    else:
+                        best_ids = [int(x[1:]) for x in images_best_qc.loni_image.unique()]
+                        best_qc_meta = scans_meta[scans_meta.ImageUID.isin(best_ids)]
+                        return select_scan_no_qc(best_qc_meta)
 
-        images_best_qc = images_not_rejected[images_not_rejected.series_quality == best_q]
-        if images_best_qc.shape[0] == 1:
-            selected_image = images_best_qc.iloc[0].loni_image[1:]
-        else:
-            selected_image = min(int_ids)
+            if selected_image is None and multiple_mag_strength:
+                scans_meta = not_preferred_scan
+            else:
+                scan = scans_meta[scans_meta.ImageUID == int(selected_image)].iloc[0]
+                return scan
 
-    return int(selected_image)
-
+    # 1.5T or 3.0T without QC
+    return select_scan_no_qc(scans_meta)
