@@ -20,7 +20,7 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         subject_pet_meta = pet_meta_list[pet_meta_list['Subject'] == subj]
         if subject_pet_meta.shape[0] < 1:
             # TODO Log somewhere subjects with problems
-            print 'NO Screening: Subject - ' + subj + ' for visit ' + qc_visit.VISCODE2
+            print 'NO Screening: Subject - ' + subj
             continue
 
         for visit in list(pet_qc_subj.VISCODE2.unique()):
@@ -58,7 +58,8 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                 qc_visit = pet_qc_visit.iloc[0]
             int_image_id = int(qc_visit.LONIUID[1:])
             original_pet_meta = subject_pet_meta[
-                (subject_pet_meta['Orig/Proc'] == 'Original') & (subject_pet_meta['Image ID'] == int_image_id)]
+                (subject_pet_meta['Orig/Proc'] == 'Original') & (subject_pet_meta['Image ID'] == int_image_id)
+                & (subject_pet_meta.Sequence.map(lambda s: (s.lower().find('early') < 0)))]
             if original_pet_meta.shape[0] < 1:
                 original_pet_meta = subject_pet_meta[(subject_pet_meta['Orig/Proc'] == 'Original')
                                                      & (subject_pet_meta.Sequence.map(

@@ -6,13 +6,13 @@ def compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     from numpy import argsort
     from clinica.bids.converters.adni_utils import replace_sequence_chars
 
-    pet_fdg_col = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
+    pet_av45_col = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
                    'Series_ID', 'Image_ID', 'Original']
 
-    pet_fdg_df = pd.DataFrame(columns=pet_fdg_col)
-    petqc_path = path.join(csv_dir, 'PETQC.csv')
+    pet_av45_df = pd.DataFrame(columns=pet_av45_col)
+    av45qc_path = path.join(csv_dir, 'AV45QC.csv')
     pet_meta_list_path = path.join(csv_dir, 'PET_META_LIST.csv')
-    petqc = pd.io.parsers.read_csv(petqc_path, sep=',')
+    petqc = pd.io.parsers.read_csv(av45qc_path, sep=',')
     pet_meta_list = pd.io.parsers.read_csv(pet_meta_list_path, sep=',')
 
     for subj in subjs_list:
@@ -20,7 +20,7 @@ def compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         subject_pet_meta = pet_meta_list[pet_meta_list['Subject'] == subj]
         if subject_pet_meta.shape[0] < 1:
             # TODO Log somewhere subjects with problems
-            print 'NO Screening: Subject - ' + subj + ' for visit ' + qc_visit.VISCODE2
+            print 'NO Screening: Subject - ' + subj
             continue
 
         for visit in list(pet_qc_subj.VISCODE2.unique()):
@@ -37,7 +37,7 @@ def compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                         normal_meta.append(pet_meta_image)
                 if len(normal_images) == 0:
                     # TODO Log somewhere subjects with problems
-                    print 'No regular FDG-PET image: Subject - ' + subj + ' for visit ' + visit
+                    print 'No regular AV45-PET image: Subject - ' + subj + ' for visit ' + visit
                     continue
                 if len(normal_images) == 1:
                     qc_visit = normal_images[0]
@@ -45,7 +45,7 @@ def compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                     qc_visit = None
                     index = argsort([x['Series ID'] for x in normal_meta])
                     for i in index[::-1]:
-                        coreg_avg = subject_pet_meta[(subject_pet_meta['Sequence'] == 'Co-registered, Averaged')
+                        coreg_avg = subject_pet_meta[(subject_pet_meta['Sequence'] == 'AV45 Co-registered, Averaged')
                                                      & (
                                                          subject_pet_meta['Series ID'] == normal_meta[i][
                                                              'Series ID'])]
@@ -58,18 +58,19 @@ def compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                 qc_visit = pet_qc_visit.iloc[0]
             int_image_id = int(qc_visit.LONIUID[1:])
             original_pet_meta = subject_pet_meta[
-                (subject_pet_meta['Orig/Proc'] == 'Original') & (subject_pet_meta['Image ID'] == int_image_id)]
+                (subject_pet_meta['Orig/Proc'] == 'Original') & (subject_pet_meta['Image ID'] == int_image_id)
+                & (subject_pet_meta.Sequence.map(lambda s: (s.lower().find('early') < 0)))]
             if original_pet_meta.shape[0] < 1:
                 original_pet_meta = subject_pet_meta[(subject_pet_meta['Orig/Proc'] == 'Original')
                                                      & (subject_pet_meta.Sequence.map(
-                    lambda x: (x.lower().find('fdg') > -1)))
+                    lambda x: (x.lower().find('av45') > -1) & (x.lower().find('early') < 0)))
                                                      & (subject_pet_meta['Scan Date'] == qc_visit.EXAMDATE)]
                 if original_pet_meta.shape[0] < 1:
                     # TODO Log somewhere subjects with problems
                     print 'NO Screening: Subject - ' + subj + ' for visit ' + qc_visit.VISCODE2
                     continue
             original_image = original_pet_meta.iloc[0]
-            averaged_pet_meta = subject_pet_meta[(subject_pet_meta['Sequence'] == 'Co-registered, Averaged') & (
+            averaged_pet_meta = subject_pet_meta[(subject_pet_meta['Sequence'] == 'AV45 Co-registered, Averaged') & (
                 subject_pet_meta['Series ID'] == original_image['Series ID'])]
             if averaged_pet_meta.shape[0] < 1:
                 sel_image = original_image
@@ -87,10 +88,10 @@ def compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
             row_to_append = pd.DataFrame(
                 [[subj, qc_visit.VISCODE2, str(visit), sequence, date, str(study_id), str(series_id), str(image_id),
                   original]],
-                columns=pet_fdg_col)
-            pet_fdg_df = pet_fdg_df.append(row_to_append, ignore_index=True)
+                columns=pet_av45_col)
+            pet_av45_df = pet_av45_df.append(row_to_append, ignore_index=True)
 
-    images = pet_fdg_df
+    images = pet_av45_df
     # count = 0
     # total = images.shape[0]
     image_folders = []
@@ -121,15 +122,15 @@ def compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
             print 'Not found ' + str(image.Subject_ID)
     images.loc[:, 'Path'] = pd.Series(image_folders, index=images.index)
 
-    fdg_csv_path = path.join(dest_dir, 'conversion_info')
-    if not os.path.exists(fdg_csv_path):
-        os.mkdir(fdg_csv_path)
-    images.to_csv(path.join(fdg_csv_path, 'fdg_pet_paths.tsv'), sep='\t', index=False)
+    av45_csv_path = path.join(dest_dir, 'conversion_info')
+    if not os.path.exists(av45_csv_path):
+        os.mkdir(av45_csv_path)
+    images.to_csv(path.join(av45_csv_path, 'av45_pet_paths.tsv'), sep='\t', index=False)
 
     return images
 
 
-def fdg_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
+def av45_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
     from clinica.bids.converters.adni_utils import center_nifti_origin, viscode_to_session
     from os import path, makedirs, system, remove
     from numpy import nan
@@ -152,7 +153,7 @@ def fdg_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2ni
         image_path = image.Path
         bids_subj = subject.replace('_', '')
         output_path = path.join(bids_dir, 'sub-ADNI' + bids_subj +'/ses-' + session + '/pet')
-        output_filename = 'sub-ADNI' + bids_subj + '_ses-' + session + '_task-rest_acq-FDG_pet'
+        output_filename = 'sub-ADNI' + bids_subj + '_ses-' + session + '_task-rest_acq-AV45_pet'
 
         try:
             makedirs(output_path)
