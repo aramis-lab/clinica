@@ -428,6 +428,13 @@ def fill_zeros(s, length):
 
 
 def days_between(d1, d2):
+    '''
+    Calculate the days between two dates
+
+    :param d1: date 1
+    :param d2: date 2
+    :return: number of days between date 2 and date 1
+    '''
     from datetime import datetime
     d1 = datetime.strptime(d1, "%Y-%m-%d")
     d2 = datetime.strptime(d2, "%Y-%m-%d")
