@@ -1,0 +1,8 @@
+AAL2 is the implementation of a new parcellation of the orbitofrontal cortex in the automated anatomical labeling atlas. 
+Rolls ET, Joliot M & Tzourio-Mazoyer N (2015) . NeuroImage 10.1016/j.neuroimage.2015.07.075
+———————
+Overview
+An alternative parcellation of the orbitofrontal cortex is described for the automated anatomical labeling atlas of Tzourio-Mazoyer et al. (2002) (Automated anatomical labeling of activations in SPM using a macroscopic anatomical parcellation of the MNI MRI single-subject brain. NeuroImage 15:273-289). The new parcellation of the orbitofrontal cortex follows the description provided by Chiavaras, Petrides, and colleagues (2000, 2001).
+
+———————
+ The AAL atlas is probably the most widely used cortical parcellation map in connectomic literature. It can be downloaded from the website: http://www.gin.cnrs.fr/AAL2?lang=en and it consists on 120 regions which parcellate che cortical and subcortical area.

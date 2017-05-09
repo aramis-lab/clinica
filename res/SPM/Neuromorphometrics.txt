@@ -1,0 +1,143 @@
+MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling:
+--------------------------------------------------------------------------------
+
+Maximum probability tissue labels derived from the ``MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling'' (https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details). These data were released under the Creative Commons Attribution-NonCommercial (CC BY-NC) with no end date. Users should credit the MRI scans as originating from the OASIS project (http://www.oasis-brains.org/) and the labeled data as "provided by Neuromorphometrics, Inc. (http://Neuromorphometrics.com/) under academic subscription".  These references should be included in all workshop and final publications.
+
+
+Websites:    
+A) https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details
+B) http://www.oasis-brains.org/
+C) http://Neuromorphometrics.com/
+
+
+References:
+
+
+
+--------------------------------------------------------------------------------
+
+Challenge Details
+Please see https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Important_Dates for dates.
+Click Watch on the bar above to be notified via e-mail when this page is updated (you must create a free account - see the upper right).
+
+Grand Challenge Rules
+
+Submission Information
+See Submission Information for details on how to submit labels.
+
+Contest Data
+On approximately April 1, 2012, the following data will be made available after registration (see below). 
+Training Atlas Pairs: 15 datasets for distinct human data consisting of a de-faced T1-weighted structural MRI dataset and as associated manually labeled volume with one label per voxel. Each volume (MRI and label) will be stored in a separate 3D NiFTI file. These files will be properly interpreted by the MIPAV software package (freely available). (from the "reliability" OASIS data set: Challenge_Demographics).
+Testing Target MRI: 20 T1-weighted structural MRI datasets of 15 distinct subjects. (Challenge_Demographics).
+Training and Testing demographics (age, gender handedness) will be available here
+A spreadsheet of all considered labels can be found here -- see evaluation procedures for further label information.
+
+Evaluation Procedures
+Please see https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Important_Dates for dates.
+Proof of paper "preliminary" manuscripts for grand challenge submissions will be accepted. Manuscripts must be in the format indicated below.
+After submission of a preliminary manuscript, contestants will be given an access code to upload labeled target MRI datasets through this website. Within 24 hours of upload, the contact author will be e-mailed a PDF of quantitative performance results. The primary metric for the grand challenge contest is the mean Dice similarity coefficient across all brain labels and all subjects in the "testing target" cohort. The list of anatomical labels is here. A discussion of the Statistical Power of the challenge is provided here.
+
+Resubmissions of different label results are permitted within the evaluation window. We understand that technical glitches, format errors, etc. may lead to misleading error metrics. The organizers encourage (and will assist with) multiple submissions to address such errors. The last submission of label results under an access code will be considered the authors final submission.
+
+We strongly advocate against parameter tuning based on the hidden testing labels during the evaluation window. The number of submissions will be recorded on the summary PDF and must be reported in the final publication. Submission of multiple similar algorithms for evaluation is encouraged. Please use a different preliminary manuscript for each algorithm variant. Text may be shared among manuscript submissions.
+
+Additional Evaluation Information 
+We only compared against labels that appeared consistently across all of the datasets. As a result, we ignored some of the labels during the calculation of the results. In MATLAB notation, the label numbers that we ignored are:
+ignore_labels = [1:3, 5:10, 12:22, 24:29, 33:34, 42:43, 53:54, 63:68, 70, 74, 80:99, 110:111, 126:127, 130:131, 158:159, 188:189];
+Anywhere that any of these labels appear on the "true" (manual) labels are automatically set to 0 (background) on both the "true" labels and the estimated labels in order to avoid biasing the results.
+After ignoring these labels we are left with 134 labels that count. The resulting DSC values on these labels are what is reported on the results page.
+The labels were evaluated in three groups:
+1) Cortical Labels: All non-ignored labels >= 100
+2) Non-Cortical Labels: All non-ignored labels > 0 and < 100
+3) Overall: All non-ignored labels.
+
+
+Manuscript Preparation
+Papers submitted in response to the Grand Challenge should conform to the MICCAI formatting instructions, with the modifications explained below:
+Maximum author-generated manuscript length is 4 pages.
+The PDF report generated by the evaluation process must be included as a single supplementary final page (for a total of 5 pages).
+
+Submitted in PDF format
+Color illustrations in the PDF are not subject to fees.
+The preliminary manuscript may be revised up until June 12, 2012.
+
+Validation (Hidden) Data
+The hidden true labels will be revealed July 1, 2012 and made available to all authors who submitted a response to the workshop challenge. Additionally, the full source code of the program used to generate the evaluation PDF's will be made public.
+
+Terms of Use for Data Provided During the Contest
+The data will be released under the Creative Commons Attribution-NonCommercial (CC BY-NC) with no end date. Users should credit the MRI scans as originating from the OASIS project and the labeled data as "provided by Neuromorphometrics, Inc. (http://Neuromorphometrics.com/) under academic subscription". These references should be included in all workshop and final publications.
+
+Availability of Data after Contest Completion
+After the completion of the contest, testing/training data will be available from this website after users agree to the license terms.
+After the completion of the contest, please contact Neuromorphometrics (http://neuromorphometrics.com/) for additional details relevant to this dataset.
+
+Eligibility
+No individual who has access to the labeled testing datasets is permitted to submit a response to this grand challenge. Specifically, employees, affiliates or contractors for Neuromorphometrics are not permitted to participate in any contest entry.
+It is assumed that the majority of entrants will seek to use multi-atlas method to respond to this challenge. However, any method of labeling the testing datasets is permitted as long as the approach is described in a reproducible manner.
+
+Software Sharing
+Contestants are encouraged (but not required) to make available the software, tools, and source code for the methods used in response to this challenge. However, software and code sharing are not required for participation.
+
+Contest Results
+After the workshop (after October 5, 2012), a summary of all methods will be presented here. We will publish a citable book (with ISBN) with a compilation of all results and a summary of rankings. This book will be available at cost (or no cost, if possible) – neither editors nor their institutions will receive any compensation for this publication. On this website, we will make available copies of all papers, the label masks submitted for each method, the PDF result files for each method, and (if the authors desire) additional resources (software/code/etc.) that a reader may find relevant to each paper.
+
+
+
+
+
+Challenge Demographics
+--------------------------------------------------------------------------------
+
+Training Data
+Number	Age	
+Total F	10	19	min
+Total M	5	23	average
+Total	15	34	max
+Training Details
+Case #	train/test	Training	Subject	Gender	Age
+1000	train		OAS1_0061	F	20
+1001	train		OAS1_0080	F	25
+1002	train		OAS1_0092	M	22
+1006	train		OAS1_0145	M	34
+1007	train		OAS1_0150	F	20
+1008	train		OAS1_0156	F	20
+1009	train		OAS1_0191	F	21
+1010	train		OAS1_0202	F	23
+1011	train		OAS1_0230	F	19
+1012	train		OAS1_0236	F	20
+1013	train		OAS1_0239	F	29
+1014	train		OAS1_0249	F	28
+1015	train		OAS1_0285	M	20
+1036	train		OAS1_0353	M	22
+1017	train		OAS1_0368	M	22
+Testing Data
+Number	Age	
+Total (unique) F	10	18	min
+Total (unique) M	5	45.7	average
+Total (unique)	16	90	max
+Testing Individuals
+Case #	train/test	Testing	Subject	Gender	Age	Notes
+1003	test		OAS1_0101	M	29	1st Scan
+1004	test		OAS1_0111	M	23	1st Scan
+1005	test		OAS1_0117	M	25	1st Scan
+1018	test		OAS1_0379	F	20	1st Scan
+1019	test		OAS1_0395	F	26	1st Scan
+1023	test		OAS1_0101	M	29	2nd Scan
+1024	test		OAS1_0111	M	23	2nd Scan
+1025	test		OAS1_0117	M	25	2nd Scan
+1038	test		OAS1_0379	F	20	2nd Scan
+1039	test		OAS1_0395	F	26	2nd Scan
+1101	test		OAS1_0091	F	18	
+1104	test		OAS1_0417	F	30	
+1107	test		OAS1_0040	F	38	
+1110	test		OAS1_0282	F	45	
+1113	test		OAS1_0331	F	54	
+1116	test		OAS1_0456	M	61	
+1119	test		OAS1_0300	M	68	
+1122	test		OAS1_0220	F	75	
+1125	test		OAS1_0113	F	83	
+1128	test		OAS1_0083	F	90	
+
+
+--------------------------------------------------------------------------------
+$Id: neuromorphometrics.txt 817 2015-12-17 14:27:24Z dahnke $

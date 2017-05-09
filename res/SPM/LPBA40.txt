@@ -1,0 +1,44 @@
+LPBA40 atlas:
+--------------------------------------------------------------------------------
+
+The LONI Probabilistic Brain Atlas (LPBA40) is a series of maps of brain anatomic regions. These maps were produced from a set of whole-head MRI of 40 human volunteers. Each MRI was manually delineated to identify a set of 56 structures in the brain, most of which are within the cortex. These delineations were then transformed into a common atlas space to produce a set of coregistered anatomical labels. The original MRI data were also transformed into the atlas space. 
+
+Websites:    
+A) http://www.loni.usc.edu/atlases/Atlas_Detail.php?atlas_id=12
+B) http://www.loni.usc.edu/atlases/Atlas_Methods.php?atlas_id=12
+C) http://shattuck.bmap.ucla.edu/resources/lpba40/
+
+References:
+1) Shattuck DW, Mirza M, Adisetiyo V, Hojatkashani C, Salamon G, Narr KL, Poldrack RA, Bilder RM, Toga AW (2008) Construction of a 3D Probabilistic Atlas of Human Cortical Structures, NeuroImage 39 (3): 1064-1070. DOI:	10.1016/j.neuroimage.2007.09.031
+
+This paper should be referenced in any works that use the data provided here.
+Any feedback regarding this collection of data can be addressed to David Shattuck (shattuck@loni.ucla.edu). We encourage investigators who develop projects based on this collection to let us know about their work.
+
+--------------------------------------------------------------------------------
+
+Delineation
+
+MRI data from 40 subjects were preprocessed according to existing LONI protocols to produce skull-stripped brain volumes. These volumes were aligned to the ICBM305 atlas using rigid-body transformation to correct for head tilt and reduce bias in the delineation process. This produced a transform from native space to delineation space and an associated inverse transform. In each of the 40 subjects, 58 structures were delineated manually according to protocols developed for this project (see LPBA40 Protocols) using BrainSuite.
+
+Image processing
+
+Brain masks were constructed from the manual delineations and projected back to the native delineation space. The MRI volumes in native space were masked to produce brain-only MRI volumes. These volumes were then corrected for non-uniformity using BrainSuite's Bias Field Corrector. The bias-corrected brain data were processed with the Partial Volume Classifier software to produce maps of grey matter, white matter, and cerebrospinal fluid for each subject volume. The brains were then aligned to atlas targets using 3 widely used methods. The atlas targets were chosen based on the method.
+
+Atlas construction
+
+For each of the three atlas variants, we constructed a series of maps from the transformed data.
+
+Intensity atlas (LPBA40intensityavg) - a voxel-wise average of the skull-stripped MRI volumes in ICBM452 space
+
+Tissue class probabilistic atlas (LPBA40tissue) - three volumes, where each voxel contains a count of the number of subject volumes that had that voxel labeled as a the associated tissue type (GM, WM, or CSF)
+
+Structure probability maps (LPBA40structure) - 56 volumes, each of which contains the voxel-wise count of the number of subjects that had that voxel labeled as the given structure
+
+Grey matter masked structure probability maps (LPBA40GMstructure) - 56 volumes, each of which contains the voxel-wise count of the number of subjects that had that voxel labeled as the given structure and also as GM
+
+Maximum likelihood atlas (LPBA40) - for each voxel, we computed the most likely tissue type based on the 40 delineated subject volumes; in the case of a tie, the tissue type was chosen at random from the equilikely labels. This data set contains both the maximum likelihood label volume and a volume composed of the maximum count at each voxel
+
+Maximum likelihood grey matter atlas (LPBA40) - This is similar to LPBA40, above, but the tissue labels were pre before performing the maximum likelihood computation
+
+--------------------------------------------------------------------------------
+$Id: lpba40.txt 909 2016-03-21 14:56:45Z gaser $
