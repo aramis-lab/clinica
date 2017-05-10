@@ -265,13 +265,13 @@ def write_statistics_per_subject(subject_id, output_dir):
     subject_list = subject_id.split('_')[0]
     session_list = subject_id.split('_')[1]
     # name all the 26 tsv output files.
-    all_seg_volume = subject_id + '-all-seg.tsv'
-    aseg_volume = subject_id + '-aseg-volume.tsv'
+    all_seg_volume = subject_id + '_measure-all-seg.tsv'
+    aseg_volume = subject_id + '_measure-aseg-volume.tsv'
 
-    aparc_desikan_lh_volume = subject_id + '_hemi-left_parcellation-desikan_volume.tsv'
-    aparc_desikan_rh_volume = subject_id + '_hemi-right_parcellation-desikan_volume.tsv'
-    aparc_desikan_lh_thickness = subject_id + '_hemi-left_parcellation-desikan_thickness.tsv'
-    aparc_desikan_rh_thickness = subject_id + '_hemi-right_parcellation-desikan_thickness.tsv'
+    aparc_desikan_lh_volume = subject_id + '_hemi-lh_parcellation-desikan_measure-volume.tsv'
+    aparc_desikan_rh_volume = subject_id + '_hemi-rh_parcellation-desikan_measure-volume.tsv'
+    aparc_desikan_lh_thickness = subject_id + '_hemi-lh_parcellation-desikan_measure-thickness.tsv'
+    aparc_desikan_rh_thickness = subject_id + '_hemi-rh_parcellation-desikan_measure-thickness.tsv'
     aparc_desikan_lh_area = subject_id + '_hemi-left_parcellation-desikan_area.tsv'
     aparc_desikan_rh_area = subject_id + '_hemi-right_parcellation-desikan_area.tsv'
     aparc_desikan_lh_meancurv = subject_id + '_hemi-left_parcellation-desikan_meancurv.tsv'
