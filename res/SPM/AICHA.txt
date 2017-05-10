@@ -1,0 +1,12 @@
+AICHA is an atlas of intrinsic connectivity of homotopic areas. 
+It derives from Joliot M, Jobard G, Naveau M, Delcroix N, Petit L, Zago L, Crivello F, Mellet E, Mazoyer B & Tzourio-Mazoyer N (2015) . Journal of Neuroscience Methods 10.1016/j.jneumeth.2015.07.013. (PDF)
+ ——————
+Overview:
+AICHA (for Atlas of Intrinsic Connectivity of Homotopic Areas) is a functional brain ROIs atlas based on resting-state fMRI data acquired in 281 individuals. AICHA ROIs cover the whole cerebrum, each having 1- homogeneity of its constituting voxels intrinsic activity, and 2- a unique homotopic contralateral counterpart with which it has maximal intrinsic connectivity.
+This atlas is protected by copyright; you can freely use it for none profit research purposes, providing the above reference is cited. For other use please contact us through aicha.gin.brainatlas at gmail.com
+The AICHA atlas includes 192 couples of homotopic regions for a total of 384 regions. AICHA is provided in the MNI stereotaxic space (MNI ICBM 152, Template sampling size of 2x2x2 mm3 voxels; bounding box, x = -90 to 90 mm, y = -126 to 91 mm, z = -72 to 109 mm).
+
+AICHA atlas includes both regions located in the crown of the gyri (named Gyrus, region name beginning by “G_”) and regions located in the depth of the sulci (named Suclus, region name beginning by “S_”). In addition the subcortical nuclei were labeled separately (name Nucleus, region name beginning by “N_”). 
+Different parcels belonging to the same anatomical region were labeled with numbers (starting to 1). For example the precuneus show as 9 subparts labeled from G_Precuneus-1-L to G_Precuneus-9-L.
+—————— 
+Information and download can be found in the website: http://www.gin.cnrs.fr/AICHA-344?lang=en
