@@ -74,10 +74,12 @@ def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv):
     caps_dir = os.path.join(output_path, 'subjects')
 
     for i in range(len(subject_list)):
-        if os.path.isdir(os.path.join(dest_dir, subject_list[i])):
+        if os.path.isdir(os.path.join(dest_dir, subject_list[i] + '_' + session_list[i])):
             print "This subject: %s for FreeSurfer exits already!" % subject_list[i]
         else:
+            print "Convert subject: %s from CAPS to FreeSurfer output structure" % subject_list[i]
             copytree(os.path.join(caps_dir, subject_list[i], session_list[i], 't1/freesurfer-cross-sectional', subject_list[i] + '_' + session_list[i]), os.path.join(dest_dir, subject_list[i] + '_' + session_list[i]))
+            print "--------------Finish this subject!-----------------------"
 
 def volumetric_summary(subject_dir, subject_id, output_dir):
     """
