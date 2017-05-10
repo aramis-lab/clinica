@@ -57,7 +57,6 @@ def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv):
     """
     import os, csv
     from shutil import copytree
-    from os.path import isdir
 
     subject_list = []
     session_list = []
@@ -75,7 +74,7 @@ def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv):
     caps_dir = os.path.join(output_path, 'subjects')
 
     for i in range(len(subject_list)):
-        if isdir(i):
+        if os.path.isdir(os.path.join(caps_dir, subject_list[i])):
             print "This subject for FreeSurfer exits already!"
         else:
             copytree(os.path.join(caps_dir, subject_list[i], session_list[i], 't1/freesurfer-cross-sectional', subject_list[i] + '_' + session_list[i]), os.path.join(dest_dir, subject_list[i] + '_' + session_list[i]))
