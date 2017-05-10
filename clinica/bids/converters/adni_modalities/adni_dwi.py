@@ -301,7 +301,8 @@ def select_image_qc(id_list, mri_qc_subj):
 
         series_quality = [q if q > 0 else 4 for q in list(images_not_rejected.series_quality)]
         best_q = np.amin(series_quality)
-
+        if best_q == 4:
+            best_q = -1
         images_best_qc = images_not_rejected[images_not_rejected.series_quality == best_q]
         if images_best_qc.shape[0] == 1:
             selected_image = images_best_qc.iloc[0].loni_image[1:]
