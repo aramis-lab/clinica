@@ -127,8 +127,26 @@ class Pipeline(npe.Workflow):
     @abc.abstractmethod
     def default_output_node(self): pass
 
-    # @abc.abstractmethod
-    # def check_dependencies(self): pass
-    #
-    # @abc.abstractmethod
-    # def expected_result_files(self): pass
+    def check_dependencies(self, dependencies):
+        """
+        Raise exception if a program in the list do not exist
+        Example:
+            check_dependencies(["recon-all", "freesurfer"])
+
+        Args:
+            dependencies: list of program names
+
+        Raises:
+            Exception: Raises an exception.
+        """
+        from distutils.spawn import find_executable
+
+        def check_dependence(program_name):
+            path = find_executable(program_name)
+            if path is None:
+                raise Exception('Program [%s] do not found' % program_name)
+
+        [check_dependence(x) for x in dependencies]
+
+    @abc.abstractmethod
+    def expected_result_files(self): pass
