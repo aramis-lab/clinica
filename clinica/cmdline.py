@@ -190,9 +190,6 @@ class CmdlineHelper():
 
         return self.cmdline_cache
 
-
-
-
 def execute():
 
     cmdline_helper = CmdlineHelper()
@@ -292,10 +289,13 @@ def execute():
     parser.error = silent_msg
 
     args = None
+    import argparse
     try:
         argcomplete.autocomplete(parser)
         args = parser.parse_args()
-    except:
+    except SystemExit:
+        exit(-1)
+    except Exception:
         parser.print_help()
         exit(-1)
 
