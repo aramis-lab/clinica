@@ -1,11 +1,12 @@
+
+from clinica.pipeline.machine_learning.voxel_based_io import load_data, features_weights, weights_to_nifti, get_caps_t1_list
+from clinica.pipeline.machine_learning.svm_utils import evaluate_prediction, gram_matrix_linear, save_subjects_prediction, results_to_csv
 import numpy as np
-from voxel_based_io import load_data, features_weights, weights_to_nifti, get_caps_t1_list
 from sklearn.preprocessing import scale
 from os.path import join, isdir, dirname
 from os import makedirs
 import errno
-from clinica.pipeline.machine_learning.svm_utils import evaluate_prediction, gram_matrix_linear, save_subjects_prediction, results_to_csv
-from cv_svm import nested_folds
+from cv_svm import cv_svm
 
 
 def svm_binary_classification(image_list, diagnosis_list, output_directory, kernel_function=None, existing_gram_matrix=None, mask_zeros=True, scale_data=False, balanced=False, outer_folds=10, inner_folds=10, n_threads=10, c_range=np.logspace(-6, 2, 17), save_gram_matrix=False, save_subject_classification=False, save_dual_coefficients=False, scaler=None, data_mask=None, save_original_weights=False, save_features_image=True):
@@ -62,7 +63,7 @@ def svm_binary_classification(image_list, diagnosis_list, output_directory, kern
             classification_str = dx1 + '_vs_' + dx2 + ('_balanced' if balanced else '_not_balanced')
             print 'Running ' + dx1 + ' vs ' + dx2 + ' classification'
 
-            y_hat, dual_coefficients, sv_indices, intersect, c = nested_folds(gm, y, c_range, balanced=balanced, outer_folds=outer_folds, inner_folds=inner_folds, n_threads=n_threads)
+            y_hat, dual_coefficients, sv_indices, intersect, c = cv_svm(gm, y, c_range, balanced=balanced, outer_folds=outer_folds, inner_folds=inner_folds, n_threads=n_threads)
 
             evaluation = evaluate_prediction(y, y_hat)
 

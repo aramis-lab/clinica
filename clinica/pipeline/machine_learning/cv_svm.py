@@ -55,7 +55,7 @@ def outer_cross_validation(kernel_train, x_test, y_train, y_test, async_res, bal
     return result
 
 
-def nested_folds(gram_matrix, y, c_range, balanced=False, outer_folds=10, inner_folds=10, n_threads=15):
+def cv_svm(gram_matrix, y, c_range, balanced=False, outer_folds=10, inner_folds=10, n_threads=15):
 
     y_hat = np.zeros(len(y))
 
