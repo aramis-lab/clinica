@@ -35,7 +35,8 @@ setup(
         'pybids>=0.1',
         'dipy>=0.6.0',
         'argcomplete>=1.4.1',
-        'pandas>=0.18.1'
+        'pandas>=0.18.1',
+        'nose>=1.3.7'
     ],
     data_files=[('clinica', ['LICENSE.txt', 'clinica/VERSION'])],
 )
