@@ -1,3 +1,17 @@
+
+def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None):
+    import pandas as pd
+    from os import path
+
+    if subjs_list is None:
+        adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
+        adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
+        subjs_list = list(adni_merge.PTID.unique())
+
+    images = compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list)
+    t1_paths_to_bids(images, dest_dir)
+
+
 def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
     """
 
@@ -19,7 +33,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
     t1_df = pd.DataFrame(columns=t1_col_df)
     adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
     # adni_screening_path = path.join(clinical_dir, 'ADNI_ScreeningList_8_22_12.csv')
-    ida_meta_path = path.join(csv_dir, 'IDA_MR_METADATA_Listing.csv')
+    ida_meta_path = path.join(csv_dir, 'IDA_MR_Metadata_Listing.csv')
     mprage_meta_path = path.join(csv_dir, 'MPRAGEMETA.csv')
     mri_quality_path = path.join(csv_dir, 'MRIQUALITY.csv')
     mayo_mri_qc_path = path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
@@ -251,7 +265,7 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
 
         processing_seq = qc_prev_sequence[qc_prev_sequence.find(';'):qc_prev_sequence.find('N3') - 2]
         sequence = original_img_seq + processing_seq
-        print sequence
+        # print sequence
 
     sequence = replace_sequence_chars(sequence)
 

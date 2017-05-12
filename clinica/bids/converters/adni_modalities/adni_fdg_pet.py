@@ -1,4 +1,17 @@
 
+def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
+    import pandas as pd
+    from os import path
+
+    if subjs_list is None:
+        adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
+        adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
+        subjs_list = list(adni_merge.PTID.unique())
+
+    images = compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
+    fdg_pet_paths_to_bids(images, dest_dir)
+
+
 def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     import pandas as pd
     import os
@@ -94,6 +107,7 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     images = pet_fdg_df
     # count = 0
     # total = images.shape[0]
+    is_dicom = []
     image_folders = []
     for row in images.iterrows():
         image = row[1]
@@ -111,15 +125,21 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                     break
             if found:
                 break
-        if image.Original:
-            for (dirpath, dirnames, filenames) in walk(image_path):
-                for f in filenames:
-                    if f.endswith(".nii"):
-                        image_path = path.join(dirpath, f)
-                        break
+
+        dicom = True
+        for (dirpath, dirnames, filenames) in walk(image_path):
+            for f in filenames:
+                if f.endswith(".nii"):
+                    dicom = False
+                    image_path = path.join(dirpath, f)
+                    break
+
+        is_dicom.append(dicom)
         image_folders.append(image_path)
         if image_path == '':
             print 'Not found ' + str(image.Subject_ID)
+
+    images.loc[:, 'Is_Dicom'] = pd.Series(is_dicom, index=images.index)
     images.loc[:, 'Path'] = pd.Series(image_folders, index=images.index)
 
     fdg_csv_path = path.join(dest_dir, 'conversion_info')
@@ -161,7 +181,7 @@ def fdg_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2ni
             if not path.isdir(output_path):
                 raise
 
-        if image.Original:
+        if not image.Is_Dicom:
             center_nifti_origin(image_path, path.join(output_path, output_filename + '.nii.gz'))
         else:
             command = dcm2niix + ' -b n -z n -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
