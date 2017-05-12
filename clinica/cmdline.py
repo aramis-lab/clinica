@@ -110,6 +110,37 @@ def load_conf(args):
 
     return wk
 
+
+class PipelineLoader:
+    """
+    Load pipelines from a custom locations (general from $HOME/clinica)
+    """
+    def __init__(self,env='CLINICAPATH'):
+        self.env = env
+
+    def load(self):
+        import imp
+        import os
+        import os.path as op
+        import re
+        import inspect
+
+        pipeline_cli_parsers = []
+
+        if not os.environ.has_key(self.env):
+            return pipeline_cli_parsers
+
+        paths = self.extract_paths(os.environ[self.env])
+
+        for path in paths : pipeline_cli_parsers.append(path)
+
+        return pipeline_cli_parsers
+
+    def load_by_path(self, path):pass
+
+    def extract_paths(self, paths):pass
+
+
 def load_modular_pipelines_parser():
 
     import imp
