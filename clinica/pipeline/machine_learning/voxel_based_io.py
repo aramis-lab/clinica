@@ -2,10 +2,6 @@
 import numpy as np
 import pandas as pd
 import nibabel as nib
-# from numpy.linalg import norm
-import csv
-from ntpath import basename, splitext
-from scipy.spatial.distance import squareform
 from os.path import join
 
 
@@ -150,52 +146,3 @@ def weights_to_nifti(weights, image, output_filename):
 
     new_img = nib.Nifti1Image(features, qform)
     nib.save(new_img, output_filename)
-
-
-def save_subjects_prediction(subjects, diagnosis, y, y_hat, output_file):
-
-    with open(output_file, 'w') as csvfile:
-
-        fieldnames = ['Subject', 'Diagnose', 'Class_label', 'Predicted_label', 'Correct']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-
-        for i in range(len(subjects)):
-            s = splitext(basename(subjects[i]))[0]
-            dx = diagnosis[i]
-            writer.writerow({'Subject': s,
-                             'Diagnose': dx,
-                             'Class_label': y[i],
-                             'Predicted_label': int(y_hat[i]),
-                             'Correct': int(y[i] == y_hat[i])
-                             })
-
-
-def results_to_csv(results, diagnose_list, output_file):
-
-    with open(output_file, 'w') as output:
-        s = 'Balanced Accuracy\n'
-        balanced_accuracy_list = [round(res[1]['balanced_accuracy'], 2) for res in sorted(results.items())]
-        df = pd.DataFrame(squareform(balanced_accuracy_list), index=diagnose_list, columns=diagnose_list)
-        print df
-        s += df.to_csv(sep='\t')
-
-        s += '\nAccuracy\n'
-        accuracy_list = [round(res[1]['accuracy'], 2) for res in sorted(results.items())]
-        df = pd.DataFrame(squareform(accuracy_list), index=diagnose_list, columns=diagnose_list)
-        print df
-        s += df.to_csv(sep='\t')
-
-        s += '\nSensitivity\n'
-        sensitivity_list = [round(res[1]['sensitivity'], 2) for res in sorted(results.items())]
-        df = pd.DataFrame(squareform(sensitivity_list), index=diagnose_list, columns=diagnose_list)
-        print df
-        s += df.to_csv(sep='\t')
-
-        s += '\nSpecificity\n'
-        specificity_list = [round(res[1]['specificity'], 2) for res in sorted(results.items())]
-        df = pd.DataFrame(squareform(specificity_list), index=diagnose_list, columns=diagnose_list)
-        print df
-        s += df.to_csv(sep='\t')
-
-        output.write(s)
