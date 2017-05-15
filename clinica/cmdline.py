@@ -112,34 +112,53 @@ def load_conf(args):
 
 
 class PipelineLoader:
+    from clinica.pipeline.engine import Pipeline
     """
     Load pipelines from a custom locations (general from $HOME/clinica)
     """
-    def __init__(self,env='CLINICAPATH'):
+    def __init__(self,env='CLINICAPATH',baseclass=Pipeline,dir='src',reg=r".*_cli\.py$"):
         self.env = env
+        self.baseclass = baseclass
+        self.dir = dir
+        self.reg = reg
 
     def load(self):
-        import imp
         import os
-        import os.path as op
-        import re
-        import inspect
-
         pipeline_cli_parsers = []
 
         if not os.environ.has_key(self.env):
             return pipeline_cli_parsers
 
-        paths = self.extract_paths(os.environ[self.env])
+        paths = self.extract_existing_paths(os.environ[self.env])
+        src_path = self.discover_path_with_subdir(paths, self.dir)
+        files_match = self.find_files(src_path, self.reg)
+        files_match = self.find_files(src_path, self.reg)
 
-        for path in paths : pipeline_cli_parsers.append(path)
+        for file in files_match :
+            pipeline_cli_parsers.append(self.load_class(self.baseclass, file))
 
         return pipeline_cli_parsers
 
-    def load_by_path(self, path):pass
+    def load_class(self, basename, file):
+        import imp
+        import inspect
+        py_module_name, ext = os.path.splitext(os.path.split(file)[-1])
+        py_module = imp.load_source(py_module_name, file)
+        for class_name, class_obj in inspect.getmembers(py_module, inspect.isclass):
+            x = class_obj()
+            if isinstance(x, self.baseclass):
+                return x
 
-    def extract_paths(self, paths):pass
+    def extract_existing_paths(self, paths):
+        return [path for path in paths.split(':') if os.path.isdir(path)]
 
+    def discover_path_with_subdir(self, paths, dir):
+        def build_absolut_path(base, path, dir): return os.path.join(base, path, dir)
+        return [build_absolut_path(path, file, dir) for path in paths for file in os.listdir(path) if os.path.isdir(build_absolut_path(path, file, dir))]
+
+    def find_files(self, paths, reg):
+        import re
+        return [os.path.join(path,file) for path in paths for file in os.listdir(path) if re.match(reg, file) is not None]
 
 def load_modular_pipelines_parser():
 
