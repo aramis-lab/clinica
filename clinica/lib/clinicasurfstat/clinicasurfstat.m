@@ -66,7 +66,7 @@ opengl info
 %% define the path
 addpath(fileparts(which(mfilename())));
 addpath(strcat(fileparts(which(mfilename())), '/SurfStat'));
-addpath(strcat(fileparts(which(mfilename())), '/matlab-freesurfer-5.3'));
+addpath(strcat(getenv('FREESURFER_HOME), '/matlab'));
 addpath(strcat(fileparts(which(mfilename())), '/tools'));
 surfstathome = fileparts(which(mfilename()));
 %% Load the data
@@ -139,11 +139,7 @@ for i = 1:length(tsvdata)-1
     eval([firstline{i+1} '= term(tsvdata{i+1});'])
 end
 
-%% Create Images folder for output
 cd(outputdir)
-%if exist('clinica-surfstat', 'dir') ~= 7
- %   mkdir clinica-surfstat
-%end
 
 %% Convert the data into SurfStat
 
