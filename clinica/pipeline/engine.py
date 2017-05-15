@@ -75,7 +75,8 @@ class Pipeline(npe.Workflow):
     def build(self):
         self.build_core_nodes()
         if not self._hierarchy:
-            self.build_io_nodes()
+            self.build_input_node()
+            self.build_output_node()
 
     @property
     def is_built(self): return self._is_built
@@ -115,6 +116,12 @@ class Pipeline(npe.Workflow):
 
     @abc.abstractmethod
     def build_core_nodes(self): pass
+
+    @abc.abstractmethod
+    def build_input_node(self): pass
+
+    @abc.abstractmethod
+    def build_output_node(self): pass
 
     @abc.abstractmethod
     def get_input_fields(self): pass
