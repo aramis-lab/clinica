@@ -3,6 +3,7 @@
 """
 
 import nipype.pipeline.engine as npe
+import nipype.interfaces.utility as nutil
 import abc
 from bids.grabbids import BIDSLayout
 
@@ -40,45 +41,47 @@ class Pipeline(npe.Workflow):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, bids_dir, caps_dir, tsv_file=None):
+    def __init__(self, bids_dir, caps_dir, tsv_file=None, name=None):
         """
         """
         self._is_built = False
-        self._has_input_node = False
-        self._has_output_node = False
-        self._input_node = None
-        self._output_node = None
         self._input_dir = bids_dir
         self._output_dir = caps_dir
         self._verbosity = 'debug'
         self._tsv_file = tsv_file
-        self._name = self.__class__.__name__
+        if name:
+            self._name = name
+        else:
+            self._name = self.__class__.__name__
         self._parameters = {}
         self._sessions, self._subjects = get_subject_session_list(bids_dir, tsv_file)
-        npe.Workflow.__init__(self, self.__class__.__name__)
+        self._input_node = npe.Node(name="Input",
+                                    interface=nutil.IdentityInterface(
+                                        fields=self.get_input_fields(),
+                                        mandatory_inputs=True))
+        self._output_node = npe.Node(name="Output",
+                                     interface=nutil.IdentityInterface(
+                                         fields=self.get_output_fields(),
+                                         mandatory_inputs=True))
+        npe.Workflow.__init__(self, self._name)
+        self.add_nodes([self.input_node, self.output_node])
 
     def run(self, plugin=None, plugin_args=None, update_hash=False):
         if not self.is_built:
             self.build()
         npe.Workflow.run(self, plugin, plugin_args, update_hash)
 
+    @postset('is_built', True)
+    def build(self):
+        self.build_core_nodes()
+        if not self._hierarchy:
+            self.build_io_nodes()
+
     @property
     def is_built(self): return self._is_built
 
     @is_built.setter
     def is_built(self, value): self._is_built = value
-
-    @property
-    def has_input_node(self): return self._has_input_node
-
-    @has_input_node.setter
-    def has_input_node(self, value): self._has_input_node = value
-
-    @property
-    def has_output_node(self): return self._has_output_node
-
-    @has_output_node.setter
-    def has_output_node(self, value): self._has_output_node = value
 
     @property
     def parameters(self): return self._parameters
@@ -89,16 +92,8 @@ class Pipeline(npe.Workflow):
     @property
     def input_node(self): return self._input_node
 
-    @input_node.setter
-    @postset('has_input_node', True)
-    def input_node(self, value): self._input_node = value
-
     @property
     def output_node(self): return self._output_node
-
-    @output_node.setter
-    @postset('has_output_node', True)
-    def output_node(self, value): self._output_node = value
 
     @property
     def input_dir(self): return self._input_dir
@@ -119,13 +114,13 @@ class Pipeline(npe.Workflow):
     def bids_layout(self): return BIDSLayout(self.input_dir)
 
     @abc.abstractmethod
-    def build(self): pass
+    def build_core_nodes(self): pass
 
     @abc.abstractmethod
-    def default_input_node(self): pass
+    def get_input_fields(self): pass
 
     @abc.abstractmethod
-    def default_output_node(self): pass
+    def get_output_fields(self): pass
 
     def check_dependencies(self, dependencies):
         """
@@ -147,6 +142,3 @@ class Pipeline(npe.Workflow):
                 raise Exception('Program [%s] do not found' % program_name)
 
         [check_dependence(x) for x in dependencies]
-
-    @abc.abstractmethod
-    def expected_result_files(self): pass
