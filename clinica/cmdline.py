@@ -130,7 +130,9 @@ class PipelineLoader:
         if not os.environ.has_key(self.env):
             return pipeline_cli_parsers
 
-        paths = self.extract_paths(os.environ[self.env])
+        paths = self.extract_existing_paths(os.environ[self.env])
+
+        src_path = self.discover_path_with_subdir(path, 'src')
 
         for path in paths : pipeline_cli_parsers.append(path)
 
@@ -138,8 +140,12 @@ class PipelineLoader:
 
     def load_by_path(self, path):pass
 
-    def extract_paths(self, paths):pass
+    def extract_existing_paths(self, paths):
+        return [path for path in paths.split(':') if os.path.isdir(path)]
 
+    def discover_path_with_subdir(self, paths, dir):
+        def build_absolut_path(base, path, dir): return os.path.join(base, path, dir)
+        return [build_absolut_path(path, d, dir) for path in paths for d in os.listdir(path) if os.path.isdir(build_absolut_path(path, d, dir))]
 
 def load_modular_pipelines_parser():
 
