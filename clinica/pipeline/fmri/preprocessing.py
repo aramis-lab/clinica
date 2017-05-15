@@ -26,37 +26,37 @@ class BrainExtractionWorkflow(npe.Workflow):
         # Segmentation
         # ============
         seg_node = npe.MapNode(name="Segmentation",
-                            iterfield="data",
-                            interface=spm.Segment())
+                               iterfield="data",
+                               interface=spm.Segment())
         seg_node.inputs.gm_output_type = [False, False, True]
         seg_node.inputs.wm_output_type = [False, False, True]
         seg_node.inputs.csf_output_type = [False, False, True]
         add1_node = npe.MapNode(name="AddGMWM",
                                 iterfield=["in_file", "operand_file"],
-                             interface=fsl.BinaryMaths())
+                                interface=fsl.BinaryMaths())
         add1_node.inputs.operation = 'add'
         add2_node = npe.MapNode(name="AddGMWMCSF",
                                 iterfield=["in_file", "operand_file"],
-                             interface=fsl.BinaryMaths())
+                                interface=fsl.BinaryMaths())
         add2_node.inputs.operation = 'add'
         dil_node = npe.MapNode(name="Dilate",
                                iterfield="in_file",
-                            interface=fsl.DilateImage())
+                               interface=fsl.DilateImage())
         dil_node.inputs.operation = 'mean'
         ero_node = npe.MapNode(name="Erode",
                                iterfield="in_file",
-                            interface=fsl.ErodeImage())
+                               interface=fsl.ErodeImage())
         thre_node = npe.MapNode(name="Threshold",
                                 iterfield="in_file",
-                            interface=fsl.Threshold())
+                                interface=fsl.Threshold())
         thre_node.inputs.thresh = 0.5
         fill_node = npe.MapNode(name="Fill",
                                 iterfield="in_file",
-                            interface=fsl.UnaryMaths())
+                                interface=fsl.UnaryMaths())
         fill_node.inputs.operation = 'fillh'
         mask_node = npe.MapNode(name="ApplyMask",
-                            iterfield=["in_file", "mask_file"],
-                            interface=fsl.ApplyMask())
+                                iterfield=["in_file", "mask_file"],
+                                interface=fsl.ApplyMask())
         mask_node.inputs.output_type = 'NIFTI'
 
         self.connect([
@@ -113,30 +113,35 @@ class FMRIPreprocessing(cpe.Pipeline):
         >>> pipeline.run()
     """
 
-    def default_input_node(self):
-        input_node = npe.Node(name="Input",
-                              interface=nutil.IdentityInterface(fields=['magnitude1',
-                                                                        'phasediff',
-                                                                        'bold',
-                                                                        'T1w'],
-                                                                mandatory_inputs=True))
-        input_node.inputs.magnitude1 = self.bids_layout.get(return_type='file', type='magnitude1', extensions='nii')
-        input_node.inputs.phasediff = self.bids_layout.get(return_type='file', type='phasediff', extensions='nii')
-        input_node.inputs.bold = self.bids_layout.get(return_type='file', type='bold', extensions='nii')
-        input_node.inputs.T1w = self.bids_layout.get(return_type='file', run='[1]', type='T1w', extensions='nii')
-        return input_node
+    def get_input_fields(self):
+        return ['magnitude1', 'phasediff', 'bold', 'T1w']
 
-    def default_output_node(self):
-        io_fileds = ['t1_brain_mask', 'mc_params', 'native_fmri', 't1_fmri', 'mni_fmri', 'mni_smoothed_fmri']
-        output_node = npe.MapNode(name='Output',
-                                  iterfield=['container'] + io_fileds,
-                                  interface=nio.DataSink(infields=io_fileds))
-        output_node.inputs.base_directory = self.output_dir
-        output_node.inputs.parameterization = False
-        output_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
+    def get_output_fields(self):
+        return ['t1_brain_mask', 'mc_params', 'native_fmri', 't1_fmri', 'mni_fmri', 'mni_smoothed_fmri']
+
+    def build_io_nodes(self):
+
+        # Reading BIDS
+        # ============
+        read_node = npe.Node(name="ReadingBIDS",
+                              interface=nutil.IdentityInterface(fields=self.get_input_fields(),
+                                                                mandatory_inputs=True))
+        read_node.inputs.magnitude1 = self.bids_layout.get(return_type='file', type='magnitude1', extensions='nii')
+        read_node.inputs.phasediff = self.bids_layout.get(return_type='file', type='phasediff', extensions='nii')
+        read_node.inputs.bold = self.bids_layout.get(return_type='file', type='bold', extensions='nii')
+        read_node.inputs.T1w = self.bids_layout.get(return_type='file', run='[1]', type='T1w', extensions='nii')
+
+        # Writing CAPS
+        # ============
+        write_node = npe.MapNode(name='WritingCAPS',
+                                  iterfield=['container'] + self.get_output_fields(),
+                                  interface=nio.DataSink(infields=self.get_output_fields()))
+        write_node.inputs.base_directory = self.output_dir
+        write_node.inputs.parameterization = False
+        write_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
                                         '/fmri/preprocessing' for i in range(len(self.subjects))]
-        output_node.inputs.remove_dest_dir = True
-        output_node.inputs.regexp_substitutions = [
+        write_node.inputs.remove_dest_dir = True
+        write_node.inputs.regexp_substitutions = [
             (r't1_brain_mask/c3(.+)_maths_dil_ero_thresh_fillh\.nii\.gz$',  r'\1_brainmask.nii.gz'),
             (r'mc_params/rp_a(.+)\.txt$',                                   r'\1_motionparams.txt'),
             (r'native_fmri/ua(.+)\.nii$',                                   r'\1_space-native.nii'),
@@ -147,26 +152,23 @@ class FMRIPreprocessing(cpe.Pipeline):
             (r'trait_added',                                                                   r''),
         ]
 
-        # brain mask ?
-        # computed fieldmap ?
-        # motion quantities
+        self.connect([
+            # Reading BIDS
+            (read_node,   self.input_node, [('magnitude1',               'magnitude1')]),
+            (read_node,   self.input_node, [('phasediff',                 'phasediff')]),
+            (read_node,   self.input_node, [('bold',                           'bold')]),
+            (read_node,   self.input_node, [('bold',                           'bold')]),
+            (read_node,   self.input_node, [('bold',                           'bold')]),
+            # Writing CAPS
+            (self.output_node, write_node, [('t1_brain_mask',         't1_brain_mask')]),
+            (self.output_node, write_node, [('mc_params',                 'mc_params')]),
+            (self.output_node, write_node, [('native_fmri',             'native_fmri')]),
+            (self.output_node, write_node, [('t1_fmri',                     't1_fmri')]),
+            (self.output_node, write_node, [('mni_fmri',                   'mni_fmri')]),
+            (self.output_node, write_node, [('mni_smoothed_fmri', 'mni_smoothed_fmri')]),
+        ])
 
-        # corrected frmi in native space
-        # corrected frmi in T1 space (after coregistration)
-        # corrected frmi in MNI space (after normalization)
-        # corrected and smoothed frmi in MNI space (after normalization)
-
-        return output_node
-
-    @cpe.postset('is_built', True)
-    def build(self):
-
-        # Input/output
-        # ============
-        if not self.has_input_node:
-            self.input_node = self.default_input_node()
-        if not self.has_output_node:
-            self.output_node = self.default_output_node()
+    def build_core_nodes(self):
 
         # FieldMap calculation
         # ====================
