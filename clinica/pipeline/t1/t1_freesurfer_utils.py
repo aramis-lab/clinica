@@ -238,26 +238,6 @@ def log_summary(subject_list, session_list, subject_id, output_dir):
         line3 = 'Number of subjects: %s \nNumber of bad recon-all is: %s ' % (len(subject_list), bad_log)
         f1.write(line3)
 
-    # logging.basicConfig(filename=log_name, format='%(asctime)s %(levelname)s:%(message)s',
-    #                     datefmt='%m/%d/%Y %I:%M', level=logging.DEBUG)
-    # config.update_config({'logging': {'log_directory': dest_dir,
-    #                                   'log_to_file': True, 'workflow_level': 'DEBUG'}})
-    # logging.update_logging(config)
-    # bad_log = 0
-    # line1 = 'Quality check: recon-all output summary'
-    # logging.info(line1)
-    # for log in input_logs:
-    #     with open(log, 'r') as f2:
-    #         line = f2.readlines()[-1]
-    #         if 'without error' in line:
-    #             logging.info(line)
-    #         else:
-    #             logging.warning(line)
-    #             bad_log += 1
-    #         f2.close()
-    # line2 = 'Number of subjects: %s \nNumber of bad recon-all is: %s ' % (len(subject_list), bad_log)
-    # logging.info(line2)
-
 def write_statistics_per_subject(subject_id, output_dir):
 
     import os, errno
@@ -265,13 +245,13 @@ def write_statistics_per_subject(subject_id, output_dir):
     subject_list = subject_id.split('_')[0]
     session_list = subject_id.split('_')[1]
     # name all the 26 tsv output files.
-    all_seg_volume = subject_id + '_measure-all-seg.tsv'
-    aseg_volume = subject_id + '_measure-aseg-volume.tsv'
+    all_seg_volume = subject_id + '_parcellation-wm_volume.tsv'
+    aseg_volume = subject_id + '_segmentationVolumes.tsv'
 
-    aparc_desikan_lh_volume = subject_id + '_hemi-lh_parcellation-desikan_measure-volume.tsv'
-    aparc_desikan_rh_volume = subject_id + '_hemi-rh_parcellation-desikan_measure-volume.tsv'
-    aparc_desikan_lh_thickness = subject_id + '_hemi-lh_parcellation-desikan_measure-thickness.tsv'
-    aparc_desikan_rh_thickness = subject_id + '_hemi-rh_parcellation-desikan_measure-thickness.tsv'
+    aparc_desikan_lh_volume = subject_id + '_hemi-left_parcellation-desikan_volume.tsv'
+    aparc_desikan_rh_volume = subject_id + '_hemi-right_parcellation-desikan_volume.tsv'
+    aparc_desikan_lh_thickness = subject_id + '_hemi-left_parcellation-desikan_thickness.tsv'
+    aparc_desikan_rh_thickness = subject_id + '_hemi-right_parcellation-desikan_thickness.tsv'
     aparc_desikan_lh_area = subject_id + '_hemi-left_parcellation-desikan_area.tsv'
     aparc_desikan_rh_area = subject_id + '_hemi-right_parcellation-desikan_area.tsv'
     aparc_desikan_lh_meancurv = subject_id + '_hemi-left_parcellation-desikan_meancurv.tsv'
