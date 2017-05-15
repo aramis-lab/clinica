@@ -66,8 +66,8 @@ opengl info
 %% define the path
 addpath(fileparts(which(mfilename())));
 addpath(strcat(fileparts(which(mfilename())), '/SurfStat'));
+fsaveragepath = strcat(getenv('FREESURFER_HOME), '/subjects/fsaverage/surf')
 addpath(strcat(getenv('FREESURFER_HOME), '/matlab'));
-addpath(strcat(fileparts(which(mfilename())), '/tools'));
 surfstathome = fileparts(which(mfilename()));
 %% Load the data
 fid = fopen(tsvfile, 'r');
@@ -129,7 +129,7 @@ for indexsubject = 1 : nrsubject
 end
 
 %% Load average surface & creation of the mask :
-averagesurface = SurfStatReadSurf( { strcat(surfstathome,'/fsaverage/lh.pial') , strcat(surfstathome,'/fsaverage/rh.pial') } );
+averagesurface = SurfStatReadSurf( { strcat(fsaveragepath,'/lh.pial') , strcat(fsaveragepath,'/rh.pial') } );
 thicksubject = thicksubject';
 mask = thicksubject(:,1)>0;  % alternatively, we can use SurfStatMaskCut to extract the mask too, but this mask includes still the brain stem
 mask = mask';
