@@ -28,19 +28,21 @@ def absolute_path(arg):
         return os.path.join(os.getcwd(), arg)
 
 
-def get_vars(input_directory, subjects_visits_tsv, group_label):
+def data_prep(input_directory, subjects_visits_tsv, group_label, glm_type):
     """
     Fetch all the intermedial variables for this workflow
 
     :param input_directory:
     :param subjects_visits_tsv:
     :param group_label:
+    :param glm_type:
     :return:
     """
     import os
-    from glob import glob
     from shutil import copy
     import clinica.pipeline as clp
+    import sys
+    import pandas as pd
 
     path_to_matscript = os.path.join(os.path.dirname(clp.__path__[0]), 'lib/clinicasurfstat')
 
@@ -49,18 +51,52 @@ def get_vars(input_directory, subjects_visits_tsv, group_label):
     surfstat_input_dir = os.path.join(input_directory, 'subjects')
 
     group_id = 'group-' + group_label
-    output_directory = os.path.join(input_directory, 'groups', group_id, 'statistics/surfstat/clinica-surfstat')
-    if not os.path.exists(output_directory):
-        try:
-            os.makedirs(output_directory)
-        except:
-            raise OSError("Surfstat: can't create destination directory (%s)!" % (output_directory))
+    statistics_dir_tsv = os.path.join(input_directory, 'groups', group_id, 'statistics', 'participant.tsv')
+    if glm_type == "group_comparison":
+        output_directory = os.path.join(input_directory, 'groups', group_id, 'statistics', 'surfstat_group_comparison')
+        if not os.path.exists(output_directory):
+            try:
+                os.makedirs(output_directory)
+            except:
+                raise OSError("Surfstat: can't create destination directory (%s)!" % (output_directory))
+    elif glm_type == "correlation":
+        output_directory = os.path.join(input_directory, 'groups', group_id, 'statistics', 'surfstat_correlation_analysis')
+        if not os.path.exists(output_directory):
+            try:
+                os.makedirs(output_directory)
+            except:
+                raise OSError("Surfstat: can't create destination directory (%s)!" % (output_directory))
+    else:
+        print "The other GLM situations have not been implemented in this pipeline"
+        sys.exit()
 
     # cp the subjects_visits_tsv to the result folder
-    copied_tsv = output_directory + '/subjects_group_list.tsv'
-    copy(subjects_visits_tsv, copied_tsv)
+    # firstly, check if the subjects_visits_tsv has the same info with the participant.tsv in the folder of statistics.
+    # if the participant tsv does not exit, cp subjects_visits_tsv in the folder of statistics too, if it is here, compare them.
+    if not os.path.isfile(statistics_dir_tsv):
+        copy(subjects_visits_tsv, statistics_dir_tsv)
+    else:
+        ## compare the two tsv files
+        participant_df = pd.io.parsers.read_csv(statistics_dir_tsv, sep='\t')
+        subjects_visits_tsv_df = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
+        participant_list = list(participant_df.participant_id)
+        subjects_visits_tsv_list = list(subjects_visits_tsv_df.participant_id)
+        dif_list = list(set(participant_list) - set(subjects_visits_tsv_list))
+        try:
+            len(dif_list) == 0
+        except:
+            raise ValueError("It seems that this round of analysis does not contain the same subjects where you want to put the results, please check it!")
 
-    return path_to_matscript, surfstat_input_dir, output_directory
+        group_tsv = 'group-' + group_label + '_participants.tsv'
+        copied_tsv = os.path.join(output_directory, group_tsv)
+        copy(subjects_visits_tsv, copied_tsv)
+    ## point to the path to the json file
+    out_json = os.path.join(output_directory, 'group-' + group_label + '_glm.json')
+
+    #### get the FreeSurfer environment variable: FREESURFER_HOME
+    freesurfer_home = os.environ["FREESURFER_HOME"]
+
+    return path_to_matscript, surfstat_input_dir, output_directory, freesurfer_home, out_json
 
 def runmatlab(input_directory,
               output_directory,
@@ -68,6 +104,8 @@ def runmatlab(input_directory,
               design_matrix, contrast,
               str_format,
               glm_type,
+              group_label,
+              freesurfer_home,
               path_to_matscript,
               full_width_at_half_maximum,
               threshold_uncorrected_pvalue,
@@ -119,8 +157,8 @@ def runmatlab(input_directory,
     matlab.inputs.paths = path_to_matscript  # CLINICA_HOME, this is the path to add into matlab, addpath
 
     matlab.inputs.script = """
-    clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', %.3f, '%s', %.3f, '%s', %.3f);
-    """ % (input_directory, output_directory, subjects_visits_tsv, design_matrix, contrast, str_format, glm_type, 'sizeoffwhm',
+    clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', %.3f, '%s', %.3f, '%s', %.3f);
+    """ % (input_directory, output_directory, subjects_visits_tsv, design_matrix, contrast, str_format, glm_type, group_label, freesurfer_home, 'sizeoffwhm',
            full_width_at_half_maximum,
            'thresholduncorrectedpvalue', threshold_uncorrected_pvalue, 'thresholdcorrectedpvalue',
            threshold_corrected_pvalue, 'clusterthreshold',

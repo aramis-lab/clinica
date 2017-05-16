@@ -11,7 +11,8 @@ from __future__ import absolute_import
 from nipype.interfaces.utility import Function
 import nipype.pipeline.engine as pe
 from tempfile import mkdtemp
-from clinica.pipeline.statistics.surfstat_utils import absolute_path, get_vars, runmatlab
+from clinica.pipeline.statistics.surfstat_utils import absolute_path, data_prep, runmatlab
+from nipype.interfaces.io import JSONFileSink
 
 __author__ = "Junhao Wen, Alexandre Routier"
 __copyright__ = "Copyright 2016, The Aramis Lab Team"
@@ -64,17 +65,18 @@ def clinica_surfstat(input_directory,
     # Node to fetch the input vars.
     inputnode = pe.Node(name='inputnode',
                         interface=Function(
-                            input_names=['input_directory', 'subjects_visits_tsv', 'group_label'],
-                            output_names=['path_to_matscript', 'surfstat_input_dir', 'output_directory'],
-                            function=get_vars))
+                            input_names=['input_directory', 'subjects_visits_tsv', 'group_label', 'glm_type'],
+                            output_names=['path_to_matscript', 'surfstat_input_dir', 'output_directory', 'freesurfer_home', 'out_json'],
+                            function=data_prep))
     inputnode.inputs.input_directory = input_directory
     inputnode.inputs.subjects_visits_tsv = subjects_visits_tsv
     inputnode.inputs.group_label = group_label
+    inputnode.inputs.glm_type = glm_type
 
     # Node to wrap the surfstat matlab script.
     surfstat = pe.Node(name='surfstat',
                        interface=Function(input_names=['input_directory', 'output_directory', 'subjects_visits_tsv', 'design_matrix',
-                                                       'contrast', 'str_format', 'glm_type', 'path_to_matscript', 'full_width_at_half_maximum', 'threshold_uncorrected_pvalue',
+                                                       'contrast', 'str_format', 'glm_type', 'group_label', 'freesurfer_home', 'path_to_matscript', 'full_width_at_half_maximum', 'threshold_uncorrected_pvalue',
                                                        'threshold_corrected_pvalue', 'cluster_threshold'],
                                           output_names=['out_images'],
                                           function=runmatlab))
@@ -83,10 +85,23 @@ def clinica_surfstat(input_directory,
     surfstat.inputs.subjects_visits_tsv = subjects_visits_tsv
     surfstat.inputs.str_format = str_format
     surfstat.inputs.glm_type = glm_type
+    surfstat.inputs.group_label = group_label
     surfstat.inputs.full_width_at_half_maximum = full_width_at_half_maximum
     surfstat.inputs.threshold_uncorrected_pvalue = threshold_uncorrected_pvalue
     surfstat.inputs.threshold_corrected_pvalue = threshold_corrected_pvalue
     surfstat.inputs.cluster_threshold = cluster_threshold
+
+    # Node to write the GLM infor into a json file
+    jsonsink = pe.Node(JSONFileSink(input_names=['out_file']), name='jsonsinker')
+    jsonsink.inputs.in_dict = {'AnalysisType': glm_type,
+                                'DesignMatrix': design_matrix,
+                               'StringFormatTSV': str_format,
+                               'Contrast': contrast,
+                               'GroupLabel': group_label,
+                               'FWHM': full_width_at_half_maximum,
+                               'ThresholdUncorrectedPvalue': threshold_uncorrected_pvalue,
+                               'ThresholdCorrectedPvalue': threshold_corrected_pvalue,
+                               'ClusterThreshold': cluster_threshold}
 
     if working_directory is None:
         working_directory = mkdtemp()
@@ -98,5 +113,7 @@ def clinica_surfstat(input_directory,
     surfstat_wf.connect(inputnode, 'surfstat_input_dir', surfstat, 'input_directory')
     surfstat_wf.connect(inputnode, 'path_to_matscript', surfstat, 'path_to_matscript')
     surfstat_wf.connect(inputnode, 'output_directory', surfstat, 'output_directory')
+    surfstat_wf.connect(inputnode, 'freesurfer_home', surfstat, 'freesurfer_home')
+    surfstat_wf.connect(inputnode, 'out_json', jsonsink, 'out_file')
 
     return surfstat_wf
