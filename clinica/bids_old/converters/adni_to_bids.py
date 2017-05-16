@@ -289,9 +289,9 @@ class ADNI_TO_BIDS(Converter, CmdParser):
 
         if convert_dwi:
             if mod_to_update == 'dwi':
-                adni_dwi.convert_dwi(dest_dir, subjs_list, dwi_paths, mod_to_add=False, mod_to_update=True)
+                adni_dwi.convert_dwi(dest_dir, dwi_paths, mod_to_add=False, mod_to_update=True)
             elif mod_to_add == 'dwi':
-                adni_dwi.convert_dwi(dest_dir, subjs_list, dwi_paths, mod_to_add=True, mod_to_update=False)
+                adni_dwi.convert_dwi(dest_dir, dwi_paths, mod_to_add=True, mod_to_update=False)
 
 
         print '\n'
