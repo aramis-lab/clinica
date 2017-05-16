@@ -135,26 +135,28 @@ def compute_dti_paths(adni_dir, csv_dir, dest_dir, subjs_list):
     return images
 
 
-def convert_dwi(dest_dir, subjs_list, dwi_paths, mod_to_add=False, mod_to_update=False):
+def convert_dwi(dest_dir, dwi_paths, mod_to_add=False, mod_to_update=False):
     '''
 
+
     :param dest_dir: path to the BIDS ADNI directory
-    :param subjs_list: subject list
-    :param dwi_paths:
+    :param dwi_paths: pandas dataframe containing all the paths to the dwi images
     :param mod_to_add:
     :param mod_to_update:
     :return:
     '''
 
     import clinica.bids.bids_utils as bids
+    import clinica.bids.converters.adni_utils as adni_utils
     from os import path
     import os
     from glob import glob
     import shutil
 
+    subjs_list = dwi_paths['Subject_ID'].drop_duplicates().values
+
     for i in range(0, len(subjs_list)):
         print '--Converting dwi for subject', subjs_list[i], '--'
-        sess_list = dwi_paths[(dwi_paths['Subject_ID'] == subjs_list[i])]['VISCODE'].values
         alpha_id = bids.remove_space_and_symbols(subjs_list[i])
         bids_id = 'sub-ADNI' + alpha_id
         # Extract the list of sessions available from the dwi paths files, removing the duplicates
@@ -165,8 +167,10 @@ def convert_dwi(dest_dir, subjs_list, dwi_paths, mod_to_add=False, mod_to_update
 
         # For each session available, create the folder if doesn't exist and convert the files
         for ses in sess_list:
-            bids_ses_id = 'ses-' + ses
-            bids_file_name = bids_id + '_ses-' + ses
+
+            ses_bids = adni_utils.viscode_to_session(ses)
+            bids_ses_id = 'ses-' + ses_bids
+            bids_file_name = bids_id + '_ses-' + ses_bids
             ses_path = path.join(dest_dir, bids_id, bids_ses_id)
 
             existing_nii = glob(path.join(ses_path, 'func', '*nii*'))
