@@ -199,7 +199,7 @@ class CmdlineCache():
         self.io_options = None
 
     def setup_converters(self):
-        from clinica.bids.load_cmdline_converter import load_cmdline_converters
+        from clinica.iotools.load_cmdline_converter import load_cmdline_converters
         self.converters = load_cmdline_converters()
 
     def setup_io_options(self):
@@ -307,7 +307,7 @@ def execute():
     convert option: convert one of the supported dataset to the BIDS specification
     """
     convert_parser = sub_parser.add_parser('convert')
-    from clinica.bids.load_cmdline_converter import load_cmdline_converters
+    from clinica.iotools.load_cmdline_converter import load_cmdline_converters
     init_cmdparser_objects(parser, convert_parser.add_subparsers(), load_cmdline_converters())
 
     """

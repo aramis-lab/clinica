@@ -140,7 +140,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
 def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
 
-    from clinica.bids.converters.adni_utils import center_nifti_origin, viscode_to_session
+    from clinica.iotools.converters.adni_utils import center_nifti_origin, viscode_to_session
     from os import path, makedirs, system, remove
     from numpy import nan
 
@@ -197,7 +197,7 @@ def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
 
 def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj):
 
-    from clinica.bids.converters.adni_utils import replace_sequence_chars
+    from clinica.iotools.converters.adni_utils import replace_sequence_chars
     # Get the preferred scan (image series that has been Scaled)
     filtered_mprage = mprage_meta_subj[(mprage_meta_subj['Orig/Proc'] == 'Processed')
                                        & (mprage_meta_subj.Visit == visit_str)
@@ -288,7 +288,7 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
 
 def adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig, mayo_mri_qc_subj, preferred_field_strength=3.0):
 
-    from clinica.bids.converters.adni_utils import replace_sequence_chars
+    from clinica.iotools.converters.adni_utils import replace_sequence_chars
 
     cond_mprage = ((mprage_meta_subj_orig.Visit == visit_str) & mprage_meta_subj_orig.Sequence.map(
         lambda x: ((x.lower().find('mprage') > -1) | (x.lower().find('mp-rage') > -1) | (
@@ -335,7 +335,7 @@ def adnigo_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_su
 
 def visits_to_timepoints_t1(subject, mprage_meta_subj_orig, adnimerge_subj):
         from datetime import datetime
-        from clinica.bids.converters.adni_utils import days_between
+        from clinica.iotools.converters.adni_utils import days_between
 
         mprage_meta_subj_orig = mprage_meta_subj_orig[mprage_meta_subj_orig['Visit'] != 'ADNI Baseline']
 

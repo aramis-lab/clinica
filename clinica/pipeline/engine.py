@@ -19,7 +19,7 @@ def postset(attribute, value):
 
 def get_subject_session_list(input_dir, ss_file=None):
 
-    import clinica.bids.utils.data_handling as cdh
+    import clinica.iotools.utils.data_handling as cdh
     import pandas as pd
 
     if not ss_file:

@@ -928,7 +928,7 @@ class CmdParserHmtcToBids(CmdParser):
                                 help='Path to the BIDS directory.')
 
     def run_pipeline(self, args):
-        from clinica.bids import hmtc_to_bids
+        from clinica.iotools import hmtc_to_bids
         hmtc_to_bids.convert(args.dataset_directory, args.bids_directory)
 
 
@@ -946,7 +946,7 @@ class CmdParserSubsSess(CmdParser):
                             help='(Optional) Name of the output file.')
 
     def run_pipeline(self, args):
-        from clinica.bids.utils import data_handling as dt
+        from clinica.iotools.utils import data_handling as dt
         dt.create_subs_sess_list(args.bids_dir, args.out_directory, args.output_name)
 
 class CmdParserMergeTsv(CmdParser):
@@ -964,7 +964,7 @@ class CmdParserMergeTsv(CmdParser):
 
 
     def run_pipeline(self, args):
-        from clinica.bids.utils import data_handling as dt
+        from clinica.iotools.utils import data_handling as dt
         dt.create_merge_file(args.bids_dir, args.out_directory, args.true_false_mode)
 
 class CmdParserMissingModalities(CmdParser):
@@ -983,5 +983,5 @@ class CmdParserMissingModalities(CmdParser):
 
 
     def run_pipeline(self, args):
-        from clinica.bids.utils import data_handling as dt
+        from clinica.iotools.utils import data_handling as dt
         dt.compute_missing_mods(args.bids_dir, args.out_directory, args.output_prefix)

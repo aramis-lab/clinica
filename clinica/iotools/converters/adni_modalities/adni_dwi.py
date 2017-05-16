@@ -146,8 +146,8 @@ def convert_dwi(dest_dir, dwi_paths, mod_to_add=False, mod_to_update=False):
     :return:
     '''
 
-    import clinica.bids.bids_utils as bids
-    import clinica.bids.converters.adni_utils as adni_utils
+    import clinica.iotools.bids_utils as bids
+    import clinica.iotools.converters.adni_utils as adni_utils
     from os import path
     import os
     from glob import glob
@@ -245,7 +245,7 @@ def convert_dwi(dest_dir, dwi_paths, mod_to_add=False, mod_to_update=False):
 
 def dti_image(subject_id, timepoint, visit_str, ida_meta_scans, mri_qc_subj, enhanced):
 
-    from clinica.bids.converters.adni_utils import replace_sequence_chars
+    from clinica.iotools.converters.adni_utils import replace_sequence_chars
 
     sel_image = select_image_qc(list(ida_meta_scans.IMAGEUID), mri_qc_subj)
     if sel_image is None:
@@ -321,7 +321,7 @@ def select_image_qc(id_list, mri_qc_subj):
 
 def visits_to_timepoints_dti(subject, ida_meta_subj, adnimerge_subj):
     from datetime import datetime
-    from clinica.bids.converters.adni_utils import days_between
+    from clinica.iotools.converters.adni_utils import days_between
 
     visits = dict()
     unique_visits = list(ida_meta_subj.Visit.unique())
