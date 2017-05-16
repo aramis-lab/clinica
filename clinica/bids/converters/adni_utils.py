@@ -1,4 +1,4 @@
-# Paths computation methods
+
 def compute_fdg_pet_paths(source_dir, clinical_dir, dest_dir, subjs_list):
     import pandas as pd
     import os
@@ -442,6 +442,13 @@ def days_between(d1, d2):
 
 
 def viscode_to_session(viscode):
+    '''
+    Replace the session label 'bl' with 'M00' or capitalize the session name passed
+    as input.
+
+    :param viscode: session name
+    :return: M00 if is the baseline session or the original session name capitalized
+    '''
     if viscode == 'bl':
         return 'M00'
     else:

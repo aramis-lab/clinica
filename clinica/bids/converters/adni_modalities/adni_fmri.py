@@ -133,7 +133,7 @@ def compute_fmri_path( source_dir, clinical_dir, dest_dir, subjs_list):
     return fmri_df
 
 
-def convert_fmri(dest_dir, subjs_list, fmri_paths, mod_to_add=False, mod_to_update=False):
+def convert_fmri(dest_dir, fmri_paths, mod_to_add=False, mod_to_update=False):
 
     '''
     Convert the fmri extracted from the fmri_paths to BIDS
@@ -148,10 +148,13 @@ def convert_fmri(dest_dir, subjs_list, fmri_paths, mod_to_add=False, mod_to_upda
     '''
 
     import clinica.bids.bids_utils as bids
+    import clinica.bids.converters.adni_utils as adni_utils
     from os import path
     import os
     import shutil
     from glob import glob
+
+    subjs_list = fmri_paths['Subject_ID'].drop_duplicates().values
 
     for i in range(0, len(subjs_list)):
         print 'Converting fmri for subject', subjs_list[i]
@@ -161,12 +164,12 @@ def convert_fmri(dest_dir, subjs_list, fmri_paths, mod_to_add=False, mod_to_upda
 
         # For each session available, create the folder if doesn't exist and convert the files
         for ses in sess_list:
-            bids_ses_id = 'ses-' + ses
-            bids_file_name = bids_id + '_ses-' + ses
+            ses_bids = adni_utils.viscode_to_session(ses)
+            bids_ses_id = 'ses-' + ses_bids
+            bids_file_name = bids_id + '_ses-' + ses_bids
             ses_path = path.join(dest_dir, bids_id, bids_ses_id)
 
             # If the fmri already exist
-
             existing_fmri = glob(path.join(ses_path, 'func', '*_bold*'))
             print existing_fmri
             if mod_to_add:
