@@ -119,7 +119,7 @@ class FMRIPreprocessing(cpe.Pipeline):
     def get_output_fields(self):
         return ['t1_brain_mask', 'mc_params', 'native_fmri', 't1_fmri', 'mni_fmri', 'mni_smoothed_fmri']
 
-    def build_io_nodes(self):
+    def build_input_node(self):
 
         # Reading BIDS
         # ============
@@ -130,6 +130,16 @@ class FMRIPreprocessing(cpe.Pipeline):
         read_node.inputs.phasediff = self.bids_layout.get(return_type='file', type='phasediff', extensions='nii')
         read_node.inputs.bold = self.bids_layout.get(return_type='file', type='bold', extensions='nii')
         read_node.inputs.T1w = self.bids_layout.get(return_type='file', run='[1]', type='T1w', extensions='nii')
+
+        self.connect([
+            # Reading BIDS
+            (read_node,   self.input_node, [('magnitude1',               'magnitude1')]),
+            (read_node,   self.input_node, [('phasediff',                 'phasediff')]),
+            (read_node,   self.input_node, [('bold',                           'bold')]),
+            (read_node,   self.input_node, [('T1w',                             'T1w')]),
+        ])
+
+    def build_output_node(self):
 
         # Writing CAPS
         # ============
@@ -153,12 +163,6 @@ class FMRIPreprocessing(cpe.Pipeline):
         ]
 
         self.connect([
-            # Reading BIDS
-            (read_node,   self.input_node, [('magnitude1',               'magnitude1')]),
-            (read_node,   self.input_node, [('phasediff',                 'phasediff')]),
-            (read_node,   self.input_node, [('bold',                           'bold')]),
-            (read_node,   self.input_node, [('bold',                           'bold')]),
-            (read_node,   self.input_node, [('bold',                           'bold')]),
             # Writing CAPS
             (self.output_node, write_node, [('t1_brain_mask',         't1_brain_mask')]),
             (self.output_node, write_node, [('mc_params',                 'mc_params')]),

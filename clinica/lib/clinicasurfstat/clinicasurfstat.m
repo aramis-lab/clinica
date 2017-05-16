@@ -66,8 +66,8 @@ opengl info
 %% define the path
 addpath(fileparts(which(mfilename())));
 addpath(strcat(fileparts(which(mfilename())), '/SurfStat'));
-addpath(strcat(fileparts(which(mfilename())), '/matlab-freesurfer-5.3'));
-addpath(strcat(fileparts(which(mfilename())), '/tools'));
+fsaveragepath = strcat(getenv('FREESURFER_HOME), '/subjects/fsaverage/surf')
+addpath(strcat(getenv('FREESURFER_HOME), '/matlab'));
 surfstathome = fileparts(which(mfilename()));
 %% Load the data
 fid = fopen(tsvfile, 'r');
@@ -129,7 +129,7 @@ for indexsubject = 1 : nrsubject
 end
 
 %% Load average surface & creation of the mask :
-averagesurface = SurfStatReadSurf( { strcat(surfstathome,'/fsaverage/lh.pial') , strcat(surfstathome,'/fsaverage/rh.pial') } );
+averagesurface = SurfStatReadSurf( { strcat(fsaveragepath,'/lh.pial') , strcat(fsaveragepath,'/rh.pial') } );
 thicksubject = thicksubject';
 mask = thicksubject(:,1)>0;  % alternatively, we can use SurfStatMaskCut to extract the mask too, but this mask includes still the brain stem
 mask = mask';
@@ -139,11 +139,7 @@ for i = 1:length(tsvdata)-1
     eval([firstline{i+1} '= term(tsvdata{i+1});'])
 end
 
-%% Create Images folder for output
 cd(outputdir)
-%if exist('clinica-surfstat', 'dir') ~= 7
- %   mkdir clinica-surfstat
-%end
 
 %% Convert the data into SurfStat
 
