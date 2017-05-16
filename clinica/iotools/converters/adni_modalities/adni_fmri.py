@@ -147,8 +147,8 @@ def convert_fmri(dest_dir, fmri_paths, mod_to_add=False, mod_to_update=False):
     :return: None
     '''
 
-    import clinica.bids.bids_utils as bids
-    import clinica.bids.converters.adni_utils as adni_utils
+    import clinica.iotools.bids_utils as bids
+    import clinica.iotools.converters.adni_utils as adni_utils
     from os import path
     import os
     import shutil

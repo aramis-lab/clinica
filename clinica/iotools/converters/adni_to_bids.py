@@ -1,5 +1,5 @@
 
-from clinica.bids.abstract_converter import Converter
+from clinica.iotools.abstract_converter import Converter
 from clinica.engine.cmdparser import CmdParser
 import logging
 
@@ -44,7 +44,7 @@ class ADNI_TO_BIDS(Converter, CmdParser):
         from os import path
         import os
         import logging
-        import clinica.bids.bids_utils as bids
+        import clinica.iotools.bids_utils as bids
         import pandas as pd
         from glob import glob
         from os.path import normpath
@@ -194,7 +194,7 @@ class ADNI_TO_BIDS(Converter, CmdParser):
         :return:
         """
 
-        import clinica.bids.bids_utils as bids
+        import clinica.iotools.bids_utils as bids
         import os
         from os import path
         import pandas as pd
