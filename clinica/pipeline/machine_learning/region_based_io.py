@@ -20,7 +20,6 @@ def get_caps_t1_list(input_directory, subjects_visits_tsv, group_id, atlas_id):
                        + sessions[i] + '/t1/spm/atlas_statistics/'+subjects[i]+'_'+sessions[i]+'_space-'+atlas_id+'_map-gm_statistic.tsv') for i in range(len(subjects))]
     return image_list
 
-
 def get_caps_pet_list(input_directory, subjects_visits_tsv, group_id, atlas_id):
 
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
@@ -31,7 +30,6 @@ def get_caps_pet_list(input_directory, subjects_visits_tsv, group_id, atlas_id):
     image_list = [join(input_directory, 'analysis-series-default/subjects/' + subjects[i] + '/'
                        + sessions[i] + '/pet/atlas_statistics/'+ subjects[i]+'_'+sessions[i]+'_space-'+atlas_id+'_map-fdgstatistic2.tsv') for i in range(len(subjects))]
     return image_list
-
 
 def load_data(image_list,subjects_visits_tsv):
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
@@ -83,7 +81,7 @@ def weights_to_nifti(input_image_atlas,weights):
     output_image_weights=np.array(atlas_image,dtype='f')
     for i, n in enumerate(labels):
         index = np.array(np.where(image == n))
-        output_image_weights[index[0, :], index[1, :], index[2, :]]=vettore[i]
+        output_image_weights[index[0, :], index[1, :], index[2, :]]=weights[i]
     output_image = nib.Nifti1Image(output_image_weights, nib.load(input_image_atlas).get_affine(),nib.load(input_image_atlas).get_header())
     #output_image.to_filename('/Users/simona.bottani/Desktop/Database_60_subjects/SVM_output/aicha/pet/AD_vs_CN_balanced__weights.nii') Posso definirlo dopo
     return output_image
