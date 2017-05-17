@@ -41,7 +41,7 @@ class Pipeline(npe.Workflow):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, bids_dir, caps_dir, tsv_file=None, name=None):
+    def __init__(self, bids_dir=None, caps_dir=None, tsv_file=None, name=None):
         """
         """
         self._is_built = False
@@ -54,17 +54,28 @@ class Pipeline(npe.Workflow):
         else:
             self._name = self.__class__.__name__
         self._parameters = {}
-        self._sessions, self._subjects = get_subject_session_list(bids_dir, tsv_file)
-        self._input_node = npe.Node(name="Input",
-                                    interface=nutil.IdentityInterface(
-                                        fields=self.get_input_fields(),
-                                        mandatory_inputs=True))
-        self._output_node = npe.Node(name="Output",
-                                     interface=nutil.IdentityInterface(
-                                         fields=self.get_output_fields(),
-                                         mandatory_inputs=True))
+        if bids_dir:
+            self._sessions, self._subjects = get_subject_session_list(bids_dir, tsv_file)
+        else:
+            self._sessions = []
+            self._subjects = []
+        if self.get_input_fields():
+            self._input_node = npe.Node(name="Input",
+                                        interface=nutil.IdentityInterface(
+                                            fields=self.get_input_fields(),
+                                            mandatory_inputs=True))
+        else:
+            self._input_node = None
+        if self.get_output_fields():
+            self._output_node = npe.Node(name="Output",
+                                         interface=nutil.IdentityInterface(
+                                             fields=self.get_output_fields(),
+                                             mandatory_inputs=True))
+        else:
+            self._output_node = None
         npe.Workflow.__init__(self, self._name)
-        self.add_nodes([self.input_node, self.output_node])
+        if self.input_node: self.add_nodes([self.input_node])
+        if self.output_node: self.add_nodes([self.output_node])
 
     def run(self, plugin=None, plugin_args=None, update_hash=False):
         if not self.is_built:
