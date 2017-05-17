@@ -171,24 +171,28 @@ def load_modular_pipelines_parser():
     pipeline_cli_parsers = []
 
     # Clinica path
-    try:
+    if 'CLINICAPATH' in os.environ:
         clinica_path = os.environ['CLINICAPATH']
-    except KeyError:
+        if 'PYTHONPATH' in os.environ:
+            if not clinica_path in os.environ['PYTHONPATH']:
+                sys.path.append(clinica_path)
+    else:
         print("WARNING: Variable 'CLINICAPATH' is not defined.")
         return pipeline_cli_parsers
 
     # List pipeline directories and fetch CLI parser class of each pipeline
     for one_clinica_path in clinica_path.split(':'):
-        for pipeline_dir in os.listdir(one_clinica_path):
-            pipeline_src_dir = op.join(one_clinica_path, pipeline_dir, 'src')
-            if op.isdir(pipeline_src_dir):
-                for pipeline_file in os.listdir(pipeline_src_dir):
-                    if re.match(r".*_cli\.py$", pipeline_file) is not None:
-                        py_module_name, ext = op.splitext(op.split(pipeline_file)[-1])
-                        py_module = imp.load_source(py_module_name, op.join(pipeline_src_dir, pipeline_file))
-                        for class_name, class_obj in inspect.getmembers(py_module, inspect.isclass):
-                            if re.match(r".*CLI$", class_name) is not None:
-                                pipeline_cli_parsers.append(class_obj())
+        if op.isdir(one_clinica_path):
+            for pipeline_dir in os.listdir(one_clinica_path):
+                pipeline_path = op.join(one_clinica_path, pipeline_dir)
+                if op.isdir(pipeline_path):
+                    for pipeline_file in os.listdir(pipeline_path):
+                        if re.match(r".*_cli\.py$", pipeline_file) is not None:
+                            py_module_name, ext = op.splitext(op.split(pipeline_file)[-1])
+                            py_module = imp.load_source(py_module_name, op.join(pipeline_path, pipeline_file))
+                            for class_name, class_obj in inspect.getmembers(py_module, inspect.isclass):
+                                if re.match(r".*CLI$", class_name) is not None:
+                                    pipeline_cli_parsers.append(class_obj())
 
     return pipeline_cli_parsers
 
