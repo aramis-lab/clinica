@@ -37,15 +37,14 @@ def datagrabber_t1_freesurfer_pipeline(input_dir,
         :param: recon_all_args: str, the additional flags for reconAll command line, the default value will be set as
             '-qcache', which will run numerous back-to-back mris_preproc processes for your subjects.
 
-        return: Recon-wf_recon_all_with_datagrabber workflow
+        return: wf_recon_all_with_datagrabber workflow
     """
     import nipype.pipeline.engine as pe
-    import nipype.interfaces.io as nio
     import errno
     from nipype.interfaces.utility import Function
     from clinica.pipeline.t1.t1_freesurfer_utils import get_dirs_check_reconalled
     from clinica.pipeline.t1.t1_freesurfer_workflows import  t1_freesurfer_pipeline
-    from clinica.bids.utils.data_handling import create_subs_sess_list
+    from clinica.iotools.utils.data_handling import create_subs_sess_list
     import os
     from clinica.pipeline.t1.t1_freesurfer_utils import bids_datagrabber
     from tempfile import mkdtemp

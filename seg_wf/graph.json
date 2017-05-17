@@ -1,0 +1,32 @@
+[
+    {
+        "group": 1,
+        "imports": [],
+        "name": "0_selectfiles",
+        "size": 1
+    },
+    {
+        "group": 1,
+        "imports": [
+            "0_selectfiles"
+        ],
+        "name": "1_unzip",
+        "size": 1
+    },
+    {
+        "group": 1,
+        "imports": [
+            "1_unzip"
+        ],
+        "name": "2_new_segment",
+        "size": 1
+    },
+    {
+        "group": 1,
+        "imports": [
+            "2_new_segment"
+        ],
+        "name": "3_datasink",
+        "size": 1
+    }
+]
