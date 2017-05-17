@@ -4,8 +4,8 @@ Proptotype in order to generate automatique Pipeline
 from clinica.engine.cmdparser import CmdParser
 import abc
 import string
-from os.path import realpath,split,join,isdir
-from os import mkdir, getcwd
+from os.path import realpath,split,join,isdir,splitext
+from os import mkdir, getcwd, listdir
 
 
 def to_camel_case(text):
@@ -68,27 +68,39 @@ class CmdGenerateTemplates(CmdParser):
         self._name = 'template'
 
     def define_options(self):
-        self.template = [PipelineTemplate(), VisualizeTemplate()]
-        for template in self.template : template.add_argument(self._args)
-        self._args.add_argument("--name",
-                               required=True,
-                               help='The pipeline name')
+        self._args.add_argument("name",
+                                help='The pipeline title')
         self._args.add_argument("-d", "--output_dir",
                                 help='Define the path where generate the directory')
 
     def run_pipeline(self, args):
-        args.name = args.name.strip()
-
+        # Parsing input arguments
         if args.output_dir is None:
-            args.output_dir = join(getcwd(), '%s' % args.name)
+            args.output_dir = getcwd()
+        pipeline = dict()
+        pipeline['title'] = args.name
+        pipeline['module_name'] = pipeline['title'].replace(' ', '_').lower()
+        pipeline['class_name'] = pipeline['title'].replace(' ', '')
+        pipeline['command_name'] = pipeline['title'].replace(' ', '-').lower()
+        pipeline['dir'] = join(args.output_dir, pipeline['module_name'])
 
-        if isdir(args.output_dir) is False:
-            mkdir(args.output_dir)
+        from jinja2 import Environment, PackageLoader, select_autoescape
+        env = Environment(
+            loader=PackageLoader('clinica', 'resources/templates/pipeline_template'),
+            autoescape=select_autoescape(['py'])
+        )
 
-        for template in self.template :
-            with open(join(template.path_template(),template.file_template()),'r') as file_to_read:
-                with open(join(args.output_dir, template.file_to_generate(args)), 'w') as file_to_write:
-                    print "Generating template %s" % file_to_write.name
-                    file_to_write.write(string.Template(file_to_read.read()).substitute(template.dictionary(args)))
+        if not isdir(pipeline['dir']):
+            mkdir(pipeline['dir'])
 
-
+        for template_file in env.list_templates(extensions='j2'):
+            template = env.get_template(template_file)
+            rendered_file, template_ext = splitext(template_file)
+            rendered_filename, rendered_file_ext = splitext(rendered_file)
+            if rendered_file_ext == '.py' and rendered_filename != '__init__':
+                path_to_write = join(pipeline['dir'], pipeline['module_name'] + '_' + rendered_file)
+            else:
+                path_to_write = join(pipeline['dir'], rendered_file)
+            with open(path_to_write, 'w+') as file_to_write:
+                print "Generating template %s" % file_to_write.name
+                file_to_write.write(template.render(pipeline=pipeline))
