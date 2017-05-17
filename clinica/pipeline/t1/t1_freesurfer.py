@@ -45,7 +45,7 @@ def datagrabber_t1_freesurfer_pipeline(input_dir,
     from nipype.interfaces.utility import Function
     from clinica.pipeline.t1.t1_freesurfer_utils import get_dirs_check_reconalled
     from clinica.pipeline.t1.t1_freesurfer_workflows import  t1_freesurfer_pipeline
-    from clinica.bids.utils.data_handling import create_subs_sess_list
+    from clinica.iotools.utils.data_handling import create_subs_sess_list
     import os
     from clinica.pipeline.t1.t1_freesurfer_utils import bids_datagrabber
 
