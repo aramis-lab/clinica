@@ -48,6 +48,7 @@ def datagrabber_t1_freesurfer_pipeline(input_dir,
     from clinica.bids.utils.data_handling import create_subs_sess_list
     import os
     from clinica.pipeline.t1.t1_freesurfer_utils import bids_datagrabber
+    from tempfile import mkdtemp
 
     if subjects_visits_tsv is None:
         try:
@@ -55,8 +56,9 @@ def datagrabber_t1_freesurfer_pipeline(input_dir,
         except OSError as exception:
             if exception.errno != errno.EEXIST:  # if the error is not exist error, raise, otherwise, pass
                 raise
-        create_subs_sess_list(input_dir, output_dir)
-        subjects_visits_tsv = os.path.join(output_dir, 'subjects_sessions_list.tsv')
+        tmp_folder = mkdtemp()
+        create_subs_sess_list(input_dir, tmp_folder)
+        subjects_visits_tsv = os.path.join(tmp_folder, 'subjects_sessions_list.tsv')
 
     # Node to get the input vars
     inputnode = pe.Node(name='inputnode',

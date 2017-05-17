@@ -92,7 +92,10 @@ def datagrabber_t1_spm_segment_pipeline(input_directory,
     datasink.inputs.parameterization = False
     datasink.inputs.base_directory = output_directory
     datasink.inputs.container = ['subjects/' + subjects[i] + '/' + sessions[i] + '/t1/spm/segmentation' for i in range(len(subjects))]
-
+    datasink.inputs.regexp_substitutions = [
+        (r'([a-z]+[0-9])(.*)(.nii?.?.?g?z?)$', r'\2_\1\3'),
+        (r'([a-z]+_)(.*)(.nii?.?.?g?z?)', r'\2_\1\3')
+    ]
     seg_wf = pe.Workflow(name='seg_wf')
     seg_wf.base_dir = working_directory
     seg_wf.connect([
@@ -171,7 +174,9 @@ def datagrabber_t1_spm_dartel_template(output_directory,
     dartel_datasink.inputs.parameterization = False
     dartel_datasink.inputs.base_directory = output_directory
     dartel_datasink.inputs.container = ['subjects/' + subjects[i] + '/' + sessions[i] + '/t1/spm/dartel/group-' + group_id for i in range(len(subjects))]
-
+    dartel_datasink.inputs.regexp_substitutions = [
+        (r'([a-z]+?_?[a-z]+[0-9])(.*)(.nii?.?.?g?z?)$', r'\2_\1\3')
+    ]
     dartel_wf = pe.Workflow(name='dartel_wf')
     if working_directory is not None:
         dartel_wf.base_dir = working_directory
@@ -302,6 +307,10 @@ def datagrabber_t1_spm_full_pipeline(input_directory,
     seg_datasink.inputs.parameterization = False
     seg_datasink.inputs.base_directory = output_directory
     seg_datasink.inputs.container = ['subjects/' + subjects[i] + '/' + sessions[i] + '/t1/spm/segmentation' for i in range(len(subjects))]
+    seg_datasink.inputs.regexp_substitutions = [
+        (r'([a-z]+[0-9])(.*)(.nii?.?.?g?z?)$', r'\2_\1\3'),
+        (r'([a-z]+_)(.*)(.nii?.?.?g?z?)', r'\2_\1\3')
+    ]
 
     template_datasink = pe.Node(nio.DataSink(), name='template_datasink')
     template_datasink.inputs.parameterization = False
@@ -312,6 +321,9 @@ def datagrabber_t1_spm_full_pipeline(input_directory,
     dartel_datasink.inputs.parameterization = False
     dartel_datasink.inputs.base_directory = output_directory
     dartel_datasink.inputs.container = ['subjects/' + subjects[i] + '/' + sessions[i] + '/t1/spm/dartel/group-' + group_id for i in range(len(subjects))]
+    dartel_datasink.inputs.regexp_substitutions = [
+        (r'([a-z]+?_?[a-z]+[0-9])(.*)(.nii?.?.?g?z?)$', r'\2_\1\3')
+    ]
 
     preproc_wf = pe.Workflow(name='preproc_wf')
     if working_directory is not None:
@@ -328,3 +340,4 @@ def datagrabber_t1_spm_full_pipeline(input_directory,
     ])
 
     return preproc_wf
+
