@@ -3,11 +3,17 @@ def convert_genetics(clinical_data_path, genetics_files_paths, dest_dir, plink_f
 
     output_file_name = 'ADNI_1_GWAS_Human610-Quad_PlusAPOE'
 
+
+
     path_to_adnimerge = os.path.join(clinical_data_path, 'ADNIMERGE.csv')
     path_to_apoe = os.path.join(clinical_data_path, 'APOERES.csv')
     path_to_plink_files = os.path.join(genetics_files_paths, plink_file_name)
     path_to_new_plink_files = os.path.join(dest_dir, 'genetics',
                                            output_file_name)
+
+    if not os.path.exists(os.path.join(dest_dir, 'genetics')):
+        os.makedirs(os.path.join(dest_dir, 'genetics'))
+
     update_plink_files(path_to_adnimerge, path_to_apoe, path_to_plink_files, path_to_new_plink_files)
 
 
