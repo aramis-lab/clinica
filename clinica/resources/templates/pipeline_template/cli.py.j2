@@ -48,7 +48,7 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
             # Add your own pipeline parameters here to use them inside your
             # pipeline. See the file `{{ pipeline.module_name }}_pipeline.py` to
             # see an example of use.
-            'hello_word'        : args.hello_word_arg
+            'hello_word'        : args.hello_word_arg or 'Hello'
         }
         pipeline.base_dir = self.absolute_path(args.working_directory)
         if args.n_procs:
