@@ -446,8 +446,8 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
                                 help="Save list of classification results for each subject for each classification")
         self._args.add_argument("-sw", "--save_original_weights", action='store_true',
                                 help="Save feature weights for each classification as a matrix")
-        # self._args.add_argument("-sf", "--save_features_image", action='store_true',
-        #                         help="Save feature weights for each classification as an image")
+        self._args.add_argument("-sf", "--save_features_image", action='store_true',
+                                 help="Save feature weights for each classification as an image")
 
     def run_pipeline(self, args):
 
@@ -471,6 +471,44 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
                                               save_subject_classification=args.save_subject_classification,
                                               save_original_weights=args.save_original_weights,
                                               save_features_image=args.save_features_image)
+
+class CmdParserMachineLearningVBLinearSVM(CmdParser):
+
+    def define_name(self):
+        self._name = 'ml-rb-linear-svm'
+
+    def define_options(self):
+        self._args.add_argument("caps_directory",
+                                help='Directory where the input NIFTI images are stored')
+        self._args.add_argument("subjects_visits_tsv",
+                                help='TSV file with subjects and sessions to be processed')
+        self._args.add_argument("group_id",
+                                help='Current group name')
+        self._args.add_argument("diagnoses_tsv",
+                                help='TSV file with subjects diagnoses')
+        self._args.add_argument("-b", "--balanced", type=bool, default=True,
+                                help='Balance the weights of subjects for the SVM proportionally to their number in each class')
+        self._args.add_argument("-cv", "--cv_folds", type=int, default=10,
+                                help='Number of folds to use in the cross validation')
+        self._args.add_argument("-fc", "--folds_c", type=int, default=10,
+                                help='Number of folds to use in the cross validation to determine parameter C')
+        self._args.add_argument("-np", "--n_procs", type=int, default=4,
+                                help='Number of parallel processes to run')
+        self._args.add_argument("-crl", "--c_range_logspace", nargs=3, type=int, default=[-6, 2, 17],
+                                help="numpy logspace function arguments defining the range of search for SVM parameter C. Ex: -6 2 17")
+        self._args.add_argument("-sgm", "--save_gram_matrix", action='store_true',
+                                help="Save gram matrix for each classification as a matrix")
+        self._args.add_argument("-sc", "--save_subject_classification", action='store_true',
+                                help="Save list of classification results for each subject for each classification")
+        self._args.add_argument("-sw", "--save_original_weights", action='store_true',
+                                help="Save feature weights for each classification as a matrix")
+        self._args.add_argument("-sf", "--save_features_image", action='store_true',
+                                 help="Save feature weights for each classification as an image")
+
+    def run_pipeline(self, args):
+        from clinica.pipeline.machine_learning.region_based_svm import svm_binary_classification
+        from clinica.pipeline.machine_learning.region_based_io import get_caps_pet_list,get_caps_t1_list,load_data
+        from numpy import logspace
 
 
 class CmdParserT1FSL(CmdParser):
@@ -928,7 +966,7 @@ class CmdParserHmtcToBids(CmdParser):
                                 help='Path to the BIDS directory.')
 
     def run_pipeline(self, args):
-        from clinica.bids import hmtc_to_bids
+        from clinica.iotools import hmtc_to_bids
         hmtc_to_bids.convert(args.dataset_directory, args.bids_directory)
 
 
@@ -946,7 +984,7 @@ class CmdParserSubsSess(CmdParser):
                             help='(Optional) Name of the output file.')
 
     def run_pipeline(self, args):
-        from clinica.bids.utils import data_handling as dt
+        from clinica.iotools.utils import data_handling as dt
         dt.create_subs_sess_list(args.bids_dir, args.out_directory, args.output_name)
 
 class CmdParserMergeTsv(CmdParser):
@@ -964,7 +1002,7 @@ class CmdParserMergeTsv(CmdParser):
 
 
     def run_pipeline(self, args):
-        from clinica.bids.utils import data_handling as dt
+        from clinica.iotools.utils import data_handling as dt
         dt.create_merge_file(args.bids_dir, args.out_directory, args.true_false_mode)
 
 class CmdParserMissingModalities(CmdParser):
@@ -983,5 +1021,5 @@ class CmdParserMissingModalities(CmdParser):
 
 
     def run_pipeline(self, args):
-        from clinica.bids.utils import data_handling as dt
+        from clinica.iotools.utils import data_handling as dt
         dt.compute_missing_mods(args.bids_dir, args.out_directory, args.output_prefix)
