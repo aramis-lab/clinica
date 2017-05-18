@@ -37,7 +37,9 @@ setup(
         'argcomplete>=1.4.1',
         'pandas>=0.18.1',
         'nose>=1.3.7',
-        'jinja2>=2.9'
+        'jinja2>=2.9',
+        'xvfbwrapper>=0.2.8',
+	'six>=1.9.0'
     ],
     data_files=[('clinica', ['LICENSE.txt', 'clinica/VERSION'])],
 )
