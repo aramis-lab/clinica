@@ -20,7 +20,7 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
         #                         help='Path to the BIDS directory.')
         # self._args.add_argument("caps_directory",
         #                         help='Path to the CAPS directory.')
-        # self._args.add_argument("subjects_sessions_tsv",
+        # self._args.add_argument("-tsv", "--subjects_sessions_tsv",
         #                         help='TSV file containing the subjects with their sessions.')
         # Add your own pipeline command line arguments here to be used in the
         # method below. Example below:
@@ -35,7 +35,7 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
     def run_pipeline(self, args):
         """
         """
-        from {{ pipeline.module_name }}.{{ pipeline.module_name }}_pipeline import {{ pipeline.class_name }}
+        from {{ pipeline.module_name }}_pipeline import {{ pipeline.class_name }}
 
         # Most of the time, you will want to instantiate your pipeline with a
         # BIDS and CAPS directory as inputs:
