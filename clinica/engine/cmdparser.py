@@ -77,24 +77,7 @@ class CmdParser:
         else:
             return join(getcwd(), arg)
 
-
-
-
-def get_cmdparser_objects():
-    """UTIL: read all derived classes of CmdParser
-
-    :return: all derived instance of CmdParser present to this file
-    """
-
-    import inspect
-    import clinica.engine.cmdparser
-    for name, obj in inspect.getmembers(clinica.engine.cmdparser):
-        if name != 'CmdParser' and inspect.isclass(obj):
-            x = obj()
-            if isinstance(x, clinica.engine.cmdparser.CmdParser):
-                yield x
-
-def init_cmdparser_objects(rootparser, parser, objects=None):
+def init_cmdparser_objects(rootparser, parser, objects):
     """UTIL:Init all derived CmdParser instances with specific data
 
     :param parser: the ArgParser node
@@ -115,8 +98,11 @@ def init_cmdparser_objects(rootparser, parser, objects=None):
         x.options.error = error_message(x.options)
         x.options.set_defaults(func=x.run_pipeline)
         x.build()
-    if objects is None: objects = get_cmdparser_objects()
-    [init(x) for x in objects]
+    for x in objects:
+        try:
+            init(x)
+        except:pass
+
 
 def get_cmdparser_names(objects=None):
     """Return the names of all pipelines
