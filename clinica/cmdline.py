@@ -173,18 +173,21 @@ def load_modular_pipelines_parser():
     # Clinica path
     if 'CLINICAPATH' in os.environ:
         clinica_path = os.environ['CLINICAPATH']
-        if 'PYTHONPATH' in os.environ:
-            if not clinica_path in os.environ['PYTHONPATH']:
-                sys.path.append(clinica_path)
     else:
         print("WARNING: Variable 'CLINICAPATH' is not defined.")
         return pipeline_cli_parsers
+
+    # Current path
+    if os.getcwd() not in clinica_path.split(':'):
+        clinica_path = clinica_path + ':' + os.getcwd()
 
     # List pipeline directories and fetch CLI parser class of each pipeline
     for one_clinica_path in clinica_path.split(':'):
         if op.isdir(one_clinica_path):
             for pipeline_dir in os.listdir(one_clinica_path):
                 pipeline_path = op.join(one_clinica_path, pipeline_dir)
+                if not pipeline_path in os.environ['PYTHONPATH']:
+                    sys.path.append(pipeline_path)
                 if op.isdir(pipeline_path):
                     for pipeline_file in os.listdir(pipeline_path):
                         if re.match(r".*_cli\.py$", pipeline_file) is not None:
