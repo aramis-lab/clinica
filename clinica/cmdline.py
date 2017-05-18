@@ -186,7 +186,7 @@ def load_modular_pipelines_parser():
         if op.isdir(one_clinica_path):
             for pipeline_dir in os.listdir(one_clinica_path):
                 pipeline_path = op.join(one_clinica_path, pipeline_dir)
-                if not pipeline_path in sys.path
+                if not pipeline_path in sys.path:
                     sys.path.append(pipeline_path)
                 if op.isdir(pipeline_path):
                     for pipeline_file in os.listdir(pipeline_path):
