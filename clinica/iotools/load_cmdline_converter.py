@@ -15,12 +15,12 @@ def load_cmdline_converters():
             if re.match('(.*)\.pyc$',file):
                 continue
 
-            f = "clinica.bids.converters.%s" % file.split('.')[0]
+            f = "clinica.iotools.converters.%s" % file.split('.')[0]
             mod = importlib.import_module(f)
             for name, obj in inspect.getmembers(mod):
                 if name != 'CmdParser' and name != 'Converter' and inspect.isclass(obj):
                     x = obj()
-                    if isinstance(x, clinica.engine.cmdparser.CmdParser) and isinstance(x, clinica.bids.abstract_converter.Converter):
+                    if isinstance(x, clinica.engine.cmdparser.CmdParser) and isinstance(x, clinica.iotools.abstract_converter.Converter):
                         yield x
 
 def load_name_converters():
