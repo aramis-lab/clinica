@@ -40,14 +40,14 @@ def datagrabber_t1_freesurfer_pipeline(input_dir,
         return: Recon-wf_recon_all_with_datagrabber workflow
     """
     import nipype.pipeline.engine as pe
-    import nipype.interfaces.io as nio
+    from tempfile import mkdtemp
     import errno
     from nipype.interfaces.utility import Function
     from clinica.pipeline.t1.t1_freesurfer_utils import get_dirs_check_reconalled
     from clinica.pipeline.t1.t1_freesurfer_workflows import  t1_freesurfer_pipeline
     from clinica.iotools.utils.data_handling import create_subs_sess_list
     import os
-    from clinica.pipeline.t1.t1_freesurfer_utils import bids_datagrabber
+    from clinica.pipeline.t1.t1_freesurfer_utils import bids_datagrabber, absolute_path
 
     if subjects_visits_tsv is None:
         try:
@@ -91,6 +91,10 @@ def datagrabber_t1_freesurfer_pipeline(input_dir,
     # datagrabbernode.inputs.template_args = dict(anat_t1=[['subject_list', 'session_list', 'subject_repeat',
     #                                                       'session_repeat']])
     # datagrabbernode.inputs.sort_filelist = False
+    if working_directory is None:
+        working_directory = mkdtemp()
+    else:
+        working_directory = absolute_path(working_directory)
 
     datagrabber_recon_all = t1_freesurfer_pipeline(output_dir,
                            working_directory=working_directory,
