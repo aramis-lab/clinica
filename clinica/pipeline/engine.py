@@ -41,12 +41,12 @@ class Pipeline(npe.Workflow):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, bids_dir=None, caps_dir=None, tsv_file=None, name=None):
+    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None):
         """
         """
         self._is_built = False
-        self._input_dir = bids_dir
-        self._output_dir = caps_dir
+        self._input_dir = bids_directory
+        self._output_dir = caps_directory
         self._verbosity = 'debug'
         self._tsv_file = tsv_file
         if name:
@@ -54,8 +54,8 @@ class Pipeline(npe.Workflow):
         else:
             self._name = self.__class__.__name__
         self._parameters = {}
-        if bids_dir:
-            self._sessions, self._subjects = get_subject_session_list(bids_dir, tsv_file)
+        if bids_directory:
+            self._sessions, self._subjects = get_subject_session_list(bids_directory, tsv_file)
         else:
             self._sessions = []
             self._subjects = []

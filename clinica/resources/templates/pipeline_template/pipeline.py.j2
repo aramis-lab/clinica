@@ -3,9 +3,10 @@ This file has been generated automatically by the `clinica generate template`
 command line tool. See here for more details: https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
 """
 
-
-import nipype.pipeline.engine as npe
-import nipype.interfaces.utility as nutil
+# WARNING: Don't put any import statement here except if it's absolutly
+# necessary. Put it *inside* the different methods.
+# Otherwise it will slow down the dynamic loading of the pipelines list by the
+# command line tool.
 import clinica.pipeline.engine as cpe
 
 
@@ -65,6 +66,8 @@ class {{ pipeline.class_name }}(cpe.Pipeline):
         """Build and connect an input node to the pipeline.
         """
 
+        import nipype.pipeline.engine as npe
+
         # This node is supposedly used to load BIDS inputs when this pipeline is
         # not already connected to the output of a previous Clinica pipeline.
         # For the purpose of the example, we simply read input arguments given
@@ -100,6 +103,8 @@ class {{ pipeline.class_name }}(cpe.Pipeline):
         """
 
         import {{ pipeline.module_name }}.{{ pipeline.module_name }}_utils as utils
+        import nipype.interfaces.utility as nutil
+        import nipype.pipeline.engine as npe
 
         # Step 1
         # ======

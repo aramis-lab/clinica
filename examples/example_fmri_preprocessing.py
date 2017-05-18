@@ -12,7 +12,9 @@ pipeline.parameters = {
     'blip_direction': 1,
     'total_readout_time': 15.6799
 }
+
 pipeline.base_dir = '/Users/jeremy.guillon/Tmp2'
 pipeline.build()
 pipeline.write_graph()
+
 pipeline.run(plugin='MultiProc', plugin_args={'n_procs' : 2})

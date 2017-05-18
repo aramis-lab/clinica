@@ -6,9 +6,13 @@
 """
 
 from clinica.pipeline.fmri.preprocessing import FMRIPreprocessing
+import nipype.pipeline.engine as npe
+import clinica.pipeline.engine as cpe
 
-pipeline1 = FMRIPreprocessing('/Users/jeremy.guillon/Repositories/multiconproject/data/HMTC_BIDS',
-                              '/Users/jeremy.guillon/Repositories/multiconproject/data/HMTC_CAPS', name="A")
+
+# Pipeline 1
+# ==========
+pipeline1 = FMRIPreprocessing(name="A", bids_dir='/Users/jeremy.guillon/Repositories/multiconproject/data/HMTC_BIDS')
 pipeline1.parameters = {
     'num_slices': 45,
     'time_repetition': 2.4,
@@ -16,12 +20,13 @@ pipeline1.parameters = {
     'blip_direction': 1,
     'total_readout_time': 15.6799
 }
-pipeline1.base_dir = '/Users/jeremy.guillon/Tmp2'
 pipeline1.build_core_nodes()
 pipeline1.build_input_node()
 
-pipeline2 = FMRIPreprocessing('/Users/jeremy.guillon/Repositories/multiconproject/data/HMTC_BIDS',
-                              '/Users/jeremy.guillon/Repositories/multiconproject/data/HMTC_CAPS', name="B")
+
+# Pipeline 2
+# ==========
+pipeline2 = FMRIPreprocessing(name="B", caps_dir='/Users/jeremy.guillon/Repositories/multiconproject/data/HMTC_CAPS')
 pipeline2.parameters = {
     'num_slices': 45,
     'time_repetition': 2.4,
@@ -29,16 +34,13 @@ pipeline2.parameters = {
     'blip_direction': 1,
     'total_readout_time': 15.6799
 }
-pipeline2.base_dir = '/Users/jeremy.guillon/Tmp2'
 pipeline2.build_core_nodes()
 pipeline2.build_output_node()
 
-# clinica.engine.connect([pipeline1:'Output.mc_params', pipeline2:'Input.phasediff'])
 
-
-
-import nipype.pipeline.engine as npe
-
+# Workflow of pipelines
+# =====================
 wf = npe.Workflow("BigOne")
 wf.connect(pipeline1, 'Output.mc_params', pipeline2, 'Input.phasediff')
+wf.base_dir = '/Users/jeremy.guillon/Tmp2'
 wf.write_graph()
