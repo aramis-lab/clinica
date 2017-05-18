@@ -66,6 +66,7 @@ class {{ pipeline.class_name }}(cpe.Pipeline):
         """Build and connect an input node to the pipeline.
         """
 
+        import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
         # This node is supposedly used to load BIDS inputs when this pipeline is
@@ -102,7 +103,7 @@ class {{ pipeline.class_name }}(cpe.Pipeline):
         """Build and connect the core nodes of the pipeline.
         """
 
-        import {{ pipeline.module_name }}.{{ pipeline.module_name }}_utils as utils
+        import {{ pipeline.module_name }}_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
