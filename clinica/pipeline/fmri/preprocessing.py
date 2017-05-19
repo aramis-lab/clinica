@@ -89,8 +89,8 @@ class FMRIPreprocessing(cpe.Pipeline):
         - [ ] Add support of gzipped nifti inputs.
 
     Args:
-        input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be written.
+        bids_directory: A BIDS directory.
+        caps_directory: An empty output directory where CAPS structured data will be written.
         subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
 
     Returns:
@@ -146,7 +146,7 @@ class FMRIPreprocessing(cpe.Pipeline):
         write_node = npe.MapNode(name='WritingCAPS',
                                   iterfield=['container'] + self.get_output_fields(),
                                   interface=nio.DataSink(infields=self.get_output_fields()))
-        write_node.inputs.base_directory = self.output_dir
+        write_node.inputs.base_directory = self.caps_directory
         write_node.inputs.parameterization = False
         write_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
                                         '/fmri/preprocessing' for i in range(len(self.subjects))]

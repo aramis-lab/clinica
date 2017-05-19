@@ -129,11 +129,12 @@ class ClinicaClassLoader:
         if not os.environ.has_key(self.env):
             return pipeline_cli_parsers
 
-        clinicapath = join(os.environ[self.env],self.extra_dir)
-        if not os.path.isdir(clinicapath):
+        clinica_pipelines_path = join(os.environ[self.env],self.extra_dir)
+        if not os.path.isdir(clinica_pipelines_path):
             return pipeline_cli_parsers
 
-        src_path = self.discover_path_with_subdir(clinicapath)
+        src_path = self.discover_path_with_subdir(clinica_pipelines_path)
+        self.add_to_python_path(src_path)
         files_match = self.find_files(src_path, self.reg)
 
         for file in files_match:
@@ -151,6 +152,12 @@ class ClinicaClassLoader:
                 x = class_obj()
                 if isinstance(x, baseclass):
                     return x
+
+    def add_to_python_path(self, paths):
+        for p in paths:
+            if not p in sys.path:
+                sys.path.append(p)
+
 
     def discover_path_with_subdir(self, path):
         return [os.path.join(path, file) for file in os.listdir(path) if os.path.isdir(os.path.join(path, file))]
@@ -300,6 +307,7 @@ def execute():
     from clinica.engine import CmdParser
     run_parser = sub_parser.add_parser('run')
     pipelines = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
+    # pipelines = load_modular_pipelines_parser()
     pipelines = pipelines + [CmdParserT1SPMFullPrep(), CmdParserT1SPMSegment(),
                  CmdParserT1SPMDartelTemplate(), CmdParserPETPreprocessing(),
                  CmdParserT1FreeSurfer(), CmdParserT1FSL(),
