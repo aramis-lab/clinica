@@ -300,6 +300,7 @@ def execute():
     from clinica.engine import CmdParser
     run_parser = sub_parser.add_parser('run')
     pipelines = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
+    # pipelines = load_modular_pipelines_parser()
     pipelines = pipelines + [CmdParserT1SPMFullPrep(), CmdParserT1SPMSegment(),
                  CmdParserT1SPMDartelTemplate(), CmdParserPETPreprocessing(),
                  CmdParserT1FreeSurfer(), CmdParserT1FSL(),

@@ -45,8 +45,8 @@ class Pipeline(npe.Workflow):
         """
         """
         self._is_built = False
-        self._input_dir = bids_directory
-        self._output_dir = caps_directory
+        self._bids_directory = bids_directory
+        self._caps_directory = caps_directory
         self._verbosity = 'debug'
         self._tsv_file = tsv_file
         if name:
@@ -108,10 +108,10 @@ class Pipeline(npe.Workflow):
     def output_node(self): return self._output_node
 
     @property
-    def input_dir(self): return self._input_dir
+    def bids_directory(self): return self._bids_directory
 
     @property
-    def output_dir(self): return self._output_dir
+    def caps_directory(self): return self._caps_directory
 
     @property
     def subjects(self): return self._subjects
@@ -123,7 +123,7 @@ class Pipeline(npe.Workflow):
     def tsv_file(self): return self._tsv_file
 
     @property
-    def bids_layout(self): return BIDSLayout(self.input_dir)
+    def bids_layout(self): return BIDSLayout(self.bids_directory)
 
     @abc.abstractmethod
     def build_core_nodes(self): pass
