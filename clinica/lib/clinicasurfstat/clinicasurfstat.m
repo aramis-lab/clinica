@@ -289,7 +289,7 @@ switch glmtype
         if strfind(contrast, '-')
                 slm = SurfStatT( slm, -contrastpos );
                 strs = strsplit(contrast,'-');
-                contrast = strs(2);
+                contrast = char(strs(2));
                 contrastsign = 'negative';
         else
                 slm = SurfStatT( slm, contrastpos );
