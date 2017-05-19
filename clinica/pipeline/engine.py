@@ -82,12 +82,20 @@ class Pipeline(npe.Workflow):
             self.build()
         npe.Workflow.run(self, plugin, plugin_args, update_hash)
 
+    def has_input_connections(self):
+        return self._graph.in_degree(self.input_node) > 0
+
+    def has_output_connections(self):
+        return self._graph.out_degree(self.output_node) > 0
+
     @postset('is_built', True)
     def build(self):
-        self.build_core_nodes()
-        if not self._hierarchy:
-            self.build_input_node()
-            self.build_output_node()
+        if not self.is_built:
+            self.build_core_nodes()
+            if not self.has_input_connections():
+                self.build_input_node()
+            if not self.has_output_connections():
+                self.build_output_node()
 
     @property
     def is_built(self): return self._is_built
