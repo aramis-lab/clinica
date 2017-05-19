@@ -111,16 +111,16 @@ def load_conf(args):
     return wk
 
 
-class PipelineLoader:
+class ClinicaClassLoader:
     from clinica.pipeline.engine import Pipeline
     """
     Load pipelines from a custom locations (general from $HOME/clinica)
     """
-    def __init__(self,env='CLINICAPATH',baseclass=Pipeline,dir='src',reg=r".*_cli\.py$"):
+    def __init__(self,env='CLINICAPATH',baseclass=Pipeline,reg=r".*_cli\.py$", extra_dir=""):
         self.env = env
         self.baseclass = baseclass
-        self.dir = dir
         self.reg = reg
+        self.extra_dir = extra_dir
 
     def load(self):
         import os
@@ -129,32 +129,31 @@ class PipelineLoader:
         if not os.environ.has_key(self.env):
             return pipeline_cli_parsers
 
-        paths = self.extract_existing_paths(os.environ[self.env])
-        src_path = self.discover_path_with_subdir(paths, self.dir)
-        files_match = self.find_files(src_path, self.reg)
+        clinicapath = join(os.environ[self.env],self.extra_dir)
+        if not os.path.isdir(clinicapath):
+            return pipeline_cli_parsers
+
+        src_path = self.discover_path_with_subdir(clinicapath)
         files_match = self.find_files(src_path, self.reg)
 
-        for file in files_match :
+        for file in files_match:
             pipeline_cli_parsers.append(self.load_class(self.baseclass, file))
 
         return pipeline_cli_parsers
 
-    def load_class(self, basename, file):
+    def load_class(self, baseclass, file):
         import imp
         import inspect
         py_module_name, ext = os.path.splitext(os.path.split(file)[-1])
         py_module = imp.load_source(py_module_name, file)
         for class_name, class_obj in inspect.getmembers(py_module, inspect.isclass):
-            x = class_obj()
-            if isinstance(x, self.baseclass):
-                return x
+            if inspect.isclass(class_obj) and not inspect.isabstract(class_obj):
+                x = class_obj()
+                if isinstance(x, baseclass):
+                    return x
 
-    def extract_existing_paths(self, paths):
-        return [path for path in paths.split(':') if os.path.isdir(path)]
-
-    def discover_path_with_subdir(self, paths, dir):
-        def build_absolut_path(base, path, dir): return os.path.join(base, path, dir)
-        return [build_absolut_path(path, file, dir) for path in paths for file in os.listdir(path) if os.path.isdir(build_absolut_path(path, file, dir))]
+    def discover_path_with_subdir(self, path):
+        return [os.path.join(path, file) for file in os.listdir(path) if os.path.isdir(os.path.join(path, file))]
 
     def find_files(self, paths, reg):
         import re
@@ -186,7 +185,7 @@ def load_modular_pipelines_parser():
         if op.isdir(one_clinica_path):
             for pipeline_dir in os.listdir(one_clinica_path):
                 pipeline_path = op.join(one_clinica_path, pipeline_dir)
-                if not pipeline_path in os.environ['PYTHONPATH']:
+                if not pipeline_path in sys.path:
                     sys.path.append(pipeline_path)
                 if op.isdir(pipeline_path):
                     for pipeline_file in os.listdir(pipeline_path):
@@ -205,9 +204,9 @@ class CmdlineCache():
         self.converters = None
         self.io_options = None
 
-    def setup_converters(self):
-        from clinica.iotools.load_cmdline_converter import load_cmdline_converters
-        self.converters = load_cmdline_converters()
+    def setup_converters(self):pass
+        #from clinica.iotools.load_cmdline_converter import load_cmdline_converters
+        #self.converters = load_cmdline_converters()
 
     def setup_io_options(self):
         self.io_options = [CmdParserSubsSess(), CmdParserMergeTsv(), CmdParserMissingModalities()]
@@ -249,8 +248,8 @@ class CmdlineHelper():
 
 def execute():
 
-    cmdline_helper = CmdlineHelper()
-    cmdline_cache = cmdline_helper.load_cache()
+    #cmdline_helper = CmdlineHelper()
+    #cmdline_cache = cmdline_helper.load_cache()
 
     """
     Define and parse the command line argument
@@ -278,11 +277,12 @@ def execute():
 
     """
     shell option: re-open a nipype.Workflow object within python/ipython session
+    TODO: complete for future release
     """
-    shell_parser = sub_parser.add_parser('shell')
-    def shell_parser_fun(args):
-        shell(load_conf(args[1:]))
-    shell_parser.set_defaults(func=shell_parser_fun)
+    #shell_parser = sub_parser.add_parser('shell')
+    #def shell_parser_fun(args):
+    #    shell(load_conf(args[1:]))
+    #shell_parser.set_defaults(func=shell_parser_fun)
 
 
     """
@@ -297,10 +297,9 @@ def execute():
     """
     run option: run one of the available pipelines
     """
+    from clinica.engine import CmdParser
     run_parser = sub_parser.add_parser('run')
-    #adding the independent pipeline ArgumentParser objects
-    # init_cmdparser_objects(run_parser.add_subparsers())
-    pipelines = load_modular_pipelines_parser()
+    pipelines = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
     pipelines = pipelines + [CmdParserT1SPMFullPrep(), CmdParserT1SPMSegment(),
                  CmdParserT1SPMDartelTemplate(), CmdParserPETPreprocessing(),
                  CmdParserT1FreeSurfer(), CmdParserT1FSL(),
@@ -313,9 +312,10 @@ def execute():
     """
     convert option: convert one of the supported dataset to the BIDS specification
     """
-    convert_parser = sub_parser.add_parser('convert')
-    from clinica.iotools.load_cmdline_converter import load_cmdline_converters
-    init_cmdparser_objects(parser, convert_parser.add_subparsers(), load_cmdline_converters())
+    converters = ClinicaClassLoader(baseclass=CmdParser, extra_dir="iotools/converters", reg=r".*_bids\.py$").load()
+    if (len(converters)):
+        convert_parser = sub_parser.add_parser('convert')
+        init_cmdparser_objects(parser, convert_parser.add_subparsers(), converters)
 
     """
     generate option: template
@@ -339,7 +339,7 @@ def execute():
             parser.print_help = silent_help
             exit(-1)
         return error
-    for p in [vis_parser, shell_parser, pipeline_list_parser, run_parser]: p.error = single_error_message(p)
+    for p in [vis_parser, pipeline_list_parser, run_parser]: p.error = single_error_message(p)
 
     #Do not want stderr message
     def silent_msg(x): pass
