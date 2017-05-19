@@ -1,4 +1,0 @@
-[submodule "examples/external-data"]
-	path = examples/external-data
-	url = https://gitlab.icm-institute.org/aramislab/clinica-data.git
-
