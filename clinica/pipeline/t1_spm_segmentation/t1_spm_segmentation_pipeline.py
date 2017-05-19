@@ -1,0 +1,251 @@
+"""T1 SPM Segmentation - Clinica Pipeline.
+This file has been generated automatically by the `clinica generate template`
+command line tool. See here for more details: https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
+"""
+
+
+import clinica.pipeline.engine as cpe
+
+
+class T1SPMSegmentation(cpe.Pipeline):
+    """T1 SPM Segmentation SHORT DESCRIPTION.
+
+    Warnings:
+        - A WARNING.
+
+    Todos:
+        - [x] A FILLED TODO ITEM.
+        - [ ] AN ON-GOING TODO ITEM.
+
+    Args:
+        bids_directory: A BIDS directory.
+        caps_directory: An empty output directory where CAPS structured data will be written.
+        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
+
+    Returns:
+        A clinica pipeline object containing the T1 SPM Segmentation pipeline.
+
+    Raises:
+
+
+    Example:
+        >>> from t1_spm_segmentation import T1SPMSegmentation
+        >>> pipeline = T1SPMSegmentation('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
+        >>> pipeline.parameters = {
+        >>>     # ...
+        >>> }
+        >>> pipeline.base_dir = '/tmp/'
+        >>> pipeline.run()
+    """
+
+    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None):
+        super(T1SPMSegmentation, self).__init__(bids_directory, caps_directory, tsv_file, name)
+        # Default parameters
+        self._parameters = {'tissue_classes': [1, 2, 3],
+                           'dartel_tissues': [1, 2, 3],
+                           'save_warped_unmodulated': False,
+                           'save_warped_modulated': False,
+                           'affine_regularization': None,
+                           'channel_info': None,
+                           'sampling_distance': None,
+                           'warping_regularization': None,
+                           'write_deformation_fields': None
+                           }
+
+    def get_input_fields(self):
+        """Specify the list of possible inputs of this pipeline.
+
+        Returns:
+            A list of (string) input fields name.
+        """
+
+        return ['input_images']
+
+    def get_output_fields(self):
+        """Specify the list of possible outputs of this pipeline.
+
+        Returns:
+            A list of (string) output fields name.
+        """
+
+        return ['bias_corrected_images',
+                'bias_field_images',
+                'dartel_input_images',
+                'forward_deformation_field',
+                'inverse_deformation_field',
+                'modulated_class_images',
+                'native_class_images',
+                'normalized_class_images',
+                'transformation_mat']
+
+    def build_input_node(self):
+        """Build and connect an input node to the pipeline.
+        """
+
+        # This node is supposedly used to load BIDS inputs when this pipeline is
+        # not already connected to the output of a previous Clinica pipeline.
+        # For the purpose of the example, we simply read input arguments given
+        # by the command line interface and transmitted here through the
+        # `self.parameters` dictionary and pass it to the `self.input_node` to
+        # further by used as input of the core nodes.
+
+        import nipype.pipeline.engine as npe
+        import nipype.interfaces.utility as nutil
+        import t1_spm_segmentation_utils as utils
+
+        # Reading BIDS
+        # ============
+        read_node = npe.Node(name="read_node",
+                             interface=nutil.IdentityInterface(fields=['bids_images'],
+                                                               mandatory_inputs=True))
+        read_node.inputs.bids_images = utils.select_bids_images(self.subjects, self.sessions, 'T1w', self.bids_layout)
+
+        self.connect([
+            (read_node, self.input_node, [('bids_images', 'input_images')])
+        ])
+
+    def build_output_node(self):
+        """Build and connect an output node to the pipeline.
+        """
+
+        # In the same idea as the input node, this output node is supposedly
+        # used to write the output fields in a CAPS. It should be executed only
+        # if this pipeline output is not already connected to a next Clinica
+        # pipeline.
+
+        import nipype.pipeline.engine as npe
+        import t1_spm_segmentation_utils as utils
+        import nipype.interfaces.io as nio
+        from clinica.utils.io import zip_nii
+
+        # Writing CAPS
+        # ============
+        datasink_infields = ['native_space', 'dartel_input']
+
+        datasink_connections = [(('native_class_images', utils.group_nested_images_by_subject, True), 'native_space'),
+                                (('dartel_input_images', utils.group_nested_images_by_subject, True), 'dartel_input')]
+
+        if self.parameters['save_warped_unmodulated']:
+            datasink_connections.append(
+                (('normalized_class_images', utils.group_nested_images_by_subject, True), 'normalized'))
+            datasink_infields.append('normalized')
+
+        if self.parameters['save_warped_modulated']:
+            datasink_connections.append(
+                (('modulated_class_images', utils.group_nested_images_by_subject, True), 'modulated_normalized'))
+            datasink_infields.append('modulated_normalized')
+
+        if self.parameters['write_deformation_fields'] is not None:
+            if self.parameters['write_deformation_fields'][0]:
+                datasink_connections.append((('inverse_deformation_field', zip_nii, True), 'inverse_deformation_field'))
+                datasink_infields.append('inverse_deformation_field')
+            if self.parameters['write_deformation_fields'][1]:
+                datasink_connections.append((('forward_deformation_field', zip_nii, True), 'forward_deformation_field'))
+                datasink_infields.append('forward_deformation_field')
+
+        datasink_iterfields = ['container'] + datasink_infields
+        write_node = npe.MapNode(name='WritingCAPS',
+                                 iterfield=datasink_iterfields,
+                                 interface=nio.DataSink(infields=datasink_infields))
+        write_node.inputs.base_directory = self.caps_directory
+        write_node.inputs.parameterization = False
+        write_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] + '/t1/spm/segmentation'
+                                       for i in range(len(self.subjects))]
+
+        write_node.inputs.regexp_substitutions = [
+            (r'(.*)(c1)(sub-.*)(\.nii(\.gz)?)$', r'\1\3_segm-graymatter\4'),
+            (r'(.*)(c2)(sub-.*)(\.nii(\.gz)?)$', r'\1\3_segm-whitematter\4'),
+            (r'(.*)(c3)(sub-.*)(\.nii(\.gz)?)$', r'\1\3_segm-csf\4'),
+            (r'(.*)(c4)(sub-.*)(\.nii(\.gz)?)$', r'\1\3_segm-bone\4'),
+            (r'(.*)(c5)(sub-.*)(\.nii(\.gz)?)$', r'\1\3_segm-softtissue\4'),
+            (r'(.*)(c6)(sub-.*)(\.nii(\.gz)?)$', r'\1\3_segm-background\4'),
+            (r'(.*)(/native_space/sub-.*)(\.nii(\.gz)?)$', r'\1\2_probability\3'),
+            (r'(.*)(/([a-z]+)_deformation_field/)i?y_(sub-.*)(\.nii(\.gz)?)$', r'\1/normalized_space/\4_target-Ixi549Space_transformation-\3_deformation\5'),
+            (r'(.*)(/modulated_normalized/)mw(sub-.*)(\.nii(\.gz)?)$', r'\1/normalized_space/\3_space-Ixi549Space_modulated-on_probability\4'),
+            (r'(.*)(/normalized/)w(sub-.*)(\.nii(\.gz)?)$', r'\1/normalized_space/\3_space-Ixi549Space_modulated-off_probability\4'),
+            (r'(.*/dartel_input/)r(sub-.*)(\.nii(\.gz)?)$', r'\1\2_dartelinput\3'),
+            (r'trait_added', r'')
+        ]
+
+        self.connect([
+            # Writing CAPS
+            (self.output_node, write_node, datasink_connections)
+        ])
+
+    def build_core_nodes(self):
+        """Build and connect the core nodes of the pipeline.
+        """
+
+        import os
+        import os.path as op
+        import nipype.interfaces.spm as spm
+        import nipype.interfaces.matlab as mlab
+        import nipype.pipeline.engine as npe
+        import nipype.interfaces.utility as nutil
+        import t1_spm_segmentation_utils as utils
+        from clinica.utils.io import unzip_nii
+
+        spm_home = os.getenv("SPM_HOME")
+        mlab_home = os.getenv("MATLABCMD")
+        mlab.MatlabCommand.set_default_matlab_cmd(mlab_home)
+        mlab.MatlabCommand.set_default_paths(spm_home)
+
+        version = spm.Info.version()
+
+        if version:
+            spm_path = version['path']
+            if version['name'] == 'SPM8':
+                print 'You are using SPM version 8. The recommended version to use with Clinica is SPM 12. ' \
+                      'Please upgrade your SPM toolbox.'
+                tissue_map = op.join(spm_path, 'toolbox/Seg/TPM.nii')
+            elif version['name'] == 'SPM12':
+                tissue_map = op.join(spm_path, 'tpm/TPM.nii')
+            else:
+                raise RuntimeError('SPM version 8 or 12 could not be found. Please upgrade your SPM toolbox.')
+        else:
+            raise RuntimeError('SPM could not be found. Please verify your SPM_HOME environment variable.')
+
+        # Unzipping
+        # ===============================
+        unzip_node = npe.MapNode(nutil.Function(input_names=['in_file'],
+                                                output_names=['out_file'],
+                                                function=unzip_nii),
+                                 name='unzip_node', iterfield=['in_file'])
+
+        # Unified Segmentation
+        # ===============================
+        new_segment = npe.MapNode(spm.NewSegment(),
+                                  name='new_segment',
+                                  iterfield=['channel_files'])
+
+        if self.parameters['affine_regularization'] is not None:
+            new_segment.inputs.affine_regularization = self.parameters['affine_regularization']
+        if self.parameters['channel_info'] is not None:
+            new_segment.inputs.channel_info = self.parameters['channel_info']
+        if self.parameters['sampling_distance'] is not None:
+            new_segment.inputs.sampling_distance = self.parameters['sampling_distance']
+        if self.parameters['warping_regularization'] is not None:
+            new_segment.inputs.warping_regularization = self.parameters['warping_regularization']
+        if self.parameters['write_deformation_fields'] is not None:
+            new_segment.inputs.write_deformation_fields = self.parameters['write_deformation_fields']
+
+        new_segment.inputs.tissues = utils.get_tissue_tuples(tissue_map,
+                                                             self.parameters['tissue_classes'],
+                                                             self.parameters['dartel_tissues'],
+                                                             self.parameters['save_warped_unmodulated'],
+                                                             self.parameters['save_warped_modulated'])
+        # Connection
+        # ==========
+        self.connect([
+            (self.input_node, unzip_node, [('input_images', 'in_file')]),
+            (unzip_node, new_segment, [('out_file', 'channel_files')]),
+            (new_segment, self.output_node, [('bias_corrected_images', 'bias_corrected_images'),
+                                             ('bias_field_images', 'bias_field_images'),
+                                             ('dartel_input_images', 'dartel_input_images'),
+                                             ('forward_deformation_field', 'forward_deformation_field'),
+                                             ('inverse_deformation_field', 'inverse_deformation_field'),
+                                             ('modulated_class_images', 'modulated_class_images'),
+                                             ('native_class_images', 'native_class_images'),
+                                             ('normalized_class_images', 'normalized_class_images'),
+                                             ('transformation_mat', 'transformation_mat')])
+        ])
