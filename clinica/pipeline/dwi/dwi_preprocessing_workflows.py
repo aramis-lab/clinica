@@ -12,6 +12,7 @@ from nipype.workflows.dmri.fsl.utils import rads2radsec
 from nipype.workflows.dmri.fsl.utils import rotate_bvecs
 from nipype.workflows.dmri.fsl.utils import siemens2rads
 from nipype.workflows.dmri.fsl.utils import vsm2warp
+from nipype.workflows.dmri.fsl.utils import enhance
 
 
 
@@ -169,10 +170,13 @@ def hmc_pipeline(name='motion_correct'):
 #                  schedule=get_flirt_schedule('hmc'),
 #                  searchr_x=[-4, 4], searchr_y=[-4, 4], searchr_z=[-4, 4], fine_search=1, coarse_search=10 )
 
-    params = dict(dof=6, interp='spline', cost='normmi', cost_func='normmi', save_log=True,
-                  no_search=True, bgvalue=0, padding_size=10,
-                  schedule=get_flirt_schedule('hmc'),
-                  searchr_x=[-5, 5], searchr_y=[-5, 5], searchr_z=[-25, 25])
+    # params = dict(dof=6, interp='spline', cost='normmi', cost_func='normmi', save_log=True,
+    #               no_search=True, bgvalue=0, padding_size=10,
+    #               schedule=get_flirt_schedule('hmc'),
+    #               searchr_x=[-5, 5], searchr_y=[-5, 5], searchr_z=[-25, 25])
+    params = dict(dof=6, bgvalue=0, save_log=True, no_search=True,
+                  # cost='mutualinfo', cost_func='mutualinfo', bins=64,
+                  schedule=get_flirt_schedule('hmc'))
 
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['in_file', 'in_bvec', 'in_bval', 'in_mask', 'ref_num']),
@@ -195,7 +199,7 @@ def hmc_pipeline(name='motion_correct'):
     merged_volumes = pe.Node(niu.Function(input_names=['in_file1', 'in_file2'], output_names=['out_file'], function=merge_volumes_tdim), name='merge_reference_moving')
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['out_file',
-                         'out_bvec', 'out_xfms']), name='outputnode')
+                         'out_bvec', 'out_xfms', 'mask_B0']), name='outputnode')
 
     wf = pe.Workflow(name=name)
     wf.connect([
@@ -214,7 +218,8 @@ def hmc_pipeline(name='motion_correct'):
         (flirt,            merged_volumes,   [('outputnode.out_ref', 'in_file1'),
                                               ('outputnode.out_file', 'in_file2')]),
         (merged_volumes,   outputnode,       [('out_file', 'out_file')]),
-        (insmat,           outputnode,       [('out', 'out_xfms')])
+        (insmat,           outputnode,       [('out', 'out_xfms')]),
+        (flirt,           outputnode,       [('outputnode.out_ref', 'mask_B0')])
     ])
     return wf
 
@@ -248,12 +253,12 @@ def ecc_pipeline(name='eddy_correct'):
         51:103-114 (2004).
     Example
     -------
-    >>> from nipype.workflows.dmri.fsl.artifacts import ecc_pipeline
-    >>> ecc = ecc_pipeline()
-    >>> ecc.inputs.inputnode.in_file = 'diffusion.nii'
-    >>> ecc.inputs.inputnode.in_bval = 'diffusion.bval'
-    >>> ecc.inputs.inputnode.in_mask = 'mask.nii'
-    >>> ecc.run() # doctest: +SKIP
+    from nipype.workflows.dmri.fsl.artifacts import ecc_pipeline
+    ecc = ecc_pipeline()
+    ecc.inputs.inputnode.in_file = 'diffusion.nii'
+    ecc.inputs.inputnode.in_bval = 'diffusion.bval'
+    ecc.inputs.inputnode.in_mask = 'mask.nii'
+    ecc.run() # doctest: +SKIP
     Inputs::
         inputnode.in_file - input dwi file
         inputnode.in_mask - weights mask of reference image (a file with data \
@@ -272,14 +277,19 @@ head-motion correction)
     from nipype.workflows.dmri.fsl.utils import recompose_xfm
     from nipype.workflows.dmri.fsl.utils import recompose_dwi
     from nipype.workflows.dmri.fsl.artifacts import _xfm_jacobian
+    from clinica.pipeline.dwi.dwi_preprocessing_utils import merge_volumes_tdim
+
 
 #    params = dict(dof=12, no_search=True, interp='spline', bgvalue=0,
 #                  schedule=get_flirt_schedule('ecc'))
 
-    params = dict(dof=12, interp='spline', cost='normmi', cost_func='normmi', save_log=True,
-                  no_search=True, bgvalue=0, padding_size=10,
-                  schedule=get_flirt_schedule('ecc'),
-                  searchr_x=[-5, 5], searchr_y=[-5, 5], searchr_z=[-25, 25])
+    # params = dict(dof=12, interp='spline', cost='normmi', cost_func='normmi', save_log=True,
+    #               no_search=True, bgvalue=0, padding_size=10,
+    #               schedule=get_flirt_schedule('ecc'),
+    #               searchr_x=[-5, 5], searchr_y=[-5, 5], searchr_z=[-25, 25])
+
+    params = dict(dof=12, no_search=True, interp='spline', bgvalue=0,
+                  schedule=get_flirt_schedule('ecc'))
 
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['in_file', 'in_bval', 'in_mask', 'in_xfms']), name='inputnode')
@@ -306,6 +316,8 @@ head-motion correction)
         input_names=['in_dwi', 'in_bval', 'in_corrected'],
         output_names=['out_file'], function=recompose_dwi), name='MergeDWIs')
 
+    merged_volumes = pe.Node(niu.Function(input_names=['in_file1', 'in_file2'], output_names=['out_file'], function=merge_volumes_tdim), name='merge_enhanced_ref_dwis')
+
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['out_file', 'out_xfms']), name='outputnode')
 
@@ -314,8 +326,11 @@ head-motion correction)
         (inputnode,  getb0,        [('in_file', 'in_file')]),
         (inputnode,  pick_dws,     [('in_file', 'in_dwi'),
                                     ('in_bval', 'in_bval')]),
-        (inputnode,  merge,        [('in_file', 'in_dwi'),
-                                    ('in_bval', 'in_bval')]),
+        (flirt, merged_volumes, [('outputnode.out_ref', 'in_file1'),
+                                 ('outputnode.out_file', 'in_file2')]),
+
+        (merged_volumes,  merge,        [('out_file', 'in_dwi')]),
+        (inputnode, merge, [('in_bval', 'in_bval')]),
         (inputnode,  flirt,        [('in_mask', 'inputnode.ref_mask'),
                                     ('in_xfms', 'inputnode.in_xfms'),
                                     ('in_bval', 'inputnode.in_bval')]),
@@ -336,7 +351,7 @@ head-motion correction)
 
 
 
-def sdc_fmb(fugue_params=dict(smooth3d=2.0),
+def  sdc_fmb(fugue_params=dict(smooth3d=2.0),
             fmap_params=dict(delta_te=2.46e-3),
             epi_params=dict(echospacing=0.39e-3,
                             enc_dir='y'),
@@ -401,6 +416,7 @@ def sdc_fmb(fugue_params=dict(smooth3d=2.0),
                          name='outputnode')
 
     getb0 = pe.Node(fsl.ExtractROI(t_min=0, t_size=1), name='get_b0')
+    firstmag = pe.Node(fsl.ExtractROI(t_min=0, t_size=1), name='GetFirst')
     n4 = pe.Node(ants.N4BiasFieldCorrection(dimension=3), name='n4_magnitude')
     bet = pe.Node(fsl.BET(frac=0.4, mask=True), name='bet_n4_magnitude')
     dilate = pe.Node(fsl.maths.MathsCommand(nan2zeros=True,
@@ -412,13 +428,48 @@ def sdc_fmb(fugue_params=dict(smooth3d=2.0),
                        output_names=['out_file'], function=rads2radsec), name='ToRadSec')
     rad2rsec.inputs.delta_te = fmap_params['delta_te']
 
-    flirt = pe.Node(fsl.FLIRT(interp='spline', cost='normmi', cost_func='normmi',
-                    dof=6, bins=64, save_log=True, padding_size=10,
-                    searchr_x=[-4, 4], searchr_y=[-4, 4], searchr_z=[-4, 4],
-                    fine_search=1, coarse_search=10),
-                    name='BmapMag2B0')
-    applyxfm = pe.Node(fsl.ApplyXfm(interp='spline', padding_size=10, apply_xfm=True),
-                       name='BmapPha2B0')
+    # flirt = pe.Node(fsl.FLIRT(interp='spline', cost='normmi', cost_func='normmi',
+    #                 dof=6, bins=64, save_log=True, padding_size=10,
+    #                 searchr_x=[-4, 4], searchr_y=[-4, 4], searchr_z=[-4, 4],
+    #                 fine_search=1, coarse_search=10),
+    #                 name='BmapMag2B0')
+    # applyxfm = pe.Node(fsl.ApplyXfm(interp='spline', padding_size=10, apply_xfm=True),
+    #                    name='BmapPha2B0')
+
+    # ### Solution 2: register phase2b0 directly
+    # flirt_phase = pe.Node(fsl.FLIRT(interp='spline', cost='normmi', cost_func='normmi',
+    #                 dof=6, bins=64, save_log=True, padding_size=10,
+    #                 searchr_x=[-4, 4], searchr_y=[-4, 4], searchr_z=[-4, 4],
+    #                 fine_search=1, coarse_search=10),
+    #                 name='BmapPha2B0')
+
+
+    ############ Solution 3: use ants
+    fmm2b0 = pe.Node(ants.Registration(output_warped_image=True),
+                     name="FMm_to_B0")
+    fmm2b0.inputs.transforms = ['Rigid'] * 2
+    fmm2b0.inputs.transform_parameters = [(1.0,)] * 2
+    fmm2b0.inputs.number_of_iterations = [[50], [20]]
+    fmm2b0.inputs.dimension = 3
+    fmm2b0.inputs.metric = ['Mattes', 'Mattes']
+    fmm2b0.inputs.metric_weight = [1.0] * 2
+    fmm2b0.inputs.radius_or_number_of_bins = [64, 64]
+    fmm2b0.inputs.sampling_strategy = ['Regular', 'Random']
+    fmm2b0.inputs.sampling_percentage = [None, 0.2]
+    fmm2b0.inputs.convergence_threshold = [1.e-5, 1.e-8]
+    fmm2b0.inputs.convergence_window_size = [20, 10]
+    fmm2b0.inputs.smoothing_sigmas = [[6.0], [2.0]]
+    fmm2b0.inputs.sigma_units = ['vox'] * 2
+    fmm2b0.inputs.shrink_factors = [[6], [1]]  # ,[1] ]
+    fmm2b0.inputs.use_estimate_learning_rate_once = [True] * 2
+    fmm2b0.inputs.use_histogram_matching = [True] * 2
+    fmm2b0.inputs.initial_moving_transform_com = 0
+    fmm2b0.inputs.collapse_output_transforms = True
+    fmm2b0.inputs.winsorize_upper_quantile = 0.995
+
+    applyxfm = pe.Node(ants.ApplyTransforms(
+        dimension=3, interpolation='BSpline'), name='FMp_to_B0')
+
 
     pre_fugue = pe.Node(fsl.FUGUE(save_fmap=True), name='PreliminaryFugue')
     demean = pe.Node(niu.Function(input_names=['in_file', 'in_mask'],
@@ -450,7 +501,8 @@ def sdc_fmb(fugue_params=dict(smooth3d=2.0),
     wf.connect([
         (inputnode, pha2rads, [('in_fmap_phasediff', 'in_file')]),
         (inputnode, getb0, [('in_file', 'in_file')]),
-        (inputnode, n4, [('in_fmap_magnitude', 'input_image')]),
+        (inputnode, firstmag, [('in_fmap_magnitude', 'in_file')]),
+        (firstmag, n4, [('roi_file', 'input_image')]),
         (n4, bet, [('output_image', 'in_file')]),
         (bet, dilate, [('mask_file', 'in_file')]),
         (pha2rads, prelude, [('out_file', 'phase_file')]),
@@ -460,14 +512,31 @@ def sdc_fmb(fugue_params=dict(smooth3d=2.0),
     ])
     if register_fmap_on_b0:
         wf.connect([
-            (getb0,     flirt, [('roi_file', 'reference')]),
-            (inputnode, flirt, [('in_mask', 'ref_weight')]),
-            (n4,        flirt, [('output_image', 'in_file')]),
-            (dilate,    flirt, [('out_file', 'in_weight')]),
-            (getb0,    applyxfm, [('roi_file', 'reference')]),
-            (rad2rsec, applyxfm, [('out_file', 'in_file')]),
-            (flirt,    applyxfm, [('out_matrix_file', 'in_matrix_file')]),
-            (applyxfm,  pre_fugue, [('out_file', 'fmap_in_file')]),
+            # (getb0,     flirt, [('roi_file', 'reference')]),
+            # (inputnode, flirt, [('in_mask', 'ref_weight')]),
+            # (n4,        flirt, [('output_image', 'in_file')]),
+            # (dilate,    flirt, [('out_file', 'in_weight')]),
+            #### Solution1: using the xfm matrix from mag2b0 for phase2b0
+            (getb0,    applyxfm, [('roi_file', 'reference_image')]),
+            (rad2rsec, applyxfm, [('out_file', 'input_image')]),
+            # (flirt,    applyxfm, [('out_matrix_file', 'in_matrix_file')]),
+            (fmm2b0, applyxfm, [
+                ('forward_transforms', 'transforms'),
+                ('forward_invert_flags', 'invert_transform_flags')]),
+            (applyxfm,  pre_fugue, [('output_image', 'fmap_in_file')]),
+            #
+            # ###### Solution using flirt to reg phase2b0 directly
+            # (getb0,    flirt_phase, [('roi_file', 'reference')]),
+            # (rad2rsec, flirt_phase, [('out_file', 'in_file')]),
+            # (flirt,    flirt_phase, [('out_matrix_file', 'in_matrix_file')]),
+            # (flirt_phase,  pre_fugue, [('out_file', 'fmap_in_file')]),
+
+            ###### Solution using ants
+            (getb0, fmm2b0, [('roi_file', 'fixed_image')]),
+            (n4, fmm2b0, [('output_image', 'moving_image')]),
+            (inputnode, fmm2b0, [('in_mask', 'fixed_image_mask')]),
+            (dilate, fmm2b0, [('out_file', 'moving_image_mask')]),
+
             (inputnode, pre_fugue, [('in_mask', 'mask_file')]),
             (pre_fugue, demean, [('fmap_out_file', 'in_file')]),
             (inputnode, demean, [('in_mask', 'in_mask')]),
@@ -483,7 +552,8 @@ def sdc_fmb(fugue_params=dict(smooth3d=2.0),
             (thres,  merge, [('out_file', 'in_files')]),
             (merge, vsm2dfm, [('merged_file', 'inputnode.in_ref')]),
             (vsm,   vsm2dfm, [('shift_out_file', 'inputnode.in_vsm')]),
-            (applyxfm, outputnode, [('out_file', 'out_registered_fmap')]),
+            (applyxfm, outputnode, [('output_image', 'out_registered_fmap')]),
+            # (flirt_phase, outputnode, [('out_file', 'out_registered_fmap')]),
             (rad2rsec, outputnode, [('out_file', 'out_native_fmap')]),
             (merge,    outputnode, [('merged_file', 'out_file')]),
             (vsm,      outputnode, [('shift_out_file', 'out_vsm')]),
@@ -995,6 +1065,15 @@ def dwi_flirt(name='DWICoregistration', excl_nodiff=False,
     merge = pe.Node(fsl.Merge(dimension='t'), name='MergeDWIs')
     outputnode = pe.Node(niu.IdentityInterface(fields=['out_file',
                          'out_xfms', 'out_ref']), name='outputnode')
+    enhb0 = pe.Node(niu.Function(
+        input_names=['in_file', 'in_mask', 'clip_limit'],
+        output_names=['out_file'], function=enhance), name='B0Equalize')
+    enhb0.inputs.clip_limit = 0.015
+    enhdw = pe.MapNode(niu.Function(
+        input_names=['in_file', 'in_mask'], output_names=['out_file'],
+        function=enhance), name='DWEqualize', iterfield=['in_file'])
+    # enhb0.inputs.clip_limit = clip_limit
+
     wf = pe.Workflow(name=name)
     wf.connect([
         (inputnode,  split,      [('in_file', 'in_file')]),
@@ -1002,17 +1081,20 @@ def dwi_flirt(name='DWICoregistration', excl_nodiff=False,
         (inputnode,   n4,        [('reference', 'input_image'),
                                   ('ref_mask', 'mask_image')]),
 #        (inputnode,  flirt,      [('ref_mask', 'reference')]),
-        (n4,      flirt, [('output_image', 'reference')]),
+        (n4, enhb0, [('output_image', 'in_file')]),
+        (enhb0, flirt, [('out_file', 'reference')]),
         (inputnode, initmat, [('in_xfms', 'in_xfms'),
                               ('in_bval', 'in_bval')]),
-        (dilate,  flirt, [('out_file', 'ref_weight'),
-                          ('out_file', 'in_weight')]),
-        (split,   flirt, [('out_files', 'in_file')]),
+        (split, enhdw, [('out_files', 'in_file')]),
+        (dilate, enhdw, [('out_file', 'in_mask')]),
+        (dilate, flirt, [('out_file', 'ref_weight'),
+                         ('out_file', 'in_weight')]),
+        (enhdw, flirt, [('out_file', 'in_file')]),
         (initmat, flirt, [('init_xfms', 'in_matrix_file')]),
         (flirt,      thres,      [('out_file', 'in_file')]),
         (thres,      merge,      [('out_file', 'in_files')]),
         (merge,     outputnode, [('merged_file', 'out_file')]),
-        (inputnode, outputnode, [('reference', 'out_ref')]),
+        (enhb0, outputnode, [('out_file', 'out_ref')]),
         (flirt,     outputnode, [('out_matrix_file', 'out_xfms')])
     ])
     return wf
