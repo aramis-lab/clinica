@@ -401,7 +401,7 @@ class CmdParserStatisticsSurfStat(CmdParser):
 class CmdParserMachineLearningVBLinearSVM(CmdParser):
 
     def define_name(self):
-        self._name = 'ml-vb-linear-svm'
+        self._name = 'machinelearning-svm-voxel'
 
     def define_options(self):
         self._args.add_argument("caps_directory",
@@ -458,43 +458,106 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
                                               save_original_weights=args.save_original_weights,
                                               save_features_image=args.save_features_image)
 
-class CmdParserMachineLearningVBLinearSVM(CmdParser):
+class CmdParserMachineLearningSVM_RB(CmdParser):
 
     def define_name(self):
-        self._name = 'ml-rb-linear-svm'
+        self._name = 'machinelearning-svm-region'
 
     def define_options(self):
+        self.args.add_argument("image_type",
+                                   help='it can assume two values: pet/t1, according to the images used')
         self._args.add_argument("caps_directory",
-                                help='Directory where the input NIFTI images are stored')
-        self._args.add_argument("subjects_visits_tsv",
-                                help='TSV file with subjects and sessions to be processed')
+                                    help='Directory where the input NIFTI images are stored')
         self._args.add_argument("group_id",
-                                help='Current group name')
-        self._args.add_argument("diagnoses_tsv",
-                                help='TSV file with subjects diagnoses')
+                                    help='Current group name')
+        self._args.add_argument("diagnosis_tsv",
+                                    help='TSV file with subjects diagnosis')
+        self._args.add_argument("atlas_id",
+                                    help='Name of the atlas used to extract features')
+        self._args.add_argument("subjects_visits_tsv",
+                                    help='TSV file with subjects and sessions to be processed')
         self._args.add_argument("-b", "--balanced", type=bool, default=True,
-                                help='Balance the weights of subjects for the SVM proportionally to their number in each class')
+                                    help='Balance the weights of subjects for the SVM proportionally to their number in each class')
         self._args.add_argument("-cv", "--cv_folds", type=int, default=10,
-                                help='Number of folds to use in the cross validation')
+                                    help='Number of folds to use in the cross validation')
         self._args.add_argument("-fc", "--folds_c", type=int, default=10,
-                                help='Number of folds to use in the cross validation to determine parameter C')
+                                    help='Number of folds to use in the cross validation to determine parameter C')
         self._args.add_argument("-np", "--n_procs", type=int, default=4,
-                                help='Number of parallel processes to run')
+                                    help='Number of parallel processes to run')
         self._args.add_argument("-crl", "--c_range_logspace", nargs=3, type=int, default=[-6, 2, 17],
-                                help="numpy logspace function arguments defining the range of search for SVM parameter C. Ex: -6 2 17")
+                                    help="numpy logspace function arguments defining the range of search for SVM parameter C. Ex: -6 2 17")
         self._args.add_argument("-sgm", "--save_gram_matrix", action='store_true',
-                                help="Save gram matrix for each classification as a matrix")
+                                    help="Save gram matrix for each classification as a matrix")
+        self._args.add_argument("-sdc", "--save_dual_coefficients", action='store_true',
+                                    help="Save ")
         self._args.add_argument("-sc", "--save_subject_classification", action='store_true',
-                                help="Save list of classification results for each subject for each classification")
+                                    help="Save list of classification results for each subject for each classification")
         self._args.add_argument("-sw", "--save_original_weights", action='store_true',
-                                help="Save feature weights for each classification as a matrix")
+                                    help="Save feature weights for each classification as a matrix")
         self._args.add_argument("-sf", "--save_features_image", action='store_true',
-                                 help="Save feature weights for each classification as an image")
+                                    help="Save feature weights for each classification as an image")
 
     def run_pipeline(self, args):
         from clinica.pipeline.machine_learning.region_based_svm import svm_binary_classification
-        from clinica.pipeline.machine_learning.region_based_io import get_caps_pet_list,get_caps_t1_list,load_data
+        from clinica.pipeline.machine_learning.region_based_io import get_caps_pet_list, get_caps_t1_list, load_data
+        from clinica.pipeline.machine_learning.svm_utils import gram_matrix_linear
         from numpy import logspace
+        import pandas
+        import os.path
+
+        if not os.path.isfile(self.absolute_path(args.participants_sessions_tsv)):
+            raise Exception('The TSV file does not exist.')
+        subjects_visits_tsv = pandas.io.parsers.read_csv(self.absolute_path(args.participants_sessions_tsv),
+                                                            sep='\t')
+        if list(subjects_visits_tsv.columns.values) != ['participant_id', 'session_id']:
+            raise Exception('Subjects and visits file is not in the correct format.')
+
+        if args.image_type == 't1':
+
+            image_list = get_caps_t1_list(self.absolute_path(args.caps_directory),
+                                              subjects_visits_tsv,
+                                              args.group_id,
+                                              args.atlas_id)
+        else:
+
+            image_list = get_caps_pet_list(self.absolute_path(args.caps_directory),
+                                               subjects_visits_tsv,
+                                               args.group_id,
+                                               args.atlas_id)
+
+        data = load_data(image_list, subjects_visits_tsv)
+        input_image_atlas = os.path.join('/Users/simona.bottani/Desktop/Database_60_subjects/Atlas_SPM', atlas_id+'.nii')
+        subjects_diagnosis = pd.io.parsers.read_csv(args.diagnosis_tsv, sep='\t')
+        if list(subjects_diagnosis.columns.values) != ['participant_id', 'diagnosis']:
+            raise Exception('Subjects and visits file is not in the correct format.')
+        diagnosis_list = list(subjects_diagnosis.diagnosis)
+        gram_matrix = gram_matrix_linear(data)
+        c_range = logspace(args.c_range_logspace[0], args.c_range_logspace[1], args.c_range_logspace[2])
+        output_directory = os.path.join(self.absolute_path(args.caps_directory),
+                                            'group-' +args.group_id + '/machine_learning/region_based_svm/',
+                                            'space' + args.atlas_id, args.image_type)
+
+
+
+        #save_gram_matrix = args.save_gram_matrix
+        #save_subject_classification = args.save_subject_classification
+        #save_original_weights = args.save_original_weights
+        #save_features_image = args.save_features_image
+
+        svm_binary_classification(input_image_atlas,image_list,diagnosis_list,output_directory, kernel_function=None, existing_gram_matrix=None, mask_zeros=True,
+                                  scale_data=False, balanced=False,
+                                  outer_folds=args.cv_folds,
+                                  inner_folds=args.folds_c,
+                                  n_threads=args.n_procs,
+                                  c_range=c_range,
+                                  save_gram_matrix=args.save_gram_matrix,
+                                  save_subject_classification=args.save_subject_classification,
+                                  save_dual_coefficients=args.save_dual_coefficients,
+                                  scaler=None, data_mask=None,
+                                  save_original_weights=args.save_original_weights,
+                                  save_features_image=args.save_features_image)
+
+
 
 
 class CmdParserT1FSL(CmdParser):
