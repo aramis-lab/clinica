@@ -401,7 +401,7 @@ class CmdParserStatisticsSurfStat(CmdParser):
 class CmdParserMachineLearningVBLinearSVM(CmdParser):
 
     def define_name(self):
-        self._name = 'machinelearning-svm-voxel'
+        self.name = 'machinelearning-svm-voxel'
 
     def define_options(self):
         self._args.add_argument("caps_directory",
@@ -458,7 +458,7 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
                                               save_original_weights=args.save_original_weights,
                                               save_features_image=args.save_features_image)
 
-class CmdParserMachineLearningSVM_RB(CmdParser):
+class CmdParserMachineLearningSVMRB(CmdParser):
 
     def define_name(self):
         self.name = 'machinelearning-svm-region'
@@ -507,8 +507,7 @@ class CmdParserMachineLearningSVM_RB(CmdParser):
 
         if not os.path.isfile(self.absolute_path(args.participants_sessions_tsv)):
             raise Exception('The TSV file does not exist.')
-        subjects_visits_tsv = pandas.io.parsers.read_csv(self.absolute_path(args.participants_sessions_tsv),
-                                                            sep='\t')
+        subjects_visits_tsv = pandas.io.parsers.read_csv(self.absolute_path(args.participants_sessions_tsv),sep='\t')
         if list(subjects_visits_tsv.columns.values) != ['participant_id', 'session_id']:
             raise Exception('Subjects and visits file is not in the correct format.')
 
@@ -526,7 +525,7 @@ class CmdParserMachineLearningSVM_RB(CmdParser):
                                                args.atlas_id)
 
         data = load_data(image_list, subjects_visits_tsv)
-        input_image_atlas = os.path.join('/Users/simona.bottani/Desktop/Database_60_subjects/Atlas_SPM', atlas_id+'.nii')
+        input_image_atlas = os.path.join('/Users/simona.bottani/Desktop/Database_60_subjects/Atlas_SPM', args.atlas_id+'.nii')
         subjects_diagnosis = pd.io.parsers.read_csv(args.diagnosis_tsv, sep='\t')
         if list(subjects_diagnosis.columns.values) != ['participant_id', 'diagnosis']:
             raise Exception('Subjects and visits file is not in the correct format.')
@@ -544,7 +543,7 @@ class CmdParserMachineLearningSVM_RB(CmdParser):
         #save_original_weights = args.save_original_weights
         #save_features_image = args.save_features_image
 
-        svm_binary_classification(input_image_atlas,image_list,diagnosis_list,output_directory, kernel_function=None, existing_gram_matrix=None, mask_zeros=True,
+        svm_binary_classification(input_image_atlas,image_list,diagnosis_list,output_directory, kernel_function=None, existing_gram_matrix=gram_matrix, mask_zeros=True,
                                   scale_data=False, balanced=False,
                                   outer_folds=args.cv_folds,
                                   inner_folds=args.folds_c,
