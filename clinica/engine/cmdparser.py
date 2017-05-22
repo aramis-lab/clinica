@@ -461,7 +461,7 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
 class CmdParserMachineLearningSVM_RB(CmdParser):
 
     def define_name(self):
-        self._name = 'machinelearning-svm-region'
+        self.name = 'machinelearning-svm-region'
 
     def define_options(self):
         self.args.add_argument("image_type",
