@@ -220,7 +220,6 @@ class Atlas_JHUTracts50_2mm(AtlasAbstract):
 
 
 
-
 class AtlasLoader:
     def __init__(self, atlases=None):
         self.atlas = {}
@@ -232,3 +231,6 @@ class AtlasLoader:
             raise Exception("Atlas element must be an AtlasAbstract type")
 
     def get_atlases(self): return self.atlas
+    
+    
+
