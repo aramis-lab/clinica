@@ -32,6 +32,9 @@ def unzip_nii(in_file):
     from nipype.utils.filemanip import split_filename
     from nipype.algorithms.misc import Gunzip
 
+    if type(in_file) is list:
+        return [unzip_nii(f) for f in in_file]
+
     _, base, ext = split_filename(in_file)
 
     # Not compressed

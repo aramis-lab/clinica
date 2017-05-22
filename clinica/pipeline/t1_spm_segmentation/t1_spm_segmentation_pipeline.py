@@ -3,7 +3,6 @@ This file has been generated automatically by the `clinica generate template`
 command line tool. See here for more details: https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
 """
 
-
 import clinica.pipeline.engine as cpe
 
 
@@ -42,15 +41,15 @@ class T1SPMSegmentation(cpe.Pipeline):
         super(T1SPMSegmentation, self).__init__(bids_directory, caps_directory, tsv_file, name)
         # Default parameters
         self._parameters = {'tissue_classes': [1, 2, 3],
-                           'dartel_tissues': [1, 2, 3],
-                           'save_warped_unmodulated': False,
-                           'save_warped_modulated': False,
-                           'affine_regularization': None,
-                           'channel_info': None,
-                           'sampling_distance': None,
-                           'warping_regularization': None,
-                           'write_deformation_fields': None
-                           }
+                            'dartel_tissues': [1, 2, 3],
+                            'save_warped_unmodulated': False,
+                            'save_warped_modulated': False,
+                            'affine_regularization': None,
+                            'channel_info': None,
+                            'sampling_distance': None,
+                            'warping_regularization': None,
+                            'write_deformation_fields': None
+                            }
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
@@ -108,11 +107,6 @@ class T1SPMSegmentation(cpe.Pipeline):
         """Build and connect an output node to the pipeline.
         """
 
-        # In the same idea as the input node, this output node is supposedly
-        # used to write the output fields in a CAPS. It should be executed only
-        # if this pipeline output is not already connected to a next Clinica
-        # pipeline.
-
         import nipype.pipeline.engine as npe
         import t1_spm_segmentation_utils as utils
         import nipype.interfaces.io as nio
@@ -153,12 +147,12 @@ class T1SPMSegmentation(cpe.Pipeline):
                                        for i in range(len(self.subjects))]
 
         write_node.inputs.regexp_substitutions = [
-            (r'(.*)(c1)(sub-.*)(\.nii(\.gz)?)$', r'\1\3_segm-graymatter\4'),
-            (r'(.*)(c2)(sub-.*)(\.nii(\.gz)?)$', r'\1\3_segm-whitematter\4'),
-            (r'(.*)(c3)(sub-.*)(\.nii(\.gz)?)$', r'\1\3_segm-csf\4'),
-            (r'(.*)(c4)(sub-.*)(\.nii(\.gz)?)$', r'\1\3_segm-bone\4'),
-            (r'(.*)(c5)(sub-.*)(\.nii(\.gz)?)$', r'\1\3_segm-softtissue\4'),
-            (r'(.*)(c6)(sub-.*)(\.nii(\.gz)?)$', r'\1\3_segm-background\4'),
+            (r'(.*)c1(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-graymatter\3'),
+            (r'(.*)c2(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-whitematter\3'),
+            (r'(.*)c3(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-csf\3'),
+            (r'(.*)c4(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-bone\3'),
+            (r'(.*)c5(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-softtissue\3'),
+            (r'(.*)c6(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-background\3'),
             (r'(.*)(/native_space/sub-.*)(\.nii(\.gz)?)$', r'\1\2_probability\3'),
             (r'(.*)(/([a-z]+)_deformation_field/)i?y_(sub-.*)(\.nii(\.gz)?)$', r'\1/normalized_space/\4_target-Ixi549Space_transformation-\3_deformation\5'),
             (r'(.*)(/modulated_normalized/)mw(sub-.*)(\.nii(\.gz)?)$', r'\1/normalized_space/\3_space-Ixi549Space_modulated-on_probability\4'),
