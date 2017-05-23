@@ -416,8 +416,8 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
                                 help='Images prefix')
         self._args.add_argument("-t", "--tissue",
                                 help='')
-        self._args.add_argument("subjects_visits_tsv",type=str, default=None,
-                                help='TSV file with subjects and sessions to be processed')
+        self._args.add_argument("-svt", "--subjects_visits_tsv", type=str, default=None,
+                                    help='TSV file with subjects and sessions to be processed')
         self._args.add_argument("-mz", "--mask_zeros", type=bool, default=True,
                                 help='Use a mask to remove zero valued voxels across images')
         self._args.add_argument("-b", "--balanced", type=bool, default=True,
@@ -444,6 +444,12 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
 
         from clinica.pipeline.machine_learning.voxel_based_svm import linear_svm_binary_classification_caps
         from numpy import logspace
+
+        if args.subjects_visits_tsv is None:
+            subjects_visits_tsv=() #where it's saved for t1 and pet
+        else:
+            subjects_visits_tsv = pandas.io.parsers.read_csv(self.absolute_path(args.participants_sessions_tsv),
+                                                             sep='\t')
 
         c_range = logspace(args.c_range_logspace[0], args.c_range_logspace[1], args.c_range_logspace[2])
 
@@ -479,7 +485,7 @@ class CmdParserMachineLearningSVMRB(CmdParser):
                                     help='TSV file with subjects diagnosis')
         self._args.add_argument("atlas_id",
                                     help='Name of the atlas used to extract features')
-        self._args.add_argument("subjects_visits_tsv", type=str, default=None,
+        self._args.add_argument("-svt", "--subjects_visits_tsv", type=str, default=None,
                                     help='TSV file with subjects and sessions to be processed')
         self._args.add_argument("-b", "--balanced", type=bool, default=True,
                                     help='Balance the weights of subjects for the SVM proportionally to their number in each class')
@@ -510,11 +516,15 @@ class CmdParserMachineLearningSVMRB(CmdParser):
         import pandas
         import os.path
 
-        if not os.path.isfile(self.absolute_path(args.participants_sessions_tsv)):
-            raise Exception('The TSV file does not exist.')
-        subjects_visits_tsv = pandas.io.parsers.read_csv(self.absolute_path(args.participants_sessions_tsv),sep='\t')
-        if list(subjects_visits_tsv.columns.values) != ['participant_id', 'session_id']:
-            raise Exception('Subjects and visits file is not in the correct format.')
+        output_directory = os.path.join(self.absolute_path(args.caps_directory),
+                                            'group-' +args.group_id + '/machine_learning/region_based_svm/',
+                                            'space' + args.atlas_id, args.image_type)
+
+        if args.subjects_visits_tsv is None:
+            subjects_visits_tsv=() #where it's saved for t1 and pet
+        else:
+            subjects_visits_tsv = pandas.io.parsers.read_csv(self.absolute_path(args.participants_sessions_tsv),
+                                                             sep='\t')
 
         if args.image_type == 't1':
 
@@ -530,16 +540,14 @@ class CmdParserMachineLearningSVMRB(CmdParser):
                                                args.atlas_id)
 
         data = load_data(image_list, subjects_visits_tsv)
-        input_image_atlas = os.path.join('/Users/simona.bottani/Desktop/Database_60_subjects/Atlas_SPM', args.atlas_id+'.nii')
+        input_image_atlas = os.path.join(os.path.expandvars('$CLINICA_HOME'),clinica, resources,atlases_spm, args.atlas_id+'.nii')
         subjects_diagnosis = pandas.io.parsers.read_csv(args.diagnosis_tsv, sep='\t')
         if list(subjects_diagnosis.columns.values) != ['participant_id', 'diagnosis']:
             raise Exception('Subjects and visits file is not in the correct format.')
         diagnosis_list = list(subjects_diagnosis.diagnosis)
         gram_matrix = gram_matrix_linear(data)
         c_range = logspace(args.c_range_logspace[0], args.c_range_logspace[1], args.c_range_logspace[2])
-        output_directory = os.path.join(self.absolute_path(args.caps_directory),
-                                            'group-' +args.group_id + '/machine_learning/region_based_svm/',
-                                            'space' + args.atlas_id, args.image_type)
+
 
 
         svm_binary_classification(input_image_atlas,image_list,diagnosis_list,output_directory, kernel_function=None, existing_gram_matrix=gram_matrix, mask_zeros=True,
