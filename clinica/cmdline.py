@@ -315,7 +315,7 @@ def execute():
                  CmdParserDWIPreprocessingPhaseDifferenceFieldmap(), CmdParserDWIPreprocessingTwoPhaseImagesFieldmap(),
                  CmdParserDWIPreprocessingT1Based(),
                  CmdParserDWIProcessing(), T1SPMSegmentationCLI(),
-                 CmdParserStatisticsSurfStat(), CmdParserMachineLearningVBLinearSVM()]
+                 CmdParserStatisticsSurfStat(), CmdParserMachineLearningVBLinearSVM(), CmdParserMachineLearningSVMRB()]
     init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
 
     """
