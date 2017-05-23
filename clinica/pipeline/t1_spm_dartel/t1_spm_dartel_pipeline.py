@@ -29,7 +29,7 @@ class T1SPMDartel(cpe.Pipeline):
 
     Example:
         >>> from t1_spm_dartel import T1SPMDartel
-        >>> pipeline = T1SPMDartel('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
+        >>> pipeline = T1SPMDartel('myGroup', '~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipeline.parameters.update({
         >>>     # ...
         >>> })
@@ -41,6 +41,7 @@ class T1SPMDartel(cpe.Pipeline):
         super(T1SPMDartel, self).__init__(bids_directory, caps_directory, tsv_file, name)
 
         self._group_id = group_id
+
         # Default parameters
         self._parameters = {'dartel_tissues': [1, 2, 3],
                             'iteration_parameters': None,
@@ -70,6 +71,7 @@ class T1SPMDartel(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
         """
+
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
 
@@ -86,7 +88,8 @@ class T1SPMDartel(cpe.Pipeline):
                                                             'subject_repeat', 'session_repeat',
                                                             'tissue'],
                                                   outfields=['out_files']),
-                                  name="caps_reader", iterfield=['tissue'])
+                                  name="caps_reader",
+                                  iterfield=['tissue'])
 
         caps_reader.inputs.base_directory = self.caps_directory
         caps_reader.inputs.template = 'subjects/%s/%s/t1/spm/segmentation/dartel_input/%s_%s_T1w_segm-%s_dartelinput.nii*'
@@ -110,7 +113,7 @@ class T1SPMDartel(cpe.Pipeline):
         import re
         from clinica.utils.io import zip_nii
 
-        # Writing flowfields CAPS
+        # Writing flowfields into CAPS
         # =======================
         write_flowfields_node = npe.MapNode(name='write_flowfields_node',
                                             iterfield=['container', 'flow_fields'],
@@ -134,7 +137,7 @@ class T1SPMDartel(cpe.Pipeline):
             (r'trait_added', r'')
         ]
 
-        # Writing templates CAPS
+        # Writing templates into CAPS
         # ======================
         write_template_node = npe.Node(nio.DataSink(), name='write_template_node')
         write_template_node.inputs.parameterization = False
@@ -197,6 +200,7 @@ class T1SPMDartel(cpe.Pipeline):
             dartel_template.inputs.regularization_form = self.parameters['regularization_form']
         if self.parameters['template_prefix'] is not None:
             dartel_template.inputs.template_prefix = self.parameters['template_prefix']
+
         # Connection
         # ==========
         self.connect([
