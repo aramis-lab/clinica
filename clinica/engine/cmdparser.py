@@ -230,7 +230,7 @@ class CmdParserT1SPMSegment(CmdParser):
         # print 'Workflow set'
         segment_wf.run('MultiProc', plugin_args={'n_procs': args.n_threads})
 
-
+                                                                                                                             
 class CmdParserT1SPMDartelTemplate(CmdParser):
 
     def define_name(self):
@@ -401,19 +401,23 @@ class CmdParserStatisticsSurfStat(CmdParser):
 class CmdParserMachineLearningVBLinearSVM(CmdParser):
 
     def define_name(self):
-        self.name = 'machinelearning-svm-voxel'
+        self._name = 'machinelearning-svm-voxel'
 
     def define_options(self):
+        self._args.add_argument("image_type",
+                                help='it can assume two values: pet/t1, according to the images used')
         self._args.add_argument("caps_directory",
                                 help='Directory where the input NIFTI images are stored')
-        self._args.add_argument("subjects_visits_tsv",
-                                help='TSV file with subjects and sessions to be processed')
         self._args.add_argument("group_id",
                                 help='Current group name')
         self._args.add_argument("diagnoses_tsv",
                                 help='TSV file with subjects diagnoses')
         self._args.add_argument("-p", "--prefix",
                                 help='Images prefix')
+        self._args.add_argument("-t", "--tissue",
+                                help='')
+        self._args.add_argument("subjects_visits_tsv",type=str, default=None,
+                                help='TSV file with subjects and sessions to be processed')
         self._args.add_argument("-mz", "--mask_zeros", type=bool, default=True,
                                 help='Use a mask to remove zero valued voxels across images')
         self._args.add_argument("-b", "--balanced", type=bool, default=True,
@@ -421,7 +425,7 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
         self._args.add_argument("-cv", "--cv_folds", type=int, default=10,
                                 help='Number of folds to use in the cross validation')
         self._args.add_argument("-fc", "--folds_c", type=int, default=10,
-                                help='Number of folds to use in the cross validation to determine parameter C')
+                                help='Number of folds to use in the cross validation to determine parameter C')  
         self._args.add_argument("-np", "--n_procs", type=int, default=4,
                                 help='Number of parallel processes to run')
         self._args.add_argument("-crl", "--c_range_logspace", nargs=3, type=int, default=[-6, 2, 17],
@@ -433,8 +437,9 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
         self._args.add_argument("-sw", "--save_original_weights", action='store_true',
                                 help="Save feature weights for each classification as a matrix")
         self._args.add_argument("-sf", "--save_features_image", action='store_true',
-                                 help="Save feature weights for each classification as an image")
-
+                                help="Save feature weights for each classification as an image")
+        self._args.add_argument("-sdc", "--save_dual_coefficients", action='store_true',
+                                help="Save ")
     def run_pipeline(self, args):
 
         from clinica.pipeline.machine_learning.voxel_based_svm import linear_svm_binary_classification_caps
@@ -461,10 +466,10 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
 class CmdParserMachineLearningSVMRB(CmdParser):
 
     def define_name(self):
-        self.name = 'machinelearning-svm-region'
+        self._name = 'machinelearning-svm-region'
 
     def define_options(self):
-        self.args.add_argument("image_type",
+        self._args.add_argument("image_type",
                                    help='it can assume two values: pet/t1, according to the images used')
         self._args.add_argument("caps_directory",
                                     help='Directory where the input NIFTI images are stored')
@@ -474,7 +479,7 @@ class CmdParserMachineLearningSVMRB(CmdParser):
                                     help='TSV file with subjects diagnosis')
         self._args.add_argument("atlas_id",
                                     help='Name of the atlas used to extract features')
-        self._args.add_argument("subjects_visits_tsv",
+        self._args.add_argument("subjects_visits_tsv", type=str, default=None,
                                     help='TSV file with subjects and sessions to be processed')
         self._args.add_argument("-b", "--balanced", type=bool, default=True,
                                     help='Balance the weights of subjects for the SVM proportionally to their number in each class')
@@ -526,7 +531,7 @@ class CmdParserMachineLearningSVMRB(CmdParser):
 
         data = load_data(image_list, subjects_visits_tsv)
         input_image_atlas = os.path.join('/Users/simona.bottani/Desktop/Database_60_subjects/Atlas_SPM', args.atlas_id+'.nii')
-        subjects_diagnosis = pd.io.parsers.read_csv(args.diagnosis_tsv, sep='\t')
+        subjects_diagnosis = pandas.io.parsers.read_csv(args.diagnosis_tsv, sep='\t')
         if list(subjects_diagnosis.columns.values) != ['participant_id', 'diagnosis']:
             raise Exception('Subjects and visits file is not in the correct format.')
         diagnosis_list = list(subjects_diagnosis.diagnosis)
@@ -536,12 +541,6 @@ class CmdParserMachineLearningSVMRB(CmdParser):
                                             'group-' +args.group_id + '/machine_learning/region_based_svm/',
                                             'space' + args.atlas_id, args.image_type)
 
-
-
-        #save_gram_matrix = args.save_gram_matrix
-        #save_subject_classification = args.save_subject_classification
-        #save_original_weights = args.save_original_weights
-        #save_features_image = args.save_features_image
 
         svm_binary_classification(input_image_atlas,image_list,diagnosis_list,output_directory, kernel_function=None, existing_gram_matrix=gram_matrix, mask_zeros=True,
                                   scale_data=False, balanced=False,
