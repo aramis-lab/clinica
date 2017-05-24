@@ -29,8 +29,6 @@ def merge_volumes_tdim(in_file1, in_file2):
     os.system(cmd)
     return out_file
 
-
-
 def b0_dwi_split(in_file, in_bvals, in_bvecs, lowbval=5.0):
     """
     Split the volumes into two datasets :
@@ -438,4 +436,3 @@ def create_phase_in_radsec(in_phase1, in_phase2, delta_te, out_file=None):
     data = (img2.get_data().astype(np.float32)-img1.get_data().astype(np.float32)) * (1.0/delta_te)
     nb.Nifti1Image(data, img1.get_affine(), img1.get_header()).to_filename(out_file)
     return out_file
-

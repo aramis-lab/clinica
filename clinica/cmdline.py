@@ -305,6 +305,7 @@ def execute():
     run option: run one of the available pipelines
     """
     from clinica.engine import CmdParser
+    from clinica.pipeline.t1_spm_segmentation.t1_spm_segmentation_cli import T1SPMSegmentationCLI
     run_parser = sub_parser.add_parser('run')
     pipelines = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
     # pipelines = load_modular_pipelines_parser()
@@ -313,8 +314,8 @@ def execute():
                  CmdParserT1FreeSurfer(), CmdParserT1FSL(),
                  CmdParserDWIPreprocessingPhaseDifferenceFieldmap(), CmdParserDWIPreprocessingTwoPhaseImagesFieldmap(),
                  CmdParserDWIPreprocessingT1Based(),
-                 CmdParserDWIProcessing(),
-                 CmdParserStatisticsSurfStat(), CmdParserMachineLearningVBLinearSVM()]
+                 CmdParserDWIProcessing(), T1SPMSegmentationCLI(),
+                 CmdParserStatisticsSurfStat(), CmdParserMachineLearningVBLinearSVM(), CmdParserMachineLearningSVMRB()]
     init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
 
     """

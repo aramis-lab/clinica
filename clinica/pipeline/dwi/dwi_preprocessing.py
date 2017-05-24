@@ -348,13 +348,13 @@ def diffusion_preprocessing_phasediff_fieldmap(
         (pre, hmc, [('outputnode.mask_b0', 'inputnode.in_mask')]),
         # Susceptibility distortion correction:
         (hmc,       sdc, [('outputnode.out_file', 'inputnode.in_file')]),
-        (pre,       sdc, [('outputnode.mask_b0', 'inputnode.in_mask')]),
+        (hmc,       sdc, [('outputnode.mask_B0', 'inputnode.in_mask')]),
         (inputnode, sdc, [('in_fmap_magnitude', 'inputnode.in_fmap_magnitude')]),
         (inputnode, sdc, [('in_fmap_phasediff', 'inputnode.in_fmap_phasediff')]),
         # Eddy-currents correction:
         (hmc, ecc, [('outputnode.out_xfms', 'inputnode.in_xfms')]),
         (pre, ecc, [('outputnode.out_bvals', 'inputnode.in_bval')]),
-        (sdc, ecc, [('outputnode.out_file', 'inputnode.in_file')]),
+        (pre, ecc, [('outputnode.dwi_b0_merge', 'inputnode.in_file')]),
         (pre, ecc, [('outputnode.mask_b0', 'inputnode.in_mask')]),
         # Apply all corrections:
         (pre, unwarp, [('outputnode.dwi_b0_merge', 'inputnode.in_dwi')]),

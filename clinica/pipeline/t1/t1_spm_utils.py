@@ -104,6 +104,22 @@ class DARTELExistingTemplate(SPMCommand):
         return outputs
 
 
+def select_image(participant_id, session_id, image_type, bids_layout):
+    import warnings
+    selected_images = bids_layout.get(subject=participant_id, session=session_id, type=image_type,
+                                      return_type='file', extensions='nii.gz')
+    if len(selected_images) == 0:
+        selected_images = bids_layout.get(subject=participant_id, session=session_id, type=image_type,
+                                          return_type='file', extensions='nii')
+    if len(selected_images) == 0:
+        raise RuntimeError('No ' + image_type + ' images were found for participant ' + participant_id
+                           + ' and session ' + session_id)
+    if len(selected_images) > 1:
+        warnings.warn('Several ' + image_type + ' images were found for participant ' + participant_id
+                      + ' and session ' + session_id, RuntimeWarning)
+    return selected_images[0]
+
+
 def get_tissue_tuples(tissue_map, tissue_classes, dartel_tissues, save_warped_unmodulated, save_warped_modulated):
     '''
     Method to obtain the list of tuples, one for each tissue class, with the following fields:
@@ -162,7 +178,7 @@ def get_class_images(class_images, index_list):
 
     :param class_images: image set from which to extract images.
     :param index_list: index list of the classes to extract.
-    :return: extracted images in a list of list (without empty lists).
+    :return: extracted images in a list of lists (without empty lists).
 
     Example
     -------
@@ -186,7 +202,11 @@ def get_class_images(class_images, index_list):
     return result
 
 
-def group_nested_images_by_subject(class_images):
+def group_nested_images_by_subject(class_images, zip=False):
+    from clinica.utils.io import zip_nii
+    if zip:
+        return [zip_nii([s for tissue in subject for s in tissue], True) for subject in class_images]
+
     return [[s for tissue in subject for s in tissue] for subject in class_images]
 
 
@@ -222,4 +242,3 @@ def group_images_list_by_tissue(images_list, tissue_classes):
         grouped_images.append(tissue_images)
 
     return grouped_images
-
