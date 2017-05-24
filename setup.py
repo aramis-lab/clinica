@@ -39,6 +39,7 @@ setup(
         'nose>=1.3.7',
         'jinja2>=2.9',
         'xvfbwrapper>=0.2.8',
+        'plinkio>=0.9.6'
 	'six>=1.9.0'
     ],
     data_files=[('clinica', ['LICENSE.txt', 'clinica/VERSION'])],
