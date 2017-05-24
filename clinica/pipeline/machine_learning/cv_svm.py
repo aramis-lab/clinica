@@ -133,4 +133,3 @@ def cv_svm(gram_matrix, y, c_range, balanced=False, outer_folds=10, inner_folds=
     svc.fit(gram_matrix, y)
 
     return y_hat, svc.dual_coef_, svc.support_, svc.intercept_, best_c
-
