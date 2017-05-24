@@ -31,7 +31,7 @@ setup(
     ],
     install_requires=[
         'nibabel>=2.0.2',
-        'nipype>=0.11.0,<0.13.0', # the t1-freesurfer pipeline does not run with nipype>=0.13.0
+        'nipype>=0.11.0,<0.13.0',  # the t1-freesurfer pipeline does not run with nipype>=0.13.0
         'pybids>=0.1',
         'dipy>=0.6.0',
         'argcomplete>=1.4.1',
@@ -40,7 +40,7 @@ setup(
         'jinja2>=2.9',
         'xvfbwrapper>=0.2.8',
         'plinkio>=0.9.6',
-	    'six>=1.9.0'
+        'six>=1.9.0'
     ],
     data_files=[('clinica', ['LICENSE.txt', 'clinica/VERSION'])],
 )
