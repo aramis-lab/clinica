@@ -6,7 +6,7 @@ Created on Tue Jun 28 15:20:40 2016
 @author: Junhao Wen, Alexandre Routier
 """
 ### TODO save the probability map volume to be .nii(pysurfer) format or .mat(SurfStatView) format, so that in the future can be used clinica visualize.
-### TODO implement the correlation for surfstat
+### TODO implement the random mixed model
 from __future__ import absolute_import
 from nipype.interfaces.utility import Function
 import nipype.pipeline.engine as pe
@@ -60,6 +60,12 @@ def clinica_surfstat(input_directory,
           http://www.math.mcgill.ca/keith/surfstat/
 
         return: result images in output_directory of clinicasurfstat matlab script.
+
+        Note: this pipeline supports also the mixed-effect general linear model, but when you add the random effect,  need to add the
+        identity matrix I to allow for independent "white" noise in every observation (this is added by default to any fixed effect model,
+        but it must be specifically added to a mixed effects model), e.g. M3 = 1 + Age + Gender + random( Subj ) + I;
+        In general it will give good results whenever there is just one additive random effect, such as random(Subj), so my suggestion is to stick to that.
+        So far only T tests for univariate mixed effects models are implemented - F tests and multivariate mixed effects models are yet to come.
 
     """
     # Node to fetch the input vars.
