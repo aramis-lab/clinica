@@ -6,7 +6,6 @@
 def dti_processing_pipeline(
         participant_id, session_id, caps_directory, working_directory=None,
         atlas_name=None,
-        max_harmonic_order=None, tractography_algorithm='iFOD2', tractography_nb_of_tracks="100K",
         tractography_fod_threshold=None, tractography_step_size=None, tractography_angle=None,
         nthreads=2,
         zero_diagonal=True,
@@ -64,7 +63,7 @@ def dti_processing_pipeline(
     import tempfile
     from clinica.pipeline.dwi.dwi_white_matter_scalar_analysis import dti_based_analysis_pipeline
     from clinica.utils.check_dependency import check_ants, check_mrtrix
-
+    from clinica.utils.atlas import Atlas_JHUDTI81_1mm, Atlas_JHUTracts0_1mm, Atlas_JHUTracts25_1mm, Atlas_JHUTracts50_1mm
 
     check_ants(); check_mrtrix()
 

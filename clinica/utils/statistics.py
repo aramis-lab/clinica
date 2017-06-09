@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Jun  2 11:15:38 2016
-
-@author: jacquemont
-"""
 
 def permutation_test(vector_1, vector_2, number_of_permutation, tails=2):
     """
@@ -168,3 +163,62 @@ def create_new_feature_tsv(subjects_visits_tsv, bids_dir, dest_tsv, added_featur
     new_features.reset_index(inplace=True, drop=True)
     all_features = concat([sub_set, new_features], axis=1)
     all_features.to_csv(dest_tsv, sep='\t', index=False)
+
+
+def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
+    """
+    Compute statistics of a map on an atlas.
+
+    Given an atlas image with a set of ROIs, this function computes the mean of a normalized map (e.g. GM segmentation,
+    FA map from DTI, etc.) on each ROI.
+
+    Args:
+        in_normalized_map (str): File containing a scalar image registered on the atlas.
+        in_atlas (str): An atlas with a set of ROI. These ROI are used to compute statistics.
+        out_file (Optional[str]): Name of the output file.
+
+    Returns:
+        out_file (str): TSV file containing the statistics (content of the columns:
+            label, mean scalar, std of the scalar', number of voxels).
+    """
+    from clinica.utils.atlas import AtlasAbstract
+    import nibabel as nib
+    import numpy as np
+    import pandas
+    import os.path as op
+
+    if not isinstance(in_atlas, AtlasAbstract):
+        raise Exception("Atlas element must be an AtlasAbstract type")
+
+    if out_file is None:
+        fname, ext = op.splitext(op.basename(in_normalized_map))
+        if ext == ".gz":
+            fname, ext2 = op.splitext(fname)
+            ext = ext2 + ext
+        out_file = op.abspath("%s_statistics_%s.tsv" % (fname, in_atlas.get_name_atlas))
+
+    atlas_labels = nib.load(in_atlas.get_atlas_labels())
+    atlas_image_data = atlas_labels.get_data()
+    list_roi = list(set(atlas_image_data.ravel()))
+
+    in_image = nib.load(in_normalized_map)
+    scalar_image_data = in_image.get_data()
+
+    subjects_visits = pandas.io.parsers.read_csv(in_atlas.get_roi_name(), sep='\t')
+    label_list = list(subjects_visits.roi_name)
+
+    stats_scalar = np.zeros((len(list_roi),2))
+    for index, index_label in enumerate(list_roi):
+        atlas_label_index = np.array(np.where(atlas_image_data==index_label))
+        stats_scalar[index,0]=index
+        labeled_voxel = scalar_image_data[atlas_label_index[0, :], atlas_label_index[1, :], atlas_label_index[2, :]]
+        average_voxel = labeled_voxel.mean()
+        stats_scalar[index,1] = average_voxel
+
+    data = pandas.DataFrame({'index': stats_scalar[:,0],
+                             'label_name': label_list,
+                             'mean_scalar': stats_scalar[:,1]
+                             })
+    data.to_csv(out_file, sep='\t', index=False)
+
+    return out_file
