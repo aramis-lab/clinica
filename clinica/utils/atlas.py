@@ -11,6 +11,9 @@ class AtlasAbstract:
 
     @abc.abstractmethod
     def get_name_atlas(self):pass
+    """
+    Returns the name of the atlas (as defined in BIDS/CAPS specifications).
+    """
 
     def get_spatial_resolution(self):
         import nibabel as nib
@@ -37,12 +40,27 @@ class AtlasAbstract:
             s_z = str(voxels_map[2])
 
         return s_x + "x" + s_y + "x" + s_z
+    """
+    Returns the spatial resolution of the atlas (in format "XxXxX" e.g. 1x1x1 or 1.5x1.5x1.5).
+    """
 
     @abc.abstractmethod
     def get_atlas_labels(self):pass
+    """
+    Returns the image with the different ROIs.
+    """
 
     @abc.abstractmethod
     def get_atlas_map(self):pass
+    """
+    Returns the map associated to the atlas (e.g. T1, FA map from DTI, etc.).
+    """
+
+    @abc.abstractmethod
+    def get_roi_name(self):pass
+    """
+    Returns the spatial resolution of the atlas (in format "XxXxX" e.g. 1x1x1 or 1.5x1.5x1.5).
+    """
 
 
 
@@ -67,6 +85,13 @@ class Atlas_JHUDTI81_2mm(AtlasAbstract):
             raise Exception('FSLDIR variable from FSL software is not set')
         return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
 
+    def get_roi_name(self):
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from Clinica software is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUDTI81_ROI.tsv')
+
 
 
 
@@ -90,6 +115,13 @@ class Atlas_JHUDTI81_1mm(AtlasAbstract):
             raise Exception('FSLDIR variable from FSL software is not set')
         return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
 
+    def get_roi_name(self):
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from Clinica software is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUDTI81_ROI.tsv')
+
 
 
 
@@ -111,7 +143,14 @@ class Atlas_JHUTracts0_1mm(AtlasAbstract):
         FSLDIR = os.environ.get('FSLDIR', '')
         if not FSLDIR:
             raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr0-1mm.nii.gz')
+        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
+
+    def get_roi_name(self):
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from Clinica software is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
 
 
 
@@ -133,7 +172,14 @@ class Atlas_JHUTracts0_2mm(AtlasAbstract):
         FSLDIR = os.environ.get('FSLDIR', '')
         if not FSLDIR:
             raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr0-2mm.nii.gz')
+        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
+
+    def get_roi_name(self):
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from Clinica software is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
 
 
 class Atlas_JHUTracts25_1mm(AtlasAbstract):
@@ -154,7 +200,16 @@ class Atlas_JHUTracts25_1mm(AtlasAbstract):
         FSLDIR = os.environ.get('FSLDIR', '')
         if not FSLDIR:
             raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr25-1mm.nii.gz')
+        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
+
+    def get_roi_name(self):
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from Clinica software is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
+
+
 
 class Atlas_JHUTracts25_2mm(AtlasAbstract):
     def __init__(self):
@@ -174,7 +229,16 @@ class Atlas_JHUTracts25_2mm(AtlasAbstract):
         FSLDIR = os.environ.get('FSLDIR', '')
         if not FSLDIR:
             raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr25-2mm.nii.gz')
+        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
+
+    def get_roi_name(self):
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from Clinica software is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
+
+
 
 class Atlas_JHUTracts50_1mm(AtlasAbstract):
     def __init__(self):
@@ -194,7 +258,15 @@ class Atlas_JHUTracts50_1mm(AtlasAbstract):
         FSLDIR = os.environ.get('FSLDIR', '')
         if not FSLDIR:
             raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr50-1mm.nii.gz')
+        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
+
+    def get_roi_name(self):
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from Clinica software is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
+
 
 
 class Atlas_JHUTracts50_2mm(AtlasAbstract):
@@ -215,7 +287,15 @@ class Atlas_JHUTracts50_2mm(AtlasAbstract):
         FSLDIR = os.environ.get('FSLDIR', '')
         if not FSLDIR:
             raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr50-2mm.nii.gz')
+        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
+
+    def get_roi_name(self):
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from Clinica software is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
+
 
 
 

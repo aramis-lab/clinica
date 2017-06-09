@@ -45,3 +45,14 @@ def test_AtlasMap():
     assert_true(os.path.isfile(Atlas_JHUTracts50_1mm().get_atlas_map()))
     assert_true(os.path.isfile(Atlas_JHUTracts50_2mm().get_atlas_map()))
 
+def test_AtlasROIName():
+    import os
+    assert_true(os.path.isfile(Atlas_JHUDTI81_1mm().get_roi_name()))
+    assert_true(os.path.isfile(Atlas_JHUDTI81_2mm().get_roi_name()))
+    assert_true(os.path.isfile(Atlas_JHUTracts0_1mm().get_roi_name()))
+    assert_true(os.path.isfile(Atlas_JHUTracts0_2mm().get_roi_name()))
+    assert_true(os.path.isfile(Atlas_JHUTracts25_1mm().get_roi_name()))
+    assert_true(os.path.isfile(Atlas_JHUTracts25_2mm().get_roi_name()))
+    assert_true(os.path.isfile(Atlas_JHUTracts50_1mm().get_roi_name()))
+    assert_true(os.path.isfile(Atlas_JHUTracts50_2mm().get_roi_name()))
+
