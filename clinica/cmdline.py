@@ -334,9 +334,9 @@ def execute():
     init_cmdparser_objects(parser, convert_parser.add_subparsers(), [CmdGenerateTemplates()])
 
     """
-    io option
+    iotools option
     """
-    io_parser = sub_parser.add_parser('io')
+    io_parser = sub_parser.add_parser('iotools')
     io_tasks = [CmdParserSubsSess(), CmdParserMergeTsv(), CmdParserMissingModalities()]
     init_cmdparser_objects(parser, io_parser.add_subparsers(), io_tasks)
 
