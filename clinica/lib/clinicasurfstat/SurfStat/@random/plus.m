@@ -17,7 +17,8 @@ if size(m1,3)==1
 end
 if size(m2,3)==1
     v=eye(max(size(m1,1),sqrt(size(m1,3))));
-    m2.variance=term(v(:),'I');
+    %m2.variance=term(v(:),'I');
+    m2.variance=term(v(:),cellstr('I')); % debugger par HAO
 end
 
 s.mean=m1.mean+m2.mean;
