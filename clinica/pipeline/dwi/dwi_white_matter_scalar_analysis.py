@@ -261,3 +261,4 @@ def dti_atlas_scalar_analysis(input_image, atlas_labels_image, name_output_file=
     data.to_csv(outfile, sep='\t', index=False)
 
     return outfile
+

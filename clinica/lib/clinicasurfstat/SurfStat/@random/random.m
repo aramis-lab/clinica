@@ -116,7 +116,8 @@ else
                 end
             end
             v=x*x';
-            model.variance=term(v(:),strran);
+            %model.variance=term(v(:),strran);
+            model.variance=term(v(:),cellstr(strran)); % debugger par HAO
         end
     end
     if nargin>=2 && ~isempty(fix)

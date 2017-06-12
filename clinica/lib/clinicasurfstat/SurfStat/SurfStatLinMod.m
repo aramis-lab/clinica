@@ -66,12 +66,12 @@ end
 n=s(1);
 v=s(2);
 if length(s)==2
-    k=1;
+    k=1;%univariate model
 else
     k=s(3);
 end
 
-if isa(M,'random')
+if isa(M,'random') % mixed model
     [slm.X,V]=double(M);
     [n2 q]=size(V);
     II=reshape(eye(n),n^2,1);
@@ -83,7 +83,7 @@ if isa(M,'random')
         slm.V=reshape(V,[n n q]);
     end
     clear V II r;
-else
+else % fixed model
     q=1;
     if isa(M,'term')
         slm.X=double(M);
@@ -137,7 +137,7 @@ for ic=1:nc
             Y=double(permute(Ym.Data(1).Data(v1:v2,:,:),[3 1 2]));
         end
     end
-    if k==1
+    if k==1 %univariate model
         if q==1
             %% fixed effects
             if ~isfield(slm,'V')
@@ -185,8 +185,11 @@ for ic=1:nc
 
             tlim=sqrt(2*diag(pinv(M)))*sum(theta)*thetalim;
             theta=theta.*(theta>=tlim)+tlim.*(theta<tlim);
-            r=theta(1:q1,:)./repmat(sum(theta),q1,1);
+            r=theta(1:q1,:)./repmat(sum(theta),q1,1); % this may get NAN if the has 0
 
+            % debugger par HAO, replace Nan with 0
+            %r(isnan(r)) = 0;
+            
             Vt=2*pinv(M);
             m1=diag(Vt);
             m2=2*sum(Vt)';
@@ -230,6 +233,11 @@ for ic=1:nc
 
             %% finish Fisher scoring
             irs=round(r.*repmat(1./dr,1,vc));
+            
+            % debugger par HAO, replace Nan with 0
+            %irs(isnan(irs)) = 0;
+            %r(isnan(r)) = 0;
+            
             [ur,ir,jr]=unique(irs','rows');
             nr=size(ur,1);
             for ir=1:nr

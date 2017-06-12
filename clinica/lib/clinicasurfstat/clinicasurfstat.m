@@ -152,8 +152,7 @@ switch glmtype
         factor2 = char(group){2};
 
         thicksubject = thicksubject';
-
-        slmmodel  = SurfStatLinMod(thicksubject, eval(designmatrix), averagesurface);
+        slmmodel = SurfStatLinMod(thicksubject, eval(designmatrix), averagesurface);
         disp(['The GLM linear model is: ', designmatrix])
 
         %% Clear the variables which will not be used later
