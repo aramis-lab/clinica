@@ -7,8 +7,8 @@
 
 
 def dti_based_analysis_pipeline(
-        participant_id, session_id, caps_directory,
-        working_directory=None, atlas_name=None, name="dti_based_analysis_pipeline"):
+        participant_id, session_id, caps_directory, atlas,
+        working_directory=None, name="dti_based_analysis_pipeline"):
     """
     Perform tracts analysis according to a white matter atlas using a tensor-derived scalar image.
 
@@ -51,38 +51,23 @@ def dti_based_analysis_pipeline(
     import nipype.interfaces.io as nio
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
+    from clinica.utils.atlas import AtlasAbstract
     from clinica.utils.mri_registration import ants_registration_syn_quick
     from clinica.utils.mri_registration import apply_ants_registration_syn_quick_transformation
+    from clinica.utils.statistics import statistics_on_atlas
 
-    try:
-        fsl_dir = os.environ.get('FSLDIR', '')
-        if not fsl_dir:
-            raise RuntimeError('FSLDIR variable is not set')
-    except Exception as e:
-        print(str(e))
-        exit(1)
+
+    if not isinstance(atlas, AtlasAbstract):
+        raise Exception("Atlas element must be an AtlasAbstract type")
 
     if working_directory is None:
         working_directory = tempfile.mkdtemp()
 
-
-    if atlas_name is None or atlas_name.lower() == 'jhu-icbm-tracts-maxprob-thr25' :
-        atlas_name='JHU-ICBM-tracts-maxprob-thr25'
-        atlas_scalar_image=os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
-        atlas_labels=os.path.join(fsl_dir, 'data', 'atlases', 'JHU', atlas_name + '-1mm.nii.gz')
-    elif atlas_name.lower() == 'jhu-icbm-labels':
-        atlas_name='JHU-ICBM-labels'
-        atlas_scalar_image=os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
-        atlas_labels=os.path.join(fsl_dir, 'data', 'atlases', 'JHU', atlas_name + '-1mm.nii.gz')
-    else:
-        raise IOError('atlas_name should be jhu-icbm-tracts-maxprob-thr25 or jhu-icbm-labels (it is ' + atlas_name.lower()  + ')')
-
-
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['in_fa', 'in_md', 'in_ad', 'in_rd', 'in_atlas_scalar_image', 'in_atlas_labels']),
         name='inputnode')
-    inputnode.inputs.in_atlas_scalar_image=atlas_scalar_image
-    inputnode.inputs.in_atlas_labels=atlas_labels
+    inputnode.inputs.in_atlas_scalar_image=atlas.get_atlas_map()
+    inputnode.inputs.in_atlas_labels=atlas.get_atlas_labels()
 
     ants_registration = pe.Node(interface=niu.Function(
         input_names=['fixe_image', 'moving_image', 'prefix_output'],
@@ -135,16 +120,16 @@ def dti_based_analysis_pipeline(
     datasink = pe.Node(nio.DataSink(), name='datasink')
     caps_identifier = participant_id + '_' + session_id
     datasink.inputs.base_directory = os.path.join(caps_directory, 'subjects', participant_id, session_id, 'dwi')
-    datasink.inputs.substitutions = [('SyN_Quick0GenericAffine.mat', caps_identifier + '_transform-affine_' + atlas_name + '.mat'),
-                                     ('SyN_Quick1Warp.nii.gz', caps_identifier + '_transform-bspline_' + atlas_name + '.nii.gz'),
-                                     ('SyN_QuickWarped.nii.gz', caps_identifier + '_map-fa_registeredOn' + atlas_name + '.nii.gz'),
-                                     ('md_map_registered_to_atlas.nii.gz', caps_identifier + '_map-md_registeredOn' + atlas_name + '.nii.gz'),
-                                     ('ad_map_registered_to_atlas.nii.gz', caps_identifier + '_map-ad_registeredOn' + atlas_name + '.nii.gz'),
-                                     ('rd_map_registered_to_atlas.nii.gz', caps_identifier + '_map-rd_registeredOn' + atlas_name + '.nii.gz'),
-                                     ('stats_fa.csv', caps_identifier + '_map-fa_statisticsOn' + atlas_name + '.tsv'),
-                                     ('stats_md.csv', caps_identifier + '_map-md_statisticsOn' + atlas_name + '.tsv'),
-                                     ('stats_ad.csv', caps_identifier + '_map-ad_statisticsOn' + atlas_name + '.tsv'),
-                                     ('stats_rd.csv', caps_identifier + '_map-rd_statisticsOn' + atlas_name + '.tsv')
+    datasink.inputs.substitutions = [('SyN_Quick0GenericAffine.mat', caps_identifier + '_transform-affine_' + atlas.get_name() + '.mat'),
+                                     ('SyN_Quick1Warp.nii.gz', caps_identifier + '_transform-bspline_' + atlas.get_name() + '.nii.gz'),
+                                     ('SyN_QuickWarped.nii.gz', caps_identifier + '_map-fa_registeredOn' + atlas.get_name() + '.nii.gz'),
+                                     ('md_map_registered_to_atlas.nii.gz', caps_identifier + '_map-md_registeredOn' + atlas.get_name() + '.nii.gz'),
+                                     ('ad_map_registered_to_atlas.nii.gz', caps_identifier + '_map-ad_registeredOn' + atlas.get_name() + '.nii.gz'),
+                                     ('rd_map_registered_to_atlas.nii.gz', caps_identifier + '_map-rd_registeredOn' + atlas.get_name() + '.nii.gz'),
+                                     ('stats_fa.csv', caps_identifier + '_map-fa_statisticsOn' + atlas.get_name() + '.tsv'),
+                                     ('stats_md.csv', caps_identifier + '_map-md_statisticsOn' + atlas.get_name() + '.tsv'),
+                                     ('stats_ad.csv', caps_identifier + '_map-ad_statisticsOn' + atlas.get_name() + '.tsv'),
+                                     ('stats_rd.csv', caps_identifier + '_map-rd_statisticsOn' + atlas.get_name() + '.tsv')
                                      ]
 
     wf = pe.Workflow(name=name, base_dir=working_directory)
