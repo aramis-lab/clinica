@@ -157,6 +157,7 @@ set(cb,'Position',[0.35 0.085 0.3 0.03]); % define the colorbar specific positio
 set(cb,'XAxisLocation','bottom'); % display the xaxis of the colorbar
 h=get(cb,'Title'); % get the Title property
 set(h,'String',title);
+set(h, 'FontSize', 20); % change the size of the title, by HAO
 
 whitebg(gcf,background);
 set(gcf,'Color',background,'InvertHardcopy','off');
