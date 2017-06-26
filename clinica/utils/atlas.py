@@ -22,9 +22,12 @@ class AtlasAbstract:
         img_labels = nib.load(self.get_atlas_labels())
         voxels_map = img_map.header.get_zooms()
         voxels_labels = img_labels.header.get_zooms()
-        if voxels_map != voxels_labels:
-            raise Exception(
-                "Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas()))
+        if (voxels_map[0]!=voxels_labels[0]) | (voxels_map[1]!=voxels_labels[1]) | (voxels_map[2]!=voxels_labels[2]):
+        #if voxels_map != voxels_labels:
+            print "Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas())
+            #raise Exception(
+             #       "Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas()))
+        #else:
         # Will display integers without decimals
         if int(voxels_map[0]) == voxels_map[0]:
             s_x = str(int(voxels_map[0]))
@@ -62,6 +65,22 @@ class AtlasAbstract:
     Returns the spatial resolution of the atlas (in format "XxXxX" e.g. 1x1x1 or 1.5x1.5x1.5).
     """
 
+    def get_index(self):
+        import nibabel as nib
+        import numpy as np
+        img_labels = nib.load(self.get_atlas_labels())
+        img_labels = img_labels.get_data()
+        labels = list(set(img_labels.ravel()))
+        index_vector=np.zeros(len(labels))
+        for index, n in enumerate(labels):
+            index_vector[index] = index
+        return index_vector
+
+    @abc.abstractmethod
+    def get_csv_labels(self):pass
+
+    @abc.abstractmethod
+    def get_labels(self):pass
 
 
 
@@ -93,6 +112,9 @@ class Atlas_JHUDTI81_2mm(AtlasAbstract):
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUDTI81_ROI.tsv')
 
 
+    #def test(self):
+    #    x = self.get_spatial_resolution()
+    #    return x
 
 
 class Atlas_JHUDTI81_1mm(AtlasAbstract):
@@ -297,7 +319,139 @@ class Atlas_JHUTracts50_2mm(AtlasAbstract):
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
 
 
+#SPM_Atlases
 
+class AAL2(AtlasAbstract):
+    def __init__(self):
+        AtlasAbstract.__init__(self)
+
+    def get_name_atlas(self):return "AAL2"
+
+    def get_atlas_labels(self):
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from clinica is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','AAL2.nii')
+
+    def get_atlas_map(self):
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from clinica is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','Template_MNI152.nii')
+
+    def get_csv_labels(self):
+        import os.path
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from clinica is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', 'AAL2.csv')
+
+
+
+class Hammers(AtlasAbstract):
+    def __init__(self):
+        AtlasAbstract.__init__(self)
+    def get_name_atlas(self):return "Hammers"
+
+    def get_atlas_labels(self):
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from clinica is not set')
+        return os.path.join(CLINICA_HOME, 'clinica',  'resources', 'atlases_spm','Hammers.nii')
+
+    def get_atlas_map(self):
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from clinica is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','Template_MNI152.nii')
+    def get_csv_labels(self):
+        import os.path
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from clinica is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', 'Hammers.csv')
+
+
+class LPBA40(AtlasAbstract):
+    def __init__(self):
+        AtlasAbstract.__init__(self)
+    def get_name_atlas(self):return "LPBA40"
+
+    def get_atlas_labels(self):
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from clinica is not set')
+        return os.path.join(CLINICA_HOME, 'clinica','resources', 'atlases_spm','LPBA40.nii')
+
+    def get_atlas_map(self):
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from clinica is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','Template_MNI152.nii')
+    def get_csv_labels(self):
+        import os.path
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from clinica is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', 'LPBA40.csv')
+
+
+class AICHA(AtlasAbstract):
+    def __init__(self):
+        AtlasAbstract.__init__(self)
+    def get_name_atlas(self):return "AICHA"
+
+    def get_atlas_labels(self):
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from clinica is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','AICHA.nii')
+
+    def get_atlas_map(self):
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from clinica is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','Template_MNI152.nii')
+    def get_csv_labels(self):
+        import os.path
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from clinica is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', 'AICHA.csv')
+
+
+class Neuromorphometrics(AtlasAbstract):
+    def __init__(self):
+        AtlasAbstract.__init__(self)
+    def get_name_atlas(self):return "Neuromorphometrics"
+
+    def get_atlas_labels(self):
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from clinica is not set')
+        return os.path.join(CLINICA_HOME, 'clinica','resources', 'atlases_spm','Neuromorphometrics.nii')
+
+    def get_atlas_map(self):
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from clinica is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','Template_MNI152.nii')
+    def get_csv_labels(self):
+        import os.path
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from clinica is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', 'Neuromorphometrics.csv')
 
 
 class AtlasLoader:

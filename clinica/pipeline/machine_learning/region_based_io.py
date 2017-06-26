@@ -74,14 +74,14 @@ def features_weights(image_list, dual_coefficients, sv_indices, scaler=None, mas
     return weights
 
 def weights_to_nifti(input_image_atlas,weights):
+    #input_image_atlas = os.path.join('....', 'atlas_id.nii')
 
-    input_image_atlas=os.path.join('....','atlas_id.nii')
     atlas_image = nib.load(input_image_atlas).get_data()
     labels = list(set(atlas_image.ravel()))
     output_image_weights=np.array(atlas_image,dtype='f')
     for i, n in enumerate(labels):
-        index = np.array(np.where(image == n))
+        index = np.array(np.where(atlas_image== n))
         output_image_weights[index[0, :], index[1, :], index[2, :]]=weights[i]
     output_image = nib.Nifti1Image(output_image_weights, nib.load(input_image_atlas).get_affine(),nib.load(input_image_atlas).get_header())
-    #output_image.to_filename('/Users/simona.bottani/Desktop/Database_60_subjects/SVM_output/aicha/pet/AD_vs_CN_balanced__weights.nii') Posso definirlo dopo
+
     return output_image
