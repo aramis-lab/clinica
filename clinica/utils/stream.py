@@ -28,6 +28,13 @@ class FilterOut(object):
     self.flush()
 
 
+def active_cprint():
+    """
+    In order to use cprint, be sure to active cprint
+    sys.stdout = active_cprint()
+    """
+    return FilterOut(sys.stdout)
+
 def cprint(msg):
     global clinica_verbose
     if clinica_verbose is True:
