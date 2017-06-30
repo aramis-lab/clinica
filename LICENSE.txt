@@ -37,10 +37,19 @@ The following files derived from the ``MICCAI 2012 Grand Challenge and Workshop 
     clinica/resources/atlases_spm/Neuromorphometrics.nii
 The details of license are included below.
 
-
 The clinica/lib/clinicasurfstat/SurfStat library is Copyright 2003 K.J. Worsley.
 The details of license are included below.
 
+
+The following files are copyright of Tzourio-Mazoyer N, Landeau B, Papathanassiou D, Crivello F, Etard O, Delcroix N, Mazoyer B, Joliot M. Automated anatomical labeling of activations in SPM using a macroscopic anatomical parcellation of the MNI MRI single-subject brain. Neuroimage. 2002 Jan;15(1):273-89.PUBMED ID: 11771995.
+    clinica/resources/mask_cerebellum+pons_eroded_6mm.nii.gz
+    clinica/resources/mask_pons_eroded_6mm.nii.gz
+The software used to produce those files is the WFU PickAtlas Standard Atlases:
+Maldjian JA, Laurienti PJ, Kraft RA, Burdette JH. An automated method for neuroanatomic and cytoarchitectonic atlas-based interrogation of fMRI data sets. Neuroimage. 2003 Jul;19(3):1233-9.
+PUBMED ID: 12880848
+Maldjian JA, Laurienti PJ, Burdette JH. Precentral gyrus discrepancy in electronic versions of the Talairach atlas. Neuroimage. 2004 Jan;21(1):450-5.
+PUBMED ID: 14741682
+The above manuscripts provide a complete description of how the atlas volumes were generated and validated.
 
 ----------------------------------------------------------------------
 
