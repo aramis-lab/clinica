@@ -1,7 +1,7 @@
 {
-    "id": "aramislan/fmripreprocessnig",
-    "author",
-            "version",
+    "id": "aramislab/fmripreprocessnig",
+    "author": 'GUILLON Jeremy',
+    "version": "0.1",
     "dependencies": [
         {
             "type": "software",
