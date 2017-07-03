@@ -11,7 +11,7 @@ import clinica.pipeline.engine as cpe
 
 __author__ = "Jeremy Guillon"
 __copyright__ = "Copyright 2016,2017 The Aramis Lab Team"
-__credits__ = ["Jeremy Guillon", "Romain Valabrègue"]
+__credits__ = ["Jeremy Guillon", "Romain Valabregue"]
 __license__ = "See LICENSE.txt file"
 __version__ = "1.0.0"
 __maintainer__ = "Jeremy Guillon"
