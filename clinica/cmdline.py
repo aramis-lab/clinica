@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 """
 The 'clinica' executable command line, installed with the clinica packages,
 call this module.
