@@ -9,6 +9,14 @@ command line tool. See here for more details: https://gitlab.icm-institute.org/a
 # command line tool.
 import clinica.pipeline.engine as cpe
 
+__author__ = "Jeremy Guillon"
+__copyright__ = "Copyright 2016,2017 The Aramis Lab Team"
+__credits__ = ["Jeremy Guillon", "Romain Valabrègue"]
+__license__ = "See LICENSE.txt file"
+__version__ = "1.0.0"
+__maintainer__ = "Jeremy Guillon"
+__email__ = "jeremy.guillon@inria.fr"
+__status__ = "Development"
 
 class fMRIPreprocessing(cpe.Pipeline):
     """Create fMRI preprocessing pipeline object.
@@ -21,7 +29,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         - [x] Replace reg_node target image by the brain only using c1 + c2 + c3 dilated-eroded-filled.
         - [x] Develop SPM Realign and Unwarp wrapper and integrate it.
         - [x] Develop SPM Fieldmap Calculation Tool wrapper and integrate it.
-        - [ ] Replace standard DataGrabber by a BIDS tree finder.
+        - [x] Replace standard DataGrabber by a BIDS tree finder.
         - [ ] Add support of gzipped nifti inputs.
 
     Args:

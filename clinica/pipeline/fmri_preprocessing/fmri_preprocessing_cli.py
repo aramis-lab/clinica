@@ -31,6 +31,8 @@ class fMRIPreprocessingCLI(ce.CmdParser):
                                 help='Temporary directory to store pipeline intermediate results')
         self._args.add_argument("-np", "--n_procs", type=int,
                                 help='Number of processors to run in parallel')
+        self._args.add_argument("-sl", "--slurm", action='store_true',
+                                help='Run the pipeline using SLURM')
         self._args.add_argument("-ns", "--num_slices", type=int,
                                 help="Number of slices")
         self._args.add_argument("-tr", "--time_repetition", type=float,
@@ -62,5 +64,7 @@ class fMRIPreprocessingCLI(ce.CmdParser):
         pipeline.base_dir = self.absolute_path(args.working_directory)
         if args.n_procs:
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
+        elif args.slurm:
+            pipeline.run(plugin='SLURM')
         else:
             pipeline.run()
