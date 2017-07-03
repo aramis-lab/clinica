@@ -141,6 +141,8 @@ class fMRIPreprocessing(cpe.Pipeline):
             (self.output_node, write_node, [('mni_smoothed_fmri', 'mni_smoothed_fmri')]),
         ])
 
+    def check_custom_dependencies(self):
+        pass
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
