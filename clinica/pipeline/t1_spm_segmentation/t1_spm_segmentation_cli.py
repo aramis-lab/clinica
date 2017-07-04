@@ -35,8 +35,8 @@ class T1SPMSegmentationCLI(ce.CmdParser):
                                 help="Save warped unmodulated images for tissues specified in --tissue_classes")
         self._args.add_argument("-swm", "--save_warped_modulated", action='store_true',
                                 help="Save warped modulated images for tissues specified in --tissue_classes")
-        self._args.add_argument("-wdf", "--write_deformation_fields", nargs=2, type=bool,
-                                help="Option to save the deformation fields from Unified Segmentation. Both inverse and forward fields can be saved. Format: a list of 2 booleans. [Inverse, Forward]")
+        # self._args.add_argument("-wdf", "--write_deformation_fields", nargs=2, type=bool,
+        #                         help="Option to save the deformation fields from Unified Segmentation. Both inverse and forward fields can be saved. Format: a list of 2 booleans. [Inverse, Forward]")
 
     def run_pipeline(self, args):
         """
@@ -51,7 +51,8 @@ class T1SPMSegmentationCLI(ce.CmdParser):
                                     'dartel_tissues': args.dartel_tissues,
                                     'save_warped_unmodulated': args.save_warped_unmodulated,
                                     'save_warped_modulated': args.save_warped_modulated,
-                                    'write_deformation_fields': args.write_deformation_fields
+                                    'write_deformation_fields': (True, True),  # args.write_deformation_fields
+                                    'save_t1_mni': True
                                     })
 
         pipeline.base_dir = self.absolute_path(args.working_directory)

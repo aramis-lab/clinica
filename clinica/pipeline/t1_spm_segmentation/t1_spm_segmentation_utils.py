@@ -2,6 +2,12 @@
 
 """
 
+import os
+import numpy as np
+from nipype.interfaces.spm.base import SPMCommandInputSpec, SPMCommand
+from nipype.interfaces.base import TraitedSpec, OutputMultiPath, InputMultiPath, File, traits
+from nipype.utils.filemanip import filename_to_list, list_to_filename
+
 
 def select_bids_images(subjects, sessions, image_type, bids_layout):
     """
@@ -88,3 +94,71 @@ def get_tissue_tuples(tissue_map, tissue_classes, dartel_tissues, save_warped_un
         tissues.append(((tissue_map, i), n_gaussians, (native_space, dartel_input), (warped_unmodulated, warped_modulated)))
 
     return tissues
+
+
+class ApplySegmentationDeformationInput(SPMCommandInputSpec):
+
+    deformation_field = File(
+        exists=True,  mandatory=True,
+        field='comp{1}.def',
+        desc='SPM Segmentation deformation file')
+    in_files = InputMultiPath(
+        File(exists=True), mandatory=True,
+        field='out{1}.pull.fnames',
+        desc='Files on which deformation field is applied')
+    interpolation = traits.Range(
+        low=0, high=7,
+        field='out{1}.pull.interp',
+        desc='degree of b-spline used for interpolation')
+    mask = traits.Int(
+        0,
+        usedefault=True,
+        field='out{1}.pull.mask',
+        desc='image masking')
+    fwhm = traits.List(
+        traits.Float(0),
+        field='out{1}.pull.fwhm',
+        minlen=3, maxlen=3,
+        desc='3-element list (opt)')
+
+
+class ApplySegmentationDeformationOutput(TraitedSpec):
+    out_files = OutputMultiPath(File(exists=True),
+                                desc='Transformed files')
+
+
+class ApplySegmentationDeformation(SPMCommand):
+    """ Uses spm to apply a deformation field obtained from Segmentation routine to a given file
+
+    Examples
+    --------
+
+    >>> import clinica.pipeline.t1_spm_segmentation.t1_spm_segmentation_utils as seg_utils
+    >>> inv = seg_utils.ApplySegmentationDeformation()
+    >>> inv.inputs.in_files = 'T1w.nii'
+    >>> inv.inputs.deformation = 'y_T1w.nii'
+    >>> inv.run() # doctest: +SKIP
+    """
+
+    input_spec = ApplySegmentationDeformationInput
+    output_spec = ApplySegmentationDeformationOutput
+
+    _jobtype = 'util'
+    _jobname = 'defs'
+
+    def _format_arg(self, opt, spec, val):
+        """Convert input to appropriate format for spm
+        """
+        if opt == 'deformation_field':
+            return np.array([list_to_filename(val)], dtype=object)
+        if opt == 'in_files':
+            return np.array(filename_to_list(val), dtype=object)
+        return val
+
+    def _list_outputs(self):
+        outputs = self._outputs().get()
+        outputs['out_files'] = []
+        for filename in self.inputs.in_files:
+            _, fname = os.path.split(filename)
+            outputs['out_files'].append(os.path.realpath('w%s' % fname))
+        return outputs
