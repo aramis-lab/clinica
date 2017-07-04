@@ -3,6 +3,10 @@
 
 """This module contains utilities to check dependencies of the different neuroimaging tools."""
 
+from clinica.utils.stream import cprint, active_cprint
+
+active_cprint()
+
 def is_binary_present(binary):
     """
     Check if a binary is present.
@@ -26,6 +30,7 @@ def is_binary_present(binary):
     except OSError as e:
         if e.errno == os.errno.ENOENT:
             return False
+    cprint("Binary '%s' has been detected." % binary)
     return True
 
 
@@ -42,7 +47,7 @@ def check_ants():
         if not antspath:
             raise RuntimeError('ANTSPATH variable is not set')
     except Exception as e:
-        print(str(e))
+        cprint(str(e))
 
     list_binaries = ['N4BiasFieldCorrection', 'antsRegistrationSyNQuick.sh']
     for binary in list_binaries:
@@ -65,7 +70,7 @@ def check_freesurfer():
         if not freesurfer_home:
             raise RuntimeError('FREESURFER_HOME variable is not set')
     except Exception as e:
-        print(str(e))
+        cprint(str(e))
 
     list_binaries = ['mri_convert', 'recon-all']
     for binary in list_binaries:

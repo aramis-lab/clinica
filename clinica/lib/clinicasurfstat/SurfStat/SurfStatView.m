@@ -72,7 +72,11 @@ else
 %         h=get(cb,'Children'); %Get object properties, get all the children images from handle cb, (GroupSix_analysis_Thomas.m/uncorrected Pvalue! the cb and h value is randomly, cuz i put the images in anywhere
 %         set(h,'XData',[0 255]*struct.thresh);
         set(cb,'XTick',[1 64 127 129 192 255]*struct.thresh);% randamly, we get the error, Error using set Invalid property found. Object Name :  text Property Name :  'XData'.
-
+       
+        % added by HAO, resize the title
+        h=get(cb,'Title'); % get the Title property
+        set(h, 'FontSize', 20); % change the size of the title, by HAO
+        
         pstr1=num2str(round(struct.thresh*1000)/1000);
         pstr2=num2str(round(struct.thresh*1000/2)/1000);
         set(cb,'XTickLabel',strvcat(['     ' pstr1],['   ' pstr2],...
@@ -101,6 +105,11 @@ else
 %         set(h,'XData',[0 255]*struct.thresh); % Xdata is just the
 %         propertiy of an image, here cb is the colorbar, so maybe it is
 %         cuz matlab advanced, before, XData can be used for colorbar
+
+        % added by HAO, resize the title
+        h=get(cb,'Title'); % get the Title property
+        set(h, 'FontSize', 20); % change the size of the title, by HAO
+        
         set(cb,'XTick',(2+(0:5)/5*253)*struct.thresh);
         set(cb,'XTickLabel',num2str(struct.thresh*(5:-1:0)'/5));
         xl=get(cb,'XLabel');

@@ -4,7 +4,10 @@
 
 import nipype.pipeline.engine as npe
 import nipype.interfaces.utility as nutil
+import os
 import abc
+import json
+import inspect
 from bids.grabbids import BIDSLayout
 
 
@@ -23,7 +26,7 @@ def get_subject_session_list(input_dir, ss_file=None):
     import pandas as pd
 
     if not ss_file:
-        cdh.create_subs_sess_list(input_dir, '/tmp/')
+        cdh.create_subs_sess_list(input_dir, '/tmp/') # FIXME(@jguillon): make temporary directory (or temporary file)
         ss_file = '/tmp/subjects_sessions_list.tsv'
 
     ss_df = pd.io.parsers.read_csv(ss_file, sep='\t')
@@ -49,6 +52,10 @@ class Pipeline(npe.Workflow):
         self._caps_directory = caps_directory
         self._verbosity = 'debug'
         self._tsv_file = tsv_file
+        self._info_file = os.path.join(
+            os.path.dirname(os.path.abspath(inspect.getfile(self.__class__))),
+            'info.json')
+        self._info = {}
         if name:
             self._name = name
         else:
@@ -90,12 +97,66 @@ class Pipeline(npe.Workflow):
 
     @postset('is_built', True)
     def build(self):
+        self.check_dependencies()
         if not self.is_built:
             self.build_core_nodes()
             if not self.has_input_connections():
                 self.build_input_node()
             if not self.has_output_connections():
                 self.build_output_node()
+
+    def load_info(self):
+        with open(self.info_file) as info_file:
+            self.info = json.load(info_file)
+
+
+    def check_dependencies(self):
+        """Checks if listed dependencies are present.
+        
+        Loads the pipeline related `info.json` file and check each one of the dependencies listed in the JSON 
+        "dependencies" field. Its raises exception if a program in the list does not exist or if environment variables
+        are not properly defined.
+    
+        Todos:
+            - [ ] MATLAB toolbox dependency checking
+            - [ ] Clinica pipeline dependency checkings
+            - [ ] Check dependencies version
+
+        Raises:
+            Exception: Raises an exception when bad dependency types given in the `info.json` file are detected.
+        """
+
+        import clinica.utils.check_dependency as chk
+
+        # Checking functions preparation
+        check_software = {
+            # 'matlab': chk.check_matlab,
+            'freesurfer': chk.check_freesurfer,
+            'fsl': chk.check_fsl,
+            'mrtrix': chk.check_mrtrix
+        }
+        check_binary = chk.is_binary_present
+        # check_toolbox = chk.is_toolbox_present
+        # check_pipeline = chk.is_pipeline_present
+
+        # Load the info.json file
+        if not self.info:
+            self.load_info()
+
+        # Dependencies checking
+        for d in self.info['dependencies']:
+            if d['type'] == 'software':
+                check_software[d['name']]()
+            elif d['type'] == 'binary':
+                check_binary(d['name'])
+            elif d['type'] == 'toolbox':
+                pass
+            elif d['type'] == 'pipeline':
+                pass
+            else:
+                raise Exception("Unknown dependency type: '%s'." % d['type'])
+
+        self.check_custom_dependencies()
 
     @property
     def is_built(self): return self._is_built
@@ -131,6 +192,15 @@ class Pipeline(npe.Workflow):
     def tsv_file(self): return self._tsv_file
 
     @property
+    def info_file(self): return self._info_file
+
+    @property
+    def info(self): return self._info
+
+    @info.setter
+    def info(self, value): self._info = value
+
+    @property
     def bids_layout(self): return BIDSLayout(self.bids_directory)
 
     @abc.abstractmethod
@@ -148,23 +218,5 @@ class Pipeline(npe.Workflow):
     @abc.abstractmethod
     def get_output_fields(self): pass
 
-    def check_dependencies(self, dependencies):
-        """
-        Raise exception if a program in the list do not exist
-        Example:
-            check_dependencies(["recon-all", "freesurfer"])
-
-        Args:
-            dependencies: list of program names
-
-        Raises:
-            Exception: Raises an exception.
-        """
-        from distutils.spawn import find_executable
-
-        def check_dependence(program_name):
-            path = find_executable(program_name)
-            if path is None:
-                raise Exception('Program [%s] do not found' % program_name)
-
-        [check_dependence(x) for x in dependencies]
+    @abc.abstractmethod
+    def check_custom_dependencies(self): pass
