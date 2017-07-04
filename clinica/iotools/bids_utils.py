@@ -932,8 +932,8 @@ def merge_noddi_dti(folder_input, folder_output, name):
     '''
     Merge NODDI dti CATI organised following these rules:
 
-       - DTI1, DTI3 and DTI5 are always Posterior to Anterior
-       - DTI2, DTI4, DTI6 are always Anterior to Posterior
+       - DTI1, DTI3 and DTI5 are always Anterior to Posterior(AP/j-)
+       - DTI2, DTI4, DTI6 are always Posterior to Anterior(PA/j)
 
     :param folder_input: path to the folder where are the DTI
     :param folder_output: path to the BIDS folder
@@ -962,8 +962,8 @@ def merge_noddi_dti(folder_input, folder_output, name):
     out_file_name_pa = path.join(folder_output, name + '_seq-mshellPA' + get_bids_suff('dwi'))
     out_file_name_ap = path.join(folder_output, name + '_seq-mshellAP' + get_bids_suff('dwi'))
 
-    dti_pa_paths = glob(path.join(folder_input, '*DTI[1,3,5]*'))
-    dti_ap_paths = glob(path.join(folder_input, '*DTI[2,4,6]*'))
+    dti_ap_paths = glob(path.join(folder_input, '*DTI[1,3,5]*'))
+    dti_pa_paths = glob(path.join(folder_input, '*DTI[2,4,6]*'))
 
     for f in dti_pa_paths:
         dti_pa_nii.append(glob(path.join(f, '*.nii*'))[0])

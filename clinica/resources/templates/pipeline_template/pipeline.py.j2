@@ -33,7 +33,7 @@ class {{ pipeline.class_name }}(cpe.Pipeline):
 
     Example:
         >>> from {{ pipeline.module_name }} import {{ pipeline.class_name }}
-        >>> pipeline = FMRIPreprocessing('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
+        >>> pipeline = {{ pipeline.class_name }}('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipeline.parameters = {
         >>>     # ...
         >>> }

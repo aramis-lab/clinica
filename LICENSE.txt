@@ -1,0 +1,377 @@
+All files in this distribution are part of the Clinica software.
+
+Clinica is Copyright 2017 Inria.
+
+Clinica is distributed under the terms of the INRIA Non-Commercial
+License Agreement given below. This is a non-free license that grants you the
+right to use Clinica for educational, research or evaluation purposes only,
+but prohibits commercial uses.
+
+
+Several files present in Clinica came from other projects with a specific LICENSE file that is included below.
+
+The following file is copyright of Rolls ET, Joliot M & Tzourio-Mazoyer N (2015) . NeuroImage 10.1016/j.neuroimage.2015.07.075:
+    clinica/resources/atlases_spm/AAL2.nii
+The details of license are included below.
+
+
+The following file is copyright of Joliot M, Jobard G, Naveau M, Delcroix N, Petit L, Zago L, Crivello F, Mellet E, Mazoyer B & Tzourio-Mazoyer N (2015) . Journal of Neuroscience Methods 10.1016/j.jneumeth.2015.07.013:
+    clinica/resources/atlases_spm/AICHA.nii
+The details of license are included below.
+
+
+The following files based on Alexander Hammers' brain atlas, made available for the Euripides project, Nov 2009 (A):
+    clinica/resources/atlases_spm/Hammers.csv
+    clinica/resources/atlases_spm/Hammers.nii
+The details of license are included below.
+
+
+The following files are copyright of Shattuck DW, Mirza M, Adisetiyo V, Hojatkashani C, Salamon G, Narr KL, Poldrack RA, Bilder RM, Toga AW (2008) Construction of a 3D Probabilistic Atlas of Human Cortical Structures, NeuroImage 39 (3): 1064-1070. DOI:	10.1016/j.neuroimage.2007.09.031:
+    clinica/resources/atlases_spm/LPBA40.csv
+    clinica/resources/atlases_spm/LPBA40.nii
+The details of license are included below.
+
+
+The following files derived from the ``MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling'' (https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details). These data were released under the Creative Commons Attribution-NonCommercial (CC BY-NC) with no end date. Users should credit the MRI scans as originating from the OASIS project (http://www.oasis-brains.org/) and the labeled data as "provided by Neuromorphometrics, Inc. (http://Neuromorphometrics.com/) under academic subscription".  These references should be included in all workshop and final publications:
+    clinica/resources/atlases_spm/Neuromorphometrics.csv
+    clinica/resources/atlases_spm/Neuromorphometrics.nii
+The details of license are included below.
+
+The clinica/lib/clinicasurfstat/SurfStat library is Copyright 2003 K.J. Worsley.
+The details of license are included below.
+
+
+The following files are copyright of Tzourio-Mazoyer N, Landeau B, Papathanassiou D, Crivello F, Etard O, Delcroix N, Mazoyer B, Joliot M. Automated anatomical labeling of activations in SPM using a macroscopic anatomical parcellation of the MNI MRI single-subject brain. Neuroimage. 2002 Jan;15(1):273-89.PUBMED ID: 11771995.
+    clinica/resources/mask_cerebellum+pons_eroded_6mm.nii.gz
+    clinica/resources/mask_pons_eroded_6mm.nii.gz
+The software used to produce those files is the WFU PickAtlas Standard Atlases:
+Maldjian JA, Laurienti PJ, Kraft RA, Burdette JH. An automated method for neuroanatomic and cytoarchitectonic atlas-based interrogation of fMRI data sets. Neuroimage. 2003 Jul;19(3):1233-9.
+PUBMED ID: 12880848
+Maldjian JA, Laurienti PJ, Burdette JH. Precentral gyrus discrepancy in electronic versions of the Talairach atlas. Neuroimage. 2004 Jan;21(1):450-5.
+PUBMED ID: 14741682
+The above manuscripts provide a complete description of how the atlas volumes were generated and validated.
+
+----------------------------------------------------------------------
+
+INRIA Non-Commercial License Agreement for the software Clinica
+
+	1	Background: Institut National de Recherche en Informatique et en
+Automatique (the "Provider") developed the software Clinica (the
+"Software") and seeks to distribute the Software for public use and benefit.
+
+	2	Grant: The Provider hereby grants to you a revocable,
+nonexclusive, nontransferable, royalty-free and worldwide license (the
+"License") to use the Software solely for educational, research, or evaluation
+purposes, in accordance with Paragraph 3 below and subject to the terms and
+conditions of this License Agreement (the "Agreement"). The License entitles you
+to use the Software to conduct research or education and to create Derivative
+Works solely for academic, non-commercial research endeavors of the Licensee
+(A "Derivative Work" is a work that is a modification of, enhancement to, derived
+from, or based upon the Software).
+
+	3	Limitations on Use: The License is limited to noncommercial use.
+Noncommercial use relates only to educational, research, personal or evaluation
+purposes. Any other use is commercial use. You may not use the Software in
+connection with any activities which purpose is to procure a commercial gain to
+you or others.
+
+	4	Limitations on Distribution: If you distribute the Software or any
+derivative works of the Software, you will distribute them under the same terms
+and conditions as in this License, and you will not grant other rights to the
+Software or derivative works that are different from those provided by this
+License.
+
+	5	Ownership: The Software and the accompanying documentation
+are licensed, not sold, to you. The Software is a proprietary product of the
+Provider and is protected under French copyright law and international treaty
+revisions. The Provider retains all rights not specifically granted to you
+hereunder, including ownership of the Software and all copyrights, trade secrets,
+or other intellectual property rights in the Software and any accompanying
+information.
+
+	6	Publication Credit: You agree to acknowledge the Clinica
+software with appropriate citations in any publication or presentation
+containing research results obtained in whole or in part through the use of the
+Software.
+
+	7	Term of License: The License is effective upon receipt by you of the
+Software and shall continue until terminated. The License will terminate
+immediately without notice by the Provider if you fail to comply with the terms
+and conditions of this Agreement. Upon termination of this License, you shall
+immediately discontinue all use of the Software provided hereunder, and return
+to the Provider or destroy the original and all copies of all such Software. All of
+your obligations under this Agreement shall survive the termination of the
+License.
+
+	8	THE PROVIDER MAKES NO REPRESENTATIONS ABOUT THE
+SUITABILITY, USE, OR PERFORMANCE OF THIS SOFTWARE OR ABOUT ANY
+CONTENT OR INFORMATION MADE ACCESSIBLE BY THE SOFTWARE, FOR ANY
+PURPOSE. THE SOFTWARE IS PROVIDED "AS IS," WITHOUT EXPRESS OR
+IMPLIED WARRANTIES INCLUDING, BUT NOT LIMITED TO, ANY IMPLIED
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+OR NONINFRINGEMENT WITH RESPECT TO THE SOFTWARE. THE PROVIDER IS
+NOT OBLIGATED TO SUPPORT OR ISSUE UPDATES TO THE SOFTWARE. THE
+SOFTWARE HAS NOT BEEN APPROVED FOR CLINICAL USE.
+
+	9	Limitation on Liability: This Software is provided free of charge
+and, accordingly, the Provider shall not be liable under any theory for any
+damages suffered by you or any user of the Software. UNDER NO
+CIRCUMSTANCES SHALL PROVIDER BE LIABLE TO YOU OR ANY OTHER
+PERSON FOR ANY DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR
+CONSEQUENTIAL DAMAGES OF ANY CHARACTER INCLUDING, WITHOUT
+LIMITATION, DAMAGES FOR LOSS OF GOODWILL, WORK STOPPAGE,
+COMPUTER FAILURE OR MALFUNCTION, OR ANY AND ALL OTHER ECONOMIC
+LOSS OR COMMERCIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO
+USE THIS SOFTWARE, EVEN IF PROVIDER SHALL HAVE BEEN INFORMED OF
+THE POSSIBILITY OF SUCH DAMAGES, OR FOR ANY THIRD-PARTY CLAIMS.
+
+	10	Disputes: The Parties agree to attempt to settle amicably any
+controversy or claim arising under this Agreement or a breach of this
+Agreement. Thereafter, both parties agree that all disputes between them arising
+out of or relating to this Agreement, shall be submitted to non-binding mediation
+unless the parties mutually agree otherwise. All parties agree to exercise their
+best effort in good faith to resolve all disputes in mediation. This Agreement shall
+be governed and construed in accordance with the laws of France.
+
+	11	Entire Agreement: This Agreement contains the entire agreement
+between the parties with respect to the subject matter hereof, and it shall not be
+modified or amended except by an instrument in writing signed by both parties
+hereto.
+
+----------------------------------------------------------------------
+AAL2 is the implementation of a new parcellation of the orbitofrontal cortex in the automated anatomical labeling atlas.
+Rolls ET, Joliot M & Tzourio-Mazoyer N (2015) . NeuroImage 10.1016/j.neuroimage.2015.07.075
+———————
+Overview
+An alternative parcellation of the orbitofrontal cortex is described for the automated anatomical labeling atlas of Tzourio-Mazoyer et al. (2002) (Automated anatomical labeling of activations in SPM using a macroscopic anatomical parcellation of the MNI MRI single-subject brain. NeuroImage 15:273-289). The new parcellation of the orbitofrontal cortex follows the description provided by Chiavaras, Petrides, and colleagues (2000, 2001).
+
+———————
+ The AAL atlas is probably the most widely used cortical parcellation map in connectomic literature. It can be downloaded from the website: http://www.gin.cnrs.fr/AAL2?lang=en and it consists on 120 regions which parcellate che cortical and subcortical area.
+
+----------------------------------------------------------------------
+AICHA is an atlas of intrinsic connectivity of homotopic areas.
+It derives from Joliot M, Jobard G, Naveau M, Delcroix N, Petit L, Zago L, Crivello F, Mellet E, Mazoyer B & Tzourio-Mazoyer N (2015) . Journal of Neuroscience Methods 10.1016/j.jneumeth.2015.07.013. (PDF)
+ ——————
+Overview:
+AICHA (for Atlas of Intrinsic Connectivity of Homotopic Areas) is a functional brain ROIs atlas based on resting-state fMRI data acquired in 281 individuals. AICHA ROIs cover the whole cerebrum, each having 1- homogeneity of its constituting voxels intrinsic activity, and 2- a unique homotopic contralateral counterpart with which it has maximal intrinsic connectivity.
+This atlas is protected by copyright; you can freely use it for none profit research purposes, providing the above reference is cited. For other use please contact us through aicha.gin.brainatlas at gmail.com
+The AICHA atlas includes 192 couples of homotopic regions for a total of 384 regions. AICHA is provided in the MNI stereotaxic space (MNI ICBM 152, Template sampling size of 2x2x2 mm3 voxels; bounding box, x = -90 to 90 mm, y = -126 to 91 mm, z = -72 to 109 mm).
+
+AICHA atlas includes both regions located in the crown of the gyri (named Gyrus, region name beginning by “G_”) and regions located in the depth of the sulci (named Suclus, region name beginning by “S_”). In addition the subcortical nuclei were labeled separately (name Nucleus, region name beginning by “N_”).
+Different parcels belonging to the same anatomical region were labeled with numbers (starting to 1). For example the precuneus show as 9 subparts labeled from G_Precuneus-1-L to G_Precuneus-9-L.
+——————
+Information and download can be found in the website: http://www.gin.cnrs.fr/AICHA-344?lang=en
+
+----------------------------------------------------------------------
+AICHA is an atlas of intrinsic connectivity of homotopic areas.
+It derives from Joliot M, Jobard G, Naveau M, Delcroix N, Petit L, Zago L, Crivello F, Mellet E, Mazoyer B & Tzourio-Mazoyer N (2015) . Journal of Neuroscience Methods 10.1016/j.jneumeth.2015.07.013. (PDF)
+ ——————
+Overview:
+AICHA (for Atlas of Intrinsic Connectivity of Homotopic Areas) is a functional brain ROIs atlas based on resting-state fMRI data acquired in 281 individuals. AICHA ROIs cover the whole cerebrum, each having 1- homogeneity of its constituting voxels intrinsic activity, and 2- a unique homotopic contralateral counterpart with which it has maximal intrinsic connectivity.
+This atlas is protected by copyright; you can freely use it for none profit research purposes, providing the above reference is cited. For other use please contact us through aicha.gin.brainatlas at gmail.com
+The AICHA atlas includes 192 couples of homotopic regions for a total of 384 regions. AICHA is provided in the MNI stereotaxic space (MNI ICBM 152, Template sampling size of 2x2x2 mm3 voxels; bounding box, x = -90 to 90 mm, y = -126 to 91 mm, z = -72 to 109 mm).
+
+AICHA atlas includes both regions located in the crown of the gyri (named Gyrus, region name beginning by “G_”) and regions located in the depth of the sulci (named Suclus, region name beginning by “S_”). In addition the subcortical nuclei were labeled separately (name Nucleus, region name beginning by “N_”).
+Different parcels belonging to the same anatomical region were labeled with numbers (starting to 1). For example the precuneus show as 9 subparts labeled from G_Precuneus-1-L to G_Precuneus-9-L.
+——————
+Information and download can be found in the website: http://www.gin.cnrs.fr/AICHA-344?lang=en
+
+----------------------------------------------------------------------
+Hammers atlas:
+--------------------------------------------------------------------------------
+This atlas, based on Alexander Hammers' brain atlas, made available for the
+Euripides project, Nov 2009 (A).
+
+CAT12 was used to segment the T1 data and estimate Dartel normalization to the
+VBM IXI550 template for each subject. Dartel mapping was then applied for label
+map. A 3D median filter was used to remove outliers in the label map. ROI-IDs
+were reseted to guaranty that left side ROIs were described by odd numbers,
+whereas right-hand side ROIs only have even numbers. ROIs without side-alignment
+in the original atlas like the brainstem were broken into a right and left part.
+Therefore, a Laplace filter was used to estimate the potential field of unaligned
+regions between the left an right potential. If most or no side alignment in the
+original map was available, a side label map from the anatomy toolbox of SPM was
+used.
+
+If you use these atlases, please cite the references below.
+
+
+Websites:
+A) http://biomedic.doc.ic.ac.uk/brain-development/index.php?n=Main.Atlases
+
+
+References:
+1) Hammers A, Allom R, Koepp MJ, Free SL, Myers R, Lemieux L, Mitchell TN,
+Brooks DJ, Duncan JS. Three-dimensional maximum probability atlas of the human
+brain, with particular reference to the temporal lobe. Hum Brain Mapp 2003, 19:
+224-247.
+(for the region definitions #01-49 including protocols)
+
+2) Gousias IS, Rueckert D, Heckemann RA, Dyet LE, Boardman JP, Edwards AD,
+Hammers A. Automatic segmentation of brain MRIs of 2-year-olds into 83 regions
+of interest. Neuroimage 2008 Apr 1;40(2):672-684.
+(for region names #50-67 and access to protocols: www.brain-development.org)
+
+
+--------------------------------------------------------------------------------
+$Id: hammers.txt 909 2016-03-21 14:56:45Z gaser $
+
+----------------------------------------------------------------------
+
+LPBA40 atlas:
+--------------------------------------------------------------------------------
+
+The LONI Probabilistic Brain Atlas (LPBA40) is a series of maps of brain anatomic regions. These maps were produced from a set of whole-head MRI of 40 human volunteers. Each MRI was manually delineated to identify a set of 56 structures in the brain, most of which are within the cortex. These delineations were then transformed into a common atlas space to produce a set of coregistered anatomical labels. The original MRI data were also transformed into the atlas space.
+
+Websites:
+A) http://www.loni.usc.edu/atlases/Atlas_Detail.php?atlas_id=12
+B) http://www.loni.usc.edu/atlases/Atlas_Methods.php?atlas_id=12
+C) http://shattuck.bmap.ucla.edu/resources/lpba40/
+
+References:
+1) Shattuck DW, Mirza M, Adisetiyo V, Hojatkashani C, Salamon G, Narr KL, Poldrack RA, Bilder RM, Toga AW (2008) Construction of a 3D Probabilistic Atlas of Human Cortical Structures, NeuroImage 39 (3): 1064-1070. DOI:	10.1016/j.neuroimage.2007.09.031
+
+This paper should be referenced in any works that use the data provided here.
+Any feedback regarding this collection of data can be addressed to David Shattuck (shattuck@loni.ucla.edu). We encourage investigators who develop projects based on this collection to let us know about their work.
+
+--------------------------------------------------------------------------------
+
+Delineation
+
+MRI data from 40 subjects were preprocessed according to existing LONI protocols to produce skull-stripped brain volumes. These volumes were aligned to the ICBM305 atlas using rigid-body transformation to correct for head tilt and reduce bias in the delineation process. This produced a transform from native space to delineation space and an associated inverse transform. In each of the 40 subjects, 58 structures were delineated manually according to protocols developed for this project (see LPBA40 Protocols) using BrainSuite.
+
+Image processing
+
+Brain masks were constructed from the manual delineations and projected back to the native delineation space. The MRI volumes in native space were masked to produce brain-only MRI volumes. These volumes were then corrected for non-uniformity using BrainSuite's Bias Field Corrector. The bias-corrected brain data were processed with the Partial Volume Classifier software to produce maps of grey matter, white matter, and cerebrospinal fluid for each subject volume. The brains were then aligned to atlas targets using 3 widely used methods. The atlas targets were chosen based on the method.
+
+Atlas construction
+
+For each of the three atlas variants, we constructed a series of maps from the transformed data.
+
+Intensity atlas (LPBA40intensityavg) - a voxel-wise average of the skull-stripped MRI volumes in ICBM452 space
+
+Tissue class probabilistic atlas (LPBA40tissue) - three volumes, where each voxel contains a count of the number of subject volumes that had that voxel labeled as a the associated tissue type (GM, WM, or CSF)
+
+Structure probability maps (LPBA40structure) - 56 volumes, each of which contains the voxel-wise count of the number of subjects that had that voxel labeled as the given structure
+
+Grey matter masked structure probability maps (LPBA40GMstructure) - 56 volumes, each of which contains the voxel-wise count of the number of subjects that had that voxel labeled as the given structure and also as GM
+
+Maximum likelihood atlas (LPBA40) - for each voxel, we computed the most likely tissue type based on the 40 delineated subject volumes; in the case of a tie, the tissue type was chosen at random from the equilikely labels. This data set contains both the maximum likelihood label volume and a volume composed of the maximum count at each voxel
+
+Maximum likelihood grey matter atlas (LPBA40) - This is similar to LPBA40, above, but the tissue labels were pre before performing the maximum likelihood computation
+
+--------------------------------------------------------------------------------
+$Id: lpba40.txt 909 2016-03-21 14:56:45Z gaser $
+----------------------------------------------------------------------
+MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling:
+--------------------------------------------------------------------------------
+
+Maximum probability tissue labels derived from the ``MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling'' (https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details). These data were released under the Creative Commons Attribution-NonCommercial (CC BY-NC) with no end date. Users should credit the MRI scans as originating from the OASIS project (http://www.oasis-brains.org/) and the labeled data as "provided by Neuromorphometrics, Inc. (http://Neuromorphometrics.com/) under academic subscription".  These references should be included in all workshop and final publications.
+
+
+Websites:
+A) https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details
+B) http://www.oasis-brains.org/
+C) http://Neuromorphometrics.com/
+
+
+References:
+
+
+
+--------------------------------------------------------------------------------
+
+Challenge Details
+Please see https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Important_Dates for dates.
+Click Watch on the bar above to be notified via e-mail when this page is updated (you must create a free account - see the upper right).
+
+Grand Challenge Rules
+
+Submission Information
+See Submission Information for details on how to submit labels.
+
+Contest Data
+On approximately April 1, 2012, the following data will be made available after registration (see below).
+Training Atlas Pairs: 15 datasets for distinct human data consisting of a de-faced T1-weighted structural MRI dataset and as associated manually labeled volume with one label per voxel. Each volume (MRI and label) will be stored in a separate 3D NiFTI file. These files will be properly interpreted by the MIPAV software package (freely available). (from the "reliability" OASIS data set: Challenge_Demographics).
+Testing Target MRI: 20 T1-weighted structural MRI datasets of 15 distinct subjects. (Challenge_Demographics).
+Training and Testing demographics (age, gender handedness) will be available here
+A spreadsheet of all considered labels can be found here -- see evaluation procedures for further label information.
+
+Evaluation Procedures
+Please see https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Important_Dates for dates.
+Proof of paper "preliminary" manuscripts for grand challenge submissions will be accepted. Manuscripts must be in the format indicated below.
+After submission of a preliminary manuscript, contestants will be given an access code to upload labeled target MRI datasets through this website. Within 24 hours of upload, the contact author will be e-mailed a PDF of quantitative performance results. The primary metric for the grand challenge contest is the mean Dice similarity coefficient across all brain labels and all subjects in the "testing target" cohort. The list of anatomical labels is here. A discussion of the Statistical Power of the challenge is provided here.
+
+Resubmissions of different label results are permitted within the evaluation window. We understand that technical glitches, format errors, etc. may lead to misleading error metrics. The organizers encourage (and will assist with) multiple submissions to address such errors. The last submission of label results under an access code will be considered the authors final submission.
+
+We strongly advocate against parameter tuning based on the hidden testing labels during the evaluation window. The number of submissions will be recorded on the summary PDF and must be reported in the final publication. Submission of multiple similar algorithms for evaluation is encouraged. Please use a different preliminary manuscript for each algorithm variant. Text may be shared among manuscript submissions.
+
+Additional Evaluation Information
+We only compared against labels that appeared consistently across all of the datasets. As a result, we ignored some of the labels during the calculation of the results. In MATLAB notation, the label numbers that we ignored are:
+ignore_labels = [1:3, 5:10, 12:22, 24:29, 33:34, 42:43, 53:54, 63:68, 70, 74, 80:99, 110:111, 126:127, 130:131, 158:159, 188:189];
+Anywhere that any of these labels appear on the "true" (manual) labels are automatically set to 0 (background) on both the "true" labels and the estimated labels in order to avoid biasing the results.
+After ignoring these labels we are left with 134 labels that count. The resulting DSC values on these labels are what is reported on the results page.
+The labels were evaluated in three groups:
+1) Cortical Labels: All non-ignored labels >= 100
+2) Non-Cortical Labels: All non-ignored labels > 0 and < 100
+3) Overall: All non-ignored labels.
+
+
+Manuscript Preparation
+Papers submitted in response to the Grand Challenge should conform to the MICCAI formatting instructions, with the modifications explained below:
+Maximum author-generated manuscript length is 4 pages.
+The PDF report generated by the evaluation process must be included as a single supplementary final page (for a total of 5 pages).
+
+Submitted in PDF format
+Color illustrations in the PDF are not subject to fees.
+The preliminary manuscript may be revised up until June 12, 2012.
+
+Validation (Hidden) Data
+The hidden true labels will be revealed July 1, 2012 and made available to all authors who submitted a response to the workshop challenge. Additionally, the full source code of the program used to generate the evaluation PDF's will be made public.
+
+Terms of Use for Data Provided During the Contest
+The data will be released under the Creative Commons Attribution-NonCommercial (CC BY-NC) with no end date. Users should credit the MRI scans as originating from the OASIS project and the labeled data as "provided by Neuromorphometrics, Inc. (http://Neuromorphometrics.com/) under academic subscription". These references should be included in all workshop and final publications.
+
+Availability of Data after Contest Completion
+After the completion of the contest, testing/training data will be available from this website after users agree to the license terms.
+After the completion of the contest, please contact Neuromorphometrics (http://neuromorphometrics.com/) for additional details relevant to this dataset.
+
+Eligibility
+No individual who has access to the labeled testing datasets is permitted to submit a response to this grand challenge. Specifically, employees, affiliates or contractors for Neuromorphometrics are not permitted to participate in any contest entry.
+It is assumed that the majority of entrants will seek to use multi-atlas method to respond to this challenge. However, any method of labeling the testing datasets is permitted as long as the approach is described in a reproducible manner.
+
+Software Sharing
+Contestants are encouraged (but not required) to make available the software, tools, and source code for the methods used in response to this challenge. However, software and code sharing are not required for participation.
+
+Contest Results
+After the workshop (after October 5, 2012), a summary of all methods will be presented here. We will publish a citable book (with ISBN) with a compilation of all results and a summary of rankings. This book will be available at cost (or no cost, if possible) – neither editors nor their institutions will receive any compensation for this publication. On this website, we will make available copies of all papers, the label masks submitted for each method, the PDF result files for each method, and (if the authors desire) additional resources (software/code/etc.) that a reader may find relevant to each paper.
+
+--------------------------------------------------------------------------------
+$Id: neuromorphometrics.txt 817 2015-12-17 14:27:24Z dahnke $
+----------------------------------------------------------------------
+%############################################################################
+% COPYRIGHT:   Copyright 2003 K.J. Worsley
+%              Department of Mathematics and Statistics,
+%              McConnell Brain Imaging Center,
+%              Montreal Neurological Institute,
+%              McGill University, Montreal, Quebec, Canada.
+%              keith.worsley@mcgill.ca , www.math.mcgill.ca/keith
+%
+%              Permission to use, copy, modify, and distribute this
+%              software and its documentation for any purpose and without
+%              fee is hereby granted, provided that this copyright
+%              notice appears in all copies. The author and McGill University
+%              make no representations about the suitability of this
+%              software for any purpose.  It is provided "as is" without
+%              express or implied warranty.
+%############################################################################
+----------------------------------------------------------------------
+
+
+
+
+
+
+
+
+

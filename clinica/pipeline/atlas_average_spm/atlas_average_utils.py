@@ -1,10 +1,11 @@
+#reading the NIFTI image
 def reading_image(directory):
     import nibabel as nib
     reading_input_image = nib.load(directory)
     image = reading_input_image.get_data()
     return image
 
-
+#reading from the corresponding CSV the name of region associated to the index
 def read_csv_label(atlas_id):
     import os
     import pandas
@@ -12,8 +13,9 @@ def read_csv_label(atlas_id):
     read_csv_atlas=os.path.join(directory_atlas,atlas_id+'.csv')
     label_list=[]
 
+    #it reads the name of the region and how many voxels belong to the region (if the information is provided), because if there are no Voxels, the region is not taken into account.
     if num_columns_csv(read_csv_atlas) > 5 :
-        read_ROIname_voxel = pandas.read_csv(read_csv_atlas, sep=';', usecols=[2,5])# da cambiare
+        read_ROIname_voxel = pandas.read_csv(read_csv_atlas, sep=';', usecols=[2,5])
         read_labels=read_ROIname_voxel[read_ROIname_voxel.Voxel>0]
     elif ((num_columns_csv(read_csv_atlas)<5) and (num_columns_csv(read_csv_atlas)>2)):
         read_labels = pandas.read_csv(read_csv_atlas, sep=';', usecols=[2])
@@ -35,6 +37,7 @@ def num_columns_csv(filename):
                 headings = ';'.join(line)
     return len(line)
 
+#it calculates the average value of each region of the brain which has been parcellated by the atlas
 def statistics(atlas_id,image):
     import os
     import numpy as np
@@ -58,6 +61,7 @@ def statistics(atlas_id,image):
         average_voxel = labeled_voxel.mean()
         stats_scalar[index,1] = average_voxel
 
+    #the results are the list of index, the corresponding name of the region and the value of the mean
     data = pandas.DataFrame({'index': stats_scalar[:,0],
                     'label_name': label_list,
                     'mean_scalar': stats_scalar[:,1]

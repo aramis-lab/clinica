@@ -165,6 +165,7 @@ def create_new_feature_tsv(subjects_visits_tsv, bids_dir, dest_tsv, added_featur
     all_features.to_csv(dest_tsv, sep='\t', index=False)
 
 
+
 def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
     """
     Compute statistics of a map on an atlas.
