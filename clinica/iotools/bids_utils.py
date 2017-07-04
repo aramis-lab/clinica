@@ -13,7 +13,7 @@ __status__ = "Development"
 
 
 # @ToDo:test this function
-def create_participants_df(input_path,out_path, study_name, clinical_spec_path, bids_ids, delete_non_bids_info=True):
+def create_participants_df(input_path, out_path, study_name, clinical_spec_path, clinical_data_dir, bids_ids, delete_non_bids_info=True):
     """
     :param input_path: path to the original dataset
     :param out_path: path to the bids folder
@@ -66,7 +66,7 @@ def create_participants_df(input_path,out_path, study_name, clinical_spec_path, 
                 pass
             else:
                 file_ext = os.path.splitext(location)[1]
-                file_to_read_path = path.join(input_path, 'clinicalData', location)
+                file_to_read_path = path.join(clinical_data_dir, location)
 
                 if file_ext == '.xlsx':
                     file_to_read = pd.read_excel(file_to_read_path, sheetname=sheet)
