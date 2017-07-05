@@ -44,7 +44,7 @@ def visualize(clinicaWorkflow, ids, rebase=False):
         def __del__(self):
             os.chdir(self.pwd)
 
-    change_directory = None
+        change_directory = None
     if rebase is False:
         change_directory = chdir(clinicaWorkflow.base_dir)
     else:
@@ -324,13 +324,10 @@ def execute():
                  CmdParserT1SPMDartelTemplate(), CmdParserPETPreprocessing(),
                  CmdParserT1FreeSurfer(), CmdParserT1FSL(),
                  CmdParserDWIPreprocessingPhaseDifferenceFieldmap(), CmdParserDWIPreprocessingTwoPhaseImagesFieldmap(),
-<<<<<<< HEAD
                  CmdParserDWIPreprocessingT1Based(),
                  CmdParserDWIProcessing(), T1SPMSegmentationCLI(), fMRIPreprocessingCLI(), T1FreeSurfer3CLI(), StatisticsSurfstat3CLI(),
-=======
                  CmdParserDWIPreprocessingT1Based(),CmdParserT1FreeSurfer(),
                  CmdParserDWIProcessing(), T1SPMSegmentationCLI(), fMRIPreprocessingCLI(),T1FreeSurfer3CLI(),
->>>>>>> Update T1-freesurfer pipeline
                  CmdParserStatisticsSurfStat(), CmdParserMachineLearningVBLinearSVM(), CmdParserMachineLearningSVMRB()]
     init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
 
