@@ -313,6 +313,7 @@ def execute():
     """
     from clinica.engine import CmdParser
     from clinica.pipeline.t1_spm_segmentation.t1_spm_segmentation_cli import T1SPMSegmentationCLI
+    from clinica.pipeline.t1_freesurfer3.t1_freesurfer3_cli import T1FreeSurfer3CLI
     from clinica.pipeline.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI
     from clinica.pipeline.t1_freesurfer3.t1_freesurfer3_cli import T1FreeSurfer3CLI
     from clinica.pipeline.statistics_surfstat3.statistics_surfstat3_cli import StatisticsSurfstat3CLI
@@ -323,8 +324,13 @@ def execute():
                  CmdParserT1SPMDartelTemplate(), CmdParserPETPreprocessing(),
                  CmdParserT1FreeSurfer(), CmdParserT1FSL(),
                  CmdParserDWIPreprocessingPhaseDifferenceFieldmap(), CmdParserDWIPreprocessingTwoPhaseImagesFieldmap(),
+<<<<<<< HEAD
                  CmdParserDWIPreprocessingT1Based(),
                  CmdParserDWIProcessing(), T1SPMSegmentationCLI(), fMRIPreprocessingCLI(), T1FreeSurfer3CLI(), StatisticsSurfstat3CLI(),
+=======
+                 CmdParserDWIPreprocessingT1Based(),CmdParserT1FreeSurfer(),
+                 CmdParserDWIProcessing(), T1SPMSegmentationCLI(), fMRIPreprocessingCLI(),T1FreeSurfer3CLI(),
+>>>>>>> Update T1-freesurfer pipeline
                  CmdParserStatisticsSurfStat(), CmdParserMachineLearningVBLinearSVM(), CmdParserMachineLearningSVMRB()]
     init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
 
