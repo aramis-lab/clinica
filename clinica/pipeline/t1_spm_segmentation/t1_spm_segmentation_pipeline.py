@@ -239,9 +239,9 @@ class T1SPMSegmentation(cpe.Pipeline):
         # Check if we need to save the forward transformation for registering the T1 to the MNI space
         if self.parameters['save_t1_mni'] is not None and self.parameters['save_t1_mni']:
             if self.parameters['write_deformation_fields'] is not None:
-                self.parameters['write_deformation_fields'] = (self.parameters['write_deformation_fields'][0], True)
+                self.parameters['write_deformation_fields'][1] = True
             else:
-                self.parameters['write_deformation_fields'] = (False, True)
+                self.parameters['write_deformation_fields'] = [False, True]
 
         if self.parameters['write_deformation_fields'] is not None:
             new_segment.inputs.write_deformation_fields = self.parameters['write_deformation_fields']

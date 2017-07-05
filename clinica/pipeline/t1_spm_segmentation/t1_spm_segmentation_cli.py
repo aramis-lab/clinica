@@ -51,7 +51,7 @@ class T1SPMSegmentationCLI(ce.CmdParser):
                                     'dartel_tissues': args.dartel_tissues,
                                     'save_warped_unmodulated': args.save_warped_unmodulated,
                                     'save_warped_modulated': args.save_warped_modulated,
-                                    'write_deformation_fields': (True, True),  # args.write_deformation_fields
+                                    'write_deformation_fields': [True, True],  # args.write_deformation_fields
                                     'save_t1_mni': True
                                     })
 
