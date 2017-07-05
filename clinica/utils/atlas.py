@@ -79,12 +79,14 @@ class AtlasAbstract:
 
 
 
-class Atlas_JHUDTI81_2mm(AtlasAbstract):
+class JHUDTI81_2mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
 
+    @staticmethod
     def get_name_atlas(): return "JHUDTI81"
 
+    @staticmethod
     def get_atlas_labels():
         import os
         FSLDIR = os.environ.get('FSLDIR', '')
@@ -92,6 +94,7 @@ class Atlas_JHUDTI81_2mm(AtlasAbstract):
             raise Exception('FSLDIR variable from FSL software is not set')
         return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-labels-2mm.nii.gz')
 
+    @staticmethod
     def get_atlas_map():
         import os
         FSLDIR = os.environ.get('FSLDIR', '')
@@ -99,6 +102,7 @@ class Atlas_JHUDTI81_2mm(AtlasAbstract):
             raise Exception('FSLDIR variable from FSL software is not set')
         return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
 
+    @staticmethod
     def get_tsv_roi():
         import os
         CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
@@ -107,12 +111,14 @@ class Atlas_JHUDTI81_2mm(AtlasAbstract):
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUDTI81_ROI.tsv')
 
 
-class Atlas_JHUDTI81_1mm(AtlasAbstract):
+class JHUDTI81_1mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
 
+    @staticmethod
     def get_name_atlas(): return "JHUDTI81"
 
+    @staticmethod
     def get_atlas_labels():
         import os
         FSLDIR = os.environ.get('FSLDIR', '')
@@ -120,6 +126,7 @@ class Atlas_JHUDTI81_1mm(AtlasAbstract):
             raise Exception('FSLDIR variable from FSL software is not set')
         return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-labels-1mm.nii.gz')
 
+    @staticmethod
     def get_atlas_map():
         import os
         FSLDIR = os.environ.get('FSLDIR', '')
@@ -127,6 +134,7 @@ class Atlas_JHUDTI81_1mm(AtlasAbstract):
             raise Exception('FSLDIR variable from FSL software is not set')
         return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
 
+    @staticmethod
     def get_tsv_roi():
         import os
         CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
@@ -137,12 +145,14 @@ class Atlas_JHUDTI81_1mm(AtlasAbstract):
 
 
 
-class Atlas_JHUTracts0_1mm(AtlasAbstract):
+class JHUTracts0_1mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
 
+    @staticmethod
     def get_name_atlas(): return "JHUTracts0"
 
+    @staticmethod
     def get_atlas_labels():
         import os
         FSLDIR = os.environ.get('FSLDIR', '')
@@ -150,6 +160,7 @@ class Atlas_JHUTracts0_1mm(AtlasAbstract):
             raise Exception('FSLDIR variable from FSL software is not set')
         return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr0-1mm.nii.gz')
 
+    @staticmethod
     def get_atlas_map():
         import os
         FSLDIR = os.environ.get('FSLDIR', '')
@@ -157,6 +168,7 @@ class Atlas_JHUTracts0_1mm(AtlasAbstract):
             raise Exception('FSLDIR variable from FSL software is not set')
         return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
 
+    @staticmethod
     def get_tsv_roi():
         import os
         CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
@@ -166,12 +178,14 @@ class Atlas_JHUTracts0_1mm(AtlasAbstract):
 
 
 
-class Atlas_JHUTracts0_2mm(AtlasAbstract):
+class JHUTracts0_2mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
 
+    @staticmethod
     def get_name_atlas(): return "JHUTracts0"
 
+    @staticmethod
     def get_atlas_labels():
         import os
         FSLDIR = os.environ.get('FSLDIR', '')
@@ -179,6 +193,7 @@ class Atlas_JHUTracts0_2mm(AtlasAbstract):
             raise Exception('FSLDIR variable from FSL software is not set')
         return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr0-2mm.nii.gz')
 
+    @staticmethod
     def get_atlas_map():
         import os
         FSLDIR = os.environ.get('FSLDIR', '')
@@ -186,6 +201,7 @@ class Atlas_JHUTracts0_2mm(AtlasAbstract):
             raise Exception('FSLDIR variable from FSL software is not set')
         return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
 
+    @staticmethod
     def get_tsv_roi():
         import os
         CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
@@ -194,12 +210,14 @@ class Atlas_JHUTracts0_2mm(AtlasAbstract):
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
 
 
-class Atlas_JHUTracts25_1mm(AtlasAbstract):
+class JHUTracts25_1mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
 
+    @staticmethod
     def get_name_atlas(): return "JHUTracts25"
 
+    @staticmethod
     def get_atlas_labels():
         import os
         FSLDIR = os.environ.get('FSLDIR', '')
@@ -207,6 +225,7 @@ class Atlas_JHUTracts25_1mm(AtlasAbstract):
             raise Exception('FSLDIR variable from FSL software is not set')
         return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr25-1mm.nii.gz')
 
+    @staticmethod
     def get_atlas_map():
         import os
         FSLDIR = os.environ.get('FSLDIR', '')
@@ -214,6 +233,7 @@ class Atlas_JHUTracts25_1mm(AtlasAbstract):
             raise Exception('FSLDIR variable from FSL software is not set')
         return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
 
+    @staticmethod
     def get_tsv_roi():
         import os
         CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
@@ -223,12 +243,14 @@ class Atlas_JHUTracts25_1mm(AtlasAbstract):
 
 
 
-class Atlas_JHUTracts25_2mm(AtlasAbstract):
+class JHUTracts25_2mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
 
+    @staticmethod
     def get_name_atlas(): return "JHUTracts25"
 
+    @staticmethod
     def get_atlas_labels():
         import os
         FSLDIR = os.environ.get('FSLDIR', '')
@@ -236,6 +258,7 @@ class Atlas_JHUTracts25_2mm(AtlasAbstract):
             raise Exception('FSLDIR variable from FSL software is not set')
         return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr25-2mm.nii.gz')
 
+    @staticmethod
     def get_atlas_map():
         import os
         FSLDIR = os.environ.get('FSLDIR', '')
@@ -243,6 +266,7 @@ class Atlas_JHUTracts25_2mm(AtlasAbstract):
             raise Exception('FSLDIR variable from FSL software is not set')
         return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
 
+    @staticmethod
     def get_tsv_roi():
         import os
         CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
@@ -252,7 +276,7 @@ class Atlas_JHUTracts25_2mm(AtlasAbstract):
 
 
 
-class Atlas_JHUTracts50_1mm(AtlasAbstract):
+class JHUTracts50_1mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
 
@@ -285,7 +309,7 @@ class Atlas_JHUTracts50_1mm(AtlasAbstract):
 
 
 
-class Atlas_JHUTracts50_2mm(AtlasAbstract):
+class JHUTracts50_2mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
 
@@ -318,12 +342,14 @@ class Atlas_JHUTracts50_2mm(AtlasAbstract):
 
 
 
-class Atlas_AAL2(AtlasAbstract):
+class AAL2(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
 
+    @staticmethod
     def get_name_atlas(): return "AAL2"
 
+    @staticmethod
     def get_atlas_labels():
         import os
         CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
@@ -331,6 +357,7 @@ class Atlas_AAL2(AtlasAbstract):
             raise Exception('CLINICA_HOME variable from Clinica software is not set')
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','AAL2.nii')
 
+    @staticmethod
     def get_atlas_map():
         import os
         CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
@@ -338,6 +365,7 @@ class Atlas_AAL2(AtlasAbstract):
             raise Exception('CLINICA_HOME variable from Clinica software is not set')
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', 'Template_MNI152.nii')
 
+    @staticmethod
     def get_tsv_roi():
         import os
         CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
@@ -350,8 +378,11 @@ class Atlas_AAL2(AtlasAbstract):
 class Hammers(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
-    def get_name_atlas():return "Hammers"
 
+    @staticmethod
+    def get_name_atlas(): return "Hammers"
+
+    @staticmethod
     def get_atlas_labels():
         import os
         CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
@@ -359,6 +390,7 @@ class Hammers(AtlasAbstract):
             raise Exception('CLINICA_HOME variable from Clinica software is not set')
         return os.path.join(CLINICA_HOME, 'clinica',  'resources', 'atlases_spm','Hammers.nii')
 
+    @staticmethod
     def get_atlas_map():
         import os
         CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
@@ -366,6 +398,7 @@ class Hammers(AtlasAbstract):
             raise Exception('CLINICA_HOME variable from Clinica software is not set')
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','Template_MNI152.nii')
 
+    @staticmethod
     def get_tsv_roi():
         import os.path
         CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
@@ -377,8 +410,11 @@ class Hammers(AtlasAbstract):
 class LPBA40(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
-    def get_name_atlas():return "LPBA40"
 
+    @staticmethod
+    def get_name_atlas(): return "LPBA40"
+
+    @staticmethod
     def get_atlas_labels():
         import os
         CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
@@ -386,12 +422,15 @@ class LPBA40(AtlasAbstract):
             raise Exception('CLINICA_HOME variable from Clinica software is not set')
         return os.path.join(CLINICA_HOME, 'clinica','resources', 'atlases_spm','LPBA40.nii')
 
+    @staticmethod
     def get_atlas_map():
         import os
         CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
         if not CLINICA_HOME:
             raise Exception('CLINICA_HOME variable from Clinica software is not set')
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','Template_MNI152.nii')
+
+    @staticmethod
     def get_tsv_roi():
         import os.path
         CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
@@ -403,8 +442,11 @@ class LPBA40(AtlasAbstract):
 class AICHA(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
-    def get_name_atlas():return "AICHA"
 
+    @staticmethod
+    def get_name_atlas(): return "AICHA"
+
+    @staticmethod
     def get_atlas_labels():
         import os
         CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
@@ -412,12 +454,15 @@ class AICHA(AtlasAbstract):
             raise Exception('CLINICA_HOME variable from Clinica software is not set')
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','AICHA.nii')
 
+    @staticmethod
     def get_atlas_map():
         import os
         CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
         if not CLINICA_HOME:
             raise Exception('CLINICA_HOME variable from Clinica software is not set')
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','Template_MNI152.nii')
+
+    @staticmethod
     def get_tsv_roi():
         import os.path
         CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
@@ -431,7 +476,7 @@ class Neuromorphometrics(AtlasAbstract):
         AtlasAbstract.__init__(self)
 
     @staticmethod
-    def get_name_atlas():return "Neuromorphometrics"
+    def get_name_atlas(): return "Neuromorphometrics"
 
     @staticmethod
     def get_atlas_labels():
