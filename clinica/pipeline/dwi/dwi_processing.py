@@ -63,7 +63,7 @@ def dti_processing_pipeline(
     import tempfile
     from clinica.pipeline.dwi.dwi_white_matter_scalar_analysis import dti_based_analysis_pipeline
     from clinica.utils.check_dependency import check_ants, check_mrtrix
-    from clinica.utils.atlas import Atlas_JHUDTI81_1mm, Atlas_JHUTracts0_1mm, Atlas_JHUTracts25_1mm, Atlas_JHUTracts50_1mm
+    from clinica.utils.atlas import JHUDTI81_1mm, JHUTracts0_1mm, JHUTracts25_1mm, JHUTracts50_1mm
 
     check_ants(); check_mrtrix()
 
