@@ -52,6 +52,11 @@ class T1SPMSegmentation(cpe.Pipeline):
                             'save_t1_mni': False
                             }
 
+    def check_custom_dependencies(self):
+        """Check dependencies that can not be listed in the `info.json` file.
+        """
+        pass
+
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
 
