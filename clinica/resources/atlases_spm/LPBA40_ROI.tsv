@@ -1,0 +1,58 @@
+	roi_name
+0	Background
+1	Left Superior Frontal Gyrus
+2	Right Superior Frontal Gyrus
+3	Left Middle Frontal Gyrus
+4	Right Middle Frontal Gyrus
+5	Left Inferior Frontal Gyrus
+6	Right Inferior Frontal Gyrus
+7	Left Precentral Gyrus
+8	Right Precentral Gyrus
+9	Left Middle Orbitofrontal Gyrus
+10	Right Middle Orbitofrontal Gyrus
+11	Left Lateral Orbitofrontal Gyrus
+12	Right Lateral Orbitofrontal Gyrus
+13	Left Gyrus Rectus
+14	Right Gyrus Rectus
+15	Left Postcentral Gyrus
+16	Right Postcentral Gyrus
+17	Left Superior Parietal Gyrus
+18	Right Superior Parietal Gyrus
+19	Left Supramarginal Gyrus
+20	Right Supramarginal Gyrus
+21	Left Angular Gyrus
+22	Right Angular Gyrus
+23	Left Precuneus
+24	Right Precuneus
+25	Left Superior Occipital Gyrus
+26	Right Superior Occipital Gyrus
+27	Left Middle Occipital Gyrus
+28	Right Middle Occipital Gyrus
+29	Left Inferior Occipital Gyrus
+30	Right Inferior Occipital Gyrus
+31	Left Cuneus
+32	Right Cuneus
+33	Left Superior Temporal Gyrus
+34	Right Superior Temporal Gyrus
+35	Left Middle Temporal Gyrus
+36	Right Middle Temporal Gyrus
+37	Left Inferior Temporal Gyrus
+38	Right Inferior Temporal Gyrus
+39	Left Parahippocampal Gyrus
+40	Right Parahippocampal Gyrus
+41	Left Lingual Gyrus
+42	Right Lingual Gyrus
+43	Left Fusiform Gyrus
+44	Right Fusiform Gyrus
+45	Left Insula
+46	Right Insula
+47	Left Cingulate Gyrus
+48	Right Cingulate Gyrus
+49	Left Caudate
+50	Right Caudate
+51	Left Putamen
+52	Right Putamen
+53	Left Hippocampus
+54	Right Hippocampus
+55	Bothside Cerebellar Lobe
+56	Bothside Brainstem
