@@ -15,6 +15,15 @@ __status__ = "Development"
 
 
 def bids_datagrabber(input_dir, subject_list, session_list):
+    """
+    Fetches files from a BIDS directory, subjects list and a sessions list
+
+    #TODO add the functionality to fethc with several run in your dataset.
+    :param input_dir:
+    :param subject_list:
+    :param session_list:
+    :return:
+    """
     from bids.grabbids import bids_layout
 
     bids_layout = bids_layout(input_dir)
