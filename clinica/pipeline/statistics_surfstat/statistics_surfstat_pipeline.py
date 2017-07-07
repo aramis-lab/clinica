@@ -10,8 +10,8 @@ command line tool. See here for more details: https://gitlab.icm-institute.org/a
 import clinica.pipeline.engine as cpe
 
 
-class StatisticsSurfstat3(cpe.Pipeline):
-    """Statistics Surfstat3 SHORT DESCRIPTION.
+class StatisticsSurfstat(cpe.Pipeline):
+    """Statistics Surfstat SHORT DESCRIPTION.
 
     Warnings:
         - A WARNING.
@@ -32,7 +32,7 @@ class StatisticsSurfstat3(cpe.Pipeline):
 
 
     Example:
-        >>> from statistics_surfstat3 import StatisticsSurfstat3
+        >>> from statistics_surfstat import StatisticsSurfstat
         >>> pipeline = FMRIPreprocessing('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipeline.parameters = {
         >>>     # ...
@@ -124,7 +124,7 @@ class StatisticsSurfstat3(cpe.Pipeline):
         """Build and connect the core nodes of the pipeline.
         """
 
-        import statistics_surfstat3_utils as utils
+        import statistics_surfstat_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces.io import JSONFileSink

@@ -313,22 +313,19 @@ def execute():
     """
     from clinica.engine import CmdParser
     from clinica.pipeline.t1_spm_segmentation.t1_spm_segmentation_cli import T1SPMSegmentationCLI
-    from clinica.pipeline.t1_freesurfer3.t1_freesurfer3_cli import T1FreeSurfer3CLI
     from clinica.pipeline.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI
-    from clinica.pipeline.t1_freesurfer3.t1_freesurfer3_cli import T1FreeSurfer3CLI
-    from clinica.pipeline.statistics_surfstat3.statistics_surfstat3_cli import StatisticsSurfstat3CLI
+    from clinica.pipeline.t1_freesurfer.t1_freesurfer_cli import T1FreeSurferCLI
+    from clinica.pipeline.statistics_surfstat.statistics_surfstat_cli import StatisticsSurfstatCLI
     run_parser = sub_parser.add_parser('run')
     pipelines = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
     # pipelines = load_modular_pipelines_parser()
     pipelines = pipelines + [CmdParserT1SPMFullPrep(), CmdParserT1SPMSegment(),
-                 CmdParserT1SPMDartelTemplate(), CmdParserPETPreprocessing(),
-                 CmdParserT1FreeSurfer(), CmdParserT1FSL(),
+                 CmdParserT1SPMDartelTemplate(), CmdParserPETPreprocessing(), CmdParserT1FSL(),
                  CmdParserDWIPreprocessingPhaseDifferenceFieldmap(), CmdParserDWIPreprocessingTwoPhaseImagesFieldmap(),
                  CmdParserDWIPreprocessingT1Based(),
-                 CmdParserDWIProcessing(), T1SPMSegmentationCLI(), fMRIPreprocessingCLI(), T1FreeSurfer3CLI(), StatisticsSurfstat3CLI(),
-                 CmdParserDWIPreprocessingT1Based(),CmdParserT1FreeSurfer(),
-                 CmdParserDWIProcessing(), T1SPMSegmentationCLI(), fMRIPreprocessingCLI(),T1FreeSurfer3CLI(),
-                 CmdParserStatisticsSurfStat(), CmdParserMachineLearningVBLinearSVM(), CmdParserMachineLearningSVMRB()]
+                 CmdParserDWIProcessing(), T1SPMSegmentationCLI(), fMRIPreprocessingCLI(), T1FreeSurferCLI(), StatisticsSurfstatCLI(),
+                 CmdParserDWIPreprocessingT1Based(),
+                 CmdParserDWIProcessing(), T1SPMSegmentationCLI(), fMRIPreprocessingCLI(),T1FreeSurferCLI(), CmdParserMachineLearningVBLinearSVM(), CmdParserMachineLearningSVMRB()]
     init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
 
     """
