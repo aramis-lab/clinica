@@ -10,8 +10,8 @@ command line tool. See here for more details: https://gitlab.icm-institute.org/a
 import clinica.pipeline.engine as cpe
 
 
-class T1FreeSurfer3(cpe.Pipeline):
-    """T1 FreeSurfer3 SHORT DESCRIPTION.
+class T1FreeSurfer(cpe.Pipeline):
+    """T1 FreeSurfer SHORT DESCRIPTION.
 
     Warnings:
         - A WARNING.
@@ -32,7 +32,7 @@ class T1FreeSurfer3(cpe.Pipeline):
 
 
     Example:
-        >>> from t1_freesurfer3 import T1FreeSurfer3
+        >>> from t1_freesurfer import T1FreeSurfer
         >>> pipeline = FMRIPreprocessing('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipeline.parameters = {
         >>>     # ...
@@ -72,7 +72,7 @@ class T1FreeSurfer3(cpe.Pipeline):
         """Build and connect an input node to the pipeline.
         """
 
-        import t1_freesurfer3_utils as utils
+        import t1_freesurfer_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -139,7 +139,7 @@ class T1FreeSurfer3(cpe.Pipeline):
         """Build and connect the core nodes of the pipeline.
         """
 
-        import t1_freesurfer3_utils as utils
+        import t1_freesurfer_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces.freesurfer.preprocess import ReconAll

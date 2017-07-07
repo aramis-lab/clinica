@@ -7,14 +7,14 @@ command line tool. See here for more details: https://gitlab.icm-institute.org/a
 import clinica.engine as ce
 
 
-class StatisticsSurfstat3CLI(ce.CmdParser):
+class StatisticsSurfstatCLI(ce.CmdParser):
 
 
     def define_name(self):
         """Define the sub-command name to run this pipeline.
         """
 
-        self._name = 'statistics-surfstat3'
+        self._name = 'statistics-surfstat'
 
 
     def define_options(self):
@@ -53,11 +53,11 @@ class StatisticsSurfstat3CLI(ce.CmdParser):
         """
 
         from tempfile import mkdtemp
-        from statistics_surfstat3_pipeline import StatisticsSurfstat3
+        from statistics_surfstat_pipeline import StatisticsSurfstat
 
         # Most of the time, you will want to instantiate your pipeline with a
         # BIDS and CAPS directory as inputs:
-        pipeline = StatisticsSurfstat3(
+        pipeline = StatisticsSurfstat(
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.tsv_file))
         pipeline.parameters = {

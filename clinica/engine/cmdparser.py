@@ -314,88 +314,88 @@ class CmdParserPETPreprocessing(CmdParser):
         pet_wf.run('MultiProc', plugin_args={'n_procs': args.n_threads})
 
 
-class CmdParserT1FreeSurfer(CmdParser):
-
-    def define_name(self):
-        self._name = 't1-freesurfer'
-
-    def define_options(self):
-        self._args.add_argument("bids_dir",
-                                help='Path to the BIDS directory')
-        self._args.add_argument("caps_dir",
-                                help='Path to the CAPS output directory')
-        self._args.add_argument("-tsv", "--subjects_visits_tsv", type=str, default=None,
-                                help='The path to the tsv file, which by default contains all the subjects in your BIDS dataset')
-        self._args.add_argument("-wd", "--working_directory", type=str, default=None,
-                                help='Path to contain the information about your workflow')
-        self._args.add_argument("-ras", "--reconall_args", type=str, default='-qcache',
-                                help='additional flags for recon-all command line, default is -qcache')
-        self._args.add_argument("-np", "--n_procs", type=int, default=4,
-                                help='Number of parallel processes to run')
-
-    def run_pipeline(self, args):
-
-        from clinica.pipeline.t1.t1_freesurfer import datagrabber_t1_freesurfer_pipeline
-
-        reconall_wf = datagrabber_t1_freesurfer_pipeline(self.absolute_path(args.bids_dir),
-                                         self.absolute_path(args.caps_dir),
-                                         subjects_visits_tsv=self.absolute_path(args.subjects_visits_tsv),
-                                         working_directory=self.absolute_path(args.working_directory),
-                                         recon_all_args=args.reconall_args)
-
-        reconall_wf.run("MultiProc", plugin_args={'n_procs': args.n_procs})
-
-
-class CmdParserStatisticsSurfStat(CmdParser):
-
-    def define_name(self):
-        self._name = 'statistics-surfstat'
-
-    def define_options(self):
-        self._args.add_argument("caps_dir",
-                                help='Directory where the input files(output of FreeSurfer pipeline) are stored')
-        self._args.add_argument("subjects_visits_tsv",
-                                help='Directory where the tsv files are stored, this is based on your GLM')
-        self._args.add_argument("design_matrix",
-                                help='A str to define the design matrix that fits into GLM, eg, 1 + group + sex + age')
-        self._args.add_argument("contrast",
-                                help='A str to define the contrast matrix for GLM, eg, group_label')
-        self._args.add_argument("str_format",
-                                help='A str to define the format string for the tsv column , eg, %%s %%s %%s %%f')
-        self._args.add_argument("group_label",
-                                help='A str for current group name')
-        self._args.add_argument("glm_type",
-                                help='A str based on glm type for the hypothesis, one between group_comparison and correlation' )
-        self._args.add_argument("-fwhm", "--full_width_at_half_maximum", type=int, default=20, help='FWHM for the surface smoothing (default=20)')
-        self._args.add_argument("-tup", "--threshold_uncorrected_p_value", type=float, default=0.001,
-                                help='Threshold to display the uncorrected Pvalue (default=0.001)')
-        self._args.add_argument("-tcp", "--threshold_corrected_p_value", type=float, default=0.05,
-                                help='Threshold to display the corrected cluster (default=0.05)')
-        self._args.add_argument("-ct", "--cluster_threshold", type=float, default=0.001,
-                                help='Threshold to define a cluster in the process of cluster-wise correction (default=0.001)')
-        self._args.add_argument("-np", "--n_procs", type=int, default=4,
-                                help='Number of parallel processes to run (default=4)')
-        self._args.add_argument("-wd", "--working_directory", type=str, default=None,
-                                help='Temporary directory to run the workflow')
-
-    def run_pipeline(self, args):
-
-        from clinica.pipeline.statistics.surfstat import clinica_surfstat
-        # working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
-        surfstat_wf = clinica_surfstat(self.absolute_path(args.caps_dir),
-                                       self.absolute_path(args.subjects_visits_tsv),
-                                       args.design_matrix,
-                                       args.contrast,
-                                       args.str_format,
-                                       args.group_label,
-                                       args.glm_type,
-                                       full_width_at_half_maximum=args.full_width_at_half_maximum,
-                                       threshold_uncorrected_pvalue=args.threshold_uncorrected_p_value,
-                                       threshold_corrected_pvalue=args.threshold_corrected_p_value,
-                                       cluster_threshold=args.cluster_threshold,
-                                       working_directory=self.absolute_path(args.working_directory))
-
-        surfstat_wf.run("MultiProc", plugin_args={'n_procs': args.n_procs})
+# class CmdParserT1FreeSurfer(CmdParser):
+#
+#     def define_name(self):
+#         self._name = 't1-freesurfer'
+#
+#     def define_options(self):
+#         self._args.add_argument("bids_dir",
+#                                 help='Path to the BIDS directory')
+#         self._args.add_argument("caps_dir",
+#                                 help='Path to the CAPS output directory')
+#         self._args.add_argument("-tsv", "--subjects_visits_tsv", type=str, default=None,
+#                                 help='The path to the tsv file, which by default contains all the subjects in your BIDS dataset')
+#         self._args.add_argument("-wd", "--working_directory", type=str, default=None,
+#                                 help='Path to contain the information about your workflow')
+#         self._args.add_argument("-ras", "--reconall_args", type=str, default='-qcache',
+#                                 help='additional flags for recon-all command line, default is -qcache')
+#         self._args.add_argument("-np", "--n_procs", type=int, default=4,
+#                                 help='Number of parallel processes to run')
+#
+#     def run_pipeline(self, args):
+#
+#         from clinica.pipeline.t1.t1_freesurfer import datagrabber_t1_freesurfer_pipeline
+#
+#         reconall_wf = datagrabber_t1_freesurfer_pipeline(self.absolute_path(args.bids_dir),
+#                                          self.absolute_path(args.caps_dir),
+#                                          subjects_visits_tsv=self.absolute_path(args.subjects_visits_tsv),
+#                                          working_directory=self.absolute_path(args.working_directory),
+#                                          recon_all_args=args.reconall_args)
+#
+#         reconall_wf.run("MultiProc", plugin_args={'n_procs': args.n_procs})
+#
+#
+# class CmdParserStatisticsSurfStat(CmdParser):
+#
+#     def define_name(self):
+#         self._name = 'statistics-surfstat'
+#
+#     def define_options(self):
+#         self._args.add_argument("caps_dir",
+#                                 help='Directory where the input files(output of FreeSurfer pipeline) are stored')
+#         self._args.add_argument("subjects_visits_tsv",
+#                                 help='Directory where the tsv files are stored, this is based on your GLM')
+#         self._args.add_argument("design_matrix",
+#                                 help='A str to define the design matrix that fits into GLM, eg, 1 + group + sex + age')
+#         self._args.add_argument("contrast",
+#                                 help='A str to define the contrast matrix for GLM, eg, group_label')
+#         self._args.add_argument("str_format",
+#                                 help='A str to define the format string for the tsv column , eg, %%s %%s %%s %%f')
+#         self._args.add_argument("group_label",
+#                                 help='A str for current group name')
+#         self._args.add_argument("glm_type",
+#                                 help='A str based on glm type for the hypothesis, one between group_comparison and correlation' )
+#         self._args.add_argument("-fwhm", "--full_width_at_half_maximum", type=int, default=20, help='FWHM for the surface smoothing (default=20)')
+#         self._args.add_argument("-tup", "--threshold_uncorrected_p_value", type=float, default=0.001,
+#                                 help='Threshold to display the uncorrected Pvalue (default=0.001)')
+#         self._args.add_argument("-tcp", "--threshold_corrected_p_value", type=float, default=0.05,
+#                                 help='Threshold to display the corrected cluster (default=0.05)')
+#         self._args.add_argument("-ct", "--cluster_threshold", type=float, default=0.001,
+#                                 help='Threshold to define a cluster in the process of cluster-wise correction (default=0.001)')
+#         self._args.add_argument("-np", "--n_procs", type=int, default=4,
+#                                 help='Number of parallel processes to run (default=4)')
+#         self._args.add_argument("-wd", "--working_directory", type=str, default=None,
+#                                 help='Temporary directory to run the workflow')
+#
+#     def run_pipeline(self, args):
+#
+#         from clinica.pipeline.statistics.surfstat import clinica_surfstat
+#         # working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
+#         surfstat_wf = clinica_surfstat(self.absolute_path(args.caps_dir),
+#                                        self.absolute_path(args.subjects_visits_tsv),
+#                                        args.design_matrix,
+#                                        args.contrast,
+#                                        args.str_format,
+#                                        args.group_label,
+#                                        args.glm_type,
+#                                        full_width_at_half_maximum=args.full_width_at_half_maximum,
+#                                        threshold_uncorrected_pvalue=args.threshold_uncorrected_p_value,
+#                                        threshold_corrected_pvalue=args.threshold_corrected_p_value,
+#                                        cluster_threshold=args.cluster_threshold,
+#                                        working_directory=self.absolute_path(args.working_directory))
+#
+#         surfstat_wf.run("MultiProc", plugin_args={'n_procs': args.n_procs})
 
 
 class CmdParserMachineLearningVBLinearSVM(CmdParser):

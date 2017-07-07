@@ -6,12 +6,12 @@ command line tool. See here for more details: https://gitlab.icm-institute.org/a
 
 import clinica.engine as ce
 
-class T1FreeSurfer3CLI(ce.CmdParser):
+class T1FreeSurferCLI(ce.CmdParser):
 
     def define_name(self):
         """Define the sub-command name to run this pipeline.
         """
-        self._name = 't1-freesurfer3'
+        self._name = 't1-freesurfer'
 
     def define_options(self):
         """Define the sub-command arguments
@@ -34,16 +34,16 @@ class T1FreeSurfer3CLI(ce.CmdParser):
     def run_pipeline(self, args):
         """
         """
-        from t1_freesurfer3_pipeline import T1FreeSurfer3
+        from t1_freesurfer_pipeline import T1FreeSurfer
         from tempfile import mkdtemp
 
         # Most of the time, you will want to instantiate your pipeline with a
         # BIDS and CAPS directory as inputs:
-        # pipeline = T1FreeSurfer3(
+        # pipeline = T1FreeSurfer(
         #     bids_directory=self.absolute_path(args.bids_directory),
         #     caps_directory=self.absolute_path(args.caps_directory),
         #     tsv_file=self.absolute_path(args.subjects_sessions_tsv))
-        pipeline = T1FreeSurfer3(
+        pipeline = T1FreeSurfer(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv))
