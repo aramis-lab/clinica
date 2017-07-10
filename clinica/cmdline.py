@@ -313,19 +313,29 @@ def execute():
     """
     from clinica.engine import CmdParser
     from clinica.pipeline.t1_spm_segmentation.t1_spm_segmentation_cli import T1SPMSegmentationCLI
+    from clinica.pipeline.t1_spm_dartel.t1_spm_dartel_cli import T1SPMDartelCLI
+    from clinica.pipeline.t1_spm_dartel2mni.t1_spm_dartel2mni_cli import T1SPMDartel2MNICLI
     from clinica.pipeline.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI
     from clinica.pipeline.t1_freesurfer.t1_freesurfer_cli import T1FreeSurferCLI
     from clinica.pipeline.statistics_surfstat.statistics_surfstat_cli import StatisticsSurfstatCLI
     run_parser = sub_parser.add_parser('run')
     pipelines = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
     # pipelines = load_modular_pipelines_parser()
-    pipelines = pipelines + [CmdParserT1SPMFullPrep(), CmdParserT1SPMSegment(),
-                 CmdParserT1SPMDartelTemplate(), CmdParserPETPreprocessing(), CmdParserT1FSL(),
-                 CmdParserDWIPreprocessingPhaseDifferenceFieldmap(), CmdParserDWIPreprocessingTwoPhaseImagesFieldmap(),
-                 CmdParserDWIPreprocessingT1Based(),
-                 CmdParserDWIProcessing(), T1SPMSegmentationCLI(), fMRIPreprocessingCLI(), T1FreeSurferCLI(), StatisticsSurfstatCLI(),
-                 CmdParserDWIPreprocessingT1Based(),
-                 CmdParserDWIProcessing(), T1SPMSegmentationCLI(), fMRIPreprocessingCLI(),T1FreeSurferCLI(), CmdParserMachineLearningVBLinearSVM(), CmdParserMachineLearningSVMRB()]
+    pipelines += [
+        T1SPMSegmentationCLI(),
+        T1SPMDartelCLI(),
+        T1SPMDartel2MNICLI(),
+        CmdParserT1FSL(),
+        CmdParserDWIPreprocessingPhaseDifferenceFieldmap(),
+        CmdParserDWIPreprocessingTwoPhaseImagesFieldmap(),
+        CmdParserDWIPreprocessingT1Based(),
+        CmdParserDWIProcessing(),
+        fMRIPreprocessingCLI(),
+        T1FreeSurferCLI(),
+        StatisticsSurfstatCLI(),
+        CmdParserMachineLearningVBLinearSVM(),
+        CmdParserMachineLearningSVMRB()]
+
     init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
 
     """
