@@ -27,18 +27,32 @@ def bids_datagrabber(input_dir, subject_list, session_list):
     from bids.grabbids.bids_layout import BIDSLayout
 
     bidslayout = BIDSLayout(input_dir)
-    for i in range(len(subject_list)):
-        print('subject : ' + subject_list[i])
-        anat_t1 = bidslayout.get(return_type='file',
-                                        type='T1w',
-                                        extensions=['nii|nii.gz'],
-                                        session=session_list[i].replace('ses-', ''),
+    anat_t1 = []
+    if not bidslayout.get(target='run', return_type='id', type='T1w'):
+        print "There is just one run for T1w image of this analysis"
+        for i in range(len(subject_list)):
+            t1 = bidslayout.get(return_type='file',
+                                            type='T1w',
+                                            extensions=['nii|nii.gz'],
+                                            session=session_list[i].replace('ses-', ''),
                                         subject=subject_list[i].replace('sub-', ''))
-        if len(anat_t1) == 0:
-            raise ValueError("you have to grap at least one image, but the result is empty, please check it out!")
-        if len(anat_t1) != len(subject_list) or len(anat_t1) != len(session_list):
-            raise ValueError("Pybids found some missing files, you should remove them out from your analysis!!!")
-    print anat_t1
+            anat_t1.append(t1)
+    else:
+        print "There are more than one runs for T1w image for this analysis"
+        for i in range(len(subject_list)):
+            t1 = bidslayout.get(return_type='file',
+                                            type='T1w',
+                                            extensions=['nii|nii.gz'],
+                                            session=session_list[i].replace('ses-', ''),
+                                        subject=subject_list[i].replace('sub-', ''),
+                                     run='1')
+            anat_t1.append(t1)
+
+
+    if len(anat_t1) == 0:
+        raise ValueError("you have to grap at least one image, but the result is empty, please check it out!")
+    if len(anat_t1) != len(subject_list) or len(anat_t1) != len(session_list):
+        raise ValueError("Pybids found some missing files, you should remove them out from your analysis!!!")
 
     return anat_t1
 
