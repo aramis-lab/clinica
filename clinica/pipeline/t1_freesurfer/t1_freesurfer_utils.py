@@ -26,10 +26,10 @@ def bids_datagrabber(input_dir, subject_list, session_list):
     """
     from bids.grabbids import bids_layout
 
-    bids_layout = bids_layout(input_dir)
+    bidslayout = bids_layout(input_dir)
     for i in range(len(subject_list)):
         print('subject : ' + subject_list[i])
-        anat_t1 = bids_layout.get(return_type='file',
+        anat_t1 = bidslayout.get(return_type='file',
                                         type='T1w',
                                         extensions=['nii|nii.gz'],
                                         session=session_list[i].replace('ses-', ''),
