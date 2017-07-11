@@ -24,9 +24,9 @@ def bids_datagrabber(input_dir, subject_list, session_list):
     :param session_list:
     :return:
     """
-    from bids.grabbids import bids_layout
+    from bids.grabbids.bids_layout import BIDSLayout
 
-    bidslayout = bids_layout(input_dir)
+    bidslayout = BIDSLayout(input_dir)
     for i in range(len(subject_list)):
         print('subject : ' + subject_list[i])
         anat_t1 = bidslayout.get(return_type='file',
@@ -41,7 +41,6 @@ def bids_datagrabber(input_dir, subject_list, session_list):
     print anat_t1
 
     return anat_t1
-
 
 def get_dirs_check_reconalled(output_dir, subject_list, session_list):
     """
