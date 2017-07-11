@@ -1,0 +1,11 @@
+{   "id": "aramislab/t1freesurfer",
+    "author": "WEN Junhao",
+    "version": "0.1",
+    "dependencies": [
+        {
+            "type": "toolbox",
+            "name": "freesurfer",
+            "version": ">=5.3"
+        }
+    ]
+}
