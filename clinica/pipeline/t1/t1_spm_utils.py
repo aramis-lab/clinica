@@ -188,7 +188,7 @@ def get_class_images(class_images, index_list):
     # Declare class images list
     class_n_images = {}
     for idx in index_list:
-        class_n_images[idx]=[]
+        class_n_images[idx] = []
 
     for session in class_images:
         for idx in index_list:

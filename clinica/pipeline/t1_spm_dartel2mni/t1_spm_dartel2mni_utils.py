@@ -2,15 +2,60 @@
 
 """
 
-def step1(in_hello_word):
-    """Example function for Step 1.
+
+def prepare_flowfields(flow_fields, tissues):
     """
 
-    print(in_hello_word + " from the step 1 of the T1 SPM Dartel2MNI Clinica pipeline.")
-
-
-def step2(in_hello_word):
-    """Example function for Step 2.
+    :param flow_fields:
+    :param tissues:
+    :return:
     """
+    return [[f] * len(tissues) for f in flow_fields]
 
-    print(in_hello_word + " from the step 2 of the T1 SPM Dartel2MNI Clinica pipeline.")
+
+def join_smoothed_files(smoothed_normalized_files):
+    """
+    Joins outputs
+    :param smoothed_normalized_files:
+    :return:
+    """
+    # from clinica.utils.stream import cprint
+    # cprint(smoothed_normalized_files)
+
+    return [[x for smooth in subject for x in smooth] for subject in zip(*smoothed_normalized_files)]
+
+
+def atlas_statistics(in_image, in_atlas_list):
+    """
+    For each atlas name provided it calculates for the input image the mean for each region in the atlas and saves it to a tsv file.
+    :param in_image: A Nifti image
+    :param in_atlas_list: List of names of atlas to be applied
+    :return: List of paths to tsv files
+    """
+    from os import getcwd
+    from os.path import abspath, join
+    from nipype.utils.filemanip import split_filename
+    from clinica.utils.atlas import AtlasAbstract
+    from clinica.utils.statistics import statistics_on_atlas
+
+    orig_dir, base, ext = split_filename(in_image)
+    atlas_classes = AtlasAbstract.__subclasses__()
+    atlas_statistics_list = []
+    for atlas in in_atlas_list:
+        for atlas_class in atlas_classes:
+            if atlas_class.get_name_atlas() == atlas:
+                out_atlas_statistics = abspath(join(getcwd(), base + '_space-' + atlas + '_map-graymatter_statistics.tsv'))
+                statistics_on_atlas(in_image, atlas_class(), out_atlas_statistics)
+                atlas_statistics_list.append(out_atlas_statistics)
+                break
+
+    return atlas_statistics_list
+
+
+def select_gm_images(in_images):
+    """
+    Selects only
+    :param in_images:
+    :return:
+    """
+    return [image for subject in in_images for image in subject if ('c1' in image or 'graymatter' in image)]

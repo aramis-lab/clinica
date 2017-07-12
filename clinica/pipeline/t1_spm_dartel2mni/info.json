@@ -1,0 +1,12 @@
+{
+    "id": "aramislab/t1spmdartel2mni",
+    "author": "BOTTANI, Simona; SAMPER-GONZALEZ Jorge",
+    "version": "0.1",
+    "dependencies": [
+        {
+            "type": "toolbox",
+            "name": "spm",
+            "version": ">=8"
+        }
+    ]
+}
