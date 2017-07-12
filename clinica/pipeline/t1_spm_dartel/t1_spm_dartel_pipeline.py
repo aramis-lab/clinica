@@ -140,7 +140,7 @@ class T1SPMDartel(cpe.Pipeline):
             (r'(.*)c6(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-background\3'),
             (r'(.*)r(sub-.*)(\.nii(\.gz)?)$', r'\1\2\3'),
             (r'(.*)_dartelinput(\.nii(\.gz)?)$', r'\1\2'),
-            (r'(.*)u_(sub-.*)(\.nii(\.gz)?)$', r'\1\2_target-' + re.escape(self._group_id) + r'_deformation\3'),
+            (r'(.*)flow_fields/u_(sub-.*)_segm-.*(\.nii(\.gz)?)$', r'\1\2_target-' + re.escape(self._group_id) + r'_transformation-forward_deformation\3'),
             (r'trait_added', r'')
         ]
 
@@ -148,7 +148,8 @@ class T1SPMDartel(cpe.Pipeline):
         # ======================
         write_template_node = npe.Node(nio.DataSink(), name='write_template_node')
         write_template_node.inputs.parameterization = False
-        write_template_node.inputs.base_directory = op.join(self.caps_directory, 'groups/group-' + self._group_id, 't1')
+        write_template_node.inputs.base_directory = self.caps_directory
+        write_template_node.inputs.container = op.join('groups/group-' + self._group_id, 't1')
         write_template_node.inputs.regexp_substitutions = [
             (r'(.*)final_template_file/.*(\.nii(\.gz)?)$', r'\1group-' + re.escape(self._group_id) + r'_template\2'),
             (r'(.*)template_files/.*([0-9])(\.nii(\.gz)?)$', r'\1group-' + re.escape(self._group_id) + r'_iteration-\2_template\3')
@@ -212,7 +213,7 @@ class T1SPMDartel(cpe.Pipeline):
         # ==========
         self.connect([
             (self.input_node, unzip_node,    [('dartel_input_images', 'in_file')]),
-            (self.unzip_node, dartel_template,    [('out_file', 'image_files')]),
+            (unzip_node, dartel_template,    [('out_file', 'image_files')]),
             (dartel_template, self.output_node, [('dartel_flow_fields', 'dartel_flow_fields'),
                                                  ('final_template_file', 'final_template_file'),
                                                  ('template_files', 'template_files')])

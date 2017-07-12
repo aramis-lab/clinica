@@ -178,9 +178,6 @@ class T1SPMSegmentation(cpe.Pipeline):
             (self.output_node, write_node, datasink_connections)
         ])
 
-    def check_custom_dependencies(self):
-        pass
-
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
         """

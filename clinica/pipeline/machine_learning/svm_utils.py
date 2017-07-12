@@ -4,6 +4,7 @@ import pandas as pd
 import csv
 from ntpath import basename, splitext
 from scipy.spatial.distance import squareform
+from sklearn.metrics import roc_auc_score
 
 
 def evaluate_prediction(y, y_hat):
@@ -66,6 +67,17 @@ def gram_matrix_linear(data):
     return np.dot(data, data.transpose())
 
 
+def calculate_auc(svc, shared_x, train_indices, test_indices, y_test):
+
+    x_train = shared_x[train_indices[np.array(svc.support_)], :]
+    weights = np.sum(x_train * svc.dual_coef_.transpose(), 0)
+
+    x_test = shared_x[test_indices, :]
+    y_hat = x_test.dot(weights) + svc.intercept_
+
+    return roc_auc_score(y_test, y_hat)
+
+
 def save_subjects_prediction(subjects, diagnosis, y, y_hat, output_file):
 
     with open(output_file, 'w') as csvfile:
@@ -85,10 +97,17 @@ def save_subjects_prediction(subjects, diagnosis, y, y_hat, output_file):
                              })
 
 
-def results_to_csv(results, diagnose_list, output_file):
+def results_to_tsv(results, diagnose_list, output_file):
 
     with open(output_file, 'w') as output:
-        s = 'Balanced Accuracy\n'
+
+        s = 'AUC\n'
+        auc_list = [round(res[1]['auc'], 2) for res in sorted(results.items())]
+        df = pd.DataFrame(squareform(auc_list), index=diagnose_list, columns=diagnose_list)
+        print df
+        s += df.to_csv(sep='\t')
+
+        s += '\nBalanced Accuracy\n'
         balanced_accuracy_list = [round(res[1]['balanced_accuracy'], 2) for res in sorted(results.items())]
         df = pd.DataFrame(squareform(balanced_accuracy_list), index=diagnose_list, columns=diagnose_list)
         print df

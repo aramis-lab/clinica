@@ -436,7 +436,7 @@ class LPBA40(AtlasAbstract):
         CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
         if not CLINICA_HOME:
             raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', 'LPBA40.csv')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', 'LPBA40_ROI.tsv')
 
 
 class AICHA(AtlasAbstract):

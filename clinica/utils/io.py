@@ -7,10 +7,10 @@ def zip_nii(in_file, same_dir=False):
     import shutil
     from nipype.utils.filemanip import split_filename
 
-    if type(in_file) is list:
+    if not isinstance(in_file, basestring): # type(in_file) is list:
         return [zip_nii(f, same_dir) for f in in_file]
 
-    orig_dir, base, ext = split_filename(in_file)
+    orig_dir, base, ext = split_filename(str(in_file))
 
     # Already compressed
     if ext[-3:].lower() == ".gz":

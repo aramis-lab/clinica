@@ -1,6 +1,6 @@
 
 from clinica.pipeline.machine_learning.region_based_io import get_caps_t1_list, get_caps_pet_list,load_data, features_weights, weights_to_nifti
-from clinica.pipeline.machine_learning.svm_utils import evaluate_prediction, gram_matrix_linear, save_subjects_prediction, results_to_csv
+from clinica.pipeline.machine_learning.svm_utils import evaluate_prediction, gram_matrix_linear, save_subjects_prediction, results_to_tsv
 import numpy as np
 from sklearn.preprocessing import scale
 from os.path import join
@@ -97,4 +97,4 @@ def svm_binary_classification(input_image_atlas,image_list, diagnosis_list, outp
 
             results[(dx1, dx2)] = evaluate_prediction(y, y_hat)
 
-    results_to_csv(results, dx_filter, join(output_directory, 'resume' + ('_balanced' if balanced else '_not_balanced') + '.csv'))
+    results_to_tsv(results, dx_filter, join(output_directory, 'resume' + ('_balanced' if balanced else '_not_balanced') + '.csv'))
