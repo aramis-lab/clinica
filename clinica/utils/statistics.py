@@ -216,12 +216,6 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
         average_voxel = labeled_voxel.mean()
         stats_scalar[index,1] = average_voxel
 
-    from clinica.utils.stream import cprint
-    cprint('LALALA')
-    cprint(in_atlas.get_name_atlas())
-    cprint(str(stats_scalar.shape))
-    cprint(str(len(label_list)))
-
     data = pandas.DataFrame({'index': stats_scalar[:,0],
                              'label_name': label_list,
                              'mean_scalar': stats_scalar[:,1]
