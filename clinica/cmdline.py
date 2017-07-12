@@ -315,6 +315,7 @@ def execute():
     from clinica.pipeline.t1_spm_segmentation.t1_spm_segmentation_cli import T1SPMSegmentationCLI
     from clinica.pipeline.t1_spm_dartel.t1_spm_dartel_cli import T1SPMDartelCLI
     from clinica.pipeline.t1_spm_dartel2mni.t1_spm_dartel2mni_cli import T1SPMDartel2MNICLI
+    from clinica.pipeline.t1_spm_full_prep.t1_spm_full_prep_cli import T1SPMFullPrepCLI
     from clinica.pipeline.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI
     from clinica.pipeline.t1_freesurfer.t1_freesurfer_cli import T1FreeSurferCLI
     from clinica.pipeline.statistics_surfstat.statistics_surfstat_cli import StatisticsSurfstatCLI
@@ -325,6 +326,7 @@ def execute():
         T1SPMSegmentationCLI(),
         T1SPMDartelCLI(),
         T1SPMDartel2MNICLI(),
+        T1SPMFullPrepCLI(),
         CmdParserT1FSL(),
         CmdParserDWIPreprocessingPhaseDifferenceFieldmap(),
         CmdParserDWIPreprocessingTwoPhaseImagesFieldmap(),

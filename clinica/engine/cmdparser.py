@@ -121,149 +121,149 @@ def get_cmdparser_names(objects=None):
 #| |   | |_| | | |   | | | || |___| |\ \| |___    | | \ \_/ / |_| | |\ \  | \__/\| |____| | | |/\__/ /\__/ /
 #\_|    \___/  \_/   \_| |_/\____/\_| \_\____/    \_/  \___/ \___/\_| \_|  \____/\_____/\_| |_/\____/\____/
 
-class CmdParserT1SPMFullPrep(CmdParser):
+# class CmdParserT1SPMFullPrep(CmdParser):
+#
+#     def define_name(self):
+#         self._name = 't1-spm-full-prep'
+#
+#     def define_options(self):
+#         self._args.add_argument("bids_directory",
+#                                 help='Path to the BIDS directory.')
+#         self._args.add_argument("caps_directory",
+#                                 help='Path to the CAPS directory.')
+#         self._args.add_argument("subjects_sessions_tsv",
+#                                 help='TSV file containing the subjects with their sessions.')
+#         self._args.add_argument("group_id",
+#                                 help='Current group name')
+#         self._args.add_argument("-wd", "--working_directory",
+#                                 help='Temporary directory to store pipeline intermediate results')
+#         self._args.add_argument("-np", "--n_threads", type=int, default=4,
+#                                 help='Number of threads to run in parallel')
+#         self._args.add_argument("-ti", "--tissue_classes", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
+#                                 help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to save. Up to 6 tissue classes can be saved. Ex: 1 2 3 is GM, WM and CSF")
+#         self._args.add_argument("-dt", "--dartel_tissues", nargs='+', type=int, default=[1], choices=range(1, 7),
+#                                 help='Tissues to use for DARTEL template calculation. Ex: 1 is only GM')
+#         self._args.add_argument("-swu", "--save_warped_unmodulated", action='store_true',
+#                                 help="Save warped unmodulated images for tissues specified in --tissue_classes")
+#         self._args.add_argument("-swm", "--save_warped_modulated", action='store_true',
+#                                 help="Save warped modulated images for tissues specified in --tissue_classes")
+#         self._args.add_argument("-wdf", "--write_deformation_fields", nargs=2, type=bool,
+#                                 help="Option to save the deformation fields from Unified Segmentation. Both inverse and forward fields can be saved. Format: a list of 2 booleans. [Inverse, Forward]")
+#         # The default smoothing is 8mm isotropic, as in the Matlab version of SPM.
+#         # This is recommended when using modulated images.
+#         self._args.add_argument("-fwhm", "--fwhm", nargs=3, type=float, default=[8, 8, 8],
+#                                 help="A list of 3 floats specifying the FWHM for each dimension")
+#         self._args.add_argument("-m", "--modulate", type=bool, default=True,
+#                                 help='A boolean. Modulate output images - no modulation preserves concentrations')
+#         self._args.add_argument("-vs", "--voxel_size", nargs=3, type=float,
+#                                 help="A list of 3 floats specifying voxel sizes for each dimension of output image")
+#
+#
+#     def run_pipeline(self, args):
+#
+#         from clinica.pipeline.t1.t1_spm import datagrabber_t1_spm_full_pipeline
+#
+#         working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
+#
+#         voxel_size = tuple(args.voxel_size) if args.voxel_size is not None else None
+#
+#         preproc_wf = datagrabber_t1_spm_full_pipeline(self.absolute_path(args.bids_directory),
+#                                                       self.absolute_path(args.caps_directory),
+#                                                       self.absolute_path(args.subjects_sessions_tsv),
+#                                                       args.group_id,
+#                                                       working_directory=self.absolute_path(working_directory),
+#                                                       tissue_classes=args.tissue_classes,
+#                                                       dartel_tissues=args.dartel_tissues,
+#                                                       save_warped_unmodulated=args.save_warped_unmodulated,
+#                                                       save_warped_modulated=args.save_warped_modulated,
+#                                                       in_write_deformation_fields=args.write_deformation_fields,
+#                                                       in_fwhm=args.fwhm,
+#                                                       in_modulate=args.modulate,
+#                                                       in_voxel_size=voxel_size)
+#
+#         # print 'Workflow set'
+#         preproc_wf.run('MultiProc', plugin_args={'n_procs': args.n_threads})
 
-    def define_name(self):
-        self._name = 't1-spm-full-prep'
-
-    def define_options(self):
-        self._args.add_argument("bids_directory",
-                                help='Path to the BIDS directory.')
-        self._args.add_argument("caps_directory",
-                                help='Path to the CAPS directory.')
-        self._args.add_argument("subjects_sessions_tsv",
-                                help='TSV file containing the subjects with their sessions.')
-        self._args.add_argument("group_id",
-                                help='Current group name')
-        self._args.add_argument("-wd", "--working_directory",
-                                help='Temporary directory to store pipeline intermediate results')
-        self._args.add_argument("-np", "--n_threads", type=int, default=4,
-                                help='Number of threads to run in parallel')
-        self._args.add_argument("-ti", "--tissue_classes", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
-                                help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to save. Up to 6 tissue classes can be saved. Ex: 1 2 3 is GM, WM and CSF")
-        self._args.add_argument("-dt", "--dartel_tissues", nargs='+', type=int, default=[1], choices=range(1, 7),
-                                help='Tissues to use for DARTEL template calculation. Ex: 1 is only GM')
-        self._args.add_argument("-swu", "--save_warped_unmodulated", action='store_true',
-                                help="Save warped unmodulated images for tissues specified in --tissue_classes")
-        self._args.add_argument("-swm", "--save_warped_modulated", action='store_true',
-                                help="Save warped modulated images for tissues specified in --tissue_classes")
-        self._args.add_argument("-wdf", "--write_deformation_fields", nargs=2, type=bool,
-                                help="Option to save the deformation fields from Unified Segmentation. Both inverse and forward fields can be saved. Format: a list of 2 booleans. [Inverse, Forward]")
-        # The default smoothing is 8mm isotropic, as in the Matlab version of SPM.
-        # This is recommended when using modulated images.
-        self._args.add_argument("-fwhm", "--fwhm", nargs=3, type=float, default=[8, 8, 8],
-                                help="A list of 3 floats specifying the FWHM for each dimension")
-        self._args.add_argument("-m", "--modulate", type=bool, default=True,
-                                help='A boolean. Modulate output images - no modulation preserves concentrations')
-        self._args.add_argument("-vs", "--voxel_size", nargs=3, type=float,
-                                help="A list of 3 floats specifying voxel sizes for each dimension of output image")
-
-
-    def run_pipeline(self, args):
-
-        from clinica.pipeline.t1.t1_spm import datagrabber_t1_spm_full_pipeline
-
-        working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
-
-        voxel_size = tuple(args.voxel_size) if args.voxel_size is not None else None
-
-        preproc_wf = datagrabber_t1_spm_full_pipeline(self.absolute_path(args.bids_directory),
-                                                      self.absolute_path(args.caps_directory),
-                                                      self.absolute_path(args.subjects_sessions_tsv),
-                                                      args.group_id,
-                                                      working_directory=self.absolute_path(working_directory),
-                                                      tissue_classes=args.tissue_classes,
-                                                      dartel_tissues=args.dartel_tissues,
-                                                      save_warped_unmodulated=args.save_warped_unmodulated,
-                                                      save_warped_modulated=args.save_warped_modulated,
-                                                      in_write_deformation_fields=args.write_deformation_fields,
-                                                      in_fwhm=args.fwhm,
-                                                      in_modulate=args.modulate,
-                                                      in_voxel_size=voxel_size)
-
-        # print 'Workflow set'
-        preproc_wf.run('MultiProc', plugin_args={'n_procs': args.n_threads})
-
-
-class CmdParserT1SPMSegment(CmdParser):
-
-    def define_name(self):
-        self._name = 't1-spm-segment'
-
-    def define_options(self):
-        self._args.add_argument("bids_directory",
-                                help='Path to the BIDS directory.')
-        self._args.add_argument("caps_directory",
-                                help='Path to the CAPS directory.')
-        self._args.add_argument("subjects_sessions_tsv",
-                                help='TSV file containing the subjects with their sessions.')
-        self._args.add_argument("-wd", "--working_directory",
-                                help='Temporary directory to store pipeline intermediate results')
-        self._args.add_argument("-np", "--n_threads", type=int, default=4,
-                                help='Number of threads to run in parallel')
-        self._args.add_argument("-ti", "--tissue_classes", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
-                                help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to save. Up to 6 tissue classes can be saved. Ex: 1 2 3 is GM, WM and CSF")
-        self._args.add_argument("-dt", "--dartel_tissues", nargs='+', type=int, default=[1], choices=range(1, 7),
-                                help='Tissues to use for DARTEL template calculation. Ex: 1 is only GM')
-        self._args.add_argument("-swu", "--save_warped_unmodulated", action='store_true',
-                                help="Save warped unmodulated images for tissues specified in --tissue_classes")
-        self._args.add_argument("-swm", "--save_warped_modulated", action='store_true',
-                                help="Save warped modulated images for tissues specified in --tissue_classes")
-        self._args.add_argument("-wdf", "--write_deformation_fields", nargs=2, type=bool,
-                                help="Option to save the deformation fields from Unified Segmentation. Both inverse and forward fields can be saved. Format: a list of 2 booleans. [Inverse, Forward]")
-
-    def run_pipeline(self, args):
-
-        from clinica.pipeline.t1.t1_spm import datagrabber_t1_spm_segment_pipeline
-
-        working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
-        segment_wf = datagrabber_t1_spm_segment_pipeline(self.absolute_path(args.bids_directory),
-                                                         self.absolute_path(args.caps_directory),
-                                                         self.absolute_path(args.subjects_sessions_tsv),
-                                                         working_directory=self.absolute_path(working_directory),
-                                                         tissue_classes=args.tissue_classes,
-                                                         dartel_tissues=args.dartel_tissues,
-                                                         save_warped_unmodulated=args.save_warped_unmodulated,
-                                                         save_warped_modulated=args.save_warped_modulated,
-                                                         in_write_deformation_fields=args.write_deformation_fields)
-
-        # print 'Workflow set'
-        segment_wf.run('MultiProc', plugin_args={'n_procs': args.n_threads})
-
-                                                                                                                             
-class CmdParserT1SPMDartelTemplate(CmdParser):
-
-    def define_name(self):
-        self._name = 't1-spm-dartel-template'
-
-    def define_options(self):
-        self._args.add_argument("caps_directory",
-                                help='Path to the CAPS directory.')
-        self._args.add_argument("subjects_sessions_tsv",
-                                help='TSV file containing the subjects with their sessions.')
-        self._args.add_argument("group_id",
-                                help='Current group name')
-        self._args.add_argument("-wd", "--working_directory",
-                                help='Temporary directory to store pipeline intermediate results')
-        self._args.add_argument("-np", "--n_threads", type=int, default=4,
-                                help='Number of threads to run in parallel')
-        self._args.add_argument("-dt", "--dartel_tissues", nargs='+', type=int, default=[1], choices=range(1, 7),
-                                help='Tissues to use for DARTEL template calculation. Ex: 1 is only GM')
-
-    def run_pipeline(self, args):
-
-        from clinica.pipeline.t1.t1_spm import datagrabber_t1_spm_dartel_template
-
-        working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
-
-        dartel_template_wf = datagrabber_t1_spm_dartel_template(self.absolute_path(args.caps_directory),
-                                                                self.absolute_path(args.subjects_sessions_tsv),
-                                                                args.group_id,
-                                                                working_directory=self.absolute_path(working_directory),
-                                                                dartel_tissues=args.dartel_tissues)
-
-        # print 'Workflow set'
-        dartel_template_wf.run('MultiProc', plugin_args={'n_procs': args.n_threads})
+#
+# class CmdParserT1SPMSegment(CmdParser):
+#
+#     def define_name(self):
+#         self._name = 't1-spm-segment'
+#
+#     def define_options(self):
+#         self._args.add_argument("bids_directory",
+#                                 help='Path to the BIDS directory.')
+#         self._args.add_argument("caps_directory",
+#                                 help='Path to the CAPS directory.')
+#         self._args.add_argument("subjects_sessions_tsv",
+#                                 help='TSV file containing the subjects with their sessions.')
+#         self._args.add_argument("-wd", "--working_directory",
+#                                 help='Temporary directory to store pipeline intermediate results')
+#         self._args.add_argument("-np", "--n_threads", type=int, default=4,
+#                                 help='Number of threads to run in parallel')
+#         self._args.add_argument("-ti", "--tissue_classes", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
+#                                 help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to save. Up to 6 tissue classes can be saved. Ex: 1 2 3 is GM, WM and CSF")
+#         self._args.add_argument("-dt", "--dartel_tissues", nargs='+', type=int, default=[1], choices=range(1, 7),
+#                                 help='Tissues to use for DARTEL template calculation. Ex: 1 is only GM')
+#         self._args.add_argument("-swu", "--save_warped_unmodulated", action='store_true',
+#                                 help="Save warped unmodulated images for tissues specified in --tissue_classes")
+#         self._args.add_argument("-swm", "--save_warped_modulated", action='store_true',
+#                                 help="Save warped modulated images for tissues specified in --tissue_classes")
+#         self._args.add_argument("-wdf", "--write_deformation_fields", nargs=2, type=bool,
+#                                 help="Option to save the deformation fields from Unified Segmentation. Both inverse and forward fields can be saved. Format: a list of 2 booleans. [Inverse, Forward]")
+#
+#     def run_pipeline(self, args):
+#
+#         from clinica.pipeline.t1.t1_spm import datagrabber_t1_spm_segment_pipeline
+#
+#         working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
+#         segment_wf = datagrabber_t1_spm_segment_pipeline(self.absolute_path(args.bids_directory),
+#                                                          self.absolute_path(args.caps_directory),
+#                                                          self.absolute_path(args.subjects_sessions_tsv),
+#                                                          working_directory=self.absolute_path(working_directory),
+#                                                          tissue_classes=args.tissue_classes,
+#                                                          dartel_tissues=args.dartel_tissues,
+#                                                          save_warped_unmodulated=args.save_warped_unmodulated,
+#                                                          save_warped_modulated=args.save_warped_modulated,
+#                                                          in_write_deformation_fields=args.write_deformation_fields)
+#
+#         # print 'Workflow set'
+#         segment_wf.run('MultiProc', plugin_args={'n_procs': args.n_threads})
+#
+#
+# class CmdParserT1SPMDartelTemplate(CmdParser):
+#
+#     def define_name(self):
+#         self._name = 't1-spm-dartel-template'
+#
+#     def define_options(self):
+#         self._args.add_argument("caps_directory",
+#                                 help='Path to the CAPS directory.')
+#         self._args.add_argument("subjects_sessions_tsv",
+#                                 help='TSV file containing the subjects with their sessions.')
+#         self._args.add_argument("group_id",
+#                                 help='Current group name')
+#         self._args.add_argument("-wd", "--working_directory",
+#                                 help='Temporary directory to store pipeline intermediate results')
+#         self._args.add_argument("-np", "--n_threads", type=int, default=4,
+#                                 help='Number of threads to run in parallel')
+#         self._args.add_argument("-dt", "--dartel_tissues", nargs='+', type=int, default=[1], choices=range(1, 7),
+#                                 help='Tissues to use for DARTEL template calculation. Ex: 1 is only GM')
+#
+#     def run_pipeline(self, args):
+#
+#         from clinica.pipeline.t1.t1_spm import datagrabber_t1_spm_dartel_template
+#
+#         working_directory = self.absolute_path(args.working_directory) if (args.working_directory is not None) else None
+#
+#         dartel_template_wf = datagrabber_t1_spm_dartel_template(self.absolute_path(args.caps_directory),
+#                                                                 self.absolute_path(args.subjects_sessions_tsv),
+#                                                                 args.group_id,
+#                                                                 working_directory=self.absolute_path(working_directory),
+#                                                                 dartel_tissues=args.dartel_tissues)
+#
+#         # print 'Workflow set'
+#         dartel_template_wf.run('MultiProc', plugin_args={'n_procs': args.n_threads})
 
 
 class CmdParserPETPreprocessing(CmdParser):
