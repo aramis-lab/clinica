@@ -144,8 +144,8 @@ class T1SPMDartel2MNI(cpe.Pipeline):
         import re
         from clinica.utils.io import zip_nii
 
-        # Writing flowfields into CAPS
-        # ============================
+        # Writing normalized images (and smoothed) into CAPS
+        # ==================================================
         write_normalized_node = npe.MapNode(name='write_normalized_node',
                                             iterfield=['container', 'normalized_files', 'smoothed_normalized_files'],
                                             interface=nio.DataSink(infields=['normalized_files', 'smoothed_normalized_files']))

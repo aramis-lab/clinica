@@ -121,7 +121,7 @@ class T1SPMDartel(cpe.Pipeline):
         from clinica.utils.io import zip_nii
 
         # Writing flowfields into CAPS
-        # =======================
+        # ============================
         write_flowfields_node = npe.MapNode(name='write_flowfields_node',
                                             iterfield=['container', 'flow_fields'],
                                             interface=nio.DataSink(infields=['flow_fields']))
@@ -145,7 +145,7 @@ class T1SPMDartel(cpe.Pipeline):
         ]
 
         # Writing templates into CAPS
-        # ======================
+        # ===========================
         write_template_node = npe.Node(nio.DataSink(), name='write_template_node')
         write_template_node.inputs.parameterization = False
         write_template_node.inputs.base_directory = self.caps_directory

@@ -34,8 +34,6 @@ class T1SPMDartelCLI(ce.CmdParser):
                                 help='Temporary directory to store pipeline intermediate results')
         self._args.add_argument("-np", "--n_procs", type=int,
                                 help='Number of cores used to run in parallel')
-        self._args.add_argument("-dt", "--dartel_tissues", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
-                                help='Tissues to use for DARTEL template calculation. Ex: 1 is only GM')
 
     def run_pipeline(self, args):
         """
@@ -43,7 +41,8 @@ class T1SPMDartelCLI(ce.CmdParser):
 
         from t1_spm_dartel_pipeline import T1SPMDartel
 
-        pipeline = T1SPMDartel(bids_directory=self.absolute_path(args.bids_directory),
+        pipeline = T1SPMDartel(args.group_id,
+                               bids_directory=self.absolute_path(args.bids_directory),
                                caps_directory=self.absolute_path(args.caps_directory),
                                tsv_file=self.absolute_path(args.subjects_sessions_tsv))
 

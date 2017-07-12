@@ -88,13 +88,6 @@ class T1SPMSegmentation(cpe.Pipeline):
         """Build and connect an input node to the pipeline.
         """
 
-        # This node is supposedly used to load BIDS inputs when this pipeline is
-        # not already connected to the output of a previous Clinica pipeline.
-        # For the purpose of the example, we simply read input arguments given
-        # by the command line interface and transmitted here through the
-        # `self.parameters` dictionary and pass it to the `self.input_node` to
-        # further by used as input of the core nodes.
-
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         import t1_spm_segmentation_utils as utils
