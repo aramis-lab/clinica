@@ -168,7 +168,7 @@ class T1SPMFullPrep(cpe.Pipeline):
             datasink_infields.append('t1_mni')
 
         datasink_iterfields = ['container'] + datasink_infields
-        write_segmentation_node = npe.MapNode(name='WritingCAPS',
+        write_segmentation_node = npe.MapNode(name='write_segmentation_node',
                                               iterfield=datasink_iterfields,
                                               interface=nio.DataSink(infields=datasink_infields))
         write_segmentation_node.inputs.base_directory = self.caps_directory
@@ -276,18 +276,15 @@ class T1SPMFullPrep(cpe.Pipeline):
                                                   '/t1/spm/atlas_statistics'
                                                   for i in range(len(self.subjects))]
         write_atlas_node.inputs.regexp_substitutions = [
-            (r'(.*)c1(sub-.*)(\.tsv)$', r'\1\2_segm-graymatter\3'),
-            # TODO Check which MNI space
-            (r'(.*)mw(sub-.*)(\.tsv)$', r'\1\2_space-Ixi549Space_modulated-on_probability\3'),
-            (r'(.*)w(sub-.*)(\.tsv)$', r'\1\2_space-Ixi549Space_modulated-off_probability\3'),
-            (r'(.*)/atlas_statistics/(sub-.*)_segm-graymatter_space-Ixi549Space_modulated-.*_probability(_space-.*_map-graymatter_statistics\.tsv)$', r'\1/\2\3'),
+            (r'(.*atlas_statistics)/atlas_statistics/mwc1(sub-.*_T1w).*(_space-.*_map-graymatter_statistics\.tsv)$', r'\1/\2\3'),
+            (r'(.*atlas_statistics)/atlas_statistics/(m?w)?(sub-.*_T1w).*(_space-.*_map-graymatter_statistics).*(\.tsv)$', r'\1/\3\4\5'),
             (r'trait_added', r'')
         ]
 
         self.connect([
             (self.output_node, write_normalized_node, [(('normalized_files', zip_nii, True), 'normalized_files'),
                                                        (('smoothed_normalized_files', zip_nii, True), 'smoothed_normalized_files')]),
-            (self.output_node, write_atlas_node, [(('atlas_statistics', zip_nii, True), 'atlas_statistics')])
+            (self.output_node, write_atlas_node, [('atlas_statistics', 'atlas_statistics')])
         ])
 
     def build_core_nodes(self):
