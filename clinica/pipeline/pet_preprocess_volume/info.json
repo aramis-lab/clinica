@@ -1,0 +1,12 @@
+{
+    "id": "aramislab/petpreprocessingvolume",
+    "author": "SAMPER-GONZALEZ Jorge",
+    "version": "0.1",
+    "dependencies": [
+        {
+            "type": "toolbox",
+            "name": "spm",
+            "version": ">=8"
+        }
+    ]
+}

@@ -1,0 +1,139 @@
+"""PET Preprocess Volume - Clinica Pipeline.
+This file has been generated automatically by the `clinica generate template`
+command line tool. See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
+"""
+
+# WARNING: Don't put any import statement here except if it's absolutly
+# necessary. Put it *inside* the different methods.
+# Otherwise it will slow down the dynamic loading of the pipelines list by the
+# command line tool.
+import clinica.pipeline.engine as cpe
+
+
+class PETPreprocessVolume(cpe.Pipeline):
+    """PET Preprocess Volume SHORT DESCRIPTION.
+
+    Warnings:
+        - A WARNING.
+
+    Todos:
+        - [x] A FILLED TODO ITEM.
+        - [ ] AN ON-GOING TODO ITEM.
+
+    Args:
+        input_dir: A BIDS directory.
+        output_dir: An empty output directory where CAPS structured data will be written.
+        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
+
+    Returns:
+        A clinica pipeline object containing the PET Preprocess Volume pipeline.
+
+    Raises:
+
+
+    Example:
+        >>> from pet_preprocess_volume import PETPreprocessVolume
+        >>> pipeline = PETPreprocessVolume('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
+        >>> pipeline.parameters = {
+        >>>     # ...
+        >>> }
+        >>> pipeline.base_dir = '/tmp/'
+        >>> pipeline.run()
+    """
+
+
+    def check_custom_dependencies(self):
+        """Check dependencies that can not be listed in the `info.json` file.
+        """
+        pass
+
+
+    def get_input_fields(self):
+        """Specify the list of possible inputs of this pipeline.
+
+        Returns:
+            A list of (string) input fields name.
+        """
+
+        return ['hello_word'] # Fill here the list
+
+
+    def get_output_fields(self):
+        """Specify the list of possible outputs of this pipeline.
+
+        Returns:
+            A list of (string) output fields name.
+        """
+
+        return [] # Fill here the list
+
+
+    def build_input_node(self):
+        """Build and connect an input node to the pipeline.
+        """
+
+        import nipype.interfaces.utility as nutil
+        import nipype.pipeline.engine as npe
+
+        # This node is supposedly used to load BIDS inputs when this pipeline is
+        # not already connected to the output of a previous Clinica pipeline.
+        # For the purpose of the example, we simply read input arguments given
+        # by the command line interface and transmitted here through the
+        # `self.parameters` dictionary and pass it to the `self.input_node` to
+        # further by used as input of the core nodes.
+
+        read_parameters_node = npe.Node(name="LoadingCLIArguments",
+                                        interface=nutil.IdentityInterface(
+                                            fields=self.get_input_fields(),
+                                            mandatory_inputs=True))
+        read_parameters_node.inputs.hello_word = self.parameters['hello_word']
+
+        self.connect([
+            (read_parameters_node,      self.input_node,    [('hello_word',    'hello_word')])
+        ])
+
+
+    def build_output_node(self):
+        """Build and connect an output node to the pipeline.
+        """
+
+        # In the same idea as the input node, this output node is supposedly
+        # used to write the output fields in a CAPS. It should be executed only
+        # if this pipeline output is not already connected to a next Clinica
+        # pipeline.
+
+        pass
+
+
+    def build_core_nodes(self):
+        """Build and connect the core nodes of the pipeline.
+        """
+
+        import pet_preprocess_volume_utils as utils
+        import nipype.interfaces.utility as nutil
+        import nipype.pipeline.engine as npe
+
+        # Step 1
+        # ======
+        node1 = npe.Node(name="Step1",
+                         interface=nutil.Function(
+                             input_names=['in_hello_word'],
+                             output_names=[],
+                             function=utils.step1))
+
+        # Step 2
+        # ======
+        node2 = npe.Node(name="Step2",
+                         interface=nutil.Function(
+                             input_names=['in_hello_word'],
+                             output_names=[],
+                             function=utils.step2))
+
+        # Connection
+        # ==========
+        self.connect([
+            # STEP 1
+            (self.input_node,      node1,    [('hello_word',    'in_hello_word')]),
+            # STEP 2
+            (self.input_node,      node2,    [('hello_word',    'in_hello_word')])
+        ])
