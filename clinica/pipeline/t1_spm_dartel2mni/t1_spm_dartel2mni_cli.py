@@ -50,10 +50,11 @@ class T1SPMDartel2MNICLI(ce.CmdParser):
 
         from t1_spm_dartel2mni_pipeline import T1SPMDartel2MNI
 
-        pipeline = T1SPMDartel2MNI(args.group_id,
-                                   bids_directory=self.absolute_path(args.bids_directory),
+        pipeline = T1SPMDartel2MNI(bids_directory=self.absolute_path(args.bids_directory),
                                    caps_directory=self.absolute_path(args.caps_directory),
-                                   tsv_file=self.absolute_path(args.subjects_sessions_tsv))
+                                   tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+                                   group_id=args.group_id
+                                   )
 
         pipeline.parameters.update({'tissues': args.tissues,
                                     # 'bounding_box': None,

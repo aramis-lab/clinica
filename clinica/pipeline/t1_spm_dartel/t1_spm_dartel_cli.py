@@ -41,10 +41,11 @@ class T1SPMDartelCLI(ce.CmdParser):
 
         from t1_spm_dartel_pipeline import T1SPMDartel
 
-        pipeline = T1SPMDartel(args.group_id,
-                               bids_directory=self.absolute_path(args.bids_directory),
+        pipeline = T1SPMDartel(bids_directory=self.absolute_path(args.bids_directory),
                                caps_directory=self.absolute_path(args.caps_directory),
-                               tsv_file=self.absolute_path(args.subjects_sessions_tsv))
+                               tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+                               group_id=args.group_id
+                               )
 
         pipeline.parameters.update({'dartel_tissues': args.dartel_tissues})
 

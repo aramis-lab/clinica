@@ -37,8 +37,11 @@ class T1SPMDartel2MNI(cpe.Pipeline):
         >>> pipeline.run()
     """
 
-    def __init__(self, group_id, bids_directory=None, caps_directory=None, tsv_file=None, name=None):
+    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
         super(T1SPMDartel2MNI, self).__init__(bids_directory, caps_directory, tsv_file, name)
+
+        if not group_id.isalnum():
+            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
 
         self._group_id = group_id
 
@@ -90,6 +93,7 @@ class T1SPMDartel2MNI(cpe.Pipeline):
                         }
 
         # DataGrabbers
+        #=============
         tissues_caps_reader = npe.MapNode(nio.DataGrabber(infields=['subject_id', 'session',
                                                                     'subject_repeat', 'session_repeat',
                                                                     'tissue'],
@@ -257,7 +261,8 @@ class T1SPMDartel2MNI(cpe.Pipeline):
                                          name='smoothing_node',
                                          iterfield=['in_files'])
 
-            smoothing_node.iterables = [('fwhm', [[x, x, x] for x in self.parameters['fwhm']]), ('out_prefix', ['fwhm-' + str(x) + 'mm_' for x in self.parameters['fwhm']])]
+            smoothing_node.iterables = [('fwhm', [[x, x, x] for x in self.parameters['fwhm']]),
+                                        ('out_prefix', ['fwhm-' + str(x) + 'mm_' for x in self.parameters['fwhm']])]
             smoothing_node.synchronize = True
 
             join_smoothing_node = npe.JoinNode(interface=nutil.Function(input_names=['smoothed_normalized_files'],

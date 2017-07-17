@@ -37,8 +37,11 @@ class T1SPMDartel(cpe.Pipeline):
         >>> pipeline.run()
     """
 
-    def __init__(self, group_id, bids_directory=None, caps_directory=None, tsv_file=None, name=None):
+    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
         super(T1SPMDartel, self).__init__(bids_directory, caps_directory, tsv_file, name)
+
+        if not group_id.isalnum():
+            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
 
         self._group_id = group_id
 
@@ -50,12 +53,10 @@ class T1SPMDartel(cpe.Pipeline):
                             'template_prefix': None
                             }
 
-
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
         pass
-
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
