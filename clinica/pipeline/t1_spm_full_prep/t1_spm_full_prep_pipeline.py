@@ -38,8 +38,11 @@ class T1SPMFullPrep(cpe.Pipeline):
         >>> pipeline.run()
     """
 
-    def __init__(self, group_id, bids_directory=None, caps_directory=None, tsv_file=None, name=None):
+    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
         super(T1SPMFullPrep, self).__init__(bids_directory, caps_directory, tsv_file, name)
+
+        if not group_id.isalnum():
+            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
 
         self._group_id = group_id
 
@@ -70,7 +73,6 @@ class T1SPMFullPrep(cpe.Pipeline):
         """
         pass
 
-
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
 
@@ -79,7 +81,6 @@ class T1SPMFullPrep(cpe.Pipeline):
         """
 
         return ['input_images']
-
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
@@ -105,7 +106,6 @@ class T1SPMFullPrep(cpe.Pipeline):
                 'smoothed_normalized_files',
                 'atlas_statistics'
                 ]
-
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -136,7 +136,6 @@ class T1SPMFullPrep(cpe.Pipeline):
         from clinica.utils.io import zip_nii
         import os.path as op
         import re
-
 
         # Writing Segmentation output into CAPS
         # =====================================
@@ -300,7 +299,6 @@ class T1SPMFullPrep(cpe.Pipeline):
         import clinica.pipeline.t1_spm_segmentation.t1_spm_segmentation_utils as seg_utils
         import clinica.pipeline.t1_spm_dartel.t1_spm_dartel_utils as dartel_utils
         import clinica.pipeline.t1_spm_dartel2mni.t1_spm_dartel2mni_utils as dartel2mni_utils
-
         from clinica.utils.io import unzip_nii
 
         spm_home = os.getenv("SPM_HOME")
