@@ -502,6 +502,37 @@ class Neuromorphometrics(AtlasAbstract):
             raise Exception('CLINICA_HOME variable from Clinica software is not set')
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', 'Neuromorphometrics_ROI.tsv')
 
+class MCALT_ADIR122(AtlasAbstract):
+    def __init__(self):
+        AtlasAbstract.__init__(self)
+
+    @staticmethod
+    def get_name_atlas(): return "MCALT_ADIR122"
+
+    @staticmethod
+    def get_atlas_labels():
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from Clinica software is not set')
+        return os.path.join(CLINICA_HOME, 'clinica','resources', 'atlases_spm','MCALT_ADIR122.nii')
+
+    @staticmethod
+    def get_atlas_map():
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from Clinica software is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','Template_MNI152.nii')
+
+    @staticmethod
+    def get_tsv_roi():
+        import os.path
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        if not CLINICA_HOME:
+            raise Exception('CLINICA_HOME variable from Clinica software is not set')
+        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', 'MCALT_ADIR122_ROI.tsv')
+
 
 class AtlasLoader:
     def __init__(self, atlases=None):
