@@ -12,13 +12,14 @@ __email__ = "sabrina.fontanella@icm-institute.org"
 __status__ = "Development"
 
 
+# -- Methods for the clinical data --
 # @ToDo:test this function
 def create_participants_df(input_path, out_path, study_name, clinical_spec_path, clinical_data_dir, bids_ids, delete_non_bids_info=True):
     """
     :param input_path: path to the original dataset
     :param out_path: path to the bids folder
     :param study_name: name of the study (Ex. ADNI)
-    :param clinical_spec_path:
+    :param clinical_spec_path: path to the clinical file
     :param bids_ids:
     :param delete_non_bids_info:
     :return: a pandas dataframe that contains the participants data
@@ -114,37 +115,16 @@ def create_participants_df(input_path, out_path, study_name, clinical_spec_path,
     return participant_df
 
 
-def contain_dicom(folder_path):
-    """
-    Check if a folder contains DICOM images
-
-    :param folder_path:
-    :return: True if dicom files are found inside the folder, False otherwise
-    """
-    from glob import glob
-    from os import path
-
-    dcm_files = glob(path.join(folder_path, '*.dcm'))
-    if len(dcm_files) > 0:
-        return True
-
-    return False
-
-
-def get_supported_dataset():
-    return ['ADNI', 'CLINAD', 'PREVDEMALS', 'INSIGHT']
-
-
 def create_sessions_dict(input_path, study_name, clinical_spec_path, bids_ids, name_column_ids, subj_to_remove = []):
     """
     Extract the information regarding the sessions and store them in a dictionary (session M0 only)
 
-    :param input_path:
+    :param input_path: path to the input folder
     :param study_name: name of the study (Ex: ADNI)
-    :param clinical_spec_path:
-    :param bids_ids:
-    :param name_column_ids:
-    :param subj_to_remove:
+    :param clinical_spec_path: path to the clinical file
+    :param bids_ids: list of bids ids
+    :param name_column_ids: name of the column where the subject ids are stored
+    :param subj_to_remove: subjects to remove
     :return:
     """
     import pandas as pd
@@ -206,6 +186,16 @@ def create_sessions_dict(input_path, study_name, clinical_spec_path, bids_ids, n
 
 
 def create_scans_dict(input_path, study_name, clinic_specs_path, bids_ids, name_column_ids):
+    """
+    Extract the information regarding the scans and store them in a dictionary (session M0 only)
+
+    :param input_path:
+    :param study_name:
+    :param clinic_specs_path:
+    :param bids_ids:
+    :param name_column_ids:
+    :return:
+    """
     import pandas as pd
     from os import path
     scans_dict = {}
@@ -338,6 +328,27 @@ def write_scans_tsv(out_path, bids_ids, scans_dict):
                 scans_df = scans_df.append(row_to_append)
 
             scans_df.to_csv(path.join(out_path, bids_id, 'ses-M0', tsv_name), sep='\t', index=False, encoding='utf8')
+
+# -- Other methods --
+def contain_dicom(folder_path):
+    """
+    Check if a folder contains DICOM images
+
+    :param folder_path:
+    :return: True if dicom files are found inside the folder, False otherwise
+    """
+    from glob import glob
+    from os import path
+
+    dcm_files = glob(path.join(folder_path, '*.dcm'))
+    if len(dcm_files) > 0:
+        return True
+
+    return False
+
+
+def get_supported_dataset():
+    return ['ADNI', 'CLINAD', 'PREVDEMALS', 'INSIGHT']
 
 
 def dcm_to_nii(input_path, output_path, bids_name):
@@ -622,32 +633,44 @@ def convert_T1(t1_path, output_path, t1_bids_name):
 
 
 def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name , acquisition = ''):
+    """
+
+    :param folder_input:
+    :param folder_output:
+    :param pet_name:
+    :param bids_name:
+    :param task_name:
+    :param acquisition: tracer name (FDG, AV45, etc)
+    :return:
+    """
     from os import path
     from shutil import copy
     import os
 
+
     if acquisition!='':
-        pet_name = bids_name+'_task-'+task_name+'_acq-',acquisition
+        pet_bids_name = bids_name+'_task-'+task_name+'_acq-'+acquisition
     else:
-        pet_name = bids_name+'_task-'+task_name
+        pet_bids_name = bids_name+'_task-'+task_name
 
     if contain_dicom(folder_input):
-        dcm_to_nii(folder_input, folder_output, pet_name, 'pet')
+        print 'DICOM found for PET'
+        dcm_to_nii(folder_input, folder_output, pet_bids_name, 'pet')
     else:
         if not os.path.exists(folder_output):
             os.mkdir(folder_output)
 
-            #If a prefixed pet is chosen for the conversion use it, otherwise extracts the pet file available into the folder
-            if pet_name!='':
-                pet_path = path.join(folder_input, pet_name)
-            else:
-                print 'WARNING: feature to be implemented'
+        #If a prefixed pet is chosen for the conversion use it, otherwise extracts the pet file available into the folder
+        if pet_name!='':
+            pet_path = path.join(folder_input, pet_name)
+        else:
+            print 'WARNING: feature to be implemented'
 
-            file_ext = get_ext(pet_path)
-            copy(pet_path, path.join(folder_output, pet_name + get_bids_suff('pet') + file_ext))
-            # If  the original image is not compress, compress it
-            if file_ext == '.nii':
-                compress_nii(path.join(folder_output, pet_name + get_bids_suff('pet') + file_ext))
+        file_ext = get_ext(pet_path)
+        copy(pet_path, path.join(folder_output, pet_bids_name + get_bids_suff('pet') + file_ext))
+        # If  the original image is not compress, compress it
+        if file_ext == '.nii':
+            compress_nii(path.join(folder_output, pet_bids_name + get_bids_suff('pet') + file_ext))
 
 
 def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False,False]):
@@ -904,10 +927,6 @@ def merge_DTI(folder_input, folder_output, name, fixed_dti_list=False):
 
         if len(incomp_folders) > 0:
             return incomp_folders
-
-#
-# def convert_dwi(folder_input, folder_output, name, acq=''):
-#     if coi
 
 
 def concatenate_bvec_bval(files_list, output_file, type):
