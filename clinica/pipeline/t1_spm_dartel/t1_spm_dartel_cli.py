@@ -9,11 +9,9 @@ import clinica.engine as ce
 
 class T1SPMDartelCLI(ce.CmdParser):
 
-
     def define_name(self):
         """Define the sub-command name to run this pipeline.
         """
-
         self._name = 't1-spm-dartel'
 
     def define_options(self):
