@@ -1,0 +1,12 @@
+{
+    "id": "aramislab/t1-spm-dartel-existing-template",
+    "author": "Jorge SAMPER-GONZALEZ",
+    "version": "0.1.0",
+    "dependencies": [
+        {
+            "type": "binary",
+            "name": "clinica",
+            "version": ">=0.1.0"
+        }
+    ]
+}
