@@ -46,7 +46,7 @@ class T1SPMDartelExistingTemplate(cpe.Pipeline):
         self._group_id = group_id
 
         # Default parameters
-        self._parameters = {'dartel_tissues': [1, 2, 3],
+        self._parameters = {'tissues': [1, 2, 3],
                             'iteration_parameters': None,
                             'optimization_parameters': None,
                             'regularization_form': None
@@ -104,7 +104,7 @@ class T1SPMDartelExistingTemplate(cpe.Pipeline):
         dartel_input_reader.inputs.template = 'subjects/%s/%s/t1/spm/segmentation/dartel_input/%s_%s_T1w_segm-%s_dartelinput.nii*'
         dartel_input_reader.inputs.subject_id = self.subjects
         dartel_input_reader.inputs.session = self.sessions
-        dartel_input_reader.inputs.tissue = [tissue_names[t] for t in self.parameters['dartel_tissues']]
+        dartel_input_reader.inputs.tissue = [tissue_names[t] for t in self.parameters['tissues']]
         dartel_input_reader.inputs.subject_repeat = self.subjects
         dartel_input_reader.inputs.session_repeat = self.sessions
         dartel_input_reader.inputs.sort_filelist = False
@@ -187,7 +187,7 @@ class T1SPMDartelExistingTemplate(cpe.Pipeline):
         # =============================
         dartel_existing_template = npe.MapNode(utils.DARTELExistingTemplate(),
                                                name='dartel_existing_template',
-                                               iterfield=['dartel_input_images'])
+                                               iterfield=['image_files'])
         if self.parameters['optimization_parameters'] is not None:
             dartel_existing_template.inputs.optimization_parameters = self.parameters['optimization_parameters']
         if self.parameters['regularization_form'] is not None:
