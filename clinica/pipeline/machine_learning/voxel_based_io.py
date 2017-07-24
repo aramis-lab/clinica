@@ -35,7 +35,7 @@ def get_caps_pet_list_OLD(input_directory, subjects_visits_tsv, analysis_series_
     return image_list
 
 
-def get_caps_t1_list(input_directory, subjects_visits_tsv, group_id, prefix, tissue):
+def get_caps_t1_list(input_directory, subjects_visits_tsv, group_id, fwhm, tissue):
 
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
     if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
@@ -44,8 +44,8 @@ def get_caps_t1_list(input_directory, subjects_visits_tsv, group_id, prefix, tis
     sessions = list(subjects_visits.session_id)
 
     image_list = [join(input_directory, 'subjects/' + subjects[i] + '/'
-                       + sessions[i] + '/t1/spm/dartel/group-' + group_id + '/registered/' + prefix + tissue
-                       + subjects[i] + '_' + sessions[i] + '_T1w.nii.gz') for i in range(len(subjects))]
+                       + sessions[i] + '/t1/spm/dartel/group-' + group_id + '/'
+                       + subjects[i] + '_' + sessions[i] + '_T1w_segm-'+tissue+'_space-Ixi549Space_modulated-on_fwhm-'+fwhm+'mm_probability.nii.gz') for i in range(len(subjects))]
 
     return image_list
 
