@@ -16,8 +16,6 @@ __status__ = "Development"
 # @ToDo:test this function
 def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bids_ids, delete_non_bids_info=True):
     """
-    :param input_path: path to the original dataset
-    :param out_path: path to the bids folder
     :param study_name: name of the study (Ex. ADNI)
     :param clinical_spec_path: path to the clinical file
     :param bids_ids: list of bids ids
