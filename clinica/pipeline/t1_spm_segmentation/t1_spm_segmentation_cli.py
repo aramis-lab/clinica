@@ -23,10 +23,6 @@ class T1SPMSegmentationCLI(ce.CmdParser):
                                 help='Path to the CAPS directory.')
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
                                 help='TSV file containing the subjects with their sessions.')
-        self._args.add_argument("-wd", "--working_directory",
-                                help='Temporary directory to store pipeline intermediate results')
-        self._args.add_argument("-np", "--n_procs", type=int,
-                                help='Number of cores used to run in parallel')
         self._args.add_argument("-ti", "--tissue_classes", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
                                 help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to save. Up to 6 tissue classes can be saved. Ex: 1 2 3 is GM, WM and CSF")
         self._args.add_argument("-dt", "--dartel_tissues", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
@@ -37,6 +33,12 @@ class T1SPMSegmentationCLI(ce.CmdParser):
                                 help="Save warped modulated images for tissues specified in --tissue_classes")
         # self._args.add_argument("-wdf", "--write_deformation_fields", nargs=2, type=bool,
         #                         help="Option to save the deformation fields from Unified Segmentation. Both inverse and forward fields can be saved. Format: a list of 2 booleans. [Inverse, Forward]")
+        self._args.add_argument("-wd", "--working_directory",
+                                help='Temporary directory to store pipeline intermediate results')
+        self._args.add_argument("-np", "--n_procs", type=int,
+                                help='Number of cores used to run in parallel')
+        self._args.add_argument("-sl", "--slurm", action='store_true',
+                                help='Run the pipeline using SLURM')
 
     def run_pipeline(self, args):
         """
@@ -59,5 +61,7 @@ class T1SPMSegmentationCLI(ce.CmdParser):
 
         if args.n_procs:
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
+        elif args.slurm:
+            pipeline.run(plugin='SLURM')
         else:
             pipeline.run()

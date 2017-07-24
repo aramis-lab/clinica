@@ -1,13 +1,13 @@
-"""T1 SPM Dartel - Clinica Pipeline.
+"""T1 SPM Dartel Existing Template - Clinica Pipeline.
 This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
+command line tool. See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
 """
 
 import clinica.pipeline.engine as cpe
 
 
-class T1SPMDartel(cpe.Pipeline):
-    """T1 SPM Dartel SHORT DESCRIPTION.
+class T1SPMDartelExistingTemplate(cpe.Pipeline):
+    """T1 SPM Dartel Existing Template SHORT DESCRIPTION.
 
     Warnings:
         - A WARNING.
@@ -22,23 +22,23 @@ class T1SPMDartel(cpe.Pipeline):
         subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
 
     Returns:
-        A clinica pipeline object containing the T1 SPM Dartel pipeline.
+        A clinica pipeline object containing the T1 SPM Dartel Existing Template pipeline.
 
     Raises:
 
 
     Example:
-        >>> from t1_spm_dartel import T1SPMDartel
-        >>> pipeline = T1SPMDartel('myGroup', '~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
-        >>> pipeline.parameters.update({
+        >>> from t1_spm_dartel_existing_template import T1SPMDartelExistingTemplate
+        >>> pipeline = T1SPMDartelExistingTemplate('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
+        >>> pipeline.parameters = {
         >>>     # ...
-        >>> })
+        >>> }
         >>> pipeline.base_dir = '/tmp/'
         >>> pipeline.run()
     """
 
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
-        super(T1SPMDartel, self).__init__(bids_directory, caps_directory, tsv_file, name)
+        super(T1SPMDartelExistingTemplate, self).__init__(bids_directory, caps_directory, tsv_file, name)
 
         if not group_id.isalnum():
             raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
@@ -49,13 +49,13 @@ class T1SPMDartel(cpe.Pipeline):
         self._parameters = {'dartel_tissues': [1, 2, 3],
                             'iteration_parameters': None,
                             'optimization_parameters': None,
-                            'regularization_form': None,
-                            'template_prefix': None
+                            'regularization_form': None
                             }
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
+        # TODO TEST SPM VERSION HERE
         pass
 
     def get_input_fields(self):
@@ -65,7 +65,7 @@ class T1SPMDartel(cpe.Pipeline):
             A list of (string) input fields name.
         """
 
-        return ['dartel_input_images']
+        return ['dartel_input_images', 'dartel_iteration_templates']
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
@@ -74,7 +74,7 @@ class T1SPMDartel(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        return ['final_template_file', 'template_files', 'dartel_flow_fields']
+        return ['dartel_flow_fields']
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -92,7 +92,7 @@ class T1SPMDartel(cpe.Pipeline):
                         }
 
         # Dartel Input Tissues DataGrabber
-        # =================================
+        #=================================
         dartel_input_reader = npe.MapNode(nio.DataGrabber(infields=['subject_id', 'session',
                                                                     'subject_repeat', 'session_repeat',
                                                                     'tissue'],
@@ -109,8 +109,20 @@ class T1SPMDartel(cpe.Pipeline):
         dartel_input_reader.inputs.session_repeat = self.sessions
         dartel_input_reader.inputs.sort_filelist = False
 
+        # Dartel Templates DataGrabber
+        # ============================
+        templates_reader = npe.MapNode(nio.DataGrabber(infields=['iteration'],
+                                                       outfields=['out_files']),
+                                       name="templates_reader",
+                                       iterfield=['iteration'])
+        templates_reader.inputs.base_directory = self.caps_directory
+        templates_reader.inputs.template = 'groups/group-' + self._group_id + '/t1/group-' + self._group_id + '_iteration-%d_template.nii*'
+        templates_reader.inputs.iteration = range(1, 7)
+        templates_reader.inputs.sort_filelist = False
+
         self.connect([
-            (dartel_input_reader, self.input_node, [('out_files', 'dartel_input_images')])
+            (dartel_input_reader, self.input_node, [('out_files', 'dartel_input_images')]),
+            (templates_reader, self.input_node, [('out_files', 'dartel_iteration_templates')])
         ])
 
     def build_output_node(self):
@@ -142,81 +154,51 @@ class T1SPMDartel(cpe.Pipeline):
             (r'(.*)c6(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-background\3'),
             (r'(.*)r(sub-.*)(\.nii(\.gz)?)$', r'\1\2\3'),
             (r'(.*)_dartelinput(\.nii(\.gz)?)$', r'\1\2'),
-            (r'(.*)flow_fields/u_(sub-.*)_segm-.*(\.nii(\.gz)?)$', r'\1\2_target-' + re.escape(self._group_id) + r'_transformation-forward_deformation\3'),
+            (r'(.*)flow_fields/u_(sub-.*)_segm-.*(\.nii(\.gz)?)$',
+             r'\1\2_target-' + re.escape(self._group_id) + r'_transformation-forward_deformation\3'),
             (r'trait_added', r'')
         ]
 
-        # Writing templates into CAPS
-        # ===========================
-        write_template_node = npe.Node(nio.DataSink(), name='write_template_node')
-        write_template_node.inputs.parameterization = False
-        write_template_node.inputs.base_directory = self.caps_directory
-        write_template_node.inputs.container = op.join('groups/group-' + self._group_id, 't1')
-        write_template_node.inputs.regexp_substitutions = [
-            (r'(.*)final_template_file/.*(\.nii(\.gz)?)$', r'\1group-' + re.escape(self._group_id) + r'_template\2'),
-            (r'(.*)template_files/.*([0-9])(\.nii(\.gz)?)$', r'\1group-' + re.escape(self._group_id) + r'_iteration-\2_template\3')
-        ]
-
         self.connect([
-            (self.output_node, write_flowfields_node, [(('dartel_flow_fields', zip_nii, True), 'flow_fields')]),
-            (self.output_node, write_template_node, [(('final_template_file', zip_nii, True), 'final_template_file'),
-                                                     (('template_files', zip_nii, True), 'template_files')])
+            (self.output_node, write_flowfields_node, [(('dartel_flow_fields', zip_nii, True), 'flow_fields')])
         ])
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
         """
 
-        import os
-        import nipype.interfaces.spm as spm
-        import nipype.interfaces.matlab as mlab
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.io import unzip_nii
-
-        spm_home = os.getenv("SPM_HOME")
-        mlab_home = os.getenv("MATLABCMD")
-        mlab.MatlabCommand.set_default_matlab_cmd(mlab_home)
-        mlab.MatlabCommand.set_default_paths(spm_home)
-
-        version = spm.Info.version()
-
-        if version:
-            if version['name'] == 'SPM8':
-                print 'You are using SPM version 8. The recommended version to use with Clinica is SPM 12. ' \
-                      'Please upgrade your SPM toolbox.'
-            elif version['name'] != 'SPM12':
-                raise RuntimeError('SPM version 8 or 12 could not be found. Please upgrade your SPM toolbox.')
-        else:
-            raise RuntimeError('SPM could not be found. Please verify your SPM_HOME environment variable.')
+        import t1_spm_dartel_existing_template_utils as utils
 
         # Unzipping
         # =========
-        unzip_node = npe.MapNode(nutil.Function(input_names=['in_file'],
-                                                output_names=['out_file'],
-                                                function=unzip_nii),
-                                 name='unzip_node', iterfield=['in_file'])
-
-        # DARTEL template
-        # ===============
-        dartel_template = npe.Node(spm.DARTEL(),
-                                   name='dartel_template')
-
-        if self.parameters['iteration_parameters'] is not None:
-            dartel_template.inputs.iteration_parameters = self.parameters['iteration_parameters']
+        unzip_dartel_input_node = npe.MapNode(nutil.Function(input_names=['in_file'],
+                                                             output_names=['out_file'],
+                                                             function=unzip_nii),
+                                              name='unzip_dartel_input_node',
+                                              iterfield=['in_file'])
+        unzip_templates_node = npe.Node(nutil.Function(input_names=['in_file'],
+                                                       output_names=['out_file'],
+                                                       function=unzip_nii),
+                                        name='unzip_templates_node')
+        # DARTEL with existing template
+        # =============================
+        dartel_existing_template = npe.MapNode(utils.DARTELExistingTemplate(),
+                                               name='dartel_existing_template',
+                                               iterfield=['dartel_input_images'])
         if self.parameters['optimization_parameters'] is not None:
-            dartel_template.inputs.optimization_parameters = self.parameters['optimization_parameters']
+            dartel_existing_template.inputs.optimization_parameters = self.parameters['optimization_parameters']
         if self.parameters['regularization_form'] is not None:
-            dartel_template.inputs.regularization_form = self.parameters['regularization_form']
-        if self.parameters['template_prefix'] is not None:
-            dartel_template.inputs.template_prefix = self.parameters['template_prefix']
+            dartel_existing_template.inputs.regularization_form = self.parameters['regularization_form']
 
         # Connection
         # ==========
         self.connect([
-            (self.input_node, unzip_node,    [('dartel_input_images', 'in_file')]),
-            (unzip_node, dartel_template,    [('out_file', 'image_files')]),
-            (dartel_template, self.output_node, [('dartel_flow_fields', 'dartel_flow_fields'),
-                                                 ('final_template_file', 'final_template_file'),
-                                                 ('template_files', 'template_files')])
+            (self.input_node, unzip_dartel_input_node, [('dartel_input_images', 'in_file')]),
+            (self.input_node, unzip_templates_node, [('dartel_iteration_templates', 'in_file')]),
+            (unzip_dartel_input_node, dartel_existing_template, [(('out_file', utils.prepare_dartel_input_images), 'image_files')]),
+            (unzip_templates_node, dartel_existing_template, [(('out_file', utils.create_iteration_parameters, self.parameters['iteration_parameters']), 'iteration_parameters')]),
+            (dartel_existing_template, self.output_node, [('dartel_flow_fields', 'dartel_flow_fields')])
         ])

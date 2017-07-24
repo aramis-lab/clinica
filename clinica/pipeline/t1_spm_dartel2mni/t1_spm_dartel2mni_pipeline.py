@@ -92,8 +92,8 @@ class T1SPMDartel2MNI(cpe.Pipeline):
                         6: 'background'
                         }
 
-        # DataGrabbers
-        #=============
+        # Segmented Tissues DataGrabber
+        #==============================
         tissues_caps_reader = npe.MapNode(nio.DataGrabber(infields=['subject_id', 'session',
                                                                     'subject_repeat', 'session_repeat',
                                                                     'tissue'],
@@ -110,6 +110,8 @@ class T1SPMDartel2MNI(cpe.Pipeline):
         tissues_caps_reader.inputs.session_repeat = self.sessions
         tissues_caps_reader.inputs.sort_filelist = False
 
+        # Flow Fields DataGrabber
+        #==============================
         flowfields_caps_reader = npe.Node(nio.DataGrabber(infields=['subject_id', 'session',
                                                                     'subject_repeat', 'session_repeat'],
                                                           outfields=['out_files']),
@@ -122,6 +124,8 @@ class T1SPMDartel2MNI(cpe.Pipeline):
         flowfields_caps_reader.inputs.session_repeat = self.sessions
         flowfields_caps_reader.inputs.sort_filelist = False
 
+        # Dartel Template DataGrabber
+        # ===========================
         template_caps_reader = npe.Node(nio.DataGrabber(infields=['group_id', 'group_id_repeat'],
                                                         outfields=['out_files']),
                                         name="template_caps_reader")
@@ -164,17 +168,18 @@ class T1SPMDartel2MNI(cpe.Pipeline):
             (r'(.*)c4(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-bone_probability\3'),
             (r'(.*)c5(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-softtissue_probability\3'),
             (r'(.*)c6(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-background_probability\3'),
-            # TODO Check which MNI space
             (r'(.*)mw(sub-.*)_probability(\.nii(\.gz)?)$', r'\1\2_space-Ixi549Space_modulated-on_probability\3'),
             (r'(.*)w(sub-.*)_probability(\.nii(\.gz)?)$', r'\1\2_space-Ixi549Space_modulated-off_probability\3'),
             (r'(.*)/normalized_files/(sub-.*)$', r'\1/\2'),
             (r'(.*)/smoothed_normalized_files/(fwhm-[0-9]+mm)_(sub-.*)_probability(\.nii(\.gz)?)$', r'\1/\3_\2_probability\4'),
 
-            (r'(.*)/atlas_statistics/(fwhm-[0-9]+mm)_(sub-.*)_probability(\.nii(\.gz)?)$', r'\1/\3_\2_probability\4'),
+            # (r'(.*)/atlas_statistics/(fwhm-[0-9]+mm)_(sub-.*)_probability(\.nii(\.gz)?)$', r'\1/\3_\2_probability\4'),
 
             (r'trait_added', r'')
         ]
 
+        # Writing atlas statistics into CAPS
+        # ==================================
         write_atlas_node = npe.MapNode(name='write_atlas_node',
                                             iterfield=['container', 'atlas_statistics'],
                                             interface=nio.DataSink(infields=['atlas_statistics']))
@@ -255,7 +260,6 @@ class T1SPMDartel2MNI(cpe.Pipeline):
 
         # Smoothing
         # =========
-
         if self.parameters['fwhm'] is not None and len(self.parameters['fwhm']) > 0:
             smoothing_node = npe.MapNode(spm.Smooth(),
                                          name='smoothing_node',
