@@ -42,6 +42,7 @@ class T1SPMSegmentation(cpe.Pipeline):
         # Default parameters
         self._parameters = {'tissue_classes': [1, 2, 3],
                             'dartel_tissues': [1, 2, 3],
+                            'tpm': None,
                             'save_warped_unmodulated': False,
                             'save_warped_modulated': False,
                             'affine_regularization': None,
@@ -236,6 +237,8 @@ class T1SPMSegmentation(cpe.Pipeline):
         if self.parameters['write_deformation_fields'] is not None:
             new_segment.inputs.write_deformation_fields = self.parameters['write_deformation_fields']
 
+        if self.parameters['tpm'] is not None:
+            tissue_map = self.parameters['tpm']
         new_segment.inputs.tissues = utils.get_tissue_tuples(tissue_map,
                                                              self.parameters['tissue_classes'],
                                                              self.parameters['dartel_tissues'],

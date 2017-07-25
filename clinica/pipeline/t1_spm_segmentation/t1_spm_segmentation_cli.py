@@ -27,6 +27,8 @@ class T1SPMSegmentationCLI(ce.CmdParser):
                                 help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to save. Up to 6 tissue classes can be saved. Ex: 1 2 3 is GM, WM and CSF")
         self._args.add_argument("-dt", "--dartel_tissues", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
                                 help='Tissues to use for DARTEL template calculation. Ex: 1 is only GM')
+        self._args.add_argument("-tpm", "--tissue_probability_maps",
+                                help='Tissue probability maps to use for segmentation.')
         self._args.add_argument("-swu", "--save_warped_unmodulated", action='store_true',
                                 help="Save warped unmodulated images for tissues specified in --tissue_classes")
         self._args.add_argument("-swm", "--save_warped_modulated", action='store_true',
@@ -51,6 +53,7 @@ class T1SPMSegmentationCLI(ce.CmdParser):
 
         pipeline.parameters.update({'tissue_classes': args.tissue_classes,
                                     'dartel_tissues': args.dartel_tissues,
+                                    'tpm': args.tissue_probability_maps,
                                     'save_warped_unmodulated': args.save_warped_unmodulated,
                                     'save_warped_modulated': args.save_warped_modulated,
                                     'write_deformation_fields': [True, True],  # args.write_deformation_fields
