@@ -19,8 +19,6 @@ def join_smoothed_files(smoothed_normalized_files):
     :param smoothed_normalized_files:
     :return:
     """
-    # from clinica.utils.stream import cprint
-    # cprint(smoothed_normalized_files)
 
     return [[x for smooth in subject for x in smooth] for subject in zip(*smoothed_normalized_files)]
 

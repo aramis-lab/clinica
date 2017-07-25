@@ -259,7 +259,7 @@ class T1SPMFullPrep(cpe.Pipeline):
             (r'(.*)/normalized_files/(sub-.*)$', r'\1/\2'),
             (r'(.*)/smoothed_normalized_files/(fwhm-[0-9]+mm)_(sub-.*)_probability(\.nii(\.gz)?)$', r'\1/\3_\2_probability\4'),
 
-            (r'(.*)/atlas_statistics/(fwhm-[0-9]+mm)_(sub-.*)_probability(\.nii(\.gz)?)$', r'\1/\3_\2_probability\4'),
+            # (r'(.*)/atlas_statistics/(fwhm-[0-9]+mm)_(sub-.*)_probability(\.nii(\.gz)?)$', r'\1/\3_\2_probability\4'),
 
             (r'trait_added', r'')
         ]
