@@ -18,6 +18,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
     """
     :param study_name: name of the study (Ex. ADNI)
     :param clinical_spec_path: path to the clinical file
+    :param clinical_spec_dir: path to the directory where the clinical data are stored
     :param bids_ids: list of bids ids
     :param delete_non_bids_info: if True delete all the rows of the subjects that are not available in the BIDS dataset
     :return: a pandas dataframe that contains the participants data
@@ -113,7 +114,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
     return participant_df
 
 
-def create_sessions_dict(input_path, study_name, clinical_spec_path, bids_ids, name_column_ids, subj_to_remove = []):
+def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids_ids, name_column_ids, subj_to_remove = []):
     """
     Extract the information regarding the sessions and store them in a dictionary (session M0 only)
 
@@ -128,6 +129,7 @@ def create_sessions_dict(input_path, study_name, clinical_spec_path, bids_ids, n
     import pandas as pd
     from os import path
     import numpy as np
+    import os
 
     # Load data
     location = study_name + ' location'
@@ -152,16 +154,27 @@ def create_sessions_dict(input_path, study_name, clinical_spec_path, bids_ids, n
             # Load the file
             tmp = field_location[i].split('/')
             location = tmp[0]
-            sheet = tmp[1]
-            file_to_read_path = path.join(input_path, 'clinicalData', location)
-            file_to_read = pd.read_excel(file_to_read_path, sheetname=sheet)
+            if len(tmp) > 1:
+                sheet = tmp[1]
+            else:
+                sheet = ''
+
+            file_to_read_path = path.join(clinical_data_dir, location)
+            file_ext = os.path.splitext(location)[1]
+
+            if file_ext == '.xlsx':
+                file_to_read = pd.read_excel(file_to_read_path, sheetname=sheet)
+            elif file_ext == '.csv':
+                file_to_read = pd.read_csv(file_to_read_path)
 
             for r in range(0, len(file_to_read.values)):
                 row = file_to_read.iloc[r]
                 # Extracts the subject ids columns from the dataframe
                 subj_id = row[name_column_ids.decode('utf-8')]
-                if subj_id.dtype == np.int64:
-                    subj_id = str(subj_id)
+                print subj_id
+                if hasattr(subj_id, 'dtype'):
+                    if subj_id.dtype == np.int64:
+                        subj_id = str(subj_id)
                 # Removes all the - from
                 subj_id_alpha = remove_space_and_symbols(subj_id)
 
@@ -188,10 +201,10 @@ def create_scans_dict(input_path, study_name, clinic_specs_path, bids_ids, name_
     Extract the information regarding the scans and store them in a dictionary (session M0 only)
 
     :param input_path:
-    :param study_name:
+    :param study_name: name of the study (Ex ADNI)
     :param clinic_specs_path:
-    :param bids_ids:
-    :param name_column_ids:
+    :param bids_ids: list of bids ids
+    :param name_column_ids: name of the column where the subject id is contained
     :return:
     """
     import pandas as pd
@@ -257,19 +270,20 @@ def create_scans_dict(input_path, study_name, clinic_specs_path, bids_ids, name_
     return scans_dict
 
 
-def write_sessions_tsv(bids_paths, sessions_dict):
+def write_sessions_tsv(bids_dir, sessions_dict):
+    """
+    Write the content of the function create scans dict in several tsv files following the BIDS specification
+
+    :param bids_dir: path to the bids directory
+    :param sessions_dict: output of the function create_scans_dict
     """
 
-    :param out_path:
-    :param bids_paths:
-    :param sessions_dict:
-    :param fields_bids:
-    :param sessions_list:
-    :return:
-    """
     import os
     import pandas as pd
     from os import path
+    from glob import glob
+
+    bids_paths = glob(path.join(bids_dir, 'sub-*'))
 
     for sp in bids_paths:
         bids_id = sp.split(os.sep)[-1]
@@ -284,6 +298,7 @@ def write_sessions_tsv(bids_paths, sessions_dict):
             print "No session data available for " + sp
             session_df = pd.DataFrame(columns=['session_id'])
             session_df['session_id'] = pd.Series('M0')
+            print
             session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf8')
 
 
@@ -457,11 +472,10 @@ def get_ext(file_path):
 
 def compress_nii(file_path):
     '''
-    Compress .nii file
-    :param path:
-    :return:
-    '''
+    Compress nii files.
 
+    :param file_path: path to the file to convert
+    '''
     from os import path
     import os
     import gzip
@@ -471,7 +485,6 @@ def compress_nii(file_path):
     f_out.writelines(f_in)
     f_out.close()
     f_in.close()
-
     # Remove the original file
     os.remove(file_path)
 
