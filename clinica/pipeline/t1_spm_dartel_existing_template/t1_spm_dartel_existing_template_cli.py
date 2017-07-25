@@ -1,18 +1,19 @@
-"""T1 SPM Dartel - Clinica Command Line Interface.
+"""T1 SPM Dartel Existing Template - Clinica Command Line Interface.
 This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
+command line tool. See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
 """
 
 
 import clinica.engine as ce
 
 
-class T1SPMDartelCLI(ce.CmdParser):
+class T1SPMDartelExistingTemplateCLI(ce.CmdParser):
 
     def define_name(self):
         """Define the sub-command name to run this pipeline.
         """
-        self._name = 't1-spm-dartel'
+
+        self._name = 't1-spm-dartel-existing-template'
 
     def define_options(self):
         """Define the sub-command arguments
@@ -26,8 +27,8 @@ class T1SPMDartelCLI(ce.CmdParser):
                                 help='Current group name')
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
                                 help='TSV file containing the subjects with their sessions.')
-        self._args.add_argument("-dt", "--dartel_tissues", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
-                                help='Tissues to use for DARTEL template calculation. Ex: 1 is only GM')
+        self._args.add_argument("-t", "--tissues", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
+                                help='Tissues to create flow fields to DARTEL template. Ex: 1 is only GM')
         self._args.add_argument("-wd", "--working_directory",
                                 help='Temporary directory to store pipeline intermediate results')
         self._args.add_argument("-np", "--n_procs", type=int,
@@ -39,15 +40,15 @@ class T1SPMDartelCLI(ce.CmdParser):
         """
         """
 
-        from t1_spm_dartel_pipeline import T1SPMDartel
+        from t1_spm_dartel_existing_template_pipeline import T1SPMDartelExistingTemplate
 
-        pipeline = T1SPMDartel(bids_directory=self.absolute_path(args.bids_directory),
-                               caps_directory=self.absolute_path(args.caps_directory),
-                               tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-                               group_id=args.group_id
-                               )
+        pipeline = T1SPMDartelExistingTemplate(bids_directory=self.absolute_path(args.bids_directory),
+                                               caps_directory=self.absolute_path(args.caps_directory),
+                                               tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+                                               group_id=args.group_id
+                                               )
 
-        pipeline.parameters.update({'dartel_tissues': args.dartel_tissues})
+        pipeline.parameters.update({'tissues': args.tissues})
 
         pipeline.base_dir = self.absolute_path(args.working_directory)
 

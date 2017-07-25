@@ -47,6 +47,8 @@ class T1SPMFullPrepCLI(ce.CmdParser):
                                 help='Temporary directory to store pipeline intermediate results')
         self._args.add_argument("-np", "--n_procs", type=int,
                                 help='Number of cores used to run in parallel')
+        self._args.add_argument("-sl", "--slurm", action='store_true',
+                                help='Run the pipeline using SLURM')
 
     def run_pipeline(self, args):
         """
@@ -75,5 +77,7 @@ class T1SPMFullPrepCLI(ce.CmdParser):
 
         if args.n_procs:
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
+        elif args.slurm:
+            pipeline.run(plugin='SLURM')
         else:
             pipeline.run()

@@ -6,8 +6,12 @@ def zip_nii(in_file, same_dir=False):
     import gzip
     import shutil
     from nipype.utils.filemanip import split_filename
+    from traits.trait_base import _Undefined
 
-    if not isinstance(in_file, basestring): # type(in_file) is list:
+    if (in_file is None) or isinstance(in_file, _Undefined):
+        return None
+
+    if not isinstance(in_file, basestring):  # type(in_file) is list:
         return [zip_nii(f, same_dir) for f in in_file]
 
     orig_dir, base, ext = split_filename(str(in_file))
@@ -31,8 +35,12 @@ def zip_nii(in_file, same_dir=False):
 def unzip_nii(in_file):
     from nipype.utils.filemanip import split_filename
     from nipype.algorithms.misc import Gunzip
+    from traits.trait_base import _Undefined
 
-    if type(in_file) is list:
+    if (in_file is None) or isinstance(in_file, _Undefined):
+        return None
+
+    if not isinstance(in_file, basestring):  # type(in_file) is list:
         return [unzip_nii(f) for f in in_file]
 
     _, base, ext = split_filename(in_file)
