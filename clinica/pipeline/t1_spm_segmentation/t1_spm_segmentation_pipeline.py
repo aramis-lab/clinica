@@ -98,6 +98,13 @@ class T1SPMSegmentation(cpe.Pipeline):
         read_node = npe.Node(name="read_node",
                              interface=nutil.IdentityInterface(fields=['bids_images'],
                                                                mandatory_inputs=True))
+        from clinica.utils.stream import cprint
+
+        cprint("SUBJECTS")
+        cprint(self.subjects)
+        cprint("SESSIONS")
+        cprint(self.sessions)
+
         read_node.inputs.bids_images = utils.select_bids_images(self.subjects, self.sessions, 'T1w', self.bids_layout)
 
         self.connect([
