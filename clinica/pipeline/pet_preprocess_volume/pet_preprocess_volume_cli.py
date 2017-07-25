@@ -35,10 +35,10 @@ class PETPreprocessVolumeCLI(ce.CmdParser):
                                 help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to use for masking the PET image. Ex: 1 2 3 is GM, WM and CSF")
         self._args.add_argument("-threshold", "--mask_threshold", type=float, default=0.3,
                                 help='Value to be used as threshold to binarize the tissues mask.')
-        self._args.add_argument("-m", "--modulated_mask", type=bool, default=True,
-                                help='A boolean. Indicates if modulated version of mask tissues should be used.')
         self._args.add_argument("-pvc_mask", "--pvc_mask_tissues", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
                                 help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to use as mask for PVC. Ex: 1 2 3 is GM, WM and CSF")
+        self._args.add_argument("-smooth", "--smooth", nargs='+', type=int, default=[8],
+                                help="A list of integers specifying the different isomorphic fwhm in milimeters to smooth the image")
         self._args.add_argument("-atlases", "--atlases", nargs='+', type=str,
                                 default=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
                                 choices=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
@@ -65,9 +65,9 @@ class PETPreprocessVolumeCLI(ce.CmdParser):
 
         pipeline.parameters.update({'pet_type': args.pet_type,
                                     'mask_tissues': args.mask_tissues,
-                                    'mask_tissues_modulation': 'on' if args.modulated_mask else 'off',
                                     'mask_threshold': args.mask_threshold,
                                     'pvc_mask_tissues': args.pvc_mask_tissues,
+                                    'smooth': args.smooth,
                                     'atlas_list': args.atlases
                                     })
 

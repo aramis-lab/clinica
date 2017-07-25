@@ -49,7 +49,8 @@ class T1SPMFullPrep(cpe.Pipeline):
         # Default parameters
         self._parameters = {'tissue_classes': [1, 2, 3],
                             'dartel_tissues': [1, 2, 3],
-                            'save_warped_unmodulated': False,
+                            'tpm': None,
+                            'save_warped_unmodulated': True,
                             'save_warped_modulated': False,
                             'affine_regularization': None,
                             'channel_info': None,
@@ -272,8 +273,8 @@ class T1SPMFullPrep(cpe.Pipeline):
         write_atlas_node.inputs.base_directory = self.caps_directory
         write_atlas_node.inputs.parameterization = False
         write_atlas_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
-                                                  '/t1/spm/atlas_statistics'
-                                                  for i in range(len(self.subjects))]
+                                             '/t1/spm/dartel/group-' + self._group_id + '/atlas_statistics'
+                                             for i in range(len(self.subjects))]
         write_atlas_node.inputs.regexp_substitutions = [
             (r'(.*atlas_statistics)/atlas_statistics/mwc1(sub-.*_T1w).*(_space-.*_map-graymatter_statistics\.tsv)$', r'\1/\2\3'),
             (r'(.*atlas_statistics)/atlas_statistics/(m?w)?(sub-.*_T1w).*(_space-.*_map-graymatter_statistics).*(\.tsv)$', r'\1/\3\4\5'),
@@ -352,6 +353,9 @@ class T1SPMFullPrep(cpe.Pipeline):
 
         if self.parameters['write_deformation_fields'] is not None:
             new_segment.inputs.write_deformation_fields = self.parameters['write_deformation_fields']
+
+        if self.parameters['tpm'] is not None:
+            tissue_map = self.parameters['tpm']
 
         new_segment.inputs.tissues = seg_utils.get_tissue_tuples(tissue_map,
                                                                  self.parameters['tissue_classes'],

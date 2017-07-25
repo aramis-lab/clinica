@@ -43,14 +43,14 @@ class T1SPMSegmentation(cpe.Pipeline):
         self._parameters = {'tissue_classes': [1, 2, 3],
                             'dartel_tissues': [1, 2, 3],
                             'tpm': None,
-                            'save_warped_unmodulated': False,
+                            'save_warped_unmodulated': True,
                             'save_warped_modulated': False,
                             'affine_regularization': None,
                             'channel_info': None,
                             'sampling_distance': None,
                             'warping_regularization': None,
                             'write_deformation_fields': None,
-                            'save_t1_mni': False
+                            'save_t1_mni': True
                             }
 
     def check_custom_dependencies(self):
@@ -98,13 +98,6 @@ class T1SPMSegmentation(cpe.Pipeline):
         read_node = npe.Node(name="read_node",
                              interface=nutil.IdentityInterface(fields=['bids_images'],
                                                                mandatory_inputs=True))
-        from clinica.utils.stream import cprint
-
-        cprint("SUBJECTS")
-        cprint(self.subjects)
-        cprint("SESSIONS")
-        cprint(self.sessions)
-
         read_node.inputs.bids_images = utils.select_bids_images(self.subjects, self.sessions, 'T1w', self.bids_layout)
 
         self.connect([
@@ -246,6 +239,7 @@ class T1SPMSegmentation(cpe.Pipeline):
 
         if self.parameters['tpm'] is not None:
             tissue_map = self.parameters['tpm']
+
         new_segment.inputs.tissues = utils.get_tissue_tuples(tissue_map,
                                                              self.parameters['tissue_classes'],
                                                              self.parameters['dartel_tissues'],

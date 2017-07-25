@@ -14,9 +14,6 @@ def select_bids_images(subjects, sessions, image_type, bids_layout):
     """
     if len(subjects) != len(sessions):
         raise RuntimeError("Subjects list and sessions list must have the same length.")
-    from clinica.utils.stream import cprint
-    for i in range(len(subjects)):
-        cprint(subjects[i])
 
     return [select_image(subjects[i], sessions[i], image_type, bids_layout) for i in range(len(subjects))]
 
@@ -25,9 +22,6 @@ def select_image(participant_id, session_id, image_type, bids_layout):
     """
     """
     import warnings
-    from clinica.utils.stream import cprint
-    cprint(participant_id)
-    cprint(session_id)
 
     if participant_id.startswith('sub-'):
         participant_id = participant_id[4:]
