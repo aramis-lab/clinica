@@ -29,7 +29,7 @@ class T1SPMSegmentationCLI(ce.CmdParser):
                                 help='Tissues to use for DARTEL template calculation. Ex: 1 is only GM')
         self._args.add_argument("-tpm", "--tissue_probability_maps",
                                 help='Tissue probability maps to use for segmentation.')
-        self._args.add_argument("-swu", "--save_warped_unmodulated", action='store_true',
+        self._args.add_argument("-swu", "--save_warped_unmodulated", action='store_true', default=True,
                                 help="Save warped unmodulated images for tissues specified in --tissue_classes")
         self._args.add_argument("-swm", "--save_warped_modulated", action='store_true',
                                 help="Save warped modulated images for tissues specified in --tissue_classes")
