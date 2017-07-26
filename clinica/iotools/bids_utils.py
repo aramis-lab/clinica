@@ -196,7 +196,7 @@ def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids
     return sessions_dict
 
 
-def create_scans_dict(input_path, study_name, clinic_specs_path, bids_ids, name_column_ids):
+def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids, name_column_ids):
     """
     Extract the information regarding the scans and store them in a dictionary (session M0 only)
 
@@ -248,7 +248,7 @@ def create_scans_dict(input_path, study_name, clinic_specs_path, bids_ids, name_
         if file_name == prev_file and sheet == prev_sheet:
             pass
         else:
-            file_to_read_path = path.join(input_path, 'clinicalData', file_name)
+            file_to_read_path = path.join(clinical_data_dir, file_name)
             if sheet != '':
                 file_to_read = pd.read_excel(file_to_read_path, sheetname=sheet)
             else:
@@ -302,13 +302,13 @@ def write_sessions_tsv(bids_dir, sessions_dict):
             session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf8')
 
 
-def write_scans_tsv(out_path, bids_ids, scans_dict):
+def write_scans_tsv(bids_dir, bids_ids, scans_dict):
     """
     Write the scans dict into tsv files.
-    :param out_path:
-    :param bids_ids:
-    :param scans_dict:
-    :return:
+
+    :param bids_dir: path to the BIDS directory
+    :param bids_ids: list of bids ids
+    :param scans_dict: the output of the function create_scans_dict
     """
     import pandas as pd
     from os import path
@@ -321,10 +321,10 @@ def write_scans_tsv(out_path, bids_ids, scans_dict):
         # Create the file
         tsv_name = bids_id + "_ses-M0_scans.tsv"
         # If the file already exists, remove it
-        if os.path.exists(path.join(out_path, bids_id, 'ses-M0', tsv_name)):
-            os.remove(path.join(out_path, bids_id, 'ses-M0', tsv_name))
+        if os.path.exists(path.join(bids_dir, bids_id, 'ses-M0', tsv_name)):
+            os.remove(path.join(bids_dir, bids_id, 'ses-M0', tsv_name))
 
-        mod_available = glob(path.join(out_path, bids_id, 'ses-M0', '*'))
+        mod_available = glob(path.join(bids_dir, bids_id, 'ses-M0', '*'))
         for mod in mod_available:
             mod_name = os.path.basename(mod)
             files = glob(path.join(mod, '*'))
@@ -340,7 +340,7 @@ def write_scans_tsv(out_path, bids_ids, scans_dict):
                 row_to_append.insert(0, 'filename', path.join(mod_name, file_name))
                 scans_df = scans_df.append(row_to_append)
 
-            scans_df.to_csv(path.join(out_path, bids_id, 'ses-M0', tsv_name), sep='\t', index=False, encoding='utf8')
+            scans_df.to_csv(path.join(bids_dir, bids_id, 'ses-M0', tsv_name), sep='\t', index=False, encoding='utf8')
 
 # -- Other methods --
 def contain_dicom(folder_path):
@@ -361,7 +361,7 @@ def contain_dicom(folder_path):
 
 
 def get_supported_dataset():
-    return ['ADNI', 'CLINAD', 'PREVDEMALS', 'INSIGHT']
+    return ['ADNI', 'CLINAD', 'PREVDEMALS', 'INSIGHT', 'OASIS', 'AIBL']
 
 
 def dcm_to_nii(input_path, output_path, bids_name):
