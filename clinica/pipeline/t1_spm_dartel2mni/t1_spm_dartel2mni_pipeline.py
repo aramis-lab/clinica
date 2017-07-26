@@ -186,8 +186,8 @@ class T1SPMDartel2MNI(cpe.Pipeline):
         write_atlas_node.inputs.base_directory = self.caps_directory
         write_atlas_node.inputs.parameterization = False
         write_atlas_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
-                                                  '/t1/spm/atlas_statistics'
-                                                  for i in range(len(self.subjects))]
+                                             '/t1/spm/dartel/group-' + self._group_id + '/atlas_statistics'
+                                             for i in range(len(self.subjects))]
         write_atlas_node.inputs.regexp_substitutions = [
             (r'(.*atlas_statistics)/atlas_statistics/mwc1(sub-.*)(_space-.*_map-graymatter_statistics\.tsv)$', r'\1/\2\3'),
             (r'(.*atlas_statistics)/atlas_statistics/(m?w)?(sub-.*_T1w).*(_space-.*_map-graymatter_statistics).*(\.tsv)$', r'\1/\3\4\5'),
