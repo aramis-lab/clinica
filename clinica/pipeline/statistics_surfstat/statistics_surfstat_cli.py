@@ -50,20 +50,17 @@ class StatisticsSurfstatCLI(ce.CmdParser):
 
     def run_pipeline(self, args):
         """
+        Run the pipeline with defined args
         """
 
-        from tempfile import mkdtemp
         from statistics_surfstat_pipeline import StatisticsSurfstat
 
-        # Most of the time, you will want to instantiate your pipeline with a
-        # BIDS and CAPS directory as inputs:
         pipeline = StatisticsSurfstat(
+            # pass these args by the class attribute itself
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.tsv_file))
         pipeline.parameters = {
-            # Add your own pipeline parameters here to use them inside your
-            # pipeline. See the file `statistics_surfstat2_pipeline.py` to
-            # see an example of use.
+            # pass these args by using self.parameters in a dictionary
             'design_matrix': args.design_matrix,
             'contrast': args.contrast,
             'str_format': args.str_format,
@@ -75,7 +72,11 @@ class StatisticsSurfstatCLI(ce.CmdParser):
             'cluster_threshold': args.cluster_threshold or 0.001
         }
         pipeline.base_dir = self.absolute_path(args.working_directory)
+
+        # run the pipeline in n_procs cores based on your computation power.
         if args.n_procs:
+            pipeline.write_graph()
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         else:
+            pipeline.write_graph()
             pipeline.run()

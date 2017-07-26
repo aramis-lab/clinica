@@ -1,4 +1,4 @@
-"""T1 FreeSurfer3 - Clinica Command Line Interface.
+"""T1 FreeSurfer - Clinica Command Line Interface.
 This file has been generated automatically by the `clinica generate template`
 command line tool. See here for more details: https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
 """
@@ -16,14 +16,14 @@ class T1FreeSurferCLI(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments
         """
+        # default args created by template
         self._args.add_argument("bids_directory",
                                 help='Path to the BIDS directory.')
         self._args.add_argument("caps_directory",
                                 help='Path to the CAPS directory.')
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
                                 help='TSV file containing the subjects with their sessions.')
-        # Add your own pipeline command line arguments here to be used in the
-        # method below. Example below:
+        # Custom args added by developers
         self._args.add_argument("-ras", "--recon_all_args",
                                 help='additional flags for recon-all command line, default will be -qcache')
         self._args.add_argument("-wd", "--working_directory",
@@ -33,32 +33,31 @@ class T1FreeSurferCLI(ce.CmdParser):
 
     def run_pipeline(self, args):
         """
+        Run the pipeline with defined args
         """
         from t1_freesurfer_pipeline import T1FreeSurfer
         from tempfile import mkdtemp
 
-        # Most of the time, you will want to instantiate your pipeline with a
-        # BIDS and CAPS directory as inputs:
-        # pipeline = T1FreeSurfer(
-        #     bids_directory=self.absolute_path(args.bids_directory),
-        #     caps_directory=self.absolute_path(args.caps_directory),
-        #     tsv_file=self.absolute_path(args.subjects_sessions_tsv))
         pipeline = T1FreeSurfer(
+            # pass these args by the class attribute itself
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv))
 
         pipeline.parameters = {
-            # Add your own pipeline parameters here to use them inside your
-            # pipeline. See the file `t1_freesurfer2_pipeline.py` to
-            # see an example of use.
+            # pass these args by using self.parameters in a dictionary
             'recon_all_args': args.recon_all_args or '-qcache'
         }
+
+        # make sure if working_directory is not defined, using a temp folder to the working directory.
         if args.working_directory is None:
             args.working_directory = mkdtemp()
-
         pipeline.base_dir = self.absolute_path(args.working_directory)
+
+        # run the pipeline in n_procs cores based on your computation power.
         if args.n_procs:
+            pipeline.write_graph()
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         else:
+            pipeline.write_graph()
             pipeline.run()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""This module contains functions used for the surfstat() pipeline"""
+"""This module contains functions used for the statistics_surfstat() pipeline"""
 
 __author__ = "Junhao Wen, Alexandre Routier"
 __copyright__ = "Copyright 2016, The Aramis Lab Team"
@@ -13,13 +13,16 @@ __status__ = "Development"
 
 def data_prep(input_directory, subjects_visits_tsv, group_label, glm_type):
     """
-    Fetch all the intermedial variables for this workflow
+        Fetch all the intermedial variables for this workflow
 
-    :param input_directory:
-    :param subjects_visits_tsv:
-    :param group_label:
-    :param glm_type:
-    :return:
+    Args:
+        input_directory: CAPS directory
+        subjects_visits_tsv: tsv file defining the glm model
+        group_label: Current group name for this analysis
+        glm_type: based on the hypothesis, you should define one of the glm types, "group_comparison", "correlation"
+
+    Returns:
+
     """
     import os
     from shutil import copy
@@ -96,20 +99,30 @@ def runmatlab(input_directory,
               threshold_corrected_pvalue,
               cluster_threshold):
     """
-    a wrapper the matlab script of surfstat with nipype.
+        a wrapper the matlab script of surfstat with nipype.
 
-    :param input_directory:
-    :param output_directory:
-    :param subjects_visits_tsv:
-    :param design_matrix:
-    :param contrast:
-    :param str_format:
-    :param path_to_matscript:
-    :param full_width_at_half_maximum:
-    :param threshold_uncorrected_pvalue:
-    :param threshold_corrected_pvalue:
-    :param cluster_threshold:
-    :return:
+    Args:
+        input_directory: surfstat_input_dir where containing all the subjects' output in CAPS directory
+        output_directory: output folder to contain the result in CAPS folder
+        subjects_visits_tsv: tsv file containing the glm information
+        design_matrix: str, the linear model that fits into the GLM, for example '1+group'.
+        contrast: string, the contrast matrix for GLM, if the factor you choose is categorized variable, clinica_surfstat will create two contrasts,
+                  for example, contrast = 'Label', this will create contrastpos = Label.AD - Label.CN, contrastneg = Label.CN - Label.AD; if the fac-
+                  tory that you choose is a continuous factor, clinica_surfstat will just create one contrast, for example, contrast = 'Age', but note,
+                  the string name that you choose should be exactly the same with the columns names in your subjects_visits_tsv.
+        str_format:string, the str_format which uses to read your tsv file, the typy of the string should corresponds exactly with the columns in the tsv file.
+                  Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
+        glm_type: based on the hypothesis, you should define one of the glm types, "group_comparison", "correlation"
+        group_label: current group name for this analysis
+        freesurfer_home: the environmental variable $FREESURFER_HOME
+        path_to_matscript: path to find the matlab script
+        full_width_at_half_maximum: fwhm for the surface smoothing, default is 20, integer.
+        threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float, default is 0.001.
+        threshold_corrected_pvalue: the threshold to display the corrected cluster, default is 0.05, float.
+        cluster_threshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float.
+
+    Returns:
+
     """
     from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
     from os.path import join
@@ -162,6 +175,27 @@ def runmatlab(input_directory,
 
 def json_dict_create(glm_type, design_matrix, str_format, contrast, group_label, full_width_at_half_maximum,
                     threshold_uncorrected_pvalue, threshold_corrected_pvalue, cluster_threshold):
+    """
+        create a json file containing the glm information
+    Args:
+
+        design_matrix: str, the linear model that fits into the GLM, for example '1+group'.
+        contrast: string, the contrast matrix for GLM, if the factor you choose is categorized variable, clinica_surfstat will create two contrasts,
+                  for example, contrast = 'Label', this will create contrastpos = Label.AD - Label.CN, contrastneg = Label.CN - Label.AD; if the fac-
+                  tory that you choose is a continuous factor, clinica_surfstat will just create one contrast, for example, contrast = 'Age', but note,
+                  the string name that you choose should be exactly the same with the columns names in your subjects_visits_tsv.
+        str_format:string, the str_format which uses to read your tsv file, the typy of the string should corresponds exactly with the columns in the tsv file.
+                  Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
+        glm_type: based on the hypothesis, you should define one of the glm types, "group_comparison", "correlation"
+        group_label: current group name for this analysis
+        full_width_at_half_maximum: fwhm for the surface smoothing, default is 20, integer.
+        threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float, default is 0.001.
+        threshold_corrected_pvalue: the threshold to display the corrected cluster, default is 0.05, float.
+        cluster_threshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float.
+
+    Returns:
+
+    """
     json_dict = {'AnalysisType': glm_type,
                 'DesignMatrix': design_matrix,
                 'StringFormatTSV': str_format,
