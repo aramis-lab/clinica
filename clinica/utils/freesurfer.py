@@ -48,12 +48,15 @@ def freesurfer_volume_to_native_volume(freesurfer_volume, native_volume, name_ou
 
 def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv):
     """
-    This function is to transfer caps recon-all output structure to standard freesurfer recon-all output structure.
-    :param caps_dir:
-    :param dest_dir:
-    :param subjects_visits_tsv:
-    :param analysis_series_id:
-    :return:
+        This function is to transfer caps recon-all output structure to standard FreeSurfer recon-all output structure.
+
+    Args:
+        caps_dir: CAPS directory containing the outputs in CAPS hierarchy
+        dest_dir: the destination folder containing the FreeSurfer output structure
+        subjects_visits_tsv: tsv files containing the subjects that you want to convert
+
+    Returns:
+
     """
     import os, csv
     from shutil import copytree
@@ -83,12 +86,15 @@ def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv):
 
 def volumetric_summary(subject_dir, subject_id, output_dir):
     """
-    To write statistics summary for all the subjects after reconall pipeline.
-    :param subject_dir:
-    :param subject_id: this is a list for all the subjects
-    :param output_dir:
-    :return:
-    Note: this function should be connected with get_dirs_check_reconalled in a workflow.
+        To write statistics summary for all the subjects after reconall pipeline.
+
+    Args:
+        subject_dir: a list containing all the CAPS directory path
+        subject_id: a list containing all the participant_id
+        output_dir: destination folder containing the summarized statistics tsv
+
+    Returns:
+
     """
     import os, errno
 
@@ -232,9 +238,14 @@ def volumetric_summary(subject_dir, subject_id, output_dir):
 
 def write_volumetric_summary(output_dir, subjects_visits_tsv):
     """
-    This func is to write the volumetric measurement after recon-all pipeline for all the subjects
-    :param subjects_visits_tsv:
-    :return:
+        This func is to write the volumetric measurement after recon-all pipeline for all the subjects
+
+    Args:
+        output_dir: destination folder to contain the tsv file
+        subjects_visits_tsv: tsv contains all the particiapnt_id and session_id
+
+    Returns:
+
     """
     ### TODO, this should be done after we define the name of the tsv file for each subject, otherwise this will be changed often....
     import nipype.pipeline.engine as pe
@@ -261,9 +272,14 @@ def write_volumetric_summary(output_dir, subjects_visits_tsv):
 
 def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
     """
-    This func is to write the volumetric measurement after recon-all pipeline for each subjects in the subjects_visits_tsv
-    :param subjects_visits_tsv:
-    :return:
+        This func is to write the volumetric measurement after recon-all pipeline for each subjects in the subjects_visits_tsv
+
+    Args:
+        caps_dir: CAPS directory
+        subjects_visits_tsv: tsv contains all the particiapnt_id and session_id
+
+    Returns:
+
     """
     import nipype.pipeline.engine as pe
     from nipype.interfaces.utility import Function
@@ -291,10 +307,15 @@ def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
 
 def write_reconall_log_summary(caps_dir, subjects_visits_tsv):
     """
-       This func is to write the recon_all.log summary for all the subjects, the first step quality check
-       :param :
-       :return:
-       """
+        This func is to write the recon_all.log summary for all the subjects, the first step quality check
+
+    Args:
+        caps_dir: CAPS directory
+        subjects_visits_tsv: tsv contains all the particiapnt_id and session_id
+
+    Returns:
+
+    """
     import nipype.pipeline.engine as pe
     from nipype.interfaces.utility import Function
     import pandas as pd

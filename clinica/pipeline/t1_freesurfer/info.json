@@ -1,4 +1,5 @@
-{   "id": "aramislab/t1freesurfer",
+{
+    "id": "aramislab/t1-freesurfer",
     "author": "WEN Junhao",
     "version": "0.1",
     "dependencies": [

@@ -65,9 +65,9 @@ class PETPreprocessVolume(cpe.Pipeline):
         # Default parameters
         self._parameters = {'pet_type': 'fdg',
                             'mask_tissues': [1, 2, 3],
-                            'mask_tissues_modulation': 'on',
                             'mask_threshold': 0.3,
                             'pvc_mask_tissues': [1, 2, 3],
+                            'smooth': [8],
                             'atlas_list': ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
                             }
 
@@ -104,10 +104,12 @@ class PETPreprocessVolume(cpe.Pipeline):
                 'pet_suvr',
                 'binary_mask',
                 'pet_suvr_masked',
+                'pet_suvr_masked_smoothed',
                 'pet_pvc',
                 'pet_pvc_mni',
                 'pet_pvc_suvr',
                 'pet_pvc_suvr_masked',
+                'pet_pvc_suvr_masked_smoothed',
                 'atlas_statistics',
                 'pvc_atlas_statistics'
                 ]
@@ -198,7 +200,7 @@ class PETPreprocessVolume(cpe.Pipeline):
         tissues_caps_reader = npe.Node(nio.DataGrabber(infields=['subject_id', 'session', 'subject_repeat', 'session_repeat', 'tissues'],
                                                        outfields=['out_files']), name='tissues_caps_reader')
         tissues_caps_reader.inputs.base_directory = join(self.caps_directory, 'subjects')
-        tissues_caps_reader.inputs.template = '%s/%s/t1/spm/dartel/group-' + self._group_id + '/%s_%s_T1w_segm-%s_space-Ixi549Space_modulated-' + self.parameters['mask_tissues_modulation'] + '_probability.nii*'
+        tissues_caps_reader.inputs.template = '%s/%s/t1/spm/segmentation/normalized_space/%s_%s_T1w_segm-%s_space-Ixi549Space_modulated-off_probability.nii*'
         tissues_caps_reader.inputs.tissues = [tissue_names[t] for t in self.parameters['mask_tissues']]
         tissues_caps_reader.inputs.sort_filelist = False
 
@@ -283,6 +285,11 @@ class PETPreprocessVolume(cpe.Pipeline):
             (r'(.*/)pet_pvc_suvr/suvr_wpvc-rbv_r(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-Ixi549Space_pvc-rbv_suvr-' + re.escape(self._suvr_region) + r'_pet\3'),
             (r'(.*/)pet_suvr_masked/masked_suvr_wr(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-Ixi549Space_suvr-' + re.escape(self._suvr_region) + r'_mask-brain_pet\3'),
             (r'(.*/)pet_pvc_suvr_masked/masked_suvr_wpvc-rbv_r(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-Ixi549Space_pvc-rbv_suvr-' + re.escape(self._suvr_region) + r'_mask-brain_pet\3'),
+
+
+            (r'(.*/)pet_suvr_masked_smoothed/(fwhm-[0-9]+mm)_masked_suvr_wr(sub-.*)(\.nii(\.gz)?)$', r'\1\3_space-Ixi549Space_suvr-' + re.escape(self._suvr_region) + r'_mask-brain_\2_pet\4'),
+            (r'(.*/)pet_pvc_suvr_masked_smoothed/(fwhm-[0-9]+mm)_masked_suvr_wpvc-rbv_r(sub-.*)(\.nii(\.gz)?)$', r'\1\3_space-Ixi549Space_pvc-rbv_suvr-' + re.escape(self._suvr_region) + r'_mask-brain_\2_pet\4'),
+
             (r'(.*/)binary_mask/(sub-.*_T1w_).*(space-[a-zA-Z0-9]+).*(_brainmask\.nii(\.gz)?)$', r'\1\2\3\4')
         ]
 
@@ -306,11 +313,13 @@ class PETPreprocessVolume(cpe.Pipeline):
                                                              (('pet_suvr', zip_nii, True), 'pet_suvr'),
                                                              (('binary_mask', zip_nii, True), 'binary_mask'),
                                                              (('pet_suvr_masked', zip_nii, True), 'pet_suvr_masked'),
+                                                             (('pet_suvr_masked_smoothed', zip_nii, True), 'pet_suvr_masked_smoothed'),
                                                              (('pet_pvc', zip_nii, True), 'pet_pvc'),
                                                              (('pet_pvc_mni', zip_nii, True), 'pet_pvc_mni'),
                                                              (('pet_pvc_suvr', zip_nii, True), 'pet_pvc_suvr'),
-                                                             (('pet_pvc_suvr_masked', zip_nii, True), 'pet_pvc_suvr_masked')]),
-                      (container_path, write_atlas_node, [('container', 'container')]),
+                                                             (('pet_pvc_suvr_masked', zip_nii, True), 'pet_pvc_suvr_masked'),
+                                                             (('pet_pvc_suvr_masked_smoothed', zip_nii, True), 'pet_pvc_suvr_masked_smoothed')]),
+                      (container_path, write_atlas_node, [(('container', join, 'group-' + self._group_id), 'container')]),
                       (self.output_node, write_atlas_node, [('atlas_statistics', 'atlas_statistics'),
                                                             ('pvc_atlas_statistics', 'pvc_atlas_statistics')])
                       ])
@@ -396,6 +405,21 @@ class PETPreprocessVolume(cpe.Pipeline):
                                              function=utils.apply_binary_mask),
                               name='apply_mask')
 
+        # Smoothing
+        # =========
+        if self.parameters['smooth'] is not None and len(self.parameters['smooth']) > 0:
+            smoothing_node = npe.MapNode(spm.Smooth(),
+                                         name='smoothing_node',
+                                         iterfield=['fwhm', 'out_prefix'])
+            smoothing_node.inputs.fwhm = [[x, x, x] for x in self.parameters['smooth']]
+            smoothing_node.inputs.out_prefix = ['fwhm-' + str(x) + 'mm_' for x in self.parameters['smooth']]
+            self.connect([
+                (apply_mask, smoothing_node, [('masked_image_path', 'in_files')]),
+                (smoothing_node, self.output_node, [('smoothed_files', 'pet_suvr_masked_smoothed')])
+            ])
+        else:
+            self.output_node.inputs.pet_suvr_masked_smoothed = []
+
         # Atlas Statistics
         # ================
         atlas_stats_node = npe.MapNode(nutil.Function(input_names=['in_image',
@@ -474,9 +498,9 @@ class PETPreprocessVolume(cpe.Pipeline):
             # Normalize PET values according to reference region
             # ==================================================
             norm_to_ref_pvc = npe.Node(nutil.Function(input_names=['pet_image', 'region_mask'],
-                                                  output_names=['suvr_pet_path'],
-                                                  function=utils.normalize_to_reference),
-                                   name='norm_to_ref_pvc')
+                                                      output_names=['suvr_pet_path'],
+                                                      function=utils.normalize_to_reference),
+                                       name='norm_to_ref_pvc')
 
             # Mask PET image
             # ==============
@@ -484,6 +508,20 @@ class PETPreprocessVolume(cpe.Pipeline):
                                                      output_names=['masked_image_path'],
                                                      function=utils.apply_binary_mask),
                                       name='apply_mask_pvc')
+            # Smoothing
+            # =========
+            if self.parameters['smooth'] is not None and len(self.parameters['smooth']) > 0:
+                smoothing_pvc = npe.MapNode(spm.Smooth(),
+                                            name='smoothing_pvc',
+                                            iterfield=['fwhm', 'out_prefix'])
+                smoothing_pvc.inputs.fwhm = [[x, x, x] for x in self.parameters['smooth']]
+                smoothing_pvc.inputs.out_prefix = ['fwhm-' + str(x) + 'mm_' for x in self.parameters['smooth']]
+                self.connect([
+                    (apply_mask_pvc, smoothing_pvc, [('masked_image_path', 'in_files')]),
+                    (smoothing_pvc, self.output_node, [('smoothed_files', 'pet_pvc_suvr_masked_smoothed')])
+                ])
+            else:
+                self.output_node.inputs.pet_pvc_suvr_masked_smoothed = []
             # Atlas Statistics
             # ================
             atlas_stats_pvc = npe.MapNode(nutil.Function(input_names=['in_image',

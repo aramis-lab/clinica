@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module contains functions used for the recon_all_pipeline() and recon_all_statistics_pipeline()"""
-import os
+"""This module contains useful functions used for t1_freesurfer pipeline"""
 
 __author__ = "Junhao Wen"
 __copyright__ = "Copyright 2016, The Aramis Lab Team"
@@ -16,13 +15,14 @@ __status__ = "Development"
 
 def bids_datagrabber(input_dir, subject_list, session_list):
     """
-    Fetches files from a BIDS directory, subjects list and a sessions list
+        Fetch t1 images from a BIDS directory based on subject_list and a session_list
+    Args:
+        input_dir: BIDS directory
+        subject_list: a list containing all the participant_id
+        session_list: a list containing all the session_id
 
-    #TODO add the functionality to fethc with several run in your dataset.
-    :param input_dir:
-    :param subject_list:
-    :param session_list:
-    :return:
+    Returns: a list containing all the t1 images
+
     """
     from bids.grabbids.bids_layout import BIDSLayout
 
@@ -58,14 +58,17 @@ def bids_datagrabber(input_dir, subject_list, session_list):
 
 def get_dirs_check_reconalled(output_dir, subject_list, session_list):
     """
-    Get the info from subjects_visits_tsv, like subject_dir, subject_id, subject_list, session_list
-    Also, this func is also to check out the rerun of the dataset, if the subject result folder has been created, you should
-    check out the result and decide if you are going to rerun it or just ignore it.
+        Get the info from subjects_visits_tsv, like subject_dir, subject_id, subject_list, session_list
+        Also, this func is also to check out the rerun of the dataset, if the subject result folder has been created, you should
+        check out the result and decide if you are going to rerun it or just ignore it.
 
-    :param output_dir:
-    :param subjects_visits_tsv:
-    :return: return the lists containing CAPS version for subject_id, and also the Freesurfer version subject_id, also
-    return the subject_id, session_id in the tsv fils
+    Args:
+        output_dir: CAPS directory to contain the output
+        subject_list:  a list containing all the participant_id
+        session_list: a list containing all the session_id
+
+    Returns: the related lists based on the tsv files
+
     """
     import os, errno
     from copy import deepcopy as cp
@@ -115,14 +118,14 @@ def get_dirs_check_reconalled(output_dir, subject_list, session_list):
 
 def checkfov(t1_list, recon_all_args):
     """
-    Verifying size of inputs and FOV of each T1 image
+        Verifying size of inputs and FOV of each T1 image
 
-    Note:node2mapnode, so every subject is running in parallel, we dont have to check out if they have the same SIZE, but if you
-    node2node, it will be serialized, so that we can compare their size.
+    Args:
+        t1_list: a list containing all the t1 images
+        recon_all_args: default the -qache flag
 
-    :param t1_list:
-    :param recon_all_args:
-    :return:
+    Returns: a list containing -qcache + -cw256 or -qcache based on the FOV
+
     """
     import sys
     import nibabel as nib
@@ -153,10 +156,13 @@ def checkfov(t1_list, recon_all_args):
 
 def create_flags_str(input_flags):
     """
-    Create a commandline string from a list of input flags
+        Create a commandline string from a list of input flags
 
-    :param input_flags:
-    :return:
+    Args:
+        input_flags: the added flag for recon-all command
+
+    Returns: converted string flag
+
     """
     output_str = ""
     for flag in input_flags:
@@ -167,13 +173,16 @@ def create_flags_str(input_flags):
 
 def log_summary(subject_list, session_list, subject_id, output_dir):
     """
-    create the txt file to summarize the reconall result for all the subjects
+        create a log file to summarize the recon-all result for all the subjects, the first step quality check
 
-    :param subject_list:
-    :param session_list:
-    :param subject_id:
-    :param output_dir:
-    :return:
+    Args:
+        subject_list: a list containing all the path to the subject
+        session_list: a list containing all the session_id
+        subject_id: a list containing all the participant_id
+        output_dir: CAPS directory
+
+    Returns:
+
     """
     import os
     from datetime import datetime
@@ -213,6 +222,16 @@ def log_summary(subject_list, session_list, subject_id, output_dir):
         f1.write(line3)
 
 def write_statistics_per_subject(subject_id, output_dir):
+    """
+        A custom function to write the statistical measures into tsv files for each subject
+
+    Args:
+        subject_id: the subject's particiapnt_id
+        output_dir: CAPS directory
+
+    Returns:
+
+    """
 
     import os, errno
 
