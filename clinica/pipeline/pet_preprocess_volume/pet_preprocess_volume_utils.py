@@ -30,6 +30,15 @@ def read_psf(json_path):
 
 
 def create_binary_mask(tissues, threshold=0.3):
+    """
+
+    Args:
+        tissues:
+        threshold:
+
+    Returns:
+
+    """
     import nibabel as nib
     import numpy as np
     from os import getcwd
@@ -131,6 +140,13 @@ def normalize_to_reference(pet_image, region_mask):
 
 def atlas_statistics(in_image, in_atlas_list):
     """
+
+    Args:
+        in_image:
+        in_atlas_list:
+
+    Returns:
+
     For each atlas name provided it calculates for the input image the mean for each region in the atlas and saves it to a tsv file.
     :param in_image: A Nifti image
     :param in_atlas_list: List of names of atlas to be applied
@@ -157,6 +173,14 @@ def atlas_statistics(in_image, in_atlas_list):
 
 
 def pet_container_from_filename(pet_filename):
+    """
+
+    Args:
+        pet_filename:
+
+    Returns:
+
+    """
     import re
     from os.path import join
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', pet_filename)
