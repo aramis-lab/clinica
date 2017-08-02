@@ -566,3 +566,4 @@ class PETPreprocessVolume(cpe.Pipeline):
             self.output_node.inputs.pet_pvc_suvr = [[]]
             self.output_node.inputs.pet_pvc_suvr_masked = [[]]
             self.output_node.inputs.pvc_atlas_statistics = [[]]
+            self.output_node.inputs.pet_pvc_suvr_masked_smoothed = [[]]
