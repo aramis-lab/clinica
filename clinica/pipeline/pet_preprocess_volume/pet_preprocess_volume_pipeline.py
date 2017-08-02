@@ -418,7 +418,7 @@ class PETPreprocessVolume(cpe.Pipeline):
                 (smoothing_node, self.output_node, [('smoothed_files', 'pet_suvr_masked_smoothed')])
             ])
         else:
-            self.output_node.inputs.pet_suvr_masked_smoothed = []
+            self.output_node.inputs.pet_suvr_masked_smoothed = [[]]
 
         # Atlas Statistics
         # ================
@@ -521,7 +521,7 @@ class PETPreprocessVolume(cpe.Pipeline):
                     (smoothing_pvc, self.output_node, [('smoothed_files', 'pet_pvc_suvr_masked_smoothed')])
                 ])
             else:
-                self.output_node.inputs.pet_pvc_suvr_masked_smoothed = []
+                self.output_node.inputs.pet_pvc_suvr_masked_smoothed = [[]]
             # Atlas Statistics
             # ================
             atlas_stats_pvc = npe.MapNode(nutil.Function(input_names=['in_image',
@@ -561,8 +561,8 @@ class PETPreprocessVolume(cpe.Pipeline):
                           (atlas_stats_pvc, self.output_node, [('atlas_statistics', 'pvc_atlas_statistics')])
                           ])
         else:
-            self.output_node.inputs.pet_pvc = []
-            self.output_node.inputs.pet_pvc_mni = []
-            self.output_node.inputs.pet_pvc_suvr = []
-            self.output_node.inputs.pet_pvc_suvr_masked = []
-            self.output_node.inputs.pvc_atlas_statistics = []
+            self.output_node.inputs.pet_pvc = [[]]
+            self.output_node.inputs.pet_pvc_mni = [[]]
+            self.output_node.inputs.pet_pvc_suvr = [[]]
+            self.output_node.inputs.pet_pvc_suvr_masked = [[]]
+            self.output_node.inputs.pvc_atlas_statistics = [[]]
