@@ -8,3 +8,4 @@ jinja2>=2.9
 xvfbwrapper>=0.2.8
 plinkio>=0.9.6
 six>=1.9.0
+configparser>=3.5.0
