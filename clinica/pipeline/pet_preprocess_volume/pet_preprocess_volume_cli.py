@@ -60,7 +60,7 @@ class PETPreprocessVolumeCLI(ce.CmdParser):
                                        caps_directory=self.absolute_path(args.caps_directory),
                                        tsv_file=self.absolute_path(args.subjects_sessions_tsv),
                                        group_id=args.group_id,
-                                       fwhm_tsv=self.absolute_path(args.subjects_sessions_tsv)
+                                       fwhm_tsv=self.absolute_path(args.fwhm_tsv)
                                        )
 
         pipeline.parameters.update({'pet_type': args.pet_type,
