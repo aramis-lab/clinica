@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
 
 """
@@ -368,7 +365,7 @@ class BrainExtractionWorkflow(npe.Workflow):
         mask_node = npe.MapNode(name="ApplyMask",
                                 iterfield=["in_file", "mask_file"],
                                 interface=fsl.ApplyMask())
-        mask_node.inputs.output_type = 'NIFTI'
+        mask_node.inputs.output_type = str('NIFTI')
 
         self.connect([
             (seg_node   , add1_node   , [('native_gm_image' , 'in_file'     )]),
