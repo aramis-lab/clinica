@@ -925,12 +925,12 @@ class CmdParserDWIProcessing(CmdParser):
             # T1-FreeSurfer:
             caps_path_to_desikan_parcellation = os.path.join(self.absolute_path(args.caps_directory), 'subjects',
                                                              participant_id, session_id, 't1',
-                                                             'freesurfer-cross-sectional',
+                                                             'freesurfer_cross_sectional',
                                                              participant_id + '_' + session_id, 'mri', 'aparc+aseg.mgz')
             print(caps_path_to_desikan_parcellation)
             caps_path_to_destrieux_parcellation = os.path.join(self.absolute_path(args.caps_directory), 'subjects',
                                                                participant_id, session_id, 't1',
-                                                               'freesurfer-cross-sectional',
+                                                               'freesurfer_cross_sectional',
                                                                participant_id + '_' + session_id, 'mri',
                                                                'aparc.a2009s+aseg.mgz')
             print(caps_path_to_destrieux_parcellation)

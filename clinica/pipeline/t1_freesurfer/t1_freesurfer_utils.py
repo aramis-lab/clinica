@@ -6,7 +6,7 @@
 __author__ = "Junhao Wen"
 __copyright__ = "Copyright 2016, The Aramis Lab Team"
 __credits__ = ["Michael Bacci", "Junhao Wen"]
-__license__ = "??"
+__license__ = "See LICENSE.txt file"
 __version__ = "1.0.0"
 __maintainer__ = "Junhao Wen"
 __email__ = "junhao.Wen@inria.fr"
@@ -197,7 +197,7 @@ def log_summary(subject_list, session_list, subject_id, output_dir):
     input_logs = []
 
     for i in xrange(len(subject_list)):
-        input_log = os.path.join(dest_dir, subject_list[i], session_list[i], 't1', 'freesurfer-cross-sectional', subject_id[i], 'scripts', 'recon-all-status.log' )
+        input_log = os.path.join(dest_dir, subject_list[i], session_list[i], 't1', 'freesurfer_cross_sectional', subject_id[i], 'scripts', 'recon-all-status.log' )
         input_logs.append(input_log)
 
     bad_log = 0
@@ -270,9 +270,9 @@ def write_statistics_per_subject(subject_id, output_dir):
 
     # subject_name = subject_list + '_' + session_list
     output_path = os.path.expanduser(output_dir)
-    cs_dir = os.path.join(output_path, 'subjects', subject_list, session_list, 't1', 'freesurfer-cross-sectional')
+    cs_dir = os.path.join(output_path, 'subjects', subject_list, session_list, 't1', 'freesurfer_cross_sectional')
     if not os.path.isdir(cs_dir):
-        print("ERROR: directory freesurfer-cross-sectional does not exist, it should be CAPS directory after running recon_all_pipeline!!!")
+        print("ERROR: directory freesurfer_cross_sectional does not exist, it should be CAPS directory after running recon_all_pipeline!!!")
     else:
         pass
     dest_dir = cs_dir + '/regional_measures'
