@@ -151,7 +151,7 @@ def linear_svm_binary_classification_caps(caps_directory,
         else:
             raise
 
-    image_list = get_caps_t1_list(caps_directory, subjects_visits_tsv, group_id, prefix, tissue)
+    image_list = get_caps_t1_list(caps_directory, subjects_visits_tsv, group_id, fwhm, modulated)
 
     linear_svm_binary_classification(image_list, diagnosis_list, output_directory, mask_zeros=mask_zeros,
                                      scale_data=scale_data, balanced=balanced, outer_folds=outer_folds,

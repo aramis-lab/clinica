@@ -319,6 +319,7 @@ def execute():
     from clinica.pipeline.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI
     from clinica.pipeline.t1_freesurfer.t1_freesurfer_cli import T1FreeSurferCLI
     from clinica.pipeline.statistics_surfstat.statistics_surfstat_cli import StatisticsSurfstatCLI
+    from clinica.pipeline.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI
     run_parser = sub_parser.add_parser('run')
     pipelines = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
     # pipelines = load_modular_pipelines_parser()
@@ -336,7 +337,8 @@ def execute():
         T1FreeSurferCLI(),
         StatisticsSurfstatCLI(),
         CmdParserMachineLearningVBLinearSVM(),
-        CmdParserMachineLearningSVMRB()]
+        CmdParserMachineLearningSVMRB(),
+        PETPreprocessVolumeCLI()]
 
     init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
 

@@ -35,17 +35,22 @@ def get_caps_pet_list_OLD(input_directory, subjects_visits_tsv, analysis_series_
     return image_list
 
 
-def get_caps_t1_list(input_directory, subjects_visits_tsv, group_id, fwhm, tissue):
+def get_caps_t1_list(input_directory, subjects_visits_tsv, group_id, fwhm, modulated):
 
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
     if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
         raise Exception('Subjects and visits file is not in the correct format.')
     subjects = list(subjects_visits.participant_id)
     sessions = list(subjects_visits.session_id)
-
-    image_list = [join(input_directory, 'subjects/' + subjects[i] + '/'
+    if fwhm==0:
+        image_list = [join(input_directory, 'subjects/' + subjects[i] + '/'
                        + sessions[i] + '/t1/spm/dartel/group-' + group_id + '/'
-                       + subjects[i] + '_' + sessions[i] + '_T1w_segm-'+tissue+'_space-Ixi549Space_modulated-on_fwhm-'+fwhm+'mm_probability.nii.gz') for i in range(len(subjects))]
+                       + subjects[i] + '_' + sessions[i] + '_T1w_segm-graymatter'+'_space-Ixi549Space_modulated-'+modulated+'_probability.nii.gz') for i in range(len(subjects))]
+    else:
+        image_list = [join(input_directory, 'subjects/' + subjects[i] + '/'
+                           + sessions[i] + '/t1/spm/dartel/group-' + group_id + '/'
+                           + subjects[i] + '_' + sessions[i] + '_T1w_segm-graymatter' + '_space-Ixi549Space_modulated-' + modulated + '_fwhm-'+fwhm+'mm_probability.nii.gz')
+                      for i in range(len(subjects))]
 
     return image_list
 
