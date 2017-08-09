@@ -73,6 +73,6 @@ class fMRIPreprocessingCLI(ce.CmdParser):
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         elif args.slurm:
             pipeline.run(plugin='SLURMGraph', plugin_args = {
-                'dont_resubmit_completed_jobs': True, 'sbatch_args': ''})
+                'dont_resubmit_completed_jobs': True, 'sbatch_args': '--qos=short'})
         else:
             pipeline.run()
