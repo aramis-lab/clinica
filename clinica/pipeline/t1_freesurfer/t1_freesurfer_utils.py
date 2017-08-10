@@ -372,4 +372,3 @@ def write_statistics_per_subject(subject_id, output_dir):
     os.system(cmd_aparc_BA_rh_meancurv)
 
     print "Writing statistical data to tsv file for %s finished!" % subject
-
