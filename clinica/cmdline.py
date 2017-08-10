@@ -408,7 +408,9 @@ def execute():
         import os
         from nipype import config, logging
         from nipype import logging
-        config.update_config({'logging':{'workflow_level':'DEBUG','log_directory': os.getcwd(),'log_to_file': True},
+        config.update_config({'logging':{'workflow_level':'INFO',
+                                         'log_directory': os.getcwd(),
+                                         'log_to_file': True},
                               'execution':{'stop_on_first_crash': False,'hash_method': 'content'}})
         logging.update_logging(config)
 
