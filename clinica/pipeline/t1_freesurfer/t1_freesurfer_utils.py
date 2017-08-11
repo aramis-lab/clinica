@@ -50,7 +50,7 @@ def bids_datagrabber(input_dir, subject_list, session_list):
 
 
     if len(anat_t1) == 0:
-        raise ValueError("you have to grap at least one image, but the result is empty, please check it out!")
+        raise ValueError("Pybids finds no t1 images for this analysis, please check if the subjects have been already recon-alled or there is no images in BIDS!")
     if len(anat_t1) != len(subject_list) or len(anat_t1) != len(session_list):
         raise ValueError("Pybids found some missing files, you should remove them out from your analysis!!!")
 
