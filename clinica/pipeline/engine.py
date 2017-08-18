@@ -130,14 +130,14 @@ class Pipeline(npe.Workflow):
             self._input_node = npe.Node(name="Input",
                                         interface=nutil.IdentityInterface(
                                             fields=self.get_input_fields(),
-                                            mandatory_inputs=True))
+                                            mandatory_inputs=False))
         else:
             self._input_node = None
         if self.get_output_fields():
             self._output_node = npe.Node(name="Output",
                                          interface=nutil.IdentityInterface(
                                              fields=self.get_output_fields(),
-                                             mandatory_inputs=True))
+                                             mandatory_inputs=False))
         else:
             self._output_node = None
         npe.Workflow.__init__(self, self._name)
