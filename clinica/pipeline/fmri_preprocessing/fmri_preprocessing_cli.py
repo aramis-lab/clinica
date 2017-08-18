@@ -41,8 +41,13 @@ class fMRIPreprocessingCLI(ce.CmdParser):
                                 help="Echo times in seconds (ex.: '-et 5.19 7.65')")
         self._args.add_argument("-bd", "--blip_direction", type=int,
                                 help="Blip direction (1 or -1)")
+        self._args.add_argument("-fwhm", "--full_width_at_half_maximum",
+                                nargs=3, type=int, default=[8, 8, 8],
+                                help="Size of the fwhm filter in milimeters to smooth the image")
         self._args.add_argument("-trt", "--total_readout_time", type=float,
                                 help="Total readout time (TRT) in seconds")
+        self._args.add_argument("-t1s", "--t1_native_space", action='store_true',
+                                help="Also return images in T1 native space")
 
 
     def run_pipeline(self, args):
@@ -55,16 +60,19 @@ class fMRIPreprocessingCLI(ce.CmdParser):
                                      caps_directory=self.absolute_path(args.caps_directory),
                                      tsv_file=self.absolute_path(args.subjects_sessions_tsv))
         pipeline.parameters = {
-            'num_slices'        : args.num_slices,
-            'time_repetition'   : args.time_repetition,
-            'echo_times'        : args.echo_times,
-            'blip_direction'    : args.blip_direction,
-            'total_readout_time': args.total_readout_time
+            'num_slices'                 : args.num_slices,
+            'time_repetition'            : args.time_repetition,
+            'echo_times'                 : args.echo_times,
+            'blip_direction'             : args.blip_direction,
+            'total_readout_time'         : args.total_readout_time,
+            'full_width_at_half_maximum' : args.full_width_at_half_maximum,
+            't1_native_space'            : args.t1_native_space,
         }
         pipeline.base_dir = self.absolute_path(args.working_directory)
         if args.n_procs:
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         elif args.slurm:
-            pipeline.run(plugin='SLURM')
+            pipeline.run(plugin='SLURMGraph', plugin_args = {
+                'dont_resubmit_completed_jobs': True, 'sbatch_args': '--qos=short'})
         else:
             pipeline.run()

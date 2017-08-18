@@ -97,11 +97,12 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
 
     # Adding participant_id column with BIDS ids
     for i in range(0, len(participant_df)):
-        value = remove_space_and_symbols(participant_df['alternative_id_1'][i])
-        if study_name == 'AIBL':
-            bids_id = ['sub-AIBL'+value]
+        if study_name == 'OASIS':
+            value = (participant_df['alternative_id_1'][i].split("_"))[1]
         else:
-            bids_id = [s for s in bids_ids if value in s]
+            value = remove_space_and_symbols(participant_df['alternative_id_1'][i])
+
+        bids_id = [s for s in bids_ids if value in s]
 
         if len(bids_id) == 0:
             print "Subject " + value + " not found in the BIDS converted version of the dataset."
