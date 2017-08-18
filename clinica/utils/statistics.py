@@ -137,8 +137,17 @@ def fdr_correction_matrix(p_value_matrix, template=None):
     return reject_test, p_value_corrected
 
 def create_new_feature_tsv(subjects_visits_tsv, bids_dir, dest_tsv, added_features):
-    """This func is to add new features(columns) from the subjects_visits_list tsv file, and use the generated file in the statistical analysis
+    """
+        This func is to add new features(columns) from the subjects_visits_list tsv file, and use the generated file in the statistical analysis
         added_features : list of str, the added features that you want to write into the tsv file, e.g. ['age_bl', 'sex']
+
+    Args:
+        subjects_visits_tsv: tsv files containing just participant_id and session_id columns
+        bids_dir: BIDS directory
+        dest_tsv: the destination tsv file
+        added_features: a list containing all the new columns from the participant.tsv in BIDS directory.
+
+    Returns:
 
     """
     import pandas as pd
@@ -196,7 +205,7 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
         if ext == ".gz":
             fname, ext2 = op.splitext(fname)
             ext = ext2 + ext
-        out_file = op.abspath("%s_statistics_%s.tsv" % (fname, in_atlas.get_name_atlas))
+        out_file = op.abspath("%s_statistics_%s.tsv" % (fname, in_atlas.get_name_atlas()))
 
     atlas_labels = nib.load(in_atlas.get_atlas_labels())
     atlas_image_data = atlas_labels.get_data()
@@ -205,7 +214,7 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
     in_image = nib.load(in_normalized_map)
     scalar_image_data = in_image.get_data()
 
-    subjects_visits = pandas.io.parsers.read_csv(in_atlas.get_roi_name(), sep='\t')
+    subjects_visits = pandas.io.parsers.read_csv(in_atlas.get_tsv_roi(), sep='\t')
     label_list = list(subjects_visits.roi_name)
 
     stats_scalar = np.zeros((len(list_roi),2))
@@ -220,6 +229,6 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
                              'label_name': label_list,
                              'mean_scalar': stats_scalar[:,1]
                              })
-    data.to_csv(out_file, sep='\t', index=False)
+    data.to_csv(out_file, sep='\t', index=False, encoding='utf-8')
 
     return out_file

@@ -44,7 +44,7 @@ def visualize(clinicaWorkflow, ids, rebase=False):
         def __del__(self):
             os.chdir(self.pwd)
 
-    change_directory = None
+        change_directory = None
     if rebase is False:
         change_directory = chdir(clinicaWorkflow.base_dir)
     else:
@@ -313,17 +313,33 @@ def execute():
     """
     from clinica.engine import CmdParser
     from clinica.pipeline.t1_spm_segmentation.t1_spm_segmentation_cli import T1SPMSegmentationCLI
+    from clinica.pipeline.t1_spm_dartel.t1_spm_dartel_cli import T1SPMDartelCLI
+    from clinica.pipeline.t1_spm_dartel2mni.t1_spm_dartel2mni_cli import T1SPMDartel2MNICLI
+    from clinica.pipeline.t1_spm_full_prep.t1_spm_full_prep_cli import T1SPMFullPrepCLI
     from clinica.pipeline.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI
+    from clinica.pipeline.t1_freesurfer.t1_freesurfer_cli import T1FreeSurferCLI
+    from clinica.pipeline.statistics_surfstat.statistics_surfstat_cli import StatisticsSurfstatCLI
+    from clinica.pipeline.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI
     run_parser = sub_parser.add_parser('run')
     pipelines = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
     # pipelines = load_modular_pipelines_parser()
-    pipelines = pipelines + [CmdParserT1SPMFullPrep(), CmdParserT1SPMSegment(),
-                 CmdParserT1SPMDartelTemplate(), CmdParserPETPreprocessing(),
-                 CmdParserT1FreeSurfer(), CmdParserT1FSL(),
-                 CmdParserDWIPreprocessingPhaseDifferenceFieldmap(), CmdParserDWIPreprocessingTwoPhaseImagesFieldmap(),
-                 CmdParserDWIPreprocessingT1Based(),
-                 CmdParserDWIProcessing(), T1SPMSegmentationCLI(), fMRIPreprocessingCLI(),
-                 CmdParserStatisticsSurfStat(), CmdParserMachineLearningVBLinearSVM(), CmdParserMachineLearningSVMRB()]
+    pipelines += [
+        T1SPMSegmentationCLI(),
+        T1SPMDartelCLI(),
+        T1SPMDartel2MNICLI(),
+        T1SPMFullPrepCLI(),
+        CmdParserT1FSL(),
+        CmdParserDWIPreprocessingPhaseDifferenceFieldmap(),
+        CmdParserDWIPreprocessingTwoPhaseImagesFieldmap(),
+        CmdParserDWIPreprocessingT1Based(),
+        CmdParserDWIProcessing(),
+        fMRIPreprocessingCLI(),
+        T1FreeSurferCLI(),
+        StatisticsSurfstatCLI(),
+        CmdParserMachineLearningVBLinearSVM(),
+        CmdParserMachineLearningSVMRB(),
+        PETPreprocessVolumeCLI()]
+
     init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
 
     """
@@ -392,7 +408,9 @@ def execute():
         import os
         from nipype import config, logging
         from nipype import logging
-        config.update_config({'logging':{'workflow_level':'DEBUG','log_directory': os.getcwd(),'log_to_file': True},
+        config.update_config({'logging':{'workflow_level':'INFO',
+                                         'log_directory': os.getcwd(),
+                                         'log_to_file': True},
                               'execution':{'stop_on_first_crash': False,'hash_method': 'content'}})
         logging.update_logging(config)
 
