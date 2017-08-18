@@ -12,6 +12,15 @@ from bids.grabbids import BIDSLayout
 
 
 def postset(attribute, value):
+    """Sets the attribute of an object after the execution.
+
+    Args:
+        attribute: An object's attribute to be set.
+        value: A desired value for the object's attribute.
+
+    Returns:
+        A decorator executed after the decorated function is.
+    """
     def postset_decorator(func):
         def func_wrapper(self, *args, **kwargs):
             res = func(self, *args, **kwargs)
@@ -21,7 +30,20 @@ def postset(attribute, value):
     return postset_decorator
 
 def get_subject_session_list(input_dir, ss_file=None):
+    """Parses a BIDS directory to get the subjects and sessions.
 
+    This function lists all the subjects and sessions based on the content of
+    the BIDS directory or (if specified) on the provided subject-sessions tsv
+    file.
+
+    Args:
+        input_dir: A BIDS directory path.
+        ss_file: A subjects-sessions file (.tsv format).
+
+    Returns:
+        subjects: A subjects list.
+        sessions: A sessions list.
+    """
     import clinica.iotools.utils.data_handling as cdh
     import pandas as pd
 
@@ -39,13 +61,50 @@ def get_subject_session_list(input_dir, ss_file=None):
     return sessions, subjects
 
 class Pipeline(npe.Workflow):
-    """
+    """Clinica Pipeline class.
+
+    This class overwrites the `npe.Workflow` to integrate and encourage the
+    use of BIDS and CAPS data structures as inputs and outputs of the pipelines
+    developed for the Clinica software.
+
+    The global architecture of a Clinica pipeline is as follow:
+        [ Data Input Stream ]
+                |
+            [ Input ]
+                |
+            [[ Core ]] <- Could be one or more `npe.Node`s
+                |
+            [ Output ]
+                |
+        [ Data Output Stream ]
+
+    Attributes:
+        is_built (bool): Informs if the pipeline has been built or not.
+        parameters (dict): Parameters of the pipeline.
+        info (dict): Information presented in the associated `info.json` file.
+        bids_layout (:obj:`BIDSLayout`): Object representing the BIDS directory.
+        input_node (:obj:`npe.Node`): Identity interface connecting inputs.
+        output_node (:obj:`npe.Node`): Identity interface connecting outputs.
+        bids_directory (str): Directory used to read the data from, in BIDS.
+        caps_directory (str): Directory used to read/write the data from/to,
+            in CAPS.
+        subjects (list): List of subjects defined in the `subjects.tsv` file.
+            # TODO(@jguillon): Check the subjects-sessions file name.
+        sessions (list): List of sessions defined in the `subjects.tsv` file.
+        tsv_file (str): Path to the subjects-sessions `.tsv` file.
+        info_file (str): Path to the associated `info.json` file.
     """
 
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None):
-        """
+        """Inits a Pipeline object.
+
+        Args:
+            bids_directory (optional): Path to a BIDS directory.
+            caps_directory (optional): Path to a CAPS directory.
+            tsv_file (optional): Path to a subjects-sessions `.tsv` file.
+            name (optional): A pipeline name.
         """
         self._is_built = False
         self._bids_directory = bids_directory
@@ -62,7 +121,8 @@ class Pipeline(npe.Workflow):
             self._name = self.__class__.__name__
         self._parameters = {}
         if bids_directory:
-            self._sessions, self._subjects = get_subject_session_list(bids_directory, tsv_file)
+            self._sessions, self._subjects = get_subject_session_list(
+                bids_directory, tsv_file)
         else:
             self._sessions = []
             self._subjects = []
@@ -70,52 +130,99 @@ class Pipeline(npe.Workflow):
             self._input_node = npe.Node(name="Input",
                                         interface=nutil.IdentityInterface(
                                             fields=self.get_input_fields(),
-                                            mandatory_inputs=True))
+                                            mandatory_inputs=False))
         else:
             self._input_node = None
         if self.get_output_fields():
             self._output_node = npe.Node(name="Output",
                                          interface=nutil.IdentityInterface(
                                              fields=self.get_output_fields(),
-                                             mandatory_inputs=True))
+                                             mandatory_inputs=False))
         else:
             self._output_node = None
         npe.Workflow.__init__(self, self._name)
         if self.input_node: self.add_nodes([self.input_node])
         if self.output_node: self.add_nodes([self.output_node])
 
-    def run(self, plugin=None, plugin_args=None, update_hash=False):
-        if not self.is_built:
-            self.build()
-        npe.Workflow.run(self, plugin, plugin_args, update_hash)
-
     def has_input_connections(self):
+        """Checks if the Pipeline's input node has been connected.
+
+        Returns:
+            True if the input node is connected, False otherwise.
+        """
         return self._graph.in_degree(self.input_node) > 0
 
     def has_output_connections(self):
+        """Checks if the Pipeline's output node has been connected.
+
+        Returns:
+            True if the output node is connected, False otherwise.
+        """
         return self._graph.out_degree(self.output_node) > 0
 
     @postset('is_built', True)
     def build(self):
-        self.check_dependencies()
+        """Builds the core, input and output nodes of the Pipeline.
+
+        This method first checks it has already been run. It then checks
+        the pipeline dependencies and, in this order, builds the core nodes,
+        the input node and, finally, the ouput node of the Pipeline.
+
+        Since this method returns the concerned object, it can be chained to
+        any other method of the Pipeline class.
+
+        Returns:
+            self: A Pipeline object.
+        """
         if not self.is_built:
+            self.check_dependencies()
             self.build_core_nodes()
             if not self.has_input_connections():
                 self.build_input_node()
             if not self.has_output_connections():
                 self.build_output_node()
+        return self
+
+    def run(self, plugin=None, plugin_args=None, update_hash=False):
+        """Executes the Pipeline.
+
+        It overwrites the default npe.Workflow method to check if the
+        Pipeline is built before running it. If not, it builds it and then
+        run it.
+
+        Args:
+            Similar to those of npe.Workflow.run.
+
+        Returns:
+            An execution graph (see npe.Workflow.run).
+        """
+        if not self.is_built:
+            self.build()
+        return npe.Workflow.run(self, plugin, plugin_args, update_hash)
 
     def load_info(self):
+        """Loads the associated info.json file.
+
+        Todos:
+            - [ ] Raise an appropriate exception when the info file can't open
+
+        Raises:
+            None. # TODO(@jguillon)
+
+        Returns:
+            self: A Pipeline object.
+        """
         with open(self.info_file) as info_file:
             self.info = json.load(info_file)
-
+        return self
 
     def check_dependencies(self):
         """Checks if listed dependencies are present.
         
-        Loads the pipeline related `info.json` file and check each one of the dependencies listed in the JSON 
-        "dependencies" field. Its raises exception if a program in the list does not exist or if environment variables
-        are not properly defined.
+        Loads the pipeline related `info.json` file and check each one of the
+        dependencies listed in the JSON "dependencies" field. Its raises
+        exception if a program in the list does not exist or if environment
+        variables are not properly defined.
     
         Todos:
             - [ ] MATLAB toolbox dependency checking
@@ -123,9 +230,12 @@ class Pipeline(npe.Workflow):
             - [ ] Check dependencies version
 
         Raises:
-            Exception: Raises an exception when bad dependency types given in the `info.json` file are detected.
-        """
+            Exception: Raises an exception when bad dependency types given in
+            the `info.json` file are detected.
 
+        Returns:
+            self: A Pipeline object.
+        """
         import clinica.utils.check_dependency as chk
 
         # Checking functions preparation
@@ -158,6 +268,8 @@ class Pipeline(npe.Workflow):
 
         self.check_custom_dependencies()
 
+        return self
+
     @property
     def is_built(self): return self._is_built
 
@@ -169,6 +281,15 @@ class Pipeline(npe.Workflow):
 
     @parameters.setter
     def parameters(self, value): self._parameters = value
+
+    @property
+    def info(self): return self._info
+
+    @info.setter
+    def info(self, value): self._info = value
+
+    @property
+    def bids_layout(self): return BIDSLayout(self.bids_directory)
 
     @property
     def input_node(self): return self._input_node
@@ -194,29 +315,58 @@ class Pipeline(npe.Workflow):
     @property
     def info_file(self): return self._info_file
 
-    @property
-    def info(self): return self._info
+    @abc.abstractmethod
+    def build_core_nodes(self):
+        """Builds the Pipeline's core nodes.
 
-    @info.setter
-    def info(self, value): self._info = value
-
-    @property
-    def bids_layout(self): return BIDSLayout(self.bids_directory)
+        This method should use and connect to the `Pipeline.input_node` one
+        or more core `Node`s. The outputs of the core processing should then be
+        connected to the `Pipeline.output_node`.
+        """
+        pass
 
     @abc.abstractmethod
-    def build_core_nodes(self): pass
+    def build_input_node(self):
+        """Builds the Pipeline's input data stream node.
+
+        Warnings:
+            This method does not modify the `Pipeline.input_node` (see the
+            notes about the global architecture in the class documentation).
+        """
+        pass
 
     @abc.abstractmethod
-    def build_input_node(self): pass
+    def build_output_node(self):
+        """Builds the Pipeline's output data stream node.
+
+        Warnings:
+            This method does not modify the `Pipeline.output_node` (see the
+            notes about the global architecture in the class documentation).
+        """
+        pass
 
     @abc.abstractmethod
-    def build_output_node(self): pass
+    def get_input_fields(self):
+        """Lists the input fields of the Pipeline.
+
+        Returns:
+            A list of strings defining the fields of the `IdentityInterface`
+            of the `Pipeline.input_node`.
+        """
+        pass
 
     @abc.abstractmethod
-    def get_input_fields(self): pass
+    def get_output_fields(self):
+        """Lists the output fields of the Pipeline.
+
+        Returns:
+            A list of strings defining the fields of the `IdentityInterface`
+            of the `Pipeline.output_node`.
+        """
+        pass
 
     @abc.abstractmethod
-    def get_output_fields(self): pass
-
-    @abc.abstractmethod
-    def check_custom_dependencies(self): pass
+    def check_custom_dependencies(self):
+        """Checks dependencies provided by the developer.
+        """
+        pass

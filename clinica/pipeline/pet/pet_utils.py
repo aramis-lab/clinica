@@ -103,8 +103,6 @@ def create_pvc_mask(tissues):
     return out_mask
 
 
-
-
 def normalize_to_reference(pet_image, region_mask):
     import nibabel as nib
     import numpy as np

@@ -38,10 +38,3 @@ def get_class_images(class_images, index_list):
             result.append(class_n_images[idx])
 
     return result
-
-
-def step2(in_hello_word):
-    """Example function for Step 2.
-    """
-
-    print(in_hello_word + " from the step 2 of the T1 SPM Dartel Clinica pipeline.")

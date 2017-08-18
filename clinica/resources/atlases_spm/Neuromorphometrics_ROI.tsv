@@ -1,0 +1,142 @@
+	roi_name
+0	Background
+1	Left Third Ventricle
+2	Right Third Ventricle
+3	Left Fourth Ventricle
+4	Right Fourth Ventricle
+5	Left Accumbens
+6	Right Accumbens
+7	Left Amygdala
+8	Right Amygdala
+9	Left Brainstem
+10	Right Brainstem
+11	Left Caudate
+12	Right Caudate
+13	Left Exterior Cerebellum
+14	Right Exterior Cerebellum
+15	Left Cerebellum White Matter
+16	Right Cerebellum White Matter
+17	Left Cerebral White Matter
+18	Right Cerebral White Matter
+19	Left CSF
+20	Right CSF
+21	Left Hippocampus
+22	Right Hippocampus
+23	Right Inferior Lateral Ventricle
+24	Left Lateral Ventricle
+25	Right Lateral Ventricle
+26	Left Pallidum
+27	Right Pallidum
+28	Left Putamen
+29	Right Putamen
+30	Left Thalamus Proper
+31	Right Thalamus Proper
+32	Left Ventral Ventricle
+33	Right Ventral Ventricle
+34	Right Optic Chiasm
+35	Left Cerebellar Lobule Cerebellar Vermal Lobules I-V
+36	Right Cerebellar Lobule Cerebellar Vermal Lobules I-V
+37	Left Cerebellar Lobule Cerebellar Vermal Lobules VI-VII
+38	Right Cerebellar Lobule Cerebellar Vermal Lobules VI-VII
+39	Left Cerebellar Lobule Cerebellar Vermal Lobules VIII-X
+40	Right Cerebellar Lobule Cerebellar Vermal Lobules VIII-X
+41	Left Basal Cerebrum and Forebrain Brain
+42	Right Basal Cerebrum and Forebrain Brain
+43	Left Anterior Cingulate Gyrus
+44	Right Anterior Cingulate Gyrus
+45	Left Anterior Insula
+46	Right Anterior Insula
+47	Left Anterior Orbital Gyrus
+48	Right Anterior Orbital Gyrus
+49	Left Angular Gyrus
+50	Right Angular Gyrus
+51	Left Calcarine and Cerebrum
+52	Right Calcarine and Cerebrum
+53	Left Central Operculum
+54	Right Central Operculum
+55	Left Cuneus
+56	Right Cuneus
+57	Left Entorhinal Area
+58	Right Entorhinal Area
+59	Left Frontal Operculum
+60	Right Frontal Operculum
+61	Left Frontal Pole
+62	Right Frontal Pole
+63	Left Fusiform Gyrus
+64	Right Fusiform Gyrus
+65	Left Gyrus Rectus
+66	Right Gyrus Rectus
+67	Left Inferior Occipital Gyrus
+68	Right Inferior Occipital Gyrus
+69	Left Inferior Temporal Gyrus
+70	Right Inferior Temporal Gyrus
+71	Left Lingual Gyrus
+72	Right Lingual Gyrus
+73	Left Lateral Orbital Gyrus
+74	Right Lateral Orbital Gyrus
+75	Left Middle Cingulate Gyrus
+76	Right Middle Cingulate Gyrus
+77	Left Medial Frontal Cerebrum
+78	Right Medial Frontal Cerebrum
+79	Left Middle Frontal Gyrus
+80	Right Middle Frontal Gyrus
+81	Left Middle Occipital Gyrus
+82	Right Middle Occipital Gyrus
+83	Left Medial Orbital Gyrus
+84	Right Medial Orbital Gyrus
+85	Left Medial Postcentral Gyrus
+86	Right Medial Postcentral Gyrus
+87	Left Medial Precentral Gyrus
+88	Right Medial Precentral Gyrus
+89	Left Superior Medial Frontal Gyrus
+90	Right Superior Medial Frontal Gyrus
+91	Left Middle Temporal Gyrus
+92	Right Middle Temporal Gyrus
+93	Left Occipital Pole
+94	Right Occipital Pole
+95	Left Occipital Fusiform Gyrus
+96	Right Occipital Fusiform Gyrus
+97	Left Inferior Frontal Gyrus
+98	Right Inferior Frontal Gyrus
+99	Left Inferior Frontal Orbital Gyrus
+100	Right Inferior Frontal Orbital Gyrus
+101	Left Posterior Cingulate Gyrus
+102	Right Posterior Cingulate Gyrus
+103	Left Precuneus
+104	Right Precuneus
+105	Left Parahippocampus Gyrus
+106	Right Parahippocampus Gyrus
+107	Left Posterior Insula
+108	Right Posterior Insula
+109	Left Parietal Operculum
+110	Right Parietal Operculum
+111	Left Postcentral Gyrus
+112	Right Postcentral Gyrus
+113	Left Posterior Orbital Gyrus
+114	Right Posterior Orbital Gyrus
+115	Left Planum Polare
+116	Right Planum Polare
+117	Left Precentral Gyrus
+118	Right Precentral Gyrus
+119	Left Temporal
+120	Right Temporal
+121	Left Subcallosal Area
+122	Right Subcallosal Area
+123	Left Superior Frontal Gyrus
+124	Right Superior Frontal Gyrus
+125	Left Cerebrum and Motor
+126	Right Cerebrum and Motor
+127	Left Supramarginal Gyrus
+128	Right Supramarginal Gyrus
+129	Left Superior Occipital Gyrus
+130	Right Superior Occipital Gyrus
+131	Left Superior Parietal Lobule
+132	Right Superior Parietal Lobule
+133	Left Superior Temporal Gyrus
+134	Right Superior Temporal Gyrus
+135	Left Temporal Pole
+136	Right Temporal Pole
+137	Left Inferior Frontal Angular Gyrus
+138	Right Inferior Frontal Angular Gyrus
+139	Left Temporal Transverse Gyrus
+140	Right Temporal Transverse Gyrus

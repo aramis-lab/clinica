@@ -23,20 +23,24 @@ class T1SPMSegmentationCLI(ce.CmdParser):
                                 help='Path to the CAPS directory.')
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
                                 help='TSV file containing the subjects with their sessions.')
-        self._args.add_argument("-wd", "--working_directory",
-                                help='Temporary directory to store pipeline intermediate results')
-        self._args.add_argument("-np", "--n_procs", type=int,
-                                help='Number of cores used to run in parallel')
         self._args.add_argument("-ti", "--tissue_classes", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
                                 help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to save. Up to 6 tissue classes can be saved. Ex: 1 2 3 is GM, WM and CSF")
         self._args.add_argument("-dt", "--dartel_tissues", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
                                 help='Tissues to use for DARTEL template calculation. Ex: 1 is only GM')
-        self._args.add_argument("-swu", "--save_warped_unmodulated", action='store_true',
+        self._args.add_argument("-tpm", "--tissue_probability_maps",
+                                help='Tissue probability maps to use for segmentation.')
+        self._args.add_argument("-swu", "--save_warped_unmodulated", action='store_true', default=True,
                                 help="Save warped unmodulated images for tissues specified in --tissue_classes")
         self._args.add_argument("-swm", "--save_warped_modulated", action='store_true',
                                 help="Save warped modulated images for tissues specified in --tissue_classes")
-        self._args.add_argument("-wdf", "--write_deformation_fields", nargs=2, type=bool,
-                                help="Option to save the deformation fields from Unified Segmentation. Both inverse and forward fields can be saved. Format: a list of 2 booleans. [Inverse, Forward]")
+        # self._args.add_argument("-wdf", "--write_deformation_fields", nargs=2, type=bool,
+        #                         help="Option to save the deformation fields from Unified Segmentation. Both inverse and forward fields can be saved. Format: a list of 2 booleans. [Inverse, Forward]")
+        self._args.add_argument("-wd", "--working_directory",
+                                help='Temporary directory to store pipeline intermediate results')
+        self._args.add_argument("-np", "--n_procs", type=int,
+                                help='Number of cores used to run in parallel')
+        self._args.add_argument("-sl", "--slurm", action='store_true',
+                                help='Run the pipeline using SLURM')
 
     def run_pipeline(self, args):
         """
@@ -49,14 +53,18 @@ class T1SPMSegmentationCLI(ce.CmdParser):
 
         pipeline.parameters.update({'tissue_classes': args.tissue_classes,
                                     'dartel_tissues': args.dartel_tissues,
+                                    'tpm': args.tissue_probability_maps,
                                     'save_warped_unmodulated': args.save_warped_unmodulated,
                                     'save_warped_modulated': args.save_warped_modulated,
-                                    'write_deformation_fields': args.write_deformation_fields
+                                    'write_deformation_fields': [True, True],  # args.write_deformation_fields
+                                    'save_t1_mni': True
                                     })
 
         pipeline.base_dir = self.absolute_path(args.working_directory)
 
         if args.n_procs:
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
+        elif args.slurm:
+            pipeline.run(plugin='SLURM')
         else:
             pipeline.run()

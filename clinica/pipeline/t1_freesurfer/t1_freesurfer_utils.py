@@ -1,66 +1,74 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module contains functions used for the recon_all_pipeline() and recon_all_statistics_pipeline()"""
-import os
+"""This module contains useful functions used for t1_freesurfer pipeline"""
 
 __author__ = "Junhao Wen"
 __copyright__ = "Copyright 2016, The Aramis Lab Team"
 __credits__ = ["Michael Bacci", "Junhao Wen"]
-__license__ = "??"
+__license__ = "See LICENSE.txt file"
 __version__ = "1.0.0"
 __maintainer__ = "Junhao Wen"
 __email__ = "junhao.Wen@inria.fr"
 __status__ = "Development"
 
+
 def bids_datagrabber(input_dir, subject_list, session_list):
-    """Fetches files from a BIDS directory, subjects list and a sessions list
-
-    :param input_dir:
-    :param subject_list:
-    :param session_list:
-    :return: A list of paths to the desired files.
     """
-    from bids.grabbids import BIDSLayout
-    from os.path import isfile
-    import sys
+        Fetch t1 images from a BIDS directory based on subject_list and a session_list
+    Args:
+        input_dir: BIDS directory
+        subject_list: a list containing all the participant_id
+        session_list: a list containing all the session_id
 
-    layout = BIDSLayout(input_dir)
+    Returns: a list containing all the t1 images
 
-    # if there exists multiple run, we take the first one
-    if not layout.get(target='run', return_type='id', type='T1w'):
-        anat_t1 = layout.get(return_type='file',
-                             type='T1w',
-                             extensions='nii|nii.gz',
-                             session='|'.join(session_list).replace('ses-',''),
-                             subject='|'.join(subject_list).replace('sub-',''))
+    """
+    from bids.grabbids.bids_layout import BIDSLayout
+
+    bidslayout = BIDSLayout(input_dir)
+    anat_t1 = []
+    if not bidslayout.get(target='run', return_type='id', type='T1w'):
+        print "There is just one run for T1w image of this analysis"
+        for i in range(len(subject_list)):
+            t1 = bidslayout.get(return_type='file',
+                                            type='T1w',
+                                            extensions=['nii|nii.gz'],
+                                            session=session_list[i].replace('ses-', ''),
+                                        subject=subject_list[i].replace('sub-', ''))
+            anat_t1.append(t1)
     else:
-        anat_t1 = layout.get(return_type='file',
-                             type='T1w',
-                             extensions='nii|nii.gz',
-                             session='|'.join(session_list).replace('ses-',''),
-                             subject='|'.join(subject_list).replace('sub-',''),
-                             run='1')
-    if len(anat_t1) == 0:
-        raise ValueError("you have to grap at least one image, but the result is empty, please check it out!")
+        print "There are more than one runs for T1w image for this analysis"
+        for i in range(len(subject_list)):
+            t1 = bidslayout.get(return_type='file',
+                                            type='T1w',
+                                            extensions=['nii|nii.gz'],
+                                            session=session_list[i].replace('ses-', ''),
+                                        subject=subject_list[i].replace('sub-', ''),
+                                     run='1')
+            anat_t1.append(t1)
 
-    ### NOTE: pybids seems to not give error if the file is not there, so we should check it out manually
+
+    if len(anat_t1) == 0:
+        raise ValueError("Pybids finds no t1 images for this analysis, please check if the subjects have been already recon-alled or there is no images in BIDS!")
     if len(anat_t1) != len(subject_list) or len(anat_t1) != len(session_list):
         raise ValueError("Pybids found some missing files, you should remove them out from your analysis!!!")
 
     return anat_t1
 
-
 def get_dirs_check_reconalled(output_dir, subject_list, session_list):
     """
-    Get the info from subjects_visits_tsv, like subject_dir, subject_id, subject_list, session_list
-    Also, this func is also to check out the rerun of the dataset, if the subject result folder has been created, you should
-    check out the result and decide if you are going to rerun it or just ignore it.
+        Get the info from subjects_visits_tsv, like subject_dir, subject_id, subject_list, session_list
+        Also, this func is also to check out the rerun of the dataset, if the subject result folder has been created, you should
+        check out the result and decide if you are going to rerun it or just ignore it.
 
-    :param output_dir:
-    :param subjects_visits_tsv:
-    :return: return the lists containing CAPS version for subject_id, and also the Freesurfer version subject_id, also
-    return the subject_id, session_id in the tsv fils
+    Args:
+        output_dir: CAPS directory to contain the output
+        subject_list:  a list containing all the participant_id
+        session_list: a list containing all the session_id
+
+    Returns: the related lists based on the tsv files
+
     """
     import os, errno
     from copy import deepcopy as cp
@@ -110,14 +118,14 @@ def get_dirs_check_reconalled(output_dir, subject_list, session_list):
 
 def checkfov(t1_list, recon_all_args):
     """
-    Verifying size of inputs and FOV of each T1 image
+        Verifying size of inputs and FOV of each T1 image
 
-    Note:node2mapnode, so every subject is running in parallel, we dont have to check out if they have the same SIZE, but if you
-    node2node, it will be serialized, so that we can compare their size.
+    Args:
+        t1_list: a list containing all the t1 images
+        recon_all_args: default the -qache flag
 
-    :param t1_list:
-    :param recon_all_args:
-    :return:
+    Returns: a list containing -qcache + -cw256 or -qcache based on the FOV
+
     """
     import sys
     import nibabel as nib
@@ -148,10 +156,13 @@ def checkfov(t1_list, recon_all_args):
 
 def create_flags_str(input_flags):
     """
-    Create a commandline string from a list of input flags
+        Create a commandline string from a list of input flags
 
-    :param input_flags:
-    :return:
+    Args:
+        input_flags: the added flag for recon-all command
+
+    Returns: converted string flag
+
     """
     output_str = ""
     for flag in input_flags:
@@ -162,13 +173,16 @@ def create_flags_str(input_flags):
 
 def log_summary(subject_list, session_list, subject_id, output_dir):
     """
-    create the txt file to summarize the reconall result for all the subjects
+        create a log file to summarize the recon-all result for all the subjects, the first step quality check
 
-    :param subject_list:
-    :param session_list:
-    :param subject_id:
-    :param output_dir:
-    :return:
+    Args:
+        subject_list: a list containing all the path to the subject
+        session_list: a list containing all the session_id
+        subject_id: a list containing all the participant_id
+        output_dir: CAPS directory
+
+    Returns:
+
     """
     import os
     from datetime import datetime
@@ -183,7 +197,7 @@ def log_summary(subject_list, session_list, subject_id, output_dir):
     input_logs = []
 
     for i in xrange(len(subject_list)):
-        input_log = os.path.join(dest_dir, subject_list[i], session_list[i], 't1', 'freesurfer-cross-sectional', subject_id[i], 'scripts', 'recon-all-status.log' )
+        input_log = os.path.join(dest_dir, subject_list[i], session_list[i], 't1', 'freesurfer_cross_sectional', subject_id[i], 'scripts', 'recon-all-status.log' )
         input_logs.append(input_log)
 
     bad_log = 0
@@ -208,6 +222,16 @@ def log_summary(subject_list, session_list, subject_id, output_dir):
         f1.write(line3)
 
 def write_statistics_per_subject(subject_id, output_dir):
+    """
+        A custom function to write the statistical measures into tsv files for each subject
+
+    Args:
+        subject_id: the subject's particiapnt_id
+        output_dir: CAPS directory
+
+    Returns:
+
+    """
 
     import os, errno
 
@@ -246,9 +270,9 @@ def write_statistics_per_subject(subject_id, output_dir):
 
     # subject_name = subject_list + '_' + session_list
     output_path = os.path.expanduser(output_dir)
-    cs_dir = os.path.join(output_path, 'subjects', subject_list, session_list, 't1', 'freesurfer-cross-sectional')
+    cs_dir = os.path.join(output_path, 'subjects', subject_list, session_list, 't1', 'freesurfer_cross_sectional')
     if not os.path.isdir(cs_dir):
-        print("ERROR: directory freesurfer-cross-sectional does not exist, it should be CAPS directory after running recon_all_pipeline!!!")
+        print("ERROR: directory freesurfer_cross_sectional does not exist, it should be CAPS directory after running recon_all_pipeline!!!")
     else:
         pass
     dest_dir = cs_dir + '/regional_measures'
@@ -348,4 +372,3 @@ def write_statistics_per_subject(subject_id, output_dir):
     os.system(cmd_aparc_BA_rh_meancurv)
 
     print "Writing statistical data to tsv file for %s finished!" % subject
-

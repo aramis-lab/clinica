@@ -37,8 +37,11 @@ class T1SPMDartel(cpe.Pipeline):
         >>> pipeline.run()
     """
 
-    def __init__(self, group_id, bids_directory=None, caps_directory=None, tsv_file=None, name=None):
+    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
         super(T1SPMDartel, self).__init__(bids_directory, caps_directory, tsv_file, name)
+
+        if not group_id.isalnum():
+            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
 
         self._group_id = group_id
 
@@ -49,6 +52,11 @@ class T1SPMDartel(cpe.Pipeline):
                             'regularization_form': None,
                             'template_prefix': None
                             }
+
+    def check_custom_dependencies(self):
+        """Check dependencies that can not be listed in the `info.json` file.
+        """
+        pass
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
@@ -83,25 +91,26 @@ class T1SPMDartel(cpe.Pipeline):
                         6: 'background'
                         }
 
-        # DataGrabber
-        caps_reader = npe.MapNode(nio.DataGrabber(infields=['subject_id', 'session',
-                                                            'subject_repeat', 'session_repeat',
-                                                            'tissue'],
-                                                  outfields=['out_files']),
-                                  name="caps_reader",
-                                  iterfield=['tissue'])
+        # Dartel Input Tissues DataGrabber
+        # =================================
+        dartel_input_reader = npe.MapNode(nio.DataGrabber(infields=['subject_id', 'session',
+                                                                    'subject_repeat', 'session_repeat',
+                                                                    'tissue'],
+                                                          outfields=['out_files']),
+                                          name="dartel_input_reader",
+                                          iterfield=['tissue'])
 
-        caps_reader.inputs.base_directory = self.caps_directory
-        caps_reader.inputs.template = 'subjects/%s/%s/t1/spm/segmentation/dartel_input/%s_%s_T1w_segm-%s_dartelinput.nii*'
-        caps_reader.inputs.subject_id = self.subjects
-        caps_reader.inputs.session = self.sessions
-        caps_reader.inputs.tissue = [tissue_names[t] for t in self.parameters['dartel_tissues']]
-        caps_reader.inputs.subject_repeat = self.subjects
-        caps_reader.inputs.session_repeat = self.sessions
-        caps_reader.inputs.sort_filelist = False
+        dartel_input_reader.inputs.base_directory = self.caps_directory
+        dartel_input_reader.inputs.template = 'subjects/%s/%s/t1/spm/segmentation/dartel_input/%s_%s_T1w_segm-%s_dartelinput.nii*'
+        dartel_input_reader.inputs.subject_id = self.subjects
+        dartel_input_reader.inputs.session = self.sessions
+        dartel_input_reader.inputs.tissue = [tissue_names[t] for t in self.parameters['dartel_tissues']]
+        dartel_input_reader.inputs.subject_repeat = self.subjects
+        dartel_input_reader.inputs.session_repeat = self.sessions
+        dartel_input_reader.inputs.sort_filelist = False
 
         self.connect([
-            (caps_reader, self.input_node, [('out_files', 'dartel_input_images')])
+            (dartel_input_reader, self.input_node, [('out_files', 'dartel_input_images')])
         ])
 
     def build_output_node(self):
@@ -114,7 +123,7 @@ class T1SPMDartel(cpe.Pipeline):
         from clinica.utils.io import zip_nii
 
         # Writing flowfields into CAPS
-        # =======================
+        # ============================
         write_flowfields_node = npe.MapNode(name='write_flowfields_node',
                                             iterfield=['container', 'flow_fields'],
                                             interface=nio.DataSink(infields=['flow_fields']))
@@ -133,15 +142,16 @@ class T1SPMDartel(cpe.Pipeline):
             (r'(.*)c6(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-background\3'),
             (r'(.*)r(sub-.*)(\.nii(\.gz)?)$', r'\1\2\3'),
             (r'(.*)_dartelinput(\.nii(\.gz)?)$', r'\1\2'),
-            (r'(.*)u_(sub-.*)(\.nii(\.gz)?)$', r'\1\2_target-' + re.escape(self._group_id) + r'_deformation\3'),
+            (r'(.*)flow_fields/u_(sub-.*)_segm-.*(\.nii(\.gz)?)$', r'\1\2_target-' + re.escape(self._group_id) + r'_transformation-forward_deformation\3'),
             (r'trait_added', r'')
         ]
 
         # Writing templates into CAPS
-        # ======================
+        # ===========================
         write_template_node = npe.Node(nio.DataSink(), name='write_template_node')
         write_template_node.inputs.parameterization = False
-        write_template_node.inputs.base_directory = op.join(self.caps_directory, 'groups/group-' + self._group_id, 't1')
+        write_template_node.inputs.base_directory = self.caps_directory
+        write_template_node.inputs.container = op.join('groups/group-' + self._group_id, 't1')
         write_template_node.inputs.regexp_substitutions = [
             (r'(.*)final_template_file/.*(\.nii(\.gz)?)$', r'\1group-' + re.escape(self._group_id) + r'_template\2'),
             (r'(.*)template_files/.*([0-9])(\.nii(\.gz)?)$', r'\1group-' + re.escape(self._group_id) + r'_iteration-\2_template\3')
@@ -181,14 +191,14 @@ class T1SPMDartel(cpe.Pipeline):
             raise RuntimeError('SPM could not be found. Please verify your SPM_HOME environment variable.')
 
         # Unzipping
-        # ===============================
+        # =========
         unzip_node = npe.MapNode(nutil.Function(input_names=['in_file'],
                                                 output_names=['out_file'],
                                                 function=unzip_nii),
                                  name='unzip_node', iterfield=['in_file'])
 
         # DARTEL template
-        # ===============================
+        # ===============
         dartel_template = npe.Node(spm.DARTEL(),
                                    name='dartel_template')
 
@@ -205,7 +215,7 @@ class T1SPMDartel(cpe.Pipeline):
         # ==========
         self.connect([
             (self.input_node, unzip_node,    [('dartel_input_images', 'in_file')]),
-            (self.unzip_node, dartel_template,    [('out_file', 'image_files')]),
+            (unzip_node, dartel_template,    [('out_file', 'image_files')]),
             (dartel_template, self.output_node, [('dartel_flow_fields', 'dartel_flow_fields'),
                                                  ('final_template_file', 'final_template_file'),
                                                  ('template_files', 'template_files')])
