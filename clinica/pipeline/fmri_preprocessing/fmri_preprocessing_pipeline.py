@@ -44,14 +44,16 @@ class fMRIPreprocessing(cpe.Pipeline):
         IOError:
 
     Example:
-        >>> from pipelines.fmri_preprocessing import fMRIPreprocessing
+        >>> from clinica.pipeline.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
         >>> pipeline = fMRIPreprocessing('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipeline.parameters = {
         >>>     'num_slices': 45,
         >>>     'time_repetition': 2.4,
         >>>     'echo_times': [5.19, 7.65],
         >>>     'blip_direction': 1,
-        >>>     'total_readout_time': 15.6799
+        >>>     'total_readout_time': 15.6799,
+        >>>     'full_width_at_half_maximum': [8, 8, 8],
+        >>>     't1_native_space': False,
         >>> }
         >>> pipeline.run()
     """
@@ -74,7 +76,12 @@ class fMRIPreprocessing(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        return ['t1_brain_mask', 'mc_params', 'native_fmri', 't1_fmri', 'mni_fmri', 'mni_smoothed_fmri']
+        if 't1_native_space' not in self.parameters or self.parameters['t1_native_space']:
+            return ['t1_brain_mask', 'mc_params', 'native_fmri', 't1_fmri',
+                    'mni_fmri', 'mni_smoothed_fmri']
+        else:
+            return ['t1_brain_mask', 'mc_params', 'native_fmri', 'mni_fmri',
+                    'mni_smoothed_fmri']
 
 
     def build_input_node(self):
@@ -89,10 +96,25 @@ class fMRIPreprocessing(cpe.Pipeline):
         read_node = npe.Node(name="ReadingBIDS",
                              interface=nutil.IdentityInterface(fields=self.get_input_fields(),
                                                                mandatory_inputs=True))
-        read_node.inputs.magnitude1 = self.bids_layout.get(return_type='file', type='magnitude1', extensions='nii')
-        read_node.inputs.phasediff = self.bids_layout.get(return_type='file', type='phasediff', extensions='nii')
-        read_node.inputs.bold = self.bids_layout.get(return_type='file', type='bold', extensions='nii')
-        read_node.inputs.T1w = self.bids_layout.get(return_type='file', run='[1]', type='T1w', extensions='nii')
+        # I remove the 'sub-' prefix that is not considered by the pybids'
+        # layout object.
+        subject_regex = '|'.join(s[4:] for s in self.subjects)
+        read_node.inputs.magnitude1 = self.bids_layout.get(return_type='file',
+                                                type='magnitude1',
+                                                extensions='nii',
+                                                subject=subject_regex)
+        read_node.inputs.phasediff = self.bids_layout.get(return_type='file',
+                                               type='phasediff',
+                                               extensions='nii',
+                                               subject=subject_regex)
+        read_node.inputs.bold = self.bids_layout.get(return_type='file',
+                                          type='bold',
+                                          extensions='nii',
+                                          subject=subject_regex)
+        read_node.inputs.T1w = self.bids_layout.get(return_type='file',
+                                         run='[1]', type='T1w',
+                                         extensions='nii',
+                                         subject=subject_regex)
 
         self.connect([
             # Reading BIDS
@@ -122,21 +144,28 @@ class fMRIPreprocessing(cpe.Pipeline):
         write_node.inputs.remove_dest_dir = True
         write_node.inputs.regexp_substitutions = [
             (r't1_brain_mask/c3(.+)_maths_dil_ero_thresh_fillh\.nii\.gz$', r'\1_brainmask.nii.gz'),
-            (r'mc_params/rp_a(.+)\.txt$', r'\1_motionparams.txt'),
-            (r'native_fmri/ua(.+)\.nii$', r'\1_space-native.nii'),
-            (r't1_fmri/rua(.+)\.nii$', r'\1_space-t1.nii'),
-            (r'mni_fmri/wrua(.+)\.nii$', r'\1_space-mni.nii'),
-            (r'mni_smoothed_fmri/swrua(.+)\.nii$', r'\1_space-mni_smoothed.nii'),
+            (r'mc_params/rp_a(.+)\.txt$', r'\1_confounds.tsv'),
+            (r'native_fmri/ua(.+)\.nii.gz$', r'\1_space-meanBOLD.nii.gz'),
+            (r't1_fmri/rua(.+)\.nii.gz$', r'\1_space-T1w.nii.gz'),
+            (r'mni_fmri/wrua(.+)\.nii.gz$', r'\1_space-Ixi549Space.nii.gz'),
+            (r'mni_smoothed_fmri/swrua(.+)\.nii.gz$',
+             r'\1_space-Ixi549Space_fwhm-'+'-'.join(map(str, self.parameters['full_width_at_half_maximum']))+'.nii.gz'),
             # I don't know why it's adding this empty folder, so I remove it:
             (r'trait_added', r''),
         ]
+
+        # fMRI images in the subject's T1 native space are large, we add it
+        # only if specified:
+        if self.parameters['t1_native_space']:
+            self.connect([
+                (self.output_node, write_node, [('t1_fmri', 't1_fmri')]),
+            ])
 
         self.connect([
             # Writing CAPS
             (self.output_node, write_node, [('t1_brain_mask', 't1_brain_mask')]),
             (self.output_node, write_node, [('mc_params', 'mc_params')]),
             (self.output_node, write_node, [('native_fmri', 'native_fmri')]),
-            (self.output_node, write_node, [('t1_fmri', 't1_fmri')]),
             (self.output_node, write_node, [('mni_fmri', 'mni_fmri')]),
             (self.output_node, write_node, [('mni_smoothed_fmri', 'mni_smoothed_fmri')]),
         ])
@@ -203,6 +232,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         smooth_node = npe.MapNode(interface=spm.Smooth(),
                                   iterfield=['in_files'],
                                   name='Smoothing')
+        smooth_node.inputs.fwhm = self.parameters['full_width_at_half_maximum']
 
         # Zipping
         # =======
@@ -211,6 +241,11 @@ class fMRIPreprocessing(cpe.Pipeline):
                                interface=nutil.Function(input_names=['in_file'],
                                                         output_names=['out_file'],
                                                         function=zip_nii))
+        zip_bet_node = zip_node.clone('ZippingBET')
+        zip_mc_node = zip_node.clone('ZippingMC')
+        zip_reg_node = zip_node.clone('ZippingRegistration')
+        zip_norm_node = zip_node.clone('ZippingNormalization')
+        zip_smooth_node = zip_node.clone('ZippingSmoothing')
 
         # Connection
         # ==========
@@ -237,10 +272,17 @@ class fMRIPreprocessing(cpe.Pipeline):
             # Smoothing
             (norm_node, smooth_node, [('normalized_files', 'in_files')]),
             # Returning output
-            (bet_node, self.output_node, [('Fill.out_file', 't1_brain_mask')]),
-            (mc_node, self.output_node, [('realignment_parameters', 'mc_params')]),
-            (mc_node, self.output_node, [('runwarped_files', 'native_fmri')]),
-            (reg_node, self.output_node, [('coregistered_files', 't1_fmri')]),
-            (norm_node, self.output_node, [('normalized_files', 'mni_fmri')]),
-            (smooth_node, self.output_node, [('smoothed_files', 'mni_smoothed_fmri')]),
+            (bet_node, zip_bet_node, [('Fill.out_file', 'in_file')]),
+            (mc_node, zip_mc_node, [('runwarped_files', 'in_file')]),
+            (reg_node, zip_reg_node, [('coregistered_files', 'in_file')]),
+            (norm_node, zip_norm_node, [('normalized_files', 'in_file')]),
+            (smooth_node, zip_smooth_node, [('smoothed_files', 'in_file')]),
+            # Returning output
+            (zip_bet_node, self.output_node, [('out_file', 't1_brain_mask')]),
+            (mc_node, self.output_node,[('realignment_parameters', 'mc_params')]),
+            (zip_mc_node, self.output_node, [('out_file', 'native_fmri')]),
+            (zip_reg_node, self.output_node, [('out_file', 't1_fmri')]),
+            (zip_norm_node, self.output_node, [('out_file', 'mni_fmri')]),
+            (zip_smooth_node, self.output_node, [('out_file',
+                                                  'mni_smoothed_fmri')]),
         ])
