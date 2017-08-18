@@ -1,4 +1,4 @@
-"""T1 FreeSurfer3 - Clinica Pipeline.
+"""T1 FreeSurfer - Clinica Pipeline.
 This file has been generated automatically by the `clinica generate template`
 command line tool. See here for more details: https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
 """
@@ -9,37 +9,51 @@ command line tool. See here for more details: https://gitlab.icm-institute.org/a
 # command line tool.
 import clinica.pipeline.engine as cpe
 
+__author__ = "Junhao Wen"
+__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__credits__ = ["Michael Bacci", "Junhao Wen"]
+__license__ = "See LICENSE.txt file"
+__version__ = "1.0.0"
+__maintainer__ = "Junhao Wen"
+__email__ = "junhao.Wen@inria.fr"
+__status__ = "Development"
 
-class T1FreeSurfer3(cpe.Pipeline):
-    """T1 FreeSurfer3 SHORT DESCRIPTION.
+class T1FreeSurfer(cpe.Pipeline):
+    """Creates a pipeline that performs Freesurfer commander, recon-all, It takes the input files of MRI T1 images and
+        executes the 31 steps to reconstruct the surface of the brain, this progress includes surface-based and Volume-based
+        piepeline, which including gray(GM)and white matter(WM) segementation, pial and white surface extraction!.
 
     Warnings:
         - A WARNING.
 
-    Todos:
-        - [x] A FILLED TODO ITEM.
-        - [ ] AN ON-GOING TODO ITEM.
+    Todos: Transfer print to clinica log???
 
     Args:
-        input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
+        bids_directory: Path to the BIDS directory.
+        caps_directory: Path to the CAPS directory.
+        tsv: TSV file containing the subjects with their sessions
+        ras: additional flags for recon-all command line, default will be -qcache
+        wd: Temporary directory to store pipeline intermediate results
+        np: Number of cores used to run in parallel
 
     Returns:
-        A clinica pipeline object containing the T1 FreeSurfer3 pipeline.
+        A clinica pipeline object containing the T1 FreeSurfer pipeline.
 
     Raises:
 
 
     Example:
-        >>> from t1_freesurfer3 import T1FreeSurfer3
-        >>> pipeline = FMRIPreprocessing('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
-        >>> pipeline.parameters = {
-        >>>     # ...
-        >>> }
+        >>> from t1_freesurfer import T1FreeSurfer
+        >>> pipeline = T1FreeSurfer('~/MYDATASET_BIDS', '~/MYDATASET_CAPS', 'TSV')
         >>> pipeline.base_dir = '/tmp/'
         >>> pipeline.run()
     """
+
+
+    def check_custom_dependencies(self):
+        """Check dependencies that can not be listed in the `info.json` file.
+        """
+        pass
 
 
     def get_input_fields(self):
@@ -66,7 +80,7 @@ class T1FreeSurfer3(cpe.Pipeline):
         """Build and connect an input node to the pipeline.
         """
 
-        import t1_freesurfer3_utils as utils
+        import t1_freesurfer_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -77,13 +91,14 @@ class T1FreeSurfer3(cpe.Pipeline):
         # `self.parameters` dictionary and pass it to the `self.input_node` to
         # further by used as input of the core nodes.
 
+        # An IdentityInterface to get the input fields for the pipeline
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(
                                             fields=self.get_input_fields(),
                                             mandatory_inputs=True))
         read_parameters_node.inputs.recon_all_args = self.parameters['recon_all_args']
 
-        # Node to get the input vars
+        # check if a specific subject has already run recon-all, and return the related lists in the tsv file
         dataprepr = npe.Node(name='dataprepr',
                              interface=nutil.Function(
                                  input_names=['output_dir', 'subject_list', 'session_list'],
@@ -94,8 +109,7 @@ class T1FreeSurfer3(cpe.Pipeline):
         dataprepr.inputs.subject_list = self.subjects
         dataprepr.inputs.session_list = self.sessions
 
-        # BIDS DataGrabber
-        # ===============
+        # use pybids to grab the anat_t1 images based on the tsv file
         datagrabbernode = npe.Node(name='datagrabbernode',
                                    interface=nutil.Function(
                                        function=utils.bids_datagrabber,
@@ -133,7 +147,7 @@ class T1FreeSurfer3(cpe.Pipeline):
         """Build and connect the core nodes of the pipeline.
         """
 
-        import t1_freesurfer3_utils as utils
+        import t1_freesurfer_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces.freesurfer.preprocess import ReconAll
@@ -146,7 +160,6 @@ class T1FreeSurfer3(cpe.Pipeline):
             print(str(e))
             exit(1)
 
-        # ======
         # MapNode to check out if we need -cw256 for every subject, and -qcache is default for every subject.
         flagnode = npe.MapNode(name='flagnode',
                                iterfield=['t1_list'],
@@ -154,9 +167,6 @@ class T1FreeSurfer3(cpe.Pipeline):
                                    input_names=['t1_list', 'recon_all_args'],
                                    output_names=['output_flags'],
                                    function=utils.checkfov))
-
-        ## TODO: before launch the reconall pipeline, should verify if the number of output_flags equals the number of 'subject_id' from inputnode, because pybids datagrabber does not return error if the files do not exist
-
 
         # MapNode to transfer every subject's flag to string.
         create_flags = npe.MapNode(interface=nutil.Function(
@@ -172,6 +182,7 @@ class T1FreeSurfer3(cpe.Pipeline):
                                 iterfield=['subject_id', 'T1_files', 'subjects_dir', 'flags'])
         recon_all.inputs.directive = 'all'
 
+        # MapNode to create the statistical tsv file for each subject
         tsvmapnode = npe.MapNode(name='tsvmapnode',
                                  iterfield=['subject_id'],
                                  interface=nutil.Function(
@@ -180,6 +191,7 @@ class T1FreeSurfer3(cpe.Pipeline):
                                      function=utils.write_statistics_per_subject))
         tsvmapnode.inputs.output_dir = self.caps_directory
 
+        # Node to create the log file doing the first step quality check
         lognode = npe.Node(name='lognode',
                            interface=nutil.Function(
                                input_names=['subject_list', 'session_list', 'subject_id', 'output_dir'],

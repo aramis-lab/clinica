@@ -80,7 +80,7 @@ def datagrabber_t1_spm_segment_pipeline(input_directory,
 
     if in_write_deformation_fields is not None:
         if in_write_deformation_fields[0]:
-            datasink_connections.append(('new_segment.inverse_deformation_field', 'inverse_deformation_field'))
+            datasink_connections.append( ('new_segment.inverse_deformation_field', 'inverse_deformation_field') )
             datasink_infields.append('inverse_deformation_field')
         if in_write_deformation_fields[1]:
             datasink_connections.append(('new_segment.forward_deformation_field', 'forward_deformation_field'))
@@ -93,8 +93,8 @@ def datagrabber_t1_spm_segment_pipeline(input_directory,
     datasink.inputs.base_directory = output_directory
     datasink.inputs.container = ['subjects/' + subjects[i] + '/' + sessions[i] + '/t1/spm/segmentation' for i in range(len(subjects))]
     datasink.inputs.regexp_substitutions = [
-        (r'([a-z]+[0-9])(.*)(.nii?.?.?g?z?)$', r'\2_\1\3'),
-        (r'([a-z]+_)(.*)(.nii?.?.?g?z?)', r'\2_\1\3')
+        (r'([a-z]+[0-9])(.*)(\.nii?(\.gz)?)$', r'\2_\1\3'),
+        (r'([a-z]+)_(.*)(\.nii?(\.gz)?)$', r'\2_\1\3')
     ]
     seg_wf = pe.Workflow(name='seg_wf')
     seg_wf.base_dir = working_directory
@@ -309,7 +309,7 @@ def datagrabber_t1_spm_full_pipeline(input_directory,
     seg_datasink.inputs.container = ['subjects/' + subjects[i] + '/' + sessions[i] + '/t1/spm/segmentation' for i in range(len(subjects))]
     seg_datasink.inputs.regexp_substitutions = [
         (r'([a-z]+[0-9])(.*)(.nii?.?.?g?z?)$', r'\2_\1\3'),
-        (r'([a-z]+_)(.*)(.nii?.?.?g?z?)', r'\2_\1\3')
+        (r'([a-z]+)_(.*)(.nii?.?.?g?z?)$', r'\2_\1\3')
     ]
 
     template_datasink = pe.Node(nio.DataSink(), name='template_datasink')

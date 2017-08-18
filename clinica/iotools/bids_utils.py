@@ -12,15 +12,15 @@ __email__ = "sabrina.fontanella@icm-institute.org"
 __status__ = "Development"
 
 
+# -- Methods for the clinical data --
 # @ToDo:test this function
-def create_participants_df(input_path,out_path, study_name, clinical_spec_path, bids_ids, delete_non_bids_info=True):
+def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bids_ids, delete_non_bids_info=True):
     """
-    :param input_path: path to the original dataset
-    :param out_path: path to the bids folder
     :param study_name: name of the study (Ex. ADNI)
-    :param clinical_spec_path:
-    :param bids_ids:
-    :param delete_non_bids_info:
+    :param clinical_spec_path: path to the clinical file
+    :param clinical_spec_dir: path to the directory where the clinical data are stored
+    :param bids_ids: list of bids ids
+    :param delete_non_bids_info: if True delete all the rows of the subjects that are not available in the BIDS dataset
     :return: a pandas dataframe that contains the participants data
     """
     import pandas as pd
@@ -30,24 +30,22 @@ def create_participants_df(input_path,out_path, study_name, clinical_spec_path, 
     import numpy as np
 
     fields_bids = ['participant_id']
-    fields_dataset = []
     prev_location = ''
     index_to_drop=[]
-
     location_name = study_name + ' location'
 
+    # Load the data from the clincal specification file
     participants_specs = pd.read_excel(clinical_spec_path , sheetname='participant.tsv')
     participant_fields_db = participants_specs[study_name]
     field_location = participants_specs[location_name]
     participant_fields_bids = participants_specs['BIDS CLINICA']
 
-    # Extract the list of the available fields for the dataset (and the corresponding BIDS version)
+    # Extract the list of the available BIDS fields for the dataset
     for i in range(0, len(participant_fields_db)):
         if not pd.isnull(participant_fields_db[i]):
             fields_bids.append(participant_fields_bids[i])
-            fields_dataset.append(participant_fields_db[i])
 
-    # Init the dataframe that will be saved in the file participant.tsv
+    # Init the dataframe that will be saved in the file participants.tsv
     participant_df = pd.DataFrame(columns=fields_bids)
 
     for i in range(0, len(participant_fields_db)):
@@ -66,7 +64,7 @@ def create_participants_df(input_path,out_path, study_name, clinical_spec_path, 
                 pass
             else:
                 file_ext = os.path.splitext(location)[1]
-                file_to_read_path = path.join(input_path, 'clinicalData', location)
+                file_to_read_path = path.join(clinical_data_dir, location)
 
                 if file_ext == '.xlsx':
                     file_to_read = pd.read_excel(file_to_read_path, sheetname=sheet)
@@ -79,8 +77,9 @@ def create_participants_df(input_path,out_path, study_name, clinical_spec_path, 
             # For each field in fields_dataset extract all the column values
             for j in range(0, len(file_to_read)):
                 # Convert the alternative_id_1 to string if is an integer/float
+                value_to_read = file_to_read[participant_fields_db[i]]
                 if participant_fields_bids[i] == 'alternative_id_1' and\
-                        (file_to_read[participant_fields_db[i]].dtype == np.float64 or file_to_read[participant_fields_db[i]].dtype == np.int64) :
+                        (value_to_read.dtype == np.float64 or value_to_read.dtype == np.int64) :
                     if not pd.isnull(file_to_read.get_value(j, participant_fields_db[i])):
                         value_to_append = str(file_to_read.get_value(j, participant_fields_db[i])).rstrip('.0')
                     else:
@@ -91,21 +90,25 @@ def create_participants_df(input_path,out_path, study_name, clinical_spec_path, 
             # Add the extracted column to the participant_df
             participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
 
-    if study_name == 'ADNI':
+    if study_name == 'ADNI' or study_name == 'AIBL':
         # ADNImerge contains one row for each visits so there are duplicates
         participant_df = participant_df.drop_duplicates(subset=['alternative_id_1'], keep='first')
     participant_df.reset_index(inplace=True, drop=True)
 
     # Adding participant_id column with BIDS ids
     for i in range(0, len(participant_df)):
-        value = remove_space_and_symbols(participant_df['alternative_id_1'][i])
+        if study_name == 'OASIS':
+            value = (participant_df['alternative_id_1'][i].split("_"))[1]
+        else:
+            value = remove_space_and_symbols(participant_df['alternative_id_1'][i])
+
         bids_id = [s for s in bids_ids if value in s]
+
         if len(bids_id) == 0:
             print "Subject " + value + " not found in the BIDS converted version of the dataset."
-            logging.error("Subject " + value + " not found in the BIDS converted version of the dataset.")
             index_to_drop.append(i)
         else:
-            participant_df['participant_id'][i] = bids_id[0]
+            participant_df.set_value(i, 'participant_id', bids_id[0])
 
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info == True:
@@ -114,42 +117,22 @@ def create_participants_df(input_path,out_path, study_name, clinical_spec_path, 
     return participant_df
 
 
-def contain_dicom(folder_path):
-    """
-    Check if a folder contains DICOM images
-
-    :param folder_path:
-    :return: True if dicom files are found inside the folder, False otherwise
-    """
-    from glob import glob
-    from os import path
-
-    dcm_files = glob(path.join(folder_path, '*.dcm'))
-    if len(dcm_files) > 0:
-        return True
-
-    return False
-
-
-def get_supported_dataset():
-    return ['ADNI', 'CLINAD', 'PREVDEMALS', 'INSIGHT']
-
-
-def create_sessions_dict(input_path, study_name, clinical_spec_path, bids_ids, name_column_ids, subj_to_remove = []):
+def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids_ids, name_column_ids, subj_to_remove = []):
     """
     Extract the information regarding the sessions and store them in a dictionary (session M0 only)
 
-    :param input_path:
+    :param input_path: path to the input folder
     :param study_name: name of the study (Ex: ADNI)
-    :param clinical_spec_path:
-    :param bids_ids:
-    :param name_column_ids:
-    :param subj_to_remove:
+    :param clinical_spec_path: path to the clinical file
+    :param bids_ids: list of bids ids
+    :param name_column_ids: name of the column where the subject ids are stored
+    :param subj_to_remove: subjects to remove
     :return:
     """
     import pandas as pd
     from os import path
     import numpy as np
+    import os
 
     # Load data
     location = study_name + ' location'
@@ -174,16 +157,26 @@ def create_sessions_dict(input_path, study_name, clinical_spec_path, bids_ids, n
             # Load the file
             tmp = field_location[i].split('/')
             location = tmp[0]
-            sheet = tmp[1]
-            file_to_read_path = path.join(input_path, 'clinicalData', location)
-            file_to_read = pd.read_excel(file_to_read_path, sheetname=sheet)
+            if len(tmp) > 1:
+                sheet = tmp[1]
+            else:
+                sheet = ''
+
+            file_to_read_path = path.join(clinical_data_dir, location)
+            file_ext = os.path.splitext(location)[1]
+
+            if file_ext == '.xlsx':
+                file_to_read = pd.read_excel(file_to_read_path, sheetname=sheet)
+            elif file_ext == '.csv':
+                file_to_read = pd.read_csv(file_to_read_path)
 
             for r in range(0, len(file_to_read.values)):
                 row = file_to_read.iloc[r]
                 # Extracts the subject ids columns from the dataframe
                 subj_id = row[name_column_ids.decode('utf-8')]
-                if subj_id.dtype == np.int64:
-                    subj_id = str(subj_id)
+                if hasattr(subj_id, 'dtype'):
+                    if subj_id.dtype == np.int64:
+                        subj_id = str(subj_id)
                 # Removes all the - from
                 subj_id_alpha = remove_space_and_symbols(subj_id)
 
@@ -205,7 +198,17 @@ def create_sessions_dict(input_path, study_name, clinical_spec_path, bids_ids, n
     return sessions_dict
 
 
-def create_scans_dict(input_path, study_name, clinic_specs_path, bids_ids, name_column_ids):
+def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids, name_column_ids):
+    """
+    Extract the information regarding the scans and store them in a dictionary (session M0 only)
+
+    :param clinical_data_dir: path to the directory where the clinical data are stored
+    :param study_name: name of the study (Ex ADNI)
+    :param clinic_specs_path: path to the clinical specification file
+    :param bids_ids: list of bids ids
+    :param name_column_ids: name of the column where the subject id is contained
+    :return: a dictonary
+    """
     import pandas as pd
     from os import path
     scans_dict = {}
@@ -247,7 +250,7 @@ def create_scans_dict(input_path, study_name, clinic_specs_path, bids_ids, name_
         if file_name == prev_file and sheet == prev_sheet:
             pass
         else:
-            file_to_read_path = path.join(input_path, 'clinicalData', file_name)
+            file_to_read_path = path.join(clinical_data_dir, file_name)
             if sheet != '':
                 file_to_read = pd.read_excel(file_to_read_path, sheetname=sheet)
             else:
@@ -269,19 +272,20 @@ def create_scans_dict(input_path, study_name, clinic_specs_path, bids_ids, name_
     return scans_dict
 
 
-def write_sessions_tsv(bids_paths, sessions_dict):
+def write_sessions_tsv(bids_dir, sessions_dict):
+    """
+    Write the content of the function create scans dict in several tsv files following the BIDS specification
+
+    :param bids_dir: path to the bids directory
+    :param sessions_dict: output of the function create_scans_dict
     """
 
-    :param out_path:
-    :param bids_paths:
-    :param sessions_dict:
-    :param fields_bids:
-    :param sessions_list:
-    :return:
-    """
     import os
     import pandas as pd
     from os import path
+    from glob import glob
+
+    bids_paths = glob(path.join(bids_dir, 'sub-*'))
 
     for sp in bids_paths:
         bids_id = sp.split(os.sep)[-1]
@@ -296,16 +300,17 @@ def write_sessions_tsv(bids_paths, sessions_dict):
             print "No session data available for " + sp
             session_df = pd.DataFrame(columns=['session_id'])
             session_df['session_id'] = pd.Series('M0')
+            print
             session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf8')
 
 
-def write_scans_tsv(out_path, bids_ids, scans_dict):
+def write_scans_tsv(bids_dir, bids_ids, scans_dict):
     """
     Write the scans dict into tsv files.
-    :param out_path:
-    :param bids_ids:
-    :param scans_dict:
-    :return:
+
+    :param bids_dir: path to the BIDS directory
+    :param bids_ids: list of bids ids
+    :param scans_dict: the output of the function create_scans_dict
     """
     import pandas as pd
     from os import path
@@ -318,10 +323,10 @@ def write_scans_tsv(out_path, bids_ids, scans_dict):
         # Create the file
         tsv_name = bids_id + "_ses-M0_scans.tsv"
         # If the file already exists, remove it
-        if os.path.exists(path.join(out_path, bids_id, 'ses-M0', tsv_name)):
-            os.remove(path.join(out_path, bids_id, 'ses-M0', tsv_name))
+        if os.path.exists(path.join(bids_dir, bids_id, 'ses-M0', tsv_name)):
+            os.remove(path.join(bids_dir, bids_id, 'ses-M0', tsv_name))
 
-        mod_available = glob(path.join(out_path, bids_id, 'ses-M0', '*'))
+        mod_available = glob(path.join(bids_dir, bids_id, 'ses-M0', '*'))
         for mod in mod_available:
             mod_name = os.path.basename(mod)
             files = glob(path.join(mod, '*'))
@@ -337,7 +342,30 @@ def write_scans_tsv(out_path, bids_ids, scans_dict):
                 row_to_append.insert(0, 'filename', path.join(mod_name, file_name))
                 scans_df = scans_df.append(row_to_append)
 
-            scans_df.to_csv(path.join(out_path, bids_id, 'ses-M0', tsv_name), sep='\t', index=False, encoding='utf8')
+            scans_df.to_csv(path.join(bids_dir, bids_id, 'ses-M0', tsv_name), sep='\t', index=False, encoding='utf8')
+
+
+
+# -- Other methods --
+def contain_dicom(folder_path):
+    """
+    Check if a folder contains DICOM images
+
+    :param folder_path:
+    :return: True if dicom files are found inside the folder, False otherwise
+    """
+    from glob import glob
+    from os import path
+
+    dcm_files = glob(path.join(folder_path, '*.dcm'))
+    if len(dcm_files) > 0:
+        return True
+
+    return False
+
+
+def get_supported_dataset():
+    return ['ADNI', 'CLINAD', 'PREVDEMALS', 'INSIGHT', 'OASIS', 'AIBL']
 
 
 def dcm_to_nii(input_path, output_path, bids_name):
@@ -448,11 +476,10 @@ def get_ext(file_path):
 
 def compress_nii(file_path):
     '''
-    Compress .nii file
-    :param path:
-    :return:
-    '''
+    Compress nii files.
 
+    :param file_path: path to the file to convert
+    '''
     from os import path
     import os
     import gzip
@@ -462,7 +489,6 @@ def compress_nii(file_path):
     f_out.writelines(f_in)
     f_out.close()
     f_in.close()
-
     # Remove the original file
     os.remove(file_path)
 
@@ -622,32 +648,44 @@ def convert_T1(t1_path, output_path, t1_bids_name):
 
 
 def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name , acquisition = ''):
+    """
+
+    :param folder_input:
+    :param folder_output:
+    :param pet_name:
+    :param bids_name:
+    :param task_name:
+    :param acquisition: tracer name (FDG, AV45, etc)
+    :return:
+    """
     from os import path
     from shutil import copy
     import os
 
+
     if acquisition!='':
-        pet_name = bids_name+'_task-'+task_name+'_acq-',acquisition
+        pet_bids_name = bids_name+'_task-'+task_name+'_acq-'+acquisition
     else:
-        pet_name = bids_name+'_task-'+task_name
+        pet_bids_name = bids_name+'_task-'+task_name
 
     if contain_dicom(folder_input):
-        dcm_to_nii(folder_input, folder_output, pet_name, 'pet')
+        print 'DICOM found for PET'
+        dcm_to_nii(folder_input, folder_output, pet_bids_name, 'pet')
     else:
         if not os.path.exists(folder_output):
             os.mkdir(folder_output)
 
-            #If a prefixed pet is chosen for the conversion use it, otherwise extracts the pet file available into the folder
-            if pet_name!='':
-                pet_path = path.join(folder_input, pet_name)
-            else:
-                print 'WARNING: feature to be implemented'
+        #If a prefixed pet is chosen for the conversion use it, otherwise extracts the pet file available into the folder
+        if pet_name!='':
+            pet_path = path.join(folder_input, pet_name)
+        else:
+            print 'WARNING: feature to be implemented'
 
-            file_ext = get_ext(pet_path)
-            copy(pet_path, path.join(folder_output, pet_name + get_bids_suff('pet') + file_ext))
-            # If  the original image is not compress, compress it
-            if file_ext == '.nii':
-                compress_nii(path.join(folder_output, pet_name + get_bids_suff('pet') + file_ext))
+        file_ext = get_ext(pet_path)
+        copy(pet_path, path.join(folder_output, pet_bids_name + get_bids_suff('pet') + file_ext))
+        # If  the original image is not compress, compress it
+        if file_ext == '.nii':
+            compress_nii(path.join(folder_output, pet_bids_name + get_bids_suff('pet') + file_ext))
 
 
 def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False,False]):
@@ -905,10 +943,6 @@ def merge_DTI(folder_input, folder_output, name, fixed_dti_list=False):
         if len(incomp_folders) > 0:
             return incomp_folders
 
-#
-# def convert_dwi(folder_input, folder_output, name, acq=''):
-#     if coi
-
 
 def concatenate_bvec_bval(files_list, output_file, type):
     import fileinput
@@ -932,8 +966,8 @@ def merge_noddi_dti(folder_input, folder_output, name):
     '''
     Merge NODDI dti CATI organised following these rules:
 
-       - DTI1, DTI3 and DTI5 are always Posterior to Anterior
-       - DTI2, DTI4, DTI6 are always Anterior to Posterior
+       - DTI1, DTI3 and DTI5 are always Anterior to Posterior(AP/j-)
+       - DTI2, DTI4, DTI6 are always Posterior to Anterior(PA/j)
 
     :param folder_input: path to the folder where are the DTI
     :param folder_output: path to the BIDS folder
@@ -962,8 +996,8 @@ def merge_noddi_dti(folder_input, folder_output, name):
     out_file_name_pa = path.join(folder_output, name + '_seq-mshellPA' + get_bids_suff('dwi'))
     out_file_name_ap = path.join(folder_output, name + '_seq-mshellAP' + get_bids_suff('dwi'))
 
-    dti_pa_paths = glob(path.join(folder_input, '*DTI[1,3,5]*'))
-    dti_ap_paths = glob(path.join(folder_input, '*DTI[2,4,6]*'))
+    dti_ap_paths = glob(path.join(folder_input, '*DTI[1,3,5]*'))
+    dti_pa_paths = glob(path.join(folder_input, '*DTI[2,4,6]*'))
 
     for f in dti_pa_paths:
         dti_pa_nii.append(glob(path.join(f, '*.nii*'))[0])

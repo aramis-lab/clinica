@@ -1,4 +1,4 @@
-"""Statistics Surfstat3 - Clinica Pipeline.
+"""Statistics Surfstat - Clinica Pipeline.
 This file has been generated automatically by the `clinica generate template`
 command line tool. See here for more details: https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
 """
@@ -9,9 +9,21 @@ command line tool. See here for more details: https://gitlab.icm-institute.org/a
 # command line tool.
 import clinica.pipeline.engine as cpe
 
+__author__ = "Junhao Wen"
+__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__credits__ = ["Michael Bacci", "Junhao Wen"]
+__license__ = "See LICENSE.txt file"
+__version__ = "1.0.0"
+__maintainer__ = "Junhao Wen"
+__email__ = "junhao.Wen@inria.fr"
+__status__ = "Development"
 
-class StatisticsSurfstat3(cpe.Pipeline):
-    """Statistics Surfstat3 SHORT DESCRIPTION.
+class StatisticsSurfstat(cpe.Pipeline):
+    """
+        Based on the Matlab toolbox [SurfStat](http://www.math.mcgill.ca/keith/surfstat/), which performs statistical
+        analyses of univariate and multivariate surface and volumetric data using the generalized linear model (GLM),
+        this pipeline performs analyses including group comparison and correlation with the surface-based features.
+        Currently, this pipeline fits the normalised cortical thickness on FsAverage from `t1-freesurfer` pipeline. New features will be added in the future.
 
     Warnings:
         - A WARNING.
@@ -21,18 +33,31 @@ class StatisticsSurfstat3(cpe.Pipeline):
         - [ ] AN ON-GOING TODO ITEM.
 
     Args:
-        input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
-
+        caps_directory: str, the output folder of recon-all which will contain the result files: ?h.thickness.fwhm**.mgh.
+        tsv_file: str, Path to the tsv containing the information for GLM.
+        design_matrix: str, the linear model that fits into the GLM, for example '1+group'.
+        contrast: string, the contrast matrix for GLM, if the factor you choose is categorized variable, clinica_surfstat will create two contrasts,
+                  for example, contrast = 'Label', this will create contrastpos = Label.AD - Label.CN, contrastneg = Label.CN - Label.AD; if the fac-
+                  tory that you choose is a continuous factor, clinica_surfstat will just create one contrast, for example, contrast = 'Age', but note,
+                  the string name that you choose should be exactly the same with the columns names in your subjects_visits_tsv.
+        str_format: string, the str_format which uses to read your tsv file, the typy of the string should corresponds exactly with the columns in the tsv file.
+            Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
+        group_label: current group name for this analysis
+        glm_type: based on the hypothesis, you should define one of the glm types, "group_comparison", "correlation"
+        full_width_at_half_maximum: fwhm for the surface smoothing, default is 20, integer.
+        threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float, default is 0.001.
+        threshold_corrected_pvalue: the threshold to display the corrected cluster, default is 0.05, float.
+        cluster_threshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float.
+        working_directory: define where to put the infomation of the nipype workflow.
+        n_procs: define how many cores to run this workflow.
     Returns:
-        A clinica pipeline object containing the Statistics Surfstat3 pipeline.
+        A clinica pipeline object containing the Statistics Surfstat pipeline.
 
     Raises:
 
 
     Example:
-        >>> from statistics_surfstat3 import StatisticsSurfstat3
+        >>> from statistics_surfstat import StatisticsSurfstat
         >>> pipeline = FMRIPreprocessing('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipeline.parameters = {
         >>>     # ...
@@ -40,6 +65,12 @@ class StatisticsSurfstat3(cpe.Pipeline):
         >>> pipeline.base_dir = '/tmp/'
         >>> pipeline.run()
     """
+
+
+    def check_custom_dependencies(self):
+        """Check dependencies that can not be listed in the `info.json` file.
+        """
+        pass
 
 
     def get_input_fields(self):
@@ -118,7 +149,7 @@ class StatisticsSurfstat3(cpe.Pipeline):
         """Build and connect the core nodes of the pipeline.
         """
 
-        import statistics_surfstat3_utils as utils
+        import statistics_surfstat_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces.io import JSONFileSink
