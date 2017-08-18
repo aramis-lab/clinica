@@ -44,14 +44,16 @@ class fMRIPreprocessing(cpe.Pipeline):
         IOError:
 
     Example:
-        >>> from pipelines.fmri_preprocessing import fMRIPreprocessing
+        >>> from clinica.pipeline.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
         >>> pipeline = fMRIPreprocessing('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipeline.parameters = {
         >>>     'num_slices': 45,
         >>>     'time_repetition': 2.4,
         >>>     'echo_times': [5.19, 7.65],
         >>>     'blip_direction': 1,
-        >>>     'total_readout_time': 15.6799
+        >>>     'total_readout_time': 15.6799,
+        >>>     'full_width_at_half_maximum': [8, 8, 8],
+        >>>     't1_native_space': False,
         >>> }
         >>> pipeline.run()
     """
@@ -94,10 +96,25 @@ class fMRIPreprocessing(cpe.Pipeline):
         read_node = npe.Node(name="ReadingBIDS",
                              interface=nutil.IdentityInterface(fields=self.get_input_fields(),
                                                                mandatory_inputs=True))
-        read_node.inputs.magnitude1 = self.bids_layout.get(return_type='file', type='magnitude1', extensions='nii')
-        read_node.inputs.phasediff = self.bids_layout.get(return_type='file', type='phasediff', extensions='nii')
-        read_node.inputs.bold = self.bids_layout.get(return_type='file', type='bold', extensions='nii')
-        read_node.inputs.T1w = self.bids_layout.get(return_type='file', run='[1]', type='T1w', extensions='nii')
+        # I remove the 'sub-' prefix that is not considered by the pybids'
+        # layout object.
+        subject_regex = '|'.join(s[4:] for s in self.subjects)
+        read_node.inputs.magnitude1 = self.bids_layout.get(return_type='file',
+                                                type='magnitude1',
+                                                extensions='nii',
+                                                subject=subject_regex)
+        read_node.inputs.phasediff = self.bids_layout.get(return_type='file',
+                                               type='phasediff',
+                                               extensions='nii',
+                                               subject=subject_regex)
+        read_node.inputs.bold = self.bids_layout.get(return_type='file',
+                                          type='bold',
+                                          extensions='nii',
+                                          subject=subject_regex)
+        read_node.inputs.T1w = self.bids_layout.get(return_type='file',
+                                         run='[1]', type='T1w',
+                                         extensions='nii',
+                                         subject=subject_regex)
 
         self.connect([
             # Reading BIDS
