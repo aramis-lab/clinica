@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 def permutation_test(vector_1, vector_2, number_of_permutation, tails=2):
     """
@@ -15,30 +14,31 @@ def permutation_test(vector_1, vector_2, number_of_permutation, tails=2):
     
     def exact_mc_perm_test(xs, ys, nmc, tails=2):
         n, k = len(xs), 0.
-        if tails==2:
+        if tails == 2:
             diff = np.abs(np.mean(xs) - np.mean(ys))
-        if tails==1:
+        if tails == 1:
             diff = np.mean(xs) - np.mean(ys)
         zs = np.concatenate([xs, ys])
         for j in range(nmc):
             np.random.shuffle(zs)
-            if tails==2:
+            if tails == 2:
                 diff_random = np.abs(np.mean(zs[:n]) - np.mean(zs[n:]))
-            if tails==1:
+            if tails == 1:
                 diff_random = np.mean(zs[:n]) - np.mean(zs[n:])
             k += diff < diff_random
         return k/float(nmc)
     
     p_value = 1.
     
-    X = vector_1
-    Y = vector_2
+    x = vector_1
+    y = vector_2
     
-    if X!=np.array([]) and Y!=np.array([]):   
-        if X.sum()!=0 or Y.sum()!=0:
-            p_value = exact_mc_perm_test(X,Y,number_of_permutation, tails)
+    if x != np.array([]) and y != np.array([]):
+        if x.sum() != 0 or y.sum() != 0:
+            p_value = exact_mc_perm_test(x, y, number_of_permutation, tails)
     
     return p_value
+
 
 def t_test(vector_1, vector_2, tails=2):
     """
@@ -59,19 +59,20 @@ def t_test(vector_1, vector_2, tails=2):
     X = vector_1
     Y = vector_2
     
-    if X!=np.array([]) and Y!=np.array([]):
-        p_value= ttest_ind(X,Y,equal_var=False).pvalue
-        if tails==1:
-            array_X = np.array(X)
-            array_Y = np.array(Y)
-            if array_X.mean()>array_Y.mean():
+    if X != np.array([]) and Y != np.array([]):
+        p_value = ttest_ind(X, Y, equal_var=False).pvalue
+        if tails == 1:
+            x = np.array(X)
+            array_y = np.array(Y)
+            if x.mean() > array_y.mean():
                 p_value = float(p_value)/2.0
             else:
                 p_value = 1 - float(p_value)/2.0
     
     return p_value
-    
-def Mann_Whitney(vector_1, vector_2, tails=2):
+
+
+def mann_whitney(vector_1, vector_2, tails=2):
     """
     This function take two vectors as entry and return 
     the p_value of a  Mann_Whitney U test. 
@@ -87,20 +88,21 @@ def Mann_Whitney(vector_1, vector_2, tails=2):
     
     p_value = 1.
     
-    X = vector_1
-    X_non_nul = [X[k] for k in np.nonzero(X)[0].tolist()]
+    x = vector_1
+    non_zero_x = [x[k] for k in np.nonzero(x)[0].tolist()]
  
-    Y = vector_2
-    Y_non_nul = [Y[k] for k in np.nonzero(Y)[0].tolist()]
+    y = vector_2
+    non_zero_y = [y[k] for k in np.nonzero(y)[0].tolist()]
     
-    if X!=np.array([]) and Y!=np.array([]):
-        if X_non_nul!=np.array([]) or Y_non_nul!=np.array([]):
-            p_value= mannwhitneyu(X,Y).pvalue
-            if tails==2:
+    if x != np.array([]) and y != np.array([]):
+        if non_zero_x != np.array([]) or non_zero_y != np.array([]):
+            p_value = mannwhitneyu(x, y).pvalue
+            if tails == 2:
                 p_value = 2*p_value
     
     return p_value
-    
+
+
 def fdr_correction_matrix(p_value_matrix, template=None):
     """
     This function take a p value matrix as entry and return the p_value corrected for False Rate Discovery. 
@@ -112,29 +114,30 @@ def fdr_correction_matrix(p_value_matrix, template=None):
     import numpy as np
     from mne.stats import fdr_correction
     
-    if type(template)==type(p_value_matrix):
-        if p_value_matrix.shape!=template.shape:
+    if type(template) == type(p_value_matrix):
+        if p_value_matrix.shape != template.shape:
             raise IOError('p_value_matrix and template should have the same shape.')
          
-    if type(template)==type(p_value_matrix):  
+    if type(template) == type(p_value_matrix):
         p_value_corrected = np.ones(p_value_matrix.shape)
         reject_test = np.zeros(p_value_matrix.shape, dtype=bool)     
         eff_p_value = []
         index_of_eff_p_value = []    
         for i in np.arange(0, p_value_matrix.shape[0]):
-            for j in np.arange(0,i):
-                if template[j,i]==1:
-                    eff_p_value += [p_value_matrix[j,i]]
-                    index_of_eff_p_value += [(j,i)]     
+            for j in np.arange(0, i):
+                if template[j, i] == 1:
+                    eff_p_value += [p_value_matrix[j, i]]
+                    index_of_eff_p_value += [(j, i)]
         reject, p_corrected = fdr_correction(eff_p_value)     
         for i, corrected in enumerate(p_corrected):
             p_value_corrected[index_of_eff_p_value[i][0],index_of_eff_p_value[i][1]] = corrected
             reject_test[index_of_eff_p_value[i][0],index_of_eff_p_value[i][1]] = reject[i]
     elif not template:
-         reject_test, p_value_corrected = fdr_correction(p_value_matrix)
+        reject_test, p_value_corrected = fdr_correction(p_value_matrix)
     else:
-         raise IOError('template input should be an numpy array or None.') 
+        raise IOError('template input should be an numpy array or None.')
     return reject_test, p_value_corrected
+
 
 def create_new_feature_tsv(subjects_visits_tsv, bids_dir, dest_tsv, added_features):
     """
@@ -172,7 +175,6 @@ def create_new_feature_tsv(subjects_visits_tsv, bids_dir, dest_tsv, added_featur
     new_features.reset_index(inplace=True, drop=True)
     all_features = concat([sub_set, new_features], axis=1)
     all_features.to_csv(dest_tsv, sep='\t', index=False)
-
 
 
 def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
@@ -217,17 +219,17 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
     subjects_visits = pandas.io.parsers.read_csv(in_atlas.get_tsv_roi(), sep='\t')
     label_list = list(subjects_visits.roi_name)
 
-    stats_scalar = np.zeros((len(list_roi),2))
+    stats_scalar = np.zeros((len(list_roi), 2))
     for index, index_label in enumerate(list_roi):
-        atlas_label_index = np.array(np.where(atlas_image_data==index_label))
-        stats_scalar[index,0]=index
+        atlas_label_index = np.array(np.where(atlas_image_data == index_label))
+        stats_scalar[index, 0] = index
         labeled_voxel = scalar_image_data[atlas_label_index[0, :], atlas_label_index[1, :], atlas_label_index[2, :]]
         average_voxel = labeled_voxel.mean()
-        stats_scalar[index,1] = average_voxel
+        stats_scalar[index, 1] = average_voxel
 
-    data = pandas.DataFrame({'index': stats_scalar[:,0],
+    data = pandas.DataFrame({'index': stats_scalar[:, 0],
                              'label_name': label_list,
-                             'mean_scalar': stats_scalar[:,1]
+                             'mean_scalar': stats_scalar[:, 1]
                              })
     data.to_csv(out_file, sep='\t', index=False, encoding='utf-8')
 
