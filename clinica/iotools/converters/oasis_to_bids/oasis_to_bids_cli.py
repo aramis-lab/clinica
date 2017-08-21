@@ -23,9 +23,3 @@ class OasisToBidsCLI(ce.CmdParser):
 
         oasis_to_bids.convert_images(args.dataset_directory, args.bids_directory)
         oasis_to_bids.convert_clinical_data(args.clinical_data_directory, args.bids_directory)
-
-
-
-
-
-

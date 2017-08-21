@@ -29,11 +29,9 @@ class OasisToBids(Converter):
         print 'Converting clinical data...'
         bids_ids = bids.get_bids_subjs_list(bids_dir)
 
-        clinicapath = 'CLINICA_HOME'
-        clinica_folder = os.environ[clinicapath]
-        clinic_specs_path = path.join(clinica_folder, 'clinica', 'iotools', 'data',
+        iotools_folder = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        clinic_specs_path = path.join(iotools_folder, 'data',
                                       'clinical_specifications.xlsx')
-
 
         # --Create participants.tsv--
         participants_df = bids.create_participants_df('OASIS', clinic_specs_path, clinical_data_dir, bids_ids)
