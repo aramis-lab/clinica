@@ -3,9 +3,8 @@
 
 """This module contains utilities to check dependencies of the different neuroimaging tools."""
 
-from clinica.utils.stream import cprint, active_cprint
+from clinica.utils.stream import cprint
 
-active_cprint()
 
 def is_binary_present(binary):
     """
@@ -52,7 +51,7 @@ def check_ants():
     list_binaries = ['N4BiasFieldCorrection', 'antsRegistrationSyNQuick.sh']
     for binary in list_binaries:
         if not is_binary_present(binary):
-            raise RuntimeError(binary + ' from FreeSurfer Software is not present in your PATH environment: did you source ${FREESURFER_HOME}/SetUpFreeSurfer.sh ?')
+            raise RuntimeError(binary + ' from ANTs Software is not present in your PATH environment.')
 
 
 def check_freesurfer():
@@ -78,7 +77,6 @@ def check_freesurfer():
             raise RuntimeError(binary + ' from FreeSurfer Software is not present in your PATH environment: did you source ${FREESURFER_HOME}/SetUpFreeSurfer.sh ?')
 
 
-
 def check_fsl():
     """
     Check FSL software.
@@ -88,24 +86,27 @@ def check_fsl():
     import os
     import nipype.interfaces.fsl as fsl
 
+    from clinica.utils.stream import cprint
+
+    cprint('Checking FSL...')
+
     try:
         fsl_dir = os.environ.get('FSLDIR', '')
         if not fsl_dir:
             raise RuntimeError('FSLDIR variable is not set')
     except Exception as e:
-        print(str(e))
+        cprint(str(e))
 
     try:
         if fsl.Info.version().split(".") < ['5', '0', '5']:
             raise RuntimeError('FSL version must be greater than 5.0.5')
     except Exception as e:
-        print(str(e))
+        cprint(str(e))
 
     list_binaries = ['bet', 'flirt', 'fast', 'first']
     for binary in list_binaries:
         if not is_binary_present(binary):
             raise RuntimeError(binary + ' from FSL Software is not present in your PATH environment.')
-
 
 
 def check_mrtrix():
@@ -127,7 +128,6 @@ def check_mrtrix():
     for binary in list_binaries:
         if not is_binary_present(binary):
             raise RuntimeError(binary + ' from MRtrix Software is not present in your PATH environment.')
-
 
 
 def check_spm():
