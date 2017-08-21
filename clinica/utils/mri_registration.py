@@ -39,7 +39,6 @@ def convert_flirt_transformation_to_mrtrix_transformation(
     return out_mrtrix_matrix
 
 
-
 def apply_mrtrix_transform_without_resampling(in_image, in_mrtrix_matrix, name_output_image=None):
     """
     Apply a transformation without resampling.
@@ -75,7 +74,6 @@ def apply_mrtrix_transform_without_resampling(in_image, in_mrtrix_matrix, name_o
     os.system(cmd)
 
     return out_deformed_image
-
 
 
 def apply_ants_registration_syn_quick_transformation(
@@ -121,7 +119,6 @@ def apply_ants_registration_syn_quick_transformation(
     return out_deformed_image
 
 
-
 def ants_registration_syn_quick(fixe_image, moving_image, prefix_output=None):
     """
     TODO.
@@ -149,7 +146,6 @@ def ants_registration_syn_quick(fixe_image, moving_image, prefix_output=None):
     subprocess.call([cmd], shell=True)
 
     return image_warped, affine_matrix, warp, inverse_warped, inverse_warp
-
 
 
 def ants_combine_transform(in_file, transforms_list, reference):

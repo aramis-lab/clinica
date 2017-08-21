@@ -1,12 +1,9 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
-"""This module contains pipelines for MRI registration."""
 
-def t1_b0_registration_pipeline(
+def t1_b0_registration(
         participant_id, session_id,
         caps_directory, working_directory=None,
-        name="t1_b0_registration_pipeline"):
+        name="t1_b0_registration"):
     """
     Perform rigid registration of the T1-weighted image onto the B0 image.
 
@@ -76,7 +73,9 @@ def t1_b0_registration_pipeline(
     if working_directory is None:
         working_directory = tempfile.mkdtemp()
 
-    check_freesurfer(); check_fsl(); check_mrtrix()
+    check_freesurfer()
+    check_fsl()
+    check_mrtrix()
 
     caps_identifier = participant_id + '_' + session_id
 
@@ -87,19 +86,19 @@ def t1_b0_registration_pipeline(
 
     get_b0 = pe.Node(fsl.ExtractROI(args='0 1'), name='get_b0')
 
-    upsample_b0 = pe.Node(MRIConvert(vox_size=(1,1,1), out_type='niigz'), name='upsample_b0')
+    upsample_b0 = pe.Node(MRIConvert(vox_size=(1, 1, 1), out_type='niigz'), name='upsample_b0')
 
-    upsample_b0_mask = pe.Node(MRIConvert(vox_size=(1,1,1), out_type='niigz'), name='upsample_b0_mask')
+    upsample_b0_mask = pe.Node(MRIConvert(vox_size=(1, 1, 1), out_type='niigz'), name='upsample_b0_mask')
 
     registration_t1_to_b0 = pe.Node(fsl.FLIRT(
         dof=6, interp='spline', cost='normmi', cost_func='normmi',
         out_matrix_file=caps_identifier + '_t1-to-b0_withResampling.mat'),
         name='registration_t1_to_b0')
-    #registration_t1_to_b0.outputs.out_matrix_file = caps_identifier + '_t1-to-b0-with-resampling.mat'
-
+    # registration_t1_to_b0.outputs.out_matrix_file = caps_identifier + '_t1-to-b0-with-resampling.mat'
 
     apply_flirt_registration = pe.Node(fsl.ApplyXfm(apply_xfm=True, interp='spline'), name='apply_flirt_registration')
-    apply_flirt_registration.inputs.out_file = caps_identifier + '_binarymask-whitematter_reslicedOnDiffusionSpace.nii.gz'
+    apply_flirt_registration.inputs.out_file = \
+        caps_identifier + '_binarymask-whitematter_reslicedOnDiffusionSpace.nii.gz'
 
     convert_flirt_to_mrtrix = pe.Node(interface=niu.Function(
         input_names=['in_source_image', 'in_reference_image', 'in_flirt_matrix', 'name_output_matrix'],
@@ -118,12 +117,14 @@ def t1_b0_registration_pipeline(
         input_names=['in_image', 'in_mrtrix_matrix', 'name_output_image'],
         output_names=['out_deformed_image'], function=apply_mrtrix_transform_without_resampling),
         name='desikan_in_diffusion_space')
-    desikan_in_diffusion_space.inputs.name_output_image = caps_identifier + '_parcellation-desikan_onDiffusionSpace.nii.gz'
+    desikan_in_diffusion_space.inputs.name_output_image = \
+        caps_identifier + '_parcellation-desikan_onDiffusionSpace.nii.gz'
     destrieux_in_diffusion_space = pe.Node(interface=niu.Function(
         input_names=['in_image', 'in_mrtrix_matrix', 'name_output_image'],
         output_names=['out_deformed_image'], function=apply_mrtrix_transform_without_resampling),
         name='destrieux_in_diffusion_space')
-    destrieux_in_diffusion_space.inputs.name_output_image = caps_identifier + '_parcellation-destrieux_onDiffusionSpace.nii.gz'
+    destrieux_in_diffusion_space.inputs.name_output_image = \
+        caps_identifier + '_parcellation-destrieux_onDiffusionSpace.nii.gz'
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['out_registered_t1', 'out_flirt_matrix', 'out_wm_mask_in_diffusion_space', 'out_mrtrix_matrix',
@@ -181,36 +182,3 @@ def t1_b0_registration_pipeline(
         (destrieux_in_diffusion_space, datasink, [('out_deformed_image', 'dwi.@out_destrieux_in_diffusion_space')])
     ])
     return wf
-
-
-
-def ants_registration_syn_quick(fixe_image, moving_image):
-
-        import subprocess
-        import os.path as op
-
-        image_warped = op.abspath('SyN_QuickWarped.nii.gz')
-        affine_matrix = op.abspath('SyN_Quick0GenericAffine.mat')
-        warp = op.abspath('SyN_Quick1Warp.nii.gz')
-        inverse_warped = op.abspath('SyN_QuickInverseWarped.nii.gz')
-        inverse_warp = op.abspath('SyN_Quick1InverseWarp.nii.gz')
-
-        cmd = 'antsRegistrationSyNQuick.sh -t br -d 3 -f ' + fixe_image + ' -m ' + moving_image + ' -o SyN_Quick'
-        subprocess.call([cmd], shell=True)
-
-        return image_warped, affine_matrix, warp, inverse_warped, inverse_warp
-
-def antscombintransform(in_file, transforms_list, reference):
-
-        import os
-        import os.path as op
-
-        out_warp = op.abspath('out_warp.nii.gz')
-
-        transforms = ""
-        for trans in transforms_list:
-            transforms += " " + trans
-        cmd = 'antsApplyTransforms -o [out_warp.nii.gz,1] -i ' + in_file + ' -r ' + reference + ' -t' + transforms
-        os.system(cmd)
-
-        return out_warp
