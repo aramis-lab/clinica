@@ -1,7 +1,5 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """This module contains MRtrix utilities."""
+
 
 def dilate_mask(in_mask, npass=4, nthreads=2):
     """

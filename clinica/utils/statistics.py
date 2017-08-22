@@ -1,7 +1,8 @@
 
 def permutation_test(vector_1, vector_2, number_of_permutation, tails=2):
     """
-    This function take two vectors as entry and return the p_value of a permutation test. 
+    This function take two vectors as entry and return the p_value
+    of a permutation test.
     If permutation not done, p_value is set to 1.
     This function performs a two tails permutation on *non-nul values*
     If tails is set to 1 the contrast is supposed to be vector_1 > vector_2
@@ -9,7 +10,6 @@ def permutation_test(vector_1, vector_2, number_of_permutation, tails=2):
     WARNING: here 0 are not removed from the dataset
     If tails is set to 1 the contrast is supposed to be vector_1 > vector_2
     """
-    
     import numpy as np
     
     def exact_mc_perm_test(xs, ys, nmc, tails=2):
@@ -42,7 +42,8 @@ def permutation_test(vector_1, vector_2, number_of_permutation, tails=2):
 
 def t_test(vector_1, vector_2, tails=2):
     """
-    This function take two vectors as entry and return the p_value. of a t_test. 
+    This function takes two vectors as entry and return the p-value
+    of a t_test.
     If the t_test not done (only zeros in both vectors), p_value is set to 1.
     This function performs a t_test on *non-nul values*.
     If tails is set to 1 the contrast is supposed to be vector_1 > vector_2.
@@ -105,10 +106,12 @@ def mann_whitney(vector_1, vector_2, tails=2):
 
 def fdr_correction_matrix(p_value_matrix, template=None):
     """
-    This function take a p value matrix as entry and return the p_value corrected for False Rate Discovery. 
-    If not all statistical tests have been performed (typically in DTI at a absent connection) a template
-    matrix (which is a binary metrix with 1 if the test is performed and 0 else) with the same shape as 
-    p_value_matrix input of the actually performed test can be provide at input.
+    This function take a p value matrix as entry and return the corrected
+    p_value for False Rate Discovery.
+    If not all statistical tests have been performed (typically in DTI at
+    a absent connection) a template matrix (which is a binary metrix with 1
+    if the test is performed and 0 else) with the same shape as p_value_matrix
+    input of the actually performed test can be provide at input.
     """
     
     import numpy as np
@@ -116,7 +119,8 @@ def fdr_correction_matrix(p_value_matrix, template=None):
     
     if type(template) == type(p_value_matrix):
         if p_value_matrix.shape != template.shape:
-            raise IOError('p_value_matrix and template should have the same shape.')
+            raise IOError(
+                'p_value_matrix and template should have the same shape.')
          
     if type(template) == type(p_value_matrix):
         p_value_corrected = np.ones(p_value_matrix.shape)
@@ -181,17 +185,19 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
     """
     Compute statistics of a map on an atlas.
 
-    Given an atlas image with a set of ROIs, this function computes the mean of a normalized map (e.g. GM segmentation,
-    FA map from DTI, etc.) on each ROI.
+    Given an atlas image with a set of ROIs, this function computes the mean of
+    a normalized map (e.g. GM segmentation, FA map from DTI, etc.) on each ROI.
 
     Args:
-        in_normalized_map (str): File containing a scalar image registered on the atlas.
-        in_atlas (str): An atlas with a set of ROI. These ROI are used to compute statistics.
+        in_normalized_map (str): File containing a scalar image registered
+            on the atlas.
+        in_atlas (:obj: AbstractClass): An atlas with a set of ROI. These ROI
+            are used to compute statistics.
         out_file (Optional[str]): Name of the output file.
 
     Returns:
-        out_file (str): TSV file containing the statistics (content of the columns:
-            label, mean scalar, std of the scalar', number of voxels).
+        out_file (str): TSV file containing the statistics (content of the
+            columns: label, mean scalar, std of the scalar', number of voxels).
     """
     from clinica.utils.atlas import AtlasAbstract
     import nibabel as nib
@@ -207,7 +213,8 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
         if ext == ".gz":
             fname, ext2 = op.splitext(fname)
             ext = ext2 + ext
-        out_file = op.abspath("%s_statistics_%s.tsv" % (fname, in_atlas.get_name_atlas()))
+        out_file = op.abspath("%s_statistics_%s.tsv"
+                              % (fname, in_atlas.get_name_atlas()))
 
     atlas_labels = nib.load(in_atlas.get_atlas_labels())
     atlas_image_data = atlas_labels.get_data()
@@ -216,14 +223,19 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
     in_image = nib.load(in_normalized_map)
     scalar_image_data = in_image.get_data()
 
-    subjects_visits = pandas.io.parsers.read_csv(in_atlas.get_tsv_roi(), sep='\t')
+    subjects_visits = pandas.io.parsers.read_csv(
+        in_atlas.get_tsv_roi(), sep='\t')
     label_list = list(subjects_visits.roi_name)
 
     stats_scalar = np.zeros((len(list_roi), 2))
     for index, index_label in enumerate(list_roi):
         atlas_label_index = np.array(np.where(atlas_image_data == index_label))
         stats_scalar[index, 0] = index
-        labeled_voxel = scalar_image_data[atlas_label_index[0, :], atlas_label_index[1, :], atlas_label_index[2, :]]
+        labeled_voxel = scalar_image_data[
+            atlas_label_index[0, :],
+            atlas_label_index[1, :],
+            atlas_label_index[2, :]
+        ]
         average_voxel = labeled_voxel.mean()
         stats_scalar[index, 1] = average_voxel
 

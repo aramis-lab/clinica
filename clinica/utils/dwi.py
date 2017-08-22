@@ -16,7 +16,7 @@ def merge_volumes_tdim(in_file1, in_file2):
     import os
 
     out_file = op.abspath('merged_files.nii.gz')
-    cmd = 'fslmerge -t ' + out_file + ' ' + in_file1 + ' ' + in_file2
+    cmd = 'fslmerge -t %s %s %s ' % (out_file, in_file1, in_file2)
     os.system(cmd)
     return out_file
 
@@ -27,7 +27,8 @@ def count_b0s(in_bval, low_bval=5.0):
 
     Args:
         in_bval (str): bval file.
-        low_bval (Optional[int]): Define the b0 volumes as all volume bval <= lowbval. (Default=5.0)
+        low_bval (Optional[int]): Define the b0 volumes as all volume
+            bval <= lowbval. (Default=5.0)
 
     Returns:
         num_b0s: Number of b0s.
@@ -90,7 +91,8 @@ def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
         in_dwi (str): DWI dataset.
         in_bval (str): File describing the b-values of the DWI dataset.
         in_bvec (str): File describing the directions of the DWI dataset.
-        low_bval (Optional[int]): Define the b0 volumes as all volume bval <= lowbval. (Default=5.0)
+        low_bval (Optional[int]): Define the b0 volumes as all volume
+            bval <= lowbval. (Default=5.0)
 
     Returns:
         out_b0 (str): The set of b<=low_bval volumes.
@@ -116,7 +118,8 @@ def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
     bvecs = np.loadtxt(in_bvec)
 
     if bvals.shape[0] == bvecs.shape[0]:
-        warnings.warn("Warning - The b-vectors file should be column-wise: the b-vectors will be transposed",
+        warnings.warn('Warning: The b-vectors file should be column-wise. '
+                      + 'The b-vectors will be transposed',
                       UserWarning)
         bvecs = bvecs.T
 
@@ -142,7 +145,9 @@ def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
     out_bvals = op.abspath('bvals')
     np.savetxt(out_bvals, bvals_dwi, fmt='%d', delimiter=' ')
 
-    bvecs_dwi = np.array([bvecs[0][dwi_bvals].tolist(), bvecs[1][dwi_bvals].tolist(), bvecs[2][dwi_bvals].tolist()])
+    bvecs_dwi = np.array([bvecs[0][dwi_bvals].tolist(),
+                          bvecs[1][dwi_bvals].tolist(),
+                          bvecs[2][dwi_bvals].tolist()])
     out_bvecs = op.abspath('bvecs')
     np.savetxt(out_bvecs, bvecs_dwi, fmt='%10.5f', delimiter=' ')
 
@@ -151,7 +156,8 @@ def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
 
 def insert_b0_into_dwi(in_b0, in_dwi, in_bval, in_bvec):
     """
-    This function inserts a b0 volume into the dwi dataset as the first volume and updates the bvals and bvecs files.
+    This function inserts a b0 volume into the dwi dataset as the first volume
+    and updates the bvals and bvecs files.
 
     Args:
         in_b0 (str): One b=0 volume (could be the average of a b0 dataset).
@@ -196,28 +202,28 @@ def insert_b0_into_dwi(in_b0, in_dwi, in_bval, in_bvec):
 
 def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
     """
-    This function prepare the data for further corrections. It coregisters the B0 images and then
-    average it in order to obtain only one average B0 images.
+    This function prepare the data for further corrections. It coregisters
+    the B0 images and then average it in order to obtain only
+    one average B0 images.
 
     Args:
         in_dwi (str): Input DWI file.
-        in_bvec (str): Vector file of the diffusion directions of the dwi dataset.
+        in_bvec (str): Vector file of the diffusion directions of
+            the dwi dataset.
         in_bval (str): B-values file.
         low_bval (optional[int]):
 
     Returns:
         out_reference_b0 (str): Average of the B0 images or the only B0 image.
-        out_b0_mask (str): Binary mask obtained from the average of the B0 images.
+        out_b0_mask (str): Binary mask obtained from the average of
+            the B0 images.
         out_b0_dwi_merge (str): Average of B0 images merged to the DWIs.
         out_updated_bval (str): Updated gradient values table.
         out_updated_bvec (str): Updated gradient vectors table.
     """
-    import nipype.interfaces.fsl as fsl
-    import nipype.interfaces.utility as niu
-    import nipype.pipeline.engine as pe
-    import nipype.interfaces.io as nio
 
-    from clinica.utils.dwi import insert_b0_into_dwi, b0_dwi_split, count_b0s, b0_average
+    from clinica.utils.dwi import (insert_b0_into_dwi, b0_dwi_split,
+                                   count_b0s, b0_average)
     from clinica.workflows.dwi_preprocessing import b0_flirt_pipeline
     from clinica.utils.stream import cprint
 
@@ -225,15 +231,14 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
 
     import tempfile
 
-    from clinica.utils.check_dependency import check_fsl
-
     # Count the number of b0s
     nb_b0s = count_b0s(in_bval=in_bval, low_bval=low_bval)
-    cprint('Found ' + str(nb_b0s) + ' b0 for ' + in_dwi)
+    cprint('Found %s b0 for %s' % (nb_b0s, in_dwi))
 
     # Split dataset into two datasets: the b0 and the b>low_bval datasets
     [extracted_b0, out_split_dwi, out_split_bval, out_split_bvec] = \
-        b0_dwi_split(in_dwi=in_dwi, in_bval=in_bval, in_bvec=in_bvec, low_bval=low_bval)
+        b0_dwi_split(
+            in_dwi=in_dwi, in_bval=in_bval, in_bvec=in_bvec, low_bval=low_bval)
 
     if nb_b0s == 1:
         # The reference b0 is the extracted b0
@@ -248,13 +253,17 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
         b0_flirt.run()
 
         # out_node = b0_flirt.get_node('outputnode')
-        registered_b0s = op.abspath(tmp_dir + '/b0_coregistration/concat_ref_moving/merged_files.nii.gz')
+        registered_b0s = op.abspath(
+            tmp_dir
+            + '/b0_coregistration/concat_ref_moving/merged_files.nii.gz')
         cprint('B0 s will be avg...(file = ' + registered_b0s + ')')
         # Average the b0s to obtain the reference b0
         out_reference_b0 = b0_average(in_file=registered_b0s)
         cprint('B0s are merged!!!!!!')
     else:
-        raise ValueError('The number of b0s should be strictly positive (b-val file =' + in_bval + ').')
+        raise ValueError(
+            'The number of b0s should be strictly positive (b-val file =%s).'
+            % in_bval)
 
     # Merge datasets such that bval(DWI) = (0 b1 ... bn)
     [out_b0_dwi_merge, out_updated_bval, out_updated_bvec] = \
@@ -275,27 +284,19 @@ def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
     Selects the reference ('out_ref') and moving ('out_mov') volumes
     from a dwi dataset for the purpose of head motion correction (HMC).
 
-    Parameters
-    ----------
-    in_file : FILE
-      Mandatory input. Dwi dataset.
-    in_bval : FILE
-      Mandatory input. Bval file.
-    ref_num : INT
-      Optional input. The reference volume in the dwi dataset. Default ref_num= 0.
-    lowbval : FLOAT
-      Optional input. Define the volumes with low bval. All volume bval <= lowbval. Default lowbval=5.0
+    Args:
+        in_file (str): DWI dataset.
+        in_bval (str): File describing the b-values of the DWI dataset.
+        ref_num (Optional[str]): The reference volume in the dwi dataset.
+            Default ref_num= 0.
+        lowbval (Optional[int]): Define the b0 volumes as all volume
+            bval <= lowbval. (Default=5.0)
+    Returns:
+        out_ref (str): The reference volume.
+        out_mov (str): The moving volume to align to the reference volume.
+        out_bval (str): The b-values corresponding to the moving volume.
+        volid (int): Index of the reference volume.
 
-    Outputs
-    ------
-    out_ref : FILE
-      Output. The reference volume.
-    out_mov : FILE
-     Output. The moving volume to align to the reference volume.
-    out_bval : FILE
-     Output. The bvalues corresonding to the moving volume.
-    volid : INT
-      Index of the reference volume.
     """
     import numpy as np
     import nibabel as nib
