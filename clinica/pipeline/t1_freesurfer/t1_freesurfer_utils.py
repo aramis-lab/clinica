@@ -233,8 +233,6 @@ def write_statistics_per_subject(subject_id, output_dir):
 
     """
 
-    import os, errno
-
     subject_list = subject_id.split('_')[0]
     session_list = subject_id.split('_')[1]
     # name all the 26 tsv output files.
