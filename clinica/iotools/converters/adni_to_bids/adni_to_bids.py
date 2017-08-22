@@ -13,7 +13,7 @@ __email__ = "sabrina.fontanella@icm-institute.org"
 __status__ = "Development"
 
 
-class ADNI_TO_BIDS(Converter):
+class AdniToBids(Converter):
 
     def get_modalities_supported(self):
         return ['T1', 'PET_FDG', 'PET_AV45']
@@ -32,7 +32,7 @@ class ADNI_TO_BIDS(Converter):
         import pandas as pd
         from glob import glob
         from os.path import normpath
-        import iotools.converters.adni_to_bids.adni_utils as adni_utils
+        import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
 
         clinic_specs_path = path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'data',
                                       'clinical_specifications_adni.xlsx')
@@ -46,7 +46,7 @@ class ADNI_TO_BIDS(Converter):
         bids_subjs_paths = bids.get_bids_subjs_paths(out_path)
 
         # -- Creation of participant.tsv --
-        logging.info("--Creation of sessions files. --")
+        logging.info("--Creating sessions files. --")
         participants_df = bids.create_participants_df('ADNI', clinic_specs_path, clinical_data_dir, bids_ids)
 
         # Replace the original values with the standard defined by the AramisTeam
@@ -56,63 +56,13 @@ class ADNI_TO_BIDS(Converter):
         participants_df.to_csv(path.join(out_path, 'participants.tsv'), sep='\t', index=False)
 
         # -- Creation of sessions.tsv --
-        logging.info("--Creation of sessions files. --")
+        logging.info("--Creating of sessions files. --")
         print("\nCreation of sessions files...")
         adni_utils.create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bids_subjs_paths)
 
         # -- Creation of scans files --
-        print 'Creation of scans files...'
-        scans_dict = {}
-
-        for bids_id in bids_ids:
-            scans_dict.update({bids_id: {'T1/DWI/fMRI': {}, 'FDG': {}}})
-
-        scans_specs = pd.read_excel(clinic_specs_path, sheetname='scans.tsv')
-        scans_fields_db = scans_specs['ADNI']
-        scans_fields_bids = scans_specs['BIDS CLINICA']
-        scans_fields_mod = scans_specs['Modalities related']
-        fields_bids = ['filename']
-
-        for i in range(0, len(scans_fields_db)):
-            if not pd.isnull(scans_fields_db[i]):
-                fields_bids.append(scans_fields_bids[i])
-
-        scans_df = pd.DataFrame(columns=(fields_bids))
-
-        for bids_subj_path in bids_subjs_paths:
-            # Create the file
-            bids_id = os.path.basename(normpath(bids_subj_path))
-
-            sessions_paths = glob(path.join(bids_subj_path, 'ses-*'))
-            for session_path in sessions_paths:
-                session_name = session_path.split(os.sep)[-1]
-                tsv_name = bids_id + '_' + session_name + "_scans.tsv"
-
-                # If the file already exists, remove it
-                if os.path.exists(path.join(session_path, tsv_name)):
-                    os.remove(path.join(session_path, tsv_name))
-
-                scans_tsv = open(path.join(session_path, tsv_name), 'a')
-                scans_df.to_csv(scans_tsv, sep='\t', index=False)
-
-                # Extract modalities available for each subject
-                mod_available = glob(path.join(session_path, '*'))
-                for mod in mod_available:
-                    mod_name = os.path.basename(mod)
-                    files = glob(path.join(mod, '*'))
-                    for file in files:
-                        file_name = os.path.basename(file)
-                        if mod == "anat" or mod == "dwi" or mod == "func":
-                            type_mod = 'T1/DWI/fMRI'
-                        else:
-                            type_mod = 'FDG'
-
-                        scans_df['filename'] = pd.Series(path.join(mod_name, file_name))
-                        scans_df.to_csv(scans_tsv, header=False, sep='\t', index=False)
-
-                scans_df = pd.DataFrame(columns=(fields_bids))
-
-        print '-- Scans files created for each subject. --'
+        print 'Creating of scans files...'
+        adni_utils.create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids)
 
     def convert_images(self, source_dir, clinical_dir, dest_dir, subjs_list_path='', mod_to_add=''):
         '''
@@ -129,7 +79,6 @@ class ADNI_TO_BIDS(Converter):
         import os
         from os import path
         import pandas as pd
-        import iotools.converters.adni_to_bids.adni_utils as adni_utils
         import adni_modalities.adni_t1 as adni_t1
         import adni_modalities.adni_av45_pet as adni_av45
         import adni_modalities.adni_fdg_pet as adni_fdg
@@ -138,8 +87,10 @@ class ADNI_TO_BIDS(Converter):
         adni_merge = pd.read_csv(adni_merge_path)
         paths_files_location = path.join(dest_dir, 'conversion_info')
 
+        print subjs_list_path
+
         # Load a file with subjects list or compute all the subjects
-        if subjs_list_path != '':
+        if subjs_list_path is not None and subjs_list_path!='':
             subjs_list = [line.rstrip('\n') for line in open(subjs_list_path)]
         else:
             print 'Using all the subjects contained into ADNI merge...'
@@ -167,8 +118,3 @@ class ADNI_TO_BIDS(Converter):
             pet_av45_paths = adni_av45.compute_av45_pet_paths(source_dir, clinical_dir, dest_dir, subjs_list)
             print 'Done!'
             adni_av45.convert_adni_av45_pet(source_dir, clinical_dir, dest_dir, subjs_list)
-
-
-
-
-
