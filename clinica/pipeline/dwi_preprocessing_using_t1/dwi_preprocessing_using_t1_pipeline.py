@@ -1,7 +1,8 @@
 """DWI Preprocessing using T1 - Clinica Pipeline.
 This file has been generated automatically by the `clinica generate template`
 command line tool.
-See here for more details: https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
+See here for more details:
+https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
 """
 
 import clinica.pipeline.engine as cpe
@@ -29,7 +30,7 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
 
 
     Example:
-        >>> from dwi_preprocessing_using_t1 import DWIPreprocessingusingT1
+        >>> from dwi_preprocessing_using_t1 import DWIPreprocessingUsingT1
         >>> pipeline = DWIPreprocessingusingT1('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipeline.parameters = {
         >>>     # ...
@@ -37,8 +38,8 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
         >>> pipeline.base_dir = '/tmp/'
         >>> pipeline.run()
     """
-    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None,
-                 low_bval=5, save_intermediate_files=False):
+    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None,
+                 name=None, low_bval=5, save_intermediate_files=False):
         """
 
         Args:
@@ -47,12 +48,16 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
             tsv_file:
             name:
             low_bval (int):
-            save_intermediate_files (optional[bool]): Save intermediate results for debugging purposes (default: False)
+            save_intermediate_files (optional[bool]): Save intermediate results
+                for debugging purposes (default: False)
         """
         import warnings
 
         super(DWIPreprocessingUsingT1, self).__init__(
-            bids_directory=bids_directory, caps_directory=caps_directory, tsv_file=tsv_file, name=name)
+            bids_directory=bids_directory,
+            caps_directory=caps_directory,
+            tsv_file=tsv_file,
+            name=name)
 
         self._low_bval = low_bval
         self._save_intermediate_files = save_intermediate_files
@@ -87,7 +92,8 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
         Returns:
             A list of (string) output fields name.
         """
-        output_list = ['preproc_dwi', 'preproc_bvec', 'preproc_bval', 'b0_mask']
+        output_list = ['preproc_dwi', 'preproc_bvec', 'preproc_bval',
+                       'b0_mask']
         #        if self._save_intermediate_files is True:
         #            output_list = [output_list, 'some_results']
 
@@ -107,14 +113,17 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
 
         cprint('Reading BIDS dataset')
         for i in range(len(self.subjects)):
-            cprint('------- SUBJECT ' + self.subjects[i] + ' SESSION ' + self.sessions[i] + ' -------')
+            cprint('------- SUBJECT %s SESSION %s -------'
+                   % (self.subjects[i], self.sessions[i]))
 
             # Check b-val file and compute the nb of b0 from file:
-            bval_file = self.bids_layout.get(return_type='file',
-                                             type='dwi',
-                                             extensions=['bval'],
-                                             session=self.sessions[i].replace('ses-', ''),
-                                             subject=self.subjects[i].replace('sub-', ''))
+            bval_file = self.bids_layout.get(
+                return_type='file',
+                type='dwi',
+                extensions=['bval'],
+                session=self.sessions[i].replace('ses-', ''),
+                subject=self.subjects[i].replace('sub-', '')
+            )
             if len(bval_file) != 1:
                 raise IOError('Expected to find 1 bval file file for subject '
                               + self.subjects[i]
@@ -124,14 +133,17 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
                               + str(len(bval_file))
                               + ' bval instead.')
             else:
-                list_num_b0s.append(count_b0s(in_bval=bval_file[0], low_bval=self._low_bval))
+                list_num_b0s.append(count_b0s(in_bval=bval_file[0],
+                                              low_bval=self._low_bval))
 
             # Check b-vec file:
-            bvec_file = self.bids_layout.get(return_type='file',
-                                             type='dwi',
-                                             extensions=['bvec'],
-                                             session=self.sessions[i].replace('ses-', ''),
-                                             subject=self.subjects[i].replace('sub-', ''))
+            bvec_file = self.bids_layout.get(
+                return_type='file',
+                type='dwi',
+                extensions=['bvec'],
+                session=self.sessions[i].replace('ses-', ''),
+                subject=self.subjects[i].replace('sub-', '')
+            )
             if len(bvec_file) != 1:
                 raise IOError('Expected to find 1 bvec file file for subject '
                               + self.subjects[i]
@@ -142,11 +154,13 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
                               + ' bvec instead.')
 
             # Check DWI file:
-            dwi_file = self.bids_layout.get(return_type='file',
-                                            type='dwi',
-                                            extensions=['.nii|.nii.gz'],
-                                            session=self.sessions[i].replace('ses-', ''),
-                                            subject=self.subjects[i].replace('sub-', ''))
+            dwi_file = self.bids_layout.get(
+                return_type='file',
+                type='dwi',
+                extensions=['.nii|.nii.gz'],
+                session=self.sessions[i].replace('ses-', ''),
+                subject=self.subjects[i].replace('sub-', '')
+            )
             if len(dwi_file) != 1:
                 raise IOError('Expected to find 1 dwi file file for subject '
                               + self.subjects[i]
@@ -157,11 +171,13 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
                               + ' dwi instead.')
 
             # Check T1w file:
-            t1_file = self.bids_layout.get(return_type='file',
-                                           type='T1w',
-                                           extensions=['.nii|.nii.gz'],
-                                           session=self.sessions[i].replace('ses-', ''),
-                                           subject=self.subjects[i].replace('sub-', ''))
+            t1_file = self.bids_layout.get(
+                return_type='file',
+                type='T1w',
+                extensions=['.nii|.nii.gz'],
+                session=self.sessions[i].replace('ses-', ''),
+                subject=self.subjects[i].replace('sub-', '')
+            )
             if len(t1_file) != 1:
                 raise IOError('Expected to find 1 T1w file file for subject '
                               + self.subjects[i]
@@ -183,7 +199,8 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
 
         # T1 DataGrabber
         t1_bids_reader = npe.Node(
-            nio.DataGrabber(infields=['subject_id', 'session', 'subject_repeat', 'session_repeat'],
+            nio.DataGrabber(infields=['subject_id', 'session',
+                                      'subject_repeat', 'session_repeat'],
                             outfields=['out_files']), name='t1_bids_reader')
         t1_bids_reader.inputs.base_directory = self.bids_directory
         t1_bids_reader.inputs.template = '%s/%s/anat/%s_%s_T1w.nii*'
@@ -191,7 +208,8 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
 
         # DWI DataGrabber
         dwi_bids_reader = npe.Node(
-            nio.DataGrabber(infields=['subject_id', 'session', 'subject_repeat', 'session_repeat'],
+            nio.DataGrabber(infields=['subject_id', 'session',
+                                      'subject_repeat', 'session_repeat'],
                             outfields=['out_files']), name='dwi_bids_reader')
         dwi_bids_reader.inputs.base_directory = self.bids_directory
         dwi_bids_reader.inputs.template = '%s/%s/dwi/%s_%s_dwi.nii*'
@@ -199,7 +217,8 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
 
         # Bval DataGrabber
         bval_bids_reader = npe.Node(
-            nio.DataGrabber(infields=['subject_id', 'session', 'subject_repeat', 'session_repeat'],
+            nio.DataGrabber(infields=['subject_id', 'session',
+                                      'subject_repeat', 'session_repeat'],
                             outfields=['out_files']), name='bval_bids_reader')
         bval_bids_reader.inputs.base_directory = self.bids_directory
         bval_bids_reader.inputs.template = '%s/%s/dwi/%s_%s_dwi.bval'
@@ -207,7 +226,8 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
 
         # Bvec dataGrabber
         bvec_bids_reader = npe.Node(
-            nio.DataGrabber(infields=['subject_id', 'session', 'subject_repeat', 'session_repeat'],
+            nio.DataGrabber(infields=['subject_id', 'session',
+                                      'subject_repeat', 'session_repeat'],
                             outfields=['out_files']), name='bvec_bids_reader')
         bvec_bids_reader.inputs.base_directory = self.bids_directory
         bvec_bids_reader.inputs.template = '%s/%s/dwi/%s_%s_dwi.bvec'
@@ -215,27 +235,27 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
 
         self.connect([
             # Iterables:
-            (iterables_node,      t1_bids_reader,  [('subject_id',          'subject_id'),
-                                                    ('session_id',             'session'),
-                                                    ('subject_id',      'subject_repeat'),
-                                                    ('session_id',    'session_repeat')]),
-            (iterables_node,     dwi_bids_reader,  [('subject_id',          'subject_id'),
-                                                    ('session_id',             'session'),
-                                                    ('subject_id',      'subject_repeat'),
-                                                    ('session_id',    'session_repeat')]),
-            (iterables_node,     bval_bids_reader, [('subject_id',          'subject_id'),
-                                                    ('session_id',             'session'),
-                                                    ('subject_id',      'subject_repeat'),
-                                                    ('session_id',    'session_repeat')]),
-            (iterables_node,     bvec_bids_reader, [('subject_id',          'subject_id'),
-                                                    ('session_id',             'session'),
-                                                    ('subject_id',      'subject_repeat'),
-                                                    ('session_id',    'session_repeat')]),
+            (iterables_node,      t1_bids_reader,  [('subject_id',       'subject_id'),  # noqa
+                                                    ('session_id',          'session'),  # noqa
+                                                    ('subject_id',   'subject_repeat'),  # noqa
+                                                    ('session_id', 'session_repeat')]),  # noqa
+            (iterables_node,     dwi_bids_reader,  [('subject_id',       'subject_id'),  # noqa
+                                                    ('session_id',          'session'),  # noqa
+                                                    ('subject_id',   'subject_repeat'),  # noqa
+                                                    ('session_id', 'session_repeat')]),  # noqa
+            (iterables_node,     bval_bids_reader, [('subject_id',       'subject_id'),  # noqa
+                                                    ('session_id',          'session'),  # noqa
+                                                    ('subject_id',   'subject_repeat'),  # noqa
+                                                    ('session_id', 'session_repeat')]),  # noqa
+            (iterables_node,     bvec_bids_reader, [('subject_id',       'subject_id'),  # noqa
+                                                    ('session_id',          'session'),  # noqa
+                                                    ('subject_id',   'subject_repeat'),  # noqa
+                                                    ('session_id', 'session_repeat')]),  # noqa
             # Inputnode:
-            (t1_bids_reader,     self.input_node,  [('out_files',                'T1w')]),
-            (dwi_bids_reader,    self.input_node,  [('out_files',                'dwi')]),
-            (bval_bids_reader,   self.input_node,  [('out_files',               'bval')]),
-            (bvec_bids_reader,   self.input_node,  [('out_files',               'bvec')])
+            (t1_bids_reader,     self.input_node,  [('out_files',             'T1w')]),  # noqa
+            (dwi_bids_reader,    self.input_node,  [('out_files',             'dwi')]),  # noqa
+            (bval_bids_reader,   self.input_node,  [('out_files',            'bval')]),  # noqa
+            (bvec_bids_reader,   self.input_node,  [('out_files',            'bvec')])   # noqa
         ])
 
     def build_output_node(self):
@@ -251,10 +271,11 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
 
         # Find container path from pet filename
         # =====================================
-        container_path = npe.Node(nutil.Function(input_names=['dwi_filename'],
-                                                 output_names=['container'],
-                                                 function=utils.dwi_container_from_filename),
-                                  name='container_path')
+        container_path = npe.Node(nutil.Function(
+            input_names=['dwi_filename'],
+            output_names=['container'],
+            function=utils.dwi_container_from_filename),
+            name='container_path')
         # container_path.inputs.threshold = self.parameters['mask_threshold']
 
         # Writing results into CAPS
@@ -265,13 +286,12 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
         write_results.inputs.parameterization = False
 
         self.connect([
-           (self.input_node, container_path, [('dwi', 'dwi_filename')]),
-
-           (container_path,   write_results, [(('container', join, 'dwi'), 'container')]),
-           (self.output_node, write_results, [('preproc_dwi',  'preprocessing.@preproc_dwi'),
-                                              ('preproc_bvec', 'preprocessing.@preproc_bvec'),
-                                              ('preproc_bval', 'preprocessing.@preproc_bval'),
-                                              ('b0_mask',      'preprocessing.@b0_mask')])
+           (self.input_node, container_path, [('dwi',                       'dwi_filename')]),  # noqa
+           (container_path,   write_results, [(('container',     join, 'dwi'), 'container')]),  # noqa
+           (self.output_node, write_results, [('preproc_dwi',   'preprocessing.@preproc_dwi'),  # noqa
+                                              ('preproc_bvec', 'preprocessing.@preproc_bvec'),  # noqa
+                                              ('preproc_bval', 'preprocessing.@preproc_bval'),  # noqa
+                                              ('b0_mask',         'preprocessing.@b0_mask')])   # noqa
         ])
 
     def build_core_nodes(self):
@@ -295,24 +315,25 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
         # Prepare b0 image for further corrections
         prepare_b0 = npe.Node(name="PrepareB0", interface=nutil.Function(
             input_names=['in_dwi', 'in_bval', 'in_bvec', 'low_bval'],
-            output_names=['out_reference_b0', 'out_b0_dwi_merge', 'out_updated_bval', 'out_updated_bvec'],
+            output_names=['out_reference_b0', 'out_b0_dwi_merge',
+                          'out_updated_bval', 'out_updated_bvec'],
             function=prepare_reference_b0))
         prepare_b0.inputs.low_bval = self._low_bval
         # Mask b0 for computations purposes
-        mask_b0_pre = npe.Node(fsl.BET(frac=0.3, mask=True, robust=True), name='PreMaskB0')
+        mask_b0_pre = npe.Node(fsl.BET(frac=0.3, mask=True, robust=True),
+                               name='PreMaskB0')
         # Head-motion correction
         hmc = hmc_pipeline(name='HeadMotionCorrection')
         # Eddy-currents correction
         ecc = ecc_pipeline(name='EddyCurrentCorrection')
         # Susceptibility distortion correction using T1w image
-        sdc = workflows.susceptibility_distortion_correction_using_t1(name='SusceptibilityDistortionCorrection')
+        sdc = workflows.susceptibility_distortion_correction_using_t1(
+            name='SusceptibilityDistortionCorrection')
         # Remove bias correction
         bias = remove_bias(name='RemoveBias')
-        #        # Final b0 mask after corrections
-        #        get_b0 = npe.Node(fsl.ExtractROI(t_min=0, t_size=1), name='GetCorrectedB0')
-        #        mask_b0_final = npe.Node(fsl.BET(frac=0.3, mask=True, robust=True), name='FinalMaskB0')
         # Apply all corrections
-        aac = workflows.apply_all_corrections_using_ants(name='ApplyAllCorrections')
+        aac = workflows.apply_all_corrections_using_ants(
+            name='ApplyAllCorrections')
 
         # Connection
         # ==========
@@ -346,12 +367,9 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
             (self.input_node, aac, [('T1w', 'inputnode.in_t1')]),
             # Bias correction
             (aac, bias, [('outputnode.out_file', 'inputnode.in_file')]),
-            #            # Extract b0 for final mask
-            #            (bias, get_b0, [('outputnode.out_file', 'in_file')]),
-            #            (get_b0, mask_b0_final, [('roi_file', 'in_file')]),
             # Outputnode:
-            (bias,       self.output_node, [('outputnode.out_file', 'preproc_dwi')]),
-            (hmc,        self.output_node, [('outputnode.out_bvec', 'preproc_bvec')]),
-            (prepare_b0, self.output_node, [('out_updated_bval', 'preproc_bval')]),
-            (bias,       self.output_node, [('outputnode.b0_mask', 'b0_mask')])
+            (bias,       self.output_node, [('outputnode.out_file',  'preproc_dwi')]),  # noqa
+            (hmc,        self.output_node, [('outputnode.out_bvec', 'preproc_bvec')]),  # noqa
+            (prepare_b0, self.output_node, [('out_updated_bval',    'preproc_bval')]),  # noqa
+            (bias,       self.output_node, [('outputnode.b0_mask',       'b0_mask')])   # noqa
         ])
