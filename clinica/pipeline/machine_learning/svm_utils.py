@@ -132,3 +132,54 @@ def results_to_tsv(results, diagnose_list, output_file):
         s += df.to_csv(sep='\t')
 
         output.write(s)
+
+
+def metric_distribution(metric, labels, output_path, num_classes=2, metric_label='balanced accuracy'):
+    """
+    Distribution plots of various metrics such as balanced accuracy!
+    metric is expected to be ndarray of size [num_repetitions, num_datasets]
+    """
+
+    import matplotlib.pyplot as plt
+    from matplotlib import cm
+    from matplotlib.backends.backend_pdf import PdfPages
+
+    num_repetitions = metric.shape[0]
+    num_datasets = metric.shape[1]
+    assert len(labels) == num_datasets, "Differing number of features and labels!"
+    method_ticks = 1.0 + np.arange(num_datasets)
+
+    fig, ax = plt.subplots(figsize=[3, 3])
+    line_coll = ax.violinplot(metric, widths=0.8, bw_method=0.2,
+                              showmedians=True, showextrema=False,
+                              positions=method_ticks)
+
+    cmap = cm.get_cmap('Paired', num_datasets)
+    for cc, ln in enumerate(line_coll['bodies']):
+        ln.set_facecolor(cmap(cc))
+        ln.set_label(labels[cc])
+
+    plt.legend(loc=2, ncol=num_datasets)
+
+    ax.tick_params(axis='both', which='major', labelsize=15)
+    ax.grid(axis='y', which='major')
+
+    lower_lim = np.round(np.min([ np.float64(0.9 / num_classes), metric.min() ]), 3)
+    upper_lim = np.round(np.max([ 1.01, metric.max() ]), 3)
+    step_tick = 0.1
+    ax.set_ylim(lower_lim, upper_lim)
+
+    ax.set_xticks(method_ticks)
+    ax.set_xlim(np.min(method_ticks) - 1, np.max(method_ticks) + 1)
+    ax.set_xticklabels(labels, rotation=45)  # 'vertical'
+
+    ax.set_yticks(np.arange(lower_lim, upper_lim, step_tick))
+    ax.set_yticklabels(np.arange(lower_lim, upper_lim, step_tick))
+    # plt.xlabel(xlabel, fontsize=16)
+    plt.ylabel(metric_label, fontsize=16)
+
+    fig.tight_layout()
+
+    pp1 = PdfPages(output_path + '.pdf')
+    pp1.savefig()
+    pp1.close()
