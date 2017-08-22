@@ -1,0 +1,16 @@
+{
+    "id": "aramislab/dwi-preprocessing-using-t1",
+    "author": ["John DOE"],
+    "version": "0.1.0",
+    "dependencies": [
+        {
+            "type": "software",
+            "name": "fsl",
+            "version": ">=5.0.9"
+        },
+        {
+            "type": "binary",
+            "name": "which"
+        }
+    ]
+}

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import abc
+
+
 class AtlasAbstract:
     """
     Abstract class for Atlas handling.
@@ -25,7 +27,8 @@ class AtlasAbstract:
         img_labels = nib.load(self.get_atlas_labels())
         voxels_map = img_map.header.get_zooms()
         voxels_labels = img_labels.header.get_zooms()
-        if (voxels_map[0]!=voxels_labels[0]) | (voxels_map[1]!=voxels_labels[1]) | (voxels_map[2]!=voxels_labels[2]):
+        if (voxels_map[0] != voxels_labels[0]) | (voxels_map[1] != voxels_labels[1]) | \
+                (voxels_map[2] != voxels_labels[2]):
         #if voxels_map != voxels_labels:
             print "Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas())
             #raise Exception(
@@ -75,8 +78,6 @@ class AtlasAbstract:
         for index, n in enumerate(labels):
             index_vector[index] = index
         return index_vector
-
-
 
 
 class JHUDTI81_2mm(AtlasAbstract):
@@ -141,8 +142,6 @@ class JHUDTI81_1mm(AtlasAbstract):
         if not CLINICA_HOME:
             raise Exception('CLINICA_HOME variable from Clinica software is not set')
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUDTI81_ROI.tsv')
-
-
 
 
 class JHUTracts0_1mm(AtlasAbstract):
@@ -308,7 +307,6 @@ class JHUTracts50_1mm(AtlasAbstract):
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
 
 
-
 class JHUTracts50_2mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
@@ -341,7 +339,6 @@ class JHUTracts50_2mm(AtlasAbstract):
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
 
 
-
 class AAL2(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
@@ -372,7 +369,6 @@ class AAL2(AtlasAbstract):
         if not CLINICA_HOME:
             raise Exception('CLINICA_HOME variable from Clinica software is not set')
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', 'AAL2_ROI.tsv')
-
 
 
 class Hammers(AtlasAbstract):
@@ -502,6 +498,7 @@ class Neuromorphometrics(AtlasAbstract):
             raise Exception('CLINICA_HOME variable from Clinica software is not set')
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', 'Neuromorphometrics_ROI.tsv')
 
+
 class MCALT_ADIR122(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
@@ -538,13 +535,11 @@ class AtlasLoader:
     def __init__(self, atlases=None):
         self.atlas = {}
         if atlases:
-            for atlas in atlases: self.add_atlas(atlas)
+            for atlas in atlases:
+                self.add_atlas(atlas)
 
     def add_atlas(self,atlas):
         if not isinstance(atlas, AtlasAbstract):
             raise Exception("Atlas element must be an AtlasAbstract type")
 
     def get_atlases(self): return self.atlas
-    
-    
-

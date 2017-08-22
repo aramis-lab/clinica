@@ -4,22 +4,26 @@
 """This module contains FreeSurfer utilities."""
 
 
-
-
-def freesurfer_volume_to_native_volume(freesurfer_volume, native_volume, name_output_volume=None):
+def freesurfer_volume_to_native_volume(
+        freesurfer_volume,
+        native_volume,
+        name_output_volume=None):
     """
     Convert FreeSurfer volume in native space.
 
     This function converts any volume in FreeSurfer's conformed space
     (1x1x1mm voxel size, 256x256x256 dimension) into a volume in native space.
 
-    For further details: https://surfer.nmr.mgh.harvard.edu/fswiki/FsAnat-to-NativeAnat
+    For further details:
+    https://surfer.nmr.mgh.harvard.edu/fswiki/FsAnat-to-NativeAnat
 
     Args:
-        freesurfer_volume (str): Volume in FreeSurfer's conformed space (e.g. aparc+aseg.mgz containing
-            the Desikan parcellation)
-        native_volume (str): Volume in native space (You should choose ${SUBJECTS_DIR}/subject_id/mri/rawavg.mgz).
-        name_output_volume (Optional[str]): Name of the output matrix (default=volume_in_native_space.nii.gz).
+        freesurfer_volume (str): Volume in FreeSurfer's conformed space
+            (e.g. aparc+aseg.mgz containing the Desikan parcellation)
+        native_volume (str): Volume in native space (You should choose
+            ${SUBJECTS_DIR}/subject_id/mri/rawavg.mgz).
+        name_output_volume (Optional[str]): Name of the output matrix
+            (default=volume_in_native_space.nii.gz).
 
     Returns:
         out_volume (str): volume in native space (the file is saved here:
@@ -38,9 +42,10 @@ def freesurfer_volume_to_native_volume(freesurfer_volume, native_volume, name_ou
     if name_output_volume is None:
         out_volume = op.abspath('volume_in_native_space.nii.gz')
     else:
-        out_volume = op.abspath(name_output_volume);
+        out_volume = op.abspath(name_output_volume)
 
-    cmd = 'mri_vol2vol --regheader --no-save-reg --mov ' + freesurfer_volume + ' --targ ' + native_volume + ' --o ' + out_volume
+    cmd = 'mri_vol2vol --regheader --no-save-reg --mov %s --targ %s --o %s' \
+          % (freesurfer_volume, native_volume, out_volume)
     os.system(cmd)
 
     return out_volume
@@ -83,6 +88,7 @@ def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv):
             print "Convert subject: %s from CAPS to FreeSurfer output structure" % subject_list[i]
             copytree(os.path.join(caps_dir, subject_list[i], session_list[i], 't1/freesurfer-cross-sectional', subject_list[i] + '_' + session_list[i]), os.path.join(dest_dir, subject_list[i] + '_' + session_list[i]))
             print "--------------Finish this subject!-----------------------"
+
 
 def volumetric_summary(subject_dir, subject_id, output_dir):
     """
@@ -236,6 +242,7 @@ def volumetric_summary(subject_dir, subject_id, output_dir):
     cmd_aparc_BA_rh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas meancurv --tablefile ' + aparc_BA_rh_meancurv_tsv
     os.system(cmd_aparc_BA_rh_meancurv)
 
+
 def write_volumetric_summary(output_dir, subjects_visits_tsv):
     """
         This func is to write the volumetric measurement after recon-all pipeline for all the subjects
@@ -269,6 +276,7 @@ def write_volumetric_summary(output_dir, subjects_visits_tsv):
     fs_tsv_summary.inputs.output_dir = output_dir
 
     return fs_tsv_summary
+
 
 def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
     """
@@ -304,6 +312,7 @@ def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
     fs_tsv_subject.inputs.output_dir = caps_dir
 
     return fs_tsv_subject
+
 
 def write_reconall_log_summary(caps_dir, subjects_visits_tsv):
     """
