@@ -31,17 +31,21 @@ def inner_grid_search(kernel_train, x_test, y_train, y_test, c, balanced=False):
 
 
 def select_best_c(async_res):
-    best_c = 0
-    best_acc = 0
 
-    k = async_res.keys()
-    k.sort()
+    c_values = []
+    accuracies = []
+    for fold in async_res.keys():
+        best_c = 0
+        best_acc = 0
+        for c, acc in async_res[fold].iteritems():
+            if acc > best_acc:
+                best_c = c
+                best_acc = acc
+        c_values.append(best_c)
+        accuracies.append(best_acc)
 
-    for c in k:
-        mean_acc = np.mean([res.get() for res in async_res[c].values()])
-        if mean_acc > best_acc:
-            best_acc = mean_acc
-            best_c = c
+    best_acc = np.mean(accuracies)
+    best_c = np.power(10, np.mean(np.log10(c_values)))
 
     return best_c, best_acc
 
@@ -49,6 +53,7 @@ def select_best_c(async_res):
 def outer_cross_validation(kernel_train, shared_x, train_indices, test_indices, x_test, y_train, y_test, async_res, balanced=False):
 
     best_c, best_acc = select_best_c(async_res)
+
     y_hat, auc = launch_svc(kernel_train, x_test, y_train, y_test, best_c, balanced, shared_x, train_indices, test_indices)
 
     result = dict()
@@ -68,8 +73,8 @@ def cv_svm(gram_matrix, shared_x, indices, y, c_range, balanced=False, outer_fol
     async_result = {}
     for i in range(outer_folds):
         async_result[i] = {}
-        for c in c_range:
-            async_result[i][c] = {}
+        for j in range(inner_folds):
+            async_result[i][j] = {}
 
     inner_pool = ThreadPool(n_threads)
 
@@ -95,7 +100,7 @@ def cv_svm(gram_matrix, shared_x, indices, y, c_range, balanced=False, outer_fol
 
             for c in c_range:
                 # print 'Launched %d, %d, %0.5f' %(i, j, c)
-                async_result[i][c][j] = inner_pool.apply_async(inner_grid_search, (inner_gram_matrix, x_test_inner, y_train_inner, y_test_inner, c, balanced))
+                async_result[i][j][c] = inner_pool.apply_async(inner_grid_search, (inner_gram_matrix, x_test_inner, y_train_inner, y_test_inner, c, balanced))
 
     #print 'All inner threads launched'
     inner_pool.close()
@@ -132,8 +137,10 @@ def cv_svm(gram_matrix, shared_x, indices, y, c_range, balanced=False, outer_fol
         best_c_list.append(res['best_c'])
         auc_list.append(res['auc'])
 
-    # Mode of best c for each iteration is selected
-    best_c = mode(best_c_list)[0][0]
+    # # Mean of best c of each fold is selected
+    # best_c = mode(best_c_list)[0][0]
+    best_c = np.power(10, np.mean(np.log10(best_c_list)))
+
     # Mean AUC
     auc = np.mean(auc_list)
 
