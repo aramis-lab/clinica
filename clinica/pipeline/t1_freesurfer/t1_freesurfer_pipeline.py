@@ -15,7 +15,7 @@ __credits__ = ["Michael Bacci", "Junhao Wen"]
 __license__ = "See LICENSE.txt file"
 __version__ = "1.0.0"
 __maintainer__ = "Junhao Wen"
-__email__ = "junhao.Wen@inria.fr"
+__email__ = "junhao.wen@inria.fr"
 __status__ = "Development"
 
 class T1FreeSurfer(cpe.Pipeline):

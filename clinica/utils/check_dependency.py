@@ -1,19 +1,18 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""This module contains utilities to check dependencies of the different
+neuroimaging tools."""
 
-"""This module contains utilities to check dependencies of the different neuroimaging tools."""
+from clinica.utils.stream import cprint
 
-from clinica.utils.stream import cprint, active_cprint
-
-active_cprint()
 
 def is_binary_present(binary):
     """
     Check if a binary is present.
 
-    This function checks if the program is present. Do not use this function with a binary GUI, it will open the GUI.
+    This function checks if the program is present. Do not use this function
+    with a binary GUI, it will open the GUI.
 
-    Taken from: https://stackoverflow.com/questions/11210104/check-if-a-program-exists-from-a-python-script
+    Taken from:
+    https://stackoverflow.com/questions/11210104/check-if-a-program-exists-from-a-python-script
 
     Args:
         binary (str): Name of the program.
@@ -52,7 +51,9 @@ def check_ants():
     list_binaries = ['N4BiasFieldCorrection', 'antsRegistrationSyNQuick.sh']
     for binary in list_binaries:
         if not is_binary_present(binary):
-            raise RuntimeError(binary + ' from FreeSurfer Software is not present in your PATH environment: did you source ${FREESURFER_HOME}/SetUpFreeSurfer.sh ?')
+            raise RuntimeError(
+                '%s from ANTs Software is not present '
+                'in your PATH environment.' % binary)
 
 
 def check_freesurfer():
@@ -62,8 +63,6 @@ def check_freesurfer():
     This function checks if FreeSurfer is present (FREESURFER_HOME & binaries).
     """
     import os
-    #from nipype.workflows.smri.freesurfer.utils import checkenv
-    #checkenv(True)
 
     try:
         freesurfer_home = os.environ.get('FREESURFER_HOME', '')
@@ -75,37 +74,45 @@ def check_freesurfer():
     list_binaries = ['mri_convert', 'recon-all']
     for binary in list_binaries:
         if not is_binary_present(binary):
-            raise RuntimeError(binary + ' from FreeSurfer Software is not present in your PATH environment: did you source ${FREESURFER_HOME}/SetUpFreeSurfer.sh ?')
-
+            raise RuntimeError(
+                '%s from FreeSurfer Software is not present in your PATH '
+                'environment: did you source ${FREESURFER_HOME}/' 
+                'SetUpFreeSurfer.sh ?' % binary)
 
 
 def check_fsl():
     """
     Check FSL software.
 
-    This function checks if FSL is present (FSLDIR & binaries) and if the version of FSL is recent.
+    This function checks if FSL is present (FSLDIR & binaries) and if the
+    version of FSL is recent.
     """
     import os
     import nipype.interfaces.fsl as fsl
+
+    from clinica.utils.stream import cprint
+
+    cprint('Checking FSL...')
 
     try:
         fsl_dir = os.environ.get('FSLDIR', '')
         if not fsl_dir:
             raise RuntimeError('FSLDIR variable is not set')
     except Exception as e:
-        print(str(e))
+        cprint(str(e))
 
     try:
         if fsl.Info.version().split(".") < ['5', '0', '5']:
             raise RuntimeError('FSL version must be greater than 5.0.5')
     except Exception as e:
-        print(str(e))
+        cprint(str(e))
 
     list_binaries = ['bet', 'flirt', 'fast', 'first']
     for binary in list_binaries:
         if not is_binary_present(binary):
-            raise RuntimeError(binary + ' from FSL Software is not present in your PATH environment.')
-
+            raise RuntimeError(
+                '%s from FSL Software is not present in your '
+                'PATH environment.' % binary)
 
 
 def check_mrtrix():
@@ -126,8 +133,9 @@ def check_mrtrix():
     list_binaries = ['transformconvert', 'mrtransform']
     for binary in list_binaries:
         if not is_binary_present(binary):
-            raise RuntimeError(binary + ' from MRtrix Software is not present in your PATH environment.')
-
+            raise RuntimeError(
+                '%s from MRtrix Software is not present in your '
+                'PATH environment.' % binary)
 
 
 def check_spm():
@@ -148,5 +156,7 @@ def check_spm():
     list_binaries = ['matlab']
     for binary in list_binaries:
         if not is_binary_present(binary):
-            raise RuntimeError(binary + ' from SPM Software is not present in your PATH environment.')
+            raise RuntimeError(
+                '%s from SPM Software is not present in your '
+                'PATH environment.' % binary)
 

@@ -64,8 +64,8 @@ class T1FreeSurferCLI(ce.CmdParser):
 
         # run the pipeline in n_procs cores based on your computation power.
         if args.n_procs:
-            pipeline.write_graph()
+            #pipeline.write_graph()
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         else:
-            pipeline.write_graph()
+            #pipeline.write_graph()
             pipeline.run()

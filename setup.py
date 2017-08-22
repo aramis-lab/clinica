@@ -31,7 +31,7 @@ setup(
     ],
     install_requires=[
         'nibabel>=2.0.2',
-        'nipype>=0.11.0,<0.13.0',  # the t1-freesurfer pipeline does not run with nipype>=0.13.0
+        'nipype>=0.13.0',  # the t1-freesurfer pipeline does not run with nipype>=0.13.0
         'pybids>=0.1',
         'dipy>=0.6.0',
         'argcomplete>=1.4.1',

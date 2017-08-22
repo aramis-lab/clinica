@@ -320,6 +320,8 @@ def execute():
     from clinica.pipeline.t1_freesurfer.t1_freesurfer_cli import T1FreeSurferCLI
     from clinica.pipeline.statistics_surfstat.statistics_surfstat_cli import StatisticsSurfstatCLI
     from clinica.pipeline.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI
+    from clinica.pipeline.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DWIPreprocessingUsingT1CLI
+    from clinica.pipeline.dwi_processing.dwi_processing_cli import DWIProcessingCLI
     run_parser = sub_parser.add_parser('run')
     pipelines = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
     # pipelines = load_modular_pipelines_parser()
@@ -329,10 +331,8 @@ def execute():
         T1SPMDartel2MNICLI(),
         T1SPMFullPrepCLI(),
         CmdParserT1FSL(),
-        CmdParserDWIPreprocessingPhaseDifferenceFieldmap(),
-        CmdParserDWIPreprocessingTwoPhaseImagesFieldmap(),
-        CmdParserDWIPreprocessingT1Based(),
-        CmdParserDWIProcessing(),
+        DWIPreprocessingUsingT1CLI(),
+        DWIProcessingCLI(),
         fMRIPreprocessingCLI(),
         T1FreeSurferCLI(),
         StatisticsSurfstatCLI(),
