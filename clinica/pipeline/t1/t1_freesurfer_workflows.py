@@ -90,7 +90,8 @@ def t1_freesurfer_pipeline(output_dir,
                             interface=Function(
                                 input_names=['subject_id', 'output_dir'],
                                 output_names=[],
-                                function=write_statistics_per_subject))
+                                function=write_statistics_per_subject,
+                                imports=['import os', 'import errno']))
     tsvmapnode.inputs.output_dir = output_dir
 
     lognode = pe.Node(name='lognode',

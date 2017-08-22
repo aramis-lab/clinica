@@ -307,7 +307,8 @@ def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
                                 interface=Function(
                                 input_names=['subject_id', 'output_dir'],
                                 output_names=[],
-                                function=write_statistics_per_subject))
+                                function=write_statistics_per_subject,
+                                imports=['import os', 'import errno']))
     fs_tsv_subject.inputs.subject_id = subject_id
     fs_tsv_subject.inputs.output_dir = caps_dir
 

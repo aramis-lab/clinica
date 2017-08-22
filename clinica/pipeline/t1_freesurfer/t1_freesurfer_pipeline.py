@@ -188,7 +188,8 @@ class T1FreeSurfer(cpe.Pipeline):
                                  interface=nutil.Function(
                                      input_names=['subject_id', 'output_dir'],
                                      output_names=[],
-                                     function=utils.write_statistics_per_subject))
+                                     function=utils.write_statistics_per_subject,
+                                     imports=['import os', 'import errno']))
         tsvmapnode.inputs.output_dir = self.caps_directory
 
         # Node to create the log file doing the first step quality check
