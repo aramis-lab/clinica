@@ -3,7 +3,8 @@
 
 def prepare_b0(num_b0s, low_bval=5, name='prepare_b0'):
     """
-    Create a pipeline that prepare the data for further corrections. This pipeline coregister the B0 images and then
+    Create a pipeline that prepare the data for further corrections. This
+    pipeline coregister the B0 images and then
     average it in order to obtain only one average B0 images.
     The b-vectors and b-values are updated according to the modifications.
 
@@ -14,7 +15,8 @@ def prepare_b0(num_b0s, low_bval=5, name='prepare_b0'):
 
     Inputnode:
         in_dwi (str): Input DWI file.
-        in_bvec (str): Vector file of the diffusion directions of the dwi dataset.
+        in_bvec (str): Vector file of the diffusion directions
+            of the dwi dataset.
         in_bval (str): B-values file.
 
     Outputnode:
@@ -50,7 +52,8 @@ def prepare_b0(num_b0s, low_bval=5, name='prepare_b0'):
         input_names=['in_file'], output_names=['out_file'],
         function=b0_average), name='b0_average')
 
-    mask_b0 = pe.Node(fsl.BET(frac=0.3, mask=True, robust=True), name='mask_b0')
+    mask_b0 = pe.Node(fsl.BET(frac=0.3, mask=True, robust=True),
+                      name='mask_b0')
 
     insert_b0_into_dwi = pe.Node(niu.Function(
         input_names=['in_b0', 'in_dwi', 'in_bvals', 'in_bvecs'],
@@ -58,54 +61,55 @@ def prepare_b0(num_b0s, low_bval=5, name='prepare_b0'):
         function=insert_b0_into_dwi), name='insert_b0avg_into_dwi')
 
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['mask_b0', 'b0_reference', 'dwi_b0_merge', 'out_bvecs', 'out_bvals']),
+        fields=['mask_b0', 'b0_reference', 'dwi_b0_merge',
+                'out_bvecs', 'out_bvals']),
         name='outputnode')
 
     wf = pe.Workflow(name=name)
 
     if num_b0s == 1:
         wf.connect([
-            # Split dataset into two datasets: the b0 and the b>low_bval datasets
-            (inputnode,            b0_dwi_split, [('in_bval',         'in_bvals'),
-                                                  ('in_bvec',         'in_bvecs'),
-                                                  ('in_dwi',         'in_file')]),
+            # Split dataset into two datasets (b0, b>low_bval)
+            (inputnode,          b0_dwi_split, [('in_bval',       'in_bvals'),
+                                                ('in_bvec',       'in_bvecs'),
+                                                ('in_dwi',       'in_file')]),
             # Merge datasets such that bval(DWI) = (0 b1 ... bn)
-            (b0_dwi_split,   insert_b0_into_dwi, [('out_b0',             'in_b0'),
-                                                  ('out_dwi',           'in_dwi'),
-                                                  ('out_bvals',       'in_bvals'),
-                                                  ('out_bvecs',     'in_bvecs')]),
+            (b0_dwi_split, insert_b0_into_dwi, [('out_b0',           'in_b0'),
+                                                ('out_dwi',         'in_dwi'),
+                                                ('out_bvals',     'in_bvals'),
+                                                ('out_bvecs',   'in_bvecs')]),
             # Compute b0 mask
-            (b0_dwi_split,              mask_b0, [('out_b0',         'in_file')]),
+            (b0_dwi_split,            mask_b0, [('out_b0',       'in_file')]),
             # Outputnode
-            (insert_b0_into_dwi,     outputnode, [('out_dwi',     'dwi_b0_merge'),
-                                                  ('out_bvals',      'out_bvals'),
-                                                  ('out_bvecs',    'out_bvecs')]),
-            (mask_b0,                outputnode, [('mask_file',      'mask_b0')]),
-            (b0_dwi_split,           outputnode, [('out_b0',    'b0_reference')])
+            (insert_b0_into_dwi,   outputnode, [('out_dwi',   'dwi_b0_merge'),
+                                                ('out_bvals',    'out_bvals'),
+                                                ('out_bvecs',  'out_bvecs')]),
+            (mask_b0,              outputnode, [('mask_file',    'mask_b0')]),
+            (b0_dwi_split,         outputnode, [('out_b0',  'b0_reference')])
         ])
     elif num_b0s > 1:
         wf.connect([
-            # Split dataset into two datasets: the b0 and the b>low_bval datasets
-            (inputnode,             b0_dwi_split, [('in_bval',                'in_bvals'),
-                                                   ('in_bvec',                'in_bvecs'),
-                                                   ('in_dwi',                'in_file')]),
+            # Split dataset into two datasets (b0s, b>low_bval)
+            (inputnode,             b0_dwi_split, [('in_bval',              'in_bvals'),  # noqa
+                                                   ('in_bvec',              'in_bvecs'),  # noqa
+                                                   ('in_dwi',              'in_file')]),  # noqa
             # Register the b0 onto the first b0
-            (b0_dwi_split,              b0_flirt, [('out_b0',      'inputnode.in_file')]),
+            (b0_dwi_split,              b0_flirt, [('out_b0',    'inputnode.in_file')]),  # noqa
             # Average the b0s
-            (b0_flirt,                    b0_avg, [('outputnode.out_file',   'in_file')]),
+            (b0_flirt,                    b0_avg, [('outputnode.out_file', 'in_file')]),  # noqa
             # Compute b0 mask from b0avg
-            (b0_avg,                     mask_b0, [('out_file',              'in_file')]),
+            (b0_avg,                     mask_b0, [('out_file',            'in_file')]),  # noqa
             # Merge datasets such that bval(DWI) = (0 b1 ... bn)
-            (b0_avg,          insert_b0_into_dwi, [('out_file',                'in_b0')]),
-            (b0_dwi_split,    insert_b0_into_dwi, [('out_dwi',                  'in_dwi'),
-                                                   ('out_bvals',              'in_bvals'),
-                                                   ('out_bvecs',            'in_bvecs')]),
+            (b0_avg,          insert_b0_into_dwi, [('out_file',              'in_b0')]),  # noqa
+            (b0_dwi_split,    insert_b0_into_dwi, [('out_dwi',                'in_dwi'),  # noqa
+                                                   ('out_bvals',            'in_bvals'),  # noqa
+                                                   ('out_bvecs',          'in_bvecs')]),  # noqa
             # Outputnode
-            (insert_b0_into_dwi,      outputnode, [('out_dwi',             'dwi_b0_merge'),
-                                                   ('out_bvals',              'out_bvals'),
-                                                   ('out_bvecs',            'out_bvecs')]),
-            (mask_b0,                 outputnode, [('mask_file',              'mask_b0')]),
-            (b0_avg,                  outputnode, [('out_file',          'b0_reference')])
+            (insert_b0_into_dwi,      outputnode, [('out_dwi',          'dwi_b0_merge'),  # noqa
+                                                   ('out_bvals',           'out_bvals'),  # noqa
+                                                   ('out_bvecs',         'out_bvecs')]),  # noqa
+            (mask_b0,                 outputnode, [('mask_file',           'mask_b0')]),  # noqa
+            (b0_avg,                  outputnode, [('out_file',       'b0_reference')])   # noqa
         ])
     else:
         raise ValueError('The number of b0s should be strictly positive.')
@@ -127,8 +131,7 @@ def b0_flirt_pipeline(num_b0s, name='b0_coregistration'):
         in_file(str): B0 dataset.
 
     Outputnode
-        out_b0_reg(str) : The set of B0 volumes registered to the first volume.
-
+        out_b0_reg(str): The set of B0 volumes registered to the first volume.
 
     Returns:
         The workflow
@@ -143,26 +146,34 @@ def b0_flirt_pipeline(num_b0s, name='b0_coregistration'):
                         name='inputnode')
     fslroi_ref = pe.Node(fsl.ExtractROI(args='0 1'), name='b0_reference')
     tsize = num_b0s - 1
-    fslroi_moving = pe.Node(fsl.ExtractROI(args='1 '+str(tsize)), name='b0_moving')
+    fslroi_moving = pe.Node(fsl.ExtractROI(args='1 '+str(tsize)),
+                            name='b0_moving')
     split_moving = pe.Node(fsl.Split(dimension='t'), name='split_b0_moving')
 
-    bet_ref = pe.Node(fsl.BET(frac=0.3, mask=True, robust=True), name='bet_ref')
+    bet_ref = pe.Node(fsl.BET(frac=0.3, mask=True, robust=True),
+                      name='bet_ref')
 
     dilate = pe.Node(fsl.maths.MathsCommand(nan2zeros=True,
                      args='-kernel sphere 5 -dilM'), name='mask_dilate')
 
-    flirt = pe.MapNode(fsl.FLIRT(interp='spline', dof=6, bins=50, save_log=True, cost='corratio', cost_func='corratio',
-                                 padding_size=10, searchr_x=[-4, 4], searchr_y=[-4, 4], searchr_z=[-4, 4],
-                                 fine_search=1, coarse_search=10),
-                       name='b0_co_registration', iterfield=['in_file'])
+    flirt = pe.MapNode(fsl.FLIRT(
+        interp='spline', dof=6, bins=50, save_log=True,
+        cost='corratio', cost_func='corratio', padding_size=10,
+        searchr_x=[-4, 4], searchr_y=[-4, 4], searchr_z=[-4, 4],
+        fine_search=1, coarse_search=10),
+        name='b0_co_registration', iterfield=['in_file'])
 
     merge = pe.Node(fsl.Merge(dimension='t'), name='merge_registered_b0s')
     thres = pe.MapNode(fsl.Threshold(thresh=0.0), iterfield=['in_file'],
                        name='remove_negative')
-    insert_ref = pe.Node(niu.Function(input_names=['in_file1', 'in_file2'], output_names=['out_file'],
-                                      function=merge_volumes_tdim), name='concat_ref_moving')
+    insert_ref = pe.Node(niu.Function(input_names=['in_file1', 'in_file2'],
+                                      output_names=['out_file'],
+                                      function=merge_volumes_tdim),
+                         name='concat_ref_moving')
 
-    outputnode = pe.Node(niu.IdentityInterface(fields=['out_file', 'out_xfms']), name='outputnode')
+    outputnode = pe.Node(niu.IdentityInterface(
+        fields=['out_file', 'out_xfms']),
+        name='outputnode')
 
     wf = pe.Workflow(name=name)
     wf.connect([
@@ -172,7 +183,7 @@ def b0_flirt_pipeline(num_b0s, name='b0_coregistration'):
         (fslroi_ref, bet_ref, [('roi_file', 'in_file')]),
         (bet_ref, dilate, [('mask_file', 'in_file')]),
         (dilate, flirt, [('out_file', 'ref_weight'),
-                        ('out_file', 'in_weight')]),
+                         ('out_file', 'in_weight')]),
         (fslroi_ref, flirt, [('roi_file', 'reference')]),
         (split_moving, flirt, [('out_files', 'in_file')]),
         (flirt, thres, [('out_file', 'in_file')]),
@@ -185,8 +196,7 @@ def b0_flirt_pipeline(num_b0s, name='b0_coregistration'):
     return wf
 
 
-def dwi_flirt(name='DWICoregistration', excl_nodiff=False,
-              flirt_param={}):
+def dwi_flirt(name='DWICoregistration', excl_nodiff=False, flirt_param={}):
     """
     Generates a workflow for linear registration of dwi volumes using flirt.
 
@@ -247,7 +257,7 @@ def dwi_flirt(name='DWICoregistration', excl_nodiff=False,
         (inputnode,  dilate,     [('ref_mask', 'in_file')]),
         (inputnode,   n4,        [('reference', 'input_image'),
                                   ('ref_mask', 'mask_image')]),
-#        (inputnode,  flirt,      [('ref_mask', 'reference')]),
+        #        (inputnode,  flirt,      [('ref_mask', 'reference')]),
         (n4, enhb0, [('output_image', 'in_file')]),
         (enhb0, flirt, [('out_file', 'reference')]),
         (inputnode, initmat, [('in_xfms', 'in_xfms'),
@@ -316,7 +326,6 @@ def hmc_pipeline(name='motion_correct'):
 
     Outputnode
     ----------
-
         outputnode.out_file - corrected dwi file
         outputnode.out_bvec - rotated gradient vectors table
         outputnode.out_xfms - list of transformation matrices
@@ -333,14 +342,10 @@ def hmc_pipeline(name='motion_correct'):
     from clinica.utils.dwi import hmc_split
     from clinica.workflows.dwi_preprocessing import dwi_flirt
 
-#    params = dict(dof=6, interp='spline', cost='normmi', cost_func='normmi', bins=50, save_log=True, padding_size=10,
-#                  schedule=get_flirt_schedule('hmc'),
-#                  searchr_x=[-4, 4], searchr_y=[-4, 4], searchr_z=[-4, 4], fine_search=1, coarse_search=10 )
+    #    params = dict(dof=6, interp='spline', cost='normmi', cost_func='normmi', bins=50, save_log=True, padding_size=10,
+    #                  schedule=get_flirt_schedule('hmc'),
+    #                  searchr_x=[-4, 4], searchr_y=[-4, 4], searchr_z=[-4, 4], fine_search=1, coarse_search=10 )
 
-    # params = dict(dof=6, interp='spline', cost='normmi', cost_func='normmi', save_log=True,
-    #               no_search=True, bgvalue=0, padding_size=10,
-    #               schedule=get_flirt_schedule('hmc'),
-    #               searchr_x=[-5, 5], searchr_y=[-5, 5], searchr_z=[-25, 25])
     params = dict(dof=6, bgvalue=0, save_log=True, no_search=True,
                   # cost='mutualinfo', cost_func='mutualinfo', bins=64,
                   schedule=get_flirt_schedule('hmc'))
@@ -356,37 +361,44 @@ def hmc_pipeline(name='motion_correct'):
 
     flirt = dwi_flirt(flirt_param=params)
 
-    insmat = pe.Node(niu.Function(input_names=['inlist', 'volid'],
-                     output_names=['out'], function=insert_mat), name='insert_ref_matrix')
+    insmat = pe.Node(niu.Function(
+        input_names=['inlist', 'volid'],
+        output_names=['out'],
+        function=insert_mat), name='insert_ref_matrix')
 
-    rot_bvec = pe.Node(niu.Function(input_names=['in_bvec', 'in_matrix'],
-                       output_names=['out_file'], function=rotate_bvecs),
-                       name='Rotate_Bvec')
+    rot_bvec = pe.Node(niu.Function(
+        input_names=['in_bvec', 'in_matrix'],
+        output_names=['out_file'],
+        function=rotate_bvecs), name='Rotate_Bvec')
 
-    merged_volumes = pe.Node(niu.Function(input_names=['in_file1', 'in_file2'], output_names=['out_file'], function=merge_volumes_tdim), name='merge_reference_moving')
+    merged_volumes = pe.Node(niu.Function(
+        input_names=['in_file1', 'in_file2'],
+        output_names=['out_file'],
+        function=merge_volumes_tdim), name='merge_reference_moving')
 
-    outputnode = pe.Node(niu.IdentityInterface(fields=['out_file',
-                         'out_bvec', 'out_xfms', 'mask_B0']), name='outputnode')
+    outputnode = pe.Node(niu.IdentityInterface(
+        fields=['out_file', 'out_bvec', 'out_xfms', 'mask_B0']),
+        name='outputnode')
 
     wf = pe.Workflow(name=name)
     wf.connect([
-        (inputnode, split, [('in_file', 'in_file'),
-                            ('in_bval', 'in_bval'),
-                            ('ref_num', 'ref_num')]),
-        (inputnode, flirt, [('in_mask', 'inputnode.ref_mask')]),
-        (split,     flirt, [('out_ref', 'inputnode.reference'),
-                            ('out_mov', 'inputnode.in_file'),
-                            ('out_bval', 'inputnode.in_bval')]),
-        (flirt,     insmat, [('outputnode.out_xfms', 'inlist')]),
-        (split,     insmat, [('volid', 'volid')]),
-        (inputnode, rot_bvec, [('in_bvec', 'in_bvec')]),
-        (insmat,    rot_bvec, [('out', 'in_matrix')]),
-        (rot_bvec,         outputnode,       [('out_file', 'out_bvec')]),
-        (flirt,            merged_volumes,   [('outputnode.out_ref', 'in_file1'),
-                                              ('outputnode.out_file', 'in_file2')]),
-        (merged_volumes,   outputnode,       [('out_file', 'out_file')]),
-        (insmat,           outputnode,       [('out', 'out_xfms')]),
-        (flirt,           outputnode,       [('outputnode.out_ref', 'mask_B0')])
+        (inputnode,          split,  [('in_file',                'in_file'),
+                                      ('in_bval',                'in_bval'),
+                                      ('ref_num',              'ref_num')]),
+        (inputnode,          flirt,  [('in_mask',   'inputnode.ref_mask')]),
+        (split,              flirt,  [('out_ref',    'inputnode.reference'),
+                                      ('out_mov',      'inputnode.in_file'),
+                                      ('out_bval',   'inputnode.in_bval')]),
+        (flirt,              insmat, [('outputnode.out_xfms',   'inlist')]),
+        (split,              insmat, [('volid',                  'volid')]),
+        (inputnode,        rot_bvec, [('in_bvec',              'in_bvec')]),
+        (insmat,           rot_bvec, [('out',                'in_matrix')]),
+        (rot_bvec,       outputnode, [('out_file',            'out_bvec')]),
+        (flirt,      merged_volumes, [('outputnode.out_ref',    'in_file1'),
+                                      ('outputnode.out_file', 'in_file2')]),
+        (merged_volumes, outputnode, [('out_file',            'out_file')]),
+        (insmat,         outputnode, [('out',                 'out_xfms')]),
+        (flirt,          outputnode, [('outputnode.out_ref',   'mask_B0')])
     ])
     return wf
 
@@ -449,15 +461,6 @@ head-motion correction)
     from nipype.workflows.dmri.fsl.artifacts import _xfm_jacobian
     from clinica.pipeline.dwi.dwi_preprocessing_utils import merge_volumes_tdim
 
-
-#    params = dict(dof=12, no_search=True, interp='spline', bgvalue=0,
-#                  schedule=get_flirt_schedule('ecc'))
-
-    # params = dict(dof=12, interp='spline', cost='normmi', cost_func='normmi', save_log=True,
-    #               no_search=True, bgvalue=0, padding_size=10,
-    #               schedule=get_flirt_schedule('ecc'),
-    #               searchr_x=[-5, 5], searchr_y=[-5, 5], searchr_z=[-25, 25])
-
     params = dict(dof=12, no_search=True, interp='spline', bgvalue=0,
                   schedule=get_flirt_schedule('ecc'))
 
@@ -486,7 +489,10 @@ head-motion correction)
         input_names=['in_dwi', 'in_bval', 'in_corrected'],
         output_names=['out_file'], function=recompose_dwi), name='MergeDWIs')
 
-    merged_volumes = pe.Node(niu.Function(input_names=['in_file1', 'in_file2'], output_names=['out_file'], function=merge_volumes_tdim), name='merge_enhanced_ref_dwis')
+    merged_volumes = pe.Node(niu.Function(
+        input_names=['in_file1', 'in_file2'],
+        output_names=['out_file'],
+        function=merge_volumes_tdim), name='merge_enhanced_ref_dwis')
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['out_file', 'out_xfms']), name='outputnode')
@@ -509,7 +515,7 @@ head-motion correction)
         (pick_dws,   flirt,        [('out_file', 'inputnode.in_file')]),
         (flirt,      get_mat,      [('outputnode.out_xfms', 'in_xfms')]),
         (flirt,      mult,         [(('outputnode.out_xfms', _xfm_jacobian),
-                                      'operand_value')]),
+                                     'operand_value')]),
         (flirt,      split,        [('outputnode.out_file', 'in_file')]),
         (split,      mult,         [('out_files', 'in_file')]),
         (mult,       thres,        [('out_file', 'in_file')]),
@@ -547,12 +553,13 @@ def remove_bias(name='bias_correct'):
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['in_file']), name='inputnode')
 
-    outputnode = pe.Node(niu.IdentityInterface(fields=['out_file','b0_mask']),
+    outputnode = pe.Node(niu.IdentityInterface(fields=['out_file', 'b0_mask']),
                          name='outputnode')
 
-    getb0 = pe.Node(fsl.ExtractROI(t_min=0, t_size=1), name='get_b0')
+    get_b0 = pe.Node(fsl.ExtractROI(t_min=0, t_size=1), name='get_b0')
 
-    mask_b0 = pe.Node(fsl.BET(frac=0.3, mask=True, robust=True), name='mask_b0')
+    mask_b0 = pe.Node(fsl.BET(frac=0.3, mask=True, robust=True),
+                      name='mask_b0')
 
     n4 = pe.Node(ants.N4BiasFieldCorrection(
         dimension=3, save_bias=True, bspline_fitting_distance=600),
@@ -566,9 +573,9 @@ def remove_bias(name='bias_correct'):
 
     wf = pe.Workflow(name=name)
     wf.connect([
-        (inputnode, getb0, [('in_file', 'in_file')]),
-        (getb0,   n4, [('roi_file', 'input_image')]),
-        (getb0, mask_b0, [('roi_file', 'in_file')]),
+        (inputnode, get_b0, [('in_file', 'in_file')]),
+        (get_b0,   n4, [('roi_file', 'input_image')]),
+        (get_b0, mask_b0, [('roi_file', 'in_file')]),
         (mask_b0, n4, [('mask_file', 'mask_image')]),
         (inputnode, split, [('in_file', 'in_file')]),
         (n4,    mult, [('bias_image', 'operand_files')]),
