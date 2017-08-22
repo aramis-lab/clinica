@@ -18,6 +18,7 @@ __maintainer__ = "Jeremy Guillon"
 __email__ = "jeremy.guillon@inria.fr"
 __status__ = "Development"
 
+
 class fMRIPreprocessing(cpe.Pipeline):
     """Create fMRI preprocessing pipeline object.
 
@@ -47,17 +48,16 @@ class fMRIPreprocessing(cpe.Pipeline):
         >>> from clinica.pipeline.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
         >>> pipeline = fMRIPreprocessing('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipeline.parameters = {
-        >>>     'num_slices': 45,
-        >>>     'time_repetition': 2.4,
-        >>>     'echo_times': [5.19, 7.65],
-        >>>     'blip_direction': 1,
-        >>>     'total_readout_time': 15.6799,
-        >>>     'full_width_at_half_maximum': [8, 8, 8],
-        >>>     't1_native_space': False,
+        >>>     'num_slices' : 45,
+        >>>     'time_repetition' : 2.4,
+        >>>     'echo_times' : [5.19, 7.65],
+        >>>     'blip_direction' : 1,
+        >>>     'total_readout_time' : 15.6799,
+        >>>     'full_width_at_half_maximum' : [8, 8, 8],
+        >>>     't1_native_space' : False
         >>> }
         >>> pipeline.run()
     """
-
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
@@ -68,7 +68,6 @@ class fMRIPreprocessing(cpe.Pipeline):
 
         return ['magnitude1', 'phasediff', 'bold', 'T1w']
 
-
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
 
@@ -76,13 +75,13 @@ class fMRIPreprocessing(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        if 't1_native_space' not in self.parameters or self.parameters['t1_native_space']:
+        if 't1_native_space' not in self.parameters or self.parameters[
+            't1_native_space']:
             return ['t1_brain_mask', 'mc_params', 'native_fmri', 't1_fmri',
                     'mni_fmri', 'mni_smoothed_fmri']
         else:
             return ['t1_brain_mask', 'mc_params', 'native_fmri', 'mni_fmri',
                     'mni_smoothed_fmri']
-
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -94,27 +93,28 @@ class fMRIPreprocessing(cpe.Pipeline):
         # Reading BIDS
         # ============
         read_node = npe.Node(name="ReadingBIDS",
-                             interface=nutil.IdentityInterface(fields=self.get_input_fields(),
-                                                               mandatory_inputs=True))
+                             interface=nutil.IdentityInterface(
+                                 fields=self.get_input_fields(),
+                                 mandatory_inputs=True))
         # I remove the 'sub-' prefix that is not considered by the pybids'
         # layout object.
         subject_regex = '|'.join(s[4:] for s in self.subjects)
         read_node.inputs.magnitude1 = self.bids_layout.get(return_type='file',
-                                                type='magnitude1',
-                                                extensions='nii',
-                                                subject=subject_regex)
+                                                           type='magnitude1',
+                                                           extensions='nii',
+                                                           subject=subject_regex)
         read_node.inputs.phasediff = self.bids_layout.get(return_type='file',
-                                               type='phasediff',
-                                               extensions='nii',
-                                               subject=subject_regex)
+                                                          type='phasediff',
+                                                          extensions='nii',
+                                                          subject=subject_regex)
         read_node.inputs.bold = self.bids_layout.get(return_type='file',
-                                          type='bold',
-                                          extensions='nii',
-                                          subject=subject_regex)
+                                                     type='bold',
+                                                     extensions='nii',
+                                                     subject=subject_regex)
         read_node.inputs.T1w = self.bids_layout.get(return_type='file',
-                                         run='[1]', type='T1w',
-                                         extensions='nii',
-                                         subject=subject_regex)
+                                                    run='[1]', type='T1w',
+                                                    extensions='nii',
+                                                    subject=subject_regex)
 
         self.connect([
             # Reading BIDS
@@ -123,7 +123,6 @@ class fMRIPreprocessing(cpe.Pipeline):
             (read_node, self.input_node, [('bold', 'bold')]),
             (read_node, self.input_node, [('T1w', 'T1w')]),
         ])
-
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
@@ -135,21 +134,26 @@ class fMRIPreprocessing(cpe.Pipeline):
         # Writing CAPS
         # ============
         write_node = npe.MapNode(name='WritingCAPS',
-                                 iterfield=['container'] + self.get_output_fields(),
-                                 interface=nio.DataSink(infields=self.get_output_fields()))
+                                 iterfield=['container']
+                                           + self.get_output_fields(),
+                                 interface=nio.DataSink(
+                                     infields=self.get_output_fields()))
         write_node.inputs.base_directory = self.caps_directory
         write_node.inputs.parameterization = False
-        write_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
-                                       '/fmri/preprocessing' for i in range(len(self.subjects))]
+        write_node.inputs.container = [
+            'subjects/' + self.subjects[i] + '/' + self.sessions[i] +
+            '/fmri/preprocessing' for i in range(len(self.subjects))]
         write_node.inputs.remove_dest_dir = True
         write_node.inputs.regexp_substitutions = [
-            (r't1_brain_mask/c3(.+)_maths_dil_ero_thresh_fillh\.nii\.gz$', r'\1_brainmask.nii.gz'),
+            (r't1_brain_mask/c3(.+)_maths_dil_ero_thresh_fillh\.nii\.gz$',
+             r'\1_brainmask.nii.gz'),
             (r'mc_params/rp_a(.+)\.txt$', r'\1_confounds.tsv'),
             (r'native_fmri/ua(.+)\.nii.gz$', r'\1_space-meanBOLD.nii.gz'),
             (r't1_fmri/rua(.+)\.nii.gz$', r'\1_space-T1w.nii.gz'),
             (r'mni_fmri/wrua(.+)\.nii.gz$', r'\1_space-Ixi549Space.nii.gz'),
             (r'mni_smoothed_fmri/swrua(.+)\.nii.gz$',
-             r'\1_space-Ixi549Space_fwhm-'+'-'.join(map(str, self.parameters['full_width_at_half_maximum']))+'.nii.gz'),
+             r'\1_space-Ixi549Space_fwhm-' + '-'.join(map(str, self.parameters[
+                 'full_width_at_half_maximum'])) + '.nii.gz'),
             # I don't know why it's adding this empty folder, so I remove it:
             (r'trait_added', r''),
         ]
@@ -163,11 +167,16 @@ class fMRIPreprocessing(cpe.Pipeline):
 
         self.connect([
             # Writing CAPS
-            (self.output_node, write_node, [('t1_brain_mask', 't1_brain_mask')]),
-            (self.output_node, write_node, [('mc_params', 'mc_params')]),
-            (self.output_node, write_node, [('native_fmri', 'native_fmri')]),
-            (self.output_node, write_node, [('mni_fmri', 'mni_fmri')]),
-            (self.output_node, write_node, [('mni_smoothed_fmri', 'mni_smoothed_fmri')]),
+            (self.output_node, write_node,
+             [('t1_brain_mask', 't1_brain_mask')]),
+            (self.output_node, write_node,
+             [('mc_params', 'mc_params')]),
+            (self.output_node, write_node,
+             [('native_fmri', 'native_fmri')]),
+            (self.output_node, write_node,
+             [('mni_fmri', 'mni_fmri')]),
+            (self.output_node, write_node,
+             [('mni_smoothed_fmri', 'mni_smoothed_fmri')]),
         ])
 
     def check_custom_dependencies(self):
@@ -200,8 +209,9 @@ class fMRIPreprocessing(cpe.Pipeline):
         st_node.inputs.slice_order = range(1, self.parameters['num_slices'] + 1)
         st_node.inputs.num_slices = self.parameters['num_slices']
         st_node.inputs.ref_slice = self.parameters['num_slices'] / 2
-        st_node.inputs.time_acquisition = self.parameters['time_repetition'] - self.parameters['time_repetition'] \
-                                                                               / float(self.parameters['num_slices'])
+        st_node.inputs.time_acquisition = self.parameters['time_repetition'] - \
+                                          self.parameters['time_repetition'] \
+                                          / float(self.parameters['num_slices'])
 
         # Motion correction and unwarping
         # ===============================
@@ -239,7 +249,8 @@ class fMRIPreprocessing(cpe.Pipeline):
         zip_node = npe.MapNode(name='Zipping',
                                iterfield=['in_file'],
                                interface=nutil.Function(input_names=['in_file'],
-                                                        output_names=['out_file'],
+                                                        output_names=[
+                                                            'out_file'],
                                                         function=zip_nii))
         zip_bet_node = zip_node.clone('ZippingBET')
         zip_mc_node = zip_node.clone('ZippingMC')
@@ -279,7 +290,8 @@ class fMRIPreprocessing(cpe.Pipeline):
             (smooth_node, zip_smooth_node, [('smoothed_files', 'in_file')]),
             # Returning output
             (zip_bet_node, self.output_node, [('out_file', 't1_brain_mask')]),
-            (mc_node, self.output_node,[('realignment_parameters', 'mc_params')]),
+            (mc_node, self.output_node,
+             [('realignment_parameters', 'mc_params')]),
             (zip_mc_node, self.output_node, [('out_file', 'native_fmri')]),
             (zip_reg_node, self.output_node, [('out_file', 't1_fmri')]),
             (zip_norm_node, self.output_node, [('out_file', 'mni_fmri')]),
