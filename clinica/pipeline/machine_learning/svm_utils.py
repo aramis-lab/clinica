@@ -36,18 +36,26 @@ def evaluate_prediction(y, y_hat):
                 fp.append(i)
 
     accuracy = (true_positive + true_negative) / (true_positive + true_negative + false_positive + false_negative)
-    sensitivity = true_positive / (true_positive + false_negative)
-    specificity = true_negative / (false_positive + true_negative)
 
-    if (true_positive + false_positive) !=  0:
+    if (true_positive + false_negative) != 0:
+        sensitivity = true_positive / (true_positive + false_negative)
+    else:
+        sensitivity = 0.0
+
+    if (false_positive + true_negative) != 0:
+        specificity = true_negative / (false_positive + true_negative)
+    else:
+        specificity = 0.0
+
+    if (true_positive + false_positive) != 0:
         ppv = true_positive / (true_positive + false_positive)
     else:
-        ppv = 0
+        ppv = 0.0
 
     if (true_negative + false_negative) != 0:
         npv = true_negative / (true_negative + false_negative)
     else:
-        npv = 0
+        npv = 0.0
 
     balanced_accuracy = (sensitivity + specificity) / 2
 
@@ -57,7 +65,7 @@ def evaluate_prediction(y, y_hat):
                'specificity': specificity,
                'ppv': ppv,
                'npv': npv,
-               'predictions': (tp, tn, fp, fn)
+               'confusion_matrix': {'tp': len(tp), 'tn': len(tn), 'fp': len(fp), 'fn': len(fn)}
                }
 
     return results
