@@ -336,6 +336,9 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                                         if type(row['VISCODE2']) == float:
                                             continue
                                         visit_id = row['VISCODE2']
+                                        # Convert sc to bl
+                                        if visit_id == 'sc':
+                                            visit_id = 'bl'
                                     else:
                                         visit_id = row['VISCODE']
 
@@ -351,6 +354,65 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
     write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths)
 
 
+def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
+    """
+    Create scans files for adni
+    :param clinic_specs_path: path to the clinical file
+    :param bids_subjs_paths: list of bids subject paths
+    :param bids_ids: list of bids ids
+    """
+    from glob import glob
+    import os
+    import pandas as pd
+    from os import path
+    from os.path import normpath
 
+    scans_dict = {}
 
+    for bids_id in bids_ids:
+        scans_dict.update({bids_id: {'T1/DWI/fMRI': {}, 'FDG': {}}})
 
+    scans_specs = pd.read_excel(clinic_specs_path, sheetname='scans.tsv')
+    scans_fields_db = scans_specs['ADNI']
+    scans_fields_bids = scans_specs['BIDS CLINICA']
+    scans_fields_mod = scans_specs['Modalities related']
+    fields_bids = ['filename']
+
+    for i in range(0, len(scans_fields_db)):
+        if not pd.isnull(scans_fields_db[i]):
+            fields_bids.append(scans_fields_bids[i])
+
+    scans_df = pd.DataFrame(columns=(fields_bids))
+
+    for bids_subj_path in bids_subjs_paths:
+        # Create the file
+        bids_id = os.path.basename(normpath(bids_subj_path))
+
+        sessions_paths = glob(path.join(bids_subj_path, 'ses-*'))
+        for session_path in sessions_paths:
+            session_name = session_path.split(os.sep)[-1]
+            tsv_name = bids_id + '_' + session_name + "_scans.tsv"
+
+            # If the file already exists, remove it
+            if os.path.exists(path.join(session_path, tsv_name)):
+                os.remove(path.join(session_path, tsv_name))
+
+            scans_tsv = open(path.join(session_path, tsv_name), 'a')
+            scans_df.to_csv(scans_tsv, sep='\t', index=False)
+
+            # Extract modalities available for each subject
+            mod_available = glob(path.join(session_path, '*'))
+            for mod in mod_available:
+                mod_name = os.path.basename(mod)
+                files = glob(path.join(mod, '*'))
+                for file in files:
+                    file_name = os.path.basename(file)
+                    if mod == "anat" or mod == "dwi" or mod == "func":
+                        type_mod = 'T1/DWI/fMRI'
+                    else:
+                        type_mod = 'FDG'
+
+                    scans_df['filename'] = pd.Series(path.join(mod_name, file_name))
+                    scans_df.to_csv(scans_tsv, header=False, sep='\t', index=False)
+
+            scans_df = pd.DataFrame(columns=(fields_bids))

@@ -1,87 +1,80 @@
 
-from clinica.pipeline.machine_learning import base
-
-from multiprocessing.pool import ThreadPool
+from os import path
+import json
 import numpy as np
-from sklearn.svm import SVC
+import pandas as pd
 from sklearn.model_selection import StratifiedKFold
+from multiprocessing.pool import ThreadPool
+
+from clinica.pipeline.machine_learning import base
 
 
 class KFoldCV(base.MLValidation):
 
     def __init__(self, ml_algorithm):
         self._ml_algorithm = ml_algorithm
-        self._best_parameters = []
+        self._fold_results = []
+        self._classifier = None
+        self._best_params = None
+        self._cv = None
 
-    def outer_cross_validation(kernel_train, shared_x, train_indices, test_indices, x_test, y_train, y_test,
-                               best_c, best_acc, balanced=False):
+    def validate(self, y, n_folds=10, n_threads=15):
 
-        y_hat, auc = launch_svc(kernel_train, x_test, y_train, y_test, best_c, balanced, shared_x, train_indices,
-                                test_indices)
+        skf = StratifiedKFold(n_splits=n_folds, shuffle=True)
+        self._cv = list(skf.split(np.zeros(len(y)), y))
+        async_pool = ThreadPool(n_threads)
+        async_result = {}
 
-        result = dict()
-        result['best_c'] = best_c
-        result['best_acc'] = best_acc
-        result['evaluation'] = evaluate_prediction(y_test, y_hat)
-        result['y_hat'] = y_hat
-        result['auc'] = auc
+        for i in range(n_folds):
 
-        return result
+            train_index, test_index = self._cv[i]
 
-    def cv_svm(self, gram_matrix, shared_x, indices, y, balanced=False, outer_folds=10, inner_folds=10,
-               n_threads=15):
+            # self._fold_results.append(self._ml_algorithm.parameter_estimation(train_index))
 
-        y_hat = np.zeros(len(y))
+            async_result[i] = async_pool.apply_async(self._ml_algorithm.evaluate, (train_index, test_index))
 
-        skf = StratifiedKFold(n_splits=outer_folds, shuffle=True)
-        outer_cv = list(skf.split(np.zeros(len(y)), y))
-        outer_pool = ThreadPool(n_threads)
-        outer_async_result = {}
+        # print "lanzando threads"
+        async_pool.close()
+        async_pool.join()
+        # print "terminaron threads"
 
-        for i in range(outer_folds):
+        for i in range(n_folds):
+            self._fold_results.append(async_result[i].get())
 
-            train_index, test_index = outer_cv[i]
+        self._classifier, self._best_params = self._ml_algorithm.apply_best_parameters(self._fold_results)
 
-            self._best_parameters.append(self._ml_algorithm.parameter_estimation(train_index))
+        return self._classifier, self._best_params, self._fold_results
 
-            outer_kernel = gram_matrix[train_index, :][:, train_index]
-            x_test = gram_matrix[test_index, :][:, train_index]
-            y_train, y_test = y[train_index], y[test_index]
-            train_indices, test_indices = indices[train_index], indices[test_index]
+    def save_results(self, output_dir):
+        if self._fold_results is None:
+            raise Exception("No results to save. Method validate() must be run before save_results().")
 
-            outer_async_result[i] = outer_pool.apply_async(outer_cross_validation, (
-            outer_kernel, shared_x, train_indices, test_indices, x_test, y_train, y_test, async_result[i],
-            balanced))
+        results_dict = {'balanced_accuracy': np.nanmean([r['evaluation']['balanced_accuracy'] for r in self._fold_results]),
+                        'auc': np.nanmean([r['auc'] for r in self._fold_results]),
+                        'accuracy': np.nanmean([r['evaluation']['accuracy'] for r in self._fold_results]),
+                        'sensitivity': np.nanmean([r['evaluation']['sensitivity'] for r in self._fold_results]),
+                        'specificity': np.nanmean([r['evaluation']['specificity'] for r in self._fold_results]),
+                        'ppv': np.nanmean([r['evaluation']['ppv'] for r in self._fold_results]),
+                        'npv': np.nanmean([r['evaluation']['npv'] for r in self._fold_results])}
 
-        # print 'All outer threads launched'
-        outer_pool.close()
-        outer_pool.join()
-        # print 'All outer threads finished'
+        # t1_df = pd.DataFrame(columns=t1_col_df)
+        # t1_df = t1_df.append(row_to_append, ignore_index=True)
 
-        keys = outer_async_result.keys()
-        keys.sort()
+        results_df = pd.DataFrame(results_dict, index=['i', ])
+        results_df.to_csv(path.join(output_dir, 'results.tsv'),
+                          index=False, sep='\t', encoding='utf-8')
 
-        best_c_list = []
-        auc_list = []
-        for i in keys:
-            train_index, test_index = outer_cv[i]
-            res = outer_async_result[i].get()
-            y_hat[test_index] = res['y_hat']
-            best_c_list.append(res['best_c'])
-            auc_list.append(res['auc'])
+        subjects_folds = []
+        for i in range(len(self._fold_results)):
+            subjects_df = pd.DataFrame({'y': self._fold_results[i]['y'],
+                                        'y_hat': self._fold_results[i]['y_hat'],
+                                        'y_index': self._fold_results[i]['y_index']})
 
-        # # Mean of best c of each fold is selected
-        # best_c = mode(best_c_list)[0][0]
-        best_c = np.power(10, np.mean(np.log10(best_c_list)))
+            subjects_df.to_csv(path.join(output_dir, 'subjects_fold-' + str(i) + '.tsv'),
+                               index=False, sep='\t', encoding='utf-8')
 
-        # Mean AUC
-        auc = np.mean(auc_list)
+            subjects_folds.append(subjects_df)
 
-        if balanced:
-            svc = SVC(C=best_c, kernel='precomputed', tol=1e-6, class_weight='balanced')
-        else:
-            svc = SVC(C=best_c, kernel='precomputed', tol=1e-6)
-
-        svc.fit(gram_matrix, y)
-
-        return y_hat, svc.dual_coef_, svc.support_, svc.intercept_, best_c, auc
+        all_subjects = pd.concat(subjects_folds)
+        all_subjects.to_csv(path.join(output_dir, 'subjects.tsv'),
+                            index=False, sep='\t', encoding='utf-8')
