@@ -345,7 +345,6 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
             scans_df.to_csv(path.join(bids_dir, bids_id, 'ses-M0', tsv_name), sep='\t', index=False, encoding='utf8')
 
 
-
 # -- Other methods --
 def contain_dicom(folder_path):
     """
