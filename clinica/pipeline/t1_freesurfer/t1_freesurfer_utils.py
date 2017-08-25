@@ -29,7 +29,7 @@ def bids_datagrabber(input_dir, subject_list, session_list):
     bidslayout = BIDSLayout(input_dir)
     anat_t1 = []
     if not bidslayout.get(target='run', return_type='id', type='T1w'):
-        print "There is just one run for T1w image of this analysis"
+        print("There is just one run for T1w image of this analysis")
         for i in range(len(subject_list)):
             t1 = bidslayout.get(return_type='file',
                                             type='T1w',
@@ -38,7 +38,7 @@ def bids_datagrabber(input_dir, subject_list, session_list):
                                         subject=subject_list[i].replace('sub-', ''))
             anat_t1.append(t1)
     else:
-        print "There are more than one runs for T1w image for this analysis"
+        print("There are more than one runs for T1w image for this analysis")
         for i in range(len(subject_list)):
             t1 = bidslayout.get(return_type='file',
                                             type='T1w',
@@ -70,6 +70,7 @@ def get_dirs_check_reconalled(output_dir, subject_list, session_list):
     Returns: the related lists based on the tsv files
 
     """
+
     import os, errno
     from copy import deepcopy as cp
 
@@ -101,10 +102,14 @@ def get_dirs_check_reconalled(output_dir, subject_list, session_list):
         subject_path = os.path.join(subject, subject_id[i])
         subject_path_abs = os.path.expanduser(subject_path)
         if os.path.exists(subject_path_abs):
-            print "Note: subject %s seems to be already recon-alled or being runing, please check out the result folder and" \
-                  "recon-all sumarry log, in case that the processing of recon-all has been killed accidentally, please" \
-                  "delete the result foder and rerun it; In case that the subject has been run successfully with recon-all," \
-                  "just ignore this message and  continue to run the new-added or non-recon-alled subjects!!! " % subject_id[i]
+            print("Note: subject %s seems to be already recon-alled or being "
+                  "runing, please check out the result folder and recon-all "
+                  "sumarry log, in case that the processing of recon-all has "
+                  "been killed accidentally, please delete the result foder "
+                  "and rerun it; In case that the subject has been run "
+                  "successfully with recon-all, just ignore this message and "
+                  "continue to run the new-added or non-recon-alled "
+                  "subjects!!! " % subject_id[i])
             subject_id_without_reconalled.remove(subject_id[i])
             subject_list_without_reconalled.remove(subject_list[i])
             session_list_without_reconalled.remove(session_list[i])
