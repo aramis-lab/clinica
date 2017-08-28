@@ -7,15 +7,30 @@ import clinica.pipeline.machine_learning.voxel_based_io as vbio
 import clinica.pipeline.machine_learning.svm_utils as utils
 
 
-class CAPST1Input(base.MLInput):
+class CAPSVoxelBasedInput(base.MLInput):
 
-    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, fwhm=0, modulated="on",
-                 mask_zeros=True, precomputed_kernel=None):
+    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type='T1', fwhm=0,
+                 modulated="on", pvc=None, mask_zeros=True, precomputed_kernel=None):
+        """
+
+        Args:
+            caps_directory:
+            subjects_visits_tsv:
+            diagnoses_tsv:
+            group_id:
+            image_type: 'T1', 'fdg', 'av45', 'pib' or 'flute'
+            fwhm:
+            modulated:
+            mask_zeros:
+            precomputed_kernel:
+        """
 
         self._caps_directory = caps_directory
         self._group_id = group_id
+        self._image_type = image_type
         self._fwhm = fwhm
         self._modulated = modulated
+        self._pvc = pvc
         self._mask_zeros = mask_zeros
         self._orig_shape = None
         self._data_mask = None
@@ -34,6 +49,9 @@ class CAPST1Input(base.MLInput):
         if 'diagnosis' not in list(diagnoses.columns.values):
             raise Exception('Diagnoses file is not in the correct format.')
         self._diagnoses = list(diagnoses.diagnosis)
+
+        if image_type not in ['T1', 'fdg', 'av45', 'pib', 'flute']:
+            raise Exception("Incorrect image type. It must be one of the values 'T1', 'fdg', 'av45', 'pib' or 'flute'")
 
         if precomputed_kernel is not None:
             if type(precomputed_kernel) == np.ndarray:
@@ -59,18 +77,33 @@ class CAPST1Input(base.MLInput):
         if self._images is not None:
             return self._images
 
-        if self._fwhm == 0:
-            self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
-                                      't1/spm/dartel/group-' + self._group_id,
-                                      '%s_%s_T1w_segm-graymatter_space-Ixi549Space_modulated-%s_probability.nii.gz'
-                                      % (self._subjects[i], self._sessions[i], self._modulated))
-                            for i in range(len(self._subjects))]
+        if self._image_type == 'T1':
+            if self._fwhm == 0:
+                self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
+                                          't1/spm/dartel/group-' + self._group_id,
+                                          '%s_%s_T1w_segm-graymatter_space-Ixi549Space_modulated-%s_probability.nii.gz'
+                                          % (self._subjects[i], self._sessions[i], self._modulated))
+                                for i in range(len(self._subjects))]
+            else:
+                self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
+                                          't1/spm/dartel/group-' + self._group_id,
+                                          '%s_%s_T1w_segm-graymatter_space-Ixi549Space_modulated-%s_fwhm-%dmm_probability.nii.gz'
+                                          % (self._subjects[i], self._sessions[i], self._modulated, self._fwhm))
+                                for i in range(len(self._subjects))]
         else:
-            self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
-                                      't1/spm/dartel/group-' + self._group_id,
-                                      '%s_%s_T1w_segm-graymatter_space-Ixi549Space_modulated-%s_fwhm-%dmm_probability.nii.gz'
-                                      % (self._subjects[i], self._sessions[i], self._modulated, self._fwhm))
-                            for i in range(len(self._subjects))]
+            if self._pvc is None:
+                self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
+                                          'pet/preprocessing/group-' + self._group_id,
+                                          '%s_%s_task-rest_acq-%s_pet_space-Ixi549Space_pet.nii.gz'
+                                          % (self._subjects[i], self._sessions[i], self._image_type))
+                                for i in range(len(self._subjects))]
+            else:
+                self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
+                                          'pet/preprocessing/group-' + self._group_id,
+                                          '%s_%s_task-rest_acq-%s_pet_space-Ixi549Space_pvc-%s_pet.nii.gz'
+                                          % (self._subjects[i], self._sessions[i], self._image_type, self._pvc))
+                                for i in range(len(self._subjects))]
+
         return self._images
 
     def get_x(self):
