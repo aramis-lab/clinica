@@ -49,6 +49,8 @@ class VB_KFold_DualSVM(base.MLWorkflow):
 
         self._validation.save_results(self._output_dir)
 
+        # self._input.save_weights_as_nifti(weights)
+
 
 class VB_RepKFold_DualSVM(base.MLWorkflow):
 
@@ -89,10 +91,12 @@ class VB_RepKFold_DualSVM(base.MLWorkflow):
         os.mkdir(classifier_dir)
 
         self._algorithm.save_classifier(classifier, classifier_dir)
-        self._algorithm.save_weights(classifier, x, classifier_dir)
+        weights = self._algorithm.save_weights(classifier, x, classifier_dir)
         self._algorithm.save_parameters(best_params, classifier_dir)
 
         self._validation.save_results(self._output_dir)
+
+        # self._input.save_weights_as_nifti(weights)
 
 
 class VB_RepHoldOut_DualSVM(base.MLWorkflow):
@@ -139,4 +143,6 @@ class VB_RepHoldOut_DualSVM(base.MLWorkflow):
         self._algorithm.save_parameters(best_params, classifier_dir)
 
         self._validation.save_results(self._output_dir)
+
+        # self._input.save_weights_as_nifti(weights)
 

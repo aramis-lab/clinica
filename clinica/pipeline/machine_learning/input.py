@@ -1,16 +1,18 @@
 
-import numpy as np
-from clinica.pipeline.machine_learning import base
+import abc
 import os.path as path
+
+import numpy as np
 from pandas.io import parsers
+
+from clinica.pipeline.machine_learning import base
 import clinica.pipeline.machine_learning.voxel_based_io as vbio
 import clinica.pipeline.machine_learning.svm_utils as utils
 
 
-class CAPSVoxelBasedInput(base.MLInput):
+class CAPSInput(base.MLInput):
 
-    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type='T1', fwhm=0,
-                 modulated="on", pvc=None, mask_zeros=True, precomputed_kernel=None):
+    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, precomputed_kernel=None):
         """
 
         Args:
@@ -19,21 +21,12 @@ class CAPSVoxelBasedInput(base.MLInput):
             diagnoses_tsv:
             group_id:
             image_type: 'T1', 'fdg', 'av45', 'pib' or 'flute'
-            fwhm:
-            modulated:
-            mask_zeros:
             precomputed_kernel:
         """
 
         self._caps_directory = caps_directory
         self._group_id = group_id
         self._image_type = image_type
-        self._fwhm = fwhm
-        self._modulated = modulated
-        self._pvc = pvc
-        self._mask_zeros = mask_zeros
-        self._orig_shape = None
-        self._data_mask = None
         self._images = None
         self._x = None
         self._y = None
@@ -67,6 +60,102 @@ class CAPSVoxelBasedInput(base.MLInput):
                 raise Exception("""Precomputed kernel provided is not in the correct format.
                 It must be a numpy.ndarray object with number of rows and columns equal to the number of subjects,
                 or a filename to a numpy txt file containing an object with the described format.""")
+
+    @abc.abstractmethod
+    def get_images(self):
+        """
+
+        Returns: a list of filenames
+
+        """
+        pass
+
+    @abc.abstractmethod
+    def get_x(self):
+        """
+
+        Returns: a numpy 2d-array.
+
+        """
+        pass
+
+    def get_y(self):
+        """
+
+        Returns: a list of integers. Each integer represents a class.
+
+        """
+        if self._y is not None:
+            return self._y
+
+        unique = list(set(self._diagnoses))
+        self._y = np.array([unique.index(x) for x in self._diagnoses])
+        return self._y
+
+    def get_kernel(self, kernel_function=utils.gram_matrix_linear, recompute_if_exists=False):
+        """
+
+        Returns: a numpy 2d-array.
+
+        """
+        if self._kernel is not None and not recompute_if_exists:
+            return self._kernel
+
+        if self._x is None:
+            self.get_x()
+
+        print "Computing kernel ..."
+        self._kernel = kernel_function(self._x)
+        print "Kernel computed"
+        return self._kernel
+
+    def save_kernel(self, output_dir):
+        """
+
+        Args:
+            output_dir:
+
+        Returns:
+
+        """
+        if self._kernel is not None:
+            filename = path.join(output_dir, 'kernel.txt')
+            np.savetxt(filename, self._kernel)
+            return filename
+        raise Exception("Unable to save the kernel. Kernel must have been computed before.")
+
+    @abc.abstractmethod
+    def save_weights_as_nifti(self, weights):
+        pass
+
+
+class CAPSVoxelBasedInput(CAPSInput):
+
+    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, fwhm=0,
+                 modulated="on", pvc=None, mask_zeros=True, precomputed_kernel=None):
+        """
+
+        Args:
+            caps_directory:
+            subjects_visits_tsv:
+            diagnoses_tsv:
+            group_id:
+            image_type: 'T1', 'fdg', 'av45', 'pib' or 'flute'
+            fwhm:
+            modulated:
+            mask_zeros:
+            precomputed_kernel:
+        """
+
+        super(CAPSVoxelBasedInput, self).__init__(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
+                                                  image_type, precomputed_kernel=precomputed_kernel)
+
+        self._fwhm = fwhm
+        self._modulated = modulated
+        self._pvc = pvc
+        self._mask_zeros = mask_zeros
+        self._orig_shape = None
+        self._data_mask = None
 
     def get_images(self):
         """
@@ -121,47 +210,96 @@ class CAPSVoxelBasedInput(base.MLInput):
 
         return self._x
 
-    def get_y(self):
+    def save_weights_as_nifti(self, weights):
+        pass
+
+
+class CAPSRegionBasedInput(CAPSInput):
+
+    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, atlas, fwhm=0,
+                 modulated="on", pvc=None, mask_zeros=True, precomputed_kernel=None):
         """
 
-        Returns: a list of integers. Each integer represents a class.
+        Args:
+            caps_directory:
+            subjects_visits_tsv:
+            diagnoses_tsv:
+            group_id:
+            image_type: 'T1', 'fdg', 'av45', 'pib' or 'flute'
+            atlas:
+            fwhm:
+            modulated:
+            mask_zeros:
+            precomputed_kernel:
+        """
+
+        super(CAPSRegionBasedInput, self).__init__(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
+                                                  image_type, precomputed_kernel=precomputed_kernel)
+
+        self._atlas = atlas
+        self._fwhm = fwhm
+        self._modulated = modulated
+        self._pvc = pvc
+        self._mask_zeros = mask_zeros
+        self._orig_shape = None
+        self._data_mask = None
+
+        # TODO CHECK ATLASES
+        if atlas not in ['LALA1', 'LALA2']:
+            raise Exception("Incorrect atlas name. It must be one of the values 'LALALALALALALA'")
+
+    def get_images(self):
+        """
+
+        Returns: a list of filenames
 
         """
-        if self._y is not None:
-            return self._y
+        if self._images is not None:
+            return self._images
 
-        unique = list(set(self._diagnoses))
-        self._y = np.array([unique.index(x) for x in self._diagnoses])
-        return self._y
+        if self._image_type == 'T1':
+            if self._fwhm == 0:
+                self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
+                                          't1/spm/dartel/group-' + self._group_id,
+                                          '%s_%s_T1w_segm-graymatter_space-Ixi549Space_modulated-%s_probability.nii.gz'
+                                          % (self._subjects[i], self._sessions[i], self._modulated))
+                                for i in range(len(self._subjects))]
+            else:
+                self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
+                                          't1/spm/dartel/group-' + self._group_id,
+                                          '%s_%s_T1w_segm-graymatter_space-Ixi549Space_modulated-%s_fwhm-%dmm_probability.nii.gz'
+                                          % (self._subjects[i], self._sessions[i], self._modulated, self._fwhm))
+                                for i in range(len(self._subjects))]
+        else:
+            if self._pvc is None:
+                self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
+                                          'pet/preprocessing/group-' + self._group_id,
+                                          '%s_%s_task-rest_acq-%s_pet_space-Ixi549Space_pet.nii.gz'
+                                          % (self._subjects[i], self._sessions[i], self._image_type))
+                                for i in range(len(self._subjects))]
+            else:
+                self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
+                                          'pet/preprocessing/group-' + self._group_id,
+                                          '%s_%s_task-rest_acq-%s_pet_space-Ixi549Space_pvc-%s_pet.nii.gz'
+                                          % (self._subjects[i], self._sessions[i], self._image_type, self._pvc))
+                                for i in range(len(self._subjects))]
 
-    def get_kernel(self, kernel_function=utils.gram_matrix_linear, recompute_if_exists=False):
+        return self._images
+
+    def get_x(self):
         """
 
         Returns: a numpy 2d-array.
 
         """
-        if self._kernel is not None and not recompute_if_exists:
-            return self._kernel
+        if self._x is not None:
+            return self._x
 
-        if self._x is None:
-            self.get_x()
+        print 'Loading ' + str(len(self.get_images())) + ' subjects'
+        self._x, self._orig_shape, self._data_mask = vbio.load_data(self._images, mask=self._mask_zeros)
+        print 'Subjects loaded'
 
-        print "Computing kernel ..."
-        self._kernel = kernel_function(self._x)
-        print "Kernel computed"
-        return self._kernel
+        return self._x
 
-    def save_kernel(self, output_dir):
-        """
-
-        Args:
-            output_dir:
-
-        Returns:
-
-        """
-        if self._kernel is not None:
-            filename = path.join(output_dir, 'kernel.txt')
-            np.savetxt(filename, self._kernel)
-            return filename
-        raise Exception("Unable to save the kernel. Kernel must be computed before.")
+    def save_weights_as_nifti(self, weights):
+        pass
