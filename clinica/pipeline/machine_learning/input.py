@@ -7,6 +7,7 @@ from pandas.io import parsers
 
 from clinica.pipeline.machine_learning import base
 import clinica.pipeline.machine_learning.voxel_based_io as vbio
+import clinica.pipeline.machine_learning.region_based_io as rbio
 import clinica.pipeline.machine_learning.svm_utils as utils
 
 
@@ -125,7 +126,7 @@ class CAPSInput(base.MLInput):
         raise Exception("Unable to save the kernel. Kernel must have been computed before.")
 
     @abc.abstractmethod
-    def save_weights_as_nifti(self, weights):
+    def save_weights_as_nifti(self, weights, output_dir):
         pass
 
 
@@ -210,7 +211,7 @@ class CAPSVoxelBasedInput(CAPSInput):
 
         return self._x
 
-    def save_weights_as_nifti(self, weights):
+    def save_weights_as_nifti(self, weights, output_dir):
         pass
 
 
@@ -244,9 +245,9 @@ class CAPSRegionBasedInput(CAPSInput):
         self._orig_shape = None
         self._data_mask = None
 
-        # TODO CHECK ATLASES
-        if atlas not in ['LALA1', 'LALA2']:
-            raise Exception("Incorrect atlas name. It must be one of the values 'LALALALALALALA'")
+
+        if atlas not in ['AAL2', 'Neuromorphometrics', 'AICHA', 'LPBA40', 'Hammers']:
+            raise Exception("Incorrect atlas name. It must be one of the values 'AAL2', 'Neuromorphometrics', 'AICHA', 'LPBA40', 'Hammers' ")
 
     def get_images(self):
         """
@@ -261,16 +262,18 @@ class CAPSRegionBasedInput(CAPSInput):
             if self._fwhm == 0:
                 self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
                                           't1/spm/dartel/group-' + self._group_id,
-                                          '%s_%s_T1w_segm-graymatter_space-Ixi549Space_modulated-%s_probability.nii.gz'
-                                          % (self._subjects[i], self._sessions[i], self._modulated))
+                                          'atlas_statistics/','%s_%s_T1w_space-%s_map-graymatter_statistics.tsv'
+                                          % (self._subjects[i], self._sessions[i], self._atlas))
                                 for i in range(len(self._subjects))]
             else:
+                #da aggiungere fwm
                 self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
                                           't1/spm/dartel/group-' + self._group_id,
-                                          '%s_%s_T1w_segm-graymatter_space-Ixi549Space_modulated-%s_fwhm-%dmm_probability.nii.gz'
-                                          % (self._subjects[i], self._sessions[i], self._modulated, self._fwhm))
+                                          'atlas_statistics/', '%s_%s_T1w_space-%s_map-graymatter_statistics.tsv'
+                                          % (self._subjects[i], self._sessions[i], self._atlas))
                                 for i in range(len(self._subjects))]
         else:
+            #da modificare (mi manca un esempio di caps)
             if self._pvc is None:
                 self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
                                           'pet/preprocessing/group-' + self._group_id,
@@ -296,10 +299,16 @@ class CAPSRegionBasedInput(CAPSInput):
             return self._x
 
         print 'Loading ' + str(len(self.get_images())) + ' subjects'
-        self._x, self._orig_shape, self._data_mask = vbio.load_data(self._images, mask=self._mask_zeros)
+        self._x= rbio.load_data(self._images, self._subjects)
         print 'Subjects loaded'
 
         return self._x
 
-    def save_weights_as_nifti(self, weights):
+    def save_weights_as_nifti(self, weights, output_dir):
+        #dove prende i weight
+        import os
+        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
+        input_image_atlas = os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', self._atlas + '.nii')
+        output_image=rbio.weights_to_nifti(input_image_atlas, weights)
+        output_image.to_filename(os.path.join(output_dir, 'weights-' + self._atlas + '.nii'))
         pass
