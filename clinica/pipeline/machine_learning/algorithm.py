@@ -171,7 +171,7 @@ from sklearn.metrics import roc_auc_score
 
 class LogisticReg(base.MLAlgorithm):
     
-    def __init__(self, penalty='l2', x, y, balanced=True, grid_search_folds=10, c_range=np.logspace(-6, 2, 17), n_threads=15):
+    def __init__(self, x, y, penalty='l2', balanced=True, grid_search_folds=10, c_range=np.logspace(-6, 2, 17), n_threads=15):
         """ penalty can either be 'l2' or 'l1'"""
         self._penalty = penalty
         self._x = y
