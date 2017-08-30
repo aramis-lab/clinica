@@ -18,6 +18,8 @@ class KFoldCV(base.MLValidation):
         self._classifier = None
         self._best_params = None
         self._cv = None
+        self._resampled_t = None
+        self._corrected_resampled_t = None
 
     def validate(self, y, n_folds=10, n_threads=15):
 
@@ -175,7 +177,7 @@ class RepeatedKFoldCV(base.MLValidation):
 
 class RepeatedSplit(base.MLValidation):
 
-    def __init__(self, ml_algorithm, n_iterations=100, test_size = 0.3):
+    def __init__(self, ml_algorithm, n_iterations=100, test_size=0.3):
         self._ml_algorithm = ml_algorithm
         self._split_results = []
         self._classifier = None
@@ -242,29 +244,23 @@ class RepeatedSplit(base.MLValidation):
         all_subjects.to_csv(path.join(output_dir, 'subjects.tsv'),
                             index=False, sep='\t', encoding='utf-8')
 
-
     def compute_variance(self):
         # compute average test error
-        num_split = len(self._split_results) # J in the paper
-        test_error_split = np.zeros((num_split, 1)) # this list will contain the list of mu_j hat for j = 1 to J
+        num_split = len(self._split_results)  # J in the paper
+        test_error_split = np.zeros((num_split, 1))  # this list will contain the list of mu_j hat for j = 1 to J
         for i in range(num_split):
-            test_error_split[i] = compute_average_test_error(self._split_results[iteration]['y'], self._split_results[iteration]['y_hat'])
+            test_error_split[i] = self._compute_average_test_error(self._split_results[i]['y'],
+                                                                   self._split_results[i]['y_hat'])
         
         # compute mu_{n_1}^{n_2}
         average_test_error = np.mean(test_error_split)
         
         # compute variance (point 2 and 6 of Nadeau's paper)
-        self._resemapled_t = np.linalg.norm(test_error_split-average_test_error)**2/(num_split-1)
-        self._corrected_resemapled_t = (1/num_split + test_size/(1-test_size))*self._resemapled_t
+        self._resampled_t = np.linalg.norm(test_error_split - average_test_error)**2/(num_split - 1)
+        self._corrected_resampled_t = (1/num_split + self._test_size/(1 - self._test_size)) * self._resampled_t
 
-        return self._resemapled_t, self._corrected_resemapled_t
+        return self._resampled_t, self._corrected_resampled_t
 
-
-
-def compute_average_test_error(y_list, yhat_list):
-    # return the average test error (denoted mu_j hat)
-    return len(np.where(y_list != yhat_list)[0])/len(y_list)
-
-
-
-
+    def _compute_average_test_error(self, y_list, yhat_list):
+        # return the average test error (denoted mu_j hat)
+        return len(np.where(y_list != yhat_list)[0])/len(y_list)
