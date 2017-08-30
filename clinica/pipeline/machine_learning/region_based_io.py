@@ -58,7 +58,7 @@ def load_data(image_list,subjects_visits_tsv):
     scipy.io.savemat('data.mat', {'data':data})
     return data
 
-def features_weights(image_list, dual_coefficients, sv_indices, scaler=None, mask=None):
+def features_weights(image_list, dual_coefficients, sv_indices, scaler=None):
 
     if len(sv_indices) != len(dual_coefficients):
         print "Length dual coefficients: " + str(len(dual_coefficients))
@@ -80,7 +80,8 @@ def features_weights(image_list, dual_coefficients, sv_indices, scaler=None, mas
 
     return weights
 
-def weights_to_nifti(input_image_atlas,weights):
+
+def weights_to_nifti(input_image_atlas, weights):
     #input_image_atlas = os.path.join('....', 'atlas_id.nii')
 
     atlas_image = nib.load(input_image_atlas).get_data()

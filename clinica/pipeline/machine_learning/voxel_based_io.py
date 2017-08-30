@@ -55,7 +55,7 @@ def get_caps_t1_list(input_directory, subjects_visits_tsv, group_id, fwhm, modul
     return image_list
 
 
-def get_caps_pet_list(input_directory, subjects_visits_tsv, prefix, pet_type):
+def get_caps_pet_list(input_directory, subjects_visits_tsv, group_id, pet_type):
 
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
     if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
@@ -64,8 +64,8 @@ def get_caps_pet_list(input_directory, subjects_visits_tsv, prefix, pet_type):
     sessions = list(subjects_visits.session_id)
 
     image_list = [join(input_directory, 'subjects/' + subjects[i] + '/'
-                       + sessions[i] + '/pet/preprocessing/masked_suvr_pet/masked_suvr_' + prefix + subjects[i]
-                       + '_' + sessions[i] + '_task-rest_acq-' + pet_type + '_pet.nii.gz') for i in range(len(subjects))]
+                       + sessions[i] + '/pet/preprocessing/group-' +group_id +'/' + subjects[i]
+                       + '_' + sessions[i] + '_task-rest_acq-' + pet_type + '_pet_space-Ixi549Space_pet.nii.gz') for i in range(len(subjects))]
 
     return image_list
 
