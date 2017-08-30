@@ -5,7 +5,9 @@ from multiprocessing.pool import ThreadPool
 
 import numpy as np
 from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import roc_auc_score
 
 from clinica.pipeline.machine_learning import base
 import clinica.pipeline.machine_learning.svm_utils as utils
@@ -154,19 +156,6 @@ class DualSVMAlgorithm(base.MLAlgorithm):
     def save_parameters(self, parameters_dict, output_dir):
         with open(path.join(output_dir, 'best_parameters.json'), 'w') as f:
             json.dump(parameters_dict, f)
-
-
-
-
-
-
-
-
-
-
-
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import roc_auc_score
 
 
 class LogisticReg(base.MLAlgorithm):
