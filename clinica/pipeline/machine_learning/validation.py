@@ -197,15 +197,16 @@ class RepeatedSplit(base.MLValidation):
 
             train_index, test_index = self._cv[i]
             async_result[i] = async_pool.apply_async(self._ml_algorithm.evaluate, (train_index, test_index))
-
+            print 'outer', i, async_result[i]
         async_pool.close()
         async_pool.join()
 
         for i in range(self._n_iterations):
             self._split_results.append(async_result[i].get())
-
+        print self._split_results
+        
         self._classifier, self._best_params = self._ml_algorithm.apply_best_parameters(self._split_results)
-
+        print self._best_params
         return self._classifier, self._best_params, self._split_results
 
     def save_results(self, output_dir):

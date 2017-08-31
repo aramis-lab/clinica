@@ -93,6 +93,7 @@ class DualSVMAlgorithm(base.MLAlgorithm):
                 async_result[i][c] = inner_pool.apply_async(self._grid_search,
                                                             (inner_kernel, x_test_inner,
                                                              y_train_inner, y_test_inner, c))
+                #print i, c, async_result[i][c]
         inner_pool.close()
         inner_pool.join()
 
@@ -173,17 +174,21 @@ class LogisticReg(base.MLAlgorithm):
     def _launch_logistic_reg(self, x_train, x_test, y_train, y_test, c, shared_x=None, train_indices=None,
                              test_indices=None):
         
+        #x_train_, mean_x, std_x = centered_normalised_data(x_train)
+        #x_test_ = (x_test - mean_x)/std_x
+        x_train_ = x_train.copy()
+        x_test_ = x_test.copy()
+        
         if self._balanced:
-            classifier = LogisticRegression(C=c, penalty=self._penalty, tol=1e-6, class_weight='balanced')
+            classifier = LogisticRegression(penalty=self._penalty, tol=1e-6, C=c, class_weight='balanced')
         else:
-            classifier = LogisticRegression(C=c, penalty=self._penalty, tol=1e-6)
+            classifier = LogisticRegression(penalty=self._penalty, tol=1e-6, C=c)
         
-        classifier.fit(x_train, y_train)
-        y_hat = classifier.predict(x_test)
-        
-        proba_test = classifier.predict_proba(x_test)
+        classifier.fit(x_train_, y_train)
+        y_hat = classifier.predict(x_test_)
+        proba_test = classifier.predict_proba(x_test_)[:, 1]
         auc = roc_auc_score(y_test, proba_test)
-        
+
         return classifier, y_hat, auc
 
     def _grid_search(self, x_train, x_test, y_train, y_test, c):
@@ -236,13 +241,14 @@ class LogisticReg(base.MLAlgorithm):
             y_train_inner = y_train[inner_train_index]
             y_test_inner = y_train[inner_test_index]
             
+            
             for c in self._c_range:
                 async_result[i][c] = inner_pool.apply_async(self._grid_search,
                                                             (x_train_inner, x_test_inner,
                                                              y_train_inner, y_test_inner, c))
         inner_pool.close()
         inner_pool.join()
-            
+        
         best_parameter = self._select_best_parameter(async_result)
         x_test = self._x[test_index]
         y_test = self._y[test_index]
@@ -296,3 +302,13 @@ class LogisticReg(base.MLAlgorithm):
         
         with open(path.join(output_dir, 'best_parameters.json'), 'w') as f:
             json.dump(parameters_dict, f)
+
+
+def centered_normalised_data(features):
+    std = np.std(features, axis=0)
+    std[np.where(std == 0)[0]] = 1.
+    mean = np.mean(features, axis=0)
+    features_bis = (features - mean)/std
+    return features_bis, mean, std
+
+
