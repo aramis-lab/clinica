@@ -1,3 +1,5 @@
+# coding: utf8
+
 
 def permutation_test(vector_1, vector_2, number_of_permutation, tails=2):
     """
@@ -47,19 +49,19 @@ def t_test(vector_1, vector_2, tails=2):
     If the t_test not done (only zeros in both vectors), p_value is set to 1.
     This function performs a t_test on *non-nul values*.
     If tails is set to 1 the contrast is supposed to be vector_1 > vector_2.
-    
+
     WARNING: here 0 are not removed from the dataset
     If tails is set to 1 the contrast is supposed to be vector_1 > vector_2
     """
-    
+
     import numpy as np
     from scipy.stats import ttest_ind
-    
+
     p_value = 1.
-    
+
     X = vector_1
     Y = vector_2
-    
+
     if X != np.array([]) and Y != np.array([]):
         p_value = ttest_ind(X, Y, equal_var=False).pvalue
         if tails == 1:
@@ -69,7 +71,7 @@ def t_test(vector_1, vector_2, tails=2):
                 p_value = float(p_value)/2.0
             else:
                 p_value = 1 - float(p_value)/2.0
-    
+
     return p_value
 
 
@@ -134,8 +136,12 @@ def fdr_correction_matrix(p_value_matrix, template=None):
                     index_of_eff_p_value += [(j, i)]
         reject, p_corrected = fdr_correction(eff_p_value)     
         for i, corrected in enumerate(p_corrected):
-            p_value_corrected[index_of_eff_p_value[i][0],index_of_eff_p_value[i][1]] = corrected
-            reject_test[index_of_eff_p_value[i][0],index_of_eff_p_value[i][1]] = reject[i]
+            p_value_corrected[
+                index_of_eff_p_value[i][0], index_of_eff_p_value[i][1]
+            ] = corrected
+            reject_test[
+                index_of_eff_p_value[i][0], index_of_eff_p_value[i][1]
+            ] = reject[i]
     elif not template:
         reject_test, p_value_corrected = fdr_correction(p_value_matrix)
     else:
@@ -145,8 +151,10 @@ def fdr_correction_matrix(p_value_matrix, template=None):
 
 def create_new_feature_tsv(subjects_visits_tsv, bids_dir, dest_tsv, added_features):
     """
-        This func is to add new features(columns) from the subjects_visits_list tsv file, and use the generated file in the statistical analysis
-        added_features : list of str, the added features that you want to write into the tsv file, e.g. ['age_bl', 'sex']
+        This func is to add new features(columns) from the subjects_visits_list
+        TSV file, and use the generated file in the statistical analysis
+        added_features : list of str, the added features that you want to write
+        into the tsv file, e.g. ['age_bl', 'sex']
 
     Args:
         subjects_visits_tsv: tsv files containing just participant_id and session_id columns
@@ -178,7 +186,7 @@ def create_new_feature_tsv(subjects_visits_tsv, bids_dir, dest_tsv, added_featur
     new_features = selected_subj[added_features]
     new_features.reset_index(inplace=True, drop=True)
     all_features = concat([sub_set, new_features], axis=1)
-    all_features.to_csv(dest_tsv, sep='\t', index=False)
+    all_features.to_csv(dest_tsv, sep='\t', index=False, encoding='utf-8')
 
 
 def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):

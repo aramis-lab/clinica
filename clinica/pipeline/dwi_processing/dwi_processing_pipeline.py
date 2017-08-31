@@ -1,13 +1,5 @@
-"""DWI Processing - Clinica Pipeline.
-This file has been generated automatically by the `clinica generate template`
-command line tool.
-See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
-"""
+# coding: utf8
 
-# WARNING: Don't put any import statement here except if it's absolutly
-# necessary. Put it *inside* the different methods.
-# Otherwise it will slow down the dynamic loading of the pipelines list by the
-# command line tool.
 import clinica.pipeline.engine as cpe
 
 
@@ -18,13 +10,18 @@ class DWIProcessing(cpe.Pipeline):
         - A WARNING.
 
     Todos:
-        - [x] A FILLED TODO ITEM.
-        - [ ] AN ON-GOING TODO ITEM.
+        - [ ] CAPS
+        - [ ] CAPS Layout for data reading
+        - [ ] Refactoring Statistics code
+        - [ ] Tractogram-based processing with automatic optional registration
+        - [ ] Option to the CLI to choose the DTI or Tracto processing
 
     Args:
         input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
+        output_dir: An empty output directory where CAPS structured data will
+            be written.
+        subjects_sessions_list: The Subjects-Sessions list file (in .tsv
+            format).
 
     Returns:
         A clinica pipeline object containing the DWI Processing pipeline.
@@ -62,9 +59,11 @@ class DWIProcessing(cpe.Pipeline):
         Returns:
             A list of (string) output fields name.
         """
-        output_list_dti = ['dti', 'fa', 'md', 'ad', 'rd',
-                           'registered_fa', 'registered_md', 'registered_ad', 'registered_rd',
-                           'statistics_fa', 'statistics_md', 'statistics_ad', 'statistics_rd']
+        output_list_dti = [
+            'dti', 'fa', 'md', 'ad', 'rd',
+            'registered_fa', 'registered_md', 'registered_ad', 'registered_rd',
+            'statistics_fa', 'statistics_md', 'statistics_ad', 'statistics_rd'
+        ]
 
         return output_list_dti
 
@@ -87,12 +86,7 @@ class DWIProcessing(cpe.Pipeline):
             cprint('------- SUBJECT ' + self.subjects[i] + ' SESSION ' + self.sessions[i] + ' -------')
 
             # Check b-val file:
-#            bval_file = self.bids_layout.get(return_type='file',
-#                                             type='dwi',
-#                                             extensions=['bval'],
-#                                             session=self.sessions[i].replace('ses-', ''),
-#                                             subject=self.subjects[i].replace('sub-', ''))
-            bval_file = os.path.join(self.caps_directory, 'subjects', self.subjects[i], self.sessions[i], 'dwi', 'preprocessing', 'bvals')
+            bval_file = os.path.join(self.caps_directory, 'subjects', self.subjects[i], self.sessions[i], 'dwi', 'preprocessing', 'bvals')  # noqa
             if not os.path.isfile(bval_file):
                 raise IOError('B-val file not found for subject '
                               + self.subjects[i]
@@ -111,12 +105,7 @@ class DWIProcessing(cpe.Pipeline):
 #                              + ' bval instead.')
 
             # Check b-vec file:
-#            bvec_file = self.bids_layout.get(return_type='file',
-#                                             type='dwi',
-#                                             extensions=['bvec'],
-#                                             session=self.sessions[i].replace('ses-', ''),
-#                                             subject=self.subjects[i].replace('sub-', ''))
-            bvec_file = os.path.join(self.caps_directory, 'subjects', self.subjects[i], self.sessions[i], 'dwi', 'preprocessing', 'bvals')
+            bvec_file = os.path.join(self.caps_directory, 'subjects', self.subjects[i], self.sessions[i], 'dwi', 'preprocessing', 'bvals')  # noqa
             if not os.path.isfile(bvec_file):
                 raise IOError('B-vec file not found for subject '
                               + self.subjects[i]
@@ -135,12 +124,7 @@ class DWIProcessing(cpe.Pipeline):
 #                              + ' bvec instead.')
 
             # Check DWI file:
-#            dwi_file = self.bids_layout.get(return_type='file',
-#                                            type='dwi',
-#                                            extensions=['.nii|.nii.gz'],
-#                                            session=self.sessions[i].replace('ses-', ''),
-#                                            subject=self.subjects[i].replace('sub-', ''))
-            dwi_file = os.path.join(self.caps_directory, 'subjects', self.subjects[i], self.sessions[i], 'dwi', 'preprocessing', 'bvals')
+            dwi_file = os.path.join(self.caps_directory, 'subjects', self.subjects[i], self.sessions[i], 'dwi', 'preprocessing', 'bvals')  # noqa
             if not os.path.isfile(dwi_file):
                 raise IOError('DWI file not found for subject '
                               + self.subjects[i]
@@ -159,12 +143,7 @@ class DWIProcessing(cpe.Pipeline):
 #                              + ' dwi instead.')
 
             # Check B0 file:
-            b0_mask_file = os.path.join(self.caps_directory, 'subjects', self.subjects[i], self.sessions[i], 'dwi', 'preprocessing', 'bvals')
-#            t1_file = self.bids_layout.get(return_type='file',
-#                                           type='T1w',
-#                                           extensions=['.nii|.nii.gz'],
-#                                           session=self.sessions[i].replace('ses-', ''),
-#                                           subject=self.subjects[i].replace('sub-', ''))
+            b0_mask_file = os.path.join(self.caps_directory, 'subjects', self.subjects[i], self.sessions[i], 'dwi', 'preprocessing', 'bvals')  # noqa
             if not os.path.isfile(b0_mask_file):
                 raise IOError('B0 mask file not found for subject '
                               + self.subjects[i]
@@ -195,9 +174,10 @@ class DWIProcessing(cpe.Pipeline):
         # B0 mask
         b0_mask_caps_reader = npe.Node(
             nio.DataGrabber(infields=['subject_id', 'session'],
-                            outfields=['out_files']), name='b0_mask_caps_reader')
+                            outfields=['out_files']),
+            name='b0_mask_caps_reader')
         b0_mask_caps_reader.inputs.base_directory = self.caps_directory
-        b0_mask_caps_reader.inputs.template = 'subjects/%s/%s/dwi/preprocessing/vol0000_warp_maths_thresh_merged_roi_brain_mask.nii.gz'
+        b0_mask_caps_reader.inputs.template = 'subjects/%s/%s/dwi/preprocessing/vol0000_warp_maths_thresh_merged_roi_brain_mask.nii.gz'  # noqa
         b0_mask_caps_reader.inputs.sort_filelist = False
 
         # DWI DataGrabber
@@ -205,7 +185,7 @@ class DWIProcessing(cpe.Pipeline):
             nio.DataGrabber(infields=['subject_id', 'session'],
                             outfields=['out_files']), name='dwi_caps_reader')
         dwi_caps_reader.inputs.base_directory = self.caps_directory
-        dwi_caps_reader.inputs.template = 'subjects/%s/%s/dwi/preprocessing/vol0000_maths_thresh_merged.nii.gz'
+        dwi_caps_reader.inputs.template = 'subjects/%s/%s/dwi/preprocessing/vol0000_maths_thresh_merged.nii.gz'  # noqa
         dwi_caps_reader.inputs.sort_filelist = False
 
         # Bval DataGrabber
@@ -213,7 +193,7 @@ class DWIProcessing(cpe.Pipeline):
             nio.DataGrabber(infields=['subject_id', 'session'],
                             outfields=['out_files']), name='bval_caps_reader')
         bval_caps_reader.inputs.base_directory = self.caps_directory
-        bval_caps_reader.inputs.template = 'subjects/%s/%s/dwi/preprocessing/bvals'
+        bval_caps_reader.inputs.template = 'subjects/%s/%s/dwi/preprocessing/bvals'  # noqa
         bval_caps_reader.inputs.sort_filelist = False
 
         # Bvec dataGrabber
@@ -221,24 +201,24 @@ class DWIProcessing(cpe.Pipeline):
             nio.DataGrabber(infields=['subject_id', 'session'],
                             outfields=['out_files']), name='bvec_caps_reader')
         bvec_caps_reader.inputs.base_directory = self.caps_directory
-        bvec_caps_reader.inputs.template = 'subjects/%s/%s/dwi/preprocessing/bvecs_rotated.bvec'
+        bvec_caps_reader.inputs.template = 'subjects/%s/%s/dwi/preprocessing/bvecs_rotated.bvec'  # noqa
         bvec_caps_reader.inputs.sort_filelist = False
 
         self.connect([
             # Iterables:
-            (iterables_node,  b0_mask_caps_reader, [('subject_id',          'subject_id'),
-                                                    ('session_id',             'session')]),
-            (iterables_node,     dwi_caps_reader,  [('subject_id',          'subject_id'),
-                                                    ('session_id',             'session')]),
-            (iterables_node,     bval_caps_reader, [('subject_id',          'subject_id'),
-                                                    ('session_id',             'session')]),
-            (iterables_node,     bvec_caps_reader, [('subject_id',          'subject_id'),
-                                                    ('session_id',             'session')]),
+            (iterables_node,  b0_mask_caps_reader, [('subject_id',    'subject_id'),  # noqa
+                                                    ('session_id',     'session')]),  # noqa
+            (iterables_node,     dwi_caps_reader,  [('subject_id',    'subject_id'),  # noqa
+                                                    ('session_id',     'session')]),  # noqa
+            (iterables_node,     bval_caps_reader, [('subject_id',    'subject_id'),  # noqa
+                                                    ('session_id',     'session')]),  # noqa
+            (iterables_node,     bvec_caps_reader, [('subject_id',    'subject_id'),  # noqa
+                                                    ('session_id',     'session')]),  # noqa
             # Inputnode:
-            (b0_mask_caps_reader, self.input_node, [('out_files',             'b0_mask')]),
-            (dwi_caps_reader,     self.input_node, [('out_files',         'preproc_dwi')]),
-            (bval_caps_reader,    self.input_node, [('out_files',        'preproc_bval')]),
-            (bvec_caps_reader,    self.input_node, [('out_files',        'preproc_bvec')])
+            (b0_mask_caps_reader, self.input_node, [('out_files',      'b0_mask')]),  # noqa
+            (dwi_caps_reader,     self.input_node, [('out_files',  'preproc_dwi')]),  # noqa
+            (bval_caps_reader,    self.input_node, [('out_files', 'preproc_bval')]),  # noqa
+            (bvec_caps_reader,    self.input_node, [('out_files', 'preproc_bvec')])  # noqa
         ])
 
     def build_output_node(self):
@@ -253,12 +233,13 @@ class DWIProcessing(cpe.Pipeline):
 
         import dwi_processing_utils as utils
 
-        # Find container path from pet filename
-        # =====================================
-        container_path = npe.Node(nutil.Function(input_names=['dwi_filename'],
-                                                 output_names=['container'],
-                                                 function=utils.dwi_container_from_filename),
-                                  name='container_path')
+        # Find container path from filename
+        # =================================
+        container_path = npe.Node(nutil.Function(
+            input_names=['dwi_filename'],
+            output_names=['container'],
+            function=utils.dwi_container_from_filename),
+            name='container_path')
         # container_path.inputs.threshold = self.parameters['mask_threshold']
 
         # Writing results into CAPS
@@ -269,24 +250,24 @@ class DWIProcessing(cpe.Pipeline):
         write_results.inputs.parameterization = False
 
         self.connect([
-           (self.input_node, container_path, [('preproc_dwi', 'dwi_filename')]),
+           (self.input_node, container_path, [('preproc_dwi', 'dwi_filename')]),  # noqa
 
-           (container_path,   write_results, [(('container', join, 'dwi'), 'container')]),
+           (container_path,   write_results, [(('container', join, 'dwi'), 'container')]),  # noqa
            (self.output_node, write_results, [('dti', 'native_space.@dti')]),
            (self.output_node, write_results, [('fa', 'native_space.@fa'),
                                               ('md', 'native_space.@md'),
                                               ('ad', 'native_space.@ad'),
                                               ('rd', 'native_space.@rd')]),
 
-           (self.output_node, write_results, [('registered_fa', 'normalized_space.@registered_fa')]),
-           (self.output_node, write_results, [('registered_md', 'normalized_space.@registered_md')]),
-           (self.output_node, write_results, [('registered_ad', 'normalized_space.@registered_ad')]),
-           (self.output_node, write_results, [('registered_rd', 'normalized_space.@registered_rd')]),
+           (self.output_node, write_results, [('registered_fa', 'normalized_space.@registered_fa')]),  # noqa
+           (self.output_node, write_results, [('registered_md', 'normalized_space.@registered_md')]),  # noqa
+           (self.output_node, write_results, [('registered_ad', 'normalized_space.@registered_ad')]),  # noqa
+           (self.output_node, write_results, [('registered_rd', 'normalized_space.@registered_rd')]),  # noqa
 
-           (self.output_node, write_results, [('statistics_fa', 'atlas_statistics.@statistics_fa')]),
-           (self.output_node, write_results, [('statistics_md', 'atlas_statistics.@statistics_md')]),
-           (self.output_node, write_results, [('statistics_ad', 'atlas_statistics.@statistics_ad')]),
-           (self.output_node, write_results, [('statistics_rd', 'atlas_statistics.@statistics_rd')])
+           (self.output_node, write_results, [('statistics_fa', 'atlas_statistics.@statistics_fa')]),  # noqa
+           (self.output_node, write_results, [('statistics_md', 'atlas_statistics.@statistics_md')]),  # noqa
+           (self.output_node, write_results, [('statistics_ad', 'atlas_statistics.@statistics_ad')]),  # noqa
+           (self.output_node, write_results, [('statistics_rd', 'atlas_statistics.@statistics_rd')])   # noqa
         ])
 
     def build_core_nodes(self):
@@ -305,11 +286,12 @@ class DWIProcessing(cpe.Pipeline):
 
         nthreads = 1
 
-        convert_nifti_to_mrtrix_format = npe.Node(interface=nutil.Function(
+        convert_to_mrtrix_format = npe.Node(interface=nutil.Function(
             input_names=['in_dwi_nii', 'in_bvals', 'in_bvecs', 'nthreads'],
             output_names=['out_dwi_mif'],
-            function=utils.convert_nifti_to_mrtrix_format), name='convert_nifti_to_mrtrix_format')
-        convert_nifti_to_mrtrix_format.inputs.nthreads = nthreads
+            function=utils.convert_nifti_to_mrtrix_format),
+            name='convert_to_mrtrix_format')
+        convert_to_mrtrix_format.inputs.nthreads = nthreads
 
         dwi_to_tensor = npe.Node(interface=nutil.Function(
             input_names=['in_dwi_mif', 'in_b0_mask', 'nthreads'],
@@ -353,37 +335,37 @@ class DWIProcessing(cpe.Pipeline):
         # ==========
         self.connect([
             # Conversion to MRtrix format
-            (self.input_node, convert_nifti_to_mrtrix_format, [('preproc_dwi', 'in_dwi_nii'),
-                                                               ('preproc_bval', 'in_bvals'),
-                                                               ('preproc_bvec', 'in_bvecs')]),
+            (self.input_node, convert_to_mrtrix_format, [('preproc_dwi',  'in_dwi_nii'),  # noqa
+                                                         ('preproc_bval',   'in_bvals'),  # noqa
+                                                         ('preproc_bvec', 'in_bvecs')]),  # noqa
             # Computation of the DTI
-            (self.input_node,                      dwi_to_tensor, [('b0_mask', 'in_b0_mask')]),
-            (convert_nifti_to_mrtrix_format,       dwi_to_tensor, [('out_dwi_mif', 'in_dwi_mif')]),
+            (self.input_node,            dwi_to_tensor, [('b0_mask',     'in_b0_mask')]),  # noqa
+            (convert_to_mrtrix_format,   dwi_to_tensor, [('out_dwi_mif', 'in_dwi_mif')]),  # noqa
             # Computation of the different metrics from the DTI
-            (self.input_node,     tensor_to_metrics, [('b0_mask', 'in_b0_mask')]),
-            (dwi_to_tensor, tensor_to_metrics, [('out_dti', 'in_dti')]),
+            (self.input_node,      tensor_to_metrics, [('b0_mask', 'in_b0_mask')]),  # noqa
+            (dwi_to_tensor,        tensor_to_metrics, [('out_dti', 'in_dti')]),  # noqa
             # Register DTI maps on JHU atlas
-            (tensor_to_metrics, register_on_jhu_atlas, [('out_fa', 'inputnode.in_fa'),
-                                                        ('out_md', 'inputnode.in_md'),
-                                                        ('out_ad', 'inputnode.in_ad'),
-                                                        ('out_rd', 'inputnode.in_rd')]),
-            (register_on_jhu_atlas, scalar_analysis_fa, [('outputnode.out_registered_fa', 'in_registered_map')]),
-            (register_on_jhu_atlas, scalar_analysis_md, [('outputnode.out_registered_md', 'in_registered_map')]),
-            (register_on_jhu_atlas, scalar_analysis_ad, [('outputnode.out_registered_ad', 'in_registered_map')]),
-            (register_on_jhu_atlas, scalar_analysis_rd, [('outputnode.out_registered_rd', 'in_registered_map')]),
+            (tensor_to_metrics,    register_on_jhu_atlas, [('out_fa', 'inputnode.in_fa'),  # noqa
+                                                           ('out_md', 'inputnode.in_md'),  # noqa
+                                                           ('out_ad', 'inputnode.in_ad'),  # noqa
+                                                           ('out_rd', 'inputnode.in_rd')]),  # noqa
+            (register_on_jhu_atlas, scalar_analysis_fa, [('outputnode.out_registered_fa', 'in_registered_map')]),  # noqa
+            (register_on_jhu_atlas, scalar_analysis_md, [('outputnode.out_registered_md', 'in_registered_map')]),  # noqa
+            (register_on_jhu_atlas, scalar_analysis_ad, [('outputnode.out_registered_ad', 'in_registered_map')]),  # noqa
+            (register_on_jhu_atlas, scalar_analysis_rd, [('outputnode.out_registered_rd', 'in_registered_map')]),  # noqa
             # Outputnode
-            (dwi_to_tensor,     self.output_node, [('out_dti', 'dti')]),
-            (tensor_to_metrics, self.output_node, [('out_fa', 'fa'),
-                                                   ('out_md', 'md'),
-                                                   ('out_ad', 'ad'),
-                                                   ('out_rd', 'rd')]),
-            (register_on_jhu_atlas, self.output_node, [('outputnode.out_registered_fa', 'registered_fa')]),
-            (register_on_jhu_atlas, self.output_node, [('outputnode.out_registered_md', 'registered_md')]),
-            (register_on_jhu_atlas, self.output_node, [('outputnode.out_registered_ad', 'registered_ad')]),
-            (register_on_jhu_atlas, self.output_node, [('outputnode.out_registered_rd', 'registered_rd')]),
-            (scalar_analysis_fa, self.output_node, [('atlas_statistics_list', 'statistics_fa')]),
-            (scalar_analysis_md, self.output_node, [('atlas_statistics_list', 'statistics_md')]),
-            (scalar_analysis_ad, self.output_node, [('atlas_statistics_list', 'statistics_ad')]),
-            (scalar_analysis_rd, self.output_node, [('atlas_statistics_list', 'statistics_rd')])
+            (dwi_to_tensor,           self.output_node, [('out_dti', 'dti')]),
+            (tensor_to_metrics,       self.output_node, [('out_fa',   'fa'),
+                                                         ('out_md',   'md'),
+                                                         ('out_ad',   'ad'),
+                                                         ('out_rd',   'rd')]),
+            (register_on_jhu_atlas,   self.output_node, [('outputnode.out_registered_fa', 'registered_fa')]),  # noqa
+            (register_on_jhu_atlas,   self.output_node, [('outputnode.out_registered_md', 'registered_md')]),  # noqa
+            (register_on_jhu_atlas,   self.output_node, [('outputnode.out_registered_ad', 'registered_ad')]),  # noqa
+            (register_on_jhu_atlas,   self.output_node, [('outputnode.out_registered_rd', 'registered_rd')]),  # noqa
+            (scalar_analysis_fa,      self.output_node, [('atlas_statistics_list',        'statistics_fa')]),  # noqa
+            (scalar_analysis_md,      self.output_node, [('atlas_statistics_list',        'statistics_md')]),  # noqa
+            (scalar_analysis_ad,      self.output_node, [('atlas_statistics_list',        'statistics_ad')]),  # noqa
+            (scalar_analysis_rd,      self.output_node, [('atlas_statistics_list',        'statistics_rd')])   # noqa
 
         ])

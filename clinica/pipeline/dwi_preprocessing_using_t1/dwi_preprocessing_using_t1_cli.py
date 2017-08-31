@@ -1,20 +1,13 @@
-"""DWI Preprocessing using T1 - Clinica Command Line Interface.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
-"""
+# coding: utf8
 
 
 import clinica.engine as ce
 
-__author__ = ["Thomas Jacquemont", "Alexandre Routier"]
-__copyright__ = "Copyright 2016,2017 The Aramis Lab Team"
-__credits__ = ["Nipype", "Thomas Jacquemont", "Alexandre Routier"]
-__license__ = "See LICENSE.txt file"
-__version__ = "1.0.0"
-__status__ = "Development"
-
 
 class DWIPreprocessingUsingT1CLI(ce.CmdParser):
+
+    def __init__(self):
+        super(DWIPreprocessingUsingT1CLI, self).__init__()
 
     def define_name(self):
         """Define the sub-command name to run this pipeline.
@@ -31,15 +24,15 @@ class DWIPreprocessingUsingT1CLI(ce.CmdParser):
         self._args.add_argument("caps_directory",
                                 help='Path to the CAPS directory.')
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
-                                help='TSV file containing the subjects with their sessions.')
+                                help='TSV file containing the subjects with their sessions.')  # noqa
 
         self._args.add_argument("--low_bval", type=int, default=5,
-                                help='Define the b0 volumes as all volume bval <= lowbval. (Default=5)')
-        self._args.add_argument("--save_intermediate_files", type=bool, default=False,
-                                help='Will save some intermediate results (for debugging purposes).')
+                                help='Define the b0 volumes as all volume bval <= lowbval. (Default=5)')  # noqa
+        self._args.add_argument("--save_intermediate_files", type=bool, default=False,  # noqa
+                                help='Will save some intermediate results (for debugging purposes).')  # noqa
 
         self._args.add_argument("-wd", "--working_directory",
-                                help='Temporary directory to store pipeline intermediate results')
+                                help='Temporary directory to store pipeline intermediate results')  # noqa
         self._args.add_argument("-np", "--n_procs", type=int,
                                 help='Number of cores used to run in parallel')
         self._args.add_argument("-sl", "--slurm", action='store_true',
