@@ -169,7 +169,7 @@ class VB_RepHoldOut_LogisticRegression(base.MLWorkflow):
         
         x = self._input.get_x()
         y = self._input.get_y()
-        kernel = self._input.get_kernel()
+        #x, kept_columns = remove_null_columns(x)
         
         self._algorithm = algorithm.LogisticReg(x, y, balanced=self._balanced,
                                                 grid_search_folds=self._grid_search_folds,
@@ -185,6 +185,12 @@ class VB_RepHoldOut_LogisticRegression(base.MLWorkflow):
         self._algorithm.save_classifier(classifier, classifier_dir)
         self._algorithm.save_parameters(best_params, classifier_dir)
         self._validation.save_results(self._output_dir)
+
+
+
+def remove_null_columns(x):
+    kept_columns = np.where(np.std(x, axis=0) != 0)[0]
+    return x[:, kept_columns], kept_columns
 
 
 
