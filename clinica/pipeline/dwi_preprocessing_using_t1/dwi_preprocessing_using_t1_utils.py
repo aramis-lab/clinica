@@ -1,3 +1,5 @@
+# coding: utf8
+
 
 def ants_registration_syn_quick(fix_image, moving_image):
     import os

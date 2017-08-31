@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
 The 'clinica' executable command line, installed with the clinica packages,
 call this module.
@@ -12,7 +9,10 @@ and give to the user some other utils to works with the pipelines.
 
 
 from __future__ import print_function
-import argcomplete, sys, os, subprocess
+import argcomplete
+import sys
+import os
+import subprocess
 from clinica.engine.cmdparser import *
 
 __author__ = "Michael Bacci"
@@ -41,6 +41,7 @@ def visualize(clinicaWorkflow, ids, rebase=False):
         def __init__(self, base):
             self.pwd = os.getcwd()
             os.chdir(base)
+
         def __del__(self):
             os.chdir(self.pwd)
 
@@ -76,7 +77,7 @@ def shell(clinicaWorkflow):
 
     def load_ipython_shell():
         from IPython.terminal.embed import InteractiveShellEmbed
-        InteractiveShellEmbed(user_ns=namespace,banner1=__banner__)()
+        InteractiveShellEmbed(user_ns=namespace, banner1=__banner__)()
 
     try:
         load_ipython_shell()
@@ -85,6 +86,7 @@ def shell(clinicaWorkflow):
             load_python_shell()
         except:
             print("Impossible to load ipython or python shell")
+
 
 def load_conf(args):
     """Load a pipeline serialization
@@ -119,7 +121,7 @@ class ClinicaClassLoader:
     """
     Load pipelines from a custom locations (general from $HOME/clinica)
     """
-    def __init__(self,env='CLINICAPATH',baseclass=Pipeline,reg=r".*_cli\.py$", extra_dir=""):
+    def __init__(self, env='CLINICAPATH', baseclass=Pipeline, reg=r".*_cli\.py$", extra_dir=""):
         self.env = env
         self.baseclass = baseclass
         self.reg = reg
@@ -161,13 +163,13 @@ class ClinicaClassLoader:
             if not p in sys.path:
                 sys.path.append(p)
 
-
     def discover_path_with_subdir(self, path):
         return [os.path.join(path, file) for file in os.listdir(path) if os.path.isdir(os.path.join(path, file))]
 
     def find_files(self, paths, reg):
         import re
-        return [os.path.join(path,file) for path in paths for file in os.listdir(path) if re.match(reg, file) is not None]
+        return [os.path.join(path, file) for path in paths for file in os.listdir(path) if re.match(reg, file) is not None]
+
 
 def load_modular_pipelines_parser():
 
@@ -214,16 +216,18 @@ class CmdlineCache():
         self.converters = None
         self.io_options = None
 
-    def setup_converters(self):pass
+    def setup_converters(self): pass
         #from clinica.iotools.load_cmdline_converter import load_cmdline_converters
         #self.converters = load_cmdline_converters()
 
     def setup_io_options(self):
-        self.io_options = [CmdParserSubsSess(), CmdParserMergeTsv(), CmdParserMissingModalities()]
+        self.io_options = [
+            CmdParserSubsSess(), CmdParserMergeTsv(), CmdParserMissingModalities()]
 
     def load(self):
         self.setup_converters()
         self.setup_io_options()
+
 
 class CmdlineHelper():
     def __init__(self):
@@ -242,7 +246,8 @@ class CmdlineHelper():
             try:
                 os.makedirs(clinica_dir)
             except:
-                raise Exception("Error: is not possible to create the [%s] dir" % clinica_dir)
+                raise Exception("Error: is not possible to create the [%s] dir"
+                                % clinica_dir)
                 exit(-1)
 
         cmdline_cache_file = join(clinica_dir, "cmdline_cache.pkl")
@@ -256,6 +261,7 @@ class CmdlineHelper():
 
         return self.cmdline_cache
 
+
 def execute():
 
     #cmdline_helper = CmdlineHelper()
@@ -267,11 +273,11 @@ def execute():
 
     parser = ArgumentParser()
     sub_parser = parser.add_subparsers()
-    parser.add_argument("-v","--verbose",
+    parser.add_argument("-v", "--verbose",
                         dest='verbose',
                         action='store_true', default=False,
                         help='verbose : print all messages to the console')
-    parser.add_argument("-l","--logname",
+    parser.add_argument("-l", "--logname",
                         dest='logname', default="clinica.log",
                         help='define the log file name')
 
@@ -285,6 +291,7 @@ def execute():
     vis_parser.add_argument("-r", "--rebase", dest="rebase",
                             default=False,
                             help="unique identifier")
+
     def vis_parser_fun(args):
         visualize(load_conf(args[1:]), args.id.split(","), args.rebase)
     vis_parser.set_defaults(func=vis_parser_fun)
@@ -298,11 +305,11 @@ def execute():
     #    shell(load_conf(args[1:]))
     #shell_parser.set_defaults(func=shell_parser_fun)
 
-
     """
     pipelines-list option: show all available pipelines
     """
     pipeline_list_parser = sub_parser.add_parser('pipeline-list')
+
     def pipeline_list_fun(args):
         #display all available pipelines
         print(*get_cmdparser_names())
@@ -312,33 +319,36 @@ def execute():
     run option: run one of the available pipelines
     """
     from clinica.engine import CmdParser
+    from clinica.pipeline.t1_freesurfer.t1_freesurfer_cli import T1FreeSurferCLI
     from clinica.pipeline.t1_spm_segmentation.t1_spm_segmentation_cli import T1SPMSegmentationCLI
     from clinica.pipeline.t1_spm_dartel.t1_spm_dartel_cli import T1SPMDartelCLI
     from clinica.pipeline.t1_spm_dartel2mni.t1_spm_dartel2mni_cli import T1SPMDartel2MNICLI
     from clinica.pipeline.t1_spm_full_prep.t1_spm_full_prep_cli import T1SPMFullPrepCLI
+    from clinica.pipeline.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DWIPreprocessingUsingT1CLI
+    from clinica.pipeline.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DWIPreprocessingUsingPhaseDiffFieldmapCLI
+    from clinica.pipeline.dwi_processing.dwi_processing_cli import DWIProcessingCLI
     from clinica.pipeline.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI
-    from clinica.pipeline.t1_freesurfer.t1_freesurfer_cli import T1FreeSurferCLI
     from clinica.pipeline.statistics_surfstat.statistics_surfstat_cli import StatisticsSurfstatCLI
     from clinica.pipeline.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI
-    from clinica.pipeline.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DWIPreprocessingUsingT1CLI
-    from clinica.pipeline.dwi_processing.dwi_processing_cli import DWIProcessingCLI
+
     run_parser = sub_parser.add_parser('run')
     pipelines = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
     # pipelines = load_modular_pipelines_parser()
     pipelines += [
+        T1FreeSurferCLI(),
         T1SPMSegmentationCLI(),
         T1SPMDartelCLI(),
         T1SPMDartel2MNICLI(),
         T1SPMFullPrepCLI(),
-        CmdParserT1FSL(),
         DWIPreprocessingUsingT1CLI(),
+        DWIPreprocessingUsingPhaseDiffFieldmapCLI(),
         DWIProcessingCLI(),
         fMRIPreprocessingCLI(),
-        T1FreeSurferCLI(),
         StatisticsSurfstatCLI(),
         CmdParserMachineLearningVBLinearSVM(),
         CmdParserMachineLearningSVMRB(),
-        PETPreprocessVolumeCLI()]
+        PETPreprocessVolumeCLI()
+    ]
 
     init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
 
@@ -374,19 +384,24 @@ def execute():
         return error
     for p in [vis_parser, pipeline_list_parser, run_parser]: p.error = single_error_message(p)
 
-    #Do not want stderr message
+    # Do not want stderr message
     def silent_msg(x): pass
     parser.error = silent_msg
 
     args = None
+    unknown = None
     try:
         argcomplete.autocomplete(parser)
-        args = parser.parse_args()
+        # args = parser.parse_args()
+        args, unknown = parser.parse_known_args()
     except SystemExit:
         exit(-1)
     except Exception:
         parser.print_help()
         exit(-1)
+
+    if unknown:
+        raise ValueError('Unknown flag detected: %s' % unknown)
 
     if args is None or hasattr(args,'func') is False:
         parser.print_help()
@@ -408,10 +423,12 @@ def execute():
         import os
         from nipype import config, logging
         from nipype import logging
-        config.update_config({'logging':{'workflow_level':'INFO',
-                                         'log_directory': os.getcwd(),
-                                         'log_to_file': True},
-                              'execution':{'stop_on_first_crash': False,'hash_method': 'content'}})
+        config.update_config({'logging': {'workflow_level': 'INFO',
+                                          'log_directory': os.getcwd(),
+                                          'log_to_file': True},
+                              'execution': {'stop_on_first_crash': False,
+                                            'hash_method': 'content'}
+                              })
         logging.update_logging(config)
 
         class LogFilter(Filter):
@@ -454,9 +471,10 @@ def execute():
             self._iflogger.addHandler(hdlr)
             self._hdlr = hdlr
         enable_file_logging(logging, args.logname)
-        python_logging.basicConfig(format=logging.fmt, datefmt=logging.datefmt,stream=stream())
+        python_logging.basicConfig(
+            format=logging.fmt, datefmt=logging.datefmt, stream=stream())
 
-    #Run the pipeline!
+    # Run the pipeline!
     args.func(args)
 
 

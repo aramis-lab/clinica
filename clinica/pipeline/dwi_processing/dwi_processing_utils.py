@@ -1,8 +1,4 @@
-"""DWI Processing - Clinica Utilities.
-This file has been generated automatically by the `clinica generate template`
-command line tool.
-See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
-"""
+# coding: utf8
 
 
 def convert_nifti_to_mrtrix_format(in_dwi_nii, in_bvals, in_bvecs, nthreads=2):
@@ -35,8 +31,8 @@ def convert_nifti_to_mrtrix_format(in_dwi_nii, in_bvals, in_bvecs, nthreads=2):
     assert(op.isfile(in_bvecs))
 
     out_dwi_mif = op.abspath('dwi.mif')
-    cmd = 'mrconvert ' + in_dwi_nii + ' ' + out_dwi_mif + ' -fslgrad ' + in_bvecs + ' ' + in_bvals \
-          + ' -datatype float32 -stride 0,0,0,1 -nthreads ' + str(nthreads)
+    cmd = 'mrconvert %s %s -fslgrad %s %s -datatype float32 -stride 0,0,0,1 -nthreads %s' \
+          % (in_dwi_nii, out_dwi_mif, in_bvecs, in_bvals, nthreads)
     os.system(cmd)
     return out_dwi_mif
 
@@ -63,7 +59,7 @@ def compute_maximum_harmonic_order(in_bvecs):
     import os
     import warnings
 
-    # TODO : Check if b=0 is present, number_of_directions=number_of_directions-1;
+    # TODO: Check if b=0 is present, nb_of_directions=nb_of_directions-1;
     number_of_directions = os.system("$(sort " + in_bvecs + " | uniq | wc -l)")
     out_lmax = 0
     if 6 < number_of_directions <= 15:
@@ -107,8 +103,8 @@ def erode_mask(in_mask, npass=6, nthreads=2):
     assert(op.isfile(in_mask))
 
     out_eroded_mask = op.abspath('eroded_mask.nii.gz')
-    cmd = 'maskfilter -npass ' + str(npass) + ' -nthreads ' + str(nthreads) + ' ' + in_mask + ' erode ' \
-          + out_eroded_mask
+    cmd = 'maskfilter -npass %s -nthreads %s %s erode %s' \
+          % (npass, nthreads, in_mask, out_eroded_mask)
     os.system(cmd)
     return out_eroded_mask
 
@@ -117,7 +113,8 @@ def dwi_to_tensor(in_dwi_mif, in_b0_mask, nthreads=2):
     """
     Perform diffusion tensor estimation from DWI dataset.
 
-    Diffusion (kurtosis) tensor estimation using iteratively reweighted linear least squares estimator.
+    Diffusion (kurtosis) tensor estimation using iteratively reweighted linear
+    least squares estimator.
 
     Args:
         in_dwi_mif (str): DWI dataset in MRtrix image format.
@@ -137,7 +134,8 @@ def dwi_to_tensor(in_dwi_mif, in_b0_mask, nthreads=2):
 
     out_dti = op.abspath('dti.mif')
 
-    cmd = 'dwi2tensor -mask ' + in_b0_mask + ' ' + in_dwi_mif + ' ' + out_dti + ' -nthreads ' + str(nthreads)
+    cmd = 'dwi2tensor -mask %s %s %s -nthreads %s' \
+          % (in_b0_mask, in_dwi_mif, out_dti, nthreads)
     os.system(cmd)
 
     return out_dti
@@ -153,7 +151,7 @@ def tensor_to_metric(in_dti, in_b0_mask, metric='fa', nthreads=2):
         in_dti (str): Tensor.
         in_b0_mask (str): Binary mask of the b0 image. Only perform computation
             within this specified binary brain mask image.
-        metric (str): Tensor-derived parameter. Currenly, choices are:
+        metric (str): Tensor-derived parameter. Currently, choices are:
             - adc/md: mean apparent diffusion coefficient (also called
             mean diffusivity)
             - fa(default): fractional anisotropy
@@ -169,7 +167,8 @@ def tensor_to_metric(in_dti, in_b0_mask, metric='fa', nthreads=2):
     assert(op.isfile(in_dti))
     assert(op.isfile(in_b0_mask))
 
-    cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads)
+    cmd = 'tensor2metric -mask %s %s -nthreads %s' % \
+          (in_b0_mask, in_dti, nthreads)
     if metric in ("ADC", "adc", "MD", "md"):
         out_metric = op.abspath('md.nii.gz')
         cmd = cmd + ' -adc ' + out_metric
@@ -196,10 +195,12 @@ def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2):
 
     Returns:
         out_fa (str): The tensor-derived parameter fractional anisotropy.
-        out_md (str): The tensor-derived parameter mean diffusivity (also called mean apparent diffusion).
+        out_md (str): The tensor-derived parameter mean diffusivity (also
+            called mean apparent diffusion).
         out_ad (str): The tensor-derived parameter axial diffusivity.
         out_rd (str): The tensor-derived parameter radial diffusivity.
-        out_ev (str): The directionally-encoded colour (DEC) fractional anisotropy map This corresponds to the
+        out_ev (str): The directionally-encoded colour (DEC) fractional
+            anisotropy map This corresponds to the
             first eigenvector modulated by the FA.
     """
     import os.path as op
@@ -209,29 +210,35 @@ def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2):
     assert(op.isfile(in_b0_mask))
 
     out_fa = op.abspath('fa_map_from_dti.nii.gz')
-    cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -fa ' + out_fa
+    cmd = 'tensor2metric -mask %s %s -nthreads %s -fa %s' % \
+          (in_b0_mask, in_dti, nthreads, out_fa)
     os.system(cmd)
 
     out_md = op.abspath('md_map_from_dti.nii.gz')
-    cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -adc ' + out_md
+    cmd = 'tensor2metric -mask %s %s -nthreads %s -adc %s' % \
+          (in_b0_mask, in_dti, nthreads, out_md)
     os.system(cmd)
 
     out_ad = op.abspath('ad_map_from_dti.nii.gz')
-    cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -ad ' + out_ad
+    cmd = 'tensor2metric -mask %s %s -nthreads %s -ad %s' % \
+          (in_b0_mask, in_dti, nthreads, out_ad)
     os.system(cmd)
 
     out_rd = op.abspath('rd_map_from_dti.nii.gz')
-    cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -rd ' + out_rd
+    cmd = 'tensor2metric -mask %s %s -nthreads %s -rd %s' % \
+          (in_b0_mask, in_dti, nthreads, out_rd)
     os.system(cmd)
 
     out_ev = op.abspath('dec_fa_map_from_dti.nii.gz')
-    cmd = 'tensor2metric -mask ' + in_b0_mask + ' ' + in_dti + ' -nthreads ' + str(nthreads) + ' -vector ' + out_ev
+    cmd = 'tensor2metric -mask %s %s -nthreads %s -vector %s' % \
+          (in_b0_mask, in_dti, nthreads, out_ev)
     os.system(cmd)
 
     return out_fa, out_ad, out_md, out_rd, out_ev
 
 
-def estimate_response(in_dwi_mif, in_b0_mask, lmax=None, algorithm='tax', tmpdir='/tmp/', nthreads=2):
+def estimate_response(in_dwi_mif, in_b0_mask, lmax=None, algorithm='tax',
+                      tmpdir='/tmp/', nthreads=2):
     """
     Estimate response function(s) for spherical deconvolution.
 
@@ -240,14 +247,20 @@ def estimate_response(in_dwi_mif, in_b0_mask, lmax=None, algorithm='tax', tmpdir
 
     Args:
         in_dwi_mif (str): DWI dataset in MRtrix image format.
-        in_b0_mask (str): Binary mask of the b0 image. Only perform computation within this specified binary brain
-            mask image. It is advised to erode the mask (we assume that an eroded mask is given)
-        algorithm (Optional[str]): Used algorithm to derive the response function. Currenly, choices are:
-            - tax (default): Use the Tax et al. (2014) recursive calibration algorithm
-            - tournier: Use the Tournier et al. (2013) iterative RF selection algorithm
-        lmax (Optional[int]): The maximum harmonic degree(s) of response function estimation
+        in_b0_mask (str): Binary mask of the b0 image. Only perform computation
+            within this specified binary brain mask image. It is advised to
+            erode the mask (we assume that an eroded mask is given)
+        algorithm (Optional[str]): Used algorithm to derive the response
+            function. Currenly, choices are:
+            - tax (default): Use the Tax et al. (2014) recursive calibration
+                algorithm
+            - tournier: Use the Tournier et al. (2013) iterative RF selection
+                algorithm
+        lmax (Optional[int]): The maximum harmonic degree(s) of response
+            function estimation
         tmpdir (Optional[str]): Path where the temporary results are stored.
-        nthreads (Optional[int]): Number of threads used in this function (default=2, 1 disables multi-threading).
+        nthreads (Optional[int]): Number of threads used in this function
+            (default=2, 1 disables multi-threading).
 
     Returns:
         out_response_function (str): Text file containing response function
@@ -262,20 +275,24 @@ def estimate_response(in_dwi_mif, in_b0_mask, lmax=None, algorithm='tax', tmpdir
     if algorithm == 'tax':
         out_response_function = op.abspath('out_response_function_tax.txt')
     elif algorithm == 'tournier':
-        out_response_function = op.abspath('out_response_function_tournier.txt')
+        out_response_function = op.abspath(
+            'out_response_function_tournier.txt')
     else:
-        raise ValueError('Invalid choice of algorithm in estimate_response function')
+        raise ValueError(
+            'Invalid choice of algorithm in estimate_response function')
 
     cmd = 'dwi2response ' + algorithm + ' -mask ' + in_b0_mask
     if lmax is not None:
         cmd = cmd + ' -lmax ' + str(lmax)
-    cmd = cmd + ' ' + in_dwi_mif + ' ' + out_response_function + ' -nthreads ' + str(nthreads)
+    cmd = '%s %s %s -nthreads %s' % \
+          (cmd, in_dwi_mif, out_response_function, nthreads)
     os.system(cmd)
 
     return out_response_function
 
 
-def estimate_fod(in_dwi_mif, in_b0_mask, in_response_function_coefficients, lmax=None, nthreads=2):
+def estimate_fod(in_dwi_mif, in_b0_mask, in_response_function_coefficients,
+                 lmax=None, nthreads=2):
     """
     Estimate FOD.
 
@@ -319,8 +336,9 @@ def estimate_fod(in_dwi_mif, in_b0_mask, in_response_function_coefficients, lmax
 
     out_sh_coefficients_image = op.abspath('sh_coefficients_image.mif')
 
-    cmd = 'dwi2fod csd -mask ' + in_b0_mask + ' ' +  in_dwi_mif + ' ' + in_response_function_coefficients \
-          + ' ' + out_sh_coefficients_image
+    cmd = 'dwi2fod csd -mask %s %s %s %s' % \
+          (in_b0_mask, in_dwi_mif, in_response_function_coefficients,
+           out_sh_coefficients_image)
     if lmax is not None:
         cmd = cmd + ' -lmax ' + str(lmax)
     os.system(cmd)
@@ -329,8 +347,14 @@ def estimate_fod(in_dwi_mif, in_b0_mask, in_response_function_coefficients, lmax
 
 
 def streamlines_tractography(
-        in_source, in_white_matter_binary_mask, algorithm='iFOD2', number_of_tracks='100K',
-        fod_threshold=None, step_size=None, angle=None, nthreads=2):
+        in_source,
+        in_white_matter_binary_mask,
+        algorithm='iFOD2',
+        number_of_tracks='100K',
+        fod_threshold=None,
+        step_size=None,
+        angle=None,
+        nthreads=2):
     """
     Perform streamlines tractography.
 
@@ -372,7 +396,8 @@ def streamlines_tractography(
 #    assert(op.isfile(in_source))
     assert(op.isfile(in_white_matter_binary_mask))
     if algorithm not in ('iFOD1', 'iFOD2', 'Nulldist2', 'Tensor_Det', 'Tensor_Prob'):
-        raise ValueError('Invalid choice of algorithm in streamlines_tractography function')
+        raise ValueError(
+            'Invalid choice of algorithm in streamlines_tractography function')
 
     out_tracks = op.abspath('out_tracks_' + number_of_tracks + '.tck')
 
@@ -390,12 +415,13 @@ def tcksift(in_tracks, in_fod):
     """
     Perform filtering of tractograms.
 
-    This function filters a whole-brain fibre-tracking data set such that the streamline
-    densities match the FOD lobe integrals.
+    This function filters a whole-brain fibre-tracking data set such that the
+    streamline densities match the FOD lobe integrals.
 
     Args:
         in_tracks (str): Input track file.
-        in_fod (str): Input image containing the spherical harmonics of the fibre orientation distributions.
+        in_fod (str): Input image containing the spherical harmonics of the
+            fibre orientation distributions.
 
     Returns:
         out_tracks (str): Output filtered tracks file in *.tck format.
@@ -427,7 +453,9 @@ def statistics_on_atlases(in_registered_map, name_map):
     from os import getcwd
     from os.path import abspath, join
     from nipype.utils.filemanip import split_filename
-    from clinica.utils.atlas import AtlasAbstract, JHUDTI81_1mm, JHUTracts0_1mm, JHUTracts25_1mm, JHUTracts50_1mm
+    from clinica.utils.atlas import (AtlasAbstract, JHUDTI81_1mm,
+                                     JHUTracts0_1mm, JHUTracts25_1mm,
+                                     JHUTracts50_1mm)
     from clinica.utils.statistics import statistics_on_atlas
 
     orig_dir, base, ext = split_filename(in_registered_map)
@@ -445,15 +473,6 @@ def statistics_on_atlases(in_registered_map, name_map):
         statistics_on_atlas(in_registered_map, atlas, out_atlas_statistics)
         atlas_statistics_list.append(out_atlas_statistics)
 
-#        for atlas_class in atlas_classes:
-#            if atlas_class.get_name_atlas() == atlas:
-#                name_map
-#                out_atlas_statistics = abspath(join(getcwd(),
-#                                   base + '_space-' + atlas.get_name_atlas() + '_statistics.tsv'))
-#                statistics_on_atlas(in_registered_map, atlas_class(), out_atlas_statistics)
-#                atlas_statistics_list.append(out_atlas_statistics)
-#                break
-
     return atlas_statistics_list
 
 
@@ -463,7 +482,9 @@ def dwi_container_from_filename(dwi_filename):
     m = re.search(r'(sub-[a-zA-Z0-9]+)/(ses-[a-zA-Z0-9]+)', dwi_filename)
 
     if m is None:
-        raise ValueError('Input filename is not in a BIDS or CAPS compliant format. It doesn\'t contain the subject and session informations.')
+        raise ValueError(
+            'Input filename is not in a BIDS or CAPS compliant format.' 
+            ' It does not contain the subject and session information.')
 
     subject = m.group(1)
     session = m.group(2)
