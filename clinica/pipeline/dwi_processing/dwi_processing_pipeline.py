@@ -6,9 +6,6 @@ import clinica.pipeline.engine as cpe
 class DWIProcessing(cpe.Pipeline):
     """DWI Processing SHORT DESCRIPTION.
 
-    Warnings:
-        - A WARNING.
-
     Todos:
         - [ ] CAPS
         - [ ] CAPS Layout for data reading
