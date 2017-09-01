@@ -1,3 +1,6 @@
+# coding: utf8
+
+
 """This module contains utilities for DWI handling."""
 
 
@@ -54,7 +57,6 @@ def b0_average(in_file, out_file=None):
 
     Warnings:
         The b0 volumes must be registered.
-
     """
     import numpy as np
     import nibabel as nb
@@ -99,7 +101,6 @@ def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
         out_dwi (str): Output. The set of b>low_bval volumes.
         out_bvals (str): The b-values corresponding to the out_dwi.
         out_bvecs (str): The b-vecs corresponding to the out_dwi.
-
     """
     import numpy as np
     import nibabel as nib
@@ -221,7 +222,6 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
         out_updated_bval (str): Updated gradient values table.
         out_updated_bvec (str): Updated gradient vectors table.
     """
-
     from clinica.utils.dwi import (insert_b0_into_dwi, b0_dwi_split,
                                    count_b0s, b0_average)
     from clinica.workflows.dwi_preprocessing import b0_flirt_pipeline
@@ -247,15 +247,15 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
         # Register the b0 onto the first b0
         b0_flirt = b0_flirt_pipeline(num_b0s=nb_b0s)
         b0_flirt.inputs.inputnode.in_file = extracted_b0
-        # BUG
+        # BUG: Nipype does allow to extract the output after running the
+        # workflow: we need to 'guess' where the output will be generated
         tmp_dir = tempfile.mkdtemp()
         b0_flirt.base_dir = tmp_dir
         b0_flirt.run()
-
         # out_node = b0_flirt.get_node('outputnode')
-        registered_b0s = op.abspath(
-            tmp_dir
-            + '/b0_coregistration/concat_ref_moving/merged_files.nii.gz')
+        registered_b0s = op.abspath(op.join(
+            tmp_dir, 'b0_coregistration', 'concat_ref_moving',
+            'merged_files.nii.gz'))
         cprint('B0 s will be avg...(file = ' + registered_b0s + ')')
         # Average the b0s to obtain the reference b0
         out_reference_b0 = b0_average(in_file=registered_b0s)
@@ -296,7 +296,6 @@ def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
         out_mov (str): The moving volume to align to the reference volume.
         out_bval (str): The b-values corresponding to the moving volume.
         volid (int): Index of the reference volume.
-
     """
     import numpy as np
     import nibabel as nib
