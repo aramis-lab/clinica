@@ -305,3 +305,136 @@ class LogisticReg(base.MLAlgorithm):
         return features_bis, mean, std
 
 
+
+
+from sklearn.ensemble import RandomForestClassifier
+
+class RandomForest(base.MLAlgorithm):
+    
+    def __init__(self, x, y, balanced=False, grid_search_folds=10, n_estimators_range=range(5, 30, 1), n_threads=15):
+        self._x = x
+        self._y = y
+        self._balanced = balanced
+        self._grid_search_folds = grid_search_folds
+        self._n_estimators_range = n_estimators_range
+        self._n_threads = n_threads
+    
+    def _launch_random_forest(self, x_train, x_test, y_train, y_test, n_estimators):
+        
+        if self._balanced:
+            classifier = RandomForestClassifier(n_estimators=n_estimators, class_weight='balanced')
+        else:
+            classifier = RandomForestClassifier(n_estimators=n_estimators)
+        
+        classifier.fit(x_train, y_train)
+        y_hat = classifier.predict(x_test)
+        proba_test = classifier.predict_proba(x_test)[:, 1]
+        auc = roc_auc_score(y_test, proba_test)
+        
+        return classifier, y_hat, auc
+
+    def _grid_search(self, x_train, x_test, y_train, y_test, n_estimators):
+    
+        _, y_hat, _ = self._launch_random_forest(x_train, x_test, y_train, y_test, n_estimators)
+        res = utils.evaluate_prediction(y_test, y_hat)
+        
+        return res['balanced_accuracy']
+    
+    def _select_best_parameter(self, async_result):
+        
+        n_estimators_list = []
+        accuracies = []
+        for fold in async_result.keys():
+            best_n_estimators = -1
+            best_acc = -1
+            
+            for n_estimators, async_acc in async_result[fold].iteritems():
+                
+                acc = async_acc.get()
+                if acc > best_acc:
+                    best_n_estimators = n_estimators
+                    best_acc = acc
+            n_estimators_list.append(best_n_estimators)
+            accuracies.append(best_acc)
+        
+        best_acc = np.mean(accuracies)
+        best_n_estimators = int(np.mean(n_estimators_list))
+        
+        return {'n_estimators': best_n_estimators, 'balanced_accuracy': best_acc}
+    
+    def evaluate(self, train_index, test_index):
+        
+        inner_pool = ThreadPool(self._n_threads)
+        async_result = {}
+        for i in range(self._grid_search_folds):
+            async_result[i] = {}
+        
+        x_train = self._x[train_index]
+        y_train = self._y[train_index]
+        
+        skf = StratifiedKFold(n_splits=self._grid_search_folds, shuffle=True)
+        inner_cv = list(skf.split(np.zeros(len(y_train)), y_train))
+        
+        for i in range(len(inner_cv)):
+            inner_train_index, inner_test_index = inner_cv[i]
+            
+            x_train_inner = x_train[inner_train_index]
+            x_test_inner = x_train[inner_test_index]
+            y_train_inner = y_train[inner_train_index]
+            y_test_inner = y_train[inner_test_index]
+            
+            for n_estimators in self._n_estimators_range:
+                async_result[i][n_estimators] = inner_pool.apply_async(self._grid_search,
+                                                                       (x_train_inner, x_test_inner,
+                                                                        y_train_inner, y_test_inner, n_estimators))
+        inner_pool.close()
+        inner_pool.join()
+        
+        best_parameter = self._select_best_parameter(async_result)
+        x_test = self._x[test_index]
+        y_test = self._y[test_index]
+        
+        _, y_hat, auc = self._launch_random_forest(x_train, x_test, y_train, y_test, best_parameter['n_estimators'])
+        
+        result = dict()
+        result['best_parameter'] = best_parameter
+        result['evaluation'] = utils.evaluate_prediction(y_test, y_hat)
+        result['y_hat'] = y_hat
+        result['y'] = y_test
+        result['y_index'] = test_index
+        result['auc'] = auc
+        
+        return result
+
+    def apply_best_parameters(self, results_list):
+    
+        best_n_estimators_list = []
+        bal_acc_list = []
+        
+        for result in results_list:
+            best_n_estimators_list.append(result['best_parameter']['n_estimators'])
+            bal_acc_list.append(result['best_parameter']['balanced_accuracy'])
+    
+        # best n_estimators is the average of all n_estimators
+        best_n_estimators = int(np.mean(best_n_estimators_list))
+        # Mean balanced accuracy
+        mean_bal_acc = np.mean(bal_acc_list)
+        
+        if self._balanced:
+            classifier = RandomForestClassifier(n_estimators=best_n_estimators, class_weight='balanced')
+        else:
+            classifier = RandomForestClassifier(n_estimators=best_n_estimators)
+        
+        classifier.fit(self._x, self._y)
+        
+        return classifier, {'n_estimators': best_n_estimators, 'balanced_accuracy': mean_bal_acc}
+
+    def save_classifier(self, classifier, output_dir):
+        np.savetxt(path.join(output_dir, 'feature_importances.txt'), classifier.feature_importances_)
+        #print classifier.estimators_
+        #np.savetxt(path.join(output_dir, 'estimators.txt'), str(classifier.estimators_))
+    
+    def save_parameters(self, parameters_dict, output_dir):
+        
+        with open(path.join(output_dir, 'best_parameters.json'), 'w') as f:
+            json.dump(parameters_dict, f)
