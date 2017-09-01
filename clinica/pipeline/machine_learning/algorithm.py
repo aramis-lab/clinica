@@ -174,7 +174,7 @@ class LogisticReg(base.MLAlgorithm):
     def _launch_logistic_reg(self, x_train, x_test, y_train, y_test, c, shared_x=None, train_indices=None,
                              test_indices=None):
         
-        #x_train_, mean_x, std_x = centered_normalised_data(x_train)
+        #x_train_, mean_x, std_x = _centered_normalised_data(x_train)
         #x_test_ = (x_test - mean_x)/std_x
         x_train_ = x_train.copy()
         x_test_ = x_test.copy()
@@ -303,12 +303,11 @@ class LogisticReg(base.MLAlgorithm):
         with open(path.join(output_dir, 'best_parameters.json'), 'w') as f:
             json.dump(parameters_dict, f)
 
-
-def centered_normalised_data(features):
-    std = np.std(features, axis=0)
-    std[np.where(std == 0)[0]] = 1.
-    mean = np.mean(features, axis=0)
-    features_bis = (features - mean)/std
-    return features_bis, mean, std
+    def _centered_normalised_data(features):
+        std = np.std(features, axis=0)
+        std[np.where(std == 0)[0]] = 1.
+        mean = np.mean(features, axis=0)
+        features_bis = (features - mean)/std
+        return features_bis, mean, std
 
 

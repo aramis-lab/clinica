@@ -152,7 +152,7 @@ class VB_RepHoldOut_LogisticRegression(base.MLWorkflow):
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type,
                  output_dir, fwhm=0, modulated="on", mask_zeros=True, n_threads=15,
                  n_splits=100, test_size=0.3,
-                 grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17)):
+                 grid_search_folds=10, balanced=True, voxelbased=False, c_range=np.logspace(-6, 2, 17)):
         self._output_dir = output_dir
         self._n_threads = n_threads
         self._n_splits = n_splits
@@ -161,7 +161,10 @@ class VB_RepHoldOut_LogisticRegression(base.MLWorkflow):
         self._balanced = balanced
         self._c_range = c_range
         
-        self._input = input.CAPSVoxelBasedInput(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, fwhm, modulated, mask_zeros, None, )
+        if voxelbased:
+            self._input = input.CAPSVoxelBasedInput(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, fwhm, modulated, mask_zeros, None)
+        else:
+            self._input = input.CAPSRegionBasedInput(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, 'AAL2', modulated, mask_zeros, None)
         self._validation = None
         self._algorithm = None
     
@@ -169,7 +172,6 @@ class VB_RepHoldOut_LogisticRegression(base.MLWorkflow):
         
         x = self._input.get_x()
         y = self._input.get_y()
-        #x, kept_columns = remove_null_columns(x)
         
         self._algorithm = algorithm.LogisticReg(x, y, balanced=self._balanced,
                                                 grid_search_folds=self._grid_search_folds,
@@ -187,10 +189,6 @@ class VB_RepHoldOut_LogisticRegression(base.MLWorkflow):
         self._validation.save_results(self._output_dir)
 
 
-
-def remove_null_columns(x):
-    kept_columns = np.where(np.std(x, axis=0) != 0)[0]
-    return x[:, kept_columns], kept_columns
 
 
 
