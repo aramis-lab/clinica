@@ -36,6 +36,17 @@ def get_caps_t1_list(input_directory, subjects_visits_tsv,group_id, atlas_id):
 
 
 def get_caps_pet_list(input_directory, subjects_visits_tsv, group_id, atlas_id):
+    """
+
+    Args:
+        input_directory:
+        subjects_visits_tsv:
+        group_id:
+        atlas_id:
+
+    Returns:
+
+    """
 
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
     if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
@@ -47,10 +58,17 @@ def get_caps_pet_list(input_directory, subjects_visits_tsv, group_id, atlas_id):
     return image_list
 
 
-def load_data(image_list, subjects): # _visits_tsv):
+def load_data(image_list, subjects):
+    """
 
-    # subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
-    # subjects = list(subjects_visits.participant_id)
+    Args:
+        image_list:
+        subjects:
+
+    Returns:
+
+    """
+
     subj_average = []
     all_vector = np.array([])
     read_file = pd.io.parsers.read_csv(image_list[0], sep='\t', usecols=[2], header=0)
@@ -71,6 +89,17 @@ def load_data(image_list, subjects): # _visits_tsv):
 
 
 def features_weights(image_list, dual_coefficients, sv_indices, scaler=None):
+    """
+
+    Args:
+        image_list:
+        dual_coefficients:
+        sv_indices:
+        scaler:
+
+    Returns:
+
+    """
 
     if len(sv_indices) != len(dual_coefficients):
         print "Length dual coefficients: " + str(len(dual_coefficients))
@@ -94,6 +123,15 @@ def features_weights(image_list, dual_coefficients, sv_indices, scaler=None):
 
 
 def weights_to_nifti(input_image_atlas, weights):
+    """
+
+    Args:
+        input_image_atlas:
+        weights:
+
+    Returns:
+
+    """
     #input_image_atlas = os.path.join('....', 'atlas_id.nii')
 
     atlas_image = nib.load(input_image_atlas).get_data()
