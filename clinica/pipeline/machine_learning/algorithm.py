@@ -23,20 +23,17 @@ class DualSVMAlgorithm(base.MLAlgorithm):
         self._c_range = c_range
         self._n_threads = n_threads
 
-    def _launch_svc(self, kernel_train, x_test, y_train, y_test, c, shared_x=None, train_indices=None,
-                    test_indices=None):
+    def _launch_svc(self, kernel_train, x_test, y_train, y_test, c):
 
         if self._balanced:
-            svc = SVC(C=c, kernel='precomputed', tol=1e-6, class_weight='balanced')
+            svc = SVC(C=c, kernel='precomputed', probability=True, tol=1e-6, class_weight='balanced')
         else:
-            svc = SVC(C=c, kernel='precomputed', tol=1e-6)
+            svc = SVC(C=c, kernel='precomputed', probability=True, tol=1e-6)
 
         svc.fit(kernel_train, y_train)
         y_hat = svc.predict(x_test)
-        auc = 0.0
-
-        if shared_x is not None and train_indices is not None and test_indices is not None:
-            auc = utils.calculate_auc(svc, shared_x, train_indices, test_indices, y_test)
+        proba_test = svc.predict_proba(x_test)[:, 1]
+        auc = roc_auc_score(y_test, proba_test)
 
         return svc, y_hat, auc
 
@@ -128,9 +125,9 @@ class DualSVMAlgorithm(base.MLAlgorithm):
         mean_bal_acc = np.mean(bal_acc_list)
 
         if self._balanced:
-            svc = SVC(C=best_c, kernel='precomputed', tol=1e-6, class_weight='balanced')
+            svc = SVC(C=best_c, kernel='precomputed', probability=True, tol=1e-6, class_weight='balanced')
         else:
-            svc = SVC(C=best_c, kernel='precomputed', tol=1e-6)
+            svc = SVC(C=best_c, kernel='precomputed', probability=True, tol=1e-6)
 
         svc.fit(self._kernel, self._y)
 

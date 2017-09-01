@@ -153,11 +153,11 @@ class VB_RepHoldOut_LogisticRegression(base.MLWorkflow):
     
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type,
                  output_dir, fwhm=0, modulated="on", mask_zeros=True, n_threads=15,
-                 n_splits=100, test_size=0.3,
+                 n_iterations=100, test_size=0.3,
                  grid_search_folds=10, balanced=True, voxelbased=False, c_range=np.logspace(-6, 2, 17)):
         self._output_dir = output_dir
         self._n_threads = n_threads
-        self._n_splits = n_splits
+        self._n_iterations = n_iterations
         self._test_size = test_size
         self._grid_search_folds = grid_search_folds
         self._balanced = balanced
@@ -180,20 +180,13 @@ class VB_RepHoldOut_LogisticRegression(base.MLWorkflow):
                                                 c_range=self._c_range,
                                                 n_threads=self._n_threads)
             
-        self._validation = validation.RepeatedSplit(self._algorithm, n_iterations=self._n_splits, test_size=self._test_size)
+        self._validation = validation.RepeatedSplit(self._algorithm, n_iterations=self._n_iterations, test_size=self._test_size)
         classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads)
                                                      
         classifier_dir = os.path.join(self._output_dir, 'classifier')
-        try:
+        if not path.exists(classifier_dir):
             os.makedirs(classifier_dir)
-        except:
-            pass
         
         self._algorithm.save_classifier(classifier, classifier_dir)
         self._algorithm.save_parameters(best_params, classifier_dir)
         self._validation.save_results(self._output_dir)
-
-
-
-
-
