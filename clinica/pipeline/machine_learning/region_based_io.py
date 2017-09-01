@@ -10,13 +10,20 @@ from skimage import img_as_float
 
 
 def get_caps_t1_list(input_directory, subjects_visits_tsv,group_id, atlas_id):
-    ''''
-    path to arrive to the list of the file with the statistics on atlas_id 
-    '''
+    """
+    path to arrive to the list of the file with the statistics on atlas_id
+    Args:
+        input_directory:
+        subjects_visits_tsv:
+        group_id:
+        atlas_id:
 
-    import pandas as pd
+    Returns:
+
+    """
 
     from os.path import join
+    import pandas as pd
 
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
     if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
@@ -26,6 +33,7 @@ def get_caps_t1_list(input_directory, subjects_visits_tsv,group_id, atlas_id):
     image_list = [join(input_directory+ '/subjects/' + subjects[i] + '/'
                        + sessions[i] + '/t1/spm/dartel/group-'+group_id+'/atlas_statistics/'+subjects[i]+'_'+sessions[i]+'_T1w_space-'+atlas_id+'_map-graymatter_statistics.tsv') for i in range(len(subjects))]
     return image_list
+
 
 def get_caps_pet_list(input_directory, subjects_visits_tsv, group_id, atlas_id):
 
@@ -38,25 +46,29 @@ def get_caps_pet_list(input_directory, subjects_visits_tsv, group_id, atlas_id):
                        + sessions[i] + '/pet/atlas_statistics/'+ subjects[i]+'_'+sessions[i]+'_space-'+atlas_id+'_map-fdgstatistic2.tsv') for i in range(len(subjects))]
     return image_list
 
-def load_data(image_list,subjects_visits_tsv):
-    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
-    subjects = list(subjects_visits.participant_id)
-    subj_average=[]
-    all_vector=np.array([])
-    data_=np.array([])
-    read_file= pd.io.parsers.read_csv(image_list[0], sep='\t',usecols=[2],header=0)
-    read_file=read_file.mean_scalar
-    data=np.zeros((len(subjects), len(read_file)))
+
+def load_data(image_list, subjects): # _visits_tsv):
+
+    # subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
+    # subjects = list(subjects_visits.participant_id)
+    subj_average = []
+    all_vector = np.array([])
+    read_file = pd.io.parsers.read_csv(image_list[0], sep='\t', usecols=[2], header=0)
+    read_file = read_file.mean_scalar
+    data = np.zeros((len(subjects), len(read_file)))
+
     for i in xrange(len(image_list)):
-        tsv_file= pd.io.parsers.read_csv(image_list[i], sep='\t',usecols=[2],header=0)
-        subj_average=tsv_file.mean_scalar
-        all_vector=np.append(all_vector,subj_average)
-    data_=np.split(all_vector, len(image_list))
+        tsv_file = pd.io.parsers.read_csv(image_list[i], sep='\t', usecols=[2], header=0)
+        subj_average = tsv_file.mean_scalar
+        all_vector = np.append(all_vector, subj_average)
+    data_temp = np.split(all_vector, len(image_list))
+
     for i in xrange(len(image_list)):
         for j in xrange(len(subj_average)):
-            data[i][j]=data_[i][j]
-    scipy.io.savemat('data.mat', {'data':data})
+            data[i][j] = data_temp[i][j]
+    scipy.io.savemat('data.mat', {'data': data})
     return data
+
 
 def features_weights(image_list, dual_coefficients, sv_indices, scaler=None):
 
