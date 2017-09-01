@@ -16,11 +16,14 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
 
     Args:
         input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
+        output_dir: An empty output directory where CAPS structured data will
+            be written.
+        subjects_sessions_list: The Subjects-Sessions list file (in .tsv
+            format).
 
     Returns:
-        A clinica pipeline object containing the DWI Preprocessing using T1 pipeline.
+        A clinica pipeline object containing the DWI Preprocessing using T1
+        pipeline.
 
     Raises:
 
@@ -260,19 +263,24 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        from clinica.utils.io import zip_nii
         from os.path import join
-        import re
         import dwi_preprocessing_using_t1_utils as utils
 
-        # Find container path from pet filename
+        # Find container path from DWI filename
         # =====================================
         container_path = npe.Node(nutil.Function(
-            input_names=['dwi_filename'],
+            input_names=['bids_dwi_filename'],
             output_names=['container'],
             function=utils.dwi_container_from_filename),
             name='container_path')
-        # container_path.inputs.threshold = self.parameters['mask_threshold']
+
+        rename_into_caps = npe.Node(nutil.Function(
+            input_names=['in_bids_dwi', 'fname_dwi', 'fname_bval',
+                         'fname_bvec', 'fname_brainmask'],
+            output_names=['out_caps_dwi', 'out_caps_bval', 'out_caps_bvec',
+                          'out_caps_brainmask'],
+            function=utils.rename_into_caps),
+            name='rename_into_caps')
 
         # Writing results into CAPS
         # =========================
@@ -282,18 +290,29 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
         write_results.inputs.parameterization = False
 
         self.connect([
-           (self.input_node, container_path, [('dwi',                       'dwi_filename')]),  # noqa
-           (container_path,   write_results, [(('container',     join, 'dwi'), 'container')]),  # noqa
-           (self.output_node, write_results, [('preproc_dwi',   'preprocessing.@preproc_dwi'),  # noqa
-                                              ('preproc_bvec', 'preprocessing.@preproc_bvec'),  # noqa
-                                              ('preproc_bval', 'preprocessing.@preproc_bval'),  # noqa
-                                              ('b0_mask',         'preprocessing.@b0_mask')])   # noqa
+            (self.input_node, container_path, [('dwi', 'bids_dwi_filename')]),
+            (container_path, write_results,   [(('container', join, 'dwi'), 'container')]),  # noqa
+
+            (self.input_node,  rename_into_caps, [('dwi',         'in_bids_dwi')]),  # noqa
+            (self.output_node, rename_into_caps, [('preproc_dwi',     'fname_dwi'),  # noqa
+                                                  ('preproc_bval',   'fname_bval'),  # noqa
+                                                  ('preproc_bvec',   'fname_bvec'),  # noqa
+                                                  ('b0_mask', 'fname_brainmask')]),  # noqa
+
+            (rename_into_caps, write_results, [('out_caps_dwi',    'preprocessing.@preproc_dwi'),  # noqa
+                                               ('out_caps_bval',  'preprocessing.@preproc_bval'),  # noqa
+                                               ('out_caps_bvec',  'preprocessing.@preproc_bvec'),  # noqa
+                                               ('out_caps_brainmask', 'preprocessing.@b0_mask')])  # noqa
+#            (self.input_node, get_source_filename, [('dwi',                       'in_file')]),  # noqa
+#            (self.output_node, write_results, [('preproc_dwi',   'preprocessing.@preproc_dwi'),  # noqa
+#                                               ('preproc_bvec', 'preprocessing.@preproc_bvec'),  # noqa
+#                                               ('preproc_bval', 'preprocessing.@preproc_bval'),  # noqa
+#                                               ('b0_mask',         'preprocessing.@b0_mask')])   # noqa
         ])
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
         """
-        import dwi_preprocessing_using_t1_utils as utils
         import dwi_preprocessing_using_t1_workflows as workflows
 
         import nipype.interfaces.utility as nutil
