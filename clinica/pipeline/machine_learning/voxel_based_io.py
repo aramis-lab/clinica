@@ -123,6 +123,7 @@ def features_weights(image_list, dual_coefficients, sv_indices, scaler=None, mas
     for i in range(len(sv_images)):
         subj = nib.load(sv_images[i])
         subj_data = np.nan_to_num(subj.get_data())
+
         if scaler is not None and mask is not None:
             subj_data = subj_data.flatten()[mask]
             subj_data = scaler.transform(subj_data)
@@ -132,7 +133,7 @@ def features_weights(image_list, dual_coefficients, sv_indices, scaler=None, mas
     return weights
 
 
-def weights_to_nifti(weights, image, output_filename):
+def weights_to_nifti(weights, image, output_filename, mask=None):
 
     # Normalize with 2-norm
     # comparable_features = 2 * weights / np.power(norm(weights.flatten(), 2), 2)
