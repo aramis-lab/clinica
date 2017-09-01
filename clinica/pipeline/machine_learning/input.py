@@ -212,7 +212,13 @@ class CAPSVoxelBasedInput(CAPSInput):
         return self._x
 
     def save_weights_as_nifti(self, weights, output_dir):
-        pass
+
+        if self._images is None:
+            self.get_images()
+
+        output_filename = path.join(output_dir, 'weights.nii.gz')
+        data = vbio.revert_mask(weights, self._data_mask, self._orig_shape)
+        vbio.weights_to_nifti(data, self._images[0], output_filename)
 
 
 class CAPSRegionBasedInput(CAPSInput):
@@ -259,21 +265,14 @@ class CAPSRegionBasedInput(CAPSInput):
             return self._images
 
         if self._image_type == 'T1':
-            if self._fwhm == 0:
-                self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
-                                          't1/spm/dartel/group-' + self._group_id,
-                                          'atlas_statistics/','%s_%s_T1w_space-%s_map-graymatter_statistics.tsv'
-                                          % (self._subjects[i], self._sessions[i], self._atlas))
-                                for i in range(len(self._subjects))]
-            else:
-                #da aggiungere fwm
-                self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
-                                          't1/spm/dartel/group-' + self._group_id,
-                                          'atlas_statistics/', '%s_%s_T1w_space-%s_map-graymatter_statistics.tsv'
-                                          % (self._subjects[i], self._sessions[i], self._atlas))
-                                for i in range(len(self._subjects))]
+            self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
+                                      't1/spm/dartel/group-' + self._group_id,
+                                      'atlas_statistics/','%s_%s_T1w_space-%s_map-graymatter_statistics.tsv'
+                                      % (self._subjects[i], self._sessions[i], self._atlas))
+                            for i in range(len(self._subjects))]
         else:
-            #da modificare (mi manca un esempio di caps)
+            # TODO
+            # da modificare (mi manca un esempio di caps)
             if self._pvc is None:
                 self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
                                           'pet/preprocessing/group-' + self._group_id,
@@ -299,7 +298,7 @@ class CAPSRegionBasedInput(CAPSInput):
             return self._x
 
         print 'Loading ' + str(len(self.get_images())) + ' subjects'
-        self._x= rbio.load_data(self._images, self._subjects)
+        self._x = rbio.load_data(self._images, self._subjects)
         print 'Subjects loaded'
 
         return self._x
@@ -311,4 +310,3 @@ class CAPSRegionBasedInput(CAPSInput):
         input_image_atlas = os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', self._atlas + '.nii')
         output_image=rbio.weights_to_nifti(input_image_atlas, weights)
         output_image.to_filename(os.path.join(output_dir, 'weights-' + self._atlas + '.nii'))
-        pass
