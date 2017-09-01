@@ -1,9 +1,5 @@
-"""DWI Preprocessing using T1 - Clinica Pipeline.
-This file has been generated automatically by the `clinica generate template`
-command line tool.
-See here for more details:
-https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
-"""
+# coding: utf8
+
 
 import clinica.pipeline.engine as cpe
 
@@ -12,7 +8,7 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
     """DWI Preprocessing using T1 image for susceptibility distortion step.
 
     Warnings:
-        - A WARNING.
+        - Do not use this pipeline if you have fieldmap data in your dataset.
 
     Todos:
         - [ ] Do the CAPS.

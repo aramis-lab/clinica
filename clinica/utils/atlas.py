@@ -12,10 +12,11 @@ class AtlasAbstract:
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def get_name_atlas(self):pass
-    """
-    Returns the name of the atlas (as defined in BIDS/CAPS specifications).
-    """
+    def get_name_atlas(self):
+        """
+        Returns the name of the atlas (as defined in BIDS/CAPS specifications).
+        """
+        pass
 
     def get_spatial_resolution(self):
         """
@@ -27,7 +28,8 @@ class AtlasAbstract:
         img_labels = nib.load(self.get_atlas_labels())
         voxels_map = img_map.header.get_zooms()
         voxels_labels = img_labels.header.get_zooms()
-        if (voxels_map[0] != voxels_labels[0]) | (voxels_map[1] != voxels_labels[1]) | \
+        if (voxels_map[0] != voxels_labels[0]) or \
+                (voxels_map[1] != voxels_labels[1]) or \
                 (voxels_map[2] != voxels_labels[2]):
         #if voxels_map != voxels_labels:
             print "Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas())
@@ -51,22 +53,25 @@ class AtlasAbstract:
         return s_x + "x" + s_y + "x" + s_z
 
     @abc.abstractmethod
-    def get_atlas_labels(self):pass
-    """
-    Returns the image with the different labels/ROIs.
-    """
+    def get_atlas_labels(self):
+        """
+        Returns the image with the different labels/ROIs.
+        """
+        pass
 
     @abc.abstractmethod
-    def get_atlas_map(self):pass
-    """
-    Returns the map associated to the atlas (e.g. T1, FA map from DTI, etc.).
-    """
+    def get_atlas_map(self):
+        """
+        Returns the map associated to the atlas (e.g. T1, FA map from DTI, etc.).
+        """
+        pass
 
     @abc.abstractmethod
-    def get_tsv_roi(self):pass
-    """
-    Returns the TSV file containing the ROI (regions of interest) of the atlas.
-    """
+    def get_tsv_roi(self):
+        """
+        Returns the TSV file containing the ROI (regions of interest) of the atlas.
+        """
+        pass
 
     def get_index(self):
         import nibabel as nib
@@ -538,7 +543,7 @@ class AtlasLoader:
             for atlas in atlases:
                 self.add_atlas(atlas)
 
-    def add_atlas(self,atlas):
+    def add_atlas(self, atlas):
         if not isinstance(atlas, AtlasAbstract):
             raise Exception("Atlas element must be an AtlasAbstract type")
 

@@ -9,10 +9,6 @@
             "version": ">=5.0.9"
         },
         {
-            "type": "software",
-            "name": "ants"
-        },
-        {
             "type": "binary",
             "name": "clinica",
             "version": ">=0.1.0"

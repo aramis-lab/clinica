@@ -1,3 +1,4 @@
+# coding: utf8
 
 
 def susceptibility_distortion_correction_using_t1(
