@@ -1,13 +1,12 @@
-"""DWI Processing - Clinica Command Line Interface.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
-"""
-
+# coding: utf8
 
 import clinica.engine as ce
 
 
 class DWIProcessingCLI(ce.CmdParser):
+
+    def __init__(self):
+        super(DWIProcessingCLI, self).__init__()
 
     def define_name(self):
         """Define the sub-command name to run this pipeline.
@@ -24,11 +23,6 @@ class DWIProcessingCLI(ce.CmdParser):
                                 help='Path to the CAPS directory.')
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
                                 help='TSV file containing the subjects with their sessions.')
-
-#        self._args.add_argument("--low_bval", type=int, default=5,
-#                                help='Define the b0 volumes as all volume bval <= lowbval. (Default=5)')
-#        self._args.add_argument("--save_intermediate_files", type=bool, default=False,
-#                                help='Will save some intermediate results (for debugging purposes).')
 
         self._args.add_argument("-wd", "--working_directory",
                                 help='Temporary directory to store pipeline intermediate results')
@@ -63,7 +57,8 @@ class DWIProcessingCLI(ce.CmdParser):
         pipeline.base_dir = self.absolute_path(args.working_directory)
 
         if args.n_procs:
-            pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
+            pipeline.run(plugin='MultiProc',
+                         plugin_args={'n_procs': args.n_procs})
         elif args.slurm:
             pipeline.run(plugin='SLURM')
         else:
