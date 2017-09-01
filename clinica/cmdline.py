@@ -28,11 +28,11 @@ __status__ = "Development"
 def visualize(clinicaWorkflow, ids, rebase=False):
     """Open a specific GUI program to display images made by pipeline
 
-    :param clinicaWorkflow: the main pipeline object
-    :param ids: list of id of patients
-    :param rebase: path to looking for configuration
+    Args:
+        clinicaWorkflow: the main pipeline object
+        ids: list of id of patients
+        rebase: path to looking for configuration
     """
-
     if not clinicaWorkflow.data.has_key('visualize'):
         print("No visualization was defined")
         exit(0)
@@ -54,16 +54,22 @@ def visualize(clinicaWorkflow, ids, rebase=False):
     print(clinicaWorkflow.data['visualize'])
     program, arguments, matches = clinicaWorkflow.data['visualize']
 
-    def run_program(id): subprocess.Popen([program] + arguments.replace("${%s}" % matches, id).strip().split(" "))
+    def run_program(id):
+        subprocess.Popen([program] + arguments.replace(
+            "${%s}" % matches, id).strip().split(" "))
+
     [run_program(id) for id in ids]
 
 
 def shell(clinicaWorkflow):
     """Open a python/ipython shell and re-init the clinicaWorkflow object
 
-    :param clinicaWorkflow: the main pipeline object
-    """
+    Args:
+        clinicaWorkflow: the main pipeline object
 
+    Returns:
+
+    """
     workflow = clinicaWorkflow
     __banner__ = "workflow variable is instantiated for you!"
     namespace = globals().copy()
@@ -91,10 +97,13 @@ def shell(clinicaWorkflow):
 def load_conf(args):
     """Load a pipeline serialization
 
-    :param args: the path where looking for
-    :return: ClinicaWorkflow object
-    """
+    Args:
+        args:  the path where looking for
 
+    Returns:
+        ClinicaWorkflow object
+
+    """
     import cPickle
 
     def load(path):
@@ -264,8 +273,8 @@ class CmdlineHelper():
 
 def execute():
 
-    #cmdline_helper = CmdlineHelper()
-    #cmdline_cache = cmdline_helper.load_cache()
+    # cmdline_helper = CmdlineHelper()
+    # cmdline_cache = cmdline_helper.load_cache()
 
     """
     Define and parse the command line argument
@@ -300,10 +309,10 @@ def execute():
     shell option: re-open a nipype.Workflow object within python/ipython session
     TODO: complete for future release
     """
-    #shell_parser = sub_parser.add_parser('shell')
-    #def shell_parser_fun(args):
-    #    shell(load_conf(args[1:]))
-    #shell_parser.set_defaults(func=shell_parser_fun)
+    # shell_parser = sub_parser.add_parser('shell')
+    # def shell_parser_fun(args):
+    #     shell(load_conf(args[1:]))
+    # shell_parser.set_defaults(func=shell_parser_fun)
 
     """
     pipelines-list option: show all available pipelines
@@ -311,7 +320,7 @@ def execute():
     pipeline_list_parser = sub_parser.add_parser('pipeline-list')
 
     def pipeline_list_fun(args):
-        #display all available pipelines
+        # display all available pipelines
         print(*get_cmdparser_names())
     pipeline_list_parser.set_defaults(func=pipeline_list_fun)
 
@@ -319,20 +328,26 @@ def execute():
     run option: run one of the available pipelines
     """
     from clinica.engine import CmdParser
-    from clinica.pipeline.t1_freesurfer.t1_freesurfer_cli import T1FreeSurferCLI
-    from clinica.pipeline.t1_spm_segmentation.t1_spm_segmentation_cli import T1SPMSegmentationCLI
-    from clinica.pipeline.t1_spm_dartel.t1_spm_dartel_cli import T1SPMDartelCLI
-    from clinica.pipeline.t1_spm_dartel2mni.t1_spm_dartel2mni_cli import T1SPMDartel2MNICLI
-    from clinica.pipeline.t1_spm_full_prep.t1_spm_full_prep_cli import T1SPMFullPrepCLI
-    from clinica.pipeline.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DWIPreprocessingUsingT1CLI
-    from clinica.pipeline.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DWIPreprocessingUsingPhaseDiffFieldmapCLI
-    from clinica.pipeline.dwi_processing.dwi_processing_cli import DWIProcessingCLI
-    from clinica.pipeline.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI
-    from clinica.pipeline.statistics_surfstat.statistics_surfstat_cli import StatisticsSurfstatCLI
-    from clinica.pipeline.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI
+
+    from clinica.pipeline.t1_freesurfer.t1_freesurfer_cli import T1FreeSurferCLI  # noqa
+    from clinica.pipeline.t1_spm_segmentation.t1_spm_segmentation_cli import T1SPMSegmentationCLI  # noqa
+    from clinica.pipeline.t1_spm_dartel.t1_spm_dartel_cli import T1SPMDartelCLI  # noqa
+    from clinica.pipeline.t1_spm_dartel2mni.t1_spm_dartel2mni_cli import T1SPMDartel2MNICLI  # noqa
+    from clinica.pipeline.t1_spm_full_prep.t1_spm_full_prep_cli import T1SPMFullPrepCLI  # noqa
+
+    from clinica.pipeline.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DWIPreprocessingUsingT1CLI  # noqa
+    # from clinica.pipeline.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DWIPreprocessingUsingPhaseDiffFieldmapCLI  # noqa
+    from clinica.pipeline.dwi_processing.dwi_processing_cli import DWIProcessingCLI  # noqa
+
+    from clinica.pipeline.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI  # noqa
+
+    from clinica.pipeline.statistics_surfstat.statistics_surfstat_cli import StatisticsSurfstatCLI  # noqa
+
+    from clinica.pipeline.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI  # noqa
 
     run_parser = sub_parser.add_parser('run')
-    pipelines = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
+    pipelines = ClinicaClassLoader(
+        baseclass=CmdParser, extra_dir="pipelines").load()
     # pipelines = load_modular_pipelines_parser()
     pipelines += [
         T1FreeSurferCLI(),
@@ -341,7 +356,7 @@ def execute():
         T1SPMDartel2MNICLI(),
         T1SPMFullPrepCLI(),
         DWIPreprocessingUsingT1CLI(),
-        DWIPreprocessingUsingPhaseDiffFieldmapCLI(),
+        # DWIPreprocessingUsingPhaseDiffFieldmapCLI(),
         DWIProcessingCLI(),
         fMRIPreprocessingCLI(),
         StatisticsSurfstatCLI(),
@@ -355,23 +370,32 @@ def execute():
     """
     convert option: convert one of the supported dataset to the BIDS specification
     """
-    converters = ClinicaClassLoader(baseclass=CmdParser, extra_dir="iotools/converters", reg=r".*_bids\.py$").load()
+    converters = ClinicaClassLoader(
+        baseclass=CmdParser, extra_dir="iotools/converters",
+        reg=r".*_bids\.py$").load()
     if (len(converters)):
         convert_parser = sub_parser.add_parser('convert')
-        init_cmdparser_objects(parser, convert_parser.add_subparsers(), converters)
+        init_cmdparser_objects(parser, convert_parser.add_subparsers(),
+                               converters)
 
     """
     generate option: template
     """
     convert_parser = sub_parser.add_parser('generate')
     from clinica.engine.template import CmdGenerateTemplates
-    init_cmdparser_objects(parser, convert_parser.add_subparsers(), [CmdGenerateTemplates()])
+    init_cmdparser_objects(parser, convert_parser.add_subparsers(), [
+        CmdGenerateTemplates()
+    ])
 
     """
     iotools option
     """
     io_parser = sub_parser.add_parser('iotools')
-    io_tasks = [CmdParserSubsSess(), CmdParserMergeTsv(), CmdParserMissingModalities()]
+    io_tasks = [
+        CmdParserSubsSess(),
+        CmdParserMergeTsv(),
+        CmdParserMissingModalities()
+    ]
     init_cmdparser_objects(parser, io_parser.add_subparsers(), io_tasks)
 
     def silent_help(): pass
@@ -382,10 +406,12 @@ def execute():
             parser.print_help = silent_help
             exit(-1)
         return error
-    for p in [vis_parser, pipeline_list_parser, run_parser]: p.error = single_error_message(p)
+    for p in [vis_parser, pipeline_list_parser, run_parser]:
+        p.error = single_error_message(p)
 
     # Do not want stderr message
-    def silent_msg(x): pass
+    def silent_msg(x):
+        pass
     parser.error = silent_msg
 
     args = None
@@ -403,7 +429,7 @@ def execute():
     if unknown:
         raise ValueError('Unknown flag detected: %s' % unknown)
 
-    if args is None or hasattr(args,'func') is False:
+    if args is None or hasattr(args, 'func') is False:
         parser.print_help()
         exit(-1)
 
@@ -441,7 +467,7 @@ def execute():
         logger.addFilter(LogFilter())
 
         class stream:
-            def write(self,text):
+            def write(self, text):
                 print(text)
                 sys.stdout.flush()
 

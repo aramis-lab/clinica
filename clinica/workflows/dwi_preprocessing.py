@@ -453,13 +453,14 @@ head-motion correction)
     import nipype.pipeline.engine as pe
     import nipype.interfaces.fsl as fsl
 
-    from clinica.pipeline.dwi.dwi_preprocessing_workflows import dwi_flirt
     from nipype.workflows.data import get_flirt_schedule
     from nipype.workflows.dmri.fsl.utils import extract_bval
     from nipype.workflows.dmri.fsl.utils import recompose_xfm
     from nipype.workflows.dmri.fsl.utils import recompose_dwi
     from nipype.workflows.dmri.fsl.artifacts import _xfm_jacobian
-    from clinica.pipeline.dwi.dwi_preprocessing_utils import merge_volumes_tdim
+
+    from clinica.workflows.dwi_preprocessing import dwi_flirt
+    from clinica.utils.dwi import merge_volumes_tdim
 
     params = dict(dof=12, no_search=True, interp='spline', bgvalue=0,
                   schedule=get_flirt_schedule('ecc'))

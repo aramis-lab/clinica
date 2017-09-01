@@ -18,7 +18,6 @@ class DWIPreprocessingUsingT1CLI(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments
         """
-
         self._args.add_argument("bids_directory",
                                 help='Path to the BIDS directory.')
         self._args.add_argument("caps_directory",
@@ -26,16 +25,20 @@ class DWIPreprocessingUsingT1CLI(ce.CmdParser):
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
                                 help='TSV file containing the subjects with their sessions.')  # noqa
 
-        self._args.add_argument("--low_bval", type=int, default=5,
+        self._args.add_argument("--low_bval",
+                                type=int, default=5,
                                 help='Define the b0 volumes as all volume bval <= lowbval. (Default=5)')  # noqa
-        self._args.add_argument("--save_intermediate_files", type=bool, default=False,  # noqa
+        self._args.add_argument("--save_intermediate_files",
+                                type=bool, default=False,
                                 help='Will save some intermediate results (for debugging purposes).')  # noqa
 
         self._args.add_argument("-wd", "--working_directory",
                                 help='Temporary directory to store pipeline intermediate results')  # noqa
-        self._args.add_argument("-np", "--n_procs", type=int,
+        self._args.add_argument("-np", "--n_procs",
+                                type=int,
                                 help='Number of cores used to run in parallel')
-        self._args.add_argument("-sl", "--slurm", action='store_true',
+        self._args.add_argument("-sl", "--slurm",
+                                action='store_true',
                                 help='Run the pipeline using SLURM')
 
     def run_pipeline(self, args):

@@ -4,24 +4,47 @@
 def susceptibility_distortion_correction_using_t1(
         name='susceptibility_distortion_correction_using_t1'):
     """
+    Susceptibility distortion correction using the T1w image.
+
+    This workflow allows to correct for echo-planar induced susceptibility
+    artifacts without fieldmap (e.g. ADNI Database) by elastically register
+    DWIs to their respective baseline T1-weighted structural scans using an
+    inverse consistent registration algorithm with a mutual information cost
+    function (SyN algorithm).
 
     Args:
         name (Optional[str]): Name of the workflow.
 
     Inputnode:
+        in_t1 (str): T1w image.
+        in_dwi (str): DWI dataset
 
     Outputnode:
-        outputnode.out_dwi - corrected dwi file
-        outputnode.out_bvec - rotated gradient vectors table
-        outputnode.out_b0_to_t1_rigid_body_matrix - B0 to T1 image FLIRT rigid body fsl coregistration matrix
-        outputnode.out_t1_coregistered_to_b0 - T1 image rigid body coregistered to the B0 image
-        outputnode.out_b0_to_t1_affine_matrix - B0 to T1 image ANTs affine itk coregistration matrix
-        outputnode.out_b0_to_t1_syn_deformation_field - B0 to T1 image ANTs SyN itk warp
-        outputnode.out_warp - Out warp allowing DWI to T1 registration and susceptibilty induced artifacts correction
+        out_dwi (str): Corrected DWI dataset
+        out_warp (str): Out warp allowing DWI to T1 registration and
+            susceptibilty induced artifacts correction
+        out_b0_to_t1_rigid_body_matrix (str): B0 to T1 image FLIRT rigid body
+            FSL coregistration matrix
+        out_t1_to_b0_rigid_body_matrix (str): T1 to B0 image FLIRT rigid body
+            FSL coregistration matrix
+        out_t1_coregistered_to_b0 (str): T1 image rigid body coregistered to
+            the B0 image
+        out_b0_to_t1_syn_deformation_field (str): B0 to T1 image ANTs SyN
+            ITK warp
+        out_b0_to_t1_affine_matrix (str): B0 to T1 image ANTs affine ITK
+            coregistration matrix
 
+    References:
+      .. Nir et al. (Neurobiology of Aging 2015): Connectivity network measures
+        predict volumetric atrophy in mild cognitive impairment
+
+      .. Leow et al. (IEEE Trans Med Imaging 2007): Statistical Properties of
+        Jacobian Maps and the Realization of Unbiased Large Deformation
+        Nonlinear Image Registration
 
 
     Returns:
+        The workflow
 
     Example:
         >>> epi = susceptibility_distortion_correction_using_t1()
@@ -29,30 +52,7 @@ def susceptibility_distortion_correction_using_t1(
         >>> epi.inputs.inputnode.in_t1 = 'T1w.nii'
         >>> epi.run() # doctest: +SKIP
     """
-
-    """
-    SDC stands for susceptibility distortion correction and SYB stand for SyN based. This workflow
-    allows to correct for echo-planar induced susceptibility artifacts without fieldmap
-    (e.g. ADNI Database) by elastically register DWIs to their respective baseline T1-weighted
-    structural scans using an inverse consistent registration algorithm with a mutual information cost
-    function (SyN algorithm).
-    .. References
-      .. Nir et al. (Neurobiology of Aging 2015)- Connectivity network measures predict volumetric atrophy in mild cognitive impairment
-
-         Leow et al. (IEEE Trans Med Imaging 2007)- Statistical Properties of Jacobian Maps and the Realization of Unbiased Large Deformation Nonlinear Image Registration
-
-    Inputnode
-    ---------
-    DWI : FILE
-      Mandatory input. Input dwi file.
-    T1 : FILE
-      Mandatory input. Input T1 file.
-
-    Outputnode
-    ----------
-
-
-    """
+    import nipype
     import nipype.pipeline.engine as pe
     import nipype.interfaces.utility as niu
     import nipype.interfaces.fsl as fsl
@@ -73,7 +73,13 @@ def susceptibility_distortion_correction_using_t1(
     invert_xfm = pe.Node(interface=fsl.ConvertXFM(), name='invert_xfm')
     invert_xfm.inputs.invert_xfm = True
 
-    apply_xfm = pe.Node(interface=fsl.ApplyXfm(), name='apply_xfm')
+    if nipype.__version__.split('.') < ['0', '13', '0']:
+        apply_xfm = pe.Node(interface=fsl.ApplyXfm(),
+                            name='apply_xfm')
+    else:
+        apply_xfm = pe.Node(interface=fsl.ApplyXFM(),
+                            name='apply_xfm')
+    # apply_xfm = pe.Node(interface=fsl.ApplyXfm(), name='apply_xfm')
     apply_xfm.inputs.apply_xfm = True
     apply_xfm.inputs.interp = 'spline'
     apply_xfm.inputs.cost = 'normmi'
@@ -161,6 +167,7 @@ def apply_all_corrections_using_ants(name='apply_all_corrections_using_ants'):
     Additionally, computes the corresponding bspline coefficients and
     the map of determinants of the jacobian.
     """
+    import  nipype
     import nipype.interfaces.fsl as fsl
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
@@ -185,7 +192,13 @@ def apply_all_corrections_using_ants(name='apply_all_corrections_using_ants'):
     invert_xfm = pe.Node(interface=fsl.ConvertXFM(), name='invert_xfm')
     invert_xfm.inputs.invert_xfm = True
 
-    apply_xfm = pe.Node(interface=fsl.ApplyXfm(), name='apply_xfm')
+    if nipype.__version__.split('.') < ['0', '13', '0']:
+        apply_xfm = pe.Node(interface=fsl.ApplyXfm(),
+                            name='apply_xfm')
+    else:
+        apply_xfm = pe.Node(interface=fsl.ApplyXFM(),
+                            name='apply_xfm')
+    # apply_xfm = pe.Node(interface=fsl.ApplyXfm(), name='apply_xfm')
     apply_xfm.inputs.apply_xfm = True
     apply_xfm.inputs.interp = "spline"
     apply_xfm.inputs.cost = 'normmi'
@@ -219,33 +232,33 @@ def apply_all_corrections_using_ants(name='apply_all_corrections_using_ants'):
 
     wf = pe.Workflow(name=name)
     wf.connect([
-        (inputnode, concat_hmc_ecc, [('in_ecc', 'in_file2')]),
-        (inputnode, concat_hmc_ecc, [('in_hmc', 'in_file')]),
-        (concat_hmc_ecc, warps,     [('out_file', 'premat')]),
-        (inputnode, warps,        [('in_sdc_syb', 'warp1')]),
-        (inputnode, split, [('in_dwi', 'in_file')]),
-        (split, pick_ref, [('out_files', 'inlist')]),
-        (pick_ref, flirt_b0_to_t1, [('out', 'in_file')]),
-        (inputnode, flirt_b0_to_t1, [('in_t1', 'reference')]),
-        (flirt_b0_to_t1, invert_xfm, [('out_matrix_file', 'in_file')]),
-        (invert_xfm, apply_xfm, [('out_file', 'in_matrix_file')]),
-        (inputnode, apply_xfm, [('in_t1', 'in_file')]),
-        (pick_ref, apply_xfm, [('out', 'reference')]),
-        (apply_xfm, warps, [('out_file', 'reference')]),
-        (warps, unwarp, [('out_file', 'field_file')]),
-        (split, unwarp, [('out_files', 'in_file')]),
-        (apply_xfm, unwarp, [('out_file', 'ref_file')]),
-        (apply_xfm, coeffs, [('out_file', 'reference')]),
-        (warps, coeffs, [('out_file', 'in_file')]),
-        (apply_xfm, jacobian, [('out_file', 'reference')]),
-        (coeffs, jacobian, [('out_file', 'in_file')]),
-        (unwarp, jacmult, [('out_file', 'in_file')]),
-        (jacobian, jacmult, [('out_jacobian', 'operand_files')]),
-        (jacmult, thres, [('out_file', 'in_file')]),
-        (thres, merge, [('out_file', 'in_files')]),
-        (warps, outputnode, [('out_file', 'out_warp')]),
-        (coeffs, outputnode, [('out_file', 'out_coeff')]),
-        (jacobian, outputnode, [('out_jacobian', 'out_jacobian')]),
-        (merge, outputnode, [('merged_file', 'out_file')])
+        (inputnode,  concat_hmc_ecc, [('in_ecc',            'in_file2')]),
+        (inputnode,  concat_hmc_ecc, [('in_hmc',             'in_file')]),
+        (concat_hmc_ecc,      warps, [('out_file',            'premat')]),
+        (inputnode,           warps, [('in_sdc_syb',           'warp1')]),
+        (inputnode,           split, [('in_dwi',             'in_file')]),
+        (split,            pick_ref, [('out_files',           'inlist')]),
+        (pick_ref,   flirt_b0_to_t1, [('out',                'in_file')]),
+        (inputnode,  flirt_b0_to_t1, [('in_t1',            'reference')]),
+        (flirt_b0_to_t1, invert_xfm, [('out_matrix_file',    'in_file')]),
+        (invert_xfm,      apply_xfm, [('out_file',    'in_matrix_file')]),
+        (inputnode,       apply_xfm, [('in_t1',              'in_file')]),
+        (pick_ref,        apply_xfm, [('out',              'reference')]),
+        (apply_xfm,           warps, [('out_file',         'reference')]),
+        (warps,              unwarp, [('out_file',        'field_file')]),
+        (split,              unwarp, [('out_files',          'in_file')]),
+        (apply_xfm,          unwarp, [('out_file',          'ref_file')]),
+        (apply_xfm,          coeffs, [('out_file',         'reference')]),
+        (warps,              coeffs, [('out_file',           'in_file')]),
+        (apply_xfm,        jacobian, [('out_file',         'reference')]),
+        (coeffs,           jacobian, [('out_file',           'in_file')]),
+        (unwarp,            jacmult, [('out_file',           'in_file')]),
+        (jacobian,          jacmult, [('out_jacobian', 'operand_files')]),
+        (jacmult,             thres, [('out_file',           'in_file')]),
+        (thres,               merge, [('out_file',          'in_files')]),
+        (warps,          outputnode, [('out_file',          'out_warp')]),
+        (coeffs,         outputnode, [('out_file',         'out_coeff')]),
+        (jacobian,       outputnode, [('out_jacobian',  'out_jacobian')]),
+        (merge,          outputnode, [('merged_file',        'out_file')])
     ])
     return wf

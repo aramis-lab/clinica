@@ -1,5 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# coding: utf8
+
+
 import abc
 
 
@@ -7,7 +8,8 @@ class AtlasAbstract:
     """
     Abstract class for Atlas handling.
 
-    Naming convention for children classes of AtlasAbstract: <name_atlas>[_<resolution>][_<map>]
+    Naming convention for children classes of AtlasAbstract:
+    <name_atlas>[<resolution>][<map>]
     """
     __metaclass__ = abc.ABCMeta
 
@@ -20,7 +22,8 @@ class AtlasAbstract:
 
     def get_spatial_resolution(self):
         """
-        Returns the spatial resolution of the atlas (in format "XxXxX" e.g. 1x1x1 or 1.5x1.5x1.5).
+        Returns the spatial resolution of the atlas (in format "XxXxX" e.g.
+        1x1x1 or 1.5x1.5x1.5).
         """
         import nibabel as nib
 
@@ -62,14 +65,15 @@ class AtlasAbstract:
     @abc.abstractmethod
     def get_atlas_map(self):
         """
-        Returns the map associated to the atlas (e.g. T1, FA map from DTI, etc.).
+        Returns the map associated to the atlas (e.g. T1, FA map from DTI).
         """
         pass
 
     @abc.abstractmethod
     def get_tsv_roi(self):
         """
-        Returns the TSV file containing the ROI (regions of interest) of the atlas.
+        Returns the TSV file containing the ROI (regions of interest) of
+        the atlas.
         """
         pass
 
@@ -85,7 +89,7 @@ class AtlasAbstract:
         return index_vector
 
 
-class JHUDTI81_2mm(AtlasAbstract):
+class JHUDTI812mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
 
@@ -117,7 +121,7 @@ class JHUDTI81_2mm(AtlasAbstract):
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUDTI81_ROI.tsv')
 
 
-class JHUDTI81_1mm(AtlasAbstract):
+class JHUDTI811mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
 
@@ -149,7 +153,7 @@ class JHUDTI81_1mm(AtlasAbstract):
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUDTI81_ROI.tsv')
 
 
-class JHUTracts0_1mm(AtlasAbstract):
+class JHUTracts01mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
 
@@ -181,8 +185,7 @@ class JHUTracts0_1mm(AtlasAbstract):
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
 
 
-
-class JHUTracts0_2mm(AtlasAbstract):
+class JHUTracts02mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
 
@@ -214,7 +217,7 @@ class JHUTracts0_2mm(AtlasAbstract):
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
 
 
-class JHUTracts25_1mm(AtlasAbstract):
+class JHUTracts251mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
 
@@ -246,8 +249,7 @@ class JHUTracts25_1mm(AtlasAbstract):
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
 
 
-
-class JHUTracts25_2mm(AtlasAbstract):
+class JHUTracts252mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
 
@@ -279,8 +281,7 @@ class JHUTracts25_2mm(AtlasAbstract):
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
 
 
-
-class JHUTracts50_1mm(AtlasAbstract):
+class JHUTracts501mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
 
@@ -312,7 +313,7 @@ class JHUTracts50_1mm(AtlasAbstract):
         return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
 
 
-class JHUTracts50_2mm(AtlasAbstract):
+class JHUTracts502mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
 
