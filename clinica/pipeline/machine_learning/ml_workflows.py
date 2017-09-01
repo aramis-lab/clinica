@@ -198,7 +198,7 @@ class RB_RepHoldOut_RandomForest(base.MLWorkflow):
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type,
                  output_dir, fwhm=0, modulated="on", mask_zeros=True, n_threads=15,
                  n_splits=100, test_size=0.3,
-                 grid_search_folds=10, balanced=True, voxelbased=False, n_estimators_range=range(5, 30, 1)):
+                 grid_search_folds=10, balanced=True, voxelbased=False, n_estimators_range=range(5, 15, 1)):
         self._output_dir = output_dir
         self._n_threads = n_threads
         self._n_splits = n_splits

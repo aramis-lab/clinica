@@ -311,7 +311,7 @@ from sklearn.ensemble import RandomForestClassifier
 
 class RandomForest(base.MLAlgorithm):
     
-    def __init__(self, x, y, balanced=False, grid_search_folds=10, n_estimators_range=range(5, 30, 1), n_threads=15):
+    def __init__(self, x, y, balanced=False, grid_search_folds=10, n_estimators_range=range(5, 15, 1), n_threads=15):
         self._x = x
         self._y = y
         self._balanced = balanced
