@@ -358,7 +358,7 @@ class RandomForest(base.MLAlgorithm):
             accuracies.append(best_acc)
         
         best_acc = np.mean(accuracies)
-        best_n_estimators = int(np.mean(n_estimators_list))
+        best_n_estimators = int(round(np.mean(n_estimators_list)))
         
         return {'n_estimators': best_n_estimators, 'balanced_accuracy': best_acc}
     
@@ -416,7 +416,7 @@ class RandomForest(base.MLAlgorithm):
             bal_acc_list.append(result['best_parameter']['balanced_accuracy'])
     
         # best n_estimators is the average of all n_estimators
-        best_n_estimators = int(np.mean(best_n_estimators_list))
+        best_n_estimators = int(round(np.mean(best_n_estimators_list)))
         # Mean balanced accuracy
         mean_bal_acc = np.mean(bal_acc_list)
         
