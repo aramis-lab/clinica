@@ -174,19 +174,17 @@ class LogisticReg(base.MLAlgorithm):
     def _launch_logistic_reg(self, x_train, x_test, y_train, y_test, c, shared_x=None, train_indices=None,
                              test_indices=None):
         
-        #x_train_, mean_x, std_x = _centered_normalised_data(x_train)
-        #x_test_ = (x_test - mean_x)/std_x
-        x_train_ = x_train.copy()
-        x_test_ = x_test.copy()
+        # x_train_, mean_x, std_x = centered_normalised_data(x_train)
+        # x_test_ = (x_test - mean_x)/std_x
         
         if self._balanced:
             classifier = LogisticRegression(penalty=self._penalty, tol=1e-6, C=c, class_weight='balanced')
         else:
             classifier = LogisticRegression(penalty=self._penalty, tol=1e-6, C=c)
         
-        classifier.fit(x_train_, y_train)
-        y_hat = classifier.predict(x_test_)
-        proba_test = classifier.predict_proba(x_test_)[:, 1]
+        classifier.fit(x_train, y_train)
+        y_hat = classifier.predict(x_test)
+        proba_test = classifier.predict_proba(x_test)[:, 1]
         auc = roc_auc_score(y_test, proba_test)
 
         return classifier, y_hat, auc
@@ -240,8 +238,7 @@ class LogisticReg(base.MLAlgorithm):
             x_test_inner = x_train[inner_test_index]
             y_train_inner = y_train[inner_train_index]
             y_test_inner = y_train[inner_test_index]
-            
-            
+
             for c in self._c_range:
                 async_result[i][c] = inner_pool.apply_async(self._grid_search,
                                                             (x_train_inner, x_test_inner,
