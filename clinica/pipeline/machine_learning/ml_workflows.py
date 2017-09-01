@@ -183,10 +183,12 @@ class VB_RepHoldOut_LogisticRegression(base.MLWorkflow):
         self._validation = validation.RepeatedSplit(self._algorithm, n_iterations=self._n_splits, test_size=self._test_size)
         classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads)
                                                      
-        classifier_dir = path.join(self._output_dir, 'classifier')
-        if not path.exists(classifier):
+        classifier_dir = os.path.join(self._output_dir, 'classifier')
+        try:
             os.makedirs(classifier_dir)
-                                                     
+        except:
+            pass
+        
         self._algorithm.save_classifier(classifier, classifier_dir)
         self._algorithm.save_parameters(best_params, classifier_dir)
         self._validation.save_results(self._output_dir)
