@@ -5,14 +5,25 @@ import abc
 class MLWorkflow:
     __metaclass__ = abc.ABCMeta
 
-    # def __init__(self, ml_input, ml_validation, ml_algorithm):
+    # def __init__(self, ml_input, ml_validation, ml_algorithm, output_dir):
     #     self._ml_input = ml_input
     #     self._ml_validation = ml_validation
     #     self._ml_algorithm = ml_algorithm
+    #     self._output_dir = output_dir
 
     @abc.abstractmethod
     def run(self):
         pass
+
+    def save_image(self):
+        import os
+        import pandas as pd
+        from neuropredict import visualize
+
+        df = pd.io.parsers.read_csv(os.path.join(self._output_dir, 'results.tsv'), sep='\t')
+        visualize.metric_distribution(df.as_matrix(['balanced_accuracy', 'auc', 'accuracy']),
+                                      ['balanced_accuracy', 'auc', 'accuracy'],
+                                      os.path.join(self._output_dir, 'metrics'))
 
 
 class MLInput:
