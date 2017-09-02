@@ -71,6 +71,15 @@ def get_caps_pet_list(input_directory, subjects_visits_tsv, group_id, pet_type):
 
 
 def load_data(image_list, mask=True):
+    """
+
+    Args:
+        image_list:
+        mask:
+
+    Returns:
+
+    """
     data = None
     shape = None
     data_mask = None
@@ -96,6 +105,16 @@ def load_data(image_list, mask=True):
 
 
 def revert_mask(weights, mask, shape):
+    """
+
+    Args:
+        weights:
+        mask:
+        shape:
+
+    Returns:
+
+    """
 
     z = np.zeros(np.prod(shape))
     z[mask] = weights
@@ -133,10 +152,20 @@ def features_weights(image_list, dual_coefficients, sv_indices, scaler=None, mas
     return weights
 
 
-def weights_to_nifti(weights, image, output_filename, mask=None):
+def weights_to_nifti(weights, image, output_filename):
+    """
+
+    Args:
+        weights:
+        image:
+        output_filename:
+
+    Returns:
+
+    """
 
     # Normalize with 2-norm
-    # comparable_features = 2 * weights / np.power(norm(weights.flatten(), 2), 2)
+    # features = 2 * weights / np.power(norm(weights.flatten(), 2), 2)
 
     # Normalize inf-norm
     features = weights / abs(weights).max()
@@ -150,5 +179,5 @@ def weights_to_nifti(weights, image, output_filename, mask=None):
         qform[i-1, i-1] = hd['pixdim'][i]
         qform[i-1, 3] = -1.0 * hd['pixdim'][i] * hd['dim'][i] / 2.0
 
-    new_img = nib.Nifti1Image(features, qform)
-    nib.save(new_img, output_filename)
+    output_image = nib.Nifti1Image(features, qform)
+    nib.save(output_image, output_filename)

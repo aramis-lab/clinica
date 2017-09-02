@@ -158,6 +158,9 @@ class CAPSVoxelBasedInput(CAPSInput):
         self._orig_shape = None
         self._data_mask = None
 
+        if modulated not in ['on', 'off']:
+            raise Exception("Incorrect modulation parameter. It must be one of the values 'on' or 'off'")
+
     def get_images(self):
         """
 
@@ -168,31 +171,27 @@ class CAPSVoxelBasedInput(CAPSInput):
             return self._images
 
         if self._image_type == 'T1':
-            if self._fwhm == 0:
-                self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
-                                          't1/spm/dartel/group-' + self._group_id,
-                                          '%s_%s_T1w_segm-graymatter_space-Ixi549Space_modulated-%s_probability.nii.gz'
-                                          % (self._subjects[i], self._sessions[i], self._modulated))
-                                for i in range(len(self._subjects))]
-            else:
-                self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
-                                          't1/spm/dartel/group-' + self._group_id,
-                                          '%s_%s_T1w_segm-graymatter_space-Ixi549Space_modulated-%s_fwhm-%dmm_probability.nii.gz'
-                                          % (self._subjects[i], self._sessions[i], self._modulated, self._fwhm))
-                                for i in range(len(self._subjects))]
+            fwhm = '' if self._fwhm == 0 else '_fwhm-%dmm' % int(self._fwhm)
+
+            self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
+                                      't1/spm/dartel/group-' + self._group_id,
+                                      '%s_%s_T1w_segm-graymatter_space-Ixi549Space_modulated-%s%s_probability.nii.gz'
+                                      % (self._subjects[i], self._sessions[i], self._modulated, fwhm))
+                            for i in range(len(self._subjects))]
         else:
-            if self._pvc is None:
-                self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
-                                          'pet/preprocessing/group-' + self._group_id,
-                                          '%s_%s_task-rest_acq-%s_pet_space-Ixi549Space_pet.nii.gz'
-                                          % (self._subjects[i], self._sessions[i], self._image_type))
-                                for i in range(len(self._subjects))]
-            else:
-                self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
-                                          'pet/preprocessing/group-' + self._group_id,
-                                          '%s_%s_task-rest_acq-%s_pet_space-Ixi549Space_pvc-%s_pet.nii.gz'
-                                          % (self._subjects[i], self._sessions[i], self._image_type, self._pvc))
-                                for i in range(len(self._subjects))]
+            pvc = '' if self._pvc is None else '_pvc-%s' % self._pvc
+            fwhm = '' if self._fwhm == 0 else '_fwhm-%dmm' % int(self._fwhm)
+            suvr = 'pons' if self._image_type == 'fdg' else 'cerebellumPons'
+
+            self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
+                                      'pet/preprocessing/group-' + self._group_id,
+                                      '%s_%s_task-rest_acq-%s_pet_space-Ixi549Space%s_suvr-%s_mask-brain%s_pet.nii.gz'
+                                      % (self._subjects[i], self._sessions[i], self._image_type, pvc, suvr, fwhm))
+                            for i in range(len(self._subjects))]
+
+        for image in self._images:
+            if not path.exists(image):
+                raise Exception("File %s doesn't exists." % image)
 
         return self._images
 
@@ -223,8 +222,8 @@ class CAPSVoxelBasedInput(CAPSInput):
 
 class CAPSRegionBasedInput(CAPSInput):
 
-    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, atlas, fwhm=0,
-                 modulated="on", pvc=None, mask_zeros=True, precomputed_kernel=None):
+    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, atlas,
+                 pvc=None, precomputed_kernel=None):
         """
 
         Args:
@@ -234,23 +233,16 @@ class CAPSRegionBasedInput(CAPSInput):
             group_id:
             image_type: 'T1', 'fdg', 'av45', 'pib' or 'flute'
             atlas:
-            fwhm:
-            modulated:
-            mask_zeros:
             precomputed_kernel:
         """
 
         super(CAPSRegionBasedInput, self).__init__(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
-                                                  image_type, precomputed_kernel=precomputed_kernel)
+                                                   image_type, precomputed_kernel=precomputed_kernel)
 
         self._atlas = atlas
-        self._fwhm = fwhm
-        self._modulated = modulated
         self._pvc = pvc
-        self._mask_zeros = mask_zeros
         self._orig_shape = None
         self._data_mask = None
-
 
         if atlas not in ['AAL2', 'Neuromorphometrics', 'AICHA', 'LPBA40', 'Hammers']:
             raise Exception("Incorrect atlas name. It must be one of the values 'AAL2', 'Neuromorphometrics', 'AICHA', 'LPBA40', 'Hammers' ")
@@ -271,20 +263,18 @@ class CAPSRegionBasedInput(CAPSInput):
                                       % (self._subjects[i], self._sessions[i], self._atlas))
                             for i in range(len(self._subjects))]
         else:
-            # TODO
-            # da modificare (mi manca un esempio di caps)
-            if self._pvc is None:
-                self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
-                                          'pet/preprocessing/group-' + self._group_id,
-                                          '%s_%s_task-rest_acq-%s_pet_space-Ixi549Space_pet.nii.gz'
-                                          % (self._subjects[i], self._sessions[i], self._image_type))
-                                for i in range(len(self._subjects))]
-            else:
-                self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
-                                          'pet/preprocessing/group-' + self._group_id,
-                                          '%s_%s_task-rest_acq-%s_pet_space-Ixi549Space_pvc-%s_pet.nii.gz'
-                                          % (self._subjects[i], self._sessions[i], self._image_type, self._pvc))
-                                for i in range(len(self._subjects))]
+            pvc = '' if self._pvc is None else '_pvc-%s' % self._pvc
+            suvr = 'pons' if self._image_type == 'fdg' else 'cerebellumPons'
+
+            self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
+                                      'pet/preprocessing/group-' + self._group_id,
+                                      '%s_%s_task-rest_acq-%s_pet_space-%s%s_suvr-%s_statistics.tsv'
+                                      % (self._subjects[i], self._sessions[i], self._image_type, self._atlas, pvc, suvr))
+                            for i in range(len(self._subjects))]
+
+        for image in self._images:
+            if not path.exists(image):
+                raise Exception("File %s doesn't exists." % image)
 
         return self._images
 
@@ -304,9 +294,16 @@ class CAPSRegionBasedInput(CAPSInput):
         return self._x
 
     def save_weights_as_nifti(self, weights, output_dir):
-        #dove prende i weight
-        import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        input_image_atlas = os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', self._atlas + '.nii')
-        output_image=rbio.weights_to_nifti(input_image_atlas, weights)
-        output_image.to_filename(os.path.join(output_dir, 'weights-' + self._atlas + '.nii'))
+        """
+
+        Args:
+            weights:
+            output_dir:
+
+        Returns:
+
+        """
+
+        output_filename = path.join(output_dir, 'weights.nii.gz')
+        output_image = rbio.weights_to_nifti(weights, self._atlas, output_filename)
+        output_image.to_filename()

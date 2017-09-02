@@ -191,7 +191,7 @@ class RepeatedKFoldCV(base.MLValidation):
                                index=False, sep='\t', encoding='utf-8')
 
 
-class RepeatedSplit(base.MLValidation):
+class RepeatedHoldOut(base.MLValidation):
 
     def __init__(self, ml_algorithm, n_iterations=100, test_size=0.3):
         self._ml_algorithm = ml_algorithm
@@ -237,34 +237,6 @@ class RepeatedSplit(base.MLValidation):
             iteration_dir = path.join(output_dir, 'iteration-' + str(iteration))
             if not path.exists(iteration_dir):
                 os.makedirs(iteration_dir)
-
-            # iteration_subjects_list = []
-            # iteration_results_list = []
-            # folds_dir = path.join(iteration_dir, 'folds')
-
-            # if not path.exists(folds_dir):
-            #     os.makedirs(folds_dir)
-
-            # for i in range(len(self._split_results[iteration])):
-            #     subjects_df = pd.DataFrame({'y': self._split_results[iteration][i]['y'],
-            #                                 'y_hat': self._split_results[iteration][i]['y_hat'],
-            #                                 'y_index': self._split_results[iteration][i]['y_index']})
-            #     subjects_df.to_csv(path.join(folds_dir, 'subjects_fold-' + str(i) + '.tsv'),
-            #                        index=False, sep='\t', encoding='utf-8')
-            #     iteration_subjects_list.append(subjects_df)
-            #
-            #     results_df = pd.DataFrame(
-            #         {'balanced_accuracy': self._split_results[iteration][i]['evaluation']['balanced_accuracy'],
-            #          'auc': self._split_results[iteration][i]['auc'],
-            #          'accuracy': self._split_results[iteration][i]['evaluation']['accuracy'],
-            #          'sensitivity': self._split_results[iteration][i]['evaluation']['sensitivity'],
-            #          'specificity': self._split_results[iteration][i]['evaluation']['specificity'],
-            #          'ppv': self._split_results[iteration][i]['evaluation']['ppv'],
-            #          'npv': self._split_results[iteration][i]['evaluation']['npv']}, index=['i', ])
-            #     results_df.to_csv(path.join(folds_dir, 'results_fold-' + str(i) + '.tsv'),
-            #                       index=False, sep='\t', encoding='utf-8')
-            #     iteration_results_list.append(results_df)
-
             iteration_subjects_df = pd.DataFrame({'y': self._split_results[iteration]['y'],
                                                   'y_hat': self._split_results[iteration]['y_hat'],
                                                   'y_index': self._split_results[iteration]['y_index']})
@@ -302,38 +274,11 @@ class RepeatedSplit(base.MLValidation):
         mean_results_df.to_csv(path.join(output_dir, 'mean_results.tsv'),
                                index=False, sep='\t', encoding='utf-8')
 
-        # results_dict = {'balanced_accuracy': np.nanmean([r['evaluation']['balanced_accuracy'] for r in self._split_results]),
-        #                 'auc': np.nanmean([r['auc'] for r in self._split_results]),
-        #                 'accuracy': np.nanmean([r['evaluation']['accuracy'] for r in self._split_results]),
-        #                 'sensitivity': np.nanmean([r['evaluation']['sensitivity'] for r in self._split_results]),
-        #                 'specificity': np.nanmean([r['evaluation']['specificity'] for r in self._split_results]),
-        #                 'ppv': np.nanmean([r['evaluation']['ppv'] for r in self._split_results]),
-        #                 'npv': np.nanmean([r['evaluation']['npv'] for r in self._split_results])}
-        #
-        # # t1_df = pd.DataFrame(columns=t1_col_df)
-        # # t1_df = t1_df.append(row_to_append, ignore_index=True)
-        #
-        # results_df = pd.DataFrame(results_dict, index=['i', ])
-        # results_df.to_csv(path.join(output_dir, 'results.tsv'),
-        #                   index=False, sep='\t', encoding='utf-8')
-        #
-        # subjects_folds = []
-        # container_dir = path.join(output_dir, 'iterations')
-        # if not path.exists(container_dir):
-        #     os.makedirs(container_dir)
-        # for i in range(len(self._split_results)):
-        #     subjects_df = pd.DataFrame({'y': self._split_results[i]['y'],
-        #                                 'y_hat': self._split_results[i]['y_hat'],
-        #                                 'y_index': self._split_results[i]['y_index']})
-        #
-        #     subjects_df.to_csv(path.join(container_dir, 'subjects_iteration-' + str(i) + '.tsv'),
-        #                        index=False, sep='\t', encoding='utf-8')
-        #
-        #     subjects_folds.append(subjects_df)
-        #
-        # all_subjects = pd.concat(subjects_folds)
-        # all_subjects.to_csv(path.join(output_dir, 'subjects.tsv'),
-        #                     index=False, sep='\t', encoding='utf-8')
+        self.compute_variance()
+        variance_df = pd.DataFrame({'resampled_t': self._resampled_t,
+                                    'corrected_resampled_t': self._corrected_resampled_t}, index=[0, ])
+        variance_df.to_csv(path.join(output_dir, 'variance.tsv'),
+                           index=False, sep='\t', encoding='utf-8')
 
     def compute_variance(self):
         # compute average test error
