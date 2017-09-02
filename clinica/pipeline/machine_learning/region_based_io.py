@@ -111,35 +111,41 @@ def features_weights(image_list, dual_coefficients, sv_indices, scaler=None):
 
     sv_images = [image_list[i] for i in sv_indices]
 
-    shape = pd.io.parsers.read_csv(sv_images[0], sep='\t',usecols=[2],header=0)
+    shape = pd.io.parsers.read_csv(sv_images[0], sep='\t', usecols=[2], header=0)
     weights = np.zeros(len(shape))
 
     for i in range(len(sv_images)):
-        subj = pd.io.parsers.read_csv(sv_images[i], sep='\t',usecols=[2],header=0)
+        subj = pd.io.parsers.read_csv(sv_images[i], sep='\t', usecols=[2], header=0)
         subj_data = subj.mean_scalar
         weights += dual_coefficients[i] * subj_data
 
     return weights
 
 
-def weights_to_nifti(input_image_atlas, weights):
+def weights_to_nifti(weights, atlas, output_filename):
     """
 
     Args:
-        input_image_atlas:
+        atlas:
         weights:
 
     Returns:
 
     """
-    #input_image_atlas = os.path.join('....', 'atlas_id.nii')
 
-    atlas_image = nib.load(input_image_atlas).get_data()
-    labels = list(set(atlas_image.ravel()))
-    output_image_weights=np.array(atlas_image,dtype='f')
+    import os
+    clinica_home = os.environ.get('CLINICA_HOME', '')
+    atlas_path = os.path.join(clinica_home, 'clinica', 'resources', 'atlases_spm', atlas + '.nii')
+
+    atlas_image = nib.load(atlas_path)
+    atlas_data = atlas_image.get_data()
+    labels = list(set(atlas_data.ravel()))
+    output_image_weights = np.array(atlas_data, dtype='f')
     for i, n in enumerate(labels):
-        index = np.array(np.where(atlas_image== n))
-        output_image_weights[index[0, :], index[1, :], index[2, :]]=weights[i]
-    output_image = nib.Nifti1Image(output_image_weights, nib.load(input_image_atlas).get_affine(),nib.load(input_image_atlas).get_header())
+        index = np.array(np.where(atlas_data == n))
+        output_image_weights[index[0, :], index[1, :], index[2, :]] = weights[i]
 
-    return output_image
+    affine = atlas_image.get_affine()
+    header = atlas_image.get_header()
+    output_image = nib.Nifti1Image(output_image_weights, affine, header)
+    nib.save(output_image, output_filename)
