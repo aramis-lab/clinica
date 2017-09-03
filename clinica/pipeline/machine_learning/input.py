@@ -305,5 +305,4 @@ class CAPSRegionBasedInput(CAPSInput):
         """
 
         output_filename = path.join(output_dir, 'weights.nii.gz')
-        output_image = rbio.weights_to_nifti(weights, self._atlas, output_filename)
-        output_image.to_filename()
+        rbio.weights_to_nifti(weights, self._atlas, output_filename)
