@@ -287,17 +287,15 @@ class RepeatedHoldOut(base.MLValidation):
         for i in range(num_split):
             test_error_split[i] = self._compute_average_test_error(self._split_results[i]['y'],
                                                                    self._split_results[i]['y_hat'])
-        
         # compute mu_{n_1}^{n_2}
         average_test_error = np.mean(test_error_split)
-        
+
         # compute variance (point 2 and 6 of Nadeau's paper)
         self._resampled_t = np.linalg.norm(test_error_split - average_test_error)**2/(num_split - 1)
         self._corrected_resampled_t = (1/num_split + self._test_size/(1 - self._test_size)) * self._resampled_t
 
-        print self._resampled_t, self._corrected_resampled_t
         return self._resampled_t, self._corrected_resampled_t
 
     def _compute_average_test_error(self, y_list, yhat_list):
         # return the average test error (denoted mu_j hat)
-        return len(np.where(y_list != yhat_list)[0])/len(y_list)
+        return float(len(np.where(y_list != yhat_list)[0]))/float(len(y_list))
