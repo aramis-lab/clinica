@@ -267,7 +267,7 @@ class CAPSRegionBasedInput(CAPSInput):
             suvr = 'pons' if self._image_type == 'fdg' else 'cerebellumPons'
 
             self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
-                                      'pet/preprocessing/group-' + self._group_id,
+                                      'pet/preprocessing/group-' + self._group_id, 'atlas_statistics',
                                       '%s_%s_task-rest_acq-%s_pet_space-%s%s_suvr-%s_statistics.tsv'
                                       % (self._subjects[i], self._sessions[i], self._image_type, self._atlas, pvc, suvr))
                             for i in range(len(self._subjects))]
