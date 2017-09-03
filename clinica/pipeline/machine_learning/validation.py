@@ -295,6 +295,7 @@ class RepeatedHoldOut(base.MLValidation):
         self._resampled_t = np.linalg.norm(test_error_split - average_test_error)**2/(num_split - 1)
         self._corrected_resampled_t = (1/num_split + self._test_size/(1 - self._test_size)) * self._resampled_t
 
+        print self._resampled_t, self._corrected_resampled_t
         return self._resampled_t, self._corrected_resampled_t
 
     def _compute_average_test_error(self, y_list, yhat_list):

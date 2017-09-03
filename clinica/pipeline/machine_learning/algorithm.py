@@ -437,7 +437,7 @@ class RandomForest(base.MLAlgorithm):
     def save_weights(self, classifier, output_dir):
 
         np.savetxt(path.join(output_dir, 'weights.txt'), classifier.feature_importances_)
-        return classifier.coef_
+        return classifier.feature_importances_
     
     def save_parameters(self, parameters_dict, output_dir):
         
