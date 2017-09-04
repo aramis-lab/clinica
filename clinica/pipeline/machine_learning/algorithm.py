@@ -6,6 +6,7 @@ from multiprocessing.pool import ThreadPool
 import numpy as np
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_auc_score
 
@@ -284,19 +285,20 @@ class LogisticReg(base.MLAlgorithm):
 
     def save_classifier(self, classifier, output_dir):
         
-        np.savetxt(path.join(output_dir, 'weights.txt'), classifier.coef_)
+        np.savetxt(path.join(output_dir, 'weights.txt'), classifier.coef_.transpose())
         np.savetxt(path.join(output_dir, 'intercept.txt'), classifier.intercept_)
 
     def save_weights(self, classifier, output_dir):
-    
-        np.savetxt(path.join(output_dir, 'weights.txt'), classifier.coef_)
-        return classifier.coef_
+
+        np.savetxt(path.join(output_dir, 'weights.txt'), classifier.coef_.transpose())
+        return classifier.coef_.transpose()
     
     def save_parameters(self, parameters_dict, output_dir):
         
         with open(path.join(output_dir, 'best_parameters.json'), 'w') as f:
             json.dump(parameters_dict, f)
 
+    @staticmethod
     def _centered_normalised_data(features):
         std = np.std(features, axis=0)
         std[np.where(std == 0)[0]] = 1.
@@ -304,10 +306,6 @@ class LogisticReg(base.MLAlgorithm):
         features_bis = (features - mean)/std
         return features_bis, mean, std
 
-
-
-
-from sklearn.ensemble import RandomForestClassifier
 
 class RandomForest(base.MLAlgorithm):
     

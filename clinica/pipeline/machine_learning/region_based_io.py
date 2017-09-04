@@ -128,6 +128,7 @@ def weights_to_nifti(weights, atlas, output_filename):
     Args:
         atlas:
         weights:
+        output_filename:
 
     Returns:
 

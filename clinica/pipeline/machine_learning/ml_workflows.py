@@ -236,6 +236,8 @@ class RB_RepHoldOut_LogisticRegression(base.MLWorkflow):
         self._algorithm.save_parameters(best_params, classifier_dir)
         weights = self._algorithm.save_weights(classifier, classifier_dir)
 
+        self._classifier = classifier
+
         self._input.save_weights_as_nifti(weights, classifier_dir)
 
         self._validation.save_results(self._output_dir)
