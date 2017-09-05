@@ -345,6 +345,8 @@ def execute():
 
     from clinica.pipeline.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI  # noqa
 
+
+
     run_parser = sub_parser.add_parser('run')
     pipelines = ClinicaClassLoader(
         baseclass=CmdParser, extra_dir="pipelines").load()
