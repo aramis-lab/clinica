@@ -345,15 +345,6 @@ def execute():
 
     from clinica.pipeline.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI  # noqa
 
-    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids_cli import AiblToBidsCLI
-
-    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids_cli import AiblToBidsCLI
-    from clinica.iotools.converters.adni_to_bids.adni_to_bids_cli import AdniToBidsCLI
-    from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_cli import OasisToBidsCLI
-
-
-
-
     run_parser = sub_parser.add_parser('run')
     pipelines = ClinicaClassLoader(
         baseclass=CmdParser, extra_dir="pipelines").load()
@@ -371,42 +362,34 @@ def execute():
         StatisticsSurfstatCLI(),
         CmdParserMachineLearningVBLinearSVM(),
         CmdParserMachineLearningSVMRB(),
-        PETPreprocessVolumeCLI(), AiblToBidsCLI()
+        PETPreprocessVolumeCLI()
     ]
-
     init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
 
     """
     convert option: convert one of the supported dataset to the BIDS specification
     """
-    ####
-    #converters = ClinicaClassLoader(
-    #    baseclass=CmdParser, extra_dir="iotools/converters",
-    #    reg=r".*_bids\.py$").load()
-    #if (len(converters)):
-    #    convert_parser = sub_parser.add_parser('convert')
-    #    init_cmdparser_objects(parser, convert_parser.add_subparsers(),
-    #                           converters)
 
-    #convert_parser = sub_parser.add_parser('convert')
-    ####
+    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids_cli import AiblToBidsCLI
+    from clinica.iotools.converters.adni_to_bids.adni_to_bids_cli import AdniToBidsCLI
+    from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_cli import OasisToBidsCLI
 
-    convertdata_parser = sub_parser.add_parser('convert')
+    convert_parser = sub_parser.add_parser('convert')
     convert_task = [
         AiblToBidsCLI(),
         AdniToBidsCLI(),
         OasisToBidsCLI()
 
     ]
-    init_cmdparser_objects(parser, convertdata_parser.add_subparsers(), convert_task)
+    init_cmdparser_objects(parser, convert_parser.add_subparsers(), convert_task)
 
 
     """
     generate option: template
     """
-    convert_parser = sub_parser.add_parser('generate')
+    template_parser = sub_parser.add_parser('generate')
     from clinica.engine.template import CmdGenerateTemplates
-    init_cmdparser_objects(parser, convert_parser.add_subparsers(), [
+    init_cmdparser_objects(parser, template_parser.add_subparsers(), [
         CmdGenerateTemplates()
     ])
 
