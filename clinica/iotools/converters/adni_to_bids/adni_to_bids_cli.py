@@ -5,7 +5,7 @@ class AdniToBidsCLI(ce.CmdParser):
         """Define the sub-command name to run this pipeline.
         """
 
-        self._name = 'convert-adni-to-bids'
+        self._name = 'adni-to-bids'
 
 
     def define_options(self):
