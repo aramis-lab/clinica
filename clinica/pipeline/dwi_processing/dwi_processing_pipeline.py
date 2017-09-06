@@ -76,14 +76,16 @@ class DWIProcessing(cpe.Pipeline):
 
         from clinica.utils.stream import cprint
 
-        cprint('Found ' + str(len(self.subjects)) + ' subjects')
-
-        cprint('Reading CAPS dataset')
+        cprint('Reading CAPS dataset for %s images' % len(self.subjects))
         for i in range(len(self.subjects)):
-            cprint('------- SUBJECT ' + self.subjects[i] + ' SESSION ' + self.sessions[i] + ' -------')
+            # cprint('------- SUBJECT %s SESSION %s -------'
+            #        % (self.subjects[i], self.sessions[i]))
 
             # Check b-val file:
-            bval_file = os.path.join(self.caps_directory, 'subjects', self.subjects[i], self.sessions[i], 'dwi', 'preprocessing', 'bvals')  # noqa
+            bval_file = os.path.join(
+                self.caps_directory, 'subjects', self.subjects[i],
+                self.sessions[i], 'dwi', 'preprocessing',
+                self.subjects[i] + '_' + self.sessions[i] + '_dwi_space-T1w_preproc.bval')
             if not os.path.isfile(bval_file):
                 raise IOError('B-val file not found for subject '
                               + self.subjects[i]
@@ -92,17 +94,12 @@ class DWIProcessing(cpe.Pipeline):
                               + ' (expecting '
                               + bval_file
                               + ').')
-#            if len(bval_file) != 1:
-#                raise IOError('Expected to find 1 bval file file for subject '
-#                              + self.subjects[i]
-#                              + ' and session '
-#                              + self.sessions[i]
-#                              + ' but found '
-#                              + str(len(bval_file))
-#                              + ' bval instead.')
 
             # Check b-vec file:
-            bvec_file = os.path.join(self.caps_directory, 'subjects', self.subjects[i], self.sessions[i], 'dwi', 'preprocessing', 'bvals')  # noqa
+            bvec_file = os.path.join(
+                self.caps_directory, 'subjects', self.subjects[i],
+                self.sessions[i], 'dwi', 'preprocessing',
+                self.subjects[i] + '_' + self.sessions[i] + '_dwi_space-T1w_preproc.bvec')
             if not os.path.isfile(bvec_file):
                 raise IOError('B-vec file not found for subject '
                               + self.subjects[i]
@@ -111,17 +108,12 @@ class DWIProcessing(cpe.Pipeline):
                               + ' (expecting '
                               + bvec_file
                               + ').')
-#            if len(bvec_file) != 1:
-#                raise IOError('Expected to find 1 bvec file file for subject '
-#                              + self.subjects[i]
-#                              + ' and session '
-#                              + self.sessions[i]
-#                              + ' but found '
-#                              + str(len(bvec_file))
-#                              + ' bvec instead.')
 
             # Check DWI file:
-            dwi_file = os.path.join(self.caps_directory, 'subjects', self.subjects[i], self.sessions[i], 'dwi', 'preprocessing', 'bvals')  # noqa
+            dwi_file = os.path.join(
+                self.caps_directory, 'subjects', self.subjects[i],
+                self.sessions[i], 'dwi', 'preprocessing',
+                self.subjects[i] + '_' + self.sessions[i] + '_dwi_space-T1w_preproc.nii.gz')
             if not os.path.isfile(dwi_file):
                 raise IOError('DWI file not found for subject '
                               + self.subjects[i]
@@ -140,7 +132,10 @@ class DWIProcessing(cpe.Pipeline):
 #                              + ' dwi instead.')
 
             # Check B0 file:
-            b0_mask_file = os.path.join(self.caps_directory, 'subjects', self.subjects[i], self.sessions[i], 'dwi', 'preprocessing', 'bvals')  # noqa
+            b0_mask_file = os.path.join(
+                self.caps_directory, 'subjects', self.subjects[i],
+                self.sessions[i], 'dwi', 'preprocessing',
+                self.subjects[i] + '_' + self.sessions[i] + '_dwi_space-T1w_brainmask.nii.gz')
             if not os.path.isfile(b0_mask_file):
                 raise IOError('B0 mask file not found for subject '
                               + self.subjects[i]
@@ -170,47 +165,59 @@ class DWIProcessing(cpe.Pipeline):
 
         # B0 mask
         b0_mask_caps_reader = npe.Node(
-            nio.DataGrabber(infields=['subject_id', 'session'],
+            nio.DataGrabber(infields=['subject_id', 'session',
+                                      'subject_repeat', 'session_repeat'],
                             outfields=['out_files']),
             name='b0_mask_caps_reader')
         b0_mask_caps_reader.inputs.base_directory = self.caps_directory
-        b0_mask_caps_reader.inputs.template = 'subjects/%s/%s/dwi/preprocessing/vol0000_warp_maths_thresh_merged_roi_brain_mask.nii.gz'  # noqa
+        b0_mask_caps_reader.inputs.template = 'subjects/%s/%s/dwi/preprocessing/%s_%s_dwi_space-*_brainmask.nii.gz'  # noqa
         b0_mask_caps_reader.inputs.sort_filelist = False
 
         # DWI DataGrabber
         dwi_caps_reader = npe.Node(
-            nio.DataGrabber(infields=['subject_id', 'session'],
+            nio.DataGrabber(infields=['subject_id', 'session',
+                                      'subject_repeat', 'session_repeat'],
                             outfields=['out_files']), name='dwi_caps_reader')
         dwi_caps_reader.inputs.base_directory = self.caps_directory
-        dwi_caps_reader.inputs.template = 'subjects/%s/%s/dwi/preprocessing/vol0000_maths_thresh_merged.nii.gz'  # noqa
+        dwi_caps_reader.inputs.template = 'subjects/%s/%s/dwi/preprocessing/%s_%s_dwi_space-*_preproc.nii.gz'  # noqa
         dwi_caps_reader.inputs.sort_filelist = False
 
         # Bval DataGrabber
         bval_caps_reader = npe.Node(
-            nio.DataGrabber(infields=['subject_id', 'session'],
+            nio.DataGrabber(infields=['subject_id', 'session',
+                                      'subject_repeat', 'session_repeat'],
                             outfields=['out_files']), name='bval_caps_reader')
         bval_caps_reader.inputs.base_directory = self.caps_directory
-        bval_caps_reader.inputs.template = 'subjects/%s/%s/dwi/preprocessing/bvals'  # noqa
+        bval_caps_reader.inputs.template = 'subjects/%s/%s/dwi/preprocessing/%s_%s_dwi_space-*_preproc.bval'  # noqa
         bval_caps_reader.inputs.sort_filelist = False
 
         # Bvec dataGrabber
         bvec_caps_reader = npe.Node(
-            nio.DataGrabber(infields=['subject_id', 'session'],
+            nio.DataGrabber(infields=['subject_id', 'session',
+                                      'subject_repeat', 'session_repeat'],
                             outfields=['out_files']), name='bvec_caps_reader')
         bvec_caps_reader.inputs.base_directory = self.caps_directory
-        bvec_caps_reader.inputs.template = 'subjects/%s/%s/dwi/preprocessing/bvecs_rotated.bvec'  # noqa
+        bvec_caps_reader.inputs.template = 'subjects/%s/%s/dwi/preprocessing/%s_%s_dwi_space-*_preproc.bvec'  # noqa
         bvec_caps_reader.inputs.sort_filelist = False
 
         self.connect([
             # Iterables:
-            (iterables_node,  b0_mask_caps_reader, [('subject_id',    'subject_id'),  # noqa
-                                                    ('session_id',     'session')]),  # noqa
-            (iterables_node,     dwi_caps_reader,  [('subject_id',    'subject_id'),  # noqa
-                                                    ('session_id',     'session')]),  # noqa
-            (iterables_node,     bval_caps_reader, [('subject_id',    'subject_id'),  # noqa
-                                                    ('session_id',     'session')]),  # noqa
-            (iterables_node,     bvec_caps_reader, [('subject_id',    'subject_id'),  # noqa
-                                                    ('session_id',     'session')]),  # noqa
+            (iterables_node,  b0_mask_caps_reader, [('subject_id',       'subject_id'),  # noqa
+                                                    ('session_id',          'session'),  # noqa
+                                                    ('subject_id',   'subject_repeat'),  # noqa
+                                                    ('session_id', 'session_repeat')]),  # noqa
+            (iterables_node,     dwi_caps_reader,  [('subject_id',       'subject_id'),  # noqa
+                                                    ('session_id',          'session'),  # noqa
+                                                    ('subject_id',   'subject_repeat'),  # noqa
+                                                    ('session_id', 'session_repeat')]),  # noqa
+            (iterables_node,     bval_caps_reader, [('subject_id',       'subject_id'),  # noqa
+                                                    ('session_id',          'session'),  # noqa
+                                                    ('subject_id',   'subject_repeat'),  # noqa
+                                                    ('session_id', 'session_repeat')]),  # noqa
+            (iterables_node,     bvec_caps_reader, [('subject_id',       'subject_id'),  # noqa
+                                                    ('session_id',          'session'),  # noqa
+                                                    ('subject_id',   'subject_repeat'),  # noqa
+                                                    ('session_id', 'session_repeat')]),  # noqa
             # Inputnode:
             (b0_mask_caps_reader, self.input_node, [('out_files',      'b0_mask')]),  # noqa
             (dwi_caps_reader,     self.input_node, [('out_files',  'preproc_dwi')]),  # noqa
@@ -237,7 +244,6 @@ class DWIProcessing(cpe.Pipeline):
             output_names=['container'],
             function=utils.dwi_container_from_filename),
             name='container_path')
-        # container_path.inputs.threshold = self.parameters['mask_threshold']
 
         # Writing results into CAPS
         # =========================
@@ -245,6 +251,22 @@ class DWIProcessing(cpe.Pipeline):
                                  interface=nio.DataSink())
         write_results.inputs.base_directory = self.caps_directory
         write_results.inputs.parameterization = False
+#        write_results.inputs.regexp_substitutions = [
+#            (r'(.*/)pet_t1_native/r(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-T1w_pet\3'),
+#            (r'(.*/)pet_pvc/pvc-rbv_r(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-T1w_pvc-rbv_pet\3'),
+#            (r'(.*/)pet_mni/wr(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-Ixi549Space_pet\3'),
+#            (r'(.*/)pet_pvc_mni/wpvc-rbv_r(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-Ixi549Space_pvc-rbv_pet\3'),
+#            (r'(.*/)pet_suvr/suvr_wr(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-Ixi549Space_suvr-' + re.escape(self._suvr_region) + r'_pet\3'),
+#            (r'(.*/)pet_pvc_suvr/suvr_wpvc-rbv_r(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-Ixi549Space_pvc-rbv_suvr-' + re.escape(self._suvr_region) + r'_pet\3'),
+#            (r'(.*/)pet_suvr_masked/masked_suvr_wr(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-Ixi549Space_suvr-' + re.escape(self._suvr_region) + r'_mask-brain_pet\3'),
+#            (r'(.*/)pet_pvc_suvr_masked/masked_suvr_wpvc-rbv_r(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-Ixi549Space_pvc-rbv_suvr-' + re.escape(self._suvr_region) + r'_mask-brain_pet\3'),
+#
+#
+#            (r'(.*/)pet_suvr_masked_smoothed/(fwhm-[0-9]+mm)_masked_suvr_wr(sub-.*)(\.nii(\.gz)?)$', r'\1\3_space-Ixi549Space_suvr-' + re.escape(self._suvr_region) + r'_mask-brain_\2_pet\4'),
+#            (r'(.*/)pet_pvc_suvr_masked_smoothed/(fwhm-[0-9]+mm)_masked_suvr_wpvc-rbv_r(sub-.*)(\.nii(\.gz)?)$', r'\1\3_space-Ixi549Space_pvc-rbv_suvr-' + re.escape(self._suvr_region) + r'_mask-brain_\2_pet\4'),
+#
+#            (r'(.*/)binary_mask/(sub-.*_T1w_).*(space-[a-zA-Z0-9]+).*(_brainmask\.nii(\.gz)?)$', r'\1\2\3\4')
+#        ]
 
         self.connect([
            (self.input_node, container_path, [('preproc_dwi', 'dwi_filename')]),  # noqa
@@ -276,11 +298,10 @@ class DWIProcessing(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from clinica.utils.atlas import JHUTracts0_1mm
+        from clinica.utils.atlas import JHUTracts01mm
 
         # Nodes creation
         # ==============
-
         nthreads = 1
 
         convert_to_mrtrix_format = npe.Node(interface=nutil.Function(
@@ -296,8 +317,13 @@ class DWIProcessing(cpe.Pipeline):
             function=utils.dwi_to_tensor), name='dwi_to_tensor')
         dwi_to_tensor.inputs.nthreads = nthreads
 
+        get_bids_identifier = npe.Node(interface=nutil.Function(
+            input_names=['caps_dwi_filename'],
+            output_names=['bids_identifier'],
+            function=utils.extract_bids_identifier_from_caps_filename),
+            name='get_bids_identifier')
         tensor_to_metrics = npe.Node(interface=nutil.Function(
-            input_names=['in_dti', 'in_b0_mask', 'nthreads'],
+            input_names=['in_dti', 'in_b0_mask', 'nthreads', 'prefix_file'],
             output_names=['out_fa', 'out_md', 'out_ad', 'out_rd', 'out_ev'],
             function=utils.tensor_to_metrics), name='tensor_to_metrics')
         # Register DTI-maps on JHU atlas
@@ -338,7 +364,10 @@ class DWIProcessing(cpe.Pipeline):
             # Computation of the DTI
             (self.input_node,            dwi_to_tensor, [('b0_mask',     'in_b0_mask')]),  # noqa
             (convert_to_mrtrix_format,   dwi_to_tensor, [('out_dwi_mif', 'in_dwi_mif')]),  # noqa
+            # Get BIDS identifier from filename
+            (self.input_node,      get_bids_identifier, [('preproc_dwi', 'caps_dwi_filename')]),  # noqa
             # Computation of the different metrics from the DTI
+            (get_bids_identifier,  tensor_to_metrics, [('bids_identifier', 'prefix_file')]),  # noqa
             (self.input_node,      tensor_to_metrics, [('b0_mask', 'in_b0_mask')]),  # noqa
             (dwi_to_tensor,        tensor_to_metrics, [('out_dti', 'in_dti')]),  # noqa
             # Register DTI maps on JHU atlas

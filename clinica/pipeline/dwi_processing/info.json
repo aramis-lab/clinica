@@ -1,17 +1,16 @@
 {
     "id": "aramislab/dwi-processing",
-    "author": ["John DOE"],
+    "author": ["Alexandre Routier", "Thomas Jacquemont"],
+    "maintainer": ["Alexandre Routier"],
     "version": "0.1.0",
     "dependencies": [
         {
             "type": "software",
-            "name": "mrtrix",
-            "version": ">=5.0.9"
+            "name": "ants"
         },
         {
-            "type": "binary",
-            "name": "clinica",
-            "version": ">=0.1.0"
+            "type": "software",
+            "name": "mrtrix"
         }
     ]
 }

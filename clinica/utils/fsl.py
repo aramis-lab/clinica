@@ -1,3 +1,6 @@
+# coding: utf8
+
+
 """This module contains FSL utilities."""
 
 

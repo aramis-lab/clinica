@@ -1,5 +1,6 @@
 from nipype import Workflow
 
+
 class ClinicaWorkflow(Workflow):
     tasks = {}
     is_reset = False
@@ -45,8 +46,10 @@ def dwork(type, name):
         return wrappper
     return decorator
 
+
 def RunDecorator(type):
     return dwork(type, "run")
+
 
 def Dump(clinicaWorkflow):
     import cPickle
@@ -57,6 +60,7 @@ def Dump(clinicaWorkflow):
         clinicaWorkflow.timestamp = datetime.datetime.utcnow()
         cPickle.dump(clinicaWorkflow, dump_file)
     return clinicaWorkflow
+
 
 def Visualize(application, parameters, matches):
     def visu(clinicaWorkflow):

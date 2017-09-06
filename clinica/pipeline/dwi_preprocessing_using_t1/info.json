@@ -1,6 +1,7 @@
 {
     "id": "aramislab/dwi-preprocessing-using-t1",
-    "author": ["John DOE"],
+    "author": ["Thomas Jacquemont"],
+    "maintainer": ["Alexandre Routier"],
     "version": "0.1.0",
     "dependencies": [
         {
@@ -9,8 +10,8 @@
             "version": ">=5.0.9"
         },
         {
-            "type": "binary",
-            "name": "which"
+            "type": "software",
+            "name": "ants"
         }
     ]
 }

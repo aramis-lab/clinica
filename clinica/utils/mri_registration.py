@@ -1,5 +1,7 @@
-"""This module contains functions used for the registration pipeline or
-other pipelines."""
+# coding: utf8
+
+
+"""This module contains functions used for the registration aspects."""
 
 
 def convert_flirt_transformation_to_mrtrix_transformation(
@@ -27,17 +29,16 @@ def convert_flirt_transformation_to_mrtrix_transformation(
     Returns:
         out_mrtrix_matrix (str): Transformation matrix in MRtrix format.
     """
-    import os.path as op
     import os
 
-    assert(op.isfile(in_source_image))
-    assert(op.isfile(in_reference_image))
-    assert(op.isfile(in_flirt_matrix))
+    assert(os.path.isfile(in_source_image))
+    assert(os.path.isfile(in_reference_image))
+    assert(os.path.isfile(in_flirt_matrix))
 
     if name_output_matrix is None:
-        out_mrtrix_matrix = op.abspath('mrtrix_matrix.mat')
+        out_mrtrix_matrix = os.path.abspath('mrtrix_matrix.mat')
     else:
-        out_mrtrix_matrix = op.abspath(name_output_matrix)
+        out_mrtrix_matrix = os.path.abspath(name_output_matrix)
 
     cmd = 'transformconvert %s %s %s flirt_import %s' \
           % (in_flirt_matrix, in_source_image, in_reference_image,
@@ -65,21 +66,16 @@ def apply_mrtrix_transform_without_resampling(
     Returns:
         out_deformed_image (str): File containing the deformed image according
             to in_mrtrix_matrix transformation.
-
-    Example:
-        >>> from clinica.utils.mri_registration import apply_mrtrix_transform_without_resampling
-        >>> apply_mrtrix_transform_without_resampling('t1_image.nii', 't1_to_diffusion.txt', 't1_in_diffusion_space.nii')
     """
-    import os.path as op
     import os
 
-    assert(op.isfile(in_image))
-    assert(op.isfile(in_mrtrix_matrix))
+    assert(os.path.isfile(in_image))
+    assert(os.path.isfile(in_mrtrix_matrix))
 
     if name_output_image is None:
-        out_deformed_image = op.abspath('deformed_image.nii.gz')
+        out_deformed_image = os.path.abspath('deformed_image.nii.gz')
     else:
-        out_deformed_image = op.abspath(name_output_image)
+        out_deformed_image = os.path.abspath(name_output_image)
 
     cmd = 'mrtransform -linear %s %s %s' \
           % (in_mrtrix_matrix, in_image, out_deformed_image)
@@ -117,25 +113,22 @@ def apply_ants_registration_syn_quick_transformation(
         out_deformed_image (str): File containing the deformed image according
             to in_affine_transformation and in_bspline_transformation
             transformations.
-
-    Example:
-        >>> from clinica.utils.mri_registration import apply_ants_registration_syn_quick_transformation
-        >>> apply_ants_registration_syn_quick_transformation('my_image.nii.gz', 'output0GenericAffine.mat', 'output1Warp.nii.gz', 'my_deformed_image.nii.gz')
     """
-    import os.path as op
     import os
 
-    assert(op.isfile(in_image))
-    assert(op.isfile(in_affine_transformation))
-    assert(op.isfile(in_bspline_transformation))
+    assert(os.path.isfile(in_image))
+    assert(os.path.isfile(in_affine_transformation))
+    assert(os.path.isfile(in_bspline_transformation))
 
     if name_output_image is None:
-        out_deformed_image = op.abspath('deformed_image.nii.gz')
+        out_deformed_image = os.path.abspath('deformed_image.nii.gz')
     else:
-        out_deformed_image = op.abspath(name_output_image)
+        out_deformed_image = os.path.abspath(name_output_image)
 
-    cmd = 'antsApplyTransforms -d 3 -e 0 -i %s -o %s -t %s -t %s -r %s --interpolation BSpline' \
-          % (in_image, out_deformed_image, in_bspline_transformation, in_affine_transformation, in_reference_image)
+    cmd = 'antsApplyTransforms -d 3 -e 0 -i %s -o %s -t %s -t %s -r %s ' \
+          '--interpolation BSpline' \
+          % (in_image, out_deformed_image, in_bspline_transformation,
+             in_affine_transformation, in_reference_image)
     os.system(cmd)
 
     return out_deformed_image
@@ -143,29 +136,34 @@ def apply_ants_registration_syn_quick_transformation(
 
 def ants_registration_syn_quick(fix_image, moving_image, prefix_output=None):
     """
-    TODO.
+    Small wrapper for antsRegistrationSyNQuick.sh.
 
-    TODO
+    This function calls antsRegistrationSyNQuick.sh in order to register
+    non-linearly moving_image towards fix_image.
 
     Args:
+        fix_image (str): The target image.
+        moving_image (str): The source
+        prefix_output (str): Prefix for output files
+            (format: <prefix_output>[Warped|0GenericAffine|1Warp|
+            InverseWarped|1InverseWarp])
 
     Returns:
-
-    Example:
-        >>> from clinica.utils.mri_registration import apply_ants_registration_syn_quick_transformation
-        >>> apply_ants_registration_syn_quick_transformation('my_image.nii.gz', 'output0GenericAffine.mat', 'output1Warp.nii.gz', 'my_deformed_image.nii.gz')
+        The deformed image with the deformation parameters.
     """
     import os
-    import os.path as op
 
-    image_warped = op.abspath('SyN_QuickWarped.nii.gz')
-    affine_matrix = op.abspath('SyN_Quick0GenericAffine.mat')
-    warp = op.abspath('SyN_Quick1Warp.nii.gz')
-    inverse_warped = op.abspath('SyN_QuickInverseWarped.nii.gz')
-    inverse_warp = op.abspath('SyN_Quick1InverseWarp.nii.gz')
+    if prefix_output is None:
+        prefix_output = 'SyN_Quick'
 
-    cmd = 'antsRegistrationSyNQuick.sh -t br -d 3 -f %s -m %s -o SyN_Quick' \
-          % (fix_image, moving_image)
+    image_warped = os.path.abspath(prefix_output + 'Warped.nii.gz')
+    affine_matrix = os.path.abspath(prefix_output + '0GenericAffine.mat')
+    warp = os.path.abspath(prefix_output + '1Warp.nii.gz')
+    inverse_warped = os.path.abspath(prefix_output + 'InverseWarped.nii.gz')
+    inverse_warp = os.path.abspath(prefix_output + '1InverseWarp.nii.gz')
+
+    cmd = 'antsRegistrationSyNQuick.sh -t br -d 3 -f %s -m %s -o %s' \
+          % (fix_image, moving_image, prefix_output)
     os.system(cmd)
 
     return image_warped, affine_matrix, warp, inverse_warped, inverse_warp
@@ -175,35 +173,30 @@ def ants_combine_transform(in_file, transforms_list, reference):
     """
     Apply a transformation obtained with antsRegistrationSyNQuick.sh.
 
-    This function applies a rigid & deformable B-Spline syn transformation which has been estimated previously with
-    antsRegistrationSyNQuick script.
+    This function applies a rigid & deformable B-Spline syn transformation
+    which has been estimated previously with antsRegistrationSyNQuick script.
 
     Args:
-        in_image (str): File containing the input image to be transformed.
-        in_reference_image (str): File defining the spacing, origin, size, and direction of the output warped image.
-        in_affine_transformation (str): File containing the affine transformation matrix obtained by antsRegistrationSyNQuick
-            (expected file: [Prefix]0GenericAffine.mat).
-        in_bspline_transformation (str): File containing the BSpline transformation obtained by antsRegistrationSyNQuick
-            (expected file: [Prefix]1Warp.nii.gz).
-        name_output_image (Optional[str]): Name of the output image (default=deformed_image.nii.gz).
+        in_file (str): File containing the input image to be transformed.
+        reference (str): File defining the spacing, origin, size, and
+            direction of the output warped image.
+        transforms_list (str): File containing the transformations
+            obtained by antsRegistrationSyNQuick.
 
     Returns:
-        out_deformed_image (str): File containing the deformed image according to in_affine_transformation and
+        out_warp (str): File containing the deformed image according to
+            transforms_list in_affine_transformation and
             in_bspline_transformation transformations.
-
-    Example:
-        >>> from clinica.utils.mri_registration import apply_ants_registration_syn_quick_transformation
-        >>> apply_ants_registration_syn_quick_transformation('my_image.nii.gz', 'output0GenericAffine.mat', 'output1Warp.nii.gz', 'my_deformed_image.nii.gz')
     """
     import os
-    import os.path as op
 
-    out_warp = op.abspath('out_warp.nii.gz')
+    out_warp = os.path.abspath('out_warp.nii.gz')
 
     transforms = ""
     for trans in transforms_list:
         transforms += " " + trans
-    cmd = 'antsApplyTransforms -o [out_warp.nii.gz,1] -i ' + in_file + ' -r ' + reference + ' -t' + transforms
+    cmd = 'antsApplyTransforms -o [out_warp.nii.gz,1] -i %s -r %s -t %s' % \
+          (in_file, reference, transforms)
     os.system(cmd)
 
     return out_warp
