@@ -1,3 +1,6 @@
+# coding: utf8
+
+
 """This module contains utilities to check dependencies of the different
 neuroimaging tools."""
 

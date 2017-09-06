@@ -1,3 +1,6 @@
+# coding: utf8
+
+
 """This module contains MRtrix utilities."""
 
 
@@ -15,8 +18,7 @@ def dilate_mask(in_mask, npass=4, nthreads=2):
             (default=2, 0 disables multi-threading).
 
     Returns:
-        out_dilated_mask : FILE
-          Output. Dilated mask.
+        The dilated mask.
     """
     import os.path as op
     import os
@@ -24,6 +26,7 @@ def dilate_mask(in_mask, npass=4, nthreads=2):
     assert(op.isfile(in_mask))
 
     out_dilated_mask = op.abspath('dilated_mask.nii')
-    cmd = 'maskfilter -npass ' + str(npass) + ' -nthreads ' + str(nthreads) + ' ' + in_mask + ' dilate ' + out_dilated_mask
+    cmd = 'maskfilter -npass %s -nthreads %s %s dilate %s' % \
+          (npass, nthreads, in_mask, out_dilated_mask)
     os.system(cmd)
     return out_dilated_mask

@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 
 """Define the command line parser for each pipeline
@@ -26,6 +25,7 @@ from argparse import ArgumentParser
 from os.path import join
 from os import getcwd
 from os.path import expanduser
+
 
 class CmdParser:
     """Abstract class to extend in order to create your command line parser
@@ -76,6 +76,7 @@ class CmdParser:
             return getcwd()
         else:
             return join(getcwd(), arg)
+
 
 def init_cmdparser_objects(rootparser, parser, objects):
     """UTIL:Init all derived CmdParser instances with specific data
@@ -313,6 +314,7 @@ class CmdParserPETPreprocessing(CmdParser):
 
         pet_wf.run('MultiProc', plugin_args={'n_procs': args.n_threads})
 
+
 class CmdParserMachineLearningVBLinearSVM(CmdParser):
 
     def define_name(self):
@@ -355,6 +357,7 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
                                 help="Save feature weights for each classification as an image")
         self._args.add_argument("-sdc", "--save_dual_coefficients", action='store_true',
                                 help="Save ")
+
     def run_pipeline(self, args):
 
         from clinica.pipeline.machine_learning.voxel_based_svm import linear_svm_binary_classification_caps
@@ -383,6 +386,7 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
                                               save_subject_classification=args.save_subject_classification,
                                               save_original_weights=args.save_original_weights,
                                               save_features_image=args.save_features_image)
+
 
 class CmdParserMachineLearningSVMRB(CmdParser):
 
@@ -478,416 +482,6 @@ class CmdParserMachineLearningSVMRB(CmdParser):
                                   save_original_weights=args.save_original_weights,
                                   save_features_image=args.save_features_image)
 
-
-
-
-class CmdParserT1FSL(CmdParser):
-
-    def define_name(self):
-        self._name = 't1-fsl'
-
-
-    def define_options(self):
-        self._args.add_argument("bids_directory",
-                                help='Path to the BIDS directory.')
-        self._args.add_argument("caps_directory",
-                                help='Path to the CAPS directory.')
-        self._args.add_argument("participants_sessions_tsv",
-                                help='TSV file containing the participants with their sessions.')
-        self._args.add_argument("-working_directory", default=None,
-                                help='Temporary directory to store intermediate results')
-        self._args.add_argument("-n_threads", type=int, default=1,
-                                help='Number of threads (default=1, which disables multi-threading).')
-        group = self._args.add_mutually_exclusive_group(required=True)
-        group.add_argument('-is_bias_corrected', action='store_true',
-                           help='Set this flag if your images are bias corrected (mutually exclusive with \'-is_not_bias_corrected\').')
-        group.add_argument('-is_not_bias_corrected', action='store_false',
-                           help='Set this flag if your images are not bias corrected (mutually exclusive with \'-is_bias_corrected\').')
-
-    def run_pipeline(self, args):
-        from clinica.pipeline.t1.t1_fsl import t1_fsl_segmentation_pipeline
-        import pandas
-        import os.path
-
-        if not os.path.isfile(self.absolute_path(args.participants_sessions_tsv)):
-            raise Exception('The TSV file does not exist.')
-        subjects_visits = pandas.io.parsers.read_csv(self.absolute_path(args.participants_sessions_tsv), sep='\t')
-        if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
-            raise Exception('Subjects and visits file is not in the correct format.')
-        subjects = list(subjects_visits.participant_id)
-        sessions = list(subjects_visits.session_id)
-
-#        with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
-        for index in xrange(len(subjects)):
-            participant_id=subjects[index]
-            session_id=sessions[index]
-            bids_path_to_t1 = os.path.join(self.absolute_path(args.bids_directory), participant_id, session_id, 'anat',
-                                           participant_id + '_' + session_id + '_T1w.nii.gz')
-            assert(os.path.isfile(bids_path_to_t1))
-            t1_fsl_segmentation = t1_fsl_segmentation_pipeline(
-                participant_id=participant_id,
-                session_id=session_id,
-                caps_directory=self.absolute_path(args.caps_directory),
-                working_directory=self.absolute_path(args.working_directory),
-                is_bias_corrected=args.is_bias_corrected
-                )
-            t1_fsl_segmentation.inputs.inputnode.in_t1 = bids_path_to_t1
-            t1_fsl_segmentation.run('MultiProc', plugin_args={'n_procs': args.n_threads})
-
-
-
-class CmdParserDWIPreprocessingPhaseDifferenceFieldmap(CmdParser):
-
-    def define_name(self):
-        self._name = 'dwi-preprocessing-phase-difference-fieldmap'
-
-
-    def define_options(self):
-        self._args.add_argument("bids_directory",
-                                help='Path to the BIDS directory.')
-        self._args.add_argument("caps_directory",
-                                help='Path to the CAPS directory.')
-        self._args.add_argument("subjects_sessions_tsv",
-                                help='TSV file containing the subjects with their sessions.')
-        self._args.add_argument("-working_directory", default=None,
-                                help='Temporary directory to store intermediate results')
-        self._args.add_argument("-n_threads", type=int, default=1,
-                                help='Number of threads (default=1, which disables multi-threading).')
-        registration = self._args.add_mutually_exclusive_group(required=True)
-        registration.add_argument('-register_fmap_on_b0', action='store_true',
-                           help='Choose to register fmap on b0. (mutually exclusive with \'-do_not_register_fmap_on_b0\').')
-        registration.add_argument('-do_not_register_fmap_on_b0', action='store_false',
-                           help='Choose not to register fmap on b0. (mutually exclusive with \'-register_fmap_on_b0\').')
-
-
-
-    def run_pipeline(self, args):
-        import os.path
-        from clinica.pipeline.dwi.dwi_preprocessing import diffusion_preprocessing_phasediff_fieldmap
-        from clinica.pipeline.dwi.dwi_preprocessing_utils import count_b0s
-        import pandas
-
-        subjects_visits = pandas.io.parsers.read_csv(self.absolute_path(args.subjects_sessions_tsv), sep='\t')
-        if list(subjects_visits.columns.values) != ['participant_id', 'session_id', 'dwi_effective_echo_spacing',
-                                                    'delta_echo_time', 'dwi_phase_encoding_direction']:
-            raise Exception(
-                'The TSV file should contain the following columns: participant_id, session_id, dwi_effective_echo_spacing (in seconds), dwi_phase_encoding_direction (x/x-/y/y-/z/z-), delta_echo_time (in seconds).')
-        subjects = list(subjects_visits.participant_id)
-        sessions = list(subjects_visits.session_id)
-        delta_echo_times = list(subjects_visits.delta_echo_time)
-        echo_spacings = list(subjects_visits.dwi_effective_echo_spacing)
-        phase_encoding_directions = list(subjects_visits.dwi_phase_encoding_direction)
-
-        if args.register_fmap_on_b0:
-            print("The fieldmap will be registered on the B0")
-        else:
-            print("The fieldmap will NOT be registered on the B0")
-
-
-#        with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
-        for index in xrange(len(subjects)):
-            participant_id = subjects[index]
-            session_id = sessions[index]
-            delta_echo_time = delta_echo_times[index]
-            echo_spacing = echo_spacings[index]
-            phase_encoding_direction = phase_encoding_directions[index]
-
-            bids_path_to_dwi = os.path.join(self.absolute_path(args.bids_directory), participant_id, session_id, 'dwi',
-                                           participant_id + '_' + session_id + '_dwi.nii.gz')
-            bids_path_to_bval = os.path.join(self.absolute_path(args.bids_directory), participant_id, session_id, 'dwi',
-                                           participant_id + '_' + session_id + '_dwi.bval')
-            bids_path_to_bvec = os.path.join(self.absolute_path(args.bids_directory), participant_id, session_id, 'dwi',
-                                           participant_id + '_' + session_id + '_dwi.bvec')
-            bids_path_to_fmap_magnitude = os.path.join(self.absolute_path(args.bids_directory), participant_id, session_id, 'fmap',
-                                           participant_id + '_' + session_id + '_magnitude1.nii.gz')
-            bids_path_to_fmap_phasediff = os.path.join(self.absolute_path(args.bids_directory), participant_id, session_id, 'fmap',
-                                           participant_id + '_' + session_id + '_phasediff.nii.gz')
-            assert(os.path.isfile(bids_path_to_dwi))
-            assert(os.path.isfile(bids_path_to_bval))
-            assert(os.path.isfile(bids_path_to_bvec))
-            assert(os.path.isfile(bids_path_to_fmap_magnitude))
-            assert(os.path.isfile(bids_path_to_fmap_phasediff))
-            preprocessing = diffusion_preprocessing_phasediff_fieldmap(
-                participant_id=participant_id, session_id=session_id,
-                caps_directory=self.absolute_path(args.caps_directory),
-                delta_echo_time=delta_echo_time,
-                effective_echo_spacing=echo_spacing,
-                phase_encoding_direction=phase_encoding_direction,
-                num_b0s=count_b0s(bids_path_to_bval),
-                register_fmap_on_b0=args.register_fmap_on_b0,
-                working_directory=self.absolute_path(args.working_directory)
-            )
-            preprocessing.inputs.inputnode.in_dwi = bids_path_to_dwi
-            preprocessing.inputs.inputnode.in_bvals = bids_path_to_bval
-            preprocessing.inputs.inputnode.in_bvecs = bids_path_to_bvec
-            preprocessing.inputs.inputnode.in_fmap_magnitude = bids_path_to_fmap_magnitude
-            preprocessing.inputs.inputnode.in_fmap_phasediff = bids_path_to_fmap_phasediff
-
-            preprocessing.run('MultiProc', plugin_args={'n_procs': args.n_threads})
-
-
-class CmdParserDWIPreprocessingTwoPhaseImagesFieldmap(CmdParser):
-    def define_name(self):
-        self._name = 'dwi-preprocessing-two-phase-images-fieldmap'
-
-    def define_options(self):
-        self._args.add_argument("bids_directory",
-                                help='Path to the BIDS directory.')
-        self._args.add_argument("caps_directory",
-                                help='Path to the CAPS directory.')
-        self._args.add_argument("subjects_sessions_tsv",
-                                help='TSV file containing the subjects with their sessions.')
-        self._args.add_argument("-working_directory", default=None,
-                                help='Temporary directory to store intermediate results')
-        self._args.add_argument("-n_threads", type=int, default=1,
-                                help='Number of threads (default=1, which disables multi-threading).')
-
-    def run_pipeline(self, args):
-        import os.path
-        from clinica.pipeline.dwi.dwi_preprocessing import diffusion_preprocessing_twophase_fieldmap
-        from clinica.pipeline.dwi.dwi_preprocessing_utils import count_b0s
-        import pandas
-
-        subjects_visits = pandas.io.parsers.read_csv(self.absolute_path(args.subjects_sessions_tsv), sep='\t')
-        if list(subjects_visits.columns.values) != ['participant_id', 'session_id', 'dwi_effective_echo_spacing',
-                                                    'delta_echo_time', 'dwi_phase_encoding_direction']:
-            raise Exception(
-                'The TSV file should contain the following columns: participant_id, session_id, dwi_effective_echo_spacing (in seconds), dwi_phase_encoding_direction (x/x-/y/y-/z/z-), delta_echo_time (in seconds).')
-        subjects = list(subjects_visits.participant_id)
-        sessions = list(subjects_visits.session_id)
-        delta_echo_times = list(subjects_visits.delta_echo_time)
-        echo_spacings = list(subjects_visits.dwi_effective_echo_spacing)
-        phase_encoding_directions = list(subjects_visits.dwi_phase_encoding_direction)
-
-        #        with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
-        for index in xrange(len(subjects)):
-            participant_id = subjects[index]
-            session_id = sessions[index]
-            delta_echo_time = delta_echo_times[index]
-            phase_encoding_direction = phase_encoding_directions[index]
-            echo_spacing = echo_spacings[index]
-
-            bids_path_to_dwi = os.path.join(self.absolute_path(args.bids_directory), participant_id, session_id, 'dwi',
-                                            participant_id + '_' + session_id + '_dwi.nii.gz')
-            bids_path_to_bval = os.path.join(self.absolute_path(args.bids_directory), participant_id, session_id, 'dwi',
-                                             participant_id + '_' + session_id + '_dwi.bval')
-            bids_path_to_bvec = os.path.join(self.absolute_path(args.bids_directory), participant_id, session_id, 'dwi',
-                                             participant_id + '_' + session_id + '_dwi.bvec')
-            bids_path_to_fmap_magnitude1 = os.path.join(self.absolute_path(args.bids_directory), participant_id,
-                                                       session_id, 'fmap',
-                                                       participant_id + '_' + session_id + '_magnitude1.nii.gz')
-            bids_path_to_fmap_magnitude2 = os.path.join(self.absolute_path(args.bids_directory), participant_id,
-                                                       session_id, 'fmap',
-                                                       participant_id + '_' + session_id + '_magnitude2.nii.gz')
-            bids_path_to_fmap_phase1 = os.path.join(self.absolute_path(args.bids_directory), participant_id, session_id,
-                                                   'fmap', participant_id + '_' + session_id + '_phase1.nii.gz')
-            bids_path_to_fmap_phase2 = os.path.join(self.absolute_path(args.bids_directory), participant_id, session_id,
-                                                   'fmap', participant_id + '_' + session_id + '_phase2.nii.gz')
-            assert (os.path.isfile(bids_path_to_dwi))
-            assert (os.path.isfile(bids_path_to_bval))
-            assert (os.path.isfile(bids_path_to_bvec))
-            assert (os.path.isfile(bids_path_to_fmap_magnitude1))
-            assert (os.path.isfile(bids_path_to_fmap_magnitude2))
-            assert (os.path.isfile(bids_path_to_fmap_phase1))
-            assert (os.path.isfile(bids_path_to_fmap_phase2))
-            preprocessing = diffusion_preprocessing_twophase_fieldmap(
-                participant_id=participant_id, session_id=session_id,
-                caps_directory=self.absolute_path(args.caps_directory),
-                delta_echo_time=delta_echo_time,
-                effective_echo_spacing=echo_spacing,
-                phase_encoding_direction=phase_encoding_direction,
-                num_b0s=count_b0s(bids_path_to_bval),
-                working_directory=self.absolute_path(args.working_directory)
-            )
-            preprocessing.inputs.inputnode.in_dwi = bids_path_to_dwi
-            preprocessing.inputs.inputnode.in_bvals = bids_path_to_bval
-            preprocessing.inputs.inputnode.in_bvecs = bids_path_to_bvec
-            preprocessing.inputs.inputnode.in_fmap_magnitude1 = bids_path_to_fmap_magnitude1
-            preprocessing.inputs.inputnode.in_fmap_magnitude2 = bids_path_to_fmap_magnitude2
-            preprocessing.inputs.inputnode.in_fmap_phase1 = bids_path_to_fmap_phase1
-            preprocessing.inputs.inputnode.in_fmap_phase2 = bids_path_to_fmap_phase2
-
-            preprocessing.run('MultiProc', plugin_args={'n_procs': args.n_threads})
-
-
-class CmdParserDWIPreprocessingT1Based(CmdParser):
-
-    def define_name(self):
-        self._name = 'dwi-preprocessing-t1-based'
-
-
-    def define_options(self):
-        self._args.add_argument("bids_directory",
-                                help='Path to the BIDS directory.')
-        self._args.add_argument("caps_directory",
-                                help='Path to the CAPS directory.')
-        self._args.add_argument("subjects_sessions_tsv",
-                                help='TSV file containing the subjects with their sessions.')
-        self._args.add_argument("-working_directory", default=None,
-                                help='Temporary directory to store intermediate results')
-        self._args.add_argument("-n_threads", type=int, default=1,
-                                help='Number of threads (default=1, which disables multi-threading).')
-
-    def run_pipeline(self, args):
-        import os.path
-        from clinica.pipeline.dwi.dwi_preprocessing import diffusion_preprocessing_t1_based
-        from clinica.pipeline.dwi.dwi_preprocessing_utils import count_b0s
-        import pandas
-
-        subjects_visits = pandas.io.parsers.read_csv(self.absolute_path(args.subjects_sessions_tsv), sep='\t')
-        if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
-            raise Exception('Subjects and visits file is not in the correct format.')
-        subjects = list(subjects_visits.participant_id)
-        sessions = list(subjects_visits.session_id)
-
-#        with open(self.absolute_path(args.subjects_sessions_tsv), 'rb') as tsv_file:
-        for index in xrange(len(subjects)):
-            participant_id=subjects[index]
-            session_id=sessions[index]
-
-            bids_path_to_t1 = os.path.join(self.absolute_path(args.bids_directory), participant_id, session_id, 'anat',
-                                           participant_id + '_' + session_id + '_T1w.nii.gz')
-            bids_path_to_dwi = os.path.join(self.absolute_path(args.bids_directory), participant_id, session_id, 'dwi',
-                                           participant_id + '_' + session_id + '_dwi.nii.gz')
-            bids_path_to_bval = os.path.join(self.absolute_path(args.bids_directory), participant_id, session_id, 'dwi',
-                                           participant_id + '_' + session_id + '_dwi.bval')
-            bids_path_to_bvec = os.path.join(self.absolute_path(args.bids_directory), participant_id, session_id, 'dwi',
-                                           participant_id + '_' + session_id + '_dwi.bvec')
-            assert(os.path.isfile(bids_path_to_t1))
-            assert(os.path.isfile(bids_path_to_dwi))
-            assert(os.path.isfile(bids_path_to_bval))
-            assert(os.path.isfile(bids_path_to_bvec))
-            preprocessing = diffusion_preprocessing_t1_based(
-                participant_id=participant_id, session_id=session_id,
-                caps_directory=self.absolute_path(args.caps_directory),
-                num_b0s=count_b0s(bids_path_to_bval),
-                working_directory=self.absolute_path(args.working_directory)
-            )
-            preprocessing.inputs.inputnode.in_t1= bids_path_to_t1
-            preprocessing.inputs.inputnode.in_dwi = bids_path_to_dwi
-            preprocessing.inputs.inputnode.in_bvals = bids_path_to_bval
-            preprocessing.inputs.inputnode.in_bvecs = bids_path_to_bvec
-
-            preprocessing.run('MultiProc', plugin_args={'n_procs': args.n_threads})
-
-
-class CmdParserDWIProcessing(CmdParser):
-
-    def define_name(self):
-        self._name = 'dwi-processing'
-
-
-    def define_options(self):
-        self._args.add_argument("caps_directory",
-                                help='Path to the output/input directory in a CAPS format.')
-        self._args.add_argument("participants_sessions_tsv",
-                                help='TSV file containing the subjects/sessions list to be processed.')
-        self._args.add_argument("-working_directory", default=None,
-                                help='Temporary directory to store intermediate results')
-        self._args.add_argument("-n_threads", type=int, default=1,
-                                help='Number of threads (default=1, which disables multi-threading).')
-        self._args.add_argument("number_of_tracks",
-                                help="Set the desired number of tracks (e.g. 100K, 1M, ...).")
-        self._args.add_argument("-max_harmonic_order", default=None,
-                                help="@TODO")
-        self._args.add_argument("-tractography_algorithm", default='iFOD2',
-                                help="@TODO")
-        self._args.add_argument("-tractography_fod_threshold", default=None,
-                                help="@TODO")
-        self._args.add_argument("-tractography_step_size", default=None,
-                                help="@TODO")
-        self._args.add_argument("-tractography_angle", default=None,
-                                help="@TODO")
-
-
-    def run_pipeline(self, args):
-        import pandas
-        import os.path
-        from clinica.pipeline.dwi.dwi_processing import dwi_processing_pipeline
-
-        if not os.path.isfile(self.absolute_path(args.participants_sessions_tsv)):
-            raise Exception('The TSV file does not exist.')
-        subjects_visits = pandas.io.parsers.read_csv(self.absolute_path(args.participants_sessions_tsv), sep='\t')
-        if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
-            raise Exception('Subjects and visits file is not in the correct format.')
-        subjects = list(subjects_visits.participant_id)
-        sessions = list(subjects_visits.session_id)
-
-        for index in xrange(len(subjects)):
-            participant_id = subjects[index]
-            session_id = sessions[index]
-
-            # DWI-Preprocessing:
-            caps_path_to_preprocessed_dwi = os.path.join(self.absolute_path(args.caps_directory), 'subjects',
-                                                         participant_id, session_id, 'dwi', 'preprocessing',
-                                                         participant_id + '_' + session_id + '_dwi.nii.gz')
-            caps_path_to_bvecs = os.path.join(self.absolute_path(args.caps_directory), 'subjects', participant_id,
-                                              session_id, 'dwi', 'preprocessing',
-                                              participant_id + '_' + session_id + '_dwi.bvec')
-            caps_path_to_bvals = os.path.join(self.absolute_path(args.caps_directory), 'subjects', participant_id,
-                                              session_id, 'dwi', 'preprocessing',
-                                              participant_id + '_' + session_id + '_dwi.bval')
-            caps_path_to_b0_mask = os.path.join(self.absolute_path(args.caps_directory), 'subjects', participant_id,
-                                                session_id, 'dwi', 'preprocessing',
-                                                participant_id + '_' + session_id + '_b0Mask.nii.gz')
-            # T1-FSL:
-            caps_path_to_bias_corrected_bet_t1 = os.path.join(self.absolute_path(args.caps_directory), 'subjects',
-                                                              participant_id, session_id, 't1', 'fsl',
-                                                              participant_id + '_' + session_id + '_brainExtractedT1w.nii.gz')
-            caps_path_to_white_matter_binary_mask = os.path.join(self.absolute_path(args.caps_directory), 'subjects',
-                                                                 participant_id, session_id, 't1', 'fsl',
-                                                                 participant_id + '_' + session_id + '_tissue-whitematter_binaryMask.nii.gz')
-            # T1-FreeSurfer:
-            caps_path_to_desikan_parcellation = os.path.join(self.absolute_path(args.caps_directory), 'subjects',
-                                                             participant_id, session_id, 't1',
-                                                             'freesurfer_cross_sectional',
-                                                             participant_id + '_' + session_id, 'mri', 'aparc+aseg.mgz')
-            print(caps_path_to_desikan_parcellation)
-            caps_path_to_destrieux_parcellation = os.path.join(self.absolute_path(args.caps_directory), 'subjects',
-                                                               participant_id, session_id, 't1',
-                                                               'freesurfer_cross_sectional',
-                                                               participant_id + '_' + session_id, 'mri',
-                                                               'aparc.a2009s+aseg.mgz')
-            print(caps_path_to_destrieux_parcellation)
-
-            assert (os.path.isfile(caps_path_to_preprocessed_dwi))
-            assert (os.path.isfile(caps_path_to_bvecs))
-            assert (os.path.isfile(caps_path_to_bvals))
-            assert (os.path.isfile(caps_path_to_bias_corrected_bet_t1))
-            assert (os.path.isfile(caps_path_to_b0_mask))
-            assert (os.path.isfile(caps_path_to_white_matter_binary_mask))
-            assert (os.path.isfile(caps_path_to_desikan_parcellation))
-            assert (os.path.isfile(caps_path_to_destrieux_parcellation))
-
-            dwi_processing = dwi_processing_pipeline(
-                participant_id=participant_id,
-                session_id=session_id,
-                caps_directory=self.absolute_path(args.caps_directory),
-                working_directory=self.absolute_path(args.working_directory),
-                atlas_name='JHU-ICBM-tracts-maxprob-thr25',
-                max_harmonic_order=args.max_harmonic_order,
-                tractography_algorithm=args.tractography_algorithm,
-                tractography_nb_of_tracks=args.number_of_tracks,
-                tractography_fod_threshold=args.tractography_fod_threshold,
-                tractography_step_size=args.tractography_step_size,
-                tractography_angle=args.tractography_angle,
-                nthreads=args.n_threads,
-                zero_diagonal=True
-            )
-            dwi_processing.inputs.inputnode.in_preprocessed_dwi = caps_path_to_preprocessed_dwi
-            dwi_processing.inputs.inputnode.in_bvecs = caps_path_to_bvecs
-            dwi_processing.inputs.inputnode.in_bvals = caps_path_to_bvals
-            dwi_processing.inputs.inputnode.in_bias_corrected_bet_t1 = caps_path_to_bias_corrected_bet_t1
-            dwi_processing.inputs.inputnode.in_b0_mask = caps_path_to_b0_mask
-            dwi_processing.inputs.inputnode.in_white_matter_binary_mask = caps_path_to_white_matter_binary_mask
-            dwi_processing.inputs.inputnode.in_desikan_parcellation = caps_path_to_desikan_parcellation
-            dwi_processing.inputs.inputnode.in_destrieux_parcellation = caps_path_to_destrieux_parcellation
-
-            dwi_processing.run('MultiProc', plugin_args={'n_procs': args.n_threads})
-
-
-
-
 # class CmdParserInsightToBids(CmdParser):
 #
 #     def define_name(self):
@@ -957,6 +551,7 @@ class CmdParserSubsSess(CmdParser):
         from clinica.iotools.utils import data_handling as dt
         dt.create_subs_sess_list(args.bids_dir, args.out_directory, args.output_name)
 
+
 class CmdParserMergeTsv(CmdParser):
 
     def define_name(self):
@@ -970,10 +565,10 @@ class CmdParserMergeTsv(CmdParser):
         self._args.add_argument("-tf", '--true_false_mode', type= bool, default = False,
                                 help = '(Optional) Conver all the field with binary meaning into True and False values.')
 
-
     def run_pipeline(self, args):
         from clinica.iotools.utils import data_handling as dt
         dt.create_merge_file(args.bids_dir, args.out_directory, args.true_false_mode)
+
 
 class CmdParserMissingModalities(CmdParser):
 
@@ -987,8 +582,6 @@ class CmdParserMissingModalities(CmdParser):
                                 help='Path to the output directory.')
         self._args.add_argument("-op", '--output_prefix', type= str, default= '',
                                 help='Prefix for the name of output files.')
-
-
 
     def run_pipeline(self, args):
         from clinica.iotools.utils import data_handling as dt

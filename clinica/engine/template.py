@@ -1,5 +1,5 @@
 """
-Proptotype in order to generate automatique Pipeline
+Prototype in order to generate automatic Pipeline
 """
 from clinica.engine.cmdparser import CmdParser
 import abc
@@ -11,9 +11,11 @@ from os import mkdir, getcwd, listdir
 def to_camel_case(text):
     return ''.join(x for x in text.title() if not x.isspace())
 
+
 class AbstractTemplate:
     __metaclass__ = abc.ABCMeta
     args = None
+
     def path_template(self):
         return join(split(realpath(__file__))[0], '../resources/template')
 
@@ -38,11 +40,13 @@ class PipelineTemplate(AbstractTemplate):
         return '%sPipeline.py' % args.name
 
     def dictionary(self, args):
-        return {'clinica_major_version' : 1,
-                'clinica_minor_version' : 0,
-                'clinica_patch_version' : 0,
-                'pipeline_name': args.name
-                }
+        return {
+            'clinica_major_version': 0,
+            'clinica_minor_version': 1,
+            'clinica_patch_version': 0,
+            'pipeline_name': args.name
+        }
+
 
 class VisualizeTemplate(AbstractTemplate):
 
@@ -53,11 +57,13 @@ class VisualizeTemplate(AbstractTemplate):
         return '%sVisualize.py' % args.name
 
     def dictionary(self, args):
-        return {'clinica_major_version' : 1,
-                'clinica_minor_version' : 0,
-                'clinica_patch_version' : 0,
-                'pipeline_name': args.name
-                }
+        return {
+            'clinica_major_version': 0,
+            'clinica_minor_version': 1,
+            'clinica_patch_version': 0,
+            'pipeline_name': args.name
+        }
+
 
 class CmdGenerateTemplates(CmdParser):
 

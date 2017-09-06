@@ -25,13 +25,17 @@ def convert_nifti_to_mrtrix_format(in_dwi_nii, in_bvals, in_bvecs, nthreads=2):
     """
     import os.path as op
     import os
+    from nipype.utils.filemanip import split_filename
 
     assert(op.isfile(in_dwi_nii))
     assert(op.isfile(in_bvals))
     assert(op.isfile(in_bvecs))
 
-    out_dwi_mif = op.abspath('dwi.mif')
-    cmd = 'mrconvert %s %s -fslgrad %s %s -datatype float32 -stride 0,0,0,1 -nthreads %s' \
+    _, source_file_dwi, _ = split_filename(in_dwi_nii)
+
+    out_dwi_mif = op.abspath(source_file_dwi + '.mif')
+    cmd = 'mrconvert %s %s -fslgrad %s %s -datatype float32 -stride 0,0,0,1 ' \
+          '-nthreads %s' \
           % (in_dwi_nii, out_dwi_mif, in_bvecs, in_bvals, nthreads)
     os.system(cmd)
     return out_dwi_mif
@@ -71,7 +75,8 @@ def compute_maximum_harmonic_order(in_bvecs):
     elif 45 < number_of_directions <= 66:
         out_lmax = 8
     else:
-        warnings.warn("The number of distinct directions is > to 66, lmax is automatically set to 8", UserWarning)
+        warnings.warn("The number of distinct directions is > to 66, lmax is "
+                      "automatically set to 8", UserWarning)
         out_lmax = 8
 
     return out_lmax
@@ -94,8 +99,7 @@ def erode_mask(in_mask, npass=6, nthreads=2):
             (default=2, 1 disables multi-threading).
 
     Returns:
-        out_eroded_mask : FILE
-          Output. Eroded mask.
+        An eroded mask.
     """
     import os.path as op
     import os
@@ -128,11 +132,14 @@ def dwi_to_tensor(in_dwi_mif, in_b0_mask, nthreads=2):
     """
     import os.path as op
     import os
+    from nipype.utils.filemanip import split_filename
 
     assert(op.isfile(in_dwi_mif))
     assert(op.isfile(in_b0_mask))
 
-    out_dti = op.abspath('dti.mif')
+    _, source_file_dwi, _ = split_filename(in_dwi_mif)
+
+    out_dti = op.abspath(source_file_dwi + '_dti.mif')
 
     cmd = 'dwi2tensor -mask %s %s %s -nthreads %s' \
           % (in_b0_mask, in_dwi_mif, out_dti, nthreads)
@@ -141,48 +148,7 @@ def dwi_to_tensor(in_dwi_mif, in_b0_mask, nthreads=2):
     return out_dti
 
 
-def tensor_to_metric(in_dti, in_b0_mask, metric='fa', nthreads=2):
-    """
-    Generate maps of tensor-derived parameters.
-
-    ..warning:: Only FA and MD are available for the moment.
-
-    Args:
-        in_dti (str): Tensor.
-        in_b0_mask (str): Binary mask of the b0 image. Only perform computation
-            within this specified binary brain mask image.
-        metric (str): Tensor-derived parameter. Currently, choices are:
-            - adc/md: mean apparent diffusion coefficient (also called
-            mean diffusivity)
-            - fa(default): fractional anisotropy
-        nthreads (Optional[int]): Number of threads used in this function
-            (default=2, 1 disables multi-threading).
-
-    Returns:
-        out_metric (str): The tensor-derived parameter `metric`.
-    """
-    import os.path as op
-    import os
-
-    assert(op.isfile(in_dti))
-    assert(op.isfile(in_b0_mask))
-
-    cmd = 'tensor2metric -mask %s %s -nthreads %s' % \
-          (in_b0_mask, in_dti, nthreads)
-    if metric in ("ADC", "adc", "MD", "md"):
-        out_metric = op.abspath('md.nii.gz')
-        cmd = cmd + ' -adc ' + out_metric
-    elif metric in ("FA", "fa"):
-        out_metric = op.abspath('fa.nii.gz')
-        cmd = cmd + ' -fa ' + out_metric
-    else:
-        raise ValueError('Invalid choice of metric in tensor2metric function')
-    os.system(cmd)
-
-    return out_metric
-
-
-def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2):
+def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2, prefix_file=None):
     """
     Generate maps of tensor-derived parameters.
 
@@ -192,6 +158,8 @@ def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2):
             within this specified binary brain mask image.
         nthreads (Optional[int]): Number of threads used in this function
             (default=2, 1 disables multi-threading).
+        prefix_file (Optional[str]): prefix_name for outputs (Output:
+            <prefix_file>_[fa|md|ad|rd|].nii.gz)
 
     Returns:
         out_fa (str): The tensor-derived parameter fractional anisotropy.
@@ -205,31 +173,47 @@ def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2):
     """
     import os.path as op
     import os
+    from nipype.utils.filemanip import split_filename
 
     assert(op.isfile(in_dti))
     assert(op.isfile(in_b0_mask))
 
-    out_fa = op.abspath('fa_map_from_dti.nii.gz')
+    if prefix_file is None:
+        out_fa = op.abspath('fa_map_from_dti.nii.gz')
+    else:
+        out_fa = op.abspath(prefix_file + '_fa.nii.gz')
     cmd = 'tensor2metric -mask %s %s -nthreads %s -fa %s' % \
           (in_b0_mask, in_dti, nthreads, out_fa)
     os.system(cmd)
 
-    out_md = op.abspath('md_map_from_dti.nii.gz')
+    if prefix_file is None:
+        out_md = op.abspath('md_map_from_dti.nii.gz')
+    else:
+        out_md = op.abspath(prefix_file + '_md.nii.gz')
     cmd = 'tensor2metric -mask %s %s -nthreads %s -adc %s' % \
           (in_b0_mask, in_dti, nthreads, out_md)
     os.system(cmd)
 
-    out_ad = op.abspath('ad_map_from_dti.nii.gz')
+    if prefix_file is None:
+        out_ad = op.abspath('ad_map_from_dti.nii.gz')
+    else:
+        out_ad = op.abspath(prefix_file + '_ad.nii.gz')
     cmd = 'tensor2metric -mask %s %s -nthreads %s -ad %s' % \
           (in_b0_mask, in_dti, nthreads, out_ad)
     os.system(cmd)
 
-    out_rd = op.abspath('rd_map_from_dti.nii.gz')
+    if prefix_file is None:
+        out_rd = op.abspath('rd_map_from_dti.nii.gz')
+    else:
+        out_rd = op.abspath(prefix_file + '_rd.nii.gz')
     cmd = 'tensor2metric -mask %s %s -nthreads %s -rd %s' % \
           (in_b0_mask, in_dti, nthreads, out_rd)
     os.system(cmd)
 
-    out_ev = op.abspath('dec_fa_map_from_dti.nii.gz')
+    if prefix_file is None:
+        out_ev = op.abspath('dec_fa_map_from_dti.nii.gz')
+    else:
+        out_ev = op.abspath(prefix_file + '_decfa.nii.gz')
     cmd = 'tensor2metric -mask %s %s -nthreads %s -vector %s' % \
           (in_b0_mask, in_dti, nthreads, out_ev)
     os.system(cmd)
@@ -238,7 +222,7 @@ def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2):
 
 
 def estimate_response(in_dwi_mif, in_b0_mask, lmax=None, algorithm='tax',
-                      tmpdir='/tmp/', nthreads=2):
+                      tmpdir=None, nthreads=2):
     """
     Estimate response function(s) for spherical deconvolution.
 
@@ -268,6 +252,10 @@ def estimate_response(in_dwi_mif, in_b0_mask, lmax=None, algorithm='tax',
     """
     import os.path as op
     import os
+    import tempfile
+
+    if tmpdir is None:
+        tmpdir = tempfile.mkdtemp()
 
     assert(op.isfile(in_dwi_mif))
     assert(op.isfile(in_b0_mask))
@@ -284,8 +272,8 @@ def estimate_response(in_dwi_mif, in_b0_mask, lmax=None, algorithm='tax',
     cmd = 'dwi2response ' + algorithm + ' -mask ' + in_b0_mask
     if lmax is not None:
         cmd = cmd + ' -lmax ' + str(lmax)
-    cmd = '%s %s %s -nthreads %s' % \
-          (cmd, in_dwi_mif, out_response_function, nthreads)
+    cmd = '%s %s %s -nthreads %s -tempdir %s' % \
+          (cmd, in_dwi_mif, out_response_function, nthreads, tmpdir)
     os.system(cmd)
 
     return out_response_function
@@ -395,14 +383,16 @@ def streamlines_tractography(
 
 #    assert(op.isfile(in_source))
     assert(op.isfile(in_white_matter_binary_mask))
-    if algorithm not in ('iFOD1', 'iFOD2', 'Nulldist2', 'Tensor_Det', 'Tensor_Prob'):
+    if algorithm not in \
+            ('iFOD1', 'iFOD2', 'Nulldist2', 'Tensor_Det', 'Tensor_Prob'):
         raise ValueError(
             'Invalid choice of algorithm in streamlines_tractography function')
 
     out_tracks = op.abspath('out_tracks_' + number_of_tracks + '.tck')
 
-    cmd = 'tckgen -algorithm ' + algorithm + ' -number ' + number_of_tracks + ' -seed_image ' \
-          + in_white_matter_binary_mask + ' ' + in_source + ' ' + out_tracks + ' -nthreads ' + str(nthreads)
+    cmd = 'tckgen -algorithm %s -number %s -seed_image %s %s %s -nthreads %s' \
+          % (algorithm, number_of_tracks, in_white_matter_binary_mask,
+             in_source, out_tracks, nthreads)
     # + ' -rk4'
     # cmd = cmd + ' -step ' + str(step_size)
 
@@ -453,23 +443,25 @@ def statistics_on_atlases(in_registered_map, name_map):
     from os import getcwd
     from os.path import abspath, join
     from nipype.utils.filemanip import split_filename
-    from clinica.utils.atlas import (AtlasAbstract, JHUDTI81_1mm,
-                                     JHUTracts0_1mm, JHUTracts25_1mm,
-                                     JHUTracts50_1mm)
+    from clinica.utils.atlas import (AtlasAbstract, JHUDTI811mm,
+                                     JHUTracts01mm, JHUTracts251mm,
+                                     JHUTracts501mm)
     from clinica.utils.statistics import statistics_on_atlas
 
-    orig_dir, base, ext = split_filename(in_registered_map)
+    _, base, _ = split_filename(in_registered_map)
 #    atlas_classes = AtlasAbstract.__subclasses__()
+
+    in_atlas_list = [JHUDTI811mm(), JHUTracts01mm(), JHUTracts251mm()]
+    #, JHUTracts501mm()]
+
     atlas_statistics_list = []
-
-    in_atlas_list = [JHUDTI81_1mm(), JHUTracts0_1mm(), JHUTracts25_1mm()]
-    #, JHUTracts50_1mm()]
-
     for atlas in in_atlas_list:
         if not isinstance(atlas, AtlasAbstract):
             raise TypeError("Atlas element must be an AtlasAbstract type")
 
-        out_atlas_statistics = abspath(join(getcwd(), base + '_space-' + atlas.get_name_atlas() + '_map-' + name_map + '_statistics.tsv'))
+        out_atlas_statistics = abspath(
+            join(getcwd(), '%s_space-%s_map-%s_statistics.tsv' %
+                 (base, atlas.get_name_atlas(), name_map)))
         statistics_on_atlas(in_registered_map, atlas, out_atlas_statistics)
         atlas_statistics_list.append(out_atlas_statistics)
 
@@ -490,3 +482,22 @@ def dwi_container_from_filename(dwi_filename):
     session = m.group(2)
 
     return join('subjects', subject, session)
+
+
+def extract_bids_identifier_from_caps_filename(caps_dwi_filename):
+    """Extract BIDS identifier from CAPS filename"""
+    import re
+    from os.path import join
+    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_dwi',
+                  caps_dwi_filename)
+
+    if m is None:
+        raise ValueError('Input filename is not in a CAPS compliant format.')
+
+    bids_identifier = m.group(0)
+
+    from clinica.utils.stream import cprint
+    cprint("BIDS identifier: " + bids_identifier)
+
+    return bids_identifier
+

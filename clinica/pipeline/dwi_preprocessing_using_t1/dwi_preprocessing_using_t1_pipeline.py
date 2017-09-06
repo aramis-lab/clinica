@@ -11,7 +11,7 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
         - Do not use this pipeline if you have fieldmap data in your dataset.
 
     Todos:
-        - [ ] Do the CAPS.
+        - [X] Do the CAPS.
         - [ ] Do a cleaner reading BIDS input.
 
     Args:
@@ -30,9 +30,10 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
 
     Example:
         >>> from dwi_preprocessing_using_t1 import DWIPreprocessingUsingT1
-        >>> pipeline = DWIPreprocessingusingT1('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
+        >>> pipeline = DWIPreprocessingUsingT1('~/MYDATASET_BIDS',
+        >>>                                    '~/MYDATASET_CAPS')
         >>> pipeline.parameters = {
-        >>>     # ...
+        >>>     'low_bval': 10
         >>> }
         >>> pipeline.base_dir = '/tmp/'
         >>> pipeline.run()
@@ -93,8 +94,6 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
         """
         output_list = ['preproc_dwi', 'preproc_bvec', 'preproc_bval',
                        'b0_mask']
-        #        if self._save_intermediate_files is True:
-        #            output_list = [output_list, 'some_results']
 
         return output_list
 
@@ -104,16 +103,13 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        from clinica.utils.dwi import count_b0s
-
-        list_num_b0s = []
 
         from clinica.utils.stream import cprint
 
-        cprint('Reading BIDS dataset')
+        cprint('Reading BIDS dataset for %s images' % len(self.subjects))
         for i in range(len(self.subjects)):
-            cprint('------- SUBJECT %s SESSION %s -------'
-                   % (self.subjects[i], self.sessions[i]))
+            # cprint('------- SUBJECT %s SESSION %s -------'
+            #        % (self.subjects[i], self.sessions[i]))
 
             # Check b-val file and compute the nb of b0 from file:
             bval_file = self.bids_layout.get(
@@ -131,9 +127,6 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
                               + ' but found '
                               + str(len(bval_file))
                               + ' bval instead.')
-            else:
-                list_num_b0s.append(count_b0s(in_bval=bval_file[0],
-                                              low_bval=self._low_bval))
 
             # Check b-vec file:
             bvec_file = self.bids_layout.get(
@@ -290,24 +283,17 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
         write_results.inputs.parameterization = False
 
         self.connect([
-            (self.input_node, container_path, [('dwi', 'bids_dwi_filename')]),
-            (container_path, write_results,   [(('container', join, 'dwi'), 'container')]),  # noqa
-
-            (self.input_node,  rename_into_caps, [('dwi',         'in_bids_dwi')]),  # noqa
-            (self.output_node, rename_into_caps, [('preproc_dwi',     'fname_dwi'),  # noqa
-                                                  ('preproc_bval',   'fname_bval'),  # noqa
-                                                  ('preproc_bvec',   'fname_bvec'),  # noqa
-                                                  ('b0_mask', 'fname_brainmask')]),  # noqa
-
-            (rename_into_caps, write_results, [('out_caps_dwi',    'preprocessing.@preproc_dwi'),  # noqa
-                                               ('out_caps_bval',  'preprocessing.@preproc_bval'),  # noqa
-                                               ('out_caps_bvec',  'preprocessing.@preproc_bvec'),  # noqa
-                                               ('out_caps_brainmask', 'preprocessing.@b0_mask')])  # noqa
-#            (self.input_node, get_source_filename, [('dwi',                       'in_file')]),  # noqa
-#            (self.output_node, write_results, [('preproc_dwi',   'preprocessing.@preproc_dwi'),  # noqa
-#                                               ('preproc_bvec', 'preprocessing.@preproc_bvec'),  # noqa
-#                                               ('preproc_bval', 'preprocessing.@preproc_bval'),  # noqa
-#                                               ('b0_mask',         'preprocessing.@b0_mask')])   # noqa
+            (self.input_node, container_path,    [('dwi',                    'bids_dwi_filename')]),  # noqa
+            (self.input_node,  rename_into_caps, [('dwi',                          'in_bids_dwi')]),  # noqa
+            (self.output_node, rename_into_caps, [('preproc_dwi',                      'fname_dwi'),  # noqa
+                                                  ('preproc_bval',                    'fname_bval'),  # noqa
+                                                  ('preproc_bvec',                    'fname_bvec'),  # noqa
+                                                  ('b0_mask',                  'fname_brainmask')]),  # noqa
+            (container_path, write_results,      [(('container', join, 'dwi'),       'container')]),  # noqa
+            (rename_into_caps, write_results,    [('out_caps_dwi',    'preprocessing.@preproc_dwi'),  # noqa
+                                                  ('out_caps_bval',  'preprocessing.@preproc_bval'),  # noqa
+                                                  ('out_caps_bvec',  'preprocessing.@preproc_bvec'),  # noqa
+                                                  ('out_caps_brainmask', 'preprocessing.@b0_mask')])  # noqa
         ])
 
     def build_core_nodes(self):

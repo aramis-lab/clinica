@@ -47,8 +47,8 @@ def register_dti_maps_on_atlas(
         (ants_registration_syn_quick,
          apply_ants_registration_syn_quick_transformation)
 
-    from clinica.utils.atlas import JHUTracts0_1mm
-    atlas = JHUTracts0_1mm()
+    from clinica.utils.atlas import JHUTracts01mm
+    atlas = JHUTracts01mm()
 
     if not isinstance(atlas, AtlasAbstract):
         raise Exception("Atlas element must be an AtlasAbstract type")
@@ -75,7 +75,7 @@ def register_dti_maps_on_atlas(
         function=apply_ants_registration_syn_quick_transformation),
         name='apply_ants_registration_for_md')
     apply_ants_registration_for_md.inputs.name_output_image = \
-        'md_map_registered_to_atlas.nii.gz'
+        'space-' + atlas.get_name_atlas() + '_md.nii.gz'
     apply_ants_registration_for_ad = pe.Node(interface=niu.Function(
         input_names=['in_image', 'in_reference_image',
                      'in_affine_transformation', 'in_bspline_transformation',
@@ -84,7 +84,7 @@ def register_dti_maps_on_atlas(
         function=apply_ants_registration_syn_quick_transformation),
         name='apply_ants_registration_for_ad')
     apply_ants_registration_for_ad.inputs.name_output_image = \
-        'ad_map_registered_to_atlas.nii.gz'
+        'space-' + atlas.get_name_atlas() + '_ad.nii.gz'
     apply_ants_registration_for_rd = pe.Node(interface=niu.Function(
         input_names=['in_image', 'in_reference_image',
                      'in_affine_transformation', 'in_bspline_transformation',
@@ -93,7 +93,7 @@ def register_dti_maps_on_atlas(
         function=apply_ants_registration_syn_quick_transformation),
         name='apply_ants_registration_for_rd')
     apply_ants_registration_for_rd.inputs.name_output_image = \
-        'rd_map_registered_to_atlas.nii.gz'
+        'space-' + atlas.get_name_atlas() + '_rd.nii.gz'
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['out_registered_fa', 'out_registered_md', 'out_registered_ad',

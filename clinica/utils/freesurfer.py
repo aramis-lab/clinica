@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# coding: utf8
+
 
 """This module contains FreeSurfer utilities."""
 
