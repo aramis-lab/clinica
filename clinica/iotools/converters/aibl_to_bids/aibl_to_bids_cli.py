@@ -13,7 +13,7 @@ class AiblToBidsCLI(ce.CmdParser):
         self._args.add_argument("dataset_directory",
                                help='Path to the AIBL images directory.')
         self._args.add_argument("clinical_data_directory",
-                                help='Path to the OASIS clinical data directory.')
+                                help='Path to the AIBL clinical data directory.')
         self._args.add_argument("bids_directory",
                                 help='Path to the BIDS directory.')
 
