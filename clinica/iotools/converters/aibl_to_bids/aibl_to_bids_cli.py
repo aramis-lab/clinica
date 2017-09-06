@@ -5,7 +5,7 @@ class AiblToBidsCLI(ce.CmdParser):
     def define_name(self):
         """Define the sub-command name to run this pipeline.
         """
-        self._name = 'convert-aibl-to-bids'
+        self._name = 'aibl-to-bids'
 
     def define_options(self):
         """Define the sub-command arguments
@@ -20,5 +20,5 @@ class AiblToBidsCLI(ce.CmdParser):
     def run_pipeline(self, args):
         from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import convert_clinical_data, convert_images
 
-        convert_images(self.dataset_directory, self.clinical_data_directory, self.bids_directory)
-        convert_clinical_data(self.bids_directory, self.clinical_data_directory)
+        convert_images(args.dataset_directory, args.clinical_data_directory, args.bids_directory)
+        convert_clinical_data(args.bids_directory, args.clinical_data_directory)

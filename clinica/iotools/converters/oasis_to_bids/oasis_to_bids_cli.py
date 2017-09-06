@@ -5,7 +5,7 @@ class OasisToBidsCLI(ce.CmdParser):
     def define_name(self):
         """Define the sub-command name to run this pipeline.
         """
-        self._name = 'convert-oasis-to-bids'
+        self._name = 'oasis-to-bids'
 
     def define_options(self):
         """Define the sub-command arguments
