@@ -10,6 +10,14 @@ from scipy.stats import mode
 from clinica.pipeline.machine_learning.voxel_based_io import get_caps_image_list, load_data, revert_mask, weights_to_nifti, save_subjects_prediction, results_to_csv
 from clinica.pipeline.machine_learning.voxel_based_utils import evaluate_prediction, gram_matrix_linear
 
+__author__ = "Jorge Samper Gonzalez"
+__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__credits__ = ["Jorge Samper Gonzalez"]
+__license__ = "See LICENSE.txt file"
+__version__ = "0.1.0"
+__maintainer__ = "Jorge Samper Gonzalez"
+__email__ = "jorge.samper-gonzalez@inria.fr"
+__status__ = "Development"
 
 def launch_svc(kernel_train, x_test, y_train, c, balanced=False):
     if balanced:

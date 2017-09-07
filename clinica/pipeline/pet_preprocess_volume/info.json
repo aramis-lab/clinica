@@ -1,7 +1,7 @@
 {
     "id": "aramislab/pet-preprocess-volume",
     "author": "SAMPER-GONZALEZ Jorge",
-    "version": "0.1",
+    "version": "0.1.0",
     "dependencies": [
         {
             "type": "toolbox",
