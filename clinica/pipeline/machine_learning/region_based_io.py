@@ -143,8 +143,9 @@ def weights_to_nifti(weights, atlas, output_filename):
     """
 
     import os
-    clinica_home = os.environ.get('CLINICA_HOME', '')
-    atlas_path = os.path.join(clinica_home, 'clinica', 'resources', 'atlases_spm', atlas + '.nii')
+    from os.path import join, split, realpath
+
+    atlas_path = join(split(realpath(__file__))[0], '../../resources/atlases_spm', atlas + '.nii')
 
     atlas_image = nib.load(atlas_path)
     atlas_data = atlas_image.get_data()

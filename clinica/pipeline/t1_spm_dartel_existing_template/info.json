@@ -4,9 +4,9 @@
     "version": "0.1.0",
     "dependencies": [
         {
-            "type": "binary",
-            "name": "clinica",
-            "version": ">=0.1.0"
+            "type": "software",
+            "name": "spm",
+            "version": ">=12"
         }
     ]
 }

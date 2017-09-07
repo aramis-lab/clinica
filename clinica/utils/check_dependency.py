@@ -156,10 +156,10 @@ def check_spm():
     except Exception as e:
         print(str(e))
 
-    list_binaries = ['matlab']
-    for binary in list_binaries:
-        if not is_binary_present(binary):
-            raise RuntimeError(
-                '%s from SPM Software is not present in your '
-                'PATH environment.' % binary)
+    # list_binaries = ['matlab']
+    # for binary in list_binaries:
+    #     if not is_binary_present(binary):
+    #         raise RuntimeError(
+    #             '%s from SPM Software is not present in your '
+    #             'PATH environment.' % binary)
 

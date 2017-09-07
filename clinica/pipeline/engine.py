@@ -241,6 +241,8 @@ class Pipeline(npe.Workflow):
         # Checking functions preparation
         check_software = {
             # 'matlab': chk.check_matlab,
+            'ants': chk.check_ants,
+            'spm': chk.check_spm,
             'freesurfer': chk.check_freesurfer,
             'fsl': chk.check_fsl,
             'mrtrix': chk.check_mrtrix

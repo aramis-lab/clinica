@@ -433,14 +433,14 @@ class CmdParserMachineLearningSVMRB(CmdParser):
         from clinica.pipeline.machine_learning.svm_utils import gram_matrix_linear
         from numpy import logspace
         import pandas
-        import os.path
+        from os.path import join, split, realpath
 
-        output_directory = os.path.join(self.absolute_path(args.caps_directory),
+        output_directory = join(self.absolute_path(args.caps_directory),
                                             'group-' +args.group_id + '/machine_learning/region_based_svm/',
                                             'space' + args.atlas_id, args.image_type)
 
         if args.subjects_visits_tsv is None:
-            subjects_visits_tsv=() #where it's saved for t1 and pet
+            subjects_visits_tsv = () # TODO where it's saved for t1 and pet
         else:
             subjects_visits_tsv = pandas.io.parsers.read_csv(self.absolute_path(args.participants_sessions_tsv),
                                                              sep='\t')
@@ -448,18 +448,18 @@ class CmdParserMachineLearningSVMRB(CmdParser):
         if args.image_type == 't1':
 
             image_list = get_caps_t1_list(self.absolute_path(args.caps_directory),
-                                              subjects_visits_tsv,
-                                              args.group_id,
-                                              args.atlas_id)
+                                          subjects_visits_tsv,
+                                          args.group_id,
+                                          args.atlas_id)
         else:
 
             image_list = get_caps_pet_list(self.absolute_path(args.caps_directory),
-                                               subjects_visits_tsv,
-                                               args.group_id,
-                                               args.atlas_id)
+                                           subjects_visits_tsv,
+                                           args.group_id,
+                                           args.atlas_id)
 
         data = load_data(image_list, subjects_visits_tsv)
-        input_image_atlas = os.path.join(os.path.expandvars('$CLINICA_HOME'),clinica, resources,atlases_spm, args.atlas_id+'.nii')
+        input_image_atlas = join(split(realpath(__file__))[0], '../resources/atlases_spm', args.atlas_id + '.nii')
         subjects_diagnosis = pandas.io.parsers.read_csv(args.diagnosis_tsv, sep='\t')
         if list(subjects_diagnosis.columns.values) != ['participant_id', 'diagnosis']:
             raise Exception('Subjects and visits file is not in the correct format.')

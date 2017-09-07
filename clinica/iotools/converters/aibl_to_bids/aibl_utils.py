@@ -7,8 +7,6 @@ Utils to convert AIBL dataset in BIDS
 
 """
 
-'''
-
 __author__ = "Simona Bottani"
 __copyright__ = "Copyright 2011, The Aramis Lab Team"
 __credits__ = ["Simona Bottani"]
@@ -18,7 +16,6 @@ __maintainer__ = "Simona Bottani"
 __email__ = "simona.bottani@icm-institute.org"
 __status__ = "Development"
 
-'''
 
 
 def listdir_nohidden(path):
