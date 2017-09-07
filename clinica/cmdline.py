@@ -19,7 +19,7 @@ __author__ = "Michael Bacci"
 __copyright__ = "Copyright 2016,2017 The Aramis Lab Team"
 __credits__ = ["Michael Bacci"]
 __license__ = "See LICENSE.txt file"
-__version__ = "1.0.0"
+__version__ = "0.1.0"
 __maintainer__ = "Michael Bacci"
 __email__ = "michael.bacci@inria.fr"
 __status__ = "Development"
@@ -179,47 +179,6 @@ class ClinicaClassLoader:
         import re
         return [os.path.join(path, file) for path in paths for file in os.listdir(path) if re.match(reg, file) is not None]
 
-
-def load_modular_pipelines_parser():
-
-    import imp
-    import os
-    import os.path as op
-    import re
-    import inspect
-
-    pipeline_cli_parsers = []
-
-    # Clinica path
-    if 'CLINICAPATH' in os.environ:
-        clinica_path = os.environ['CLINICAPATH']
-    else:
-        print("WARNING: Variable 'CLINICAPATH' is not defined.")
-        return pipeline_cli_parsers
-
-    # Current path
-    if os.getcwd() not in clinica_path.split(':'):
-        clinica_path = clinica_path + ':' + os.getcwd()
-
-    # List pipeline directories and fetch CLI parser class of each pipeline
-    for one_clinica_path in clinica_path.split(':'):
-        if op.isdir(one_clinica_path):
-            for pipeline_dir in os.listdir(one_clinica_path):
-                pipeline_path = op.join(one_clinica_path, pipeline_dir)
-                if not pipeline_path in sys.path:
-                    sys.path.append(pipeline_path)
-                if op.isdir(pipeline_path):
-                    for pipeline_file in os.listdir(pipeline_path):
-                        if re.match(r".*_cli\.py$", pipeline_file) is not None:
-                            py_module_name, ext = op.splitext(op.split(pipeline_file)[-1])
-                            py_module = imp.load_source(py_module_name, op.join(pipeline_path, pipeline_file))
-                            for class_name, class_obj in inspect.getmembers(py_module, inspect.isclass):
-                                if re.match(r".*CLI$", class_name) is not None:
-                                    pipeline_cli_parsers.append(class_obj())
-
-    return pipeline_cli_parsers
-
-
 class CmdlineCache():
     def __init__(self):
         self.converters = None
@@ -315,16 +274,6 @@ def execute():
     # shell_parser.set_defaults(func=shell_parser_fun)
 
     """
-    pipelines-list option: show all available pipelines
-    """
-    pipeline_list_parser = sub_parser.add_parser('pipeline-list')
-
-    def pipeline_list_fun(args):
-        # display all available pipelines
-        print(*get_cmdparser_names())
-    pipeline_list_parser.set_defaults(func=pipeline_list_fun)
-
-    """
     run option: run one of the available pipelines
     """
     from clinica.engine import CmdParser
@@ -346,9 +295,7 @@ def execute():
     from clinica.pipeline.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI  # noqa
 
     run_parser = sub_parser.add_parser('run')
-    pipelines = ClinicaClassLoader(
-        baseclass=CmdParser, extra_dir="pipelines").load()
-    # pipelines = load_modular_pipelines_parser()
+    pipelines = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
     pipelines += [
         T1FreeSurferCLI(),
         T1SPMSegmentationCLI(),
@@ -365,6 +312,16 @@ def execute():
         PETPreprocessVolumeCLI()
     ]
     init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
+
+    """
+    pipelines-list option: show all available pipelines
+    """
+    pipeline_list_parser = sub_parser.add_parser('pipeline-list')
+
+    def pipeline_list_fun(args):
+        for p in pipelines :
+            cprint(p.name)
+    pipeline_list_parser.set_defaults(func=pipeline_list_fun)
 
     """
     convert option: convert one of the supported dataset to the BIDS specification
