@@ -34,13 +34,10 @@ def convert_images(path_to_dataset, path_to_csv, bids_dir):
 def convert_clinical_data(bids_dir, path_to_csv):
     # clinical specifications in BIDS
     import os
+    from os.path import join, split, realpath
     from clinica.iotools.converters.aibl_to_bids.aibl_utils import create_participants_df_AIBL, \
         create_sessions_dict_AIBL
 
-    CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-    if not CLINICA_HOME:
-        raise Exception('CLINICA_HOME variable from Clinica software is not set')
-
-    clinical_spec_path = os.path.join(CLINICA_HOME, 'clinica', 'iotools', 'data', 'clinical_specifications.xlsx')
+    clinical_spec_path = join(split(realpath(__file__))[0], '../../iotools/data/clinical_specifications.xlsx')
     create_participants_df_AIBL(bids_dir, clinical_spec_path, path_to_csv, delete_non_bids_info=True)
     create_sessions_dict_AIBL(bids_dir, path_to_csv, clinical_spec_path)

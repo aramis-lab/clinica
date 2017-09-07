@@ -4,9 +4,9 @@
     "version": "0.1.0",
     "dependencies": [
         {
-            "type": "toolbox",
+            "type": "software",
             "name": "spm",
-            "version": ">=8"
+            "version": ">=12"
         }
     ]
 }

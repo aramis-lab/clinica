@@ -115,10 +115,8 @@ class JHUDTI812mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUDTI81_ROI.tsv')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUDTI81_ROI.tsv')
 
 
 class JHUDTI811mm(AtlasAbstract):
@@ -147,10 +145,8 @@ class JHUDTI811mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUDTI81_ROI.tsv')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUDTI81_ROI.tsv')
 
 
 class JHUTracts01mm(AtlasAbstract):
@@ -179,10 +175,8 @@ class JHUTracts01mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
 
 
 class JHUTracts02mm(AtlasAbstract):
@@ -211,10 +205,8 @@ class JHUTracts02mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
 
 
 class JHUTracts251mm(AtlasAbstract):
@@ -243,10 +235,8 @@ class JHUTracts251mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
 
 
 class JHUTracts252mm(AtlasAbstract):
@@ -275,10 +265,8 @@ class JHUTracts252mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
 
 
 class JHUTracts501mm(AtlasAbstract):
@@ -307,10 +295,8 @@ class JHUTracts501mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
 
 
 class JHUTracts502mm(AtlasAbstract):
@@ -339,10 +325,8 @@ class JHUTracts502mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases', 'JHUTract_ROI.tsv')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
 
 
 class AAL2(AtlasAbstract):
@@ -355,26 +339,20 @@ class AAL2(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','AAL2.nii')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'AAL2.nii')
 
     @staticmethod
     def get_atlas_map():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', 'Template_MNI152.nii')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
 
     @staticmethod
     def get_tsv_roi():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', 'AAL2_ROI.tsv')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'AAL2_ROI.tsv')
 
 
 class Hammers(AtlasAbstract):
@@ -387,26 +365,20 @@ class Hammers(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica',  'resources', 'atlases_spm','Hammers.nii')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Hammers.nii')
 
     @staticmethod
     def get_atlas_map():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','Template_MNI152.nii')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
 
     @staticmethod
     def get_tsv_roi():
-        import os.path
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', 'Hammers_ROI.tsv')
+        import os
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Hammers_ROI.tsv')
 
 
 class LPBA40(AtlasAbstract):
@@ -419,26 +391,20 @@ class LPBA40(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica','resources', 'atlases_spm','LPBA40.nii')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'LPBA40.nii')
 
     @staticmethod
     def get_atlas_map():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','Template_MNI152.nii')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
 
     @staticmethod
     def get_tsv_roi():
-        import os.path
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', 'LPBA40_ROI.tsv')
+        import os
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'LPBA40_ROI.tsv')
 
 
 class AICHA(AtlasAbstract):
@@ -451,26 +417,20 @@ class AICHA(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','AICHA.nii')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'AICHA.nii')
 
     @staticmethod
     def get_atlas_map():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','Template_MNI152.nii')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
 
     @staticmethod
     def get_tsv_roi():
-        import os.path
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', 'AICHA_ROI.tsv')
+        import os
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'AICHA_ROI.tsv')
 
 
 class Neuromorphometrics(AtlasAbstract):
@@ -483,26 +443,20 @@ class Neuromorphometrics(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica','resources', 'atlases_spm','Neuromorphometrics.nii')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Neuromorphometrics.nii')
 
     @staticmethod
     def get_atlas_map():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','Template_MNI152.nii')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
 
     @staticmethod
     def get_tsv_roi():
-        import os.path
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', 'Neuromorphometrics_ROI.tsv')
+        import os
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Neuromorphometrics_ROI.tsv')
 
 
 class MCALT_ADIR122(AtlasAbstract):
@@ -515,26 +469,20 @@ class MCALT_ADIR122(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica','resources', 'atlases_spm','MCALT_ADIR122.nii')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'MCALT_ADIR122.nii')
 
     @staticmethod
     def get_atlas_map():
         import os
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm','Template_MNI152.nii')
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
 
     @staticmethod
     def get_tsv_roi():
-        import os.path
-        CLINICA_HOME = os.environ.get('CLINICA_HOME', '')
-        if not CLINICA_HOME:
-            raise Exception('CLINICA_HOME variable from Clinica software is not set')
-        return os.path.join(CLINICA_HOME, 'clinica', 'resources', 'atlases_spm', 'MCALT_ADIR122_ROI.tsv')
+        import os
+        from os.path import join, split, realpath
+        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'MCALT_ADIR122_ROI.tsv')
 
 
 class AtlasLoader:

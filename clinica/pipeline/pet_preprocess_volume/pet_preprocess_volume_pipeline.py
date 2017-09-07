@@ -131,7 +131,7 @@ class PETPreprocessVolume(cpe.Pipeline):
         import nipype.interfaces.io as nio
         import clinica.pipeline.pet_preprocess_volume.pet_preprocess_volume_utils as utils
         import os
-        from os.path import join
+        from os.path import join, split, realpath
 
         iterables_fwhm = self._fwhm
         if not self._apply_pvc:
@@ -181,9 +181,8 @@ class PETPreprocessVolume(cpe.Pipeline):
 
         # Reference Mask DataGrabber
         # ===========================
-        clinica_home = os.environ.get("CLINICA_HOME")
         reference_mask = npe.Node(nio.DataGrabber(outfields=['out_files']), name='reference_mask')
-        reference_mask.inputs.base_directory = join(clinica_home, 'clinica', 'resources', 'masks')
+        reference_mask.inputs.base_directory = join(split(realpath(__file__))[0], '../../resources/masks')
         reference_mask.inputs.sort_filelist = False
         # TODO DIFFERENT PET TYPES TO PROCESS
         if self.parameters['pet_type'] == 'fdg' or self.parameters['pet_type'] == 'FDG':
