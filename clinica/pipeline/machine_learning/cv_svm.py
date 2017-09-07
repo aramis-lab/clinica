@@ -5,6 +5,15 @@ from sklearn.model_selection import StratifiedKFold
 from scipy.stats import mode
 from clinica.pipeline.machine_learning.svm_utils import evaluate_prediction, calculate_auc
 
+__author__ = "Jorge Samper Gonzalez"
+__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__credits__ = ["Jorge Samper Gonzalez", "Pascal Lu", "Simona Bottani"]
+__license__ = "See LICENSE.txt file"
+__version__ = "0.1.0"
+__maintainer__ = "Jorge Samper Gonzalez"
+__email__ = "jorge.samper-gonzalez@inria.fr"
+__status__ = "Development"
+
 
 def launch_svc(kernel_train, x_test, y_train, y_test, c, balanced=False, shared_x=None, train_indices=None, test_indices=None):
     if balanced:

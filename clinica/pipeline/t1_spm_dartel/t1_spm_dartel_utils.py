@@ -1,6 +1,18 @@
+
+"""T1 SPM Dartel - Clinica Utilities.
+This file has been generated automatically by the `clinica generate template`
+command line tool. See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
 """
 
-"""
+
+__author__ = "Jorge Samper Gonzalez"
+__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__credits__ = [ "Jorge Samper Gonzalez"]
+__license__ = "See LICENSE.txt file"
+__version__ = "0.1.0"
+__maintainer__ = "Jorge Samper Gonzalez"
+__email__ = "jorge.samper-gonzalez@inria.fr"
+__status__ = "Development"
 
 def get_class_images(class_images, index_list):
     """

@@ -11,6 +11,15 @@ import clinica.pipeline.machine_learning.region_based_io as rbio
 import clinica.pipeline.machine_learning.svm_utils as utils
 
 
+__author__ = "Jorge Samper Gonzalez"
+__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__credits__ = ["Jorge Samper Gonzalez", "Simona Bottani"]
+__license__ = "See LICENSE.txt file"
+__version__ = "0.1.0"
+__maintainer__ = "Jorge Samper Gonzalez"
+__email__ = "jorge.samper-gonzalez@inria.fr"
+__status__ = "Development"
+
 class CAPSInput(base.MLInput):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, precomputed_kernel=None):

@@ -8,6 +8,14 @@ from os.path import join
 import scipy.io
 from skimage import img_as_float
 
+__author__ = "Jorge Samper Gonzalez"
+__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__credits__ = ["Jorge Samper Gonzalez", "Simona Bottani"]
+__license__ = "See LICENSE.txt file"
+__version__ = "0.1.0"
+__maintainer__ = "Jorge Samper Gonzalez"
+__email__ = "jorge.samper-gonzalez@inria.fr"
+__status__ = "Development"
 
 def get_caps_t1_list(input_directory, subjects_visits_tsv,group_id, atlas_id):
     """

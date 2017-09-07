@@ -4,6 +4,14 @@ import pandas as pd
 import nibabel as nib
 from os.path import join
 
+__author__ = "Jorge Samper Gonzalez"
+__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__credits__ = ["Jorge Samper Gonzalez"]
+__license__ = "See LICENSE.txt file"
+__version__ = "0.1.0"
+__maintainer__ = "Jorge Samper Gonzalez"
+__email__ = "jorge.samper-gonzalez@inria.fr"
+__status__ = "Development"
 
 def get_caps_t1_list_OLD(input_directory, subjects_visits_tsv, analysis_series_id, group_id, prefix, tissue):
 

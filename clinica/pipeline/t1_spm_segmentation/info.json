@@ -1,7 +1,7 @@
 {
     "id": "aramislab/t1-spm-segmentation",
     "author": "SAMPER-GONZALEZ Jorge",
-    "version": "0.1",
+    "version": "0.1.0",
     "dependencies": [
         {
             "type": "toolbox",
