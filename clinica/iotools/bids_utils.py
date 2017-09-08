@@ -18,7 +18,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
     """
     :param study_name: name of the study (Ex. ADNI)
     :param clinical_spec_path: path to the clinical file
-    :param clinical_spec_dir: path to the directory where the clinical data are stored
+    :param clinical_data_dir: path to the directory where the clinical data are stored
     :param bids_ids: list of bids ids
     :param delete_non_bids_info: if True delete all the rows of the subjects that are not available in the BIDS dataset
     :return: a pandas dataframe that contains the participants data
@@ -28,6 +28,8 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
     from os import path
     import logging
     import numpy as np
+    from clinica.utils.stream import cprint
+
 
     fields_bids = ['participant_id']
     prev_location = ''
@@ -65,6 +67,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
             else:
                 file_ext = os.path.splitext(location)[1]
                 file_to_read_path = path.join(clinical_data_dir, location)
+                cprint(file_to_read_path)
 
                 if file_ext == '.xlsx':
                     file_to_read = pd.read_excel(file_to_read_path, sheetname=sheet)

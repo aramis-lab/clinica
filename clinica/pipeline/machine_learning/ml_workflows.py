@@ -14,12 +14,19 @@ __maintainer__ = "Jorge Samper Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
+#This code is an example of implementation of a machine learning pipeline
 
 class VB_KFold_DualSVM(base.MLWorkflow):
+
+    #First of all, input has to be chosen. According to it (CAPSVoxelBasedInput or CAPSRegionBasedInput), all the necessary inputs
+    #can be found in input.py
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, output_dir, fwhm=0,
                  modulated="on", pvc=None, precomputed_kernel=None, mask_zeros=True, n_threads=15, n_folds=10,
                  grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17)):
+
+        #here some parameters selected for this task
+
         self._output_dir = output_dir
         self._n_threads = n_threads
         self._n_folds = n_folds
@@ -27,16 +34,27 @@ class VB_KFold_DualSVM(base.MLWorkflow):
         self._balanced = balanced
         self._c_range = c_range
 
+        # In this case we are running a voxel based input approach
+        #
+
         self._input = input.CAPSVoxelBasedInput(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
                                                 image_type, fwhm, modulated, pvc, mask_zeros, precomputed_kernel)
+
+        #validation and algorithm will be selected in the next part of code
+
         self._validation = None
         self._algorithm = None
 
     def run(self):
 
+        # call on parameters already computed
+
         x = self._input.get_x()
         y = self._input.get_y()
         kernel = self._input.get_kernel()
+
+        #now algorithm has been selected, in this case Dual SVM algorithm. Look at algorithm.py to understand the input necessary for each method
+        #input parameters were chosen previously
 
         self._algorithm = algorithm.DualSVMAlgorithm(kernel,
                                                      y,
@@ -44,15 +62,19 @@ class VB_KFold_DualSVM(base.MLWorkflow):
                                                      grid_search_folds=self._grid_search_folds,
                                                      c_range=self._c_range,
                                                      n_threads=self._n_threads)
+        #here validation type is selected, it's the K fold cross-validation
 
         self._validation = validation.KFoldCV(self._algorithm)
 
         classifier, best_params, results = self._validation.validate(y, n_folds=self._n_folds, n_threads=self._n_threads)
 
+        #creation of the path where all the results will be saved
+
         classifier_dir = path.join(self._output_dir, 'classifier')
         if not path.exists(classifier_dir):
             os.makedirs(classifier_dir)
 
+        #here we have selected whant we wanted save
         self._algorithm.save_classifier(classifier, classifier_dir)
         self._algorithm.save_weights(classifier, x, classifier_dir)
         self._algorithm.save_parameters(best_params, classifier_dir)
