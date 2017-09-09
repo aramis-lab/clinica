@@ -33,3 +33,4 @@ class AdniToBidsCLI(ce.CmdParser):
         adni_to_bids = AdniToBids()
 
         adni_to_bids.convert_clinical_data(args.clinical_data_directory, args.bids_directory)
+        adni_to_bids.convert_images(args.dataset_directory,args.clinical_data_directory, args.bids_directory, args.subjects_list, args.modality)
