@@ -59,7 +59,7 @@ class T1SPMDartel2MNI(cpe.Pipeline):
                             'voxel_size': None,
                             'modulation': True,
                             'fwhm': [8],
-                            'atlas_list': ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
+                            'atlas_list': ['AAL2', 'Neuromorphometrics', 'AICHA', 'Hammers']
                             }
 
     def check_custom_dependencies(self):

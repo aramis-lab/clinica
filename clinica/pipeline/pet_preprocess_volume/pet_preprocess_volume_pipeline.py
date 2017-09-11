@@ -76,7 +76,7 @@ class PETPreprocessVolume(cpe.Pipeline):
                             'mask_threshold': 0.3,
                             'pvc_mask_tissues': [1, 2, 3],
                             'smooth': [8],
-                            'atlas_list': ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
+                            'atlas_list': ['AAL2', 'Neuromorphometrics', 'AICHA', 'Hammers']
                             }
 
     def check_custom_dependencies(self):
