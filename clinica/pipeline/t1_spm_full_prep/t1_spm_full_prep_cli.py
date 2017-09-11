@@ -51,8 +51,10 @@ class T1SPMFullPrepCLI(ce.CmdParser):
         self._args.add_argument("-vs", "--voxel_size", nargs=3, type=float,
                                 help="A list of 3 floats specifying voxel sizes for each dimension of output image")
         self._args.add_argument("-atlases", "--atlases", nargs='+', type=str,
-                                default=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
-                                choices=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
+                                #default=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
+                                #choices=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
+                                default=['AAL2', 'Neuromorphometrics', 'AICHA', 'Hammers'],
+                                choices=['AAL2', 'Neuromorphometrics', 'AICHA', 'Hammers'],
                                 help='A list of atlases to use to calculate the mean GM concentration at each region')
         self._args.add_argument("-wd", "--working_directory",
                                 help='Temporary directory to store pipeline intermediate results')

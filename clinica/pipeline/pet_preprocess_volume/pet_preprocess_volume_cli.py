@@ -49,8 +49,10 @@ class PETPreprocessVolumeCLI(ce.CmdParser):
         self._args.add_argument("-smooth", "--smooth", nargs='+', type=int, default=[8],
                                 help="A list of integers specifying the different isomorphic fwhm in milimeters to smooth the image")
         self._args.add_argument("-atlases", "--atlases", nargs='+', type=str,
-                                default=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
-                                choices=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
+                                #default=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
+                                #choices=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
+                                default=['AAL2', 'Neuromorphometrics', 'AICHA', 'Hammers'],
+                                choices=['AAL2', 'Neuromorphometrics', 'AICHA', 'Hammers'],
                                 help='A list of atlases to use to calculate the mean GM concentration at each region')
         self._args.add_argument("-wd", "--working_directory",
                                 help='Temporary directory to store pipeline intermediate results')
