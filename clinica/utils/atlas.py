@@ -365,8 +365,12 @@ class Hammers(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Hammers.nii')
+        SPM_HOME = os.environ.get('SPM_HOME', '')
+        if not SPM_HOME:
+            raise Exception('SPM_HOME variable from SPM software is not set')
+        if not os.path.exists(os.path.join(SPM_HOME, 'toolbox', 'cat12')):
+            raise Exception('CAT12 not included in SPM_HOME/toolbox')
+        return os.path.join(SPM_HOME, 'toolbox', 'cat12', 'templates_1.50mm', 'hammers.nii')
 
     @staticmethod
     def get_atlas_map():
@@ -391,8 +395,12 @@ class LPBA40(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'LPBA40.nii')
+        SPM_HOME = os.environ.get('SPM_HOME', '')
+        if not SPM_HOME:
+            raise Exception('SPM_HOME variable from SPM software is not set')
+        if not os.path.exists(os.path.join(SPM_HOME, 'toolbox', 'cat12')):
+            raise Exception('CAT12 not included in SPM_HOME/toolbox')
+        return os.path.join(SPM_HOME, 'toolbox', 'cat12', 'templates_1.50mm', 'lpba40.nii')
 
     @staticmethod
     def get_atlas_map():
@@ -443,8 +451,12 @@ class Neuromorphometrics(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Neuromorphometrics.nii')
+        SPM_HOME = os.environ.get('SPM_HOME', '')
+        if not SPM_HOME:
+            raise Exception('SPM_HOME variable from SPM software is not set')
+        if not os.path.exists(os.path.join(SPM_HOME, 'toolbox', 'cat12')):
+            raise Exception('CAT12 not included in SPM_HOME/toolbox')
+        return os.path.join(SPM_HOME, 'toolbox', 'cat12', 'templates_1.50mm', 'neuromorphometrics.nii')
 
     @staticmethod
     def get_atlas_map():
