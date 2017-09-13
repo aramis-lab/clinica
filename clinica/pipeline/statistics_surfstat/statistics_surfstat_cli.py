@@ -73,7 +73,6 @@ class StatisticsSurfstatCLI(ce.CmdParser):
             args.custom_file = '@subject/@session/pet/surface/@subject_@session_task-rest_acq-FDG_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-@hemi_fwhm-@fwhm_projection.mgh'
         elif args.feature_type is not None:
             raise Exception('Feature type ' + args.feature_type + ' not recognized. Use the --custom_file to specify your own files.')
-        print 'hello !!**************'
         pipeline = StatisticsSurfstat(
             # pass these args by the class attribute itself
             caps_directory=self.absolute_path(args.caps_directory),
