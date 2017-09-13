@@ -47,11 +47,11 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
     mri_quality_path = path.join(csv_dir, 'MRIQUALITY.csv')
     mayo_mri_qc_path = path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
 
-    adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
-    ida_meta = pd.io.parsers.read_csv(ida_meta_path, sep=',')
-    mprage_meta = pd.io.parsers.read_csv(mprage_meta_path, sep=',')
-    mri_quality = pd.io.parsers.read_csv(mri_quality_path, sep=',')
-    mayo_mri_qc = pd.io.parsers.read_csv(mayo_mri_qc_path, sep=',')
+    adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',', low_memory=False)
+    ida_meta = pd.io.parsers.read_csv(ida_meta_path, sep=',', low_memory=False)
+    mprage_meta = pd.io.parsers.read_csv(mprage_meta_path, sep=',', low_memory=False)
+    mri_quality = pd.io.parsers.read_csv(mri_quality_path, sep=',', low_memory=False)
+    mayo_mri_qc = pd.io.parsers.read_csv(mayo_mri_qc_path, sep=',', low_memory=False)
     mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == 'T1']
 
     for subj in subjs_list:
