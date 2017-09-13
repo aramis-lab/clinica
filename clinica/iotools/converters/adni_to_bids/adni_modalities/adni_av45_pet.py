@@ -7,6 +7,7 @@ __maintainer__ = "Jorge Samper"
 __email__ = ""
 __status__ = "Development"
 
+
 def convert_adni_av45_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     import pandas as pd
     from os import path
@@ -25,7 +26,7 @@ def compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     import os
     from os import walk, path
     from numpy import argsort
-    from iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
+    from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
 
     pet_av45_col = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
                    'Series_ID', 'Image_ID', 'Original']
@@ -158,7 +159,7 @@ def compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
 
 def av45_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
-    from iotools.converters.adni_to_bids.adni_utils import center_nifti_origin, viscode_to_session
+    from clinica.iotools.converters.adni_to_bids.adni_utils import center_nifti_origin, viscode_to_session
     from os import path, makedirs, system, remove
     from numpy import nan
 
