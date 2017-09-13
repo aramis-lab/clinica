@@ -42,6 +42,10 @@ class StatisticsSurfstatCLI(ce.CmdParser):
                                 help='A str for current group name')
         self._args.add_argument("glm_type",
                                 help='A str based on glm type for the hypothesis, choose one between group_comparison and correlation')
+        self._args.add_argument("--feature_type", "-ft", type=str, default='cortical_thickness',
+                                help='Feature type. Can be : cortical_thickness, pet_fdg_projection. Default = cortical_thickness')
+        self._args.add_argument("--custom_file", "-cf", type=str, default=None,
+                                help='Pattern of file inside caps directory using @subject, @session, @fwhm, @hemi')
         self._args.add_argument("-fwhm", "--full_width_at_half_maximum", type=int, default=20,
                                 help='FWHM for the surface smoothing (default=20)')
         self._args.add_argument("-tup", "--threshold_uncorrected_pvalue", type=float, default=0.001,
@@ -63,6 +67,13 @@ class StatisticsSurfstatCLI(ce.CmdParser):
 
         from statistics_surfstat_pipeline import StatisticsSurfstat
 
+        if args.feature_type == 'cortical_thickness':
+            args.custom_file = '@subject/@session/t1/freesurfer-cross-sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
+        elif args.feature_type == 'pet_fdg_projection':
+            args.custom_file = '@subject/@session/pet/surface/@subject_@session_task-rest_acq-FDG_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-@hemi_fwhm-@fwhm_projection.mgh'
+        elif args.feature_type is not None:
+            raise Exception('Feature type ' + args.feature_type + ' not recognized. Use the --custom_file to specify your own files.')
+        print 'hello !!**************'
         pipeline = StatisticsSurfstat(
             # pass these args by the class attribute itself
             caps_directory=self.absolute_path(args.caps_directory),
@@ -74,6 +85,7 @@ class StatisticsSurfstatCLI(ce.CmdParser):
             'str_format': args.str_format,
             'group_label': args.group_label,
             'glm_type': args.glm_type,
+            'custom_file': args.custom_file,
             'full_width_at_half_maximum': args.full_width_at_half_maximum or 20,
             'threshold_uncorrected_pvalue': args.threshold_uncorrected_pvalue or 0.001,
             'threshold_corrected_pvalue': args.threshold_corrected_pvalue or 0.05,
@@ -87,4 +99,5 @@ class StatisticsSurfstatCLI(ce.CmdParser):
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.write_graph()
+            print(pipeline.parameters)
             pipeline.run()
