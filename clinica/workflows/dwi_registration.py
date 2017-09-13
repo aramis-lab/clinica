@@ -196,10 +196,10 @@ def t1_b0_registration(
         (inputnode, destrieux_in_native_space, [('in_destrieux_parcellation', 'freesurfer_volume'),
                                                 ('in_bias_corrected_bet_t1', 'native_volume')]),
         # Apply registration without resampling on Desikan & Destrieux parcellations:
-        (desikan_in_native_space, desikan_in_diffusion_space, [('out_volume', 'in_image')]),
-        (convert_flirt_to_mrtrix, desikan_in_diffusion_space, [('out_mrtrix_matrix', 'in_mrtrix_matrix')]),
-        (destrieux_in_native_space, destrieux_in_diffusion_space, [('out_volume', 'in_image')]),
-        (convert_flirt_to_mrtrix,   destrieux_in_diffusion_space, [('out_mrtrix_matrix', 'in_mrtrix_matrix')]),
+        (desikan_in_native_space, desikan_in_diffusion_space, [('out_volume', 'in_image')]),  # noqa
+        (convert_flirt_to_mrtrix, desikan_in_diffusion_space, [('out_mrtrix_matrix', 'in_mrtrix_matrix')]),  # noqa
+        (destrieux_in_native_space, destrieux_in_diffusion_space, [('out_volume', 'in_image')]),  # noqa
+        (convert_flirt_to_mrtrix,   destrieux_in_diffusion_space, [('out_mrtrix_matrix', 'in_mrtrix_matrix')]),  # noqa
         # Outputnode:
         (registration_t1_to_b0,        outputnode, [('out_file',                          'out_registered_t1')]),  # noqa
         (registration_t1_to_b0,        outputnode, [('out_matrix_file',                    'out_flirt_matrix')]),  # noqa

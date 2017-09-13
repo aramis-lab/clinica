@@ -167,7 +167,7 @@ def apply_all_corrections_using_ants(name='apply_all_corrections_using_ants'):
     Additionally, computes the corresponding bspline coefficients and
     the map of determinants of the jacobian.
     """
-    import  nipype
+    import nipype
     import nipype.interfaces.fsl as fsl
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
