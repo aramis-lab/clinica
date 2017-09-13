@@ -93,6 +93,7 @@ def runmatlab(input_directory,
               glm_type,
               group_label,
               freesurfer_home,
+              surface_file,
               path_to_matscript,
               full_width_at_half_maximum,
               threshold_uncorrected_pvalue,
@@ -154,8 +155,8 @@ def runmatlab(input_directory,
     matlab.inputs.paths = path_to_matscript  # CLINICA_HOME, this is the path to add into matlab, addpath
 
     matlab.inputs.script = """
-    clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', %.3f, '%s', %.3f, '%s', %.3f);
-    """ % (input_directory, output_directory, subjects_visits_tsv, design_matrix, contrast, str_format, glm_type, group_label, freesurfer_home, 'sizeoffwhm',
+    clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', %.3f, '%s', %.3f, '%s', %.3f);
+    """ % (input_directory, output_directory, subjects_visits_tsv, design_matrix, contrast, str_format, glm_type, group_label, freesurfer_home, surface_file, 'sizeoffwhm',
            full_width_at_half_maximum,
            'thresholduncorrectedpvalue', threshold_uncorrected_pvalue, 'thresholdcorrectedpvalue',
            threshold_corrected_pvalue, 'clusterthreshold',
@@ -169,7 +170,6 @@ def runmatlab(input_directory,
     print "MatlabCommand choose which matlab to use(matlab_cmd): %s" % get_matlab_command()
     if sys.platform.startswith('linux'):
         print "MatlabCommand inputs flag: nosoftwareopengl = %s" % matlab.inputs.args
-
     out = matlab.run()
     return out
 

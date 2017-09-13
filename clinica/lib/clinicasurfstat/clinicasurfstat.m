@@ -1,4 +1,4 @@
-function clinicasurfstat( inputdir, outputdir, tsvfile, designmatrix, contrast, strformat, glmtype, grouplabel, freesurferhome, varargin)
+function clinicasurfstat( inputdir, outputdir, tsvfile, designmatrix, contrast, strformat, glmtype, grouplabel, freesurferhome, surface_file, varargin)
 % Saves all the output images for group analysis of T1 images smoothed data
 %
 % Usage: [some outputs] = clinicasurfstat( inputdir, outputdir, tsvfile, designmatrix, contrast, strformat, glmtype, varargin)
@@ -98,12 +98,12 @@ end
 for indexsubject = 1 : nrsubject
     subjectname = tsvdata{1}{indexsubject};
     sessionname = tsvdata{2}{indexsubject};
-    surfsubdir = strcat(inputdir, '/', subjectname, '/', sessionname, '/t1/freesurfer-cross-sectional/', subjectname, '_', sessionname, '/surf' );
-    %[surfsubdir, xuuu] = glob(interpath);
-    %surfsubdir = char(surfsubdir);
-    Y = SurfStatReadData( { ...
-        [ surfsubdir '/lh.thickness.fwhm' num2str(sizeoffwhm) '.fsaverage.mgh' ],...
-        [ surfsubdir '/rh.thickness.fwhm' num2str(sizeoffwhm) '.fsaverage.mgh' ]} );
+    surf_file = regexprep(surface_file, '@subject', subjectname);
+    surf_file = regexprep(surf_file, '@session', sessionname);
+    surf_file = regexprep(surf_file, '@fwhm', num2str(sizeoffwhm));
+    surf_file_lh = fullfile(inputdir, regexprep(surf_file, '@hemi', 'lh'))
+    surf_file_rh = fullfile(inputdir, regexprep(surf_file, '@hemi', 'rh'))
+    Y = SurfStatReadData({surf_file_lh, surf_file_rh});
     if size(Y, 1) ~= 1
         error('Unexpected dimension of Y in SurfStatReadData')
     end
