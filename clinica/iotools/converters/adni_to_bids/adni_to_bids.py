@@ -71,8 +71,7 @@ class AdniToBids(Converter):
         :param clinical_dir: path to the clinical data directory
         :param dest_dir: path to the BIDS directory
         :param subjs_list_path: list of subjects to process
-        :param mod_to_add:
-        :param mod_to_update:
+        :param mod_to_add: modality to convert (T1, PET_FDG, PET_AV45)
         :return:
         '''
 
@@ -82,18 +81,18 @@ class AdniToBids(Converter):
         import adni_modalities.adni_t1 as adni_t1
         import adni_modalities.adni_av45_pet as adni_av45
         import adni_modalities.adni_fdg_pet as adni_fdg
+        from clinica.utils.stream import cprint
 
         adni_merge_path = path.join(clinical_dir, 'ADNIMERGE.csv')
         adni_merge = pd.read_csv(adni_merge_path)
         paths_files_location = path.join(dest_dir, 'conversion_info')
 
-        print subjs_list_path
-
         # Load a file with subjects list or compute all the subjects
         if subjs_list_path is not None and subjs_list_path!='':
+            cprint('Loading a subjects lists provided by the user...')
             subjs_list = [line.rstrip('\n') for line in open(subjs_list_path)]
         else:
-            print 'Using all the subjects contained into ADNI merge...'
+            cprint('Using all the subjects contained into the ADNIMERGE.csv file...')
             subjs_list = adni_merge['PTID'].unique()
 
         # Create the output folder if is not already existing
@@ -102,19 +101,19 @@ class AdniToBids(Converter):
             os.makedirs(path.join(dest_dir, 'conversion_info'))
 
         if mod_to_add == 'T1' or not mod_to_add:
-            print 'Calculating paths for T1. Output will be in ', paths_files_location
+            cprint('Calculating paths for T1. Output will be stored in ' + paths_files_location+'.')
             t1_paths = adni_t1.compute_t1_paths(source_dir, clinical_dir, dest_dir, subjs_list)
-            print 'Done!'
+            cprint('Done!')
             adni_t1.t1_paths_to_bids(t1_paths, dest_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", mod_to_update=True)
 
         if mod_to_add=='PET_FDG' or not mod_to_add :
-            print 'Calculating paths for PET_FDG. Output will be in ', paths_files_location
+            cprint('Calculating paths for PET_FDG. Output will be stored in ' + paths_files_location+'.')
             pet_fdg_paths = adni_fdg.compute_fdg_pet_paths(source_dir, clinical_dir, dest_dir, subjs_list)
-            print 'Done!'
-            adni_fdg.convert_adni_fdg_pet(source_dir, clinical_dir, dest_dir, subjs_list)
+            cprint('Done!')
+            adni_fdg.fdg_pet_paths_to_bids(pet_fdg_paths, dest_dir)
 
         if mod_to_add == 'PET_AV45' or not mod_to_add:
-            print 'Calculating paths for PET_FDG. Output will be in ', paths_files_location
+            cprint('Calculating paths for PET_FDG. Output will be stored in ' + paths_files_location+'.')
             pet_av45_paths = adni_av45.compute_av45_pet_paths(source_dir, clinical_dir, dest_dir, subjs_list)
-            print 'Done!'
-            adni_av45.convert_adni_av45_pet(source_dir, clinical_dir, dest_dir, subjs_list)
+            cprint('Done!')
+            adni_av45.av45_pet_paths_to_bids(pet_av45_paths, dest_dir)
