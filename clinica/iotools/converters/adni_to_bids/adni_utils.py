@@ -211,7 +211,7 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
                 sessions_df = sessions_df.append(pd.DataFrame(sessions_dict[bids_id][ses], index=['i', ]))
 
             sessions_df = sessions_df[columns_order]
-            sessions_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False)
+            sessions_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf-8')
 
 
 def update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_field_name):
@@ -398,7 +398,7 @@ def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
                 os.remove(path.join(session_path, tsv_name))
 
             scans_tsv = open(path.join(session_path, tsv_name), 'a')
-            scans_df.to_csv(scans_tsv, sep='\t', index=False)
+            scans_df.to_csv(scans_tsv, sep='\t', index=False, encoding='utf-8')
 
             # Extract modalities available for each subject
             mod_available = glob(path.join(session_path, '*'))
@@ -413,6 +413,6 @@ def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
                         type_mod = 'FDG'
 
                     scans_df['filename'] = pd.Series(path.join(mod_name, file_name))
-                    scans_df.to_csv(scans_tsv, header=False, sep='\t', index=False)
+                    scans_df.to_csv(scans_tsv, header=False, sep='\t', index=False, encoding='utf-8')
 
             scans_df = pd.DataFrame(columns=(fields_bids))

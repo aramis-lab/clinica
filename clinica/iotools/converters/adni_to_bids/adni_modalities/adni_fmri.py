@@ -33,10 +33,7 @@ def compute_fmri_path( source_dir, clinical_dir, dest_dir, subjs_list):
     from os import walk
     import pandas as pd
     import logging
-    from iotools.converters.adni_to_bids import adni_utils
-    import iotools.converters.bids_utils as bids
-
-
+    from clinica.iotools.converters.adni_to_bids import adni_utils
 
     fmri_col = ['Subject_ID', 'VISCODE', 'Visit', 'IMAGEUID', 'Sequence', 'Scan Date', 'LONIUID', 'Scanner',
                 'MagStregth', 'Path']
@@ -159,12 +156,12 @@ def convert_fmri(dest_dir, fmri_paths, mod_to_add=False, mod_to_update=False):
     :return: None
     """
 
-    from iotools.converters.adni_to_bids import adni_utils
+    from clinica.iotools.converters.adni_to_bids import adni_utils
     from os import path
     import os
     import shutil
     from glob import glob
-    import iotools.converters.bids_utils as bids
+    import clinica.iotools.converters.bids_utils as bids
 
     subjs_list = fmri_paths['Subject_ID'].drop_duplicates().values
 
