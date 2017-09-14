@@ -342,10 +342,6 @@ def hmc_pipeline(name='motion_correct'):
     from clinica.utils.dwi import hmc_split
     from clinica.workflows.dwi_preprocessing import dwi_flirt
 
-    #    params = dict(dof=6, interp='spline', cost='normmi', cost_func='normmi', bins=50, save_log=True, padding_size=10,
-    #                  schedule=get_flirt_schedule('hmc'),
-    #                  searchr_x=[-4, 4], searchr_y=[-4, 4], searchr_z=[-4, 4], fine_search=1, coarse_search=10 )
-
     params = dict(dof=6, bgvalue=0, save_log=True, no_search=True,
                   # cost='mutualinfo', cost_func='mutualinfo', bins=64,
                   schedule=get_flirt_schedule('hmc'))

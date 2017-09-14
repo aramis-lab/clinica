@@ -80,7 +80,16 @@ class StatisticsSurfstat(cpe.Pipeline):
             A list of (string) input fields name.
         """
 
-        return ['design_matrix', 'contrast', 'str_format', 'group_label', 'glm_type', 'full_width_at_half_maximum', 'threshold_uncorrected_pvalue', 'threshold_corrected_pvalue', 'cluster_threshold'] # Fill here the list
+        return ['design_matrix',
+                'contrast',
+                'str_format',
+                'group_label',
+                'glm_type',
+                'surface_file',
+                'full_width_at_half_maximum',
+                'threshold_uncorrected_pvalue',
+                'threshold_corrected_pvalue',
+                'cluster_threshold']
 
 
     def get_output_fields(self):
@@ -115,6 +124,7 @@ class StatisticsSurfstat(cpe.Pipeline):
         read_parameters_node.inputs.str_format = self.parameters['str_format']
         read_parameters_node.inputs.group_label = self.parameters['group_label']
         read_parameters_node.inputs.glm_type = self.parameters['glm_type']
+        read_parameters_node.inputs.surface_file = self.parameters['custom_file']
         read_parameters_node.inputs.full_width_at_half_maximum = self.parameters['full_width_at_half_maximum']
         read_parameters_node.inputs.threshold_uncorrected_pvalue = self.parameters['threshold_uncorrected_pvalue']
         read_parameters_node.inputs.threshold_corrected_pvalue = self.parameters['threshold_corrected_pvalue']
@@ -122,6 +132,7 @@ class StatisticsSurfstat(cpe.Pipeline):
 
         self.connect([
             (read_parameters_node,      self.input_node,    [('design_matrix',    'design_matrix')]),
+            (read_parameters_node,      self.input_node,    [('surface_file',   'surface_file')]),
             (read_parameters_node,      self.input_node,    [('contrast',    'contrast')]),
             (read_parameters_node,      self.input_node,    [('str_format',    'str_format')]),
             (read_parameters_node,      self.input_node,    [('group_label',    'group_label')]),
@@ -167,12 +178,21 @@ class StatisticsSurfstat(cpe.Pipeline):
         # Node to wrap the surfstat matlab script.
         surfstat = npe.Node(name='surfstat',
                             interface=nutil.Function(
-                                input_names=['input_directory', 'output_directory', 'subjects_visits_tsv',
+                                input_names=['input_directory',
+                                             'output_directory',
+                                             'subjects_visits_tsv',
                                              'design_matrix',
-                                             'contrast', 'str_format', 'glm_type', 'group_label',
-                                             'freesurfer_home', 'path_to_matscript',
-                                             'full_width_at_half_maximum', 'threshold_uncorrected_pvalue',
-                                             'threshold_corrected_pvalue', 'cluster_threshold'],
+                                             'contrast',
+                                             'str_format',
+                                             'glm_type',
+                                             'group_label',
+                                             'freesurfer_home',
+                                             'surface_file',
+                                             'path_to_matscript',
+                                             'full_width_at_half_maximum',
+                                             'threshold_uncorrected_pvalue',
+                                             'threshold_corrected_pvalue',
+                                             'cluster_threshold'],
                                 output_names=['out_images'],
                                 function=utils.runmatlab))
         surfstat.inputs.subjects_visits_tsv = self.tsv_file
@@ -202,6 +222,7 @@ class StatisticsSurfstat(cpe.Pipeline):
             (self.input_node, surfstat, [('threshold_uncorrected_pvalue', 'threshold_uncorrected_pvalue')]),
             (self.input_node, surfstat, [('threshold_corrected_pvalue', 'threshold_corrected_pvalue')]),
             (self.input_node, surfstat, [('cluster_threshold', 'cluster_threshold')]),
+            (self.input_node, surfstat, [('surface_file', 'surface_file')]),
             (data_prep, surfstat, [('surfstat_input_dir', 'input_directory')]),
             (data_prep, surfstat, [('path_to_matscript', 'path_to_matscript')]),
             (data_prep, surfstat, [('output_directory', 'output_directory')]),

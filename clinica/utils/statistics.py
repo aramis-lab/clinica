@@ -212,6 +212,7 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
     import numpy as np
     import pandas
     import os.path as op
+    from clinica.utils.stream import cprint
 
     if not isinstance(in_atlas, AtlasAbstract):
         raise Exception("Atlas element must be an AtlasAbstract type")
@@ -247,10 +248,14 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
         average_voxel = labeled_voxel.mean()
         stats_scalar[index, 1] = average_voxel
 
-    data = pandas.DataFrame({'index': stats_scalar[:, 0],
-                             'label_name': label_list,
-                             'mean_scalar': stats_scalar[:, 1]
-                             })
-    data.to_csv(out_file, sep='\t', index=False, encoding='utf-8')
+    try:
+        data = pandas.DataFrame({'index': stats_scalar[:, 0],
+                                 'label_name': label_list,
+                                 'mean_scalar': stats_scalar[:, 1]
+                                 })
+        data.to_csv(out_file, sep='\t', index=False, encoding='utf-8')
+    except Exception as e:
+        cprint("Impossible to save %s with pandas" % out_file)
+        raise e
 
     return out_file
