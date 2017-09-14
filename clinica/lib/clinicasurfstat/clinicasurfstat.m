@@ -87,7 +87,7 @@ end
 tsvdata = textscan( fid, strformat, 'HeaderLines', 0);
 fclose(fid);
 
-%% read the thickness for all the subjects!
+%% read the files for all the subjects!
 nrsubject = length(tsvdata{1});
 % nrfactor1 = 0; nrfactor2 = 0;
 csvheader = firstline;
