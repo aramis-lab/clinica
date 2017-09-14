@@ -29,4 +29,5 @@ def dilate_mask(in_mask, npass=4, nthreads=2):
     cmd = 'maskfilter -npass %s -nthreads %s %s dilate %s' % \
           (npass, nthreads, in_mask, out_dilated_mask)
     os.system(cmd)
+
     return out_dilated_mask
