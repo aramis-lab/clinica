@@ -4,8 +4,6 @@
 """This module contains utilities to check dependencies of the different
 neuroimaging tools."""
 
-from clinica.utils.stream import cprint
-
 
 def is_binary_present(binary):
     """
@@ -32,7 +30,7 @@ def is_binary_present(binary):
     except OSError as e:
         if e.errno == os.errno.ENOENT:
             return False
-    cprint("Binary '%s' has been detected." % binary)
+#    cprint("Binary '%s' has been detected." % binary)
     return True
 
 
@@ -43,6 +41,7 @@ def check_ants():
     This function checks if ANTs is present (ANTSPATH, binaries, & scripts).
     """
     import os
+    from clinica.utils.stream import cprint
 
     try:
         antspath = os.environ.get('ANTSPATH', '')
@@ -58,6 +57,8 @@ def check_ants():
                 '%s from ANTs Software is not present '
                 'in your PATH environment.' % binary)
 
+    cprint('ANTs has been detected')
+
 
 def check_freesurfer():
     """
@@ -66,6 +67,7 @@ def check_freesurfer():
     This function checks if FreeSurfer is present (FREESURFER_HOME & binaries).
     """
     import os
+    from clinica.utils.stream import cprint
 
     try:
         freesurfer_home = os.environ.get('FREESURFER_HOME', '')
@@ -82,6 +84,8 @@ def check_freesurfer():
                 'environment: did you source ${FREESURFER_HOME}/' 
                 'SetUpFreeSurfer.sh ?' % binary)
 
+    cprint('FreeSurfer has been detected')
+
 
 def check_fsl():
     """
@@ -94,8 +98,6 @@ def check_fsl():
     import nipype.interfaces.fsl as fsl
 
     from clinica.utils.stream import cprint
-
-    cprint('Checking FSL...')
 
     try:
         fsl_dir = os.environ.get('FSLDIR', '')
@@ -117,6 +119,8 @@ def check_fsl():
                 '%s from FSL Software is not present in your '
                 'PATH environment.' % binary)
 
+    cprint('FSL has been detected')
+
 
 def check_mrtrix():
     """
@@ -125,6 +129,7 @@ def check_mrtrix():
     This function checks if MRtrix is present (MRTRIX_HOME & binaries).
     """
     import os
+    from clinica.utils.stream import cprint
 
     try:
         mrtrix_home = os.environ.get('MRTRIX_HOME', '')
@@ -140,6 +145,8 @@ def check_mrtrix():
                 '%s from MRtrix Software is not present in your '
                 'PATH environment.' % binary)
 
+    cprint('MRtrix has been detected')
+
 
 def check_spm():
     """
@@ -148,6 +155,7 @@ def check_spm():
     This function checks if SPM is present (SPM_HOME).
     """
     import os
+    from clinica.utils.stream import cprint
 
     try:
         spm_home = os.environ.get('SPM_HOME', '')
@@ -162,4 +170,6 @@ def check_spm():
     #         raise RuntimeError(
     #             '%s from SPM Software is not present in your '
     #             'PATH environment.' % binary)
+
+    cprint('SPM has been detected')
 

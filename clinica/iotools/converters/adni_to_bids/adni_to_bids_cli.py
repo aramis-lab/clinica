@@ -32,6 +32,9 @@ class AdniToBidsCLI(ce.CmdParser):
         from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
         adni_to_bids = AdniToBids()
 
+        # Check dcm2nii and dcm2niix dependencies
+        adni_to_bids.check_adni_dependencies()
+
         # adni_to_bids.convert_clinical_data(args.clinical_data_directory, args.bids_directory)
         adni_to_bids.convert_images(args.dataset_directory, args.clinical_data_directory, args.bids_directory, args.subjects_list, args.modality)
 
