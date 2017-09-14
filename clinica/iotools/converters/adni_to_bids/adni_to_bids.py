@@ -18,6 +18,17 @@ class AdniToBids(Converter):
     def get_modalities_supported(self):
         return ['T1', 'PET_FDG', 'PET_AV45']
 
+    def check_adni_dependencies(self):
+        from clinica.utils.check_dependency import is_binary_present
+
+        list_binaries = ['dcm2nii', 'dcm2niix']
+
+        for binary in list_binaries:
+            if not is_binary_present(binary):
+                raise RuntimeError(
+                    '%s is not present '
+                    'in your PATH environment.' % binary)
+
     def convert_clinical_data(self,  clinical_data_dir, out_path):
         """
         Convert the clinical data of ADNI specified into the file clinical_specifications_adni.xlsx
