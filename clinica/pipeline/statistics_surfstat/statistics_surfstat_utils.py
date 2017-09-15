@@ -111,11 +111,16 @@ def runmatlab(input_directory,
                   for example, contrast = 'Label', this will create contrastpos = Label.AD - Label.CN, contrastneg = Label.CN - Label.AD; if the fac-
                   tory that you choose is a continuous factor, clinica_surfstat will just create one contrast, for example, contrast = 'Age', but note,
                   the string name that you choose should be exactly the same with the columns names in your subjects_visits_tsv.
-        str_format:string, the str_format which uses to read your tsv file, the typy of the string should corresponds exactly with the columns in the tsv file.
+        str_format:string, the str_format which uses to read your tsv file, the type of the string should corresponds exactly with the columns in the tsv file.
                   Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
         glm_type: based on the hypothesis, you should define one of the glm types, "group_comparison", "correlation"
         group_label: current group name for this analysis
         freesurfer_home: the environmental variable $FREESURFER_HOME
+        surface_file: Specify where to find the data surfaces file in the "CAPS/subject" directory, using specific keywords.
+                     For instance, to catch for each subject the cortical thickness, the string used will be :
+                     '@subject/@session/t1/freesurfer-cross-sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
+                     More information is available on the documentation page of the surfstat pipeline. The keywords @subject @ session @hemi @fwhm
+                     represents the variable parts.
         path_to_matscript: path to find the matlab script
         full_width_at_half_maximum: fwhm for the surface smoothing, default is 20, integer.
         threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float, default is 0.001.
@@ -173,8 +178,15 @@ def runmatlab(input_directory,
     out = matlab.run()
     return out
 
-def json_dict_create(glm_type, design_matrix, str_format, contrast, group_label, full_width_at_half_maximum,
-                    threshold_uncorrected_pvalue, threshold_corrected_pvalue, cluster_threshold):
+def json_dict_create(glm_type,
+                     design_matrix,
+                     str_format,
+                     contrast,
+                     group_label,
+                     full_width_at_half_maximum,
+                     threshold_uncorrected_pvalue,
+                     threshold_corrected_pvalue,
+                     cluster_threshold):
     """
         create a json file containing the glm information
     Args:
@@ -207,3 +219,48 @@ def json_dict_create(glm_type, design_matrix, str_format, contrast, group_label,
                 'ClusterThreshold': cluster_threshold}
 
     return json_dict
+
+
+def check_inputs(caps,
+                 custom_filename,
+                 fwhm,
+                 tsv_file):
+    """
+        Simply checks if the custom strings provided find the correct files. If files are missing, it is easier to
+        raise an exception here rather than doing it in the MATLAB script.
+    Args:
+
+        caps: The CAPS folder
+        custom_filename: The string defining where are the files needed for the surfstat analysis
+        fwhm: Full Width at Half Maximum used for the smoothing of the data, needed to catch the file
+        tsv_file: tsv file that contains the subject and session lists, along with the other covariates
+
+    Returns:
+
+    """
+    import os
+    from clinica.utils.stream import cprint
+    import pandas as pd
+
+    subjects_visits = pd.io.parsers.read_csv(tsv_file, sep='\t')
+    subjects = list(subjects_visits.participant_id)
+    sessions = list(subjects_visits.session_id)
+
+    missing_files = []
+    for idx in range(len(subjects)):
+        fullpath = os.path.join(caps,
+                                'subjects',
+                                custom_filename.replace('@subject', subjects[idx]).replace('@session', sessions[idx]).replace('@fwhm', str(fwhm)))
+        left_hemi = fullpath.replace('@hemi', 'lh')
+        right_hemi = fullpath.replace('@hemi', 'rh')
+
+        if not os.path.exists(left_hemi):
+            missing_files.append(left_hemi)
+        if not os.path.exists(right_hemi):
+            missing_files.append(right_hemi)
+
+    if len(missing_files) > 0:
+        print(' ** Missing files **')
+        for l in missing_files:
+            cprint('Not found : ' + l)
+        raise Exception(str(len(missing_files)) + ' files not found !')
