@@ -42,10 +42,10 @@ class StatisticsSurfstatCLI(ce.CmdParser):
                                 help='A str for current group name')
         self._args.add_argument("glm_type",
                                 help='A str based on glm type for the hypothesis, choose one between group_comparison and correlation')
-        self._args.add_argument("--feature_type", "-ft", type=str, default='cortical_thickness',
+        self._args.add_argument("--feature_type", "-ft", type=str, default=None,
                                 help='Feature type. Can be : cortical_thickness, pet_fdg_projection. Default = cortical_thickness')
         self._args.add_argument("--custom_file", "-cf", type=str, default=None,
-                                help='Pattern of file inside caps directory using @subject, @session, @fwhm, @hemi')
+                                help='Pattern of file inside caps directory using @subject, @session, @fwhm, @hemi. No --feature_type must be specified in order to use this flag.')
         self._args.add_argument("-fwhm", "--full_width_at_half_maximum", type=int, default=20,
                                 help='FWHM for the surface smoothing (default=20)')
         self._args.add_argument("-tup", "--threshold_uncorrected_pvalue", type=float, default=0.001,
@@ -66,15 +66,26 @@ class StatisticsSurfstatCLI(ce.CmdParser):
         """
 
         from statistics_surfstat_pipeline import StatisticsSurfstat
+        from statistics_surfstat_utils import check_inputs
+        from clinica.utils.stream import cprint
 
-        if args.feature_type == 'cortical_thickness':
-            args.custom_file = '@subject/@session/t1/freesurfer-cross-sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
-        elif args.feature_type == 'pet_fdg_projection':
-            args.custom_file = '@subject/@session/pet/surface/@subject_@session_task-rest_acq-FDG_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-@hemi_fwhm-@fwhm_projection.mgh'
-        elif args.feature_type is not None:
-            raise Exception('Feature type ' + args.feature_type + ' not recognized. Use the --custom_file to specify your own files.')
+        if args.feature_type is not None:
+            if args.custom_file is not None:
+                raise Exception('--feature_type and --custom_file are mutually exclusive : you must choose between one or the other. See documentation for more informations.')
+            if args.feature_type == 'cortical_thickness':
+                args.custom_file = '@subject/@session/t1/freesurfer-cross-sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
+            elif args.feature_type == 'pet_fdg_projection':
+                args.custom_file = '@subject/@session/pet/surface/@subject_@session_task-rest_acq-FDG_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-@hemi_fwhm-@fwhm_projection.mgh'
+            else:
+                raise Exception('Feature type ' + args.feature_type + ' not recognized. Use --custom_file to specify your own files (without --feature_type).')
+        elif args.feature_type is None:
+            if args.custom_file is None:
+                cprint('No feature type selected : using cortical thickness as default value')
+                args.custom_file = '@subject/@session/t1/freesurfer-cross-sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
+            else:
+                cprint('Using custom features.')
+
         pipeline = StatisticsSurfstat(
-            # pass these args by the class attribute itself
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.tsv_file))
         pipeline.parameters = {
@@ -91,6 +102,11 @@ class StatisticsSurfstatCLI(ce.CmdParser):
             'cluster_threshold': args.cluster_threshold or 0.001
         }
         pipeline.base_dir = self.absolute_path(args.working_directory)
+
+        check_inputs(pipeline.caps_directory,
+                     pipeline.parameters['custom_file'],
+                     pipeline.parameters['full_width_at_half_maximum'],
+                     pipeline.tsv_file)
 
         # run the pipeline in n_procs cores based on your computation power.
         if args.n_procs:
