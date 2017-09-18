@@ -7,7 +7,6 @@ class AdniToBidsCLI(ce.CmdParser):
 
         self._name = 'adni-to-bids'
 
-
     def define_options(self):
         """Define the sub-command arguments
         """
@@ -18,8 +17,8 @@ class AdniToBidsCLI(ce.CmdParser):
         self._args.add_argument("bids_directory",
                                 help='Path to the BIDS directory.')
         self._args.add_argument("-c", "--clinical_data_only", action='store_true',
-                                help='(Optional) Given an already existing ADNI BIDS folder, convert only the clinical '
-                                     'data.')
+                                help='(Optional) Given the path to an already existing ADNI BIDS folder, convert only '
+                                     'the clinical data.')
         self._args.add_argument("-sl", "--subjects_list",
                                  help='(Optional) A path to a .txt file containing a list of subject to convert '
                                       '(one for each row).')
@@ -35,6 +34,7 @@ class AdniToBidsCLI(ce.CmdParser):
         # Check dcm2nii and dcm2niix dependencies
         adni_to_bids.check_adni_dependencies()
 
-        # adni_to_bids.convert_clinical_data(args.clinical_data_directory, args.bids_directory)
-        adni_to_bids.convert_images(args.dataset_directory, args.clinical_data_directory, args.bids_directory, args.subjects_list, args.modality)
+        if not args.clinical_data_only:
+            adni_to_bids.convert_images(args.dataset_directory, args.clinical_data_directory, args.bids_directory, args.subjects_list, args.modality)
 
+        adni_to_bids.convert_clinical_data(args.clinical_data_directory, args.bids_directory)

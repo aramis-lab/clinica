@@ -38,11 +38,8 @@ class AdniToBids(Converter):
         """
         from os import path
         import os
-        import logging
         import clinica.iotools.bids_utils as bids
-        import pandas as pd
-        from glob import glob
-        from os.path import normpath
+        from clinica.utils.stream import cprint
         import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
 
         clinic_specs_path = path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'data',
@@ -57,7 +54,7 @@ class AdniToBids(Converter):
         bids_subjs_paths = bids.get_bids_subjs_paths(out_path)
 
         # -- Creation of participant.tsv --
-        logging.info("--Creating sessions files. --")
+        cprint("Creating participants.tsv...")
         participants_df = bids.create_participants_df('ADNI', clinic_specs_path, clinical_data_dir, bids_ids)
 
         # Replace the original values with the standard defined by the AramisTeam
@@ -67,12 +64,11 @@ class AdniToBids(Converter):
         participants_df.to_csv(path.join(out_path, 'participants.tsv'), sep='\t', index=False)
 
         # -- Creation of sessions.tsv --
-        logging.info("--Creating of sessions files. --")
-        print("\nCreation of sessions files...")
+        cprint("Creating sessions files...")
         adni_utils.create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bids_subjs_paths)
 
         # -- Creation of scans files --
-        print 'Creating of scans files...'
+        cprint('Creating scans files...')
         adni_utils.create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids)
 
     def convert_images(self, source_dir, clinical_dir, dest_dir, subjs_list_path='', mod_to_add=''):
