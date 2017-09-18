@@ -67,7 +67,6 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
             else:
                 file_ext = os.path.splitext(location)[1]
                 file_to_read_path = path.join(clinical_data_dir, location)
-                cprint(file_to_read_path)
 
                 if file_ext == '.xlsx':
                     file_to_read = pd.read_excel(file_to_read_path, sheetname=sheet)
