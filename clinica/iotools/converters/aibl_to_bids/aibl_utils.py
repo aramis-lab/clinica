@@ -512,6 +512,7 @@ def av45_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
     import pandas
     from os import path
     from numpy import nan
+    from clinica.utils.stream import cprint
 
     # it reads the dataframe where subject_ID, session_ID and path are saved
     csv_file = pandas.read_csv(os.path.join(path_to_csv, 'aibl_av45meta_28-Apr-2015.csv'))
@@ -527,9 +528,9 @@ def av45_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
         image_path = image.Path_to_pet
         count += 1
         if image_path is nan:
-            print 'No path specified for ' + subject + ' in session ' + session
+            cprint( 'No path specified for ' + subject + ' in session ' + session)
             continue
-        print 'Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total)
+        cprint ('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
         session = viscode_to_session(session)
         output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'pet')
         output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_task-rest_acq-av45_pet'
@@ -553,6 +554,7 @@ def pib_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix
     import pandas
     from os import path
     from numpy import nan
+    from clinica.utils.stream import cprint
 
     # it reads the dataframe where subject_ID, session_ID and path are saved
     csv_file = pandas.read_csv(os.path.join(path_to_csv, 'aibl_pibmeta_28-Apr-2015.csv'))
@@ -568,9 +570,9 @@ def pib_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix
         image_path = image.Path_to_pet
         count += 1
         if image_path is nan:
-            print 'No path specified for ' + subject + ' in session ' + session
+            cprint ('No path specified for ' + subject + ' in session ' + session)
             continue
-        print 'Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total)
+        cprint ('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
         session = viscode_to_session(session)
         output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'pet')
         output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_task-rest_acq-pib_pet'
@@ -595,6 +597,7 @@ def flute_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2ni
     import pandas
     from os import path
     from numpy import nan
+    from clinica.utils.stream import cprint
 
     # it reads the dataframe where subject_ID, session_ID and path are saved
 
@@ -611,9 +614,9 @@ def flute_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2ni
         image_path = image.Path_to_pet
         count += 1
         if image_path is nan:
-            print 'No path specified for ' + subject + ' in session ' + session
+            cprint ('No path specified for ' + subject + ' in session ' + session)
             continue
-        print 'Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total)
+        cprint ('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
 
         session = viscode_to_session(session)
         output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'pet')
@@ -658,9 +661,9 @@ def t1_paths_to_bids(path_to_dataset,path_to_csv, bids_dir):
         count += 1
 
         if image_path is nan:
-            print 'No path specified for ' + subject + ' in session ' + session
+            cprint ('No path specified for ' + subject + ' in session ' + session)
             continue
-        print 'Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total)
+        cprint ('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
 
         session=viscode_to_session(session)
         #creation of the path
