@@ -223,7 +223,15 @@ class fMRIPreprocessing(cpe.Pipeline):
 
         # Brain extraction
         # ================
-        bet_node = utils.BrainExtractionWorkflow(name="BrainExtraction")
+        import os.path as path
+        if self.parameters['freesurfer_brain_mask']:
+            brain_masks = [path.join(self.caps_directory,'subjects',
+                                     self.subjects[i], self.sessions[i],
+                                     't1/freesurfer_cross_sectional',
+                                     self.subjects[i],'mri/brain.mgz')
+                           for i in range(len(self.subjects))]
+        else:
+            bet_node = utils.BrainExtractionWorkflow(name="BrainExtraction")
 
         # Registration
         # ============
@@ -259,15 +267,24 @@ class fMRIPreprocessing(cpe.Pipeline):
         zip_smooth_node = zip_node.clone('ZippingSmoothing')
 
         # Connection
-        # ==========
+
+        if self.parameters['freesurfer_brain_mask']:
+            reg_node.inputs.target = brain_masks
+            zip_bet_node.inputs.in_file = brain_masks
+        else:
+            self.connect([
+                # Brain extraction
+                (self.input_node, bet_node, [('T1w', 'Segmentation.data')]),
+                (self.input_node, bet_node, [('T1w', 'ApplyMask.in_file')]),
+                (bet_node, reg_node, [('ApplyMask.out_file', 'target')]),
+                (bet_node, zip_bet_node, [('Fill.out_file', 'in_file')]),
+            ])
+
         self.connect([
             # FieldMap calculation
             (self.input_node, fm_node, [('magnitude1', 'magnitude')]),
             (self.input_node, fm_node, [('phasediff', 'phase')]),
             (self.input_node, fm_node, [('bold', 'epi')]),
-            # Brain extraction
-            (self.input_node, bet_node, [('T1w', 'Segmentation.data')]),
-            (self.input_node, bet_node, [('T1w', 'ApplyMask.in_file')]),
             # Slice timing correction
             (self.input_node, st_node, [('bold', 'in_files')]),
             # Motion correction and unwarping
@@ -276,14 +293,12 @@ class fMRIPreprocessing(cpe.Pipeline):
             # Registration
             (mc_node, reg_node, [('mean_image', 'source')]),
             (mc_node, reg_node, [('runwarped_files', 'apply_to_files')]),
-            (bet_node, reg_node, [('ApplyMask.out_file', 'target')]),
             # Normalization
             (self.input_node, norm_node, [('T1w', 'image_to_align')]),
             (reg_node, norm_node, [('coregistered_files', 'apply_to_files')]),
             # Smoothing
             (norm_node, smooth_node, [('normalized_files', 'in_files')]),
             # Returning output
-            (bet_node, zip_bet_node, [('Fill.out_file', 'in_file')]),
             (mc_node, zip_mc_node, [('runwarped_files', 'in_file')]),
             (reg_node, zip_reg_node, [('coregistered_files', 'in_file')]),
             (norm_node, zip_norm_node, [('normalized_files', 'in_file')]),
@@ -298,3 +313,4 @@ class fMRIPreprocessing(cpe.Pipeline):
             (zip_smooth_node, self.output_node, [('out_file',
                                                   'mni_smoothed_fmri')]),
         ])
+        # ==========
