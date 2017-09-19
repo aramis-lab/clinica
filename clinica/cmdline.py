@@ -7,7 +7,6 @@ and give to the user some other utils to works with the pipelines.
 
 """
 
-
 from __future__ import print_function
 import argcomplete
 import sys
@@ -126,10 +125,10 @@ def load_conf(args):
 
 
 class ClinicaClassLoader:
-    from clinica.pipeline.engine import Pipeline
     """
     Load pipelines from a custom locations (general from $HOME/clinica)
     """
+    from clinica.pipeline.engine import Pipeline
     def __init__(self, env='CLINICAPATH', baseclass=Pipeline, reg=r".*_cli\.py$", extra_dir=""):
         self.env = env
         self.baseclass = baseclass
@@ -179,62 +178,7 @@ class ClinicaClassLoader:
         import re
         return [os.path.join(path, file) for path in paths for file in os.listdir(path) if re.match(reg, file) is not None]
 
-class CmdlineCache():
-    def __init__(self):
-        self.converters = None
-        self.io_options = None
-
-    def setup_converters(self): pass
-        #from clinica.iotools.load_cmdline_converter import load_cmdline_converters
-        #self.converters = load_cmdline_converters()
-
-    def setup_io_options(self):
-        self.io_options = [
-            CmdParserSubsSess(), CmdParserMergeTsv(), CmdParserMissingModalities()]
-
-    def load(self):
-        self.setup_converters()
-        self.setup_io_options()
-
-
-class CmdlineHelper():
-    def __init__(self):
-        self.cmdline_cache = None
-
-    def load_cache(self):
-        import pickle
-        from os.path import expanduser
-        home_dir = expanduser("~")
-        if not os.path.exists(home_dir):
-            raise Exception("Home user can't be found!")
-            exit(-1)
-
-        clinica_dir = join(home_dir, ".clinica")
-        if not os.path.exists(clinica_dir):
-            try:
-                os.makedirs(clinica_dir)
-            except:
-                raise Exception("Error: is not possible to create the [%s] dir"
-                                % clinica_dir)
-                exit(-1)
-
-        cmdline_cache_file = join(clinica_dir, "cmdline_cache.pkl")
-        if os.path.isfile(cmdline_cache_file):
-            pkl_cmdline_cache = open(cmdline_cache_file, 'rb')
-            self.cmdline_cache = pickle.load(pkl_cmdline_cache)
-            pkl_cmdline_cache.close()
-        else:
-            self.cmdline_cache = CmdlineCache()
-            self.cmdline_cache.load()
-
-        return self.cmdline_cache
-
-
 def execute():
-
-    # cmdline_helper = CmdlineHelper()
-    # cmdline_cache = cmdline_helper.load_cache()
-
     """
     Define and parse the command line argument
     """
@@ -420,6 +364,7 @@ def execute():
                               })
         logging.update_logging(config)
 
+        #Define the LogFilter
         class LogFilter(Filter):
             def filter(self, record):
                 if record.levelno >= ERROR:

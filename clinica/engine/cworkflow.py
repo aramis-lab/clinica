@@ -1,7 +1,12 @@
+"""
+Utility class to serialize data and run pipeline
+"""
 from nipype import Workflow
 
-
 class ClinicaWorkflow(Workflow):
+    """
+    Execute pipeline and store data in order to run the pipeline
+    """
     tasks = {}
     is_reset = False
 
@@ -32,6 +37,9 @@ class ClinicaWorkflow(Workflow):
 
 
 def dwork(type, name):
+    """
+    Decorator : program specific task for a pipeline
+    """
     def decorator(func):
         def wrappper(*args, **kwargs):
             wf = func(*args, **kwargs)
@@ -48,10 +56,19 @@ def dwork(type, name):
 
 
 def RunDecorator(type):
+    """
+    The RUN decorator
+    """
     return dwork(type, "run")
 
 
 def Dump(clinicaWorkflow):
+    """
+    The DUMP decorator
+    use:
+        @Dump
+        def my_pipeline(...):
+    """
     import cPickle
     import datetime
     from os.path import realpath,join
@@ -63,6 +80,12 @@ def Dump(clinicaWorkflow):
 
 
 def Visualize(application, parameters, matches):
+    """
+    The Visualize decorator
+    use:
+        @Visualize("freeview", "-t %1")
+        def my_pipeline(...):
+    """
     def visu(clinicaWorkflow):
         clinicaWorkflow.add_data('visualize', [application, parameters, matches])
         return Dump(clinicaWorkflow)
