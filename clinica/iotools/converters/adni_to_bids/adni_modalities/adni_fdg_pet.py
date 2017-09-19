@@ -225,3 +225,5 @@ def fdg_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2ni
 
             adni_utils.center_nifti_origin(nifti_file, output_image)
             os.remove(nifti_file)
+
+    adni_utils.remove_tmp_dmc_folder(bids_dir)

@@ -126,6 +126,19 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
         return dicom_path
 
 
+def remove_tmp_dmc_folder(bids_dir):
+    """
+    Remove the folder tmp_dmc_folder created by the method check_two_dcm_folder (if existing)
+    :param bids_dir: path to the bids directory
+    """
+    from os import path
+    import os
+
+    tmp_dcm_folder_path = path.join(bids_dir, 'tmp_dcm_folder')
+    if os.path.exists(tmp_dcm_folder_path):
+        os.remove(tmp_dcm_folder_path)
+
+
 def check_bids_files(bids_path, container='anat', extension='_T1w.nii.gz', subjects=None):
 
     import os
