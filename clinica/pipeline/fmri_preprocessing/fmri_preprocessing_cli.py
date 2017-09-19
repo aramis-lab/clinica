@@ -48,6 +48,9 @@ class fMRIPreprocessingCLI(ce.CmdParser):
                                 help="Total readout time (TRT) in seconds")
         self._args.add_argument("-t1s", "--t1_native_space", action='store_true',
                                 help="Also return images in T1 native space")
+        self._args.add_argument("-fsbm", "--freesurfer_brain_mask",
+                                action='store_true',
+                                help="Use Freesurfer's pre-computed brain mask")
 
 
     def run_pipeline(self, args):
@@ -67,6 +70,7 @@ class fMRIPreprocessingCLI(ce.CmdParser):
             'total_readout_time'         : args.total_readout_time,
             'full_width_at_half_maximum' : args.full_width_at_half_maximum,
             't1_native_space'            : args.t1_native_space,
+            'freesurfer_brain_mask'      : args.freesurfer_brain_mask
         }
         pipeline.base_dir = self.absolute_path(args.working_directory)
         if args.n_procs:
