@@ -224,12 +224,19 @@ class fMRIPreprocessing(cpe.Pipeline):
         # Brain extraction
         # ================
         import os.path as path
+        from nipype.interfaces.freesurfer import MRIConvert
         if self.parameters['freesurfer_brain_mask']:
             brain_masks = [path.join(self.caps_directory,'subjects',
                                      self.subjects[i], self.sessions[i],
                                      't1/freesurfer_cross_sectional',
-                                     self.subjects[i],'mri/brain.mgz')
+                                     self.subjects[i] + '_' + self.sessions[i],
+                                     'mri/brain.mgz')
                            for i in range(len(self.subjects))]
+            bet_node = npe.MapNode(interface=MRIConvert(),
+                                   iterfield=["in_file"],
+                                   name="BrainConversion")
+            bet_node.inputs.in_file = brain_masks
+            bet_node.inputs.out_type = 'nii'
         else:
             bet_node = utils.BrainExtractionWorkflow(name="BrainExtraction")
 
@@ -269,8 +276,11 @@ class fMRIPreprocessing(cpe.Pipeline):
         # Connection
 
         if self.parameters['freesurfer_brain_mask']:
-            reg_node.inputs.target = brain_masks
-            zip_bet_node.inputs.in_file = brain_masks
+            self.connect([
+                # Brain extraction
+                (bet_node, reg_node, [('out_file', 'target')]),
+                (bet_node, zip_bet_node, [('out_file', 'in_file')]),
+            ])
         else:
             self.connect([
                 # Brain extraction
