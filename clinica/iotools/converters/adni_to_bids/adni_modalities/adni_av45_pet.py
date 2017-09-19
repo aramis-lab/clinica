@@ -161,6 +161,7 @@ def compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 def av45_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
     from clinica.iotools.converters.adni_to_bids.adni_utils import center_nifti_origin, viscode_to_session
     from os import path, makedirs, system, remove
+    from clinica.iotools.converters.adni_to_bids import adni_utils
     from numpy import nan
 
     count = 0
@@ -210,5 +211,7 @@ def av45_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2n
 
             center_nifti_origin(nifti_file, output_image)
             remove(nifti_file)
+
+    adni_utils.remove_tmp_dmc_folder(bids_dir)
 
 

@@ -156,7 +156,6 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
 
 def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", mod_to_update=False):
-
     import os
     from os import path
     from numpy import nan
@@ -231,6 +230,10 @@ def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", m
         else:
             output_image = path.join(output_path, output_filename + '.nii.gz')
             adni_utils.center_nifti_origin(image_path, output_image)
+
+    # Check if there is still the folder tmp_dcm_folder and remove it
+    adni_utils.remove_tmp_dmc_folder(bids_dir)
+
 
 
 def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj):
