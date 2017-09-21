@@ -43,7 +43,7 @@ class StatisticsSurfstatCLI(ce.CmdParser):
         self._args.add_argument("glm_type",
                                 help='A str based on glm type for the hypothesis, choose one between group_comparison and correlation')
         self._args.add_argument("--feature_type", "-ft", type=str, default=None,
-                                help='Feature type. Can be : cortical_thickness, pet_fdg_projection. Default = cortical_thickness')
+                                help='Feature type. Can be : cortical_thickness, pet_fdg_projection, pet_noddi_projection_ndi and pet_noddi_projection_odi. Default = cortical_thickness')
         self._args.add_argument("--custom_file", "-cf", type=str, default=None,
                                 help='Pattern of file inside caps directory using @subject, @session, @fwhm, @hemi. No --feature_type must be specified in order to use this flag.')
         self._args.add_argument("-fwhm", "--full_width_at_half_maximum", type=int, default=20,
@@ -76,6 +76,10 @@ class StatisticsSurfstatCLI(ce.CmdParser):
                 args.custom_file = '@subject/@session/t1/freesurfer-cross-sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
             elif args.feature_type == 'pet_fdg_projection':
                 args.custom_file = '@subject/@session/pet/surface/@subject_@session_task-rest_acq-FDG_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-@hemi_fwhm-@fwhm_projection.mgh'
+            elif args.feature_type == 'pet_noddi_projection_ndi':
+                args.custom_file = '@subject/@session/noddi/postprocessing/noddi-register-vertex-fsaverage/cortex-projection/@subject_@session_OnFsaverage_fwhm-@fwhm_measure-ficvf_hemi-@hemi.mgh'
+            elif args.feature_type == 'pet_noddi_projection_odi':
+                args.custom_file = '@subject/@session/noddi/postprocessing/noddi-register-vertex-fsaverage/cortex-projection/@subject_@session_OnFsaverage_fwhm-@fwhm_measure-odi_hemi-@hemi.mgh'
             else:
                 raise Exception('Feature type ' + args.feature_type + ' not recognized. Use --custom_file to specify your own files (without --feature_type).')
         elif args.feature_type is None:
