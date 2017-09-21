@@ -145,8 +145,7 @@ class fMRIPreprocessing(cpe.Pipeline):
             '/fmri/preprocessing' for i in range(len(self.subjects))]
         write_node.inputs.remove_dest_dir = True
         write_node.inputs.regexp_substitutions = [
-            (r't1_brain_mask/c3(.+)_maths_dil_ero_thresh_fillh\.nii\.gz$',
-             r'\1_brainmask.nii.gz'),
+            (r't1_brain_mask/(.+)\.nii\.gz$', r'\1_brainmask.nii.gz'),
             (r'mc_params/rp_a(.+)\.txt$', r'\1_confounds.tsv'),
             (r'native_fmri/ua(.+)\.nii.gz$', r'\1_space-meanBOLD.nii.gz'),
             (r't1_fmri/rua(.+)\.nii.gz$', r'\1_space-T1w.nii.gz'),
@@ -232,10 +231,13 @@ class fMRIPreprocessing(cpe.Pipeline):
                                      self.subjects[i] + '_' + self.sessions[i],
                                      'mri/brain.mgz')
                            for i in range(len(self.subjects))]
+            conv_brain_masks = [self.subjects[i] + '_' + self.sessions[i] +
+                                '.nii' for i in range(len(self.subjects))]
             bet_node = npe.MapNode(interface=MRIConvert(),
-                                   iterfield=["in_file"],
+                                   iterfield=["in_file", "out_file"],
                                    name="BrainConversion")
             bet_node.inputs.in_file = brain_masks
+            bet_node.inputs.out_file = conv_brain_masks
             bet_node.inputs.out_type = 'nii'
         else:
             bet_node = utils.BrainExtractionWorkflow(name="BrainExtraction")
