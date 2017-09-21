@@ -35,16 +35,16 @@ class StatisticsSurfstatCLI(ce.CmdParser):
         self._args.add_argument("design_matrix",
                                 help='A str to define the design matrix that fits into GLM, eg, 1 + group + sex + age')
         self._args.add_argument("contrast",
-                                help='A str to define the contrast matrix for GLM, eg, group_label')
+                                help='A str to define the contrast matrix for GLM, eg, group. Note, when you want to negative correlation, there is a bug for Clinica commandline currently')
         self._args.add_argument("str_format",
                                 help='A str to define the format string for the tsv column , eg, %%s %%s %%s %%f')
         self._args.add_argument("group_label",
                                 help='A str for current group name')
         self._args.add_argument("glm_type",
                                 help='A str based on glm type for the hypothesis, choose one between group_comparison and correlation')
-        self._args.add_argument("--feature_type", "-ft", type=str, default=None,
+        self._args.add_argument("-ft", "--feature_type", type=str, default=None,
                                 help='Feature type. Can be : cortical_thickness, pet_fdg_projection, pet_noddi_projection_ndi and pet_noddi_projection_odi. Default = cortical_thickness')
-        self._args.add_argument("--custom_file", "-cf", type=str, default=None,
+        self._args.add_argument("-cf", "--custom_file", type=str, default=None,
                                 help='Pattern of file inside caps directory using @subject, @session, @fwhm, @hemi. No --feature_type must be specified in order to use this flag.')
         self._args.add_argument("-fwhm", "--full_width_at_half_maximum", type=int, default=20,
                                 help='FWHM for the surface smoothing (default=20)')
