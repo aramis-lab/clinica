@@ -73,7 +73,7 @@ class StatisticsSurfstatCLI(ce.CmdParser):
             if args.custom_file is not None:
                 raise Exception('--feature_type and --custom_file are mutually exclusive : you must choose between one or the other. See documentation for more informations.')
             if args.feature_type == 'cortical_thickness':
-                args.custom_file = '@subject/@session/t1/freesurfer-cross-sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
+                args.custom_file = '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
             elif args.feature_type == 'pet_fdg_projection':
                 args.custom_file = '@subject/@session/pet/surface/@subject_@session_task-rest_acq-FDG_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-@hemi_fwhm-@fwhm_projection.mgh'
             elif args.feature_type == 'pet_noddi_projection_ndi':
@@ -85,7 +85,7 @@ class StatisticsSurfstatCLI(ce.CmdParser):
         elif args.feature_type is None:
             if args.custom_file is None:
                 cprint('No feature type selected : using cortical thickness as default value')
-                args.custom_file = '@subject/@session/t1/freesurfer-cross-sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
+                args.custom_file = '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
             else:
                 cprint('Using custom features.')
 
