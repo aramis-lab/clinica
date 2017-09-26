@@ -25,34 +25,46 @@ def bids_datagrabber(input_dir, subject_list, session_list):
 
     """
     from bids.grabbids.bids_layout import BIDSLayout
+    from clinica.utils.stream import cprint
 
     bidslayout = BIDSLayout(input_dir)
     anat_t1 = []
+    missing_subject_session = []
     if not bidslayout.get(target='run', return_type='id', type='T1w'):
-        print("There is just one run for T1w image of this analysis")
+        cprint("There is just one run for T1w image of this analysis")
         for i in range(len(subject_list)):
             t1 = bidslayout.get(return_type='file',
                                             type='T1w',
                                             extensions=['nii|nii.gz'],
                                             session=session_list[i].replace('ses-', ''),
-                                        subject=subject_list[i].replace('sub-', ''))
+                                            subject=subject_list[i].replace('sub-', ''))
+            if len(t1) == 0:
+                missing_subject_session.append([subject_list[i], session_list[i]])
             anat_t1.append(t1)
     else:
-        print("There are more than one runs for T1w image for this analysis")
+        cprint("There are more than one runs for T1w image for this analysis")
         for i in range(len(subject_list)):
             t1 = bidslayout.get(return_type='file',
                                             type='T1w',
                                             extensions=['nii|nii.gz'],
                                             session=session_list[i].replace('ses-', ''),
-                                        subject=subject_list[i].replace('sub-', ''),
-                                     run='1')
+                                            subject=subject_list[i].replace('sub-', ''),
+                                            run='1')
+            if len(t1) == 0:
+                missing_subject_session.append([subject_list[i], session_list[i]])
             anat_t1.append(t1)
 
 
     if len(anat_t1) == 0:
         raise ValueError("Pybids finds no t1 images for this analysis, please check if the subjects have been already recon-alled or there is no images in BIDS!")
     if len(anat_t1) != len(subject_list) or len(anat_t1) != len(session_list):
-        raise ValueError("Pybids found some missing files, you should remove them out from your analysis!!!")
+        raise ValueError('Pybids found ' + str(len(anat_t1)) + '  T1 but there are ' + str(len(subject_list)) + ' subjects-sessions ! ')
+    if len(missing_subject_session) > 0:
+        error_string = 'Please verify there is no error in your tsv file. Clinica could not find T1 for those ' + str(len(missing_subject_session)) + ' subjects - session :'
+        for e in missing_subject_session:
+            error_string += '\n - ' + e[0] + ' and ' + e[1]
+        raise IOError(error_string)
+
 
     return anat_t1
 
