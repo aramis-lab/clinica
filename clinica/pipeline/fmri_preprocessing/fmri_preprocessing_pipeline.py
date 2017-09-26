@@ -231,8 +231,9 @@ class fMRIPreprocessing(cpe.Pipeline):
                                      self.subjects[i] + '_' + self.sessions[i],
                                      'mri/brain.mgz')
                            for i in range(len(self.subjects))]
-            conv_brain_masks = [self.subjects[i] + '_' + self.sessions[i] +
-                                '.nii' for i in range(len(self.subjects))]
+            conv_brain_masks = [str(self.subjects[i] + '_' + self.sessions[i] +
+                                    '.nii')
+                                for i in range(len(self.subjects))]
             bet_node = npe.MapNode(interface=MRIConvert(),
                                    iterfield=["in_file", "out_file"],
                                    name="BrainConversion")
