@@ -89,6 +89,9 @@ class StatisticsSurfstatCLI(ce.CmdParser):
             else:
                 cprint('Using custom features.')
 
+        if not args.group_label.isalnum():
+            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
+
         pipeline = StatisticsSurfstat(
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.tsv_file))
