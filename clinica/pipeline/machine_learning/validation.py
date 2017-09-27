@@ -210,8 +210,10 @@ class RepeatedHoldOut(base.MLValidation):
         self._cv = None
         self._n_iterations = n_iterations
         self._test_size = test_size
-        self._resampled_t = None
-        self._corrected_resampled_t = None
+        self._error_resampled_t = None
+        self._error_corrected_resampled_t = None
+        self._bal_accuracy_resampled_t = None
+        self._bal_accuracy_corrected_resampled_t = None
 
     def validate(self, y, n_threads=15):
 
@@ -283,28 +285,61 @@ class RepeatedHoldOut(base.MLValidation):
         mean_results_df.to_csv(path.join(output_dir, 'mean_results.tsv'),
                                index=False, sep='\t', encoding='utf-8')
 
-        self.compute_variance()
-        variance_df = pd.DataFrame({'resampled_t': self._resampled_t,
-                                    'corrected_resampled_t': self._corrected_resampled_t}, index=[0, ])
+        self.compute_error_variance()
+        self.compute_accuracy_variance()
+
+        variance_df = pd.DataFrame({'bal_accuracy_resampled_t': self._bal_accuracy_resampled_t,
+                                    'bal_accuracy_corrected_resampled_t': self._bal_accuracy_corrected_resampled_t,
+                                    'error_resampled_t': self._error_resampled_t,
+                                    'error_corrected_resampled_t': self._error_corrected_resampled_t}, index=[0, ])
+
         variance_df.to_csv(path.join(output_dir, 'variance.tsv'),
                            index=False, sep='\t', encoding='utf-8')
 
-    def compute_variance(self):
+    def _compute_variance(self, test_error_split):
+
         # compute average test error
         num_split = len(self._split_results)  # J in the paper
+
+        # compute mu_{n_1}^{n_2}
+        average_test_error = np.mean(test_error_split)
+
+        approx_variance = np.sum((test_error_split - average_test_error)**2)/(num_split - 1)
+
+        # compute variance (point 2 and 6 of Nadeau's paper)
+        resampled_t = approx_variance / num_split
+        corrected_resampled_t = (1/num_split + self._test_size/(1 - self._test_size)) * approx_variance
+
+        return resampled_t, corrected_resampled_t
+
+    def compute_error_variance(self):
+        num_split = len(self._split_results)
         test_error_split = np.zeros((num_split, 1))  # this list will contain the list of mu_j hat for j = 1 to J
         for i in range(num_split):
             test_error_split[i] = self._compute_average_test_error(self._split_results[i]['y'],
                                                                    self._split_results[i]['y_hat'])
-        # compute mu_{n_1}^{n_2}
-        average_test_error = np.mean(test_error_split)
 
-        # compute variance (point 2 and 6 of Nadeau's paper)
-        self._resampled_t = np.linalg.norm(test_error_split - average_test_error)**2/(num_split - 1)
-        self._corrected_resampled_t = (1/num_split + self._test_size/(1 - self._test_size)) * self._resampled_t
+            self._error_resampled_t, self._error_corrected_resampled_t = self._compute_variance(test_error_split)
 
-        return self._resampled_t, self._corrected_resampled_t
+        return self._error_resampled_t, self._error_corrected_resampled_t
 
     def _compute_average_test_error(self, y_list, yhat_list):
         # return the average test error (denoted mu_j hat)
         return float(len(np.where(y_list != yhat_list)[0]))/float(len(y_list))
+
+    def compute_accuracy_variance(self):
+        num_split = len(self._split_results)
+        test_error_split = np.zeros((num_split, 1))  # this list will contain the list of mu_j hat for j = 1 to J
+        for i in range(num_split):
+            test_error_split[i] = self._compute_average_test_accuracy(self._split_results[i]['y'],
+                                                                      self._split_results[i]['y_hat'])
+
+        self._bal_accuracy_resampled_t, self._bal_accuracy_corrected_resampled_t = self._compute_variance(test_error_split)
+
+        return self._bal_accuracy_resampled_t, self._bal_accuracy_corrected_resampled_t
+
+    def _compute_average_test_accuracy(self, y_list, yhat_list):
+
+        from clinica.pipeline.machine_learning.svm_utils import evaluate_prediction
+
+        return evaluate_prediction(y_list, yhat_list)['balanced_accuracy']
