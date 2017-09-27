@@ -37,8 +37,7 @@ class PETPreprocessVolumeCLI(ce.CmdParser):
                                 help='TSV file containing the subjects with their sessions.')
         self._args.add_argument("-fwhm", "--fwhm_tsv",
                                 help='TSV file containing the fwhm_x, fwhm_y and fwhm_z for each pet image.')
-        # TODO REMOVE FDG
-        self._args.add_argument("-pet", "--pet_type", type=str, default='fdg', choices=['fdg', 'av45', 'FDG'],
+        self._args.add_argument("-pet", "--pet_type", type=str, default='fdg', choices=['fdg', 'av45'],
                                 help='PET image type. Possible values are fdg and av45.')
         self._args.add_argument("-mask", "--mask_tissues", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
                                 help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to use for masking the PET image. Ex: 1 2 3 is GM, WM and CSF")
