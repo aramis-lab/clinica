@@ -184,8 +184,8 @@ class PETPreprocessVolume(cpe.Pipeline):
         reference_mask = npe.Node(nio.DataGrabber(outfields=['out_files']), name='reference_mask')
         reference_mask.inputs.base_directory = join(split(realpath(__file__))[0], '../../resources/masks')
         reference_mask.inputs.sort_filelist = False
-        # TODO DIFFERENT PET TYPES TO PROCESS
-        if self.parameters['pet_type'] == 'fdg' or self.parameters['pet_type'] == 'FDG':
+        # TODO ADD DIFFERENT PET TYPES TO PROCESS
+        if self.parameters['pet_type'] == 'fdg':
             reference_mask.inputs.template = 'region-pons_eroded-6mm_mask.nii*'
             self._suvr_region = 'pons'
         elif self.parameters['pet_type'] == 'av45':
