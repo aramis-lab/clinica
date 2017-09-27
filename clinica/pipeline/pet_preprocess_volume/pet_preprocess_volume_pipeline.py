@@ -46,12 +46,28 @@ class PETPreprocessVolume(cpe.Pipeline):
     """
 
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default', fwhm_tsv=None):
+        from pandas.io.parsers import read_csv
+        import os
+
         super(PETPreprocessVolume, self).__init__(bids_directory, caps_directory, tsv_file, name)
 
         if not group_id.isalnum():
             raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
 
-        from pandas.io.parsers import read_csv
+        # Check that group already exists
+        if not os.path.exists(os.path.join(os.path.abspath(caps_directory), 'groups', 'group-' + group_id)):
+            error_message = group_id + ' does not exists, please choose an other one (or maybe you need to run t1-spm-dartel).' \
+                            + '\nGroups that already exists in your CAPS directory are : \n'
+            list_groups = os.listdir(os.path.join(os.path.abspath(caps_directory), 'groups'))
+            is_empty = True
+            for e in list_groups:
+                if e.startswith('group-'):
+                    error_message += e + ' \n'
+                    is_empty = False
+            if is_empty is True:
+                error_message += 'NO GROUP FOUND'
+            raise ValueError(error_message)
+
 
         self._group_id = group_id
         self._suvr_region = ''
@@ -184,8 +200,8 @@ class PETPreprocessVolume(cpe.Pipeline):
         reference_mask = npe.Node(nio.DataGrabber(outfields=['out_files']), name='reference_mask')
         reference_mask.inputs.base_directory = join(split(realpath(__file__))[0], '../../resources/masks')
         reference_mask.inputs.sort_filelist = False
-        # TODO DIFFERENT PET TYPES TO PROCESS
-        if self.parameters['pet_type'] == 'fdg' or self.parameters['pet_type'] == 'FDG':
+        # TODO ADD DIFFERENT PET TYPES TO PROCESS
+        if self.parameters['pet_type'] == 'fdg':
             reference_mask.inputs.template = 'region-pons_eroded-6mm_mask.nii*'
             self._suvr_region = 'pons'
         elif self.parameters['pet_type'] == 'av45':

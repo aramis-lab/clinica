@@ -46,12 +46,26 @@ class T1SPMDartel2MNI(cpe.Pipeline):
     """
 
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
+        import os
         super(T1SPMDartel2MNI, self).__init__(bids_directory, caps_directory, tsv_file, name)
 
         if not group_id.isalnum():
             raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
 
         self._group_id = group_id
+        # Check that group already exists
+        if not os.path.exists(os.path.join(os.path.abspath(caps_directory), 'groups', 'group-' + group_id)):
+            error_message = group_id + ' does not exists, please choose an other one (or maybe you need to run t1-spm-dartel).' \
+                            + '\nGroups that already exists in your CAPS directory are : \n'
+            list_groups = os.listdir(os.path.join(os.path.abspath(caps_directory), 'groups'))
+            is_empty = True
+            for e in list_groups:
+                if e.startswith('group-'):
+                    error_message += e + ' \n'
+                    is_empty = False
+            if is_empty is True:
+                error_message += 'NO GROUP FOUND'
+            raise ValueError(error_message)
 
         # Default parameters
         self._parameters = {'tissues': [1, 2, 3],
