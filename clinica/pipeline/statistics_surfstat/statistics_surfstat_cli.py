@@ -95,13 +95,13 @@ class StatisticsSurfstatCLI(ce.CmdParser):
             raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
 
         # Check that group label does not already exists in CAPS folder
-        if os.path.exists(os.path.join(os.path.abspath(self.absolute_path(args.caps_directory)), 'groups', 'group-' + args.group_label)):
-            error_message = 'group_id : ' + args.group_label + ' already exists, please choose an other one. Groups that exists in your CAPS directory are : \n'
-            list_groups = os.listdir(os.path.join(os.path.abspath(self.absolute_path(args.caps_directory)), 'groups'))
-            for e in list_groups:
-                if e.startswith('group-'):
-                    error_message += e + ' \n'
-            raise ValueError(error_message)
+        #if os.path.exists(os.path.join(os.path.abspath(self.absolute_path(args.caps_directory)), 'groups', 'group-' + args.group_label)):
+        #    error_message = 'group_id : ' + args.group_label + ' already exists, please choose an other one. Groups that exists in your CAPS directory are : \n'
+        #    list_groups = os.listdir(os.path.join(os.path.abspath(self.absolute_path(args.caps_directory)), 'groups'))
+        #    for e in list_groups:
+        #       if e.startswith('group-'):
+        #            error_message += e + ' \n'
+        #   raise ValueError(error_message)
 
         pipeline = StatisticsSurfstat(
             caps_directory=self.absolute_path(args.caps_directory),
