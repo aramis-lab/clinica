@@ -68,6 +68,7 @@ class StatisticsSurfstatCLI(ce.CmdParser):
         from statistics_surfstat_pipeline import StatisticsSurfstat
         from statistics_surfstat_utils import check_inputs
         from clinica.utils.stream import cprint
+        import os
 
         if args.feature_type is not None:
             if args.custom_file is not None:
@@ -89,8 +90,18 @@ class StatisticsSurfstatCLI(ce.CmdParser):
             else:
                 cprint('Using custom features.')
 
+        # Check that group label is alphanumerical
         if not args.group_label.isalnum():
             raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
+
+        # Check that group label does not already exists in CAPS folder
+        #if os.path.exists(os.path.join(os.path.abspath(self.absolute_path(args.caps_directory)), 'groups', 'group-' + args.group_label)):
+        #    error_message = 'group_id : ' + args.group_label + ' already exists, please choose an other one. Groups that exists in your CAPS directory are : \n'
+        #    list_groups = os.listdir(os.path.join(os.path.abspath(self.absolute_path(args.caps_directory)), 'groups'))
+        #    for e in list_groups:
+        #       if e.startswith('group-'):
+        #            error_message += e + ' \n'
+        #   raise ValueError(error_message)
 
         pipeline = StatisticsSurfstat(
             caps_directory=self.absolute_path(args.caps_directory),
