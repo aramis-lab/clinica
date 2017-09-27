@@ -48,10 +48,26 @@ class T1SPMFullPrep(cpe.Pipeline):
     """
 
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
+        import os
+
         super(T1SPMFullPrep, self).__init__(bids_directory, caps_directory, tsv_file, name)
 
         if not group_id.isalnum():
             raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
+
+        # Check that group does not already exists
+        if os.path.exists(os.path.join(os.path.abspath(caps_directory), 'groups', 'group-' + group_id)):
+            error_message = 'group_id : ' + group_id + ' already exists, please choose an other one. Groups that exists in your CAPS directory are : \n'
+            list_groups = os.listdir(os.path.join(os.path.abspath(caps_directory), 'groups'))
+            for e in list_groups:
+                if e.startswith('group-'):
+                    error_message += e + ' \n'
+            raise ValueError(error_message)
+
+        # Check that there is at least 2 subjects
+        if len(self.subjects) <= 1:
+            raise ValueError('This pipeline needs at least 2 subjects to perform DARTEL, and found '
+                             + str(len(self.subjects)) + ' only in ' + self.tsv_file + '.')
 
         self._group_id = group_id
 
