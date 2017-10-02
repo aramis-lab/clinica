@@ -329,12 +329,12 @@ class RepeatedHoldOut(base.MLValidation):
 
     def compute_accuracy_variance(self):
         num_split = len(self._split_results)
-        test_error_split = np.zeros((num_split, 1))  # this list will contain the list of mu_j hat for j = 1 to J
+        test_accuracy_split = np.zeros((num_split, 1))  # this list will contain the list of mu_j hat for j = 1 to J
         for i in range(num_split):
-            test_error_split[i] = self._compute_average_test_accuracy(self._split_results[i]['y'],
-                                                                      self._split_results[i]['y_hat'])
+            test_accuracy_split[i] = self._compute_average_test_accuracy(self._split_results[i]['y'],
+                                                                         self._split_results[i]['y_hat'])
 
-        self._bal_accuracy_resampled_t, self._bal_accuracy_corrected_resampled_t = self._compute_variance(test_error_split)
+        self._bal_accuracy_resampled_t, self._bal_accuracy_corrected_resampled_t = self._compute_variance(test_accuracy_split)
 
         return self._bal_accuracy_resampled_t, self._bal_accuracy_corrected_resampled_t
 

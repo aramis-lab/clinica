@@ -37,7 +37,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
     location_name = study_name + ' location'
 
     # Load the data from the clincal specification file
-    participants_specs = pd.read_excel(clinical_spec_path , sheetname='participant.tsv')
+    participants_specs = pd.read_excel(clinical_spec_path, sheetname='participant.tsv')
     participant_fields_db = participants_specs[study_name]
     field_location = participants_specs[location_name]
     participant_fields_bids = participants_specs['BIDS CLINICA']
@@ -51,7 +51,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
     participant_df = pd.DataFrame(columns=fields_bids)
 
     for i in range(0, len(participant_fields_db)):
-    # If a field not empty is found
+        # If a field not empty is found
         if not pd.isnull(participant_fields_db[i]):
             # Extract the file location of the field and read the value from the file
             tmp = field_location[i].split('/')
@@ -61,7 +61,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
                 sheet = tmp[1]
             else:
                 sheet = ''
-            # Check if the file to open for a certain field it's the same of the previous field
+            # Check if the file to open for a certain field is the same of the previous field
             if location == prev_location and sheet == prev_sheet:
                 pass
             else:
@@ -107,7 +107,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
         bids_id = [s for s in bids_ids if value in s]
 
         if len(bids_id) == 0:
-            print "Subject " + value + " not found in the BIDS converted version of the dataset."
+            cprint("Subject " + value + " not found in the BIDS converted version of the dataset.")
             index_to_drop.append(i)
         else:
             participant_df.set_value(i, 'participant_id', bids_id[0])
@@ -186,7 +186,7 @@ def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids
                 subj_bids = [s for s in bids_ids if subj_id_alpha in s]
                 if len(subj_bids) == 0:
                     # If the subject is not an excluded one
-                    if not subj_id in subj_to_remove:
+                    if subj_id not in subj_to_remove:
                         print sessions_fields[i] + ' for ' + subj_id + ' not found in the BIDS converted.'
                 else:
                     subj_bids = subj_bids[0]
