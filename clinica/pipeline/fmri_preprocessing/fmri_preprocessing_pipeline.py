@@ -227,7 +227,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         if self.parameters['freesurfer_brain_mask']:
             brain_masks = [path.join(self.caps_directory,'subjects',
                                      self.subjects[i], self.sessions[i],
-                                     't1/freesurfer_cross_sectional',
+                                     't1/freesurfer-cross-sectional',
                                      self.subjects[i] + '_' + self.sessions[i],
                                      'mri/brain.mgz')
                            for i in range(len(self.subjects))]
