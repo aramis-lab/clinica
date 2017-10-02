@@ -38,6 +38,7 @@ class AdniToBids(Converter):
         """
         from os import path
         import os
+        import pandas as pd
         import clinica.iotools.bids_utils as bids
         from clinica.utils.stream import cprint
         import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
@@ -52,6 +53,12 @@ class AdniToBids(Converter):
 
         bids_ids = bids.get_bids_subjs_list(out_path)
         bids_subjs_paths = bids.get_bids_subjs_paths(out_path)
+
+        if not bids_ids:
+            adni_merge_path = path.join(clinical_data_dir, 'ADNIMERGE.csv')
+            adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
+            bids_ids = ['sub-ADNI' + subj.replace('_', '') for subj in list(adni_merge.PTID.unique())]
+            bids_subjs_paths = [path.join(out_path, subj) for subj in bids_ids]
 
         # -- Creation of participant.tsv --
         cprint("Creating participants.tsv...")
