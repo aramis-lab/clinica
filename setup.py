@@ -35,12 +35,14 @@ setup(
         'pybids>=0.1',
         'dipy>=0.6.0',
         'argcomplete>=1.4.1',
+        'configparser>=3.5.0',
         'pandas>=0.18.1',
         'nose>=1.3.7',
         'jinja2>=2.9',
         'xvfbwrapper>=0.2.8',
+        'networkx<2.0.0',
         'plinkio>=0.9.6',
 	    'six>=1.9.0'
     ],
-    data_files=[('clinica', ['LICENSE.txt', 'clinica/VERSION'])],
+    package_data={'clinica', ['LICENSE.txt', 'clinica/VERSION']},
 )
