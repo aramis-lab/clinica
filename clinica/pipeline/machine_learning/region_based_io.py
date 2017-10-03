@@ -1,14 +1,8 @@
 
-#TODO clean imports
 import numpy as np
 import pandas as pd
 import nibabel as nib
-#import csv
-#from ntpath import basename, splitext
-#from scipy.spatial.distance import squareform
 from os.path import join
-import scipy.io
-#from skimage import img_as_float
 
 __author__ = "Jorge Samper Gonzalez"
 __copyright__ = "Copyright 2016, The Aramis Lab Team"
@@ -19,7 +13,8 @@ __maintainer__ = "Jorge Samper Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
-def get_caps_t1_list(input_directory, subjects_visits_tsv,group_id, atlas_id):
+
+def get_caps_t1_list(input_directory, subjects_visits_tsv, group_id, atlas_id):
     """
     path to arrive to the list of the file with the statistics on atlas_id
     Args:
@@ -40,8 +35,10 @@ def get_caps_t1_list(input_directory, subjects_visits_tsv,group_id, atlas_id):
         raise Exception('Subjects and visits file is not in the correct format.')
     subjects = list(subjects_visits.participant_id)
     sessions = list(subjects_visits.session_id)
-    image_list = [join(input_directory+ '/subjects/' + subjects[i] + '/'
-                       + sessions[i] + '/t1/spm/dartel/group-'+group_id+'/atlas_statistics/'+subjects[i]+'_'+sessions[i]+'_T1w_space-'+atlas_id+'_map-graymatter_statistics.tsv') for i in range(len(subjects))]
+    image_list = [join(input_directory + '/subjects/' + subjects[i] + '/'
+                       + sessions[i] + '/t1/spm/dartel/group-' + group_id + '/atlas_statistics/' + subjects[i] + '_'
+                       + sessions[i]+'_T1w_space-'+atlas_id+'_map-graymatter_statistics.tsv')
+                  for i in range(len(subjects))]
     return image_list
 
 
@@ -64,7 +61,9 @@ def get_caps_pet_list(input_directory, subjects_visits_tsv, group_id, atlas_id):
     subjects = list(subjects_visits.participant_id)
     sessions = list(subjects_visits.session_id)
     image_list = [join(input_directory, 'analysis-series-default/subjects/' + subjects[i] + '/'
-                       + sessions[i] + '/pet/atlas_statistics/'+ subjects[i]+'_'+sessions[i]+'_space-'+atlas_id+'_map-fdgstatistic2.tsv') for i in range(len(subjects))]
+                       + sessions[i] + '/pet/atlas_statistics/' + subjects[i] + '_' + sessions[i]
+                       + '_space-' + atlas_id + '_map-fdgstatistic2.tsv')
+                  for i in range(len(subjects))]
     return image_list
 
 
@@ -94,7 +93,6 @@ def load_data(image_list, subjects):
     for i in xrange(len(image_list)):
         for j in xrange(len(subj_average)):
             data[i][j] = data_temp[i][j]
-    scipy.io.savemat('data.mat', {'data': data})
     return data
 
 
@@ -144,7 +142,6 @@ def weights_to_nifti(weights, atlas, output_filename):
 
     """
 
-    import os
     from os.path import join, split, realpath
 
     atlas_path = join(split(realpath(__file__))[0], '../../resources/atlases_spm', atlas + '.nii')
