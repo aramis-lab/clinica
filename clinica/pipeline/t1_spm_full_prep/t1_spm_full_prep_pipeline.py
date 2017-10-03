@@ -333,6 +333,7 @@ class T1SPMFullPrep(cpe.Pipeline):
         mlab.MatlabCommand.set_default_paths(spm_home)
 
         version = spm.Info.version()
+        #TODO: remove check for SPM
 
         if version:
             spm_path = version['path']

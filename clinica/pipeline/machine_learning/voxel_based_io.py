@@ -13,35 +13,6 @@ __maintainer__ = "Jorge Samper Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
-def get_caps_t1_list_OLD(input_directory, subjects_visits_tsv, analysis_series_id, group_id, prefix, tissue):
-
-    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
-    if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
-        raise Exception('Subjects and visits file is not in the correct format.')
-    subjects = list(subjects_visits.participant_id)
-    sessions = list(subjects_visits.session_id)
-
-    image_list = [join(input_directory, 'analysis-series-' + analysis_series_id + '/subjects/' + subjects[i] + '/'
-                       + sessions[i] + '/t1/spm/dartel/group-' + group_id + '/registered/' + prefix + tissue
-                       + subjects[i] + '_' + sessions[i] + '_T1w.nii.gz') for i in range(len(subjects))]
-
-    return image_list
-
-
-def get_caps_pet_list_OLD(input_directory, subjects_visits_tsv, analysis_series_id, prefix, pet_type):
-
-    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
-    if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
-        raise Exception('Subjects and visits file is not in the correct format.')
-    subjects = list(subjects_visits.participant_id)
-    sessions = list(subjects_visits.session_id)
-
-    image_list = [join(input_directory, 'analysis-series-' + analysis_series_id + '/subjects/' + subjects[i] + '/'
-                       + sessions[i] + '/pet/preprocessing/masked_suvr_pet/masked_suvr_' + prefix + subjects[i]
-                       + '_' + sessions[i] + '_task-rest_acq-' + pet_type + '_pet.nii.gz') for i in range(len(subjects))]
-
-    return image_list
-
 
 def get_caps_t1_list(input_directory, subjects_visits_tsv, group_id, fwhm, modulated):
 

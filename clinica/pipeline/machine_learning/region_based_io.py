@@ -1,12 +1,14 @@
+
+#TODO clean imports
 import numpy as np
 import pandas as pd
 import nibabel as nib
-import csv
-from ntpath import basename, splitext
-from scipy.spatial.distance import squareform
+#import csv
+#from ntpath import basename, splitext
+#from scipy.spatial.distance import squareform
 from os.path import join
 import scipy.io
-from skimage import img_as_float
+#from skimage import img_as_float
 
 __author__ = "Jorge Samper Gonzalez"
 __copyright__ = "Copyright 2016, The Aramis Lab Team"
