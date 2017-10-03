@@ -43,6 +43,5 @@ setup(
         'networkx<2.0.0',
         'plinkio>=0.9.6',
 	    'six>=1.9.0'
-    ],
-    package_data={'clinica', ['LICENSE.txt', 'clinica/VERSION']},
+    ]
 )
