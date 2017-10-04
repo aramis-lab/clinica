@@ -1,4 +1,6 @@
 include README.md
+include clinica/VERSION
+include LICENSE.txt
 recursive-include clinica/lib *
 recursive-include clinica/iotools *
 recursive-include clinica/bids/data *
