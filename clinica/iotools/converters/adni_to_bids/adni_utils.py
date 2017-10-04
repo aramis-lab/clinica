@@ -213,6 +213,10 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
 
     columns_order.insert(0, 'session_id')
     for sp in bids_subjs_paths:
+
+        if not path.exists(sp):
+            os.makedirs(sp)
+
         bids_id = sp.split(os.sep)[-1]
 
         fields_bids = list(set(fields_bids))

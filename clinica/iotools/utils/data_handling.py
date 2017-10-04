@@ -404,7 +404,7 @@ def create_subs_sess_list(dataset_path, out_dir, file_name = ''):
     subjects_paths.sort()
 
     if len(subjects_paths) == 0:
-        raise 'Dataset empty or not BIDS-compliant.'
+        raise Exception('Dataset empty or not BIDS-compliant.')
 
     for sub_path in subjects_paths:
         subj_id = sub_path.split(os.sep)[-1]
