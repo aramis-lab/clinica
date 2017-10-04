@@ -114,10 +114,10 @@ class StatisticsSurfstatCLI(ce.CmdParser):
             'group_label': args.group_label,
             'glm_type': args.glm_type,
             'custom_file': args.custom_file,
-            'full_width_at_half_maximum': args.full_width_at_half_maximum or 20,
-            'threshold_uncorrected_pvalue': args.threshold_uncorrected_pvalue or 0.001,
-            'threshold_corrected_pvalue': args.threshold_corrected_pvalue or 0.05,
-            'cluster_threshold': args.cluster_threshold or 0.001
+            'full_width_at_half_maximum': args.full_width_at_half_maximum,
+            'threshold_uncorrected_pvalue': args.threshold_uncorrected_pvalue,
+            'threshold_corrected_pvalue': args.threshold_corrected_pvalue,
+            'cluster_threshold': args.cluster_threshold
         }
         pipeline.base_dir = self.absolute_path(args.working_directory)
 
