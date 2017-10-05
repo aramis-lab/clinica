@@ -397,7 +397,13 @@ class LearningCurveRepeatedHoldOut(base.MLValidation):
 
             self._split_results.append(learning_point_results)
 
-        self._classifier, self._best_params = self._ml_algorithm.apply_best_parameters(self._split_results)
+        self._classifier = []
+        self._best_params = []
+        for j in range(self._n_learning_points):
+            classifier, best_params = self._ml_algorithm.apply_best_parameters(self._split_results[j])
+            self._classifier.append(classifier)
+            self._best_params.append(best_params)
+
         return self._classifier, self._best_params, self._split_results
 
     def save_results(self, output_dir):
