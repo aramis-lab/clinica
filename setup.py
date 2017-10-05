@@ -42,6 +42,11 @@ setup(
         'xvfbwrapper>=0.2.8',
         'networkx<2.0.0',
         'plinkio>=0.9.6',
-	    'six>=1.9.0'
+        'six>=1.9.0',
+        'numpy>= 1.8.2',
+        'scipy>= 0.13.3',
+        'scikit-learn>=0.18.2',
+        'sharedmem>=0.3.5',
+        'scikit-image>=0.13.0'
     ]
 )
