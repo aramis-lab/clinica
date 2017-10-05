@@ -41,15 +41,16 @@ class DualSVMAlgorithm(base.MLAlgorithm):
             svc = SVC(C=c, kernel='precomputed', probability=True, tol=1e-6)
 
         svc.fit(kernel_train, y_train)
+        y_hat_train = svc.predict(kernel_train)
         y_hat = svc.predict(x_test)
         proba_test = svc.predict_proba(x_test)[:, 1]
         auc = roc_auc_score(y_test, proba_test)
 
-        return svc, y_hat, auc
+        return svc, y_hat, auc, y_hat_train
 
     def _grid_search(self, kernel_train, x_test, y_train, y_test, c):
 
-        _, y_hat, _ = self._launch_svc(kernel_train, x_test, y_train, y_test, c)
+        _, y_hat, _, _ = self._launch_svc(kernel_train, x_test, y_train, y_test, c)
         res = utils.evaluate_prediction(y_test, y_hat)
 
         return res['balanced_accuracy']
@@ -108,11 +109,12 @@ class DualSVMAlgorithm(base.MLAlgorithm):
         x_test = self._kernel[test_index, :][:, train_index]
         y_train, y_test = self._y[train_index], self._y[test_index]
 
-        _, y_hat, auc = self._launch_svc(outer_kernel, x_test, y_train, y_test, best_parameter['c'])
+        _, y_hat, auc, y_hat_train = self._launch_svc(outer_kernel, x_test, y_train, y_test, best_parameter['c'])
 
         result = dict()
         result['best_parameter'] = best_parameter
         result['evaluation'] = utils.evaluate_prediction(y_test, y_hat)
+        result['evaluation_training'] = utils.evaluate_prediction(y_train, y_hat_train)
         result['y_hat'] = y_hat
         result['y'] = y_test
         result['y_index'] = test_index
