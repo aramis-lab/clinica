@@ -368,11 +368,12 @@ class VB_LearningCurveRepHoldOut_DualSVM(base.MLWorkflow):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, output_dir, fwhm=0,
                  modulated="on", pvc=None, precomputed_kernel=None, mask_zeros=True, n_threads=15, n_iterations=100,
-                 test_size=0.3, grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17)):
+                 test_size=0.3, n_learning_points=10, grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17)):
         self._output_dir = output_dir
         self._n_threads = n_threads
         self._n_iterations = n_iterations
         self._test_size = test_size
+        self._n_learning_points = n_learning_points
         self._grid_search_folds = grid_search_folds
         self._balanced = balanced
         self._c_range = c_range
@@ -396,17 +397,25 @@ class VB_LearningCurveRepHoldOut_DualSVM(base.MLWorkflow):
                                                      c_range=self._c_range,
                                                      n_threads=self._n_threads)
 
-        self._validation = validation.LearningCurveRepeatedHoldOut(self._algorithm, n_iterations=self._n_iterations, test_size=self._test_size)
+        self._validation = validation.LearningCurveRepeatedHoldOut(self._algorithm,
+                                                                   n_iterations=self._n_iterations,
+                                                                   test_size=self._test_size,
+                                                                   n_learning_points=self._n_learning_points)
 
         classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads)
-        classifier_dir = path.join(self._output_dir, 'classifier')
-        if not path.exists(classifier_dir):
-            os.makedirs(classifier_dir)
 
-        self._algorithm.save_classifier(classifier, classifier_dir)
-        self._algorithm.save_parameters(best_params, classifier_dir)
-        weights = self._algorithm.save_weights(classifier, x, classifier_dir)
+        for learning_point in range(self._n_learning_points):
 
-        self._input.save_weights_as_nifti(weights, classifier_dir)
+            learning_point_dir = path.join(self._output_dir, 'learning_split-' + str(learning_point))
+
+            classifier_dir = path.join(learning_point_dir, 'classifier')
+            if not path.exists(classifier_dir):
+                os.makedirs(classifier_dir)
+
+            self._algorithm.save_classifier(classifier, classifier_dir)
+            self._algorithm.save_parameters(best_params, classifier_dir)
+            weights = self._algorithm.save_weights(classifier, x, classifier_dir)
+
+            self._input.save_weights_as_nifti(weights, classifier_dir)
 
         self._validation.save_results(self._output_dir)
