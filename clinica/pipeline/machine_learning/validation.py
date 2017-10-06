@@ -376,15 +376,7 @@ class LearningCurveRepeatedHoldOut(base.MLValidation):
             inner_cv = list(skf.split(np.zeros(len(y[train_index])), y[train_index]))
 
             for j in range(self._n_learning_points):
-
                 inner_train_index = np.concatenate([indexes[1] for indexes in inner_cv[:j + 1]]).ravel()
-
-                # print i
-                # print j
-                y_train = y[train_index[inner_train_index]]
-                # print y_train
-                print np.unique(y_train)
-
                 async_result[i][j] = async_pool.apply_async(self._ml_algorithm.evaluate, (train_index[inner_train_index], test_index))
 
         async_pool.close()
