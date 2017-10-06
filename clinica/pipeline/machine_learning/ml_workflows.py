@@ -412,9 +412,9 @@ class VB_LearningCurveRepHoldOut_DualSVM(base.MLWorkflow):
             if not path.exists(classifier_dir):
                 os.makedirs(classifier_dir)
 
-            self._algorithm.save_classifier(classifier, classifier_dir)
-            self._algorithm.save_parameters(best_params, classifier_dir)
-            weights = self._algorithm.save_weights(classifier, x, classifier_dir)
+            self._algorithm.save_classifier(classifier[learning_point], classifier_dir)
+            self._algorithm.save_parameters(best_params[learning_point], classifier_dir)
+            weights = self._algorithm.save_weights(classifier[learning_point], x, classifier_dir)
 
             self._input.save_weights_as_nifti(weights, classifier_dir)
 
