@@ -88,6 +88,7 @@ def init_cmdparser_objects(rootparser, parser, objects):
 
     def init(x):
         def silent_help(): pass
+
         def error_message(p):
             def error(x):
                 p.print_help()
@@ -102,7 +103,8 @@ def init_cmdparser_objects(rootparser, parser, objects):
     for x in objects:
         try:
             init(x)
-        except:pass
+        except:
+            pass
 
 
 def get_cmdparser_names(objects=None):
@@ -111,8 +113,10 @@ def get_cmdparser_names(objects=None):
     :param objects: all CmpParser instances of this file
     :return: the names of all pipelines
     """
-    if objects is None: objects = get_cmdparser_objects()
-    for x in objects: yield x.name
+    if objects is None:
+        objects = get_cmdparser_objects()
+    for x in objects:
+        yield x.name
 
 
 #______ _   _ _____   _   _  ___________ _____  __   _______ _   _______   _____  _       ___   _____ _____
