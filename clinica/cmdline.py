@@ -13,6 +13,7 @@ import sys
 import os
 import subprocess
 from clinica.engine.cmdparser import *
+from clinica.utils.stream import cprint
 
 __author__ = "Michael Bacci"
 __copyright__ = "Copyright 2016,2017 The Aramis Lab Team"
@@ -189,7 +190,7 @@ def execute():
             parser.print_help = silent_help
             exit(-1)
         return error
-    for p in [vis_parser, pipeline_list_parser, run_parser]:
+    for p in [pipeline_list_parser, run_parser]:
         p.error = single_error_message(p)
 
     # Do not want stderr message
