@@ -1,6 +1,7 @@
 """{{ pipeline.title }} - Clinica Command Line Interface.
 This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
+command line tool. See here for more details:
+https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
 """
 
 
@@ -9,13 +10,11 @@ import clinica.engine as ce
 
 class {{ pipeline.class_name }}CLI(ce.CmdParser):
 
-
     def define_name(self):
         """Define the sub-command name to run this pipeline.
         """
 
         self._name = '{{ pipeline.command_name }}'
-
 
     def define_options(self):
         """Define the sub-command arguments
@@ -38,7 +37,6 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
         self._args.add_argument("-sl", "--slurm", action='store_true',
                                 help='Run the pipeline using SLURM')
         # END OF EXAMPLE
-
 
     def run_pipeline(self, args):
         """
@@ -69,3 +67,4 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
             pipeline.run(plugin='SLURM')
         else:
             pipeline.run()
+
