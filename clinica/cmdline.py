@@ -59,40 +59,6 @@ def visualize(clinicaWorkflow, ids, rebase=False):
 
     [run_program(id) for id in ids]
 
-
-def shell(clinicaWorkflow):
-    """Open a python/ipython shell and re-init the clinicaWorkflow object
-
-    Args:
-        clinicaWorkflow: the main pipeline object
-
-    Returns:
-
-    """
-    workflow = clinicaWorkflow
-    __banner__ = "workflow variable is instantiated for you!"
-    namespace = globals().copy()
-    namespace.update(locals())
-
-    def load_python_shell():
-        import readline
-        import code
-        shell = code.InteractiveConsole(namespace)
-        shell.interact(banner=__banner__)
-
-    def load_ipython_shell():
-        from IPython.terminal.embed import InteractiveShellEmbed
-        InteractiveShellEmbed(user_ns=namespace, banner1=__banner__)()
-
-    try:
-        load_ipython_shell()
-    except:
-        try:
-            load_python_shell()
-        except:
-            print("Impossible to load ipython or python shell")
-
-
 def load_conf(args):
     """Load a pipeline serialization
 
@@ -208,14 +174,6 @@ def execute():
         visualize(load_conf(args[1:]), args.id.split(","), args.rebase)
     vis_parser.set_defaults(func=vis_parser_fun)
 
-    """
-    shell option: re-open a nipype.Workflow object within python/ipython session
-    TODO: complete for future release
-    """
-    # shell_parser = sub_parser.add_parser('shell')
-    # def shell_parser_fun(args):
-    #     shell(load_conf(args[1:]))
-    # shell_parser.set_defaults(func=shell_parser_fun)
 
     """
     run option: run one of the available pipelines
