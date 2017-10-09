@@ -2,8 +2,9 @@
 Script that generate the skeleton for a new Pipeline
 """
 from clinica.engine.cmdparser import CmdParser
-from os.path import join,isdir,splitext
+from os.path import join, isdir, splitext
 from os import mkdir, getcwd
+
 
 class CmdGenerateTemplates(CmdParser):
     """
