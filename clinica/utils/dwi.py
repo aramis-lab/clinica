@@ -259,7 +259,6 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
         cprint('B0 s will be avg...(file = ' + registered_b0s + ')')
         # Average the b0s to obtain the reference b0
         out_reference_b0 = b0_average(in_file=registered_b0s)
-        cprint('B0s are merged!!!!!!')
     else:
         raise ValueError(
             'The number of b0s should be strictly positive (b-val file =%s).'
