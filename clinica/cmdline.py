@@ -1,10 +1,9 @@
 """
-The 'clinica' executable command line, installed with the clinica packages,
-call this module.
+The 'clinica' executable command line, installed with the clinica package,
+calls this module.
 
-The aim of this module is to execute pipeline from command line,
-and give to the user some other utils to works with the pipelines.
-
+The aim of this module is to execute pipelines from the command line,
+and gives to the user some other utils to work with the pipelines.
 """
 
 from __future__ import print_function
@@ -24,11 +23,13 @@ __maintainer__ = "Michael Bacci"
 __email__ = "michael.bacci@inria.fr"
 __status__ = "Development"
 
+
 class ClinicaClassLoader:
     """
     Load pipelines from a custom locations (general from $HOME/clinica)
     """
     from clinica.pipeline.engine import Pipeline
+
     def __init__(self, env='CLINICAPATH', baseclass=Pipeline, reg=r".*_cli\.py$", extra_dir=""):
         self.env = env
         self.baseclass = baseclass
@@ -241,7 +242,7 @@ def execute():
                               })
         logging.update_logging(config)
 
-        #Define the LogFilter
+        # Define the LogFilter
         class LogFilter(Filter):
             def filter(self, record):
                 if record.levelno >= ERROR:

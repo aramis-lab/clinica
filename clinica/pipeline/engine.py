@@ -29,6 +29,7 @@ def postset(attribute, value):
         return func_wrapper
     return postset_decorator
 
+
 def get_subject_session_list(input_dir, ss_file=None):
     """Parses a BIDS directory to get the subjects and sessions.
 
@@ -59,6 +60,7 @@ def get_subject_session_list(input_dir, ss_file=None):
     sessions = list(ss_df.session_id)
 
     return sessions, subjects
+
 
 class Pipeline(npe.Workflow):
     """Clinica Pipeline class.
