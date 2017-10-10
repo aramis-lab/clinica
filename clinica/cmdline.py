@@ -132,7 +132,7 @@ def execute():
         CmdParserMachineLearningSVMRB(),
         PETPreprocessVolumeCLI()
     ]
-    init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
+    init_cmdparser_objects(parser, run_parsFilterOuter.add_subparsers(), pipelines)
 
     """
     pipelines-list option: show all available pipelines
@@ -181,6 +181,10 @@ def execute():
     ]
     init_cmdparser_objects(parser, io_parser.add_subparsers(), io_tools)
 
+    """
+    Silent all sub-parser errors methods except the one which is called
+    otherwise the output console will display useless messages
+    """
     def silent_help(): pass
 
     def single_error_message(p):
@@ -197,20 +201,22 @@ def execute():
         pass
     parser.error = silent_msg
 
+    """
+    Parse the command and check that everything went fine
+    """
     args = None
-    unknown = None
+    unknown_args = None
     try:
         argcomplete.autocomplete(parser)
-        # args = parser.parse_args()
-        args, unknown = parser.parse_known_args()
+        args, unknown_args = parser.parse_known_args()
     except SystemExit:
         exit(-1)
     except Exception:
         parser.print_help()
         exit(-1)
 
-    if unknown:
-        raise ValueError('Unknown flag detected: %s' % unknown)
+    if unknown_args:
+        raise ValueError('Unknown flag detected: %s' % unknown_args)
 
     if args is None or hasattr(args, 'func') is False:
         parser.print_help()
