@@ -89,10 +89,10 @@ def execute():
     parser.add_argument("-v", "--verbose",
                         dest='verbose',
                         action='store_true', default=False,
-                        help='verbose : print all messages to the console')
+                        help='Verbose: print all messages to the console')
     parser.add_argument("-l", "--logname",
                         dest='logname', default="clinica.log",
-                        help='define the log file name')
+                        help='Define the log file name (default: clinica.log)')
 
     """
     run option: run one of the available pipelines
