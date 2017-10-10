@@ -253,7 +253,7 @@ def execute():
         # Define the LogFilter for ERROR detection
         class LogFilter(Filter):
             """
-            The LogFilter class ables to monitor if an ERROR signal is sent
+            The LogFilter class ables to monitor if an ERROR log signal is sent
             from Clinica/Nipype. If detected, the user will be warned.
             """
             def filter(self, record):
