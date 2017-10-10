@@ -71,8 +71,8 @@ def init_cmdparser_objects(rootparser, parser, objects):
     Init all derived CmdParser instances with specific data.
 
     Args:
-        rootparser:
-        parser: The ArgParser node
+        rootparser: The root parser
+        parser: The ArgParser node (e.g. 'run' or 'convert')
         objects: All CmdParser instances of this file
     """
     def init(x):
@@ -330,7 +330,7 @@ class CmdParserHmtcToBids(CmdParser):
 
     def define_options(self):
         self._args.add_argument("dataset_directory",
-                               help='Path of the unorganized HMTC directory.')
+                                help='Path of the unorganized HMTC directory.')
         self._args.add_argument("bids_directory",
                                 help='Path to the BIDS directory.')
 
@@ -346,11 +346,11 @@ class CmdParserSubsSess(CmdParser):
 
     def define_options(self):
         self._args.add_argument("bids_dir",
-                               help='Path to the BIDS dataset directory.')
+                                help='Path to the BIDS dataset directory.')
         self._args.add_argument("out_directory",
                                 help='Path to the output directory.')
         self._args.add_argument("-on", '--output_name', type=str, default='',
-                            help='(Optional) Name of the output file.')
+                                help='(Optional) Name of the output file.')
 
     def run_pipeline(self, args):
         from clinica.iotools.utils import data_handling as dt
@@ -364,10 +364,10 @@ class CmdParserMergeTsv(CmdParser):
 
     def define_options(self):
         self._args.add_argument("bids_dir",
-                               help='Path to the BIDS dataset directory.')
+                                help='Path to the BIDS dataset directory.')
         self._args.add_argument("out_directory",
                                 help='Path to the output directory.')
-        self._args.add_argument("-tf", '--true_false_mode', type= bool, default = False,
+        self._args.add_argument("-tf", '--true_false_mode', type=bool, default=False,
                                 help = '(Optional) Conver all the field with binary meaning into True and False values.')
 
     def run_pipeline(self, args):
@@ -382,10 +382,10 @@ class CmdParserMissingModalities(CmdParser):
 
     def define_options(self):
         self._args.add_argument("bids_dir",
-                               help='Path to the BIDS dataset directory.')
+                                help='Path to the BIDS dataset directory.')
         self._args.add_argument("out_directory",
                                 help='Path to the output directory.')
-        self._args.add_argument("-op", '--output_prefix', type= str, default= '',
+        self._args.add_argument("-op", '--output_prefix', type= str, default='',
                                 help='Prefix for the name of output files.')
 
     def run_pipeline(self, args):
