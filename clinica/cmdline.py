@@ -7,10 +7,12 @@ and gives to the user some other utils to work with the pipelines.
 """
 
 from __future__ import print_function
-import argcomplete
-import sys
+
 import os
-import subprocess
+import sys
+
+import argcomplete
+
 from clinica.engine.cmdparser import *
 from clinica.utils.stream import cprint
 
@@ -132,7 +134,7 @@ def execute():
         CmdParserMachineLearningSVMRB(),
         PETPreprocessVolumeCLI()
     ]
-    init_cmdparser_objects(parser, run_parsFilterOuter.add_subparsers(), pipelines)
+    init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
 
     """
     pipelines-list option: show all available pipelines
@@ -238,6 +240,8 @@ def execute():
         import os
         from nipype import config, logging
         from nipype import logging
+
+        # Configure Nipype logger for our needs
         config.update_config({'logging': {'workflow_level': 'INFO',
                                           'log_directory': os.getcwd(),
                                           'log_to_file': True},
@@ -246,8 +250,12 @@ def execute():
                               })
         logging.update_logging(config)
 
-        # Define the LogFilter
+        # Define the LogFilter for ERROR detection
         class LogFilter(Filter):
+            """
+            The LogFilter class ables to monitor if an ERROR signal is sent
+            from Clinica/Nipype. If detected, the user will be warned.
+            """
             def filter(self, record):
                 if record.levelno >= ERROR:
                     cprint("An ERROR was generated: please check the log file for more information")
@@ -256,20 +264,17 @@ def execute():
         logger = logging.getLogger('workflow')
         logger.addFilter(LogFilter())
 
-        class stream:
-            def write(self, text):
-                print(text)
-                sys.stdout.flush()
-
-        # Remove all handlers associated with the root logger object.
+        # Remove all handlers associated with the root logger object
         for handler in python_logging.root.handlers[:]:
             python_logging.root.removeHandler(handler)
 
         logging.disable_file_logging()
 
+        # Enable file logging using a filename
         def enable_file_logging(self, filename):
             """
-            Hack to define a filename for the log!
+            Hack to define a filename for the log file! It overloads the
+            'enable_file_logging' method in 'nipype/utils/logger.py' file.
             """
             import logging
             from logging.handlers import RotatingFileHandler as RFHandler
@@ -287,10 +292,16 @@ def execute():
             self._iflogger.addHandler(hdlr)
             self._hdlr = hdlr
         enable_file_logging(logging, args.logname)
-        python_logging.basicConfig(
-            format=logging.fmt, datefmt=logging.datefmt, stream=stream())
 
-    # Run the pipeline!
+        class Stream:
+            def write(self, text):
+                print(text)
+                sys.stdout.flush()
+
+        python_logging.basicConfig(
+            format=logging.fmt, datefmt=logging.datefmt, stream=Stream())
+
+    # Finally, run the pipeline
     args.func(args)
 
 
