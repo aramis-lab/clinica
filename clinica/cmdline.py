@@ -43,7 +43,7 @@ class ClinicaClassLoader:
         if not os.environ.has_key(self.env):
             return pipeline_cli_parsers
 
-        clinica_pipelines_path = join(os.environ[self.env],self.extra_dir)
+        clinica_pipelines_path = join(os.environ[self.env], self.extra_dir)
         if not os.path.isdir(clinica_pipelines_path):
             return pipeline_cli_parsers
 
@@ -79,21 +79,20 @@ class ClinicaClassLoader:
         import re
         return [os.path.join(path, file) for path in paths for file in os.listdir(path) if re.match(reg, file) is not None]
 
+
 def execute():
     """
     Define and parse the command line argument
     """
-
     parser = ArgumentParser()
     sub_parser = parser.add_subparsers()
     parser.add_argument("-v", "--verbose",
                         dest='verbose',
                         action='store_true', default=False,
-                        help='verbose : print all messages to the console')
+                        help='Verbose: print all messages to the console')
     parser.add_argument("-l", "--logname",
                         dest='logname', default="clinica.log",
-                        help='define the log file name')
-
+                        help='Define the log file name (default: clinica.log)')
 
     """
     run option: run one of the available pipelines
@@ -141,32 +140,31 @@ def execute():
     pipeline_list_parser = sub_parser.add_parser('pipeline-list')
 
     def pipeline_list_fun(args):
-        for p in pipelines :
-            cprint(p.name)
+        for pipeline in pipelines:
+            cprint(pipeline.name)
+
     pipeline_list_parser.set_defaults(func=pipeline_list_fun)
 
     """
-    convert option: convert one of the supported dataset to the BIDS specification
+    convert option: convert one of the supported datasets into the BIDS
     """
-
-    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids_cli import AiblToBidsCLI
-    from clinica.iotools.converters.adni_to_bids.adni_to_bids_cli import AdniToBidsCLI
-    from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_cli import OasisToBidsCLI
+    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids_cli import AiblToBidsCLI  # noqa
+    from clinica.iotools.converters.adni_to_bids.adni_to_bids_cli import AdniToBidsCLI  # noqa
+    from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_cli import OasisToBidsCLI  # noqa
 
     convert_parser = sub_parser.add_parser('convert')
-    convert_task = [
+    converters = [
         AiblToBidsCLI(),
         AdniToBidsCLI(),
         OasisToBidsCLI()
-
     ]
-    init_cmdparser_objects(parser, convert_parser.add_subparsers(), convert_task)
-
+    init_cmdparser_objects(parser, convert_parser.add_subparsers(), converters)
 
     """
     generate option: template
     """
     template_parser = sub_parser.add_parser('generate')
+
     from clinica.engine.template import CmdGenerateTemplates
     init_cmdparser_objects(parser, template_parser.add_subparsers(), [
         CmdGenerateTemplates()
@@ -176,12 +174,12 @@ def execute():
     iotools option
     """
     io_parser = sub_parser.add_parser('iotools')
-    io_tasks = [
+    io_tools = [
         CmdParserSubsSess(),
         CmdParserMergeTsv(),
         CmdParserMissingModalities()
     ]
-    init_cmdparser_objects(parser, io_parser.add_subparsers(), io_tasks)
+    init_cmdparser_objects(parser, io_parser.add_subparsers(), io_tools)
 
     def silent_help(): pass
 
