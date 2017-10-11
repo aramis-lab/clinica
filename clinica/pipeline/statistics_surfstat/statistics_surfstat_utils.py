@@ -118,7 +118,7 @@ def runmatlab(input_directory,
         freesurfer_home: the environmental variable $FREESURFER_HOME
         surface_file: Specify where to find the data surfaces file in the "CAPS/subject" directory, using specific keywords.
                      For instance, to catch for each subject the cortical thickness, the string used will be :
-                     '@subject/@session/t1/freesurfer-cross-sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
+                     '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
                      More information is available on the documentation page of the surfstat pipeline. The keywords @subject @ session @hemi @fwhm
                      represents the variable parts.
         path_to_matscript: path to find the matlab script

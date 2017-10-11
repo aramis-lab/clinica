@@ -8,7 +8,6 @@ clinica_verbose = False
 
 
 class FilterOut(object):
-
     def __init__(self, stdout):
         self.stdout = stdout
 
