@@ -1,18 +1,48 @@
-# -*- coding: utf-8 -*-
+# coding: utf8
 """
-    Created on Mon May 15 18:43:59 2017
-    
-    Generate new BED/BIM/FAM files by adding APOE and changing patients' ID
-    
-    @author: Pascal & Sabrina
+    Generate new BED/BIM/FAM files by adding APOE and changing patients ID.
+
+    Since APOE has not been genotyped in the original BED/BIM files, but is one of the main genes that is responsible
+    for AD, we decided to convert also the genetics files of ADNI adding this information during the conversion.
+
+    All the input genetic files .BED, .FAM and .BIM will be stored in a folder called Genetics on the top level of
+     the BIDS folder, with the following modifications:
+     - BED: original file plus APOE
+     - FAM: the second column (that contain the original subject id) is replaced with the bids id and the fourth and the
+      fifth columns ( sex and affection) are replaced with 0
+     - BIM: original file plus APOE
+
+    The information regarding APOE will be extracted from the  ADNI clinical file APOERS.tsv.
+    The output name chosen for the BIDS converted files is "ADNI_1_GWAS_Human610-Quad_PlusAPOE".
 """
 
+__author__ = "Pascal Lu"
+__copyright__ = "Copyright 2017, The Aramis Lab Team"
+__credits__ = ["Sabrina Fontanella"]
+__license__ = "See LICENSE.txt file"
+__version__ = "0.1.0"
+__maintainer__ = "Pascal Lu"
+__email__ = "pascal.lu@icm-institute.org"
+__status__ = "Completed"
 
-def convert_genetics(clinical_data_path, input_gen_dir, dest_dir,
-                     plink_file_name = 'ADNI_cluster_01_forward_757LONI',
-                     output_file_name = 'ADNI_1_GWAS_Human610-Quad_PlusAPOE'):
+
+def convert_genetics(clinical_data_path, input_gen_dir, dest_dir, plink_file_name='ADNI_cluster_01_forward_757LONI',
+                     output_file_name='ADNI_1_GWAS_Human610-Quad_PlusAPOE'):
+    """
+    Convert the genetics data of ADNI to BIDS specification with the modification explained above
+
+    Args:
+        clinical_data_path: path to the clinical data
+        input_gen_dir: path to the folder with the original genetic files (.BED, .FAM and .BIM)
+        dest_dir: path to the bids directory
+        plink_file_name: name of the plink file (if the user don't modify the original files downloaded from the website
+        is not necessary to modify this variable)
+        output_file_name: output name of the converted files
+
+    Returns:
+
+    """
     import os
-    from os import path
 
     path_to_adnimerge = os.path.join(clinical_data_path, 'ADNIMERGE.csv')
     path_to_apoe = os.path.join(clinical_data_path, 'APOERES.csv')
@@ -26,10 +56,21 @@ def convert_genetics(clinical_data_path, input_gen_dir, dest_dir,
     update_plink_files(path_to_adnimerge, path_to_apoe, path_to_plink_files, path_to_new_plink_files)
 
 
-
 def update_plink_files(path_to_adnimerge, path_to_apoe, path_to_plink_files, path_to_new_plink_files):
+    """
+    Add the genotype of APOE and change the patients' ID
+
+    Args:
+        path_to_adnimerge: path to the original ADNIMERGE.csv file of ADNI
+        path_to_apoe: path the original APOERES.csv file of ADNI
+        path_to_plink_files: path to the original folder containing the bed, bim and fam file
+        path_to_new_plink_files: path to the new plink folder
+
+    Returns:
+
+    """
     import os
-    import shutil
+
 
     # convert bed bim fam to ped map nof
     os.system('plink --bfile ' + path_to_plink_files + ' --recode --out ' + path_to_plink_files)
@@ -59,6 +100,15 @@ def update_plink_files(path_to_adnimerge, path_to_apoe, path_to_plink_files, pat
 
 
 def update_ID_fam(path_to_plink_files):
+    """
+    Change the patients' ID, replace sex value by 0 and replace affection value by 0
+
+    Args:
+        path_to_plink_files: path the plink file
+
+    Returns:
+
+    """
     import csv
     import sys
     import numpy as np
@@ -90,6 +140,18 @@ def update_ID_fam(path_to_plink_files):
 
 
 def add_apoe_ped_files(path_to_adnimerge, path_to_apoe, path_to_plink_files, path_to_new_plink_files):
+    """
+   Add the genotype of APOE inside the DNA sequence
+
+    Args:
+        path_to_adnimerge: path to the original ADNIMERGE.csv file of ADNI
+        path_to_apoe: path the original APOERES.csv file of ADNI
+        path_to_plink_files: path to the old plink file to modify
+        path_to_new_plink_files: path to the new plink file modified
+
+    Returns:
+
+    """
     import csv
     import sys
     import numpy as np
@@ -147,8 +209,19 @@ def add_apoe_ped_files(path_to_adnimerge, path_to_apoe, path_to_plink_files, pat
     print 'new map file created'
 
 
-
 def import_apoe_ACGT(file_path, bed=0):
+    """
+    For all subjects, it returns the genotype of APOE
+
+    Args:
+        file_path: path to the apoe file
+        bed: 0 or 1. If 0, the genotype will be seen as a DNA sequence. If 1, the genotype will be a sequence
+         of numbers (0,1,2), where the number of minor variants is indicated for each snp
+
+    Returns:
+        dict: dictonary where the keys are the subjects id and the values are the sequence
+
+    """
     import numpy as np
     import pandas as pd
     apoe_file = pd.io.parsers.read_csv(file_path, sep=',')
@@ -164,12 +237,26 @@ def import_apoe_ACGT(file_path, bed=0):
 
 
 def reindex_apoe_ACGT(dict, patient_list, adni_merge, bed=0):
+    """
+    Create a table with the DNA sequence of gene APOE ordered by the list of patients
+
+    Args:
+        dict: the output of the method import_apoe_ACGT
+        patient_list: list of patients
+        adni_merge: path to the ADNIMERGE.csv file of ADNI
+        bed: 0 or 1. If 0, the genotype will be seen as a DNA sequence. If 1, the genotype will be a sequence
+         of numbers (0,1,2), where the number of minor variants is indicated for each snp. It must be the same value
+         passed to the method import_apoe_ACGT
+
+    Returns:
+        apoe_snp_patient: a table of DNA sequence for the gene APOE ordered by the list of patients
+    """
     import numpy as np
     num_patients = len(patient_list)
     if bed:
         apoe_snp_patient = np.zeros((num_patients, 2))
     else:
-        apoe_snp_patient = np.zeros((num_patients, 4), dtype = '|S10')
+        apoe_snp_patient = np.zeros((num_patients, 4), dtype='|S10')
     for i in range(num_patients):
         patient = patient_list[i]
         rid = int(adni_merge['RID'][np.where(adni_merge['PTID'] == patient)[0][0]])
@@ -177,42 +264,47 @@ def reindex_apoe_ACGT(dict, patient_list, adni_merge, bed=0):
     return apoe_snp_patient
 
 
-def count_minor_allele_apoe_ACGT(epsilon_rs429358, epsilon_rs7412):
+def count_minor_allele_apoe_ACGT(epsilon_first_parent, epsilon_second_parent):
+    """
+    Convert the allele to the DNA sequence
+
+    If the APOE allele is epsilon4/epsilon4, this method will return the sequence C,C,C,C
+    Args:
+        epsilon_first_parent: allele from the first parent
+        epsilon_second_parent: allele from the second parent
+
+    Returns:
+        sequence: the two first letters correspond to snp rs429358, the two last letters correspond to snp rs7412
+        count: the first number correspond to the number of minor variants for rs429358, the second number correspond to
+         the number of minor variants for rs7412
+    """
     # rs429358 (T common); rs7412 (T common)
-    if (epsilon_rs429358 == 2) & (epsilon_rs7412 == 2):
-        #Apo2/2 gs268 (T;T) (T;T)
+    if (epsilon_first_parent == 2) & (epsilon_second_parent == 2):
+        # Apo2/2 gs268 (T;T) (T;T)
         sequence = ['T', 'T', 'T', 'T']
         count = [0, 0]
-    elif (epsilon_rs429358 == 2) & (epsilon_rs7412 == 3):
-        #Apo2/3 gs269 (T;T) (C;T)
+    elif (epsilon_first_parent == 2) & (epsilon_second_parent == 3):
+        # Apo2/3 gs269 (T;T) (C;T)
         sequence = ['T', 'T', 'C', 'T']
         count = [0, 1]
-    elif (epsilon_rs429358 == 2) & (epsilon_rs7412 == 4):
-        #Apo2/4 gs270 (C;T) (C;T) ambiguous with Apo1/3
+    elif (epsilon_first_parent == 2) & (epsilon_second_parent == 4):
+        # Apo2/4 gs270 (C;T) (C;T) ambiguous with Apo1/3
         sequence = ['C', 'T', 'C', 'T']
         count = [1, 1]
-    elif (epsilon_rs429358 == 3) & (epsilon_rs7412 == 3):
-        #Apo3/3 gs246 (T;T) (C;C) the most common
+    elif (epsilon_first_parent == 3) & (epsilon_second_parent == 3):
+        # Apo3/3 gs246 (T;T) (C;C) the most common
         sequence = ['T', 'T', 'C', 'C']
         count = [0, 2]
-    elif (epsilon_rs429358 == 3) & (epsilon_rs7412 == 4):
-        #Apo3/4 gs141 (C;T) (C;C)
+    elif (epsilon_first_parent == 3) & (epsilon_second_parent == 4):
+        # Apo3/4 gs141 (C;T) (C;C)
         sequence = ['C', 'T', 'C', 'C']
         count = [1, 2]
-    elif (epsilon_rs429358 == 4) & (epsilon_rs7412 == 4):
-        #Apo4/4 gs216 (C;C) (C;C) ~11x increased Alzheimer's risk
+    elif (epsilon_first_parent == 4) & (epsilon_second_parent == 4):
+        # Apo4/4 gs216 (C;C) (C;C) ~11x increased Alzheimer's risk
         sequence = ['C', 'C', 'C', 'C']
         count = [2, 2]
     else:
         sequence = []
         count = []
-        print 'problem with', epsilon_rs429358, epsilon_rs7412
+        print 'missing combination for ', epsilon_first_parent, epsilon_second_parent
     return sequence, count
-
-
-if __name__ == '__main__':
-    clinical_data_path = '/Users/pascal.lu/ownCloud/genotype/code_sabrina/data'
-    input_gen_dir = '/Users/pascal.lu/ownCloud/genotype/code_sabrina/data/ADNI_1_GWAS_Plink'
-    dest_dir = '/Users/pascal.lu/ownCloud/genotype/code_sabrina/data'
-    convert_genetics(clinical_data_path, input_gen_dir, dest_dir)
-
