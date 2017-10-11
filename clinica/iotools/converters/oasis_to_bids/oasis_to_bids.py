@@ -9,8 +9,8 @@ __copyright__ = "Copyright 2017, The Aramis Lab Team"
 __credits__ = [""]
 __license__ = ""
 __version__ = "0.1.0"
-__maintainer__ = "Sabrina Fontanella"
-__email__ = "sabrina.fontanella@icm-institute.org"
+__maintainer__ = "Simona Bottani"
+__email__ = "simona.bottani@icm-institute.org"
 __status__ = "Completed"
 
 
@@ -41,7 +41,7 @@ class OasisToBids(Converter):
         participants_df['diagnosis_bl'].replace([0.5], 'AD', inplace=True)
         participants_df['diagnosis_bl'].replace([2.0], 'AD', inplace=True)
         participants_df['diagnosis_bl'].replace(participants_df['diagnosis_bl']>0.0, 'AD', inplace=True)
-        participants_df.to_csv(path.join(bids_dir, 'participants.tsv'), sep='\t', index=False)
+        participants_df.to_csv(path.join(bids_dir, 'participants.tsv'), sep='\t', index=False, encoding='utf-8')
 
         # --Create sessions files--
         sessions_dict = bids.create_sessions_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids, 'ID')
