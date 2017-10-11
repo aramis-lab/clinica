@@ -43,15 +43,15 @@ class StatisticsSurfstatCLI(ce.CmdParser):
         self._args.add_argument("glm_type",
                                 help='A str based on glm type for the hypothesis, choose one between group_comparison and correlation')
         self._args.add_argument("-ft", "--feature_type", type=str, default=None,
-                                help='Feature type. Can be : cortical_thickness, pet_fdg_projection, pet_noddi_projection_ndi and pet_noddi_projection_odi. Default = cortical_thickness')
+                                help='Feature type. Can be : cortical_thickness, pet_fdg_projection, noddi_projection_ndi, noddi_projection_odi, noddi_projection_fiso, dti_projection_fa, dti_projection_md, dti_projection_rd and dti_projection_ad. Default = cortical_thickness')
         self._args.add_argument("-cf", "--custom_file", type=str, default=None,
                                 help='Pattern of file inside caps directory using @subject, @session, @fwhm, @hemi. No --feature_type must be specified in order to use this flag.')
         self._args.add_argument("-fwhm", "--full_width_at_half_maximum", type=int, default=20,
                                 help='FWHM for the surface smoothing (default=20)')
         self._args.add_argument("-tup", "--threshold_uncorrected_pvalue", type=float, default=0.001,
-                                help='Threshold to display the uncorrected Pvalue (default=0.001)')
+                                help='Threshold to display the uncorrected pvalue (default=0.001)')
         self._args.add_argument("-tcp", "--threshold_corrected_pvalue", type=float, default=0.05,
-                                help='Threshold to display the corrected cluster (default=0.05)')
+                                help='Threshold to display the corrected pvalue (default=0.05)')
         self._args.add_argument("-ct", "--cluster_threshold", type=float, default=0.001,
                                 help='Threshold to define a cluster in the process of cluster-wise correction (default=0.001)')
         self._args.add_argument("-np", "--n_procs", type=int, default=4,
@@ -73,35 +73,42 @@ class StatisticsSurfstatCLI(ce.CmdParser):
         if args.feature_type is not None:
             if args.custom_file is not None:
                 raise Exception('--feature_type and --custom_file are mutually exclusive : you must choose between one or the other. See documentation for more informations.')
+            # freesurfer cortical thickness
             if args.feature_type == 'cortical_thickness':
-                args.custom_file = '@subject/@session/t1/freesurfer-cross-sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
+                args.custom_file = '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
+            # pet cortical projection
             elif args.feature_type == 'pet_fdg_projection':
                 args.custom_file = '@subject/@session/pet/surface/@subject_@session_task-rest_acq-FDG_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-@hemi_fwhm-@fwhm_projection.mgh'
-            elif args.feature_type == 'pet_noddi_projection_ndi':
+            # NODDI NDI, ODI and FISO
+            elif args.feature_type == 'noddi_projection_ndi':
                 args.custom_file = '@subject/@session/noddi/postprocessing/noddi-register-vertex-fsaverage/cortex-projection/@subject_@session_OnFsaverage_fwhm-@fwhm_measure-ficvf_hemi-@hemi.mgh'
-            elif args.feature_type == 'pet_noddi_projection_odi':
+            elif args.feature_type == 'noddi_projection_fiso':
+                args.custom_file = '@subject/@session/noddi/postprocessing/noddi-register-vertex-fsaverage/cortex-projection/@subject_@session_OnFsaverage_fwhm-@fwhm_measure-fiso_hemi-@hemi.mgh'
+            elif args.feature_type == 'noddi_projection_odi':
                 args.custom_file = '@subject/@session/noddi/postprocessing/noddi-register-vertex-fsaverage/cortex-projection/@subject_@session_OnFsaverage_fwhm-@fwhm_measure-odi_hemi-@hemi.mgh'
+            # DTI fa, md, rd and ad
+            elif args.feature_type == 'dti_projection_fa':
+                args.custom_file = '@subject/@session/noddi/postprocessing/dti-register-vertex-fsaverage/cortex-projection/@subject_@session_OnFsaverage_fwhm-@fwhm_measure-fa_hemi-@hemi.mgh'
+            elif args.feature_type == 'dti_projection_md':
+                args.custom_file = '@subject/@session/noddi/postprocessing/dti-register-vertex-fsaverage/cortex-projection/@subject_@session_OnFsaverage_fwhm-@fwhm_measure-md_hemi-@hemi.mgh'
+            elif args.feature_type == 'dti_projection_rd':
+                args.custom_file = '@subject/@session/noddi/postprocessing/dti-register-vertex-fsaverage/cortex-projection/@subject_@session_OnFsaverage_fwhm-@fwhm_measure-rd_hemi-@hemi.mgh'
+            elif args.feature_type == 'dti_projection_ad':
+                args.custom_file = '@subject/@session/noddi/postprocessing/dti-register-vertex-fsaverage/cortex-projection/@subject_@session_OnFsaverage_fwhm-@fwhm_measure-ad_hemi-@hemi.mgh'
+
             else:
                 raise Exception('Feature type ' + args.feature_type + ' not recognized. Use --custom_file to specify your own files (without --feature_type).')
         elif args.feature_type is None:
             if args.custom_file is None:
                 cprint('No feature type selected : using cortical thickness as default value')
-                args.custom_file = '@subject/@session/t1/freesurfer-cross-sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
+                args.custom_file = '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
             else:
                 cprint('Using custom features.')
 
-        # Check that group label is alphanumerical
-        if not args.group_label.isalnum():
-            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
-
-        # Check that group label does not already exists in CAPS folder
-        #if os.path.exists(os.path.join(os.path.abspath(self.absolute_path(args.caps_directory)), 'groups', 'group-' + args.group_label)):
-        #    error_message = 'group_id : ' + args.group_label + ' already exists, please choose an other one. Groups that exists in your CAPS directory are : \n'
-        #    list_groups = os.listdir(os.path.join(os.path.abspath(self.absolute_path(args.caps_directory)), 'groups'))
-        #    for e in list_groups:
-        #       if e.startswith('group-'):
-        #            error_message += e + ' \n'
-        #   raise ValueError(error_message)
+        #Check if the group label has been existed, if yes, give the warning to the users
+        if os.path.exists(os.path.join(os.path.abspath(self.absolute_path(args.caps_directory)), 'groups', 'group-' + args.group_label)):
+            error_message = 'group_id : ' + args.group_label + ' already exists, please choose another one or delete the existing folder and also the working directory and rerun the pipeline'
+            raise Exception(error_message)
 
         pipeline = StatisticsSurfstat(
             caps_directory=self.absolute_path(args.caps_directory),
@@ -114,10 +121,10 @@ class StatisticsSurfstatCLI(ce.CmdParser):
             'group_label': args.group_label,
             'glm_type': args.glm_type,
             'custom_file': args.custom_file,
-            'full_width_at_half_maximum': args.full_width_at_half_maximum or 20,
-            'threshold_uncorrected_pvalue': args.threshold_uncorrected_pvalue or 0.001,
-            'threshold_corrected_pvalue': args.threshold_corrected_pvalue or 0.05,
-            'cluster_threshold': args.cluster_threshold or 0.001
+            'full_width_at_half_maximum': args.full_width_at_half_maximum,
+            'threshold_uncorrected_pvalue': args.threshold_uncorrected_pvalue,
+            'threshold_corrected_pvalue': args.threshold_corrected_pvalue,
+            'cluster_threshold': args.cluster_threshold
         }
         pipeline.base_dir = self.absolute_path(args.working_directory)
 

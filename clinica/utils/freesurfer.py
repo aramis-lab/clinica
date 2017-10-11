@@ -86,7 +86,7 @@ def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv):
             print "This subject: %s for FreeSurfer exits already!" % subject_list[i]
         else:
             print "Convert subject: %s from CAPS to FreeSurfer output structure" % subject_list[i]
-            copytree(os.path.join(caps_dir, subject_list[i], session_list[i], 't1/freesurfer-cross-sectional', subject_list[i] + '_' + session_list[i]), os.path.join(dest_dir, subject_list[i] + '_' + session_list[i]))
+            copytree(os.path.join(caps_dir, subject_list[i], session_list[i], 't1/freesurfer_cross_sectional', subject_list[i] + '_' + session_list[i]), os.path.join(dest_dir, subject_list[i] + '_' + session_list[i]))
             print "--------------Finish this subject!-----------------------"
 
 
@@ -139,7 +139,7 @@ def volumetric_summary(subject_dir, subject_id, output_dir):
 
     cs_dir = os.path.join(output_path, 'subjects')
     if not os.path.isdir(cs_dir):
-        print("ERROR: directory freesurfer-cross-sectional does not exist, it should be CAPS directory after running recon_all_pipeline!!!")
+        print("ERROR: directory freesurfer_cross_sectional does not exist, it should be CAPS directory after running recon_all_pipeline!!!")
     else:
         pass
     dest_dir = cs_dir + '/regional_measures_summary'

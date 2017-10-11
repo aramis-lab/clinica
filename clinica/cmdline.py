@@ -1,18 +1,20 @@
 """
-The 'clinica' executable command line, installed with the clinica packages,
-call this module.
+The 'clinica' executable command line, installed with the clinica package,
+calls this module.
 
-The aim of this module is to execute pipeline from command line,
-and give to the user some other utils to works with the pipelines.
-
+The aim of this module is to execute pipelines from the command line,
+and gives to the user some other utils to work with the pipelines.
 """
 
 from __future__ import print_function
-import argcomplete
-import sys
+
 import os
-import subprocess
+import sys
+
+import argcomplete
+
 from clinica.engine.cmdparser import *
+from clinica.utils.stream import cprint
 
 __author__ = "Michael Bacci"
 __copyright__ = "Copyright 2016,2017 The Aramis Lab Team"
@@ -24,111 +26,12 @@ __email__ = "michael.bacci@inria.fr"
 __status__ = "Development"
 
 
-def visualize(clinicaWorkflow, ids, rebase=False):
-    """Open a specific GUI program to display images made by pipeline
-
-    Args:
-        clinicaWorkflow: the main pipeline object
-        ids: list of id of patients
-        rebase: path to looking for configuration
-    """
-    if not clinicaWorkflow.data.has_key('visualize'):
-        print("No visualization was defined")
-        exit(0)
-
-    class chdir:
-        def __init__(self, base):
-            self.pwd = os.getcwd()
-            os.chdir(base)
-
-        def __del__(self):
-            os.chdir(self.pwd)
-
-        change_directory = None
-    if rebase is False:
-        change_directory = chdir(clinicaWorkflow.base_dir)
-    else:
-        change_directory = chdir(rebase)
-
-    print(clinicaWorkflow.data['visualize'])
-    program, arguments, matches = clinicaWorkflow.data['visualize']
-
-    def run_program(id):
-        subprocess.Popen([program] + arguments.replace(
-            "${%s}" % matches, id).strip().split(" "))
-
-    [run_program(id) for id in ids]
-
-
-def shell(clinicaWorkflow):
-    """Open a python/ipython shell and re-init the clinicaWorkflow object
-
-    Args:
-        clinicaWorkflow: the main pipeline object
-
-    Returns:
-
-    """
-    workflow = clinicaWorkflow
-    __banner__ = "workflow variable is instantiated for you!"
-    namespace = globals().copy()
-    namespace.update(locals())
-
-    def load_python_shell():
-        import readline
-        import code
-        shell = code.InteractiveConsole(namespace)
-        shell.interact(banner=__banner__)
-
-    def load_ipython_shell():
-        from IPython.terminal.embed import InteractiveShellEmbed
-        InteractiveShellEmbed(user_ns=namespace, banner1=__banner__)()
-
-    try:
-        load_ipython_shell()
-    except:
-        try:
-            load_python_shell()
-        except:
-            print("Impossible to load ipython or python shell")
-
-
-def load_conf(args):
-    """Load a pipeline serialization
-
-    Args:
-        args:  the path where looking for
-
-    Returns:
-        ClinicaWorkflow object
-
-    """
-    import cPickle
-
-    def load(path):
-        file = os.path.join(path, "clinica.pkl")
-        if os.path.isfile(file): return cPickle.load(open(file))
-        return False
-
-    wk = False
-
-    if len(args) == 0:
-        wk = load(os.getcwd())
-    elif os.path.isdir(args[0]):
-        wk = load(args[0])
-
-    if not wk:
-        print("No <clinica.pkl> file found!")
-        exit(0)
-
-    return wk
-
-
 class ClinicaClassLoader:
     """
     Load pipelines from a custom locations (general from $HOME/clinica)
     """
     from clinica.pipeline.engine import Pipeline
+
     def __init__(self, env='CLINICAPATH', baseclass=Pipeline, reg=r".*_cli\.py$", extra_dir=""):
         self.env = env
         self.baseclass = baseclass
@@ -142,7 +45,7 @@ class ClinicaClassLoader:
         if not os.environ.has_key(self.env):
             return pipeline_cli_parsers
 
-        clinica_pipelines_path = join(os.environ[self.env],self.extra_dir)
+        clinica_pipelines_path = join(os.environ[self.env], self.extra_dir)
         if not os.path.isdir(clinica_pipelines_path):
             return pipeline_cli_parsers
 
@@ -178,44 +81,20 @@ class ClinicaClassLoader:
         import re
         return [os.path.join(path, file) for path in paths for file in os.listdir(path) if re.match(reg, file) is not None]
 
+
 def execute():
     """
     Define and parse the command line argument
     """
-
     parser = ArgumentParser()
     sub_parser = parser.add_subparsers()
     parser.add_argument("-v", "--verbose",
                         dest='verbose',
                         action='store_true', default=False,
-                        help='verbose : print all messages to the console')
+                        help='Verbose: print all messages to the console')
     parser.add_argument("-l", "--logname",
                         dest='logname', default="clinica.log",
-                        help='define the log file name')
-
-    """
-    visualize option: open image[s] in a specific GUI program, generated by a pipeline
-    """
-    vis_parser = sub_parser.add_parser('visualize')
-    vis_parser.add_argument("-i", "--id", dest="id",
-                            required=True,
-                            help="unique identifier")
-    vis_parser.add_argument("-r", "--rebase", dest="rebase",
-                            default=False,
-                            help="unique identifier")
-
-    def vis_parser_fun(args):
-        visualize(load_conf(args[1:]), args.id.split(","), args.rebase)
-    vis_parser.set_defaults(func=vis_parser_fun)
-
-    """
-    shell option: re-open a nipype.Workflow object within python/ipython session
-    TODO: complete for future release
-    """
-    # shell_parser = sub_parser.add_parser('shell')
-    # def shell_parser_fun(args):
-    #     shell(load_conf(args[1:]))
-    # shell_parser.set_defaults(func=shell_parser_fun)
+                        help='Define the log file name (default: clinica.log)')
 
     """
     run option: run one of the available pipelines
@@ -263,32 +142,31 @@ def execute():
     pipeline_list_parser = sub_parser.add_parser('pipeline-list')
 
     def pipeline_list_fun(args):
-        for p in pipelines :
-            cprint(p.name)
+        for pipeline in pipelines:
+            cprint(pipeline.name)
+
     pipeline_list_parser.set_defaults(func=pipeline_list_fun)
 
     """
-    convert option: convert one of the supported dataset to the BIDS specification
+    convert option: convert one of the supported datasets into the BIDS
     """
-
-    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids_cli import AiblToBidsCLI
-    from clinica.iotools.converters.adni_to_bids.adni_to_bids_cli import AdniToBidsCLI
-    from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_cli import OasisToBidsCLI
+    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids_cli import AiblToBidsCLI  # noqa
+    from clinica.iotools.converters.adni_to_bids.adni_to_bids_cli import AdniToBidsCLI  # noqa
+    from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_cli import OasisToBidsCLI  # noqa
 
     convert_parser = sub_parser.add_parser('convert')
-    convert_task = [
+    converters = [
         AiblToBidsCLI(),
         AdniToBidsCLI(),
         OasisToBidsCLI()
-
     ]
-    init_cmdparser_objects(parser, convert_parser.add_subparsers(), convert_task)
-
+    init_cmdparser_objects(parser, convert_parser.add_subparsers(), converters)
 
     """
     generate option: template
     """
     template_parser = sub_parser.add_parser('generate')
+
     from clinica.engine.template import CmdGenerateTemplates
     init_cmdparser_objects(parser, template_parser.add_subparsers(), [
         CmdGenerateTemplates()
@@ -298,13 +176,17 @@ def execute():
     iotools option
     """
     io_parser = sub_parser.add_parser('iotools')
-    io_tasks = [
+    io_tools = [
         CmdParserSubsSess(),
         CmdParserMergeTsv(),
         CmdParserMissingModalities()
     ]
-    init_cmdparser_objects(parser, io_parser.add_subparsers(), io_tasks)
+    init_cmdparser_objects(parser, io_parser.add_subparsers(), io_tools)
 
+    """
+    Silent all sub-parser errors methods except the one which is called
+    otherwise the output console will display useless messages
+    """
     def silent_help(): pass
 
     def single_error_message(p):
@@ -313,7 +195,7 @@ def execute():
             parser.print_help = silent_help
             exit(-1)
         return error
-    for p in [vis_parser, pipeline_list_parser, run_parser]:
+    for p in [pipeline_list_parser, run_parser]:
         p.error = single_error_message(p)
 
     # Do not want stderr message
@@ -321,20 +203,22 @@ def execute():
         pass
     parser.error = silent_msg
 
+    """
+    Parse the command and check that everything went fine
+    """
     args = None
-    unknown = None
+    unknown_args = None
     try:
         argcomplete.autocomplete(parser)
-        # args = parser.parse_args()
-        args, unknown = parser.parse_known_args()
+        args, unknown_args = parser.parse_known_args()
     except SystemExit:
         exit(-1)
     except Exception:
         parser.print_help()
         exit(-1)
 
-    if unknown:
-        raise ValueError('Unknown flag detected: %s' % unknown)
+    if unknown_args:
+        raise ValueError('Unknown flag detected: %s' % unknown_args)
 
     if args is None or hasattr(args, 'func') is False:
         parser.print_help()
@@ -356,6 +240,8 @@ def execute():
         import os
         from nipype import config, logging
         from nipype import logging
+
+        # Configure Nipype logger for our needs
         config.update_config({'logging': {'workflow_level': 'INFO',
                                           'log_directory': os.getcwd(),
                                           'log_to_file': True},
@@ -364,8 +250,12 @@ def execute():
                               })
         logging.update_logging(config)
 
-        #Define the LogFilter
+        # Define the LogFilter for ERROR detection
         class LogFilter(Filter):
+            """
+            The LogFilter class ables to monitor if an ERROR log signal is sent
+            from Clinica/Nipype. If detected, the user will be warned.
+            """
             def filter(self, record):
                 if record.levelno >= ERROR:
                     cprint("An ERROR was generated: please check the log file for more information")
@@ -374,20 +264,17 @@ def execute():
         logger = logging.getLogger('workflow')
         logger.addFilter(LogFilter())
 
-        class stream:
-            def write(self, text):
-                print(text)
-                sys.stdout.flush()
-
-        # Remove all handlers associated with the root logger object.
+        # Remove all handlers associated with the root logger object
         for handler in python_logging.root.handlers[:]:
             python_logging.root.removeHandler(handler)
 
         logging.disable_file_logging()
 
+        # Enable file logging using a filename
         def enable_file_logging(self, filename):
             """
-            Hack to define a filename for the log!
+            Hack to define a filename for the log file! It overloads the
+            'enable_file_logging' method in 'nipype/utils/logger.py' file.
             """
             import logging
             from logging.handlers import RotatingFileHandler as RFHandler
@@ -405,10 +292,16 @@ def execute():
             self._iflogger.addHandler(hdlr)
             self._hdlr = hdlr
         enable_file_logging(logging, args.logname)
-        python_logging.basicConfig(
-            format=logging.fmt, datefmt=logging.datefmt, stream=stream())
 
-    # Run the pipeline!
+        class Stream:
+            def write(self, text):
+                print(text)
+                sys.stdout.flush()
+
+        python_logging.basicConfig(
+            format=logging.fmt, datefmt=logging.datefmt, stream=Stream())
+
+    # Finally, run the pipeline
     args.func(args)
 
 
