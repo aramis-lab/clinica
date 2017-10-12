@@ -1,5 +1,28 @@
+# coding: utf-8
+"""
+ Module for converting FDG PET of ADNI
+"""
+__author__ = "Jorge Samper Gonzalez"
+__copyright__ = "Copyright 2017, The Aramis Lab Team"
+__credits__ = ["Sabrina Fontanella"]
+__license__ = "See LICENSE.txt file"
+__version__ = "0.1.0"
+__maintainer__ = "Jorge Samper Gonzalez"
+__email__ = "jorge.samper-gonzalez@inria.fr"
+__status__ = "Development"
 
 def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
+    """
+
+    Args:
+        source_dir:
+        csv_dir:
+        dest_dir:
+        subjs_list:
+
+    Returns:
+
+    """
     import pandas as pd
     from os import path
 
@@ -13,6 +36,17 @@ def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
 
 
 def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
+    """
+
+    Args:
+        source_dir:
+        csv_dir:
+        dest_dir:
+        subjs_list:
+
+    Returns:
+
+    """
     import pandas as pd
     import os
     from os import walk, path
@@ -152,7 +186,18 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
 
 def fdg_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", mod_to_update=False):
+    """
 
+    Args:
+        images:
+        bids_dir:
+        dcm2niix:
+        dcm2nii:
+        mod_to_update:
+
+    Returns:
+
+    """
     from clinica.iotools.converters.adni_to_bids import adni_utils
     import os
     from os import path

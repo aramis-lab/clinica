@@ -1,24 +1,34 @@
+# coding: utf-8
+"""
 
+"""
 from clinica.iotools.abstract_converter import Converter
-from clinica.engine.cmdparser import CmdParser
-import logging
 
-__author__ = "Sabrina Fontanella"
+__author__ = "Jorge Samper Gonzalez and Sabrina Fontanella"
 __copyright__ = "Copyright 2017, The Aramis Lab Team"
-__credits__ = ["Jorge Samper"]
-__license__ = ""
+__credits__ = [""]
+__license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
-__maintainer__ = "Sabrina Fontanella"
-__email__ = "sabrina.fontanella@icm-institute.org"
+__maintainer__ = "Jorge Samper Gonzalez"
+__email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
 class AdniToBids(Converter):
 
     def get_modalities_supported(self):
+        """
+        Return a list of modalities supported
+
+        Returns: a list containing the modalities supported by the converter (T1, PET_FDG, PET_AV45)
+
+        """
         return ['T1', 'PET_FDG', 'PET_AV45']
 
     def check_adni_dependencies(self):
+        """
+        Check the dependencies of ADNI converter
+        """
         from clinica.utils.check_dependency import is_binary_present
 
         list_binaries = ['dcm2nii', 'dcm2niix']
@@ -33,8 +43,10 @@ class AdniToBids(Converter):
         """
         Convert the clinical data of ADNI specified into the file clinical_specifications_adni.xlsx
 
-        :param clinical_data_dir: path to the clinical data directory
-        :param out_path: path to the BIDS directory
+        Args:
+            clinical_data_dir:  path to the clinical data directory
+            out_path: path to the BIDS directory
+
         """
         from os import path
         import os
@@ -68,7 +80,7 @@ class AdniToBids(Converter):
         participants_df['sex'] = participants_df['sex'].replace('Male', 'M')
         participants_df['sex'] = participants_df['sex'].replace('Female', 'F')
 
-        participants_df.to_csv(path.join(out_path, 'participants.tsv'), sep='\t', index=False)
+        participants_df.to_csv(path.join(out_path, 'participants.tsv'), sep='\t', index=False, encoding='utf-8')
 
         # -- Creation of sessions.tsv --
         cprint("Creating sessions files...")
@@ -79,15 +91,17 @@ class AdniToBids(Converter):
         adni_utils.create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids)
 
     def convert_images(self, source_dir, clinical_dir, dest_dir, subjs_list_path='', mod_to_add=''):
-        '''
+        """
+        Convert the images of ADNI
 
-        :param source_dir: path to the ADNI dataset directory
-        :param clinical_dir: path to the clinical data directory
-        :param dest_dir: path to the BIDS directory
-        :param subjs_list_path: list of subjects to process
-        :param mod_to_add: modality to convert (T1, PET_FDG, PET_AV45)
-        :return:
-        '''
+        Args:
+            source_dir: path to the ADNI directory
+            clinical_dir: path to the clinical data directory
+            dest_dir: path to the BIDS directory
+            subjs_list_path: list of subjects to process
+            mod_to_add: modality to convert (T1, PET_FDG, PET_AV45)
+
+        """
 
         import os
         from os import path
@@ -120,7 +134,7 @@ class AdniToBids(Converter):
             cprint('Done!')
             adni_t1.t1_paths_to_bids(t1_paths, dest_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", mod_to_update=True)
 
-        if mod_to_add=='PET_FDG' or not mod_to_add :
+        if mod_to_add == 'PET_FDG' or not mod_to_add :
             cprint('Calculating paths for PET_FDG. Output will be stored in ' + paths_files_location+'.')
             pet_fdg_paths = adni_fdg.compute_fdg_pet_paths(source_dir, clinical_dir, dest_dir, subjs_list)
             cprint('Done!')

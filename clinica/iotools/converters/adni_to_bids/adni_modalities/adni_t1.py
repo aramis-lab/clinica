@@ -1,14 +1,29 @@
-__author__ = "Jorge Samper and Sabrina Fontanella"
+# coding: utf-8
+"""
+ Module for converting T1 of ADNI
+"""
+__author__ = "Jorge Samper Gonzalez"
 __copyright__ = "Copyright 2017, The Aramis Lab Team"
-__credits__ = [""]
-__license__ = ""
+__credits__ = ["Sabrina Fontanella"]
+__license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
-__maintainer__ = "Jorge Samper"
-__email__ = ""
+__maintainer__ = "Jorge Samper Gonzalez"
+__email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
 def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None):
+    """
+
+    Args:
+        source_dir: path to the ADNI directory
+        csv_dir: path to the clinical data directory
+        dest_dir: path to the destination directory
+        subjs_list: subjects list
+
+    Returns:
+
+    """
     import pandas as pd
     from os import path
 
