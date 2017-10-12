@@ -1,4 +1,19 @@
+# coding: utf-8
+
+"""
+ Command line for adni_to_bids converter
+"""
+
 import clinica.engine as ce
+
+__author__ = "Jorge Samper Gonzalez and Sabrina Fontanella"
+__copyright__ = "Copyright 2017, The Aramis Lab Team"
+__credits__ = [""]
+__license__ = "See LICENSE.txt file"
+__version__ = "0.1.0"
+__maintainer__ = "Jorge Samper Gonzalez"
+__email__ = "jorge.samper-gonzalez@inria.fr"
+__status__ = "Development"
 
 
 class AdniToBidsCLI(ce.CmdParser):

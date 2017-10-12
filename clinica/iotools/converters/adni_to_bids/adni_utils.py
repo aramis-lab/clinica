@@ -1,14 +1,29 @@
-__author__ = "Sabrina Fontanella and Jorge Samper"
+# coding: utf-8
+"""
+
+ Utilities for adni_to_bids converter
+
+"""
+__author__ = "Jorge Samper Gonzalez and Sabrina Fontanella"
 __copyright__ = "Copyright 2017, The Aramis Lab Team"
-__credits__ = ""
-__license__ = ""
+__credits__ = [""]
+__license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
-__maintainer__ = "Sabrina Fontanella"
-__email__ = "sabrina.fontanella@icm-institute.org"
+__maintainer__ = "Jorge Samper Gonzalez"
+__email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
 def replace_sequence_chars(sequence_name):
+    """
+    Replace some special character with the sequence name given in input
+
+    Args:
+        sequence_name: sequence to replace
+
+    Returns: the new string
+
+    """
     import re
     return re.sub('[ /;*():]', '_', sequence_name)
 
@@ -21,10 +36,14 @@ def days_between(d1, d2):
     """
     Calculate the days between two dates
 
-    :param d1: date 1
-    :param d2: date 2
-    :return: number of days between date 2 and date 1
+    Args:
+        d1: date 1
+        d2: date 2
+
+    Returns: number of days between date 2 and date 1
+
     """
+
     from datetime import datetime
     d1 = datetime.strptime(d1, "%Y-%m-%d")
     d2 = datetime.strptime(d2, "%Y-%m-%d")
@@ -34,11 +53,15 @@ def days_between(d1, d2):
 def viscode_to_session(viscode):
     """
     Replace the session label 'bl' with 'M00' or capitalize the session name passed
-    as input.
+    as input
 
-    :param viscode: session name
-    :return: M00 if is the baseline session or the original session name capitalized
+    Args:
+        viscode: session name
+
+    Returns: M00 if is the baseline session or the original session name capitalized
+
     """
+
     if viscode == 'bl':
         return 'M00'
     else:
@@ -47,11 +70,15 @@ def viscode_to_session(viscode):
 
 def center_nifti_origin(input_image, output_image):
     """
-     Put the origin of the coordinate system at the center of the image.
 
-    :param input_image: path to the input image
-    :param output_image: path to the output image (where the result will be stored)
-    :return:
+    Put the origin of the coordinate system at the center of the image
+
+    Args:
+        input_image: path to the input image
+        output_image: path to the output image (where the result will be stored)
+
+    Returns:
+
     """
 
     import nibabel as nib
@@ -73,11 +100,14 @@ def center_nifti_origin(input_image, output_image):
 def remove_space_and_symbols(data):
     """
     Remove spaces and  - _ from a list (or a single) of strings
-    :param data: list of strings or a single string to clean
-    :return:
-        data: list of strings or a string without space and symbols _ and -
-    """
 
+    Args:
+        data: list of strings or a single string to clean
+
+    Returns:
+         data: list of strings or a string without space and symbols _ and -
+
+    """
     import re
 
     if type(data) is list:
@@ -91,16 +121,19 @@ def remove_space_and_symbols(data):
 
 def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
     """
-    Check if a folder contains more than one DICOM and if yes, copy the DICOM related to image id passed as parameter into
-    a temporary folder called tmp_dicom_folder.
+    Check if a folder contains more than one DICOM and if yes, copy the DICOM related to image id passed as parameter
+    into a temporary folder called tmp_dicom_folder
 
-    :param dicom_path: path to the DICOM folder
-    :param bids_folder: path to the BIDS folder where the dataset will be stored
-    :param image_uid: image id of the fmri
-    :return: the path to the original DICOM folder or the path to a temporary folder called tmp_dicom_folder where only
+    Args:
+        dicom_path: path to the DICOM folder
+        bids_folder: path to the BIDS folder where the dataset will be stored
+        image_uid: image id of the fmri
+
+    Returns: the path to the original DICOM folder or the path to a temporary folder called tmp_dicom_folder where only
      the DICOM to convert is copied
 
     """
+
     from glob import glob
     from os import path
     from shutil import copy
@@ -118,7 +151,7 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
         if os.path.exists(dest_path):
             shutil.rmtree(dest_path)
         os.mkdir(dest_path)
-        dmc_to_conv = glob(path.join(dicom_path,'*'+str(image_uid)+'.dcm*'))
+        dmc_to_conv = glob(path.join(dicom_path, '*'+str(image_uid)+'.dcm*'))
         for d in dmc_to_conv:
             copy(d, dest_path)
         return dest_path
@@ -129,7 +162,12 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
 def remove_tmp_dmc_folder(bids_dir):
     """
     Remove the folder tmp_dmc_folder created by the method check_two_dcm_folder (if existing)
-    :param bids_dir: path to the bids directory
+
+    Args:
+        bids_dir: path to the BIDS directory
+
+    Returns:
+
     """
     from os import path
     import os
@@ -163,11 +201,16 @@ def check_bids_files(bids_path, container='anat', extension='_T1w.nii.gz', subje
 
 
 def is_nan(value):
-    '''
+    """
     Check if a value is nan
-    :param value: value that need to be checked
-    :return: boolean value
-    '''
+
+    Args:
+        value: value that need to be checked
+
+    Returns: true if is nan, false otherwise
+
+    """
+
     from math import isnan
     import numpy as np
 
@@ -189,10 +232,13 @@ def remove_fields_duplicated(bids_fields):
 def convert_diagnosis_code(diagnosis_code):
     """
     Convert the numeric field DXCURREN and DXCHANGE contained in DXSUM_PDXCONV_ADNIALL.csv into a code that identify the
-    diagnosis.
+    diagnosis
 
-    :param diagnosis_code: a string that represents a number between 1 and 9
-    :return: a code that identify a diagnosis
+    Args:
+        diagnosis_code: a string that represents a number between 1 and 9
+
+    Returns:a code that identify a diagnosis
+
     """
 
     # Legenda
@@ -205,6 +251,17 @@ def convert_diagnosis_code(diagnosis_code):
 
 
 def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
+    """
+    Write the result of method create_session_dict into several tsv files
+
+    Args:
+        sessions_dict: dictonary coming from the method create_sessions_dict
+        fields_bids: fields bids to convert
+        bids_subjs_paths: a list with the path to all bids subjects
+
+    Returns:
+
+    """
     from os import path
     import os
     import pandas as pd
@@ -233,15 +290,21 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
 
 def update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_field_name):
     """
-    Update the sessions dictionary for the bids subject specified by subj_bids created by the method create_adni_sessions_dict
+    Update the sessions dictionary for the bids subject specified by subj_bids created by the method
+    create_adni_sessions_dict
 
-    :param sessions_dict: the session_dict created by the methodd create_adni_sessions_dict
-    :param subj_bids: bids is of the subject for which the information need to be updated
-    :param visit_id: session name (ex m54)
-    :param field_value: value of the field extracted from the original clinical data
-    :param bids_field_name: BIDS name of the field to update (Ex: diagnosis or examination date)
-    :return: the session_dict updated
+    Args:
+        sessions_dict: the session_dict created by the method create_adni_sessions_dict
+        subj_bids: bids is of the subject for which the information need to be updated
+        visit_id: session name (ex m54)
+        field_value: value of the field extracted from the original clinical data
+        bids_field_name: BIDS name of the field to update (Ex: diagnosis or examination date)
+
+    Returns:
+        session_dict: the dictonary updated
+
     """
+
     if visit_id=='sc' or visit_id == 'uns1':
         return sessions_dict
 
@@ -276,13 +339,18 @@ def update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_f
 
 
 def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bids_subjs_paths):
-    '''
+    """
     Extract all the data required for the sessions files and organize them in a dictionary
 
-    :param bids_ids:
-    :param clinic_specs_path:
-    :param clinical_data_dir:
-    '''
+    Args:
+        bids_ids:
+        clinic_specs_path: path to the specifications for converting the clinical data
+        clinical_data_dir: path to the clinical data folder
+        bids_subjs_paths: a list with the path to all the BIDS subjects
+
+    Returns:
+
+    """
     import pandas as pd
     from os import path
     import clinica.iotools.bids_utils as bids
@@ -373,10 +441,16 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
 
 def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
     """
-    Create scans files for adni
-    :param clinic_specs_path: path to the clinical file
-    :param bids_subjs_paths: list of bids subject paths
-    :param bids_ids: list of bids ids
+
+    Create scans.tsv files for ADNI
+
+    Args:
+        clinic_specs_path: path to the clinical file
+        bids_subjs_paths: list of bids subject paths
+        bids_ids: list of bids ids
+
+    Returns:
+
     """
     from glob import glob
     import os

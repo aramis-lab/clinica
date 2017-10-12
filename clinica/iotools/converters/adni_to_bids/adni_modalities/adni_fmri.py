@@ -1,14 +1,19 @@
-__author__ = "Sabrina Fontanella and Jorge Samper"
+# coding: utf-8
+"""
+ Module for converting FMRI of ADNI
+"""
+__author__ = "Jorge Samper Gonzalez and Sabrina Fontanella"
 __copyright__ = "Copyright 2017, The Aramis Lab Team"
 __credits__ = [""]
-__license__ = ""
+__license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
-__maintainer__ = "Sabrina Fontanella"
-__email__ = "sabrina.fontanella@icm-institute.org"
+__maintainer__ = "Jorge Samper Gonzalez"
+__email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
+
 def compute_fmri_path( source_dir, clinical_dir, dest_dir, subjs_list):
-    '''
+    """
     Compute the paths to fmri images.
 
     The fmri images to convert into BIDS are chosen in the following way:
@@ -21,13 +26,15 @@ def compute_fmri_path( source_dir, clinical_dir, dest_dir, subjs_list):
         - If yes choose the one with series_selected == 1
         - If no choose the scan with the best quality
 
+    Args:
+        source_dir: path to the ADNI image folder
+        clinical_dir: path to the directory with all the clinical data od ADNI
+        dest_dir:  path to the output_folder
+        subjs_list: subjects list
 
-    :param source_dir: path to the ADNI image folder
-    :param clinical_dir: path to the directory with all the clinical data od ADNI
-    :param dest_dir: path to the output_folder
-    :param subjs_list: subjects list
-    :return: pandas Dataframe containing the path for each fmri
-    '''
+    Returns: pandas Dataframe containing the path for each fmri
+
+    """
     import os
     from os import path
     from os import walk
@@ -143,19 +150,16 @@ def compute_fmri_path( source_dir, clinical_dir, dest_dir, subjs_list):
 
 
 def convert_fmri(dest_dir, fmri_paths, mod_to_add=False, mod_to_update=False):
-
     """
     Convert the fmri extracted from the fmri_paths to BIDS
 
-    :param input_dir: path to the input directory
-    :param out_dir: path to the BIDS directory
-    :param subjs_list: subjects list
-    :param fmri_paths: paths to all fmri images
-    :param mod_to_add: if True add the fmri only where is missing
-    :param mod_to_update: if True overwrite (or create if is missing) all the existing fmri
-    :return: None
-    """
+    Args:
+        dest_dir: path to the input directory
+        fmri_paths: path to the BIDS directory
+        mod_to_add: if True add the fmri only where is missing
+        mod_to_update:  if True overwrite (or create if is missing) all the existing fmri
 
+    """
     from clinica.iotools.converters.adni_to_bids import adni_utils
     from os import path
     import os
@@ -209,6 +213,15 @@ def convert_fmri(dest_dir, fmri_paths, mod_to_add=False, mod_to_update=False):
 
 
 def select_image_qc(id_list, mri_qc_subj):
+    """
+
+    Args:
+        id_list:
+        mri_qc_subj:
+
+    Returns:
+
+    """
     import numpy as np
 
     if len(id_list) == 0:

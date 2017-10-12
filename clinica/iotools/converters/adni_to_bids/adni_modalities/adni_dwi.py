@@ -1,35 +1,31 @@
-__author__ = "Jorge Samper and Sabrina Fontanella"
+# coding: utf-8
+"""
+ Module for converting DWI of ADNI
+"""
+__author__ = "Jorge Samper Gonzalez and Sabrina Fontanella"
 __copyright__ = "Copyright 2017, The Aramis Lab Team"
 __credits__ = [""]
-__license__ = ""
+__license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
-__maintainer__ = "Jorge Samper"
-__email__ = ""
+__maintainer__ = "Jorge Samper Gonzalez"
+__email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
+
 def compute_dti_paths(adni_dir, csv_dir, dest_dir, subjs_list):
-    '''
-    Computes paths to DWI images of ADNI
+    """
+    Compute paths to DWI images to convert to BIDS
 
-    The pandas datataframe returned as output cointains the following information:
-        - Subject_ID = id of the subjects
-        - VISCODE = id of the session
-        - Visit =
-        - Sequence
-        - Scan_Date = acquisition date
-        - Study_ID
-        - Series_ID
-        - Image_ID = id of the image
-        - Scanner = name of the scanner used for the acquisition
-        - Enhanced
+    Args:
+        adni_dir: path to the ADNI directory
+        csv_dir: path to the clinical data directory
+        dest_dir: path to the destination directory
+        subjs_list: subjects list
 
-    :param adni_dir: path to the input adni directory
-    :param csv_dir: path to the directory containing the clinical data
-    :param dest_dir: path to the destination list
-    :param subjs_list: a list containing the subjects to process
-    :return: a pandas dataframe
-    '''
+    Returns:
+        images: pandas dataframe that contains the path to all the dwi images to convert
 
+    """
     import pandas as pd
     from os import path, walk
 
@@ -140,16 +136,16 @@ def compute_dti_paths(adni_dir, csv_dir, dest_dir, subjs_list):
 
 
 def convert_dwi(dest_dir, dwi_paths, mod_to_add=False, mod_to_update=False):
-    '''
+    """
+    Convert DWI images
 
+    Args:
+        dest_dir: path to the destination directory
+        dwi_paths: dataframe returned by the method compute_dti_paths
+        mod_to_add: if True it will convert the image only if is missing
+        mod_to_update: if is true and an image is already existing it will overwrite the old version
 
-    :param dest_dir: path to the BIDS ADNI directory
-    :param dwi_paths: pandas dataframe containing all the paths to the dwi images
-    :param mod_to_add:
-    :param mod_to_update:
-    :return:
-    '''
-
+    """
     import clinica.iotools.bids_utils as bids
     import clinica.iotools.converters.adni_utils as adni_utils
     from os import path
@@ -248,6 +244,19 @@ def convert_dwi(dest_dir, dwi_paths, mod_to_add=False, mod_to_update=False):
 
 
 def dti_image(subject_id, timepoint, visit_str, ida_meta_scans, mri_qc_subj, enhanced):
+    """
+
+    Args:
+        subject_id:
+        timepoint:
+        visit_str:
+        ida_meta_scans:
+        mri_qc_subj:
+        enhanced:
+
+    Returns:
+
+    """
     from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
 
     sel_image = select_image_qc(list(ida_meta_scans.IMAGEUID), mri_qc_subj)
@@ -275,6 +284,15 @@ def dti_image(subject_id, timepoint, visit_str, ida_meta_scans, mri_qc_subj, enh
 
 
 def select_image_qc(id_list, mri_qc_subj):
+    """
+
+    Args:
+        id_list:
+        mri_qc_subj:
+
+    Returns:
+
+    """
     import numpy as np
 
     if len(id_list) == 0:
@@ -323,6 +341,16 @@ def select_image_qc(id_list, mri_qc_subj):
 
 
 def visits_to_timepoints_dti(subject, ida_meta_subj, adnimerge_subj):
+    """
+
+    Args:
+        subject:
+        ida_meta_subj:
+        adnimerge_subj:
+
+    Returns:
+
+    """
     from datetime import datetime
     from clinica.iotools.converters.adni_to_bids.adni_utils import days_between
 

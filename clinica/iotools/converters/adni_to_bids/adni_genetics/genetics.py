@@ -39,8 +39,6 @@ def convert_genetics(clinical_data_path, input_gen_dir, dest_dir, plink_file_nam
         is not necessary to modify this variable)
         output_file_name: output name of the converted files
 
-    Returns:
-
     """
     import os
 
@@ -65,8 +63,6 @@ def update_plink_files(path_to_adnimerge, path_to_apoe, path_to_plink_files, pat
         path_to_apoe: path the original APOERES.csv file of ADNI
         path_to_plink_files: path to the original folder containing the bed, bim and fam file
         path_to_new_plink_files: path to the new plink folder
-
-    Returns:
 
     """
     import os
@@ -105,8 +101,6 @@ def update_ID_fam(path_to_plink_files):
 
     Args:
         path_to_plink_files: path the plink file
-
-    Returns:
 
     """
     import csv
