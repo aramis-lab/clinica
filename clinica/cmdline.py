@@ -30,7 +30,7 @@ class ClinicaClassLoader:
     """
     Load pipelines from a custom locations (general from $HOME/clinica)
     """
-    from clinica.pipeline.engine import Pipeline
+    from clinica.pipelines.engine import Pipeline
 
     def __init__(self, env='CLINICAPATH', baseclass=Pipeline, reg=r".*_cli\.py$", extra_dir=""):
         self.env = env
@@ -101,21 +101,21 @@ def execute():
     """
     from clinica.engine import CmdParser
 
-    from clinica.pipeline.t1_freesurfer.t1_freesurfer_cli import T1FreeSurferCLI  # noqa
-    from clinica.pipeline.t1_spm_segmentation.t1_spm_segmentation_cli import T1SPMSegmentationCLI  # noqa
-    from clinica.pipeline.t1_spm_dartel.t1_spm_dartel_cli import T1SPMDartelCLI  # noqa
-    from clinica.pipeline.t1_spm_dartel2mni.t1_spm_dartel2mni_cli import T1SPMDartel2MNICLI  # noqa
-    from clinica.pipeline.t1_spm_full_prep.t1_spm_full_prep_cli import T1SPMFullPrepCLI  # noqa
+    from clinica.pipelines.t1_freesurfer.t1_freesurfer_cli import T1FreeSurferCLI  # noqa
+    from clinica.pipelines.t1_spm_segmentation.t1_spm_segmentation_cli import T1SPMSegmentationCLI  # noqa
+    from clinica.pipelines.t1_spm_dartel.t1_spm_dartel_cli import T1SPMDartelCLI  # noqa
+    from clinica.pipelines.t1_spm_dartel2mni.t1_spm_dartel2mni_cli import T1SPMDartel2MNICLI  # noqa
+    from clinica.pipelines.t1_spm_full_prep.t1_spm_full_prep_cli import T1SPMFullPrepCLI  # noqa
 
-    from clinica.pipeline.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DWIPreprocessingUsingT1CLI  # noqa
-    # from clinica.pipeline.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DWIPreprocessingUsingPhaseDiffFieldmapCLI  # noqa
-    from clinica.pipeline.dwi_processing.dwi_processing_cli import DWIProcessingCLI  # noqa
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DWIPreprocessingUsingT1CLI  # noqa
+    # from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DWIPreprocessingUsingPhaseDiffFieldmapCLI  # noqa
+    from clinica.pipelines.dwi_processing.dwi_processing_cli import DWIProcessingCLI  # noqa
 
-    from clinica.pipeline.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI  # noqa
+    from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI  # noqa
 
-    from clinica.pipeline.statistics_surfstat.statistics_surfstat_cli import StatisticsSurfstatCLI  # noqa
+    from clinica.pipelines.statistics_surfstat.statistics_surfstat_cli import StatisticsSurfstatCLI  # noqa
 
-    from clinica.pipeline.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI  # noqa
+    from clinica.pipelines.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI  # noqa
 
     run_parser = sub_parser.add_parser('run')
     pipelines = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
@@ -139,7 +139,7 @@ def execute():
     """
     pipelines-list option: show all available pipelines
     """
-    pipeline_list_parser = sub_parser.add_parser('pipeline-list')
+    pipeline_list_parser = sub_parser.add_parser('pipelines-list')
 
     def pipeline_list_fun(args):
         for pipeline in pipelines:
@@ -301,7 +301,7 @@ def execute():
         python_logging.basicConfig(
             format=logging.fmt, datefmt=logging.datefmt, stream=Stream())
 
-    # Finally, run the pipeline
+    # Finally, run the pipelines
     args.func(args)
 
 

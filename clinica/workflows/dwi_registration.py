@@ -7,7 +7,7 @@ def t1_b0_registration(
     """
     Perform rigid registration of the T1-weighted image onto the B0 image.
 
-    Given a subject, this pipeline performs a registration between its
+    Given a subject, this pipelines performs a registration between its
     T1-weighted image onto its 1mm upsampled B0 image. Once done, the estimated
     transformation matrix is used to align the binary mask of the segmentation
     of the white matter (obtained with FSL fast) from the anatomical space to
@@ -15,7 +15,7 @@ def t1_b0_registration(
     Destrieux parcellation (obtained with FreeSurfer recon-all) except that
     these latter are not resliced on the B0 image.
 
-    These steps enable to prepare the data for the DWI processing pipeline.
+    These steps enable to prepare the data for the DWI processing pipelines.
 
     Args:
          participant_id (str): Subject (participant) ID in a BIDS format
@@ -26,12 +26,12 @@ def t1_b0_registration(
          working_directory (Optional[str]): Directory where the temporary
             results are stored. If not specified, it is automatically generated
             (generally in /tmp/).
-         name (Optional[str]): Name of the pipeline.
+         name (Optional[str]): Name of the pipelines.
 
     Inputnode:
         in_bias_corrected_bet_t1 (str): File containing the bias corrected
             brain extracted T1-weighted image. It corresponds to the
-            out_brain_extracted file from FSL-T1 pipeline.
+            out_brain_extracted file from FSL-T1 pipelines.
         in_preprocessed_dwi (str): File containing the preprocessed DWI
             dataset. It assumes that the reference b0 is the first volume in
             the dataset (which is the case if you are using Clinica).
@@ -64,7 +64,7 @@ def t1_b0_registration(
             parcellation in diffusion space.
 
     Example:
-        >>> from clinica.pipeline.dwi.dwi_registration import t1_b0_registration_pipeline
+        >>> from clinica.pipelines.dwi.dwi_registration import t1_b0_registration_pipeline
         >>> t1_b0_registration = t1_b0_registration_pipeline(participant_id='sub-CLNC01', session_id='ses-M00', caps_directory='/path/to/output/results')
         >>> t1_b0_registration.inputs.inputnode.in_bias_corrected_bet_t1 = 'sub-CLNC01_ses-M00_bias_corrected_brain_extracted_t1.nii'
         >>> t1_b0_registration.inputs.inputnode.in_preprocessed_dwi = 'sub-CLNC01_ses-M00_preprocessed_dwi.nii'
