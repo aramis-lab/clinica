@@ -8,8 +8,8 @@ from os import mkdir, getcwd
 
 class CmdGenerateTemplates(CmdParser):
     """
-    Using the jinja2 library and the pipeline template's file (in the resource dir)
-     the user can create his own run-to-go pipeline
+    Using the jinja2 library and the pipelines template's file (in the resource dir)
+     the user can create his own run-to-go pipelines
     """
 
     def __init__(self):
@@ -20,7 +20,7 @@ class CmdGenerateTemplates(CmdParser):
 
     def define_options(self):
         self._args.add_argument("name",
-                                help='The pipeline title')
+                                help='The pipelines title')
         self._args.add_argument("-d", "--output_dir",
                                 help='Define the path where generate the directory')
 

@@ -92,7 +92,7 @@ def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv):
 
 def volumetric_summary(subject_dir, subject_id, output_dir):
     """
-        To write statistics summary for all the subjects after reconall pipeline.
+        To write statistics summary for all the subjects after reconall pipelines.
 
     Args:
         subject_dir: a list containing all the CAPS directory path
@@ -245,7 +245,7 @@ def volumetric_summary(subject_dir, subject_id, output_dir):
 
 def write_volumetric_summary(output_dir, subjects_visits_tsv):
     """
-        This func is to write the volumetric measurement after recon-all pipeline for all the subjects
+        This func is to write the volumetric measurement after recon-all pipelines for all the subjects
 
     Args:
         output_dir: destination folder to contain the tsv file
@@ -280,7 +280,7 @@ def write_volumetric_summary(output_dir, subjects_visits_tsv):
 
 def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
     """
-        This func is to write the volumetric measurement after recon-all pipeline for each subjects in the subjects_visits_tsv
+        This func is to write the volumetric measurement after recon-all pipelines for each subjects in the subjects_visits_tsv
 
     Args:
         caps_dir: CAPS directory
@@ -292,7 +292,7 @@ def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
     import nipype.pipeline.engine as pe
     from nipype.interfaces.utility import Function
     import pandas as pd
-    from clinica.pipeline.t1.t1_freesurfer_utils import write_statistics_per_subject
+    from clinica.pipelines.t1.t1_freesurfer_utils import write_statistics_per_subject
 
     # get the list for subject_ids
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
@@ -329,7 +329,7 @@ def write_reconall_log_summary(caps_dir, subjects_visits_tsv):
     import nipype.pipeline.engine as pe
     from nipype.interfaces.utility import Function
     import pandas as pd
-    from clinica.pipeline.t1.t1_freesurfer_utils import log_summary
+    from clinica.pipelines.t1.t1_freesurfer_utils import log_summary
 
     # get the list for subject_ids
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')

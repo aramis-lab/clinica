@@ -11,7 +11,7 @@ __status__ = "Completed"
 
 class OasisToBidsCLI(ce.CmdParser):
     def define_name(self):
-        """Define the sub-command name to run this pipeline.
+        """Define the sub-command name to run this pipelines.
         """
         self._name = 'oasis-to-bids'
 

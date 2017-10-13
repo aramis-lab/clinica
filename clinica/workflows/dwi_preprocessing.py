@@ -3,8 +3,8 @@
 
 def prepare_b0(num_b0s, low_bval=5, name='prepare_b0'):
     """
-    Create a pipeline that prepare the data for further corrections. This
-    pipeline coregister the B0 images and then
+    Create a pipelines that prepare the data for further corrections. This
+    pipelines coregister the B0 images and then
     average it in order to obtain only one average B0 images.
     The b-vectors and b-values are updated according to the modifications.
 
@@ -281,7 +281,7 @@ def hmc_pipeline(name='motion_correct'):
     """
     HMC stands for head-motion correction.
 
-    Creates a pipeline that corrects for head motion artifacts in dMRI
+    Creates a pipelines that corrects for head motion artifacts in dMRI
     sequences. It takes a series of diffusion weighted images and
     rigidly co-registers them to one reference image (FLIRT normalised
     mutual information). Finally, the `b`-matrix is rotated
@@ -402,7 +402,7 @@ def hmc_pipeline(name='motion_correct'):
 def ecc_pipeline(name='eddy_correct'):
     """
     ECC stands for Eddy currents correction.
-    Creates a pipeline that corrects for artifacts induced by Eddy currents in
+    Creates a pipelines that corrects for artifacts induced by Eddy currents in
     dMRI sequences.
     It takes a series of diffusion weighted images and linearly co-registers
     them to one reference image (the average of all b0s in the dataset).
