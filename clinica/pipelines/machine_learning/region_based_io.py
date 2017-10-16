@@ -144,7 +144,16 @@ def weights_to_nifti(weights, atlas, output_filename):
 
     from os.path import join, split, realpath
 
-    atlas_path = join(split(realpath(__file__))[0], '../../resources/atlases_spm', atlas + '.nii')
+    from clinica.utils.atlas import AtlasAbstract
+
+    atlas_path = None
+    atlas_classes = AtlasAbstract.__subclasses__()
+    for atlas_class in atlas_classes:
+        if atlas_class.get_name_atlas() == atlas:
+            atlas_path = atlas_class.get_atlas_labels()
+
+    if not atlas_path:
+        raise ValueError('Atlas path not found for atlas name ' + atlas)
 
     atlas_image = nib.load(atlas_path)
     atlas_data = atlas_image.get_data()
