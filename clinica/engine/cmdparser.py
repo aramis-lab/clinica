@@ -165,7 +165,7 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
 
     def run_pipeline(self, args):
 
-        from clinica.pipeline.machine_learning.voxel_based_svm import linear_svm_binary_classification_caps
+        from clinica.pipelines.machine_learning.voxel_based_svm import linear_svm_binary_classification_caps
         from numpy import logspace
 
         if args.subjects_visits_tsv is None:
@@ -233,9 +233,9 @@ class CmdParserMachineLearningSVMRB(CmdParser):
                                 help="Save feature weights for each classification as an image")
 
     def run_pipeline(self, args):
-        from clinica.pipeline.machine_learning.region_based_svm import svm_binary_classification
-        from clinica.pipeline.machine_learning.region_based_io import get_caps_pet_list, get_caps_t1_list, load_data
-        from clinica.pipeline.machine_learning.svm_utils import gram_matrix_linear
+        from clinica.pipelines.machine_learning.region_based_svm import svm_binary_classification
+        from clinica.pipelines.machine_learning.region_based_io import get_caps_pet_list, get_caps_t1_list, load_data
+        from clinica.pipelines.machine_learning.svm_utils import gram_matrix_linear
         from numpy import logspace
         import pandas
         from os.path import join, split, realpath

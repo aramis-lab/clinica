@@ -7,7 +7,7 @@ from clinica.iotools.abstract_converter import Converter
 __author__ = "Sabrina Fontanella"
 __copyright__ = "Copyright 2017, The Aramis Lab Team"
 __credits__ = [""]
-__license__ = ""
+__license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Simona Bottani"
 __email__ = "simona.bottani@icm-institute.org"
@@ -19,8 +19,10 @@ class OasisToBids(Converter):
         """
         Convert the clinical data defined inside the clinical_specifications.xlx into BIDS
 
-        :param clinical_data_dir: path to the folder with the original clinical data
-        :param bids_dir: path to the bids directory
+        Args:
+            clinical_data_dir: path to the folder with the original clinical data
+            bids_dir: path to the bids directory
+
         """
         import clinica.iotools.bids_utils as bids
         from os import path
@@ -56,9 +58,10 @@ class OasisToBids(Converter):
         """
         Convert T1 images to BIDS
 
-        :param source_dir: path to the OASIS dataset
-        :param dest_dir: path to the BIDS directory
-        :return:
+        Args:
+            source_dir: path to the OASIS dataset
+            dest_dir: path to the BIDS directory
+
         """
         from os import path
         from glob import glob

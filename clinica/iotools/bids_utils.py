@@ -1,32 +1,35 @@
+# coding: utf-8
 """
-Methods used by BIDS converters.
+Methods used by BIDS converters
 """
-
 __author__ = "Sabrina Fontanella"
-__copyright__ = "Copyright 2016, The Aramis Lab Team"
-__credits__ = ["Sabrina Fontanella"]
-__license__ = ""
+__copyright__ = "Copyright 2017, The Aramis Lab Team"
+__credits__ = [""]
+__license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
-__maintainer__ = "Sabrina Fontanella"
-__email__ = "sabrina.fontanella@icm-institute.org"
-__status__ = "Development"
+__maintainer__ = "Simona Bottani"
+__email__ = "simona.bottani@icm-institute.org"
+__status__ = "Completed"
 
 
 # -- Methods for the clinical data --
 # @ToDo:test this function
 def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bids_ids, delete_non_bids_info=True):
     """
-    :param study_name: name of the study (Ex. ADNI)
-    :param clinical_spec_path: path to the clinical file
-    :param clinical_data_dir: path to the directory where the clinical data are stored
-    :param bids_ids: list of bids ids
-    :param delete_non_bids_info: if True delete all the rows of the subjects that are not available in the BIDS dataset
-    :return: a pandas dataframe that contains the participants data
+    Create the file participants.tsv
+
+    Args:
+        study_name: name of the study (Ex. ADNI)
+        clinical_spec_path: path to the clinical file
+        clinical_data_dir: path to the directory where the clinical data are stored
+        bids_ids: list of bids ids
+        delete_non_bids_info: if True delete all the rows of the subjects that are not available in the BIDS dataset
+
+    Returns: a pandas dataframe that contains the participants data
     """
     import pandas as pd
     import os
     from os import path
-    import logging
     import numpy as np
     from clinica.utils.stream import cprint
 
@@ -121,15 +124,17 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
 
 def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids_ids, name_column_ids, subj_to_remove = []):
     """
+
     Extract the information regarding the sessions and store them in a dictionary (session M0 only)
 
-    :param input_path: path to the input folder
-    :param study_name: name of the study (Ex: ADNI)
-    :param clinical_spec_path: path to the clinical file
-    :param bids_ids: list of bids ids
-    :param name_column_ids: name of the column where the subject ids are stored
-    :param subj_to_remove: subjects to remove
-    :return:
+    Args:
+        clinical_data_dir: path to the input folder
+        study_name: name of the study (Ex: ADNI)
+        clinical_spec_path:  path to the clinical file
+        bids_ids: list of bids ids
+        name_column_ids: name of the column where the subject ids are stored
+        subj_to_remove: subjects to remove
+
     """
     import pandas as pd
     from os import path
@@ -202,14 +207,16 @@ def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids
 
 def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids, name_column_ids):
     """
-    Extract the information regarding the scans and store them in a dictionary (session M0 only)
 
-    :param clinical_data_dir: path to the directory where the clinical data are stored
-    :param study_name: name of the study (Ex ADNI)
-    :param clinic_specs_path: path to the clinical specification file
-    :param bids_ids: list of bids ids
-    :param name_column_ids: name of the column where the subject id is contained
-    :return: a dictonary
+    Args:
+        clinical_data_dir: path to the directory where the clinical data are stored
+        study_name: name of the study (Ex ADNI)
+        clinic_specs_path: path to the clinical specification file
+        bids_ids: list of bids ids
+        name_column_ids: name of the column where the subject id is contained
+
+    Returns:
+
     """
     import pandas as pd
     from os import path
@@ -278,10 +285,13 @@ def write_sessions_tsv(bids_dir, sessions_dict):
     """
     Write the content of the function create scans dict in several tsv files following the BIDS specification
 
-    :param bids_dir: path to the bids directory
-    :param sessions_dict: output of the function create_scans_dict
-    """
+    Args:
+        bids_dir: path to the bids directory
+        sessions_dict: output of the function create_scans_dict
 
+    Returns:
+
+    """
     import os
     import pandas as pd
     from os import path
@@ -308,11 +318,14 @@ def write_sessions_tsv(bids_dir, sessions_dict):
 
 def write_scans_tsv(bids_dir, bids_ids, scans_dict):
     """
-    Write the scans dict into tsv files.
 
-    :param bids_dir: path to the BIDS directory
-    :param bids_ids: list of bids ids
-    :param scans_dict: the output of the function create_scans_dict
+    Write the scans dict into tsv files
+
+    Args:
+        bids_dir:  path to the BIDS directory
+        bids_ids: list of bids ids
+        scans_dict:  the output of the function create_scans_dict
+
     """
     import pandas as pd
     from os import path
@@ -350,10 +363,13 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
 # -- Other methods --
 def contain_dicom(folder_path):
     """
-    Check if a folder contains DICOM images
+     Check if a folder contains DICOM images
 
-    :param folder_path:
-    :return: True if dicom files are found inside the folder, False otherwise
+    Args:
+        folder_path: path to the folder
+
+    Returns: True if dicom files are found inside the folder, False otherwise
+
     """
     from glob import glob
     from os import path
@@ -366,17 +382,25 @@ def contain_dicom(folder_path):
 
 
 def get_supported_dataset():
+    """
+    Return the list of supported datasets
+
+    Returns: a list of supported datasets
+
+    """
     return ['ADNI', 'CLINAD', 'PREVDEMALS', 'INSIGHT', 'OASIS', 'AIBL']
 
 
 def dcm_to_nii(input_path, output_path, bids_name):
     """
-    :param t1_path:
-    :param output_path:
-    :param bids_name:
-    :return:
-    """
+    Convert DICOM to NIFTI trying to use several converters
 
+    Args:
+        input_path: path to the input folder with DICOM images
+        output_path: path to the output folder
+        bids_name: bids name to give to the converterd file
+
+    """
     import os
     from os import path
 
@@ -398,10 +422,12 @@ def dcm_to_nii(input_path, output_path, bids_name):
 
 def get_bids_subjs_list(bids_path):
     """
+
     Given a BIDS compliant dataset, returns the list of all the subjects available
 
-    :param bids_path: path to the BIDS folder
-    :return:
+    Args:
+        bids_path: path to the BIDS folder
+
     """
     import os
     from os import path
@@ -411,11 +437,13 @@ def get_bids_subjs_list(bids_path):
 
 def get_bids_subjs_paths(bids_path):
     """
+
     Given a BIDS compliant dataset, returns the list of all paths to the subjects folders
 
-    :param bids_path: path to the BIDS folder
-    :return:
+    Args:
+        bids_path: path to the BIDS folder
     """
+
     import os
     from os import path
 
@@ -424,16 +452,19 @@ def get_bids_subjs_paths(bids_path):
 
 def compute_new_subjects(original_ids, bids_ids):
     """
-    Check for new subject to convert.
+    Check for new subject to convert
 
     This function checks for news subjects to convert to the BIDS version i.e. subjects contained in the unorganised
     version that are not available in the bids version.
 
-    :param original_ids: list of all the ids of the unorganized folder.
-    :param bids_ids: list of all the BIDS ids contained inside the bids converted version of the dataset
-    :return: a list containing the original_ids of the subjects that are not available in the bids converted version
-    """
 
+    Args:
+        original_ids: list of all the ids of the unorganized folder.
+        bids_ids: list of all the BIDS ids contained inside the bids converted version of the dataset
+
+    Returns: a list containing the original_ids of the subjects that are not available in the bids converted version
+
+    """
     to_return = []
     original_ids = remove_space_and_symbols(original_ids)
 
@@ -650,15 +681,18 @@ def convert_T1(t1_path, output_path, t1_bids_name):
 
 def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name , acquisition = ''):
     """
+    Convert PET to BIDS
 
-    :param folder_input:
-    :param folder_output:
-    :param pet_name:
-    :param bids_name:
-    :param task_name:
-    :param acquisition: tracer name (FDG, AV45, etc)
-    :return:
+    Args:
+        folder_input: path to the input folder
+        folder_output: path to the BIDS folder
+        pet_name: original name
+        bids_name: bids name
+        task_name: task name
+        acquisition: acquisition name
+
     """
+
     from os import path
     from shutil import copy
     import os
@@ -946,6 +980,15 @@ def merge_DTI(folder_input, folder_output, name, fixed_dti_list=False):
 
 
 def concatenate_bvec_bval(files_list, output_file, type):
+    """
+    Concatenate bvec and baval files
+
+    Args:
+        files_list: list of file
+        output_file: path to the output file
+        type: bvec of bval
+
+    """
     import fileinput
     if type == 'bval':
         lines_out = ['']
@@ -964,16 +1007,17 @@ def concatenate_bvec_bval(files_list, output_file, type):
 
 
 def merge_noddi_dti(folder_input, folder_output, name):
-    '''
-    Merge NODDI dti CATI organised following these rules:
+    """
+       Merge NODDI dti CATI organised following these rules:
 
        - DTI1, DTI3 and DTI5 are always Anterior to Posterior(AP/j-)
        - DTI2, DTI4, DTI6 are always Posterior to Anterior(PA/j)
 
-    :param folder_input: path to the folder where are the DTI
-    :param folder_output: path to the BIDS folder
-    :param name: BIDS id of the file
-    '''
+    Args:
+        folder_input: path to the folder where are the DTI
+        folder_output: path to the BIDS folder
+        name: BIDS id of the file
+    """
     from glob import glob
     from os import path
     import fileinput
