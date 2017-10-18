@@ -33,6 +33,8 @@ class fMRIPreprocessingCLI(ce.CmdParser):
                                 help='Number of processors to run in parallel')
         self._args.add_argument("-sl", "--slurm", action='store_true',
                                 help='Run the pipelines using SLURM')
+        self._args.add_argument("-sa", "--sbatch_args",
+                                help='SLURM\'s sbatch tool arguments')
         self._args.add_argument("-ns", "--num_slices", type=int,
                                 help="Number of slices")
         self._args.add_argument("-tr", "--time_repetition", type=float,
@@ -81,6 +83,7 @@ class fMRIPreprocessingCLI(ce.CmdParser):
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         elif args.slurm:
             pipeline.run(plugin='SLURMGraph', plugin_args = {
-                'dont_resubmit_completed_jobs': True, 'sbatch_args': '--qos=short'})
+                'dont_resubmit_completed_jobs': True, 'sbatch_args':
+                    args.sbatch_args})
         else:
             pipeline.run()
