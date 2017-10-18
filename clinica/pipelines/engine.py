@@ -265,7 +265,7 @@ class Pipeline(npe.Workflow):
                 check_binary(d['name'])
             elif d['type'] == 'toolbox':
                 pass
-            elif d['type'] == 'pipelines':
+            elif d['type'] == 'pipeline':
                 pass
             else:
                 raise Exception("Unknown dependency type: '%s'." % d['type'])
