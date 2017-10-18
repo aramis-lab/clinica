@@ -51,6 +51,9 @@ class fMRIPreprocessingCLI(ce.CmdParser):
         self._args.add_argument("-fsbm", "--freesurfer_brain_mask",
                                 action='store_true',
                                 help="Use Freesurfer's pre-computed brain mask")
+        self._args.add_argument("-u", "--unwarping",
+                                action='store_true',
+                                help="Add SPM's Unwarping to the Realign step")
 
 
     def run_pipeline(self, args):
@@ -70,7 +73,8 @@ class fMRIPreprocessingCLI(ce.CmdParser):
             'total_readout_time'         : args.total_readout_time,
             'full_width_at_half_maximum' : args.full_width_at_half_maximum,
             't1_native_space'            : args.t1_native_space,
-            'freesurfer_brain_mask'      : args.freesurfer_brain_mask
+            'freesurfer_brain_mask'      : args.freesurfer_brain_mask,
+            'unwarping'                  : args.unwarping
         }
         pipeline.base_dir = self.absolute_path(args.working_directory)
         if args.n_procs:

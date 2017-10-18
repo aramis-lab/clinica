@@ -32,6 +32,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         - [x] Develop SPM Fieldmap Calculation Tool wrapper and integrate it.
         - [x] Replace standard DataGrabber by a BIDS tree finder.
         - [ ] Add support of gzipped nifti inputs.
+        - [x] Export only gzipped nifti files.
 
     Args:
         input_dir: A BIDS directory.
@@ -147,10 +148,10 @@ class fMRIPreprocessing(cpe.Pipeline):
         write_node.inputs.regexp_substitutions = [
             (r't1_brain_mask/(.+)\.nii\.gz$', r'\1_brainmask.nii.gz'),
             (r'mc_params/rp_a(.+)\.txt$', r'\1_confounds.tsv'),
-            (r'native_fmri/ua(.+)\.nii.gz$', r'\1_space-meanBOLD.nii.gz'),
-            (r't1_fmri/rua(.+)\.nii.gz$', r'\1_space-T1w.nii.gz'),
-            (r'mni_fmri/wrua(.+)\.nii.gz$', r'\1_space-Ixi549Space.nii.gz'),
-            (r'mni_smoothed_fmri/swrua(.+)\.nii.gz$',
+            (r'native_fmri/[u|r]a(.+)\.nii.gz$', r'\1_space-meanBOLD.nii.gz'),
+            (r't1_fmri/r[u|r]a(.+)\.nii.gz$', r'\1_space-T1w.nii.gz'),
+            (r'mni_fmri/wr[u|r]a(.+)\.nii.gz$', r'\1_space-Ixi549Space.nii.gz'),
+            (r'mni_smoothed_fmri/swr[u|r]a(.+)\.nii.gz$',
              r'\1_space-Ixi549Space_fwhm-' + '-'.join(map(str, self.parameters[
                  'full_width_at_half_maximum'])) + '.nii.gz'),
             # I don't know why it's adding this empty folder, so I remove it:
@@ -193,12 +194,13 @@ class fMRIPreprocessing(cpe.Pipeline):
 
         # FieldMap calculation
         # ====================
-        fm_node = npe.MapNode(name="FieldMapCalculation",
-                              iterfield=['phase', 'magnitude', 'epi'],
-                              interface=utils.FieldMap())
-        fm_node.inputs.et = self.parameters['echo_times']
-        fm_node.inputs.blipdir = self.parameters['blip_direction']
-        fm_node.inputs.tert = self.parameters['total_readout_time']
+        if self.parameters['unwarping']:
+            fm_node = npe.MapNode(name="FieldMapCalculation",
+                                  iterfield=['phase', 'magnitude', 'epi'],
+                                  interface=utils.FieldMap())
+            fm_node.inputs.et = self.parameters['echo_times']
+            fm_node.inputs.blipdir = self.parameters['blip_direction']
+            fm_node.inputs.tert = self.parameters['total_readout_time']
 
         # Slice timing correction
         # =======================
@@ -214,11 +216,19 @@ class fMRIPreprocessing(cpe.Pipeline):
 
         # Motion correction and unwarping
         # ===============================
-        mc_node = npe.MapNode(name="MotionCorrectionUnwarping",
-                              iterfield=["scans", "pmscan"],
-                              interface=utils.RealignUnwarp())
-        mc_node.inputs.register_to_mean = True
-        mc_node.inputs.write_mask = False
+
+        if self.parameters['unwarping']:
+            mc_node = npe.MapNode(name="MotionCorrectionUnwarping",
+                                  iterfield=["scans", "pmscan"],
+                                  interface=utils.RealignUnwarp())
+            mc_node.inputs.register_to_mean = True
+            mc_node.inputs.write_mask = False
+        else:
+            mc_node = npe.MapNode(name="MotionCorrection",
+                                  iterfield=["in_files"],
+                                  interface=spm.Realign())
+            mc_node.inputs.register_to_mean = True
+
 
         # Brain extraction
         # ================
@@ -270,13 +280,15 @@ class fMRIPreprocessing(cpe.Pipeline):
                                                         output_names=[
                                                             'out_file'],
                                                         function=zip_nii))
+
         zip_bet_node = zip_node.clone('ZippingBET')
         zip_mc_node = zip_node.clone('ZippingMC')
         zip_reg_node = zip_node.clone('ZippingRegistration')
         zip_norm_node = zip_node.clone('ZippingNormalization')
         zip_smooth_node = zip_node.clone('ZippingSmoothing')
 
-        # Connection
+        # Connections
+        # ===========
 
         if self.parameters['freesurfer_brain_mask']:
             self.connect([
@@ -293,26 +305,37 @@ class fMRIPreprocessing(cpe.Pipeline):
                 (bet_node, zip_bet_node, [('Fill.out_file', 'in_file')]),
             ])
 
+        if self.parameters['unwarping']:
+            self.connect([
+                # FieldMap calculation
+                (self.input_node, fm_node, [('magnitude1', 'magnitude')]),
+                (self.input_node, fm_node, [('phasediff', 'phase')]),
+                (self.input_node, fm_node, [('bold', 'epi')]),
+                # Motion correction and unwarping
+                (st_node, mc_node, [('timecorrected_files', 'scans')]),
+                (fm_node, mc_node, [('vdm', 'pmscan')]),
+                (mc_node, reg_node, [('runwarped_files', 'apply_to_files')]),
+                (mc_node, zip_mc_node, [('runwarped_files', 'in_file')]),
+            ])
+        else:
+            self.connect([
+                # Motion correction and unwarping
+                (st_node, mc_node, [('timecorrected_files', 'in_files')]),
+                (mc_node, reg_node, [('realigned_files', 'apply_to_files')]),
+                (mc_node, zip_mc_node, [('realigned_files', 'in_file')]),
+            ])
+
         self.connect([
-            # FieldMap calculation
-            (self.input_node, fm_node, [('magnitude1', 'magnitude')]),
-            (self.input_node, fm_node, [('phasediff', 'phase')]),
-            (self.input_node, fm_node, [('bold', 'epi')]),
             # Slice timing correction
             (self.input_node, st_node, [('bold', 'in_files')]),
-            # Motion correction and unwarping
-            (st_node, mc_node, [('timecorrected_files', 'scans')]),
-            (fm_node, mc_node, [('vdm', 'pmscan')]),
             # Registration
             (mc_node, reg_node, [('mean_image', 'source')]),
-            (mc_node, reg_node, [('runwarped_files', 'apply_to_files')]),
             # Normalization
             (self.input_node, norm_node, [('T1w', 'image_to_align')]),
             (reg_node, norm_node, [('coregistered_files', 'apply_to_files')]),
             # Smoothing
             (norm_node, smooth_node, [('normalized_files', 'in_files')]),
             # Returning output
-            (mc_node, zip_mc_node, [('runwarped_files', 'in_file')]),
             (reg_node, zip_reg_node, [('coregistered_files', 'in_file')]),
             (norm_node, zip_norm_node, [('normalized_files', 'in_file')]),
             (smooth_node, zip_smooth_node, [('smoothed_files', 'in_file')]),
@@ -326,4 +349,3 @@ class fMRIPreprocessing(cpe.Pipeline):
             (zip_smooth_node, self.output_node, [('out_file',
                                                   'mni_smoothed_fmri')]),
         ])
-        # ==========
