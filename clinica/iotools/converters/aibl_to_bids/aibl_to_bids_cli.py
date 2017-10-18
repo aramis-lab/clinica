@@ -3,7 +3,7 @@ import clinica.engine as ce
 
 class AiblToBidsCLI(ce.CmdParser):
     def define_name(self):
-        """Define the sub-command name to run this pipeline.
+        """Define the sub-command name to run this pipelines.
         """
         self._name = 'aibl-to-bids'
 

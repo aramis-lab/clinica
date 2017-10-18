@@ -1,17 +1,15 @@
-from os import path
-from glob import glob
-import pandas as pd
-import os
-from ..converter_utils import MissingModsTracker, print_statistics
-
+# coding: utf-8
+"""
+Data handling scripts
+"""
 __author__ = "Sabrina Fontanella"
-__copyright__ = "Copyright 2016, The Aramis Lab Team"
-__credits__ = ["Sabrina Fontanella"]
-__license__ = ""
+__copyright__ = "Copyright 2017, The Aramis Lab Team"
+__credits__ = [""]
+__license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
-__maintainer__ = "Sabrina Fontanella"
-__email__ = "sabrina.fontanella@icm-institute.org"
-__status__ = "Development"
+__maintainer__ = "Simona Bottani"
+__email__ = "simona.bottani@icm-institute.org"
+__status__ = "Completed"
 
 
 def create_merge_file(bids_dir, out_dir, true_false_mode = False):
@@ -19,11 +17,15 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
     Merge all the .tsv files containing clinical data of a BIDS compliant dataset and store
     the result inside a .tsv file
 
-    :param bids_dir: path to the BIDS folder
-    :param out_dir: path to the output foler
-    :param true_false_mode: if True convert all the binary values to True/False
+    Args:
+        bids_dir: path to the BIDS folder
+        out_dir: path to the output folder
+        true_false_mode: if True convert all the binary values to True/False
 
     """
+    from os import path
+    from glob import glob
+    import os
 
     col_list = []
     scans_dict = {}
@@ -166,10 +168,13 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
 
 def find_mods_and_sess(dataset_dir):
     """
-    Finds all the modalities and sessions available for a given BIDS dataset
+    Find all the modalities and sessions available for a given BIDS dataset
 
-    :param dataset_dir:
-    :return: a dictionary that stores the sessions and modalities found and has the following structure.
+    Args:
+        dataset_dir: path to the BIDS dataset
+
+    Returns:
+        mods_dict: a dictionary that stores the sessions and modalities found and has the following structure.
     Example:
     {
         'sessions': ['ses-M00', 'ses-M18'],
@@ -178,7 +183,10 @@ def find_mods_and_sess(dataset_dir):
         'func': ['func_task-rest'],
         'dwi': ['dwi']
     }
+
     """
+    from glob import glob
+    from os import path
 
     mods_dict = {}
     mods_list = []
@@ -266,13 +274,18 @@ def find_mods_and_sess(dataset_dir):
 
 def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
     """
-    Compute the list of missing modalities for each subject in a BIDS compliant dataset.
+    Compute the list of missing modalities for each subject in a BIDS compliant dataset
 
-    :param in_dir: path to the BIDS directory
-    :param out_dir: path to the output directory
-    :param output_prefix: string that replace the default prefix ('missing_mods_') in the name of all the output files
+    Args:
+        in_dir: path to the BIDS directory
+        out_dir: path to the output folder
+        output_prefix: string that replace the default prefix ('missing_mods_') in the name of all the output files
     created
     """
+    from ..converter_utils import MissingModsTracker, print_statistics
+    from os import path
+    import pandas as pd
+    from glob import glob
 
     # Find all the modalities and sessions available for the input dataset
     mods_and_sess= find_mods_and_sess(in_dir)
@@ -376,7 +389,7 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
             row_to_append_df = pd.DataFrame(columns=cols_dataframe)
 
         missing_mods_df = missing_mods_df[cols_dataframe]
-        missing_mods_df.to_csv(path.join(out_dir, out_file_name+ses+'.tsv'), sep='\t', index=False)
+        missing_mods_df.to_csv(path.join(out_dir, out_file_name+ses+'.tsv'), sep='\t', index=False, encoding='utf-8')
         missing_mods_df = pd.DataFrame(columns=cols_dataframe)
 
     print_statistics(summary_file, len(subjects_paths_lists), sessions_found, mmt )
@@ -384,15 +397,19 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
 
 def create_subs_sess_list(dataset_path, out_dir, file_name = ''):
     """
+
     Create the file subject_session_list.tsv that contains the list of the visits for each subject for a BIDS compliant
-    dataset.
+    dataset
 
-
-    :param dataset_path: path to the BIDS directory
-    :param out_dir: path to the output directory
-    :param file_name: name of the output file
+    Args:
+        dataset_path: path to the BIDS directory
+        out_dir:  path to the output directory
+        file_name: name of the output file
 
     """
+    from os import path
+    from glob import glob
+    import os
 
     if file_name == '':
         file_name = 'subjects_sessions_list.tsv'
@@ -415,7 +432,4 @@ def create_subs_sess_list(dataset_path, out_dir, file_name = ''):
             subjs_sess_tsv.write(subj_id+'\t'+session_name+'\n')
 
     subjs_sess_tsv.close()
-
-
-
 
