@@ -72,6 +72,11 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
                           + str(self._low_bval)
                           + '), it should be close to zero', UserWarning)
 
+    def check_custom_dependencies(self):
+        """Check dependencies that can not be listed in the `info.json` file.
+        """
+        pass
+
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipelines.
 
