@@ -256,7 +256,7 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
         registered_b0s = op.abspath(op.join(
             tmp_dir, 'b0_coregistration', 'concat_ref_moving',
             'merged_files.nii.gz'))
-        cprint('B0 s will be avg...(file = ' + registered_b0s + ')')
+        cprint('B0 s will be averaged (file = ' + registered_b0s + ')')
         # Average the b0s to obtain the reference b0
         out_reference_b0 = b0_average(in_file=registered_b0s)
     else:
