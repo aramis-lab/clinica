@@ -67,7 +67,7 @@ opengl info
 addpath(fileparts(which(mfilename())));
 addpath(strcat(fileparts(which(mfilename())), '/SurfStat'));
 fsaveragepath = strcat(freesurferhome, '/subjects/fsaverage/surf');
-addpath(strcat(getenv('FREESURFER_HOME'), '/matlab'));
+addpath(strcat(freesurferhome, '/matlab'));
 surfstathome = fileparts(which(mfilename()));
 %% Load the data
 fid = fopen(tsvfile, 'r');
@@ -119,7 +119,7 @@ for indexsubject = 1 : nrsubject
         indexunique = strfind(firstline, abscontrast);
         indexunique = find(not(cellfun('isempty', indexunique)));
         if iscell(tsvdata{indexunique})
-            uniquelabels = unique(tsvdata{indexunique});
+            uniquelabels = unique(tsvdata{indexunique}); % this is to find the unique levels for the group/diagnosis, should just have two level, like CN vs PT
             if length(uniquelabels) ~= 2
                 error('For group comparison, there should be just 2 different groups!')
             end
@@ -148,8 +148,8 @@ switch glmtype
     case 'group_comparison'
         contrastpos    = eval([contrast '(1)']) - eval([ contrast '(2)']); % use char(eval(contrast))
         contrasteffectgroupneg    = eval([contrast '(2)']) - eval([ contrast '(1)']); % use char(eval(contrast))
-        factor1 = char(group){1};
-        factor2 = char(group){2};
+        factor1 = char(term(tsvdata{indexunique})){1};
+        factor2 = char(term(tsvdata{indexunique})){2};
 
         thicksubject = thicksubject';
         slmmodel = SurfStatLinMod(thicksubject, eval(designmatrix), averagesurface);
