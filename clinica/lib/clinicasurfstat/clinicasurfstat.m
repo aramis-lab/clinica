@@ -108,20 +108,26 @@ for indexsubject = 1 : nrsubject
         error('Unexpected dimension of Y in SurfStatReadData')
     end
     disp(['The subject ID is: ', subjectname, '_', sessionname] )
-    if indexsubject == 1
+    if indexsubject == 1 % check the header format of the input tsv 
         thicksubject = zeros(nrsubject, size(Y,2));
         %if startsWith(contrast, '-') this works for matlab2016b
-        if strfind(contrast, '-')
+        if strfind(contrast, '-') % check for negative correlation analysis
             abscontrast = contrast(2:end);
         else
             abscontrast = contrast;
         end
-        indexunique = strfind(firstline, abscontrast);
-        indexunique = find(not(cellfun('isempty', indexunique)));
-        if iscell(tsvdata{indexunique})
-            uniquelabels = unique(tsvdata{indexunique}); % this is to find the unique levels for the group/diagnosis, should just have two level, like CN vs PT
-            if length(uniquelabels) ~= 2
-                error('For group comparison, there should be just 2 different groups!')
+        if strfind(contrast, '*')
+            with_intercation = 1
+            disp('You include interaction as covariate in you model, please carefully check the format of your tsv files')
+        else  % the case not include the interaction, to check the format of the tsv
+            with_intercation = 0
+            indexunique = strfind(firstline, abscontrast);
+            indexunique = find(not(cellfun('isempty', indexunique)));
+            if iscell(tsvdata{indexunique})
+                uniquelabels = unique(tsvdata{indexunique}); % this is to find the unique levels for the group/diagnosis, should just have two level, like CN vs PT
+                if length(uniquelabels) ~= 2
+                    error('For group comparison, there should be just 2 different groups!')
+                end
             end
         end
     end
@@ -140,136 +146,218 @@ for i = 1:length(tsvdata)-1
 end
 
 cd(outputdir)
-measurelabel = 'ct';
+measurelabel = 'ct'; % todo, change this to be dynamic
 
 %% Convert the data into SurfStat
 
 switch glmtype
     case 'group_comparison'
-        contrastpos    = eval([contrast '(1)']) - eval([ contrast '(2)']); % use char(eval(contrast))
-        contrasteffectgroupneg    = eval([contrast '(2)']) - eval([ contrast '(1)']); % use char(eval(contrast))
-        factor1 = char(term(tsvdata{indexunique})){1};
-        factor2 = char(term(tsvdata{indexunique})){2};
+        if with_intercation ~= 1 % case without interaction, contrast should be negative and positive
+            contrastpos    = eval([contrast '(1)']) - eval([ contrast '(2)']); % use char(eval(contrast))
+            contrasteffectgroupneg    = eval([contrast '(2)']) - eval([ contrast '(1)']); % use char(eval(contrast))
+            factor1 = char(term(tsvdata{indexunique})){1};
+            factor2 = char(term(tsvdata{indexunique})){2};
 
-        thicksubject = thicksubject';
-        slmmodel = SurfStatLinMod(thicksubject, eval(designmatrix), averagesurface);
-        disp(['The GLM linear model is: ', designmatrix])
+            thicksubject = thicksubject';
+            slmmodel = SurfStatLinMod(thicksubject, eval(designmatrix), averagesurface);
+            disp(['The GLM linear model is: ', designmatrix])
 
-        %% Clear the variables which will not be used later
-        clearvars csvsorted tsvdata thicksubject
+            %% Clear the variables which will not be used later
+            clearvars csvsorted tsvdata thicksubject
 
-        % Contrast Positive:
-        tic;
-        slm = SurfStatT( slmmodel, contrastpos );
-        SurfStatView( slm.t .* mask, averagesurface, [ 'ContrastPo-value of the T-statistic for ' factor1 '-' factor2]);
-        set(gcf,'PaperPositionMode','auto');
-        print(['group-' grouplabel '_' factor2 '-lt-' factor1 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_TStatistics'] ,'-djpeg','-r0'); close
-        disp('Contrast Positive: t_value'); toc;
-        tvaluewithmask = slm.t .* mask;
-        save(['group-' grouplabel '_' factor2 '-lt-' factor1 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_TStatistics.mat'],'tvaluewithmask');
+            % Contrast Positive:
+            tic;
+            slm = SurfStatT( slmmodel, contrastpos );
+            SurfStatView( slm.t .* mask, averagesurface, [ 'ContrastPo-value of the T-statistic for ' factor1 '-' factor2]);
+            set(gcf,'PaperPositionMode','auto');
+            print(['group-' grouplabel '_' factor2 '-lt-' factor1 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_TStatistics'] ,'-djpeg','-r0'); close
+            disp('Contrast Positive: t_value'); toc;
+            tvaluewithmask = slm.t .* mask;
+            save(['group-' grouplabel '_' factor2 '-lt-' factor1 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_TStatistics.mat'],'tvaluewithmask');
 
-        % Computation of the uncorrected p-value:
-        tic;
-        %Method 1:
-        %t = tpdf(slm.t, slm.df);
-        %uncorrectedpvalues = double(t<=0.05).*t+double(t>0.05);
-        %Method 2:
-        uncorrectedpvalues = 1-tcdf(slm.t,slm.df);
-        clearvars struct; struct.P = uncorrectedpvalues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
-        SurfStatView( struct, averagesurface, [ 'ContrastPo-Uncorrected P-values(' num2str(thresholduncorrectedpvalue) ')' factor1 '-' factor2 ]);
-        set(gcf,'PaperPositionMode','auto');
-        print(['group-' grouplabel '_' factor2 '-lt-' factor1 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_uncorrectedPValue'] ,'-djpeg','-r0'); close
-        disp('Contrast Positive: uncorrected Pvalue'); toc;
-        uncorrectedpvaluesstruct = struct;
-        save(['group-' grouplabel '_' factor2 '-lt-' factor1 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_uncorrectedPValue.mat'],'tvaluewithmask');
+            % Computation of the uncorrected p-value:
+            tic;
+            %Method 1:
+            %t = tpdf(slm.t, slm.df);
+            %uncorrectedpvalues = double(t<=0.05).*t+double(t>0.05);
+            %Method 2:
+            uncorrectedpvalues = 1-tcdf(slm.t,slm.df);
+            clearvars struct; struct.P = uncorrectedpvalues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
+            SurfStatView( struct, averagesurface, [ 'ContrastPo-Uncorrected P-values(' num2str(thresholduncorrectedpvalue) ')' factor1 '-' factor2 ]);
+            set(gcf,'PaperPositionMode','auto');
+            print(['group-' grouplabel '_' factor2 '-lt-' factor1 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_uncorrectedPValue'] ,'-djpeg','-r0'); close
+            disp('Contrast Positive: uncorrected Pvalue'); toc;
+            uncorrectedpvaluesstruct = struct;
+            save(['group-' grouplabel '_' factor2 '-lt-' factor1 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_uncorrectedPValue.mat'],'uncorrectedpvaluesstruct');
 
-        % Computation of the corrected p-values: P-value threshold or statistic threshold for defining clusters, 0.001 by default
-        tic;
-        [ pval, ~, clus ] = SurfStatP( slm , mask, clusterthreshold);
-        pval.thresh = thresholdcorrectedpvalue;
-        SurfStatView( pval, averagesurface, ['(ContrastPo-Corrected P-values) ' factor1 '-' factor2 ' (clusterthreshold = ' num2str(clusterthreshold) ')']);
-        set(gcf,'PaperPositionMode','auto');
-        print(['group-' grouplabel '_' factor2 '-lt-' factor1 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_correctedPValue'] ,'-djpeg','-r0'); close
-        disp('Contrast Positive: Corrected Pvalue'); toc;
-        correctedpvaluesstruct = pval;
-        save(['group-' grouplabel '_' factor2 '-lt-' factor1 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_correctedPValue.mat'],'tvaluewithmask');
+            % Computation of the corrected p-values: P-value threshold or statistic threshold for defining clusters, 0.001 by default
+            tic;
+            [ pval, ~, clus ] = SurfStatP( slm , mask, clusterthreshold);
+            pval.thresh = thresholdcorrectedpvalue;
+            SurfStatView( pval, averagesurface, ['(ContrastPo-Corrected P-values) ' factor1 '-' factor2 ' (clusterthreshold = ' num2str(clusterthreshold) ')']);
+            set(gcf,'PaperPositionMode','auto');
+            print(['group-' grouplabel '_' factor2 '-lt-' factor1 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_correctedPValue'] ,'-djpeg','-r0'); close
+            disp('Contrast Positive: Corrected Pvalue'); toc;
+            correctedpvaluesstruct = pval;
+            save(['group-' grouplabel '_' factor2 '-lt-' factor1 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_correctedPValue.mat'],'correctedpvaluesstruct');
 
-        disp('###')
-        disp('After correction(Clusterwise Correction for Multiple Comparisons): ')
-        if isempty(clus) ~= 1
-            disp(['#Clusters found:                             ' num2str(  length(clus.P)        ) ])
-            disp(['#Significative clusters (after correction) : ' num2str(  length(find(clus.P<=thresholdcorrectedpvalue))  ) ])
+            disp('###')
+            disp('After correction(Clusterwise Correction for Multiple Comparisons): ')
+            if isempty(clus) ~= 1
+                disp(['#Clusters found:                             ' num2str(  length(clus.P)        ) ])
+                disp(['#Significative clusters (after correction) : ' num2str(  length(find(clus.P<=thresholdcorrectedpvalue))  ) ])
+            else
+                disp('No cluster found!');
+            end
+            disp('###');
+
+            % Computation of the false discovery rate :
+            tic;
+            qval = SurfStatQ( slm , mask );
+            SurfStatView( qval, averagesurface, ['ContrastPo-False discovery rate ' factor1 '-' factor2 ]);
+            set(gcf,'PaperPositionMode','auto');
+            print(['group-' grouplabel '_' factor2 '-lt-' factor1 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_FDR'] ,'-djpeg','-r0'); close
+            disp('Contrast Positive: FDR'); toc;
+            qvaluesstruct = qval;
+            save(['group-' grouplabel '_' factor2 '-lt-' factor1 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_FDR.mat'],'qvaluesstruct');
+
+            %% Contrast Negative:
+            % Computation of the T-statisticÌ£:  T statistics for a contrast in a univariate or multivariate model.
+            tic;
+            slm = SurfStatT( slmmodel, contrasteffectgroupneg );
+            SurfStatView( slm.t .* mask, averagesurface, [ 'ContrastNe-value of the T-statistic for ' factor1 '-' factor2 ]);
+            set(gcf,'PaperPositionMode','auto');
+            print(['group-' grouplabel '_' factor1 '-lt-' factor2 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_TStatistics'] ,'-djpeg','-r0'); close
+            disp('Contrast Negative: t_value'); toc;
+            tvaluewithmask = slm.t .* mask;
+            save(['group-' grouplabel '_' factor1 '-lt-' factor2 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_TStatistics.mat'],'tvaluewithmask');
+
+            % Computation of the uncorrected p-value:
+            tic;
+            %t = tpdf(abs(slm.t), slm.df);
+            %uncorrectedpvalues = double(t<=0.05).*t+double(t>0.05);
+            uncorrectedpvalues = 1-tcdf(slm.t,slm.df);
+            clearvars struct; struct.P = uncorrectedpvalues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
+            SurfStatView( struct, averagesurface, [ 'ContrastNe-Uncorrected P-values(' num2str(thresholduncorrectedpvalue) ')' factor1 '-' factor2]);
+            set(gcf,'PaperPositionMode','auto');
+            print(['group-' grouplabel '_' factor1 '-lt-' factor2 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_uncorrectedPValue'] ,'-djpeg','-r0'); close
+            disp('Contrast Negative: Uncorrected Pvalue'); toc;
+            uncorrectedpvaluesstruct = struct;
+            save(['group-' grouplabel '_' factor1 '-lt-' factor2 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_uncorrectedPValue.mat'],'uncorrectedpvaluesstruct');
+
+            % Computation of the corrected p-values: P-value threshold or statistic threshold for defining clusters, 0.001 by default
+            tic;
+            [ pval, ~, clus ] = SurfStatP( slm , mask, clusterthreshold);
+            pval.thresh = thresholdcorrectedpvalue;
+            SurfStatView( pval, averagesurface, ['(ContrastNe-Corrected P-values )' factor1 '-' factor2 ' (clusterthreshold = ' num2str(clusterthreshold) ')']);
+            % to change the background color(black), uncomment this line.
+            %SurfStatView( pval, averagesurface, ['(ContrastNe-Corrected P-values )' factor1 '-' factor2 ' (clusterthreshold = ' num2str(clusterthreshold) ')'], 'black');
+            set(gcf,'PaperPositionMode','auto');
+            print(['group-' grouplabel '_' factor1 '-lt-' factor2 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_correctedPValue'] ,'-djpeg','-r0'); close
+            disp('Contrast Negative: Corrected Pvalue'); toc;
+            correctedpvaluesstruct = pval;
+            save(['group-' grouplabel '_' factor1 '-lt-' factor2 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_correctedPValue.mat'],'correctedpvaluesstruct');
+
+            disp('###')
+            disp('After correction(Clusterwise Correction for Multiple Comparisons): ')
+            if isempty(clus) ~= 1
+                disp(['#Clusters found:                             ' num2str(  length(clus.P)        ) ])
+                disp(['#Significative clusters (after correction) : ' num2str(  length(find(clus.P<=thresholdcorrectedpvalue))  ) ])
+            else
+                disp('No cluster found!')
+            end
+            disp('###')
+
+            % Computation of the false discovery rate :
+            tic;
+            qval = SurfStatQ( slm , mask );
+            SurfStatView( qval, averagesurface, ['ContrastNe-False discovery rate ' factor1 '-' factor2 ]);
+            set(gcf,'PaperPositionMode','auto');
+            print(['group-' grouplabel '_' factor1 '-lt-' factor2 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_FDR'] ,'-djpeg','-r0'); close
+            disp('Contrast Negative: FDR'); toc;
+            qvaluesstruct = qval;
+            save(['group-' grouplabel '_' factor1 '-lt-' factor2 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_FDR.mat'],'qvaluesstruct');
         else
-            disp('No cluster found!');
+            disp(['The GLM linear model is: ', designmatrix])
+            disp(['The contrast here is the interaction between one continue variable and one categorical variable: ', contrast])
+
+            strs_contrast = strsplit(contrast,'*');
+            if size(eval(strs_contrast{1}), [, 2]) == 1 % test the size of the continue and categorical term
+                continue_contrast = strs_contrast{1};
+                categorical_contrast = strs_contrast{2};
+            else
+                continue_contrast = strs_contrast{2};
+                categorical_contrast = strs_contrast{1} ;               
+            end
+            categorical_term = eval(categorical_contrast);
+            continue_term = eval(continue_contrast);
+            contrast_interaction    = continue_term(1).*categorical_term(1) - continue_term(1).*categorical_term(2);
+            thicksubject = thicksubject';
+            slm = SurfStatLinMod(thicksubject, eval(designmatrix), averagesurface);
+            slm = SurfStatT( slm, contrast_interaction);
+            SurfStatView( slm.t .* mask, averagesurface, ['T-statistic for interaction' contrast]);
+            set(gcf,'PaperPositionMode','auto');
+            print(['interaction-' contrast '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_TStatistics'] ,'-djpeg','-r0'); close
+            tvaluewithmask = slm.t .* mask;
+            save(['interaction-' contrast '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_TStatistics.mat'],'tvaluewithmask');
+            % find the maximum t score for a voxel and plot the regression
+            % line to check the slopes for two groups
+            biggestT = find(slm.t == max( slm.t ));
+            Yseed = double( thicksubject(:,biggestT(1)) );
+            SurfStatPlot( continue_term, Yseed, 1, categorical_term );
+            xlabel(strcat(continue_contrast, ':', num2str(biggestT(1))))
+            ylabel('Yseed')
+            set(gcf,'PaperPositionMode','auto');
+            print(['Highest T value vertex Yseed versus ' continue_contrast] ,'-djpeg','-r0'); close
+            
+            % F statistics are obtained by comparing nested models
+            % test if the contrast has the same format like in designmatrix
+            if strfind(designmatrix, contrast) ~= 0 % contrast is inside designmatrix with the same order
+                designmatrix_reduced_model = strrep(strrep(designmatrix, ' ', ''), strcat('+',contrast), '');
+            else % if the order is not the same in designmatrix
+                contrast_inverse = strsplit(contrast, '*');
+                contrast = char(strcat(contrast_inverse(2), '*', contrast_inverse(1))); 
+                designmatrix_reduced_model = strrep(strrep(designmatrix, ' ', ''), strcat('+',contrast), '');
+            end
+            slm_reduce = SurfStatLinMod( thicksubject, eval(char(designmatrix_reduced_model)), averagesurface );
+            slm = SurfStatF( slm, slm_reduce );
+            SurfStatView( slm.t.*mask, averagesurface, ['F-statistic for interaction ' contrast]);
+            set(gcf,'PaperPositionMode','auto');
+            print(['interaction-' contrast '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_FStatistics'] ,'-djpeg','-r0'); close
+            fvaluewithmask = slm.t .* mask;
+            save(['interaction-' contrast '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_FStatistics.mat'],'fvaluewithmask');
+            
+            % pvalue 
+            [ pval, ~, clus ] = SurfStatP( slm , mask, clusterthreshold);
+            pval.thresh = thresholdcorrectedpvalue;
+            SurfStatView( pval, averagesurface, ['Corrected Pvalue for interaction ', contrast, ' (clusterthreshold = ' num2str(clusterthreshold) ')']);
+            % to change the background color(black), uncomment this line.
+            %SurfStatView( pval, averagesurface, ['(ContrastNe-Corrected P-values )' factor1 '-' factor2 ' (clusterthreshold = ' num2str(clusterthreshold) ')'], 'black');
+            set(gcf,'PaperPositionMode','auto');
+            print(['interaction-' contrast '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_correctedPValue'] ,'-djpeg','-r0'); close
+            correctedpvaluesstruct = pval;
+            save(['interaction-' contrast '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_correctedPValue.mat'],'correctedpvaluesstruct');
+            
+            % display the details of cluster-wise correction
+            disp('###')
+            disp('After correction(Clusterwise Correction for Multiple Comparisons): ')
+            if isempty(clus) ~= 1
+                disp(['#Clusters found:                             ' num2str(  length(clus.P)        ) ])
+                disp(['#Significative clusters (after correction) : ' num2str(  length(find(clus.P<=thresholdcorrectedpvalue))  ) ])
+            else
+                disp('No cluster found!')
+            end
+            disp('###')
+            
+            % FDR correction with 0.05 threshold, q value
+            qval = SurfStatQ( slm , mask );
+            SurfStatView( qval, averagesurface, ['False discovery rate for interaction ' contrast]);
+            set(gcf,'PaperPositionMode','auto');
+            print(['interaction-' contrast '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_FDR'] ,'-djpeg','-r0'); close
+            disp('Interaction: FDR'); 
+            qvaluesstruct = qval;
+            save(['interaction-' contrast '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_FDR.mat'],'qvaluesstruct');
         end
-        disp('###');
-
-        % Computation of the false discovery rate :
-        tic;
-        qval = SurfStatQ( slm , mask );
-        SurfStatView( qval, averagesurface, ['ContrastPo-False discovery rate ' factor1 '-' factor2 ]);
-        set(gcf,'PaperPositionMode','auto');
-        print(['group-' grouplabel '_' factor2 '-lt-' factor1 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_FDR'] ,'-djpeg','-r0'); close
-        disp('Contrast Positive: FDR'); toc;
-        qvaluesstruct = qval;
-        save(['group-' grouplabel '_' factor2 '-lt-' factor1 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_FDR.mat'],'tvaluewithmask');
-
-        %% Contrast Negative:
-        % Computation of the T-statistic̣:  T statistics for a contrast in a univariate or multivariate model.
-        tic;
-        slm = SurfStatT( slmmodel, contrasteffectgroupneg );
-        SurfStatView( slm.t .* mask, averagesurface, [ 'ContrastNe-value of the T-statistic for ' factor1 '-' factor2 ]);
-        set(gcf,'PaperPositionMode','auto');
-        print(['group-' grouplabel '_' factor1 '-lt-' factor2 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_TStatistics'] ,'-djpeg','-r0'); close
-        disp('Contrast Negative: t_value'); toc;
-        tvaluewithmask = slm.t .* mask;
-        save(['group-' grouplabel '_' factor1 '-lt-' factor2 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_TStatistics.mat'],'tvaluewithmask');
-
-        % Computation of the uncorrected p-value:
-        tic;
-        %t = tpdf(abs(slm.t), slm.df);
-        %uncorrectedpvalues = double(t<=0.05).*t+double(t>0.05);
-        uncorrectedpvalues = 1-tcdf(slm.t,slm.df);
-        clearvars struct; struct.P = uncorrectedpvalues; struct.mask = mask; struct.thresh = thresholduncorrectedpvalue;
-        SurfStatView( struct, averagesurface, [ 'ContrastNe-Uncorrected P-values(' num2str(thresholduncorrectedpvalue) ')' factor1 '-' factor2]);
-        set(gcf,'PaperPositionMode','auto');
-        print(['group-' grouplabel '_' factor1 '-lt-' factor2 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_uncorrectedPValue'] ,'-djpeg','-r0'); close
-        disp('Contrast Negative: Uncorrected Pvalue'); toc;
-        uncorrectedpvaluesstruct = struct;
-        save(['group-' grouplabel '_' factor1 '-lt-' factor2 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_uncorrectedPValue.mat'],'tvaluewithmask');
-
-        % Computation of the corrected p-values: P-value threshold or statistic threshold for defining clusters, 0.001 by default
-        tic;
-        [ pval, ~, clus ] = SurfStatP( slm , mask, clusterthreshold);
-        pval.thresh = thresholdcorrectedpvalue;
-        SurfStatView( pval, averagesurface, ['(ContrastNe-Corrected P-values )' factor1 '-' factor2 ' (clusterthreshold = ' num2str(clusterthreshold) ')']);
-        % to change the background color(black), uncomment this line.
-        %SurfStatView( pval, averagesurface, ['(ContrastNe-Corrected P-values )' factor1 '-' factor2 ' (clusterthreshold = ' num2str(clusterthreshold) ')'], 'black');
-        set(gcf,'PaperPositionMode','auto');
-        print(['group-' grouplabel '_' factor1 '-lt-' factor2 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_correctedPValue'] ,'-djpeg','-r0'); close
-        disp('Contrast Negative: Corrected Pvalue'); toc;
-        correctedpvaluesstruct = pval;
-        save(['group-' grouplabel '_' factor1 '-lt-' factor2 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_correctedPValue.mat'],'tvaluewithmask');
-
-        disp('###')
-        disp('After correction(Clusterwise Correction for Multiple Comparisons): ')
-        if isempty(clus) ~= 1
-            disp(['#Clusters found:                             ' num2str(  length(clus.P)        ) ])
-            disp(['#Significative clusters (after correction) : ' num2str(  length(find(clus.P<=thresholdcorrectedpvalue))  ) ])
-        else
-            disp('No cluster found!')
-        end
-        disp('###')
-
-        % Computation of the false discovery rate :
-        tic;
-        qval = SurfStatQ( slm , mask );
-        SurfStatView( qval, averagesurface, ['ContrastNe-False discovery rate ' factor1 '-' factor2 ]);
-        set(gcf,'PaperPositionMode','auto');
-        print(['group-' grouplabel '_' factor1 '-lt-' factor2 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_FDR'] ,'-djpeg','-r0'); close
-        disp('Contrast Negative: FDR'); toc;
-        qvaluesstruct = qval;
-        save(['group-' grouplabel '_' factor1 '-lt-' factor2 '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_FDR.mat'],'tvaluewithmask');
 
     case 'correlation'
         %% if the contrast is continuous variable, dont use term, just use double to fit in the test!!!
