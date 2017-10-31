@@ -1,3 +1,3 @@
 # Clinica
 
-Welcome to the [**Clinica**](http://www.clinica.run) Software! All the information can be found on the [wiki](http://www.clinica.run/doc) section !
+Welcome to the [**Clinica**](http://clinica.run) software! All the information can be found on the [wiki](http://clinica.run/doc) section!
