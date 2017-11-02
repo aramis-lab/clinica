@@ -835,9 +835,11 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
         dict = []
         for i in files_to_read:
             file_to_read = pd.read_csv(i, dtype={'text': unicode})
+            #file_to_read = pd.io.parsers.read_csv(i, sep=',')
+            if len(file_to_read.columns) == 1:
+                file_to_read = pd.read_csv(i, sep = ';')
             # information are written following the BIDS specifications
             viscode = file_to_read.loc[(file_to_read["RID"] == r), "VISCODE"]
-            #TODO: fix the logic error when viscode[false] = ?????
             viscode[viscode == 'bl'] = 'M00'
             viscode[viscode == 'm18'] = 'M18'
             viscode[viscode == 'm36'] = 'M36'
@@ -846,6 +848,9 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
                 if i in list(file_to_read.columns.values) and i == 'MMSCORE':
                     MMSCORE = file_to_read.loc[(file_to_read["RID"] == r), i]
                     MMSCORE[MMSCORE == -4] = np.nan
+                elif i in list(file_to_read.columns.values) and i == 'CDGLOBAL':
+                    CDGLOBAL = file_to_read.loc[(file_to_read["RID"] == r), i]
+                    CDGLOBAL[CDGLOBAL == -4] = np.nan
                 elif i in list(file_to_read.columns.values) and i == 'DXCURREN':
                     DXCURREN = file_to_read.loc[(file_to_read["RID"] == r), i]
                     DXCURREN[DXCURREN == -4] = np.nan
@@ -856,6 +861,7 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
                     EXAMDATE = file_to_read.loc[(file_to_read["RID"] == r), i]
         dict = pd.DataFrame({'session_id': 'ses-' + viscode,
                              'MMS': MMSCORE,
+                             'cdr_sb': CDGLOBAL,
                              'diagnosis': DXCURREN,
                              'examination_date': EXAMDATE
                              })
