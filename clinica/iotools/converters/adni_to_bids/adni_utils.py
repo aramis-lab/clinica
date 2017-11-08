@@ -421,11 +421,9 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                                         if type(row['VISCODE2']) == float:
                                             continue
                                         visit_id = row['VISCODE2']
-                                        print visit_id
                                         # Convert sc to bl
                                         if visit_id == 'sc':
                                             visit_id = 'bl'
-                                            print "conversion sc to bl"
                                     else:
                                         visit_id = row['VISCODE']
 
