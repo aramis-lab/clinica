@@ -11,9 +11,9 @@ __maintainer__ = "Jorge Samper Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
+
 def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     """
-
     Args:
         source_dir:
         csv_dir:
@@ -25,14 +25,18 @@ def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     """
     import pandas as pd
     from os import path
+    from clinica.utils.stream import cprint
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
         adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
         subjs_list = list(adni_merge.PTID.unique())
 
+    cprint('Calculating paths of FDG PET images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
     images = compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
+    cprint('Paths of FDG PET images found. Exporting images into BIDS ...')
     fdg_pet_paths_to_bids(images, dest_dir)
+    cprint('FDG PET conversion done.')
 
 
 def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
@@ -53,6 +57,7 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     from numpy import argsort
     # from clinica.iotools.converters.adni_utils import replace_sequence_chars
     from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
+    from clinica.utils.stream import cprint
 
     pet_fdg_col = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
                    'Series_ID', 'Image_ID', 'Original']
@@ -68,7 +73,7 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         subject_pet_meta = pet_meta_list[pet_meta_list['Subject'] == subj]
         if subject_pet_meta.shape[0] < 1:
             # TODO Log somewhere subjects with problems
-            print 'NO Screening: Subject - ' + subj
+            cprint('NO Screening: Subject - ' + subj)
             continue
 
         for visit in list(pet_qc_subj.VISCODE2.unique()):
@@ -85,7 +90,7 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                         normal_meta.append(pet_meta_image)
                 if len(normal_images) == 0:
                     # TODO Log somewhere subjects with problems
-                    print 'No regular FDG-PET image: Subject - ' + subj + ' for visit ' + visit
+                    cprint('No regular FDG-PET image: Subject - ' + subj + ' for visit ' + visit)
                     continue
                 if len(normal_images) == 1:
                     qc_visit = normal_images[0]
@@ -115,7 +120,7 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                                                      & (subject_pet_meta['Scan Date'] == qc_visit.EXAMDATE)]
                 if original_pet_meta.shape[0] < 1:
                     # TODO Log somewhere subjects with problems
-                    print 'NO Screening: Subject - ' + subj + ' for visit ' + qc_visit.VISCODE2
+                    cprint('NO Screening: Subject - ' + subj + ' for visit ' + qc_visit.VISCODE2)
                     continue
             original_image = original_pet_meta.iloc[0]
             averaged_pet_meta = subject_pet_meta[(subject_pet_meta['Sequence'] == 'Co-registered, Averaged') & (
@@ -172,7 +177,7 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         is_dicom.append(dicom)
         image_folders.append(image_path)
         if image_path == '':
-            print 'Not found ' + str(image.Subject_ID)
+            cprint('Not found ' + str(image.Subject_ID))
 
     images.loc[:, 'Is_Dicom'] = pd.Series(is_dicom, index=images.index)
     images.loc[:, 'Path'] = pd.Series(image_folders, index=images.index)
@@ -203,6 +208,7 @@ def fdg_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2ni
     from os import path
     import numpy
     import glob
+    from clinica.utils.stream import cprint
 
     count = 0
     total = images.shape[0]
@@ -213,10 +219,10 @@ def fdg_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2ni
         count += 1
 
         if image.Path is numpy.nan:
-            print 'No path specified for ' + image.Subject_ID + ' in session ' + image.VISCODE
+            cprint('No path specified for ' + image.Subject_ID + ' in session ' + image.VISCODE)
             continue
 
-        print 'Processing subject ' + str(subject) + ' - session ' + image.VISCODE + ', ' + str(count) + ' / ' + str(total)
+        cprint('Processing subject ' + str(subject) + ' - session ' + image.VISCODE + ', ' + str(count) + ' / ' + str(total))
 
         session = adni_utils.viscode_to_session(image.VISCODE)
         image_path = image.Path
@@ -238,7 +244,7 @@ def fdg_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2ni
         # If updated mode is selected, check if an old FDG image is existing and remove it
         existing_fdg = glob.glob(path.join(output_path, output_filename + '*'))
         if mod_to_update and len(existing_fdg) > 0:
-            print 'Removing the old FDG image...'
+            cprint('Removing the old FDG image...')
             for fdg in existing_fdg:
                 os.remove(fdg)
                 # ------------------
@@ -265,7 +271,7 @@ def fdg_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2ni
                 output_image = path.join(output_path, output_filename + '.nii.gz')
 
                 if not path.isfile(nifti_file):
-                    print 'DICOM to NIFTI conversion error for ' + image_path
+                    cprint('DICOM to NIFTI conversion error for ' + image_path)
                     continue
 
             adni_utils.center_nifti_origin(nifti_file, output_image)
