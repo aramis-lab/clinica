@@ -169,7 +169,7 @@ def metric_distribution(metric, labels, output_path, num_classes=2, metric_label
 
     plt.legend(loc=2, ncol=num_datasets)
 
-    ax.tick_params(axis='both', which='major', labelsize=15)
+    ax. tick_params(axis='both', which='major', labelsize=15)
     ax.grid(axis='y', which='major')
 
     lower_lim = np.round(np.min([ np.float64(0.9 / num_classes), metric.min() ]), 3)

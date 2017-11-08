@@ -2,15 +2,12 @@
 """
 Utils to convert AIBL dataset in BIDS
 
-
-@author: Simona Bottani
-
 """
 
 __author__ = "Simona Bottani"
 __copyright__ = "Copyright 2011, The Aramis Lab Team"
 __credits__ = ["Simona Bottani"]
-__license__ = ""
+__license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Simona Bottani"
 __email__ = "simona.bottani@icm-institute.org"
@@ -19,58 +16,49 @@ __status__ = "Development"
 
 
 def listdir_nohidden(path):
-    '''
+    """
 
        This method lists all the subdirectories of path except the hidden folders'
 
         :param path: path whose subdirectories are needed
         :return: list of all the subdirectories of path
-    '''
+    """
 
     import os
-
     result = []
     for x in os.listdir(path):
+        if not x.startswith(".") :
         # check if there is the folder .DS_STORE, if it's present, we do not save them
-        if x.startswith("."):
-            continue
-        else:
             result.append(x)
+        #yield x
     return result
 
 
 def find_T1_folder(subdirectory, path_to_T1_1):
-    '''
+    """
 
         This method checks if the subdirectory contains a T1 image, and it returns the h
 
         :param subdirectory: name of the folder
         :return: previous path to arrive to the T1 image
-    '''
+    """
 
     import os
 
-    # there are if conditions which checks if the subfolder contain a T1 image
-    if subdirectory == 'MPRAGE_ADNI_confirmed':
-        return os.path.join(path_to_T1_1, 'MPRAGE_ADNI_confirmed')
-    elif subdirectory == 'MPRAGE':
-        return os.path.join(path_to_T1_1, 'MPRAGE')
-    elif subdirectory == 'MPRAGE_ADNI_confirmed_RPT':
-        return os.path.join(path_to_T1_1, 'MPRAGE_ADNI_confirmed_RPT')
-    elif subdirectory == 'MPRAGE_ADNI_confirmed_REPEATX2':
-        return os.path.join(path_to_T1_1, 'MPRAGE_ADNI_confirmed_REPEATX2')
-    elif subdirectory == 'MPRAGE_ADNI_confirmed_repeat':
-        return os.path.join(path_to_T1_1, 'MPRAGE_ADNI_confirmed_repeat')
-    elif subdirectory == 'MPRAGE_ADNI_confirmed_REPEAT':
-        return os.path.join(path_to_T1_1, 'MPRAGE_ADNI_confirmed_REPEAT')
-    elif subdirectory == 'MPRAGE_ADNI_conf_REPEAT':
-        return os.path.join(path_to_T1_1, 'MPRAGE_ADNI_conf_REPEAT')
-    else:
-        return 'NaN'  # there are no more folders which could contain T1 images
+    path_to_convert = {'MPRAGE_ADNI_confirmed', 'MPRAGE', 'MPRAGE_ADNI_confirmed_RPT', 'MPRAGE_ADNI_confirmed_REPEATX2', 'MPRAGE_ADNI_confirmed_repeat', 'MPRAGE_ADNI_confirmed_REPEAT',
+                       'MPRAGE_ADNI_conf_REPEAT'}
+    for j in path_to_convert:
+        path = []
+        #if conditions which checks if the subfolder contain a T1 image
+        if j == subdirectory:
+            path = os.path.join(path_to_T1_1, subdirectory)
+            return path
+    if path == []:
+        return 'NaN' # there are no more folders which could contain T1 images
 
 
 def find_T1_folder_nodata(subdirectory, path_to_T1_1):
-    '''
+    """
 
        This method checks if the subdirectory contains a T1 image, and it returns the path. This method differs from the 
        find_T1_folder since for these folders the exame_date is not present in the clinical excel file and we will not check if the exame_date corresponds
@@ -78,53 +66,53 @@ def find_T1_folder_nodata(subdirectory, path_to_T1_1):
 
         :param subdirectory: name of the folder
         :return: previous path to arrive to the T1 image
-    '''
+    """
     import os
 
-    if subdirectory == 'MPRAGESAGISOp2ND':
-        return os.path.join(path_to_T1_1, 'MPRAGESAGISOp2ND')
-    elif subdirectory == 'MPRAGE_SAG_ISO_p2_ND':
-        return os.path.join(path_to_T1_1, 'MPRAGE_SAG_ISO_p2_ND')
-    elif subdirectory == 'MPRAGE_SAG_ISO_p2':
-        return os.path.join(path_to_T1_1, 'MPRAGE_SAG_ISO_p2')
-    else:
-        return 'NaN'  # there are no more folders which could contain T1 images
+    path_to_convert = {'MPRAGESAGISOp2ND', 'MPRAGE_SAG_ISO_p2_ND', 'MPRAGE_SAG_ISO_p2'}
+    for j in path_to_convert:
+        path = []
+        #if conditions which checks if the subfolder contain a T1 image
+        if j == subdirectory:
+            path = os.path.join(path_to_T1_1, subdirectory)
+            return path
+    if path == []:
+        return 'NaN' # there are no more folders which could contain T1 images
 
 
 def find_correspondance_index(i, csv_file):
-    '''
+    """
 
         This method gives as output the index of the csv file analysed which correspond to the 'i' subject
 
         :param i: subject_ID
         :param csv_file: csv file where all the information are listed
         :return: index
-    '''
+    """
 
     index = []
     for x in csv_file.RID:
         if i == str(x):
             index = csv_file.RID[csv_file.RID == x].index.tolist()
-    return index
+            return index
+
 
 
 def find_correspondance_date(index, csv_file):
-    '''
+    """
 
         The method returns the dates reported in the csv_file for the i-subject 
 
         :param index: index corresponding to the subject analysed
         :param csv_file: csv file where all the information are listed
         :return date
-    '''
+    """
 
-    csv_date = []
-    csv_date = csv_file.EXAMDATE[index]
-    return csv_date
+    return csv_file.EXAMDATE[index]
 
 
 def match_data(exame_date, i, csv_file):
-    '''
+    """
 
         This method returns the session_ID. It controls if the dates corresponding to the image (from the name
         of the subdirectory) correspond to one of the dates listed from the csv_file for the subject analysed. The session_ID 
@@ -135,7 +123,7 @@ def match_data(exame_date, i, csv_file):
         :param i: subject_ID
         :param csv_file: csv file where all the information are listed
         :return session_id of the patient
-    '''
+    """
 
     import re
 
@@ -155,41 +143,20 @@ def match_data(exame_date, i, csv_file):
 
 
 def list_of_paths():
-    ''' 
+    """
 
         It lists all the folders which not contain PET images
-    '''
-    path_not_for_pet = ['.DS_Store', 'localizer',
-                        'Space_3D_T2_FLAIR_sag_p2',
-                        'AXIAL_FLAIR',
-                        'MPRAGE_ADNI_confirmed_REPEATX2',
-                        'Axial_PD-T2_TSE',
-                        'Axial_PD-T2_TSE_repeat',
-                        'MPRAGE_SAG_ISO_p2_ND',
-                        'Axial_PD-T2_TSE_confirmed',
-                        'MPRAGESAGISOp2ND',
-                        'MPRAGE_ADNI_confirmed',
-                        'MPRAGE_ADNI_confirmed_repeat',
-                        'MPRAGE_SAG_ISO_p2',
-                        'MPRAGE',
-                        'MPRAGE_ADNI_confirmed_REPEAT',
-                        'Axial_PD-T2_TSE_confirmed_repeat',
-                        'MPRAGE_ADNI_conf_REPEAT',
-                        'Space_3D_T2_FLAIR_sag_p2_REPEAT',
-                        'MPRAGE_ADNI_confirmed_RPT',
-                        'Brain_256_1.6_zoom_4_x_4_iter',
-                        'Space_3D_T2_FLAIR_sag_REPEAT',
-                        'Axial_PD-T2_TSE_RPTconfirmed',
-                        'Axial_PD-T2_TSE_RPT_confirmed',
-                        'Axial_PD-T2_TSE_confirmed_REPEAT',
-                        'flair_t2_spc_irprep_ns_sag_p2_1mm_iso',
-                        'localiser'
-                        ]
-    return path_not_for_pet
+    """
+    return ['.DS_Store', 'localizer',  'Space_3D_T2_FLAIR_sag_p2', 'AXIAL_FLAIR',  'MPRAGE_ADNI_confirmed_REPEATX2', 'Axial_PD-T2_TSE',
+             'Axial_PD-T2_TSE_repeat', 'MPRAGE_SAG_ISO_p2_ND', 'Axial_PD-T2_TSE_confirmed', 'MPRAGESAGISOp2ND',  'MPRAGE_ADNI_confirmed',
+            'MPRAGE_ADNI_confirmed_repeat', 'MPRAGE_SAG_ISO_p2',  'MPRAGE', 'MPRAGE_ADNI_confirmed_REPEAT', 'Axial_PD-T2_TSE_confirmed_repeat',
+            'MPRAGE_ADNI_conf_REPEAT',  'Space_3D_T2_FLAIR_sag_p2_REPEAT', 'MPRAGE_ADNI_confirmed_RPT', 'Brain_256_1.6_zoom_4_x_4_iter',
+            'Space_3D_T2_FLAIR_sag_REPEAT',  'Axial_PD-T2_TSE_RPTconfirmed', 'Axial_PD-T2_TSE_RPT_confirmed', 'Axial_PD-T2_TSE_confirmed_REPEAT',
+            'flair_t2_spc_irprep_ns_sag_p2_1mm_iso',  'localiser']
 
 
 def check_subdirectories_pet(subdirectories, sub, no_pet):
-    ''' 
+    """ 
 
         It returns the correct subdirectories for the PET images, they should belong to the list where there all the possible
         names of the PET images 
@@ -198,7 +165,7 @@ def check_subdirectories_pet(subdirectories, sub, no_pet):
         :param sub: all the possible subdirectories which need to be checked
         :param no pet: list of names of folders which not contain PET images 
         :return subdirectory which is containing a PET image which needs to be converted
-    '''
+    """
 
     for j in xrange(len(sub)):
         if (sub[j] not in no_pet) & (sub[j] != '.DS_Store'):
@@ -208,31 +175,35 @@ def check_subdirectories_pet(subdirectories, sub, no_pet):
 
 
 def compress_nii(file_path):
-    '''
+    """
 
         Compress .nii file
 
         :param file_path:
         :return: compressed image
-    '''
+    """
 
     from os import path
     import os
     import gzip
+    from clinica.utils.stream import cprint
 
-    f_in = open(file_path)
-    f_out = gzip.open(path.join(file_path + '.gz'), 'wb')
-    f_out.writelines(f_in)
-    f_out.close()
-    f_in.close()
+    try:
+        f_in = open(file_path)
+        f_out = gzip.open(path.join(file_path + '.gz'), 'wb')
+        f_out.writelines(f_in)
+        f_out.close()
+        f_in.close()
 
-    # Remove the original file in order to have only the compressed image
-    os.remove(file_path)
+        # Remove the original file in order to have only the compressed image
+        os.remove(file_path)
+    except Exception as e:
+        cprint("file NIFTI not found for compression")
 
 
 def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dcm2niix', dcm2nii='dcm2nii',
                  mri_convert='mri_convert'):
-    '''
+    """ 
 
         From dicom to nifti converts the dicom images in a nifti files using dicom2nii or mri_convert
 
@@ -241,9 +212,11 @@ def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dc
         :param output_filename: name of the nifti image 
         :param image_path: where dicom files are stored 
         :return: Image in a nifti format 
-    '''
+    """
     import os
     import gzip
+    import subprocess
+    from clinica.utils.stream import cprint
 
     try:
         os.makedirs(output_path)
@@ -253,13 +226,14 @@ def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dc
 
     # if image.Is_Dicom:
     command = dcm2niix + ' -b n -z n -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
-    os.system(command)
+    subprocess.Popen(command)
     nifti_file = os.path.join(output_path, output_filename + '.nii')
 
     # Check if conversion worked (output file exists?)
     if not os.path.isfile(nifti_file):
         command = dcm2nii + ' -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
-        os.system(command)
+
+        subprocess.Popen(command)
         nifti_file = os.path.join(output_path, subject.replace('_', '') + '.nii')
 
     if nifti_file == os.path.join(output_path, 'DE-IDENTIFIED.nii') or nifti_file == os.path.join(output_path,
@@ -269,19 +243,26 @@ def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dc
         dicom_image = os.path.join(image_path, dicom_image[1])
         # it requires the installation of Freesurfer
         command = mri_convert + ' ' + dicom_image + ' ' + os.path.join(output_path, output_filename + '.nii')
-        os.system(command)
+        subprocess.Popen(command)
 
         nifti_file_1 = os.path.join(output_path, output_filename + '.nii')
-        f_in = open(nifti_file_1)
-        f_out = gzip.open(os.path.join(nifti_file_1 + '.gz'), 'wb')
-        f_out.writelines(f_in)
-        f_out.close()
-        f_in.close()
+        try:
+            f_in = open(nifti_file_1)
+            f_out = gzip.open(os.path.join(nifti_file_1 + '.gz'), 'wb')
+            f_out.writelines(f_in)
+            f_out.close()
+            f_in.close()
 
-        # Remove the original file
-        os.remove(nifti_file_1)
+
+            # Remove the original file
+            os.remove(nifti_file_1)
+        except Exception as e:
+            cprint("file NIFTI not found")
         if os.path.exists(os.path.join(output_path, 'DE-IDENTIFIED.nii')):
-            os.remove(os.path.join(output_path, 'DE-IDENTIFIED.nii'))
+            try:
+                os.remove(os.path.join(output_path, 'DE-IDENTIFIED.nii'))
+            except Exception as e:
+                cprint("file to delete not found")
 
         output_image = os.path.join(output_path, output_filename + '.nii')
     else:
@@ -291,14 +272,14 @@ def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dc
 
 
 def viscode_to_session(viscode):
-    '''
+    """
 
         Replace the session label 'bl' with 'M00' or capitalize the session name passed
         as input.
 
         :param viscode: session name
         :return: M00 if is the baseline session or the original session name capitalized
-    '''
+    """
     if viscode == 'bl':
         return 'M00'
     else:
@@ -306,7 +287,7 @@ def viscode_to_session(viscode):
 
 
 def find_path_to_pet_modality(path_to_dataset, csv_file):
-    '''
+    """
 
         This method creates a Dataframe which contains all the paths to the PET image of a modality (for example AV45 or PIB)
 
@@ -314,10 +295,15 @@ def find_path_to_pet_modality(path_to_dataset, csv_file):
         :param csv_file: file which correspond to the modality
         :return: A dataframe which contains the path for PET images for a single modality and subject_ID and session_ID are 
         reported for each path
-    '''
+    """
 
     import os
     import pandas
+
+
+    #TODO
+    #exclude_subjects = get_exclude_subject(file.txt)
+
 
     no_pet = list_of_paths()
     subjects_ID = listdir_nohidden(path_to_dataset)
@@ -328,39 +314,46 @@ def find_path_to_pet_modality(path_to_dataset, csv_file):
     sub_ID = []
     ses_ID = []
     path_pet = []
-    for i in subjects_ID:
-        # Iteration through all the subjects_ID
-        if int(i) in list(csv_file.RID):
-            # check if the subject is present in the csv_file for the modality selected
-            subdirectories = []
-            path_to_pet_1 = os.path.join(path_to_dataset, str(i))
-            # subdirectory_all = os.listdir(path_to_pet_1)
-            subdirectory_all = listdir_nohidden(path_to_pet_1)
-            subdirectories = check_subdirectories_pet(subdirectories, subdirectory_all, no_pet)
-            # selection only of the folders which contain PET image
-            for j in xrange(len(subdirectories)):
-                path_to_pet_2 = os.path.join(path_to_pet_1, subdirectories[j])
-                exame_date = listdir_nohidden(path_to_pet_2)
-                # exame date of the image which is going to be converted
-                for x in xrange(len(exame_date)):
-                    # selection of the session_ID matching the data in the csv_file with the one of the image
-                    session_ID = match_data(exame_date[x], i, csv_file)
-                    if session_ID != '-4':
-                        path_to_pet_3 = os.path.join(path_to_pet_2, str(exame_date[x]))
-                        # For the RID 1607 there are two PET images of the flute modality, and we select the first
-                        if i == '1607':
-                            if subdirectories[j] == 'Flute_256_1.6_Zoom_plain_4_x_4_Iter':
-                                image_ID = ['I442930']
-                            else:
-                                image_ID = listdir_nohidden(path_to_pet_3)
+
+    # Iteration through all the subjects_ID
+    def is_int(x):
+        for i in x :
+            if int(i) in list(csv_file.RID): yield i
+
+#    def append_path(image_ID):
+
+    for i in is_int(subjects_ID):
+        # check if the subject is present in the csv_file for the modality selected
+        subdirectories = []
+        path_to_pet_1 = os.path.join(path_to_dataset, str(i))
+        # subdirectory_all = os.listdir(path_to_pet_1)
+        subdirectory_all = listdir_nohidden(path_to_pet_1)
+        subdirectories = check_subdirectories_pet(subdirectories, subdirectory_all, no_pet)
+        # selection only of the folders which contain PET image
+        for j in xrange(len(subdirectories)):
+            path_to_pet_2 = os.path.join(path_to_pet_1, subdirectories[j])
+            exame_date = listdir_nohidden(path_to_pet_2)
+            # exame date of the image which is going to be converted
+            for x in xrange(len(exame_date)):
+                # selection of the session_ID matching the data in the csv_file with the one of the image
+                session_ID = match_data(exame_date[x], i, csv_file)
+                if session_ID != '-4':
+                    path_to_pet_3 = os.path.join(path_to_pet_2, str(exame_date[x]))
+                    # For the RID 1607 there are two PET images of the flute modality, and we select the first
+                    if i == '1607':
+                        if subdirectories[j] == 'Flute_256_1.6_Zoom_plain_4_x_4_Iter':
+                            image_ID = ['I442930']
                         else:
                             image_ID = listdir_nohidden(path_to_pet_3)
-                        for y in xrange(len(image_ID)):
-                            # final path to find the image we want to convert
-                            path_to_pet = os.path.join(path_to_pet_3, image_ID[y])  #
-                            sub_ID.append(i)
-                            ses_ID.append(session_ID)
-                            path_pet.append(path_to_pet)
+                    else:
+                        image_ID = listdir_nohidden(path_to_pet_3)
+
+                    for y in xrange(len(image_ID)):
+                        # final path to find the image we want to convert
+                        path_to_pet = os.path.join(path_to_pet_3, image_ID[y])  #
+                        sub_ID.append(i)
+                        ses_ID.append(session_ID)
+                        path_pet.append(path_to_pet)
 
     data = pandas.DataFrame({'Subjects_ID': sub_ID,
                              'Session_ID': ses_ID,
@@ -371,7 +364,7 @@ def find_path_to_pet_modality(path_to_dataset, csv_file):
 
 
 def find_path_to_T1_ADNI(file_mri, subjects_ID, path_to_dataset):
-    '''
+    """
 
         This method creates a Dataframe which contains all the paths to the T1 images which are ADNI compliant (as
         explained in the AIBL website). This images differ from the others T1 of the dataset since in the cvs_file is 
@@ -382,7 +375,7 @@ def find_path_to_T1_ADNI(file_mri, subjects_ID, path_to_dataset):
         :param subjects_ID: subjects_id in the dataset dowloaded
         :param path_to_dataset: path to AIBL dataset
         :return: A dataframe which contains the path for T1 images and subject_ID and session_ID are reported for each path
-    '''
+    """
     import os
 
     sub_ID = []
@@ -419,7 +412,7 @@ def find_path_to_T1_ADNI(file_mri, subjects_ID, path_to_dataset):
 
 
 def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
-    '''
+    """
 
         This method creates a Dataframe which contains all the paths to the T1 images which are not ADNI compliant, 
         they contain the word "SAG" in their name
@@ -430,7 +423,7 @@ def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
         :param ses_ID: the previous list (from T1_ADNI) where new session ID will be appended
         :param path_T1:the previous list (from T1_ADNI) where new paths will be appended
         :return: it completes the list of all the T1 paths including all the images where we didn't find the exame-data but we can fix it with a further analysis
-    '''
+    """
     import os
 
     for i in subjects_ID:
@@ -466,14 +459,14 @@ def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
 
 
 def find_path_to_T1(path_to_dataset, path_to_csv):
-    '''
+    """
         This method creates a DataFrame for the T1 images, where for each of them the subject ID, the session ID
         and the path to the image are reported
 
         :param path_to_dataset:  path to AIBL dataset 
         :param path_to_csv: path to the csv files downloaded 
         :return: pandas dataframe which contains all the paths for the T1 images, and the correisponding subject_ID and session_ID 
-    '''
+    """
     import os
     import pandas
 
@@ -500,14 +493,14 @@ def find_path_to_T1(path_to_dataset, path_to_csv):
 
 
 def av45_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
-    '''
+    """
         This methods converts all the PET images-av45 in BIDS
 
         :param path_to_dataset: path_to_dataset
         :param path_to_csv: path_to_csv with clinical data
         :param bids_dir: path to save the AIBL-PET-dataset converted in a BIDS format
         :return: all the images are converted in a BIDS format and saved in the bids_dir        
-    '''
+    """
     import os
     import pandas
     from os import path
@@ -515,9 +508,12 @@ def av45_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
     from clinica.utils.stream import cprint
 
     # it reads the dataframe where subject_ID, session_ID and path are saved
-    csv_file = pandas.read_csv(os.path.join(path_to_csv, 'aibl_av45meta_28-Apr-2015.csv'))
+    try:
+        csv_file = pandas.read_csv(os.path.join(path_to_csv, 'aibl_av45meta_28-Apr-2015.csv'))
+    except Exception as e:
+        cprint("csv file not found")
     images = find_path_to_pet_modality(path_to_dataset, csv_file)
-    images.to_csv(os.path.join(bids_dir, 'pet_av45_paths_aibl.tsv'), sep='\t')
+    images.to_csv(os.path.join(bids_dir, 'pet_av45_paths_aibl.tsv'), sep='\t', encoding = 'utf-8')
     count = 0
     total = images.shape[0]
     for row in images.iterrows():
@@ -542,14 +538,14 @@ def av45_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
 
 
 def pib_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
-    '''
+    """
         This methods converts all the PET images-pib in BIDS
 
         :param path_to_dataset: path_to_dataset
         :param path_to_csv: path_to_csv with clinical data
         :param bids_dir: path to save the AIBL-PET-dataset converted in a BIDS format
         :return: all the images are converted in a BIDS format and saved in the bids_dir
-    '''
+    """
     import os
     import pandas
     from os import path
@@ -557,9 +553,12 @@ def pib_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix
     from clinica.utils.stream import cprint
 
     # it reads the dataframe where subject_ID, session_ID and path are saved
-    csv_file = pandas.read_csv(os.path.join(path_to_csv, 'aibl_pibmeta_28-Apr-2015.csv'))
+    try:
+        csv_file = pandas.read_csv(os.path.join(path_to_csv, 'aibl_pibmeta_28-Apr-2015.csv'))
+    except Exception as e:
+        cprint("csv file not found")
     images = find_path_to_pet_modality(path_to_dataset, csv_file)
-    images.to_csv(os.path.join(bids_dir, 'pet_pib_paths_aibl.tsv'), sep='\t')
+    images.to_csv(os.path.join(bids_dir, 'pet_pib_paths_aibl.tsv'), sep='\t', encoding = 'utf-8')
     count = 0
     total = images.shape[0]
     for row in images.iterrows():
@@ -585,14 +584,14 @@ def pib_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix
 
 
 def flute_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
-    '''
+    """
         This methods converts all the PET images-flute in BIDS
 
         :param path_to_dataset: path_to_dataset
         :param path_to_csv: path_to_csv with clinical data
         :param bids_dir: path to save the AIBL-PET-dataset converted in a BIDS format
         :return: all the images are converted in a BIDS format and saved in the bids_dir
-    '''
+    """
     import os
     import pandas
     from os import path
@@ -600,10 +599,12 @@ def flute_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2ni
     from clinica.utils.stream import cprint
 
     # it reads the dataframe where subject_ID, session_ID and path are saved
-
-    csv_file = pandas.read_csv(os.path.join(path_to_csv, 'aibl_flutemeta_28-Apr-2015.csv'))
+    try:
+        csv_file = pandas.read_csv(os.path.join(path_to_csv, 'aibl_flutemeta_28-Apr-2015.csv'))
+    except Exception as e:
+        cprint("csv file not found")
     images = find_path_to_pet_modality(path_to_dataset, csv_file)
-    images.to_csv(os.path.join(bids_dir, 'pet_flute_paths_aibl.tsv'), sep='\t')
+    images.to_csv(os.path.join(bids_dir, 'pet_flute_paths_aibl.tsv'), sep='\t', encoding = 'utf-8')
     count = 0
     total = images.shape[0]
     for row in images.iterrows():
@@ -645,10 +646,11 @@ def t1_paths_to_bids(path_to_dataset,path_to_csv, bids_dir):
     '''
     from os import path
     from numpy import nan
+    from clinica.utils.stream import cprint
 
     #it reads the dataframe where subject_ID, session_ID and path are saved
     images=find_path_to_T1(path_to_dataset,path_to_csv)
-    images.to_csv(path.join(bids_dir, 'T1_MRI_paths.tsv'), sep='\t', index=False)
+    images.to_csv(path.join(bids_dir, 'T1_MRI_paths.tsv'), sep='\t', index=False, encoding ='utf-8')
     count = 0
     total = images.shape[0]
 
@@ -694,6 +696,7 @@ def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_di
     from os import path
     import re
     import numpy as np
+    from clinica.utils.stream import cprint
 
     fields_bids = ['participant_id']
     fields_dataset = []
@@ -701,8 +704,10 @@ def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_di
     index_to_drop = []
 
     location_name = 'AIBL location'
-
-    participants_specs = pd.read_excel(clinical_spec_path, sheetname='participant.tsv')
+    try:
+        participants_specs = pd.read_excel(clinical_spec_path, sheetname='participant.tsv')
+    except Exception as e:
+        cprint("participants tsv file not found")
     participant_fields_db = participants_specs['AIBL']
     field_location = participants_specs[location_name]
     participant_fields_bids = participants_specs['BIDS CLINICA']
@@ -830,6 +835,9 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
         dict = []
         for i in files_to_read:
             file_to_read = pd.read_csv(i, dtype={'text': unicode})
+            #file_to_read = pd.io.parsers.read_csv(i, sep=',')
+            if len(file_to_read.columns) == 1:
+                file_to_read = pd.read_csv(i, sep = ';')
             # information are written following the BIDS specifications
             viscode = file_to_read.loc[(file_to_read["RID"] == r), "VISCODE"]
             viscode[viscode == 'bl'] = 'M00'
@@ -840,6 +848,9 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
                 if i in list(file_to_read.columns.values) and i == 'MMSCORE':
                     MMSCORE = file_to_read.loc[(file_to_read["RID"] == r), i]
                     MMSCORE[MMSCORE == -4] = np.nan
+                elif i in list(file_to_read.columns.values) and i == 'CDGLOBAL':
+                    CDGLOBAL = file_to_read.loc[(file_to_read["RID"] == r), i]
+                    CDGLOBAL[CDGLOBAL == -4] = np.nan
                 elif i in list(file_to_read.columns.values) and i == 'DXCURREN':
                     DXCURREN = file_to_read.loc[(file_to_read["RID"] == r), i]
                     DXCURREN[DXCURREN == -4] = np.nan
@@ -850,6 +861,7 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
                     EXAMDATE = file_to_read.loc[(file_to_read["RID"] == r), i]
         dict = pd.DataFrame({'session_id': 'ses-' + viscode,
                              'MMS': MMSCORE,
+                             'cdr_sb': CDGLOBAL,
                              'diagnosis': DXCURREN,
                              'examination_date': EXAMDATE
                              })
