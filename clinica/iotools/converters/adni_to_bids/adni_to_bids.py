@@ -23,7 +23,7 @@ class AdniToBids(Converter):
         Returns: a list containing the modalities supported by the converter (T1, PET_FDG, PET_AV45)
 
         """
-        return ['T1', 'PET_FDG', 'PET_AV45']
+        return ['T1', 'PET_FDG', 'PET_AV45', 'DWI', 'fMRI']
 
     def check_adni_dependencies(self):
         """
@@ -90,7 +90,7 @@ class AdniToBids(Converter):
         cprint('Creating scans files...')
         adni_utils.create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids)
 
-    def convert_images(self, source_dir, clinical_dir, dest_dir, subjs_list_path='', mod_to_add=''):
+    def convert_images(self, source_dir, clinical_dir, dest_dir, subjs_list_path='', modalities=['T1', 'PET_FDG', 'PET_AV45', 'DWI']):
         """
         Convert the images of ADNI
 
@@ -99,7 +99,7 @@ class AdniToBids(Converter):
             clinical_dir: path to the clinical data directory
             dest_dir: path to the BIDS directory
             subjs_list_path: list of subjects to process
-            mod_to_add: modality to convert (T1, PET_FDG, PET_AV45)
+            modalities: modalities to convert (T1, PET_FDG, PET_AV45, DWI)
 
         """
 
@@ -109,39 +109,37 @@ class AdniToBids(Converter):
         import adni_modalities.adni_t1 as adni_t1
         import adni_modalities.adni_av45_pet as adni_av45
         import adni_modalities.adni_fdg_pet as adni_fdg
+        import adni_modalities.adni_dwi as adni_dwi
+        import adni_modalities.adni_fmri as adni_fmri
         from clinica.utils.stream import cprint
 
         adni_merge_path = path.join(clinical_dir, 'ADNIMERGE.csv')
         adni_merge = pd.read_csv(adni_merge_path)
-        paths_files_location = path.join(dest_dir, 'conversion_info')
 
         # Load a file with subjects list or compute all the subjects
-        if subjs_list_path is not None and subjs_list_path!='':
+        if subjs_list_path is not None and subjs_list_path != '':
             cprint('Loading a subjects lists provided by the user...')
             subjs_list = [line.rstrip('\n') for line in open(subjs_list_path)]
         else:
             cprint('Using all the subjects contained into the ADNIMERGE.csv file...')
-            subjs_list = adni_merge['PTID'].unique()
+            subjs_list = list(adni_merge['PTID'].unique())
 
         # Create the output folder if is not already existing
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
             os.makedirs(path.join(dest_dir, 'conversion_info'))
 
-        if mod_to_add == 'T1' or not mod_to_add:
-            cprint('Calculating paths for T1. Output will be stored in ' + paths_files_location+'.')
-            t1_paths = adni_t1.compute_t1_paths(source_dir, clinical_dir, dest_dir, subjs_list)
-            cprint('Done!')
-            adni_t1.t1_paths_to_bids(t1_paths, dest_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", mod_to_update=True)
+        if 'T1' in modalities:
+            adni_t1.convert_adni_t1(source_dir, clinical_dir, dest_dir, subjs_list)
 
-        if mod_to_add == 'PET_FDG' or not mod_to_add :
-            cprint('Calculating paths for PET_FDG. Output will be stored in ' + paths_files_location+'.')
-            pet_fdg_paths = adni_fdg.compute_fdg_pet_paths(source_dir, clinical_dir, dest_dir, subjs_list)
-            cprint('Done!')
-            adni_fdg.fdg_pet_paths_to_bids(pet_fdg_paths, dest_dir)
+        if 'PET_FDG' in modalities:
+            adni_fdg.convert_adni_fdg_pet(source_dir, clinical_dir, dest_dir, subjs_list)
 
-        if mod_to_add == 'PET_AV45' or not mod_to_add:
-            cprint('Calculating paths for PET_FDG. Output will be stored in ' + paths_files_location+'.')
-            pet_av45_paths = adni_av45.compute_av45_pet_paths(source_dir, clinical_dir, dest_dir, subjs_list)
-            cprint('Done!')
-            adni_av45.av45_pet_paths_to_bids(pet_av45_paths, dest_dir)
+        if 'PET_AV45' in modalities:
+            adni_av45.convert_adni_av45_pet(source_dir, clinical_dir, dest_dir, subjs_list)
+
+        if 'DWI' in modalities:
+            adni_dwi.convert_adni_dwi(source_dir, clinical_dir, dest_dir, subjs_list)
+
+        if 'fMRI' in modalities:
+            adni_fmri.convert_adni_fmri(source_dir, clinical_dir, dest_dir, subjs_list)
