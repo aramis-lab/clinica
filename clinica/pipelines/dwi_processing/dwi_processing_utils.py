@@ -182,32 +182,32 @@ def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2, prefix_file=None):
         out_fa = op.abspath('fa_map_from_dti.nii.gz')
     else:
         out_fa = op.abspath(prefix_file + '_fa.nii.gz')
-    cmd = 'tensor2metric -mask %s %s -nthreads %s -fa %s' % \
-          (in_b0_mask, in_dti, nthreads, out_fa)
+    cmd = 'tensor2metric %s -nthreads %s -fa %s' % \
+          (in_dti, nthreads, out_fa)
     os.system(cmd)
 
     if prefix_file is None:
         out_md = op.abspath('md_map_from_dti.nii.gz')
     else:
         out_md = op.abspath(prefix_file + '_md.nii.gz')
-    cmd = 'tensor2metric -mask %s %s -nthreads %s -adc %s' % \
-          (in_b0_mask, in_dti, nthreads, out_md)
+    cmd = 'tensor2metric %s -nthreads %s -adc %s' % \
+          (in_dti, nthreads, out_md)
     os.system(cmd)
 
     if prefix_file is None:
         out_ad = op.abspath('ad_map_from_dti.nii.gz')
     else:
         out_ad = op.abspath(prefix_file + '_ad.nii.gz')
-    cmd = 'tensor2metric -mask %s %s -nthreads %s -ad %s' % \
-          (in_b0_mask, in_dti, nthreads, out_ad)
+    cmd = 'tensor2metric %s -nthreads %s -ad %s' % \
+          (in_dti, nthreads, out_ad)
     os.system(cmd)
 
     if prefix_file is None:
         out_rd = op.abspath('rd_map_from_dti.nii.gz')
     else:
         out_rd = op.abspath(prefix_file + '_rd.nii.gz')
-    cmd = 'tensor2metric -mask %s %s -nthreads %s -rd %s' % \
-          (in_b0_mask, in_dti, nthreads, out_rd)
+    cmd = 'tensor2metric %s -nthreads %s -rd %s' % \
+          (in_dti, nthreads, out_rd)
     os.system(cmd)
 
     if prefix_file is None:

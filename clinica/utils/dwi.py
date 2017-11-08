@@ -126,6 +126,9 @@ def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
 
     lowbs = np.where(bvals <= low_bval)[0]
 
+    from clinica.utils.stream import cprint
+    cprint("%s - lowbs for (%s)" % (lowbs, in_dwi))
+
     fname_b0, ext_b0 = op.splitext(op.basename(in_dwi))
     if ext_b0 == ".gz":
         fname_b0, ext2 = op.splitext(fname_b0)
@@ -239,6 +242,9 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
     [extracted_b0, out_split_dwi, out_split_bval, out_split_bvec] = \
         b0_dwi_split(
             in_dwi=in_dwi, in_bval=in_bval, in_bvec=in_bvec, low_bval=low_bval)
+
+    cprint("Extracted b0 files: %s" % extracted_b0)
+    cprint("Extracted DWI files: %s" % out_split_dwi)
 
     if nb_b0s == 1:
         # The reference b0 is the extracted b0

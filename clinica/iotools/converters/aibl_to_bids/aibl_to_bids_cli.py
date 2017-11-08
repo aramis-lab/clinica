@@ -2,6 +2,10 @@ import clinica.engine as ce
 
 
 class AiblToBidsCLI(ce.CmdParser):
+    """
+    todo:add description
+    """
+
     def define_name(self):
         """Define the sub-command name to run this pipelines.
         """
