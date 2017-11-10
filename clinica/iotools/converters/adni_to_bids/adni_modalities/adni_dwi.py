@@ -56,7 +56,6 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     """
     import pandas as pd
     from os import path, walk, mkdir
-    from clinica.utils.stream import cprint
 
     dwi_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
                   'Study_ID', 'Series_ID', 'Image_ID', 'Field_Strength', 'Scanner', 'Enhanced']
@@ -180,7 +179,7 @@ def dwi_paths_to_bids(images, dest_dir, mod_to_update=False):
 
     """
     import clinica.iotools.bids_utils as bids
-    import clinica.iotools.converters.adni_utils as adni_utils
+    import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
     from os import path
     import os
     from glob import glob
