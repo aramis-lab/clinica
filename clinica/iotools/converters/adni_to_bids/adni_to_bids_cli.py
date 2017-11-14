@@ -38,9 +38,11 @@ class AdniToBidsCLI(ce.CmdParser):
         self._args.add_argument("-sl", "--subjects_list",
                                 help='(Optional) A path to a .txt file containing a list of subject to convert '
                                      '(one for each row).')
-        self._args.add_argument("-m", "--modality",
-                                help='(Optional) Convert only a selected modality. Modalities available: '
-                                      'T1, PET_FDG, PET_AV45.')
+        self._args.add_argument("-m", "--modalities", nargs='+', default=['T1', 'PET_FDG', 'PET_AV45', 'DWI', 'fMRI'],
+                                choices=['T1', 'PET_FDG', 'PET_AV45', 'DWI', 'fMRI'],
+                                help='(Optional) Convert only the list of selected modalities. '
+                                     'By default all modalities are converted. Modalities available: '
+                                      'T1, PET_FDG, PET_AV45, DWI, fMRI.')
 
     def run_pipeline(self, args):
         from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
@@ -54,7 +56,7 @@ class AdniToBidsCLI(ce.CmdParser):
                                         self.absolute_path(args.clinical_data_directory),
                                         self.absolute_path(args.bids_directory),
                                         args.subjects_list,
-                                        args.modality)
+                                        args.modalities)
 
         adni_to_bids.convert_clinical_data(self.absolute_path(args.clinical_data_directory),
                                            self.absolute_path(args.bids_directory))

@@ -47,6 +47,7 @@ setup(
         'scipy>= 0.13.3',
         'scikit-learn>=0.18.2',
         'sharedmem>=0.3.5',
-        'scikit-image>=0.13.0'
+        'scikit-image>=0.13.0',
+        'xlrd >= 0.9.0'
     ]
 )
