@@ -155,7 +155,8 @@ def execute():
     from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_cli import OasisToBidsCLI  # noqa
 
     convert_parser = sub_parser.add_parser('convert')
-    converters = [
+    converters = ClinicaClassLoader(baseclass=CmdParser, extra_dir="converters").load()
+    converters += [
         AiblToBidsCLI(),
         AdniToBidsCLI(),
         OasisToBidsCLI()
