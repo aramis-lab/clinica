@@ -47,6 +47,12 @@ class OasisToBids(Converter):
 
         # --Create sessions files--
         sessions_dict = bids.create_sessions_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids, 'ID')
+        for y in bids_ids:
+            if sessions_dict[y]['M00']['diagnosis'] >0 :
+                sessions_dict[y]['M00']['diagnosis'] = 'AD'
+            else:
+                sessions_dict[y]['M00']['diagnosis'] = 'CN'
+
         bids.write_sessions_tsv(bids_dir, sessions_dict)
 
         # --Create scans files--
