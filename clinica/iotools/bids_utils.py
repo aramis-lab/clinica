@@ -125,7 +125,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
 def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids_ids, name_column_ids, subj_to_remove = []):
     """
 
-    Extract the information regarding the sessions and store them in a dictionary (session M0 only)
+    Extract the information regarding the sessions and store them in a dictionary (session M00 only)
 
     Args:
         clinical_data_dir: path to the input folder
@@ -186,6 +186,8 @@ def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids
                         subj_id = str(subj_id)
                 # Removes all the - from
                 subj_id_alpha = remove_space_and_symbols(subj_id)
+                if study_name == 'OASIS':
+                    subj_id_alpha = str(subj_id[0:3] + 'IS' + subj_id[3] + subj_id[5:9])
 
                 # Extract the corresponding BIDS id and create the output file if doesn't exist
                 subj_bids = [s for s in bids_ids if subj_id_alpha in s]
@@ -197,10 +199,10 @@ def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids
                     subj_bids = subj_bids[0]
                     sessions_df[sessions_fields_bids[i]] = row[sessions_fields[i]]
                     if sessions_dict.has_key(subj_bids):
-                        (sessions_dict[subj_bids]['M0']).update({sessions_fields_bids[i]: row[sessions_fields[i]]})
+                        (sessions_dict[subj_bids]['M00']).update({sessions_fields_bids[i]: row[sessions_fields[i]]})
                     else:
                         sessions_dict.update({subj_bids: {
-                            'M0': {'session_id': 'ses-M0', sessions_fields_bids[i]: row[sessions_fields[i]]}}})
+                            'M00': {'session_id': 'ses-M00', sessions_fields_bids[i]: row[sessions_fields[i]]}}})
 
     return sessions_dict
 
@@ -303,7 +305,7 @@ def write_sessions_tsv(bids_dir, sessions_dict):
         bids_id = sp.split(os.sep)[-1]
 
         if sessions_dict.has_key(bids_id):
-            session_df = pd.DataFrame(sessions_dict[bids_id]['M0'], index=['i', ])
+            session_df = pd.DataFrame(sessions_dict[bids_id]['M00'], index=['i', ])
             cols = session_df.columns.tolist()
             cols = cols[-1:] + cols[:-1]
             session_df = session_df[cols]
@@ -311,7 +313,7 @@ def write_sessions_tsv(bids_dir, sessions_dict):
         else:
             print "No session data available for " + sp
             session_df = pd.DataFrame(columns=['session_id'])
-            session_df['session_id'] = pd.Series('M0')
+            session_df['session_id'] = pd.Series('M00')
             print
             session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf8')
 
@@ -336,12 +338,12 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
         scans_df = pd.DataFrame()
         bids_id = bids_id.split(os.sep)[-1]
         # Create the file
-        tsv_name = bids_id + "_ses-M0_scans.tsv"
+        tsv_name = bids_id + "_ses-M00_scans.tsv"
         # If the file already exists, remove it
-        if os.path.exists(path.join(bids_dir, bids_id, 'ses-M0', tsv_name)):
-            os.remove(path.join(bids_dir, bids_id, 'ses-M0', tsv_name))
+        if os.path.exists(path.join(bids_dir, bids_id, 'ses-M00', tsv_name)):
+            os.remove(path.join(bids_dir, bids_id, 'ses-M00', tsv_name))
 
-        mod_available = glob(path.join(bids_dir, bids_id, 'ses-M0', '*'))
+        mod_available = glob(path.join(bids_dir, bids_id, 'ses-M00', '*'))
         for mod in mod_available:
             mod_name = os.path.basename(mod)
             files = glob(path.join(mod, '*'))
@@ -357,7 +359,7 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
                 row_to_append.insert(0, 'filename', path.join(mod_name, file_name))
                 scans_df = scans_df.append(row_to_append)
 
-            scans_df.to_csv(path.join(bids_dir, bids_id, 'ses-M0', tsv_name), sep='\t', index=False, encoding='utf8')
+            scans_df.to_csv(path.join(bids_dir, bids_id, 'ses-M00', tsv_name), sep='\t', index=False, encoding='utf8')
 
 
 # -- Other methods --
