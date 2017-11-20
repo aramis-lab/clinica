@@ -55,6 +55,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     """
     import pandas as pd
+    import operator
     from os import path, walk, mkdir
 
     dwi_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
@@ -110,6 +111,43 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
             if enhanced is not None:
                 row_to_append = pd.DataFrame(enhanced, index=['i', ])
                 dwi_df = dwi_df.append(row_to_append, ignore_index=True)
+
+    # Exceptions
+    # ==========
+    conversion_errors = [('029_S_2395', 'm60'),
+                         ('029_S_0824', 'm108'),
+                         ('029_S_0914', 'm108'),
+                         ('027_S_2219', 'm36'),
+                         ('129_S_2332', 'm12'),
+                         ('029_S_4384', 'm48'),
+                         ('029_S_4385', 'm48'),
+                         ('029_S_4585', 'm48'),
+                         ('016_S_4591', 'm24'),
+                         ('094_S_4630', 'm06'),
+                         ('094_S_4649', 'm06'),
+                         ('029_S_5219', 'm24'),
+                         ('094_S_2238', 'm48'),
+                         ('129_S_4287', 'bl'),
+                         ('007_S_4611', 'm03'),
+                         ('016_S_4638', 'bl'),
+                         ('027_S_5118', 'bl'),
+                         ('098_S_4018', 'bl'),
+                         ('098_S_4003', 'm12'),
+                         ('016_S_4584', 'm24'),
+                         ('016_S_5007', 'm12'),
+                         ('129_S_2347', 'm06'),
+                         ('129_S_4220', 'bl'),
+                         ('007_S_2058', 'm12'),
+                         ('016_S_2007', 'm06')]
+
+    error_indices = []
+    for conv_error in conversion_errors:
+        error_indices.append((dwi_df.Enhanced == False)
+                             & (dwi_df.Subject_ID == conv_error[0])
+                             & (dwi_df.VISCODE == conv_error[1]))
+
+    indices_to_remove = dwi_df.index[reduce(operator.or_, error_indices, False)]
+    dwi_df.drop(indices_to_remove, inplace=True)
 
     images = dwi_df
     is_dicom = []
