@@ -53,6 +53,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
     """
 
     import pandas as pd
+    import operator
     from os import path, walk, mkdir
 
     t1_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
@@ -123,6 +124,28 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
     t1_df.loc[subj_ind, 'Sequence'] ='MPR-R__GradWarp__B1_Correction'
     t1_df.loc[subj_ind, 'Series_ID'] = '18355'
     t1_df.loc[subj_ind, 'Image_ID'] = '94827'
+
+    conversion_errors = [  # Eq_1
+                         ('031_S_0830', 'm48'),
+                         ('100_S_0995', 'm18'),
+                         ('031_S_0867', 'm48'),
+                         ('100_S_0892', 'm18'),
+                         # Empty folders
+                         ('029_S_0845', 'm24'),
+                         ('094_S_1267', 'm24'),
+                         ('029_S_0843', 'm24'),
+                         ('027_S_0307', 'm48'),
+                         ('057_S_1269', 'm24'),
+                         ('036_S_4899', 'm03')]
+
+    error_indices = []
+    for conv_error in conversion_errors:
+        error_indices.append((t1_df.Enhanced == False)
+                             & (t1_df.Subject_ID == conv_error[0])
+                             & (t1_df.VISCODE == conv_error[1]))
+
+    indices_to_remove = t1_df.index[reduce(operator.or_, error_indices, False)]
+    t1_df.drop(indices_to_remove, inplace=True)
 
     images = t1_df
     is_dicom = []
@@ -212,7 +235,7 @@ def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", m
         # ADDED lines
         # ------------------
         # If updated mode is selected, check if an old T1 image is existing and remove it
-        existing_t1 = glob(path.join(output_path, output_filename+'*'))
+        existing_t1 = glob(path.join(output_path, output_filename + '*'))
 
         if mod_to_update and len(existing_t1)>0:
             print 'Removing the old T1 image...'
