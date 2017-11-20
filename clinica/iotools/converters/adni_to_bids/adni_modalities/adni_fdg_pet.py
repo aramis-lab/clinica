@@ -53,6 +53,7 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     """
     import pandas as pd
     import os
+    import operator
     from os import walk, path
     from numpy import argsort
     # from clinica.iotools.converters.adni_utils import replace_sequence_chars
@@ -143,6 +144,24 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                   original]],
                 columns=pet_fdg_col)
             pet_fdg_df = pet_fdg_df.append(row_to_append, ignore_index=True)
+
+    # Exceptions
+    # ==========
+    conversion_errors = [  # NONAME.nii
+                         ('037_S_1421', 'm36'),
+                         ('037_S_1078', 'm36'),
+                         # Empty folders
+                         ('941_S_1195', 'm48'),
+                         ('005_S_0223', 'm12')]
+
+    error_indices = []
+    for conv_error in conversion_errors:
+        error_indices.append((pet_fdg_df.Enhanced == False)
+                             & (pet_fdg_df.Subject_ID == conv_error[0])
+                             & (pet_fdg_df.VISCODE == conv_error[1]))
+
+    indices_to_remove = pet_fdg_df.index[reduce(operator.or_, error_indices, False)]
+    pet_fdg_df.drop(indices_to_remove, inplace=True)
 
     images = pet_fdg_df
     # count = 0

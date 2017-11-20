@@ -196,7 +196,7 @@ def check_bids_t1(bids_path, container='anat', extension='_T1w.nii.gz', subjects
                 errors.append('Subject ' + subject + ' for session ' + session + ' folder is empty')
             for f in files:
                 if f != image_name:
-                    errors.append('Subject' + subject + ' for session ' + session + ' folder contains: ' + f)
+                    errors.append('Subject ' + subject + ' for session ' + session + ' folder contains: ' + f)
 
     return errors
 
@@ -226,14 +226,13 @@ def check_bids_dwi(bids_path, container='dwi', extension=('_acq-axial_dwi.bvec',
                 errors.append('Subject ' + subject + ' for session ' + session + ' folder is empty')
 
             if image_names != files:
-                errors.append('Subject' + subject + ' for session ' + session + ' folder contains: \n' + str(files))
+                errors.append('Subject ' + subject + ' for session ' + session + ' folder contains: \n' + str(files))
 
             # for f in files:
             #     if f != image_name:
             #         errors.append('Subject' + subject + ' for session ' + session + ' folder contains: ' + f)
 
     return errors
-
 
 
 def is_nan(value):

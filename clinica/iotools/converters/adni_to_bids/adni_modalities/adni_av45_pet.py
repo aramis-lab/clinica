@@ -58,6 +58,7 @@ def compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     """
     import pandas as pd
     import os
+    import operator
     from os import walk, path
     from numpy import argsort
     from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
@@ -147,6 +148,20 @@ def compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                   original]],
                 columns=pet_av45_col)
             pet_av45_df = pet_av45_df.append(row_to_append, ignore_index=True)
+
+    # Exceptions
+    # ==========
+    conversion_errors = [  # Eq_1
+                         ('128_S_2220', 'm48')]
+
+    error_indices = []
+    for conv_error in conversion_errors:
+        error_indices.append((pet_av45_df.Enhanced == False)
+                             & (pet_av45_df.Subject_ID == conv_error[0])
+                             & (pet_av45_df.VISCODE == conv_error[1]))
+
+    indices_to_remove = pet_av45_df.index[reduce(operator.or_, error_indices, False)]
+    pet_av45_df.drop(indices_to_remove, inplace=True)
 
     images = pet_av45_df
     # count = 0
