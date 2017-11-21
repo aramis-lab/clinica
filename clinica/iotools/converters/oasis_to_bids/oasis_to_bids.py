@@ -47,6 +47,12 @@ class OasisToBids(Converter):
 
         # --Create sessions files--
         sessions_dict = bids.create_sessions_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids, 'ID')
+        for y in bids_ids:
+            if sessions_dict[y]['M00']['diagnosis'] >0 :
+                sessions_dict[y]['M00']['diagnosis'] = 'AD'
+            else:
+                sessions_dict[y]['M00']['diagnosis'] = 'CN'
+
         bids.write_sessions_tsv(bids_dir, sessions_dict)
 
         # --Create scans files--
@@ -84,13 +90,13 @@ class OasisToBids(Converter):
             if not os.path.isdir(bids_subj_folder):
                 os.mkdir(bids_subj_folder)
 
-            session_folder = path.join(bids_subj_folder, 'ses-M0')
+            session_folder = path.join(bids_subj_folder, 'ses-M00')
             if not os.path.isdir(session_folder):
                 os.mkdir(path.join(session_folder))
                 os.mkdir(path.join(session_folder, 'anat'))
 
             # In order do convert the Analyze format to NIFTI the path to the .img file is required
             img_file_path = glob(path.join(t1_folder, '*.img'))[0]
-            output_path = path.join(session_folder,'anat',bids_id+'_ses-M0_T1w.nii')
+            output_path = path.join(session_folder,'anat',bids_id+'_ses-M00_T1w.nii')
             os.system('mri_convert'+' '+img_file_path+' '+output_path)
             bids.compress_nii(output_path)

@@ -195,7 +195,7 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
                                       'subject_repeat', 'session_repeat'],
                             outfields=['out_files']), name='t1_bids_reader')
         t1_bids_reader.inputs.base_directory = self.bids_directory
-        t1_bids_reader.inputs.template = '%s/%s/anat/%s_%s_T1w.nii*'
+        t1_bids_reader.inputs.template = '%s/%s/anat/%s_%s_*T1w.nii*'
         t1_bids_reader.inputs.sort_filelist = False
 
         # DWI DataGrabber
@@ -204,7 +204,7 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
                                       'subject_repeat', 'session_repeat'],
                             outfields=['out_files']), name='dwi_bids_reader')
         dwi_bids_reader.inputs.base_directory = self.bids_directory
-        dwi_bids_reader.inputs.template = '%s/%s/dwi/%s_%s_dwi.nii*'
+        dwi_bids_reader.inputs.template = '%s/%s/dwi/%s_%s_*dwi.nii*'
         dwi_bids_reader.inputs.sort_filelist = False
 
         # Bval DataGrabber
@@ -213,7 +213,7 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
                                       'subject_repeat', 'session_repeat'],
                             outfields=['out_files']), name='bval_bids_reader')
         bval_bids_reader.inputs.base_directory = self.bids_directory
-        bval_bids_reader.inputs.template = '%s/%s/dwi/%s_%s_dwi.bval'
+        bval_bids_reader.inputs.template = '%s/%s/dwi/%s_%s_*dwi.bval'
         bval_bids_reader.inputs.sort_filelist = False
 
         # Bvec dataGrabber
@@ -222,7 +222,7 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
                                       'subject_repeat', 'session_repeat'],
                             outfields=['out_files']), name='bvec_bids_reader')
         bvec_bids_reader.inputs.base_directory = self.bids_directory
-        bvec_bids_reader.inputs.template = '%s/%s/dwi/%s_%s_dwi.bvec'
+        bvec_bids_reader.inputs.template = '%s/%s/dwi/%s_%s_*dwi.bvec'
         bvec_bids_reader.inputs.sort_filelist = False
 
         self.connect([
