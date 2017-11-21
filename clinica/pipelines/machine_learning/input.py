@@ -7,6 +7,7 @@ from pandas.io import parsers
 
 from clinica.pipelines.machine_learning import base
 import clinica.pipelines.machine_learning.voxel_based_io as vbio
+import clinica.pipelines.machine_learning.vertex_based_io as vtxbio
 import clinica.pipelines.machine_learning.region_based_io as rbio
 import clinica.pipelines.machine_learning.svm_utils as utils
 
@@ -315,3 +316,78 @@ class CAPSRegionBasedInput(CAPSInput):
 
         output_filename = path.join(output_dir, 'weights.nii.gz')
         rbio.weights_to_nifti(weights, self._atlas, output_filename)
+
+
+class CAPSVertexBasedInput(CAPSInput):
+
+    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, fwhm, image_type, precomputed_kernel=None):
+        super(CAPSVertexBasedInput, self).__init__(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
+                                                   image_type, precomputed_kernel)
+        self._fwhm = fwhm
+        self._image_type = image_type
+        self._caps_directory = caps_directory
+
+    def get_images(self):
+        import os
+        """
+        returns list of filnames
+        """
+
+        if self._images is not None:
+            return self._images
+
+        if self._image_type == 'fdg' and self._images is None:
+            self._images = []
+            hemi = ['lh', 'rh']
+            for i in range(len(self._subjects)):
+                self._images.append([os.path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i], 'pet',
+                                                  'surface', self._subjects[i] + '_' + self._sessions[i]
+                                                  + '_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-' + h
+                                                  + '_fwhm-' + str(self._fwhm) + '_projection.mgh') for h in hemi])
+            missing_files = []
+            missing_files_string_error = ''
+            for img in self._images:
+                for side in img:
+                    if not os.path.exists(side):
+                        missing_files.append(side)
+                        missing_files_string_error += side + '\n'
+            if len(missing_files) > 0:
+                raise IOError('Could not find the following files : \n' + missing_files_string_error
+                              + '\n' + str(len(missing_files)) + ' files missing')
+        return self._images
+
+    def get_x(self):
+        from clinica.utils.stream import cprint
+        """
+        Returns numpy 2D array
+        """
+
+        if self._x is not None:
+            return self._x
+
+        cprint('Loading ' + str(len(self.get_images())) + ' subjects')
+        self._x = vtxbio.load_data(self._images)
+        cprint(str(len(self._x)) + ' subjects loaded')
+        return self._x
+
+    def save_weights_as_datasurface(self, weights, output_dir):
+        import numpy as np
+        import nibabel as nib
+        import os
+
+        if self._images is None:
+            self.get_images()
+
+        sample = nib.load(self._images[0][0])
+
+        left_hemi_data = np.atleast_3d(weights[:weights.size / 2])
+        left_hemi_mgh = nib.MGHImage(left_hemi_data, affine=sample.affine, header=sample.header)
+        nib.save(left_hemi_mgh, os.path.join(output_dir, 'weights_lh.mgh'))
+
+        right_hemi_data = np.atleast_3d(weights[weights.size/2:])
+        right_hemi_mgh = nib.MGHImage(right_hemi_data, affine=sample.affine, header=sample.header)
+        nib.save(right_hemi_mgh, os.path.join(output_dir, 'weights_rh.mgh'))
+        pass
+
+    def save_weights_as_nifti(self, weights, output_dir):
+        pass
