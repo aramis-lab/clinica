@@ -191,13 +191,15 @@ def check_bids_t1(bids_path, container='anat', extension='_T1w.nii.gz', subjects
         for session in sessions:
             image_name = subject + '_' + session + extension
             image_dir = os.path.join(bids_path, subject, session, container)
-            files = next(os.walk(image_dir))[2]
-            if not files:
-                errors.append('Subject ' + subject + ' for session ' + session + ' folder is empty')
-            for f in files:
-                if f != image_name:
-                    errors.append('Subject ' + subject + ' for session ' + session + ' folder contains: ' + f)
-
+            if not os.path.isdir(image_dir):
+                print 'No directory: ' + image_dir
+            else:
+                files = next(os.walk(image_dir))[2]
+                if not files:
+                    errors.append('Subject ' + subject + ' for session ' + session + ' folder is empty')
+                for f in files:
+                    if f != image_name:
+                        errors.append('Subject ' + subject + ' for session ' + session + ' folder contains: ' + f)
     return errors
 
 
@@ -219,19 +221,17 @@ def check_bids_dwi(bids_path, container='dwi', extension=('_acq-axial_dwi.bvec',
 
             image_dir = os.path.join(bids_path, subject, session, container)
 
-            files = next(os.walk(image_dir))[2]
-            files.sort()
+            if not os.path.isdir(image_dir):
+                print 'No directory: ' + image_dir
+            else:
+                files = next(os.walk(image_dir))[2]
+                files.sort()
 
-            if not files:
-                errors.append('Subject ' + subject + ' for session ' + session + ' folder is empty')
+                if not files:
+                    errors.append('Subject ' + subject + ' for session ' + session + ' folder is empty')
 
-            if image_names != files:
-                errors.append('Subject ' + subject + ' for session ' + session + ' folder contains: \n' + str(files))
-
-            # for f in files:
-            #     if f != image_name:
-            #         errors.append('Subject' + subject + ' for session ' + session + ' folder contains: ' + f)
-
+                if image_names != files:
+                    errors.append('Subject ' + subject + ' for session ' + session + ' folder contains: \n' + str(files))
     return errors
 
 
