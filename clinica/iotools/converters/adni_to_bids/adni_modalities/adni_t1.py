@@ -26,14 +26,18 @@ def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None):
     """
     import pandas as pd
     from os import path
+    from clinica.utils.stream import cprint
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
         adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
         subjs_list = list(adni_merge.PTID.unique())
 
+    cprint('Calculating paths of T1 images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
     images = compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list)
+    cprint('Paths of T1 images found. Exporting images into BIDS ...')
     t1_paths_to_bids(images, dest_dir)
+    cprint('T1 conversion done.')
 
 
 def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
@@ -49,6 +53,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
     """
 
     import pandas as pd
+    import operator
     from os import path, walk, mkdir
 
     t1_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
@@ -120,6 +125,27 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
     t1_df.loc[subj_ind, 'Series_ID'] = '18355'
     t1_df.loc[subj_ind, 'Image_ID'] = '94827'
 
+    conversion_errors = [  # Eq_1
+                         ('031_S_0830', 'm48'),
+                         ('100_S_0995', 'm18'),
+                         ('031_S_0867', 'm48'),
+                         ('100_S_0892', 'm18'),
+                         # Empty folders
+                         ('029_S_0845', 'm24'),
+                         ('094_S_1267', 'm24'),
+                         ('029_S_0843', 'm24'),
+                         ('027_S_0307', 'm48'),
+                         ('057_S_1269', 'm24'),
+                         ('036_S_4899', 'm03')]
+
+    error_indices = []
+    for conv_error in conversion_errors:
+        error_indices.append((t1_df.Subject_ID == conv_error[0])
+                             & (t1_df.VISCODE == conv_error[1]))
+
+    indices_to_remove = t1_df.index[reduce(operator.or_, error_indices, False)]
+    t1_df.drop(indices_to_remove, inplace=True)
+
     images = t1_df
     is_dicom = []
     nifti_paths = []
@@ -176,6 +202,7 @@ def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", m
     from numpy import nan
     from clinica.iotools.converters.adni_to_bids import adni_utils
     from glob import glob
+    from clinica.utils.stream import cprint
 
     count = 0
     total = images.shape[0]
@@ -186,9 +213,9 @@ def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", m
         count += 1
 
         if image.Path is nan:
-            print 'No path specified for ' + image.Subject_ID + ' in session ' + image.VISCODE
+            cprint('No path specified for ' + image.Subject_ID + ' in session ' + image.VISCODE)
             continue
-        print 'Processing subject ' + str(subject) + ' - session ' + image.VISCODE + ', ' + str(count) + ' / ' + str(total)
+            cprint('Processing subject ' + str(subject) + ' - session ' + image.VISCODE + ', ' + str(count) + ' / ' + str(total))
 
         session = adni_utils.viscode_to_session(image.VISCODE)
         image_path = image.Path
@@ -207,7 +234,8 @@ def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", m
         # ADDED lines
         # ------------------
         # If updated mode is selected, check if an old T1 image is existing and remove it
-        existing_t1 = glob(path.join(output_path, output_filename+'*'))
+        existing_t1 = glob(path.join(output_path, output_filename + '*'))
+
         if mod_to_update and len(existing_t1)>0:
             print 'Removing the old T1 image...'
             for t1 in existing_t1:
@@ -228,7 +256,7 @@ def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", m
 
             # Check if conversion worked (output file exists?)
             if not path.isfile(nifti_file):
-                print 'Conversion with dcm2niix failed, trying with dcm2nii'
+                cprint('Conversion with dcm2niix failed, trying with dcm2nii')
                 command = dcm2nii + ' -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
                 os.system(command)
                 nifti_file = path.join(output_path, subject.replace('_', '') + '.nii')
@@ -236,7 +264,7 @@ def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", m
 
                 if not path.isfile(nifti_file):
                     # TODO - LOG THIS
-                    print 'DICOM to NIFTI conversion error for ' + image_path
+                    cprint('DICOM to NIFTI conversion error for ' + image_path)
                     continue
 
             adni_utils.center_nifti_origin(nifti_file, output_image)
@@ -250,10 +278,10 @@ def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", m
     adni_utils.remove_tmp_dmc_folder(bids_dir)
 
 
-
 def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj):
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
+    from clinica.utils.stream import cprint
     # Get the preferred scan (image series that has been Scaled)
     filtered_mprage = mprage_meta_subj[(mprage_meta_subj['Orig/Proc'] == 'Processed')
                                        & (mprage_meta_subj.Visit == visit_str)
@@ -298,7 +326,7 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
 
         if filtered_scan.shape[0] < 1:
             # TODO - LOG THIS
-            print 'NO IDA Meta: ' + subject_id + ' for visit ' + timepoint + ' - ' + visit_str
+            cprint('NO IDA Meta: ' + subject_id + ' for visit ' + timepoint + ' - ' + visit_str)
             return None
 
     original = True
@@ -329,8 +357,8 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
     qc = mri_quality_subj[mri_quality_subj.LONIUID == 'S' + str(scan.SeriesID)]
     if qc.shape[0] > 0 and qc.iloc[0].PASS != 1:
         # TODO - LOG THIS
-        print 'QC found but NOT passed, NONONONO'
-        print 'Subject ' + subject_id + ' - Series: ' + str(scan.SeriesID) + ' - Study: ' + str(scan.StudyID)
+        cprint('QC found but NOT passed')
+        cprint('Subject ' + subject_id + ' - Series: ' + str(scan.SeriesID) + ' - Study: ' + str(scan.StudyID))
 
     return {'Subject_ID': subject_id,
             'VISCODE': timepoint,
@@ -347,6 +375,7 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
 def adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig, mayo_mri_qc_subj, preferred_field_strength=3.0):
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
+    from clinica.utils.stream import cprint
 
     cond_mprage = ((mprage_meta_subj_orig.Visit == visit_str) & mprage_meta_subj_orig.Sequence.map(
         lambda x: ((x.lower().find('mprage') > -1) | (x.lower().find('mp-rage') > -1) | (
@@ -359,7 +388,7 @@ def adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig, mayo_mr
 
     if filtered_scan.shape[0] < 1:
         # TODO - LOG THIS
-        print 'NO MPRAGE Meta2: ' + subject_id + ' for visit ' + timepoint + ' - ' + visit_str
+        cprint('NO MPRAGE Meta2: ' + subject_id + ' for visit ' + timepoint + ' - ' + visit_str)
         return None
 
     scan = select_scan_qc_adni2(filtered_scan, mayo_mri_qc_subj, preferred_field_strength)
@@ -393,111 +422,111 @@ def adnigo_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_su
 
 
 def visits_to_timepoints_t1(subject, mprage_meta_subj_orig, adnimerge_subj):
-        from datetime import datetime
-        from clinica.iotools.converters.adni_to_bids.adni_utils import days_between
-        # from iotools.converters.adni_utils import days_between
+    from datetime import datetime
+    from clinica.iotools.converters.adni_to_bids.adni_utils import days_between
+    from clinica.utils.stream import cprint
 
-        mprage_meta_subj_orig = mprage_meta_subj_orig[mprage_meta_subj_orig['Visit'] != 'ADNI Baseline']
+    mprage_meta_subj_orig = mprage_meta_subj_orig[mprage_meta_subj_orig['Visit'] != 'ADNI Baseline']
 
-        visits = dict()
+    visits = dict()
 
-        unique_visits = list(mprage_meta_subj_orig.Visit.unique())
+    unique_visits = list(mprage_meta_subj_orig.Visit.unique())
 
-        pending_timepoints = []
+    pending_timepoints = []
 
-        # We try to obtain the corresponding image Visit for a given VISCODE
-        for adni_row in adnimerge_subj.iterrows():  # (adnimerge_subj[adnimerge_subj.FLDSTRENG.map(lambda x: x is not '')]).iterrows():
-            visit = adni_row[1]
-            if visit.ORIGPROT == 'ADNI2':
-                if visit.VISCODE == 'bl':
-                    preferred_visit_name = 'ADNI2 Screening MRI-New Pt'
-                elif visit.VISCODE == 'm03':
-                    preferred_visit_name = 'ADNI2 Month 3 MRI-New Pt'
-                elif visit.VISCODE == 'm06':
-                    preferred_visit_name = 'ADNI2 Month 6-New Pt'
-                else:
-                    year = str(int(visit.VISCODE[1:]) / 12)
-                    preferred_visit_name = 'ADNI2 Year ' + year + ' Visit'
+    # We try to obtain the corresponding image Visit for a given VISCODE
+    for adni_row in adnimerge_subj.iterrows():  # (adnimerge_subj[adnimerge_subj.FLDSTRENG.map(lambda x: x is not '')]).iterrows():
+        visit = adni_row[1]
+        if visit.ORIGPROT == 'ADNI2':
+            if visit.VISCODE == 'bl':
+                preferred_visit_name = 'ADNI2 Screening MRI-New Pt'
+            elif visit.VISCODE == 'm03':
+                preferred_visit_name = 'ADNI2 Month 3 MRI-New Pt'
+            elif visit.VISCODE == 'm06':
+                preferred_visit_name = 'ADNI2 Month 6-New Pt'
             else:
-                if visit.VISCODE == 'bl':
-                    if visit.ORIGPROT == 'ADNI1':
-                        preferred_visit_name = 'ADNI Screening'
-                    else:  # ADNIGO
-                        preferred_visit_name = 'ADNIGO Screening MRI'
-                elif visit.VISCODE == 'm03':  # Only for ADNIGO Month 3
-                    preferred_visit_name = 'ADNIGO Month 3 MRI'
+                year = str(int(visit.VISCODE[1:]) / 12)
+                preferred_visit_name = 'ADNI2 Year ' + year + ' Visit'
+        else:
+            if visit.VISCODE == 'bl':
+                if visit.ORIGPROT == 'ADNI1':
+                    preferred_visit_name = 'ADNI Screening'
+                else:  # ADNIGO
+                    preferred_visit_name = 'ADNIGO Screening MRI'
+            elif visit.VISCODE == 'm03':  # Only for ADNIGO Month 3
+                preferred_visit_name = 'ADNIGO Month 3 MRI'
+            else:
+                month = int(visit.VISCODE[1:])
+                if month < 54:
+                    preferred_visit_name = 'ADNI1/GO Month ' + str(month)
                 else:
-                    month = int(visit.VISCODE[1:])
-                    if month < 54:
-                        preferred_visit_name = 'ADNI1/GO Month ' + str(month)
-                    else:
-                        preferred_visit_name = 'ADNIGO Month ' + str(month)
+                    preferred_visit_name = 'ADNIGO Month ' + str(month)
 
-            if preferred_visit_name in unique_visits:
-                key_preferred_visit = (visit.VISCODE, visit.COLPROT, visit.ORIGPROT)
-                if key_preferred_visit not in visits.keys():
-                    visits[key_preferred_visit] = preferred_visit_name
-                elif visits[key_preferred_visit] != preferred_visit_name:
-                    print 'Multiple visits for one timepoint!'
-                    print subject
-                    print key_preferred_visit
-                    print visits[key_preferred_visit]
-                    print visit
-                unique_visits.remove(preferred_visit_name)
-                continue
+        if preferred_visit_name in unique_visits:
+            key_preferred_visit = (visit.VISCODE, visit.COLPROT, visit.ORIGPROT)
+            if key_preferred_visit not in visits.keys():
+                visits[key_preferred_visit] = preferred_visit_name
+            elif visits[key_preferred_visit] != preferred_visit_name:
+                cprint('Multiple visits for one timepoint!')
+                cprint(subject)
+                cprint(key_preferred_visit)
+                cprint(visits[key_preferred_visit])
+                cprint(visit)
+            unique_visits.remove(preferred_visit_name)
+            continue
 
-            pending_timepoints.append(visit)
+        pending_timepoints.append(visit)
 
-        # Then for images.Visit non matching the expected labels we find the closest date in visits list
-        for visit in unique_visits:
-            image = (mprage_meta_subj_orig[mprage_meta_subj_orig.Visit == visit]).iloc[0]
-            min_db = 100000
-            min_db2 = 0
-            min_visit = None
-            min_visit2 = None
+    # Then for images.Visit non matching the expected labels we find the closest date in visits list
+    for visit in unique_visits:
+        image = (mprage_meta_subj_orig[mprage_meta_subj_orig.Visit == visit]).iloc[0]
+        min_db = 100000
+        min_db2 = 0
+        min_visit = None
+        min_visit2 = None
 
-            for timepoint in pending_timepoints:
-                db = days_between(image.ScanDate, timepoint.EXAMDATE)
-                if db < min_db:
-                    min_db2 = min_db
-                    min_visit2 = min_visit
+        for timepoint in pending_timepoints:
+            db = days_between(image.ScanDate, timepoint.EXAMDATE)
+            if db < min_db:
+                min_db2 = min_db
+                min_visit2 = min_visit
 
-                    min_db = db
-                    min_visit = timepoint
+                min_db = db
+                min_visit = timepoint
 
-            if min_visit is None:
-                print 'No corresponding timepoint in ADNIMERGE for subject ' + subject + ' in visit ' + image.Visit
-                print image
-                continue
+        if min_visit is None:
+            cprint('No corresponding timepoint in ADNIMERGE for subject ' + subject + ' in visit ' + image.Visit)
+            cprint(image)
+            continue
 
-            if min_visit2 is not None and min_db > 90:
-                print 'More than 60 days for corresponding timepoint in ADNIMERGE for subject ' + subject + ' in visit ' + image.Visit + ' on ' + image.ScanDate
-                print 'Timepoint 1: ' + min_visit.VISCODE + ' - ' + min_visit.ORIGPROT + ' on ' + min_visit.EXAMDATE + ' (Distance: ' + str(
-                    min_db) + ' days)'
-                print 'Timepoint 2: ' + min_visit2.VISCODE + ' - ' + min_visit2.ORIGPROT + ' on ' + min_visit2.EXAMDATE + ' (Distance: ' + str(
-                    min_db2) + ' days)'
+        if min_visit2 is not None and min_db > 90:
+            cprint('More than 60 days for corresponding timepoint in ADNIMERGE for subject ' + subject + ' in visit ' + image.Visit + ' on ' + image.ScanDate)
+            cprint('Timepoint 1: ' + min_visit.VISCODE + ' - ' + min_visit.ORIGPROT + ' on ' + min_visit.EXAMDATE + ' (Distance: ' + str(
+                min_db) + ' days)')
+            cprint('Timepoint 2: ' + min_visit2.VISCODE + ' - ' + min_visit2.ORIGPROT + ' on ' + min_visit2.EXAMDATE + ' (Distance: ' + str(
+                min_db2) + ' days)')
 
-                # If image is too close to the date between two visits we prefer the earlier visit
-                if (datetime.strptime(min_visit.EXAMDATE, "%Y-%m-%d")
-                        > datetime.strptime(image.ScanDate, "%Y-%m-%d")
-                        > datetime.strptime(min_visit2.EXAMDATE, "%Y-%m-%d")):
-                    dif = days_between(min_visit.EXAMDATE, min_visit2.EXAMDATE)
-                    if abs((dif / 2.0) - min_db) < 30:
-                        min_visit = min_visit2
+            # If image is too close to the date between two visits we prefer the earlier visit
+            if (datetime.strptime(min_visit.EXAMDATE, "%Y-%m-%d")
+                    > datetime.strptime(image.ScanDate, "%Y-%m-%d")
+                    > datetime.strptime(min_visit2.EXAMDATE, "%Y-%m-%d")):
+                dif = days_between(min_visit.EXAMDATE, min_visit2.EXAMDATE)
+                if abs((dif / 2.0) - min_db) < 30:
+                    min_visit = min_visit2
 
-                print 'We prefer ' + min_visit.VISCODE
+            cprint('We prefer ' + min_visit.VISCODE)
 
-            key_min_visit = (min_visit.VISCODE, min_visit.COLPROT, min_visit.ORIGPROT)
-            if key_min_visit not in visits.keys():
-                visits[key_min_visit] = image.Visit
-            elif visits[key_min_visit] != image.Visit:
-                print 'Multiple visits for one timepoint!'
-                print subject
-                print key_min_visit
-                print visits[key_min_visit]
-                print image.Visit
+        key_min_visit = (min_visit.VISCODE, min_visit.COLPROT, min_visit.ORIGPROT)
+        if key_min_visit not in visits.keys():
+            visits[key_min_visit] = image.Visit
+        elif visits[key_min_visit] != image.Visit:
+            cprint('Multiple visits for one timepoint!')
+            cprint(subject)
+            cprint(key_min_visit)
+            cprint(visits[key_min_visit])
+            cprint(image.Visit)
 
-        return visits
+    return visits
 
 
 def select_scan_no_qc(scans_meta):

@@ -12,7 +12,35 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-def compute_fmri_path( source_dir, clinical_dir, dest_dir, subjs_list):
+def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
+    """
+
+    Args:
+        source_dir: path to the ADNI directory
+        csv_dir: path to the clinical data directory
+        dest_dir: path to the destination directory
+        subjs_list: subjects list
+
+    Returns:
+
+    """
+    import pandas as pd
+    from os import path
+    from clinica.utils.stream import cprint
+
+    if subjs_list is None:
+        adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
+        adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
+        subjs_list = list(adni_merge.PTID.unique())
+
+    cprint('Calculating paths of fMRI images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
+    images = compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list)
+    cprint('Paths of fMRI images found. Exporting images into BIDS ...')
+    fmri_paths_to_bids(images, dest_dir)
+    cprint('fMRI conversion done.')
+
+
+def compute_fmri_path(source_dir, clinical_dir, dest_dir, subjs_list):
     """
     Compute the paths to fmri images.
 
@@ -41,6 +69,7 @@ def compute_fmri_path( source_dir, clinical_dir, dest_dir, subjs_list):
     import pandas as pd
     import logging
     from clinica.iotools.converters.adni_to_bids import adni_utils
+    from clinica.utils.stream import cprint
 
     fmri_col = ['Subject_ID', 'VISCODE', 'Visit', 'IMAGEUID', 'Sequence', 'Scan Date', 'LONIUID', 'Scanner',
                 'MagStregth', 'Path']
@@ -57,7 +86,7 @@ def compute_fmri_path( source_dir, clinical_dir, dest_dir, subjs_list):
     mayo_mri_imageqc = pd.io.parsers.read_csv(mayo_mri_imageqc_path, sep=',')
 
     for subj in subjs_list:
-        print subj
+        # print subj
         fmri_subjs_info = mayo_mri_fmri[(mayo_mri_fmri.RID == int(subj[-4:]))]
         # Extract visits available
         visits_list = fmri_subjs_info['VISCODE2'].tolist()
@@ -100,12 +129,12 @@ def compute_fmri_path( source_dir, clinical_dir, dest_dir, subjs_list):
                         fmri_metadata = fmri_metadata.iloc[0]
 
                         if not 'Philips' in fmri_metadata['Scanner']:
-                            print 'No Philips scanner for ', subj, 'visit', viscode, '. Skipped.'
+                            cprint('No Philips scanner for ' + subj + ' visit ' + viscode + '. Skipped.')
                             continue
 
                         elif 4 in mayo_mri_imageqc[mayo_mri_imageqc['loni_image'] == 'I' + str(fmri_imageuid)][
                             'series_quality'].values:
-                            print 'Bad scan quality for ', subj, 'visit', viscode, '. Skipped.'
+                            cprint('Bad scan quality for ' + subj + ' visit ' + viscode + '. Skipped.')
                             continue
 
                         scan_date = fmri_subj.SCANDATE
@@ -124,7 +153,7 @@ def compute_fmri_path( source_dir, clinical_dir, dest_dir, subjs_list):
                                     image_path = path.join(dirpath, d)
                                     # Check if the path exists
                                     if not os.path.isdir(image_path):
-                                        print 'Path not existing for subject:', subj, 'visit:', visit
+                                        cprint('Path not existing for subject ' + subj + ' visit ' + visit)
                                     found = True
                                     break
                             if found:
@@ -134,7 +163,7 @@ def compute_fmri_path( source_dir, clinical_dir, dest_dir, subjs_list):
                         if viscode == 'scmri':
                             viscode = 'bl'
                     else:
-                        print 'Missing visit, sequence, scan date and loniuid for ', subj, 'visit', visit
+                        cprint('Missing visit, sequence, scan date and loniuid for subject ' + subj + ' visit ' + visit)
                         continue
 
                     row_to_append = pd.DataFrame(
@@ -149,7 +178,7 @@ def compute_fmri_path( source_dir, clinical_dir, dest_dir, subjs_list):
     return fmri_df
 
 
-def convert_fmri(dest_dir, fmri_paths, mod_to_add=False, mod_to_update=False):
+def fmri_paths_to_bids(dest_dir, fmri_paths, mod_to_update=False):
     """
     Convert the fmri extracted from the fmri_paths to BIDS
 
@@ -170,7 +199,7 @@ def convert_fmri(dest_dir, fmri_paths, mod_to_add=False, mod_to_update=False):
     subjs_list = fmri_paths['Subject_ID'].drop_duplicates().values
 
     for i in range(0, len(subjs_list)):
-        print 'Converting fmri for subject', subjs_list[i]
+        # print 'Converting fmri for subject', subjs_list[i]
         sess_list = fmri_paths[(fmri_paths['Subject_ID'] == subjs_list[i])]['VISCODE'].values
         alpha_id = adni_utils.remove_space_and_symbols(subjs_list[i])
         bids_id = 'sub-ADNI' + alpha_id
@@ -184,13 +213,13 @@ def convert_fmri(dest_dir, fmri_paths, mod_to_add=False, mod_to_update=False):
 
             # If the fmri already exist
             existing_fmri = glob(path.join(ses_path, 'func', '*_bold*'))
-            if mod_to_add:
-                if len(existing_fmri) > 0:
-                    print 'Fmri already existing. Skipped.'
-                    continue
+            # if mod_to_add:
+            #     if len(existing_fmri) > 0:
+            #         print 'Fmri already existing. Skipped.'
+            #         continue
 
             if mod_to_update and len(existing_fmri) > 0:
-                print 'Removing the old fmri folder...'
+                # print 'Removing the old fmri folder...'
                 os.remove(existing_fmri[0])
 
             if not os.path.exists(ses_path):

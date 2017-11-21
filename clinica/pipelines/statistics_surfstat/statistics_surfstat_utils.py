@@ -13,7 +13,7 @@ __status__ = "Development"
 
 def data_prep(input_directory, subjects_visits_tsv, group_label, glm_type):
     """
-        Fetch all the intermedial variables for this workflow
+        Fetch all the intermediate variables for this workflow
 
     Args:
         input_directory: CAPS directory

@@ -2,13 +2,17 @@
 from os import path
 import json
 from multiprocessing.pool import ThreadPool
+import datetime
 
 import numpy as np
+
+import pandas as pd
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_auc_score
+import itertools
 
 from clinica.pipelines.machine_learning import base
 import clinica.pipelines.machine_learning.svm_utils as utils
@@ -320,20 +324,32 @@ class LogisticReg(base.MLAlgorithm):
 
 class RandomForest(base.MLAlgorithm):
     
-    def __init__(self, x, y, balanced=False, grid_search_folds=10, n_estimators_range=range(5, 15, 1), n_threads=15):
+    def __init__(self, x, y, balanced=False, grid_search_folds=10,
+                 n_estimators_range=(10, 25, 50, 100, 150, 200, 500),
+                 max_depth_range=(None, 6, 8, 10, 12),
+                 min_samples_split_range=(2, 4, 6, 8),
+                 max_features_range=('auto', 0.1, 0.2, 0.3, 0.4, 0.5),
+                 n_threads=15):
         self._x = x
         self._y = y
         self._balanced = balanced
         self._grid_search_folds = grid_search_folds
         self._n_estimators_range = n_estimators_range
+        self._max_depth_range = max_depth_range
+        self._min_samples_split_range = min_samples_split_range
+        self._max_features_range = max_features_range
         self._n_threads = n_threads
     
-    def _launch_random_forest(self, x_train, x_test, y_train, y_test, n_estimators):
+    def _launch_random_forest(self, x_train, x_test, y_train, y_test, n_estimators, max_depth, min_samples_split, max_features):
         
         if self._balanced:
-            classifier = RandomForestClassifier(n_estimators=n_estimators, class_weight='balanced')
+            classifier = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth,
+                                                min_samples_split=min_samples_split, max_features=max_features,
+                                                class_weight='balanced', n_jobs=self._n_threads)
         else:
-            classifier = RandomForestClassifier(n_estimators=n_estimators)
+            classifier = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth,
+                                                min_samples_split=min_samples_split, max_features=max_features,
+                                                n_jobs=self._n_threads)
         
         classifier.fit(x_train, y_train)
         y_hat = classifier.predict(x_test)
@@ -342,37 +358,71 @@ class RandomForest(base.MLAlgorithm):
         
         return classifier, y_hat, auc
 
-    def _grid_search(self, x_train, x_test, y_train, y_test, n_estimators):
+    def _grid_search(self, x_train, x_test, y_train, y_test, n_estimators, max_depth, min_samples_split, max_features):
     
-        _, y_hat, _ = self._launch_random_forest(x_train, x_test, y_train, y_test, n_estimators)
+        _, y_hat, _ = self._launch_random_forest(x_train, x_test, y_train, y_test,
+                                                 n_estimators, max_depth,
+                                                 min_samples_split, max_features)
         res = utils.evaluate_prediction(y_test, y_hat)
         
         return res['balanced_accuracy']
     
     def _select_best_parameter(self, async_result):
-        
-        n_estimators_list = []
+
+        params_list = []
         accuracies = []
+
+        all_params_acc = []
+
         for fold in async_result.keys():
-            best_n_estimators = -1
+            best_params = None
             best_acc = -1
             
-            for n_estimators, async_acc in async_result[fold].iteritems():
-                
+            for params, async_acc in async_result[fold].iteritems():
                 acc = async_acc.get()
                 if acc > best_acc:
-                    best_n_estimators = n_estimators
+                    best_params = params
                     best_acc = acc
-            n_estimators_list.append(best_n_estimators)
+
+                all_params_acc.append(pd.DataFrame({'n_estimators': params[0],
+                                                    'max_depth': params[1],
+                                                    'min_samples_split': params[2],
+                                                    'max_features': params[3],
+                                                    'balanced_accuracy': acc}, index=['i', ]))
+
+            params_list.append(best_params)
             accuracies.append(best_acc)
-        
+
+        # TODO For exploratory purpose only. Erase later
+        pd.concat(all_params_acc).to_csv('all_params_acc_%s.tsv' % datetime.datetime.now(), sep='\t', index=False, encoding='utf-8')
+
         best_acc = np.mean(accuracies)
-        best_n_estimators = int(round(np.mean(n_estimators_list)))
-        
-        return {'n_estimators': best_n_estimators, 'balanced_accuracy': best_acc}
+        best_n_estimators = int(round(np.mean([x[0] for x in params_list])))
+        best_max_depth = int(round(np.mean([x[1] if x[1] is not None else 50 for x in params_list])))
+        best_min_samples_split = int(round(np.mean([x[2] for x in params_list])))
+
+        def max_feature_to_float(m):
+            if type(m) is float:
+                return m
+            if type(m) is int:
+                return float(m) / float(self._x.shape[1])
+            if m == 'auto' or m == 'sqrt':
+                return np.sqrt(self._x.shape[1])/ float(self._x.shape[1])
+            if m == 'log2':
+                return np.log2(self._x.shape[1])/ float(self._x.shape[1])
+            raise ValueError('Not valid value for max_feature: %s' % m)
+
+        float_max_feat = [max_feature_to_float(x[3]) for x in params_list]
+        best_max_features = np.mean(float_max_feat)
+
+        return {'n_estimators': best_n_estimators,
+                'max_depth': best_max_depth,
+                'min_samples_split': best_min_samples_split,
+                'max_features': best_max_features,
+                'balanced_accuracy': best_acc}
     
     def evaluate(self, train_index, test_index):
-        
+
         inner_pool = ThreadPool(self._n_threads)
         async_result = {}
         for i in range(self._grid_search_folds):
@@ -383,6 +433,11 @@ class RandomForest(base.MLAlgorithm):
         
         skf = StratifiedKFold(n_splits=self._grid_search_folds, shuffle=True)
         inner_cv = list(skf.split(np.zeros(len(y_train)), y_train))
+
+        parameters_combinations = list(itertools.product(self._n_estimators_range,
+                                                         self._max_depth_range,
+                                                         self._min_samples_split_range,
+                                                         self._max_features_range))
         
         for i in range(len(inner_cv)):
             inner_train_index, inner_test_index = inner_cv[i]
@@ -392,18 +447,23 @@ class RandomForest(base.MLAlgorithm):
             y_train_inner = y_train[inner_train_index]
             y_test_inner = y_train[inner_test_index]
             
-            for n_estimators in self._n_estimators_range:
-                async_result[i][n_estimators] = inner_pool.apply_async(self._grid_search,
-                                                                       (x_train_inner, x_test_inner,
-                                                                        y_train_inner, y_test_inner, n_estimators))
+            for parameters in parameters_combinations:
+                async_result[i][parameters] = inner_pool.apply_async(self._grid_search,
+                                                                     (x_train_inner, x_test_inner,
+                                                                      y_train_inner, y_test_inner,
+                                                                      parameters[0], parameters[1],
+                                                                      parameters[2], parameters[3]))
         inner_pool.close()
         inner_pool.join()
-        
         best_parameter = self._select_best_parameter(async_result)
         x_test = self._x[test_index]
         y_test = self._y[test_index]
         
-        _, y_hat, auc = self._launch_random_forest(x_train, x_test, y_train, y_test, best_parameter['n_estimators'])
+        _, y_hat, auc = self._launch_random_forest(x_train, x_test, y_train, y_test,
+                                                   best_parameter['n_estimators'],
+                                                   best_parameter['max_depth'],
+                                                   best_parameter['min_samples_split'],
+                                                   best_parameter['max_features'])
         
         result = dict()
         result['best_parameter'] = best_parameter
@@ -416,27 +476,29 @@ class RandomForest(base.MLAlgorithm):
         return result
 
     def apply_best_parameters(self, results_list):
-    
-        best_n_estimators_list = []
-        bal_acc_list = []
-        
-        for result in results_list:
-            best_n_estimators_list.append(result['best_parameter']['n_estimators'])
-            bal_acc_list.append(result['best_parameter']['balanced_accuracy'])
-    
-        # best n_estimators is the average of all n_estimators
-        best_n_estimators = int(round(np.mean(best_n_estimators_list)))
-        # Mean balanced accuracy
-        mean_bal_acc = np.mean(bal_acc_list)
-        
+
+        mean_bal_acc = np.mean([result['best_parameter']['balanced_accuracy'] for result in results_list])
+        best_n_estimators = int(round(np.mean([result['best_parameter']['n_estimators'] for result in results_list])))
+        best_max_depth = int(round(np.mean([result['best_parameter']['max_depth'] for result in results_list])))
+        best_min_samples_split = int(round(np.mean([result['best_parameter']['min_samples_split'] for result in results_list])))
+        best_max_features = np.mean([result['best_parameter']['max_features'] for result in results_list])
+
         if self._balanced:
-            classifier = RandomForestClassifier(n_estimators=best_n_estimators, class_weight='balanced')
+            classifier = RandomForestClassifier(n_estimators=best_n_estimators, max_depth=best_max_depth,
+                                                min_samples_split=best_min_samples_split, max_features=best_max_features,
+                                                class_weight='balanced', n_jobs=self._n_threads)
         else:
-            classifier = RandomForestClassifier(n_estimators=best_n_estimators)
-        
+            classifier = RandomForestClassifier(n_estimators=best_n_estimators, max_depth=best_max_depth,
+                                                min_samples_split=best_min_samples_split, max_features=best_max_features,
+                                                n_jobs=self._n_threads)
+
         classifier.fit(self._x, self._y)
         
-        return classifier, {'n_estimators': best_n_estimators, 'balanced_accuracy': mean_bal_acc}
+        return classifier, {'n_estimators': best_n_estimators,
+                            'max_depth': best_max_depth,
+                            'min_samples_split': best_min_samples_split,
+                            'max_features': best_max_features,
+                            'balanced_accuracy': mean_bal_acc}
 
     def save_classifier(self, classifier, output_dir):
         np.savetxt(path.join(output_dir, 'feature_importances.txt'), classifier.feature_importances_)
