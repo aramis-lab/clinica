@@ -861,7 +861,7 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
                     EXAMDATE = file_to_read.loc[(file_to_read["RID"] == r), i]
         dict = pd.DataFrame({'session_id': 'ses-' + viscode,
                              'MMS': MMSCORE,
-                             'cdr_sb': CDGLOBAL,
+                             'cdr_global': CDGLOBAL,
                              'diagnosis': DXCURREN,
                              'examination_date': EXAMDATE
                              })
