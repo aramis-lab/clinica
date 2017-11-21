@@ -117,10 +117,10 @@ for indexsubject = 1 : nrsubject
             abscontrast = contrast;
         end
         if strfind(contrast, '*')
-            with_intercation = 1
+            with_intercation = 1;
             disp('You include interaction as covariate in you model, please carefully check the format of your tsv files')
         else  % the case not include the interaction, to check the format of the tsv
-            with_intercation = 0
+            with_intercation = 0;
             indexunique = strfind(firstline, abscontrast);
             indexunique = find(not(cellfun('isempty', indexunique)));
             if iscell(tsvdata{indexunique})
