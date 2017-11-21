@@ -177,7 +177,7 @@ def remove_tmp_dmc_folder(bids_dir):
         os.remove(tmp_dcm_folder_path)
 
 
-def check_bids_files(bids_path, container='anat', extension='_T1w.nii.gz', subjects=None):
+def check_bids_t1(bids_path, container='anat', extension='_T1w.nii.gz', subjects=None):
 
     import os
 
@@ -185,18 +185,53 @@ def check_bids_files(bids_path, container='anat', extension='_T1w.nii.gz', subje
         subjects = next(os.walk(bids_path))[1]
 
     errors = []
+    print len(subjects)
     for subject in subjects:
         sessions = next(os.walk(os.path.join(bids_path, subject)))[1]
         for session in sessions:
             image_name = subject + '_' + session + extension
             image_dir = os.path.join(bids_path, subject, session, container)
-            files = next(os.walk(image_dir))[2]
-            if not files:
-                errors.append('Subject ' + subject + ' for session ' + session + ' folder is empty')
-            for f in files:
-                if f != image_name:
-                    errors.append('Subject' + subject + ' for session ' + session + ' folder contains: ' + f)
+            if not os.path.isdir(image_dir):
+                print 'No directory: ' + image_dir
+            else:
+                files = next(os.walk(image_dir))[2]
+                if not files:
+                    errors.append('Subject ' + subject + ' for session ' + session + ' folder is empty')
+                for f in files:
+                    if f != image_name:
+                        errors.append('Subject ' + subject + ' for session ' + session + ' folder contains: ' + f)
+    return errors
 
+
+def check_bids_dwi(bids_path, container='dwi', extension=('_acq-axial_dwi.bvec', '_acq-axial_dwi.bval', '_acq-axial_dwi.nii.gz'), subjects=None):
+
+    import os
+
+    if subjects is None:
+        subjects = next(os.walk(bids_path))[1]
+
+    errors = []
+    print len(subjects)
+    for subject in subjects:
+        sessions = next(os.walk(os.path.join(bids_path, subject)))[1]
+        for session in sessions:
+
+            image_names = [subject + '_' + session + ext for ext in extension]
+            image_names.sort()
+
+            image_dir = os.path.join(bids_path, subject, session, container)
+
+            if not os.path.isdir(image_dir):
+                print 'No directory: ' + image_dir
+            else:
+                files = next(os.walk(image_dir))[2]
+                files.sort()
+
+                if not files:
+                    errors.append('Subject ' + subject + ' for session ' + session + ' folder is empty')
+
+                if image_names != files:
+                    errors.append('Subject ' + subject + ' for session ' + session + ' folder contains: \n' + str(files))
     return errors
 
 
@@ -417,7 +452,7 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                             if not pd.isnull(sessions_fields[i]):
                                 # Extract only the fields related to the current file opened
                                 if location in field_location[i]:
-                                    if location == 'ADAS_ADNIGO2.csv' or location == 'DXSUM_PDXCONV_ADNIALL.csv':
+                                    if location == 'ADAS_ADNIGO2.csv' or location == 'DXSUM_PDXCONV_ADNIALL.csv' or location == 'CDR.csv':
                                         if type(row['VISCODE2']) == float:
                                             continue
                                         visit_id = row['VISCODE2']
