@@ -140,8 +140,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     error_indices = []
     for conv_error in conversion_errors:
-        error_indices.append((t1_df.Enhanced == False)
-                             & (t1_df.Subject_ID == conv_error[0])
+        error_indices.append((t1_df.Subject_ID == conv_error[0])
                              & (t1_df.VISCODE == conv_error[1]))
 
     indices_to_remove = t1_df.index[reduce(operator.or_, error_indices, False)]

@@ -156,8 +156,7 @@ def compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     error_indices = []
     for conv_error in conversion_errors:
-        error_indices.append((pet_av45_df.Enhanced == False)
-                             & (pet_av45_df.Subject_ID == conv_error[0])
+        error_indices.append((pet_av45_df.Subject_ID == conv_error[0])
                              & (pet_av45_df.VISCODE == conv_error[1]))
 
     indices_to_remove = pet_av45_df.index[reduce(operator.or_, error_indices, False)]
