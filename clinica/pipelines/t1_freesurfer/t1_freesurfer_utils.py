@@ -67,29 +67,6 @@ def bids_datagrabber(input_dir, subject_list, session_list):
 
     return anat_t1
 
-# input_dir = '/teams/ARAMIS/PROJECTS/junhao.wen/PhD/SMCH_AD/SMHC_BIDS'
-# session_list = ['ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0']
-# subject_list = ['sub-SMHCA0262', 'sub-SMHCA0269', 'sub-SMHCA0273', 'sub-SMHCA0275', 'sub-SMHCA0287', 'sub-SMHCA0300', 'sub-SMHCA0316',
-#  'sub-SMHCA0338', 'sub-SMHCA0347', 'sub-SMHCA0357', 'sub-SMHCA0363', 'sub-SMHCA0378', 'sub-SMHCA0383', 'sub-SMHCA0406',
-#  'sub-SMHCA0425', 'sub-SMHCA0461', 'sub-SMHCA0480', 'sub-SMHCA0500', 'sub-SMHCA0513', 'sub-SMHCA0514', 'sub-SMHCA0516',
-#  'sub-SMHCA0517', 'sub-SMHCA0537', 'sub-SMHCA0543', 'sub-SMHCA0573', 'sub-SMHCA0579', 'sub-SMHCA0600', 'sub-SMHCA0614',
-#  'sub-SMHCA0619', 'sub-SMHCA0620', 'sub-SMHCA0624', 'sub-SMHCA0625', 'sub-SMHCA0629', 'sub-SMHCA0630', 'sub-SMHCA0642',
-#  'sub-SMHCAB019', 'sub-SMHCAB021', 'sub-SMHCAB030', 'sub-SMHCAB033', 'sub-SMHCAB043', 'sub-SMHCAB046', 'sub-SMHCAB053',
-#  'sub-SMHCAB070', 'sub-SMHCAB080', 'sub-SMHCAB089', 'sub-SMHCAB092', 'sub-SMHCAB126', 'sub-SMHCAB132', 'sub-SMHCAB138',
-#  'sub-SMHCAB141', 'sub-SMHCAB143', 'sub-SMHCAB171', 'sub-SMHCAB174', 'sub-SMHCAB175', 'sub-SMHCAB233', 'sub-SMHCAB234',
-#  'sub-SMHCAB257', 'sub-SMHCAH001', 'sub-SMHCAH016', 'sub-SMHCAH017', 'sub-SMHCAH022', 'sub-SMHCAH027', 'sub-SMHCAH034',
-#  'sub-SMHCAH035', 'sub-SMHCAH043', 'sub-SMHCAH044', 'sub-SMHCAH045', 'sub-SMHCAH048', 'sub-SMHCAH049', 'sub-SMHCAH054',
-#  'sub-SMHCAH056', 'sub-SMHCAH067', 'sub-SMHCAH070', 'sub-SMHCAH073', 'sub-SMHCAH084', 'sub-SMHCAH086', 'sub-SMHCAH092',
-#  'sub-SMHCAH107', 'sub-SMHCAH108', 'sub-SMHCAH113', 'sub-SMHCAH117', 'sub-SMHCAH118', 'sub-SMHCAH121', 'sub-SMHCAH122',
-#  'sub-SMHCAH123', 'sub-SMHCAH129', 'sub-SMHCAH130', 'sub-SMHCAH132', 'sub-SMHCAH135', 'sub-SMHCAH141', 'sub-SMHCAH143',
-#  'sub-SMHCAH147', 'sub-SMHCAH149', 'sub-SMHCAH155', 'sub-SMHCAH157', 'sub-SMHCAH171', 'sub-SMHCAH191', 'sub-SMHCAH231',
-#  'sub-SMHCAH241', 'sub-SMHCAH243', 'sub-SMHCAH245', 'sub-SMHCAH249', 'sub-SMHCAH253', 'sub-SMHCAH259', 'sub-SMHCAH264',
-#  'sub-SMHCAH265', 'sub-SMHCAH267', 'sub-SMHCAH281', 'sub-SMHCAH285', 'sub-SMHCAH294', 'sub-SMHCAH296', 'sub-SMHCAH297',
-#  'sub-SMHCAH310', 'sub-SMHCAH311', 'sub-SMHCAH337', 'sub-SMHCAH347', 'sub-SMHCAH351', 'sub-SMHCAH360', 'sub-SMHCAH405',
-#  'sub-SMHCAP079', 'sub-SMHCAP234', 'sub-SMHCAP371', 'sub-SMHCAP506', 'sub-SMHCAP513', 'sub-SMHCAP575', 'sub-SMHCAP614',
-#  'sub-SMHCAP685', 'sub-SMHCAP735']
-# t1s = bids_datagrabber(input_dir, subject_list, session_list)
-
 def get_dirs_check_reconalled(output_dir, subject_list, session_list):
     """
         Get the info from subjects_visits_tsv, like subject_dir, subject_id, subject_list, session_list
