@@ -40,7 +40,8 @@ def bids_datagrabber(input_dir, subject_list, session_list):
                                             subject=subject_list[i].replace('sub-', ''))
             if len(t1) == 0:
                 missing_subject_session.append([subject_list[i], session_list[i]])
-            anat_t1.append(t1)
+            else:
+                anat_t1.append(t1)
     else:
         cprint("There are more than one runs for T1w image for this analysis")
         for i in range(len(subject_list)):
@@ -52,21 +53,42 @@ def bids_datagrabber(input_dir, subject_list, session_list):
                                             run='1')
             if len(t1) == 0:
                 missing_subject_session.append([subject_list[i], session_list[i]])
-            anat_t1.append(t1)
+            else:
+                anat_t1.append(t1)
 
-
-    if len(anat_t1) == 0:
-        raise ValueError("Pybids finds no t1 images for this analysis, please check if the subjects have been already recon-alled or there is no images in BIDS!")
+    ### check if pybids works well tp find all the T1 images
     if len(anat_t1) != len(subject_list) or len(anat_t1) != len(session_list):
-        raise ValueError('Pybids found ' + str(len(anat_t1)) + '  T1 but there are ' + str(len(subject_list)) + ' subjects-sessions ! ')
+        raise ValueError('Pybids found ' + str(len(anat_t1)) + '  T1 but there are ' + str(len(subject_list)) + ' subjects !!! ')
     if len(missing_subject_session) > 0:
         error_string = 'Please verify there is no error in your tsv file. Clinica could not find T1 for those ' + str(len(missing_subject_session)) + ' subjects - session :'
         for e in missing_subject_session:
-            error_string += '\n - ' + e[0] + ' and ' + e[1]
+            error_string += '\n' + e[0] + ' with session ' + e[1]
         raise IOError(error_string)
 
-
     return anat_t1
+
+# input_dir = '/teams/ARAMIS/PROJECTS/junhao.wen/PhD/SMCH_AD/SMHC_BIDS'
+# session_list = ['ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0', 'ses-M0']
+# subject_list = ['sub-SMHCA0262', 'sub-SMHCA0269', 'sub-SMHCA0273', 'sub-SMHCA0275', 'sub-SMHCA0287', 'sub-SMHCA0300', 'sub-SMHCA0316',
+#  'sub-SMHCA0338', 'sub-SMHCA0347', 'sub-SMHCA0357', 'sub-SMHCA0363', 'sub-SMHCA0378', 'sub-SMHCA0383', 'sub-SMHCA0406',
+#  'sub-SMHCA0425', 'sub-SMHCA0461', 'sub-SMHCA0480', 'sub-SMHCA0500', 'sub-SMHCA0513', 'sub-SMHCA0514', 'sub-SMHCA0516',
+#  'sub-SMHCA0517', 'sub-SMHCA0537', 'sub-SMHCA0543', 'sub-SMHCA0573', 'sub-SMHCA0579', 'sub-SMHCA0600', 'sub-SMHCA0614',
+#  'sub-SMHCA0619', 'sub-SMHCA0620', 'sub-SMHCA0624', 'sub-SMHCA0625', 'sub-SMHCA0629', 'sub-SMHCA0630', 'sub-SMHCA0642',
+#  'sub-SMHCAB019', 'sub-SMHCAB021', 'sub-SMHCAB030', 'sub-SMHCAB033', 'sub-SMHCAB043', 'sub-SMHCAB046', 'sub-SMHCAB053',
+#  'sub-SMHCAB070', 'sub-SMHCAB080', 'sub-SMHCAB089', 'sub-SMHCAB092', 'sub-SMHCAB126', 'sub-SMHCAB132', 'sub-SMHCAB138',
+#  'sub-SMHCAB141', 'sub-SMHCAB143', 'sub-SMHCAB171', 'sub-SMHCAB174', 'sub-SMHCAB175', 'sub-SMHCAB233', 'sub-SMHCAB234',
+#  'sub-SMHCAB257', 'sub-SMHCAH001', 'sub-SMHCAH016', 'sub-SMHCAH017', 'sub-SMHCAH022', 'sub-SMHCAH027', 'sub-SMHCAH034',
+#  'sub-SMHCAH035', 'sub-SMHCAH043', 'sub-SMHCAH044', 'sub-SMHCAH045', 'sub-SMHCAH048', 'sub-SMHCAH049', 'sub-SMHCAH054',
+#  'sub-SMHCAH056', 'sub-SMHCAH067', 'sub-SMHCAH070', 'sub-SMHCAH073', 'sub-SMHCAH084', 'sub-SMHCAH086', 'sub-SMHCAH092',
+#  'sub-SMHCAH107', 'sub-SMHCAH108', 'sub-SMHCAH113', 'sub-SMHCAH117', 'sub-SMHCAH118', 'sub-SMHCAH121', 'sub-SMHCAH122',
+#  'sub-SMHCAH123', 'sub-SMHCAH129', 'sub-SMHCAH130', 'sub-SMHCAH132', 'sub-SMHCAH135', 'sub-SMHCAH141', 'sub-SMHCAH143',
+#  'sub-SMHCAH147', 'sub-SMHCAH149', 'sub-SMHCAH155', 'sub-SMHCAH157', 'sub-SMHCAH171', 'sub-SMHCAH191', 'sub-SMHCAH231',
+#  'sub-SMHCAH241', 'sub-SMHCAH243', 'sub-SMHCAH245', 'sub-SMHCAH249', 'sub-SMHCAH253', 'sub-SMHCAH259', 'sub-SMHCAH264',
+#  'sub-SMHCAH265', 'sub-SMHCAH267', 'sub-SMHCAH281', 'sub-SMHCAH285', 'sub-SMHCAH294', 'sub-SMHCAH296', 'sub-SMHCAH297',
+#  'sub-SMHCAH310', 'sub-SMHCAH311', 'sub-SMHCAH337', 'sub-SMHCAH347', 'sub-SMHCAH351', 'sub-SMHCAH360', 'sub-SMHCAH405',
+#  'sub-SMHCAP079', 'sub-SMHCAP234', 'sub-SMHCAP371', 'sub-SMHCAP506', 'sub-SMHCAP513', 'sub-SMHCAP575', 'sub-SMHCAP614',
+#  'sub-SMHCAP685', 'sub-SMHCAP735']
+# t1s = bids_datagrabber(input_dir, subject_list, session_list)
 
 def get_dirs_check_reconalled(output_dir, subject_list, session_list):
     """
@@ -85,12 +107,15 @@ def get_dirs_check_reconalled(output_dir, subject_list, session_list):
 
     import os, errno
     from copy import deepcopy as cp
+    import subprocess
 
+    # subject_id, subject_list and session_list
     subject_id = list(subject_list[i] + '_' + session_list[i] for i in range(len(subject_list)))
     subject_id_without_reconalled = cp(subject_id)
     subject_list_without_reconalled = cp(subject_list)
     session_list_without_reconalled = cp(session_list)
 
+    # output_path is the path to CAPS
     output_path = os.path.expanduser(output_dir)  # change the relative path to be absolute path
     output_dir = os.path.join(output_path, 'subjects')
 
@@ -100,6 +125,7 @@ def get_dirs_check_reconalled(output_dir, subject_list, session_list):
         if exception.errno != errno.EEXIST:  # if the error is not exist error, raise, otherwise, pass
             raise
 
+    ## subject_dir is the real path to FreeSurfer output path
     subject_dir = []
     subject_dir_without_reconalled = []
 
@@ -110,26 +136,24 @@ def get_dirs_check_reconalled(output_dir, subject_list, session_list):
         except OSError as exception:
             if exception.errno != errno.EEXIST:
                 raise
+
+        # add the FS path into a list with all subjects and check the recon-all.log file to see if this subject have been run recon-all successfully.
         subject_dir.append(subject)
         subject_path = os.path.join(subject, subject_id[i])
         subject_path_abs = os.path.expanduser(subject_path)
-        if os.path.exists(subject_path_abs):
-            print("Note: subject %s seems to be already recon-alled or being "
-                  "runing, please check out the result folder and recon-all "
-                  "sumarry log, in case that the processing of recon-all has "
-                  "been killed accidentally, please delete the result foder "
-                  "and rerun it; In case that the subject has been run "
-                  "successfully with recon-all, just ignore this message and "
-                  "continue to run the new-added or non-recon-alled "
-                  "subjects!!! " % subject_id[i])
-            subject_id_without_reconalled.remove(subject_id[i])
-            subject_list_without_reconalled.remove(subject_list[i])
-            session_list_without_reconalled.remove(session_list[i])
+        # check the recon-all.log
+        log_file = os.path.join(subject_path_abs, subject_list[i] + '_' + session_list[i], 'scripts', 'recon-all.log')
+        if os.path.isfile(log_file):
+            last_line = subprocess.check_output(['tail', '-1', log_file])
+            if 'finished without error' in last_line:
+                print("This subject has been run recon-all successfully, just skip this subject: %s" % subject_id[i])
+                subject_id_without_reconalled.remove(subject_id[i])
+                subject_list_without_reconalled.remove(subject_list[i])
+                session_list_without_reconalled.remove(session_list[i])
+            else:
+                subject_dir_without_reconalled.append(subject)
         else:
             subject_dir_without_reconalled.append(subject)
-
-    # # Make sure the subject_id, subject_list and session list have the same length
-
 
     return subject_dir, subject_id, subject_dir_without_reconalled, subject_id_without_reconalled, subject_list_without_reconalled, session_list_without_reconalled
 
