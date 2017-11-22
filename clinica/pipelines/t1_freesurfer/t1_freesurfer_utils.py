@@ -142,7 +142,7 @@ def get_dirs_check_reconalled(output_dir, subject_list, session_list):
         subject_path = os.path.join(subject, subject_id[i])
         subject_path_abs = os.path.expanduser(subject_path)
         # check the recon-all.log
-        log_file = os.path.join(subject_path_abs, subject_list[i] + '_' + session_list[i], 'scripts', 'recon-all.log')
+        log_file = os.path.join(subject_path_abs, 'scripts', 'recon-all.log')
         if os.path.isfile(log_file):
             last_line = subprocess.check_output(['tail', '-1', log_file])
             if 'finished without error' in last_line:
