@@ -151,13 +151,14 @@ class T1FreeSurfer(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces.freesurfer.preprocess import ReconAll
+        from clinica.utils.stream import cprint
 
         # check out ReconAll version
         try:
             if ReconAll.version.fget.func_globals['__version__'].split(".") < ['0', '11', '0']:
                 raise RuntimeError('ReconAll version should at least be version of 0.11.0')
         except Exception as e:
-            print(str(e))
+            cprint(str(e))
             exit(1)
 
         # MapNode to check out if we need -cw256 for every subject, and -qcache is default for every subject.

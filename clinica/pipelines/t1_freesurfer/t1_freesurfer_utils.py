@@ -85,6 +85,7 @@ def get_dirs_check_reconalled(output_dir, subject_list, session_list):
     import os, errno
     from copy import deepcopy as cp
     import subprocess
+    from clinica.utils.stream import cprint
 
     # subject_id, subject_list and session_list
     subject_id = list(subject_list[i] + '_' + session_list[i] for i in range(len(subject_list)))
@@ -123,7 +124,7 @@ def get_dirs_check_reconalled(output_dir, subject_list, session_list):
         if os.path.isfile(log_file):
             last_line = subprocess.check_output(['tail', '-1', log_file])
             if 'finished without error' in last_line:
-                print("This subject has been run recon-all successfully, just skip this subject: %s" % subject_id[i])
+                cprint("This subject has been run recon-all successfully, just skip this subject: %s" % subject_id[i])
                 subject_id_without_reconalled.remove(subject_id[i])
                 subject_list_without_reconalled.remove(subject_list[i])
                 session_list_without_reconalled.remove(session_list[i])
@@ -148,23 +149,24 @@ def checkfov(t1_list, recon_all_args):
     import sys
     import nibabel as nib
     from nipype.utils.filemanip import filename_to_list
+    from clinica.utils.stream import cprint
 
     output_flags = []
     num_t1 = len(t1_list)
     t1_list = filename_to_list(t1_list)
 
     if num_t1 == 0:
-        print("ERROR: No T1's Given")
+        cprint("ERROR: No T1's Given")
         sys.exit(-1)
 
     f = nib.load(t1_list[0])
     voxel_size = f.header.get_zooms()
     t1_size = f.header.get_data_shape()
     if (voxel_size[0] * t1_size[0] > 256) or (voxel_size[1] * t1_size[1]> 256) or (voxel_size[2] * t1_size[2]> 256):
-        print("Setting MRI Convert to crop images to 256 FOV")
+        cprint("Setting MRI Convert to crop images to 256 FOV")
         optional_flag = '-cw256'
     else:
-        print("No need to add -cw256 flag")
+        cprint("No need to add -cw256 flag")
         optional_flag = ''
     flag = "{0} ".format(recon_all_args) + optional_flag
     output_flags.append(flag)
@@ -204,11 +206,12 @@ def log_summary(subject_list, session_list, subject_id, output_dir):
     """
     import os
     from datetime import datetime
+    from clinica.utils.stream import cprint
 
     output_path = os.path.expanduser(output_dir)
     dest_dir = os.path.join(output_path, 'subjects')
     if not os.path.isdir(dest_dir):
-        print("ERROR: directory subjects does not exist, it should be CAPS directory after running recon_all_pipeline!!!")
+        cprint("ERROR: directory subjects does not exist, it should be CAPS directory after running recon_all_pipeline!!!")
     else:
         pass
     log_name = os.path.join(dest_dir, 'recon_all_summary.log')
@@ -251,6 +254,7 @@ def write_statistics_per_subject(subject_id, output_dir):
 
     """
     import os, errno
+    from clinica.utils.stream import cprint
 
     subject_list = subject_id.split('_')[0]
     session_list = subject_id.split('_')[1]
@@ -289,7 +293,7 @@ def write_statistics_per_subject(subject_id, output_dir):
     output_path = os.path.expanduser(output_dir)
     cs_dir = os.path.join(output_path, 'subjects', subject_list, session_list, 't1', 'freesurfer_cross_sectional')
     if not os.path.isdir(cs_dir):
-        print("ERROR: directory freesurfer_cross_sectional does not exist, it should be CAPS directory after running recon_all_pipeline!!!")
+        cprint("ERROR: directory freesurfer_cross_sectional does not exist, it should be CAPS directory after running recon_all_pipeline!!!")
     else:
         pass
     dest_dir = cs_dir + '/regional_measures'
@@ -388,4 +392,4 @@ def write_statistics_per_subject(subject_id, output_dir):
     cmd_aparc_BA_rh_meancurv = 'aparcstats2table --subjects ' + subject + ' --hemi rh --parc BA --meas meancurv --tablefile ' + aparc_BA_rh_meancurv_tsv
     os.system(cmd_aparc_BA_rh_meancurv)
 
-    print "Writing statistical data to tsv file for %s finished!" % subject
+    cprint("Writing statistical data to tsv file for %s finished!" % subject)
