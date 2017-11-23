@@ -29,6 +29,7 @@ def data_prep(input_directory, subjects_visits_tsv, group_label, glm_type):
     import clinica.pipelines as clp
     import sys
     import pandas as pd
+    from clinica.utils.stream import cprint
 
     path_to_matscript = os.path.join(os.path.dirname(clp.__path__[0]), 'lib/clinicasurfstat')
 
@@ -54,7 +55,7 @@ def data_prep(input_directory, subjects_visits_tsv, group_label, glm_type):
             except:
                 raise OSError("Surfstat: can't create destination directory (%s)!" % (output_directory))
     else:
-        print "The other GLM situations have not been implemented in this pipelines"
+        cprint("The other GLM situations have not been implemented in this pipelines")
         sys.exit()
 
     # cp the subjects_visits_tsv to the result folder
@@ -133,19 +134,21 @@ def runmatlab(input_directory,
     from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
     from os.path import join
     import sys, os
+    from clinica.utils.stream import cprint
+
     # here, we check out the os, basically, clinica works for linux and MAC OS X.
     if sys.platform.startswith('linux'):
-        print "###Note: your platform is linux, the default command line for Matlab(matlab_cmd) is matlab, but you can also export a variable MATLABCMD,  which points to your matlab,  in your .bashrc to set matlab_cmd, this can help you to choose which Matlab to run when you have more than one Matlab. "
+        cprint("###Note: your platform is linux, the default command line for Matlab(matlab_cmd) is matlab, but you can also export a variable MATLABCMD,  which points to your matlab,  in your .bashrc to set matlab_cmd, this can help you to choose which Matlab to run when you have more than one Matlab.")
     elif sys.platform.startswith('darwin'):
         try:
             if not 'MATLABCMD' in os.environ:
                 raise RuntimeError(
                     "###Note: your platform is MAC OS X, the default command line for Matlab(matlab_cmd) is matlab, but it does not work on OS X, you mush export a variable MATLABCMD, which points to your matlab, in your .bashrc to set matlab_cmd. Note, Mac os x will always choose to use OpengGl hardware mode.")
         except Exception as e:
-            print(str(e))
+            cprint(str(e))
             exit(1)
     else:
-        print "Clinica will not work on your platform "
+        cprint("Clinica will not work on your platform ")
 
     MatlabCommand.set_default_matlab_cmd(
         get_matlab_command())  # this is to set the matlab_path(os.environ) in your bashrc file, to choose which version of matlab do you wanna use
@@ -169,12 +172,12 @@ def runmatlab(input_directory,
     matlab.inputs.mfile = True  # this will create a file: pyscript.m , the pyscript.m is the default name
     matlab.inputs.single_comp_thread = False  # this will stop runing with single thread
     matlab.inputs.logfile = join(output_directory, "matlab_output.log")
-    print "Matlab logfile is located in the folder: %s" % matlab.inputs.logfile
-    print "Matlab script command = %s" % matlab.inputs.script
-    print "MatlabCommand inputs flag: single_comp_thread = %s" % matlab.inputs.single_comp_thread
-    print "MatlabCommand choose which matlab to use(matlab_cmd): %s" % get_matlab_command()
+    cprint("Matlab logfile is located in the folder: %s" % matlab.inputs.logfile)
+    cprint("Matlab script command = %s" % matlab.inputs.script)
+    cprint("MatlabCommand inputs flag: single_comp_thread = %s" % matlab.inputs.single_comp_thread)
+    cprint("MatlabCommand choose which matlab to use(matlab_cmd): %s" % get_matlab_command())
     if sys.platform.startswith('linux'):
-        print "MatlabCommand inputs flag: nosoftwareopengl = %s" % matlab.inputs.args
+        cprint("MatlabCommand inputs flag: nosoftwareopengl = %s" % matlab.inputs.args)
     out = matlab.run()
     return out
 
@@ -260,7 +263,7 @@ def check_inputs(caps,
             missing_files.append(right_hemi)
 
     if len(missing_files) > 0:
-        print(' ** Missing files **')
+        cprint(' ** Missing files **')
         for l in missing_files:
             cprint('Not found : ' + l)
         raise Exception(str(len(missing_files)) + ' files not found !')
