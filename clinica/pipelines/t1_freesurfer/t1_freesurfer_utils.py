@@ -40,7 +40,8 @@ def bids_datagrabber(input_dir, subject_list, session_list):
                                             subject=subject_list[i].replace('sub-', ''))
             if len(t1) == 0:
                 missing_subject_session.append([subject_list[i], session_list[i]])
-            anat_t1.append(t1)
+            else:
+                anat_t1.append(t1)
     else:
         cprint("There are more than one runs for T1w image for this analysis")
         for i in range(len(subject_list)):
@@ -52,19 +53,17 @@ def bids_datagrabber(input_dir, subject_list, session_list):
                                             run='1')
             if len(t1) == 0:
                 missing_subject_session.append([subject_list[i], session_list[i]])
-            anat_t1.append(t1)
+            else:
+                anat_t1.append(t1)
 
-
-    if len(anat_t1) == 0:
-        raise ValueError("Pybids finds no t1 images for this analysis, please check if the subjects have been already recon-alled or there is no images in BIDS!")
+    ### check if pybids works well tp find all the T1 images
     if len(anat_t1) != len(subject_list) or len(anat_t1) != len(session_list):
-        raise ValueError('Pybids found ' + str(len(anat_t1)) + '  T1 but there are ' + str(len(subject_list)) + ' subjects-sessions ! ')
+        raise ValueError('Pybids found ' + str(len(anat_t1)) + '  T1 but there are ' + str(len(subject_list)) + ' subjects !!! ')
     if len(missing_subject_session) > 0:
         error_string = 'Please verify there is no error in your tsv file. Clinica could not find T1 for those ' + str(len(missing_subject_session)) + ' subjects - session :'
         for e in missing_subject_session:
-            error_string += '\n - ' + e[0] + ' and ' + e[1]
+            error_string += '\n' + e[0] + ' with session ' + e[1]
         raise IOError(error_string)
-
 
     return anat_t1
 
@@ -85,12 +84,15 @@ def get_dirs_check_reconalled(output_dir, subject_list, session_list):
 
     import os, errno
     from copy import deepcopy as cp
+    import subprocess
 
+    # subject_id, subject_list and session_list
     subject_id = list(subject_list[i] + '_' + session_list[i] for i in range(len(subject_list)))
     subject_id_without_reconalled = cp(subject_id)
     subject_list_without_reconalled = cp(subject_list)
     session_list_without_reconalled = cp(session_list)
 
+    # output_path is the path to CAPS
     output_path = os.path.expanduser(output_dir)  # change the relative path to be absolute path
     output_dir = os.path.join(output_path, 'subjects')
 
@@ -100,6 +102,7 @@ def get_dirs_check_reconalled(output_dir, subject_list, session_list):
         if exception.errno != errno.EEXIST:  # if the error is not exist error, raise, otherwise, pass
             raise
 
+    ## subject_dir is the real path to FreeSurfer output path
     subject_dir = []
     subject_dir_without_reconalled = []
 
@@ -110,26 +113,24 @@ def get_dirs_check_reconalled(output_dir, subject_list, session_list):
         except OSError as exception:
             if exception.errno != errno.EEXIST:
                 raise
+
+        # add the FS path into a list with all subjects and check the recon-all.log file to see if this subject have been run recon-all successfully.
         subject_dir.append(subject)
         subject_path = os.path.join(subject, subject_id[i])
         subject_path_abs = os.path.expanduser(subject_path)
-        if os.path.exists(subject_path_abs):
-            print("Note: subject %s seems to be already recon-alled or being "
-                  "runing, please check out the result folder and recon-all "
-                  "sumarry log, in case that the processing of recon-all has "
-                  "been killed accidentally, please delete the result foder "
-                  "and rerun it; In case that the subject has been run "
-                  "successfully with recon-all, just ignore this message and "
-                  "continue to run the new-added or non-recon-alled "
-                  "subjects!!! " % subject_id[i])
-            subject_id_without_reconalled.remove(subject_id[i])
-            subject_list_without_reconalled.remove(subject_list[i])
-            session_list_without_reconalled.remove(session_list[i])
+        # check the recon-all.log
+        log_file = os.path.join(subject_path_abs, 'scripts', 'recon-all.log')
+        if os.path.isfile(log_file):
+            last_line = subprocess.check_output(['tail', '-1', log_file])
+            if 'finished without error' in last_line:
+                print("This subject has been run recon-all successfully, just skip this subject: %s" % subject_id[i])
+                subject_id_without_reconalled.remove(subject_id[i])
+                subject_list_without_reconalled.remove(subject_list[i])
+                session_list_without_reconalled.remove(session_list[i])
+            else:
+                subject_dir_without_reconalled.append(subject)
         else:
             subject_dir_without_reconalled.append(subject)
-
-    # # Make sure the subject_id, subject_list and session list have the same length
-
 
     return subject_dir, subject_id, subject_dir_without_reconalled, subject_id_without_reconalled, subject_list_without_reconalled, session_list_without_reconalled
 
