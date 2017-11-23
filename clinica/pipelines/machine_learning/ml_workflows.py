@@ -180,10 +180,14 @@ class VB_RepHoldOut_DualSVM(base.MLWorkflow):
 
         self._validation.save_results(self._output_dir)
 
+
 class VertexB_RepHoldOut_dualSVM(base.MLWorkflow):
+
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, output_dir, image_type='fdg', fwhm=20,
                  precomputed_kernel=None, n_threads=15, n_iterations=100, test_size=0.3, grid_search_folds=10,
                  balanced=True, c_range=np.logspace(-10, 2, 1000)):
+
+
         self._output_dir = output_dir
         self._n_threads = n_threads
         self._n_iterations = n_iterations
@@ -192,8 +196,10 @@ class VertexB_RepHoldOut_dualSVM(base.MLWorkflow):
         self._balanced = balanced
         self._c_range = c_range
 
+
         self._input = input.CAPSVertexBasedInput(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, fwhm,
                                                  image_type, precomputed_kernel)
+
 
         self._validation = None
         self._algorithm = None
@@ -220,6 +226,7 @@ class VertexB_RepHoldOut_dualSVM(base.MLWorkflow):
 
         self._algorithm.save_classifier(classifier, classifier_dir)
         self._algorithm.save_parameters(best_params, classifier_dir)
+
 
         weights = self._algorithm.save_weights(classifier, x, classifier_dir)
         self._input.save_weights_as_datasurface(weights, classifier_dir)
