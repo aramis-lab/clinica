@@ -126,7 +126,7 @@ def apply_ants_registration_syn_quick_transformation(
         out_deformed_image = os.path.abspath(name_output_image)
 
     cmd = 'antsApplyTransforms -d 3 -e 0 -i %s -o %s -t %s -t %s -r %s ' \
-          '--interpolation BSpline' \
+          '--interpolation Linear' \
           % (in_image, out_deformed_image, in_bspline_transformation,
              in_affine_transformation, in_reference_image)
     os.system(cmd)
