@@ -133,6 +133,9 @@ def register_dti_maps_on_atlas(
         (ants_registration, apply_ants_registration_for_rd, [('warp',           'in_bspline_transformation')]),  # noqa
 
         (ants_registration, thres_fa, [('image_warped', 'in_file')]),
+        (apply_ants_registration_for_md, thres_md, [('image_warped', 'in_file')]),
+        (apply_ants_registration_for_rd, thres_rd, [('image_warped', 'in_file')]),
+        (apply_ants_registration_for_ad, thres_ad, [('image_warped', 'in_file')]),
 
         # Outputnode:
         (thres_fa,        outputnode,  [('out_file',            'out_registered_fa')]),  # noqa
