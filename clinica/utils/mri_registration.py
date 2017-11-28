@@ -162,7 +162,7 @@ def ants_registration_syn_quick(fix_image, moving_image, prefix_output=None):
     inverse_warped = os.path.abspath(prefix_output + 'InverseWarped.nii.gz')
     inverse_warp = os.path.abspath(prefix_output + '1InverseWarp.nii.gz')
 
-    cmd = 'antsRegistrationSyNQuick.sh -t br -d 3 -f %s -m %s -o %s' \
+    cmd = 'antsRegistrationSyNQuick.sh -t b -d 3 -f %s -m %s -o %s' \
           % (fix_image, moving_image, prefix_output)
     os.system(cmd)
 
