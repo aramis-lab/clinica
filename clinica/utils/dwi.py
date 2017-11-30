@@ -243,11 +243,9 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
         b0_dwi_split(
             in_dwi=in_dwi, in_bval=in_bval, in_bvec=in_bvec, low_bval=low_bval)
 
-    cprint("Extracted b0 files: %s" % extracted_b0)
-    cprint("Extracted DWI files: %s" % out_split_dwi)
-
     if nb_b0s == 1:
         # The reference b0 is the extracted b0
+        cprint('Only one b0 for %s' % (nb_b0s, in_dwi))
         out_reference_b0 = extracted_b0
     elif nb_b0s > 1:
         # Register the b0 onto the first b0
@@ -275,7 +273,7 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
         insert_b0_into_dwi(in_b0=out_reference_b0, in_dwi=out_split_dwi,
                            in_bval=out_split_bval, in_bvec=out_split_bvec)
 
-    cprint('Results')
+    cprint('Results - Reference b0 workflow')
     cprint('out_reference_b0 = ' + out_reference_b0)
     cprint('out_b0_dwi_merge = ' + out_b0_dwi_merge)
     cprint('out_updated_bval = ' + out_updated_bval)

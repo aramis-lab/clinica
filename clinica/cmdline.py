@@ -108,7 +108,7 @@ def execute():
     from clinica.pipelines.t1_spm_full_prep.t1_spm_full_prep_cli import T1SPMFullPrepCLI  # noqa
 
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DWIPreprocessingUsingT1CLI  # noqa
-    # from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DWIPreprocessingUsingPhaseDiffFieldmapCLI  # noqa
+    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DWIPreprocessingUsingPhaseDiffFieldmapCLI # noqa
     from clinica.pipelines.dwi_processing.dwi_processing_cli import DWIProcessingCLI  # noqa
 
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI  # noqa
@@ -126,7 +126,7 @@ def execute():
         T1SPMDartel2MNICLI(),
         T1SPMFullPrepCLI(),
         DWIPreprocessingUsingT1CLI(),
-        # DWIPreprocessingUsingPhaseDiffFieldmapCLI(),
+        DWIPreprocessingUsingPhaseDiffFieldmapCLI(),
         DWIProcessingCLI(),
         fMRIPreprocessingCLI(),
         StatisticsSurfstatCLI(),

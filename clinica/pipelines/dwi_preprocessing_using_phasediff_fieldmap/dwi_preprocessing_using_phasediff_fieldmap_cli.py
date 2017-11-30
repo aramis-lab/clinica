@@ -4,16 +4,16 @@
 import clinica.engine as ce
 
 
-class DWIPreprocessingUsingT1CLI(ce.CmdParser):
+class DWIPreprocessingUsingPhaseDiffFieldmapCLI(ce.CmdParser):
 
     def __init__(self):
-        super(DWIPreprocessingUsingT1CLI, self).__init__()
+        super(DWIPreprocessingUsingPhaseDiffFieldmapCLI, self).__init__()
 
     def define_name(self):
-        """Define the sub-command name to run this pipelines.
+        """Define the sub-command name to run this pipeline.
         """
 
-        self._name = 'dwi-preprocessing-using-t1'
+        self._name = 'dwi-preprocessing-using-phasediff-fieldmap'
 
     def define_options(self):
         """Define the sub-command arguments
@@ -27,29 +27,28 @@ class DWIPreprocessingUsingT1CLI(ce.CmdParser):
 
         self._args.add_argument("--low_bval",
                                 type=int, default=5,
-                                help='Define the b0 volumes as all volume bval <= lowbval. (Default:  --low_bval 5)')  # noqa
+                                help='Define the b0 volumes as all volume bval <= lowbval. (Default: --low_bval 5)')  # noqa
         self._args.add_argument("--save_intermediate_files",
                                 type=bool, default=False,
                                 help='Will save some intermediate results (for debugging purposes).')  # noqa
 
         self._args.add_argument("-wd", "--working_directory",
-                                help='Temporary directory to store pipelines intermediate results')  # noqa
+                                help='Temporary directory to store pipeline intermediate results')  # noqa
         self._args.add_argument("-np", "--n_procs",
                                 type=int,
                                 help='Number of cores used to run in parallel')
         self._args.add_argument("-sl", "--slurm",
                                 action='store_true',
-                                help='Run the pipelines using SLURM')
+                                help='Run the pipeline using SLURM')
 
     def run_pipeline(self, args):
         """
-        Run the DWIPreprocessingUsingT1 Pipeline from command line.
         """
 
         from tempfile import mkdtemp
-        from dwi_preprocessing_using_t1_pipeline import DWIPreprocessingUsingT1
+        from dwi_preprocessing_using_phasediff_fieldmap_pipeline import DWIPreprocessingUsingPhaseDiffFieldmap
 
-        pipeline = DWIPreprocessingUsingT1(
+        pipeline = DWIPreprocessingUsingPhaseDiffFieldmap(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
@@ -57,10 +56,10 @@ class DWIPreprocessingUsingT1CLI(ce.CmdParser):
             save_intermediate_files=args.save_intermediate_files
         )
 
-#        pipelines.parameters.update({
-#            'low_bval': args.low_bval,
-#            'save_intermediate_files': args.save_intermediate_files
-#        })
+        #        pipelines.parameters.update({
+        #            'low_bval': args.low_bval,
+        #            'save_intermediate_files': args.save_intermediate_files
+        #        })
 
         if args.working_directory is None:
             args.working_directory = mkdtemp()
