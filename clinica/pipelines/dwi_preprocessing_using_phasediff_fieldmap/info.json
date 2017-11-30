@@ -1,0 +1,17 @@
+{
+    "id": "aramislab/dwi-preprocessing-using-phasediff-fieldmap",
+    "author": ["Alexandre Routier", "Thomas Jacquemont"],
+    "maintainer": ["Alexandre Routier"],
+    "version": "0.1.0",
+    "dependencies": [
+        {
+            "type": "software",
+            "name": "fsl",
+            "version": ">=5.0.9"
+        },
+        {
+            "type": "software",
+            "name": "ants"
+        }
+    ]
+}

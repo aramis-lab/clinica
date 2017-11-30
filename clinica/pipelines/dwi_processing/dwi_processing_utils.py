@@ -214,8 +214,8 @@ def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2, prefix_file=None):
         out_ev = op.abspath('dec_fa_map_from_dti.nii.gz')
     else:
         out_ev = op.abspath(prefix_file + '_decfa.nii.gz')
-    cmd = 'tensor2metric -mask %s %s -nthreads %s -vector %s' % \
-          (in_b0_mask, in_dti, nthreads, out_ev)
+    cmd = 'tensor2metric %s -nthreads %s -vector %s' % \
+          (in_dti, nthreads, out_ev)
     os.system(cmd)
 
     return out_fa, out_ad, out_md, out_rd, out_ev
