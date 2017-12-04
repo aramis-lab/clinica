@@ -120,7 +120,7 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
                 subject=self.subjects[i].replace('sub-', '')
             )
             if len(bval_file) != 1:
-                raise IOError('Expected to find 1 bval file file for subject '
+                raise IOError('Expected to find 1 bval file for subject '
                               + self.subjects[i]
                               + ' and session '
                               + self.sessions[i]
@@ -137,7 +137,7 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
                 subject=self.subjects[i].replace('sub-', '')
             )
             if len(bvec_file) != 1:
-                raise IOError('Expected to find 1 bvec file file for subject '
+                raise IOError('Expected to find 1 bvec file for subject '
                               + self.subjects[i]
                               + ' and session '
                               + self.sessions[i]
@@ -154,7 +154,7 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
                 subject=self.subjects[i].replace('sub-', '')
             )
             if len(dwi_file) != 1:
-                raise IOError('Expected to find 1 dwi file file for subject '
+                raise IOError('Expected to find 1 dwi file for subject '
                               + self.subjects[i]
                               + ' and session '
                               + self.sessions[i]
@@ -171,7 +171,7 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
                 subject=self.subjects[i].replace('sub-', '')
             )
             if len(t1_file) != 1:
-                raise IOError('Expected to find 1 T1w file file for subject '
+                raise IOError('Expected to find 1 T1w file for subject '
                               + self.subjects[i]
                               + ' and session '
                               + self.sessions[i]
