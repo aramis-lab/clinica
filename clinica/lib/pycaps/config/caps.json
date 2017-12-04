@@ -1,0 +1,18 @@
+{
+    "entities": [
+        {
+            "name": "subject",
+            "pattern": "sub-([a-zA-Z0-9]+)",
+            "directory": "{{root}}/subjects/{subject}"
+        },
+        {
+            "name": "session",
+            "pattern": "ses-([a-zA-Z0-9]+)",
+            "directory": "{{root}}/subjects/{subject}/{session}"
+        },
+        {
+            "name": "dwi_preprocessing_file",
+            "pattern":".*\/subjects\/sub-[a-zA-Z0-9]+\/ses-[a-zA-Z0-9]+\/dwi\/preprocessing\/(.*)"
+        }
+    ]
+}

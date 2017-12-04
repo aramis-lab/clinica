@@ -462,8 +462,8 @@ class DWIPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
              (mask_b0_pre, hmc, [('mask_file', 'inputnode.in_mask')]),
 
              # Eddy-current correction
-             (hmc, ecc, [('outputnode.out_xfms', 'inputnode.in_xfms'),
-                         ('outputnode.out_file', 'inputnode.in_file')]),
+             (hmc, ecc, [('outputnode.out_xfms', 'inputnode.in_xfms')]),
+             (prepare_b0, ecc, [('out_b0_dwi_merge', 'inputnode.in_file')]),
              (prepare_b0, ecc, [('out_updated_bval', 'inputnode.in_bval')]),
              (mask_b0_pre, ecc, [('mask_file', 'inputnode.in_mask')]),
              # Magnetic susceptibility correction
