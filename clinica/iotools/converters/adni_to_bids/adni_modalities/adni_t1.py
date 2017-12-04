@@ -314,6 +314,9 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
         series_id = scan.SeriesID
         qc_passed = False
 
+
+    #TODO replace by the function to find if the scanner is_philips
+
     filtered_scan = ida_meta_subj[ida_meta_subj.LONIUID == series_id]
 
     if filtered_scan.shape[0] < 1:
@@ -328,9 +331,13 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
             # TODO - LOG THIS
             cprint('NO IDA Meta: ' + subject_id + ' for visit ' + timepoint + ' - ' + visit_str)
             return None
+    ida_scan = filtered_scan.iloc[0]
+
+
 
     original = True
-    ida_scan = filtered_scan.iloc[0]
+
+    # TODO replace the condition with if is_philips
     if ida_scan.Scanner.find('Philips') > -1:
 
         scan = (mprage_meta_subj[
