@@ -17,7 +17,7 @@ def register_dti_maps_on_atlas(
 
     Args:
         working_directory (Optional[str]): Directory where the temporary
-        results are stored. If not specified, it is
+            results are stored. If not specified, it is
             automatically generated (generally in /tmp/).
         name (Optional[str]): Name of the pipelines.
 
@@ -38,8 +38,6 @@ def register_dti_maps_on_atlas(
         out_registered_rd (str): RD-map registered on <atlas_name>.
     """
     import tempfile
-    import os
-    import nipype.interfaces.io as nio
     import nipype.interfaces.fsl as fsl
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
@@ -131,20 +129,19 @@ def register_dti_maps_on_atlas(
         (inputnode,         apply_ants_registration_for_rd, [('in_atlas_scalar_image', 'in_reference_image')]),  # noqa
         (ants_registration, apply_ants_registration_for_rd, [('affine_matrix',   'in_affine_transformation')]),  # noqa
         (ants_registration, apply_ants_registration_for_rd, [('warp',           'in_bspline_transformation')]),  # noqa
-
-        (ants_registration, thres_fa, [('image_warped', 'in_file')]),
-        (apply_ants_registration_for_md, thres_md, [('out_deformed_image', 'in_file')]),
-        (apply_ants_registration_for_rd, thres_rd, [('out_deformed_image', 'in_file')]),
-        (apply_ants_registration_for_ad, thres_ad, [('out_deformed_image', 'in_file')]),
-
+        # Remove negative values from the DTI maps:
+        (ants_registration,              thres_fa, [('image_warped',       'in_file')]),  # noqa
+        (apply_ants_registration_for_md, thres_md, [('out_deformed_image', 'in_file')]),  # noqa
+        (apply_ants_registration_for_rd, thres_rd, [('out_deformed_image', 'in_file')]),  # noqa
+        (apply_ants_registration_for_ad, thres_ad, [('out_deformed_image', 'in_file')]),  # noqa
         # Outputnode:
-        (thres_fa,        outputnode,  [('out_file',            'out_registered_fa')]),  # noqa
-        (ants_registration, outputnode, [('affine_matrix',           'out_affine_matrix'),  # noqa
-                                        ('warp',               'out_b_spline_transform'),  # noqa
-                                                              ('inverse_warp',           'out_inverse_warp')]),  # noqa
-        (thres_md,        outputnode,  [('out_file',    'out_registered_md')]),  # noqa
-        (thres_ad,        outputnode,  [('out_file',    'out_registered_ad')]),  # noqa
-        (thres_rd,        outputnode,  [('out_file',    'out_registered_rd')])   # noqa
+        (thres_fa,          outputnode, [('out_file',    'out_registered_fa')]),  # noqa
+        (ants_registration, outputnode, [('affine_matrix', 'out_affine_matrix'),  # noqa
+                                         ('warp',     'out_b_spline_transform'),  # noqa
+                                         ('inverse_warp', 'out_inverse_warp')]),  # noqa
+        (thres_md,          outputnode,  [('out_file',   'out_registered_md')]),  # noqa
+        (thres_ad,          outputnode,  [('out_file',   'out_registered_ad')]),  # noqa
+        (thres_rd,          outputnode,  [('out_file',   'out_registered_rd')])   # noqa
     ])
 
     return wf

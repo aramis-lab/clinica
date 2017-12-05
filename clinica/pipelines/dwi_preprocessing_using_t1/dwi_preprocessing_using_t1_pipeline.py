@@ -106,7 +106,7 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
 
         from clinica.utils.stream import cprint
 
-        cprint('Reading BIDS dataset for %s images' % len(self.subjects))
+        cprint('Reading BIDS dataset for %s image(s)' % len(self.subjects))
         for i in range(len(self.subjects)):
             # cprint('------- SUBJECT %s SESSION %s -------'
             #        % (self.subjects[i], self.sessions[i]))
