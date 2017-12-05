@@ -72,14 +72,12 @@ class DWIProcessing(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
 
-        import os
-
         from clinica.utils.stream import cprint
         from clinica.lib.pycaps.caps_layout import CAPSLayout
 
         caps_layout = CAPSLayout(self.caps_directory)
 
-        cprint('Reading CAPS dataset for %s images' % len(self.subjects))
+        cprint('Reading CAPS dataset for %s image(s)' % len(self.subjects))
         for i in range(len(self.subjects)):
             # cprint('------- SUBJECT %s SESSION %s -------'
             #        % (self.subjects[i], self.sessions[i]))
@@ -234,9 +232,7 @@ class DWIProcessing(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        from clinica.utils.io import zip_nii
         from os.path import join
-        import re
 
         import dwi_processing_utils as utils
 
@@ -254,8 +250,8 @@ class DWIProcessing(cpe.Pipeline):
                                  interface=nio.DataSink())
         write_results.inputs.base_directory = self.caps_directory
         write_results.inputs.parameterization = False
-#        write_results.inputs.regexp_substitutions = [
-#            (r'(.*/)pet_t1_native/r(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-T1w_pet\3'),
+        write_results.inputs.regexp_substitutions = [
+#            (r'(.*/)native_space/r(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-T1w_pet\3'),  # noqa
 #            (r'(.*/)pet_pvc/pvc-rbv_r(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-T1w_pvc-rbv_pet\3'),
 #            (r'(.*/)pet_mni/wr(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-Ixi549Space_pet\3'),
 #            (r'(.*/)pet_pvc_mni/wpvc-rbv_r(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-Ixi549Space_pvc-rbv_pet\3'),
@@ -269,12 +265,12 @@ class DWIProcessing(cpe.Pipeline):
 #            (r'(.*/)pet_pvc_suvr_masked_smoothed/(fwhm-[0-9]+mm)_masked_suvr_wpvc-rbv_r(sub-.*)(\.nii(\.gz)?)$', r'\1\3_space-Ixi549Space_pvc-rbv_suvr-' + re.escape(self._suvr_region) + r'_mask-brain_\2_pet\4'),
 #
 #            (r'(.*/)binary_mask/(sub-.*_T1w_).*(space-[a-zA-Z0-9]+).*(_brainmask\.nii(\.gz)?)$', r'\1\2\3\4')
-#        ]
+        ]
 
         self.connect([
            (self.input_node, container_path, [('preproc_dwi', 'dwi_filename')]),  # noqa
 
-           (container_path,   write_results, [(('container', join, 'dwi'), 'container')]),  # noqa
+           (container_path,   write_results, [(('container', join, 'dwi', 'dti_based_processing'), 'container')]),  # noqa
            (self.output_node, write_results, [('dti', 'native_space.@dti')]),
            (self.output_node, write_results, [('fa', 'native_space.@fa'),
                                               ('md', 'native_space.@md'),
@@ -334,25 +330,25 @@ class DWIProcessing(cpe.Pipeline):
             working_directory=self.base_dir, name="RegisterDTIMapsOnJHU")
 
         scalar_analysis_fa = npe.Node(interface=nutil.Function(
-            input_names=['in_registered_map', 'name_map'],
+            input_names=['in_registered_map', 'name_map', 'prefix_file'],
             output_names=['atlas_statistics_list'],
             function=utils.statistics_on_atlases), name='ScalarAnalysisForFA')
         scalar_analysis_fa.inputs.name_map = 'fa'
 
         scalar_analysis_md = npe.Node(interface=nutil.Function(
-            input_names=['in_registered_map', 'name_map'],
+            input_names=['in_registered_map', 'name_map', 'prefix_file'],
             output_names=['atlas_statistics_list'],
             function=utils.statistics_on_atlases), name='ScalarAnalysisForMD')
         scalar_analysis_md.inputs.name_map = 'md'
 
         scalar_analysis_ad = npe.Node(interface=nutil.Function(
-            input_names=['in_registered_map', 'name_map'],
+            input_names=['in_registered_map', 'name_map', 'prefix_file'],
             output_names=['atlas_statistics_list'],
             function=utils.statistics_on_atlases), name='ScalarAnalysisForAD')
         scalar_analysis_ad.inputs.name_map = 'ad'
 
         scalar_analysis_rd = npe.Node(interface=nutil.Function(
-            input_names=['in_registered_map', 'name_map'],
+            input_names=['in_registered_map', 'name_map', 'prefix_file'],
             output_names=['atlas_statistics_list'],
             function=utils.statistics_on_atlases), name='ScalarAnalysisForRD')
         scalar_analysis_rd.inputs.name_map = 'rd'
@@ -378,9 +374,13 @@ class DWIProcessing(cpe.Pipeline):
                                                            ('out_md', 'inputnode.in_md'),  # noqa
                                                            ('out_ad', 'inputnode.in_ad'),  # noqa
                                                            ('out_rd', 'inputnode.in_rd')]),  # noqa
+            (get_bids_identifier,   scalar_analysis_fa, [('bids_identifier', 'prefix_file')]),  # noqa
             (register_on_jhu_atlas, scalar_analysis_fa, [('outputnode.out_registered_fa', 'in_registered_map')]),  # noqa
+            (get_bids_identifier,   scalar_analysis_md, [('bids_identifier', 'prefix_file')]),  # noqa
             (register_on_jhu_atlas, scalar_analysis_md, [('outputnode.out_registered_md', 'in_registered_map')]),  # noqa
+            (get_bids_identifier,   scalar_analysis_ad, [('bids_identifier', 'prefix_file')]),  # noqa
             (register_on_jhu_atlas, scalar_analysis_ad, [('outputnode.out_registered_ad', 'in_registered_map')]),  # noqa
+            (get_bids_identifier,   scalar_analysis_rd, [('bids_identifier', 'prefix_file')]),  # noqa
             (register_on_jhu_atlas, scalar_analysis_rd, [('outputnode.out_registered_rd', 'in_registered_map')]),  # noqa
             # Outputnode
             (dwi_to_tensor,           self.output_node, [('out_dti', 'dti')]),

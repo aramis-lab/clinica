@@ -429,13 +429,14 @@ def tcksift(in_tracks, in_fod):
     return out_tracks
 
 
-def statistics_on_atlases(in_registered_map, name_map):
+def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
     """
     Computes a list of statistics files for each atlas.
 
     Args:
         in_registered_map: Map already registered on atlases in Nifti format.
         name_map: Name of the registered map in CAPS format.
+        prefix_file: %s_space-<AtlasName>_map-<name_map>_statistics.tsv
 
     Returns:
         List of paths leading to the statistics TSV files.
@@ -448,7 +449,6 @@ def statistics_on_atlases(in_registered_map, name_map):
                                      JHUTracts501mm)
     from clinica.utils.statistics import statistics_on_atlas
 
-    _, base, _ = split_filename(in_registered_map)
 #    atlas_classes = AtlasAbstract.__subclasses__()
 
     in_atlas_list = [JHUDTI811mm(), JHUTracts01mm(), JHUTracts251mm()]
@@ -459,9 +459,16 @@ def statistics_on_atlases(in_registered_map, name_map):
         if not isinstance(atlas, AtlasAbstract):
             raise TypeError("Atlas element must be an AtlasAbstract type")
 
-        out_atlas_statistics = abspath(
-            join(getcwd(), '%s_space-%s_map-%s_statistics.tsv' %
-                 (base, atlas.get_name_atlas(), name_map)))
+        if prefix_file is None:
+            _, base, _ = split_filename(in_registered_map)
+            out_atlas_statistics = abspath(
+                join(getcwd(), '%s_space-%s_map-%s_statistics.tsv' %
+                     (base, atlas.get_name_atlas(), name_map)))
+        else:
+            out_atlas_statistics = abspath(
+                join(getcwd(), '%s_space-%s_map-%s_statistics.tsv' %
+                     (prefix_file, atlas.get_name_atlas(), name_map)))
+
         statistics_on_atlas(in_registered_map, atlas, out_atlas_statistics)
         atlas_statistics_list.append(out_atlas_statistics)
 
@@ -487,7 +494,7 @@ def dwi_container_from_filename(dwi_filename):
 def extract_bids_identifier_from_caps_filename(caps_dwi_filename):
     """Extract BIDS identifier from CAPS filename"""
     import re
-    from os.path import join
+
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_dwi',
                   caps_dwi_filename)
 
