@@ -434,9 +434,9 @@ def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
     Computes a list of statistics files for each atlas.
 
     Args:
-        in_registered_map: Map already registered on atlases in Nifti format.
-        name_map: Name of the registered map in CAPS format.
-        prefix_file: %s_space-<AtlasName>_map-<name_map>_statistics.tsv
+        in_registered_map (str): Map already registered on atlases in Nifti format.
+        name_map (str): Name of the registered map in CAPS format.
+        prefix_file (Opt[str]): <prefix_file>_space-<AtlasName>_map-<name_map>_statistics.tsv
 
     Returns:
         List of paths leading to the statistics TSV files.
@@ -505,6 +505,29 @@ def extract_bids_identifier_from_caps_filename(caps_dwi_filename):
 
     from clinica.utils.stream import cprint
     cprint("BIDS identifier: " + bids_identifier)
+    m = re.search(
+        r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_dwi_space-[a-zA-Z0-9]+',
+        caps_dwi_filename)
+    caps_identifier = m.group(0)
+    cprint("CAPS identifier: " + caps_identifier)
 
     return bids_identifier
 
+
+def extract_caps_identifier_from_caps_filename(caps_dwi_filename):
+    """Extract CAPS identifier from CAPS filename"""
+    import re
+
+    m = re.search(
+        r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_dwi_space-[a-zA-Z0-9]+',
+        caps_dwi_filename)
+
+    if m is None:
+        raise ValueError('Input filename is not in a CAPS compliant format.')
+
+    caps_identifier = m.group(0)
+
+    from clinica.utils.stream import cprint
+    cprint("CAPS identifier: " + caps_identifier)
+
+    return caps_identifier
