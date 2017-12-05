@@ -3,7 +3,7 @@
 import clinica.pipelines.engine as cpe
 
 
-class DWIProcessing(cpe.Pipeline):
+class DWIProcessingDTI(cpe.Pipeline):
     """DWI Processing SHORT DESCRIPTION.
 
     Todos:
@@ -27,8 +27,8 @@ class DWIProcessing(cpe.Pipeline):
 
 
     Example:
-        >>> from dwi_processing import DWIProcessing
-        >>> pipelines = DWIProcessing('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
+        >>> from dwi_processing_dti import DWIProcessingDTI
+        >>> pipelines = DWIProcessingDTI('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipelines.parameters = {
         >>>     # ...
         >>> }
@@ -59,7 +59,8 @@ class DWIProcessing(cpe.Pipeline):
         output_list_dti = [
             'dti', 'fa', 'md', 'ad', 'rd',
             'registered_fa', 'registered_md', 'registered_ad', 'registered_rd',
-            'statistics_fa', 'statistics_md', 'statistics_ad', 'statistics_rd'
+            'statistics_fa', 'statistics_md', 'statistics_ad', 'statistics_rd',
+            'b_spline_transform', 'affine_matrix'
         ]
 
         return output_list_dti
@@ -234,7 +235,7 @@ class DWIProcessing(cpe.Pipeline):
         import nipype.interfaces.io as nio
         from os.path import join
 
-        import dwi_processing_utils as utils
+        import dwi_processing_dti_utils as utils
 
         # Find container path from filename
         # =================================
@@ -277,10 +278,12 @@ class DWIProcessing(cpe.Pipeline):
                                               ('ad', 'native_space.@ad'),
                                               ('rd', 'native_space.@rd')]),
 
-           (self.output_node, write_results, [('registered_fa', 'normalized_space.@registered_fa')]),  # noqa
-           (self.output_node, write_results, [('registered_md', 'normalized_space.@registered_md')]),  # noqa
-           (self.output_node, write_results, [('registered_ad', 'normalized_space.@registered_ad')]),  # noqa
-           (self.output_node, write_results, [('registered_rd', 'normalized_space.@registered_rd')]),  # noqa
+           (self.output_node, write_results, [('registered_fa',      'normalized_space.@registered_fa')]),  # noqa
+           (self.output_node, write_results, [('registered_md',      'normalized_space.@registered_md')]),  # noqa
+           (self.output_node, write_results, [('registered_ad',      'normalized_space.@registered_ad')]),  # noqa
+           (self.output_node, write_results, [('registered_rd',      'normalized_space.@registered_rd')]),  # noqa
+           (self.output_node, write_results, [('affine_matrix',      'normalized_space.@affine_matrix')]),  # noqa
+           (self.output_node, write_results, [('b_spline_transform', 'normalized_space.@b_spline_transform')]),  # noqa
 
            (self.output_node, write_results, [('statistics_fa', 'atlas_statistics.@statistics_fa')]),  # noqa
            (self.output_node, write_results, [('statistics_md', 'atlas_statistics.@statistics_md')]),  # noqa
@@ -291,8 +294,8 @@ class DWIProcessing(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.
         """
-        import dwi_processing_workflows as workflows
-        import dwi_processing_utils as utils
+        import dwi_processing_dti_workflows as workflows
+        import dwi_processing_dti_utils as utils
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -321,6 +324,13 @@ class DWIProcessing(cpe.Pipeline):
             output_names=['bids_identifier'],
             function=utils.extract_bids_identifier_from_caps_filename),
             name='get_bids_identifier')
+
+        get_caps_identifier = npe.Node(interface=nutil.Function(
+            input_names=['caps_dwi_filename'],
+            output_names=['caps_identifier'],
+            function=utils.extract_caps_identifier_from_caps_filename),
+            name='get_caps_identifier')
+
         tensor_to_metrics = npe.Node(interface=nutil.Function(
             input_names=['in_dti', 'in_b0_mask', 'nthreads', 'prefix_file'],
             output_names=['out_fa', 'out_md', 'out_ad', 'out_rd', 'out_ev'],
@@ -392,6 +402,8 @@ class DWIProcessing(cpe.Pipeline):
             (register_on_jhu_atlas,   self.output_node, [('outputnode.out_registered_md', 'registered_md')]),  # noqa
             (register_on_jhu_atlas,   self.output_node, [('outputnode.out_registered_ad', 'registered_ad')]),  # noqa
             (register_on_jhu_atlas,   self.output_node, [('outputnode.out_registered_rd', 'registered_rd')]),  # noqa
+            (register_on_jhu_atlas,   self.output_node, [('outputnode.out_affine_matrix', 'affine_matrix')]),  # noqa
+            (register_on_jhu_atlas,   self.output_node, [('outputnode.out_b_spline_transform', 'b_spline_transform')]),  # noqa
             (scalar_analysis_fa,      self.output_node, [('atlas_statistics_list',        'statistics_fa')]),  # noqa
             (scalar_analysis_md,      self.output_node, [('atlas_statistics_list',        'statistics_md')]),  # noqa
             (scalar_analysis_ad,      self.output_node, [('atlas_statistics_list',        'statistics_ad')]),  # noqa

@@ -2,7 +2,9 @@
 
 
 def register_dti_maps_on_atlas(
-        working_directory=None, name="register_dti_maps_on_atlas"):
+        working_directory=None,
+        prefix_file=None,
+        name="register_dti_maps_on_atlas"):
     """
     Register FA-map on a subject towards a FA atlas and apply the estimated
     deformation to MD, AD & RD.
@@ -104,8 +106,9 @@ def register_dti_maps_on_atlas(
                        name='RemoveNegative_ad')
 
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['out_registered_fa', 'out_registered_md', 'out_registered_ad',
-                'out_registered_rd', 'out_affine_transform',
+        fields=['out_registered_fa', 'out_registered_md',
+                'out_registered_ad', 'out_registered_rd',
+                'out_affine_matrix',
                 'out_b_spline_transform']),
         name='outputnode')
 
