@@ -2,7 +2,8 @@
 
 
 def register_dti_maps_on_atlas(
-        working_directory=None, name="register_dti_maps_on_atlas"):
+        working_directory=None,
+        name="register_dti_maps_on_atlas"):
     """
     Register FA-map on a subject towards a FA atlas and apply the estimated
     deformation to MD, AD & RD.
@@ -46,8 +47,8 @@ def register_dti_maps_on_atlas(
         (ants_registration_syn_quick,
          apply_ants_registration_syn_quick_transformation)
 
-    from clinica.utils.atlas import JHUTracts01mm
-    atlas = JHUTracts01mm()
+    from clinica.utils.atlas import JHUDTI811mm
+    atlas = JHUDTI811mm()
 
     if not isinstance(atlas, AtlasAbstract):
         raise Exception("Atlas element must be an AtlasAbstract type")
@@ -74,7 +75,7 @@ def register_dti_maps_on_atlas(
         function=apply_ants_registration_syn_quick_transformation),
         name='apply_ants_registration_for_md')
     apply_ants_registration_for_md.inputs.name_output_image = \
-        'space-' + atlas.get_name_atlas() + '_md.nii.gz'
+        'space-' + atlas.get_name_atlas() + '_res-' + atlas.get_spatial_resolution() + '_md.nii.gz'
     apply_ants_registration_for_ad = pe.Node(interface=niu.Function(
         input_names=['in_image', 'in_reference_image',
                      'in_affine_transformation', 'in_bspline_transformation',
@@ -83,7 +84,7 @@ def register_dti_maps_on_atlas(
         function=apply_ants_registration_syn_quick_transformation),
         name='apply_ants_registration_for_ad')
     apply_ants_registration_for_ad.inputs.name_output_image = \
-        'space-' + atlas.get_name_atlas() + '_ad.nii.gz'
+        'space-' + atlas.get_name_atlas() + '_res-' + atlas.get_spatial_resolution() + '_ad.nii.gz'
     apply_ants_registration_for_rd = pe.Node(interface=niu.Function(
         input_names=['in_image', 'in_reference_image',
                      'in_affine_transformation', 'in_bspline_transformation',
@@ -92,7 +93,7 @@ def register_dti_maps_on_atlas(
         function=apply_ants_registration_syn_quick_transformation),
         name='apply_ants_registration_for_rd')
     apply_ants_registration_for_rd.inputs.name_output_image = \
-        'space-' + atlas.get_name_atlas() + '_rd.nii.gz'
+        'space-' + atlas.get_name_atlas() + '_res-' + atlas.get_spatial_resolution() + '_rd.nii.gz'
 
     thres_fa = pe.Node(fsl.Threshold(thresh=0.0), iterfield=['in_file'],
                        name='RemoveNegative_fa')
@@ -104,8 +105,9 @@ def register_dti_maps_on_atlas(
                        name='RemoveNegative_ad')
 
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['out_registered_fa', 'out_registered_md', 'out_registered_ad',
-                'out_registered_rd', 'out_affine_transform',
+        fields=['out_registered_fa', 'out_registered_md',
+                'out_registered_ad', 'out_registered_rd',
+                'out_affine_matrix',
                 'out_b_spline_transform']),
         name='outputnode')
 

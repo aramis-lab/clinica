@@ -73,7 +73,7 @@ def rename_into_caps(in_bids_dwi,
     from nipype.interfaces.utility import Rename
     import os
 
-    # Extract <source_file> in format sub-CLNC01_ses-M00_[acq-label]_dwi
+    # Extract <source_file> in format sub-CLNC01_ses-M00[_acq-label]_dwi
     _, source_file_dwi, _ = split_filename(in_bids_dwi)
 
     # Extract base path from fname:
@@ -82,28 +82,28 @@ def rename_into_caps(in_bids_dwi,
     base_dir_bvec, _, _ = split_filename(fname_bvec)
     base_dir_brainmask, _, _ = split_filename(fname_brainmask)
 
-    # Rename into CAPS DWI :
+    # Rename into CAPS DWI:
     rename_dwi = Rename()
     rename_dwi.inputs.in_file = fname_dwi
     rename_dwi.inputs.format_string = os.path.join(
         base_dir_dwi, source_file_dwi + "_space-T1w_preproc.nii.gz")
     out_caps_dwi = rename_dwi.run()
 
-    # Rename into CAPS bval :
+    # Rename into CAPS bval:
     rename_bval = Rename()
     rename_bval.inputs.in_file = fname_bval
     rename_bval.inputs.format_string = os.path.join(
         base_dir_bval, source_file_dwi + "_space-T1w_preproc.bval")
     out_caps_bval = rename_bval.run()
 
-    # Rename into CAPS DWI :
+    # Rename into CAPS DWI:
     rename_bvec = Rename()
     rename_bvec.inputs.in_file = fname_bvec
     rename_bvec.inputs.format_string = os.path.join(
         base_dir_bvec, source_file_dwi + "_space-T1w_preproc.bvec")
     out_caps_bvec = rename_bvec.run()
 
-    # Rename into CAPS DWI :
+    # Rename into CAPS DWI:
     rename_brainmask = Rename()
     rename_brainmask.inputs.in_file = fname_brainmask
     rename_brainmask.inputs.format_string = os.path.join(
