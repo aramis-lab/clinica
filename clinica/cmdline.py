@@ -109,7 +109,7 @@ def execute():
 
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DWIPreprocessingUsingT1CLI  # noqa
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DWIPreprocessingUsingPhaseDiffFieldmapCLI # noqa
-    from clinica.pipelines.dwi_processing.dwi_processing_cli import DWIProcessingCLI  # noqa
+    from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_cli import DWIProcessingDTICLI  # noqa
 
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI  # noqa
 
@@ -127,7 +127,7 @@ def execute():
         T1SPMFullPrepCLI(),
         DWIPreprocessingUsingT1CLI(),
         DWIPreprocessingUsingPhaseDiffFieldmapCLI(),
-        DWIProcessingCLI(),
+        DWIProcessingDTICLI(),
         fMRIPreprocessingCLI(),
         StatisticsSurfstatCLI(),
         CmdParserMachineLearningVBLinearSVM(),
