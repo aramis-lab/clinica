@@ -176,7 +176,6 @@ def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2, prefix_file=None):
     """
     import os.path as op
     import os
-    from nipype.utils.filemanip import split_filename
 
     assert(op.isfile(in_dti))
     assert(op.isfile(in_b0_mask))
@@ -437,9 +436,10 @@ def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
     Computes a list of statistics files for each atlas.
 
     Args:
-        in_registered_map (str): Map already registered on atlases in Nifti format.
+        in_registered_map (str): Map already registered on atlases.
         name_map (str): Name of the registered map in CAPS format.
-        prefix_file (Opt[str]): <prefix_file>_space-<atlas_name>_map-<name_map>_statistics.tsv
+        prefix_file (Opt[str]):
+            <prefix_file>_space-<atlas_name>_map-<name_map>_statistics.tsv
 
     Returns:
         List of paths leading to the statistics TSV files.
@@ -570,42 +570,48 @@ def rename_into_caps(in_caps_dwi,
     rename_fa = Rename()
     rename_fa.inputs.in_file = in_norm_fa
     rename_fa.inputs.format_string = os.path.join(
-        base_dir_norm_fa, bids_identifier + "_space-MNI152Lin_res-1x1x1_fa.nii.gz")
+        base_dir_norm_fa,
+        bids_identifier + "_space-MNI152Lin_res-1x1x1_fa.nii.gz")
     out_caps_fa = rename_fa.run()
 
     # Rename into CAPS MD:
     rename_md = Rename()
     rename_md.inputs.in_file = in_norm_md
     rename_md.inputs.format_string = os.path.join(
-        base_dir_norm_md, bids_identifier + "_space-MNI152Lin_res-1x1x1_md.nii.gz")
+        base_dir_norm_md,
+        bids_identifier + "_space-MNI152Lin_res-1x1x1_md.nii.gz")
     out_caps_md = rename_md.run()
 
     # Rename into CAPS AD:
     rename_ad = Rename()
     rename_ad.inputs.in_file = in_norm_ad
     rename_ad.inputs.format_string = os.path.join(
-        base_dir_norm_ad, bids_identifier + "_space-MNI152Lin_res-1x1x1_ad.nii.gz")
+        base_dir_norm_ad,
+        bids_identifier + "_space-MNI152Lin_res-1x1x1_ad.nii.gz")
     out_caps_ad = rename_ad.run()
 
     # Rename into CAPS RD:
     rename_rd = Rename()
     rename_rd.inputs.in_file = in_norm_rd
     rename_rd.inputs.format_string = os.path.join(
-        base_dir_norm_rd, bids_identifier + "_space-MNI152Lin_res-1x1x1_rd.nii.gz")
+        base_dir_norm_rd,
+        bids_identifier + "_space-MNI152Lin_res-1x1x1_rd.nii.gz")
     out_caps_rd = rename_rd.run()
 
     # Rename into CAPS B-spline transform:
     rename_b_spline = Rename()
     rename_b_spline.inputs.in_file = in_b_spline_transform
     rename_b_spline.inputs.format_string = os.path.join(
-        base_dir_b_spline_transform, bids_identifier + "_space-MNI152Lin_res-1x1x1_deformation.nii.gz")
+        base_dir_b_spline_transform,
+        bids_identifier + "_space-MNI152Lin_res-1x1x1_deformation.nii.gz")
     out_caps_b_spline_transform = rename_b_spline.run()
 
     # Rename into CAPS Affine Matrix:
     rename_affine = Rename()
     rename_affine.inputs.in_file = in_affine_matrix
     rename_affine.inputs.format_string = os.path.join(
-        base_dir_affine_matrix, bids_identifier + "_space-MNI152Lin_res-1x1x1_affine.mat")
+        base_dir_affine_matrix,
+        bids_identifier + "_space-MNI152Lin_res-1x1x1_affine.mat")
     out_caps_affine_matrix = rename_affine.run()
 
     from clinica.utils.stream import cprint
