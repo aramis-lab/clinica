@@ -54,8 +54,8 @@ class CAPSInput(base.MLInput):
             raise Exception('Diagnoses file is not in the correct format.')
         self._diagnoses = list(diagnoses.diagnosis)
 
-        if image_type not in ['T1', 'fdg', 'av45', 'pib', 'flute']:
-            raise Exception("Incorrect image type. It must be one of the values 'T1', 'fdg', 'av45', 'pib' or 'flute'")
+        if image_type not in ['T1', 'fdg', 'av45', 'pib', 'flute', 'dwi']:
+            raise Exception("Incorrect image type. It must be one of the values 'T1', 'fdg', 'av45', 'pib', 'flute' or 'dwi'")
 
         if precomputed_kernel is not None:
             if type(precomputed_kernel) == np.ndarray:
