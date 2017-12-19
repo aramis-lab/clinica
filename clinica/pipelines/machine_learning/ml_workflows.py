@@ -14,7 +14,7 @@ __maintainer__ = "Jorge Samper Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
-#This code is an example of implementation of a machine learning pipelines
+#This code is an example of implementation of machine learning pipelines
 
 class VB_KFold_DualSVM(base.MLWorkflow):
 
@@ -137,7 +137,7 @@ class VB_RepHoldOut_DualSVM(base.MLWorkflow):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, output_dir, fwhm=0,
                  modulated="on", pvc=None, precomputed_kernel=None, mask_zeros=True, n_threads=15, n_iterations=100,
-                 test_size=0.3, grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17)):
+                 test_size=0.3, grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17), splits_indices=None):
         self._output_dir = output_dir
         self._n_threads = n_threads
         self._n_iterations = n_iterations
@@ -145,6 +145,7 @@ class VB_RepHoldOut_DualSVM(base.MLWorkflow):
         self._grid_search_folds = grid_search_folds
         self._balanced = balanced
         self._c_range = c_range
+        self._splits_indices = splits_indices
 
         self._input = input.CAPSVoxelBasedInput(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
                                                 image_type, fwhm, modulated, pvc, mask_zeros, precomputed_kernel)
@@ -167,7 +168,7 @@ class VB_RepHoldOut_DualSVM(base.MLWorkflow):
 
         self._validation = validation.RepeatedHoldOut(self._algorithm, n_iterations=self._n_iterations, test_size=self._test_size)
 
-        classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads)
+        classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads, splits_indices=self._splits_indices)
         classifier_dir = path.join(self._output_dir, 'classifier')
         if not path.exists(classifier_dir):
             os.makedirs(classifier_dir)
@@ -238,7 +239,7 @@ class RB_RepHoldOut_DualSVM(base.MLWorkflow):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type,  atlas,
                  output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3,
-                 grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17)):
+                 grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17), splits_indices=None):
         self._output_dir = output_dir
         self._n_threads = n_threads
         self._n_iterations = n_iterations
@@ -246,6 +247,7 @@ class RB_RepHoldOut_DualSVM(base.MLWorkflow):
         self._grid_search_folds = grid_search_folds
         self._balanced = balanced
         self._c_range = c_range
+        self._splits_indices = splits_indices
 
         self._input = input.CAPSRegionBasedInput(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
                                                  image_type, atlas, pvc)
@@ -267,7 +269,7 @@ class RB_RepHoldOut_DualSVM(base.MLWorkflow):
 
         self._validation = validation.RepeatedHoldOut(self._algorithm, n_iterations=self._n_iterations, test_size=self._test_size)
 
-        classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads)
+        classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads, splits_indices=self._splits_indices)
         classifier_dir = path.join(self._output_dir, 'classifier')
         if not path.exists(classifier_dir):
             os.makedirs(classifier_dir)
@@ -285,7 +287,7 @@ class RB_RepHoldOut_LogisticRegression(base.MLWorkflow):
     
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, atlas,
                  output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3,
-                 grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17)):
+                 grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17), splits_indices=None):
         self._output_dir = output_dir
         self._n_threads = n_threads
         self._n_iterations = n_iterations
@@ -293,6 +295,7 @@ class RB_RepHoldOut_LogisticRegression(base.MLWorkflow):
         self._grid_search_folds = grid_search_folds
         self._balanced = balanced
         self._c_range = c_range
+        self._splits_indices = splits_indices
 
         self._input = input.CAPSRegionBasedInput(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
                                                  image_type, atlas, pvc)
@@ -310,7 +313,7 @@ class RB_RepHoldOut_LogisticRegression(base.MLWorkflow):
                                                 n_threads=self._n_threads)
             
         self._validation = validation.RepeatedHoldOut(self._algorithm, n_iterations=self._n_iterations, test_size=self._test_size)
-        classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads)
+        classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads, splits_indices=self._splits_indices)
                                                      
         classifier_dir = os.path.join(self._output_dir, 'classifier')
         if not path.exists(classifier_dir):
@@ -333,7 +336,7 @@ class RB_RepHoldOut_RandomForest(base.MLWorkflow):
                  output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3,
                  grid_search_folds=10, balanced=True, n_estimators_range=(100, 200, 400),
                  max_depth_range=[None], min_samples_split_range=[2],
-                 max_features_range=('auto', 0.25, 0.5)):
+                 max_features_range=('auto', 0.25, 0.5), splits_indices=None):
 
         self._output_dir = output_dir
         self._n_threads = n_threads
@@ -345,6 +348,7 @@ class RB_RepHoldOut_RandomForest(base.MLWorkflow):
         self._max_depth_range = max_depth_range
         self._min_samples_split_range = min_samples_split_range
         self._max_features_range = max_features_range
+        self._splits_indices = splits_indices
 
         self._input = input.CAPSRegionBasedInput(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
                                                  image_type, atlas, pvc)
@@ -365,7 +369,7 @@ class RB_RepHoldOut_RandomForest(base.MLWorkflow):
                                                  n_threads=self._n_threads)
 
         self._validation = validation.RepeatedHoldOut(self._algorithm, n_iterations=self._n_iterations, test_size=self._test_size)
-        classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads)
+        classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads, splits_indices=self._splits_indices)
 
         classifier_dir = os.path.join(self._output_dir, 'classifier')
         if not path.exists(classifier_dir):
