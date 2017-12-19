@@ -7,6 +7,10 @@
             "type": "binary",
             "name": "clinica",
             "version": ">=0.1.0"
+        },
+                {
+            "type": "software",
+            "name": "matlab"
         }
     ]
 }

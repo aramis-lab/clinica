@@ -228,6 +228,7 @@ class Pipeline(npe.Workflow):
     
         Todos:
             - [ ] MATLAB toolbox dependency checking
+            - [x] check MATLAB
             - [ ] Clinica pipelines dependency checkings
             - [ ] Check dependencies version
 
@@ -247,7 +248,8 @@ class Pipeline(npe.Workflow):
             'spm': chk.check_spm,
             'freesurfer': chk.check_freesurfer,
             'fsl': chk.check_fsl,
-            'mrtrix': chk.check_mrtrix
+            'mrtrix': chk.check_mrtrix,
+            'matlab': chk.check_matlab
         }
         check_binary = chk.is_binary_present
         # check_toolbox = chk.is_toolbox_present
