@@ -114,7 +114,6 @@ class JHUDTI812mm(AtlasAbstract):
 
     @staticmethod
     def get_tsv_roi():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUDTI81_ROI.tsv')
 
@@ -174,7 +173,6 @@ class JHUTracts01mm(AtlasAbstract):
 
     @staticmethod
     def get_tsv_roi():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
 
@@ -204,7 +202,6 @@ class JHUTracts02mm(AtlasAbstract):
 
     @staticmethod
     def get_tsv_roi():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
 
@@ -234,7 +231,6 @@ class JHUTracts251mm(AtlasAbstract):
 
     @staticmethod
     def get_tsv_roi():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
 
@@ -264,7 +260,6 @@ class JHUTracts252mm(AtlasAbstract):
 
     @staticmethod
     def get_tsv_roi():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
 
@@ -294,7 +289,6 @@ class JHUTracts501mm(AtlasAbstract):
 
     @staticmethod
     def get_tsv_roi():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
 
@@ -324,7 +318,6 @@ class JHUTracts502mm(AtlasAbstract):
     
     @staticmethod
     def get_tsv_roi():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
 
@@ -350,7 +343,6 @@ class AAL2(AtlasAbstract):
 
     @staticmethod
     def get_tsv_roi():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'AAL2_ROI.tsv')
 
@@ -375,12 +367,10 @@ class Hammers(AtlasAbstract):
     @staticmethod
     def get_atlas_map():
         import os
-        from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
 
     @staticmethod
     def get_tsv_roi():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Hammers_ROI.tsv')
 
@@ -399,18 +389,16 @@ class LPBA40(AtlasAbstract):
         if not SPM_HOME:
             raise Exception('SPM_HOME variable from SPM software is not set')
         if not os.path.exists(os.path.join(SPM_HOME, 'toolbox', 'cat12')):
-            raise Exception('CAT12 not included in SPM_HOME/toolbox')
+            raise Exception('CAT12 not included in ${SPM_HOME}/toolbox')
         return os.path.join(SPM_HOME, 'toolbox', 'cat12', 'templates_1.50mm', 'lpba40.nii')
 
     @staticmethod
     def get_atlas_map():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
 
     @staticmethod
     def get_tsv_roi():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'LPBA40_ROI.tsv')
 
@@ -424,19 +412,16 @@ class AICHA(AtlasAbstract):
 
     @staticmethod
     def get_atlas_labels():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'AICHA.nii')
 
     @staticmethod
     def get_atlas_map():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
 
     @staticmethod
     def get_tsv_roi():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'AICHA_ROI.tsv')
 
@@ -460,13 +445,11 @@ class Neuromorphometrics(AtlasAbstract):
 
     @staticmethod
     def get_atlas_map():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
 
     @staticmethod
     def get_tsv_roi():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Neuromorphometrics_ROI.tsv')
 
@@ -480,19 +463,16 @@ class MCALT_ADIR122(AtlasAbstract):
 
     @staticmethod
     def get_atlas_labels():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'MCALT_ADIR122.nii')
 
     @staticmethod
     def get_atlas_map():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
 
     @staticmethod
     def get_tsv_roi():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'MCALT_ADIR122_ROI.tsv')
 

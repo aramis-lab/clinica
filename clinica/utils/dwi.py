@@ -336,3 +336,28 @@ def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
     nib.Nifti1Image(data, im.get_affine(), hdr).to_filename(out_mov)
     np.savetxt(out_bval, bval)
     return out_ref, out_mov, out_bval, volid
+
+
+def check_dwi_volume(in_dwi, in_bvec, in_bval):
+    """
+    Check that # DWI = # B-val = # B-vec.
+
+    Raises
+        IOError
+    """
+    import nibabel as nib
+    import numpy as np
+
+    bvals = np.loadtxt(in_bval)
+    num_b_vals = len(bvals)
+
+    bvecs = np.loadtxt(in_bvec)
+    _, num_b_vecs = bvecs.shape
+
+    img = nib.load(in_dwi)
+    _, _, _, num_dwis = img.shape
+
+    if not (num_b_vals == num_b_vecs == num_dwis):
+        raise IOError('Number of DWIs, b-vals and b-vecs mismatch '
+                      '(# DWI = %s, # B-vec = %s, #B-val = %s)' %
+                      (num_dwis, num_b_vecs, num_b_vals))

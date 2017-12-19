@@ -113,7 +113,7 @@ def erode_mask(in_mask, npass=6, nthreads=2):
     return out_eroded_mask
 
 
-def dwi_to_tensor(in_dwi_mif, in_b0_mask, nthreads=2):
+def dwi_to_tensor(in_dwi_mif, in_b0_mask, nthreads=2, prefix_file=None):
     """
     Perform diffusion tensor estimation from DWI dataset.
 
@@ -139,7 +139,10 @@ def dwi_to_tensor(in_dwi_mif, in_b0_mask, nthreads=2):
 
     _, source_file_dwi, _ = split_filename(in_dwi_mif)
 
-    out_dti = op.abspath(source_file_dwi + '_dti.mif')
+    if prefix_file is None:
+        out_dti = op.abspath(source_file_dwi + '_model-dti_diffmodel.nii.gz')
+    else:
+        out_dti = op.abspath(prefix_file + '_model-dti_diffmodel.nii.gz')
 
     cmd = 'dwi2tensor -mask %s %s %s -nthreads %s' \
           % (in_b0_mask, in_dwi_mif, out_dti, nthreads)
@@ -173,7 +176,6 @@ def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2, prefix_file=None):
     """
     import os.path as op
     import os
-    from nipype.utils.filemanip import split_filename
 
     assert(op.isfile(in_dti))
     assert(op.isfile(in_b0_mask))
@@ -429,13 +431,15 @@ def tcksift(in_tracks, in_fod):
     return out_tracks
 
 
-def statistics_on_atlases(in_registered_map, name_map):
+def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
     """
     Computes a list of statistics files for each atlas.
 
     Args:
-        in_registered_map: Map already registered on atlases in Nifti format.
-        name_map: Name of the registered map in CAPS format.
+        in_registered_map (str): Map already registered on atlases.
+        name_map (str): Name of the registered map in CAPS format.
+        prefix_file (Opt[str]):
+            <prefix_file>_space-<atlas_name>_map-<name_map>_statistics.tsv
 
     Returns:
         List of paths leading to the statistics TSV files.
@@ -448,20 +452,28 @@ def statistics_on_atlases(in_registered_map, name_map):
                                      JHUTracts501mm)
     from clinica.utils.statistics import statistics_on_atlas
 
-    _, base, _ = split_filename(in_registered_map)
 #    atlas_classes = AtlasAbstract.__subclasses__()
 
-    in_atlas_list = [JHUDTI811mm(), JHUTracts01mm(), JHUTracts251mm()]
-    #, JHUTracts501mm()]
+    in_atlas_list = [JHUDTI811mm(),
+                     JHUTracts01mm(), JHUTracts251mm()]
 
     atlas_statistics_list = []
     for atlas in in_atlas_list:
         if not isinstance(atlas, AtlasAbstract):
             raise TypeError("Atlas element must be an AtlasAbstract type")
 
-        out_atlas_statistics = abspath(
-            join(getcwd(), '%s_space-%s_map-%s_statistics.tsv' %
-                 (base, atlas.get_name_atlas(), name_map)))
+        if prefix_file is None:
+            _, base, _ = split_filename(in_registered_map)
+            out_atlas_statistics = abspath(
+                join(getcwd(), '%s_space-%s_res-%s_map-%s_statistics.tsv' %
+                     (base, atlas.get_name_atlas(),
+                      atlas.get_spatial_resolution(), name_map)))
+        else:
+            out_atlas_statistics = abspath(
+                join(getcwd(), '%s_space-%s_res-%s_map-%s_statistics.tsv' %
+                     (prefix_file, atlas.get_name_atlas(),
+                      atlas.get_spatial_resolution(), name_map)))
+
         statistics_on_atlas(in_registered_map, atlas, out_atlas_statistics)
         atlas_statistics_list.append(out_atlas_statistics)
 
@@ -487,7 +499,7 @@ def dwi_container_from_filename(dwi_filename):
 def extract_bids_identifier_from_caps_filename(caps_dwi_filename):
     """Extract BIDS identifier from CAPS filename"""
     import re
-    from os.path import join
+
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_dwi',
                   caps_dwi_filename)
 
@@ -498,6 +510,120 @@ def extract_bids_identifier_from_caps_filename(caps_dwi_filename):
 
     from clinica.utils.stream import cprint
     cprint("BIDS identifier: " + bids_identifier)
+    m = re.search(
+        r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_dwi_space-[a-zA-Z0-9]+',
+        caps_dwi_filename)
+    caps_identifier = m.group(0)
+    cprint("CAPS identifier: " + caps_identifier)
 
     return bids_identifier
 
+
+def extract_caps_identifier_from_caps_filename(caps_dwi_filename):
+    """Extract CAPS identifier from CAPS filename"""
+    import re
+
+    m = re.search(
+        r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+).*_dwi_space-[a-zA-Z0-9]+',
+        caps_dwi_filename)
+
+    if m is None:
+        raise ValueError('Input filename is not in a CAPS compliant format.')
+
+    caps_identifier = m.group(0)
+
+    from clinica.utils.stream import cprint
+    cprint("CAPS identifier: " + caps_identifier)
+
+    return caps_identifier
+
+
+def rename_into_caps(in_caps_dwi,
+                     in_norm_fa, in_norm_md, in_norm_ad, in_norm_rd,
+                     in_b_spline_transform, in_affine_matrix):
+    """
+    Rename the outputs of the pipelines into CAPS format namely:
+    <source_file>_space-T1w_preproc[.nii.gz|bval|bvec]
+
+    Args:
+
+    Returns:
+        The different outputs in CAPS format
+    """
+    from nipype.utils.filemanip import split_filename
+    from nipype.interfaces.utility import Rename
+    import os
+
+    from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_utils import extract_bids_identifier_from_caps_filename
+
+    bids_identifier = extract_bids_identifier_from_caps_filename(in_caps_dwi)
+
+    # Extract base path from fname:
+    base_dir_norm_fa, _, _ = split_filename(in_norm_fa)
+    base_dir_norm_md, _, _ = split_filename(in_norm_md)
+    base_dir_norm_ad, _, _ = split_filename(in_norm_ad)
+    base_dir_norm_rd, _, _ = split_filename(in_norm_rd)
+    base_dir_b_spline_transform, _, _ = split_filename(in_b_spline_transform)
+    base_dir_affine_matrix, _, _ = split_filename(in_affine_matrix)
+
+    # Rename into CAPS FA:
+    rename_fa = Rename()
+    rename_fa.inputs.in_file = in_norm_fa
+    rename_fa.inputs.format_string = os.path.join(
+        base_dir_norm_fa,
+        bids_identifier + "_space-MNI152Lin_res-1x1x1_fa.nii.gz")
+    out_caps_fa = rename_fa.run()
+
+    # Rename into CAPS MD:
+    rename_md = Rename()
+    rename_md.inputs.in_file = in_norm_md
+    rename_md.inputs.format_string = os.path.join(
+        base_dir_norm_md,
+        bids_identifier + "_space-MNI152Lin_res-1x1x1_md.nii.gz")
+    out_caps_md = rename_md.run()
+
+    # Rename into CAPS AD:
+    rename_ad = Rename()
+    rename_ad.inputs.in_file = in_norm_ad
+    rename_ad.inputs.format_string = os.path.join(
+        base_dir_norm_ad,
+        bids_identifier + "_space-MNI152Lin_res-1x1x1_ad.nii.gz")
+    out_caps_ad = rename_ad.run()
+
+    # Rename into CAPS RD:
+    rename_rd = Rename()
+    rename_rd.inputs.in_file = in_norm_rd
+    rename_rd.inputs.format_string = os.path.join(
+        base_dir_norm_rd,
+        bids_identifier + "_space-MNI152Lin_res-1x1x1_rd.nii.gz")
+    out_caps_rd = rename_rd.run()
+
+    # Rename into CAPS B-spline transform:
+    rename_b_spline = Rename()
+    rename_b_spline.inputs.in_file = in_b_spline_transform
+    rename_b_spline.inputs.format_string = os.path.join(
+        base_dir_b_spline_transform,
+        bids_identifier + "_space-MNI152Lin_res-1x1x1_deformation.nii.gz")
+    out_caps_b_spline_transform = rename_b_spline.run()
+
+    # Rename into CAPS Affine Matrix:
+    rename_affine = Rename()
+    rename_affine.inputs.in_file = in_affine_matrix
+    rename_affine.inputs.format_string = os.path.join(
+        base_dir_affine_matrix,
+        bids_identifier + "_space-MNI152Lin_res-1x1x1_affine.mat")
+    out_caps_affine_matrix = rename_affine.run()
+
+    from clinica.utils.stream import cprint
+    cprint("Renamed files:")
+    cprint(out_caps_fa.outputs.out_file)
+    cprint(out_caps_md.outputs.out_file)
+    cprint(out_caps_ad.outputs.out_file)
+    cprint(out_caps_rd.outputs.out_file)
+    cprint(out_caps_b_spline_transform.outputs.out_file)
+    cprint(out_caps_affine_matrix.outputs.out_file)
+
+    return out_caps_fa.outputs.out_file, out_caps_md.outputs.out_file,\
+        out_caps_ad.outputs.out_file, out_caps_rd.outputs.out_file, \
+        out_caps_b_spline_transform.outputs.out_file, \
+        out_caps_affine_matrix.outputs.out_file
