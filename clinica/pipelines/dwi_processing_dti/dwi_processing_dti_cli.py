@@ -3,15 +3,15 @@
 import clinica.engine as ce
 
 
-class DWIProcessingCLI(ce.CmdParser):
+class DWIProcessingDTICLI(ce.CmdParser):
 
     def __init__(self):
-        super(DWIProcessingCLI, self).__init__()
+        super(DWIProcessingDTICLI, self).__init__()
 
     def define_name(self):
         """Define the sub-command name to run this pipelines.
         """
-        self._name = 'dwi-processing'
+        self._name = 'dwi-processing-dti'
 
     def define_options(self):
         """Define the sub-command arguments
@@ -37,23 +37,13 @@ class DWIProcessingCLI(ce.CmdParser):
         """
         """
         from tempfile import mkdtemp
-        from dwi_processing_pipeline import DWIProcessing
+        from dwi_processing_dti_pipeline import DWIProcessingDTI
 
-        from clinica.utils.stream import cprint
-
-        cprint('TSV file = ' + args.subjects_sessions_tsv + '.')
-
-        pipeline = DWIProcessing(
+        pipeline = DWIProcessingDTI(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv)
         )
-#        pipelines.parameters = {
-#            # Add your own pipelines parameters here to use them inside your
-#            # pipelines. See the file `dwi_processing_pipeline.py` to
-#            # see an example of use.
-#            'hello_word'        : args.hello_word_arg or 'Hello'
-#        }
         if args.working_directory is None:
             args.working_directory = mkdtemp()
         pipeline.base_dir = self.absolute_path(args.working_directory)

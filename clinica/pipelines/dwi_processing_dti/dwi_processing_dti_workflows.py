@@ -2,7 +2,8 @@
 
 
 def register_dti_maps_on_atlas(
-        working_directory=None, name="register_dti_maps_on_atlas"):
+        working_directory=None,
+        name="register_dti_maps_on_atlas"):
     """
     Register FA-map on a subject towards a FA atlas and apply the estimated
     deformation to MD, AD & RD.
@@ -17,7 +18,7 @@ def register_dti_maps_on_atlas(
 
     Args:
         working_directory (Optional[str]): Directory where the temporary
-        results are stored. If not specified, it is
+            results are stored. If not specified, it is
             automatically generated (generally in /tmp/).
         name (Optional[str]): Name of the pipelines.
 
@@ -38,8 +39,6 @@ def register_dti_maps_on_atlas(
         out_registered_rd (str): RD-map registered on <atlas_name>.
     """
     import tempfile
-    import os
-    import nipype.interfaces.io as nio
     import nipype.interfaces.fsl as fsl
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
@@ -48,8 +47,8 @@ def register_dti_maps_on_atlas(
         (ants_registration_syn_quick,
          apply_ants_registration_syn_quick_transformation)
 
-    from clinica.utils.atlas import JHUTracts01mm
-    atlas = JHUTracts01mm()
+    from clinica.utils.atlas import JHUDTI811mm
+    atlas = JHUDTI811mm()
 
     if not isinstance(atlas, AtlasAbstract):
         raise Exception("Atlas element must be an AtlasAbstract type")
@@ -76,7 +75,7 @@ def register_dti_maps_on_atlas(
         function=apply_ants_registration_syn_quick_transformation),
         name='apply_ants_registration_for_md')
     apply_ants_registration_for_md.inputs.name_output_image = \
-        'space-' + atlas.get_name_atlas() + '_md.nii.gz'
+        'space-' + atlas.get_name_atlas() + '_res-' + atlas.get_spatial_resolution() + '_md.nii.gz'
     apply_ants_registration_for_ad = pe.Node(interface=niu.Function(
         input_names=['in_image', 'in_reference_image',
                      'in_affine_transformation', 'in_bspline_transformation',
@@ -85,7 +84,7 @@ def register_dti_maps_on_atlas(
         function=apply_ants_registration_syn_quick_transformation),
         name='apply_ants_registration_for_ad')
     apply_ants_registration_for_ad.inputs.name_output_image = \
-        'space-' + atlas.get_name_atlas() + '_ad.nii.gz'
+        'space-' + atlas.get_name_atlas() + '_res-' + atlas.get_spatial_resolution() + '_ad.nii.gz'
     apply_ants_registration_for_rd = pe.Node(interface=niu.Function(
         input_names=['in_image', 'in_reference_image',
                      'in_affine_transformation', 'in_bspline_transformation',
@@ -94,7 +93,7 @@ def register_dti_maps_on_atlas(
         function=apply_ants_registration_syn_quick_transformation),
         name='apply_ants_registration_for_rd')
     apply_ants_registration_for_rd.inputs.name_output_image = \
-        'space-' + atlas.get_name_atlas() + '_rd.nii.gz'
+        'space-' + atlas.get_name_atlas() + '_res-' + atlas.get_spatial_resolution() + '_rd.nii.gz'
 
     thres_fa = pe.Node(fsl.Threshold(thresh=0.0), iterfield=['in_file'],
                        name='RemoveNegative_fa')
@@ -106,8 +105,9 @@ def register_dti_maps_on_atlas(
                        name='RemoveNegative_ad')
 
     outputnode = pe.Node(niu.IdentityInterface(
-        fields=['out_registered_fa', 'out_registered_md', 'out_registered_ad',
-                'out_registered_rd', 'out_affine_transform',
+        fields=['out_registered_fa', 'out_registered_md',
+                'out_registered_ad', 'out_registered_rd',
+                'out_affine_matrix',
                 'out_b_spline_transform']),
         name='outputnode')
 
@@ -131,20 +131,19 @@ def register_dti_maps_on_atlas(
         (inputnode,         apply_ants_registration_for_rd, [('in_atlas_scalar_image', 'in_reference_image')]),  # noqa
         (ants_registration, apply_ants_registration_for_rd, [('affine_matrix',   'in_affine_transformation')]),  # noqa
         (ants_registration, apply_ants_registration_for_rd, [('warp',           'in_bspline_transformation')]),  # noqa
-
-        (ants_registration, thres_fa, [('image_warped', 'in_file')]),
-        (apply_ants_registration_for_md, thres_md, [('out_deformed_image', 'in_file')]),
-        (apply_ants_registration_for_rd, thres_rd, [('out_deformed_image', 'in_file')]),
-        (apply_ants_registration_for_ad, thres_ad, [('out_deformed_image', 'in_file')]),
-
+        # Remove negative values from the DTI maps:
+        (ants_registration,              thres_fa, [('image_warped',       'in_file')]),  # noqa
+        (apply_ants_registration_for_md, thres_md, [('out_deformed_image', 'in_file')]),  # noqa
+        (apply_ants_registration_for_rd, thres_rd, [('out_deformed_image', 'in_file')]),  # noqa
+        (apply_ants_registration_for_ad, thres_ad, [('out_deformed_image', 'in_file')]),  # noqa
         # Outputnode:
-        (thres_fa,        outputnode,  [('out_file',            'out_registered_fa')]),  # noqa
-        (ants_registration, outputnode, [('affine_matrix',           'out_affine_matrix'),  # noqa
-                                        ('warp',               'out_b_spline_transform'),  # noqa
-                                                              ('inverse_warp',           'out_inverse_warp')]),  # noqa
-        (thres_md,        outputnode,  [('out_file',    'out_registered_md')]),  # noqa
-        (thres_ad,        outputnode,  [('out_file',    'out_registered_ad')]),  # noqa
-        (thres_rd,        outputnode,  [('out_file',    'out_registered_rd')])   # noqa
+        (thres_fa,          outputnode, [('out_file',    'out_registered_fa')]),  # noqa
+        (ants_registration, outputnode, [('affine_matrix', 'out_affine_matrix'),  # noqa
+                                         ('warp',     'out_b_spline_transform'),  # noqa
+                                         ('inverse_warp', 'out_inverse_warp')]),  # noqa
+        (thres_md,          outputnode,  [('out_file',   'out_registered_md')]),  # noqa
+        (thres_ad,          outputnode,  [('out_file',   'out_registered_ad')]),  # noqa
+        (thres_rd,          outputnode,  [('out_file',   'out_registered_rd')])   # noqa
     ])
 
     return wf

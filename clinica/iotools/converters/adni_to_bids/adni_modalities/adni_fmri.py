@@ -194,7 +194,7 @@ def fmri_paths_to_bids(dest_dir, fmri_paths, mod_to_update=False):
     import os
     import shutil
     from glob import glob
-    import clinica.iotools.converters.bids_utils as bids
+    import clinica.iotools.bids_utils as bids
 
     subjs_list = fmri_paths['Subject_ID'].drop_duplicates().values
 

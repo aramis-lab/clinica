@@ -104,7 +104,7 @@ class DWIPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        from clinica.utils.dwi import count_b0s
+        from clinica.utils.dwi import check_dwi_volume
         import dwi_preprocessing_using_phasediff_fieldmap_utils as utils
 
         list_enc_directions = []
@@ -168,6 +168,10 @@ class DWIPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
                               + ' but found '
                               + str(len(dwi_file))
                               + ' dwi instead.')
+
+            # Check that the number of DWI, b-vecs & b-val are the same:
+            check_dwi_volume(
+                in_dwi=dwi_file[0], in_bvec=bvec_file[0], in_bval=bval_file[0])
 
             # Load JSON parameters from DWI file:
             dwi_json = self.bids_layout.get(

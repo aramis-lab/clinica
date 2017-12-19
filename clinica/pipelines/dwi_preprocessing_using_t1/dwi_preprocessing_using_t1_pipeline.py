@@ -105,8 +105,9 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
         import nipype.interfaces.io as nio
 
         from clinica.utils.stream import cprint
+        from clinica.utils.dwi import check_dwi_volume
 
-        cprint('Reading BIDS dataset for %s images' % len(self.subjects))
+        cprint('Reading BIDS dataset for %s image(s)' % len(self.subjects))
         for i in range(len(self.subjects)):
             # cprint('------- SUBJECT %s SESSION %s -------'
             #        % (self.subjects[i], self.sessions[i]))
@@ -161,6 +162,10 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
                               + ' but found '
                               + str(len(dwi_file))
                               + ' dwi instead.')
+
+            # Check that the number of DWI, b-vecs & b-val are the same:
+            check_dwi_volume(
+                in_dwi=dwi_file[0], in_bvec=bvec_file[0], in_bval=bval_file[0])
 
             # Check T1w file:
             t1_file = self.bids_layout.get(
