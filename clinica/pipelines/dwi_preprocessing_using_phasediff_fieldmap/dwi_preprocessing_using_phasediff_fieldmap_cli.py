@@ -1,6 +1,5 @@
 # coding: utf8
 
-
 import clinica.engine as ce
 
 
@@ -12,7 +11,6 @@ class DWIPreprocessingUsingPhaseDiffFieldmapCLI(ce.CmdParser):
     def define_name(self):
         """Define the sub-command name to run this pipeline.
         """
-
         self._name = 'dwi-preprocessing-using-phasediff-fieldmap'
 
     def define_options(self):
@@ -28,9 +26,6 @@ class DWIPreprocessingUsingPhaseDiffFieldmapCLI(ce.CmdParser):
         self._args.add_argument("--low_bval",
                                 type=int, default=5,
                                 help='Define the b0 volumes as all volume bval <= lowbval. (Default: --low_bval 5)')  # noqa
-        self._args.add_argument("--save_intermediate_files",
-                                type=bool, default=False,
-                                help='Will save some intermediate results (for debugging purposes).')  # noqa
 
         self._args.add_argument("-wd", "--working_directory",
                                 help='Temporary directory to store pipeline intermediate results')  # noqa
@@ -43,8 +38,8 @@ class DWIPreprocessingUsingPhaseDiffFieldmapCLI(ce.CmdParser):
 
     def run_pipeline(self, args):
         """
+        Run the DWIPreprocessingUsingPhaseDiffFieldmap pipeline from command line.
         """
-
         from tempfile import mkdtemp
         from dwi_preprocessing_using_phasediff_fieldmap_pipeline import DWIPreprocessingUsingPhaseDiffFieldmap
 
@@ -52,14 +47,8 @@ class DWIPreprocessingUsingPhaseDiffFieldmapCLI(ce.CmdParser):
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            low_bval=args.low_bval,
-            save_intermediate_files=args.save_intermediate_files
+            low_bval=args.low_bval
         )
-
-        #        pipelines.parameters.update({
-        #            'low_bval': args.low_bval,
-        #            'save_intermediate_files': args.save_intermediate_files
-        #        })
 
         if args.working_directory is None:
             args.working_directory = mkdtemp()
