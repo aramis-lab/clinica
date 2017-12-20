@@ -3,6 +3,13 @@
 
 import clinica.pipelines.engine as cpe
 
+__author__ = ["Thomas Jacquemont", "Alexandre Routier"]
+__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
+__credits__ = ["Nipype"]
+__license__ = "See LICENSE.txt file"
+__version__ = "0.1.0"
+__status__ = "Development"
+
 
 class DWIPreprocessingUsingT1(cpe.Pipeline):
     """DWI Preprocessing using T1 image for susceptibility distortion step.
@@ -10,15 +17,10 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
     Warnings:
         - Do not use this pipelines if you have fieldmap data in your dataset.
 
-    Todos:
-        - [X] Do the CAPS.
-        - [ ] Do a cleaner reading BIDS input.
-
     Args:
-        input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will
-            be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv
+        input_dir(str): Input directory in a BIDS hierarchy.
+        output_dir(str): Output directory in a CAPS hierarchy.
+        subjects_sessions_list(str): The Subjects-Sessions list file (in .tsv
             format).
 
     Returns:
@@ -39,17 +41,17 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
         >>> pipelines.run()
     """
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None,
-                 name=None, low_bval=5, save_intermediate_files=False):
+                 name=None, low_bval=5):
         """
 
         Args:
-            bids_directory:
-            caps_directory:
-            tsv_file:
-            name:
-            low_bval (int):
-            save_intermediate_files (optional[bool]): Save intermediate results
-                for debugging purposes (default: False)
+            bids_directory(str): Input directory in a BIDS hierarchy.
+            caps_directory(str): Output directory in a CAPS hierarchy.
+            tsv_file(str): TSV file containing the list of participants
+                (participant_id) with their sessions (session_id).
+            name(optional[str]): Name of the pipeline
+            low_bval (int): Define the b0 volumes as all volume
+                bval <= lowbval. (Default = 5)
         """
         import warnings
 
@@ -60,7 +62,6 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
             name=name)
 
         self._low_bval = low_bval
-        self._save_intermediate_files = save_intermediate_files
 
         if self._low_bval < 0:
             raise ValueError('The low_bval is equals to '

@@ -5,15 +5,15 @@ with open(join(dirname(__file__), 'clinica/VERSION'), 'rb') as f:
     version = f.read().decode('ascii').strip()
 
 setup(
-    name='clinica',
+    name='Clinica',
     version=version,
     url='www.clinica.run',
-    description='',
+    description='Software platform for clinical neuroscience studies',
     long_description=open('README.md').read(),
-    author='ARAMIS LAB',
+    author='ARAMIS Lab',
     maintainer='Michael Bacci',
     maintainer_email='clinica-user@googlegroups.com',
-    license='Inria Non-Commercial',
+    license='MIT license',
     packages=find_packages(exclude=('tests', 'tests.*')),
     include_package_data=True,
     zip_safe=False,
@@ -22,7 +22,7 @@ setup(
     },
     classifiers=[
         'Framework :: Clinica',
-        'Development Status :: 0.1 - Dev',
+        'Development Status :: 0.1.0 - Dev',
         'Environment :: Console',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
