@@ -9,14 +9,13 @@ class DWIProcessingDTICLI(ce.CmdParser):
         super(DWIProcessingDTICLI, self).__init__()
 
     def define_name(self):
-        """Define the sub-command name to run this pipelines.
+        """Define the sub-command name to run this pipeline.
         """
         self._name = 'dwi-processing-dti'
 
     def define_options(self):
         """Define the sub-command arguments
         """
-
         self._args.add_argument("bids_directory",
                                 help='Path to the BIDS directory.')
         self._args.add_argument("caps_directory",
