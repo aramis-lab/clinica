@@ -101,7 +101,7 @@ def execute():
     """
     from clinica.engine import CmdParser
 
-    from clinica.pipelines.t1_freesurfer.t1_freesurfer_cli import T1FreeSurferCLI  # noqa
+    from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_cli import T1FreeSurferCrossSectionalCLI  # noqa
     from clinica.pipelines.t1_spm_segmentation.t1_spm_segmentation_cli import T1SPMSegmentationCLI  # noqa
     from clinica.pipelines.t1_spm_dartel.t1_spm_dartel_cli import T1SPMDartelCLI  # noqa
     from clinica.pipelines.t1_spm_dartel2mni.t1_spm_dartel2mni_cli import T1SPMDartel2MNICLI  # noqa
@@ -113,14 +113,14 @@ def execute():
 
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI  # noqa
 
-    from clinica.pipelines.statistics_surfstat.statistics_surfstat_cli import StatisticsSurfstatCLI  # noqa
+    from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI  # noqa
 
     from clinica.pipelines.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI  # noqa
 
     run_parser = sub_parser.add_parser('run')
     pipelines = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
     pipelines += [
-        T1FreeSurferCLI(),
+        T1FreeSurferCrossSectionalCLI(),
         T1SPMSegmentationCLI(),
         T1SPMDartelCLI(),
         T1SPMDartel2MNICLI(),
@@ -129,7 +129,7 @@ def execute():
         DWIPreprocessingUsingPhaseDiffFieldmapCLI(),
         DWIProcessingDTICLI(),
         fMRIPreprocessingCLI(),
-        StatisticsSurfstatCLI(),
+        StatisticsSurfaceCLI(),
         CmdParserMachineLearningVBLinearSVM(),
         CmdParserMachineLearningSVMRB(),
         PETPreprocessVolumeCLI()

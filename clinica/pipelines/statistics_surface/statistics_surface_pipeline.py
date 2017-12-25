@@ -51,7 +51,7 @@ class StatisticsSurfstat(cpe.Pipeline):
 
 
     Example:
-        >>> from statistics_surfstat import StatisticsSurfstat
+        >>> from statistics_surface import StatisticsSurfstat
         >>> pipelines = FMRIPreprocessing('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipelines.parameters = {
         >>>     # ...
@@ -60,12 +60,10 @@ class StatisticsSurfstat(cpe.Pipeline):
         >>> pipelines.run()
     """
 
-
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
         pass
-
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipelines.
@@ -85,7 +83,6 @@ class StatisticsSurfstat(cpe.Pipeline):
                 'threshold_corrected_pvalue',
                 'cluster_threshold']
 
-
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipelines.
 
@@ -94,7 +91,6 @@ class StatisticsSurfstat(cpe.Pipeline):
         """
 
         return [] # Fill here the list
-
 
     def build_input_node(self):
         """Build and connect an input node to the pipelines.
@@ -131,13 +127,11 @@ class StatisticsSurfstat(cpe.Pipeline):
             (read_parameters_node,      self.input_node,    [('cluster_threshold',    'cluster_threshold')]),
         ])
 
-
     def build_output_node(self):
         """Build and connect an output node to the pipelines.
         """
 
         pass
-
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.

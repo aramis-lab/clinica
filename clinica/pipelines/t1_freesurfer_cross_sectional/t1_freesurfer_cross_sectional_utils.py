@@ -1,17 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module contains useful functions used for t1_freesurfer pipelines"""
-
 __author__ = "Junhao Wen"
 __copyright__ = "Copyright 2016, The Aramis Lab Team"
-__credits__ = ["Michael Bacci", "Junhao Wen"]
+__credits__ = ["Junhao Wen"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Junhao Wen"
 __email__ = "junhao.Wen@inria.fr"
 __status__ = "Development"
-
 
 def bids_datagrabber(input_dir, subject_list, session_list):
     """
