@@ -1,22 +1,16 @@
-"""Statistics Surfstat - Clinica Pipeline.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
-"""
-
-# WARNING: Don't put any import statement here except if it's absolutly
-# necessary. Put it *inside* the different methods.
-# Otherwise it will slow down the dynamic loading of the pipelines list by the
-# command line tool.
-import clinica.pipelines.engine as cpe
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 __author__ = "Junhao Wen"
-__copyright__ = "Copyright 2016, The Aramis Lab Team"
-__credits__ = ["Michael Bacci", "Junhao Wen"]
+__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
+__credits__ = ["Junhao Wen"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Junhao Wen"
 __email__ = "junhao.Wen@inria.fr"
 __status__ = "Development"
+
+import clinica.pipelines.engine as cpe
 
 class StatisticsSurfstat(cpe.Pipeline):
     """
@@ -109,12 +103,6 @@ class StatisticsSurfstat(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        # This node is supposedly used to load BIDS inputs when this pipelines is
-        # not already connected to the output of a previous Clinica pipelines.
-        # For the purpose of the example, we simply read input arguments given
-        # by the command line interface and transmitted here through the
-        # `self.parameters` dictionary and pass it to the `self.input_node` to
-        # further by used as input of the core nodes.
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(
                                             fields=self.get_input_fields(),
@@ -148,11 +136,6 @@ class StatisticsSurfstat(cpe.Pipeline):
         """Build and connect an output node to the pipelines.
         """
 
-        # In the same idea as the input node, this output node is supposedly
-        # used to write the output fields in a CAPS. It should be executed only
-        # if this pipelines output is not already connected to a next Clinica
-        # pipelines.
-
         pass
 
 
@@ -160,7 +143,7 @@ class StatisticsSurfstat(cpe.Pipeline):
         """Build and connect the core nodes of the pipelines.
         """
 
-        import statistics_surfstat_utils as utils
+        import statistics_surface_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces.io import JSONFileSink
