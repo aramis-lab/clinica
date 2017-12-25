@@ -1,25 +1,23 @@
-"""T1 FreeSurfer - Clinica Command Line Interface.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
-"""
-
-import clinica.engine as ce
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 __author__ = "Junhao Wen"
 __copyright__ = "Copyright 2016, The Aramis Lab Team"
-__credits__ = ["Michael Bacci", "Junhao Wen"]
+__credits__ = ["Junhao Wen"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Junhao Wen"
 __email__ = "junhao.Wen@inria.fr"
 __status__ = "Development"
 
-class T1FreeSurferCLI(ce.CmdParser):
+import clinica.engine as ce
+
+class T1FreeSurferCrossSectionalCLI(ce.CmdParser):
 
     def define_name(self):
         """Define the sub-command name to run this pipelines.
         """
-        self._name = 't1-freesurfer'
+        self._name = 't1_freesurfer_cross_sectional'
 
     def define_options(self):
         """Define the sub-command arguments
@@ -43,10 +41,10 @@ class T1FreeSurferCLI(ce.CmdParser):
         """
         Run the pipelines with defined args
         """
-        from t1_freesurfer_pipeline import T1FreeSurfer
+        from t1_freesurfer_cross_sectional_pipeline import T1FreeSurferCrossSectional
         from tempfile import mkdtemp
 
-        pipeline = T1FreeSurfer(
+        pipeline = T1FreeSurferCrossSectional(
             # pass these args by the class attribute itself
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),

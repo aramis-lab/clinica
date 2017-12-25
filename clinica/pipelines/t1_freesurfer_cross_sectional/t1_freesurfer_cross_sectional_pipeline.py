@@ -1,24 +1,18 @@
-"""T1 FreeSurfer - Clinica Pipeline.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
-"""
-
-# WARNING: Don't put any import statement here except if it's absolutly
-# necessary. Put it *inside* the different methods.
-# Otherwise it will slow down the dynamic loading of the pipelines list by the
-# command line tool.
-import clinica.pipelines.engine as cpe
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 __author__ = "Junhao Wen"
 __copyright__ = "Copyright 2016, The Aramis Lab Team"
-__credits__ = ["Michael Bacci", "Junhao Wen"]
+__credits__ = ["Junhao Wen"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Junhao Wen"
-__email__ = "junhao.wen@inria.fr"
+__email__ = "junhao.Wen@inria.fr"
 __status__ = "Development"
 
-class T1FreeSurfer(cpe.Pipeline):
+import clinica.pipelines.engine as cpe
+
+class T1FreeSurferCrossSectional(cpe.Pipeline):
     """Creates a pipelines that performs Freesurfer commander, recon-all, It takes the input files of MRI T1 images and
         executes the 31 steps to reconstruct the surface of the brain, this progress includes surface-based and Volume-based
         piepeline, which including gray(GM)and white matter(WM) segementation, pial and white surface extraction!.
@@ -43,18 +37,16 @@ class T1FreeSurfer(cpe.Pipeline):
 
 
     Example:
-        >>> from t1_freesurfer import T1FreeSurfer
-        >>> pipelines = T1FreeSurfer('~/MYDATASET_BIDS', '~/MYDATASET_CAPS', 'TSV')
+        >>> from t1_freesurfer_cross_sectional import T1FreeSurferCrossSectional
+        >>> pipelines = T1FreeSurferCrossSectional('~/MYDATASET_BIDS', '~/MYDATASET_CAPS', 'TSV')
         >>> pipelines.base_dir = '/tmp/'
         >>> pipelines.run()
     """
-
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
         pass
-
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipelines.
@@ -65,7 +57,6 @@ class T1FreeSurfer(cpe.Pipeline):
 
         return ['recon_all_args', 'subject_list', 'session_list', 'subject_id', 'subject_dir', 'anat_t1']
 
-
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipelines.
 
@@ -75,12 +66,11 @@ class T1FreeSurfer(cpe.Pipeline):
 
         return ['subject_id']
 
-
     def build_input_node(self):
         """Build and connect an input node to the pipelines.
         """
 
-        import t1_freesurfer_utils as utils
+        import t1_freesurfer_cross_sectional_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -130,7 +120,6 @@ class T1FreeSurfer(cpe.Pipeline):
             (datagrabbernode, self.input_node, [('anat_t1', 'anat_t1')]),
         ])
 
-
     def build_output_node(self):
         """Build and connect an output node to the pipelines.
         """
@@ -142,12 +131,11 @@ class T1FreeSurfer(cpe.Pipeline):
 
         pass
 
-
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.
         """
 
-        import t1_freesurfer_utils as utils
+        import t1_freesurfer_cross_sectional_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces.freesurfer.preprocess import ReconAll

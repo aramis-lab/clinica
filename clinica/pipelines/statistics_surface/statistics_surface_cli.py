@@ -13,13 +13,11 @@ __status__ = "Development"
 import clinica.engine as ce
 class StatisticsSurfaceCLI(ce.CmdParser):
 
-
     def define_name(self):
         """Define the sub-command name to run this pipelines.
         """
 
         self._name = 'statistics-surface'
-
 
     def define_options(self):
         """Define the sub-command arguments
@@ -54,7 +52,6 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                                 help='Number of parallel processes to run (default=4)')
         self._args.add_argument("-wd", "--working_directory", type=str, default=None,
                                 help='Temporary directory to run the workflow')
-
 
     def run_pipeline(self, args):
         """
