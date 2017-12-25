@@ -215,10 +215,13 @@ class RepeatedHoldOut(base.MLValidation):
         self._bal_accuracy_resampled_t = None
         self._bal_accuracy_corrected_resampled_t = None
 
-    def validate(self, y, n_threads=15):
+    def validate(self, y, n_threads=15, splits_indices=None):
 
-        splits = StratifiedShuffleSplit(n_splits=self._n_iterations, test_size=self._test_size)
-        self._cv = list(splits.split(np.zeros(len(y)), y))
+        if splits_indices is None:
+            splits = StratifiedShuffleSplit(n_splits=self._n_iterations, test_size=self._test_size)
+            self._cv = list(splits.split(np.zeros(len(y)), y))
+        else:
+            self._cv = splits_indices
         async_pool = ThreadPool(n_threads)
         async_result = {}
 
