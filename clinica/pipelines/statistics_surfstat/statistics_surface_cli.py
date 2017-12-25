@@ -1,28 +1,24 @@
-"""Statistics Surfstat3 - Clinica Command Line Interface.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
-"""
-
-
-import clinica.engine as ce
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 __author__ = "Junhao Wen"
-__copyright__ = "Copyright 2016, The Aramis Lab Team"
-__credits__ = ["Michael Bacci", "Junhao Wen"]
+__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
+__credits__ = ["Junhao Wen"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Junhao Wen"
 __email__ = "junhao.Wen@inria.fr"
 __status__ = "Development"
 
-class StatisticsSurfstatCLI(ce.CmdParser):
+import clinica.engine as ce
+class StatisticsSurfaceCLI(ce.CmdParser):
 
 
     def define_name(self):
         """Define the sub-command name to run this pipelines.
         """
 
-        self._name = 'statistics-surfstat'
+        self._name = 'statistics-surface'
 
 
     def define_options(self):
@@ -65,8 +61,8 @@ class StatisticsSurfstatCLI(ce.CmdParser):
         Run the pipelines with defined args
         """
 
-        from statistics_surfstat_pipeline import StatisticsSurfstat
-        from statistics_surfstat_utils import check_inputs
+        from statistics_surface_pipeline import StatisticsSurfstat
+        from statistics_surface_utils import check_inputs
         from clinica.utils.stream import cprint
         import os
 

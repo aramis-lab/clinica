@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""This module contains functions used for the statistics_surfstat() pipelines"""
 
 __author__ = "Junhao Wen"
-__copyright__ = "Copyright 2016, The Aramis Lab Team"
-__credits__ = ["Michael Bacci", "Junhao Wen"]
+__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
+__credits__ = ["Junhao Wen"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Junhao Wen"
@@ -135,20 +134,6 @@ def runmatlab(input_directory,
     from os.path import join
     import sys, os
     from clinica.utils.stream import cprint
-
-    # # here, we check out the os, basically, clinica works for linux and MAC OS X.
-    # if sys.platform.startswith('linux'):
-    #     cprint("###Note: your platform is linux, the default command line for Matlab(matlab_cmd) is matlab, but you can also export a variable MATLABCMD,  which points to your matlab,  in your .bashrc to set matlab_cmd, this can help you to choose which Matlab to run when you have more than one Matlab.")
-    # elif sys.platform.startswith('darwin'):
-    #     try:
-    #         if not 'MATLABCMD' in os.environ:
-    #             raise RuntimeError(
-    #                 "###Note: your platform is MAC OS X, the default command line for Matlab(matlab_cmd) is matlab, but it does not work on OS X, you mush export a variable MATLABCMD, which points to your matlab, in your .bashrc to set matlab_cmd. Note, Mac os x will always choose to use OpengGl hardware mode.")
-    #     except Exception as e:
-    #         cprint(str(e))
-    #         exit(1)
-    # else:
-    #     cprint("Clinica will not work on your platform ")
 
     MatlabCommand.set_default_matlab_cmd(
         get_matlab_command())  # this is to set the matlab_path(os.environ) in your bashrc file, to choose which version of matlab do you wanna use
