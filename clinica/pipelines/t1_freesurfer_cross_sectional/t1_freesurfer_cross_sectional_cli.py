@@ -17,7 +17,7 @@ class T1FreeSurferCrossSectionalCLI(ce.CmdParser):
     def define_name(self):
         """Define the sub-command name to run this pipelines.
         """
-        self._name = 't1_freesurfer_cross_sectional'
+        self._name = 't1-freesurfer-cross-sectional'
 
     def define_options(self):
         """Define the sub-command arguments
