@@ -27,11 +27,12 @@ class fMRIPreprocessing(cpe.Pipeline):
         - The RealingUnwarp node is still under revision as a pull request
 
     Todos:
+        - [ ] Read parameters from sidecar `*.json` files.
+        - [ ] Add support of gzipped nifti inputs.
         - [x] Replace reg_node target image by the brain only using c1 + c2 + c3 dilated-eroded-filled.
         - [x] Develop SPM Realign and Unwarp wrapper and integrate it.
         - [x] Develop SPM Fieldmap Calculation Tool wrapper and integrate it.
         - [x] Replace standard DataGrabber by a BIDS tree finder.
-        - [ ] Add support of gzipped nifti inputs.
         - [x] Export only gzipped nifti files.
 
     Args:
