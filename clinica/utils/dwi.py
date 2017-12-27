@@ -245,7 +245,7 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
 
     if nb_b0s == 1:
         # The reference b0 is the extracted b0
-        cprint('Only one b0 for %s' % (nb_b0s, in_dwi))
+        cprint('Only one b0 for %s' % in_dwi)
         out_reference_b0 = extracted_b0
     elif nb_b0s > 1:
         # Register the b0 onto the first b0
