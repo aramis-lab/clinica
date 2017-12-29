@@ -2,7 +2,6 @@
 Redirect stream and log
 """
 import sys
-import re
 
 clinica_verbose = False
 
@@ -12,6 +11,7 @@ class FilterOut(object):
         self.stdout = stdout
 
     def write(self, text):
+        import re
         if not text:
             return
         if re.match('^(@clinica@)', text):

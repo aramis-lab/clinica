@@ -75,20 +75,23 @@ def init_cmdparser_objects(rootparser, parser, objects):
         parser: The ArgParser node (e.g. 'run' or 'convert')
         objects: All CmdParser instances of this file
     """
+
+    def silent_help():
+        pass
+
+    def error_message(p):
+        def error(x):
+            p.print_help()
+            rootparser.print_help = silent_help
+            exit(-1)
+        return error
+
     def init(x):
-        def silent_help(): pass
-
-        def error_message(p):
-            def error(x):
-                p.print_help()
-                rootparser.print_help = silent_help
-                exit(-1)
-            return error
-
         x.options = parser.add_parser(x.name)
         x.options.error = error_message(x.options)
         x.options.set_defaults(func=x.run_pipeline)
         x.build()
+
     for x in objects:
         try:
             init(x)

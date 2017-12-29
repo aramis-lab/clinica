@@ -30,11 +30,15 @@ class ClinicaClassLoader:
     """
     Load pipelines from a custom locations (general from $HOME/clinica)
     """
-    from clinica.pipelines.engine import Pipeline
 
-    def __init__(self, env='CLINICAPATH', baseclass=Pipeline, reg=r".*_cli\.py$", extra_dir=""):
+    def __init__(self, env='CLINICAPATH',
+                 baseclass=None, reg=r".*_cli\.py$", extra_dir=""):
         self.env = env
-        self.baseclass = baseclass
+        if baseclass==None:
+            import clinica.pipelines.engine as cpe
+            self.baseclass = cpe.Pipeline
+        else:
+            self.baseclass = baseclass
         self.reg = reg
         self.extra_dir = extra_dir
 
@@ -106,19 +110,16 @@ def execute():
     from clinica.pipelines.t1_spm_dartel.t1_spm_dartel_cli import T1SPMDartelCLI  # noqa
     from clinica.pipelines.t1_spm_dartel2mni.t1_spm_dartel2mni_cli import T1SPMDartel2MNICLI  # noqa
     from clinica.pipelines.t1_spm_full_prep.t1_spm_full_prep_cli import T1SPMFullPrepCLI  # noqa
-
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DWIPreprocessingUsingT1CLI  # noqa
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DWIPreprocessingUsingPhaseDiffFieldmapCLI # noqa
     from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_cli import DWIProcessingDTICLI  # noqa
-
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI  # noqa
-
     from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI  # noqa
-
     from clinica.pipelines.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI  # noqa
 
     run_parser = sub_parser.add_parser('run')
-    pipelines = ClinicaClassLoader(baseclass=CmdParser, extra_dir="pipelines").load()
+    pipelines = ClinicaClassLoader(baseclass=CmdParser,
+                                   extra_dir="pipelines").load()
     pipelines += [
         T1FreeSurferCrossSectionalCLI(),
         T1SPMSegmentationCLI(),
