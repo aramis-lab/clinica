@@ -12,9 +12,10 @@ version = __version__
 # python 2.7 minimum version is required
 import sys
 if sys.version_info < (2, 7):
-    print("clinica %s requires Python 2.7" % __version__)
+    print("Clinica %s requires Python 2.7" % __version__)
     sys.exit(1)
 
-from clinica.utils.stream import cprint
-import __builtin__
-__builtin__.cprint = cprint
+# Note: The following lines have been commented for speed purposes.
+# from clinica.utils.stream import cprint
+# import __builtin__
+# __builtin__.cprint = cprint

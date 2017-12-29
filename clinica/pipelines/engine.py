@@ -2,13 +2,8 @@
 
 """
 
-import nipype.pipeline.engine as npe
-import nipype.interfaces.utility as nutil
-import os
+from nipype.pipeline.engine import Workflow
 import abc
-import json
-import inspect
-from bids.grabbids import BIDSLayout
 
 
 def postset(attribute, value):
@@ -62,10 +57,10 @@ def get_subject_session_list(input_dir, ss_file=None):
     return sessions, subjects
 
 
-class Pipeline(npe.Workflow):
+class Pipeline(Workflow):
     """Clinica Pipeline class.
 
-    This class overwrites the `npe.Workflow` to integrate and encourage the
+    This class overwrites the `Workflow` to integrate and encourage the
     use of BIDS and CAPS data structures as inputs and outputs of the pipelines
     developed for the Clinica software.
 
@@ -108,6 +103,9 @@ class Pipeline(npe.Workflow):
             tsv_file (optional): Path to a subjects-sessions `.tsv` file.
             name (optional): A pipelines name.
         """
+        import nipype.interfaces.utility as nutil
+        import inspect
+        import os
         self._is_built = False
         self._bids_directory = bids_directory
         self._caps_directory = caps_directory
@@ -142,7 +140,7 @@ class Pipeline(npe.Workflow):
                                              mandatory_inputs=False))
         else:
             self._output_node = None
-        npe.Workflow.__init__(self, self._name)
+        Workflow.__init__(self, self._name)
         if self.input_node: self.add_nodes([self.input_node])
         if self.output_node: self.add_nodes([self.output_node])
 
@@ -188,19 +186,19 @@ class Pipeline(npe.Workflow):
     def run(self, plugin=None, plugin_args=None, update_hash=False):
         """Executes the Pipeline.
 
-        It overwrites the default npe.Workflow method to check if the
+        It overwrites the default Workflow method to check if the
         Pipeline is built before running it. If not, it builds it and then
         run it.
 
         Args:
-            Similar to those of npe.Workflow.run.
+            Similar to those of Workflow.run.
 
         Returns:
-            An execution graph (see npe.Workflow.run).
+            An execution graph (see Workflow.run).
         """
         if not self.is_built:
             self.build()
-        return npe.Workflow.run(self, plugin, plugin_args, update_hash)
+        return Workflow.run(self, plugin, plugin_args, update_hash)
 
     def load_info(self):
         """Loads the associated info.json file.
@@ -214,6 +212,7 @@ class Pipeline(npe.Workflow):
         Returns:
             self: A Pipeline object.
         """
+        import json
         with open(self.info_file) as info_file:
             self.info = json.load(info_file)
         return self
@@ -295,7 +294,9 @@ class Pipeline(npe.Workflow):
     def info(self, value): self._info = value
 
     @property
-    def bids_layout(self): return BIDSLayout(self.bids_directory)
+    def bids_layout(self):
+        from bids.grabbids import BIDSLayout
+        return BIDSLayout(self.bids_directory)
 
     @property
     def input_node(self): return self._input_node
