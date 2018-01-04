@@ -104,6 +104,7 @@ class Pipeline(Workflow):
             name (optional): A pipelines name.
         """
         import nipype.interfaces.utility as nutil
+        import nipype.pipeline.engine as npe
         import inspect
         import os
         self._is_built = False
