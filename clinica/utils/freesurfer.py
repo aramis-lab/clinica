@@ -90,14 +90,14 @@ def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv):
             print "--------------Finish this subject!-----------------------"
 
 
-def volumetric_summary(subject_dir, subject_id, output_dir):
+def volumetric_summary(subject_dir, subject_id, caps_dir):
     """
         To write statistics summary for all the subjects after reconall pipelines.
 
     Args:
         subject_dir: a list containing all the CAPS directory path
         subject_id: a list containing all the participant_id
-        output_dir: destination folder containing the summarized statistics tsv
+        caps_dir: destination folder containing the summarized statistics tsv
 
     Returns:
 
@@ -135,14 +135,7 @@ def volumetric_summary(subject_dir, subject_id, output_dir):
     aparc_BA_lh_meancurv = '_hemi-left_parcellation-ba_meancurv.tsv'
     aparc_BA_rh_meancurv = '_hemi-right_parcellation-ba_meancurv.tsv'
 
-    output_path = os.path.expanduser(output_dir)
-
-    cs_dir = os.path.join(output_path, 'subjects')
-    if not os.path.isdir(cs_dir):
-        print("ERROR: directory freesurfer_cross_sectional does not exist, it should be CAPS directory after running recon_all_pipeline!!!")
-    else:
-        pass
-    dest_dir = cs_dir + '/regional_measures_summary'
+    dest_dir = os.path.join(caps_dir, 'subjects', 'regional_measures_summary')
     try:
         os.makedirs(dest_dir)
     except OSError as exception:
@@ -225,39 +218,43 @@ def volumetric_summary(subject_dir, subject_id, output_dir):
     cmd_aparc_destrieux_rh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc aparc.a2009s --meas meancurv --tablefile ' + aparc_destrieux_rh_meancurv_tsv
     os.system(cmd_aparc_destrieux_rh_meancurv)
 
-    cmd_aparc_BA_lh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc BA --meas volume --tablefile ' + aparc_BA_lh_volume_tsv
-    os.system(cmd_aparc_BA_lh_volume)
-    cmd_aparc_BA_rh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas volume --tablefile ' + aparc_BA_rh_volume_tsv
-    os.system(cmd_aparc_BA_rh_volume)
-    cmd_parc_BA_lh_thickness = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc BA --meas thickness --tablefile ' + aparc_BA_lh_thickness_tsv
-    os.system(cmd_parc_BA_lh_thickness)
-    cmd_parc_BA_rh_thickness = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas thickness --tablefile ' + aparc_BA_rh_thickness_tsv
-    os.system(cmd_parc_BA_rh_thickness)
-    cmd_aparc_BA_lh_area = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc BA --meas area --tablefile ' + aparc_BA_lh_area_tsv
-    os.system(cmd_aparc_BA_lh_area)
-    cmd_aparc_BA_rh_area = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas area --tablefile ' + aparc_BA_rh_area_tsv
-    os.system(cmd_aparc_BA_rh_area)
-    cmd_aparc_BA_lh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc BA --meas meancurv --tablefile ' + aparc_BA_lh_meancurv_tsv
-    os.system(cmd_aparc_BA_lh_meancurv)
-    cmd_aparc_BA_rh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas meancurv --tablefile ' + aparc_BA_rh_meancurv_tsv
-    os.system(cmd_aparc_BA_rh_meancurv)
+    #### BA atals does not work for FreeSurfer 6.0
+    # cmd_aparc_BA_lh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc BA --meas volume --tablefile ' + aparc_BA_lh_volume_tsv
+    # os.system(cmd_aparc_BA_lh_volume)
+    # cmd_aparc_BA_rh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas volume --tablefile ' + aparc_BA_rh_volume_tsv
+    # os.system(cmd_aparc_BA_rh_volume)
+    # cmd_parc_BA_lh_thickness = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc BA --meas thickness --tablefile ' + aparc_BA_lh_thickness_tsv
+    # os.system(cmd_parc_BA_lh_thickness)
+    # cmd_parc_BA_rh_thickness = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas thickness --tablefile ' + aparc_BA_rh_thickness_tsv
+    # os.system(cmd_parc_BA_rh_thickness)
+    # cmd_aparc_BA_lh_area = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc BA --meas area --tablefile ' + aparc_BA_lh_area_tsv
+    # os.system(cmd_aparc_BA_lh_area)
+    # cmd_aparc_BA_rh_area = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas area --tablefile ' + aparc_BA_rh_area_tsv
+    # os.system(cmd_aparc_BA_rh_area)
+    # cmd_aparc_BA_lh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc BA --meas meancurv --tablefile ' + aparc_BA_lh_meancurv_tsv
+    # os.system(cmd_aparc_BA_lh_meancurv)
+    # cmd_aparc_BA_rh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas meancurv --tablefile ' + aparc_BA_rh_meancurv_tsv
+    # os.system(cmd_aparc_BA_rh_meancurv)
 
 
-def write_volumetric_summary(output_dir, subjects_visits_tsv):
+def write_volumetric_summary(caps_dir, subjects_visits_tsv):
     """
         This func is to write the volumetric measurement after recon-all pipelines for all the subjects
 
     Args:
-        output_dir: destination folder to contain the tsv file
+        caps_dir:
         subjects_visits_tsv: tsv contains all the particiapnt_id and session_id
 
     Returns:
 
     """
     ### TODO, this should be done after we define the name of the tsv file for each subject, otherwise this will be changed often....
+    #### NOT USE
+
     import nipype.pipeline.engine as pe
     from nipype.interfaces.utility import Function
     import pandas as pd
+    import os
 
     # get the list for subject_ids
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
@@ -266,14 +263,20 @@ def write_volumetric_summary(output_dir, subjects_visits_tsv):
     subject_list = list(subjects_visits.participant_id)
     session_list = list(subjects_visits.session_id)
     subject_id = list(subject_list[i] + '_' + session_list[i] for i in range(len(subject_list)))
+    subject_dir = []
+    for i in xrange(len(subject_id)):
+        sub_dir = os.path.join(caps_dir, 'subjects', subject_list[i], session_list[i], 't1', 'freesurfer_cross_sectional')
+        subject_dir.append(sub_dir)
+
 
     fs_tsv_summary = pe.Node(name='volumetric_summary_node',
                             interface=Function(
-                                input_names=['subject_id', 'output_dir'],
+                                input_names=['subject_dir', 'subject_id', 'caps_dir'],
                                 output_names=[],
                                 function=volumetric_summary))
     fs_tsv_summary.inputs.subject_id = subject_id
-    fs_tsv_summary.inputs.output_dir = output_dir
+    fs_tsv_summary.inputs.caps_dir = caps_dir
+    fs_tsv_summary.inputs.subject_dir = subject_dir
 
     return fs_tsv_summary
 
@@ -292,7 +295,7 @@ def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
     import nipype.pipeline.engine as pe
     from nipype.interfaces.utility import Function
     import pandas as pd
-    from clinica.pipelines.t1.t1_freesurfer_utils import write_statistics_per_subject
+    from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_utils import write_statistics_per_subject
 
     # get the list for subject_ids
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
@@ -329,7 +332,7 @@ def write_reconall_log_summary(caps_dir, subjects_visits_tsv):
     import nipype.pipeline.engine as pe
     from nipype.interfaces.utility import Function
     import pandas as pd
-    from clinica.pipelines.t1.t1_freesurfer_utils import log_summary
+    from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_utils import log_summary
 
     # get the list for subject_ids
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
