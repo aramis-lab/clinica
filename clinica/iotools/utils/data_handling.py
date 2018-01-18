@@ -12,10 +12,10 @@ __email__ = "simona.bottani@icm-institute.org"
 __status__ = "Completed"
 
 
-def create_merge_file(bids_dir, out_dir, true_false_mode = False):
+def create_merge_file(bids_dir, out_dir, true_false_mode=False):
     """
-    Merge all the .tsv files containing clinical data of a BIDS compliant dataset and store
-    the result inside a .tsv file
+    Merge all the .tsv files containing clinical data of a BIDS compliant
+    dataset and store the result inside a .tsv file
 
     Args:
         bids_dir: path to the BIDS folder
@@ -26,6 +26,7 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
     from os import path
     from glob import glob
     import os
+    import pandas as pd
 
     col_list = []
     scans_dict = {}
@@ -65,13 +66,15 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
         # Open the sessions file related to the subject
         sessions_df = pd.read_csv(path.join(sub_path, sub_name+'_sessions.tsv'), sep='\t')
 
-        # For each session found extract the information contained in the scans files
+        # For each session found
+        # extract the information contained in the scans files
         for line in range(0, len(sessions_df)):
-            # Extract and convert to a dictonary information regarding the session
+            # Extract and convert to a dictonary information
+            # regarding the session
             row_sessions = sessions_df.iloc[line]
             row_session_df = pd.DataFrame([row_sessions])
             new_cols = [s for s in row_session_df.columns.values if s not in col_list]
-            if len(new_cols)!=0:
+            if len(new_cols)!= 0:
                 for i in range(0, len(new_cols)):
                     col_list.append(new_cols[i])
 
@@ -92,17 +95,17 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
                             mod_type = file_parts[last_pattern_index]
                             value = scans_df.iloc[i][col]
                             new_col_name = col+'_'+mod_type
-                            scans_dict.update({new_col_name:value})
+                            scans_dict.update({new_col_name: value})
                 row_scans = pd.DataFrame(scans_dict, index=[0])
             else:
                 row_scans = pd.DataFrame()
 
             new_cols = [s for s in row_scans.columns.values if s not in col_list]
-            if len(new_cols)!=0:
+            if len(new_cols) != 0:
                 for i in range(0, len(new_cols)):
                     col_list.append(new_cols[i])
 
-            row_to_append_df= pd.DataFrame(columns=row_participant.columns)
+            row_to_append_df = pd.DataFrame(columns=row_participant.columns)
             for col in row_participant:
                 row_to_append_df[col] = row_participant[col]
 
@@ -121,7 +124,8 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
     merged_df = merged_df[col_list]
     merged_df.to_csv(path.join(out_dir, out_file_name), sep='\t', index=False)
 
-    # Call the script for computing the missing modalities and append the result to the merged file
+    # Call the script for computing the missing modalities
+    # and append the result to the merged file
     compute_missing_mods(bids_dir, out_dir, 'tmpG7VIY0')
     tmp_ses = glob(path.join(out_dir, 'tmpG7VIY0*'))
     for f in tmp_ses:
@@ -135,25 +139,25 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
             ses_id = ses_id.replace('.tsv', '')
             cols = mss_df.columns.values
 
-            # If the file opened contains new columns, add them to the exstisting merged_df
+            # If the file opened contains new columns,
+            # add them to the existing merged_df
             for col_name in cols:
                 if not col_name in col_list:
                     merged_df[col_name] = 0
 
             for i in range(0, len(mss_df)):
                 row = mss_df.iloc[i]
-                subj_idx = merged_df[ (merged_df['participant_id'] == row['participant_id']) & (merged_df['session_id'] == ses_id)].index.tolist()
+                subj_idx = merged_df[(merged_df['participant_id'] == row['participant_id']) & (merged_df['session_id'] == ses_id)].index.tolist()
 
-
-                if len(subj_idx)>1:
+                if len(subj_idx) > 1:
                     raise ValueError('Multiple row for the same visit in the merge-tsv file.')
-                elif len(subj_idx) ==0:
+                elif len(subj_idx) == 0:
                     print 'Warning: Found modalities missing information for the subject:' + row['participant_id']+ ' visit:' + ses_id + ' but the subject is not included in the column participant_id.'
                     continue
                 else:
                     subj_idx = subj_idx[0]
                 for col_name in cols:
-                    if not col_name=='participant_id':
+                    if not col_name == 'participant_id':
                         merged_df.iloc[subj_idx, merged_df.columns.get_loc(col_name)] = row[col_name]
 
     # Remove all the temporary files created
@@ -161,7 +165,7 @@ def create_merge_file(bids_dir, out_dir, true_false_mode = False):
         os.remove(f)
 
     if true_false_mode:
-        merged_df = merged_df.replace(['Y','N'], ['0', '1'])
+        merged_df = merged_df.replace(['Y', 'N'], ['0', '1'])
 
     merged_df.to_csv(path.join(out_dir, out_file_name), sep='\t', index=False)
 
@@ -187,6 +191,7 @@ def find_mods_and_sess(dataset_dir):
     """
     from glob import glob
     from os import path
+    import os
 
     mods_dict = {}
     mods_list = []
@@ -196,52 +201,52 @@ def find_mods_and_sess(dataset_dir):
         ses_paths = glob(path.join(sub_path, '*ses-*'))
         for session in ses_paths:
             ses_name = session.split(os.sep)[-1]
-            mods_aval = []
+            mods_avail = []
             if mods_dict.has_key('sessions'):
                 if not ses_name in mods_dict['sessions']:
                     mods_dict['sessions'].append(ses_name)
             else:
-                mods_dict.update({'sessions':[ses_name]})
+                mods_dict.update({'sessions': [ses_name]})
             mods_paths_folders = glob(path.join(session, '*/'))
 
             for p in mods_paths_folders:
                 p = p[:-1]
-                mods_aval.append(p.split('/').pop())
+                mods_avail.append(p.split('/').pop())
 
-            if 'func' in mods_aval:
+            if 'func' in mods_avail:
                 list_funcs_paths = glob(path.join(session, 'func', '*bold.nii.gz'))
                 for func_path in list_funcs_paths:
                     func_name = func_path.split(os.sep)[-1]
                     func_name_tokens = func_name.split('_')
                     func_task = func_name_tokens[2]
                 if mods_dict.has_key('func'):
-                    if not 'func_'+func_task in mods_dict['func']:
-                        mods_dict['func'].append('func_'+func_task)
+                    if 'func_'+func_task not in mods_dict['func']:
+                        mods_dict['func'].append('func_' + func_task)
                 else:
                     mods_dict.update({'func': ['func_'+func_task]})
 
-                if not 'func_'+func_task in mods_list:
+                if 'func_'+func_task not in mods_list:
                     mods_list.append('func_'+func_task)
 
-            if 'dwi' in mods_aval:
+            if 'dwi' in mods_avail:
                 if not mods_dict.has_key('dwi'):
                     mods_dict.update({'dwi': ['dwi']})
-                if not 'dwi' in mods_list:
+                if 'dwi' not in mods_list:
                     mods_list.append('dwi')
 
-            if 'fmap' in mods_aval:
+            if 'fmap' in mods_avail:
                 if not mods_dict.has_key('fmap'):
                     mods_dict.update({'fmap': ['fmap']})
-                if not 'fmap' in mods_list:
+                if 'fmap' not in mods_list:
                     mods_list.append('fmap')
 
-            if 'pet' in mods_aval:
+            if 'pet' in mods_avail:
                 if not mods_dict.has_key('pet'):
                     mods_dict.update({'pet': ['pet']})
-                if not 'pet' in mods_list:
+                if 'pet' not in mods_list:
                     mods_list.append('pet')
 
-            if 'anat' in mods_aval:
+            if 'anat' in mods_avail:
                 anat_files_paths = glob(path.join(session, 'anat', '*'))
 
                 for anat_file in anat_files_paths:
@@ -272,7 +277,7 @@ def find_mods_and_sess(dataset_dir):
     return mods_dict
 
 
-def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
+def compute_missing_mods(in_dir, out_dir, output_prefix=''):
     """
     Compute the list of missing modalities for each subject in a BIDS compliant dataset
 
@@ -283,12 +288,13 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
     created
     """
     from ..converter_utils import MissingModsTracker, print_statistics
+    import os
     from os import path
     import pandas as pd
     from glob import glob
 
     # Find all the modalities and sessions available for the input dataset
-    mods_and_sess= find_mods_and_sess(in_dir)
+    mods_and_sess = find_mods_and_sess(in_dir)
     sessions_found = mods_and_sess['sessions']
     mods_and_sess.pop('sessions')
     mods_avail_dict = mods_and_sess
@@ -337,13 +343,16 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
                     for m in mods_avail_dict['func']:
                         tokens = m.split('_')
                         task_name = tokens[1]
-                        task_avaL_list = glob(path.join(ses_path,'func' ,'*'+task_name+'*'))
+                        task_avail_list = glob(path.join(
+                            ses_path, 'func', '*'+task_name+'*')
+                        )
 
-                        if len(task_avaL_list) == 0:
+                        if len(task_avail_list) == 0:
                             row_to_append_df[m] = pd.Series('0')
                         else:
                             row_to_append_df[m] = pd.Series('1')
-                # If the folder is not available but the modality is in the list of the available one mark it as missing
+                # If the folder is not available but the modality is
+                # in the list of the available one mark it as missing
                 else:
                     if 'func' in mods_avail_dict:
                         for m in mods_avail_dict['func']:
@@ -384,7 +393,6 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
                         row_to_append_df['pet'] = pd.Series('0')
                         mmt.add_missing_mod(ses, 'pet')
 
-
             missing_mods_df = missing_mods_df.append(row_to_append_df)
             row_to_append_df = pd.DataFrame(columns=cols_dataframe)
 
@@ -392,14 +400,14 @@ def compute_missing_mods(in_dir, out_dir, output_prefix = ''):
         missing_mods_df.to_csv(path.join(out_dir, out_file_name+ses+'.tsv'), sep='\t', index=False, encoding='utf-8')
         missing_mods_df = pd.DataFrame(columns=cols_dataframe)
 
-    print_statistics(summary_file, len(subjects_paths_lists), sessions_found, mmt )
+    print_statistics(summary_file, len(subjects_paths_lists), sessions_found, mmt)
 
 
-def create_subs_sess_list(dataset_path, out_dir, file_name = ''):
+def create_subs_sess_list(dataset_path, out_dir, file_name=''):
     """
 
-    Create the file subject_session_list.tsv that contains the list of the visits for each subject for a BIDS compliant
-    dataset
+    Create the file subject_session_list.tsv that contains the list
+    of the visits for each subject for a BIDS compliant dataset.
 
     Args:
         dataset_path: path to the BIDS directory
