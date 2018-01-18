@@ -109,7 +109,7 @@ class DWIPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
 
         from clinica.utils.stream import cprint
 
-        cprint('Reading BIDS dataset for %s images' % len(self.subjects))
+        cprint('Found %s image(s) in BIDS dataset' % len(self.subjects))
         for i in range(len(self.subjects)):
             cprint('------- SUBJECT %s SESSION %s -------'
                    % (self.subjects[i], self.sessions[i]))
