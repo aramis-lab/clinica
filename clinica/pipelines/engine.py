@@ -142,8 +142,10 @@ class Pipeline(Workflow):
         else:
             self._output_node = None
         Workflow.__init__(self, self._name)
-        if self.input_node: self.add_nodes([self.input_node])
-        if self.output_node: self.add_nodes([self.output_node])
+        if self.input_node:
+            self.add_nodes([self.input_node])
+        if self.output_node:
+            self.add_nodes([self.output_node])
 
     def has_input_connections(self):
         """Checks if the Pipeline's input node has been connected.

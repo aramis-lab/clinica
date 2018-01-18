@@ -17,9 +17,9 @@ class DWIPreprocessingUsingT1CLI(ce.CmdParser):
         """Define the sub-command arguments.
         """
         self._args.add_argument("bids_directory",
-                                help='Path to the BIDS directory.')
+                                help='Path to the BIDS directory.')  # noqa
         self._args.add_argument("caps_directory",
-                                help='Path to the CAPS directory.')
+                                help='Path to the CAPS directory.')  # noqa
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
                                 help='TSV file containing the subjects with their sessions.')  # noqa
 
@@ -31,10 +31,10 @@ class DWIPreprocessingUsingT1CLI(ce.CmdParser):
                                 help='Temporary directory to store pipeline intermediate results')  # noqa
         self._args.add_argument("-np", "--n_procs",
                                 type=int,
-                                help='Number of cores used to run in parallel')
+                                help='Number of cores used to run in parallel')  # noqa
         self._args.add_argument("-sl", "--slurm",
                                 action='store_true',
-                                help='Run the pipeline using SLURM')
+                                help='Run the pipeline using SLURM')  # noqa
 
     def run_pipeline(self, args):
         """
