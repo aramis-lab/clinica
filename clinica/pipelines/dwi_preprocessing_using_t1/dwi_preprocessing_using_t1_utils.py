@@ -96,7 +96,7 @@ def rename_into_caps(in_bids_dwi,
         base_dir_bval, source_file_dwi + "_space-T1w_preproc.bval")
     out_caps_bval = rename_bval.run()
 
-    # Rename into CAPS DWI:
+    # Rename into CAPS bvec:
     rename_bvec = Rename()
     rename_bvec.inputs.in_file = fname_bvec
     rename_bvec.inputs.format_string = os.path.join(

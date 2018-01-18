@@ -74,7 +74,7 @@ class DWIProcessingDTI(cpe.Pipeline):
 
         caps_layout = CAPSLayout(self.caps_directory)
 
-        cprint('Reading CAPS dataset for %s image(s)' % len(self.subjects))
+        cprint('Found %s image(s) in CAPS dataset' % len(self.subjects))
         for i in range(len(self.subjects)):
             # cprint('------- SUBJECT %s SESSION %s -------'
             #        % (self.subjects[i], self.sessions[i]))
