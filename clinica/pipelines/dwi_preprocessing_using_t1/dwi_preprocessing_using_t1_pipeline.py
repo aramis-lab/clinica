@@ -1,6 +1,5 @@
 # coding: utf8
 
-
 import clinica.pipelines.engine as cpe
 
 __author__ = ["Thomas Jacquemont", "Alexandre Routier"]
@@ -31,14 +30,13 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
 
 
     Example:
-        >>> from dwi_preprocessing_using_t1 import DWIPreprocessingUsingT1
-        >>> pipelines = DWIPreprocessingUsingT1('~/MYDATASET_BIDS',
+        >>> pipeline = DWIPreprocessingUsingT1('~/MYDATASET_BIDS',
         >>>                                    '~/MYDATASET_CAPS')
-        >>> pipelines.parameters = {
+        >>> pipeline.parameters = {
         >>>     'low_bval': 10
         >>> }
-        >>> pipelines.base_dir = '/tmp/'
-        >>> pipelines.run()
+        >>> pipeline.base_dir = '/tmp/'
+        >>> pipeline.run()
     """
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None,
                  name=None, low_bval=5):
@@ -69,7 +67,7 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
                              + ': it should be zero or close to zero.')
 
         if self._low_bval > 100:
-            warnings.warn('Warning: The low_bval parameter is huge ('
+            warnings.warn('Warning: The low_bval parameter is é ('
                           + str(self._low_bval)
                           + '), it should be close to zero', UserWarning)
 
@@ -108,7 +106,7 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
         from clinica.utils.stream import cprint
         from clinica.utils.dwi import check_dwi_volume
 
-        cprint('Reading BIDS dataset for %s image(s)' % len(self.subjects))
+        cprint('Found %s image(s) in BIDS dataset' % len(self.subjects))
         for i in range(len(self.subjects)):
             # cprint('------- SUBJECT %s SESSION %s -------'
             #        % (self.subjects[i], self.sessions[i]))
@@ -347,36 +345,38 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
 
         self.connect([
             # Preliminary step (possible computation of a mean b0):
-            (self.input_node, prepare_b0, [('dwi', 'in_dwi'),
-                                           ('bval', 'in_bval'),
-                                           ('bvec', 'in_bvec')]),
+            (self.input_node, prepare_b0, [('dwi',  'in_dwi'),  # noqa
+                                           ('bval', 'in_bval'),  # noqa
+                                           ('bvec', 'in_bvec')]),  # noqa
             # Mask b0 before corrections
-            (prepare_b0, mask_b0_pre, [('out_reference_b0', 'in_file')]),
+            (prepare_b0, mask_b0_pre, [('out_reference_b0', 'in_file')]),  # noqa
             # Head-motion correction
-            (prepare_b0, hmc, [('out_b0_dwi_merge', 'inputnode.in_file'),
-                               ('out_updated_bval', 'inputnode.in_bval'),
-                               ('out_updated_bvec', 'inputnode.in_bvec')]),
-            (mask_b0_pre, hmc, [('mask_file', 'inputnode.in_mask')]),
-
+            (prepare_b0,  hmc, [('out_b0_dwi_merge', 'inputnode.in_file'),  # noqa
+                               ('out_updated_bval',  'inputnode.in_bval'),  # noqa
+                               ('out_updated_bvec',  'inputnode.in_bvec')]),  # noqa
+            (mask_b0_pre, hmc, [('mask_file',        'inputnode.in_mask')]),  # noqa
             # Eddy-current correction
-            (hmc, ecc, [('outputnode.out_xfms', 'inputnode.in_xfms')]),
-            (prepare_b0, ecc, [('out_b0_dwi_merge', 'inputnode.in_file')]),
-            (prepare_b0, ecc, [('out_updated_bval', 'inputnode.in_bval')]),
-            (mask_b0_pre, ecc, [('mask_file', 'inputnode.in_mask')]),
+            (hmc,         ecc, [('outputnode.out_xfms', 'inputnode.in_xfms')]),  # noqa
+            (prepare_b0,  ecc, [('out_b0_dwi_merge',    'inputnode.in_file')]),  # noqa
+            (prepare_b0,  ecc, [('out_updated_bval',    'inputnode.in_bval')]),  # noqa
+            (mask_b0_pre, ecc, [('mask_file',           'inputnode.in_mask')]),  # noqa
             # Magnetic susceptibility correction
-            (ecc, sdc, [('outputnode.out_file', 'inputnode.in_dwi')]),
-            (self.input_node, sdc, [('T1w', 'inputnode.in_t1')]),
+            (self.input_node, sdc, [('T1w',                 'inputnode.in_t1')]),  # noqa
+            (ecc,             sdc, [('outputnode.out_file', 'inputnode.in_dwi')]),  # noqa
+            (hmc,             sdc, [('outputnode.out_bvec', 'inputnode.in_bvec')]),  # noqa
             # Apply all corrections
-            (prepare_b0, aac, [('out_b0_dwi_merge', 'inputnode.in_dwi')]),
-            (hmc, aac, [('outputnode.out_xfms', 'inputnode.in_hmc')]),
-            (ecc, aac, [('outputnode.out_xfms', 'inputnode.in_ecc')]),
-            (sdc, aac, [('outputnode.out_warp', 'inputnode.in_sdc_syb')]),
-            (self.input_node, aac, [('T1w', 'inputnode.in_t1')]),
+            (prepare_b0,      aac, [('out_b0_dwi_merge',    'inputnode.in_dwi')]),  # noqa
+            (hmc,             aac, [('outputnode.out_xfms', 'inputnode.in_hmc')]),  # noqa
+            (ecc,             aac, [('outputnode.out_xfms', 'inputnode.in_ecc')]),  # noqa
+            (sdc,             aac, [('outputnode.out_warp', 'inputnode.in_sdc_syb')]),  # noqa
+            (self.input_node, aac, [('T1w',                 'inputnode.in_t1')]),  # noqa
             # Bias correction
             (aac, bias, [('outputnode.out_file', 'inputnode.in_file')]),
             # Outputnode:
-            (bias,       self.output_node, [('outputnode.out_file',  'preproc_dwi')]),  # noqa
-            (hmc,        self.output_node, [('outputnode.out_bvec', 'preproc_bvec')]),  # noqa
+
+            (bias,       self.output_node, [('outputnode.out_file', 'preproc_dwi')]),  # noqa
+            #(hmc,        self.output_node, [('outputnode.out_bvec', 'preproc_bvec')]),  # noqa
+            (sdc,        self.output_node, [('outputnode.out_bvec', 'preproc_bvec')]),  # noqa
             (prepare_b0, self.output_node, [('out_updated_bval',    'preproc_bval')]),  # noqa
-            (bias,       self.output_node, [('outputnode.b0_mask',       'b0_mask')])   # noqa
+            (bias,       self.output_node, [('outputnode.b0_mask',  'b0_mask')])   # noqa
         ])
