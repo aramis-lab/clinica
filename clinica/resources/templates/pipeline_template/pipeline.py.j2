@@ -1,16 +1,13 @@
-# coding: utf8
-
 """{{ pipeline.title }} - Clinica Pipeline.
 This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details:
-http://clinica.run/doc/InteractingWithClinica/
+command line tool. See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
 """
 
-# WARNING: Don't put any import statement here except if it's absolutely
+# WARNING: Don't put any import statement here except if it's absolutly
 # necessary. Put it *inside* the different methods.
 # Otherwise it will slow down the dynamic loading of the pipelines list by the
 # command line tool.
-import clinica.pipeline.engine as cpe
+import clinica.pipelines.engine as cpe
 
 
 class {{ pipeline.class_name }}(cpe.Pipeline):
@@ -44,10 +41,12 @@ class {{ pipeline.class_name }}(cpe.Pipeline):
         >>> pipeline.run()
     """
 
+
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
         pass
+
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
@@ -58,6 +57,7 @@ class {{ pipeline.class_name }}(cpe.Pipeline):
 
         return ['hello_word'] # Fill here the list
 
+
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
 
@@ -66,6 +66,7 @@ class {{ pipeline.class_name }}(cpe.Pipeline):
         """
 
         return [] # Fill here the list
+
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -91,6 +92,7 @@ class {{ pipeline.class_name }}(cpe.Pipeline):
             (read_parameters_node,      self.input_node,    [('hello_word',    'hello_word')])
         ])
 
+
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
         """
@@ -101,6 +103,7 @@ class {{ pipeline.class_name }}(cpe.Pipeline):
         # pipeline.
 
         pass
+
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
@@ -134,4 +137,3 @@ class {{ pipeline.class_name }}(cpe.Pipeline):
             # STEP 2
             (self.input_node,      node2,    [('hello_word',    'in_hello_word')])
         ])
-

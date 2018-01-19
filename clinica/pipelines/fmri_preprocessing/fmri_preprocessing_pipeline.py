@@ -27,8 +27,9 @@ class fMRIPreprocessing(cpe.Pipeline):
         - The RealingUnwarp node is still under revision as a pull request
 
     Todos:
-        - [ ] Read parameters from sidecar `*.json` files.
-        - [ ] Add support of gzipped nifti inputs.
+        - [ ] Don't read inputs if not needed (i.e. --unwarp or no)
+        - [x] Read parameters from sidecar `*.json` files.
+        - [x] Add support of gzipped nifti inputs.
         - [x] Replace reg_node target image by the brain only using c1 + c2 + c3 dilated-eroded-filled.
         - [x] Develop SPM Realign and Unwarp wrapper and integrate it.
         - [x] Develop SPM Fieldmap Calculation Tool wrapper and integrate it.
@@ -68,7 +69,11 @@ class fMRIPreprocessing(cpe.Pipeline):
             A list of (string) input fields name.
         """
 
-        return ['magnitude1', 'phasediff', 'bold', 'T1w']
+        input_fields = ['et', 'blipdir', 'tert', 'time_repetition', 'num_slices',
+                'magnitude1', 'slice_order', 'ref_slice',
+                'time_acquisition', 'phasediff', 'bold', 'T1w']
+
+        return input_fields
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipelines.
@@ -77,8 +82,7 @@ class fMRIPreprocessing(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        if 't1_native_space' not in self.parameters or self.parameters[
-            't1_native_space']:
+        if self.parameters['t1_native_space']:
             return ['t1_brain_mask', 'mc_params', 'native_fmri', 't1_fmri',
                     'mni_fmri', 'mni_smoothed_fmri']
         else:
@@ -87,39 +91,115 @@ class fMRIPreprocessing(cpe.Pipeline):
 
     def build_input_node(self):
         """Build and connect an input node to the pipelines.
+
+        References:
+            https://lcni.uoregon.edu/kb-articles/kb-0003
+
         """
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        import json
+        import numpy as np
+        from clinica.utils.stream import cprint
 
-        # Reading BIDS
-        # ============
+
+        # Reading BIDS files
+        # ==================
         read_node = npe.Node(name="ReadingBIDS",
                              interface=nutil.IdentityInterface(
-                                 fields=self.get_input_fields(),
-                                 mandatory_inputs=True))
+                                     fields=self.get_input_fields(),
+                                     mandatory_inputs=True))
         # I remove the 'sub-' prefix that is not considered by the pybids'
         # layout object.
         subject_regex = '|'.join(s[4:] for s in self.subjects)
         read_node.inputs.magnitude1 = self.bids_layout.get(return_type='file',
                                                            type='magnitude1',
-                                                           extensions='nii',
+                                                           extensions='nii.gz',
                                                            subject=subject_regex)
         read_node.inputs.phasediff = self.bids_layout.get(return_type='file',
                                                           type='phasediff',
-                                                          extensions='nii',
+                                                          extensions='nii.gz',
                                                           subject=subject_regex)
         read_node.inputs.bold = self.bids_layout.get(return_type='file',
                                                      type='bold',
-                                                     extensions='nii',
+                                                     extensions='nii.gz',
                                                      subject=subject_regex)
         read_node.inputs.T1w = self.bids_layout.get(return_type='file',
-                                                    run='[1]', type='T1w',
-                                                    extensions='nii',
+                                                    type='T1w',
+                                                    extensions='nii.gz',
                                                     subject=subject_regex)
 
+        # Reading BIDS json
+        # =================
+
+        read_node.inputs.et=[]
+        read_node.inputs.blipdir=[]
+        read_node.inputs.tert=[]
+        read_node.inputs.time_repetition=[]
+        read_node.inputs.num_slices=[]
+        read_node.inputs.slice_order=[]
+        read_node.inputs.ref_slice=[]
+        read_node.inputs.time_acquisition=[]
+
+        for i in range(len(self.subjects)):
+
+            # From phasediff json file
+            phasediff_json = self.bids_layout.get(return_type='file',
+                                                  type='phasediff',
+                                                  extensions='json',
+                                                  subject=self.subjects[i][4:])
+            with open(phasediff_json[0]) as json_file:
+                data = json.load(json_file)
+                # SPM echo times
+                read_node.inputs.et.append([data['EchoTime1'],
+                                            data['EchoTime2']])
+                # SPM blip direction
+                # TODO: Verifiy that it is the correct way to get the blipdir
+                blipdir_raw = data['PhaseEncodingDirection']
+                if len(blipdir_raw) > 1 and blipdir_raw[1]=='-':
+                    read_node.inputs.blipdir.append(-1)
+                else:
+                    read_node.inputs.blipdir.append(1)
+
+            # From func json file
+            func_json = self.bids_layout.get(return_type='file',
+                                             type='bold',
+                                             extensions='json',
+                                             subject=self.subjects[i][4:])
+            with open(func_json[0]) as json_file:
+                data = json.load(json_file)
+                # SPM Total readout time
+                read_node.inputs.tert.append(
+                        1/data['BandwidthPerPixelPhaseEncode'])
+                # SPM Repetition time
+                read_node.inputs.time_repetition.append(data['RepetitionTime'])
+                # Number of slices
+                slice_timing = data['SliceTiming']
+                read_node.inputs.num_slices.append(len(slice_timing))
+                # Slice order
+                slice_order = np.argsort(slice_timing) + 1
+                read_node.inputs.slice_order.append(slice_order.tolist())
+                read_node.inputs.ref_slice.append(len(slice_timing) / 2)
+                read_node.inputs.time_acquisition.append(
+                        data['RepetitionTime'] - data['RepetitionTime']
+                        / float(len(slice_timing)))
+
+            cprint(read_node.inputs)
+
+
+
         self.connect([
-            # Reading BIDS
+            # Reading BIDS json
+            (read_node, self.input_node, [('et', 'et')]),
+            (read_node, self.input_node, [('blipdir', 'blipdir')]),
+            (read_node, self.input_node, [('tert', 'tert')]),
+            (read_node, self.input_node, [('time_repetition', 'time_repetition')]),
+            (read_node, self.input_node, [('num_slices', 'num_slices')]),
+            (read_node, self.input_node, [('slice_order', 'slice_order')]),
+            (read_node, self.input_node, [('ref_slice', 'ref_slice')]),
+            (read_node, self.input_node, [('time_acquisition', 'time_acquisition')]),
+            # Reading BIDS files
             (read_node, self.input_node, [('magnitude1', 'magnitude1')]),
             (read_node, self.input_node, [('phasediff', 'phasediff')]),
             (read_node, self.input_node, [('bold', 'bold')]),
@@ -139,7 +219,7 @@ class fMRIPreprocessing(cpe.Pipeline):
                                  iterfield=['container']
                                            + self.get_output_fields(),
                                  interface=nio.DataSink(
-                                     infields=self.get_output_fields()))
+                                         infields=self.get_output_fields()))
         write_node.inputs.base_directory = self.caps_directory
         write_node.inputs.parameterization = False
         write_node.inputs.container = [
@@ -193,27 +273,35 @@ class fMRIPreprocessing(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from clinica.utils.io import zip_nii, unzip_nii
 
+        # Zipping
+        # =======
+        unzip_node = npe.MapNode(name='Unzipping',
+                                 iterfield=['in_file'],
+                                 interface=nutil.Function(input_names=['in_file'],
+                                                          output_names=[
+                                                              'out_file'],
+                                                          function=unzip_nii))
+
+        unzip_T1w = unzip_node.clone('UnzippingT1w')
+        unzip_phasediff = unzip_node.clone('UnzippingPhasediff')
+        unzip_bold = unzip_node.clone('UnzippingBold')
+        unzip_magnitude1 = unzip_node.clone('UnzippingMagnitude1')
+
         # FieldMap calculation
         # ====================
         if self.parameters['unwarping']:
             fm_node = npe.MapNode(name="FieldMapCalculation",
-                                  iterfield=['phase', 'magnitude', 'epi'],
+                                  iterfield=['phase', 'magnitude', 'epi',
+                                             'et', 'bipdir', 'tert'],
                                   interface=utils.FieldMap())
-            fm_node.inputs.et = self.parameters['echo_times']
-            fm_node.inputs.blipdir = self.parameters['blip_direction']
-            fm_node.inputs.tert = self.parameters['total_readout_time']
 
         # Slice timing correction
         # =======================
-        st_node = npe.Node(name="SliceTimingCorrection",
-                           interface=spm.SliceTiming())
-        st_node.inputs.time_repetition = self.parameters['time_repetition']
-        st_node.inputs.slice_order = range(1, self.parameters['num_slices'] + 1)
-        st_node.inputs.num_slices = self.parameters['num_slices']
-        st_node.inputs.ref_slice = self.parameters['num_slices'] / 2
-        st_node.inputs.time_acquisition = self.parameters['time_repetition'] - \
-                                          self.parameters['time_repetition'] \
-                                          / float(self.parameters['num_slices'])
+        st_node = npe.MapNode(name="SliceTimingCorrection",
+                              iterfield=['in_files', 'time_repetition',
+                                         'slice_order', 'num_slices',
+                                         'ref_slice', 'time_acquisition'],
+                              interface=spm.SliceTiming())
 
         # Motion correction and unwarping
         # ===============================
@@ -300,8 +388,8 @@ class fMRIPreprocessing(cpe.Pipeline):
         else:
             self.connect([
                 # Brain extraction
-                (self.input_node, bet_node, [('T1w', 'Segmentation.data')]),
-                (self.input_node, bet_node, [('T1w', 'ApplyMask.in_file')]),
+                (unzip_T1w, bet_node, [('out_file', 'Segmentation.data')]),
+                (unzip_T1w, bet_node, [('out_file', 'ApplyMask.in_file')]),
                 (bet_node, reg_node, [('ApplyMask.out_file', 'target')]),
                 (bet_node, zip_bet_node, [('Fill.out_file', 'in_file')]),
             ])
@@ -309,9 +397,12 @@ class fMRIPreprocessing(cpe.Pipeline):
         if self.parameters['unwarping']:
             self.connect([
                 # FieldMap calculation
-                (self.input_node, fm_node, [('magnitude1', 'magnitude')]),
-                (self.input_node, fm_node, [('phasediff', 'phase')]),
-                (self.input_node, fm_node, [('bold', 'epi')]),
+                (self.input_node, fm_node, [('et', 'et')]),
+                (self.input_node, fm_node, [('blipdir', 'blipdir')]),
+                (self.input_node, fm_node, [('tert', 'tert')]),
+                (unzip_magnitude1, fm_node, [('out_file', 'magnitude')]),
+                (unzip_phasediff, fm_node, [('out_file', 'phase')]),
+                (unzip_bold, fm_node, [('out_file', 'epi')]),
                 # Motion correction and unwarping
                 (st_node, mc_node, [('timecorrected_files', 'scans')]),
                 (fm_node, mc_node, [('vdm', 'pmscan')]),
@@ -325,18 +416,27 @@ class fMRIPreprocessing(cpe.Pipeline):
                 (mc_node, reg_node, [('realigned_files', 'apply_to_files')]),
                 (mc_node, zip_mc_node, [('realigned_files', 'in_file')]),
             ])
-
         self.connect([
+            # Unzipping
+            (self.input_node, unzip_T1w, [('T1w', 'in_file')]),
+            (self.input_node, unzip_phasediff, [('phasediff', 'in_file')]),
+            (self.input_node, unzip_magnitude1, [('magnitude1', 'in_file')]),
+            (self.input_node, unzip_bold, [('bold', 'in_file')]),
             # Slice timing correction
-            (self.input_node, st_node, [('bold', 'in_files')]),
+            (unzip_bold, st_node, [('out_file', 'in_files')]),
+            (self.input_node, st_node, [('time_repetition', 'time_repetition')]),
+            (self.input_node, st_node, [('num_slices', 'num_slices')]),
+            (self.input_node, st_node, [('slice_order', 'slice_order')]),
+            (self.input_node, st_node, [('ref_slice', 'ref_slice')]),
+            (self.input_node, st_node, [('time_acquisition', 'time_acquisition')]),
             # Registration
             (mc_node, reg_node, [('mean_image', 'source')]),
             # Normalization
-            (self.input_node, norm_node, [('T1w', 'image_to_align')]),
+            (unzip_T1w, norm_node, [('out_file', 'image_to_align')]),
             (reg_node, norm_node, [('coregistered_files', 'apply_to_files')]),
             # Smoothing
             (norm_node, smooth_node, [('normalized_files', 'in_files')]),
-            # Returning output
+            # Zipping
             (reg_node, zip_reg_node, [('coregistered_files', 'in_file')]),
             (norm_node, zip_norm_node, [('normalized_files', 'in_file')]),
             (smooth_node, zip_smooth_node, [('smoothed_files', 'in_file')]),
@@ -350,3 +450,4 @@ class fMRIPreprocessing(cpe.Pipeline):
             (zip_smooth_node, self.output_node, [('out_file',
                                                   'mni_smoothed_fmri')]),
         ])
+
