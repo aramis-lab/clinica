@@ -35,19 +35,9 @@ class fMRIPreprocessingCLI(ce.CmdParser):
                                 help='Run the pipelines using SLURM')
         self._args.add_argument("-sa", "--sbatch_args",
                                 help='SLURM\'s sbatch tool arguments')
-        self._args.add_argument("-ns", "--num_slices", type=int,
-                                help="Number of slices")
-        self._args.add_argument("-tr", "--time_repetition", type=float,
-                                help='TR in seconds')
-        self._args.add_argument("-et", "--echo_times", nargs=2, type=float,
-                                help="Echo times in seconds (ex.: '-et 5.19 7.65')")
-        self._args.add_argument("-bd", "--blip_direction", type=int,
-                                help="Blip direction (1 or -1)")
         self._args.add_argument("-fwhm", "--full_width_at_half_maximum",
                                 nargs=3, type=int, default=[8, 8, 8],
                                 help="Size of the fwhm filter in milimeters to smooth the image")
-        self._args.add_argument("-trt", "--total_readout_time", type=float,
-                                help="Total readout time (TRT) in seconds")
         self._args.add_argument("-t1s", "--t1_native_space", action='store_true',
                                 help="Also return images in T1 native space")
         self._args.add_argument("-fsbm", "--freesurfer_brain_mask",
@@ -68,11 +58,6 @@ class fMRIPreprocessingCLI(ce.CmdParser):
                                      caps_directory=self.absolute_path(args.caps_directory),
                                      tsv_file=self.absolute_path(args.subjects_sessions_tsv))
         pipeline.parameters = {
-            'num_slices'                 : args.num_slices,
-            'time_repetition'            : args.time_repetition,
-            'echo_times'                 : args.echo_times,
-            'blip_direction'             : args.blip_direction,
-            'total_readout_time'         : args.total_readout_time,
             'full_width_at_half_maximum' : args.full_width_at_half_maximum,
             't1_native_space'            : args.t1_native_space,
             'freesurfer_brain_mask'      : args.freesurfer_brain_mask,
