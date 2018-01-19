@@ -126,9 +126,6 @@ def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
 
     lowbs = np.where(bvals <= low_bval)[0]
 
-    from clinica.utils.stream import cprint
-    cprint("%s - lowbs for (%s)" % (lowbs, in_dwi))
-
     fname_b0, ext_b0 = op.splitext(op.basename(in_dwi))
     if ext_b0 == ".gz":
         fname_b0, ext2 = op.splitext(fname_b0)
@@ -236,7 +233,7 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
 
     # Count the number of b0s
     nb_b0s = count_b0s(in_bval=in_bval, low_bval=low_bval)
-    cprint('Found %s b0 for %s' % (nb_b0s, in_dwi))
+    # cprint('Found %s b0 for %s' % (nb_b0s, in_dwi))
 
     # Split dataset into two datasets: the b0 and the b>low_bval datasets
     [extracted_b0, out_split_dwi, out_split_bval, out_split_bvec] = \
@@ -245,7 +242,7 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
 
     if nb_b0s == 1:
         # The reference b0 is the extracted b0
-        cprint('Only one b0 for %s' % in_dwi)
+        # cprint('Only one b0 for %s' % in_dwi)
         out_reference_b0 = extracted_b0
     elif nb_b0s > 1:
         # Register the b0 onto the first b0
@@ -260,7 +257,7 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
         registered_b0s = op.abspath(op.join(
             tmp_dir, 'b0_coregistration', 'concat_ref_moving',
             'merged_files.nii.gz'))
-        cprint('B0 s will be averaged (file = ' + registered_b0s + ')')
+        # cprint('B0 s will be averaged (file = ' + registered_b0s + ')')
         # Average the b0s to obtain the reference b0
         out_reference_b0 = b0_average(in_file=registered_b0s)
     else:
@@ -272,12 +269,6 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
     [out_b0_dwi_merge, out_updated_bval, out_updated_bvec] = \
         insert_b0_into_dwi(in_b0=out_reference_b0, in_dwi=out_split_dwi,
                            in_bval=out_split_bval, in_bvec=out_split_bvec)
-
-    cprint('Results - Reference b0 workflow')
-    cprint('out_reference_b0 = ' + out_reference_b0)
-    cprint('out_b0_dwi_merge = ' + out_b0_dwi_merge)
-    cprint('out_updated_bval = ' + out_updated_bval)
-    cprint('out_updated_bvec = ' + out_updated_bvec)
 
     return out_reference_b0, out_b0_dwi_merge, out_updated_bval, out_updated_bvec
 
@@ -359,5 +350,5 @@ def check_dwi_volume(in_dwi, in_bvec, in_bval):
 
     if not (num_b_vals == num_b_vecs == num_dwis):
         raise IOError('Number of DWIs, b-vals and b-vecs mismatch '
-                      '(# DWI = %s, # B-vec = %s, #B-val = %s)' %
+                      '(# DWI = %s, # B-vec = %s, #B-val = %s) ' %
                       (num_dwis, num_b_vecs, num_b_vals))

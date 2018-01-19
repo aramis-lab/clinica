@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 __author__ = "Junhao Wen"
-__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
 __credits__ = ["Junhao Wen"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
@@ -372,21 +372,22 @@ def write_statistics_per_subject(subject_id, output_dir):
     cmd_aparc_destrieux_rh_meancurv = 'aparcstats2table --subjects ' + subject + ' --hemi rh --parc aparc.a2009s --meas meancurv --tablefile ' + aparc_destrieux_rh_meancurv_tsv
     os.system(cmd_aparc_destrieux_rh_meancurv)
 
-    cmd_aparc_BA_lh_volume = 'aparcstats2table --subjects ' + subject + ' --hemi lh --parc BA --meas volume --tablefile ' + aparc_BA_lh_volume_tsv
-    os.system(cmd_aparc_BA_lh_volume)
-    cmd_aparc_BA_rh_volume = 'aparcstats2table --subjects ' + subject + ' --hemi rh --parc BA --meas volume --tablefile ' + aparc_BA_rh_volume_tsv
-    os.system(cmd_aparc_BA_rh_volume)
-    cmd_parc_BA_lh_thickness = 'aparcstats2table --subjects ' + subject + ' --hemi lh --parc BA --meas thickness --tablefile ' + aparc_BA_lh_thickness_tsv
-    os.system(cmd_parc_BA_lh_thickness)
-    cmd_parc_BA_rh_thickness = 'aparcstats2table --subjects ' + subject + ' --hemi rh --parc BA --meas thickness --tablefile ' + aparc_BA_rh_thickness_tsv
-    os.system(cmd_parc_BA_rh_thickness)
-    cmd_aparc_BA_lh_area = 'aparcstats2table --subjects ' + subject + ' --hemi lh --parc BA --meas area --tablefile ' + aparc_BA_lh_area_tsv
-    os.system(cmd_aparc_BA_lh_area)
-    cmd_aparc_BA_rh_area = 'aparcstats2table --subjects ' + subject + ' --hemi rh --parc BA --meas area --tablefile ' + aparc_BA_rh_area_tsv
-    os.system(cmd_aparc_BA_rh_area)
-    cmd_aparc_BA_lh_meancurv = 'aparcstats2table --subjects ' + subject + ' --hemi lh --parc BA --meas meancurv --tablefile ' + aparc_BA_lh_meancurv_tsv
-    os.system(cmd_aparc_BA_lh_meancurv)
-    cmd_aparc_BA_rh_meancurv = 'aparcstats2table --subjects ' + subject + ' --hemi rh --parc BA --meas meancurv --tablefile ' + aparc_BA_rh_meancurv_tsv
-    os.system(cmd_aparc_BA_rh_meancurv)
+    #### BA atals does not work for FreeSurfer 6.0
+    # cmd_aparc_BA_lh_volume = 'aparcstats2table --subjects ' + subject + ' --hemi lh --parc BA --meas volume --tablefile ' + aparc_BA_lh_volume_tsv
+    # os.system(cmd_aparc_BA_lh_volume)
+    # cmd_aparc_BA_rh_volume = 'aparcstats2table --subjects ' + subject + ' --hemi rh --parc BA --meas volume --tablefile ' + aparc_BA_rh_volume_tsv
+    # os.system(cmd_aparc_BA_rh_volume)
+    # cmd_parc_BA_lh_thickness = 'aparcstats2table --subjects ' + subject + ' --hemi lh --parc BA --meas thickness --tablefile ' + aparc_BA_lh_thickness_tsv
+    # os.system(cmd_parc_BA_lh_thickness)
+    # cmd_parc_BA_rh_thickness = 'aparcstats2table --subjects ' + subject + ' --hemi rh --parc BA --meas thickness --tablefile ' + aparc_BA_rh_thickness_tsv
+    # os.system(cmd_parc_BA_rh_thickness)
+    # cmd_aparc_BA_lh_area = 'aparcstats2table --subjects ' + subject + ' --hemi lh --parc BA --meas area --tablefile ' + aparc_BA_lh_area_tsv
+    # os.system(cmd_aparc_BA_lh_area)
+    # cmd_aparc_BA_rh_area = 'aparcstats2table --subjects ' + subject + ' --hemi rh --parc BA --meas area --tablefile ' + aparc_BA_rh_area_tsv
+    # os.system(cmd_aparc_BA_rh_area)
+    # cmd_aparc_BA_lh_meancurv = 'aparcstats2table --subjects ' + subject + ' --hemi lh --parc BA --meas meancurv --tablefile ' + aparc_BA_lh_meancurv_tsv
+    # os.system(cmd_aparc_BA_lh_meancurv)
+    # cmd_aparc_BA_rh_meancurv = 'aparcstats2table --subjects ' + subject + ' --hemi rh --parc BA --meas meancurv --tablefile ' + aparc_BA_rh_meancurv_tsv
+    # os.system(cmd_aparc_BA_rh_meancurv)
 
     cprint("Writing statistical data to tsv file for %s finished!" % subject)

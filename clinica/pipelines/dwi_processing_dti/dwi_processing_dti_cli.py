@@ -11,7 +11,14 @@ class DWIProcessingDTICLI(ce.CmdParser):
     def define_name(self):
         """Define the sub-command name to run this pipeline.
         """
+        from colorama import Fore, init
+        init()
+
         self._name = 'dwi-processing-dti'
+        self._args.epilog = 'Example: clinica run dwi-processing-dti BIDS CAPS'
+        self._args.description = "%sDTI-based pipeline: http:://clinica.run/doc/DWIProcessing%s" % (Fore.GREEN, Fore.RESET)
+        self._args._positionals.title = '%sCompulsory arguments:%s' % (Fore.BLUE, Fore.RESET)
+        self._args._optionals.title = '%sOptional arguments:%s' % (Fore.BLUE, Fore.RESET)
 
     def define_options(self):
         """Define the sub-command arguments

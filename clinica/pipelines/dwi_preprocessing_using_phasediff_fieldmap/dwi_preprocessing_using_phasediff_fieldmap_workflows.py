@@ -166,62 +166,62 @@ def susceptibility_distortion_correction_using_phasediff_fmap(
 
     wf = pe.Workflow(name=name)
     wf.connect([
-        (inputnode, fsl_dir, [('phase_encoding_direction', 'bids_dir')]),
-        (inputnode, pha2rads, [('in_fmap_phasediff', 'in_file')]),
-        (inputnode, get_b0,   [('in_dwi', 'in_file')]),
-        (inputnode, first_mag, [('in_fmap_magnitude', 'in_file')]),
-        (first_mag, n4, [('roi_file', 'input_image')]),
-        (n4, bet, [('output_image', 'in_file')]),
-        (bet, dilate, [('mask_file', 'in_file')]),
-        (pha2rads, prelude, [('out_file', 'phase_file')]),
-        (n4,       prelude, [('output_image', 'magnitude_file')]),
-        (dilate,   prelude, [('out_file', 'mask_file')]),
-        (prelude,   rad2rsec, [('unwrapped_phase_file', 'in_file')]),
-        (inputnode, rad2rsec, [('delta_echo_time', 'delta_te')]),
+        (inputnode, fsl_dir, [('phase_encoding_direction', 'bids_dir')]),  # noqa
+        (inputnode, pha2rads, [('in_fmap_phasediff', 'in_file')]),  # noqa
+        (inputnode, get_b0,   [('in_dwi', 'in_file')]),  # noqa
+        (inputnode, first_mag, [('in_fmap_magnitude', 'in_file')]),  # noqa
+        (first_mag, n4, [('roi_file', 'input_image')]),  # noqa
+        (n4, bet, [('output_image', 'in_file')]),  # noqa
+        (bet, dilate, [('mask_file', 'in_file')]),  # noqa
+        (pha2rads, prelude, [('out_file',     'phase_file')]),  # noqa
+        (n4,       prelude, [('output_image', 'magnitude_file')]),  # noqa
+        (dilate,   prelude, [('out_file',     'mask_file')]),  # noqa
+        (prelude,   rad2rsec, [('unwrapped_phase_file', 'in_file')]),  # noqa
+        (inputnode, rad2rsec, [('delta_echo_time',      'delta_te')]),  # noqa
     ])
     if register_fmap_on_b0:
         wf.connect([
-            (get_b0,    fmm2b0, [('roi_file', 'fixed_image')]),
-            (n4,        fmm2b0, [('output_image', 'moving_image')]),
-            (inputnode, fmm2b0, [('in_mask', 'fixed_image_mask')]),
-            (dilate,    fmm2b0, [('out_file', 'moving_image_mask')]),
-            (get_b0,   apply_xfm, [('roi_file', 'reference_image')]),
-            (rad2rsec, apply_xfm, [('out_file', 'input_image')]),
-            (fmm2b0,   apply_xfm, [('forward_transforms', 'transforms'),
-                                   ('forward_invert_flags', 'invert_transform_flags')]),
-            (apply_xfm, pre_fugue, [('output_image', 'fmap_in_file')]),
-            (inputnode, pre_fugue, [('in_mask', 'mask_file')]),
+            (get_b0,    fmm2b0, [('roi_file',     'fixed_image')]),  # noqa
+            (n4,        fmm2b0, [('output_image', 'moving_image')]),  # noqa
+            (inputnode, fmm2b0, [('in_mask',      'fixed_image_mask')]),  # noqa
+            (dilate,    fmm2b0, [('out_file',     'moving_image_mask')]),  # noqa
+            (get_b0,   apply_xfm, [('roi_file',            'reference_image')]),  # noqa
+            (rad2rsec, apply_xfm, [('out_file',            'input_image')]),  # noqa
+            (fmm2b0,   apply_xfm, [('forward_transforms',  'transforms'),  # noqa
+                                   ('forward_invert_flags', 'invert_transform_flags')]),  # noqa
+            (apply_xfm, pre_fugue, [('output_image', 'fmap_in_file')]),  # noqa
+            (inputnode, pre_fugue, [('in_mask', 'mask_file')]),  # noqa
 
             (apply_xfm, outputnode, [('output_image', 'out_prepared_fmap')])  # noqa
         ])
     else:
         wf.connect([
-            (get_b0,    res_fmap, [('roi_file', 'in_b0')]),
-            (rad2rsec,  res_fmap, [('out_file', 'in_fmap')]),
-            (res_fmap,  pre_fugue, [('out_resampled_fmap', 'fmap_in_file')]),
-            (inputnode, pre_fugue, [('in_mask', 'mask_file')]),
+            (get_b0,   res_fmap, [('roi_file', 'in_b0')]),  # noqa
+            (rad2rsec, res_fmap, [('out_file', 'in_fmap')]),  # noqa
+            (res_fmap,  pre_fugue, [('out_resampled_fmap', 'fmap_in_file')]),  # noqa
+            (inputnode, pre_fugue, [('in_mask',            'mask_file')]),  # noqa
 
             (res_fmap, outputnode, [('out_resampled_fmap', 'out_prepared_fmap')])  # noqa
         ])
     wf.connect([
-        (pre_fugue, demean, [('fmap_out_file', 'in_file')]),
-        (inputnode, demean, [('in_mask', 'in_mask')]),
-        (demean, cleanup, [('out_file', 'inputnode.in_file')]),
-        (inputnode, cleanup, [('in_mask', 'inputnode.in_mask')]),
-        (cleanup, add_vol, [('outputnode.out_file', 'in_file')]),
-        (inputnode, vsm, [('in_mask', 'mask_file')]),
-        (add_vol, vsm, [('out_file', 'fmap_in_file')]),
-        (inputnode, vsm, [('delta_echo_time', 'asym_se_time')]),
-        (inputnode, vsm, [('effective_echo_spacing', 'dwell_time')]),
-        (inputnode, split, [('in_dwi', 'in_file')]),
-        (split, unwarp, [('out_files', 'in_file')]),
-        (vsm, unwarp, [('shift_out_file', 'shift_in_file')]),
-        (fsl_dir, unwarp, [('fsl_dir', 'unwarp_direction')]),
-        (unwarp, thres, [('unwarped_file', 'in_file')]),
-        (thres, merge, [('out_file', 'in_files')]),
-        (merge, vsm2dfm, [('merged_file', 'inputnode.in_ref')]),
-        (vsm, vsm2dfm, [('shift_out_file', 'inputnode.in_vsm')]),
-        (fsl_dir, vsm2dfm, [('fsl_dir', 'inputnode.enc_dir')]),
+        (pre_fugue, demean, [('fmap_out_file', 'in_file')]),  # noqa
+        (inputnode, demean, [('in_mask', 'in_mask')]),  # noqa
+        (demean,    cleanup, [('out_file', 'inputnode.in_file')]),  # noqa
+        (inputnode, cleanup, [('in_mask',  'inputnode.in_mask')]),  # noqa
+        (cleanup, add_vol, [('outputnode.out_file', 'in_file')]),  # noqa
+        (inputnode, vsm, [('in_mask',                'mask_file')]),  # noqa
+        (add_vol,   vsm, [('out_file',               'fmap_in_file')]),  # noqa
+        (inputnode, vsm, [('delta_echo_time',        'asym_se_time')]),  # noqa
+        (inputnode, vsm, [('effective_echo_spacing', 'dwell_time')]),  # noqa
+        (inputnode, split, [('in_dwi', 'in_file')]),  # noqa
+        (split,   unwarp, [('out_files',      'in_file')]),  # noqa
+        (vsm,     unwarp, [('shift_out_file', 'shift_in_file')]),  # noqa
+        (fsl_dir, unwarp, [('fsl_dir',        'unwarp_direction')]),  # noqa
+        (unwarp, thres, [('unwarped_file', 'in_file')]),  # noqa
+        (thres, merge, [('out_file', 'in_files')]),  # noqa
+        (merge,   vsm2dfm, [('merged_file',    'inputnode.in_ref')]),  # noqa
+        (vsm,     vsm2dfm, [('shift_out_file', 'inputnode.in_vsm')]),  # noqa
+        (fsl_dir, vsm2dfm, [('fsl_dir',        'inputnode.enc_dir')]),  # noqa
         (rad2rsec, outputnode, [('out_file',            'out_native_fmap')]),  # noqa
         (merge,    outputnode, [('merged_file',         'out_file')]),  # noqa
         (vsm,      outputnode, [('shift_out_file',      'out_vsm')]),  # noqa
