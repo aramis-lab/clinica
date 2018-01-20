@@ -23,8 +23,6 @@ class DWIProcessingDTICLI(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments
         """
-        self._args.add_argument("bids_directory",
-                                help='Path to the BIDS directory.')
         self._args.add_argument("caps_directory",
                                 help='Path to the CAPS directory.')
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
@@ -34,10 +32,10 @@ class DWIProcessingDTICLI(ce.CmdParser):
                                 help='Temporary directory to store pipelines intermediate results')  # noqa
         self._args.add_argument("-np", "--n_procs",
                                 type=int,
-                                help='Number of cores used to run in parallel')
+                                help='Number of cores used to run in parallel')  # noqa
         self._args.add_argument("-sl", "--slurm",
                                 action='store_true',
-                                help='Run the pipelines using SLURM')
+                                help='Run the pipelines using SLURM')  # noqa
 
     def run_pipeline(self, args):
         """
@@ -46,7 +44,6 @@ class DWIProcessingDTICLI(ce.CmdParser):
         from dwi_processing_dti_pipeline import DWIProcessingDTI
 
         pipeline = DWIProcessingDTI(
-            bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv)
         )

@@ -1,9 +1,56 @@
+# coding: utf8
+
 """
 
 """
+
+import abc
 
 from nipype.pipeline.engine import Workflow
-import abc
+
+
+def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True):
+    """Parses a BIDS or CAPS directory to get the subjects and sessions.
+
+    This function lists all the subjects and sessions based on the content of
+    the BIDS or CAPS directory or (if specified) on the provided
+    subject-sessions TSV file.
+
+    Args:
+        input_dir: A BIDS or CAPS directory path.
+        ss_file: A subjects-sessions file (.tsv format).
+        is_bids_dir: Indicates if input_dir is a BIDS or CAPS directory
+
+    Returns:
+        subjects: A subjects list.
+        sessions: A sessions list.
+    """
+    import clinica.iotools.utils.data_handling as cdh
+    import pandas as pd
+    import tempfile
+    from time import time, strftime, localtime
+    import os
+
+    if not ss_file:
+        output_dir = tempfile.mkdtemp()
+        timestamp = strftime('%Y%m%d_%H%M%S', localtime(time()))
+        tsv_file = '%s_subjects_sessions_list.tsv' % timestamp
+        ss_file = os.path.join(output_dir, tsv_file)
+
+        cdh.create_subs_sess_list(
+            input_dir=input_dir,
+            output_dir=output_dir,
+            file_name=tsv_file,
+            is_bids_dir=is_bids_dir)
+
+    ss_df = pd.io.parsers.read_csv(ss_file, sep='\t')
+    if list(ss_df.columns.values) != ['participant_id', 'session_id']:
+        raise Exception(
+            'Subjects and visits file is not in the correct format.')
+    subjects = list(ss_df.participant_id)
+    sessions = list(ss_df.session_id)
+
+    return sessions, subjects
 
 
 def postset(attribute, value):
@@ -23,38 +70,6 @@ def postset(attribute, value):
             return res
         return func_wrapper
     return postset_decorator
-
-
-def get_subject_session_list(input_dir, ss_file=None):
-    """Parses a BIDS directory to get the subjects and sessions.
-
-    This function lists all the subjects and sessions based on the content of
-    the BIDS directory or (if specified) on the provided subject-sessions tsv
-    file.
-
-    Args:
-        input_dir: A BIDS directory path.
-        ss_file: A subjects-sessions file (.tsv format).
-
-    Returns:
-        subjects: A subjects list.
-        sessions: A sessions list.
-    """
-    import clinica.iotools.utils.data_handling as cdh
-    import pandas as pd
-
-    if not ss_file:
-        cdh.create_subs_sess_list(input_dir, '/tmp/') # FIXME(@jguillon): make temporary directory (or temporary file)
-        ss_file = '/tmp/subjects_sessions_list.tsv'
-
-    ss_df = pd.io.parsers.read_csv(ss_file, sep='\t')
-    if list(ss_df.columns.values) != ['participant_id', 'session_id']:
-        raise Exception(
-            'Subjects and visits file is not in the correct format.')
-    subjects = list(ss_df.participant_id)
-    sessions = list(ss_df.session_id)
-
-    return sessions, subjects
 
 
 class Pipeline(Workflow):
@@ -116,17 +131,29 @@ class Pipeline(Workflow):
             os.path.dirname(os.path.abspath(inspect.getfile(self.__class__))),
             'info.json')
         self._info = {}
+
         if name:
             self._name = name
         else:
             self._name = self.__class__.__name__
         self._parameters = {}
-        if bids_directory:
+
+        if self._bids_directory is None:
+            if self._caps_directory is None:
+                raise IOError('%s does not contain BIDS nor CAPS directory' %
+                              self._name)
             self._sessions, self._subjects = get_subject_session_list(
-                bids_directory, tsv_file)
+                input_dir=self._caps_directory,
+                ss_file=self._tsv_file,
+                is_bids_dir=False
+            )
         else:
-            self._sessions = []
-            self._subjects = []
+            self._sessions, self._subjects = get_subject_session_list(
+                input_dir=self._bids_directory,
+                ss_file=self._tsv_file,
+                is_bids_dir=True
+            )
+
         if self.get_input_fields():
             self._input_node = npe.Node(name="Input",
                                         interface=nutil.IdentityInterface(
@@ -134,6 +161,7 @@ class Pipeline(Workflow):
                                             mandatory_inputs=False))
         else:
             self._input_node = None
+
         if self.get_output_fields():
             self._output_node = npe.Node(name="Output",
                                          interface=nutil.IdentityInterface(
@@ -141,6 +169,7 @@ class Pipeline(Workflow):
                                              mandatory_inputs=False))
         else:
             self._output_node = None
+
         Workflow.__init__(self, self._name)
         if self.input_node:
             self.add_nodes([self.input_node])
