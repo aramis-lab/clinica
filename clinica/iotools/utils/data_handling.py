@@ -1,4 +1,5 @@
-# coding: utf-8
+# coding: utf8
+
 """
 Data handling scripts
 """
@@ -27,6 +28,9 @@ def create_merge_file(bids_dir, out_dir, true_false_mode=False):
     from glob import glob
     import os
     import pandas as pd
+
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
 
     col_list = []
     scans_dict = {}
@@ -130,7 +134,7 @@ def create_merge_file(bids_dir, out_dir, true_false_mode=False):
     tmp_ses = glob(path.join(out_dir, 'tmpG7VIY0*'))
     for f in tmp_ses:
         # Skip the summary file
-        if not 'summary' in f:
+        if 'summary' not in f:
             # Load the file
             mss_df = pd.read_csv(f, sep='\t')
             f_name = f.split(os.sep)[-1]
@@ -142,7 +146,7 @@ def create_merge_file(bids_dir, out_dir, true_false_mode=False):
             # If the file opened contains new columns,
             # add them to the existing merged_df
             for col_name in cols:
-                if not col_name in col_list:
+                if col_name not in col_list:
                     merged_df[col_name] = 0
 
             for i in range(0, len(mss_df)):
@@ -152,7 +156,7 @@ def create_merge_file(bids_dir, out_dir, true_false_mode=False):
                 if len(subj_idx) > 1:
                     raise ValueError('Multiple row for the same visit in the merge-tsv file.')
                 elif len(subj_idx) == 0:
-                    print 'Warning: Found modalities missing information for the subject:' + row['participant_id']+ ' visit:' + ses_id + ' but the subject is not included in the column participant_id.'
+                    print 'Warning: Found modalities missing information for the subject:' + row['participant_id'] + ' visit:' + ses_id + ' but the subject is not included in the column participant_id.'
                     continue
                 else:
                     subj_idx = subj_idx[0]
@@ -203,7 +207,7 @@ def find_mods_and_sess(dataset_dir):
             ses_name = session.split(os.sep)[-1]
             mods_avail = []
             if mods_dict.has_key('sessions'):
-                if not ses_name in mods_dict['sessions']:
+                if ses_name not in mods_dict['sessions']:
                     mods_dict['sessions'].append(ses_name)
             else:
                 mods_dict.update({'sessions': [ses_name]})
@@ -282,9 +286,9 @@ def compute_missing_mods(in_dir, out_dir, output_prefix=''):
     Compute the list of missing modalities for each subject in a BIDS compliant dataset
 
     Args:
-        in_dir: path to the BIDS directory
-        out_dir: path to the output folder
-        output_prefix: string that replace the default prefix ('missing_mods_') in the name of all the output files
+        in_dir: Path to the BIDS directory
+        out_dir: Path to the output folder
+        output_prefix: String that replace the default prefix ('missing_mods_') in the name of all the output files
     created
     """
     from ..converter_utils import MissingModsTracker, print_statistics
@@ -292,6 +296,9 @@ def compute_missing_mods(in_dir, out_dir, output_prefix=''):
     from os import path
     import pandas as pd
     from glob import glob
+
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
 
     # Find all the modalities and sessions available for the input dataset
     mods_and_sess = find_mods_and_sess(in_dir)
@@ -403,33 +410,42 @@ def compute_missing_mods(in_dir, out_dir, output_prefix=''):
     print_statistics(summary_file, len(subjects_paths_lists), sessions_found, mmt)
 
 
-def create_subs_sess_list(dataset_path, out_dir, file_name=''):
+def create_subs_sess_list(input_dir, output_dir,
+                          file_name=None, is_bids_dir=True):
     """
-
     Create the file subject_session_list.tsv that contains the list
-    of the visits for each subject for a BIDS compliant dataset.
+    of the visits for each subject for a BIDS or CAPS compliant dataset.
 
     Args:
-        dataset_path: path to the BIDS directory
-        out_dir:  path to the output directory
+        input_dir (str): Path to the BIDS or CAPS directory.
+        output_dir (str): Path to the output directory
         file_name: name of the output file
-
+        is_bids_dir (boolean): Specify if input_dir is a BIDS directory or
+            not (i.e. a CAPS directory)
     """
     from os import path
     from glob import glob
     import os
 
-    if file_name == '':
-        file_name = 'subjects_sessions_list.tsv'
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
-    subjs_sess_tsv = open(path.join(out_dir, file_name), 'w')
+    if file_name is None:
+        file_name = 'subjects_sessions_list.tsv'
+    subjs_sess_tsv = open(path.join(output_dir, file_name), 'w')
     subjs_sess_tsv.write('participant_id' + '\t' + 'session_id' + '\n')
-    subjects_paths = glob(path.join(dataset_path, '*sub-*'))
+
+    if is_bids_dir:
+        path_to_search = input_dir
+    else:
+        path_to_search = path.join(input_dir, 'subjects')
+    subjects_paths = glob(path.join(path_to_search, '*sub-*'))
+
     # Sort the subjects list
     subjects_paths.sort()
 
     if len(subjects_paths) == 0:
-        raise Exception('Dataset empty or not BIDS-compliant.')
+        raise Exception('Dataset empty or not BIDS/CAPS compliant.')
 
     for sub_path in subjects_paths:
         subj_id = sub_path.split(os.sep)[-1]
