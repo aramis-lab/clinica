@@ -11,11 +11,11 @@ reqs = [str(ir.req) for ir in install_reqs]
 setup(
     name='Clinica',
     version=version,
-    url='www.clinica.run',
+    url='http://clinica.run',
     description='Software platform for clinical neuroscience studies',
     long_description=open('README.md').read(),
     author='ARAMIS Lab',
-    maintainer='Michael Bacci',
+    maintainer='Clinica developpers',
     maintainer_email='clinica-user@googlegroups.com',
     license='MIT license',
     packages=find_packages(exclude=('tests', 'tests.*')),
