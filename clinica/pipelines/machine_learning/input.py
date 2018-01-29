@@ -1,3 +1,5 @@
+# coding: utf8
+
 
 import abc
 import os.path as path
@@ -13,13 +15,14 @@ import clinica.pipelines.machine_learning.svm_utils as utils
 
 
 __author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
 __credits__ = ["Jorge Samper Gonzalez", "Simona Bottani"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Jorge Samper Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
+
 
 class CAPSInput(base.MLInput):
 

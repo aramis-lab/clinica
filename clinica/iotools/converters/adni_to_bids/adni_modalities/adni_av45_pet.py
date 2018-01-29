@@ -1,9 +1,10 @@
 # coding: utf-8
+
 """
  Module for converting PET_AV45 of ADNI
 """
 __author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2017, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
 __credits__ = ["Sabrina Fontanella"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
@@ -290,5 +291,3 @@ def av45_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2n
             os.remove(nifti_file)
 
     adni_utils.remove_tmp_dmc_folder(bids_dir)
-
-

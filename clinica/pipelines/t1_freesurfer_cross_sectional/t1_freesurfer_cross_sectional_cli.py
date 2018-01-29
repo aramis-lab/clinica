@@ -1,5 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# coding: utf8
+
+import clinica.engine as ce
 
 __author__ = "Junhao Wen"
 __copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
@@ -10,7 +11,6 @@ __maintainer__ = "Junhao Wen"
 __email__ = "junhao.Wen@inria.fr"
 __status__ = "Development"
 
-import clinica.engine as ce
 
 class T1FreeSurferCrossSectionalCLI(ce.CmdParser):
 
@@ -62,8 +62,8 @@ class T1FreeSurferCrossSectionalCLI(ce.CmdParser):
 
         # run the pipelines in n_procs cores based on your computation power.
         if args.n_procs:
-            #pipelines.write_graph()
+            # pipeline.write_graph()
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         else:
-            #pipelines.write_graph()
+            # pipeline.write_graph()
             pipeline.run()

@@ -1,3 +1,4 @@
+# coding: utf8
 
 
 def t1_b0_registration(

@@ -11,13 +11,14 @@ from clinica.pipelines.machine_learning.voxel_based_io import get_caps_image_lis
 from clinica.pipelines.machine_learning.voxel_based_utils import evaluate_prediction, gram_matrix_linear
 
 __author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
 __credits__ = ["Jorge Samper Gonzalez"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Jorge Samper Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
+
 
 def launch_svc(kernel_train, x_test, y_train, c, balanced=False):
     if balanced:
@@ -28,7 +29,6 @@ def launch_svc(kernel_train, x_test, y_train, c, balanced=False):
     svc.fit(kernel_train, y_train)
     y_hat = svc.predict(x_test)
     return y_hat
-
 
 
 def inner_grid_search(kernel_train, x_test, y_train, y_test, c, balanced=False):
@@ -84,7 +84,7 @@ def nested_folds(gram_matrix, x, y, c_range, balanced=False, outer_folds=10, inn
     skf = StratifiedKFold(y, n_folds=outer_folds, shuffle=True)
     outer_cv = list(skf)
 
-    #print 'Launching inner threads'
+    # print 'Launching inner threads'
     for i in range(len(outer_cv)):
         train_index, test_index = outer_cv[i]
 
@@ -105,10 +105,10 @@ def nested_folds(gram_matrix, x, y, c_range, balanced=False, outer_folds=10, inn
                 # print 'Launched %d, %d, %0.5f' %(i, j, c)
                 async_result[i][c][j] = inner_pool.apply_async(inner_grid_search, (inner_gram_matrix, x_test_inner, y_train_inner, y_test_inner, c, balanced))
 
-    #print 'All inner threads launched'
+    # print 'All inner threads launched'
     inner_pool.close()
     inner_pool.join()
-    #print 'All inner threads finished'
+    # print 'All inner threads finished'
 
     outer_pool = ThreadPool(n_threads)
     outer_async_result = {}
@@ -148,7 +148,11 @@ def nested_folds(gram_matrix, x, y, c_range, balanced=False, outer_folds=10, inn
     return y_hat, svc.coef_, best_c
 
 
-def linear_svm_binary_classification(image_list, diagnose_list, output_directory, mask_zeros=True, balanced=False, outer_folds=10, inner_folds=10, n_threads=10, c_range=np.logspace(-6, 2, 17), save_gram_matrix=False, save_subject_classification=False, save_original_weights=False, save_features_image=True):
+def linear_svm_binary_classification(image_list, diagnose_list, output_directory,
+                                     mask_zeros=True, balanced=False,
+                                     outer_folds=10, inner_folds=10, n_threads=10, c_range=np.logspace(-6, 2, 17),
+                                     save_gram_matrix=False, save_subject_classification=False,
+                                     save_original_weights=False, save_features_image=True):
 
     results = dict()
     dx_filter = np.unique(diagnose_list)

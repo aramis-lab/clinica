@@ -1,4 +1,7 @@
+# coding: utf8
+
 import abc
+
 
 class Converter:
     __metaclass__ = abc.ABCMeta

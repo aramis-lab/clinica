@@ -4,14 +4,13 @@ import nibabel as nib
 import os
 
 __author__ = "Arnaud Marcoux"
-__copyright__ = "Copyright 2017, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
 __credits__ = ["Arnaud Marcoux"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Arnaud Marcoux"
 __email__ = "arnaud.marcoux@inria.fr"
 __status__ = "Development"
-
 
 
 def load_data(mgh_list):

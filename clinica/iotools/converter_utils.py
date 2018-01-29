@@ -1,4 +1,5 @@
-import re
+# coding: utf8
+
 
 def print_statistics(summary_file, num_subjs, ses_aval, mmt):
     """
@@ -32,16 +33,16 @@ def print_statistics(summary_file, num_subjs, ses_aval, mmt):
             if mod != 'session':
                 num_miss_mod = missing_list[ses][mod]
                 percentage_missing = round((num_miss_mod*100/float(num_subjs - missing_list[ses]['session'])),2)
-                summary_file.write(mod+': '+ str(num_miss_mod) + ' ('+str(percentage_missing) + '%) \n')
+                summary_file.write(mod+': ' + str(num_miss_mod) + ' ('+str(percentage_missing) + '%) \n')
 
 
 def has_one_index(index_list):
     if len(index_list) == 1:
         return index_list[0]
-    if len(index_list)==0:
+    if len(index_list) == 0:
         return -1
-    if len(index_list)>1:
-        raise 'multiple indexes found'
+    if len(index_list) > 1:
+        raise 'Multiple indexes found'
 
 
 class MissingModsTracker:
@@ -75,7 +76,6 @@ class MissingModsTracker:
             mod: modality missing
         """
         self.missing[ses][mod] += 1
-
 
     def increase_missing_ses(self, ses):
         self.missing[ses]['session'] += 1

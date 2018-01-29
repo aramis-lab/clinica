@@ -1,7 +1,7 @@
-# coding=utf-8
+# coding: utf8
+
 """
 Utils to convert AIBL dataset in BIDS
-
 """
 
 __author__ = "Simona Bottani"
@@ -12,7 +12,6 @@ __version__ = "0.1.0"
 __maintainer__ = "Simona Bottani"
 __email__ = "simona.bottani@icm-institute.org"
 __status__ = "Development"
-
 
 
 def listdir_nohidden(path):
@@ -95,7 +94,6 @@ def find_correspondance_index(i, csv_file):
         if i == str(x):
             index = csv_file.RID[csv_file.RID == x].index.tolist()
             return index
-
 
 
 def find_correspondance_date(index, csv_file):
@@ -631,8 +629,7 @@ def flute_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2ni
 
 
 
-#Covert the AIBL T1 images into the BIDS specification.
-
+# Covert the AIBL T1 images into the BIDS specification.
 
 
 def t1_paths_to_bids(path_to_dataset,path_to_csv, bids_dir):

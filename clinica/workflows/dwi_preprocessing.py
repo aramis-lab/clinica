@@ -1,3 +1,5 @@
+# coding: utf8
+
 """This module contains workflows for DWI preprocessing."""
 
 

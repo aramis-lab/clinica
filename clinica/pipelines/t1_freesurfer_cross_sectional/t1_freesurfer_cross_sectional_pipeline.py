@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# coding: utf8
 
 __author__ = "Junhao Wen"
 __copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
@@ -7,10 +6,11 @@ __credits__ = ["Junhao Wen"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Junhao Wen"
-__email__ = "junhao.Wen@inria.fr"
+__email__ = "Junhao.Wen@inria.fr"
 __status__ = "Development"
 
 import clinica.pipelines.engine as cpe
+
 
 class T1FreeSurferCrossSectional(cpe.Pipeline):
     """Creates a pipelines that performs Freesurfer commander, recon-all, It takes the input files of MRI T1 images and
