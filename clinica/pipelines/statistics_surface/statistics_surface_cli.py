@@ -1,5 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# coding: utf8
+
+import clinica.engine as ce
 
 __author__ = "Junhao Wen"
 __copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
@@ -7,10 +8,10 @@ __credits__ = ["Junhao Wen"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Junhao Wen"
-__email__ = "junhao.Wen@inria.fr"
+__email__ = "Junhao.Wen@inria.fr"
 __status__ = "Development"
 
-import clinica.engine as ce
+
 class StatisticsSurfaceCLI(ce.CmdParser):
 
     def define_name(self):
@@ -58,7 +59,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         Run the pipelines with defined args
         """
 
-        from statistics_surface_pipeline import StatisticsSurfstat
+        from statistics_surface_pipeline import StatisticsSurface
         from statistics_surface_utils import check_inputs
         from clinica.utils.stream import cprint
         import os
@@ -103,7 +104,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
             error_message = 'group_id : ' + args.group_label + ' already exists, please choose another one or delete the existing folder and also the working directory and rerun the pipelines'
             raise Exception(error_message)
 
-        pipeline = StatisticsSurfstat(
+        pipeline = StatisticsSurface(
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.tsv_file))
         pipeline.parameters = {

@@ -1,3 +1,5 @@
+# coding: utf8
+
 """
 The 'clinica' executable command line, installed with the clinica package,
 calls this module.
@@ -17,7 +19,7 @@ from clinica.engine.cmdparser import *
 from clinica.utils.stream import cprint
 
 __author__ = "Michael Bacci"
-__copyright__ = "Copyright 2016,2017 The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
 __credits__ = ["Michael Bacci"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
@@ -90,7 +92,8 @@ def execute():
     """
     Define and parse the command line argument
     """
-    parser = ArgumentParser()
+    parser = ArgumentParser(add_help=False)
+    parser.epilog = "Clinica command line interface: clinica is provided is 3 type of command line: clinica run: Run pipelines"
     sub_parser = parser.add_subparsers()
     parser.add_argument("-v", "--verbose",
                         dest='verbose',
@@ -117,7 +120,7 @@ def execute():
     from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI  # noqa
     from clinica.pipelines.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI  # noqa
 
-    run_parser = sub_parser.add_parser('run')
+    run_parser = sub_parser.add_parser('run', help='Run pipelines')
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
                                    extra_dir="pipelines").load()
     pipelines += [
@@ -221,6 +224,8 @@ def execute():
         exit(-1)
 
     if unknown_args:
+        if '--verbose' or '-v' in unknown_args:
+            cprint('Verbose flag detected')
         raise ValueError('Unknown flag detected: %s' % unknown_args)
 
     if args is None or hasattr(args, 'func') is False:

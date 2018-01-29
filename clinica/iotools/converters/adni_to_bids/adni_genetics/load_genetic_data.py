@@ -1,16 +1,18 @@
 # coding: utf-8
+
 """
 Load bed/bim/fam files.
 """
 
 __author__ = "Pascal Lu"
-__copyright__ = "Copyright 2017, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
 __credits__ = ["Sabrina Fontanella"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Pascal Lu"
 __email__ = "pascal.lu@icm-institute.org"
 __status__ = "Completed"
+
 
 def import_genetics(path_to_plink_files):
     """

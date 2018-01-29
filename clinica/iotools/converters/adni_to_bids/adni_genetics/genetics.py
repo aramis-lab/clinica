@@ -1,4 +1,5 @@
 # coding: utf8
+
 """
     Generate new BED/BIM/FAM files by adding APOE and changing patients ID.
 
@@ -17,7 +18,7 @@
 """
 
 __author__ = "Pascal Lu"
-__copyright__ = "Copyright 2017, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
 __credits__ = ["Sabrina Fontanella"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
@@ -66,7 +67,6 @@ def update_plink_files(path_to_adnimerge, path_to_apoe, path_to_plink_files, pat
 
     """
     import os
-
 
     # convert bed bim fam to ped map nof
     os.system('plink --bfile ' + path_to_plink_files + ' --recode --out ' + path_to_plink_files)
@@ -216,7 +216,6 @@ def import_apoe_ACGT(file_path, bed=0):
         dict: dictonary where the keys are the subjects id and the values are the sequence
 
     """
-    import numpy as np
     import pandas as pd
     apoe_file = pd.io.parsers.read_csv(file_path, sep=',')
     dict = {}

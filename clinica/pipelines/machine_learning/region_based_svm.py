@@ -1,3 +1,5 @@
+# coding: utf8
+
 
 from clinica.pipelines.machine_learning.region_based_io import get_caps_t1_list, get_caps_pet_list,load_data, features_weights, weights_to_nifti
 from clinica.pipelines.machine_learning.svm_utils import evaluate_prediction, gram_matrix_linear, save_subjects_prediction, results_to_tsv
@@ -8,7 +10,7 @@ from cv_svm import cv_svm
 import sharedmem
 
 __author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
 __credits__ = ["Jorge Samper Gonzalez", "Simona Bottani"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
@@ -16,7 +18,27 @@ __maintainer__ = "Jorge Samper Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
-def svm_binary_classification(input_image_atlas,subjects_visits_tsv,image_list, diagnosis_list, output_directory, kernel_function=None, existing_gram_matrix=None, mask_zeros=True, scale_data=False, balanced=False, outer_folds=10, inner_folds=10, n_threads=10, c_range=np.logspace(-10, 2, 1000), save_gram_matrix=False, save_subject_classification=False, save_dual_coefficients=False, scaler=None, data_mask=None, save_original_weights=False, save_features_image=True):
+
+def svm_binary_classification(input_image_atlas,
+                              subjects_visits_tsv,
+                              image_list, diagnosis_list,
+                              output_directory,
+                              kernel_function=None,
+                              existing_gram_matrix=None,
+                              mask_zeros=True,
+                              scale_data=False,
+                              balanced=False,
+                              outer_folds=10,
+                              inner_folds=10,
+                              n_threads=10,
+                              c_range=np.logspace(-10, 2, 1000),
+                              save_gram_matrix=False,
+                              save_subject_classification=False,
+                              save_dual_coefficients=False,
+                              scaler=None,
+                              data_mask=None,
+                              save_original_weights=False,
+                              save_features_image=True):
 
     if (kernel_function is None and existing_gram_matrix is None) | (
             kernel_function is not None and existing_gram_matrix is not None):
@@ -123,6 +145,6 @@ def svm_binary_classification(input_image_atlas,subjects_visits_tsv,image_list, 
             results[(dx1, dx2)] = evaluation  # evaluate_prediction(y, y_hat)
 
     results_to_tsv(results, dx_filter,
-                       join(output_directory, 'resume' + ('_balanced' if balanced else '_not_balanced') + '.tsv'))
+                   join(output_directory, 'resume' + ('_balanced' if balanced else '_not_balanced') + '.tsv'))
     shared_x = None
     gc.collect()

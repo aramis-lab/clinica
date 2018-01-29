@@ -1,3 +1,5 @@
+# coding: utf8
+
 
 from os import path
 import json
@@ -18,7 +20,7 @@ from clinica.pipelines.machine_learning import base
 import clinica.pipelines.machine_learning.svm_utils as utils
 
 __author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
 __credits__ = ["Jorge Samper Gonzalez", "Pascal Lu", "Simona Bottani"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"

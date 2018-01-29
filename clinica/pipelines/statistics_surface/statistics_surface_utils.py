@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# coding: utf8
 
 __author__ = "Junhao Wen"
 __copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
@@ -7,18 +6,18 @@ __credits__ = ["Junhao Wen"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Junhao Wen"
-__email__ = "junhao.Wen@inria.fr"
+__email__ = "Junhao.Wen@inria.fr"
 __status__ = "Development"
 
-def data_prep(input_directory, subjects_visits_tsv, group_label, glm_type):
-    """
-        Fetch all the intermediate variables for this workflow
+
+def prepare_data(input_directory, subjects_visits_tsv, group_label, glm_type):
+    """Fetch all the intermediate variables for this workflow.
 
     Args:
         input_directory: CAPS directory
-        subjects_visits_tsv: tsv file defining the glm model
+        subjects_visits_tsv: TSV file defining the GLM model
         group_label: Current group name for this analysis
-        glm_type: based on the hypothesis, you should define one of the glm types, "group_comparison", "correlation"
+        glm_type: Based on the hypothesis, you should define one of the glm types, "group_comparison", "correlation"
 
     Returns:
 
@@ -45,25 +44,25 @@ def data_prep(input_directory, subjects_visits_tsv, group_label, glm_type):
             try:
                 os.makedirs(output_directory)
             except:
-                raise OSError("Surfstat: can't create destination directory (%s)!" % (output_directory))
+                raise OSError("SurfStat: can't create destination directory (%s)!" % (output_directory))
     elif glm_type == "correlation":
         output_directory = os.path.join(input_directory, 'groups', group_id, 'statistics', 'surfstat_correlation_analysis')
         if not os.path.exists(output_directory):
             try:
                 os.makedirs(output_directory)
             except:
-                raise OSError("Surfstat: can't create destination directory (%s)!" % (output_directory))
+                raise OSError("SurfStat: can't create destination directory (%s)!" % (output_directory))
     else:
-        cprint("The other GLM situations have not been implemented in this pipelines")
+        cprint("The other GLM situations have not been implemented in this pipeline.")
         sys.exit()
 
-    # cp the subjects_visits_tsv to the result folder
-    # firstly, check if the subjects_visits_tsv has the same info with the participant.tsv in the folder of statistics.
-    # if the participant tsv does not exit, cp subjects_visits_tsv in the folder of statistics too, if it is here, compare them.
+    # Copy the subjects_visits_tsv to the result folder
+    # First, check if the subjects_visits_tsv has the same info with the participant.tsv in the folder of statistics.
+    # If the participant tsv does not exit, cp subjects_visits_tsv in the folder of statistics too, if it is here, compare them.
     if not os.path.isfile(statistics_dir_tsv):
         copy(subjects_visits_tsv, statistics_dir_tsv)
     else:
-        ## compare the two tsv files
+        # Compare the two TSV files
         participant_df = pd.io.parsers.read_csv(statistics_dir_tsv, sep='\t')
         subjects_visits_tsv_df = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
         participant_list = list(participant_df.participant_id)
@@ -77,13 +76,13 @@ def data_prep(input_directory, subjects_visits_tsv, group_label, glm_type):
         group_tsv = 'group-' + group_label + '_participants.tsv'
         copied_tsv = os.path.join(output_directory, group_tsv)
         copy(subjects_visits_tsv, copied_tsv)
-    ## point to the path to the json file
+    # Point to the path to the json file
     out_json = os.path.join(output_directory, 'group-' + group_label + '_glm.json')
 
-    #### get the FreeSurfer environment variable: FREESURFER_HOME
     freesurfer_home = os.environ["FREESURFER_HOME"]
 
     return path_to_matscript, surfstat_input_dir, output_directory, freesurfer_home, out_json
+
 
 def runmatlab(input_directory,
               output_directory,
@@ -132,7 +131,7 @@ def runmatlab(input_directory,
     """
     from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
     from os.path import join
-    import sys, os
+    import sys
     from clinica.utils.stream import cprint
 
     MatlabCommand.set_default_matlab_cmd(
@@ -166,6 +165,7 @@ def runmatlab(input_directory,
     out = matlab.run()
     return out
 
+
 def json_dict_create(glm_type,
                      design_matrix,
                      str_format,
@@ -175,10 +175,9 @@ def json_dict_create(glm_type,
                      threshold_uncorrected_pvalue,
                      threshold_corrected_pvalue,
                      cluster_threshold):
-    """
-        create a json file containing the glm information
-    Args:
+    """Create a JSON file containing the GLM information.
 
+    Args:
         design_matrix: str, the linear model that fits into the GLM, for example '1+group'.
         contrast: string, the contrast matrix for GLM, if the factor you choose is categorized variable, clinica_surfstat will create two contrasts,
                   for example, contrast = 'Label', this will create contrastpos = Label.AD - Label.CN, contrastneg = Label.CN - Label.AD; if the fac-
@@ -196,15 +195,17 @@ def json_dict_create(glm_type,
     Returns:
 
     """
-    json_dict = {'AnalysisType': glm_type,
-                'DesignMatrix': design_matrix,
-                'StringFormatTSV': str_format,
-                'Contrast': contrast,
-                'GroupLabel': group_label,
-                'FWHM': full_width_at_half_maximum,
-                'ThresholdUncorrectedPvalue': threshold_uncorrected_pvalue,
-                'ThresholdCorrectedPvalue': threshold_corrected_pvalue,
-                'ClusterThreshold': cluster_threshold}
+    json_dict = {
+        'AnalysisType': glm_type,
+        'DesignMatrix': design_matrix,
+        'StringFormatTSV': str_format,
+        'Contrast': contrast,
+        'GroupLabel': group_label,
+        'FWHM': full_width_at_half_maximum,
+        'ThresholdUncorrectedPvalue': threshold_uncorrected_pvalue,
+        'ThresholdCorrectedPvalue': threshold_corrected_pvalue,
+        'ClusterThreshold': cluster_threshold
+    }
 
     return json_dict
 
@@ -217,7 +218,6 @@ def check_inputs(caps,
         Simply checks if the custom strings provided find the correct files. If files are missing, it is easier to
         raise an exception here rather than doing it in the MATLAB script.
     Args:
-
         caps: The CAPS folder
         custom_filename: The string defining where are the files needed for the surfstat analysis
         fwhm: Full Width at Half Maximum used for the smoothing of the data, needed to catch the file

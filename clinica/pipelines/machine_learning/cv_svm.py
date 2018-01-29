@@ -1,3 +1,5 @@
+# coding: utf8
+
 from multiprocessing.pool import ThreadPool
 import numpy as np
 from sklearn.svm import SVC
@@ -6,7 +8,7 @@ from scipy.stats import mode
 from clinica.pipelines.machine_learning.svm_utils import evaluate_prediction, calculate_auc
 
 __author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
 __credits__ = ["Jorge Samper Gonzalez", "Pascal Lu", "Simona Bottani"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"

@@ -1,9 +1,10 @@
 # coding: utf-8
+
 """
  Module for converting FDG PET of ADNI
 """
 __author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2017, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
 __credits__ = ["Sabrina Fontanella"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"

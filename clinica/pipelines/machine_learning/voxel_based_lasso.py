@@ -14,7 +14,7 @@ import sharedmem
 import gc
 
 __author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
 __credits__ = ["Jorge Samper Gonzalez"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
@@ -153,7 +153,11 @@ def nested_folds(shared_x, indices, y, alphas, positive=False, outer_folds=10, i
     return y_hat, lasso.coef_, lasso.intercept_, best_alpha
 
 
-def lasso_binary_classification(image_list, diagnosis_list, output_directory, existing_gram_matrix=None, mask_zeros=True, scale_data=False, positive=False, outer_folds=10, inner_folds=10, n_threads=10, alphas=np.arange(0.1, 1.1, 0.1), save_gram_matrix=False, save_subject_classification=False, save_weights=True, save_features_image=True):
+def lasso_binary_classification(image_list, diagnosis_list, output_directory,
+                                existing_gram_matrix=None, mask_zeros=True, scale_data=False, positive=False,
+                                outer_folds=10, inner_folds=10, n_threads=10, alphas=np.arange(0.1, 1.1, 0.1),
+                                save_gram_matrix=False, save_subject_classification=False,
+                                save_weights=True, save_features_image=True):
 
     results = dict()
     dx_filter = np.unique(diagnosis_list)

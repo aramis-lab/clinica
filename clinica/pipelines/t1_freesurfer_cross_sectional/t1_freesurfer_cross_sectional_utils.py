@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# coding: utf8
 
 __author__ = "Junhao Wen"
 __copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
@@ -7,8 +6,9 @@ __credits__ = ["Junhao Wen"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Junhao Wen"
-__email__ = "junhao.Wen@inria.fr"
+__email__ = "Junhao.Wen@inria.fr"
 __status__ = "Development"
+
 
 def bids_datagrabber(input_dir, subject_list, session_list):
     """
@@ -63,6 +63,7 @@ def bids_datagrabber(input_dir, subject_list, session_list):
         raise IOError(error_string)
 
     return anat_t1
+
 
 def get_dirs_check_reconalled(output_dir, subject_list, session_list):
     """
@@ -132,6 +133,7 @@ def get_dirs_check_reconalled(output_dir, subject_list, session_list):
 
     return subject_dir, subject_id, subject_dir_without_reconalled, subject_id_without_reconalled, subject_list_without_reconalled, session_list_without_reconalled
 
+
 def checkfov(t1_list, recon_all_args):
     """
         Verifying size of inputs and FOV of each T1 image
@@ -188,6 +190,7 @@ def create_flags_str(input_flags):
 
     return output_str
 
+
 def log_summary(subject_list, session_list, subject_id, output_dir):
     """
         create a log file to summarize the recon-all result for all the subjects, the first step quality check
@@ -238,6 +241,7 @@ def log_summary(subject_list, session_list, subject_id, output_dir):
                         pass
         line3 = 'Number of subjects: %s \nNumber of bad recon-all is: %s ' % (len(subject_list), bad_log)
         f1.write(line3)
+
 
 def write_statistics_per_subject(subject_id, output_dir):
     """

@@ -1,13 +1,16 @@
+# coding: utf8
+
 import clinica.engine as ce
 
 __author__ = "Sabrina Fontanella"
-__copyright__ = "Copyright 2017, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
 __credits__ = [""]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Simona Bottani"
 __email__ = "simona.bottani@icm-institute.org"
 __status__ = "Completed"
+
 
 class OasisToBidsCLI(ce.CmdParser):
     def define_name(self):

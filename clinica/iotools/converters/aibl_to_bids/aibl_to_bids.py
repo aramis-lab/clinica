@@ -1,11 +1,11 @@
-# coding=utf-8
-"""
-Covert the AIBL dataset into the BIDS specification.
+# coding: utf8
 
+"""
+Convert the AIBL dataset into the BIDS specification.
 """
 
 __author__ = "Simona Bottani"
-__copyright__ = "Copyright 2011, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
 __credits__ = ["Simona Bottani"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
