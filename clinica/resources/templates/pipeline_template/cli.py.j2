@@ -40,7 +40,7 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
                                 help='Run the pipeline using SLURM')
         # END OF EXAMPLE
 
-    def run_pipeline(self, args):
+    def run_command(self, args):
         """
         """
 
@@ -69,4 +69,3 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
             pipeline.run(plugin='SLURM')
         else:
             pipeline.run()
-

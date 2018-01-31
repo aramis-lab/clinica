@@ -93,7 +93,7 @@ class T1SPMFullPrepCLI(ce.CmdParser):
                               default=list_atlases, choices=list_atlases,
                               help='A list of atlases to use to calculate the mean GM concentration at each region')
 
-    def run_pipeline(self, args):
+    def run_command(self, args):
         """
         """
         from t1_spm_full_prep_pipeline import T1SPMFullPrep
