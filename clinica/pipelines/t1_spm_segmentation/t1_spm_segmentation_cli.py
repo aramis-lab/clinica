@@ -56,7 +56,7 @@ class T1SPMSegmentationCLI(ce.CmdParser):
         self._args.add_argument("-sl", "--slurm", action='store_true',
                                 help='Run the pipelines using SLURM')
 
-    def run_pipeline(self, args):
+    def run_command(self, args):
         """
         """
         from t1_spm_segmentation_pipeline import T1SPMSegmentation

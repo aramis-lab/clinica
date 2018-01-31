@@ -27,7 +27,7 @@ class CmdGenerateTemplates(CmdParser):
         self._args.add_argument("-d", "--output_dir",
                                 help='Define the path where generate the directory')
 
-    def run_pipeline(self, args):
+    def run_command(self, args):
         # Parsing input arguments
         if args.output_dir is None:
             args.output_dir = getcwd()

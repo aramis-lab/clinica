@@ -43,7 +43,7 @@ class DWIProcessingDTICLI(ce.CmdParser):
                                  action='store_true',
                                  help='Run the pipelines using SLURM')
 
-    def run_pipeline(self, args):
+    def run_command(self, args):
         """
         """
         from tempfile import mkdtemp

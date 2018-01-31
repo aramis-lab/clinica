@@ -52,7 +52,7 @@ class DwiPreprocessingPhaseDifferenceFieldmap3CLI(ce.CmdParser):
                                 help='Number of cores used to run in parallel')
 
 
-    def run_pipeline(self, args):
+    def run_command(self, args):
         """
         """
 
