@@ -28,7 +28,7 @@ class AiblToBidsCLI(ce.CmdParser):
         self._args.add_argument("bids_directory",
                                 help='Path to the BIDS directory.')
 
-    def run_pipeline(self, args):
+    def run_command(self, args):
         from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import convert_clinical_data, convert_images
 
         convert_images(args.dataset_directory, args.clinical_data_directory, args.bids_directory)

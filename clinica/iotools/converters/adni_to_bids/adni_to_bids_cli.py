@@ -48,7 +48,7 @@ class AdniToBidsCLI(ce.CmdParser):
                                      'By default all modalities are converted. Modalities available: '
                                       'T1, PET_FDG, PET_AV45, DWI, fMRI.')
 
-    def run_pipeline(self, args):
+    def run_command(self, args):
         from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
         adni_to_bids = AdniToBids()
 

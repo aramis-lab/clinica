@@ -33,7 +33,7 @@ class OasisToBidsCLI(ce.CmdParser):
         self._args.add_argument("bids_directory",
                                 help='Path to the BIDS directory.')
 
-    def run_pipeline(self, args):
+    def run_command(self, args):
         from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import OasisToBids
         oasis_to_bids = OasisToBids()
 
