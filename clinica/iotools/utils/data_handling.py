@@ -15,8 +15,8 @@ __status__ = "Completed"
 
 def create_merge_file(bids_dir, out_dir, true_false_mode=False):
     """
-    Merge all the .tsv files containing clinical data of a BIDS compliant
-    dataset and store the result inside a .tsv file
+    Merge all the .TSV files containing clinical data of a BIDS compliant dataset and store
+    the result inside a .TSV file.
 
     Args:
         bids_dir: path to the BIDS folder
@@ -174,12 +174,12 @@ def create_merge_file(bids_dir, out_dir, true_false_mode=False):
     merged_df.to_csv(path.join(out_dir, out_file_name), sep='\t', index=False)
 
 
-def find_mods_and_sess(dataset_dir):
+def find_mods_and_sess(bids_dir):
     """
     Find all the modalities and sessions available for a given BIDS dataset
 
     Args:
-        dataset_dir: path to the BIDS dataset
+        bids_dir: path to the BIDS dataset
 
     Returns:
         mods_dict: a dictionary that stores the sessions and modalities found and has the following structure.
@@ -199,7 +199,7 @@ def find_mods_and_sess(dataset_dir):
 
     mods_dict = {}
     mods_list = []
-    subjects_paths_lists = glob(path.join(dataset_dir, '*sub-*'))
+    subjects_paths_lists = glob(path.join(bids_dir, '*sub-*'))
 
     for sub_path in subjects_paths_lists:
         ses_paths = glob(path.join(sub_path, '*ses-*'))
@@ -281,14 +281,14 @@ def find_mods_and_sess(dataset_dir):
     return mods_dict
 
 
-def compute_missing_mods(in_dir, out_dir, output_prefix=''):
+def compute_missing_mods(bids_dir, out_dir, output_prefix =''):
     """
     Compute the list of missing modalities for each subject in a BIDS compliant dataset
 
     Args:
-        in_dir: Path to the BIDS directory
-        out_dir: Path to the output folder
-        output_prefix: String that replace the default prefix ('missing_mods_') in the name of all the output files
+        bids_dir: path to the BIDS directory
+        out_dir: path to the output folder
+        output_prefix: string that replace the default prefix ('missing_mods_') in the name of all the output files
     created
     """
     from ..converter_utils import MissingModsTracker, print_statistics
@@ -301,7 +301,7 @@ def compute_missing_mods(in_dir, out_dir, output_prefix=''):
         os.makedirs(out_dir)
 
     # Find all the modalities and sessions available for the input dataset
-    mods_and_sess = find_mods_and_sess(in_dir)
+    mods_and_sess= find_mods_and_sess(bids_dir)
     sessions_found = mods_and_sess['sessions']
     mods_and_sess.pop('sessions')
     mods_avail_dict = mods_and_sess
@@ -318,7 +318,7 @@ def compute_missing_mods(in_dir, out_dir, output_prefix=''):
     summary_file = open(path.join(out_dir, out_file_name + 'summary.txt'), 'w')
     missing_mods_df = pd.DataFrame(columns=cols_dataframe)
     row_to_append_df = pd.DataFrame(columns=cols_dataframe)
-    subjects_paths_lists = glob(path.join(in_dir, '*sub-*'))
+    subjects_paths_lists = glob(path.join(bids_dir, '*sub-*'))
     subjects_paths_lists.sort()
 
     if len(subjects_paths_lists) == 0:
@@ -456,4 +456,3 @@ def create_subs_sess_list(input_dir, output_dir,
             subjs_sess_tsv.write(subj_id+'\t'+session_name+'\n')
 
     subjs_sess_tsv.close()
-

@@ -9,7 +9,7 @@ from os import mkdir, getcwd
 class CmdGenerateTemplates(CmdParser):
     """
     Using the jinja2 library and the pipelines template's file (in the resource dir)
-     the user can create his own run-to-go pipelines
+    the user can create his own run-to-go pipelines
     """
 
     def __init__(self):
@@ -17,6 +17,9 @@ class CmdGenerateTemplates(CmdParser):
 
     def define_name(self):
         self._name = 'template'
+
+    def define_description(self):
+        self._description = 'Generate the skeleton for a new pipeline (for developers)'
 
     def define_options(self):
         self._args.add_argument("name",

@@ -21,8 +21,12 @@ class T1SPMDartel2MNICLI(ce.CmdParser):
     def define_name(self):
         """Define the sub-command name to run this pipelines.
         """
-
         self._name = 't1-spm-dartel2mni'
+
+    def define_description(self):
+        """Define a description of this pipeline.
+        """
+        self._description = 'Register DARTEL template to MNI space with SPM: http://clinica.run/doc/Pipelines/T1_SPM_Full/'
 
     def define_options(self):
         """Define the sub-command arguments

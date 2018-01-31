@@ -11,31 +11,37 @@ class DWIProcessingDTICLI(ce.CmdParser):
     def define_name(self):
         """Define the sub-command name to run this pipeline.
         """
-        from colorama import Fore, init
-        init()
-
         self._name = 'dwi-processing-dti'
-        self._args.epilog = 'Example: clinica run dwi-processing-dti BIDS CAPS'
-        self._args.description = "%sDTI-based pipeline: http:://clinica.run/doc/DWIProcessing%s" % (Fore.GREEN, Fore.RESET)
-        self._args._positionals.title = '%sCompulsory arguments:%s' % (Fore.BLUE, Fore.RESET)
-        self._args._optionals.title = '%sOptional arguments:%s' % (Fore.BLUE, Fore.RESET)
+
+    def define_description(self):
+        """Define a description of this pipeline.
+        """
+        self._description = 'DTI-based processing of DWI datasets: http://clinica.run/doc/DWIProcessing'
 
     def define_options(self):
         """Define the sub-command arguments
         """
-        self._args.add_argument("caps_directory",
-                                help='Path to the CAPS directory.')
-        self._args.add_argument("-tsv", "--subjects_sessions_tsv",
-                                help='TSV file containing the subjects with their sessions.')  # noqa
+        from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
+        clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
+        clinica_comp.add_argument("caps_directory",
+                                  help='Path to the CAPS directory.')
 
-        self._args.add_argument("-wd", "--working_directory",
-                                help='Temporary directory to store pipelines intermediate results')  # noqa
-        self._args.add_argument("-np", "--n_procs",
-                                type=int,
-                                help='Number of cores used to run in parallel')  # noqa
-        self._args.add_argument("-sl", "--slurm",
-                                action='store_true',
-                                help='Run the pipelines using SLURM')  # noqa
+        # Clinica standard arguments (e.g. --n_procs)
+        clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
+        clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
+                                 metavar=('participants.tsv'),
+                                 help='TSV file containing the subjects with their sessions.')
+        clinica_opt.add_argument("-wd", "--working_directory",
+                                 metavar=('Working_Directory'),
+                                 help='Temporary directory to store pipelines intermediate results')
+        clinica_opt.add_argument("-np", "--n_procs",
+                                 metavar=('N'),
+                                 type=int,
+                                 help='Number of cores used to run in parallel')
+        clinica_opt.add_argument("-sl", "--slurm",
+                                 action='store_true',
+                                 help='Run the pipelines using SLURM')
 
     def run_pipeline(self, args):
         """

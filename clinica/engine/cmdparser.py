@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf8
 
 """Define the command line parser for each utility
 
@@ -13,6 +13,13 @@ from os.path import join
 from os import getcwd
 from os.path import expanduser
 
+from colorama import Fore
+PIPELINE_CATEGORIES = {
+    'CLINICA_COMPULSORY': '%sClinica mandatory arguments%s' % (Fore.BLUE, Fore.RESET),
+    'OPTIONAL': '%sPipeline options%s' % (Fore.BLUE, Fore.RESET),
+    'CLINICA_OPTIONAL': '%sClinica standard options%s' % (Fore.BLUE, Fore.RESET),
+    'ADVANCED': '%sPipelines advanced options%s' % (Fore.BLUE, Fore.RESET),
+}
 
 class CmdParser:
     """Abstract class to extend in order to create your command line parser
@@ -28,11 +35,25 @@ class CmdParser:
 
     def build(self):
         self.define_name()
+        self.define_description()
+        self.set_content()
         self.define_options()
 
     def reset(self):
         self._args = ArgumentParser()
         self._name = None
+
+    def set_content(self):
+        from colorama import Fore
+        self._args._positionals.title = '%sMandatory arguments%s' % (Fore.BLUE, Fore.RESET)
+        self._args._optionals.title = '%sOptional arguments%s' % (Fore.BLUE, Fore.RESET)
+        if self._description is None:
+            self._description = self._name
+            self._args.description = '%sIf you are not familiar with Clinica, see: http://clinica.run/doc/InteractingWithClinica/%s' % \
+                                     (Fore.GREEN, Fore.RESET)
+        else:
+            self._args.description = '%s%s\n\nIf you are not familiar with Clinica, see: http://clinica.run/doc/InteractingWithClinica/%s' % \
+                                     (Fore.GREEN, self._description, Fore.RESET)
 
     @property
     def options(self): return self._args
@@ -46,8 +67,17 @@ class CmdParser:
     @name.setter
     def name(self, x): self._name = x
 
+    @property
+    def description(self): return self._description
+
+    @description.setter
+    def description(self, x): self._description = x
+
     @abc.abstractmethod
     def define_name(self): pass
+
+    def define_description(self):
+        self._description = None
 
     @abc.abstractmethod
     def define_options(self): pass
@@ -66,12 +96,12 @@ class CmdParser:
             return join(getcwd(), arg)
 
 
-def init_cmdparser_objects(rootparser, parser, objects):
+def init_cmdparser_objects(root_parser, parser, objects):
     """
     Init all derived CmdParser instances with specific data.
 
     Args:
-        rootparser: The root parser
+        root_parser: The root parser
         parser: The ArgParser node (e.g. 'run' or 'convert')
         objects: All CmdParser instances of this file
     """
@@ -82,12 +112,16 @@ def init_cmdparser_objects(rootparser, parser, objects):
     def error_message(p):
         def error(x):
             p.print_help()
-            rootparser.print_help = silent_help
+            root_parser.print_help = silent_help
             exit(-1)
         return error
 
     def init(x):
-        x.options = parser.add_parser(x.name)
+        import argparse
+        x.options = parser.add_parser(x.name,
+                                      add_help=False,
+                                      help=x.description,
+                                      formatter_class=argparse.RawDescriptionHelpFormatter)
         x.options.error = error_message(x.options)
         x.options.set_defaults(func=x.run_pipeline)
         x.build()
@@ -123,6 +157,9 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
 
     def define_name(self):
         self._name = 'machinelearning-svm-voxel'
+
+    def define_description(self):
+        self._description = 'Classification based on machine learning (Voxel-based): http://clinica.run/doc/Pipelines/MachineLearning_Classification/'
 
     def define_options(self):
         self._args.add_argument("image_type",
@@ -175,7 +212,6 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
                                 help="Save ")  # noqa
 
     def run_pipeline(self, args):
-
         from clinica.pipelines.machine_learning.voxel_based_svm import linear_svm_binary_classification_caps
         from numpy import logspace
 
@@ -210,6 +246,9 @@ class CmdParserMachineLearningSVMRB(CmdParser):
 
     def define_name(self):
         self._name = 'machinelearning-svm-region'
+
+    def define_description(self):
+        self._description = 'Classification based on machine learning (Region-based): http://clinica.run/doc/Pipelines/MachineLearning_Classification/'
 
     def define_options(self):
         self._args.add_argument("image_type",
@@ -382,9 +421,12 @@ class CmdParserSubsSess(CmdParser):
     def define_name(self):
         self._name = 'create-subjects-visits'
 
+    def define_description(self):
+        self._description = 'Create a TSV file containing participants with their sessions'
+
     def define_options(self):
-        self._args.add_argument("bids_dir",
-                                help='Path to the BIDS dataset directory.')  # noqa
+        self._args.add_argument("bids_directory",
+                                help='Path to the BIDS dataset directory.')
         self._args.add_argument("out_directory",
                                 help='Path to the output directory.')  # noqa
         self._args.add_argument("-on", '--output_name',
@@ -393,11 +435,7 @@ class CmdParserSubsSess(CmdParser):
 
     def run_pipeline(self, args):
         from clinica.iotools.utils import data_handling as dt
-        dt.create_subs_sess_list(
-            args.bids_dir,
-            args.out_directory,
-            args.output_name
-        )
+        dt.create_subs_sess_list(args.bids_directory, args.out_directory, args.output_name)
 
 
 class CmdParserMergeTsv(CmdParser):
@@ -405,22 +443,20 @@ class CmdParserMergeTsv(CmdParser):
     def define_name(self):
         self._name = 'merge-tsv'
 
+    def define_description(self):
+        self._description = 'Merge TSV files containing clinical data of a BIDS dataset into a single TSV file.'
+
     def define_options(self):
-        self._args.add_argument("bids_dir",
-                                help='Path to the BIDS dataset directory.')  # noqa
+        self._args.add_argument("bids_directory",
+                                help='Path to the BIDS dataset directory.')
         self._args.add_argument("out_directory",
-                                help='Path to the output directory.')  # noqa
-        self._args.add_argument("-tf", '--true_false_mode',
-                                type=bool, default=False,
-                                help='(Optional) Convert all the field with binary meaning into True and False values.')  # noqa
+                                help='Path to the output directory.')
+        self._args.add_argument("-tf", '--true_false_mode', type=bool, default=False,
+                                help='(Optional) Convert all the field with binary meaning into True and False values.')
 
     def run_pipeline(self, args):
         from clinica.iotools.utils import data_handling as dt
-        dt.create_merge_file(
-            args.bids_dir,
-            args.out_directory,
-            args.true_false_mode
-        )
+        dt.create_merge_file(args.bids_directory, args.out_directory, args.true_false_mode)
 
 
 class CmdParserMissingModalities(CmdParser):
@@ -428,9 +464,12 @@ class CmdParserMissingModalities(CmdParser):
     def define_name(self):
         self._name = 'check-missing-modalities'
 
+    def define_description(self):
+        self._description = 'Check missing modalities in a BIDS directory'
+
     def define_options(self):
-        self._args.add_argument("bids_dir",
-                                help='Path to the BIDS dataset directory.')  # noqa
+        self._args.add_argument("bids_directory",
+                                help='Path to the BIDS dataset directory.')
         self._args.add_argument("out_directory",
                                 help='Path to the output directory.')  # noqa
         self._args.add_argument("-op", '--output_prefix',
@@ -439,8 +478,4 @@ class CmdParserMissingModalities(CmdParser):
 
     def run_pipeline(self, args):
         from clinica.iotools.utils import data_handling as dt
-        dt.compute_missing_mods(
-            args.bids_dir,
-            args.out_directory,
-            args.output_prefix
-        )
+        dt.compute_missing_mods(args.bids_directory, args.out_directory, args.output_prefix)
