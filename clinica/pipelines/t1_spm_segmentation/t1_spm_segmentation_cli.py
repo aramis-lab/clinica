@@ -23,6 +23,11 @@ class T1SPMSegmentationCLI(ce.CmdParser):
         """
         self._name = 't1-spm-segmentation'
 
+    def define_description(self):
+        """Define a description of this pipeline.
+        """
+        self._description = 'Tissue segmentation of T1w images with SPM: http://clinica.run/doc/Pipelines/T1_SPM_Full/'
+
     def define_options(self):
         """Define the sub-command arguments
         """

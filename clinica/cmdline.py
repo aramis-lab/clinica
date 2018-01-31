@@ -20,7 +20,7 @@ from clinica.utils.stream import cprint
 
 __author__ = "Michael Bacci"
 __copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
-__credits__ = ["Michael Bacci"]
+__credits__ = ["Michael Bacci", "Alexandre Routier"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Michael Bacci"
@@ -89,22 +89,34 @@ class ClinicaClassLoader:
 
 
 def execute():
+    import argparse
+    from colorama import Fore
+    HELP_CONVERT = 'Tools to convert unorganized datasets into a BIDS hierarchy.'
+    HELP_GENERATE = 'Generate pre-filled code files (for developers).'
+    HELP_IO_TOOLS = 'Convenient tools to handle BIDS/CAPS datasets.'
+    HELP_RUN = 'Perform pipelines on BIDS/CAPS datasets.'
+    MANDATORY_TITLE = '%sMandatory arguments%s' % (Fore.BLUE, Fore.RESET)
+    OPTIONAL_TITLE = '%sOptional arguments%s' % (Fore.BLUE, Fore.RESET)
     """
     Define and parse the command line argument
     """
     parser = ArgumentParser(add_help=False)
-    parser.epilog = "Clinica command line interface: clinica is provided is 3 type of command line: clinica run: Run pipelines"
+    parser._positionals.title = MANDATORY_TITLE
+    parser._optionals.title = OPTIONAL_TITLE
+
     sub_parser = parser.add_subparsers()
     parser.add_argument("-v", "--verbose",
                         dest='verbose',
                         action='store_true', default=False,
                         help='Verbose: print all messages to the console')
     parser.add_argument("-l", "--logname",
-                        dest='logname', default="clinica.log",
+                        dest='logname',
+                        default="clinica.log",
+                        metavar=('file.log'),
                         help='Define the log file name (default: clinica.log)')
 
     """
-    run option: run one of the available pipelines
+    run category: run one of the available pipelines
     """
     from clinica.engine import CmdParser
 
@@ -120,7 +132,6 @@ def execute():
     from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI  # noqa
     from clinica.pipelines.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI  # noqa
 
-    run_parser = sub_parser.add_parser('run', help='Run pipelines')
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
                                    extra_dir="pipelines").load()
     pipelines += [
@@ -133,32 +144,30 @@ def execute():
         DWIPreprocessingUsingPhaseDiffFieldmapCLI(),
         DWIProcessingDTICLI(),
         fMRIPreprocessingCLI(),
+        PETPreprocessVolumeCLI(),
         StatisticsSurfaceCLI(),
         CmdParserMachineLearningVBLinearSVM(),
         CmdParserMachineLearningSVMRB(),
-        PETPreprocessVolumeCLI()
     ]
-    init_cmdparser_objects(parser, run_parser.add_subparsers(), pipelines)
+
+    run_parser = sub_parser.add_parser(
+        'run',
+        add_help=False,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        help=HELP_RUN,
+    )
+    run_parser.description = '%s%s%s' % (Fore.GREEN, HELP_RUN, Fore.RESET)
+    run_parser._positionals.title = '%sclinica run expects one of the following pipelines%s' % (Fore.BLUE, Fore.RESET)
+
+    init_cmdparser_objects(parser, run_parser.add_subparsers(metavar=''), pipelines)
 
     """
-    pipelines-list option: show all available pipelines
-    """
-    pipeline_list_parser = sub_parser.add_parser('pipelines-list')
-
-    def pipeline_list_fun(args):
-        for pipeline in pipelines:
-            cprint(pipeline.name)
-
-    pipeline_list_parser.set_defaults(func=pipeline_list_fun)
-
-    """
-    convert option: convert one of the supported datasets into the BIDS
+    convert category: convert one of the supported datasets into BIDS hierarchy
     """
     from clinica.iotools.converters.aibl_to_bids.aibl_to_bids_cli import AiblToBidsCLI  # noqa
     from clinica.iotools.converters.adni_to_bids.adni_to_bids_cli import AdniToBidsCLI  # noqa
     from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_cli import OasisToBidsCLI  # noqa
 
-    convert_parser = sub_parser.add_parser('convert')
     converters = ClinicaClassLoader(baseclass=CmdParser,
                                     extra_dir="iotools/converters").load()
     converters += [
@@ -166,28 +175,51 @@ def execute():
         AdniToBidsCLI(),
         OasisToBidsCLI()
     ]
-    init_cmdparser_objects(parser, convert_parser.add_subparsers(), converters)
+
+    convert_parser = sub_parser.add_parser(
+        'convert',
+        add_help=False,
+        help=HELP_CONVERT,
+    )
+    convert_parser.description = '%s%s%s' % (Fore.GREEN, HELP_CONVERT, Fore.RESET)
+    convert_parser._positionals.title = '%sclinica convert expects one of the following dataset%s' % (Fore.BLUE, Fore.RESET)
+    convert_parser._optionals.title = OPTIONAL_TITLE
+    init_cmdparser_objects(parser, convert_parser.add_subparsers(metavar=''), converters)
 
     """
-    generate option: template
+    generate category: template
     """
-    template_parser = sub_parser.add_parser('generate')
+    generate_parser = sub_parser.add_parser('generate',
+                                            add_help=False,
+                                            help=HELP_GENERATE,
+                                            )
+    generate_parser.description = '%s%s%s' % (Fore.GREEN, HELP_GENERATE, Fore.RESET)
+    generate_parser._positionals.title = '%sclinica generate expects one of the following tools%s' % (Fore.BLUE, Fore.RESET)
+    generate_parser._optionals.title = OPTIONAL_TITLE
 
     from clinica.engine.template import CmdGenerateTemplates
-    init_cmdparser_objects(parser, template_parser.add_subparsers(), [
+    init_cmdparser_objects(parser, generate_parser.add_subparsers(metavar=''), [
         CmdGenerateTemplates()
     ])
 
     """
-    iotools option
+    iotools category
     """
-    io_parser = sub_parser.add_parser('iotools')
     io_tools = [
         CmdParserSubsSess(),
         CmdParserMergeTsv(),
         CmdParserMissingModalities()
     ]
-    init_cmdparser_objects(parser, io_parser.add_subparsers(), io_tools)
+
+    io_parser = sub_parser.add_parser('iotools',
+                                      add_help=False,
+                                      help=HELP_IO_TOOLS,
+                                      )
+    io_parser.description = '%s%s%s' % (Fore.GREEN, HELP_IO_TOOLS, Fore.RESET)
+    io_parser._positionals.title = '%sclinica iotools expects one of the following BIDS/CAPS utilities%s' % (Fore.BLUE, Fore.RESET)
+    io_parser._optionals.title = OPTIONAL_TITLE
+
+    init_cmdparser_objects(parser, io_parser.add_subparsers(metavar=''), io_tools)
 
     """
     Silent all sub-parser errors methods except the one which is called
@@ -201,7 +233,7 @@ def execute():
             parser.print_help = silent_help
             exit(-1)
         return error
-    for p in [pipeline_list_parser, run_parser]:
+    for p in [run_parser, io_parser, convert_parser, generate_parser]:
         p.error = single_error_message(p)
 
     # Do not want stderr message

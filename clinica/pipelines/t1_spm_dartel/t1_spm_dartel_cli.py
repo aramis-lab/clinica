@@ -23,10 +23,14 @@ class T1SPMDartelCLI(ce.CmdParser):
         """
         self._name = 't1-spm-dartel'
 
+    def define_description(self):
+        """Define a description of this pipeline.
+        """
+        self._description = 'DARTEL creation with SPM: http://clinica.run/doc/Pipelines/T1_SPM_Full/'
+
     def define_options(self):
         """Define the sub-command arguments
         """
-
         self._args.add_argument("bids_directory",
                                 help='Path to the BIDS directory.')
         self._args.add_argument("caps_directory",

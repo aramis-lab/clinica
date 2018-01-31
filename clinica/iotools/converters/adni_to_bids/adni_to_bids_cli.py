@@ -20,8 +20,12 @@ class AdniToBidsCLI(ce.CmdParser):
     def define_name(self):
         """Define the sub-command name to run this pipelines.
         """
-
         self._name = 'adni-to-bids'
+
+    def define_description(self):
+        """Define a description of this pipeline.
+        """
+        self._description = 'Convert ADNI (http://adni.loni.usc.edu/) into BIDS'
 
     def define_options(self):
         """Define the sub-command arguments

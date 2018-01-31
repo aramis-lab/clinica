@@ -13,9 +13,13 @@ class fMRIPreprocessingCLI(ce.CmdParser):
     def define_name(self):
         """Define the sub-command name to run this pipelines.
         """
-
         self._name = 'fmri-preprocessing'
 
+
+    def define_description(self):
+        """Define a description of this pipeline.
+        """
+        self._description = 'Preprocessing of raw fMRI datasets: http://clinica.run/doc/Pipelines/fMRI_Preprocessing/'
 
     def define_options(self):
         """Define the sub-command arguments

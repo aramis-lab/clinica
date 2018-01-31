@@ -13,6 +13,11 @@ class DWIPreprocessingUsingPhaseDiffFieldmapCLI(ce.CmdParser):
         """
         self._name = 'dwi-preprocessing-using-phasediff-fieldmap'
 
+    def define_description(self):
+        """Define a description of this pipeline.
+        """
+        self._description = 'Preprocessing of raw DWI datasets using phase difference image: http://clinica.run/doc/Pipelines/DWI_Preprocessing/'
+
     def define_options(self):
         """Define the sub-command arguments
         """

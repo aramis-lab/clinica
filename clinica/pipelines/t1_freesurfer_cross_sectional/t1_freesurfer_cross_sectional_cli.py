@@ -19,6 +19,11 @@ class T1FreeSurferCrossSectionalCLI(ce.CmdParser):
         """
         self._name = 't1-freesurfer-cross-sectional'
 
+    def define_description(self):
+        """Define a description of this pipeline.
+        """
+        self._description = 'Cross-sectional pre-processing of T1w images with FreeSurfer: http://clinica.run/doc/Pipelines/T1_FreeSurfer/'
+
     def define_options(self):
         """Define the sub-command arguments
         """
