@@ -52,7 +52,7 @@ class fMRIPreprocessingCLI(ce.CmdParser):
                                 help="Add SPM's Unwarping to the Realign step")
 
 
-    def run_pipeline(self, args):
+    def run_command(self, args):
         """
         """
 

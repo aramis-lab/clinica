@@ -41,7 +41,7 @@ class DWIPreprocessingUsingPhaseDiffFieldmapCLI(ce.CmdParser):
                                 action='store_true',
                                 help='Run the pipeline using SLURM')
 
-    def run_pipeline(self, args):
+    def run_command(self, args):
         """
         Run the DWIPreprocessingUsingPhaseDiffFieldmap pipeline from command line.
         """

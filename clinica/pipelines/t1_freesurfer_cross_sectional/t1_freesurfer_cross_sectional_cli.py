@@ -42,7 +42,7 @@ class T1FreeSurferCrossSectionalCLI(ce.CmdParser):
         self._args.add_argument("-np", "--n_procs", type=int,
                                 help='Number of cores used to run in parallel')
 
-    def run_pipeline(self, args):
+    def run_command(self, args):
         """
         Run the pipelines with defined args
         """

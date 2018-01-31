@@ -58,7 +58,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         self._args.add_argument("-wd", "--working_directory", type=str, default=None,
                                 help='Temporary directory to run the workflow')
 
-    def run_pipeline(self, args):
+    def run_command(self, args):
         """
         Run the pipelines with defined args
         """

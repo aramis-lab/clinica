@@ -83,7 +83,7 @@ class CmdParser:
     def define_options(self): pass
 
     @abc.abstractmethod
-    def run_pipeline(self, args): pass
+    def run_command(self, args): pass
 
     def absolute_path(self, arg):
         if arg is None:
@@ -123,7 +123,7 @@ def init_cmdparser_objects(root_parser, parser, objects):
                                       help=x.description,
                                       formatter_class=argparse.RawDescriptionHelpFormatter)
         x.options.error = error_message(x.options)
-        x.options.set_defaults(func=x.run_pipeline)
+        x.options.set_defaults(func=x.run_command)
         x.build()
 
     for x in objects:
@@ -211,7 +211,7 @@ class CmdParserMachineLearningVBLinearSVM(CmdParser):
                                 action='store_true',
                                 help="Save ")  # noqa
 
-    def run_pipeline(self, args):
+    def run_command(self, args):
         from clinica.pipelines.machine_learning.voxel_based_svm import linear_svm_binary_classification_caps
         from numpy import logspace
 
@@ -295,7 +295,7 @@ class CmdParserMachineLearningSVMRB(CmdParser):
                                 action='store_true',
                                 help="Save feature weights for each classification as an image")  # noqa
 
-    def run_pipeline(self, args):
+    def run_command(self, args):
         from clinica.pipelines.machine_learning.region_based_svm import svm_binary_classification
         from clinica.pipelines.machine_learning.region_based_io import get_caps_pet_list, get_caps_t1_list, load_data
         from clinica.pipelines.machine_learning.svm_utils import gram_matrix_linear
@@ -373,7 +373,7 @@ class CmdParserMachineLearningSVMRB(CmdParser):
 #         self._args.add_argument("-co", type=bool, default=False,
 #                                 help='(Optional) Given an already existing BIDS output folder, convert only the clinical data.')
 #
-#     def run_pipeline(self, args):
+#     def run_command(self, args):
 #         from clinica.bids import insight_to_bids
 #         insight_to_bids.convert(args.dataset_directory, args.bids_directory)
 
@@ -391,7 +391,7 @@ class CmdParserMachineLearningSVMRB(CmdParser):
 #         self._args.add_argument("-co", type=bool, default=False,
 #                                 help='(Optional) Given an already existing BIDS output folder, convert only the clinical data.')
 #
-#     def run_pipeline(self, args):
+#     def run_command(self, args):
 #         from clinica.bids import prevdemals_to_bids
 #         prevdemals_to_bids.convert(args.dataset_directory, args.bids_directory)
 
@@ -407,7 +407,7 @@ class CmdParserMachineLearningSVMRB(CmdParser):
 #         self._args.add_argument("bids_directory",
 #                                 help='Path to the BIDS directory.')
 #
-#     def run_pipeline(self, args):
+#     def run_command(self, args):
 #         from clinica.iotools import hmtc_to_bids
 #         hmtc_to_bids.convert(args.dataset_directory, args.bids_directory)
 
@@ -433,7 +433,7 @@ class CmdParserSubsSess(CmdParser):
                                 type=str, default='',
                                 help='(Optional) Name of the output file.')  # noqa
 
-    def run_pipeline(self, args):
+    def run_command(self, args):
         from clinica.iotools.utils import data_handling as dt
         dt.create_subs_sess_list(args.bids_directory, args.out_directory, args.output_name)
 
@@ -454,7 +454,7 @@ class CmdParserMergeTsv(CmdParser):
         self._args.add_argument("-tf", '--true_false_mode', type=bool, default=False,
                                 help='(Optional) Convert all the field with binary meaning into True and False values.')
 
-    def run_pipeline(self, args):
+    def run_command(self, args):
         from clinica.iotools.utils import data_handling as dt
         dt.create_merge_file(args.bids_directory, args.out_directory, args.true_false_mode)
 
@@ -476,6 +476,6 @@ class CmdParserMissingModalities(CmdParser):
                                 type=str, default='',
                                 help='Prefix for the name of output files.')  # noqa
 
-    def run_pipeline(self, args):
+    def run_command(self, args):
         from clinica.iotools.utils import data_handling as dt
         dt.compute_missing_mods(args.bids_directory, args.out_directory, args.output_prefix)

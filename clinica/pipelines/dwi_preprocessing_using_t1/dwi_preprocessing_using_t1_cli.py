@@ -41,7 +41,7 @@ class DWIPreprocessingUsingT1CLI(ce.CmdParser):
                                 action='store_true',
                                 help='Run the pipeline using SLURM')  # noqa
 
-    def run_pipeline(self, args):
+    def run_command(self, args):
         """
         Run the DWIPreprocessingUsingT1 Pipeline from command line.
         """
