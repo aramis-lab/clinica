@@ -129,8 +129,10 @@ def execute():
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DWIPreprocessingUsingPhaseDiffFieldmapCLI # noqa
     from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_cli import DWIProcessingDTICLI  # noqa
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI  # noqa
-    from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI  # noqa
     from clinica.pipelines.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI  # noqa
+    from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI  # noqa
+    from clinica.pipelines.machine_learning.machinelearning_svm_cli import CmdParserMachineLearningSVMRB  # noqa
+    from clinica.pipelines.machine_learning.machinelearning_svm_cli import CmdParserMachineLearningVBLinearSVM  # noqa
 
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
                                    extra_dir="pipelines").load()
@@ -205,8 +207,12 @@ def execute():
     """
     iotools category
     """
+    from clinica.iotools.utils.data_handling_cli import CmdParserSubjectsSessions
+    from clinica.iotools.utils.data_handling_cli import CmdParserMergeTsv
+    from clinica.iotools.utils.data_handling_cli import CmdParserMissingModalities
+
     io_tools = [
-        CmdParserSubsSess(),
+        CmdParserSubjectsSessions(),
         CmdParserMergeTsv(),
         CmdParserMissingModalities()
     ]
