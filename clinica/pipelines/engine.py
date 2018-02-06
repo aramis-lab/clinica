@@ -208,9 +208,9 @@ class Pipeline(Workflow):
         """
         if not self.is_built:
             self.check_dependencies()
-            self.build_core_nodes()
             if not self.has_input_connections():
                 self.build_input_node()
+            self.build_core_nodes()
             if not self.has_output_connections():
                 self.build_output_node()
         return self

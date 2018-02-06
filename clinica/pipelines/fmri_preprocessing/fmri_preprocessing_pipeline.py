@@ -82,12 +82,8 @@ class fMRIPreprocessing(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        if self.parameters['t1_native_space']:
-            return ['t1_brain_mask', 'mc_params', 'native_fmri', 't1_fmri',
-                    'mni_fmri', 'mni_smoothed_fmri']
-        else:
-            return ['t1_brain_mask', 'mc_params', 'native_fmri', 'mni_fmri',
-                    'mni_smoothed_fmri']
+        return ['t1_brain_mask', 'mc_params', 'native_fmri', 't1_fmri',
+                'mni_fmri', 'mni_smoothed_fmri']
 
     def build_input_node(self):
         """Build and connect an input node to the pipelines.
