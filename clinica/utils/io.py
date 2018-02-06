@@ -1,3 +1,4 @@
+# coding: utf8
 
 
 def zip_nii(in_file, same_dir=False):

@@ -1,3 +1,5 @@
+# coding: utf8
+
 """
 Utils for the implementation of t1-spm-segmentation pipeline
 """

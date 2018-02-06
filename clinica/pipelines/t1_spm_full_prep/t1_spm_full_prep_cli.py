@@ -1,3 +1,5 @@
+# coding: utf8
+
 """T1 SPM Full Prep - Clinica Command Line Interface.
 This file has been generated automatically by the `clinica generate template`
 command line tool. See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
@@ -26,7 +28,7 @@ class T1SPMFullPrepCLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'SPM-based pre-processing of T1w images: http://clinica.run/doc/Pipelines/T1_SPM_Full/'
+        self._description = 'SPM-based pre-processing of T1w images:\nhttp://clinica.run/doc/Pipelines/T1_SPM_Full/'
 
     def define_options(self):
         """Define the sub-command arguments

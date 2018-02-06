@@ -16,7 +16,7 @@ class DWIProcessingDTICLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'DTI-based processing of DWI datasets: http://clinica.run/doc/DWIProcessing'
+        self._description = 'DTI-based processing of DWI datasets:\nhttp://clinica.run/doc/DWIProcessing'
 
     def define_options(self):
         """Define the sub-command arguments

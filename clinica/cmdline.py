@@ -155,7 +155,7 @@ def execute():
     run_parser = sub_parser.add_parser(
         'run',
         add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+        formatter_class=argparse.RawTextHelpFormatter,
         help=HELP_RUN,
     )
     run_parser.description = '%s%s%s' % (Fore.GREEN, HELP_RUN, Fore.RESET)

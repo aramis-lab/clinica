@@ -1,3 +1,5 @@
+# coding: utf8
+
 
 """T1 SPM Dartel - Clinica Utilities.
 This file has been generated automatically by the `clinica generate template`

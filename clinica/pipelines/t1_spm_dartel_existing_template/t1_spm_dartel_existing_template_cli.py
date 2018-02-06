@@ -1,3 +1,5 @@
+# coding: utf8
+
 """T1 SPM Dartel Existing Template - Clinica Command Line Interface.
 This file has been generated automatically by the `clinica generate template`
 command line tool. See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
@@ -20,13 +22,16 @@ class T1SPMDartelExistingTemplateCLI(ce.CmdParser):
     def define_name(self):
         """Define the sub-command name to run this pipelines.
         """
-
         self._name = 't1-spm-dartel-existing-template'
+
+    def define_description(self):
+        """Define a description of this pipeline.
+        """
+        self._description = 'Create new DARTEL template based on a current DARTEL template:\nhttp://clinica.run/doc/Pipelines/T1_SPM_Full/'
 
     def define_options(self):
         """Define the sub-command arguments
         """
-
         self._args.add_argument("bids_directory",
                                 help='Path to the BIDS directory.')
         self._args.add_argument("caps_directory",
@@ -47,7 +52,6 @@ class T1SPMDartelExistingTemplateCLI(ce.CmdParser):
     def run_command(self, args):
         """
         """
-
         from t1_spm_dartel_existing_template_pipeline import T1SPMDartelExistingTemplate
 
         pipeline = T1SPMDartelExistingTemplate(bids_directory=self.absolute_path(args.bids_directory),

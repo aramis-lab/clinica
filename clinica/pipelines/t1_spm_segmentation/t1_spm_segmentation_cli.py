@@ -1,3 +1,5 @@
+# coding: utf8
+
 """T1 SPM Segmentation - Clinica Command Line Interface.
 This file has been generated automatically by the `clinica generate template`
 command line tool. See here for more details: https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
@@ -26,7 +28,7 @@ class T1SPMSegmentationCLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'Tissue segmentation of T1w images with SPM: http://clinica.run/doc/Pipelines/T1_SPM_Full/'
+        self._description = 'Tissue segmentation of T1w images with SPM:\nhttp://clinica.run/doc/Pipelines/T1_SPM_Full/'
 
     def define_options(self):
         """Define the sub-command arguments

@@ -22,7 +22,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'Surface-based mass-univariate analysis with SurfStat: http://clinica.run/doc/Pipelines/Stats_Surface/'
+        self._description = 'Surface-based mass-univariate analysis with SurfStat:\nhttp://clinica.run/doc/Pipelines/Stats_Surface/'
 
     def define_options(self):
         """Define the sub-command arguments
