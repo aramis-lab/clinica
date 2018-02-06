@@ -23,7 +23,7 @@
         },
         {
             "name": "type",
-            "pattern": "\\_(?!cross)([a-zA-Z0-9]*?)\\_"
+            "pattern": "^(?!.*freesurfer_cross_sectional).*/[^/\\\\]*?_([a-zA-Z0-9]*?)_[^/\\\\]+\.[^/\\\\]+$"
         },
         {
             "name": "task",
