@@ -9,7 +9,7 @@ class CmdParserSubjectsSessions(ce.CmdParser):
         self._name = 'create-subjects-visits'
 
     def define_description(self):
-        self._description = 'Create a TSV file containing participants with their sessions'
+        self._description = 'Create a TSV file containing a list of participants with their sessions.'
 
     def define_options(self):
         self._args.add_argument("bids_directory",
@@ -52,7 +52,7 @@ class CmdParserMissingModalities(ce.CmdParser):
         self._name = 'check-missing-modalities'
 
     def define_description(self):
-        self._description = 'Check missing modalities in a BIDS directory'
+        self._description = 'Check missing modalities in a BIDS directory.'
 
     def define_options(self):
         self._args.add_argument("bids_directory",

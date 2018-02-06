@@ -21,7 +21,7 @@ class OasisToBidsCLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'Convert OASIS (http://oasis-brains.org/) into BIDS'
+        self._description = 'Convert OASIS (http://oasis-brains.org/) into BIDS.'
 
     def define_options(self):
         """Define the sub-command arguments

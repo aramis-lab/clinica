@@ -91,20 +91,16 @@ class ClinicaClassLoader:
 def execute():
     import argparse
     from colorama import Fore
-    HELP_CONVERT = 'Tools to convert unorganized datasets into a BIDS hierarchy.'
-    HELP_GENERATE = 'Generate pre-filled code files (for developers).'
-    HELP_IO_TOOLS = 'Convenient tools to handle BIDS/CAPS datasets.'
-    HELP_RUN = 'Perform pipelines on BIDS/CAPS datasets.'
     MANDATORY_TITLE = '%sMandatory arguments%s' % (Fore.BLUE, Fore.RESET)
     OPTIONAL_TITLE = '%sOptional arguments%s' % (Fore.BLUE, Fore.RESET)
     """
     Define and parse the command line argument
     """
     parser = ArgumentParser(add_help=False)
-    parser._positionals.title = MANDATORY_TITLE
+    parser._positionals.title = '%sclinica expects one of the following keywords%s'  % (Fore.BLUE, Fore.RESET)
     parser._optionals.title = OPTIONAL_TITLE
 
-    sub_parser = parser.add_subparsers()
+    sub_parser = parser.add_subparsers(metavar='')
     parser.add_argument("-v", "--verbose",
                         dest='verbose',
                         action='store_true', default=False,
@@ -156,9 +152,9 @@ def execute():
         'run',
         add_help=False,
         formatter_class=argparse.RawTextHelpFormatter,
-        help=HELP_RUN,
+        help='To run pipelines on BIDS/CAPS datasets.',
     )
-    run_parser.description = '%s%s%s' % (Fore.GREEN, HELP_RUN, Fore.RESET)
+    run_parser.description = '%sRun pipelines on BIDS/CAPS datasets.%s' % (Fore.GREEN, Fore.RESET)
     run_parser._positionals.title = '%sclinica run expects one of the following pipelines%s' % (Fore.BLUE, Fore.RESET)
 
     init_cmdparser_objects(parser, run_parser.add_subparsers(metavar=''), pipelines)
@@ -173,36 +169,20 @@ def execute():
     converters = ClinicaClassLoader(baseclass=CmdParser,
                                     extra_dir="iotools/converters").load()
     converters += [
-        AiblToBidsCLI(),
         AdniToBidsCLI(),
-        OasisToBidsCLI()
+        AiblToBidsCLI(),
+        OasisToBidsCLI(),
     ]
 
     convert_parser = sub_parser.add_parser(
         'convert',
         add_help=False,
-        help=HELP_CONVERT,
+        help='To convert unorganized datasets into a BIDS hierarchy.',
     )
-    convert_parser.description = '%s%s%s' % (Fore.GREEN, HELP_CONVERT, Fore.RESET)
-    convert_parser._positionals.title = '%sclinica convert expects one of the following dataset%s' % (Fore.BLUE, Fore.RESET)
+    convert_parser.description = '%sTools to convert unorganized datasets into a BIDS hierarchy.%s' % (Fore.GREEN, Fore.RESET)
+    convert_parser._positionals.title = '%sclinica convert expects one of the following datasets%s' % (Fore.BLUE, Fore.RESET)
     convert_parser._optionals.title = OPTIONAL_TITLE
     init_cmdparser_objects(parser, convert_parser.add_subparsers(metavar=''), converters)
-
-    """
-    generate category: template
-    """
-    generate_parser = sub_parser.add_parser('generate',
-                                            add_help=False,
-                                            help=HELP_GENERATE,
-                                            )
-    generate_parser.description = '%s%s%s' % (Fore.GREEN, HELP_GENERATE, Fore.RESET)
-    generate_parser._positionals.title = '%sclinica generate expects one of the following tools%s' % (Fore.BLUE, Fore.RESET)
-    generate_parser._optionals.title = OPTIONAL_TITLE
-
-    from clinica.engine.template import CmdGenerateTemplates
-    init_cmdparser_objects(parser, generate_parser.add_subparsers(metavar=''), [
-        CmdGenerateTemplates()
-    ])
 
     """
     iotools category
@@ -214,9 +194,10 @@ def execute():
     io_tools = [
         CmdParserSubjectsSessions(),
         CmdParserMergeTsv(),
-        CmdParserMissingModalities()
+        CmdParserMissingModalities(),
     ]
 
+    HELP_IO_TOOLS = 'Tools to handle BIDS/CAPS datasets.'
     io_parser = sub_parser.add_parser('iotools',
                                       add_help=False,
                                       help=HELP_IO_TOOLS,
@@ -226,6 +207,23 @@ def execute():
     io_parser._optionals.title = OPTIONAL_TITLE
 
     init_cmdparser_objects(parser, io_parser.add_subparsers(metavar=''), io_tools)
+
+    """
+    generate category: template
+    """
+    generate_parser = sub_parser.add_parser(
+        'generate',
+        add_help=False,
+        help='To generate pre-filled files when creating new pipelines (for  developers).',
+    )
+    generate_parser.description = '%sGenerate pre-filled files when creating new pipelines (for  developers).%s' % (Fore.GREEN, Fore.RESET)
+    generate_parser._positionals.title = '%sclinica generate expects one of the following tools%s' % (Fore.BLUE, Fore.RESET)
+    generate_parser._optionals.title = OPTIONAL_TITLE
+
+    from clinica.engine.template import CmdGenerateTemplates
+    init_cmdparser_objects(parser, generate_parser.add_subparsers(metavar=''), [
+        CmdGenerateTemplates()
+    ])
 
     """
     Silent all sub-parser errors methods except the one which is called
