@@ -1,3 +1,4 @@
+# coding: utf8
 
 
 """T1 SPM Dartel2MNI - Clinica Utilities.

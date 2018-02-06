@@ -1,3 +1,5 @@
+# coding: utf8
+
 
 from clinica.pipelines.machine_learning.voxel_based_io import load_data, features_weights, weights_to_nifti, get_caps_t1_list
 from clinica.pipelines.machine_learning.svm_utils import evaluate_prediction, gram_matrix_linear, save_subjects_prediction, results_to_tsv
