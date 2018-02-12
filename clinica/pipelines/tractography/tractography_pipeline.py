@@ -228,23 +228,24 @@ class Tractography(cpe.Pipeline):
                                     fields=self.get_output_fields()))
 
         write_node = npe.MapNode(name='WritingCAPS',
-                                 iterfield=['container']
-                                           + self.get_output_fields(),
+                                 iterfield=['container'] +
+                                           ['tractography.@' + o
+                                            for o in self.get_output_fields()],
                                  interface=nio.DataSink(
-                                         infields=self.get_output_fields()))
+                                         infields=['tractography.@' + o for o in self.get_output_fields()]))
         write_node.inputs.base_directory = self.caps_directory
         write_node.inputs.container = utils.get_containers(self.subjects, self.sessions)
-        # write_node.inputs.substitutions = utils.get_substitutions(self.subjects, self.sessions)
-        write_node.inputs.parametrization = False
+        write_node.inputs.substitutions = [('trait_added', '')]
+        write_node.inputs.parameterization = False
 
         self.connect([
             # Writing CAPS
             (self.output_node, join_node, [('response',   'response')]),
             (self.output_node, join_node, [('fod',   'fod')]),
             (self.output_node, join_node, [('tracts',   'tracts')]),
-            (join_node, write_node, [('response',   'tractography.@response')]),
-            (join_node, write_node, [('fod',             'tractography.@fod')]),
-            (join_node, write_node, [('tracts',       'tractography.@tracts')]),
+            (join_node, write_node, [('response',       'tractography.@response')]),
+            (join_node, write_node, [('fod',                'tractography.@fod')]),
+            (join_node, write_node, [('tracts',         'tractography.@tracts')]),
         ])
 
         self.write_graph()

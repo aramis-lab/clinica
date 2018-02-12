@@ -9,7 +9,7 @@ http://clinica.run/doc/InteractingWithClinica/
 def get_containers(subjects, sessions):
 
     return [
-        'subjects/' + subjects[i] + '/' + sessions[i] + '/dwi  '
+        'subjects/' + subjects[i] + '/' + sessions[i] + '/dwi'
         for i in range(len(subjects))
     ]
 
