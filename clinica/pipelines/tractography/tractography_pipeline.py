@@ -55,7 +55,7 @@ class Tractography(cpe.Pipeline):
         """
 
         return ['t1_brain_file', 'wm_mask_file', 'dwi_file',
-                'dwi_brainmask_file', 'grad_fsl']
+                'dwi_brainmask_file', 'grad_fsl', 'atlas_files']
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
@@ -64,7 +64,7 @@ class Tractography(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        return ['response', 'fod', 'tracts']  # Fill here the list
+        return ['response', 'fod', 'tracts', 'nodes']  # Fill here the list
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -92,6 +92,9 @@ class Tractography(cpe.Pipeline):
         bvec = []
         bval = []
         grad_fsl = []
+        aparc_aseg = []
+        aparc_aseg_a2009s = []
+        atlas_files = []
         cprint('Extracting files...')
         for i in range(len(self.subjects)):
             cprint('\t...subject \'' + str(self.subjects[i][4:]) + '\', session \'' + str(self.sessions[i][4:]) + '\'')
@@ -115,6 +118,20 @@ class Tractography(cpe.Pipeline):
                                         session=self.sessions[i][4:],
                                         subject=self.subjects[i][4:],
                                         return_type='file')[0])
+
+            aparc_aseg.append(
+                    caps_layout.get(freesurfer_file='aparc\+aseg.mgz',
+                                    session=self.sessions[i][4:],
+                                    subject=self.subjects[i][4:],
+                                    return_type='file')[0])
+
+            aparc_aseg_a2009s.append(
+                    caps_layout.get(freesurfer_file='aparc.a2009s\+aseg.mgz',
+                                    session=self.sessions[i][4:],
+                                    subject=self.subjects[i][4:],
+                                    return_type='file')[0])
+
+            atlas_files.append([aparc_aseg[i], aparc_aseg_a2009s[i]])
 
             dwi_file.append(
                     caps_layout.get(type='dwi', suffix='preproc',
@@ -168,7 +185,8 @@ class Tractography(cpe.Pipeline):
                                      ('t1_brain_file', t1_brain_file),
                                      ('dwi_file', dwi_file),
                                      ('dwi_brainmask_file', dwi_brainmask_file),
-                                     ('grad_fsl', grad_fsl)
+                                     ('grad_fsl', grad_fsl),
+                                     ('atlas_files', atlas_files)
                                  ],
                                  synchronize=True,
                                  interface=nutil.IdentityInterface(
@@ -179,6 +197,7 @@ class Tractography(cpe.Pipeline):
                 (read_node, self.input_node, [('dwi_file',                     'dwi_file')]),
                 (read_node, self.input_node, [('dwi_brainmask_file', 'dwi_brainmask_file')]),
                 (read_node, self.input_node, [('grad_fsl',                     'grad_fsl')]),
+                (read_node, self.input_node, [('atlas_files',               'atlas_files')]),
             ])
 
         elif dwi_file_space[0] == 'T1w':
@@ -189,7 +208,8 @@ class Tractography(cpe.Pipeline):
                                      ('wm_mask_file', wm_mask_file),
                                      ('dwi_file', dwi_file),
                                      ('dwi_brainmask_file', dwi_brainmask_file),
-                                     ('grad_fsl', grad_fsl)
+                                     ('grad_fsl', grad_fsl),
+                                     ('atlas_files', atlas_files)
                                  ],
                                  synchronize=True,
                                  interface=nutil.IdentityInterface(
@@ -199,6 +219,7 @@ class Tractography(cpe.Pipeline):
                 (read_node, self.input_node, [('dwi_file',                     'dwi_file')]),
                 (read_node, self.input_node, [('dwi_brainmask_file', 'dwi_brainmask_file')]),
                 (read_node, self.input_node, [('grad_fsl',                     'grad_fsl')]),
+                (read_node, self.input_node, [('atlas_files',               'atlas_files')]),
             ])
 
         else:
@@ -243,9 +264,11 @@ class Tractography(cpe.Pipeline):
             (self.output_node, join_node, [('response',   'response')]),
             (self.output_node, join_node, [('fod',   'fod')]),
             (self.output_node, join_node, [('tracts',   'tracts')]),
+            (self.output_node, join_node, [('nodes',     'nodes')]),
             (join_node, write_node, [('response',       'tractography.@response')]),
             (join_node, write_node, [('fod',                'tractography.@fod')]),
             (join_node, write_node, [('tracts',         'tractography.@tracts')]),
+            (join_node, write_node, [('nodes',         'tractography.@nodes')]),
         ])
 
         self.write_graph()
@@ -258,7 +281,7 @@ class Tractography(cpe.Pipeline):
             NIFTI by default.
 
         Todos:
-            - [ ] Detect space automatically.
+            - [x] Detect space automatically.
 
         """
 
@@ -328,6 +351,15 @@ class Tractography(cpe.Pipeline):
                                 interface=mrtrix3.Tractography())
         # tck_gen_node.inputs.n_tracks = self.parameters['n_tracks']
 
+        # Nodes Generation
+        # ----------------
+        label_convert_node = npe.MapNode(name="LabelsConversion",
+                                         iterfield=['in_file', 'in_config', 'in_lut', 'out_file'],
+                                         interface=mrtrix3.LabelConvert())
+        label_convert_node.inputs.in_config = utils.get_conversion_luts()
+        label_convert_node.inputs.in_lut = utils.get_luts()
+
+
         # CAPS FIlenames Generation
         # -------------------------
         caps_filenames_node = npe.Node(name='CAPSFilenamesGeneration',
@@ -337,7 +369,7 @@ class Tractography(cpe.Pipeline):
                                                function=utils.get_caps_filenames))
 
         # Connections
-        # ==========
+        # ===========
 
         # WM in B0-space Transformation
         # -----------------------------
@@ -366,19 +398,22 @@ class Tractography(cpe.Pipeline):
         self.connect([
             (self.input_node, caps_filenames_node, [('dwi_file', 'dwi_file')]),
             # Response Estimation
-            (self.input_node,       resp_estim_node,    [('dwi_file',               'in_file')]), # Preproc. DWI #noqa
-            (self.input_node,       resp_estim_node,    [('dwi_brainmask_file',     'in_mask')]), # B0 brain mask #noqa
-            (self.input_node,       resp_estim_node,    [('grad_fsl',              'grad_fsl')]), # bvecs and bvals #noqa
-            (caps_filenames_node,   resp_estim_node,    [('response',               'wm_file')]), # output response filename #noqa
+            (self.input_node,        resp_estim_node, [('dwi_file',             'in_file')]), # Preproc. DWI #noqa
+            (self.input_node,        resp_estim_node, [('dwi_brainmask_file',   'in_mask')]), # B0 brain mask #noqa
+            (self.input_node,        resp_estim_node, [('grad_fsl',            'grad_fsl')]), # bvecs and bvals #noqa
+            (caps_filenames_node,    resp_estim_node, [('response',             'wm_file')]), # output response filename #noqa
             # FOD Estimation
-            (self.input_node,       fod_estim_node,     [('dwi_file',               'in_file')]), # Preproc. DWI #noqa
-            (resp_estim_node,       fod_estim_node,     [('wm_file',                 'wm_txt')]), # Response (txt file) #noqa
-            (self.input_node,       fod_estim_node,     [('dwi_brainmask_file',   'mask_file')]), # B0 brain mask #noqa
-            (self.input_node,       fod_estim_node,     [('grad_fsl',              'grad_fsl')]), # T1-to-B0 matrix file #noqa
-            (caps_filenames_node,   fod_estim_node,     [('fod',                     'wm_odf')]), # output odf filename #noqa
+            (self.input_node,         fod_estim_node, [('dwi_file',             'in_file')]), # Preproc. DWI #noqa
+            (resp_estim_node,         fod_estim_node, [('wm_file',               'wm_txt')]), # Response (txt file) #noqa
+            (self.input_node,         fod_estim_node, [('dwi_brainmask_file', 'mask_file')]), # B0 brain mask #noqa
+            (self.input_node,         fod_estim_node, [('grad_fsl',            'grad_fsl')]), # T1-to-B0 matrix file #noqa
+            (caps_filenames_node,     fod_estim_node, [('fod',                   'wm_odf')]), # output odf filename #noqa
             # Tracts Generation
-            (fod_estim_node,        tck_gen_node,       [('wm_odf',                 'in_file')]), # ODF file #noqa
-            (caps_filenames_node,   tck_gen_node,       [('tracts',                'out_file')]), # output odf filename #noqa
+            (fod_estim_node,            tck_gen_node, [('wm_odf',               'in_file')]), # ODF file #noqa
+            (caps_filenames_node,       tck_gen_node, [('tracts',              'out_file')]), # output odf filename #noqa
+            # Label Conversion
+            (self.input_node,     label_convert_node, [('atlas_files',          'in_file')]), # output odf filename #noqa
+            (caps_filenames_node, label_convert_node, [('nodes',               'out_file')]), # output odf filename #noqa
         ])
 
         if self.parameters['dwi_space'] == 'b0':
@@ -398,6 +433,7 @@ class Tractography(cpe.Pipeline):
             (resp_estim_node,       self.output_node,   [('wm_file',               'response')]), # T1-to-B0 matrix file #noqa
             (fod_estim_node,        self.output_node,   [('wm_odf',                     'fod')]), # T1-to-B0 matrix file #noqa
             (tck_gen_node,          self.output_node,   [('out_file',                'tracts')]), # T1-to-B0 matrix file #noqa
+            (label_convert_node,    self.output_node,   [('out_file',                 'nodes')]), # T1-to-B0 matrix file #noqa
         ])
 
         cprint('Pipeline built')

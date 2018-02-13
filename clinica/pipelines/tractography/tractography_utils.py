@@ -6,6 +6,43 @@ command line tool. See here for more details:
 http://clinica.run/doc/InteractingWithClinica/
 """
 
+def get_luts():
+    import os
+    from clinica.utils.exceptions import ClinicaException
+
+    try:
+        # For aparc+aseg.mgz file:
+        default = os.path.join(os.environ['FREESURFER_HOME'],
+                               'FreeSurferColorLUT.txt')
+        # For aparc.a2009s+aseg.mgz file:
+        a2009s = os.path.join(os.environ['FREESURFER_HOME'],
+                              'FreeSurferColorLUT.txt')
+
+        # TODO: Add custom Lausanne2008 LUTs here.
+    except KeyError:
+        raise ClinicaException('Could not find FREESURFER_HOME environment variable.')
+
+    return [default, a2009s]
+
+
+def get_conversion_luts():
+    import os
+    from clinica.utils.exceptions import ClinicaException
+
+    try:
+        # For aparc+aseg.mgz file:
+        default = os.path.join(os.environ['MRTRIX3_HOME'],
+                     'share/mrtrix3/labelconvert/fs_default.txt')
+        # For aparc.a2009s+aseg.mgz file:
+        a2009s = os.path.join(os.environ['MRTRIX3_HOME'],
+                     'share/mrtrix3/labelconvert/fs_a2009s.txt')
+
+        # TODO: Add custom Lausanne2008 conversion LUTs here.
+    except KeyError:
+        raise ClinicaException('Could not find MRTRIX3_HOME environment variable.')
+
+    return [default, a2009s]
+
 def get_containers(subjects, sessions):
 
     return [
@@ -28,7 +65,6 @@ def get_substitutions(subjects, sessions):
 def get_caps_filenames(dwi_file):
 
     import re
-    from clinica.utils.stream import cprint
 
     m = re.search(r'\/(sub-[a-zA-Z0-9]+_ses-[a-zA-Z0-9]+.*)_preproc', dwi_file)
 
@@ -37,10 +73,11 @@ def get_caps_filenames(dwi_file):
 
     source_file = m.group(1)
 
-    cprint(source_file)
-
     response = source_file + '_responsefunction.txt'
     fod =  source_file + '_fod.mif'
     tracts = source_file + '_tract.tck'
+    nodes = [source_file + '_atlas-Desikan_nodes.mif',
+             source_file + '_atlas-Destrieux_nodes.mif']
+    # TODO: Add custom Lausanne2008 node files here.
 
-    return response, fod, tracts
+    return response, fod, tracts, nodes
