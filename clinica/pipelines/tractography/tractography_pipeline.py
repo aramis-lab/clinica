@@ -64,7 +64,7 @@ class Tractography(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        return ['response', 'fod', 'tracts', 'nodes']  # Fill here the list
+        return ['response', 'fod', 'tracts', 'nodes', 'connectomes']  # Fill here the list
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -265,10 +265,12 @@ class Tractography(cpe.Pipeline):
             (self.output_node, join_node, [('fod',   'fod')]),
             (self.output_node, join_node, [('tracts',   'tracts')]),
             (self.output_node, join_node, [('nodes',     'nodes')]),
+            (self.output_node, join_node, [('connectomes',     'connectomes')]),
             (join_node, write_node, [('response',       'tractography.@response')]),
             (join_node, write_node, [('fod',                'tractography.@fod')]),
             (join_node, write_node, [('tracts',         'tractography.@tracts')]),
             (join_node, write_node, [('nodes',         'tractography.@nodes')]),
+            (join_node, write_node, [('connectomes',   'tractography.@connectomes')]),
         ])
 
         self.write_graph()
@@ -354,11 +356,19 @@ class Tractography(cpe.Pipeline):
         # Nodes Generation
         # ----------------
         label_convert_node = npe.MapNode(name="LabelsConversion",
-                                         iterfield=['in_file', 'in_config', 'in_lut', 'out_file'],
+                                         iterfield=['in_file', 'in_config',
+                                                    'in_lut', 'out_file'],
                                          interface=mrtrix3.LabelConvert())
         label_convert_node.inputs.in_config = utils.get_conversion_luts()
         label_convert_node.inputs.in_lut = utils.get_luts()
 
+        # Connectome Generation
+        # ---------------------
+        # only the parcellation and output filename should be iterable, the tck
+        # file stays the same.
+        conn_gen_node = npe.MapNode(name="ConnectomeGeneration",
+                                    iterfield=['in_parc', 'out_file'],
+                                    interface=mrtrix3.BuildConnectome())
 
         # CAPS FIlenames Generation
         # -------------------------
@@ -410,10 +420,14 @@ class Tractography(cpe.Pipeline):
             (caps_filenames_node,     fod_estim_node, [('fod',                   'wm_odf')]), # output odf filename #noqa
             # Tracts Generation
             (fod_estim_node,            tck_gen_node, [('wm_odf',               'in_file')]), # ODF file #noqa
-            (caps_filenames_node,       tck_gen_node, [('tracts',              'out_file')]), # output odf filename #noqa
+            (caps_filenames_node,       tck_gen_node, [('tracts',              'out_file')]), # output tck filename #noqa
             # Label Conversion
-            (self.input_node,     label_convert_node, [('atlas_files',          'in_file')]), # output odf filename #noqa
-            (caps_filenames_node, label_convert_node, [('nodes',               'out_file')]), # output odf filename #noqa
+            (self.input_node,     label_convert_node, [('atlas_files',          'in_file')]), # atlas image files #noqa
+            (caps_filenames_node, label_convert_node, [('nodes',               'out_file')]), # converted atlas image filenames #noqa
+            # Connectomes Generation
+            (tck_gen_node,             conn_gen_node, [('out_file',             'in_file')]), # output odf filename #noqa
+            (label_convert_node,       conn_gen_node, [('out_file',             'in_parc')]), # output odf filename #noqa
+            (caps_filenames_node,      conn_gen_node, [('connectomes',         'out_file')]), # output odf filename #noqa
         ])
 
         if self.parameters['dwi_space'] == 'b0':
@@ -434,6 +448,7 @@ class Tractography(cpe.Pipeline):
             (fod_estim_node,        self.output_node,   [('wm_odf',                     'fod')]), # T1-to-B0 matrix file #noqa
             (tck_gen_node,          self.output_node,   [('out_file',                'tracts')]), # T1-to-B0 matrix file #noqa
             (label_convert_node,    self.output_node,   [('out_file',                 'nodes')]), # T1-to-B0 matrix file #noqa
+            (conn_gen_node,         self.output_node,   [('out_file',           'connectomes')]), # T1-to-B0 matrix file #noqa
         ])
 
         cprint('Pipeline built')

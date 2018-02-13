@@ -43,21 +43,11 @@ def get_conversion_luts():
 
     return [default, a2009s]
 
+
 def get_containers(subjects, sessions):
 
     return [
         'subjects/' + subjects[i] + '/' + sessions[i] + '/dwi'
-        for i in range(len(subjects))
-    ]
-
-def get_substitutions(subjects, sessions):
-    return [
-        [
-            ('response/wm.txt', subjects[i] + '_response.txt'),
-            ('fod/wm.mif', subjects[i] + '_fod.mif'),
-            ('tracts/tracked.tck', subjects[i] + '_tracts.tck'),
-            ('trait_added', ''),
-        ]
         for i in range(len(subjects))
     ]
 
@@ -76,8 +66,11 @@ def get_caps_filenames(dwi_file):
     response = source_file + '_responsefunction.txt'
     fod =  source_file + '_fod.mif'
     tracts = source_file + '_tract.tck'
-    nodes = [source_file + '_atlas-Desikan_nodes.mif',
-             source_file + '_atlas-Destrieux_nodes.mif']
+    nodes = [source_file + '_parcellation-desikan_nodes.mif',
+             source_file + '_parcellation-destrieux_nodes.mif']
     # TODO: Add custom Lausanne2008 node files here.
+    connectomes = [source_file + '_parcellation-desikan_connectome.csv',
+             source_file + '_parcellation-destrieux_connectome.csv']
+    # TODO: Add custom Lausanne2008 connectome files here.
 
-    return response, fod, tracts, nodes
+    return response, fod, tracts, nodes, connectomes
