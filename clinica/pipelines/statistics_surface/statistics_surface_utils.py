@@ -97,7 +97,8 @@ def runmatlab(input_directory,
               full_width_at_half_maximum,
               threshold_uncorrected_pvalue,
               threshold_corrected_pvalue,
-              cluster_threshold):
+              cluster_threshold,
+              feature_label):
     """
         a wrapper the matlab script of surfstat with nipype.
 
@@ -147,8 +148,8 @@ def runmatlab(input_directory,
     matlab.inputs.paths = path_to_matscript  # CLINICA_HOME, this is the path to add into matlab, addpath
 
     matlab.inputs.script = """
-    clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', %.3f, '%s', %.3f, '%s', %.3f);
-    """ % (input_directory, output_directory, subjects_visits_tsv, design_matrix, contrast, str_format, glm_type, group_label, freesurfer_home, surface_file, 'sizeoffwhm',
+    clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', %.3f, '%s', %.3f, '%s', %.3f);
+    """ % (input_directory, output_directory, subjects_visits_tsv, design_matrix, contrast, str_format, glm_type, group_label, freesurfer_home, surface_file, feature_label, 'sizeoffwhm',
            full_width_at_half_maximum,
            'thresholduncorrectedpvalue', threshold_uncorrected_pvalue, 'thresholdcorrectedpvalue',
            threshold_corrected_pvalue, 'clusterthreshold',
