@@ -44,9 +44,10 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True):
             is_bids_dir=is_bids_dir)
 
     ss_df = pd.io.parsers.read_csv(ss_file, sep='\t')
-    if list(ss_df.columns.values) != ['participant_id', 'session_id']:
-        raise Exception(
-            'Subjects and visits file is not in the correct format.')
+    if 'participant_id' not in list(ss_df.columns.values):
+        raise Exception('No participant_id column in TSV file.')
+    if 'session_id' not in list(ss_df.columns.values):
+        raise Exception('No session_id column in TSV file.')
     subjects = list(ss_df.participant_id)
     sessions = list(ss_df.session_id)
 

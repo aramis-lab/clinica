@@ -65,7 +65,8 @@ class StatisticsSurface(cpe.Pipeline):
                 'full_width_at_half_maximum',
                 'threshold_uncorrected_pvalue',
                 'threshold_corrected_pvalue',
-                'cluster_threshold']
+                'cluster_threshold',
+                'feature_label']
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipelines.
@@ -97,6 +98,7 @@ class StatisticsSurface(cpe.Pipeline):
         read_parameters_node.inputs.threshold_uncorrected_pvalue = self.parameters['threshold_uncorrected_pvalue']
         read_parameters_node.inputs.threshold_corrected_pvalue = self.parameters['threshold_corrected_pvalue']
         read_parameters_node.inputs.cluster_threshold = self.parameters['cluster_threshold']
+        read_parameters_node.inputs.feature_label = self.parameters['feature_label']
 
         self.connect([
             (read_parameters_node, self.input_node, [('design_matrix',                'design_matrix')]),  # noqa
@@ -109,6 +111,7 @@ class StatisticsSurface(cpe.Pipeline):
             (read_parameters_node, self.input_node, [('threshold_uncorrected_pvalue', 'threshold_uncorrected_pvalue')]),  # noqa
             (read_parameters_node, self.input_node, [('threshold_corrected_pvalue',   'threshold_corrected_pvalue')]),  # noqa
             (read_parameters_node, self.input_node, [('cluster_threshold',            'cluster_threshold')]),  # noqa
+            (read_parameters_node, self.input_node, [('feature_label',                'feature_label')])
         ])
 
     def build_output_node(self):
@@ -153,7 +156,8 @@ class StatisticsSurface(cpe.Pipeline):
                                              'full_width_at_half_maximum',
                                              'threshold_uncorrected_pvalue',
                                              'threshold_corrected_pvalue',
-                                             'cluster_threshold'],
+                                             'cluster_threshold',
+                                             'feature_label'],
                                 output_names=['out_images'],
                                 function=utils.runmatlab))
         surfstat.inputs.subjects_visits_tsv = self.tsv_file
@@ -184,6 +188,7 @@ class StatisticsSurface(cpe.Pipeline):
             (self.input_node, surfstat, [('threshold_corrected_pvalue', 'threshold_corrected_pvalue')]),  # noqa
             (self.input_node, surfstat, [('cluster_threshold', 'cluster_threshold')]),  # noqa
             (self.input_node, surfstat, [('surface_file', 'surface_file')]),  # noqa
+            (self.input_node, surfstat, [('feature_label', 'feature_label')]),
             (data_prep, surfstat, [('surfstat_input_dir', 'input_directory')]),  # noqa
             (data_prep, surfstat, [('path_to_matscript', 'path_to_matscript')]),  # noqa
             (data_prep, surfstat, [('output_directory', 'output_directory')]),  # noqa
