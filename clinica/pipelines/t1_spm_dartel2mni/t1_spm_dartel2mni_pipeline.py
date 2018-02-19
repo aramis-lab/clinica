@@ -1,3 +1,5 @@
+# coding: utf8
+
 """T1 SPM Dartel2MNI - Clinica Pipeline.
 This file has been generated automatically by the `clinica generate template`
 command line tool. See here for more details: https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.

@@ -1,3 +1,5 @@
+# coding: utf8
+
 """
 Redirect stream and log
 """

@@ -1,3 +1,5 @@
+# coding: utf8
+
 from multiprocessing.pool import ThreadPool
 import numpy as np
 from os.path import join, isdir, dirname

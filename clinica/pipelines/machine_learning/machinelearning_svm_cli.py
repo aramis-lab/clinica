@@ -10,7 +10,7 @@ class CmdParserMachineLearningVBLinearSVM(ce.CmdParser):
         self._name = 'machinelearning-svm-voxel'
 
     def define_description(self):
-        self._description = 'Classification based on machine learning (Voxel-based): http://clinica.run/doc/Pipelines/MachineLearning_Classification/'
+        self._description = 'Classification based on machine learning (Voxel-based):\nhttp://clinica.run/doc/Pipelines/MachineLearning_Classification/'
 
     def define_options(self):
         self._args.add_argument("image_type",
@@ -99,7 +99,7 @@ class CmdParserMachineLearningSVMRB(ce.CmdParser):
         self._name = 'machinelearning-svm-region'
 
     def define_description(self):
-        self._description = 'Classification based on machine learning (Region-based): http://clinica.run/doc/Pipelines/MachineLearning_Classification/'
+        self._description = 'Classification based on machine learning (Region-based)\n: http://clinica.run/doc/Pipelines/MachineLearning_Classification/'
 
     def define_options(self):
         self._args.add_argument("image_type",
