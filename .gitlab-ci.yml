@@ -20,7 +20,8 @@ before_script:
   - echo $SHELL
   - pwd
   - ls
-  - source $ENVIRONMENT_TEST
+  - whoami
+  - . $ENVIRONMENT_TEST
   - which python
   - pip uninstall -y clinica
 
