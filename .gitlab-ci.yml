@@ -29,25 +29,28 @@ job_pip_install:
     - pip install -r requirements.txt
     - pip install --no-deps --ignore-installed .
     - eval "$(register-python-argcomplete clinica)"
-    
-job_py_test:
-  stage: test
-  script: 
-    - pytest .
+
+# TODO: Uncomment when unit tests are set    
+# job_py_test:
+#   stage: test
+#   script: 
+#     - pytest .
   
 job_cli_test:
   stage: test
   script:
     - clinica --help
-    
-job_pipelines_test:
-  stage: test
-  script:
-    - clinica run fmri-preprocessing -wd $WD_TEST -np 2 $BIDS_TEST $CAPS_TEST
-  after_script:
-    - rm -rf $WD_TEST/*
-    - rm -rf $CAPS_TEST/*
-  
+
+# TODO: Uncomment when computing power will be sufficient and CI policy is set
+# job_pipelines_test:
+#   stage: test
+#   script:
+#     - clinica run fmri-preprocessing -wd $WD_TEST -np 2 $BIDS_TEST $CAPS_TEST
+#   after_script:
+#     - rm -rf $WD_TEST/*
+#     - rm -rf $CAPS_TEST/*
+
+# TODO: Uncomment when everyone has switched to develop branch
 # job_push_on_master:
 #   stage: deploy
 #   script:
