@@ -21,7 +21,9 @@ before_script:
   - pwd
   - ls
   - whoami
-  - . $ENVIRONMENT_TEST
+  - echo $ENVIRONMENT_TEST
+  - cat $ENVIRONMENT_TEST
+  - source $ENVIRONMENT_TEST
   - which python
   - pip uninstall -y clinica
 
