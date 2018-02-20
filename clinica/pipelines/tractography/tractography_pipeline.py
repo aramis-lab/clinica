@@ -284,6 +284,7 @@ class Tractography(cpe.Pipeline):
 
         Todos:
             - [x] Detect space automatically.
+            - [ ] Allow for custom parcellations (See TODOs in utils).
 
         """
 
