@@ -22,13 +22,12 @@ before_script:
   - whoami
   - cat $ENVIRONMENT_TEST
   - source $ENVIRONMENT_TEST
-  - pip uninstall -y clinica
 
 job_pip_install:
   # Test the basic Clinica installation
   stage: build
   script:
-    - pip install .
+    - pip install --upgrade --force-reinstall .
     - eval "$(register-python-argcomplete clinica)"
     
 job_py_test:
