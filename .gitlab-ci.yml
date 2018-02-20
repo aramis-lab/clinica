@@ -19,12 +19,9 @@ variables:
 before_script:
   - echo $SHELL
   - pwd
-  - ls
   - whoami
-  - echo $ENVIRONMENT_TEST
   - cat $ENVIRONMENT_TEST
   - source $ENVIRONMENT_TEST
-  - which python
   - pip uninstall -y clinica
 
 job_pip_install:
