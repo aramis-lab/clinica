@@ -10,10 +10,9 @@ stages:
   - deploy
 
 variables:
-  BIDS_TEST: ""
-  CAPS_TEST: ""
-  TSV_TEST: ""
-  WD_TEST: ""
+  BIDS_TEST: "/localdrive10TB/data/gitlab-runner/BIDS_TEST"
+  CAPS_TEST: "/localdrive10TB/data/gitlab-runner/CAPS_TEST"
+  WD_TEST: "/localdrive10TB/data/gitlab-runner/WD_TEST"
   ENVIRONMENT_TEST: "/export/applications/clinica/Ubuntu14.04/dot_path"
 
 before_script:
@@ -44,9 +43,10 @@ job_cli_test:
 job_pipelines_test:
   stage: test
   script:
-    - clinica run fmri-preprocessing -tsv $TSV_TEST -wd $WD_TEST $BIDS_TEST $CAPS_TEST
+    - clinica run fmri-preprocessing -wd $WD_TEST -np 2 $BIDS_TEST $CAPS_TEST
   after_script:
-    - rm -rf $WD_TEST
+    - rm -rf $WD_TEST/*
+    - rm -rf $CAPS_TEST/*
   
 # job_push_on_master:
 #   stage: deploy
