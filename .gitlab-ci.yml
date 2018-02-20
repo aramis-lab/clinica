@@ -14,13 +14,10 @@ variables:
   CAPS_TEST: ""
   TSV_TEST: ""
   WD_TEST: ""
-  ENVIRONMENT_TEST: "$HOME/.zshrc"
+  ENVIRONMENT_TEST: "~/.zshrc"
 
 before_script:
   - echo $SHELL
-  - ls /export
-  - ls /export/applications
-  - ls /export/applications/clinica/Ubuntu14.04/
   - echo $ENVIRONMENT_TEST
   - bash $ENVIRONMENT_TEST
   - which python
