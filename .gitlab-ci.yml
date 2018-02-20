@@ -17,9 +17,9 @@ variables:
   ENVIRONMENT_TEST: "/export/applications/clinica/Ubuntu14.04/dot_path"
 
 before_script:
-  - pip uninstall -y clinica
   - source $ENVIRONMENT_TEST
   - which python
+  - pip uninstall -y clinica
 
 job_pip_install:
   # Test the basic Clinica installation
