@@ -18,8 +18,10 @@ variables:
 
 before_script:
   - echo $SHELL
-  - echo $ENVIRONMENT_TEST
-  - . $ENVIRONMENT_TEST
+  - cp $ENVIRONMENT_TEST .
+  - pwd
+  - ls
+  - ./$ENVIRONMENT_TEST
   - which python
   - pip uninstall -y clinica
 
