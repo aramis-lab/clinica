@@ -10,11 +10,11 @@ stages:
   - deploy
 
 variables:
-  BIDS_TEST: 
-  CAPS_TEST: 
-  TSV_TEST:
-  WD_TEST: 
-  ENVIRONMENT_TEST: /export/applications/clinica/Ubuntu14.04/dot_path
+  BIDS_TEST: ""
+  CAPS_TEST: ""
+  TSV_TEST: ""
+  WD_TEST: ""
+  ENVIRONMENT_TEST: "/export/applications/clinica/Ubuntu14.04/dot_path"
 
 before_script:
   - pip uninstall -y clinica
