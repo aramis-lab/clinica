@@ -1,0 +1,51 @@
+# TODO:
+#   - [ ] Test dataset
+#   - [ ] Doc generation
+#   - [ ] Automatize pipeline CL tests
+#   - [ ] Automatize pipeline CL options tests
+
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  BIDS_TEST: 
+  CAPS_TEST: 
+  TSV_TEST:
+  WD_TEST: 
+  ENVIRONMENT_TEST: /export/applications/clinica/Ubuntu14.04/dot_path
+
+before_script:
+  - pip uninstall -y clinica
+  - source $ENVIRONMENT_TEST
+  - which python
+
+job_pip_install:
+  # Test the basic Clinica installation
+  stage: build
+  script:
+    - pip install .
+    - eval "$(register-python-argcomplete clinica)"
+    
+job_py_test:
+  stage: test
+  script: 
+    - pytest .
+  
+job_cli_test:
+  stage: test
+  script:
+    - clinica --help
+    
+job_pipelines_test:
+  stage: test
+  script:
+    - clinica run fmri-preprocessing -tsv $TSV_TEST -wd $WD_TEST $BIDS_TEST $CAPS_TEST
+  after_script:
+    - rm -rf $WD_TEST
+  
+# job_push_on_master:
+#   stage: deploy
+#   script:
+#     - git push origin develop:master
