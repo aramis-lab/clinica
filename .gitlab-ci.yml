@@ -17,6 +17,9 @@ variables:
   ENVIRONMENT_TEST: "/export/applications/clinica/Ubuntu14.04/dot_path"
 
 before_script:
+  - ls /export
+  - ls /export/applications
+  - ls /export/applications/clinica/Ubuntu14.04/
   - echo $ENVIRONMENT_TEST
   - source $ENVIRONMENT_TEST
   - which python
