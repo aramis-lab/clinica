@@ -128,8 +128,7 @@ def execute():
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI  # noqa
     from clinica.pipelines.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI  # noqa
     from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI  # noqa
-    from clinica.pipelines.machine_learning.machinelearning_svm_cli import CmdParserMachineLearningSVMRB  # noqa
-    from clinica.pipelines.machine_learning.machinelearning_svm_cli import CmdParserMachineLearningVBLinearSVM  # noqa
+
 
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
                                    extra_dir="pipelines").load()
@@ -145,9 +144,7 @@ def execute():
         DWIProcessingDTICLI(),
         fMRIPreprocessingCLI(),
         PETPreprocessVolumeCLI(),
-        StatisticsSurfaceCLI(),
-        CmdParserMachineLearningVBLinearSVM(),
-        CmdParserMachineLearningSVMRB(),
+        StatisticsSurfaceCLI()
     ]
 
     run_parser = sub_parser.add_parser(
