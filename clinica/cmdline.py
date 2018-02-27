@@ -234,6 +234,8 @@ def execute():
 
     def single_error_message(p):
         def error(x):
+            from colorama import Fore
+            print('%sError %s%s\n' % (Fore.RED, x, Fore.RESET))
             p.print_help()
             parser.print_help = silent_help
             exit(-1)
@@ -244,6 +246,7 @@ def execute():
     # Do not want stderr message
     def silent_msg(x):
         pass
+
     parser.error = silent_msg
 
     """
