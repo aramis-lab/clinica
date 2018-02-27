@@ -97,6 +97,8 @@ def execute():
     Define and parse the command line argument
     """
     parser = ArgumentParser(add_help=False)
+    parser.add_argument('-h', '--help', action='help',
+                        default=argparse.SUPPRESS, help=argparse.SUPPRESS)
     parser._positionals.title = '%sclinica expects one of the following keywords%s'  % (Fore.BLUE, Fore.RESET)
     parser._optionals.title = OPTIONAL_TITLE
 
