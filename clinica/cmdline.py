@@ -255,7 +255,7 @@ def execute():
         argcomplete.autocomplete(parser)
         args, unknown_args = parser.parse_known_args()
     except SystemExit:
-        exit(-1)
+        exit(0)
     except Exception:
         parser.print_help()
         exit(-1)
@@ -267,7 +267,7 @@ def execute():
 
     if args is None or hasattr(args, 'func') is False:
         parser.print_help()
-        exit(-1)
+        exit(0)
 
     import clinica.utils.stream as var
     var.clinica_verbose = args.verbose
