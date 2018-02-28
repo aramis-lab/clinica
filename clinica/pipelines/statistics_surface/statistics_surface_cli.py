@@ -44,7 +44,9 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         self._args.add_argument("-ft", "--feature_type", type=str, default=None,
                                 help='Feature type. Can be : cortical_thickness, pet_fdg_projection, noddi_projection_ndi, noddi_projection_odi, noddi_projection_fiso, dti_projection_fa, dti_projection_md, dti_projection_rd and dti_projection_ad. Default = cortical_thickness')
         self._args.add_argument("-cf", "--custom_file", type=str, default=None,
-                                help='Pattern of file inside caps directory using @subject, @session, @fwhm, @hemi. No --feature_type must be specified in order to use this flag.')
+                                help='Pattern of file inside caps directory using @subject, @session, @fwhm, @hemi. No --feature_type must be specified in order to use this flag. You must specify a --feature_label')
+        self._args.add_argument("-fl", "--feature_label",
+                                help='Name of the feature type, if --custom_file is used', type=str, default=None)
         self._args.add_argument("-fwhm", "--full_width_at_half_maximum", type=int, default=20,
                                 help='FWHM for the surface smoothing (default=20)')
         self._args.add_argument("-tup", "--threshold_uncorrected_pvalue", type=float, default=0.001,
@@ -71,12 +73,16 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         if args.feature_type is not None:
             if args.custom_file is not None:
                 raise Exception('--feature_type and --custom_file are mutually exclusive : you must choose between one or the other. See documentation for more informations.')
+            if args.feature_label is not None:
+                raise Exception('--feature_label should not be used with --feature_type')
+            else:
+                args.feature_label = args.feature_type
             # freesurfer cortical thickness
             if args.feature_type == 'cortical_thickness':
                 args.custom_file = '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
             # pet cortical projection
             elif args.feature_type == 'pet_fdg_projection':
-                args.custom_file = '@subject/@session/pet/surface/@subject_@session_task-rest_acq-FDG_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-@hemi_fwhm-@fwhm_projection.mgh'
+                args.custom_file = '@subject/@session/pet/surface/@subject_@session_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-@hemi_fwhm-@fwhm_projection.mgh'
             # NODDI NDI, ODI and FISO
             elif args.feature_type == 'noddi_projection_ndi':
                 args.custom_file = '@subject/@session/noddi/postprocessing/noddi-register-vertex-fsaverage/cortex-projection/@subject_@session_OnFsaverage_fwhm-@fwhm_measure-ficvf_hemi-@hemi.mgh'
@@ -100,8 +106,11 @@ class StatisticsSurfaceCLI(ce.CmdParser):
             if args.custom_file is None:
                 cprint('No feature type selected : using cortical thickness as default value')
                 args.custom_file = '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
+                args.feature_label = 'cortical_thickness'
             else:
                 cprint('Using custom features.')
+                if args.feature_label is None:
+                    raise Exception('You must specify a --feature_label when using the --custom_files flag')
 
         #Check if the group label has been existed, if yes, give the warning to the users
         if os.path.exists(os.path.join(os.path.abspath(self.absolute_path(args.caps_directory)), 'groups', 'group-' + args.group_label)):
@@ -119,6 +128,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
             'group_label': args.group_label,
             'glm_type': args.glm_type,
             'custom_file': args.custom_file,
+            'feature_label': args.feature_label,
             'full_width_at_half_maximum': args.full_width_at_half_maximum,
             'threshold_uncorrected_pvalue': args.threshold_uncorrected_pvalue,
             'threshold_corrected_pvalue': args.threshold_corrected_pvalue,
@@ -133,9 +143,9 @@ class StatisticsSurfaceCLI(ce.CmdParser):
 
         # run the pipelines in n_procs cores based on your computation power.
         if args.n_procs:
-            pipeline.write_graph()
+            #pipeline.write_graph()
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         else:
-            pipeline.write_graph()
+            #pipeline.write_graph()
             print(pipeline.parameters)
             pipeline.run()

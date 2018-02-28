@@ -82,8 +82,12 @@ class fMRIPreprocessing(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        return ['t1_brain_mask', 'mc_params', 'native_fmri', 't1_fmri',
-                'mni_fmri', 'mni_smoothed_fmri']
+        if ('t1_native_space' in self.parameters) and self.parameters['t1_native_space']:
+            return ['t1_brain_mask', 'mc_params', 'native_fmri', 't1_fmri',
+                    'mni_fmri', 'mni_smoothed_fmri']
+        else:
+            return ['t1_brain_mask', 'mc_params', 'native_fmri', 'mni_fmri',
+                    'mni_smoothed_fmri']
 
     def build_input_node(self):
         """Build and connect an input node to the pipelines.
@@ -237,7 +241,7 @@ class fMRIPreprocessing(cpe.Pipeline):
 
         # fMRI images in the subject's T1 native space are large, we add it
         # only if specified:
-        if self.parameters['t1_native_space']:
+        if ('t1_native_space' in self.parameters) and self.parameters['t1_native_space']:
             self.connect([
                 (self.output_node, write_node, [('t1_fmri', 't1_fmri')]),
             ])

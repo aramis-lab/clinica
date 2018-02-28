@@ -54,13 +54,13 @@ def bids_datagrabber(input_dir, subject_list, session_list):
                 anat_t1.append(t1)
 
     ### check if pybids works well tp find all the T1 images
-    if len(anat_t1) != len(subject_list) or len(anat_t1) != len(session_list):
-        raise ValueError('Pybids found ' + str(len(anat_t1)) + '  T1 but there are ' + str(len(subject_list)) + ' subjects !!! ')
     if len(missing_subject_session) > 0:
         error_string = 'Please verify there is no error in your tsv file. Clinica could not find T1 for those ' + str(len(missing_subject_session)) + ' subjects - session :'
         for e in missing_subject_session:
             error_string += '\n' + e[0] + ' with session ' + e[1]
         raise IOError(error_string)
+    if len(anat_t1) != len(subject_list) or len(anat_t1) != len(session_list):
+        raise ValueError('Pybids found ' + str(len(anat_t1)) + '  T1 but there are ' + str(len(subject_list)) + ' subjects !!! ')
 
     return anat_t1
 

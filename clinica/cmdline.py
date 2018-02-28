@@ -97,6 +97,8 @@ def execute():
     Define and parse the command line argument
     """
     parser = ArgumentParser(add_help=False)
+    parser.add_argument('-h', '--help', action='help',
+                        default=argparse.SUPPRESS, help=argparse.SUPPRESS)
     parser._positionals.title = '%sclinica expects one of the following keywords%s'  % (Fore.BLUE, Fore.RESET)
     parser._optionals.title = OPTIONAL_TITLE
 
@@ -129,8 +131,7 @@ def execute():
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI  # noqa
     from clinica.pipelines.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI  # noqa
     from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI  # noqa
-    from clinica.pipelines.machine_learning.machinelearning_svm_cli import CmdParserMachineLearningSVMRB  # noqa
-    from clinica.pipelines.machine_learning.machinelearning_svm_cli import CmdParserMachineLearningVBLinearSVM  # noqa
+
 
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
                                    extra_dir="pipelines").load()
@@ -147,9 +148,7 @@ def execute():
         TractographyCLI(),
         fMRIPreprocessingCLI(),
         PETPreprocessVolumeCLI(),
-        StatisticsSurfaceCLI(),
-        CmdParserMachineLearningVBLinearSVM(),
-        CmdParserMachineLearningSVMRB(),
+        StatisticsSurfaceCLI()
     ]
 
     run_parser = sub_parser.add_parser(
@@ -237,6 +236,8 @@ def execute():
 
     def single_error_message(p):
         def error(x):
+            from colorama import Fore
+            print('%sError %s%s\n' % (Fore.RED, x, Fore.RESET))
             p.print_help()
             parser.print_help = silent_help
             exit(-1)
@@ -247,6 +248,7 @@ def execute():
     # Do not want stderr message
     def silent_msg(x):
         pass
+
     parser.error = silent_msg
 
     """
@@ -258,7 +260,7 @@ def execute():
         argcomplete.autocomplete(parser)
         args, unknown_args = parser.parse_known_args()
     except SystemExit:
-        exit(-1)
+        exit(0)
     except Exception:
         parser.print_help()
         exit(-1)
@@ -270,7 +272,7 @@ def execute():
 
     if args is None or hasattr(args, 'func') is False:
         parser.print_help()
-        exit(-1)
+        exit(0)
 
     import clinica.utils.stream as var
     var.clinica_verbose = args.verbose

@@ -1,4 +1,4 @@
-function clinicasurfstat( inputdir, outputdir, tsvfile, designmatrix, contrast, strformat, glmtype, grouplabel, freesurferhome, surface_file, varargin)
+function clinicasurfstat( inputdir, outputdir, tsvfile, designmatrix, contrast, strformat, glmtype, grouplabel, freesurferhome, surface_file, feature_label, varargin)
 % Saves all the output images for group analysis of T1 images smoothed data
 %
 % Usage: [some outputs] = clinicasurfstat( inputdir, outputdir, tsvfile, designmatrix, contrast, strformat, glmtype, varargin)
@@ -146,7 +146,7 @@ for i = 1:length(tsvdata)-1
 end
 
 cd(outputdir)
-measurelabel = 'ct'; % todo, change this to be dynamic
+measurelabel = feature_label;
 
 %% Convert the data into SurfStat
 
