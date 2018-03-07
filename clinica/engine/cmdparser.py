@@ -11,10 +11,10 @@ from os.path import expanduser
 
 from colorama import Fore
 PIPELINE_CATEGORIES = {
-    'CLINICA_COMPULSORY': '%sClinica mandatory arguments%s' % (Fore.BLUE, Fore.RESET),
-    'OPTIONAL': '%sPipeline options%s' % (Fore.BLUE, Fore.RESET),
-    'CLINICA_OPTIONAL': '%sClinica standard options%s' % (Fore.BLUE, Fore.RESET),
-    'ADVANCED': '%sPipeline advanced options%s' % (Fore.BLUE, Fore.RESET),
+    'CLINICA_COMPULSORY': '%sClinica mandatory arguments%s' % (Fore.YELLOW, Fore.RESET),
+    'OPTIONAL': '%sPipeline options%s' % (Fore.YELLOW, Fore.RESET),
+    'CLINICA_OPTIONAL': '%sClinica standard options%s' % (Fore.YELLOW, Fore.RESET),
+    'ADVANCED': '%sPipeline advanced options%s' % (Fore.YELLOW, Fore.RESET),
 }
 
 
@@ -42,16 +42,15 @@ class CmdParser:
         self._name = None
 
     def set_content(self):
-        from colorama import Fore
-        self._args._positionals.title = '%sMandatory arguments%s' % (Fore.BLUE, Fore.RESET)
-        self._args._optionals.title = '%sOptional arguments%s' % (Fore.BLUE, Fore.RESET)
+        self._args._positionals.title = '%sMandatory arguments%s' % (Fore.YELLOW, Fore.RESET)
+        self._args._optionals.title = '%sOptional arguments%s' % (Fore.YELLOW, Fore.RESET)
         if self._description is None:
             self._description = self._name
             self._args.description = '%sIf you are not familiar with Clinica, see: http://clinica.run/doc/InteractingWithClinica/%s' % \
-                                     (Fore.GREEN, Fore.RESET)
+                                     (Fore.CYAN, Fore.RESET)
         else:
             self._args.description = '%s%s\n\nIf you are not familiar with Clinica, see: http://clinica.run/doc/InteractingWithClinica/%s' % \
-                                     (Fore.GREEN, self._description, Fore.RESET)
+                                     (Fore.CYAN, self._description, Fore.RESET)
 
     @property
     def options(self): return self._args
