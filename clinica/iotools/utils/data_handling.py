@@ -235,7 +235,7 @@ def create_merge_file(bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines
         n_atlas = len(merged_summary_df)
         index_column_df = pd.DataFrame(index=np.arange(n_atlas), columns=['first_column_index', 'last_column_index'])
         index_column_df.iat[0, 0] = len_BIDS
-        index_column_df.iat[n_atlas, 1] = len(merged_df) - 1
+        index_column_df.iat[n_atlas - 1, 1] = len(merged_df) - 1
         for i in range(1, n_atlas):
             index_column_df.iat[i, 0] = index_column_df.iat[i-1, 0] + merged_summary_df.iat[i-1, 3]
             index_column_df.iat[i-1, 1] = index_column_df.iat[i, 0] - 1
