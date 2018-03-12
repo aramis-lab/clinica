@@ -11,10 +11,11 @@ from os.path import expanduser
 
 from colorama import Fore
 PIPELINE_CATEGORIES = {
-    'CLINICA_COMPULSORY': '%sClinica mandatory arguments%s' % (Fore.YELLOW, Fore.RESET),
-    'OPTIONAL': '%sPipeline options%s' % (Fore.YELLOW, Fore.RESET),
-    'CLINICA_OPTIONAL': '%sClinica standard options%s' % (Fore.YELLOW, Fore.RESET),
-    'ADVANCED': '%sPipeline advanced options%s' % (Fore.YELLOW, Fore.RESET),
+    'CLINICA_COMPULSORY': '%sClinica mandatory arguments%s' % (Fore.BLUE, Fore.RESET),
+    'OPTIONAL': '%sPipeline options%s' % (Fore.BLUE, Fore.RESET),
+    'CLINICA_OPTIONAL': '%sClinica standard options%s' % (Fore.BLUE, Fore.RESET),
+    'ADVANCED': '%sPipelines advanced options%s' % (Fore.BLUE, Fore.RESET),
+    'IOTOOLS_OPTIONS': '%sOptional arguments%s' % (Fore.BLUE, Fore.RESET)
 }
 
 
@@ -42,15 +43,16 @@ class CmdParser:
         self._name = None
 
     def set_content(self):
-        self._args._positionals.title = '%sMandatory arguments%s' % (Fore.YELLOW, Fore.RESET)
-        self._args._optionals.title = '%sOptional arguments%s' % (Fore.YELLOW, Fore.RESET)
+        from colorama import Fore
+        self._args._positionals.title = '%sMandatory arguments%s' % (Fore.BLUE, Fore.RESET)
+        self._args._optionals.title = '%sOptional arguments%s' % (Fore.BLUE, Fore.RESET)
         if self._description is None:
             self._description = self._name
             self._args.description = '%sIf you are not familiar with Clinica, see: http://clinica.run/doc/InteractingWithClinica/%s' % \
-                                     (Fore.CYAN, Fore.RESET)
+                                     (Fore.GREEN, Fore.RESET)
         else:
             self._args.description = '%s%s\n\nIf you are not familiar with Clinica, see: http://clinica.run/doc/InteractingWithClinica/%s' % \
-                                     (Fore.CYAN, self._description, Fore.RESET)
+                                     (Fore.GREEN, self._description, Fore.RESET)
 
     @property
     def options(self): return self._args
@@ -144,3 +146,57 @@ def get_cmdparser_names(objects=None):
         objects = get_cmdparser_objects()
     for x in objects:
         yield x.name
+
+
+# class CmdParserInsightToBids(CmdParser):
+#
+#     def define_name(self):
+#         self._name = 'insight-to-bids'
+#
+#     def define_options(self):
+#         self._args.add_argument("dataset_directory",
+#                                help='Path of the unorganized INSIGHT directory.')
+#         self._args.add_argument("bids_directory",
+#                                 help='Path to the BIDS directory.')
+#         self._args.add_argument("-co", type=bool, default=False,
+#                                 help='(Optional) Given an already existing BIDS output folder, convert only the clinical data.')
+#
+#     def run_command(self, args):
+#         from clinica.bids import insight_to_bids
+#         insight_to_bids.convert(args.dataset_directory, args.bids_directory)
+
+
+# class CmdParserPrevDemAlsToBids(CmdParser):
+#
+#     def define_name(self):
+#         self._name = 'prevdemals-to-bids'
+#
+#     def define_options(self):
+#         self._args.add_argument("dataset_directory",
+#                                help='Path of the unorganized INSIGHT directory.')
+#         self._args.add_argument("bids_directory",
+#                                 help='Path to the BIDS directory.')
+#         self._args.add_argument("-co", type=bool, default=False,
+#                                 help='(Optional) Given an already existing BIDS output folder, convert only the clinical data.')
+#
+#     def run_command(self, args):
+#         from clinica.bids import prevdemals_to_bids
+#         prevdemals_to_bids.convert(args.dataset_directory, args.bids_directory)
+
+
+# class CmdParserHmtcToBids(CmdParser):
+#
+#     def define_name(self):
+#         self._name = 'hmtc-to-bids'
+#
+#     def define_options(self):
+#         self._args.add_argument("dataset_directory",
+#                                 help='Path of the unorganized HMTC directory.')
+#         self._args.add_argument("bids_directory",
+#                                 help='Path to the BIDS directory.')
+#
+#     def run_command(self, args):
+#         from clinica.iotools import hmtc_to_bids
+#         hmtc_to_bids.convert(args.dataset_directory, args.bids_directory)
+
+
