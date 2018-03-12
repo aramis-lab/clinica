@@ -245,19 +245,29 @@ class RepeatedHoldOut(base.MLValidation):
             raise Exception("No results to save. Method validate() must be run before save_results().")
 
         all_results_list = []
-        all_subjects_list = []
+        all_train_subjects_list = []
+        all_test_subjects_list = []
 
         for iteration in range(len(self._split_results)):
 
             iteration_dir = path.join(output_dir, 'iteration-' + str(iteration))
             if not path.exists(iteration_dir):
                 os.makedirs(iteration_dir)
-            iteration_subjects_df = pd.DataFrame({'y': self._split_results[iteration]['y'],
-                                                  'y_hat': self._split_results[iteration]['y_hat'],
-                                                  'y_index': self._split_results[iteration]['y_index']})
-            iteration_subjects_df.to_csv(path.join(iteration_dir, 'subjects.tsv'),
-                                         index=False, sep='\t', encoding='utf-8')
-            all_subjects_list.append(iteration_subjects_df)
+            iteration_train_subjects_df = pd.DataFrame({'iteration': iteration,
+                                                        'y': self._split_results[iteration]['y_train'],
+                                                        'y_hat': self._split_results[iteration]['y_hat_train'],
+                                                        'subject_index': self._split_results[iteration]['x_index']})
+            iteration_train_subjects_df.to_csv(path.join(iteration_dir, 'train_subjects.tsv'),
+                                               index=False, sep='\t', encoding='utf-8')
+            all_train_subjects_list.append(iteration_train_subjects_df)
+
+            iteration_test_subjects_df = pd.DataFrame({'iteration': iteration,
+                                                       'y': self._split_results[iteration]['y'],
+                                                       'y_hat': self._split_results[iteration]['y_hat'],
+                                                       'subject_index': self._split_results[iteration]['y_index']})
+            iteration_test_subjects_df.to_csv(path.join(iteration_dir, 'test_subjects.tsv'),
+                                              index=False, sep='\t', encoding='utf-8')
+            all_test_subjects_list.append(iteration_test_subjects_df)
 
             iteration_results_df = pd.DataFrame(
                     {'balanced_accuracy': self._split_results[iteration]['evaluation']['balanced_accuracy'],
@@ -266,19 +276,30 @@ class RepeatedHoldOut(base.MLValidation):
                      'sensitivity': self._split_results[iteration]['evaluation']['sensitivity'],
                      'specificity': self._split_results[iteration]['evaluation']['specificity'],
                      'ppv': self._split_results[iteration]['evaluation']['ppv'],
-                     'npv': self._split_results[iteration]['evaluation']['npv']}, index=['i', ])
+                     'npv': self._split_results[iteration]['evaluation']['npv'],
+                     'train_balanced_accuracy': self._split_results[iteration]['evaluation_train']['balanced_accuracy'],
+                     'train_accuracy': self._split_results[iteration]['evaluation_train']['accuracy'],
+                     'train_sensitivity': self._split_results[iteration]['evaluation_train']['sensitivity'],
+                     'train_specificity': self._split_results[iteration]['evaluation_train']['specificity'],
+                     'train_ppv': self._split_results[iteration]['evaluation_train']['ppv'],
+                     'train_npv': self._split_results[iteration]['evaluation_train']['npv']
+                     }, index=['i', ])
             iteration_results_df.to_csv(path.join(iteration_dir, 'results.tsv'),
                                         index=False, sep='\t', encoding='utf-8')
 
-            mean_results_df = pd.DataFrame(iteration_results_df.apply(np.nanmean).to_dict(),
-                                           columns=iteration_results_df.columns, index=[0, ])
-            mean_results_df.to_csv(path.join(iteration_dir, 'mean_results.tsv'),
-                                   index=False, sep='\t', encoding='utf-8')
-            all_results_list.append(mean_results_df)
+            # mean_results_df = pd.DataFrame(iteration_results_df.apply(np.nanmean).to_dict(),
+            #                                columns=iteration_results_df.columns, index=[0, ])
+            # mean_results_df.to_csv(path.join(iteration_dir, 'mean_results.tsv'),
+            #                        index=False, sep='\t', encoding='utf-8')
+            all_results_list.append(iteration_results_df)
 
-        all_subjects_df = pd.concat(all_subjects_list)
-        all_subjects_df.to_csv(path.join(output_dir, 'subjects.tsv'),
-                               index=False, sep='\t', encoding='utf-8')
+        all_train_subjects_df = pd.concat(all_train_subjects_list)
+        all_train_subjects_df.to_csv(path.join(output_dir, 'train_subjects.tsv'),
+                                     index=False, sep='\t', encoding='utf-8')
+
+        all_test_subjects_df = pd.concat(all_test_subjects_list)
+        all_test_subjects_df.to_csv(path.join(output_dir, 'test_subjects.tsv'),
+                                    index=False, sep='\t', encoding='utf-8')
 
         all_results_df = pd.concat(all_results_list)
         all_results_df.to_csv(path.join(output_dir, 'results.tsv'),
@@ -323,7 +344,7 @@ class RepeatedHoldOut(base.MLValidation):
             test_error_split[i] = self._compute_average_test_error(self._split_results[i]['y'],
                                                                    self._split_results[i]['y_hat'])
 
-            self._error_resampled_t, self._error_corrected_resampled_t = self._compute_variance(test_error_split)
+        self._error_resampled_t, self._error_corrected_resampled_t = self._compute_variance(test_error_split)
 
         return self._error_resampled_t, self._error_corrected_resampled_t
 
