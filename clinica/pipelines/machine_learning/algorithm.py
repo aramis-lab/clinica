@@ -120,10 +120,13 @@ class DualSVMAlgorithm(base.MLAlgorithm):
         result = dict()
         result['best_parameter'] = best_parameter
         result['evaluation'] = utils.evaluate_prediction(y_test, y_hat)
-        result['evaluation_training'] = utils.evaluate_prediction(y_train, y_hat_train)
+        result['evaluation_train'] = utils.evaluate_prediction(y_train, y_hat_train)
         result['y_hat'] = y_hat
+        result['y_hat_train'] = y_hat_train
         result['y'] = y_test
+        result['y_train'] = y_train
         result['y_index'] = test_index
+        result['x_index'] = train_index
         result['auc'] = auc
 
         return result
