@@ -128,6 +128,7 @@ def pet_pipeline(caps_dir, df, **kwargs):
                 atlas_paths_preserved.remove(atlas_path)
 
         atlas_paths = atlas_paths_preserved
+        atlas_paths.sort()
         for atlas_path in atlas_paths:
             row_summary_df = pd.DataFrame(index=np.arange(1), columns=columns)
             atlas_file = atlas_path.split(os.sep)[-1]
@@ -267,6 +268,7 @@ def t1_spm_pipeline(caps_dir, df, **kwargs):
         if len(atlas_paths) == 0:
                 raise InitException(pipeline_name)
 
+        atlas_paths.sort()
         for atlas_path in atlas_paths:
             row_summary_df = pd.DataFrame(index=np.arange(1), columns=columns)
             atlas_file = atlas_path.split(os.sep)[-1]

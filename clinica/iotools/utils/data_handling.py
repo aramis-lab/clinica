@@ -92,7 +92,7 @@ def create_merge_file(bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines
         row_participant = participants_df[participants_df['participant_id'] == sub_name]
         # Open the sessions file related to the subject
         sessions_df = pd.read_csv(path.join(sub_path, sub_name + '_sessions.tsv'), sep='\t')
-        # Looking for the sessions corresponding to the subjects
+        # Looking for the sessions corresponding to the subject
         loc_sessions = []
         i_session = i_subject
         while i_session < n_sessions and subjects[i_session] == subjects[i_subject]:
@@ -106,7 +106,7 @@ def create_merge_file(bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines
             # Extract and convert to a dictionary information
             # regarding the session
             row_session_df = sessions_df[sessions_df.session_id == sessions[i_session]]
-            row_session_df.reset_index(inplace=True)
+            row_session_df.reset_index(inplace=True, drop=True)
             new_cols = [s for s in row_session_df.columns.values if s not in col_list]
             if len(new_cols) != 0:
                 for i in range(0, len(new_cols)):
@@ -235,7 +235,7 @@ def create_merge_file(bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines
         n_atlas = len(merged_summary_df)
         index_column_df = pd.DataFrame(index=np.arange(n_atlas), columns=['first_column_index', 'last_column_index'])
         index_column_df.iat[0, 0] = len_BIDS
-        index_column_df.iat[n_atlas - 1, 1] = len(merged_df) - 1
+        index_column_df.iat[n_atlas - 1, 1] = np.shape(merged_df)[1] - 1
         for i in range(1, n_atlas):
             index_column_df.iat[i, 0] = index_column_df.iat[i-1, 0] + merged_summary_df.iat[i-1, 3]
             index_column_df.iat[i-1, 1] = index_column_df.iat[i, 0] - 1
