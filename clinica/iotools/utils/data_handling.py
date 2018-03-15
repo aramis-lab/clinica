@@ -48,8 +48,6 @@ def create_merge_file(bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines
 
     sessions, subjects = get_subject_session_list(bids_dir, ss_file=tsv_file)
     n_sessions = len(sessions)
-    subjs_paths = glob(path.join(bids_dir, '*sub-*'))
-    subjs_paths.sort()
 
     # Find what is dir and what is file_name
     if os.sep not in out_tsv:
@@ -84,9 +82,6 @@ def create_merge_file(bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines
     i_subject = 0
     while i_subject < n_sessions:
         sub_path = path.join(bids_dir, subjects[i_subject])
-    # for sub_path in subjs_paths:
-    # for sub in range(10):           # TEST
-        # sub_path = subjs_paths[sub]
         sub_name = sub_path.split(os.sep)[-1]
         # For each subject, extract the relative row from the dataframe
         row_participant = participants_df[participants_df['participant_id'] == sub_name]
