@@ -328,3 +328,11 @@ class InitException(Exception):
 
     def __str__(self):
         return repr('The following pipeline cannot be initialized: ' + self.name)
+
+
+class DatasetError(Exception):
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return repr(self.name)

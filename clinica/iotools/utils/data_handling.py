@@ -32,7 +32,7 @@ def create_merge_file(bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines
     import pandas as pd
     import numpy as np
     import warnings
-    from .pipeline_handling import InitException
+    from .pipeline_handling import InitException, DatasetError
     from ...pipelines.engine import get_subject_session_list
 
     if caps_dir is not None:
@@ -107,6 +107,9 @@ def create_merge_file(bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines
             # regarding the session
             row_session_df = sessions_df[sessions_df.session_id == sessions[i_session]]
             row_session_df.reset_index(inplace=True, drop=True)
+            if len(row_session_df) == 0:
+                raise DatasetError('Sessions are not all formatted the same way')
+
             new_cols = [s for s in row_session_df.columns.values if s not in col_list]
             if len(new_cols) != 0:
                 for i in range(0, len(new_cols)):
