@@ -103,7 +103,7 @@ def create_merge_file(bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines
             row_session_df = sessions_df[sessions_df.session_id == sessions[i_session]]
             row_session_df.reset_index(inplace=True, drop=True)
             if len(row_session_df) == 0:
-                raise DatasetError('Sessions are not all formatted the same way')
+                raise DatasetError(sessions_df.loc[0, 'session_id'] + ' / ' + sessions[i_session])
 
             new_cols = [s for s in row_session_df.columns.values if s not in col_list]
             if len(new_cols) != 0:

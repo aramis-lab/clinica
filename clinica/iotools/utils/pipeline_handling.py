@@ -335,4 +335,4 @@ class DatasetError(Exception):
         self.name = name
 
     def __str__(self):
-        return repr(self.name)
+        return repr('Bad format for the sessions: ' + self.name)
