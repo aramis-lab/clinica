@@ -411,7 +411,13 @@ def dcm_to_nii(input_path, output_path, bids_name):
 
     if not os.path.exists(output_path):
         os.mkdir(output_path)
-    os.system('dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name  + ' ' + input_path)
+
+    if 'bold' in bids_name:
+        print "ciaoo"
+        #generation of the json file
+        os.system('dcm2niix -b y -o ' + output_path + ' -f ' + bids_name + ' ' + input_path)
+    else:
+        os.system('dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name  + ' ' + input_path)
 
     # If dcm2niix didn't work use dcm2nii
     if not os.path.exists(path.join(output_path, bids_name  + '.nii.gz')):
@@ -428,7 +434,7 @@ def get_bids_subjs_list(bids_path):
 
     Given a BIDS compliant dataset, returns the list of all the subjects available
 
-    Args:
+    Args:/
         bids_path: path to the BIDS folder
 
     """
