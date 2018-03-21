@@ -89,7 +89,6 @@ def compute_t1_paths( source_dir, csv_dir, dest_dir, subjs_list, new_download):
     mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == 'T1']
 
     for subj in subjs_list:
-        print subj
         adnimerge_subj = adni_merge[adni_merge.PTID == subj]
         # Sort the values by examination date
         adnimerge_subj = adnimerge_subj.sort_values('EXAMDATE')
@@ -220,7 +219,7 @@ def compute_t1_paths( source_dir, csv_dir, dest_dir, subjs_list, new_download):
         images = images.drop_duplicates()
         for j in images.Path:
             if not path.exists(j):
-                image.Path[images.Path == j] = ''
+                images.Path[images.Path == j] = ''
 
         images = images[images.Path != '']
 
