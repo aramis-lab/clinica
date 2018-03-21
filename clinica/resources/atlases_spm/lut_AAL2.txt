@@ -93,7 +93,7 @@
 8212	Temporal_Pole_Mid_R	255	69	0	0
 8301	Temporal_Inf_L	210	180	140	0
 8302	Temporal_Inf_R	210	180	140	0
-9011	Cerebelum_Crus1_L 	39	64	139	0
+9001	Cerebelum_Crus1_L 	39	64	139	0
 9002	Cerebelum_Crus1_R	39	64	139	0
 9011	Cerebelum_Crus2_L	255	99	71	0
 9012	Cerebelum_Crus2_R	255	99	71	0
