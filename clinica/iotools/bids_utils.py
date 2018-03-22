@@ -414,7 +414,7 @@ def dcm_to_nii(input_path, output_path, bids_name):
 
     if 'bold' in bids_name:
         #generation of the json file
-        os.system('dcm2niix -b y -z y -o ' + output_path + ' -f ' + bids_name + ' ' + input_path)
+        os.system('dcm2niix -b y -o ' + output_path + ' -f ' + bids_name + ' ' + input_path)
     else:
         os.system('dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name  + ' ' + input_path)
 

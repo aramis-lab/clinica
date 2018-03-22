@@ -36,7 +36,12 @@ def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
         subjs_list = list(adni_merge.PTID.unique())
 
     cprint('Calculating paths of fMRI images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
-    images = compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list)
+    if path.isfile(path.join(dest_dir, 'conversion_info', 'fmri_paths.tsv')):
+        images = pd.io.parsers.read_csv(path.join(dest_dir, 'conversion_info', 'fmri_paths.tsv'), sep = '\t')
+    else:
+
+        images = compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list)
+
     cprint('Paths of fMRI images found. Exporting images into BIDS ...')
     fmri_paths_to_bids(images, dest_dir)
     cprint('fMRI conversion done.')
