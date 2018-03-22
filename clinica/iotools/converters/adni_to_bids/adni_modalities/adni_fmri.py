@@ -230,7 +230,10 @@ def fmri_paths_to_bids(dest_dir, fmri_paths, mod_to_update=False):
                 os.remove(existing_fmri[0])
 
             if not os.path.exists(ses_path):
-                os.mkdir(ses_path)
+                if not os.path.exists(path.join(dest_dir, bids_id)):
+                    os.mkdir(path.join(dest_dir, bids_id))
+                os.mkdir(path.join(dest_dir, bids_id, bids_ses_id))
+                #os.mkdir(ses_path)
 
             fmri_info = fmri_paths[(fmri_paths['Subject_ID'] == subjs_list[i]) & (fmri_paths['VISCODE'] == ses)]
 
