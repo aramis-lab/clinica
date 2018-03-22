@@ -43,7 +43,7 @@ def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
         images = compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list)
 
     cprint('Paths of fMRI images found. Exporting images into BIDS ...')
-    fmri_paths_to_bids(images, dest_dir)
+    fmri_paths_to_bids(dest_dir, images)
     cprint('fMRI conversion done.')
 
 
