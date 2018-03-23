@@ -320,6 +320,13 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
                 sessions_df = sessions_df.append(pd.DataFrame(sessions_dict[bids_id][ses], index=['i', ]))
 
             sessions_df = sessions_df[columns_order]
+
+            sessions_df['adas_memory'] = (sessions_df['adas_Q1'] + sessions_df['adas_Q4'] + sessions_df['adas_Q7'] + sessions_df['adas_Q8'] + sessions_df['adas_Q9']) / 45
+            sessions_df['adas_language'] = (sessions_df['adas_Q2'] + sessions_df['adas_Q5'] + sessions_df['adas_Q10'] + sessions_df['adas_Q11'] + sessions_df['adas_Q12']) / 25
+            sessions_df['adas_praxis'] = (sessions_df['adas_Q3'] + sessions_df['adas_Q6']) / 10
+            sessions_df['adas_concentration'] = (sessions_df['adas_Q13']) / 5
+
+
             sessions_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf-8')
 
 
@@ -470,6 +477,7 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
             else:
                 continue
 
+
     # Write the sessions dictionary created in several tsv files
     write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths)
 
@@ -542,3 +550,5 @@ def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
                     scans_df.to_csv(scans_tsv, header=False, sep='\t', index=False, encoding='utf-8')
 
             scans_df = pd.DataFrame(columns=(fields_bids))
+
+
