@@ -14,6 +14,8 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
+from __future__ import division
+
 def replace_sequence_chars(sequence_name):
     """
     Replace some special character with the sequence name given in input
