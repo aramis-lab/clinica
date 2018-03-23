@@ -1,4 +1,6 @@
 # coding: utf-8
+from __future__ import division
+
 """
 
  Utilities for adni_to_bids converter
@@ -14,7 +16,6 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-from __future__ import division
 
 def replace_sequence_chars(sequence_name):
     """
