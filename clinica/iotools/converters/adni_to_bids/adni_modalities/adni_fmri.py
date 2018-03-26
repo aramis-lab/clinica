@@ -43,6 +43,8 @@ def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
         images = compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list)
 
     cprint('Paths of fMRI images found. Exporting images into BIDS ...')
+
+
     fmri_paths_to_bids(dest_dir, images)
     cprint('fMRI conversion done.')
 
@@ -244,7 +246,12 @@ def fmri_paths_to_bids(dest_dir, fmri_paths, mod_to_update=False):
                     fmri_path = fmri_info['Path'].values[0]
                     dcm_to_convert = adni_utils.check_two_dcm_folder(fmri_path, dest_dir,
                                                                 fmri_info['IMAGEUID'].values[0])
-                    bids.convert_fmri(dcm_to_convert, path.join(ses_path, 'func'), bids_file_name)
+
+                    if not os.path.isfile(ses_path, 'func', bids_file_name +'.nii.gz'):
+
+                        bids.convert_fmri(dcm_to_convert, path.join(ses_path, 'func'), bids_file_name)
+                    else:
+                        print("Images already converted")
 
                     # Delete the temporary folder used for copying fmri with 2 subjects inside the DICOM folder
                     if os.path.exists(path.join(dest_dir, 'tmp_dcm_folder')):
