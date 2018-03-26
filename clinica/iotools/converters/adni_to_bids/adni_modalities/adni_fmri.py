@@ -249,7 +249,7 @@ def fmri_paths_to_bids(dest_dir, fmri_paths, mod_to_update=False):
                                                                 fmri_info['IMAGEUID'].values[0])
                     cprint(os.path.join(ses_path, 'func', bids_file_name +'_task-rest_bold.nii.gz'))
 
-                    if not os.path.isfile(os.path.join(ses_path, 'func', bids_file_name +'.nii.gz')):
+                    if not os.path.isfile(os.path.join(ses_path, 'func', bids_file_name +'_task-rest_bold.nii.gz')):
 
                         bids.convert_fmri(dcm_to_convert, path.join(ses_path, 'func'), bids_file_name)
                     else:
