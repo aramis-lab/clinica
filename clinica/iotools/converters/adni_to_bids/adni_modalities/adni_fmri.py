@@ -204,6 +204,7 @@ def fmri_paths_to_bids(dest_dir, fmri_paths, mod_to_update=False):
     import shutil
     from glob import glob
     import clinica.iotools.bids_utils as bids
+    from clinica.utils.stream import cprint
 
     subjs_list = fmri_paths['Subject_ID'].drop_duplicates().values
 
@@ -246,12 +247,13 @@ def fmri_paths_to_bids(dest_dir, fmri_paths, mod_to_update=False):
                     fmri_path = fmri_info['Path'].values[0]
                     dcm_to_convert = adni_utils.check_two_dcm_folder(fmri_path, dest_dir,
                                                                 fmri_info['IMAGEUID'].values[0])
+                    cprint(os.path.join(ses_path, 'func', bids_file_name +'.nii.gz'))
 
                     if not os.path.isfile(os.path.join(ses_path, 'func', bids_file_name +'.nii.gz')):
 
                         bids.convert_fmri(dcm_to_convert, path.join(ses_path, 'func'), bids_file_name)
                     else:
-                        print("Images already converted")
+                        cprint("Images already converted")
 
                     # Delete the temporary folder used for copying fmri with 2 subjects inside the DICOM folder
                     if os.path.exists(path.join(dest_dir, 'tmp_dcm_folder')):
