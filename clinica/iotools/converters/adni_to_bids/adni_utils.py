@@ -323,6 +323,8 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
 
             sessions_df = sessions_df[columns_order]
 
+            sessions_df[['adas_Q1','adas_Q2','adas_Q3','adas_Q4','adas_Q5','adas_Q6','adas_Q7','adas_Q8','adas_Q9','adas_Q10','adas_Q11','adas_Q12','adas_Q13']] = sessions_df[['adas_Q1','adas_Q2','adas_Q3','adas_Q4','adas_Q5','adas_Q6','adas_Q7','adas_Q8','adas_Q9','adas_Q10','adas_Q11','adas_Q12','adas_Q13']].apply(pd.to_numeric)
+
             sessions_df['adas_memory'] = float(sessions_df['adas_Q1']) + float(sessions_df['adas_Q4']) + float(sessions_df['adas_Q7']) + float(sessions_df['adas_Q8']) + float(sessions_df['adas_Q9']) #/ 45
             sessions_df['adas_language'] = float(sessions_df['adas_Q2']) + float(sessions_df['adas_Q5']) + float(sessions_df['adas_Q10']) + float(sessions_df['adas_Q11']) + float(sessions_df['adas_Q12']) #/ 25
             sessions_df['adas_praxis'] = float(sessions_df['adas_Q3']) + float(sessions_df['adas_Q6']) #/ 10
