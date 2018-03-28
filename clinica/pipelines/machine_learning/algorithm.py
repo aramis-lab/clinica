@@ -357,17 +357,18 @@ class RandomForest(base.MLAlgorithm):
                                                 n_jobs=self._n_threads)
         
         classifier.fit(x_train, y_train)
+        y_hat_train = classifier.predict(x_train)
         y_hat = classifier.predict(x_test)
         proba_test = classifier.predict_proba(x_test)[:, 1]
         auc = roc_auc_score(y_test, proba_test)
         
-        return classifier, y_hat, auc
+        return classifier, y_hat, auc, y_hat_train
 
     def _grid_search(self, x_train, x_test, y_train, y_test, n_estimators, max_depth, min_samples_split, max_features):
     
-        _, y_hat, _ = self._launch_random_forest(x_train, x_test, y_train, y_test,
-                                                 n_estimators, max_depth,
-                                                 min_samples_split, max_features)
+        _, y_hat, _, _ = self._launch_random_forest(x_train, x_test, y_train, y_test,
+                                                    n_estimators, max_depth,
+                                                    min_samples_split, max_features)
         res = utils.evaluate_prediction(y_test, y_hat)
         
         return res['balanced_accuracy']
@@ -464,18 +465,22 @@ class RandomForest(base.MLAlgorithm):
         x_test = self._x[test_index]
         y_test = self._y[test_index]
         
-        _, y_hat, auc = self._launch_random_forest(x_train, x_test, y_train, y_test,
-                                                   best_parameter['n_estimators'],
-                                                   best_parameter['max_depth'],
-                                                   best_parameter['min_samples_split'],
-                                                   best_parameter['max_features'])
+        _, y_hat, auc, y_hat_train = self._launch_random_forest(x_train, x_test, y_train, y_test,
+                                                                best_parameter['n_estimators'],
+                                                                best_parameter['max_depth'],
+                                                                best_parameter['min_samples_split'],
+                                                                best_parameter['max_features'])
         
         result = dict()
         result['best_parameter'] = best_parameter
         result['evaluation'] = utils.evaluate_prediction(y_test, y_hat)
+        result['evaluation_train'] = utils.evaluate_prediction(y_train, y_hat_train)
         result['y_hat'] = y_hat
+        result['y_hat_train'] = y_hat_train
         result['y'] = y_test
+        result['y_train'] = y_train
         result['y_index'] = test_index
+        result['x_index'] = train_index
         result['auc'] = auc
         
         return result
