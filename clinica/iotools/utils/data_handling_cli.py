@@ -68,7 +68,7 @@ class CmdParserMergeTsv(ce.CmdParser):
         dt.create_merge_file(args.bids_directory, args.out_tsv,
                              caps_dir=args.caps_directory, pipelines=args.pipelines,
                              atlas_selection=args.atlas_selection, pvc_restriction=args.pvc_restriction,
-                             tsv_file=args.subjects_sessions_tsv)
+                             tsv_file=args.subjects_sessions_tsv, group_selection=args.group_selection)
 
 
 class CmdParserMissingModalities(ce.CmdParser):
