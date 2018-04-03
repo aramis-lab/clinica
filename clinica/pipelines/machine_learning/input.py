@@ -1,5 +1,3 @@
-# coding: utf8
-
 
 import abc
 import os.path as path
@@ -15,7 +13,7 @@ import clinica.pipelines.machine_learning.svm_utils as utils
 
 
 __author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
+__copyright__ = "Copyright 2016, The Aramis Lab Team"
 __credits__ = ["Jorge Samper Gonzalez", "Simona Bottani"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
@@ -23,10 +21,10 @@ __maintainer__ = "Jorge Samper Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
-
 class CAPSInput(base.MLInput):
 
-    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, precomputed_kernel=None):
+
+   init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, precomputed_kernel=None, balanced_down_sample=False):
         """
 
         Args:
@@ -34,7 +32,7 @@ class CAPSInput(base.MLInput):
             subjects_visits_tsv:
             diagnoses_tsv:
             group_id:
-            image_type: 'T1', 'fdg', 'av45', 'pib' or 'flute'
+            image_type: 'T1', 'fdg', 'av45', 'pib' or 'flute', 'dwi'
             precomputed_kernel:
         """
 
@@ -45,20 +43,40 @@ class CAPSInput(base.MLInput):
         self._x = None
         self._y = None
         self._kernel = None
-
-        subjects_visits = parsers.read_csv(subjects_visits_tsv, sep='\t')
-        if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
-            raise Exception('Subjects and visits file is not in the correct format.')
-        self._subjects = list(subjects_visits.participant_id)
-        self._sessions = list(subjects_visits.session_id)
+        self._balanced_down_sample = balanced_down_sample
 
         diagnoses = parsers.read_csv(diagnoses_tsv, sep='\t')
         if 'diagnosis' not in list(diagnoses.columns.values):
             raise Exception('Diagnoses file is not in the correct format.')
-        self._diagnoses = list(diagnoses.diagnosis)
+        if balanced_down_sample == False:
+            self._diagnoses = list(diagnoses.diagnosis)
+            self._subjects = list(diagnoses.participant_id)
+            self._sessions = list(diagnoses.session_id)
+        else:
+            print 'Do random subsampling the majority group to number of subjects of minority group:'
+            counts = Counter(list(diagnoses.diagnosis))
+            label1 = counts.keys()[0]
+            label2 = counts.keys()[1]
+            count_label1 = counts[label1]
+            count_label2 = counts[label2]
+            if count_label1 < count_label2:
+                majority_df = diagnoses.loc[diagnoses['diagnosis']==label2]
+                subjects_down_sampled = majority_df.sample(n=count_label1)
+                minority_df = diagnoses.loc[diagnoses['diagnosis']==label1]
+            elif count_label1 > count_label2:
+                majority_df = diagnoses.loc[diagnoses['diagnosis'] == label1]
+                subjects_down_sampled = majority_df.sample(n=count_label2)
+                minority_df = diagnoses.loc[diagnoses['diagnosis'] == label2]
+            else:
+                print "The data is balanced already"
+
+            self._diagnoses = list(subjects_down_sampled.diagnosis) + list(minority_df.diagnosis)
+            self._subjects = list(subjects_down_sampled.participant_id) + list(minority_df.participant_id)
+            self._sessions = list(subjects_down_sampled.session_id) + list(minority_df.session_id)
+
 
         if image_type not in ['T1', 'fdg', 'av45', 'pib', 'flute', 'dwi']:
-            raise Exception("Incorrect image type. It must be one of the values 'T1', 'fdg', 'av45', 'pib', 'flute' or 'dwi'")
+            raise Exception("Incorrect image type. It must be one of the values 'T1', 'fdg', 'av45', 'pib' or 'flute'")
 
         if precomputed_kernel is not None:
             if type(precomputed_kernel) == np.ndarray:
@@ -74,8 +92,7 @@ class CAPSInput(base.MLInput):
                 raise Exception("""Precomputed kernel provided is not in the correct format.
                 It must be a numpy.ndarray object with number of rows and columns equal to the number of subjects,
                 or a filename to a numpy txt file containing an object with the described format.""")
-
-    @abc.abstractmethod
+    abc.abstractmethod
     def get_images(self):
         """
 
