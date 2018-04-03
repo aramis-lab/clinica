@@ -24,7 +24,7 @@ __status__ = "Development"
 class CAPSInput(base.MLInput):
 
 
-   def init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, precomputed_kernel=None, balanced_down_sample=False):
+    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, precomputed_kernel=None, balanced_down_sample=False):
         """
 
         Args:
