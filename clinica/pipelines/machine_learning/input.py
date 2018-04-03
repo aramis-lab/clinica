@@ -92,7 +92,8 @@ class CAPSInput(base.MLInput):
                 raise Exception("""Precomputed kernel provided is not in the correct format.
                 It must be a numpy.ndarray object with number of rows and columns equal to the number of subjects,
                 or a filename to a numpy txt file containing an object with the described format.""")
-    abc.abstractmethod
+
+    @abc.abstractmethod
     def get_images(self):
         """
 
