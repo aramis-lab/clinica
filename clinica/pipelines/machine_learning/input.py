@@ -10,7 +10,6 @@ import clinica.pipelines.machine_learning.voxel_based_io as vbio
 import clinica.pipelines.machine_learning.vertex_based_io as vtxbio
 import clinica.pipelines.machine_learning.region_based_io as rbio
 import clinica.pipelines.machine_learning.svm_utils as utils
-from collections import Counter
 
 __author__ = "Jorge Samper Gonzalez"
 __copyright__ = "Copyright 2016, The Aramis Lab Team"
@@ -24,7 +23,7 @@ __status__ = "Development"
 class CAPSInput(base.MLInput):
 
 
-    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, precomputed_kernel=None, balanced_down_sample=False):
+    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, precomputed_kernel=None):
         """
 
         Args:
@@ -43,37 +42,13 @@ class CAPSInput(base.MLInput):
         self._x = None
         self._y = None
         self._kernel = None
-        self._balanced_down_sample = balanced_down_sample
 
         diagnoses = parsers.read_csv(diagnoses_tsv, sep='\t')
         if 'diagnosis' not in list(diagnoses.columns.values):
             raise Exception('Diagnoses file is not in the correct format.')
-        if balanced_down_sample == False:
-            self._diagnoses = list(diagnoses.diagnosis)
-            self._subjects = list(diagnoses.participant_id)
-            self._sessions = list(diagnoses.session_id)
-        else:
-            print 'Do random subsampling the majority group to number of subjects of minority group:'
-            counts = Counter(list(diagnoses.diagnosis))
-            label1 = counts.keys()[0]
-            label2 = counts.keys()[1]
-            count_label1 = counts[label1]
-            count_label2 = counts[label2]
-            if count_label1 < count_label2:
-                majority_df = diagnoses.loc[diagnoses['diagnosis']==label2]
-                subjects_down_sampled = majority_df.sample(n=count_label1)
-                minority_df = diagnoses.loc[diagnoses['diagnosis']==label1]
-            elif count_label1 > count_label2:
-                majority_df = diagnoses.loc[diagnoses['diagnosis'] == label1]
-                subjects_down_sampled = majority_df.sample(n=count_label2)
-                minority_df = diagnoses.loc[diagnoses['diagnosis'] == label2]
-            else:
-                print "The data is balanced already"
-
-            self._diagnoses = list(subjects_down_sampled.diagnosis) + list(minority_df.diagnosis)
-            self._subjects = list(subjects_down_sampled.participant_id) + list(minority_df.participant_id)
-            self._sessions = list(subjects_down_sampled.session_id) + list(minority_df.session_id)
-
+        self._diagnoses = list(diagnoses.diagnosis)
+        self._subjects = list(diagnoses.participant_id)
+        self._sessions = list(diagnoses.session_id)
 
         if image_type not in ['T1', 'fdg', 'av45', 'pib', 'flute', 'dwi']:
             raise Exception("Incorrect image type. It must be one of the values 'T1', 'fdg', 'av45', 'pib' or 'flute'")
