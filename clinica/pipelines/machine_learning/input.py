@@ -10,7 +10,7 @@ import clinica.pipelines.machine_learning.voxel_based_io as vbio
 import clinica.pipelines.machine_learning.vertex_based_io as vtxbio
 import clinica.pipelines.machine_learning.region_based_io as rbio
 import clinica.pipelines.machine_learning.svm_utils as utils
-
+from collections import Counter
 
 __author__ = "Jorge Samper Gonzalez"
 __copyright__ = "Copyright 2016, The Aramis Lab Team"
