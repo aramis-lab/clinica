@@ -1,3 +1,5 @@
+# coding: utf8
+
 
 import abc
 import os.path as path
@@ -11,8 +13,9 @@ import clinica.pipelines.machine_learning.vertex_based_io as vtxbio
 import clinica.pipelines.machine_learning.region_based_io as rbio
 import clinica.pipelines.machine_learning.svm_utils as utils
 
+
 __author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
 __credits__ = ["Jorge Samper Gonzalez", "Simona Bottani"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
@@ -20,8 +23,8 @@ __maintainer__ = "Jorge Samper Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
-class CAPSInput(base.MLInput):
 
+class CAPSInput(base.MLInput):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, precomputed_kernel=None):
         """
@@ -31,7 +34,7 @@ class CAPSInput(base.MLInput):
             subjects_visits_tsv:
             diagnoses_tsv:
             group_id:
-            image_type: 'T1', 'fdg', 'av45', 'pib' or 'flute', 'dwi'
+            image_type: 'T1', 'fdg', 'av45', 'pib' or 'flute'
             precomputed_kernel:
         """
 
@@ -43,15 +46,19 @@ class CAPSInput(base.MLInput):
         self._y = None
         self._kernel = None
 
+        subjects_visits = parsers.read_csv(subjects_visits_tsv, sep='\t')
+        if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
+            raise Exception('Subjects and visits file is not in the correct format.')
+        self._subjects = list(subjects_visits.participant_id)
+        self._sessions = list(subjects_visits.session_id)
+
         diagnoses = parsers.read_csv(diagnoses_tsv, sep='\t')
         if 'diagnosis' not in list(diagnoses.columns.values):
             raise Exception('Diagnoses file is not in the correct format.')
         self._diagnoses = list(diagnoses.diagnosis)
-        self._subjects = list(diagnoses.participant_id)
-        self._sessions = list(diagnoses.session_id)
 
         if image_type not in ['T1', 'fdg', 'av45', 'pib', 'flute', 'dwi']:
-            raise Exception("Incorrect image type. It must be one of the values 'T1', 'fdg', 'av45', 'pib' or 'flute'")
+            raise Exception("Incorrect image type. It must be one of the values 'T1', 'fdg', 'av45', 'pib', 'flute' or 'dwi'")
 
         if precomputed_kernel is not None:
             if type(precomputed_kernel) == np.ndarray:
