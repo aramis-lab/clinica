@@ -216,7 +216,7 @@ class RepeatedHoldOut(base.MLValidation):
         self._bal_accuracy_resampled_t = None
         self._bal_accuracy_corrected_resampled_t = None
 
-    def validate(self, y, n_threads=15, splits_indices=None):
+    def validate(self, y, n_threads=15, splits_indices=None, inner_cv=True):
 
         if splits_indices is None:
             splits = StratifiedShuffleSplit(n_splits=self._n_iterations, test_size=self._test_size)
@@ -229,7 +229,10 @@ class RepeatedHoldOut(base.MLValidation):
         for i in range(self._n_iterations):
 
             train_index, test_index = self._cv[i]
-            async_result[i] = async_pool.apply_async(self._ml_algorithm.evaluate, (train_index, test_index))
+            if inner_cv:
+                async_result[i] = async_pool.apply_async(self._ml_algorithm.evaluate, (train_index, test_index))
+            else:
+                async_result[i] = async_pool.apply_async(self._ml_algorithm.evaluate_no_cv, (train_index, test_index))
 
         async_pool.close()
         async_pool.join()

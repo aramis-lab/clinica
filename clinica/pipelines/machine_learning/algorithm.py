@@ -485,6 +485,38 @@ class RandomForest(base.MLAlgorithm):
         
         return result
 
+    def evaluate_no_cv(self, train_index, test_index):
+
+        x_train = self._x[train_index]
+        y_train = self._y[train_index]
+        x_test = self._x[test_index]
+        y_test = self._y[test_index]
+
+        best_parameter = dict()
+        best_parameter['n_estimators'] = self._n_estimators_range
+        best_parameter['max_depth'] = self._max_depth_range
+        best_parameter['min_samples_split'] = self._min_samples_split_range
+        best_parameter['max_features'] = self._max_features_range
+
+        _, y_hat, auc, y_hat_train = self._launch_random_forest(x_train, x_test, y_train, y_test,
+                                                                self._n_estimators_range,
+                                                                self._max_depth_range,
+                                                                self._min_samples_split_range,
+                                                                self._max_features_range)
+        result = dict()
+        result['best_parameter'] = best_parameter
+        result['evaluation'] = utils.evaluate_prediction(y_test, y_hat)
+        result['evaluation_train'] = utils.evaluate_prediction(y_train, y_hat_train)
+        result['y_hat'] = y_hat
+        result['y_hat_train'] = y_hat_train
+        result['y'] = y_test
+        result['y_train'] = y_train
+        result['y_index'] = test_index
+        result['x_index'] = train_index
+        result['auc'] = auc
+
+        return result
+
     def apply_best_parameters(self, results_list):
 
         mean_bal_acc = np.mean([result['best_parameter']['balanced_accuracy'] for result in results_list])
