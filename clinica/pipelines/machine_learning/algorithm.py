@@ -506,6 +506,7 @@ class RandomForest(base.MLAlgorithm):
         result = dict()
         result['best_parameter'] = best_parameter
         result['evaluation'] = utils.evaluate_prediction(y_test, y_hat)
+        best_parameter['balanced_accuracy'] = result['evaluation']['balanced_accuracy']
         result['evaluation_train'] = utils.evaluate_prediction(y_train, y_hat_train)
         result['y_hat'] = y_hat
         result['y_hat_train'] = y_hat_train
