@@ -522,7 +522,7 @@ class RandomForest(base.MLAlgorithm):
 
         mean_bal_acc = np.mean([result['best_parameter']['balanced_accuracy'] for result in results_list])
         best_n_estimators = int(round(np.mean([result['best_parameter']['n_estimators'] for result in results_list])))
-        best_max_depth = int(round(np.mean([result['best_parameter']['max_depth'] for result in results_list])))
+        best_max_depth = int(round(np.mean([result['best_parameter']['max_depth'] if result['best_parameter']['max_depth'] is not None else 50 for result in results_list])))
         best_min_samples_split = int(round(np.mean([result['best_parameter']['min_samples_split'] for result in results_list])))
         best_max_features = np.mean([result['best_parameter']['max_features'] for result in results_list])
 
