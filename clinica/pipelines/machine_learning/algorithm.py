@@ -533,9 +533,9 @@ class RandomForest(base.MLAlgorithm):
             if result_feat is None:
                 max_features = 1.0
             elif result_feat in ["auto", "sqrt"]:
-                max_features = np.sqrt(n_features)
+                max_features = np.sqrt(n_features) / n_features
             elif result_feat == "log2":
-                max_features = np.log2(n_features)
+                max_features = np.log2(n_features) / n_features
             elif isinstance(result_feat, int):
                 max_features = float(result_feat) / n_features
             elif isinstance(result_feat, float):
