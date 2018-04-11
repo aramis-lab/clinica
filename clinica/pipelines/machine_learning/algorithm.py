@@ -524,7 +524,27 @@ class RandomForest(base.MLAlgorithm):
         best_n_estimators = int(round(np.mean([result['best_parameter']['n_estimators'] for result in results_list])))
         best_max_depth = int(round(np.mean([result['best_parameter']['max_depth'] if result['best_parameter']['max_depth'] is not None else 50 for result in results_list])))
         best_min_samples_split = int(round(np.mean([result['best_parameter']['min_samples_split'] for result in results_list])))
-        best_max_features = np.mean([result['best_parameter']['max_features'] for result in results_list])
+
+        max_feat = []
+        n_features = self._x.shape[1]
+        for result in results_list:
+            result_feat = result['best_parameter']['max_features']
+
+            if result_feat is None:
+                max_features = 1.0
+            elif result_feat in ["auto", "sqrt"]:
+                max_features = np.sqrt(n_features)
+            elif result_feat == "log2":
+                max_features = np.log2(n_features)
+            elif isinstance(result_feat, int):
+                max_features = float(result_feat) / n_features
+            elif isinstance(result_feat, float):
+                max_features = result_feat
+            else:
+                raise "Unknown max_features type"
+
+            max_feat.append(max_features)
+        best_max_features = np.mean(max_feat)
 
         if self._balanced:
             classifier = RandomForestClassifier(n_estimators=best_n_estimators, max_depth=best_max_depth,
