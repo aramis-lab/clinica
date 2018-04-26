@@ -463,7 +463,7 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                             if not pd.isnull(sessions_fields[i]):
                                 # Extract only the fields related to the current file opened
                                 if location in field_location[i]:
-                                    if location == 'ADAS_ADNIGO2.csv' or location == 'DXSUM_PDXCONV_ADNIALL.csv' or location == 'CDR.csv':
+                                    if location == 'ADAS_ADNIGO2.csv' or location == 'DXSUM_PDXCONV_ADNIALL.csv' or location == 'CDR.csv' or location == 'NEUROBAT.csv':
                                         if type(row['VISCODE2']) == float:
                                             continue
                                         visit_id = row['VISCODE2']
