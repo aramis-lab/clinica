@@ -302,6 +302,7 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
     from os import path
     import os
     import pandas as pd
+    import numpy as np
 
     columns_order = remove_fields_duplicated(fields_bids)
 
@@ -329,6 +330,13 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
             sessions_df['adas_language'] = sessions_df['adas_Q2'] + sessions_df['adas_Q5'] + sessions_df['adas_Q10'] + sessions_df['adas_Q11'] + sessions_df['adas_Q12'] #/ 25
             sessions_df['adas_praxis'] = sessions_df['adas_Q3'] + sessions_df['adas_Q6'] #/ 10
             sessions_df['adas_concentration'] = sessions_df['adas_Q13'] #/ 5
+
+            list_diagnosis_nan = np.where(pd.isnull(sessions_df['diagnosis']))
+            diagnosis_change = {1: 'CN', 2: 'MCI', 3: 'AD'}
+
+            for j in list_diagnosis_nan[0]:
+                if not is_nan(sessions_df['adni_diagnosis_change'][j]) and int(sessions_df['adni_diagnosis_change'][j]) < 4:
+                    sessions_df['diagnosis'][j] = diagnosis_change[int(sessions_df['adni_diagnosis_change'][j])]
 
 
             sessions_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf-8')
@@ -358,6 +366,7 @@ def update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_f
 
     if bids_field_name == 'diagnosis':
         field_value = convert_diagnosis_code(field_value)
+
 
     # If the dictionary already contain the subject add or update information regarding a specific session,
     #  otherwise create the entry
