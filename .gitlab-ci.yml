@@ -1,3 +1,6 @@
+# Continous Integration Scrip
+# Clinica - ARAMIS
+#
 # TODO:
 #   - [ ] Test dataset
 #   - [ ] Doc generation
@@ -6,6 +9,7 @@
 
 stages:
   - build
+  - install
   - test
   - deploy
 
@@ -16,42 +20,29 @@ variables:
   ENVIRONMENT_TEST: "/export/applications/clinica/Ubuntu14.04/dot_path"
 
 before_script:
-  - echo $SHELL
   - pwd
-  - whoami
-  - cat $ENVIRONMENT_TEST
-  - source $ENVIRONMENT_TEST
 
-job_pip_install:
-  # Test the basic Clinica installation
+after_script:
+  - conda env remove --name clinica_env
+
+create_environment:
+  # Install python dependencies for  Clinica 
   stage: build
+  tags:
+    - install
   script:
+    - conda create --name clinica_env python=2.7
+    - source activate clinica_env
     - pip install -r requirements.txt
     - pip install --no-deps --ignore-installed .
     - eval "$(register-python-argcomplete clinica)"
-
-# TODO: Uncomment when unit tests are set    
-# job_py_test:
-#   stage: test
-#   script: 
-#     - pytest .
+    - source deactivate
   
-job_cli_test:
-  stage: test
+install_clinica:
+  stage: install
+  tags:
+    - install
   script:
+    - source activate clinica_env
     - clinica --help
-
-# TODO: Uncomment when computing power will be sufficient and CI policy is set
-# job_pipelines_test:
-#   stage: test
-#   script:
-#     - clinica run fmri-preprocessing -wd $WD_TEST -np 2 $BIDS_TEST $CAPS_TEST
-#   after_script:
-#     - rm -rf $WD_TEST/*
-#     - rm -rf $CAPS_TEST/*
-
-# TODO: Uncomment when everyone has switched to develop branch
-# job_push_on_master:
-#   stage: deploy
-#   script:
-#     - git push origin develop:master
+    - source deactivate
