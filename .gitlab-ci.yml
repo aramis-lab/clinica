@@ -31,7 +31,7 @@ create_environment:
   tags:
     - install
   script:
-    - conda create --name clinica_env python=2.7
+    - conda create --name clinica_env python=2.7 pip=9.0.3
     - source activate clinica_env
     - pip install -r requirements.txt
     - pip install -e .
