@@ -11,6 +11,7 @@ Clinica.egg-info
 *.sys
 *.so
 .idea
+.vscode
 .coverage
 crash*
 .DS_Store
