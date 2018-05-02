@@ -36,13 +36,14 @@ create_environment:
     - pip install -r requirements.txt
     - pip install -e .
     - eval "$(register-python-argcomplete clinica)"
-    - source deactivate
-  
-install_clinica:
-  stage: install
-  tags:
-    - install
-  script:
-    - source activate clinica_env
     - clinica --help
     - source deactivate
+  
+#install_clinica:
+#  stage: install
+#  tags:
+#    - install
+#  script:
+#    - source activate clinica_env
+#    - clinica --help
+#    - source deactivate
