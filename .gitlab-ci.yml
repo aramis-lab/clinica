@@ -31,9 +31,8 @@ create_environment:
   tags:
     - install
   script:
-    - conda create --name clinica_env python=2.7 pip=9.0.3
+    - conda env create -f environment.yml
     - source activate clinica_env
-    - pip install -r requirements.txt
     - pip install -e .
     - eval "$(register-python-argcomplete clinica)"
     - clinica --help
