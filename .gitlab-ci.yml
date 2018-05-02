@@ -13,11 +13,11 @@ stages:
   - test
   - deploy
 
-variables:
-  BIDS_TEST: "/localdrive10TB/data/gitlab-runner/BIDS_TEST"
-  CAPS_TEST: "/localdrive10TB/data/gitlab-runner/CAPS_TEST"
-  WD_TEST: "/localdrive10TB/data/gitlab-runner/WD_TEST"
-  ENVIRONMENT_TEST: "/export/applications/clinica/Ubuntu14.04/dot_path"
+    #variables:
+    #  BIDS_TEST: "/localdrive10TB/data/gitlab-runner/BIDS_TEST"
+    #  CAPS_TEST: "/localdrive10TB/data/gitlab-runner/CAPS_TEST"
+    #  WD_TEST: "/localdrive10TB/data/gitlab-runner/WD_TEST"
+    #  ENVIRONMENT_TEST: "/export/applications/clinica/Ubuntu14.04/dot_path"
 
 before_script:
   - pwd
@@ -34,7 +34,7 @@ create_environment:
     - conda create --name clinica_env python=2.7
     - source activate clinica_env
     - pip install -r requirements.txt
-    - pip install --no-deps --ignore-installed .
+    - pip install -e .
     - eval "$(register-python-argcomplete clinica)"
     - source deactivate
   
