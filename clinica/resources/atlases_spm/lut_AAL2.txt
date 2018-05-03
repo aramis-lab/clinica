@@ -1,4 +1,5 @@
-0     Background	0	0	0	0
+
+0 Background	0	0	0	0
 2001	Precentral_L	204	182	142	0
 2002	Precentral_R	204	182	142	0
 2101	Frontal_Sup_2_L	42	204	164	0

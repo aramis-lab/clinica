@@ -342,6 +342,7 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
             sessions_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf-8')
 
 
+
 def update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_field_name):
     """
     Update the sessions dictionary for the bids subject specified by subj_bids created by the method
