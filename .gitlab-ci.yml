@@ -20,7 +20,7 @@ after_script:
 
 install_mac:
   # Install python dependencies for  Clinica 
-  stage: build
+  stage: install 
   tags:
     - install
     - macOS
@@ -34,7 +34,7 @@ install_mac:
 
 install_linux:
   # Install python dependencies for  Clinica 
-  stage: build
+  stage: install
   tags:
     - install
     - linux
