@@ -1,12 +1,6 @@
 # Continous Integration Scrip
 # Clinica - ARAMIS
 #
-# TODO:
-#   - [ ] Test dataset
-#   - [ ] Doc generation
-#   - [ ] Automatize pipeline CL tests
-#   - [ ] Automatize pipeline CL options tests
-
 stages:
   - build
   - install
@@ -25,11 +19,12 @@ before_script:
 after_script:
   - conda env remove --name clinica_env
 
-create_environment:
+create_environment_macOS_sierra:
   # Install python dependencies for  Clinica 
   stage: build
   tags:
     - install
+    - macOS
   script:
     - conda env create -f environment.yml
     - source activate clinica_env
@@ -38,6 +33,20 @@ create_environment:
     - clinica --help
     - source deactivate
   
+
+create_environment_linux_ubuntu:
+  # Install python dependencies for  Clinica 
+  stage: build
+  tags:
+    - install
+    - linux
+  script:
+    - conda env create -f environment.yml
+    - source activate clinica_env
+    - pip install -e .
+    - eval "$(register-python-argcomplete clinica)"
+    - clinica --help
+    - source deactivate
 #install_clinica:
 #  stage: install
 #  tags:
