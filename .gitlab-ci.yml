@@ -2,6 +2,7 @@
 # Clinica - ARAMIS
 #
 stages:
+  - build
   - install
   - test
   - deploy
@@ -14,11 +15,24 @@ stages:
 
 before_script:
   - pwd
-  - conda env create -f environment.yml
 after_script:
-  - conda env remove -y  --name clinica_env
+  #  - conda env remove -y  --name clinica_env
 
-install_mac:
+build:mac:
+  stage: build
+  tags:
+    - macOS
+  script:
+    - conda env create --force --file environment.yml
+
+build:linux:
+  stage: build
+  tags:
+    - linux
+  script:
+    - conda env create --force --file environment.yml
+
+install:mac:
   # Install python dependencies for  Clinica 
   stage: install 
   tags:
@@ -32,7 +46,7 @@ install_mac:
     - source deactivate
   
 
-install_linux:
+install:linux:
   # Install python dependencies for  Clinica 
   stage: install
   tags:
@@ -45,10 +59,10 @@ install_linux:
     - clinica --help
     - source deactivate
 
-test_spm_full_prep_mac:
+test_spm_full_prep:linux:
   stage: test
   tags:
-    - macOS
+    - linux
   script:
     - source activate clinica_env
     - clinica --help
