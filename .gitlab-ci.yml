@@ -47,7 +47,7 @@ install_linux:
 
 test_spm_full_prep_mac:
   stage: test
-  tag:
+  tags:
     - macOS
   script:
     - source activate clinica_env
