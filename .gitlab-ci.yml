@@ -47,7 +47,7 @@ install:mac:
     - macOS
   script:
     - source activate clinica_env
-    - pip install -e .
+    - pip install .
     - eval "$(register-python-argcomplete clinica)"
     - clinica --help
     - source deactivate
@@ -61,7 +61,7 @@ install:linux:
     - linux
   script:
     - source activate clinica_env
-    - pip install -e .
+    - pip install .
     - eval "$(register-python-argcomplete clinica)"
     - clinica --help
     - source deactivate
