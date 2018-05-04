@@ -41,10 +41,6 @@ create_environment_linux_ubuntu:
     - install
     - linux
   script:
-    - echo $SHELL
-    - cat ~/.bashrc  
-    - source ~/.bashrc
-    - echo $PATH
     - conda env create -f environment.yml
     - source activate clinica_env
     - pip install -e .
