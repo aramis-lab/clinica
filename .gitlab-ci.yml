@@ -42,6 +42,7 @@ create_environment_linux_ubuntu:
     - linux
   script:
     - echo $SHELL
+    - cat ~/.bashrc  
     - source ~/.bashrc
     - echo $PATH
     - conda env create -f environment.yml
