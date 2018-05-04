@@ -17,7 +17,7 @@ before_script:
   - pwd
 
 after_script:
-  - conda env remove --name clinica_env
+  - conda env remove -y  --name clinica_env
 
 create_environment_macOS_sierra:
   # Install python dependencies for  Clinica 
@@ -41,6 +41,7 @@ create_environment_linux_ubuntu:
     - install
     - linux
   script:
+    - echo $SHELL
     - conda env create -f environment.yml
     - source activate clinica_env
     - pip install -e .
