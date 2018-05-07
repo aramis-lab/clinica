@@ -94,5 +94,5 @@ pkg:
     name: "$CI_COMMIT_REF_NAME"
     paths:
       - clinica-$CI_COMMIT_REF_NAME.tar.gz
-    only:
-      - tags
+  only:
+    - tags
