@@ -89,7 +89,7 @@ package:mac:
   tags:
     - macOS
   script:
-    - tar -cvzf clinica-$CI_COMMIT_REF_NAME.tar.gz  ../
+    - tar -cvzf clinica-$CI_COMMIT_REF_NAME.tar.gz  ./* --exclude='.*'
   artifacts:
     name: "$CI_COMMIT_REF_NAME"
     paths:
