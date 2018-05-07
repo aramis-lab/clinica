@@ -87,7 +87,7 @@ test_install:mac:
 package:mac:
   stage: package
   tags:
-    - mac
+    - macOS
   script:
     - tar -cvzf clinica-$CI_COMMIT_REF_NAME.tar.gz  ../
   artifacts:
