@@ -5,7 +5,7 @@ stages:
   - build
   - install
   - test
-  - deploy
+  - package 
 
     #variables:
     #  BIDS_TEST: "/localdrive10TB/data/gitlab-runner/BIDS_TEST"
@@ -66,7 +66,7 @@ install:linux:
     - clinica --help
     - source deactivate
 
-test_spm_full_prep:linux:
+test_install:linux:
   stage: test
   tags:
     - linux
@@ -75,3 +75,23 @@ test_spm_full_prep:linux:
     - clinica --help
     - source deactivate
 
+test_install:mac:
+  stage: test
+  tags:
+    - macOS
+  script:
+    - source activate clinica_env
+    - clinica --help
+    - source deactivate
+
+package:mac:
+  stage: package
+  tags:
+    - mac
+  script:
+    - tar -cvzf clinica-$CI_COMMIT_REF_NAME.tar.gz  ../
+  artifacts:
+    name: "$CI_COMMIT_REF_NAME"
+    paths:
+      - clinica-$CI_COMMIT_REF_NAME.tar.gz
+    expire_in: 5 hours
