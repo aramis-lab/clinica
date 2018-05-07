@@ -84,7 +84,7 @@ test_install:mac:
     - clinica --help
     - source deactivate
 
-package:mac:
+pkg:
   stage: package
   tags:
     - macOS
@@ -94,4 +94,5 @@ package:mac:
     name: "$CI_COMMIT_REF_NAME"
     paths:
       - clinica-$CI_COMMIT_REF_NAME.tar.gz
-    expire_in: 5 hours
+    only:
+      - tags
