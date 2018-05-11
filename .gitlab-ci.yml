@@ -30,14 +30,38 @@ build:mac:
   tags:
     - macOS
   script:
-    - conda env create --force --file environment.yml
+    # If the environment already exists or if it's changed
+    # (by editing the environment.yml file), the environment
+    # is recreated.
+    - >
+      if conda env list|grep -w "clinica_env"; then
+        if git diff HEAD~ --name-only|grep environment.yml; then
+          echo "REcreate environment clinica_env"
+          conda env create --force --file environment.yml
+        fi;
+      else
+        echo "Create environment clinica_env"
+        conda env create --force --file environment.yml
+      fi;
 
 build:linux:
   stage: build
   tags:
     - linux
   script:
-    - conda env create --force --file environment.yml
+    # If the environment already exists or if it's changed
+    # (by editing the environment.yml file), the environment
+    # is recreated.
+    - >
+      if conda env list|grep -w "clinica_env"; then
+        if git diff HEAD~ --name-only|grep environment.yml; then
+          echo "REcreate environment clinica_env"
+          conda env create --force --file environment.yml
+        fi;
+      else
+        echo "Create environment clinica_env"
+        conda env create --force --file environment.yml
+      fi;
 
 install:mac:
   # Install python dependencies for  Clinica 
