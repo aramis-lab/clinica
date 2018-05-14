@@ -18,7 +18,7 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-class T1SPMSegmentationCLI(ce.CmdParser):
+class T1VolumeSegmentationCLI(ce.CmdParser):
 
     def define_name(self):
         """Define the sub-command name to run this pipelines.
@@ -61,9 +61,9 @@ class T1SPMSegmentationCLI(ce.CmdParser):
     def run_command(self, args):
         """
         """
-        from t1_spm_segmentation_pipeline import T1SPMSegmentation
+        from t1_volume_segmentation_pipeline import T1VolumeSegmentation
 
-        pipeline = T1SPMSegmentation(bids_directory=self.absolute_path(args.bids_directory),
+        pipeline = T1VolumeSegmentation(bids_directory=self.absolute_path(args.bids_directory),
                                      caps_directory=self.absolute_path(args.caps_directory),
                                      tsv_file=self.absolute_path(args.subjects_sessions_tsv))
 

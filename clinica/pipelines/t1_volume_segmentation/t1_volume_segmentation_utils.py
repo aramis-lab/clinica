@@ -147,7 +147,7 @@ class ApplySegmentationDeformation(SPMCommand):
     Examples
     --------
 
-    >>> import clinica.pipelines.t1_spm_segmentation.t1_spm_segmentation_utils as seg_utils
+    >>> import clinica.pipelines.t1_volume_segmentation.t1_volume_segmentation_utils as seg_utils
     >>> inv = seg_utils.ApplySegmentationDeformation()
     >>> inv.inputs.in_files = 'T1w.nii'
     >>> inv.inputs.deformation = 'y_T1w.nii'

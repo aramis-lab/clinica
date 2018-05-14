@@ -119,7 +119,7 @@ def execute():
     from clinica.engine import CmdParser
 
     from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_cli import T1FreeSurferCrossSectionalCLI  # noqa
-    from clinica.pipelines.t1_spm_segmentation.t1_spm_segmentation_cli import T1SPMSegmentationCLI  # noqa
+    from clinica.pipelines.t1_volume_segmentation.t1_volume_segmentation_cli import T1VolumeSegmentationCLI  # noqa
     from clinica.pipelines.t1_spm_dartel.t1_spm_dartel_cli import T1SPMDartelCLI  # noqa
     from clinica.pipelines.t1_spm_dartel2mni.t1_spm_dartel2mni_cli import T1SPMDartel2MNICLI  # noqa
     from clinica.pipelines.t1_spm_full_prep.t1_spm_full_prep_cli import T1SPMFullPrepCLI  # noqa
@@ -136,7 +136,7 @@ def execute():
                                    extra_dir="pipelines").load()
     pipelines += [
         T1FreeSurferCrossSectionalCLI(),
-        T1SPMSegmentationCLI(),
+        T1VolumeSegmentationCLI(),
         T1SPMDartelCLI(),
         T1SPMDartel2MNICLI(),
         T1SPMFullPrepCLI(),
