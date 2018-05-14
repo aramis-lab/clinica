@@ -17,7 +17,7 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-class T1VolumeSegmentation(cpe.Pipeline):
+class T1VolumeTissueSegmentation(cpe.Pipeline):
     """T1 SPM Segmentation SHORT DESCRIPTION.
 
     Warnings:
@@ -39,7 +39,7 @@ class T1VolumeSegmentation(cpe.Pipeline):
 
 
     Example:
-        >>> from t1_volume_segmentation import T1VolumeSegmentation
+        >>> from t1_volume_tissue_segmentation import T1VolumeTissueSegmentation
         >>> pipelines = T1VolumeSegmentation('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipelines.parameters = {
         >>>     # ...
@@ -49,7 +49,7 @@ class T1VolumeSegmentation(cpe.Pipeline):
     """
 
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None):
-        super(T1VolumeSegmentation, self).__init__(bids_directory, caps_directory, tsv_file, name)
+        super(T1VolumeTissueSegmentation, self).__init__(bids_directory, caps_directory, tsv_file, name)
         # Default parameters
         self._parameters = {'tissue_classes': [1, 2, 3],
                             'dartel_tissues': [1, 2, 3],
@@ -193,7 +193,7 @@ class T1VolumeSegmentation(cpe.Pipeline):
         import nipype.interfaces.matlab as mlab
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
-        import t1_volume_segmentation_utils as utils
+        import t1_volume_tissue_segmentation_utils as utils
         from clinica.utils.io import unzip_nii
 
         spm_home = os.getenv("SPM_HOME")

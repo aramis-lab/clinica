@@ -1,5 +1,5 @@
 {
-    "id": "aramislab/t1-volume-segmentation",
+    "id": "aramislab/t1-volume-tissue-segmentation",
     "author": "SAMPER-GONZALEZ Jorge",
     "version": "0.1.0",
     "dependencies": [
