@@ -23,7 +23,7 @@ class T1SPMSegmentationCLI(ce.CmdParser):
     def define_name(self):
         """Define the sub-command name to run this pipelines.
         """
-        self._name = 't1-spm-segmentation'
+        self._name = 't1-volume-segmentation'
 
     def define_description(self):
         """Define a description of this pipeline.

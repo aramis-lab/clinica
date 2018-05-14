@@ -17,7 +17,7 @@ class PETPreprocessVolumeCLI(ce.CmdParser):
     def define_name(self):
         """Define the sub-command name to run this pipelines.
         """
-        self._name = 'pet-preprocess-volume'
+        self._name = 'pet-volume'
 
     def define_description(self):
         """Define a description of this pipeline.

@@ -23,7 +23,7 @@ class T1SPMDartel2MNICLI(ce.CmdParser):
     def define_name(self):
         """Define the sub-command name to run this pipelines.
         """
-        self._name = 't1-spm-dartel2mni'
+        self._name = 't1-volume-dartel2mni'
 
     def define_description(self):
         """Define a description of this pipeline.
