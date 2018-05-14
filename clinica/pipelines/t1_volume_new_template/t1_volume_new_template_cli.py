@@ -18,7 +18,7 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-class T1SPMFullPrepCLI(ce.CmdParser):
+class T1VolumeNewTemplateCLI(ce.CmdParser):
 
     def define_name(self):
         """Define the sub-command name to run this pipelines.
@@ -98,9 +98,9 @@ class T1SPMFullPrepCLI(ce.CmdParser):
     def run_command(self, args):
         """
         """
-        from t1_spm_full_prep_pipeline import T1SPMFullPrep
+        from t1_volume_new_template_pipeline import T1VolumeNewTemplate
 
-        pipeline = T1SPMFullPrep(bids_directory=self.absolute_path(args.bids_directory),
+        pipeline = T1VolumeNewTemplate (bids_directory=self.absolute_path(args.bids_directory),
                                  caps_directory=self.absolute_path(args.caps_directory),
                                  tsv_file=self.absolute_path(args.subjects_sessions_tsv),
                                  group_id=args.group_id

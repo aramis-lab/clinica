@@ -18,7 +18,7 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-class T1SPMFullPrep(cpe.Pipeline):
+class T1VolumeNewTemplate(cpe.Pipeline):
     """T1 SPM Full Prep SHORT DESCRIPTION.
 
     Warnings:
@@ -40,8 +40,8 @@ class T1SPMFullPrep(cpe.Pipeline):
 
 
     Example:
-        >>> from clinica.pipelines.t1_spm_full_prep import T1SPMFullPrep
-        >>> pipelines = T1SPMFullPrep('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
+        >>> from clinica.pipelines.t1_volume_new_template import T1VolumeNewTemplate
+        >>> pipelines = T1VolumeNewTemplate('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipelines.parameters = {
         >>>     # ...
         >>> }
@@ -52,7 +52,7 @@ class T1SPMFullPrep(cpe.Pipeline):
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
         import os
 
-        super(T1SPMFullPrep, self).__init__(bids_directory, caps_directory, tsv_file, name)
+        super(T1VolumeNewTemplate, self).__init__(bids_directory, caps_directory, tsv_file, name)
 
         if not group_id.isalnum():
             raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
@@ -141,7 +141,7 @@ class T1SPMFullPrep(cpe.Pipeline):
 
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
-        import clinica.pipelines.t1_spm_segmentation.t1_spm_segmentation_utils as seg_utils
+        import clinica.pipelines.t1_volume_segmentation.t1_volume_segmentation_utils as seg_utils
 
         # Reading BIDS
         # ============
@@ -160,7 +160,7 @@ class T1SPMFullPrep(cpe.Pipeline):
 
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        import clinica.pipelines.t1_spm_segmentation.t1_spm_segmentation_utils as seg_utils
+        import clinica.pipelines.t1_volume_segmentation.t1_volume_segmentation_utils as seg_utils
         from clinica.utils.io import zip_nii
         import os.path as op
         import re
@@ -324,9 +324,9 @@ class T1SPMFullPrep(cpe.Pipeline):
         import nipype.interfaces.matlab as mlab
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
-        import clinica.pipelines.t1_spm_segmentation.t1_spm_segmentation_utils as seg_utils
-        import clinica.pipelines.t1_spm_dartel.t1_spm_dartel_utils as dartel_utils
-        import clinica.pipelines.t1_spm_dartel2mni.t1_spm_dartel2mni_utils as dartel2mni_utils
+        import clinica.pipelines.t1_volume_segmentation.t1_volume_segmentation_utils as seg_utils
+        import clinica.pipelines.t1_volume_create_dartel.t1_volume_create_darte_utils as dartel_utils
+        import clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_utils as dartel2mni_utils
         from clinica.utils.io import unzip_nii
 
         spm_home = os.getenv("SPM_HOME")

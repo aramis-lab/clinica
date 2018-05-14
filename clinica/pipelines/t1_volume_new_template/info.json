@@ -1,7 +1,7 @@
 {
-    "id": "aramislab/t1-spm-dartel",
-    "author": "SAMPER-GONZALEZ Jorge",
-    "version": "0.1",
+    "id": "aramislab/t1-volume-new-template",
+    "author": "SAMPER-GONZALEZ Jorge; BOTTANI, Simona",
+    "version": "0.1.0",
     "dependencies": [
         {
             "type": "software",

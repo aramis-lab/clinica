@@ -17,7 +17,7 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-class T1SPMDartel2MNI(cpe.Pipeline):
+class T1VolumeDartel2MNI(cpe.Pipeline):
     """T1 SPM Dartel2MNI SHORT DESCRIPTION.
 
     Warnings:
@@ -39,8 +39,8 @@ class T1SPMDartel2MNI(cpe.Pipeline):
 
 
     Example:
-        >>> from t1_spm_dartel2mni import T1SPMDartel2MNI
-        >>> pipelines = T1SPMDartel2MNI('myGroup', '~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
+        >>> from t1_volume_dartel2mni import T1VolumeDartel2MNI
+        >>> pipelines = T1VolumeDartel2MNI('myGroup', '~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipelines.parameters.update({
         >>>     # ...
         >>> })
@@ -50,7 +50,7 @@ class T1SPMDartel2MNI(cpe.Pipeline):
 
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
         import os
-        super(T1SPMDartel2MNI, self).__init__(bids_directory, caps_directory, tsv_file, name)
+        super(T1VolumeDartel2MNI, self).__init__(bids_directory, caps_directory, tsv_file, name)
 
         if not group_id.isalnum():
             raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
@@ -234,7 +234,7 @@ class T1SPMDartel2MNI(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.io import unzip_nii
-        from t1_spm_dartel2mni_utils import prepare_flowfields, join_smoothed_files, atlas_statistics, select_gm_images
+        from t1_volume_dartel2mni_utils import prepare_flowfields, join_smoothed_files, atlas_statistics, select_gm_images
 
         spm_home = os.getenv("SPM_HOME")
         mlab_home = os.getenv("MATLABCMD")

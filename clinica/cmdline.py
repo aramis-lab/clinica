@@ -120,10 +120,10 @@ def execute():
 
     from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_cli import T1FreeSurferCrossSectionalCLI  # noqa
     from clinica.pipelines.t1_volume_segmentation.t1_volume_segmentation_cli import T1VolumeSegmentationCLI  # noqa
-    from clinica.pipelines.t1_spm_dartel.t1_spm_dartel_cli import T1SPMDartelCLI  # noqa
-    from clinica.pipelines.t1_spm_dartel2mni.t1_spm_dartel2mni_cli import T1SPMDartel2MNICLI  # noqa
-    from clinica.pipelines.t1_spm_full_prep.t1_spm_full_prep_cli import T1SPMFullPrepCLI  # noqa
-    from clinica.pipelines.t1_spm_dartel_existing_template.t1_spm_dartel_existing_template_cli import T1SPMDartelExistingTemplateCLI #noqa
+    from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_cli import T1VolumeCreateDartelCLI  # noqa
+    from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_cli import T1VolumeDartel2MNICLI  # noqa
+    from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_cli import T1VolumeNewTemplate  # noqa
+    from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import T1VolumeExistingTemplateCLI #noqa
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DWIPreprocessingUsingT1CLI  # noqa
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DWIPreprocessingUsingPhaseDiffFieldmapCLI # noqa
     from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_cli import DWIProcessingDTICLI  # noqa
@@ -137,10 +137,10 @@ def execute():
     pipelines += [
         T1FreeSurferCrossSectionalCLI(),
         T1VolumeSegmentationCLI(),
-        T1SPMDartelCLI(),
-        T1SPMDartel2MNICLI(),
-        T1SPMFullPrepCLI(),
-        T1SPMDartelExistingTemplateCLI(),
+        T1VolumeCreateDartelCLI(),
+        T1VolumeDartel2MNICLI(),
+        T1VolumeNewTemplateCLI(),
+        T1VolumeExistingTemplateCLI(),
         DWIPreprocessingUsingT1CLI(),
         DWIPreprocessingUsingPhaseDiffFieldmapCLI(),
         DWIProcessingDTICLI(),

@@ -1,6 +1,6 @@
 {
-    "id": "aramislab/t1-spm-full-prep",
-    "author": "SAMPER-GONZALEZ Jorge; BOTTANI, Simona",
+    "id": "aramislab/t1-volume-existing-template",
+    "author": "Jorge SAMPER-GONZALEZ",
     "version": "0.1.0",
     "dependencies": [
         {

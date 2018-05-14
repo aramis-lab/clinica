@@ -17,7 +17,7 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-class T1SPMDartel(cpe.Pipeline):
+class T1VolumeCreateDartel(cpe.Pipeline):
     """T1 SPM Dartel SHORT DESCRIPTION.
 
     Warnings:
@@ -39,8 +39,8 @@ class T1SPMDartel(cpe.Pipeline):
 
 
     Example:
-        >>> from t1_spm_dartel import T1SPMDartel
-        >>> pipelines = T1SPMDartel('myGroup', '~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
+        >>> from t1_volume_create_dartel import T1VolumeCreateDartel
+        >>> pipelines = T1VolumeCreateDartel('myGroup', '~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipelines.parameters.update({
         >>>     # ...
         >>> })
@@ -51,7 +51,7 @@ class T1SPMDartel(cpe.Pipeline):
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
         import os
 
-        super(T1SPMDartel, self).__init__(bids_directory, caps_directory, tsv_file, name)
+        super(T1VolumeCreateDartel, self).__init__(bids_directory, caps_directory, tsv_file, name)
 
         if not group_id.isalnum():
             raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')

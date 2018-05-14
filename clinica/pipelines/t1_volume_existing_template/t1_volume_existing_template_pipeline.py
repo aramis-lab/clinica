@@ -17,7 +17,7 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-class T1SPMDartelExistingTemplate(cpe.Pipeline):
+class T1VolumeExistingTemplate(cpe.Pipeline):
     """T1 SPM Dartel Existing Template SHORT DESCRIPTION.
 
     Warnings:
@@ -39,8 +39,8 @@ class T1SPMDartelExistingTemplate(cpe.Pipeline):
 
 
     Example:
-        >>> from t1_spm_dartel_existing_template import T1SPMDartelExistingTemplate
-        >>> pipelines = T1SPMDartelExistingTemplate('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
+        >>> from t1_volume_existing_template import T1VolumeExistingTemplate
+        >>> pipelines = T1VolumeExistingTemplate('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipelines.parameters = {
         >>>     # ...
         >>> }
@@ -49,7 +49,7 @@ class T1SPMDartelExistingTemplate(cpe.Pipeline):
     """
 
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
-        super(T1SPMDartelExistingTemplate, self).__init__(bids_directory, caps_directory, tsv_file, name)
+        super(T1VolumeExistingTemplate, self).__init__(bids_directory, caps_directory, tsv_file, name)
 
         if not group_id.isalnum():
             raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
@@ -181,7 +181,7 @@ class T1SPMDartelExistingTemplate(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.io import unzip_nii
-        import t1_spm_dartel_existing_template_utils as utils
+        import t1_volume_existing_template_utils as utils
 
         # Unzipping
         # =========

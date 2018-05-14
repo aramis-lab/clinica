@@ -18,7 +18,7 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-class T1SPMDartelCLI(ce.CmdParser):
+class T1VolumeCreateDartelCLI(ce.CmdParser):
 
     def define_name(self):
         """Define the sub-command name to run this pipelines.
@@ -54,9 +54,9 @@ class T1SPMDartelCLI(ce.CmdParser):
         """
         """
 
-        from t1_spm_dartel_pipeline import T1SPMDartel
+        from t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
 
-        pipeline = T1SPMDartel(bids_directory=self.absolute_path(args.bids_directory),
+        pipeline = T1VolumeCreateDartel(bids_directory=self.absolute_path(args.bids_directory),
                                caps_directory=self.absolute_path(args.caps_directory),
                                tsv_file=self.absolute_path(args.subjects_sessions_tsv),
                                group_id=args.group_id

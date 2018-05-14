@@ -1,7 +1,7 @@
 {
-    "id": "aramislab/t1-spm-dartel-existing-template",
-    "author": "Jorge SAMPER-GONZALEZ",
-    "version": "0.1.0",
+    "id": "aramislab/t1-volume-create-dartel",
+    "author": "SAMPER-GONZALEZ Jorge",
+    "version": "0.1",
     "dependencies": [
         {
             "type": "software",
