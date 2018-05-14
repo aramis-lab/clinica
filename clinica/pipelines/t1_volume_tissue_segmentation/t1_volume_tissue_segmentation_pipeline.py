@@ -40,7 +40,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
 
     Example:
         >>> from t1_volume_tissue_segmentation import T1VolumeTissueSegmentation
-        >>> pipelines = T1VolumeSegmentation('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
+        >>> pipelines = T1VolumeTissueSegmentation('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipelines.parameters = {
         >>>     # ...
         >>> }
@@ -102,7 +102,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
 
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
-        import t1_volume_segmentation_utils as utils
+        import t1_volume_tissue_segmentation_utils as utils
 
         # Reading BIDS
         # ============
@@ -120,7 +120,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         """
 
         import nipype.pipeline.engine as npe
-        import t1_volume_segmentation_utils as utils
+        import t1_volume_tissue_segmentation_utils as utils
         import nipype.interfaces.io as nio
         from clinica.utils.io import zip_nii
 

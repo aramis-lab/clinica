@@ -141,7 +141,7 @@ class T1VolumeNewTemplate(cpe.Pipeline):
 
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
-        import clinica.pipelines.t1_volume_segmentation.t1_volume_segmentation_utils as seg_utils
+        import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as seg_utils
 
         # Reading BIDS
         # ============
@@ -160,7 +160,7 @@ class T1VolumeNewTemplate(cpe.Pipeline):
 
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        import clinica.pipelines.t1_volume_segmentation.t1_volume_segmentation_utils as seg_utils
+        import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as seg_utils
         from clinica.utils.io import zip_nii
         import os.path as op
         import re
@@ -324,7 +324,7 @@ class T1VolumeNewTemplate(cpe.Pipeline):
         import nipype.interfaces.matlab as mlab
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
-        import clinica.pipelines.t1_volume_segmentation.t1_volume_segmentation_utils as seg_utils
+        import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as seg_utils
         import clinica.pipelines.t1_volume_create_dartel.t1_volume_create_darte_utils as dartel_utils
         import clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_utils as dartel2mni_utils
         from clinica.utils.io import unzip_nii
