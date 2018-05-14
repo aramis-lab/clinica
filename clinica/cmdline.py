@@ -136,7 +136,7 @@ def execute():
                                    extra_dir="pipelines").load()
     pipelines += [
         T1FreeSurferCrossSectionalCLI(),
-        T1VolumeSegmentationCLI(),
+        T1VolumeTissueSegmentationCLI(),
         T1VolumeCreateDartelCLI(),
         T1VolumeDartel2MNICLI(),
         T1VolumeNewTemplateCLI(),
