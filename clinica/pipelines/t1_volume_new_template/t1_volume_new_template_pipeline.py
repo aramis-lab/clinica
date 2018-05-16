@@ -325,7 +325,7 @@ class T1VolumeNewTemplate(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as seg_utils
-        import clinica.pipelines.t1_volume_create_dartel.t1_volume_create_darte_utils as dartel_utils
+        import clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_utils as dartel_utils
         import clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_utils as dartel2mni_utils
         from clinica.utils.io import unzip_nii
 
