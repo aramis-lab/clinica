@@ -183,4 +183,4 @@ def check_matlab():
     from clinica.utils.stream import cprint
 
     if not is_binary_present("matlab"):
-        raise RuntimeError('Matlab was not found in PATH environment. Did you add it?)
+        raise RuntimeError('Matlab was not found in PATH environment. Did you add it?')
