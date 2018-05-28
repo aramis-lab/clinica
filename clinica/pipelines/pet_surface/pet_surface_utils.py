@@ -812,7 +812,7 @@ def get_wf(subject_id,
     from nipype.interfaces.fsl import Merge
     from nipype.interfaces.petpvc import PETPVC
     from nipype.interfaces.spm import Coregister, Normalize12
-    import clinica_aramis.pipelines.pet_surface.pet_surface_utils as utils
+    import clinica.pipelines.pet_surface.pet_surface_utils as utils
 
     cprint('***** Beginning processing of ' + subject_id + ' on ' + session_id + ' *****')
 

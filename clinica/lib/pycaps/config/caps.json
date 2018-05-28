@@ -1,4 +1,6 @@
 {
+    "name": "caps",
+    "root": ".",
     "entities": [
         {
             "name": "subject",
