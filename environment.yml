@@ -1,7 +1,7 @@
 name: clinica_env
 channels:
   - conda-forge
-  - Aramislab 
+  - Aramislab
   - defaults
 dependencies:
   - python=2.7
@@ -25,7 +25,7 @@ dependencies:
   - scikit-image>=0.13.0
   - sharedmem>=0.3.5
   - xlrd>=0.9.0
-  - grabbit>=0.0.8
+  - grabbit==0.0.8
   - colorama>=0.3.9
   - prov==1.5.0
   - pytest>=3.4.0
