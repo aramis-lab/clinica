@@ -178,4 +178,14 @@ def test_StatisticsSurface():
     }
     pipeline.build()
 
-test_StatisticsSurface()
+def test_PETSurface(tmpdir):
+    from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
+    from s.path import dirname, join, abspath
+
+    root= dirname(abspath(__file__))
+    pipeline = PetSurface(bids_directory=join(root, 'data', 'in', 'bids'),
+                          caps_directory=join(root, 'data', 'in', 'caps_pet_volume'),
+                          tsv_file=join(root, 'data', 'in', 'subject_pet_surface.tsv'))
+    pipeline.parameters['pet_type'] = 'fdg'
+    pipeline.parameters['working_directory'] = str(tmpdir)
+    pipeline.build()
