@@ -1,11 +1,5 @@
 # coding: utf8
 
-"""spm_parcellation - Clinica Pipeline.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details:
-https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
-"""
-
 import clinica.pipelines.engine as cpe
 
 __author__ = "Simona Bottani"
@@ -18,17 +12,8 @@ __email__ = "simona.bottani@icm-institute.org"
 __status__ = "Development"
 
 
-
-
 class T1VolumeParcellation(cpe.Pipeline):
-    """spm_parcellation SHORT DESCRIPTION.
-
-    Warnings:
-        - A WARNING.
-
-    Todos:
-        - [x] A FILLED TODO ITEM.
-        - [ ] AN ON-GOING TODO ITEM.
+    """T1 Volume parcellation
 
     Args:
         input_dir: A BIDS directory.
@@ -83,14 +68,6 @@ class T1VolumeParcellation(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.lib.pycaps.caps_layout import CAPSLayout
-
-        # This node is supposedly used to load BIDS inputs when this pipeline is
-        # not already connected to the output of a previous Clinica pipeline.
-        # For the purpose of the example, we simply read input arguments given
-        # by the command line interface and transmitted here through the
-        # `self.parameters` dictionary and pass it to the `self.input_node` to
-        # further by used as input of the core nodes.
-
 
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(

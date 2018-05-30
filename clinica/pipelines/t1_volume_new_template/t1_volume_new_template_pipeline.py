@@ -1,11 +1,5 @@
 # coding: utf8
 
-"""T1 SPM Full Prep - Clinica Pipeline.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
-"""
-
-
 import clinica.pipelines.engine as cpe
 
 __author__ = "Jorge Samper Gonzalez"
@@ -20,13 +14,6 @@ __status__ = "Development"
 
 class T1VolumeNewTemplate(cpe.Pipeline):
     """T1 SPM Full Prep SHORT DESCRIPTION.
-
-    Warnings:
-        - A WARNING.
-
-    Todos:
-        - [x] A FILLED TODO ITEM.
-        - [ ] AN ON-GOING TODO ITEM.
 
     Args:
         input_dir: A BIDS directory.

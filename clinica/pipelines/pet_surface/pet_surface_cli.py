@@ -28,7 +28,6 @@ class PetSurfaceCLI(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments
         """
-
         self._args.add_argument("bids_directory",
                                 help='Path to the BIDS directory.')
         self._args.add_argument("caps_directory",

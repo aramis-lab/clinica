@@ -33,7 +33,7 @@ class PETVolumeCLI(ce.CmdParser):
         self._args.add_argument("caps_directory",
                                 help='Path to the CAPS directory.')
         self._args.add_argument("group_id",
-                                help='Current group name')
+                                help='User-defined identifier for the provided group of subjects.')
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
                                 help='TSV file containing the subjects with their sessions.')
         self._args.add_argument("-fwhm", "--fwhm_tsv",

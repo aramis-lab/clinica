@@ -37,8 +37,8 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                                 help='A str to define the contrast matrix for GLM, eg, group. Note, when you want to negative correlation, there is a bug for Clinica commandline currently')
         self._args.add_argument("str_format",
                                 help='A str to define the format string for the tsv column , eg, %%s %%s %%s %%f')
-        self._args.add_argument("group_label",
-                                help='A str for current group name')
+        self._args.add_argument("group_id",
+                                help='User-defined identifier for the provided group of subjects.')
         self._args.add_argument("glm_type",
                                 help='A str based on glm type for the hypothesis, choose one between group_comparison and correlation')
         self._args.add_argument("-ft", "--feature_type", type=str, default=None,
@@ -64,7 +64,6 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         """
         Run the pipelines with defined args
         """
-
         from statistics_surface_pipeline import StatisticsSurface
         from statistics_surface_utils import check_inputs
         from clinica.utils.stream import cprint
@@ -125,7 +124,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
             'design_matrix': args.design_matrix,
             'contrast': args.contrast,
             'str_format': args.str_format,
-            'group_label': args.group_label,
+            'group_label': args.group_id,
             'glm_type': args.glm_type,
             'custom_file': args.custom_file,
             'feature_label': args.feature_label,

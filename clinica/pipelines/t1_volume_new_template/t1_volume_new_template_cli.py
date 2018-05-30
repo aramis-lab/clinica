@@ -35,7 +35,7 @@ class T1VolumeNewTemplateCLI(ce.CmdParser):
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
         clinica_comp.add_argument("group_id",
-                                  help='Current group name')
+                                  help='User-defined identifier for the provided group of subjects.')
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("-fwhm", "--fwhm",
