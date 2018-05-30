@@ -1,13 +1,5 @@
 # coding: utf8
 
-"""spm_parcellation - Clinica Command Line Interface.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details:
-https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
-"""
-
-
-
 __author__ = "Simona Bottani"
 __copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
 __credits__ = ["Simona Bottani"]
@@ -24,8 +16,12 @@ class T1VolumeParcellationCLI(ce.CmdParser):
     def define_name(self):
         """Define the sub-command name to run this pipeline.
         """
-
         self._name = 't1-volume-parcellation'
+
+    def define_description(self):
+        """Define a description of this pipeline.
+        """
+        self._description = 'Computation of mean GM concentration for a set of regions:\nhttp://clinica.run/doc/Pipelines/T1_Volume/'
 
     def define_options(self):
         """Define the sub-command arguments
@@ -38,7 +34,7 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         self._args.add_argument("group_id",
                                 help = 'Current group name')
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
-                                help='TSV file containing the subjects with their sessions.')
+                                help='TSV file containing a list of subjects with their sessions.')
         #self._args.add_argument("-im_type", "--image_type", type = str, default = 'T1',
         #                        choices =['T1', 'pet'],
         #                        help = 'image type. Possible values are T1 and pet')

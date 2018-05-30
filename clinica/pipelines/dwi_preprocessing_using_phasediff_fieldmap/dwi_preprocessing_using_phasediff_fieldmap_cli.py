@@ -26,7 +26,7 @@ class DWIPreprocessingUsingPhaseDiffFieldmapCLI(ce.CmdParser):
         self._args.add_argument("caps_directory",
                                 help='Path to the CAPS directory.')
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
-                                help='TSV file containing the subjects with their sessions.')  # noqa
+                                help='TSV file containing a list of subjects with their sessions.')  # noqa
 
         self._args.add_argument("--low_bval",
                                 type=int, default=5,

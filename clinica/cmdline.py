@@ -130,8 +130,8 @@ def execute():
     from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_cli import DWIProcessingDTICLI  # noqa
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI  # noqa
     from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI  # noqa
-    from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI  # noqa
     from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI  # noqa
+    from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI  # noqa
 
 
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
@@ -149,8 +149,8 @@ def execute():
         DWIProcessingDTICLI(),
         fMRIPreprocessingCLI(),
         PETVolumeCLI(),
+        PetSurfaceCLI(),
         StatisticsSurfaceCLI(),
-        PetSurfaceCLI()
     ]
 
     run_parser = sub_parser.add_parser(

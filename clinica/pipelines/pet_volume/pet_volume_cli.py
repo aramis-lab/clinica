@@ -22,7 +22,7 @@ class PETVolumeCLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'SPM-based pre-processing of PET images:\nhttp://clinica.run/doc/Pipelines/PET_Preprocessing/'
+        self._description = 'SPM-based pre-processing of PET images:\nhttp://clinica.run/doc/Pipelines/PET_Volume/'
 
     def define_options(self):
         """Define the sub-command arguments

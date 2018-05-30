@@ -23,7 +23,7 @@ class PetSurfaceCLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'Surface-based processing of PET images:\nhttps://gitlab.icm-institute.org/aramislab/clinica-aramis/wikis/docs/Pipelines/PET_CorticalProjection'
+        self._description = 'Surface-based processing of PET images:\nhttp://clinica.run/doc/Pipelines/PET_Surface/'
 
     def define_options(self):
         """Define the sub-command arguments
@@ -32,9 +32,9 @@ class PetSurfaceCLI(ce.CmdParser):
         self._args.add_argument("bids_directory",
                                 help='Path to the BIDS directory.')
         self._args.add_argument("caps_directory",
-                                help='Path to the CAPS directory. (Filled with results from t1-freesurfer')
+                                help='Path to the CAPS directory. (Filled with results from t1-freesurfer-cross-sectional')
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
-                                help='TSV file containing the subjects with their sessions.')
+                                help='TSV file containing a list of subjects with their sessions.')
         self._args.add_argument("-pt", "--pet_tracer", type=str, default='fdg',
                                 help='PET tracer type. Can be fdg or av45. Default value : fdg')
         self._args.add_argument("-wd", "--working_directory",

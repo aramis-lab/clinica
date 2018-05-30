@@ -1,11 +1,5 @@
 # coding: utf8
 
-"""T1 SPM Full Prep - Clinica Command Line Interface.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
-"""
-
-
 import clinica.engine as ce
 
 __author__ = "Jorge Samper Gonzalez"
@@ -28,7 +22,7 @@ class T1VolumeNewTemplateCLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'SPM-based pre-processing of T1w images:\nhttp://clinica.run/doc/Pipelines/T1_SPM_Full/'
+        self._description = 'SPM-based pre-processing of T1w images:\nhttp://clinica.run/doc/Pipelines/T1_Volume/'
 
     def define_options(self):
         """Define the sub-command arguments
@@ -51,7 +45,7 @@ class T1VolumeNewTemplateCLI(ce.CmdParser):
         clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
         clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
                                  metavar=('participants.tsv'),
-                                 help='TSV file containing the subjects with their sessions.')
+                                 help='TSV file containing a list of subjects with their sessions.')
         clinica_opt.add_argument("-wd", "--working_directory",
                                  metavar=('Working_Directory'),
                                  help='Temporary directory to store pipelines intermediate results')

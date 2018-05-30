@@ -1,11 +1,5 @@
 # coding: utf8
 
-"""T1 SPM Dartel - Clinica Command Line Interface.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
-"""
-
-
 import clinica.engine as ce
 
 __author__ = "Jorge Samper Gonzalez"
@@ -28,7 +22,7 @@ class T1VolumeCreateDartelCLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'DARTEL creation with SPM:\nhttp://clinica.run/doc/Pipelines/T1_SPM_Full/'
+        self._description = 'DARTEL creation with SPM:\nhttp://clinica.run/doc/Pipelines/T1_Volume/'
 
     def define_options(self):
         """Define the sub-command arguments
@@ -40,7 +34,7 @@ class T1VolumeCreateDartelCLI(ce.CmdParser):
         self._args.add_argument("group_id",
                                 help='Current group name')
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
-                                help='TSV file containing the subjects with their sessions.')
+                                help='TSV file containing a list of subjects with their sessions.')
         self._args.add_argument("-dt", "--dartel_tissues", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
                                 help='Tissues to use for DARTEL template calculation. Ex: 1 is only GM')
         self._args.add_argument("-wd", "--working_directory",
