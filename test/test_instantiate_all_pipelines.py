@@ -98,7 +98,7 @@ def test_DWIPreprocessingUsingT1():
     root= dirname(abspath(__file__))
     pipeline = DWIPreprocessingUsingT1(bids_directory=join(root, 'data', 'in', 'bids'),
                                        caps_directory=join(root, 'data', 'in', 'caps'),
-                                       tsv_file=join(root, 'data', 'in', 'subjects.tsv'),
+                                       tsv_file=join(root, 'data', 'in', 'subject_dwi.tsv'),
                                        low_bval=5)
     pipeline.build()
     pass
@@ -110,7 +110,7 @@ def test_DWIPreprocessingUsingPhaseDiffFieldmap():
     root= dirname(abspath(__file__))
     pipeline = DWIPreprocessingUsingPhaseDiffFieldmap(bids_directory=join(root, 'data', 'in', 'bids'),
                                                       caps_directory=join(root, 'data', 'in', 'caps'),
-                                                      tsv_file=join(root, 'data', 'in', 'subjects.tsv'),
+                                                      tsv_file=join(root, 'data', 'in', 'subject_dwi.tsv'),
                                                       low_bval=5)
     pipeline.build()
     pass
@@ -120,7 +120,7 @@ def test_DWIProcessingDTI():
     from os.path import dirname, join, abspath
 
     root= dirname(abspath(__file__))
-    pipeline = DWIProcessingDTI(caps_directory=join(root, 'data', 'in', 'caps'),
+    pipeline = DWIProcessingDTI(caps_directory=join(root, 'data', 'in', 'caps_dti'),
                                 tsv_file=join(root, 'data', 'in', 'subjects.tsv'))
     pipeline.build()
     pass
@@ -133,7 +133,7 @@ def test_fMRIPreprocessing():
     root= dirname(abspath(__file__))
     pipeline = fMRIPreprocessing(bids_directory=join(root, 'data', 'in', 'bids'),
                                  caps_directory=join(root, 'data', 'in', 'caps_full'),
-                                 tsv_file=join(root, 'data', 'in', 'subjects.tsv'))
+                                 tsv_file=join(root, 'data', 'in', 'subject_fmri.tsv'))
     pipeline.parameters = {
             'full_width_at_half_maximum' : [8, 8, 8],
             't1_native_space'            : True,
@@ -177,15 +177,17 @@ def test_StatisticsSurface():
             'cluster_threshold': 0.001
     }
     pipeline.build()
+    pass
 
 def test_PETSurface(tmpdir):
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
-    from s.path import dirname, join, abspath
+    from os.path import dirname, join, abspath
 
     root= dirname(abspath(__file__))
     pipeline = PetSurface(bids_directory=join(root, 'data', 'in', 'bids'),
-                          caps_directory=join(root, 'data', 'in', 'caps_pet_volume'),
+                          caps_directory=join(root, 'data', 'in', 'caps_full'),
                           tsv_file=join(root, 'data', 'in', 'subject_pet_surface.tsv'))
     pipeline.parameters['pet_type'] = 'fdg'
-    pipeline.parameters['working_directory'] = str(tmpdir)
+    pipeline.parameters['wd'] = str(tmpdir)
     pipeline.build()
+    pass
