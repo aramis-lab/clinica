@@ -38,12 +38,6 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         #self._args.add_argument("-im_type", "--image_type", type = str, default = 'T1',
         #                        choices =['T1', 'pet'],
         #                        help = 'image type. Possible values are T1 and pet')
-        self._args.add_argument("-pet", "--pet_type", type = str, default = 'fdg',
-                                choices = ['fdg', 'av45'],
-                                help = 'PET image type. Possible values are fdg and av45.')
-        self._args.add_argument("-m", "--modulate", default='on',
-                                choices=['on', 'off'],
-                                help='A boolean. Modulate output images - no modulation preserves concentrations')
         self._args.add_argument("-atlases", "--atlases", nargs='+', type=str,
                                 default=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
                                 choices=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
@@ -72,8 +66,6 @@ class T1VolumeParcellationCLI(ce.CmdParser):
             # pipeline. See the file `spm_parcellation_pipeline.py` to
             # see an example of use.
             'group_id': args.group_id,
-            'pet_type': args.pet_type,
-            'modulate': args.modulate,
             'atlases': args.atlases,
             'wd': self.absolute_path(args.working_directory),
             'n_procs': args.n_procs
