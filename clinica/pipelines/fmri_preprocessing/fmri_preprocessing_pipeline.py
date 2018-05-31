@@ -144,6 +144,7 @@ class fMRIPreprocessing(cpe.Pipeline):
 
         for i in range(len(self.subjects)):
 
+            cprint('Loading subject "{sub}"...'.format(sub=self.subjects[i]))
 
             if self.parameters['unwarping']:
                 # From phasediff json file
