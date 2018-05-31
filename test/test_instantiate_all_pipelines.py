@@ -9,9 +9,9 @@ def test_T1FreeSurferCrossSectional():
     from os.path import dirname, join, abspath
 
     root= dirname(abspath(__file__))
-    pipeline = T1FreeSurferCrossSectional(bids_directory=join(root, 'data', 'in', 'bids'),
-                                          caps_directory=join(root, 'data', 'in', 'caps'),
-                                          tsv_file=join(root, 'data', 'in', 'subjects.tsv'))
+    pipeline = T1FreeSurferCrossSectional(bids_directory=join(root, 'data', 'T1FreeSurferCrossSectional', 'in', 'bids'),
+                                          caps_directory=join(root, 'data', 'T1FreeSurferCrossSectional', 'in', 'caps'),
+                                          tsv_file=join(root, 'data', 'T1FreeSurferCrossSectional', 'in', 'subjects.tsv'))
     pipeline.parameters['recon_all_args'] = '-qcache'
     pipeline.build()
     pass
@@ -21,9 +21,9 @@ def test_T1VolumeTissueSegmentation():
     from os.path import dirname, join, abspath
 
     root= dirname(abspath(__file__))
-    pipeline = T1VolumeTissueSegmentation(bids_directory=join(root, 'data', 'in', 'bids'),
-                                          caps_directory=join(root, 'data', 'in', 'caps'),
-                                          tsv_file=join(root, 'data', 'in', 'subjects.tsv'))
+    pipeline = T1VolumeTissueSegmentation(bids_directory=join(root, 'data', 'T1VolumeTissueSegmentation', 'in', 'bids'),
+                                          caps_directory=join(root, 'data', 'T1VolumeTissueSegmentation', 'in', 'caps'),
+                                          tsv_file=join(root, 'data', 'T1VolumeTissueSegmentation', 'in', 'subjects.tsv'))
     pipeline.build()
     pass
 
@@ -32,9 +32,9 @@ def test_T1VolumeCreateDartel():
     from os.path import dirname, join, abspath
 
     root= dirname(abspath(__file__))
-    pipeline = T1VolumeCreateDartel(bids_directory=join(root, 'data', 'in', 'bids'),
-                                    caps_directory=join(root, 'data', 'in', 'caps'),
-                                    tsv_file=join(root, 'data', 'in', 'subjects.tsv'),
+    pipeline = T1VolumeCreateDartel(bids_directory=join(root, 'data', 'T1VolumeCreateDartel', 'in', 'bids'),
+                                    caps_directory=join(root, 'data', 'T1VolumeCreateDartel', 'in', 'caps'),
+                                    tsv_file=join(root, 'data', 'T1VolumeCreateDartel', 'in', 'subjects.tsv'),
                                     group_id='UnitTest')
     pipeline.build()
     pass
@@ -45,9 +45,9 @@ def test_T1VolumeDartel2MNI():
     from os.path import dirname, join, abspath
 
     root= dirname(abspath(__file__))
-    pipeline = T1VolumeDartel2MNI(bids_directory=join(root, 'data', 'in', 'bids'),
-                                  caps_directory=join(root, 'data', 'in', 'caps_pet_volume'),
-                                  tsv_file=join(root, 'data', 'in', 'subjects.tsv'),
+    pipeline = T1VolumeDartel2MNI(bids_directory=join(root, 'data', 'T1VolumeDartel2MNI', 'in', 'bids'),
+                                  caps_directory=join(root, 'data', 'T1VolumeDartel2MNI', 'in', 'caps'),
+                                  tsv_file=join(root, 'data', 'T1VolumeDartel2MNI', 'in', 'subjects.tsv'),
                                   group_id='UnitTest')
     pipeline.build()
     pass
@@ -57,9 +57,9 @@ def test_T1VolumeNewTemplate():
     from os.path import dirname, join, abspath
 
     root= dirname(abspath(__file__))
-    pipeline = T1VolumeNewTemplate(bids_directory=join(root, 'data', 'in', 'bids'),
-                                   caps_directory=join(root, 'data', 'in', 'caps'),
-                                   tsv_file=join(root, 'data', 'in', 'subjects.tsv'),
+    pipeline = T1VolumeNewTemplate(bids_directory=join(root, 'data', 'T1VolumeNewTemplate', 'in', 'bids'),
+                                   caps_directory=join(root, 'data', 'T1VolumeNewTemplate', 'in', 'caps'),
+                                   tsv_file=join(root, 'data', 'T1VolumeNewTemplate', 'in', 'subjects.tsv'),
                                    group_id='UnitTest')
     pipeline.build()
     pass
@@ -70,9 +70,9 @@ def test_T1VolumeExistingTemplate():
     from os.path import dirname, join, abspath
 
     root= dirname(abspath(__file__))
-    pipeline = T1VolumeExistingTemplate(bids_directory=join(root, 'data', 'in', 'bids'),
-                                        caps_directory=join(root, 'data', 'in', 'caps'),
-                                        tsv_file=join(root, 'data', 'in', 'subjects.tsv'),
+    pipeline = T1VolumeExistingTemplate(bids_directory=join(root, 'data', 'T1VolumeExistingTemplate', 'in', 'bids'),
+                                        caps_directory=join(root, 'data', 'T1VolumeExistingTemplate', 'in', 'caps'),
+                                        tsv_file=join(root, 'data', 'T1VolumeExistingTemplate', 'in', 'subjects.tsv'),
                                         group_id='UnitTest')
     pipeline.build()
     pass
@@ -82,9 +82,9 @@ def test_T1VolumeParcellation():
     from os.path import dirname, join, abspath
 
     root= dirname(abspath(__file__))
-    pipeline = T1VolumeParcellation(bids_directory=join(root, 'data', 'in', 'bids'),
-                                    caps_directory=join(root, 'data', 'in', 'caps'),
-                                    tsv_file=join(root, 'data', 'in', 'subjects.tsv'))
+    pipeline = T1VolumeParcellation(bids_directory=join(root, 'data', 'T1VolumeParcellation', 'in', 'bids'),
+                                    caps_directory=join(root, 'data', 'T1VolumeParcellation', 'in', 'caps'),
+                                    tsv_file=join(root, 'data', 'T1VolumeParcellation', 'in', 'subjects.tsv'))
     pipeline.parameters['group_id'] = 'UnitTest'
     pipeline.parameters['atlases'] = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
     pipeline.parameters['modulate'] = 'on'
@@ -96,9 +96,9 @@ def test_DWIPreprocessingUsingT1():
     from os.path import dirname, join, abspath
 
     root= dirname(abspath(__file__))
-    pipeline = DWIPreprocessingUsingT1(bids_directory=join(root, 'data', 'in', 'bids'),
-                                       caps_directory=join(root, 'data', 'in', 'caps'),
-                                       tsv_file=join(root, 'data', 'in', 'subject_dwi.tsv'),
+    pipeline = DWIPreprocessingUsingT1(bids_directory=join(root, 'data', 'DWIPreprocessingUsingT1', 'in', 'bids'),
+                                       caps_directory=join(root, 'data', 'DWIPreprocessingUsingT1', 'in', 'caps'),
+                                       tsv_file=join(root, 'data', 'DWIPreprocessingUsingT1', 'in', 'subjects.tsv'),
                                        low_bval=5)
     pipeline.build()
     pass
@@ -108,9 +108,9 @@ def test_DWIPreprocessingUsingPhaseDiffFieldmap():
     from os.path import dirname, join, abspath
 
     root= dirname(abspath(__file__))
-    pipeline = DWIPreprocessingUsingPhaseDiffFieldmap(bids_directory=join(root, 'data', 'in', 'bids'),
-                                                      caps_directory=join(root, 'data', 'in', 'caps'),
-                                                      tsv_file=join(root, 'data', 'in', 'subject_dwi.tsv'),
+    pipeline = DWIPreprocessingUsingPhaseDiffFieldmap(bids_directory=join(root, 'data', 'DWIPreprocessingUsingPhaseDiffFieldmap', 'in', 'bids'),
+                                                      caps_directory=join(root, 'data', 'DWIPreprocessingUsingPhaseDiffFieldmap', 'in', 'caps'),
+                                                      tsv_file=join(root, 'data', 'DWIPreprocessingUsingPhaseDiffFieldmap', 'in', 'subjects.tsv'),
                                                       low_bval=5)
     pipeline.build()
     pass
@@ -120,8 +120,8 @@ def test_DWIProcessingDTI():
     from os.path import dirname, join, abspath
 
     root= dirname(abspath(__file__))
-    pipeline = DWIProcessingDTI(caps_directory=join(root, 'data', 'in', 'caps_dti'),
-                                tsv_file=join(root, 'data', 'in', 'subjects.tsv'))
+    pipeline = DWIProcessingDTI(caps_directory=join(root, 'data', 'DWIProcessingDTI', 'in', 'caps'),
+                                tsv_file=join(root, 'data', 'DWIProcessingDTI', 'in', 'subjects.tsv'))
     pipeline.build()
     pass
 
@@ -131,9 +131,9 @@ def test_fMRIPreprocessing():
     from os.path import dirname, join, abspath
 
     root= dirname(abspath(__file__))
-    pipeline = fMRIPreprocessing(bids_directory=join(root, 'data', 'in', 'bids'),
-                                 caps_directory=join(root, 'data', 'in', 'caps_full'),
-                                 tsv_file=join(root, 'data', 'in', 'subject_fmri.tsv'))
+    pipeline = fMRIPreprocessing(bids_directory=join(root, 'data', 'fMRIPreprocessing', 'in', 'bids'),
+                                 caps_directory=join(root, 'data', 'fMRIPreprocessing', 'in', 'caps'),
+                                 tsv_file=join(root, 'data', 'fMRIPreprocessing', 'in', 'subjects.tsv'))
     pipeline.parameters = {
             'full_width_at_half_maximum' : [8, 8, 8],
             't1_native_space'            : True,
@@ -148,9 +148,9 @@ def test_PETVolume():
     from os.path import dirname, join, abspath
 
     root= dirname(abspath(__file__))
-    pipeline = PETVolume(bids_directory=join(root, 'data', 'in', 'bids'),
-                         caps_directory=join(root, 'data', 'in', 'caps_pet_volume'),
-                         tsv_file=join(root, 'data', 'in', 'subjects.tsv'),
+    pipeline = PETVolume(bids_directory=join(root, 'data', 'PETVolume', 'in', 'bids'),
+                         caps_directory=join(root, 'data', 'PETVolume', 'in', 'caps'),
+                         tsv_file=join(root, 'data', 'PETVolume', 'in', 'subjects.tsv'),
                          group_id='UnitTest',
                          fwhm_tsv=None)
     pipeline.build()
@@ -161,8 +161,8 @@ def test_StatisticsSurface():
     from os.path import dirname, join, abspath
 
     root= dirname(abspath(__file__))
-    pipeline = StatisticsSurface(caps_directory=join(root, 'data', 'in', 'caps_pet_volume'),
-                                 tsv_file=join(root, 'data', 'in', 'subjects.tsv'))
+    pipeline = StatisticsSurface(caps_directory=join(root, 'data', 'StatisticsSurface', 'in', 'caps'),
+                                 tsv_file=join(root, 'data', 'StatisticsSurface', 'in', 'subjects.tsv'))
     pipeline.parameters = {
             'design_matrix': '1 + group + age + sex',
             'contrast': 'group',
@@ -184,9 +184,9 @@ def test_PETSurface(tmpdir):
     from os.path import dirname, join, abspath
 
     root= dirname(abspath(__file__))
-    pipeline = PetSurface(bids_directory=join(root, 'data', 'in', 'bids'),
-                          caps_directory=join(root, 'data', 'in', 'caps_full'),
-                          tsv_file=join(root, 'data', 'in', 'subject_pet_surface.tsv'))
+    pipeline = PetSurface(bids_directory=join(root, 'data', 'PETSurface', 'in', 'bids'),
+                          caps_directory=join(root, 'data', 'PETSurface', 'in', 'caps'),
+                          tsv_file=join(root, 'data', 'PETSurface', 'in', 'subjects.tsv'))
     pipeline.parameters['pet_type'] = 'fdg'
     pipeline.parameters['wd'] = str(tmpdir)
     pipeline.build()
