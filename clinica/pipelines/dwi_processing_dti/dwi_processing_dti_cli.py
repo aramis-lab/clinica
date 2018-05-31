@@ -36,9 +36,6 @@ class DWIProcessingDTICLI(ce.CmdParser):
         clinica_opt.add_argument("-np", "--n_procs",
                                  type=int,
                                  help='Number of cores used to run in parallel')
-        clinica_opt.add_argument("-sl", "--slurm",
-                                 action='store_true',
-                                 help='Run the pipelines using SLURM')
 
     def run_command(self, args):
         """
