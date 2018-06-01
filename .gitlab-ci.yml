@@ -124,6 +124,7 @@ unit_test:mac:
     - module load clinica/mrtrix3
     - module load clinica/spm12
     - cd test
+    - ln -s /Volumes/builds/Clinica/data_ci ./data
     - pytest
     - source deactivate
 
