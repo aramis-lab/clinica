@@ -108,6 +108,26 @@ test_install:mac:
     - clinica --help
     - source deactivate
 
+unit_test:mac:
+  stage: test
+  tags:
+    - macOS
+  script:
+    - source activate clinica_env
+    - module load clinica/matlab
+    - module load clinica/itk
+    - module load clinica/ants
+    - module load clinica/fsl
+    - module load clinica/PETPVC
+    - module load clinica/dcm2niix
+    - module load clinica/freesurfer/5.3.0
+    - module load clinica/mrtrix3
+    - module load clinica/spm12
+    - cd test
+    - pytest
+    - source deactivate
+
+  
 pkg:
   stage: package
   tags:
