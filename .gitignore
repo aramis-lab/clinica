@@ -43,6 +43,6 @@ clinica/lib/weighted_prototypes_lib/community_latest/main_hierarchy.o
 
 # Pytest files
 .pytest_cache/
-test/data/
+test/data
 
 
