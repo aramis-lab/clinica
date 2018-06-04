@@ -63,7 +63,7 @@ build:linux:
         conda env create --force --file environment.yml
       fi;
 
-install:mac:
+launch:mac:
   # Install python dependencies for  Clinica 
   stage: install 
   tags:
@@ -77,7 +77,7 @@ install:mac:
     - source deactivate
   
 
-install:linux:
+launch:linux:
   # Install python dependencies for  Clinica 
   stage: install
   tags:
@@ -90,24 +90,28 @@ install:linux:
     - clinica --help
     - source deactivate
 
-test_install:linux:
-  stage: test
-  tags:
-    - linux
-  script:
-    - source activate clinica_env
-    - clinica --help
-    - source deactivate
-
-test_install:mac:
+      
+unit:mac:
   stage: test
   tags:
     - macOS
   script:
     - source activate clinica_env
-    - clinica --help
+    - module load clinica/matlab
+    - module load clinica/itk
+    - module load clinica/ants
+    - module load clinica/fsl
+    - module load clinica/PETPVC
+    - module load clinica/dcm2niix
+    - module load clinica/freesurfer/5.3.0
+    - module load clinica/mrtrix3
+    - module load clinica/spm12
+    - cd test
+    - ln -s /Volumes/builds/Clinica/data_ci ./data
+    - pytest -v
     - source deactivate
 
+  
 pkg:
   stage: package
   tags:
