@@ -21,25 +21,27 @@ class DWIPreprocessingUsingT1CLI(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments.
         """
-        self._args.add_argument("bids_directory",
-                                help='Path to the BIDS directory.')  # noqa
-        self._args.add_argument("caps_directory",
-                                help='Path to the CAPS directory.')  # noqa
-        self._args.add_argument("-tsv", "--subjects_sessions_tsv",
-                                help='TSV file containing the subjects with their sessions.')  # noqa
-
-        self._args.add_argument("--low_bval",
-                                type=int, default=5,
-                                help='Define the b0 volumes as all volume bval <= lowbval. (Default: --low_bval 5)')  # noqa
-
-        self._args.add_argument("-wd", "--working_directory",
-                                help='Temporary directory to store pipeline intermediate results')  # noqa
-        self._args.add_argument("-np", "--n_procs",
-                                type=int,
-                                help='Number of cores used to run in parallel')  # noqa
-        self._args.add_argument("-sl", "--slurm",
-                                action='store_true',
-                                help='Run the pipeline using SLURM')  # noqa
+        from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
+        clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
+        clinica_comp.add_argument("bids_directory",
+                                  help='Path to the BIDS directory.')
+        clinica_comp.add_argument("caps_directory",
+                                  help='Path to the CAPS directory.')
+        # Optional arguments (e.g. FWHM)
+        optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
+        optional.add_argument("--low_bval",
+                              metavar=('N'), type=int, default=5,
+                              help='Define the b0 volumes as all volume bval <= lowbval. (default: --low_bval 5)')  # noqa
+        # Clinica standard arguments (e.g. --n_procs)
+        clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
+        clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
+                                 help='TSV file containing a list of subjects with their sessions.')
+        clinica_opt.add_argument("-wd", "--working_directory",
+                                 help='Temporary directory to store pipelines intermediate results')
+        clinica_opt.add_argument("-np", "--n_procs",
+                                 metavar=('N'), type=int,
+                                 help='Number of cores used to run in parallel')
 
     def run_command(self, args):
         """

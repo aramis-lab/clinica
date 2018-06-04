@@ -33,7 +33,7 @@ class T1FreeSurferCrossSectionalCLI(ce.CmdParser):
         self._args.add_argument("caps_directory",
                                 help='Path to the CAPS directory.')
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
-                                help='TSV file containing the subjects with their sessions.')
+                                help='TSV file containing a list of subjects with their sessions.')
         # Custom args added by developers
         self._args.add_argument("-ras", "--recon_all_args",
                                 help='additional flags for recon-all command line, default will be -qcache')

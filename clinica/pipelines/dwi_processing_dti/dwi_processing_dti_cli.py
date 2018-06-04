@@ -30,18 +30,12 @@ class DWIProcessingDTICLI(ce.CmdParser):
         # Clinica standard arguments (e.g. --n_procs)
         clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
         clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
-                                 metavar=('participants.tsv'),
-                                 help='TSV file containing the subjects with their sessions.')
+                                 help='TSV file containing a list of subjects with their sessions.')
         clinica_opt.add_argument("-wd", "--working_directory",
-                                 metavar=('Working_Directory'),
                                  help='Temporary directory to store pipelines intermediate results')
         clinica_opt.add_argument("-np", "--n_procs",
-                                 metavar=('N'),
                                  type=int,
                                  help='Number of cores used to run in parallel')
-        clinica_opt.add_argument("-sl", "--slurm",
-                                 action='store_true',
-                                 help='Run the pipelines using SLURM')
 
     def run_command(self, args):
         """

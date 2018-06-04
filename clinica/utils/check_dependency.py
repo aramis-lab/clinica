@@ -81,7 +81,7 @@ def check_freesurfer():
         if not is_binary_present(binary):
             raise RuntimeError(
                 '%s from FreeSurfer Software is not present in your PATH '
-                'environment: did you source ${FREESURFER_HOME}/' 
+                'environment: did you source ${FREESURFER_HOME}/'
                 'SetUpFreeSurfer.sh ?' % binary)
 
     cprint('FreeSurfer has been detected')
@@ -181,23 +181,6 @@ def check_matlab():
     """
     import os, sys
     from clinica.utils.stream import cprint
-    # here, we check out the os, basically, clinica works for linux and MAC OS X.
-    if sys.platform.startswith('linux'):
-        list_binaries = 'matlab'
-        if not is_binary_present(list_binaries):
-            raise RuntimeError('Your platform is linux, the default command line for Matlab(matlab_cmd) is matlab. You can also export a variable MATLABCMD in your .zshrc or .bashrc file to use a specific version of Matlab.')
-        else:
-            cprint('matlab has been detected')
-    elif sys.platform.startswith('darwin'):
-        try:
-            if not 'MATLABCMD' in os.environ:
-                raise RuntimeError(
-                    "Your platform is MAC OS X, the default command line for Matlab(matlab_cmd) is matlab, but it does not work on OS X, you mush export a variable MATLABCMD in your .zshrc or .bashrc, which points to your matlal. Besides, Mac os x will always choose to use OpengGl hardware mode.")
-            else:
-                cprint('matlab has been detected')
-        except Exception as e:
-            cprint(str(e))
-            exit(1)
-    else:
-        cprint("Clinica will not work on windows platform ")
 
+    if not is_binary_present("matlab"):
+        raise RuntimeError('Matlab was not found in PATH environment. Did you add it?')

@@ -1,8 +1,4 @@
-"""fMRI Preprocessing - Clinica Command Line Interface.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
-"""
-
+# coding: utf8
 
 import clinica.engine as ce
 
@@ -26,30 +22,30 @@ class fMRIPreprocessingCLI(ce.CmdParser):
         """
 
         self._args.add_argument("bids_directory",
-                                help='Path to the BIDS directory')
+                                help='Path to the BIDS directory.')
         self._args.add_argument("caps_directory",
-                                help='Path to the CAPS directory')
+                                help='Path to the CAPS directory.')
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
-                                help='TSV file containing the subjects with their sessions')
+                                help='TSV file containing a list of subjects with their sessions.')
         self._args.add_argument("-wd", "--working_directory",
-                                help='Temporary directory to store pipelines intermediate results')
+                                help='Temporary directory to store pipelines intermediate results.')
         self._args.add_argument("-np", "--n_procs", type=int,
-                                help='Number of processors to run in parallel')
+                                help='Number of processors to run in parallel.')
         self._args.add_argument("-sl", "--slurm", action='store_true',
-                                help='Run the pipelines using SLURM')
+                                help='Run the pipelines using SLURM.')
         self._args.add_argument("-sa", "--sbatch_args",
-                                help='SLURM\'s sbatch tool arguments')
+                                help='SLURM\'s sbatch tool arguments.')
         self._args.add_argument("-fwhm", "--full_width_at_half_maximum",
                                 nargs=3, type=int, default=[8, 8, 8],
-                                help="Size of the fwhm filter in milimeters to smooth the image")
+                                help="Size of the fwhm filter in milimeters to smooth the image.")
         self._args.add_argument("-t1s", "--t1_native_space", action='store_true',
-                                help="Also return images in T1 native space")
+                                help="Also return images in T1 native space.")
         self._args.add_argument("-fsbm", "--freesurfer_brain_mask",
                                 action='store_true',
-                                help="Use Freesurfer's pre-computed brain mask")
+                                help="Use FreeSurfer's pre-computed brain mask.")
         self._args.add_argument("-u", "--unwarping",
                                 action='store_true',
-                                help="Add SPM's Unwarping to the Realign step")
+                                help="Add SPM's Unwarping to the Realign step.")
 
 
     def run_command(self, args):

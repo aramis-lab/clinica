@@ -119,8 +119,6 @@ class Pipeline(Workflow):
             tsv_file (optional): Path to a subjects-sessions `.tsv` file.
             name (optional): A pipelines name.
         """
-        import nipype.interfaces.utility as nutil
-        import nipype.pipeline.engine as npe
         import inspect
         import os
         self._is_built = False
@@ -155,6 +153,14 @@ class Pipeline(Workflow):
                 is_bids_dir=True
             )
 
+        self.init_nodes()
+
+    def init_nodes(self):
+        """Inits the basic workflow and I/O nodes necessary before build.
+
+        """
+        import nipype.interfaces.utility as nutil
+        import nipype.pipeline.engine as npe
         if self.get_input_fields():
             self._input_node = npe.Node(name="Input",
                                         interface=nutil.IdentityInterface(
@@ -176,6 +182,7 @@ class Pipeline(Workflow):
             self.add_nodes([self.input_node])
         if self.output_node:
             self.add_nodes([self.output_node])
+
 
     def has_input_connections(self):
         """Checks if the Pipeline's input node has been connected.
@@ -318,7 +325,11 @@ class Pipeline(Workflow):
     def parameters(self): return self._parameters
 
     @parameters.setter
-    def parameters(self, value): self._parameters = value
+    def parameters(self, value):
+        self._parameters = value
+        # Need to rebuild input, output and core nodes
+        self.is_built = False
+        self.init_nodes()
 
     @property
     def info(self): return self._info

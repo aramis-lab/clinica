@@ -144,23 +144,26 @@ class fMRIPreprocessing(cpe.Pipeline):
 
         for i in range(len(self.subjects)):
 
-            # From phasediff json file
-            phasediff_json = self.bids_layout.get(return_type='file',
-                                                  type='phasediff',
-                                                  extensions='json',
-                                                  subject=self.subjects[i][4:])
-            with open(phasediff_json[0]) as json_file:
-                data = json.load(json_file)
-                # SPM echo times
-                read_node.inputs.et.append([data['EchoTime1'],
-                                            data['EchoTime2']])
-                # SPM blip direction
-                # TODO: Verifiy that it is the correct way to get the blipdir
-                blipdir_raw = data['PhaseEncodingDirection']
-                if len(blipdir_raw) > 1 and blipdir_raw[1]=='-':
-                    read_node.inputs.blipdir.append(-1)
-                else:
-                    read_node.inputs.blipdir.append(1)
+            cprint('Loading subject "{sub}"...'.format(sub=self.subjects[i]))
+
+            if self.parameters['unwarping']:
+                # From phasediff json file
+                phasediff_json = self.bids_layout.get(return_type='file',
+                                                      type='phasediff',
+                                                      extensions='json',
+                                                      subject=self.subjects[i][4:])
+                with open(phasediff_json[0]) as json_file:
+                    data = json.load(json_file)
+                    # SPM echo times
+                    read_node.inputs.et.append([data['EchoTime1'],
+                                                data['EchoTime2']])
+                    # SPM blip direction
+                    # TODO: Verifiy that it is the correct way to get the blipdir
+                    blipdir_raw = data['PhaseEncodingDirection']
+                    if len(blipdir_raw) > 1 and blipdir_raw[1]=='-':
+                        read_node.inputs.blipdir.append(-1)
+                    else:
+                        read_node.inputs.blipdir.append(1)
 
             # From func json file
             func_json = self.bids_layout.get(return_type='file',

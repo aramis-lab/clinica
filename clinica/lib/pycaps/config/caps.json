@@ -1,4 +1,6 @@
 {
+    "name": "caps",
+    "root": ".",
     "entities": [
         {
             "name": "subject",
@@ -13,6 +15,21 @@
         {
             "name": "dwi_preprocessing_file",
             "pattern":".*\/subjects\/sub-[a-zA-Z0-9]+\/ses-[a-zA-Z0-9]+\/dwi\/preprocessing\/(.*)"
+        },
+        {
+            "name": "freesurfer_file",
+            "pattern":".*\/subjects\/sub-[a-zA-Z0-9]+\/ses-[a-zA-Z0-9]+\/t1\/freesurfer_cross_sectional\/sub-[a-zA-Z0-9]+_ses-[a-zA-Z0-9]+\/.*\/(.*)"
+        },
+        {
+            "name": "group_id",
+            "mandatory" : false,
+            "pattern":".*\/subjects\/sub-[a-zA-Z0-9]+\/ses-[a-zA-Z0-9]+\/.*\/group-(.*)\/.*"
+
+        },
+        {
+            "name": "modulation",
+            "pattern":".*\/.*T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability.nii.*"
         }
+
     ]
 }

@@ -26,8 +26,10 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
         #                         help='Path to the BIDS directory.')
         # self._args.add_argument("caps_directory",
         #                         help='Path to the CAPS directory.')
+        # self._args.add_argument("group_id",
+        #                         help='User-defined identifier for the provided group of subjects.')
         # self._args.add_argument("-tsv", "--subjects_sessions_tsv",
-        #                         help='TSV file containing the subjects with their sessions.')
+        #                         help='TSV file containing a list of subjects with their sessions.')
         # Add your own pipeline command line arguments here to be used in the
         # method below. Example below:
         self._args.add_argument("-hw", "--hello_word_arg",

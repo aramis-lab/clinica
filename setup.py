@@ -8,11 +8,12 @@ except ImportError: # for pip <= 9.0.3
 with open(join(dirname(__file__), 'clinica/VERSION'), 'rb') as f:
     version = f.read().decode('ascii').strip()
 
+
 setup(
     name='Clinica',
     version=version,
     url='http://clinica.run',
-    description='Software platform for clinical neuroscience studies',
+    description='Software platform for clinical neuroimaging studies',
     long_description=open('README.md').read(),
     author='ARAMIS Lab',
     maintainer='Clinica developers',

@@ -1,0 +1,12 @@
+{
+    "id": "aramislab/t1-volume-existing-template",
+    "author": "Jorge SAMPER-GONZALEZ",
+    "version": "0.1.0",
+    "dependencies": [
+        {
+            "type": "software",
+            "name": "spm",
+            "version": ">=12"
+        }
+    ]
+}
