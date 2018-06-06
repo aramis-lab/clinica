@@ -453,7 +453,7 @@ class CAPSTSVBasedInput(CAPSInput):
             return self._x
 
         print 'Loading TSV subjects'
-        self._x = tbio.load_data(self._images, self._caps_directory, self._subjects_visits_tsv, self._dataset)
+        self._x = tbio.load_data(self._images, self._caps_directory, self._subjects, self._sessions, self._dataset)
         ###to finish
         print 'Subjects loaded'
 
