@@ -109,6 +109,7 @@ unit:mac:
     - cd test
     - ln -s /Volumes/builds/Clinica/data_ci ./data
     - pytest -v
+    - module purge
     - source deactivate
 
   
