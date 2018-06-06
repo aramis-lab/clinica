@@ -15,7 +15,7 @@ __email__ = "simona.bottani@icm-institute.com"
 __status__ = "Development"
 
 
-def load_data(images, caps_directory, subjects_visits_tsv, dataset):
+def load_data(images, caps_directory, subjects, sessions, dataset):
     """
 
     Args:
@@ -36,9 +36,9 @@ def load_data(images, caps_directory, subjects_visits_tsv, dataset):
 
     if dataset == 'OASIS':
         df = df[df.age_bl > 61]
-    subjects_visits = pd.io.parsers.read_csv(os.path.join(subjects_visits_tsv), sep='\t')
-    participant_id = subjects_visits.participant_id.values
-    session_id = subjects_visits.session_id.values
+    #subjects_visits = pd.io.parsers.read_csv(os.path.join(subjects_visits_tsv), sep='\t')
+    participant_id = subjects
+    session_id = sessions
 
     for i in xrange(len(participant_id)):
         df_sub = df[df.participant_id == participant_id[i]]
