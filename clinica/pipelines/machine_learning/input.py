@@ -413,7 +413,7 @@ class CAPSTSVBasedInput(CAPSInput):
         """
 
         super(CAPSTSVBasedInput, self).__init__(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
-                                                   image_type, dataset, precomputed_kernel=precomputed_kernel)
+                                                   image_type, precomputed_kernel=precomputed_kernel)
 
         self._atlas = atlas
         self._pvc = pvc
