@@ -571,7 +571,7 @@ class TB_RepHoldOut_DualSVM(base.MLWorkflow):
         self._splits_indices = splits_indices
 
         self._input = input.CAPSTSVBasedInput(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type,
-                                              atlas, dataset, pvc, None)
+                                              atlas, dataset, pvc)
 
 
         self._validation = None
