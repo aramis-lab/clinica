@@ -398,7 +398,7 @@ class CAPSVertexBasedInput(CAPSInput):
 
 class CAPSTSVBasedInput(CAPSInput):
 
-    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, atlas, dataset =None,
+    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, atlas, dataset,
                  pvc=None, precomputed_kernel=None):
         """
 
@@ -413,7 +413,7 @@ class CAPSTSVBasedInput(CAPSInput):
         """
 
         super(CAPSTSVBasedInput, self).__init__(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
-                                                   image_type, precomputed_kernel=precomputed_kernel)
+                                                image_type, precomputed_kernel)
 
         self._atlas = atlas
         self._pvc = pvc
