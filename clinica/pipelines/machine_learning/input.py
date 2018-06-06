@@ -434,6 +434,8 @@ class CAPSTSVBasedInput(CAPSInput):
 
         if self._images is not None:
             return self._images
+        print self._group_id
+        print self._atlas
         if self._image_type == 'T1':
 
             self._images = str('group-' + self._group_id + '_T1w_space-' + self._atlas + '_map-graymatter')
