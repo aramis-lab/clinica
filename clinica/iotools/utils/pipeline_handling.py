@@ -195,8 +195,8 @@ def t1_spm_pipeline(caps_dir, df, **kwargs):
     Returns:
          final_df: a DataFrame containing the information of the bids and the pipeline
     """
-    from ...pipelines.t1_spm_full_prep.t1_spm_full_prep_cli import T1SPMFullPrepCLI
-    instance = T1SPMFullPrepCLI()
+    from ...pipelines.t1_volume_new_template.t1_volume_new_template_cli import T1VolumeNewTemplateCLI
+    instance = T1VolumeNewTemplateCLI()
     pipeline_name = instance.name
     del instance
 
