@@ -136,8 +136,8 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                     raise Exception('You must specify a --feature_label when using the --custom_files flag')
 
         # Check if the group label has been existed, if yes, give an error to the users
-        if os.path.exists(os.path.join(os.path.abspath(self.absolute_path(args.caps_directory)), 'groups', 'group-' + args.group_label)):
-            error_message = 'group_id : ' + args.group_label + ' already exists, please choose another one or delete the existing folder and also the working directory and rerun the pipelines'
+        if os.path.exists(os.path.join(os.path.abspath(self.absolute_path(args.caps_directory)), 'groups', 'group-' + args.group_id)):
+            error_message = 'group_id : ' + args.group_id + ' already exists, please choose another one or delete the existing folder and also the working directory and rerun the pipelines'
             raise Exception(error_message)
 
         pipeline = StatisticsSurface(

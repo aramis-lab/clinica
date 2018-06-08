@@ -288,7 +288,7 @@ class RB_RepHoldOut_DualSVM(base.MLWorkflow):
 
 
 class RB_RepHoldOut_LogisticRegression(base.MLWorkflow):
-    
+
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, atlas,
                  output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3,
                  grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17), splits_indices=None):
@@ -305,20 +305,20 @@ class RB_RepHoldOut_LogisticRegression(base.MLWorkflow):
                                                  image_type, atlas, pvc)
         self._validation = None
         self._algorithm = None
-    
+
     def run(self):
-        
+
         x = self._input.get_x()
         y = self._input.get_y()
-        
+
         self._algorithm = algorithm.LogisticReg(x, y, balanced=self._balanced,
                                                 grid_search_folds=self._grid_search_folds,
                                                 c_range=self._c_range,
                                                 n_threads=self._n_threads)
-            
+
         self._validation = validation.RepeatedHoldOut(self._algorithm, n_iterations=self._n_iterations, test_size=self._test_size)
         classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads, splits_indices=self._splits_indices)
-                                                     
+
         classifier_dir = os.path.join(self._output_dir, 'classifier')
         if not path.exists(classifier_dir):
             os.makedirs(classifier_dir)
@@ -656,5 +656,3 @@ class TB_RepHoldOut_RandomForest(base.MLWorkflow):
         self._input.save_weights_as_nifti(weights, classifier_dir)
 
         self._validation.save_results(self._output_dir)
-
-

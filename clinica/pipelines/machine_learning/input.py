@@ -396,6 +396,7 @@ class CAPSVertexBasedInput(CAPSInput):
     def save_weights_as_nifti(self, weights, output_dir):
         pass
 
+
 class CAPSTSVBasedInput(CAPSInput):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, atlas, dataset,
@@ -418,6 +419,7 @@ class CAPSTSVBasedInput(CAPSInput):
         self._atlas = atlas
         self._pvc = pvc
         self._dataset = dataset
+
         self._orig_shape = None
         self._data_mask = None
 
@@ -427,23 +429,27 @@ class CAPSTSVBasedInput(CAPSInput):
     def get_images(self):
         """
 
-        Returns: string 
+        Returns: string
 
         """
-        import pandas as pd
 
-        if self._images is not None:
-            return self._images
-        print self._group_id
-        print self._atlas
-        if self._image_type == 'T1':
+        #import pandas as pd
+        pass
+        #if self._images is not None:
+        #    return self._images
+        #print self._group_id
+        #print self._atlas
+        #print self._image_type
 
-            self._images = str('group-' + self._group_id + '_T1w_space-' + self._atlas + '_map-graymatter')
+        #if self._image_type == 'T1':
 
-        ## to implement for PET
+        #    self._images = str('group-' + self._group_id + '_T1w_space-' + self._atlas + '_map-graymatter')
 
 
-        return self._images
+        ### to implement for PET
+
+
+        #return self._images
 
     def get_x(self):
         """
@@ -451,12 +457,17 @@ class CAPSTSVBasedInput(CAPSInput):
         Returns: a numpy 2d-array.
 
         """
-        if self._x is not None:
-            return self._x
+
+        #if self._x is not None:
+        #    return self._x
+
+
 
         print 'Loading TSV subjects'
-        self._x = tbio.load_data(self._images, self._caps_directory, self._subjects, self._sessions, self._dataset)
-        ###to finish
+        string = str('group-' + self._group_id + '_T1w_space-' + self._atlas + '_map-graymatter')
+
+        self._x = tbio.load_data(string, self._caps_directory, self._subjects, self._sessions, self._dataset)
+
         print 'Subjects loaded'
 
         return self._x
@@ -473,4 +484,6 @@ class CAPSTSVBasedInput(CAPSInput):
         """
 
         output_filename = path.join(output_dir, 'weights.nii.gz')
+
+
         rbio.weights_to_nifti(weights, self._atlas, output_filename)

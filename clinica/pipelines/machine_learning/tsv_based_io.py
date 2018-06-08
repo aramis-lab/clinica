@@ -34,22 +34,21 @@ def load_data(images, caps_directory, subjects, sessions, dataset):
 
     all_vector = np.array([])
 
-    if dataset == 'OASIS':
-        df = df[df.age_bl > 61]
-    #subjects_visits = pd.io.parsers.read_csv(os.path.join(subjects_visits_tsv), sep='\t')
+
+
     participant_id = subjects
+    print len(participant_id)
     session_id = sessions
 
     for i in xrange(len(participant_id)):
         df_sub = df[df.participant_id == participant_id[i]]
 
+
         df_analysis = df_sub[[col for col in df_sub.columns if images in col]]
 
         all_vector = np.append(all_vector, df_analysis.values)
-
-
-    data = np.zeros((participant_id.shape[0], df_analysis.shape[1]))
-    data_temp = np.split(all_vector, participant_id.shape[0])
+    data = np.zeros((len(participant_id), df_analysis.shape[1]))
+    data_temp = np.split(all_vector, len(participant_id))
 
     for i in xrange(len(participant_id)):
         for j in xrange(df_analysis.shape[1]):
