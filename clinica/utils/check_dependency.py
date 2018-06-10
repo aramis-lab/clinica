@@ -86,6 +86,26 @@ def check_freesurfer():
 
     cprint('FreeSurfer has been detected')
 
+def check_noddi_matlab_toolbox():
+    """
+    Check NODDI Matlab toolbox.
+
+    This function checks if the NODDI_MATLAB_TOOLBOX is present in the environment.
+    """
+    import os
+    from clinica.utils.stream import cprint
+
+    try:
+        noddi_matlab_toolbox = os.environ.get('NODDI_MATLAB_TOOLBOX', '')
+        if not noddi_matlab_toolbox:
+            raise RuntimeError('NODDI_MATLAB_TOOLBOX variable is not set')
+    except Exception as e:
+        cprint(str(e))
+
+    cprint('NODDI Matlab toolbox has been detected')
+
+    return noddi_matlab_toolbox
+
 
 def check_fsl():
     """
