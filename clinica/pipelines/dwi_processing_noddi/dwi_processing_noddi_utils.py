@@ -255,7 +255,7 @@ def delete_amico(root_dir, subject_id):
     else:
         [os.remove(f) for f in files_list]
 
-def runmatlab(output_dir, noddi_img, brain_mask, roi_mask, bval, bvec, prefix, bStep, num_cores, path_to_matscript, noddi_toolbox_dir):
+def runmatlab(output_dir, noddi_img, brain_mask, roi_mask, bval, bvec, prefix, bStep, num_cores, path_to_matscript, noddi_toolbox_dir, nifti_matlib_dir):
     """
     The wrapper to call noddi matlab script.
     Args:
@@ -302,8 +302,8 @@ def runmatlab(output_dir, noddi_img, brain_mask, roi_mask, bval, bvec, prefix, b
     matlab.inputs.paths = path_to_matscript  # CLINICA_HOME, this is the path to add into matlab, addpath
 
     matlab.inputs.script = """
-    noddiprocessing('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d');
-    """ % (output_dir, noddi_img, brain_mask, roi_mask, bval, bvec, prefix, bStep, noddi_toolbox_dir, num_cores)  # here, we should define the inputs for the matlab function that you want to use
+    noddiprocessing('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d');
+    """ % (output_dir, noddi_img, brain_mask, roi_mask, bval, bvec, prefix, bStep, noddi_toolbox_dir, nifti_matlib_dir, num_cores)  # here, we should define the inputs for the matlab function that you want to use
     matlab.inputs.mfile = True  # this will create a file: pyscript.m , the pyscript.m is the default name
     matlab.inputs.single_comp_thread = False  # this will stop runing with single thread
     matlab.inputs.logfile = join(output_dir, prefix + "_matlab_output.log")
@@ -417,7 +417,7 @@ def matlab_noddi_processing(caps_directory, num_cores, bStep, name='NoddiMatlab'
 
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['subject_id_list', 'noddi_preprocessed_dwi', 'noddi_preprocessed_bvec',
-                'noddi_preprocessed_bval', 'noddi_preprocessed_mask', 'noddi_toolbox_dir']),
+                'noddi_preprocessed_bval', 'noddi_preprocessed_mask', 'noddi_toolbox_dir', 'nifti_matlib_dir']),
         name='inputnode')
 
     capsnode = pe.MapNode(name='capsnode',
@@ -440,7 +440,7 @@ def matlab_noddi_processing(caps_directory, num_cores, bStep, name='NoddiMatlab'
     # Node to wrap noddi matlab toolbox script.
     nodditoolbox = pe.MapNode(name='nodditoolbox',
                        interface=niu.Function(input_names=['output_dir', 'noddi_img', 'brain_mask', 'roi_mask', 'bval', 'bvec', 'prefix', 'bStep', 'num_cores',
-                                                       'path_to_matscript', 'noddi_toolbox_dir'],
+                                                       'path_to_matscript', 'noddi_toolbox_dir', 'nifti_matlib_dir'],
                                           output_names=['fit_icvf', 'fit_isovf', 'fit_od'],
                                           function=runmatlab), iterfield=['output_dir', 'noddi_img', 'brain_mask', 'roi_mask', 'bval', 'bvec', 'prefix'])
     nodditoolbox.inputs.path_to_matscript = path_to_matscript
@@ -477,6 +477,7 @@ def matlab_noddi_processing(caps_directory, num_cores, bStep, name='NoddiMatlab'
     nodditoolbox_wf.connect(inputnode, 'subject_id_list', nodditoolbox, 'prefix')
     # nodditoolbox_wf.connect(inputnode, 'bStep', nodditoolbox, 'bStep')
     nodditoolbox_wf.connect(inputnode, 'noddi_toolbox_dir', nodditoolbox, 'noddi_toolbox_dir')
+    nodditoolbox_wf.connect(inputnode, 'nifti_matlib_dir', nodditoolbox, 'nifti_matlib_dir')
     nodditoolbox_wf.connect(inputnode, 'subject_id_list', capsnode, 'subject_id_list')
     nodditoolbox_wf.connect(capsnode, 'temp_folder', nodditoolbox, 'output_dir')
 

@@ -45,9 +45,9 @@ class DwiProcessingNoddi(cpe.Pipeline):
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
-        from clinica.utils.check_dependency import check_noddi_matlab_toolbox
-        check_noddi_matlab_toolbox()
-
+        from clinica.utils.check_dependency import check_noddi_matlab_toolbox, check_nifti_matlib_toolbox
+        _ = check_noddi_matlab_toolbox()
+        _ = check_nifti_matlib_toolbox()
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
@@ -57,7 +57,7 @@ class DwiProcessingNoddi(cpe.Pipeline):
         """
 
         return ['subject_id_list', 'noddi_preprocessed_dwi', 'noddi_preprocessed_bvec', 'noddi_preprocessed_bval',
-                'noddi_preprocessed_mask', 'n_procs', 'noddi_toolbox_dir'] # Fill here the list
+                'noddi_preprocessed_mask', 'n_procs', 'noddi_toolbox_dir', 'nifti_matlib_dir'] # Fill here the list
 
 
     def get_output_fields(self):
@@ -92,6 +92,7 @@ class DwiProcessingNoddi(cpe.Pipeline):
         read_parameters_node.inputs.noddi_preprocessed_bval = noddi_preprocessed_bval
         read_parameters_node.inputs.noddi_preprocessed_mask = noddi_preprocessed_mask
         read_parameters_node.inputs.noddi_toolbox_dir = self.parameters['noddi_toolbox_dir']['noddi_toolbox_dir']
+        read_parameters_node.inputs.nifti_matlib_dir = self.parameters['nifti_matlib_dir']['nifti_matlib_dir']
 
         self.connect([
             (read_parameters_node,      self.input_node,    [('subject_id_list',    'subject_id_list')]),
@@ -101,6 +102,7 @@ class DwiProcessingNoddi(cpe.Pipeline):
             (read_parameters_node,      self.input_node,    [('noddi_preprocessed_mask',    'noddi_preprocessed_mask')]),
             (read_parameters_node,      self.input_node,    [('n_procs',    'n_procs')]),
             (read_parameters_node,      self.input_node,    [('noddi_toolbox_dir',    'noddi_toolbox_dir')]),
+            (read_parameters_node,      self.input_node,    [('nifti_matlib_dir',    'nifti_matlib_dir')]),
         ])
 
 
@@ -155,6 +157,7 @@ class DwiProcessingNoddi(cpe.Pipeline):
             (self.input_node,      processing_pipeline,    [('noddi_preprocessed_bval',    'inputnode.noddi_preprocessed_bval')]),
             (self.input_node,      processing_pipeline,    [('noddi_preprocessed_mask',    'inputnode.noddi_preprocessed_mask')]),
             (self.input_node,      processing_pipeline,    [('noddi_toolbox_dir',    'inputnode.noddi_toolbox_dir')]),
+            (self.input_node,      processing_pipeline,    [('nifti_matlib_dir',    'inputnode.nifti_matlib_dir')]),
             ## output
             (processing_pipeline, self.output_node, [('outputnode.fit_icvf', 'fit_icvf')]),  # noqa
             (processing_pipeline, self.output_node, [('outputnode.fit_isovf', 'fit_isovf')]),  # noqa

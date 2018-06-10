@@ -61,8 +61,9 @@ class DwiProcessingNoddiCLI(ce.CmdParser):
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv))
 
-        from clinica.utils.check_dependency import check_noddi_matlab_toolbox
+        from clinica.utils.check_dependency import check_noddi_matlab_toolbox, check_nifti_matlib_toolbox
         noddi_matlab_toolbox = check_noddi_matlab_toolbox()
+        nifti_matlib_toolbox = check_nifti_matlib_toolbox()
 
         pipeline.parameters = {
             'bvalue_str': dict(
@@ -71,6 +72,8 @@ class DwiProcessingNoddiCLI(ce.CmdParser):
                 [('n_procs', args.n_procs or 4)]),
             'noddi_toolbox_dir': dict(
                 [('noddi_toolbox_dir', noddi_matlab_toolbox)]),
+            'nifti_matlib_dir': dict(
+                [('nifti_matlib_dir', nifti_matlib_toolbox)]),
         }
 
         if args.working_directory is None:

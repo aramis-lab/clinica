@@ -1,4 +1,4 @@
-function noddiprocessing(output_dir, noddi_img, brain_mask, roi_mask, bval, bvec, prefix, bStep, noddi_toolbox_dir, num_cores)
+function noddiprocessing(output_dir, noddi_img, brain_mask, roi_mask, bval, bvec, prefix, bStep, noddi_toolbox_dir, nifti_matlib_dir, num_cores)
 %This is a function to fit NODDI onto the multiple shells diffusion data
 %based on this paper: NODDI: Practical in vivo neurite orientation
 %dispersion and density imaging of the human brain, Neuroimage, 2012, Gary
@@ -32,7 +32,8 @@ end
 
 %% add path to the python.m file
 addpath(fileparts(which(mfilename())));
-addpath(noddi_toolbox_dir);
+addpath(genpath(noddi_toolbox_dir));
+addpath(genpath(nifti_matlib_dir));
 
 %%
 cd(output_dir);

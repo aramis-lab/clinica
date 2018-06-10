@@ -107,6 +107,26 @@ def check_noddi_matlab_toolbox():
     return noddi_matlab_toolbox
 
 
+def check_nifti_matlib_toolbox():
+    """
+    Check Niftimatlib toolbox.
+
+    This function checks if the NIFTI_MATLIB_TOOLBOX is present in the environment.
+    """
+    import os
+    from clinica.utils.stream import cprint
+
+    try:
+        nifti_matlib_toolbox = os.environ.get('NIFTI_MATLIB_TOOLBOX', '')
+        if not nifti_matlib_toolbox:
+            raise RuntimeError('NIFTI_MATLIB_TOOLBOX variable is not set')
+    except Exception as e:
+        cprint(str(e))
+
+    cprint('Niftimatlib toolbox has been detected')
+
+    return nifti_matlib_toolbox
+
 def check_fsl():
     """
     Check FSL software.
