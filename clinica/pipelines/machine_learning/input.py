@@ -11,6 +11,7 @@ from clinica.pipelines.machine_learning import base
 import clinica.pipelines.machine_learning.voxel_based_io as vbio
 import clinica.pipelines.machine_learning.vertex_based_io as vtxbio
 import clinica.pipelines.machine_learning.region_based_io as rbio
+import clinica.pipelines.machine_learning.tsv_based_io as tbio
 import clinica.pipelines.machine_learning.svm_utils as utils
 
 
@@ -393,4 +394,97 @@ class CAPSVertexBasedInput(CAPSInput):
         pass
 
     def save_weights_as_nifti(self, weights, output_dir):
+        pass
+
+
+class CAPSTSVBasedInput(CAPSInput):
+
+    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, atlas, dataset,
+                 pvc=None, precomputed_kernel=None):
+        """
+
+        Args:
+            caps_directory:
+            subjects_visits_tsv:
+            diagnoses_tsv:
+            group_id:
+            image_type: 'T1', 'fdg', 'av45', 'pib' or 'flute'
+            atlas:
+            precomputed_kernel:
+        """
+
+        super(CAPSTSVBasedInput, self).__init__(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
+                                                image_type, precomputed_kernel)
+
+        self._atlas = atlas
+        self._pvc = pvc
+        self._dataset = dataset
+
+        self._orig_shape = None
+        self._data_mask = None
+
+        if atlas not in ['AAL2', 'Neuromorphometrics', 'AICHA', 'LPBA40', 'Hammers']:
+            raise Exception("Incorrect atlas name. It must be one of the values 'AAL2', 'Neuromorphometrics', 'AICHA', 'LPBA40', 'Hammers' ")
+
+    def get_images(self):
+        """
+
+        Returns: string
+
+        """
+
+        #import pandas as pd
+        pass
+        #if self._images is not None:
+        #    return self._images
+        #print self._group_id
+        #print self._atlas
+        #print self._image_type
+
+        #if self._image_type == 'T1':
+
+        #    self._images = str('group-' + self._group_id + '_T1w_space-' + self._atlas + '_map-graymatter')
+
+
+        ### to implement for PET
+
+
+        #return self._images
+
+    def get_x(self):
+        """
+
+        Returns: a numpy 2d-array.
+
+        """
+
+        #if self._x is not None:
+        #    return self._x
+
+
+
+        print 'Loading TSV subjects'
+        string = str('group-' + self._group_id + '_T1w_space-' + self._atlas + '_map-graymatter')
+
+        self._x = tbio.load_data(string, self._caps_directory, self._subjects, self._sessions, self._dataset)
+
+        print 'Subjects loaded'
+
+        return self._x
+
+    def save_weights_as_nifti(self, weights, output_dir):
+        """
+
+        Args:
+            weights:
+            output_dir:
+
+        Returns:
+
+        """
+
+        #output_filename = path.join(output_dir, 'weights.nii.gz')
+
+
+        #rbio.weights_to_nifti(weights, self._atlas, output_filename)
         pass

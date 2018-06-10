@@ -16,7 +16,7 @@ setup(
     description='Software platform for clinical neuroimaging studies',
     long_description=open('README.md').read(),
     author='ARAMIS Lab',
-    maintainer='Clinica developpers',
+    maintainer='Clinica developers',
     maintainer_email='clinica-user@googlegroups.com',
     license='MIT license',
     packages=find_packages(exclude=('tests', 'tests.*')),
