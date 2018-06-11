@@ -470,6 +470,7 @@ class LearningCurveRepeatedHoldOut(base.MLValidation):
 
                 mean_results_df = pd.DataFrame(iteration_results_df.apply(np.nanmean).to_dict(),
                                                columns=iteration_results_df.columns, index=[0, ])
+                print mean_results_df
                 mean_results_df.to_csv(path.join(iteration_dir, 'mean_results.tsv'),
                                        index=False, sep='\t', encoding='utf-8')
                 all_results_list.append(mean_results_df)
