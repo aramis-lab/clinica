@@ -91,21 +91,13 @@ launch:linux:
     - source deactivate
 
       
-unit:mac:
+unittest:mac:
   stage: test
   tags:
     - macOS
   script:
     - source activate clinica_env
-    - module load clinica/matlab
-    - module load clinica/itk
-    - module load clinica/ants
-    - module load clinica/fsl
-    - module load clinica/PETPVC
-    - module load clinica/dcm2niix
-    - module load clinica/freesurfer/5.3.0
-    - module load clinica/mrtrix3
-    - module load clinica/spm12
+    - module load clinica.all
     - cd test
     - ln -s /Volumes/builds/Clinica/data_ci ./data
     - pytest -v
