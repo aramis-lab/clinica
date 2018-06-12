@@ -26,7 +26,7 @@ class DwiPreprocessingNoddiCLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'Preprocessing of raw DWI datasets with multi-shell acquisitions and phase encoding directions: http://clinica.run/doc/Pipelines/DWI_Preprocessing/'
+        self._description = 'Preprocessing of raw DWI datasets with multi-shell acquisitions and opposite phase encoding directions: http://clinica.run/doc/Pipelines/DWI_Preprocessing/'
 
     def define_options(self):
         """Define the sub-command arguments
@@ -80,7 +80,6 @@ class DwiPreprocessingNoddiCLI(ce.CmdParser):
             create_subs_sess_list(args.bids_directory, temp_dir)
             args.subjects_sessions_tsv = os.path.join(temp_dir, 'subjects_sessions_list.tsv')
 
-        #Run the DWIPreprocessingNoddi Pipeline from command line
         pipeline = DwiPreprocessingNoddi(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
