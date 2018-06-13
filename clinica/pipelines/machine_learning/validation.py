@@ -92,6 +92,11 @@ class KFoldCV(base.MLValidation):
         mean_results = pd.DataFrame(all_results.apply(np.nanmean).to_dict(), columns=all_results.columns, index=[0, ])
         mean_results.to_csv(path.join(output_dir, 'mean_results.tsv'),
                             index=False, sep='\t', encoding='utf-8')
+        print "Mean results of the classification:"
+        print "Balanced accuracy: %s" %(mean_results_df['balanced_accuracy'].to_string(index = False))
+        print "specificity: %s" % (mean_results_df['specificity'].to_string(index=False))
+        print "sensitivity: %s" % (mean_results_df['sensitivity'].to_string(index=False))
+        print "auc: %s" % (mean_results_df['auc'].to_string(index=False))
 
 
 class RepeatedKFoldCV(base.MLValidation):
@@ -312,6 +317,11 @@ class RepeatedHoldOut(base.MLValidation):
                                        columns=all_results_df.columns, index=[0, ])
         mean_results_df.to_csv(path.join(output_dir, 'mean_results.tsv'),
                                index=False, sep='\t', encoding='utf-8')
+        print "Mean results of the classification:"
+        print "Balanced accuracy: %s" %(mean_results_df['balanced_accuracy'].to_string(index = False))
+        print "specificity: %s" % (mean_results_df['specificity'].to_string(index=False))
+        print "sensitivity: %s" % (mean_results_df['sensitivity'].to_string(index=False))
+        print "auc: %s" % (mean_results_df['auc'].to_string(index=False))
 
         self.compute_error_variance()
         self.compute_accuracy_variance()
@@ -427,6 +437,7 @@ class LearningCurveRepeatedHoldOut(base.MLValidation):
         return self._classifier, self._best_params, self._split_results
 
     def save_results(self, output_dir):
+        from clinica.utils.stream import cprint
         if self._split_results is None:
             raise Exception("No results to save. Method validate() must be run before save_results().")
 
@@ -470,6 +481,7 @@ class LearningCurveRepeatedHoldOut(base.MLValidation):
 
                 mean_results_df = pd.DataFrame(iteration_results_df.apply(np.nanmean).to_dict(),
                                                columns=iteration_results_df.columns, index=[0, ])
+
                 mean_results_df.to_csv(path.join(iteration_dir, 'mean_results.tsv'),
                                        index=False, sep='\t', encoding='utf-8')
                 all_results_list.append(mean_results_df)
