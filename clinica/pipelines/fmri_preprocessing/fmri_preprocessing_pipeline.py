@@ -275,7 +275,13 @@ class fMRIPreprocessing(cpe.Pipeline):
         import nipype.interfaces.spm as spm
         import nipype.pipeline.engine as npe
         from clinica.utils.io import zip_nii, unzip_nii
-
+        import os
+        matlab_cmd = os.environ['SPMSTANDALONE_HOME'] + 
+                     '/run_spm12.sh ' 
+                     + os.environ['MCR_HOME'] 
+                     + ' script'
+        spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
+        
         # Zipping
         # =======
         unzip_node = npe.MapNode(name='Unzipping',
