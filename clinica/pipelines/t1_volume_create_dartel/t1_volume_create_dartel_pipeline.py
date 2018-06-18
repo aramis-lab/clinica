@@ -208,13 +208,13 @@ class T1VolumeCreateDartel(cpe.Pipeline):
             if version['name'] == 'SPM8':
                 print 'You are using SPM version 8. The recommended version to use with Clinica is SPM 12. ' \
                       'Please upgrade your SPM toolbox.'
-                tissue_map = op.join(spm_path, 'toolbox/Seg/TPM.nii')
+                tissue_map = os.path.join(spm_path, 'toolbox/Seg/TPM.nii')
             elif version['name'] == 'SPM12':
-                tissue_map = op.join(spm_path, 'tpm/TPM.nii')
+                tissue_map = os.path.join(spm_path, 'tpm/TPM.nii')
             else:
                 raise RuntimeError('SPM version 8 or 12 could not be found. Please upgrade your SPM toolbox.')
         elif version_sa == '12.7169':
-            tissue_map = op.join(unicode(spm_home), 'spm12_mcr/spm/spm12/tpm/TPM.nii')
+            tissue_map = os.path.join(unicode(spm_home), 'spm12_mcr/spm/spm12/tpm/TPM.nii')
         else:
             raise RuntimeError('SPM could not be found. Please verify your SPM_HOME environment variable.')
         
