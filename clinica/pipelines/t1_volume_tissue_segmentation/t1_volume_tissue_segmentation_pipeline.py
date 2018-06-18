@@ -202,8 +202,8 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         mlab.MatlabCommand.set_default_paths(spm_home)
 
         matlab_cmd = os.path.join(os.environ['SPMSTANDALONE_HOME'],
-                'run_spm12.sh ') /
-                + os.environ['MCR_HOME'] /
+                'run_spm12.sh ') \
+                + os.environ['MCR_HOME'] \
                 + ' script'
         spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
         
