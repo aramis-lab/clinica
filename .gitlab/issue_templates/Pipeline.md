@@ -1,4 +1,10 @@
-Pipeline Name
+GanttStart: YYYY-MM-DD
+
+GanttDue: YYYY-MM-DD
+
+[Pipeline Name]
+
+Description: 
 
 * [ ] Code
 * [ ] Documentation (Source code)
