@@ -3,7 +3,6 @@
 
 """
 
-
 from __future__ import print_function, division, unicode_literals, absolute_import
 from nipype.utils.filemanip import (fname_presuffix, filename_to_list, list_to_filename)
 from nipype.interfaces.base import (OutputMultiPath, TraitedSpec, isdefined, traits, File)
@@ -13,13 +12,14 @@ import nipype.interfaces.spm as spm
 import nipype.interfaces.fsl as fsl
 
 import os
-os.environ['SPMSTANDALONE_HOME']
-os.environ['MCR_HOME']
-matlab_cmd = os.path.join(os.environ['SPMSTANDALONE_HOME'],
-        '/run_spm12.sh') \
-        + ' ' + os.environ['MCR_HOME'] \
-        + ' script'
-spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
+
+if 'SPMSTANDALONE_HOME' in os.environ:
+    if 'MCR_HOME' in os.environ:
+        matlab_cmd = os.path.join(os.environ['SPMSTANDALONE_HOME'],
+                '/run_spm12.sh') \
+                + ' ' + os.environ['MCR_HOME'] \
+                + ' script'
+        spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
 
 class RealignUnwarpInputSpec(SPMCommandInputSpec):
     scans = traits.Either(traits.List(File(exists=True)), File(exists=True),
