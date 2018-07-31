@@ -358,13 +358,15 @@ class PETVolume(cpe.Pipeline):
         import clinica.pipelines.pet_volume.pet_volume_utils as utils
 
         import os
-        os.environ['SPMSTANDALONE_HOME']
-        os.environ['MCR_HOME']
-        matlab_cmd = os.environ['SPMSTANDALONE_HOME'] \
-                + '/run_spm12.sh ' \
-                + os.environ['MCR_HOME'] \
-                + ' script'
-        spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
+
+
+        if 'SPMSTANDALONE_HOME' in os.environ:
+            if 'MCR_HOME' in os.environ:
+                matlab_cmd = os.path.join(os.environ['SPMSTANDALONE_HOME'],
+                        '/run_spm12.sh') \
+                        + ' ' + os.environ['MCR_HOME'] \
+                        + ' script'
+                spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
         
  
         # Unzipping
