@@ -1,6 +1,7 @@
-# Continous Integration Scrip
+# Continous Integration Script
 # Clinica - ARAMIS
 #
+
 stages:
   - build
   - install
