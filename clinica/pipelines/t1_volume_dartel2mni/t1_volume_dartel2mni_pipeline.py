@@ -241,27 +241,35 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         mlab.MatlabCommand.set_default_matlab_cmd(mlab_home)
         mlab.MatlabCommand.set_default_paths(spm_home)
 
-        matlab_cmd = os.path.join(os.environ['SPMSTANDALONE_HOME'],
-                'run_spm12.sh ') \
-                + os.environ['MCR_HOME'] \
-                + ' script'
-        spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
         
-        version = spm.Info.version()
-        version_sa = spm.SPMCommand().version
-
+        if 'SPMSTANDALONE_HOME' in os.environ:
+            if 'MCR_HOME' in os.environ:
+                matlab_cmd = os.path.join(os.environ['SPMSTANDALONE_HOME'],
+                        'run_spm12.sh') \
+                        + ' ' + os.environ['MCR_HOME'] \
+                        + ' script'
+                spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
+                version = spm.SPMCommand().version
+        else:
+            version = spm.Info.version()
+        
+                
         if version:
-            spm_path = version['path']
-            if version['name'] == 'SPM8':
-                print 'You are using SPM version 8. The recommended version to use with Clinica is SPM 12. ' \
-                      'Please upgrade your SPM toolbox.'
-                tissue_map = os.path.join(spm_path, 'toolbox/Seg/TPM.nii')
-            elif version['name'] == 'SPM12':
-                tissue_map = os.path.join(spm_path, 'tpm/TPM.nii')
-            else:
-                raise RuntimeError('SPM version 8 or 12 could not be found. Please upgrade your SPM toolbox.')
-        elif version_sa == '12.7169':
-            tissue_map = os.path.join(unicode(spm_home), 'spm12_mcr/spm/spm12/tpm/TPM.nii')
+            if isinstance(version, dict):
+                spm_path = version['path']
+                if version['name'] == 'SPM8':
+                    print 'You are using SPM version 8. The recommended version to use with Clinica is SPM 12. ' \
+                          'Please upgrade your SPM toolbox.'
+                    tissue_map = os.path.join(spm_path, 'toolbox/Seg/TPM.nii')
+                elif version['name'] == 'SPM12':
+                    tissue_map = os.path.join(spm_path, 'tpm/TPM.nii')
+                else:
+                    raise RuntimeError('SPM version 8 or 12 could not be found. Please upgrade your SPM toolbox.')
+            if isinstance(version, unicode):
+                if version == '12.7169':
+                    tissue_map = os.path.join(unicode(spm_home), 'spm12_mcr/spm/spm12/tpm/TPM.nii')
+                else:
+                    raise RuntimeError('SPM standalone version not supported. Please upgrade SPM standalone.')
         else:
             raise RuntimeError('SPM could not be found. Please verify your SPM_HOME environment variable.')
         
