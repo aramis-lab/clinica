@@ -33,6 +33,8 @@ class T1VolumeParcellationCLI(ce.CmdParser):
                                 help='Path to the CAPS directory.')
         self._args.add_argument("group_id",
                                 help='User-defined identifier for the provided group of subjects.')
+        self._args.add_argument("-m", "--modulation",
+                                help='Specify if modulation must be enabled. Default : on', default='on')
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
                                 help='TSV file containing a list of subjects with their sessions.')
         #self._args.add_argument("-im_type", "--image_type", type = str, default = 'T1',
@@ -60,7 +62,7 @@ class T1VolumeParcellationCLI(ce.CmdParser):
              bids_directory='./4',
              caps_directory=self.absolute_path(args.caps_directory),
              tsv_file=self.absolute_path(args.subjects_sessions_tsv))
-        #pipeline = spm_parcellation()
+        assert args.modulation in ['on', 'off']
         pipeline.parameters = {
             # Add your own pipeline parameters here to use them inside your
             # pipeline. See the file `spm_parcellation_pipeline.py` to
@@ -68,7 +70,8 @@ class T1VolumeParcellationCLI(ce.CmdParser):
             'group_id': args.group_id,
             'atlases': args.atlases,
             'wd': self.absolute_path(args.working_directory),
-            'n_procs': args.n_procs
+            'n_procs': args.n_procs,
+            'modulate': args.modulation
         }
 
         if args.working_directory is None:

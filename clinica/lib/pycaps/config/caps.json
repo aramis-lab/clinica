@@ -28,7 +28,7 @@
         },
         {
             "name": "modulation",
-            "pattern":".*\/.*T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability.nii.*"
+            "pattern":".*\/.*T1w_segm-graymatter_space-Ixi549Space_modulated-(.*)_probability.nii.*"
         }
 
     ]
