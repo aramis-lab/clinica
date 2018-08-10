@@ -80,6 +80,7 @@ class DwiProcessingNoddiCLI(ce.CmdParser):
             args.working_directory = mkdtemp()
         pipeline.base_dir = self.absolute_path(args.working_directory)
         if args.n_procs:
-            pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
+            pipeline.run(plugin='MultiProc',
+                         plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.run()

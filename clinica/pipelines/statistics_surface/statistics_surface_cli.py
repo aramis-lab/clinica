@@ -165,9 +165,8 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                      pipeline.tsv_file)
 
         if args.n_procs:
-            #pipeline.write_graph()
-            pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
+            pipeline.run(plugin='MultiProc',
+                         plugin_args={'n_procs': args.n_procs})
         else:
-            #pipeline.write_graph()
             print(pipeline.parameters)
             pipeline.run()

@@ -41,8 +41,6 @@ class T1VolumeCreateDartelCLI(ce.CmdParser):
                                 help='Temporary directory to store pipelines intermediate results')
         self._args.add_argument("-np", "--n_procs", type=int,
                                 help='Number of cores used to run in parallel')
-        self._args.add_argument("-sl", "--slurm", action='store_true',
-                                help='Run the pipelines using SLURM')
 
     def run_command(self, args):
         """
@@ -61,8 +59,7 @@ class T1VolumeCreateDartelCLI(ce.CmdParser):
         pipeline.base_dir = self.absolute_path(args.working_directory)
 
         if args.n_procs:
-            pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
-        elif args.slurm:
-            pipeline.run(plugin='SLURM')
+            pipeline.run(plugin='MultiProc',
+                         plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.run()

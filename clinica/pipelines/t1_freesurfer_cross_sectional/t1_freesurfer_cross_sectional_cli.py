@@ -65,10 +65,8 @@ class T1FreeSurferCrossSectionalCLI(ce.CmdParser):
             args.working_directory = mkdtemp()
         pipeline.base_dir = self.absolute_path(args.working_directory)
 
-        # run the pipelines in n_procs cores based on your computation power.
         if args.n_procs:
-            # pipeline.write_graph()
-            pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
+            pipeline.run(plugin='MultiProc',
+                         plugin_args={'n_procs': args.n_procs})
         else:
-            # pipeline.write_graph()
             pipeline.run()

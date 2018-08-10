@@ -49,9 +49,6 @@ class PetSurfaceCLI(ce.CmdParser):
         clinica_opt.add_argument("-np", "--n_procs",
                                  metavar=('N'), type=int,
                                  help='Number of cores to use when running the pipeline in parallel (default: --n_procs 1).')
-#        clinica_opt.add_argument("-sl", "--slurm",
-#                                 action='store_true',
-#                                 help='Run the pipelines using SLURM')
 
     def run_command(self, args):
 

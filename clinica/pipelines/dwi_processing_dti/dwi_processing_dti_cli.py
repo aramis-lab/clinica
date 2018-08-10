@@ -54,7 +54,5 @@ class DWIProcessingDTICLI(ce.CmdParser):
         if args.n_procs:
             pipeline.run(plugin='MultiProc',
                          plugin_args={'n_procs': args.n_procs})
-        elif args.slurm:
-            pipeline.run(plugin='SLURM')
         else:
             pipeline.run()
