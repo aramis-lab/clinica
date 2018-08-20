@@ -56,5 +56,5 @@ class CmdGenerateTemplates(CmdParser):
             else:
                 path_to_write = join(pipeline['dir'], rendered_file)
             with open(path_to_write, 'w+') as file_to_write:
-                print "Generating template %s" % file_to_write.name
+                print("Generating template %s" % file_to_write.name)
                 file_to_write.write(template.render(pipeline=pipeline))

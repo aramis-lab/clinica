@@ -102,7 +102,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
 
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
-        import t1_volume_tissue_segmentation_utils as utils
+        import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as utils
 
         # Reading BIDS
         # ============
@@ -120,7 +120,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         """
 
         import nipype.pipeline.engine as npe
-        import t1_volume_tissue_segmentation_utils as utils
+        import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as utils
         import nipype.interfaces.io as nio
         from clinica.utils.io import zip_nii
 
@@ -193,7 +193,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         import nipype.interfaces.matlab as mlab
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
-        import t1_volume_tissue_segmentation_utils as utils
+        import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as utils
         from clinica.utils.io import unzip_nii
 
         spm_home = os.getenv("SPM_HOME")
@@ -201,13 +201,13 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         mlab.MatlabCommand.set_default_matlab_cmd(mlab_home)
         mlab.MatlabCommand.set_default_paths(spm_home)
 
-        version = spm.Info.version()
+        version = spm.Info.getinfo()
 
         if version:
             spm_path = version['path']
             if version['name'] == 'SPM8':
-                print 'You are using SPM version 8. The recommended version to use with Clinica is SPM 12. ' \
-                      'Please upgrade your SPM toolbox.'
+                print('You are using SPM version 8. The recommended version to use with Clinica is SPM 12. ' \
+                      'Please upgrade your SPM toolbox.')
                 tissue_map = op.join(spm_path, 'toolbox/Seg/TPM.nii')
             elif version['name'] == 'SPM12':
                 tissue_map = op.join(spm_path, 'tpm/TPM.nii')

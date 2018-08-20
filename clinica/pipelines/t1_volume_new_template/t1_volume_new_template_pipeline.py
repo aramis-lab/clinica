@@ -327,8 +327,8 @@ class T1VolumeNewTemplate(cpe.Pipeline):
         if version:
             spm_path = version['path']
             if version['name'] == 'SPM8':
-                print 'You are using SPM version 8. The recommended version to use with Clinica is SPM 12. ' \
-                      'Please upgrade your SPM toolbox.'
+                print('You are using SPM version 8. The recommended version to use with Clinica is SPM 12. ' \
+                      'Please upgrade your SPM toolbox.')
                 tissue_map = op.join(spm_path, 'toolbox/Seg/TPM.nii')
             elif version['name'] == 'SPM12':
                 tissue_map = op.join(spm_path, 'tpm/TPM.nii')

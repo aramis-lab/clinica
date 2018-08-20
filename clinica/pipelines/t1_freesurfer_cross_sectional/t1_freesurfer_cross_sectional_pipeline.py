@@ -70,7 +70,7 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
         """Build and connect an input node to the pipelines.
         """
 
-        import t1_freesurfer_cross_sectional_utils as utils
+        import clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -135,7 +135,7 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
         """Build and connect the core nodes of the pipelines.
         """
 
-        import t1_freesurfer_cross_sectional_utils as utils
+        import clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces.freesurfer.preprocess import ReconAll
@@ -147,7 +147,7 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
                 raise RuntimeError('ReconAll version should at least be version of 0.11.0')
         except Exception as e:
             cprint(str(e))
-            exit(1)
+            #exit(1)
 
         # MapNode to check out if we need -cw256 for every subject, and -qcache is default for every subject.
         flagnode = npe.MapNode(name='flagnode',

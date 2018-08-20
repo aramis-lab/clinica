@@ -197,8 +197,8 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
         if version:
             if version['name'] == 'SPM8':
-                print 'You are using SPM version 8. The recommended version to use with Clinica is SPM 12. ' \
-                      'Please upgrade your SPM toolbox.'
+                print('You are using SPM version 8. The recommended version to use with Clinica is SPM 12. ' \
+                      'Please upgrade your SPM toolbox.')
             elif version['name'] != 'SPM12':
                 raise RuntimeError('SPM version 8 or 12 could not be found. Please upgrade your SPM toolbox.')
         else:
