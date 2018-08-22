@@ -114,7 +114,7 @@ unittest:linux:
     - source activate clinica_env
     - module load clinica.all
     - cd test
-    - ln -s /home/mauricio.diazmelo/data/data_ci ./data
+    - ln -s /localdrive10TB/data/data_ci_linux ./data
     - pytest -v
     - module purge
     - source deactivate
