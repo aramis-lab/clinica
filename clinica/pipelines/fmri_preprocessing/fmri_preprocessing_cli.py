@@ -52,7 +52,7 @@ class fMRIPreprocessingCLI(ce.CmdParser):
         """
         """
 
-        from fmri_preprocessing_pipeline import fMRIPreprocessing
+        from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
 
         pipeline = fMRIPreprocessing(bids_directory=self.absolute_path(args.bids_directory),
                                      caps_directory=self.absolute_path(args.caps_directory),

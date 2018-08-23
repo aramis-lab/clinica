@@ -82,8 +82,8 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         """
         Run the pipelines with defined args
         """
-        from statistics_surface_pipeline import StatisticsSurface
-        from statistics_surface_utils import check_inputs
+        from clinica.pipelines.statistics_surface.statistics_surface_pipeline import StatisticsSurface
+        from clinica.pipelines.statistics_surface.statistics_surface_utils import check_inputs
         from clinica.utils.stream import cprint
         import os
 

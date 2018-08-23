@@ -61,7 +61,7 @@ class PETVolumeCLI(ce.CmdParser):
         """
         """
 
-        from pet_volume_pipeline import PETVolume
+        from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
 
         pipeline = PETVolume(bids_directory=self.absolute_path(args.bids_directory),
                              caps_directory=self.absolute_path(args.caps_directory),

@@ -181,7 +181,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.io import unzip_nii
-        import t1_volume_existing_template_utils as utils
+        import clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_utils as utils
 
         # Unzipping
         # =========

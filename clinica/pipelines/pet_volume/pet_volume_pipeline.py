@@ -144,7 +144,6 @@ class PETVolume(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
         import clinica.pipelines.pet_volume.pet_volume_utils as utils
-        import os
         from os.path import join, split, realpath
 
         iterables_fwhm = self._fwhm

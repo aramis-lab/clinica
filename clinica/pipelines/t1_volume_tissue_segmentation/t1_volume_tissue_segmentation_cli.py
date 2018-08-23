@@ -53,7 +53,7 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
     def run_command(self, args):
         """
         """
-        from t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
+        from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
 
         pipeline = T1VolumeTissueSegmentation(bids_directory=self.absolute_path(args.bids_directory),
                                      caps_directory=self.absolute_path(args.caps_directory),

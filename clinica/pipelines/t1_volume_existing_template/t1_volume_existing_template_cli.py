@@ -44,7 +44,7 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
     def run_command(self, args):
         """
         """
-        from t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
+        from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
 
         pipeline = T1VolumeExistingTemplate(bids_directory=self.absolute_path(args.bids_directory),
                                                caps_directory=self.absolute_path(args.caps_directory),

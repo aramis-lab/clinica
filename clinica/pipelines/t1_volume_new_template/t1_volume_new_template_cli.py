@@ -86,7 +86,7 @@ class T1VolumeNewTemplateCLI(ce.CmdParser):
     def run_command(self, args):
         """
         """
-        from t1_volume_new_template_pipeline import T1VolumeNewTemplate
+        from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_pipeline import T1VolumeNewTemplate
 
         pipeline = T1VolumeNewTemplate (bids_directory=self.absolute_path(args.bids_directory),
                                  caps_directory=self.absolute_path(args.caps_directory),

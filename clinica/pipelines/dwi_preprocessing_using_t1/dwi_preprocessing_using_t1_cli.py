@@ -48,7 +48,7 @@ class DWIPreprocessingUsingT1CLI(ce.CmdParser):
         Run the DWIPreprocessingUsingT1 Pipeline from command line.
         """
         from tempfile import mkdtemp
-        from dwi_preprocessing_using_t1_pipeline import DWIPreprocessingUsingT1
+        from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DWIPreprocessingUsingT1
 
         pipeline = DWIPreprocessingUsingT1(
             bids_directory=self.absolute_path(args.bids_directory),

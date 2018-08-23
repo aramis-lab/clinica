@@ -46,7 +46,7 @@ class T1VolumeCreateDartelCLI(ce.CmdParser):
         """
         """
 
-        from t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
+        from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
 
         pipeline = T1VolumeCreateDartel(bids_directory=self.absolute_path(args.bids_directory),
                                caps_directory=self.absolute_path(args.caps_directory),

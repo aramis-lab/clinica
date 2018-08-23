@@ -48,7 +48,7 @@ class DWIPreprocessingUsingPhaseDiffFieldmapCLI(ce.CmdParser):
         Run the DWIPreprocessingUsingPhaseDiffFieldmap pipeline from command line.
         """
         from tempfile import mkdtemp
-        from dwi_preprocessing_using_phasediff_fieldmap_pipeline import DWIPreprocessingUsingPhaseDiffFieldmap
+        from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DWIPreprocessingUsingPhaseDiffFieldmap
 
         pipeline = DWIPreprocessingUsingPhaseDiffFieldmap(
             bids_directory=self.absolute_path(args.bids_directory),

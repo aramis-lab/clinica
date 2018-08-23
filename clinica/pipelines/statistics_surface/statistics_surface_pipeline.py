@@ -124,7 +124,7 @@ class StatisticsSurface(cpe.Pipeline):
         """Build and connect the core nodes of the pipelines.
         """
 
-        import statistics_surface_utils as utils
+        import clinica.pipelines.statistics_surface.statistics_surface_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces.io import JSONFileSink

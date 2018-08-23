@@ -55,7 +55,7 @@ class DwiProcessingNoddiCLI(ce.CmdParser):
         """
 
         from tempfile import mkdtemp
-        from dwi_processing_noddi_pipeline import DwiProcessingNoddi
+        from clinica.pipelines.dwi_processing_noddi.dwi_processing_noddi_pipeline import DwiProcessingNoddi
 
         pipeline = DwiProcessingNoddi(
             caps_directory=self.absolute_path(args.caps_directory),
