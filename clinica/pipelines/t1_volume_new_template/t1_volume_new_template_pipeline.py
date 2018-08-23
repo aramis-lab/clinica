@@ -321,7 +321,7 @@ class T1VolumeNewTemplate(cpe.Pipeline):
         mlab.MatlabCommand.set_default_matlab_cmd(mlab_home)
         mlab.MatlabCommand.set_default_paths(spm_home)
 
-        version = spm.Info.version()
+        version = spm.Info.getinfo()
         #TODO: remove check for SPM
 
         if version:

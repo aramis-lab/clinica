@@ -193,7 +193,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         mlab.MatlabCommand.set_default_matlab_cmd(mlab_home)
         mlab.MatlabCommand.set_default_paths(spm_home)
 
-        version = spm.Info.version()
+        version = spm.Info.getinfo()
 
         if version:
             if version['name'] == 'SPM8':

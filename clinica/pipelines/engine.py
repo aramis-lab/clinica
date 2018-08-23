@@ -190,7 +190,10 @@ class Pipeline(Workflow):
         Returns:
             True if the input node is connected, False otherwise.
         """
-        return self._graph.in_degree(self.input_node) > 0
+        if self.input_node:
+            return self._graph.in_degree(self.input_node) > 0
+        else:
+            return False
 
     def has_output_connections(self):
         """Checks if the Pipeline's output node has been connected.
@@ -198,7 +201,10 @@ class Pipeline(Workflow):
         Returns:
             True if the output node is connected, False otherwise.
         """
-        return self._graph.out_degree(self.output_node) > 0
+        if self.output_node:
+            return self._graph.out_degree(self.output_node) > 0
+        else:
+            return False
 
     @postset('is_built', True)
     def build(self):
