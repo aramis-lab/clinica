@@ -327,7 +327,7 @@ class PETVolume(cpe.Pipeline):
         ]
 
         self.connect([(self.input_node, container_path, [('pet_image', 'pet_filename')]),
-                      (container_path, write_images_node, [(('container', join, 'group-' + self._group_id), 'container')]),
+                      (container_path, write_images_node, [(('container', utils.fix_join, 'group-' + self._group_id), 'container')]),
                       (self.output_node, write_images_node, [(('pet_t1_native', zip_nii, True), 'pet_t1_native'),
                                                              (('pet_mni', zip_nii, True), 'pet_mni'),
                                                              (('pet_suvr', zip_nii, True), 'pet_suvr'),
@@ -339,7 +339,7 @@ class PETVolume(cpe.Pipeline):
                                                              (('pet_pvc_suvr', zip_nii, True), 'pet_pvc_suvr'),
                                                              (('pet_pvc_suvr_masked', zip_nii, True), 'pet_pvc_suvr_masked'),
                                                              (('pet_pvc_suvr_masked_smoothed', zip_nii, True), 'pet_pvc_suvr_masked_smoothed')]),
-                      (container_path, write_atlas_node, [(('container', join, 'group-' + self._group_id), 'container')]),
+                      (container_path, write_atlas_node, [(('container', utils.fix_join, 'group-' + self._group_id), 'container')]),
                       (self.output_node, write_atlas_node, [('atlas_statistics', 'atlas_statistics'),
                                                             ('pvc_atlas_statistics', 'pvc_atlas_statistics')])
                       ])
