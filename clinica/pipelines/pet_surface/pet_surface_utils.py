@@ -734,9 +734,9 @@ def produce_tsv(pet, atlas_files):
         average_region = []
         region_names = []
         for r in range(len(annot_atlas_left[2])):
-
-                region_names.append(annot_atlas_left[2][r] + '_lh')
-                region_names.append(annot_atlas_left[2][r] + '_rh')
+                cprint(annot_atlas_left[2][r])
+                region_names.append(annot_atlas_left[2][r].astype(str) + '_lh')
+                region_names.append(annot_atlas_left[2][r].astype(str) + '_rh')
 
                 mask_left = annot_atlas_left[0] == r
                 mask_left = np.uint(mask_left)

@@ -258,7 +258,7 @@ class PetSurface(cpe.Pipeline):
         import os
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as niu
-        import pet_surface_utils as utils
+        import clinica.pipelines.pet_surface.pet_surface_utils as utils
 
         full_pipe = npe.MapNode(niu.Function(input_names=['subject_id',
                                                           'session_id',
