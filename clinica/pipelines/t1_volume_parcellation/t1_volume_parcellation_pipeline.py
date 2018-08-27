@@ -27,7 +27,7 @@ class T1VolumeParcellation(cpe.Pipeline):
 
 
     Example:
-        >>> from t1_volume_parcellation import T1VolumeParcellation
+        >>> from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import T1VolumeParcellation
         >>> pipeline = T1VolumeParcellation('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipeline.parameters = {
         >>>     # ...
@@ -117,7 +117,7 @@ class T1VolumeParcellation(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        import t1_volume_parcellation_utils as spu
+        import clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_utils as spu
         import nipype.interfaces.io as nio
 
         atlas_stats_node = npe.MapNode(nutil.Function(input_names=['file_list',

@@ -54,7 +54,7 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         """
 
         from tempfile import mkdtemp
-        from t1_volume_parcellation_pipeline import T1VolumeParcellation
+        from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import T1VolumeParcellation
 
         # Most of the time, you will want to instantiate your pipeline with a
         # BIDS and CAPS directory as inputs:
