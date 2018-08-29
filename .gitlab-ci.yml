@@ -114,7 +114,7 @@ unittest:linux:
     - source activate clinica_env_upgrade_dep
     - module load clinica.all
     - cd test
-    - ln -s /localdrive10TB/data/data_ci_mac_branch-upgrade_dep ./data
+    - ln -s /localdrive10TB/data/data_ci_linux_branch-upgrade_dep ./data
     - taskset -c 0-21 pytest --verbose --timeout=0 -n 6 -k run
     - module purge
     - source deactivate
