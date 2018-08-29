@@ -101,7 +101,7 @@ unittest:mac:
     - module load clinica.all
     - cd test
     - ln -s /Volumes/builds/Clinica/data_ci_mac ./data
-    - pytest -v
+    - pytest --verbose -k instantiate 
     - module purge
     - source deactivate
 
