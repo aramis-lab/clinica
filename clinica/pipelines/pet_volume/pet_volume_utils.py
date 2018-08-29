@@ -207,7 +207,3 @@ def expand_into_list(in_field, n_tissues):
 def get_from_list(in_list, index):
     return in_list[index]
 
-
-def fix_join(path, *paths):
-    import os
-    return os.path.join(path, *paths)

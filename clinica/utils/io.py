@@ -55,4 +55,9 @@ def unzip_nii(in_file):
     return gunzip.aggregate_outputs().out_file
 
 
+def fix_join(path, *paths):
+    # This workaround is used in pipelines like DWIPreporcessingUsingT1
+    # In the workflow.connect part, you can use some function that are used as string, causing an import error
+    import os
+    return os.path.join(path, *paths)
 

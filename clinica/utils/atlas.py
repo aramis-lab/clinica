@@ -115,7 +115,7 @@ class JHUDTI812mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUDTI81_ROI.tsv')
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUDTI81_FS_LUT_newformat.txt')
 
 
 class JHUDTI811mm(AtlasAbstract):
@@ -145,7 +145,7 @@ class JHUDTI811mm(AtlasAbstract):
     def get_tsv_roi():
         import os
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUDTI81_ROI.tsv')
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUDTI81_FS_LUT_newformat.txt')
 
 
 class JHUTracts01mm(AtlasAbstract):
@@ -174,7 +174,7 @@ class JHUTracts01mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
 
 
 class JHUTracts02mm(AtlasAbstract):
@@ -203,7 +203,7 @@ class JHUTracts02mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
 
 
 class JHUTracts251mm(AtlasAbstract):
@@ -232,7 +232,7 @@ class JHUTracts251mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
 
 
 class JHUTracts252mm(AtlasAbstract):
@@ -261,7 +261,7 @@ class JHUTracts252mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
 
 
 class JHUTracts501mm(AtlasAbstract):
@@ -290,7 +290,7 @@ class JHUTracts501mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
 
 
 class JHUTracts502mm(AtlasAbstract):
@@ -319,7 +319,7 @@ class JHUTracts502mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
 
 
 class AAL2(AtlasAbstract):

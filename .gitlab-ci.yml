@@ -100,7 +100,7 @@ unittest:mac:
     - source activate clinica_env
     - module load clinica.all
     - cd test
-    - ln -s /Volumes/builds/Clinica/data_ci ./data
+    - ln -s /Volumes/builds/Clinica/data_ci_mac ./data
     - pytest -v
     - module purge
     - source deactivate
@@ -114,8 +114,8 @@ unittest:linux:
     - source activate clinica_env
     - module load clinica.all
     - cd test
-    - ln -s /home/mauricio.diazmelo/data/data_ci ./data
-    - pytest -v
+    - ln -s /localdrive10TB/data/data_ci_mac_branch-upgrade_dep ./data
+    - taskset -c 0-21 pytest --verbose --timeout=0 -n 6 -k run
     - module purge
     - source deactivate
 pkg:
