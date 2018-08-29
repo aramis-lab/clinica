@@ -1,4 +1,4 @@
-name: clinica_env
+name: clinica_env_upgrade_dep
 channels:
   - conda-forge
   - Aramislab

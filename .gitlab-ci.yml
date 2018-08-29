@@ -24,7 +24,7 @@ cache:
 before_script:
   - pwd
 after_script:
-  #  - conda env remove -y  --name clinica_env
+  #  - conda env remove -y  --name clinica_env_upgrade_dep
 
 build:mac:
   stage: build
@@ -35,13 +35,13 @@ build:mac:
     # (by editing the environment.yml file), the environment
     # is recreated.
     - >
-      if conda env list|grep -w "clinica_env"; then
+      if conda env list|grep -w "clinica_env_upgrade_dep"; then
         if git diff HEAD~ --name-only|grep environment.yml; then
-          echo "REcreate environment clinica_env"
+          echo "REcreate environment clinica_env_upgrade_dep"
           conda env create --force --file environment.yml
         fi;
       else
-        echo "Create environment clinica_env"
+        echo "Create environment clinica_env_upgrade_dep"
         conda env create --force --file environment.yml
       fi;
 
@@ -54,13 +54,13 @@ build:linux:
     # (by editing the environment.yml file), the environment
     # is recreated.
     - >
-      if conda env list|grep -w "clinica_env"; then
+      if conda env list|grep -w "clinica_env_upgrade_dep"; then
         if git diff HEAD~ --name-only|grep environment.yml; then
-          echo "REcreate environment clinica_env"
+          echo "REcreate environment clinica_env_upgrade_dep"
           conda env create --force --file environment.yml
         fi;
       else
-        echo "Create environment clinica_env"
+        echo "Create environment clinica_env_upgrade_dep"
         conda env create --force --file environment.yml
       fi;
 
@@ -71,7 +71,7 @@ launch:mac:
     - install
     - macOS
   script:
-    - source activate clinica_env
+    - source activate clinica_env_upgrade_dep
     - pip install --ignore-installed .
     - eval "$(register-python-argcomplete clinica)"
     - clinica --help
@@ -85,7 +85,7 @@ launch:linux:
     - install
     - linux
   script:
-    - source activate clinica_env
+    - source activate clinica_env_upgrade_dep
     - pip install --ignore-installed .
     - eval "$(register-python-argcomplete clinica)"
     - clinica --help
@@ -97,11 +97,11 @@ unittest:mac:
   tags:
     - macOS
   script:
-    - source activate clinica_env
+    - source activate clinica_env_upgrade_dep
     - module load clinica.all
     - cd test
     - ln -s /Volumes/builds/Clinica/data_ci_mac ./data
-    - pytest --verbose -k instantiate 
+    - pytest --verbose -k instantiate
     - module purge
     - source deactivate
 
@@ -111,7 +111,7 @@ unittest:linux:
   tags:
     - linux
   script:
-    - source activate clinica_env
+    - source activate clinica_env_upgrade_dep
     - module load clinica.all
     - cd test
     - ln -s /localdrive10TB/data/data_ci_mac_branch-upgrade_dep ./data
