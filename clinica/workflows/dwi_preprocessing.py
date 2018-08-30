@@ -667,7 +667,7 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
     >>> epi.run() # doctest: +SKIP
     """
 
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import change_itk_transform_type, expend_matrix_list, rotate_bvecs, ants_registration_syn_quick, ants_warp_image_multi_transform_epi
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import create_jacobian_determinant_image, change_itk_transform_type, expend_matrix_list, rotate_bvecs, ants_registration_syn_quick, ants_warp_image_multi_transform, ants_combin_transform
     import nipype.pipeline.engine as pe
     import nipype.interfaces.utility as niu
     import nipype.interfaces.fsl as fsl
@@ -710,8 +710,24 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
 
     merge_transform = pe.Node(niu.Merge(3), name='MergeTransforms')
 
-    apply_transform = pe.MapNode(interface=niu.Function(input_names=['fix_image', 'moving_image', 'ants_warp_affine'], output_names=['out_warp'],
-                                                    function=ants_warp_image_multi_transform_epi), iterfield=['moving_image'], name='apply_transform')
+    apply_transform = pe.MapNode(interface=niu.Function(input_names=['fix_image', 'moving_image', 'ants_warp_affine'],
+                                                        output_names=['out_warp_field', 'out_warped'],
+                                                        function=ants_combin_transform),
+                                 iterfield=['moving_image'],
+                                 name='warp_filed')
+
+    jacobian = pe.MapNode(interface=niu.Function(input_names=['imageDimension', 'deformationField', 'outputImage'],
+                                                 output_names=['outputImage'],
+                                                 function=create_jacobian_determinant_image),
+                          iterfield=['deformationField'],
+                          name='jacobian')
+
+    jacobian.inputs.imageDimension = 3
+    jacobian.inputs.outputImage = 'Jacobian_image.nii.gz'
+
+    jacmult = pe.MapNode(fsl.MultiImageMaths(op_string='-mul %s'),
+                         iterfield=['in_file', 'operand_files'],
+                         name='ModulateDWIs')
 
     thres = pe.MapNode(fsl.Threshold(thresh=0.0), iterfield=['in_file'],
                        name='RemoveNegative')
@@ -748,8 +764,11 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
     wf.connect([(split, apply_transform, [('out_files','moving_image')])])
 
     wf.connect([(merge_transform, apply_transform, [('out','ants_warp_affine')])])
-    wf.connect([(apply_transform, thres, [('out_warp','in_file')])])
-    wf.connect([(thres, merge, [('out_file','in_files')])])
+    wf.connect([(apply_transform, jacobian, [('out_warp_field', 'deformationField')])])
+    wf.connect([(apply_transform, jacmult, [('out_warped', 'operand_files')])])
+    wf.connect([(jacobian, jacmult, [('outputImage', 'in_file')])])
+    wf.connect([(jacmult, thres, [('out_file', 'in_file')])])
+    wf.connect([(thres, merge, [('out_file', 'in_files')])])
 
     wf.connect([(merge, outputnode, [('merged_file','DWIs_epicorrected')])])
     wf.connect([(flirt_b0_2_T1, outputnode, [('out_matrix_file','DWI_2_T1_Coregistration_matrix')])])
@@ -758,96 +777,5 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
                                                         ('image_warped', 'epi_correction_image_warped' )])])
     wf.connect([(merge_transform, outputnode, [('out','warp_epi')])])
     wf.connect([(rot_bvec, outputnode, [('out_file','out_bvec')])])
-
-    return wf
-
-def apply_all_corrections(name='UnwarpArtifacts'):
-    """
-    Combines two lists of linear transforms with the deformation field
-    map obtained epi_correction by Ants.
-    Additionally, computes the corresponding bspline coefficients and
-    the map of determinants of the jacobian.
-    """
-    import nipype.pipeline.engine as pe
-    import nipype.interfaces.utility as niu
-    import nipype.interfaces.fsl as fsl
-    import nipype.interfaces.c3 as c3
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import ants_warp_image_multi_transform_aac, ants_combin_transform_aac, create_jacobian_determinant_image, convvert_eddy_2_hmc_ecc_flirt
-
-    inputnode = pe.Node(niu.IdentityInterface(
-        fields=['in_epi', 'eddy_parameters', 'in_dwi', 'T1', 'in_hmc_ref']), name='inputnode')
-
-    outputnode = pe.Node(niu.IdentityInterface(
-        fields=['out_file', 'out_warp', 'out_coeff', 'out_jacobian']),
-        name='outputnode')
-
-    split = pe.Node(fsl.Split(dimension='t'), name='SplitDWIs')
-
-    ## convert eddy_parameters to HMC and ECC for each volume
-    eddy_to_hmc_ecc_flirt = pe.Node(interface=niu.Function(input_names=['eddy_parameters'], output_names=['hmc_affine_list', 'ecc_affine_list'],
-                                                    function=convvert_eddy_2_hmc_ecc_flirt),
-                            name='eddy_to_hmc_ecc_flirt')
-
-    concat_hmc_ecc = pe.MapNode(fsl.ConvertXFM(), name="concat_hmc_ecc", iterfield=['in_file', 'in_file2'])
-    concat_hmc_ecc.inputs.concat_xfm = True
-
-    flirt2ants_hmc_ecc = pe.MapNode(c3.C3dAffineTool(),
-                               name='fsl_reg_2_itk_mapnode',
-                               iterfield=['source_file', 'transform_file'])
-    flirt2ants_hmc_ecc.inputs.itk_transform = True
-    flirt2ants_hmc_ecc.inputs.fsl2ras = True
-
-    warps_ants = pe.MapNode(interface=niu.Function(input_names=['fix_image', 'moving_image', 'epi_deform',
-                                                                'flirt2ants_hmc_ecc'], output_names=['out_warp'],
-                                                    function=ants_warp_image_multi_transform_aac),
-                            iterfield=['moving_image', 'flirt2ants_hmc_ecc'],
-                            name='apply_transform')
-
-    unwarp = pe.MapNode(interface=niu.Function(input_names=['in_file', 'fix_image', 'epi_deform',
-                                                                'flirt2ants_hmc_ecc'], output_names=['out_warp'],
-                                                    function=ants_combin_transform_aac),
-                            iterfield=['in_file', 'flirt2ants_hmc_ecc'],
-                            name='warp_filed')
-
-    jacobian = pe.MapNode(interface=niu.Function(input_names=['imageDimension', 'deformationField', 'outputImage'], output_names=['outputImage'],
-                                                    function=create_jacobian_determinant_image),
-                            iterfield=['deformationField'],
-                            name='jacobian')
-
-    jacobian.inputs.imageDimension = 3
-    jacobian.inputs.outputImage = 'Jacobian_image.nii.gz'
-
-    jacmult = pe.MapNode(fsl.MultiImageMaths(op_string='-mul %s'),
-                         iterfield=['in_file', 'operand_files'],
-                         name='ModulateDWIs')
-
-    thres = pe.MapNode(fsl.Threshold(thresh=0.0), iterfield=['in_file'],
-                       name='RemoveNegative')
-    merge = pe.Node(fsl.Merge(dimension='t'), name='MergeDWIs')
-
-    wf = pe.Workflow(name=name)
-    wf.connect([
-        (inputnode, eddy_to_hmc_ecc_flirt, [('eddy_parameters','eddy_parameters')]),
-                (eddy_to_hmc_ecc_flirt, concat_hmc_ecc, [('hmc_affine_list','in_file')]),
-                (eddy_to_hmc_ecc_flirt, concat_hmc_ecc, [('ecc_affine_list','in_file2')]),
-                (inputnode, split, [('in_dwi', 'in_file')]),
-                (concat_hmc_ecc, flirt2ants_hmc_ecc, [('out_file','transform_file')]),
-                (inputnode, flirt2ants_hmc_ecc, [('in_hmc_ref','reference_file')]),
-                (split, flirt2ants_hmc_ecc, [('out_files','source_file')]),
-                (flirt2ants_hmc_ecc, warps_ants, [('itk_transform','flirt2ants_hmc_ecc')]),
-                (inputnode, warps_ants, [('in_epi','epi_deform')]),
-                (inputnode, warps_ants, [('T1','fix_image')]),
-                (split, warps_ants, [('out_files','moving_image')]),
-                (flirt2ants_hmc_ecc, unwarp, [('itk_transform', 'flirt2ants_hmc_ecc')]),
-                (inputnode, unwarp, [('in_epi', 'epi_deform')]),
-                (inputnode, unwarp, [('T1', 'fix_image')]),
-                (split, unwarp, [('out_files', 'in_file')]),
-                (unwarp, jacobian, [('out_warp', 'deformationField')]),
-                (warps_ants, jacmult, [('out_warp', 'in_file')]),
-                (jacobian, jacmult, [('outputImage', 'operand_files')]),
-                (jacmult, thres, [('out_file', 'in_file')]),
-                (thres, merge, [('out_file', 'in_files')]),
-                (merge, outputnode, [('merged_file', 'out_file')])
-                ])
 
     return wf

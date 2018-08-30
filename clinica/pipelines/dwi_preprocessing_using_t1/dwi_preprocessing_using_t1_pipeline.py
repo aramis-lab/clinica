@@ -311,7 +311,6 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
         from clinica.utils.dwi import prepare_reference_b0
         from clinica.workflows.dwi_preprocessing import eddy_fsl_pipeline
         from clinica.workflows.dwi_preprocessing import epi_pipeline
-        from clinica.workflows.dwi_preprocessing import apply_all_corrections
         from clinica.workflows.dwi_preprocessing import remove_bias
 
         # Nodes creation
@@ -333,8 +332,6 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
         sdc = epi_pipeline(name='SusceptibilityDistortionCorrection')
         # Remove bias correction
         bias = remove_bias(name='RemoveBias')
-        # Apply all corrections
-        aac = apply_all_corrections(name='ApplyAllCorrections')
 
         # Connection
         # ==========
@@ -356,14 +353,9 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
             (eddy_fsl, sdc, [('outputnode.out_corrected', 'inputnode.DWI')]),
             (self.input_node, sdc, [('T1w', 'inputnode.T1')]),
             (eddy_fsl, sdc, [('outputnode.out_rotated_bvecs', 'inputnode.bvec')]),
-            # Apply all corrections
-            (prepare_b0,      aac, [('out_b0_dwi_merge',    'inputnode.in_dwi')]),  # noqa
-            (eddy_fsl, aac, [('outputnode.out_parameter', 'inputnode.eddy_parameters')]),  # noqa
-            (sdc, aac, [('outputnode.warp_epi', 'inputnode.in_epi')]),  # noqa
-            (self.input_node, aac, [('T1w', 'inputnode.T1')]),
-            (prepare_b0, aac, [('out_reference_b0', 'inputnode.in_hmc_ref')]),
+
             # Bias correction
-            (aac, bias, [('outputnode.out_file', 'inputnode.in_file')]),
+            (sdc, bias, [('outputnode.DWIs_epicorrected', 'inputnode.in_file')]),
             # Outputnode:
             (bias,       self.output_node, [('outputnode.out_file', 'preproc_dwi')]),  # noqa
             (sdc,        self.output_node, [('outputnode.out_bvec', 'preproc_bvec')]),  # noqa

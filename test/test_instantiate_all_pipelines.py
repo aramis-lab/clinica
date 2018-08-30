@@ -98,6 +98,8 @@ def test_DWIPreprocessingUsingT1():
     root= dirname(abspath(__file__))
     pipeline = DWIPreprocessingUsingT1(bids_directory=join(root, 'data', 'DWIPreprocessingUsingT1', 'in', 'bids'),
                                        caps_directory=join(root, 'data', 'DWIPreprocessingUsingT1', 'in', 'caps'),
+                                       phase_encoding_direction='y',
+                                       total_readout_time=0.14,
                                        tsv_file=join(root, 'data', 'DWIPreprocessingUsingT1', 'in', 'subjects.tsv'),
                                        low_bval=5)
     pipeline.build()

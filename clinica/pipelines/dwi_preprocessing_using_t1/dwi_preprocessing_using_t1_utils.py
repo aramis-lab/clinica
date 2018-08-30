@@ -243,7 +243,7 @@ def ants_registration_syn_quick(fix_image, moving_image):
 
     return image_warped, affine_matrix, warp, inverse_warped, inverse_warp
 
-def ants_warp_image_multi_transform_epi(fix_image, moving_image, ants_warp_affine):
+def ants_warp_image_multi_transform(fix_image, moving_image, ants_warp_affine):
 
     import os
     import os.path as op
@@ -289,30 +289,22 @@ def rotate_bvecs(in_bvec, in_matrix):
     np.savetxt(out_file, np.array(new_bvecs).T, fmt='%0.15f')
     return out_file
 
-def ants_warp_image_multi_transform_aac(fix_image, moving_image, epi_deform, flirt2ants_hmc_ecc):
+def ants_combin_transform(fix_image, moving_image, ants_warp_affine):
+        import os
+        import os.path as op
 
-    import os
-    import os.path as op
+        out_warp_field = op.abspath('out_warp_field.nii.gz')
+        out_warped = op.abspath('out_warped.nii.gz')
 
-    out_warp = op.abspath('warped_epi.nii.gz')
+        cmd = 'antsApplyTransforms -o [out_warp_field.nii.gz,1] -i ' + moving_image + ' -r ' + fix_image + ' -t ' + \
+              ants_warp_affine[0] + ' ' + ants_warp_affine[1] + ' ' + ants_warp_affine[2]
+        os.system(cmd)
 
-    cmd = 'WarpImageMultiTransform 3 ' + moving_image + ' '+ out_warp + ' -R ' + fix_image + ' ' + epi_deform[0] + ' ' + epi_deform[1] + ' ' + epi_deform[2] + ' ' + flirt2ants_hmc_ecc
-    os.system(cmd)
+        cmd1 = 'antsApplyTransforms -o out_warped.nii.gz -i ' + moving_image + ' -r ' + fix_image + ' -t ' + \
+               ants_warp_affine[0] + ' ' + ants_warp_affine[1] + ' ' + ants_warp_affine[2]
+        os.system(cmd1)
 
-    return out_warp
-
-
-def ants_combin_transform_aac(in_file, fix_image, epi_deform, flirt2ants_hmc_ecc):
-
-    import os
-    import os.path as op
-
-    out_warp = op.abspath('out_warp.nii.gz')
-
-    cmd = 'antsApplyTransforms -o [out_warp.nii.gz,1] -i ' + in_file + ' -r ' + fix_image + ' -t ' + epi_deform[0] + ' ' + epi_deform[1] + ' ' + epi_deform[2] + ' ' + flirt2ants_hmc_ecc
-    os.system(cmd)
-
-    return out_warp
+        return out_warp_field, out_warped
 
 
 def create_jacobian_determinant_image(imageDimension, deformationField, outputImage):
