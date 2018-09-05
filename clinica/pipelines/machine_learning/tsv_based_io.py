@@ -37,7 +37,7 @@ def load_data(images, caps_directory, subjects, sessions, dataset):
 
 
     participant_id = subjects
-    print len(participant_id)
+
     session_id = sessions
 
     for i in xrange(len(participant_id)):

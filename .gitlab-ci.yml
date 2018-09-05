@@ -1,6 +1,7 @@
-# Continous Integration Scrip
+# Continous Integration Script
 # Clinica - ARAMIS
 #
+
 stages:
   - build
   - install
@@ -91,21 +92,13 @@ launch:linux:
     - source deactivate
 
       
-unit:mac:
+unittest:mac:
   stage: test
   tags:
     - macOS
   script:
     - source activate clinica_env
-    - module load clinica/matlab
-    - module load clinica/itk
-    - module load clinica/ants
-    - module load clinica/fsl
-    - module load clinica/PETPVC
-    - module load clinica/dcm2niix
-    - module load clinica/freesurfer/5.3.0
-    - module load clinica/mrtrix3
-    - module load clinica/spm12
+    - module load clinica.all
     - cd test
     - ln -s /Volumes/builds/Clinica/data_ci ./data
     - pytest -v
@@ -113,6 +106,18 @@ unit:mac:
     - source deactivate
 
   
+unittest:linux:
+  stage: test
+  tags:
+    - linux
+  script:
+    - source activate clinica_env
+    - module load clinica.all
+    - cd test
+    - ln -s /localdrive10TB/data/data_ci_linux ./data
+    - pytest -v
+    - module purge
+    - source deactivate
 pkg:
   stage: package
   tags:

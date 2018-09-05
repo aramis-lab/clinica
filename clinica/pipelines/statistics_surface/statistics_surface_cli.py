@@ -129,7 +129,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
             if args.custom_file is None:
                 cprint('No feature type selected : using cortical thickness as default value')
                 args.custom_file = '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
-                args.feature_label = 'cortical_thickness'
+                args.feature_label = 'ct'
             else:
                 cprint('Using custom features.')
                 if args.feature_label is None:
@@ -165,9 +165,8 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                      pipeline.tsv_file)
 
         if args.n_procs:
-            #pipeline.write_graph()
-            pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
+            pipeline.run(plugin='MultiProc',
+                         plugin_args={'n_procs': args.n_procs})
         else:
-            #pipeline.write_graph()
             print(pipeline.parameters)
             pipeline.run()

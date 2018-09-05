@@ -433,23 +433,8 @@ class CAPSTSVBasedInput(CAPSInput):
 
         """
 
-        #import pandas as pd
         pass
-        #if self._images is not None:
-        #    return self._images
-        #print self._group_id
-        #print self._atlas
-        #print self._image_type
 
-        #if self._image_type == 'T1':
-
-        #    self._images = str('group-' + self._group_id + '_T1w_space-' + self._atlas + '_map-graymatter')
-
-
-        ### to implement for PET
-
-
-        #return self._images
 
     def get_x(self):
         """
@@ -483,7 +468,8 @@ class CAPSTSVBasedInput(CAPSInput):
 
         """
 
-        output_filename = path.join(output_dir, 'weights.nii.gz')
+        #output_filename = path.join(output_dir, 'weights.nii.gz')
 
 
-        rbio.weights_to_nifti(weights, self._atlas, output_filename)
+        #rbio.weights_to_nifti(weights, self._atlas, output_filename)
+        pass

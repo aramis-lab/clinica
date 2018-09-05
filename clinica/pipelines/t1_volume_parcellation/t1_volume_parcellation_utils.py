@@ -36,8 +36,5 @@ def atlas_statistics(file_list, atlas_list):
                 cprint(out_atlas_statistics)
                 statistics_on_atlas(file_list, atlas_class(), out_atlas_statistics)
                 atlas_statistics_list.append(out_atlas_statistics)
-
-                break
-
     return atlas_statistics_list
 

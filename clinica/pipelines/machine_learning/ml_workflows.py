@@ -601,7 +601,7 @@ class TB_RepHoldOut_DualSVM(base.MLWorkflow):
         self._algorithm.save_parameters(best_params, classifier_dir)
         weights = self._algorithm.save_weights(classifier, x, classifier_dir)
 
-        self._input.save_weights_as_nifti(weights, classifier_dir)
+        #self._input.save_weights_as_nifti(weights, classifier_dir)
 
         self._validation.save_results(self._output_dir)
 
@@ -653,6 +653,6 @@ class TB_RepHoldOut_RandomForest(base.MLWorkflow):
         self._algorithm.save_parameters(best_params, classifier_dir)
         weights = self._algorithm.save_weights(classifier, classifier_dir)
 
-        self._input.save_weights_as_nifti(weights, classifier_dir)
+        #self._input.save_weights_as_nifti(weights, classifier_dir)
 
-        self._validation.save_results(self._output_dir)
+        #self._validation.save_results(self._output_dir)

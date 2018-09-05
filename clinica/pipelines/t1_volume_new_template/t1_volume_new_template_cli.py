@@ -50,9 +50,6 @@ class T1VolumeNewTemplateCLI(ce.CmdParser):
         clinica_opt.add_argument("-np", "--n_procs",
                                  metavar=('N'), type=int,
                                  help='Number of cores used to run in parallel')
-        clinica_opt.add_argument("-sl", "--slurm",
-                                 action='store_true',
-                                 help='Run the pipelines using SLURM')
         # Advanced arguments (i.e. tricky parameters)
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
         advanced.add_argument("-ti", "--tissue_classes",
@@ -115,7 +112,5 @@ class T1VolumeNewTemplateCLI(ce.CmdParser):
 
         if args.n_procs:
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
-        elif args.slurm:
-            pipeline.run(plugin='SLURM')
         else:
             pipeline.run()

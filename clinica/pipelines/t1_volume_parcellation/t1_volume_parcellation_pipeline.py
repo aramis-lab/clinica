@@ -27,7 +27,7 @@ class T1VolumeParcellation(cpe.Pipeline):
 
 
     Example:
-        >>> from t1_volume_parcellation import T1VolumeParcellation
+        >>> from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import T1VolumeParcellation
         >>> pipeline = T1VolumeParcellation('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipeline.parameters = {
         >>>     # ...
@@ -87,8 +87,10 @@ class T1VolumeParcellation(cpe.Pipeline):
         caps_file = caps_layout.get(return_type='file',
                                     subject=subjects_regex,
                                     session=sessions_regex,
-                                    group_id = self.parameters['group_id'],
-                                    modulation = self.parameters['modulate'])
+                                    group_id=self.parameters['group_id'],
+                                    modulation=self.parameters['modulate'])
+        if len(caps_file) != len(self.subjects):
+            raise IOError(str(len(caps_file)) + ' file(s) grabbed, but there is ' + str(len(self.subjects)) + ' sessions')
         read_parameters_node.inputs.file_list = caps_file
 
 
@@ -115,7 +117,7 @@ class T1VolumeParcellation(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        import t1_volume_parcellation_utils as spu
+        import clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_utils as spu
         import nipype.interfaces.io as nio
 
         atlas_stats_node = npe.MapNode(nutil.Function(input_names=['file_list',
@@ -125,8 +127,8 @@ class T1VolumeParcellation(cpe.Pipeline):
                                        name='atlas_stats_node',
                                        iterfield=['file_list'])
         outputnode = npe.Node(nutil.IdentityInterface(fields=['atlas_statistics']),
-                             name='outputnode',
-                             mandatory_inputs=True)
+                              name='outputnode',
+                              mandatory_inputs=True)
 
         datasink = npe.Node(nio.DataSink(),
                             name='datasink')

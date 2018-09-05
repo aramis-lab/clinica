@@ -1,0 +1,60 @@
+# `dwi_processing_noddi`` - <VERY_SHORT_DESCRIPTION>
+
+<SHORT_DESCRIPTION>
+
+
+## Dependencies
+<!-- If you installed the docker image of Clinica, nothing is required. -->
+If you only installed the core of Clinica, this pipeline needs the installation of **<software_package>** on your computer. You can find how to install this software on the [installation](../#installing-clinica-from-source) page.
+
+
+## Running the pipeline
+The pipeline can be run with the following command line:
+
+```
+clinica run dwi_processing_noddi bids_directory caps_directory
+```
+where:
+
+  - `bids_directory` is the input folder containing the dataset in a [BIDS](../BIDS) hierarchy.
+  - `caps_directory` is the output folder containing the results in a [CAPS](../CAPS) hierarchy.
+  - `<ARG_1>` <ARG_1_DESCRIPTION>
+  - `<ARG_2>` <ARG_2_DESCRIPTION>
+
+If you want to run the pipeline on a subset of your BIDS dataset, you can use the `-tsv` flag to specify in a TSV file the participants belonging to your subset.
+
+!!! note
+    If you have
+
+
+## Outputs
+
+Results are stored in the following folder of the [CAPS hierarchy](docs/CAPS): `subjects/sub-<participant_label>/ses-<session_label>/<some_folder>`.
+
+The main output files are:
+
+  - `<source_file>_labelname-<label>_mainouput1`: description main output 1.
+
+  - `<source_file>_labelname-<label>_mainouput2`: description main output 2.
+
+The full list of output files can be found in the [ClinicA Processed Structure (CAPS) Specification](https://docs.google.com/document/d/14mjXbqRceHK0fD0BIONniLK713zY7DbQHJEV7kxqsd8/edit#heading=h.f4ddnk971gkn).
+
+
+<!--## Visualization of the results-->
+
+<!--!!! note-->
+<!--    The visualization command is not available for the moment. Please come back later, this section will be updated ASAP.-->
+
+
+## Describing this pipeline in your paper
+
+<!--You can have a single version for your pipeline-->
+
+!!! cite "Example of paragraph (short version):"
+    These results have been obtained using the `dwi_processing_noddi` pipeline of Clinica. This pipeline is a ...
+
+!!! cite "Example of paragraph (long version):"
+    These results have been obtained using the `dwi_processing_noddi` pipeline of Clinica. More precisely,...
+
+!!! tip
+    Easily access the papers cited on this page on [Zotero](https://www.zotero.org/groups/1517933/aramis_clinica/items/collectionKey/2DHP3WXH).
