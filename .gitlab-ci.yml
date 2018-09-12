@@ -16,6 +16,7 @@ stages:
 
 variables:
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
+    CLINICA_ENV_BRANCH: "clinica_env_$CI_COMMIT_REF_NAME"
 
 cache:
   paths:
@@ -35,14 +36,14 @@ build:mac:
     # (by editing the environment.yml file), the environment
     # is recreated.
     - >
-      if conda env list|grep -w "clinica_env"; then
+      if conda env list|grep -w CLINICA_ENV_BRANCH; then
         if git diff HEAD~ --name-only|grep environment.yml; then
-          echo "REcreate environment clinica_env"
-          conda env create --force --file environment.yml
+          echo "Recreate environment clinica_env"
+          conda env create --force --file environment.yml -n CLINICA_ENV_BRANCH
         fi;
       else
         echo "Create environment clinica_env"
-        conda env create --force --file environment.yml
+        conda env create --force --file environment.yml -n CLINICA_ENV_BRANCH
       fi;
 
 build:linux:
@@ -54,14 +55,14 @@ build:linux:
     # (by editing the environment.yml file), the environment
     # is recreated.
     - >
-      if conda env list|grep -w "clinica_env"; then
+      if conda env list|grep -w CLINICA_ENV_BRANCH; then
         if git diff HEAD~ --name-only|grep environment.yml; then
           echo "REcreate environment clinica_env"
-          conda env create --force --file environment.yml
+          conda env create --force --file environment.yml -n CLINICA_ENV_BRANCH
         fi;
       else
         echo "Create environment clinica_env"
-        conda env create --force --file environment.yml
+        conda env create --force --file environment.yml -n CLINICA_ENV_BRANCH
       fi;
 
 launch:mac:
@@ -71,7 +72,7 @@ launch:mac:
     - install
     - macOS
   script:
-    - source activate clinica_env
+    - source activate CLINICA_ENV_BRANCH
     - pip install --ignore-installed .
     - eval "$(register-python-argcomplete clinica)"
     - clinica --help
@@ -85,7 +86,7 @@ launch:linux:
     - install
     - linux
   script:
-    - source activate clinica_env
+    - source activate CLINICA_ENV_BRANCH
     - pip install --ignore-installed .
     - eval "$(register-python-argcomplete clinica)"
     - clinica --help
@@ -97,7 +98,7 @@ unittest:mac:
   tags:
     - macOS
   script:
-    - source activate clinica_env
+    - source activate CLINICA_ENV_BRANCH
     - module load clinica.all
     - cd test
     - ln -s /Volumes/builds/Clinica/data_ci ./data
@@ -111,13 +112,14 @@ unittest:linux:
   tags:
     - linux
   script:
-    - source activate clinica_env
+    - source activate CLINICA_ENV_BRANCH
     - module load clinica.all
     - cd test
     - ln -s /localdrive10TB/data/data_ci_linux ./data
     - pytest -v
     - module purge
     - source deactivate
+
 pkg:
   stage: package
   tags:
