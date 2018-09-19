@@ -270,7 +270,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         """Build and connect the core nodes of the pipelines.
         """
 
-        import fmri_preprocessing_utils as utils
+        import clinica.pipelines.fmri_preprocessing.fmri_preprocessing_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.interfaces.spm as spm
         import nipype.pipeline.engine as npe

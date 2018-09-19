@@ -1,7 +1,15 @@
 ## test if pipeline can run until the very end
 import warnings
+import sys
+
+## Determine location for working_directory
 warnings.filterwarnings("ignore")
-working_dir = '/localdrive10TB/data/working_directory_ci_linux_branch-upgrade_dep'
+if sys.platform == 'darwin':
+    working_dir = '/Users/arnaud.marcoux/CI/working_dir_FU_python3'
+elif sys.platform == 'linux2':
+    working_dir = '/localdrive10TB/data/working_directory_ci_linux'
+else:
+    raise SystemError('Could not determine which CI machine is running : sys.platform must return darwin or linux2')
 
 
 def test_run_T1FreeSurferCrossSectional():
@@ -345,9 +353,9 @@ def test_run_DWIProcessingDTI():
 
     root = join(dirname(abspath(__file__)), 'data', 'DWIProcessingDTI')
 
-    #clean_folder(join(root, 'out', 'caps'), recreate=False)
-    #clean_folder(join(working_dir, 'DWIProcessingDTI'))
-    #shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'DWIProcessingDTI'))
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     pipeline = DWIProcessingDTI(caps_directory=join(root, 'out', 'caps'),
                                 tsv_file=join(root, 'in', 'subjects.tsv'))
