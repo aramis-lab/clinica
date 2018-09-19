@@ -70,12 +70,12 @@ class fMRIPreprocessing(cpe.Pipeline):
         """
 
         if ('unwarping' in self.parameters) and self.parameters['unwarping']:
-	        return ['et', 'blipdir', 'tert', 'time_repetition', 'num_slices',
-	                'magnitude1', 'slice_order', 'ref_slice',
-	                'time_acquisition', 'phasediff', 'bold', 'T1w']
-    	else:
-	        return ['time_repetition', 'num_slices', 'slice_order', 'ref_slice',
-	                'time_acquisition', 'bold', 'T1w']
+            return ['et', 'blipdir', 'tert', 'time_repetition', 'num_slices',
+                    'magnitude1', 'slice_order', 'ref_slice',
+                    'time_acquisition', 'phasediff', 'bold', 'T1w']
+        else:
+            return ['time_repetition', 'num_slices', 'slice_order', 'ref_slice',
+                    'time_acquisition', 'bold', 'T1w']
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipelines.
