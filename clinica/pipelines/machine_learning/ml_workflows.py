@@ -190,8 +190,7 @@ class VertexB_RepHoldOut_dualSVM(base.MLWorkflow):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, output_dir, image_type='fdg', fwhm=20,
                  precomputed_kernel=None, n_threads=15, n_iterations=100, test_size=0.3, grid_search_folds=10,
-                 balanced=True, c_range=np.logspace(-10, 2, 1000)):
-
+                 balanced=True, c_range=np.logspace(-10, 2, 1000), splits_indices=None):
 
         self._output_dir = output_dir
         self._n_threads = n_threads
@@ -200,6 +199,7 @@ class VertexB_RepHoldOut_dualSVM(base.MLWorkflow):
         self._grid_search_folds = grid_search_folds
         self._balanced = balanced
         self._c_range = c_range
+        self._splits_indices = splits_indices
 
 
         self._input = input.CAPSVertexBasedInput(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, fwhm,
@@ -223,19 +223,14 @@ class VertexB_RepHoldOut_dualSVM(base.MLWorkflow):
                                                      n_threads=self._n_threads)
 
         self._validation = validation.RepeatedHoldOut(self._algorithm, n_iterations=self._n_iterations, test_size=self._test_size)
-
-        classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads)
+        classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads, splits_indices=self._splits_indices)
         classifier_dir = path.join(self._output_dir, 'classifier')
         if not path.exists(classifier_dir):
             os.makedirs(classifier_dir)
-
         self._algorithm.save_classifier(classifier, classifier_dir)
         self._algorithm.save_parameters(best_params, classifier_dir)
-
-
         weights = self._algorithm.save_weights(classifier, x, classifier_dir)
         self._input.save_weights_as_datasurface(weights, classifier_dir)
-
         self._validation.save_results(self._output_dir)
 
 
