@@ -9,7 +9,7 @@ import abc
 from nipype.pipeline.engine import Workflow
 
 
-def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True):
+def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_session_tsv=False):
     """Parses a BIDS or CAPS directory to get the subjects and sessions.
 
     This function lists all the subjects and sessions based on the content of
@@ -20,6 +20,7 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True):
         input_dir: A BIDS or CAPS directory path.
         ss_file: A subjects-sessions file (.tsv format).
         is_bids_dir: Indicates if input_dir is a BIDS or CAPS directory
+        use_session_tsv (boolean): Specify if the list uses the sessions listed in the sessions.tsv files
 
     Returns:
         subjects: A subjects list.
@@ -41,7 +42,8 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True):
             input_dir=input_dir,
             output_dir=output_dir,
             file_name=tsv_file,
-            is_bids_dir=is_bids_dir)
+            is_bids_dir=is_bids_dir,
+            use_session_tsv=use_session_tsv)
 
     ss_df = pd.io.parsers.read_csv(ss_file, sep='\t')
     if 'participant_id' not in list(ss_df.columns.values):
