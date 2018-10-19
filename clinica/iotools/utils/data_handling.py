@@ -46,7 +46,7 @@ def create_merge_file(bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines
         raise IOError('participants.tsv not found in the specified BIDS directory')
     participants_df = pd.read_csv(path.join(bids_dir, 'participants.tsv'), sep='\t')
 
-    sessions, subjects = get_subject_session_list(bids_dir, ss_file=tsv_file)
+    sessions, subjects = get_subject_session_list(bids_dir, ss_file=tsv_file, use_session_tsv=True)
     n_sessions = len(sessions)
 
     # Find what is dir and what is file_name
@@ -484,7 +484,7 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=''):
 
 
 def create_subs_sess_list(input_dir, output_dir,
-                          file_name=None, is_bids_dir=True):
+                          file_name=None, is_bids_dir=True, use_session_tsv=False):
     """
     Create the file subject_session_list.tsv that contains the list
     of the visits for each subject for a BIDS or CAPS compliant dataset.
@@ -495,9 +495,11 @@ def create_subs_sess_list(input_dir, output_dir,
         file_name: name of the output file
         is_bids_dir (boolean): Specify if input_dir is a BIDS directory or
             not (i.e. a CAPS directory)
+        use_session_tsv (boolean): Specify if the list uses the sessions listed in the sessions.tsv files
     """
     from os import path
     from glob import glob
+    import pandas as pd
     import os
 
     if not os.path.exists(output_dir):
@@ -522,10 +524,18 @@ def create_subs_sess_list(input_dir, output_dir,
 
     for sub_path in subjects_paths:
         subj_id = sub_path.split(os.sep)[-1]
-        sess_list = glob(path.join(sub_path, '*ses-*'))
 
-        for ses_path in sess_list:
-            session_name = ses_path.split(os.sep)[-1]
-            subjs_sess_tsv.write(subj_id + '\t' + session_name + '\n')
+        if use_session_tsv:
+            session_df = pd.read_csv(path.join(sub_path, subj_id + '_sessions.tsv'), sep='\t')
+            session_list = list(session_df['session_id'].values)
+            for session in session_list:
+                subjs_sess_tsv.write(subj_id + '\t' + session + '\n')
+
+        else:
+            sess_list = glob(path.join(sub_path, '*ses-*'))
+
+            for ses_path in sess_list:
+                session_name = ses_path.split(os.sep)[-1]
+                subjs_sess_tsv.write(subj_id + '\t' + session_name + '\n')
 
     subjs_sess_tsv.close()
