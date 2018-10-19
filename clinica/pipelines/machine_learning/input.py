@@ -473,3 +473,91 @@ class CAPSTSVBasedInput(CAPSInput):
 
         #rbio.weights_to_nifti(weights, self._atlas, output_filename)
         pass
+
+
+class CAPSVoxelBasedInputREGSVM(CAPSInput):
+
+    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, fwhm=0,
+                 modulated="on", pvc=None, mask_zeros=True, precomputed_kernel=None):
+        """
+
+        Args:
+            caps_directory:
+            subjects_visits_tsv:
+            diagnoses_tsv:
+            group_id:
+            image_type: 'T1', 'fdg', 'av45', 'pib' or 'flute'
+            fwhm:
+            modulated:
+            mask_zeros:
+            precomputed_kernel:
+        """
+
+        super(CAPSVoxelBasedInputREGSVM, self).__init__(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
+                                                  image_type, precomputed_kernel=precomputed_kernel)
+
+        self._fwhm = fwhm
+        self._modulated = modulated
+        self._pvc = pvc
+        self._mask_zeros = mask_zeros
+        self._orig_shape = None
+        self._data_mask = None
+
+        if modulated not in ['on', 'off']:
+            raise Exception("Incorrect modulation parameter. It must be one of the values 'on' or 'off'")
+
+    def get_images(self):
+        """
+
+        Returns: a list of filenames
+
+        """
+        if self._images is not None:
+            return self._images
+
+        if self._image_type == 'T1':
+            fwhm = '' if self._fwhm == 0 else '_fwhm-%dmm' % int(self._fwhm)
+
+            self._images = [path.join(self._caps_directory,
+                                      'regul_%s_%s_T1w_segm-graymatter_space-Ixi549Space_modulated-%s%s_probability.nii'
+                                      % (self._subjects[i], self._sessions[i], self._modulated, fwhm))
+                            for i in range(len(self._subjects))]
+        else:
+            pvc = '' if self._pvc is None else '_pvc-%s' % self._pvc
+            fwhm = '' if self._fwhm == 0 else '_fwhm-%dmm' % int(self._fwhm)
+            suvr = 'pons' if self._image_type == 'fdg' else 'cerebellumPons'
+            self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
+                                      'pet/preprocessing/group-' + self._group_id,
+                                      '%s_%s_task-rest_acq-%s_pet_space-Ixi549Space%s_suvr-%s_mask-brain%s_pet.nii.gz'
+                                      % (self._subjects[i], self._sessions[i], self._image_type, pvc, suvr, fwhm))
+                            for i in range(len(self._subjects))]
+
+        for image in self._images:
+            if not path.exists(image):
+                raise Exception("File %s doesn't exists." % image)
+
+        return self._images
+
+    def get_x(self):
+        """
+
+        Returns: a numpy 2d-array.
+
+        """
+        if self._x is not None:
+            return self._x
+
+        print 'Loading ' + str(len(self.get_images())) + ' subjects'
+        self._x, self._orig_shape, self._data_mask = vbio.load_data(self._images, mask=self._mask_zeros)
+        print 'Subjects loaded'
+
+        return self._x
+
+    def save_weights_as_nifti(self, weights, output_dir):
+
+        if self._images is None:
+            self.get_images()
+
+        output_filename = path.join(output_dir, 'weights.nii.gz')
+        data = vbio.revert_mask(weights, self._data_mask, self._orig_shape)
+        vbio.weights_to_nifti(data, self._images[0], output_filename)
