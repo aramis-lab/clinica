@@ -21,6 +21,14 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
+if 'SPMSTANDALONE_HOME' in os.environ:
+    if 'MCR_HOME' in os.environ:
+        matlab_cmd = os.environ['SPMSTANDALONE_HOME'] \
+                + '/run_spm12.sh ' \
+                + os.environ['MCR_HOME'] \
+                + ' script'
+        SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
+
 class DARTELExistingTemplateInputSpec(SPMCommandInputSpec):
     image_files = traits.List(traits.List(File(exists=True)),
                               desc="A list of files to be segmented",

@@ -16,6 +16,7 @@ stages:
 
 variables:
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
+    CLINICA_ENV_BRANCH: "clinica_env_$CI_COMMIT_REF_NAME"
 
 cache:
   paths:
@@ -35,6 +36,7 @@ build:mac:
     # (by editing the environment.yml file), the environment
     # is recreated.
     - >
+<<<<<<< HEAD
       if conda env list|grep -w "clinica_env_upgrade_dep"; then
         if git diff HEAD~ --name-only|grep environment.yml; then
           echo "REcreate environment clinica_env_upgrade_dep"
@@ -43,6 +45,16 @@ build:mac:
       else
         echo "Create environment clinica_env_upgrade_dep"
         conda env create --force --file environment.yml
+=======
+      if conda env list|grep -w $CLINICA_ENV_BRANCH; then
+        if git diff HEAD~ --name-only|grep environment.yml; then
+          echo "REcreate environment $CLINICA_ENV_BRANCH"
+          conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
+        fi;
+      else
+        echo "Create environment $CLINICA_ENV_BRANCH"
+        conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
+>>>>>>> dev
       fi;
 
 build:linux:
@@ -54,6 +66,7 @@ build:linux:
     # (by editing the environment.yml file), the environment
     # is recreated.
     - >
+<<<<<<< HEAD
       if conda env list|grep -w "clinica_env_upgrade_dep"; then
         if git diff HEAD~ --name-only|grep environment.yml; then
           echo "REcreate environment clinica_env_upgrade_dep"
@@ -62,6 +75,16 @@ build:linux:
       else
         echo "Create environment clinica_env_upgrade_dep"
         conda env create --force --file environment.yml
+=======
+      if conda env list|grep -w $CLINICA_ENV_BRANCH; then
+        if git diff HEAD~ --name-only|grep environment.yml; then
+          echo "REcreate environment $CLINICA_ENV_BRANCH"
+          conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
+        fi;
+      else
+        echo "Create environment $CLINICA_ENV_BRANCH"
+        conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
+>>>>>>> dev
       fi;
 
 launch:mac:
@@ -118,6 +141,7 @@ unittest:linux:
     - taskset -c 0-21 pytest --verbose --timeout=0 -n 6 -k run
     - module purge
     - source deactivate
+
 pkg:
   stage: package
   tags:

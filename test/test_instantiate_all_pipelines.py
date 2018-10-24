@@ -100,6 +100,9 @@ def test_instantiate_DWIPreprocessingUsingT1():
                                        caps_directory=join(root, 'data', 'DWIPreprocessingUsingT1', 'in', 'caps'),
                                        tsv_file=join(root, 'data', 'DWIPreprocessingUsingT1', 'in', 'subjects.tsv'),
                                        low_bval=5)
+    pipeline.parameters = {
+            'epi_param': dict([('readout_time', 0.14),  ('enc_dir', 'y')]),
+    }
     pipeline.build()
     pass
 
