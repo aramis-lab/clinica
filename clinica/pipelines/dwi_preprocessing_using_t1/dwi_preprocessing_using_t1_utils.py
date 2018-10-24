@@ -148,7 +148,7 @@ def generate_index(in_bval, b0_index):
     try:
         len(index_list) == vols
     except ValueError:
-        print "It seems that you do not define the index file for FSL eddy correctly!"
+        print("It seems that you do not define the index file for FSL eddy correctly!")
     np.savetxt(out_file, index_array.T)
 
     return out_file

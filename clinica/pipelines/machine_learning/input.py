@@ -119,9 +119,9 @@ class CAPSInput(base.MLInput):
         if self._x is None:
             self.get_x()
 
-        print "Computing kernel ..."
+        print("Computing kernel ...")
         self._kernel = kernel_function(self._x)
-        print "Kernel computed"
+        print("Kernel computed")
         return self._kernel
 
     def save_kernel(self, output_dir):
@@ -218,9 +218,9 @@ class CAPSVoxelBasedInput(CAPSInput):
         if self._x is not None:
             return self._x
 
-        print 'Loading ' + str(len(self.get_images())) + ' subjects'
+        print('Loading ' + str(len(self.get_images())) + ' subjects')
         self._x, self._orig_shape, self._data_mask = vbio.load_data(self._images, mask=self._mask_zeros)
-        print 'Subjects loaded'
+        print('Subjects loaded')
 
         return self._x
 
@@ -301,9 +301,9 @@ class CAPSRegionBasedInput(CAPSInput):
         if self._x is not None:
             return self._x
 
-        print 'Loading ' + str(len(self.get_images())) + ' subjects'
+        print('Loading ' + str(len(self.get_images())) + ' subjects')
         self._x = rbio.load_data(self._images, self._subjects)
-        print 'Subjects loaded'
+        print('Subjects loaded')
 
         return self._x
 
@@ -448,12 +448,12 @@ class CAPSTSVBasedInput(CAPSInput):
 
 
 
-        print 'Loading TSV subjects'
+        print('Loading TSV subjects')
         string = str('group-' + self._group_id + '_T1w_space-' + self._atlas + '_map-graymatter')
 
         self._x = tbio.load_data(string, self._caps_directory, self._subjects, self._sessions, self._dataset)
 
-        print 'Subjects loaded'
+        print('Subjects loaded')
 
         return self._x
 
@@ -547,9 +547,9 @@ class CAPSVoxelBasedInputREGSVM(CAPSInput):
         if self._x is not None:
             return self._x
 
-        print 'Loading ' + str(len(self.get_images())) + ' subjects'
+        print('Loading ' + str(len(self.get_images())) + ' subjects')
         self._x, self._orig_shape, self._data_mask = vbio.load_data(self._images, mask=self._mask_zeros)
-        print 'Subjects loaded'
+        print('Subjects loaded')
 
         return self._x
 
