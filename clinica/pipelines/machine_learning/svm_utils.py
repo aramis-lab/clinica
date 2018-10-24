@@ -114,31 +114,31 @@ def results_to_tsv(results, diagnose_list, output_file):
         s = 'AUC\n'
         auc_list = [round(res[1]['auc'], 2) for res in sorted(results.items())]
         df = pd.DataFrame(squareform(auc_list), index=diagnose_list, columns=diagnose_list)
-        print df
+        print(df)
         s += df.to_csv(sep='\t')
 
         s += '\nBalanced Accuracy\n'
         balanced_accuracy_list = [round(res[1]['balanced_accuracy'], 2) for res in sorted(results.items())]
         df = pd.DataFrame(squareform(balanced_accuracy_list), index=diagnose_list, columns=diagnose_list)
-        print df
+        print(df)
         s += df.to_csv(sep='\t')
 
         s += '\nAccuracy\n'
         accuracy_list = [round(res[1]['accuracy'], 2) for res in sorted(results.items())]
         df = pd.DataFrame(squareform(accuracy_list), index=diagnose_list, columns=diagnose_list)
-        print df
+        print(df)
         s += df.to_csv(sep='\t')
 
         s += '\nSensitivity\n'
         sensitivity_list = [round(res[1]['sensitivity'], 2) for res in sorted(results.items())]
         df = pd.DataFrame(squareform(sensitivity_list), index=diagnose_list, columns=diagnose_list)
-        print df
+        print(df)
         s += df.to_csv(sep='\t')
 
         s += '\nSpecificity\n'
         specificity_list = [round(res[1]['specificity'], 2) for res in sorted(results.items())]
         df = pd.DataFrame(squareform(specificity_list), index=diagnose_list, columns=diagnose_list)
-        print df
+        print(df)
         s += df.to_csv(sep='\t')
 
         output.write(s)

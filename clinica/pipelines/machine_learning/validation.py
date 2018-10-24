@@ -92,11 +92,11 @@ class KFoldCV(base.MLValidation):
         mean_results = pd.DataFrame(all_results.apply(np.nanmean).to_dict(), columns=all_results.columns, index=[0, ])
         mean_results.to_csv(path.join(output_dir, 'mean_results.tsv'),
                             index=False, sep='\t', encoding='utf-8')
-        print "Mean results of the classification:"
-        print "Balanced accuracy: %s" %(mean_results_df['balanced_accuracy'].to_string(index = False))
-        print "specificity: %s" % (mean_results_df['specificity'].to_string(index=False))
-        print "sensitivity: %s" % (mean_results_df['sensitivity'].to_string(index=False))
-        print "auc: %s" % (mean_results_df['auc'].to_string(index=False))
+        print("Mean results of the classification:")
+        print("Balanced accuracy: %s" %(mean_results['balanced_accuracy'].to_string(index = False)))
+        print("specificity: %s" % (mean_results['specificity'].to_string(index=False)))
+        print("sensitivity: %s" % (mean_results['sensitivity'].to_string(index=False)))
+        print("auc: %s" % (mean_results['auc'].to_string(index=False)))
 
 
 class RepeatedKFoldCV(base.MLValidation):
@@ -317,11 +317,11 @@ class RepeatedHoldOut(base.MLValidation):
                                        columns=all_results_df.columns, index=[0, ])
         mean_results_df.to_csv(path.join(output_dir, 'mean_results.tsv'),
                                index=False, sep='\t', encoding='utf-8')
-        print "Mean results of the classification:"
-        print "Balanced accuracy: %s" %(mean_results_df['balanced_accuracy'].to_string(index = False))
-        print "specificity: %s" % (mean_results_df['specificity'].to_string(index=False))
-        print "sensitivity: %s" % (mean_results_df['sensitivity'].to_string(index=False))
-        print "auc: %s" % (mean_results_df['auc'].to_string(index=False))
+        print("Mean results of the classification:")
+        print("Balanced accuracy: %s" %(mean_results_df['balanced_accuracy'].to_string(index = False)))
+        print("specificity: %s" % (mean_results_df['specificity'].to_string(index=False)))
+        print("sensitivity: %s" % (mean_results_df['sensitivity'].to_string(index=False)))
+        print("auc: %s" % (mean_results_df['auc'].to_string(index=False)))
 
         self.compute_error_variance()
         self.compute_accuracy_variance()

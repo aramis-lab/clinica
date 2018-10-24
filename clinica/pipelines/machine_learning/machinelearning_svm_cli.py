@@ -65,6 +65,7 @@ class CmdParserMachineLearningVBLinearSVM(ce.CmdParser):
     def run_command(self, args):
         from clinica.pipelines.machine_learning.voxel_based_svm import linear_svm_binary_classification_caps
         from numpy import logspace
+        import pandas
 
         if args.subjects_visits_tsv is None:
             subjects_visits_tsv = ()  # where it's saved for t1 and pet

@@ -15,8 +15,6 @@ else:
 def test_run_T1FreeSurferCrossSectional():
     from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_pipeline import T1FreeSurferCrossSectional
     from os.path import dirname, join, abspath, exists
-    import shutil
-    from os import makedirs
 
     root = join(dirname(abspath(__file__)), 'data', 'T1FreeSurferCrossSectional')
 
@@ -29,7 +27,8 @@ def test_run_T1FreeSurferCrossSectional():
     pipeline.parameters['recon_all_args'] = '-qcache'
     pipeline.base_dir = join(working_dir, 'T1FreeSurferCrossSectional')
     pipeline.build()
-    #pipeline.run()
+    pipeline.run()
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
 
@@ -532,6 +531,10 @@ def test_run_PETSurface():
                            np.squeeze(nib.load(ref_files[i]).get_data()),
                            rtol=1e-8, equal_nan=True)
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+    pass
+
+
+def test_run_ML_classes():
     pass
 
 

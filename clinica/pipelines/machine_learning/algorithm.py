@@ -542,7 +542,7 @@ class RandomForest(base.MLAlgorithm):
             elif isinstance(result_feat, float):
                 max_features = result_feat
             else:
-                raise "Unknown max_features type"
+                raise ("Unknown max_features type")
 
             max_feat.append(max_features)
         best_max_features = np.mean(max_feat)

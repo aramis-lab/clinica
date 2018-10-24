@@ -30,3 +30,4 @@ dependencies:
       - pydot==1.2.4
       - pytest-xdist==1.22.5
       - pytest-timeout==1.3.1
+      - xgboost==0.8

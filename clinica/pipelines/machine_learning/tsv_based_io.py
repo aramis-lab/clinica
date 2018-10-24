@@ -40,7 +40,7 @@ def load_data(images, caps_directory, subjects, sessions, dataset):
 
     session_id = sessions
 
-    for i in xrange(len(participant_id)):
+    for i in range(len(participant_id)):
         df_sub = df[df.participant_id == participant_id[i]]
 
 
@@ -50,8 +50,8 @@ def load_data(images, caps_directory, subjects, sessions, dataset):
     data = np.zeros((len(participant_id), df_analysis.shape[1]))
     data_temp = np.split(all_vector, len(participant_id))
 
-    for i in xrange(len(participant_id)):
-        for j in xrange(df_analysis.shape[1]):
+    for i in range(len(participant_id)):
+        for j in range(df_analysis.shape[1]):
             data[i][j] = data_temp[i][j]
 
 
