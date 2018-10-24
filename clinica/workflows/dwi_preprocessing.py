@@ -684,7 +684,7 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
     flirt_b0_2_T1.inputs.cost = 'normmi'
     flirt_b0_2_T1.inputs.cost_func = 'normmi'
 
-    apply_xfm = pe.Node(interface=fsl.ApplyXfm(), name='apply_xfm')
+    apply_xfm = pe.Node(interface=fsl.preprocess.ApplyXFM(), name='apply_xfm')
     apply_xfm.inputs.apply_xfm = True
 
     expend_matrix = pe.Node(interface=niu.Function(input_names=['in_matrix', 'in_bvec'], output_names=['out_matrix_list'], function=expend_matrix_list), name='expend_matrix')
