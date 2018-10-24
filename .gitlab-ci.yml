@@ -36,25 +36,14 @@ build:mac:
     # (by editing the environment.yml file), the environment
     # is recreated.
     - >
-<<<<<<< HEAD
       if conda env list|grep -w "clinica_env_upgrade_dep"; then
         if git diff HEAD~ --name-only|grep environment.yml; then
           echo "REcreate environment clinica_env_upgrade_dep"
-          conda env create --force --file environment.yml
+          conda env create --force --file environment.yml -n clinica_env_upgrade_dep
         fi;
       else
         echo "Create environment clinica_env_upgrade_dep"
-        conda env create --force --file environment.yml
-=======
-      if conda env list|grep -w $CLINICA_ENV_BRANCH; then
-        if git diff HEAD~ --name-only|grep environment.yml; then
-          echo "REcreate environment $CLINICA_ENV_BRANCH"
-          conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
-        fi;
-      else
-        echo "Create environment $CLINICA_ENV_BRANCH"
-        conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
->>>>>>> dev
+        conda env create --force --file environment.yml -n clinica_env_upgrade_dep
       fi;
 
 build:linux:
@@ -66,25 +55,14 @@ build:linux:
     # (by editing the environment.yml file), the environment
     # is recreated.
     - >
-<<<<<<< HEAD
       if conda env list|grep -w "clinica_env_upgrade_dep"; then
         if git diff HEAD~ --name-only|grep environment.yml; then
           echo "REcreate environment clinica_env_upgrade_dep"
-          conda env create --force --file environment.yml
+          conda env create --force --file environment.yml -n clinica_env_upgrade_dep
         fi;
       else
         echo "Create environment clinica_env_upgrade_dep"
-        conda env create --force --file environment.yml
-=======
-      if conda env list|grep -w $CLINICA_ENV_BRANCH; then
-        if git diff HEAD~ --name-only|grep environment.yml; then
-          echo "REcreate environment $CLINICA_ENV_BRANCH"
-          conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
-        fi;
-      else
-        echo "Create environment $CLINICA_ENV_BRANCH"
-        conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
->>>>>>> dev
+        conda env create --force --file environment.yml -n clinica_env_upgrade_dep
       fi;
 
 launch:mac:
