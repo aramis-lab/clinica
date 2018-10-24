@@ -8,7 +8,7 @@ from sklearn.preprocessing import scale
 from os.path import join, isdir, dirname
 from os import makedirs
 import errno
-from cv_svm import cv_svm
+from clinica.pipelines.machine_learning.cv_svm import cv_svm
 import sharedmem
 import gc
 
@@ -30,9 +30,9 @@ def svm_binary_classification(image_list, diagnosis_list, output_directory, kern
     results = dict()
     dx_filter = np.unique(diagnosis_list)
 
-    print 'Loading ' + str(len(image_list)) + ' subjects'
+    print('Loading ' + str(len(image_list)) + ' subjects')
     x0, orig_shape, data_mask = load_data(image_list, mask=mask_zeros)
-    print 'Subjects loaded'
+    print('Subjects loaded')
     if scale_data:
         x_all = scale(x0)
     else:
@@ -40,9 +40,9 @@ def svm_binary_classification(image_list, diagnosis_list, output_directory, kern
 
     if existing_gram_matrix is None:
         if kernel_function is not None:
-            print 'Calculating Gram matrix'
+            print('Calculating Gram matrix')
             gram_matrix = kernel_function(x_all)
-            print 'Gram matrix calculated'
+            print('Gram matrix calculated')
         else:
             raise ValueError('If a Gram matrix is not provided a function to calculate it (kernel_function) is a required input.')
     else:
@@ -79,25 +79,25 @@ def svm_binary_classification(image_list, diagnosis_list, output_directory, kern
             gm = gram_matrix[indices, :][:, indices]
 
             classification_str = dx1 + '_vs_' + dx2 + ('_balanced' if balanced else '_not_balanced')
-            print 'Running ' + dx1 + ' vs ' + dx2 + ' classification'
+            print('Running ' + dx1 + ' vs ' + dx2 + ' classification')
 
             y_hat, dual_coefficients, sv_indices, intersect, c, auc = cv_svm(gm, shared_x, np.array(indices), y, c_range, balanced=balanced, outer_folds=outer_folds, inner_folds=inner_folds, n_threads=n_threads)
 
             evaluation = evaluate_prediction(y, y_hat)
             evaluation['auc'] = auc
 
-            print '\nTrue positive %0.2f' % len(evaluation['predictions'][0])
-            print 'True negative %0.2f' % len(evaluation['predictions'][1])
-            print 'False positive %0.2f' % len(evaluation['predictions'][2])
-            print 'False negative %0.2f' % len(evaluation['predictions'][3])
+            print('\nTrue positive %0.2f' % len(evaluation['predictions'][0]))
+            print('True negative %0.2f' % len(evaluation['predictions'][1]))
+            print('False positive %0.2f' % len(evaluation['predictions'][2]))
+            print('False negative %0.2f' % len(evaluation['predictions'][3]))
 
-            print 'AUC %0.2f' % auc
-            print 'Accuracy %0.2f' % evaluation['accuracy']
-            print 'Balanced accuracy %0.2f' % evaluation['balanced_accuracy']
-            print 'Sensitivity %0.2f' % evaluation['sensitivity']
-            print 'Specificity %0.2f' % evaluation['specificity']
-            print 'Positive predictive value %0.2f' % evaluation['ppv']
-            print 'Negative predictive value %0.2f \n' % evaluation['npv']
+            print('AUC %0.2f' % auc)
+            print('Accuracy %0.2f' % evaluation['accuracy'])
+            print('Balanced accuracy %0.2f' % evaluation['balanced_accuracy'])
+            print('Sensitivity %0.2f' % evaluation['sensitivity'])
+            print('Specificity %0.2f' % evaluation['specificity'])
+            print('Positive predictive value %0.2f' % evaluation['ppv'])
+            print('Negative predictive value %0.2f \n' % evaluation['npv'])
 
             if save_dual_coefficients:
                 np.save(join(output_directory, classification_str + '__dual_coefficients'), dual_coefficients[0])

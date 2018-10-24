@@ -164,9 +164,9 @@ def lasso_binary_classification(image_list, diagnosis_list, output_directory,
     results = dict()
     dx_filter = np.unique(diagnosis_list)
 
-    print 'Loading ' + str(len(image_list)) + ' subjects'
+    print('Loading ' + str(len(image_list)) + ' subjects')
     x0, orig_shape, data_mask = load_data(image_list, mask=mask_zeros)
-    print 'Subjects loaded'
+    print('Subjects loaded')
 
     if scale_data:
         x_all = scale(x0)
@@ -218,22 +218,22 @@ def lasso_binary_classification(image_list, diagnosis_list, output_directory,
             # gm = gram_matrix[indices, :][:, indices]
 
             classification_str = dx1 + '_vs_' + dx2 + ('_positive' if positive else '')
-            print 'Running ' + dx1 + ' vs ' + dx2 + ' classification'
+            print('Running ' + dx1 + ' vs ' + dx2 + ' classification')
 
             y_hat, coefficients, intersect, alpha = nested_folds(shared_x, indices, y, alphas, positive=positive, outer_folds=outer_folds, inner_folds=inner_folds, n_threads=n_threads)
             evaluation = evaluate_prediction(y, y_hat)
 
-            print '\nTrue positive %0.2f' % len(evaluation['predictions'][0])
-            print 'True negative %0.2f' % len(evaluation['predictions'][1])
-            print 'False positive %0.2f' % len(evaluation['predictions'][2])
-            print 'False negative %0.2f' % len(evaluation['predictions'][3])
+            print('\nTrue positive %0.2f' % len(evaluation['predictions'][0]))
+            print('True negative %0.2f' % len(evaluation['predictions'][1]))
+            print('False positive %0.2f' % len(evaluation['predictions'][2]))
+            print('False negative %0.2f' % len(evaluation['predictions'][3]))
 
-            print 'Accuracy %0.2f' % evaluation['accuracy']
-            print 'Balanced accuracy %0.2f' % evaluation['balanced_accuracy']
-            print 'Sensitivity %0.2f' % evaluation['sensitivity']
-            print 'Specificity %0.2f' % evaluation['specificity']
-            print 'Positive predictive value %0.2f' % evaluation['ppv']
-            print 'Negative predictive value %0.2f \n' % evaluation['npv']
+            print('Accuracy %0.2f' % evaluation['accuracy'])
+            print('Balanced accuracy %0.2f' % evaluation['balanced_accuracy'])
+            print('Sensitivity %0.2f' % evaluation['sensitivity'])
+            print('Specificity %0.2f' % evaluation['specificity'])
+            print('Positive predictive value %0.2f' % evaluation['ppv'])
+            print('Negative predictive value %0.2f \n' % evaluation['npv'])
 
             if save_weights or save_features_image:
                 weights_orig = revert_mask(coefficients, data_mask, orig_shape)
