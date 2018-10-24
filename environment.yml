@@ -3,7 +3,7 @@ channels:
   - defaults
 dependencies:
   - python==3.6
-  - pip==18.0
+  - pip
   - pip:
       - nibabel>=2.0.2
       - nipype==1.1.2
