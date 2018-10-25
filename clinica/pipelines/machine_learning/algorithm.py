@@ -70,7 +70,7 @@ class DualSVMAlgorithm(base.MLAlgorithm):
             best_c = -1
             best_acc = -1
 
-            for c, async_acc in async_result[fold].iteritems():
+            for c, async_acc in async_result[fold].items():
 
                 acc = async_acc.get()
                 if acc > best_acc:
@@ -223,7 +223,7 @@ class LogisticReg(base.MLAlgorithm):
             best_c = -1
             best_acc = -1
             
-            for c, async_acc in async_result[fold].iteritems():
+            for c, async_acc in async_result[fold].items():
                 
                 acc = async_acc.get()
                 if acc > best_acc:
@@ -385,7 +385,7 @@ class RandomForest(base.MLAlgorithm):
             best_params = None
             best_acc = -1
             
-            for params, async_acc in async_result[fold].iteritems():
+            for params, async_acc in async_result[fold].items():
                 acc = async_acc.get()
                 if acc > best_acc:
                     best_params = params
@@ -642,7 +642,7 @@ class XGBoost(base.MLAlgorithm):
             best_params = None
             best_acc = -1
 
-            for params, async_acc in async_result[fold].iteritems():
+            for params, async_acc in async_result[fold].items():
                 acc = async_acc.get()
                 if acc > best_acc:
                     best_params = params

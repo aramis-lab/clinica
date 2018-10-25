@@ -386,11 +386,11 @@ class CAPSVertexBasedInput(CAPSInput):
 
         infinite_norm = np.max(np.abs(weights))
 
-        left_hemi_data = np.atleast_3d(np.divide(weights[:weights.size / 2], infinite_norm))
+        left_hemi_data = np.atleast_3d(np.divide(weights[:np.int(weights.size / 2)], infinite_norm))
         left_hemi_mgh = nib.MGHImage(left_hemi_data, affine=sample.affine, header=sample.header)
         nib.save(left_hemi_mgh, os.path.join(output_dir, 'weights_lh.mgh'))
 
-        right_hemi_data = np.atleast_3d(np.divide(weights[weights.size/2:], infinite_norm))
+        right_hemi_data = np.atleast_3d(np.divide(weights[np.int(weights.size/2):], infinite_norm))
         right_hemi_mgh = nib.MGHImage(right_hemi_data, affine=sample.affine, header=sample.header)
         nib.save(right_hemi_mgh, os.path.join(output_dir, 'weights_rh.mgh'))
         pass

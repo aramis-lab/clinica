@@ -4,9 +4,11 @@ import sys
 
 ## Determine location for working_directory
 warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
 if sys.platform == 'darwin':
     working_dir = '/Users/arnaud.marcoux/CI/working_dir_FU_python3'
-elif sys.platform == 'linux2':
+elif sys.platform.startswith('linux'):
     working_dir = '/localdrive10TB/data/working_directory_ci_linux'
 else:
     raise SystemError('Could not determine which CI machine is running : sys.platform must return darwin or linux2')
@@ -534,7 +536,47 @@ def test_run_PETSurface():
     pass
 
 
-def test_run_ML_classes():
+def test_run_WorkflowsML():
+    from clinica.pipelines.machine_learning.ml_workflows import RB_RepHoldOut_LogisticRegression, VertexB_RepHoldOut_dualSVM, RB_RepHoldOut_RandomForest, VB_KFold_DualSVM
+    from os.path import dirname, join, abspath
+    from os import makedirs
+    import warnings
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+    root = join(dirname(abspath(__file__)), 'data', 'WorkflowsML')
+    root_input = join(dirname(abspath(__file__)), 'data', 'InputsML')
+
+    caps_dir = join(root_input, 'in', 'caps')
+    tsv = join(root_input, 'in', 'subjects.tsv')
+    diagnoses_tsv = join(root_input, 'in', 'diagnosis.tsv')
+    group_id = 'allADNIdartel'
+
+    clean_folder(join(root, 'out'), recreate=True)
+
+    output_dir1 = join(root, 'out', 'VertexB_RepHoldOut_dualSVM')
+    makedirs(output_dir1)
+    wf1 = VertexB_RepHoldOut_dualSVM(caps_dir, tsv, diagnoses_tsv, group_id, output_dir1, image_type='fdg', fwhm=20,
+                                     n_threads=8, n_iterations=10, grid_search_folds=3, test_size=0.3)
+
+    output_dir2 = join(root, 'out', 'RB_RepHoldOut_LogisticRegression')
+    makedirs(output_dir2)
+    wf2 = RB_RepHoldOut_LogisticRegression(caps_dir, tsv, diagnoses_tsv, group_id, 'fdg', 'AICHA', output_dir2,
+                                           n_threads=8, n_iterations=10, grid_search_folds=3, test_size=0.3)
+
+    output_dir3 = join(root, 'out', 'RB_RepHoldOut_RandomForest')
+    makedirs(output_dir3)
+    wf3 = RB_RepHoldOut_RandomForest(caps_dir, tsv, diagnoses_tsv, group_id, 'T1', 'AAL2', output_dir3, n_threads=8,
+                                     n_iterations=10, grid_search_folds=3, test_size=0.3)
+
+    output_dir4 = join(root, 'out', 'VB_KFold_DualSVM')
+    makedirs(output_dir4)
+    wf4 = VB_KFold_DualSVM(caps_dir, tsv, diagnoses_tsv, group_id, 'fdg', output_dir4, fwhm=8, n_threads=8, n_folds=5,
+                           grid_search_folds=3)
+
+    wf1.run()
+    wf2.run()
+    wf3.run()
+    wf4.run()
     pass
 
 

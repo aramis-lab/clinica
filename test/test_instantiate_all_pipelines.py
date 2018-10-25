@@ -194,3 +194,38 @@ def test_instantiate_PETSurface(tmpdir):
     pipeline.parameters['wd'] = str(tmpdir)
     pipeline.build()
     pass
+
+
+def test_instantiate_InputsML():
+    from clinica.pipelines.machine_learning.input import CAPSVoxelBasedInput, CAPSRegionBasedInput, CAPSVertexBasedInput
+    from os.path import dirname, join, abspath, exists
+
+    root = join(dirname(abspath(__file__)), 'data', 'InputsML')
+
+    caps_dir = join(root, 'in', 'caps')
+    tsv = join(root, 'in', 'subjects.tsv')
+    diagnoses_tsv = join(root, 'in', 'diagnosis.tsv')
+    group_id = 'allADNIdartel'
+    image_type = ['T1', 'fdg']
+    atlases = ['AAL2', 'Neuromorphometrics', 'AICHA', 'LPBA40', 'Hammers']
+    possible_psf = [0, 5, 10, 15, 20, 25]
+
+    voxel_input = [CAPSVoxelBasedInput(caps_dir, tsv, diagnoses_tsv, group_id, im, fwhm=8)
+                   for im in image_type]
+    region_input = [CAPSRegionBasedInput(caps_dir, tsv, diagnoses_tsv, group_id, im, at)
+                    for im in image_type
+                    for at in atlases]
+    vertex_input = [CAPSVertexBasedInput(caps_dir, tsv, diagnoses_tsv, group_id, fwhm, 'fdg')
+                    for fwhm in possible_psf]
+
+    # Check that each file exists
+    for inputs in voxel_input + region_input + vertex_input:
+        for file in inputs.get_images():
+            if isinstance(file, str):
+                assert exists(file)
+            elif isinstance(file, list) and len(file) == 2:
+                assert exists(file[0])
+                assert exists(file[1])
+            else:
+                raise ValueError('An error occured...')
+    pass
