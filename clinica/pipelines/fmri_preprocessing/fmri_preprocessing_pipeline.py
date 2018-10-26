@@ -183,7 +183,7 @@ class fMRIPreprocessing(cpe.Pipeline):
                 # Slice order
                 slice_order = np.argsort(slice_timing) + 1
                 read_node.inputs.slice_order.append(slice_order.tolist())
-                read_node.inputs.ref_slice.append(len(slice_timing) / 2)
+                read_node.inputs.ref_slice.append(np.argmin(slice_timing) + 1)
                 read_node.inputs.time_acquisition.append(
                         data['RepetitionTime'] - data['RepetitionTime']
                         / float(len(slice_timing)))
