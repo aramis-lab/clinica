@@ -529,10 +529,10 @@ def test_run_PETSurface():
     ref_files = [join(root, 'ref/sub-ADNI011S4105_ses-M00_task-rest_acq-FDG_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
                       + h + '_fwhm-' + str(f) + '_projection.mgh') for h in ['lh', 'rh'] for f in [0, 5, 10, 15, 20, 25]]
 
-    for i in range(len(out_files)):
-        #assert np.allclose(np.squeeze(nib.load(out_files[i]).get_data()),
-        #                   np.squeeze(nib.load(ref_files[i]).get_data()),
-        #                   rtol=1e-8, equal_nan=True)
+    # for i in range(len(out_files)):
+    #     assert np.allclose(np.squeeze(nib.load(out_files[i]).get_data()),
+    #                        np.squeeze(nib.load(ref_files[i]).get_data()),
+    #                        rtol=1e-8, equal_nan=True)
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
