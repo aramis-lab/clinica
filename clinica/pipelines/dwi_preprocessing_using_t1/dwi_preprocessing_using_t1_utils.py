@@ -115,7 +115,8 @@ def eddy_fsl(in_bvec, in_bval, in_file, in_mask, in_acqp, in_index):
 
     cmd = 'eddy --imain=' + in_file + ' --bvecs=' + in_bvec +' --bvals=' + in_bval + ' --out=eddy_corrected' + ' --mask=' + in_mask + ' --acqp=' + in_acqp + ' --index=' + in_index + ' --flm=linear'
     os.system(cmd)
-
+    if not os.path.exists(out_corrected):
+        raise ValueError('File ' + out_corrected + ' does not exist even though following command line has been run : ' + cmd)
     return out_parameter, out_corrected, out_rotated_bvecs
 
 def b0_indices(in_bval, max_b=10.0):
