@@ -57,6 +57,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     import pandas as pd
     import operator
     from os import path, walk, mkdir
+    from functools import reduce
 
     dwi_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
                   'Study_ID', 'Series_ID', 'Image_ID', 'Field_Strength', 'Scanner', 'Enhanced']

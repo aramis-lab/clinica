@@ -39,11 +39,15 @@ def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None):
         new_download = False
     else:
         new_download = True
-    if new_download == True:
-        subjs_list.remove('127_S_5200')
-        subjs_list.remove('027_S_5083')
-        subjs_list.remove('941_S_4365')
-        subjs_list.remove('037_S_4028')
+    if new_download is True:
+        if '127_S_5200' in subjs_list:
+            subjs_list.remove('127_S_5200')
+        if '027_S_5083' in subjs_list:
+            subjs_list.remove('027_S_5083')
+        if '941_S_4365' in subjs_list:
+            subjs_list.remove('941_S_4365')
+        if '037_S_4028' in subjs_list:
+            subjs_list.remove('037_S_4028')
 
     cprint('Calculating paths of T1 images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
     images = compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download)
@@ -67,6 +71,7 @@ def compute_t1_paths( source_dir, csv_dir, dest_dir, subjs_list, new_download):
     import pandas as pd
     import operator
     from os import path, walk, mkdir
+    from functools import reduce
 
     t1_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
                  'Study_ID', 'Field_Strength', 'Series_ID', 'Image_ID', 'Original']
@@ -74,7 +79,7 @@ def compute_t1_paths( source_dir, csv_dir, dest_dir, subjs_list, new_download):
     t1_df = pd.DataFrame(columns=t1_col_df)
     adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
     # adni_screening_path = path.join(clinical_dir, 'ADNI_ScreeningList_8_22_12.csv')
-    if new_download == False:
+    if new_download is False:
         ida_meta_path = path.join(csv_dir, 'IDA_MR_Metadata_Listing.csv')
         ida_meta = pd.io.parsers.read_csv(ida_meta_path, sep=',', low_memory=False)
 
@@ -104,7 +109,7 @@ def compute_t1_paths( source_dir, csv_dir, dest_dir, subjs_list, new_download):
         mprage_meta_subj_orig = mprage_meta_subj[mprage_meta_subj['Orig/Proc'] == 'Original']
         visits = visits_to_timepoints_t1(subj, mprage_meta_subj, adnimerge_subj)
 
-        keys = visits.keys()
+        keys = list(visits.keys())
         keys.sort()
         for visit_info in visits.keys():
             if visit_info[1] == 'ADNI1':
@@ -275,7 +280,7 @@ def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", m
         existing_t1 = glob(path.join(output_path, output_filename + '*'))
 
         if mod_to_update and len(existing_t1)>0:
-            print 'Removing the old T1 image...'
+            print('Removing the old T1 image...')
             for t1 in existing_t1:
                 os.remove(t1)
         # ------------------
@@ -678,7 +683,7 @@ def adni1_select_scanner(subj, csv_dir, adnimerge, timepoint):
         scan = mrimeta.MMB1HEAD.item()
         com = mrimeta.MMB1BDCOM
 
-        if isinstance(com, basestring):
+        if isinstance(com, str):
             pass
         elif isinstance(com, float):
             pass

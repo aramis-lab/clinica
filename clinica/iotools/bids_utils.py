@@ -181,7 +181,7 @@ def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids
             for r in range(0, len(file_to_read.values)):
                 row = file_to_read.iloc[r]
                 # Extracts the subject ids columns from the dataframe
-                subj_id = row[name_column_ids.decode('utf-8')]
+                subj_id = row[name_column_ids]
                 if hasattr(subj_id, 'dtype'):
                     if subj_id.dtype == np.int64:
                         subj_id = str(subj_id)
@@ -195,11 +195,11 @@ def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids
                 if len(subj_bids) == 0:
                     # If the subject is not an excluded one
                     if subj_id not in subj_to_remove:
-                        print sessions_fields[i] + ' for ' + subj_id + ' not found in the BIDS converted.'
+                        print(sessions_fields[i] + ' for ' + subj_id + ' not found in the BIDS converted.')
                 else:
                     subj_bids = subj_bids[0]
                     sessions_df[sessions_fields_bids[i]] = row[sessions_fields[i]]
-                    if sessions_dict.has_key(subj_bids):
+                    if subj_bids in sessions_dict:
                         (sessions_dict[subj_bids]['M00']).update({sessions_fields_bids[i]: row[sessions_fields[i]]})
                     else:
                         sessions_dict.update({subj_bids: {
@@ -279,7 +279,7 @@ def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids
                 (scans_dict[bids_id][fields_mod[i]]).update(
                     {fields_bids[i]: file_to_read.iloc[row_to_extract][fields_dataset[i]]})
             else:
-                print " Scans information for " + bids_id + " not found."
+                print(" Scans information for " + bids_id + " not found.")
 
     return scans_dict
 
@@ -305,17 +305,16 @@ def write_sessions_tsv(bids_dir, sessions_dict):
     for sp in bids_paths:
         bids_id = sp.split(os.sep)[-1]
 
-        if sessions_dict.has_key(bids_id):
+        if bids_id in sessions_dict:
             session_df = pd.DataFrame(sessions_dict[bids_id]['M00'], index=['i', ])
             cols = session_df.columns.tolist()
             cols = cols[-1:] + cols[:-1]
             session_df = session_df[cols]
             session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf8')
         else:
-            print "No session data available for " + sp
+            print("No session data available for " + sp)
             session_df = pd.DataFrame(columns=['session_id'])
             session_df['session_id'] = pd.Series('M00')
-            print
             session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf8')
 
 
@@ -407,7 +406,7 @@ def dcm_to_nii(input_path, output_path, bids_name):
     import os
     from os import path
 
-    print input_path
+    print(input_path)
 
     if not os.path.exists(output_path):
         os.mkdir(output_path)
@@ -420,12 +419,12 @@ def dcm_to_nii(input_path, output_path, bids_name):
 
     # If dcm2niix didn't work use dcm2nii
     if not os.path.exists(path.join(output_path, bids_name  + '.nii.gz')):
-        print 'Conversion with dcm2niix failed, trying with dcm2nii'
+        print('Conversion with dcm2niix failed, trying with dcm2nii')
         os.system('dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + input_path)
 
     # If the conversion failed with both tools
     if not os.path.exists(path.join(output_path, bids_name + '.nii.gz')):
-        print 'Conversion of the dicom failed for ', input_path
+        print('Conversion of the dicom failed for ', input_path)
 
 
 def get_bids_subjs_list(bids_path):
@@ -520,17 +519,14 @@ def compress_nii(file_path):
 
     :param file_path: path to the file to convert
     '''
-    from os import path
-    import os
+    from os import remove
     import gzip
+    import shutil
 
-    f_in = open(file_path)
-    f_out = gzip.open(path.join(file_path + '.gz'), 'wb')
-    f_out.writelines(f_in)
-    f_out.close()
-    f_in.close()
-    # Remove the original file
-    os.remove(file_path)
+    with open(file_path, 'rb') as f_in:
+        with gzip.open(file_path + '.gz', 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    remove(file_path)
 
 
 def remove_rescan(list_path):
@@ -673,14 +669,14 @@ def convert_T1(t1_path, output_path, t1_bids_name):
     bids_name = path.join(output_path, t1_bids_name + get_bids_suff('T1'))
 
     if contain_dicom(t1_path):
-        print 'DICOM found for t1 in ' + t1_path
+        print('DICOM found for t1 in ' + t1_path)
         dcm_to_nii(t1_path, output_path, t1_bids_name + get_bids_suff('T1'))
     else:
         if not os.path.exists(output_path):
             os.mkdir(output_path)
         file_ext = get_ext(t1_path)
         bids_file = bids_name + file_ext
-        print bids_file
+        print(bids_file)
         copy(t1_path, bids_file)
         # If  the original image is not compress, compress it
         if file_ext == '.nii':
@@ -712,7 +708,7 @@ def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name , ac
         pet_bids_name = bids_name+'_task-'+task_name
 
     if contain_dicom(folder_input):
-        print 'DICOM found for PET'
+        print('DICOM found for PET')
         dcm_to_nii(folder_input, folder_output, pet_bids_name, 'pet')
     else:
         if not os.path.exists(folder_output):
@@ -722,7 +718,7 @@ def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name , ac
         if pet_name!='':
             pet_path = path.join(folder_input, pet_name)
         else:
-            print 'WARNING: feature to be implemented'
+            print('WARNING: feature to be implemented')
 
         file_ext = get_ext(pet_path)
         copy(pet_path, path.join(folder_output, pet_bids_name + get_bids_suff('pet') + file_ext))
@@ -855,7 +851,7 @@ def convert_flair(folder_input, folder_output, name, fixed_file = False):
                 return -1
         elif len(flair_lst)>1:
                 logging.warning('Multiple FLAIR found, computation aborted.')
-                raise
+                raise('Aborted')
 
 
 def convert_fmri(folder_input, folder_output, name, fixed_fmri=False, task_name = 'rest'):

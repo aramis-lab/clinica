@@ -61,7 +61,7 @@ class AdniToBids(Converter):
         try:
             os.path.exists(out_path)
         except IOError:
-            print 'BIDS folder not found.'
+            print('BIDS folder not found.')
             raise
 
         bids_ids = bids.get_bids_subjs_list(out_path)
@@ -107,11 +107,11 @@ class AdniToBids(Converter):
         import os
         from os import path
         import pandas as pd
-        import adni_modalities.adni_t1 as adni_t1
-        import adni_modalities.adni_av45_pet as adni_av45
-        import adni_modalities.adni_fdg_pet as adni_fdg
-        import adni_modalities.adni_dwi as adni_dwi
-        import adni_modalities.adni_fmri as adni_fmri
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_t1 as adni_t1
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_av45_pet as adni_av45
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet as adni_fdg
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_dwi as adni_dwi
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fmri as adni_fmri
         from clinica.utils.stream import cprint
 
         adni_merge_path = path.join(clinical_dir, 'ADNIMERGE.csv')

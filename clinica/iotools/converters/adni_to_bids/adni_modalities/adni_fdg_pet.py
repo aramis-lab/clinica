@@ -60,6 +60,7 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     # from clinica.iotools.converters.adni_utils import replace_sequence_chars
     from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
     from clinica.utils.stream import cprint
+    from functools import reduce
 
     pet_fdg_col = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
                    'Series_ID', 'Image_ID', 'Original']

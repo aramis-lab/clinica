@@ -42,7 +42,7 @@ def has_one_index(index_list):
     if len(index_list) == 0:
         return -1
     if len(index_list) > 1:
-        raise 'Multiple indexes found'
+        raise('Multiple indexes found')
 
 
 class MissingModsTracker:

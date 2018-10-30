@@ -580,14 +580,101 @@ def test_run_WorkflowsML():
     wf4.run()
     pass
 
-def test_run_OASIS2Bids():
+
+def test_run_Oasis2Bids():
+    from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import OasisToBids
+    from os.path import dirname, join, abspath
+    from os import system, remove
+    from filecmp import cmp
+
+    root = join(dirname(abspath(__file__)), 'data', 'Oasis2Bids')
+
+    clean_folder(join(root, 'out', 'bids'), recreate=True)
+
+    # Data location
+    dataset_directory = join(root, 'in', 'unorganized')
+    bids_directory = join(root, 'out', 'bids')
+    clinical_data_directory = join(root, 'in', 'clinical_data')
+
+    oasis_to_bids = OasisToBids()
+    oasis_to_bids.convert_images(dataset_directory, bids_directory)
+    oasis_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
+
+    # Generate tree of output files
+    bids_out_txt = './bids_out_oasis.txt'
+    bids_ref_txt = './bids_ref_oasis.txt'
+    system('tree ' + bids_directory + ' > ' + bids_out_txt)
+    system('tree ' + join(root, 'ref', 'bids') + ' > ' + bids_ref_txt)
+
+    # Compare them
+    if not cmp(bids_out_txt, bids_ref_txt):
+        with open(bids_out_txt, 'r') as fin:
+            out_message = fin.read()
+        with open(bids_ref_txt, 'r') as fin:
+            ref_message = fin.read()
+        remove(bids_out_txt)
+        remove(bids_ref_txt)
+        raise ValueError('Comparison of out and ref directories shows mismatch :\n OUT :\n' + out_message + '\n REF :\n' + ref_message)
+
+    # Clean folders
+    remove(bids_out_txt)
+    remove(bids_ref_txt)
+    clean_folder(join(root, 'out', 'bids'), recreate=True)
     pass
 
 
-def test_run_ADNI2Bids():
+def test_run_Adni2Bids():
+    from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
+    from os.path import dirname, join, abspath
+    from os import system, remove
+    from filecmp import cmp
+
+    root = join(dirname(abspath(__file__)), 'data', 'Adni2Bids')
+
+    clean_folder(join(root, 'out', 'bids'), recreate=True)
+
+    adni_to_bids = AdniToBids()
+    adni_to_bids.check_adni_dependencies()
+
+    dataset_directory = join(root, 'in', 'unorganized_data')
+    clinical_data_directory = join(root, 'in', 'ADNI_clinical_data_new')
+    bids_directory = join(root, 'out', 'bids')
+    subjects_list = join(root, 'in', 'subjects.txt')
+    # modalities = ['T1', 'PET_FDG', 'PET_AV45', 'DWI', 'fMRI']
+    modalities = ['T1', 'PET_FDG', 'PET_AV45']
+    adni_to_bids.convert_images(dataset_directory,
+                                clinical_data_directory,
+                                bids_directory,
+                                subjects_list,
+                                modalities)
+
+    # Generate tree of output files
+    bids_out_txt = './bids_out_adni.txt'
+    bids_ref_txt = './bids_ref_adni.txt'
+    system('tree ' + bids_directory + ' > ' + bids_out_txt)
+    system('tree ' + join(root, 'ref', 'bids') + ' > ' + bids_ref_txt)
+
+    # Compare them
+    if not cmp(bids_out_txt, bids_ref_txt):
+        with open(bids_out_txt, 'r') as fin:
+            out_message = fin.read()
+        with open(bids_ref_txt, 'r') as fin:
+            ref_message = fin.read()
+        remove(bids_out_txt)
+        remove(bids_ref_txt)
+        raise ValueError('Comparison of out and ref directories shows mismatch :\n OUT :\n' + out_message + '\n REF :\n' + ref_message)
+
+    # Clean folders
+    remove(bids_out_txt)
+    remove(bids_ref_txt)
+    clean_folder(join(root, 'out', 'bids'), recreate=True)
     pass
 
-def test_run_AIBL2Bids():
+def test_run_Aibl2Bids():
+    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import convert_clinical_data, convert_images
+
+    convert_images(args.dataset_directory, args.clinical_data_directory, args.bids_directory)
+    convert_clinical_data(args.bids_directory, args.clinical_data_directory)
     pass
 
 def clean_folder(path, recreate=True):
