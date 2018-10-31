@@ -165,7 +165,7 @@ def check_subdirectories_pet(subdirectories, sub, no_pet):
         :return subdirectory which is containing a PET image which needs to be converted
     """
 
-    for j in xrange(len(sub)):
+    for j in range(len(sub)):
         if (sub[j] not in no_pet) & (sub[j] != '.DS_Store'):
             subdirectories.append(sub[j])
     subdirectories = list(set(subdirectories))
@@ -328,11 +328,11 @@ def find_path_to_pet_modality(path_to_dataset, csv_file):
         subdirectory_all = listdir_nohidden(path_to_pet_1)
         subdirectories = check_subdirectories_pet(subdirectories, subdirectory_all, no_pet)
         # selection only of the folders which contain PET image
-        for j in xrange(len(subdirectories)):
+        for j in range(len(subdirectories)):
             path_to_pet_2 = os.path.join(path_to_pet_1, subdirectories[j])
             exame_date = listdir_nohidden(path_to_pet_2)
             # exame date of the image which is going to be converted
-            for x in xrange(len(exame_date)):
+            for x in range(len(exame_date)):
                 # selection of the session_ID matching the data in the csv_file with the one of the image
                 session_ID = match_data(exame_date[x], i, csv_file)
                 if session_ID != '-4':
@@ -346,7 +346,7 @@ def find_path_to_pet_modality(path_to_dataset, csv_file):
                     else:
                         image_ID = listdir_nohidden(path_to_pet_3)
 
-                    for y in xrange(len(image_ID)):
+                    for y in range(len(image_ID)):
                         # final path to find the image we want to convert
                         path_to_pet = os.path.join(path_to_pet_3, image_ID[y])  #
                         sub_ID.append(i)
@@ -388,18 +388,18 @@ def find_path_to_T1_ADNI(file_mri, subjects_ID, path_to_dataset):
                 path_to_T1_1 = os.path.join(path_to_dataset, str(i))
                 # subdirectories = os.listdir(path_to_T1_1)
                 subdirectories = listdir_nohidden(path_to_T1_1)
-                for j in xrange(len(subdirectories)):
+                for j in range(len(subdirectories)):
                     # check if the subdirectory can contain a T1 image
                     path_to_T1_2 = find_T1_folder(subdirectories[j], path_to_T1_1)
                     if path_to_T1_2 != 'NaN':
                         exame_date = listdir_nohidden(path_to_T1_2)  # this is the string I need to compare with the csv
-                        for x in xrange(len(exame_date)):
+                        for x in range(len(exame_date)):
                             # check if the corresponding session_ID can be found in the csv_file
                             session_ID = match_data(exame_date[x], i, jj)
                             if session_ID != '-4':
                                 path_to_T1_3 = os.path.join(path_to_T1_2, str(exame_date[x]))
                                 image_ID = listdir_nohidden(path_to_T1_3)
-                                for y in xrange(len(image_ID)):
+                                for y in range(len(image_ID)):
                                     # compute the final path
                                     path_to_T1 = os.path.join(path_to_T1_3, image_ID[y])
                                     sub_ID.append(i)
@@ -429,7 +429,7 @@ def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
         path_to_T1_1 = os.path.join(path_to_dataset, str(i))
         # subdirectories = os.listdir(path_to_T1_1)
         subdirectories = listdir_nohidden(path_to_T1_1)
-        for j in xrange(len(subdirectories)):
+        for j in range(len(subdirectories)):
             # we convert only the images which are in this list and we take only one of them for subject
             if subdirectories[j] in ['MPRAGESAGISOp2ND', 'MPRAGE_SAG_ISO_p2_ND', 'MPRAGE_SAG_ISO_p2']:
                 subdirectory_for_subject.append(subdirectories[j])
@@ -507,7 +507,7 @@ def av45_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
 
     # it reads the dataframe where subject_ID, session_ID and path are saved
     try:
-        csv_file = pandas.read_csv(os.path.join(path_to_csv, 'aibl_av45meta_28-Apr-2015.csv'))
+        csv_file = pandas.read_csv(os.path.join(path_to_csv, 'aibl_av45meta_28-Apr-2015.csv'), sep=';')
     except Exception as e:
         cprint("csv file not found")
     images = find_path_to_pet_modality(path_to_dataset, csv_file)
@@ -646,7 +646,7 @@ def t1_paths_to_bids(path_to_dataset,path_to_csv, bids_dir):
     from clinica.utils.stream import cprint
 
     #it reads the dataframe where subject_ID, session_ID and path are saved
-    images=find_path_to_T1(path_to_dataset,path_to_csv)
+    images = find_path_to_T1(path_to_dataset, path_to_csv)
     images.to_csv(path.join(bids_dir, 'T1_MRI_paths.tsv'), sep='\t', index=False, encoding ='utf-8')
     count = 0
     total = images.shape[0]
@@ -826,12 +826,12 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
             files_to_read.append(file_to_read_path)
             sessions_fields_to_read.append(sessions_fields[i])
 
-    rid = pd.read_csv(files_to_read[0], dtype={'text': unicode}).RID
+    rid = pd.read_csv(files_to_read[0], dtype={'text': str}).RID
     rid = list(set(rid))
     for r in rid:
         dict = []
         for i in files_to_read:
-            file_to_read = pd.read_csv(i, dtype={'text': unicode})
+            file_to_read = pd.read_csv(i, dtype={'text': str})
             #file_to_read = pd.io.parsers.read_csv(i, sep=',')
             if len(file_to_read.columns) == 1:
                 file_to_read = pd.read_csv(i, sep = ';')

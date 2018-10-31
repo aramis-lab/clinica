@@ -672,9 +672,22 @@ def test_run_Adni2Bids():
 
 def test_run_Aibl2Bids():
     from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import convert_clinical_data, convert_images
+    from os.path import dirname, join, abspath
+    from os import system, remove
+    from filecmp import cmp
 
-    convert_images(args.dataset_directory, args.clinical_data_directory, args.bids_directory)
-    convert_clinical_data(args.bids_directory, args.clinical_data_directory)
+    # TODO
+
+    root = join(dirname(abspath(__file__)), 'data', 'Aibl2Bids')
+
+    dataset_directory = join(root, 'in', 'unorganized_data')
+    clinical_data_directory = join(root, 'in', 'Data_extract_3.2.5')
+    bids_directory = join(root, 'out', 'bids')
+
+    clean_folder(join(root, 'out', 'bids'), recreate=True)
+
+    convert_images(dataset_directory, clinical_data_directory, bids_directory)
+    convert_clinical_data(bids_directory, clinical_data_directory)
     pass
 
 def clean_folder(path, recreate=True):
