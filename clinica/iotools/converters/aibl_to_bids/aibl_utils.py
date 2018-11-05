@@ -645,6 +645,7 @@ def t1_paths_to_bids(path_to_dataset,path_to_csv, bids_dir):
     from numpy import nan
     from clinica.utils.stream import cprint
 
+
     #it reads the dataframe where subject_ID, session_ID and path are saved
     images=find_path_to_T1(path_to_dataset,path_to_csv)
     images.to_csv(path.join(bids_dir, 'T1_MRI_paths.tsv'), sep='\t', index=False, encoding ='utf-8')

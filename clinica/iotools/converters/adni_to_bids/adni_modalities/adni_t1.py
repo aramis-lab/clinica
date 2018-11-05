@@ -113,7 +113,7 @@ def compute_t1_paths( source_dir, csv_dir, dest_dir, subjs_list, new_download):
                     image_dict = adni1_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
                                               ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj)
                 else:
-                    image_dict = adni1_image_refactoring(csv_dir, adni_merge, subj, visit_info[0], visits[visit_info],
+                    image_dict = (csv_dir, adni_merge, subj, visit_info[0], visits[visit_info],
                                              mprage_meta_subj, mri_quality_subj, mayo_mri_qc_subj)
             elif visit_info[1] == 'ADNIGO':
                 if new_download == False:
