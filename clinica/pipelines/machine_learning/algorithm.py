@@ -12,6 +12,7 @@ import pandas as pd
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_auc_score
 import itertools
@@ -120,10 +121,13 @@ class DualSVMAlgorithm(base.MLAlgorithm):
         result = dict()
         result['best_parameter'] = best_parameter
         result['evaluation'] = utils.evaluate_prediction(y_test, y_hat)
-        result['evaluation_training'] = utils.evaluate_prediction(y_train, y_hat_train)
+        result['evaluation_train'] = utils.evaluate_prediction(y_train, y_hat_train)
         result['y_hat'] = y_hat
+        result['y_hat_train'] = y_hat_train
         result['y'] = y_test
+        result['y_train'] = y_train
         result['y_index'] = test_index
+        result['x_index'] = train_index
         result['auc'] = auc
 
         return result
@@ -354,17 +358,18 @@ class RandomForest(base.MLAlgorithm):
                                                 n_jobs=self._n_threads)
         
         classifier.fit(x_train, y_train)
+        y_hat_train = classifier.predict(x_train)
         y_hat = classifier.predict(x_test)
         proba_test = classifier.predict_proba(x_test)[:, 1]
         auc = roc_auc_score(y_test, proba_test)
         
-        return classifier, y_hat, auc
+        return classifier, y_hat, auc, y_hat_train
 
     def _grid_search(self, x_train, x_test, y_train, y_test, n_estimators, max_depth, min_samples_split, max_features):
     
-        _, y_hat, _ = self._launch_random_forest(x_train, x_test, y_train, y_test,
-                                                 n_estimators, max_depth,
-                                                 min_samples_split, max_features)
+        _, y_hat, _, _ = self._launch_random_forest(x_train, x_test, y_train, y_test,
+                                                    n_estimators, max_depth,
+                                                    min_samples_split, max_features)
         res = utils.evaluate_prediction(y_test, y_hat)
         
         return res['balanced_accuracy']
@@ -461,29 +466,86 @@ class RandomForest(base.MLAlgorithm):
         x_test = self._x[test_index]
         y_test = self._y[test_index]
         
-        _, y_hat, auc = self._launch_random_forest(x_train, x_test, y_train, y_test,
-                                                   best_parameter['n_estimators'],
-                                                   best_parameter['max_depth'],
-                                                   best_parameter['min_samples_split'],
-                                                   best_parameter['max_features'])
+        _, y_hat, auc, y_hat_train = self._launch_random_forest(x_train, x_test, y_train, y_test,
+                                                                best_parameter['n_estimators'],
+                                                                best_parameter['max_depth'],
+                                                                best_parameter['min_samples_split'],
+                                                                best_parameter['max_features'])
         
         result = dict()
         result['best_parameter'] = best_parameter
         result['evaluation'] = utils.evaluate_prediction(y_test, y_hat)
+        result['evaluation_train'] = utils.evaluate_prediction(y_train, y_hat_train)
         result['y_hat'] = y_hat
+        result['y_hat_train'] = y_hat_train
         result['y'] = y_test
+        result['y_train'] = y_train
         result['y_index'] = test_index
+        result['x_index'] = train_index
         result['auc'] = auc
         
+        return result
+
+    def evaluate_no_cv(self, train_index, test_index):
+
+        x_train = self._x[train_index]
+        y_train = self._y[train_index]
+        x_test = self._x[test_index]
+        y_test = self._y[test_index]
+
+        best_parameter = dict()
+        best_parameter['n_estimators'] = self._n_estimators_range
+        best_parameter['max_depth'] = self._max_depth_range
+        best_parameter['min_samples_split'] = self._min_samples_split_range
+        best_parameter['max_features'] = self._max_features_range
+
+        _, y_hat, auc, y_hat_train = self._launch_random_forest(x_train, x_test, y_train, y_test,
+                                                                self._n_estimators_range,
+                                                                self._max_depth_range,
+                                                                self._min_samples_split_range,
+                                                                self._max_features_range)
+        result = dict()
+        result['best_parameter'] = best_parameter
+        result['evaluation'] = utils.evaluate_prediction(y_test, y_hat)
+        best_parameter['balanced_accuracy'] = result['evaluation']['balanced_accuracy']
+        result['evaluation_train'] = utils.evaluate_prediction(y_train, y_hat_train)
+        result['y_hat'] = y_hat
+        result['y_hat_train'] = y_hat_train
+        result['y'] = y_test
+        result['y_train'] = y_train
+        result['y_index'] = test_index
+        result['x_index'] = train_index
+        result['auc'] = auc
+
         return result
 
     def apply_best_parameters(self, results_list):
 
         mean_bal_acc = np.mean([result['best_parameter']['balanced_accuracy'] for result in results_list])
         best_n_estimators = int(round(np.mean([result['best_parameter']['n_estimators'] for result in results_list])))
-        best_max_depth = int(round(np.mean([result['best_parameter']['max_depth'] for result in results_list])))
+        best_max_depth = int(round(np.mean([result['best_parameter']['max_depth'] if result['best_parameter']['max_depth'] is not None else 50 for result in results_list])))
         best_min_samples_split = int(round(np.mean([result['best_parameter']['min_samples_split'] for result in results_list])))
-        best_max_features = np.mean([result['best_parameter']['max_features'] for result in results_list])
+
+        max_feat = []
+        n_features = self._x.shape[1]
+        for result in results_list:
+            result_feat = result['best_parameter']['max_features']
+
+            if result_feat is None:
+                max_features = 1.0
+            elif result_feat in ["auto", "sqrt"]:
+                max_features = np.sqrt(n_features) / n_features
+            elif result_feat == "log2":
+                max_features = np.log2(n_features) / n_features
+            elif isinstance(result_feat, int):
+                max_features = float(result_feat) / n_features
+            elif isinstance(result_feat, float):
+                max_features = result_feat
+            else:
+                raise "Unknown max_features type"
+
+            max_feat.append(max_features)
+        best_max_features = np.mean(max_feat)
 
         if self._balanced:
             classifier = RandomForestClassifier(n_estimators=best_n_estimators, max_depth=best_max_depth,
@@ -516,3 +578,231 @@ class RandomForest(base.MLAlgorithm):
         
         with open(path.join(output_dir, 'best_parameters.json'), 'w') as f:
             json.dump(parameters_dict, f)
+
+
+class XGBoost(base.MLAlgorithm):
+    def __init__(self, x, y, balanced=False, grid_search_folds=10,
+                 max_depth_range=(0, 6),
+                 learning_rate_range=(0.1, 0.3),
+                 n_estimators_range=(100, 200),
+                 colsample_bytree_range=(0.5, 1),
+                 reg_alpha=0,
+                 reg_lambda=1,
+                 n_threads=15):
+        self._x = x
+        self._y = y
+        self._balanced = balanced
+        self._scale_pos_weight = float(len(self._y - sum(self._y)) / sum(self._y))
+        self._grid_search_folds = grid_search_folds
+        self._max_depth_range = max_depth_range
+        self._learning_rate_range = learning_rate_range
+        self._n_estimators_range = n_estimators_range
+        self._colsample_bytree_range = colsample_bytree_range
+        self._reg_alpha = reg_alpha
+        self._reg_lambda = reg_lambda
+        self._n_threads = n_threads
+
+    def _launch_xgboost(self, x_train, x_test, y_train, y_test, max_depth, learning_rate, n_estimators, colsample_bytree):
+        if self._balanced:
+            # set scale_pos_weight
+            # http://xgboost.readthedocs.io/en/latest//how_to/param_tuning.html
+            classifier = XGBClassifier(max_depth=max_depth, learning_rate=learning_rate, n_estimators=n_estimators,
+                                       n_jobs=self._n_threads, colsample_bytree=colsample_bytree,
+                                       reg_alpha=self._reg_alpha, reg_lambda=self._reg_lambda,
+                                       scale_pos_weight=self._scale_pos_weight)
+        else:
+            classifier = XGBClassifier(max_depth=max_depth, learning_rate=learning_rate, n_estimators=n_estimators,
+                                       n_jobs=self._n_threads, colsample_bytree=colsample_bytree,
+                                       reg_alpha=self._reg_alpha, reg_lambda=self._reg_lambda)
+
+        classifier.fit(x_train, y_train)
+        y_hat_train = classifier.predict(x_train)
+        y_hat = classifier.predict(x_test)
+        proba_test = classifier.predict_proba(x_test)[:, 1]
+        auc = roc_auc_score(y_test, proba_test)
+
+        return classifier, y_hat, auc, y_hat_train
+
+    def _grid_search(self, x_train, x_test, y_train, y_test, max_depth, learning_rate, n_estimators, colsample_bytree):
+
+        _, y_hat, _, _ = self._launch_xgboost(x_train, x_test, y_train, y_test, max_depth, learning_rate, n_estimators,
+                                              colsample_bytree)
+        res = utils.evaluate_prediction(y_test, y_hat)
+
+        return res['balanced_accuracy']
+
+    def _select_best_parameter(self, async_result):
+
+        params_list = []
+        accuracies = []
+
+        all_params_acc = []
+
+        for fold in async_result.keys():
+            best_params = None
+            best_acc = -1
+
+            for params, async_acc in async_result[fold].iteritems():
+                acc = async_acc.get()
+                if acc > best_acc:
+                    best_params = params
+                    best_acc = acc
+
+                all_params_acc.append(pd.DataFrame({'max_depth': params[0],
+                                                    'learning_rate': params[1],
+                                                    'n_estimators': params[2],
+                                                    'colsample_bytree': params[3],
+                                                    'balanced_accuracy': acc}, index=['i', ]))
+
+            params_list.append(best_params)
+            accuracies.append(best_acc)
+
+        best_acc = np.mean(accuracies)
+
+        best_max_depth = int(round(np.mean([x[0] for x in params_list])))
+        best_learning_rate = np.mean([x[1] for x in params_list])
+        best_n_estimators = int(round(np.mean([x[2] for x in params_list])))
+        best_colsample_bytree = np.mean([x[3] for x in params_list])
+
+        return {'max_depth': best_max_depth,
+                'learning_rate': best_learning_rate,
+                'n_estimators': best_n_estimators,
+                'colsample_bytree': best_colsample_bytree,
+                'balanced_accuracy': best_acc}
+
+    def evaluate(self, train_index, test_index):
+
+        inner_pool = ThreadPool(self._n_threads)
+        async_result = {}
+        for i in range(self._grid_search_folds):
+            async_result[i] = {}
+
+        x_train = self._x[train_index]
+        y_train = self._y[train_index]
+
+        skf = StratifiedKFold(n_splits=self._grid_search_folds, shuffle=True)
+        inner_cv = list(skf.split(np.zeros(len(y_train)), y_train))
+
+        parameters_combinations = list(itertools.product(self._max_depth_range,
+                                                         self._learning_rate_range,
+                                                         self._n_estimators_range,
+                                                         self._colsample_bytree_range))
+
+        for i in range(len(inner_cv)):
+            inner_train_index, inner_test_index = inner_cv[i]
+
+            x_train_inner = x_train[inner_train_index]
+            x_test_inner = x_train[inner_test_index]
+            y_train_inner = y_train[inner_train_index]
+            y_test_inner = y_train[inner_test_index]
+
+            for parameters in parameters_combinations:
+                async_result[i][parameters] = inner_pool.apply_async(self._grid_search,
+                                                                     (x_train_inner, x_test_inner,
+                                                                      y_train_inner, y_test_inner,
+                                                                      parameters[0], parameters[1],
+                                                                      parameters[2], parameters[3]))
+        inner_pool.close()
+        inner_pool.join()
+        best_parameter = self._select_best_parameter(async_result)
+        x_test = self._x[test_index]
+        y_test = self._y[test_index]
+
+        _, y_hat, auc, y_hat_train = self._launch_xgboost(x_train, x_test, y_train, y_test,
+                                                          best_parameter['max_depth'],
+                                                          best_parameter['learning_rate'],
+                                                          best_parameter['n_estimators'],
+                                                          best_parameter['colsample_bytree'])
+
+        result = dict()
+        result['best_parameter'] = best_parameter
+        result['evaluation'] = utils.evaluate_prediction(y_test, y_hat)
+        result['evaluation_train'] = utils.evaluate_prediction(y_train, y_hat_train)
+        result['y_hat'] = y_hat
+        result['y_hat_train'] = y_hat_train
+        result['y'] = y_test
+        result['y_train'] = y_train
+        result['y_index'] = test_index
+        result['x_index'] = train_index
+        result['auc'] = auc
+
+        return result
+
+    def evaluate_no_cv(self, train_index, test_index):
+
+        x_train = self._x[train_index]
+        y_train = self._y[train_index]
+        x_test = self._x[test_index]
+        y_test = self._y[test_index]
+
+        best_parameter = dict()
+        best_parameter['max_depth'] = self._max_depth_range
+        best_parameter['learning_rate'] = self._learning_rate_range
+        best_parameter['n_estimators'] = self._n_estimators_range
+        best_parameter['colsample_bytree'] = self._colsample_bytree_range
+
+        _, y_hat, auc, y_hat_train = self._launch_xgboost(x_train, x_test, y_train, y_test,
+                                                          self._max_depth_range,
+                                                          self._learning_rate_range,
+                                                          self._n_estimators_range,
+                                                          self._colsample_bytree_range)
+        result = dict()
+        result['best_parameter'] = best_parameter
+        result['evaluation'] = utils.evaluate_prediction(y_test, y_hat)
+        best_parameter['balanced_accuracy'] = result['evaluation']['balanced_accuracy']
+        result['evaluation_train'] = utils.evaluate_prediction(y_train, y_hat_train)
+        result['y_hat'] = y_hat
+        result['y_hat_train'] = y_hat_train
+        result['y'] = y_test
+        result['y_train'] = y_train
+        result['y_index'] = test_index
+        result['x_index'] = train_index
+        result['auc'] = auc
+
+        return result
+
+    def apply_best_parameters(self, results_list):
+
+        mean_bal_acc = np.mean([result['best_parameter']['balanced_accuracy'] for result in results_list])
+
+        best_max_depth = int(round(np.mean([result['best_parameter']['max_depth'] for result in results_list])))
+        best_learning_rate = np.mean([result['best_parameter']['learning_rate'] for result in results_list])
+        best_n_estimators = int(round(np.mean([result['best_parameter']['n_estimators'] for result in results_list])))
+        best_colsample_bytree = np.mean([result['best_parameter']['colsample_bytree'] for result in results_list])
+
+        if self._balanced:
+            classifier = XGBClassifier(max_depth=best_max_depth, learning_rate=best_learning_rate,
+                                       n_estimators=best_n_estimators, n_jobs=self._n_threads,
+                                       colsample_bytree=best_colsample_bytree, reg_alpha=self._reg_alpha,
+                                       reg_lambda=self._reg_lambda, scale_pos_weight=self._scale_pos_weight)
+        else:
+            classifier = XGBClassifier(max_depth=best_max_depth, learning_rate=best_learning_rate,
+                                       n_estimators=best_n_estimators, n_jobs=self._n_threads,
+                                       colsample_bytree=best_colsample_bytree, reg_alpha=self._reg_alpha,
+                                       reg_lambda=self._reg_lambda)
+
+        classifier.fit(self._x, self._y)
+
+        return classifier, {'max_depth': best_max_depth,
+                            'learning_rate': best_learning_rate,
+                            'n_estimators': best_n_estimators,
+                            'colsample_bytree': best_colsample_bytree,
+                            'balanced_accuracy': mean_bal_acc}
+
+    def save_classifier(self, classifier, output_dir):
+        np.savetxt(path.join(output_dir, 'feature_importances.txt'), classifier.feature_importances_)
+        # print classifier.estimators_
+        # np.savetxt(path.join(output_dir, 'estimators.txt'), str(classifier.estimators_))
+
+    def save_weights(self, classifier, output_dir):
+
+        np.savetxt(path.join(output_dir, 'weights.txt'), classifier.feature_importances_)
+        return classifier.feature_importances_
+
+    def save_parameters(self, parameters_dict, output_dir):
+
+        with open(path.join(output_dir, 'best_parameters.json'), 'w') as f:
+            json.dump(parameters_dict, f)
+
+
+

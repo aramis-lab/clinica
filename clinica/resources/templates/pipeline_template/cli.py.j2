@@ -18,6 +18,11 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
 
         self._name = '{{ pipeline.command_name }}'
 
+    def define_description(self):
+        """Define a description of this pipeline.
+        """
+        # self._description = 'Brief description: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/Pipelines/{{ pipeline.class_name }}'
+
     def define_options(self):
         """Define the sub-command arguments
         """
@@ -26,8 +31,10 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
         #                         help='Path to the BIDS directory.')
         # self._args.add_argument("caps_directory",
         #                         help='Path to the CAPS directory.')
+        # self._args.add_argument("group_id",
+        #                         help='User-defined identifier for the provided group of subjects.')
         # self._args.add_argument("-tsv", "--subjects_sessions_tsv",
-        #                         help='TSV file containing the subjects with their sessions.')
+        #                         help='TSV file containing a list of subjects with their sessions.')
         # Add your own pipeline command line arguments here to be used in the
         # method below. Example below:
         self._args.add_argument("-hw", "--hello_word_arg",
@@ -36,8 +43,6 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
                                 help='Temporary directory to store pipeline intermediate results')
         self._args.add_argument("-np", "--n_procs", type=int,
                                 help='Number of cores used to run in parallel')
-        self._args.add_argument("-sl", "--slurm", action='store_true',
-                                help='Run the pipeline using SLURM')
         # END OF EXAMPLE
 
     def run_command(self, args):
@@ -64,8 +69,7 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
             args.working_directory = mkdtemp()
         pipeline.base_dir = self.absolute_path(args.working_directory)
         if args.n_procs:
-            pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
-        elif args.slurm:
-            pipeline.run(plugin='SLURM')
+            pipeline.run(plugin='MultiProc',
+                         plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.run()

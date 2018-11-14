@@ -1,0 +1,12 @@
+{
+    "id": "aramislab/t1-volume-create-dartel",
+    "author": "SAMPER-GONZALEZ Jorge",
+    "version": "0.1",
+    "dependencies": [
+        {
+            "type": "software",
+            "name": "spm",
+            "version": ">=12"
+        }
+    ]
+}

@@ -33,7 +33,7 @@ class T1FreeSurferCrossSectionalCLI(ce.CmdParser):
         self._args.add_argument("caps_directory",
                                 help='Path to the CAPS directory.')
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
-                                help='TSV file containing the subjects with their sessions.')
+                                help='TSV file containing a list of subjects with their sessions.')
         # Custom args added by developers
         self._args.add_argument("-ras", "--recon_all_args",
                                 help='additional flags for recon-all command line, default will be -qcache')
@@ -65,10 +65,8 @@ class T1FreeSurferCrossSectionalCLI(ce.CmdParser):
             args.working_directory = mkdtemp()
         pipeline.base_dir = self.absolute_path(args.working_directory)
 
-        # run the pipelines in n_procs cores based on your computation power.
         if args.n_procs:
-            # pipeline.write_graph()
-            pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
+            pipeline.run(plugin='MultiProc',
+                         plugin_args={'n_procs': args.n_procs})
         else:
-            # pipeline.write_graph()
             pipeline.run()

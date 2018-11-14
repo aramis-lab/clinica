@@ -29,19 +29,30 @@ def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None):
     from os import path
     from clinica.utils.stream import cprint
 
+
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
         adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
         subjs_list = list(adni_merge.PTID.unique())
+    #new_download: indicates the version of csv Downloaded
+    if path.isfile(path.join(csv_dir, 'IDA_MR_Metadata_Listing.csv')):
+        new_download = False
+    else:
+        new_download = True
+    if new_download == True:
+        subjs_list.remove('127_S_5200')
+        subjs_list.remove('027_S_5083')
+        subjs_list.remove('941_S_4365')
+        subjs_list.remove('037_S_4028')
 
     cprint('Calculating paths of T1 images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
-    images = compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list)
+    images = compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download)
     cprint('Paths of T1 images found. Exporting images into BIDS ...')
     t1_paths_to_bids(images, dest_dir)
     cprint('T1 conversion done.')
 
 
-def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
+def compute_t1_paths( source_dir, csv_dir, dest_dir, subjs_list, new_download):
     """
 
     Compute paths to t1 images of ADNI.
@@ -63,13 +74,15 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
     t1_df = pd.DataFrame(columns=t1_col_df)
     adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
     # adni_screening_path = path.join(clinical_dir, 'ADNI_ScreeningList_8_22_12.csv')
-    ida_meta_path = path.join(csv_dir, 'IDA_MR_Metadata_Listing.csv')
+    if new_download == False:
+        ida_meta_path = path.join(csv_dir, 'IDA_MR_Metadata_Listing.csv')
+        ida_meta = pd.io.parsers.read_csv(ida_meta_path, sep=',', low_memory=False)
+
     mprage_meta_path = path.join(csv_dir, 'MPRAGEMETA.csv')
     mri_quality_path = path.join(csv_dir, 'MRIQUALITY.csv')
     mayo_mri_qc_path = path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
 
     adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',', low_memory=False)
-    ida_meta = pd.io.parsers.read_csv(ida_meta_path, sep=',', low_memory=False)
     mprage_meta = pd.io.parsers.read_csv(mprage_meta_path, sep=',', low_memory=False)
     mri_quality = pd.io.parsers.read_csv(mri_quality_path, sep=',', low_memory=False)
     mayo_mri_qc = pd.io.parsers.read_csv(mayo_mri_qc_path, sep=',', low_memory=False)
@@ -83,7 +96,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
         mprage_meta_subj = mprage_meta[mprage_meta.SubjectID == subj]
         mprage_meta_subj = mprage_meta_subj.sort_values('ScanDate')
 
-        ida_meta_subj = ida_meta[ida_meta.Subject == subj]
+        #ida_meta_subj = ida_meta[ida_meta.Subject == subj]
 
         mri_quality_subj = mri_quality[mri_quality.RID == int(subj[-4:])]
         mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(subj[-4:])]
@@ -95,11 +108,21 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
         keys.sort()
         for visit_info in visits.keys():
             if visit_info[1] == 'ADNI1':
-                image_dict = adni1_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
+                if new_download == False:
+                    ida_meta_subj = ida_meta[ida_meta.Subject == subj]
+                    image_dict = adni1_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
                                               ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj)
+                else:
+                    image_dict = (csv_dir, adni_merge, subj, visit_info[0], visits[visit_info],
+                                             mprage_meta_subj, mri_quality_subj, mayo_mri_qc_subj)
             elif visit_info[1] == 'ADNIGO':
-                image_dict = adnigo_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
+                if new_download == False:
+                    image_dict = adnigo_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
                                                ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj, visit_info[2])
+                else:
+                    image_dict = adnigo_image_refactoring(csv_dir, adni_merge, subj, visit_info[0], visits[visit_info],
+                                             mprage_meta_subj, mri_quality_subj, mayo_mri_qc_subj, visit_info[2])
+
             else:  # ADNI2
                 image_dict = adni2_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj_orig, mayo_mri_qc_subj)
 
@@ -121,12 +144,14 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
     # Exceptions
     # ==========
     # Subject 141_S_0726
-    subj_ind = (t1_df.Subject_ID == '141_S_0726') & (t1_df.VISCODE == 'bl')
-    t1_df.loc[subj_ind, 'Sequence'] ='MPR-R__GradWarp__B1_Correction'
-    t1_df.loc[subj_ind, 'Series_ID'] = '18355'
-    t1_df.loc[subj_ind, 'Image_ID'] = '94827'
+    if new_download == False:
+        #conversion errors known
+        subj_ind = (t1_df.Subject_ID == '141_S_0726') & (t1_df.VISCODE == 'bl')
+        t1_df.loc[subj_ind, 'Sequence'] ='MPR-R__GradWarp__B1_Correction'
+        t1_df.loc[subj_ind, 'Series_ID'] = '18355'
+        t1_df.loc[subj_ind, 'Image_ID'] = '94827'
 
-    conversion_errors = [  # Eq_1
+        conversion_errors = [  # Eq_1
                          ('031_S_0830', 'm48'),
                          ('100_S_0995', 'm18'),
                          ('031_S_0867', 'm48'),
@@ -139,13 +164,14 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
                          ('057_S_1269', 'm24'),
                          ('036_S_4899', 'm03')]
 
-    error_indices = []
-    for conv_error in conversion_errors:
-        error_indices.append((t1_df.Subject_ID == conv_error[0])
+        error_indices = []
+        for conv_error in conversion_errors:
+            error_indices.append((t1_df.Subject_ID == conv_error[0])
                              & (t1_df.VISCODE == conv_error[1]))
 
-    indices_to_remove = t1_df.index[reduce(operator.or_, error_indices, False)]
-    t1_df.drop(indices_to_remove, inplace=True)
+        indices_to_remove = t1_df.index[reduce(operator.or_, error_indices, False)]
+        t1_df.drop(indices_to_remove, inplace=True)
+
 
     images = t1_df
     is_dicom = []
@@ -185,8 +211,19 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
         is_dicom.append(dicom)
         nifti_paths.append(nifti_path)
 
+
     images.loc[:, 'Is_Dicom'] = pd.Series(is_dicom, index=images.index)
     images.loc[:, 'Path'] = pd.Series(nifti_paths, index=images.index)
+
+    if new_download == True:
+        images = images.drop_duplicates()
+        for j in images.Path:
+            if not path.exists(j):
+                images.Path[images.Path == j] = ''
+
+        images = images[images.Path != '']
+
+
 
     # Store the paths inside a file called conversion_info inside the input directory
     t1_tsv_path = path.join(dest_dir, 'conversion_info')
@@ -603,3 +640,178 @@ def select_scan_qc_adni2(scans_meta, mayo_mri_qc_subj, preferred_field_strength)
 
     # 1.5T or 3.0T without QC
     return select_scan_no_qc(scans_meta)
+
+
+def adni1_select_scanner(subj, csv_dir, adnimerge, timepoint):
+    import pandas as pd
+    import os
+
+    com_philips = ['phil', 'n/a', 'not', 'phl', 'ND', 'na', 'n"a']
+    sub_discarded = ['refused', 'declined', 'not completed', 'error', 'not on 3T scanner', '']
+
+    mrimeta_tsv = pd.io.parsers.read_csv(os.path.join(csv_dir, 'MRIMETA.csv'), sep=',')
+    mri3meta_tsv = pd.io.parsers.read_csv(os.path.join(csv_dir, 'MRI3META.csv'), sep=',')
+    rid = list(adnimerge[adnimerge.PTID == subj].RID.unique())[0]
+
+    # 1.5 T
+    mrimeta_rid = mrimeta_tsv[mrimeta_tsv.RID == rid]
+    mrimeta = mrimeta_rid[mrimeta_rid.VISCODE2 == timepoint]
+    list_scanner_not_found = []
+
+    if len(mrimeta) == 2:
+        ix = mrimeta.index
+        mrimeta = mrimeta.loc[ix[0]]
+
+    if mrimeta.empty and timepoint == 'bl':
+        timepoint = 'sc'
+        mrimeta = mrimeta_rid[mrimeta_rid.VISCODE2 == timepoint]
+        if len(mrimeta) > 1:
+
+            mrimeta.drop(mrimeta.index[0], inplace=True)
+        #    print mrimeta
+        #rid_double = [40, 43, 72, 91, 118, 126, 166, 173, 176]
+
+        #if len(mrimeta) > 1 and rid in rid_double:
+        #    mrimeta.drop(mrimeta.index[0], inplace=True)
+
+    if not mrimeta.empty:
+        scan = mrimeta.MMB1HEAD.item()
+        com = mrimeta.MMB1BDCOM
+
+        if isinstance(com, basestring):
+            pass
+        elif isinstance(com, float):
+            pass
+        else:
+            com = com.item()
+
+        #com = mrimeta.MMB1BDCOM.item()
+        if scan == '-4' or not scan:
+            scanner = 'Philips'
+        else:
+            if not isinstance(com, float) and com.lower() in com_philips:
+                scanner = 'Philips'
+            else:
+                scanner = 'GE_Siemens'
+    #else:
+    if mrimeta.empty:
+        # 3T
+        mri3meta_rid = mri3meta_tsv[mri3meta_tsv.RID == rid]
+        mri3meta = mri3meta_rid[mri3meta_rid.VISCODE2 == timepoint]
+
+        if mri3meta.empty and timepoint == 'bl':
+            timepoint = 'sc'
+            mri3meta = mri3meta_rid[mri3meta_rid.VISCODE2 == timepoint]
+        if not mri3meta.empty:
+            scan = mri3meta.MMB1HEAD.item()
+            com = mri3meta.MMB1BDCOM.item()
+            if scan == '-4' or not scan:
+                scanner = 'Philips'
+            else:
+                if com.lower() in com_philips:
+                    scanner = 'Philips'
+                else:
+                    scanner = 'GE_Siemens'
+        if mri3meta.empty:
+           scanner = 'PROBLEM_SCANNER_NOT_FOUND'
+
+    return scanner
+
+
+def adni1_image_refactoring(csv_dir, adnimerge, subject_id, timepoint, visit_str, mprage_meta_subj, mri_quality_subj, mayo_mri_qc_subj):
+
+    from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
+    from clinica.utils.stream import cprint
+    # Get the preferred scan (image series that has been Scaled)
+    filtered_mprage = mprage_meta_subj[(mprage_meta_subj['Orig/Proc'] == 'Processed')
+                                       & (mprage_meta_subj.Visit == visit_str)
+                                       & (mprage_meta_subj.Sequence.map(lambda x: x.endswith('Scaled')))]
+
+    # If there is not a preferred image we use ADNI2 processing
+    # (get the best qc if available, otherwise the original) preferring 1.5T images
+    if filtered_mprage.shape[0] < 1:
+        mprage_meta_subj_orig = mprage_meta_subj[mprage_meta_subj['Orig/Proc'] == 'Original']
+        return adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig, mayo_mri_qc_subj, preferred_field_strength=1.5)
+
+    filtered_mprage_mag = filtered_mprage
+    if len(filtered_mprage.MagStrength.unique()) > 1:
+        filtered_mprage_mag = filtered_mprage[filtered_mprage.MagStrength == 1.5]  # Select 1.5T images
+
+    scan = filtered_mprage_mag.iloc[0]
+    series_id = scan.SeriesID
+
+    qc_passed = True
+    qc = mri_quality_subj[mri_quality_subj.LONIUID == 'S' + str(scan.SeriesID)]
+    if qc.shape[0] > 0 and qc.iloc[0].PASS != 1:
+        # print 'QC found but NOT passed'
+        # print 'Subject ' + subject_id + ' - Series: ' + str(scan.SeriesID) + ' - Study: ' + str(scan.StudyID)
+        mprage_meta_subj_alt = mprage_meta_subj[(mprage_meta_subj['Orig/Proc'] == 'Original')
+                                                 & (mprage_meta_subj.Visit == visit_str)
+                                                 & (mprage_meta_subj.SeriesID != series_id)]
+
+        qc_prev_sequence = scan.Sequence
+        scan = mprage_meta_subj_alt.iloc[0]
+        series_id = scan.SeriesID
+        qc_passed = False
+
+
+    #TODO replace by the function to find if the scanner is_philips
+
+    scanner = adni1_select_scanner(subject_id, csv_dir, adnimerge, timepoint)
+
+
+    original = True
+
+    # TODO replace the condition with if is_philips
+    if scanner == 'Philips':
+
+        scan = (mprage_meta_subj[
+                    (mprage_meta_subj['Orig/Proc'] == 'Original') & (mprage_meta_subj.SeriesID == series_id)]).iloc[
+            0]
+        sequence = scan.Sequence
+
+    else:  # scan already selected above
+        sequence = scan.Sequence[:scan.Sequence.find('N3') - 2]
+        original = False
+
+    if not qc_passed:
+        if scan.Sequence == 'MP-RAGE':
+            original_img_seq = 'MPR'
+        else:  # 'MP-RAGE REPEAT'
+            original_img_seq = 'MPR-R'
+
+        processing_seq = qc_prev_sequence[qc_prev_sequence.find(';'):qc_prev_sequence.find('N3') - 2]
+        sequence = original_img_seq + processing_seq
+        # print sequence
+
+    sequence = replace_sequence_chars(sequence)
+
+    qc = mri_quality_subj[mri_quality_subj.LONIUID == 'S' + str(scan.SeriesID)]
+    if qc.shape[0] > 0 and qc.iloc[0].PASS != 1:
+        # TODO - LOG THIS
+        cprint('QC found but NOT passed')
+        cprint('Subject ' + subject_id + ' - Series: ' + str(scan.SeriesID) + ' - Study: ' + str(scan.StudyID))
+
+    return {'Subject_ID': subject_id,
+            'VISCODE': timepoint,
+            'Visit': visit_str,
+            'Sequence': sequence,
+            'Scan_Date': scan.ScanDate,
+            'Study_ID': str(scan.StudyID),
+            'Series_ID': str(scan.SeriesID),
+            'Image_ID': str(scan.ImageUID),
+            'Field_Strength': scan.MagStrength,
+            'Original': original}
+
+def adnigo_image_refactoring(csv_dir, adnimerge, subject_id, timepoint, visit_str, mprage_meta_subj, mri_quality_subj, mayo_mri_qc_subj, original_phase):
+
+    if original_phase == 'ADNI1':
+        filtered_mprage = mprage_meta_subj[(mprage_meta_subj['Orig/Proc'] == 'Processed')
+                                           & (mprage_meta_subj.MagStrength == 1.5)
+                                           & (mprage_meta_subj.Visit == visit_str)
+                                           & (mprage_meta_subj.Sequence.map(lambda x: x.endswith('Scaled')))]
+        if filtered_mprage.shape[0] > 0:
+            return adni1_image_refactoring(csv_dir, adnimerge, subject_id, timepoint, visit_str, mprage_meta_subj, mri_quality_subj, mayo_mri_qc_subj)
+
+    mprage_meta_subj_orig = mprage_meta_subj[mprage_meta_subj['Orig/Proc'] == 'Original']
+    return adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig, mayo_mri_qc_subj)

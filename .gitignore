@@ -1,3 +1,4 @@
+# Python and system files
 build/
 dist/
 examples/external-data
@@ -10,10 +11,18 @@ Clinica.egg-info
 *.lib
 *.sys
 *.so
+.DS_Store
+
+
+# Editor's files
 .idea
+.vscode
+
+# Code coverage and crash log files
 .coverage
 crash*
-.DS_Store
+
+# Clinica specific files
 clinica/lib/weighted_prototypes_lib/cpp_code/bin/CMakeCache.txt
 clinica/lib/weighted_prototypes_lib/cpp_code/bin/CMakeFiles
 clinica/lib/weighted_prototypes_lib/cpp_code/bin/ITKIOFactoryRegistration
@@ -31,3 +40,9 @@ clinica/lib/weighted_prototypes_lib/community_latest/hierarchy
 clinica/lib/weighted_prototypes_lib/community_latest/main_community.o
 clinica/lib/weighted_prototypes_lib/community_latest/main_convert.o
 clinica/lib/weighted_prototypes_lib/community_latest/main_hierarchy.o
+
+# Pytest files
+.pytest_cache/
+test/data
+
+

@@ -140,9 +140,9 @@ def dwi_to_tensor(in_dwi_mif, in_b0_mask, nthreads=2, prefix_file=None):
     _, source_file_dwi, _ = split_filename(in_dwi_mif)
 
     if prefix_file is None:
-        out_dti = op.abspath(source_file_dwi + '_model-dti_diffmodel.nii.gz')
+        out_dti = op.abspath(source_file_dwi + '_model-DTI_diffmodel.nii.gz')
     else:
-        out_dti = op.abspath(prefix_file + '_model-dti_diffmodel.nii.gz')
+        out_dti = op.abspath(prefix_file + '_model-DTI_diffmodel.nii.gz')
 
     cmd = 'dwi2tensor -mask %s %s %s -nthreads %s' \
           % (in_b0_mask, in_dwi_mif, out_dti, nthreads)
@@ -181,41 +181,41 @@ def tensor_to_metrics(in_dti, in_b0_mask, nthreads=2, prefix_file=None):
     assert(op.isfile(in_b0_mask))
 
     if prefix_file is None:
-        out_fa = op.abspath('fa_map_from_dti.nii.gz')
+        out_fa = op.abspath('FA_map_from_DTI.nii.gz')
     else:
-        out_fa = op.abspath(prefix_file + '_fa.nii.gz')
+        out_fa = op.abspath(prefix_file + '_FA.nii.gz')
     cmd = 'tensor2metric %s -nthreads %s -fa %s' % \
           (in_dti, nthreads, out_fa)
     os.system(cmd)
 
     if prefix_file is None:
-        out_md = op.abspath('md_map_from_dti.nii.gz')
+        out_md = op.abspath('MD_map_from_DTI.nii.gz')
     else:
-        out_md = op.abspath(prefix_file + '_md.nii.gz')
+        out_md = op.abspath(prefix_file + '_MD.nii.gz')
     cmd = 'tensor2metric %s -nthreads %s -adc %s' % \
           (in_dti, nthreads, out_md)
     os.system(cmd)
 
     if prefix_file is None:
-        out_ad = op.abspath('ad_map_from_dti.nii.gz')
+        out_ad = op.abspath('AD_map_from_DTI.nii.gz')
     else:
-        out_ad = op.abspath(prefix_file + '_ad.nii.gz')
+        out_ad = op.abspath(prefix_file + '_AD.nii.gz')
     cmd = 'tensor2metric %s -nthreads %s -ad %s' % \
           (in_dti, nthreads, out_ad)
     os.system(cmd)
 
     if prefix_file is None:
-        out_rd = op.abspath('rd_map_from_dti.nii.gz')
+        out_rd = op.abspath('RD_map_from_dti.nii.gz')
     else:
-        out_rd = op.abspath(prefix_file + '_rd.nii.gz')
+        out_rd = op.abspath(prefix_file + '_RD.nii.gz')
     cmd = 'tensor2metric %s -nthreads %s -rd %s' % \
           (in_dti, nthreads, out_rd)
     os.system(cmd)
 
     if prefix_file is None:
-        out_ev = op.abspath('dec_fa_map_from_dti.nii.gz')
+        out_ev = op.abspath('DECFA_map_from_DTI.nii.gz')
     else:
-        out_ev = op.abspath(prefix_file + '_decfa.nii.gz')
+        out_ev = op.abspath(prefix_file + '_DECFA.nii.gz')
     cmd = 'tensor2metric %s -nthreads %s -vector %s' % \
           (in_dti, nthreads, out_ev)
     os.system(cmd)
@@ -487,7 +487,7 @@ def dwi_container_from_filename(dwi_filename):
 
     if m is None:
         raise ValueError(
-            'Input filename is not in a BIDS or CAPS compliant format.' 
+            'Input filename is not in a BIDS or CAPS compliant format.'
             ' It does not contain the subject and session information.')
 
     subject = m.group(1)
@@ -571,7 +571,7 @@ def rename_into_caps(in_caps_dwi,
     rename_fa.inputs.in_file = in_norm_fa
     rename_fa.inputs.format_string = os.path.join(
         base_dir_norm_fa,
-        bids_identifier + "_space-MNI152Lin_res-1x1x1_fa.nii.gz")
+        bids_identifier + "_space-MNI152Lin_res-1x1x1_FA.nii.gz")
     out_caps_fa = rename_fa.run()
 
     # Rename into CAPS MD:
@@ -579,7 +579,7 @@ def rename_into_caps(in_caps_dwi,
     rename_md.inputs.in_file = in_norm_md
     rename_md.inputs.format_string = os.path.join(
         base_dir_norm_md,
-        bids_identifier + "_space-MNI152Lin_res-1x1x1_md.nii.gz")
+        bids_identifier + "_space-MNI152Lin_res-1x1x1_MD.nii.gz")
     out_caps_md = rename_md.run()
 
     # Rename into CAPS AD:
@@ -587,7 +587,7 @@ def rename_into_caps(in_caps_dwi,
     rename_ad.inputs.in_file = in_norm_ad
     rename_ad.inputs.format_string = os.path.join(
         base_dir_norm_ad,
-        bids_identifier + "_space-MNI152Lin_res-1x1x1_ad.nii.gz")
+        bids_identifier + "_space-MNI152Lin_res-1x1x1_AD.nii.gz")
     out_caps_ad = rename_ad.run()
 
     # Rename into CAPS RD:
@@ -595,7 +595,7 @@ def rename_into_caps(in_caps_dwi,
     rename_rd.inputs.in_file = in_norm_rd
     rename_rd.inputs.format_string = os.path.join(
         base_dir_norm_rd,
-        bids_identifier + "_space-MNI152Lin_res-1x1x1_rd.nii.gz")
+        bids_identifier + "_space-MNI152Lin_res-1x1x1_RD.nii.gz")
     out_caps_rd = rename_rd.run()
 
     # Rename into CAPS B-spline transform:

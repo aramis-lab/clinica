@@ -27,7 +27,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         - The RealingUnwarp node is still under revision as a pull request
 
     Todos:
-        - [ ] Don't read inputs if not needed (i.e. --unwarp or no)
+        - [x] Don't read inputs if not needed (i.e. --unwarp or no)
         - [x] Read parameters from sidecar `*.json` files.
         - [x] Add support of gzipped nifti inputs.
         - [x] Replace reg_node target image by the brain only using c1 + c2 + c3 dilated-eroded-filled.
@@ -69,11 +69,13 @@ class fMRIPreprocessing(cpe.Pipeline):
             A list of (string) input fields name.
         """
 
-        input_fields = ['et', 'blipdir', 'tert', 'time_repetition', 'num_slices',
-                'magnitude1', 'slice_order', 'ref_slice',
-                'time_acquisition', 'phasediff', 'bold', 'T1w']
-
-        return input_fields
+        if ('unwarping' in self.parameters) and self.parameters['unwarping']:
+	        return ['et', 'blipdir', 'tert', 'time_repetition', 'num_slices',
+	                'magnitude1', 'slice_order', 'ref_slice',
+	                'time_acquisition', 'phasediff', 'bold', 'T1w']
+    	else:
+	        return ['time_repetition', 'num_slices', 'slice_order', 'ref_slice',
+	                'time_acquisition', 'bold', 'T1w']
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipelines.
@@ -113,14 +115,16 @@ class fMRIPreprocessing(cpe.Pipeline):
         # I remove the 'sub-' prefix that is not considered by the pybids'
         # layout object.
         subject_regex = '|'.join(s[4:] for s in self.subjects)
-        read_node.inputs.magnitude1 = self.bids_layout.get(return_type='file',
-                                                           type='magnitude1',
-                                                           extensions='nii.gz',
-                                                           subject=subject_regex)
-        read_node.inputs.phasediff = self.bids_layout.get(return_type='file',
-                                                          type='phasediff',
-                                                          extensions='nii.gz',
-                                                          subject=subject_regex)
+
+        if ('unwarping' in self.parameters) and self.parameters['unwarping']:
+	        read_node.inputs.magnitude1 = self.bids_layout.get(return_type='file',
+	                                                           type='magnitude1',
+	                                                           extensions='nii.gz',
+	                                                           subject=subject_regex)
+	        read_node.inputs.phasediff = self.bids_layout.get(return_type='file',
+	                                                          type='phasediff',
+	                                                          extensions='nii.gz',
+	                                                          subject=subject_regex)
         read_node.inputs.bold = self.bids_layout.get(return_type='file',
                                                      type='bold',
                                                      extensions='nii.gz',
@@ -144,23 +148,26 @@ class fMRIPreprocessing(cpe.Pipeline):
 
         for i in range(len(self.subjects)):
 
-            # From phasediff json file
-            phasediff_json = self.bids_layout.get(return_type='file',
-                                                  type='phasediff',
-                                                  extensions='json',
-                                                  subject=self.subjects[i][4:])
-            with open(phasediff_json[0]) as json_file:
-                data = json.load(json_file)
-                # SPM echo times
-                read_node.inputs.et.append([data['EchoTime1'],
-                                            data['EchoTime2']])
-                # SPM blip direction
-                # TODO: Verifiy that it is the correct way to get the blipdir
-                blipdir_raw = data['PhaseEncodingDirection']
-                if len(blipdir_raw) > 1 and blipdir_raw[1]=='-':
-                    read_node.inputs.blipdir.append(-1)
-                else:
-                    read_node.inputs.blipdir.append(1)
+            cprint('Loading subject "{sub}"...'.format(sub=self.subjects[i]))
+
+            if self.parameters['unwarping']:
+                # From phasediff json file
+                phasediff_json = self.bids_layout.get(return_type='file',
+                                                      type='phasediff',
+                                                      extensions='json',
+                                                      subject=self.subjects[i][4:])
+                with open(phasediff_json[0]) as json_file:
+                    data = json.load(json_file)
+                    # SPM echo times
+                    read_node.inputs.et.append([data['EchoTime1'],
+                                                data['EchoTime2']])
+                    # SPM blip direction
+                    # TODO: Verifiy that it is the correct way to get the blipdir
+                    blipdir_raw = data['PhaseEncodingDirection']
+                    if len(blipdir_raw) > 1 and blipdir_raw[1]=='-':
+                        read_node.inputs.blipdir.append(-1)
+                    else:
+                        read_node.inputs.blipdir.append(1)
 
             # From func json file
             func_json = self.bids_layout.get(return_type='file',
@@ -187,13 +194,18 @@ class fMRIPreprocessing(cpe.Pipeline):
 
             cprint(read_node.inputs)
 
-
+        if ('unwarping' in self.parameters) and self.parameters['unwarping']:
+	        self.connect([
+	            # Reading BIDS json
+	            (read_node, self.input_node, [('et', 'et')]),
+	            (read_node, self.input_node, [('blipdir', 'blipdir')]),
+	            (read_node, self.input_node, [('tert', 'tert')]),
+	            # Reading BIDS files
+	            (read_node, self.input_node, [('phasediff', 'phasediff')]),
+	        ])
 
         self.connect([
             # Reading BIDS json
-            (read_node, self.input_node, [('et', 'et')]),
-            (read_node, self.input_node, [('blipdir', 'blipdir')]),
-            (read_node, self.input_node, [('tert', 'tert')]),
             (read_node, self.input_node, [('time_repetition', 'time_repetition')]),
             (read_node, self.input_node, [('num_slices', 'num_slices')]),
             (read_node, self.input_node, [('slice_order', 'slice_order')]),
@@ -201,7 +213,6 @@ class fMRIPreprocessing(cpe.Pipeline):
             (read_node, self.input_node, [('time_acquisition', 'time_acquisition')]),
             # Reading BIDS files
             (read_node, self.input_node, [('magnitude1', 'magnitude1')]),
-            (read_node, self.input_node, [('phasediff', 'phasediff')]),
             (read_node, self.input_node, [('bold', 'bold')]),
             (read_node, self.input_node, [('T1w', 'T1w')]),
         ])
@@ -272,7 +283,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         import nipype.interfaces.spm as spm
         import nipype.pipeline.engine as npe
         from clinica.utils.io import zip_nii, unzip_nii
-
+        
         # Zipping
         # =======
         unzip_node = npe.MapNode(name='Unzipping',
@@ -400,6 +411,8 @@ class fMRIPreprocessing(cpe.Pipeline):
                 (self.input_node, fm_node, [('et', 'et')]),
                 (self.input_node, fm_node, [('blipdir', 'blipdir')]),
                 (self.input_node, fm_node, [('tert', 'tert')]),
+	            (self.input_node, unzip_phasediff, [('phasediff', 'in_file')]),
+	            (self.input_node, unzip_magnitude1, [('magnitude1', 'in_file')]),
                 (unzip_magnitude1, fm_node, [('out_file', 'magnitude')]),
                 (unzip_phasediff, fm_node, [('out_file', 'phase')]),
                 (unzip_bold, fm_node, [('out_file', 'epi')]),
@@ -419,8 +432,6 @@ class fMRIPreprocessing(cpe.Pipeline):
         self.connect([
             # Unzipping
             (self.input_node, unzip_T1w, [('T1w', 'in_file')]),
-            (self.input_node, unzip_phasediff, [('phasediff', 'in_file')]),
-            (self.input_node, unzip_magnitude1, [('magnitude1', 'in_file')]),
             (self.input_node, unzip_bold, [('bold', 'in_file')]),
             # Slice timing correction
             (unzip_bold, st_node, [('out_file', 'in_files')]),

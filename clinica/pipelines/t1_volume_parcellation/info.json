@@ -1,0 +1,12 @@
+{
+    "id": "aramislab/t1-volume-parcellation",
+    "author": "Simona Bottani",
+    "version": "0.1.0",
+    "dependencies": [
+        {
+            "type": "binary",
+            "name": "clinica",
+            "version": ">=0.1.0"
+        }
+    ]
+}

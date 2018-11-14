@@ -9,7 +9,7 @@
             "version": ">=6"
         },
         {
-            "type": "toolbox",
+            "type": "software",
             "name": "spm",
             "version": ">=6"
         },

@@ -190,8 +190,7 @@ class VertexB_RepHoldOut_dualSVM(base.MLWorkflow):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, output_dir, image_type='fdg', fwhm=20,
                  precomputed_kernel=None, n_threads=15, n_iterations=100, test_size=0.3, grid_search_folds=10,
-                 balanced=True, c_range=np.logspace(-10, 2, 1000)):
-
+                 balanced=True, c_range=np.logspace(-10, 2, 1000), splits_indices=None):
 
         self._output_dir = output_dir
         self._n_threads = n_threads
@@ -200,6 +199,7 @@ class VertexB_RepHoldOut_dualSVM(base.MLWorkflow):
         self._grid_search_folds = grid_search_folds
         self._balanced = balanced
         self._c_range = c_range
+        self._splits_indices = splits_indices
 
 
         self._input = input.CAPSVertexBasedInput(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, fwhm,
@@ -223,19 +223,14 @@ class VertexB_RepHoldOut_dualSVM(base.MLWorkflow):
                                                      n_threads=self._n_threads)
 
         self._validation = validation.RepeatedHoldOut(self._algorithm, n_iterations=self._n_iterations, test_size=self._test_size)
-
-        classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads)
+        classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads, splits_indices=self._splits_indices)
         classifier_dir = path.join(self._output_dir, 'classifier')
         if not path.exists(classifier_dir):
             os.makedirs(classifier_dir)
-
         self._algorithm.save_classifier(classifier, classifier_dir)
         self._algorithm.save_parameters(best_params, classifier_dir)
-
-
         weights = self._algorithm.save_weights(classifier, x, classifier_dir)
         self._input.save_weights_as_datasurface(weights, classifier_dir)
-
         self._validation.save_results(self._output_dir)
 
 
@@ -288,7 +283,7 @@ class RB_RepHoldOut_DualSVM(base.MLWorkflow):
 
 
 class RB_RepHoldOut_LogisticRegression(base.MLWorkflow):
-    
+
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, atlas,
                  output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3,
                  grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17), splits_indices=None):
@@ -305,20 +300,20 @@ class RB_RepHoldOut_LogisticRegression(base.MLWorkflow):
                                                  image_type, atlas, pvc)
         self._validation = None
         self._algorithm = None
-    
+
     def run(self):
-        
+
         x = self._input.get_x()
         y = self._input.get_y()
-        
+
         self._algorithm = algorithm.LogisticReg(x, y, balanced=self._balanced,
                                                 grid_search_folds=self._grid_search_folds,
                                                 c_range=self._c_range,
                                                 n_threads=self._n_threads)
-            
+
         self._validation = validation.RepeatedHoldOut(self._algorithm, n_iterations=self._n_iterations, test_size=self._test_size)
         classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads, splits_indices=self._splits_indices)
-                                                     
+
         classifier_dir = os.path.join(self._output_dir, 'classifier')
         if not path.exists(classifier_dir):
             os.makedirs(classifier_dir)
@@ -500,3 +495,317 @@ class VB_LearningCurveRepHoldOut_DualSVM(base.MLWorkflow):
             self._input.save_weights_as_nifti(weights, classifier_dir)
 
         self._validation.save_results(self._output_dir)
+
+
+
+
+class RB_RepKFold_DualSVM(base.MLWorkflow):
+
+    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type,  atlas,
+                 output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3,n_folds = 10,
+                 grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17), splits_indices=None):
+        self._output_dir = output_dir
+        self._n_threads = n_threads
+        self._n_iterations = n_iterations
+        self._test_size = test_size
+        self._grid_search_folds = grid_search_folds
+        self._balanced = balanced
+        self._c_range = c_range
+        self._n_folds = n_folds
+        self._splits_indices = splits_indices
+
+        self._input = input.CAPSRegionBasedInput(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
+                                                 image_type, atlas, pvc)
+        self._validation = None
+        self._algorithm = None
+
+
+    def run(self):
+
+        x = self._input.get_x()
+        y = self._input.get_y()
+        kernel = self._input.get_kernel()
+
+        self._algorithm = algorithm.DualSVMAlgorithm(kernel,
+                                                     y,
+                                                     balanced=self._balanced,
+                                                     grid_search_folds=self._grid_search_folds,
+                                                     c_range=self._c_range,
+                                                     n_threads=self._n_threads)
+
+        self._validation = validation.RepeatedKFoldCV(self._algorithm)
+
+        classifier, best_params, results = self._validation.validate(y, n_iterations=self._n_iterations,
+                                                                     n_folds=self._n_folds, n_threads=self._n_threads)
+
+        classifier_dir = path.join(self._output_dir, 'classifier')
+        if not path.exists(classifier_dir):
+            os.makedirs(classifier_dir)
+
+        self._algorithm.save_classifier(classifier, classifier_dir)
+        weights = self._algorithm.save_weights(classifier, x, classifier_dir)
+        self._algorithm.save_parameters(best_params, classifier_dir)
+
+        self._validation.save_results(self._output_dir)
+
+        self._input.save_weights_as_nifti(weights, classifier_dir)
+
+
+class TB_RepHoldOut_DualSVM(base.MLWorkflow):
+
+    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type,  atlas, dataset,
+                 output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3,
+                 grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17), splits_indices=None):
+        self._output_dir = output_dir
+        self._n_threads = n_threads
+        self._n_iterations = n_iterations
+        self._test_size = test_size
+        self._grid_search_folds = grid_search_folds
+        self._balanced = balanced
+        self._c_range = c_range
+        self._splits_indices = splits_indices
+
+        self._input = input.CAPSTSVBasedInput(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type,
+                                              atlas, dataset, pvc)
+
+
+        self._validation = None
+        self._algorithm = None
+
+    def run(self):
+
+        x = self._input.get_x()
+        y = self._input.get_y()
+        kernel = self._input.get_kernel()
+
+        self._algorithm = algorithm.DualSVMAlgorithm(kernel,
+                                                     y,
+                                                     balanced=self._balanced,
+                                                     grid_search_folds=self._grid_search_folds,
+                                                     c_range=self._c_range,
+                                                     n_threads=self._n_threads)
+
+        self._validation = validation.RepeatedHoldOut(self._algorithm, n_iterations=self._n_iterations, test_size=self._test_size)
+
+        classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads, splits_indices=self._splits_indices)
+        classifier_dir = path.join(self._output_dir, 'classifier')
+        if not path.exists(classifier_dir):
+            os.makedirs(classifier_dir)
+
+        self._algorithm.save_classifier(classifier, classifier_dir)
+        self._algorithm.save_parameters(best_params, classifier_dir)
+        weights = self._algorithm.save_weights(classifier, x, classifier_dir)
+
+        #self._input.save_weights_as_nifti(weights, classifier_dir)
+
+        self._validation.save_results(self._output_dir)
+
+class TB_RepHoldOut_RandomForest(base.MLWorkflow):
+    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, atlas, dataset,
+                 output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3,
+                 grid_search_folds=10, balanced=True, n_estimators_range=(100, 200, 400),
+                 max_depth_range=[None], min_samples_split_range=[2],
+                 max_features_range=('auto', 0.25, 0.5), splits_indices=None):
+
+        self._output_dir = output_dir
+        self._n_threads = n_threads
+        self._n_iterations = n_iterations
+        self._test_size = test_size
+        self._grid_search_folds = grid_search_folds
+        self._balanced = balanced
+        self._n_estimators_range = n_estimators_range
+        self._max_depth_range = max_depth_range
+        self._min_samples_split_range = min_samples_split_range
+        self._max_features_range = max_features_range
+        self._splits_indices = splits_indices
+
+        self._input = input.CAPSTSVBasedInput(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
+                                              image_type, atlas, dataset, pvc)
+        self._validation = None
+        self._algorithm = None
+
+    def run(self):
+
+        x = self._input.get_x()
+        y = self._input.get_y()
+
+        self._algorithm = algorithm.RandomForest(x, y, balanced=self._balanced,
+                                                 grid_search_folds=self._grid_search_folds,
+                                                 n_estimators_range=self._n_estimators_range,
+                                                 max_depth_range=self._max_depth_range,
+                                                 min_samples_split_range=self._min_samples_split_range,
+                                                 max_features_range=self._max_features_range,
+                                                 n_threads=self._n_threads)
+
+        self._validation = validation.RepeatedHoldOut(self._algorithm, n_iterations=self._n_iterations, test_size=self._test_size)
+        classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads, splits_indices=self._splits_indices)
+
+        classifier_dir = os.path.join(self._output_dir, 'classifier')
+        if not path.exists(classifier_dir):
+            os.makedirs(classifier_dir)
+
+        self._algorithm.save_classifier(classifier, classifier_dir)
+        self._algorithm.save_parameters(best_params, classifier_dir)
+        weights = self._algorithm.save_weights(classifier, classifier_dir)
+
+        #self._input.save_weights_as_nifti(weights, classifier_dir)
+
+        #self._validation.save_results(self._output_dir)
+
+
+
+class VB_RepHoldOut_DualSVM(base.MLWorkflow):
+
+    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, output_dir, fwhm=0,
+                 modulated="on", pvc=None, precomputed_kernel=None, mask_zeros=True, n_threads=15, n_iterations=100,
+                 test_size=0.3, grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17), splits_indices=None):
+        self._output_dir = output_dir
+        self._n_threads = n_threads
+        self._n_iterations = n_iterations
+        self._test_size = test_size
+        self._grid_search_folds = grid_search_folds
+        self._balanced = balanced
+        self._c_range = c_range
+        self._splits_indices = splits_indices
+
+        self._input = input.CAPSVoxelBasedInput(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
+                                                image_type, fwhm, modulated, pvc, mask_zeros, precomputed_kernel)
+
+        self._validation = None
+        self._algorithm = None
+
+    def run(self):
+
+        x = self._input.get_x()
+        y = self._input.get_y()
+        kernel = self._input.get_kernel()
+
+        self._algorithm = algorithm.DualSVMAlgorithm(kernel,
+                                                     y,
+                                                     balanced=self._balanced,
+                                                     grid_search_folds=self._grid_search_folds,
+                                                     c_range=self._c_range,
+                                                     n_threads=self._n_threads)
+
+        self._validation = validation.RepeatedHoldOut(self._algorithm, n_iterations=self._n_iterations, test_size=self._test_size)
+
+        classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads, splits_indices=self._splits_indices)
+        classifier_dir = path.join(self._output_dir, 'classifier')
+        if not path.exists(classifier_dir):
+            os.makedirs(classifier_dir)
+
+        self._algorithm.save_classifier(classifier, classifier_dir)
+        self._algorithm.save_parameters(best_params, classifier_dir)
+        weights = self._algorithm.save_weights(classifier, x, classifier_dir)
+
+        self._input.save_weights_as_nifti(weights, classifier_dir)
+
+        self._validation.save_results(self._output_dir)
+
+
+
+
+###############################################svm reg
+
+class VBREG_RepHoldOut_DualSVM(base.MLWorkflow):
+
+    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, output_dir, fwhm=0,
+                 modulated="on", pvc=None, precomputed_kernel=None, mask_zeros=True, n_threads=15, n_iterations=100,
+                 test_size=0.3, grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17), splits_indices=None):
+        self._output_dir = output_dir
+        self._n_threads = n_threads
+        self._n_iterations = n_iterations
+        self._test_size = test_size
+        self._grid_search_folds = grid_search_folds
+        self._balanced = balanced
+        self._c_range = c_range
+        self._splits_indices = splits_indices
+
+        self._input = input.CAPSVoxelBasedInputREGSVM(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
+                                                image_type, fwhm, modulated, pvc, mask_zeros, precomputed_kernel)
+
+        self._validation = None
+        self._algorithm = None
+
+    def run(self):
+
+        x = self._input.get_x()
+        y = self._input.get_y()
+        kernel = self._input.get_kernel()
+
+        self._algorithm = algorithm.DualSVMAlgorithm(kernel,
+                                                     y,
+                                                     balanced=self._balanced,
+                                                     grid_search_folds=self._grid_search_folds,
+                                                     c_range=self._c_range,
+                                                     n_threads=self._n_threads)
+
+        self._validation = validation.RepeatedHoldOut(self._algorithm, n_iterations=self._n_iterations, test_size=self._test_size)
+
+        classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads, splits_indices=self._splits_indices)
+        classifier_dir = path.join(self._output_dir, 'classifier')
+        if not path.exists(classifier_dir):
+            os.makedirs(classifier_dir)
+
+        self._algorithm.save_classifier(classifier, classifier_dir)
+        self._algorithm.save_parameters(best_params, classifier_dir)
+        weights = self._algorithm.save_weights(classifier, x, classifier_dir)
+
+        self._input.save_weights_as_nifti(weights, classifier_dir)
+
+        self._validation.save_results(self._output_dir)
+
+
+class RB_RepHoldOut_RandomForest_Multiclass(base.MLWorkflow):
+
+    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, atlas,
+                 output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3,
+                 grid_search_folds=10, balanced=True, n_estimators_range=(100, 200, 400),
+                 max_depth_range=[None], min_samples_split_range=[2],
+                 max_features_range=('auto', 0.25, 0.5), splits_indices=None):
+
+        self._output_dir = output_dir
+        self._n_threads = n_threads
+        self._n_iterations = n_iterations
+        self._test_size = test_size
+        self._grid_search_folds = grid_search_folds
+        self._balanced = balanced
+        self._n_estimators_range = n_estimators_range
+        self._max_depth_range = max_depth_range
+        self._min_samples_split_range = min_samples_split_range
+        self._max_features_range = max_features_range
+        self._splits_indices = splits_indices
+
+        self._input = input.CAPSRegionBasedInput(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
+                                                 image_type, atlas, pvc)
+        self._validation = None
+        self._algorithm = None
+
+    def run(self):
+
+        x = self._input.get_x()
+        y = self._input.get_y()
+
+        self._algorithm = algorithm.RandomForest(x, y, balanced=self._balanced,
+                                                 grid_search_folds=self._grid_search_folds,
+                                                 n_estimators_range=self._n_estimators_range,
+                                                 max_depth_range=self._max_depth_range,
+                                                 min_samples_split_range=self._min_samples_split_range,
+                                                 max_features_range=self._max_features_range,
+                                                 n_threads=self._n_threads)
+
+        self._validation = validation.RepeatedHoldOut(self._algorithm, n_iterations=self._n_iterations, test_size=self._test_size)
+        classifier, best_params, results = self._validation.validate(y, n_threads=self._n_threads, splits_indices=self._splits_indices)
+
+        classifier_dir = os.path.join(self._output_dir, 'classifier')
+        if not path.exists(classifier_dir):
+            os.makedirs(classifier_dir)
+
+        self._algorithm.save_classifier(classifier, classifier_dir)
+        self._algorithm.save_parameters(best_params, classifier_dir)
+        weights = self._algorithm.save_weights(classifier, classifier_dir)
+
+        self._input.save_weights_as_nifti(weights, classifier_dir)
+
+        self._validation.save_results(self._output_dir)
+

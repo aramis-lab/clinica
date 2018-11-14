@@ -55,6 +55,7 @@ class AdniToBids(Converter):
         from clinica.utils.stream import cprint
         import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
 
+
         clinic_specs_path = path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'data',
                                       'clinical_specifications_adni.xlsx')
         try:

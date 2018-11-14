@@ -340,25 +340,25 @@ class DWIProcessingDTI(cpe.Pipeline):
             input_names=['in_registered_map', 'name_map', 'prefix_file'],
             output_names=['atlas_statistics_list'],
             function=utils.statistics_on_atlases), name='ScalarAnalysisForFA')
-        scalar_analysis_fa.inputs.name_map = 'fa'
+        scalar_analysis_fa.inputs.name_map = 'FA'
 
         scalar_analysis_md = npe.Node(interface=nutil.Function(
             input_names=['in_registered_map', 'name_map', 'prefix_file'],
             output_names=['atlas_statistics_list'],
             function=utils.statistics_on_atlases), name='ScalarAnalysisForMD')
-        scalar_analysis_md.inputs.name_map = 'md'
+        scalar_analysis_md.inputs.name_map = 'MD'
 
         scalar_analysis_ad = npe.Node(interface=nutil.Function(
             input_names=['in_registered_map', 'name_map', 'prefix_file'],
             output_names=['atlas_statistics_list'],
             function=utils.statistics_on_atlases), name='ScalarAnalysisForAD')
-        scalar_analysis_ad.inputs.name_map = 'ad'
+        scalar_analysis_ad.inputs.name_map = 'AD'
 
         scalar_analysis_rd = npe.Node(interface=nutil.Function(
             input_names=['in_registered_map', 'name_map', 'prefix_file'],
             output_names=['atlas_statistics_list'],
             function=utils.statistics_on_atlases), name='ScalarAnalysisForRD')
-        scalar_analysis_rd.inputs.name_map = 'rd'
+        scalar_analysis_rd.inputs.name_map = 'RD'
 
         # Connection
         # ==========

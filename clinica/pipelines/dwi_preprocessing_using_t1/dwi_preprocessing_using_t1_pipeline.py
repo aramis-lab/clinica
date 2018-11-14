@@ -2,7 +2,7 @@
 
 import clinica.pipelines.engine as cpe
 
-__author__ = ["Thomas Jacquemont", "Alexandre Routier"]
+__author__ = ["Alexandre Routier", "Junhao Wen", "Thomas Jacquemont"]
 __copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
 __credits__ = ["Nipype"]
 __license__ = "See LICENSE.txt file"
@@ -82,7 +82,7 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
         Returns:
             A list of (string) input fields name.
         """
-        input_list = ['T1w', 'dwi', 'bvec', 'bval']
+        input_list = ['T1w', 'dwi', 'bvec', 'bval', 'epi_param']
         return input_list
 
     def get_output_fields(self):
@@ -303,15 +303,14 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.
         """
-        import dwi_preprocessing_using_t1_workflows as workflows
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.fsl as fsl
 
         from clinica.utils.dwi import prepare_reference_b0
-        from clinica.workflows.dwi_preprocessing import ecc_pipeline
-        from clinica.workflows.dwi_preprocessing import hmc_pipeline
+        from clinica.workflows.dwi_preprocessing import eddy_fsl_pipeline
+        from clinica.workflows.dwi_preprocessing import epi_pipeline
         from clinica.workflows.dwi_preprocessing import remove_bias
 
         # Nodes creation
@@ -327,18 +326,12 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
         # Mask b0 for computations purposes
         mask_b0_pre = npe.Node(fsl.BET(frac=0.3, mask=True, robust=True),
                                name='PreMaskB0')
-        # Head-motion correction
-        hmc = hmc_pipeline(name='HeadMotionCorrection')
-        # Eddy-currents correction
-        ecc = ecc_pipeline(name='EddyCurrentCorrection')
+        # Head-motion correction + Eddy-currents correction
+        eddy_fsl = eddy_fsl_pipeline(self.parameters['epi_param'], name='HeadMtionandEddyCurrentCorrection')
         # Susceptibility distortion correction using T1w image
-        sdc = workflows.susceptibility_distortion_correction_using_t1(
-            name='SusceptibilityDistortionCorrection')
+        sdc = epi_pipeline(name='SusceptibilityDistortionCorrection')
         # Remove bias correction
         bias = remove_bias(name='RemoveBias')
-        # Apply all corrections
-        aac = workflows.apply_all_corrections_using_ants(
-            name='ApplyAllCorrections')
 
         # Connection
         # ==========
@@ -350,32 +343,21 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
                                            ('bvec', 'in_bvec')]),  # noqa
             # Mask b0 before corrections
             (prepare_b0, mask_b0_pre, [('out_reference_b0', 'in_file')]),  # noqa
-            # Head-motion correction
-            (prepare_b0,  hmc, [('out_b0_dwi_merge', 'inputnode.in_file'),  # noqa
-                               ('out_updated_bval',  'inputnode.in_bval'),  # noqa
-                               ('out_updated_bvec',  'inputnode.in_bvec')]),  # noqa
-            (mask_b0_pre, hmc, [('mask_file',        'inputnode.in_mask')]),  # noqa
-            # Eddy-current correction
-            (hmc,         ecc, [('outputnode.out_xfms', 'inputnode.in_xfms')]),  # noqa
-            (prepare_b0,  ecc, [('out_b0_dwi_merge',    'inputnode.in_file')]),  # noqa
-            (prepare_b0,  ecc, [('out_updated_bval',    'inputnode.in_bval')]),  # noqa
-            (mask_b0_pre, ecc, [('mask_file',           'inputnode.in_mask')]),  # noqa
+            # Head-motion correction + eddy current correction
+            (prepare_b0, eddy_fsl, [('out_b0_dwi_merge', 'inputnode.in_file'),
+                                    ('out_updated_bval', 'inputnode.in_bval'),
+                                    ('out_updated_bvec', 'inputnode.in_bvec'),
+                                    ('out_reference_b0', 'inputnode.ref_b0')]),
+            (mask_b0_pre, eddy_fsl, [('mask_file', 'inputnode.in_mask')]),
             # Magnetic susceptibility correction
-            (self.input_node, sdc, [('T1w',                 'inputnode.in_t1')]),  # noqa
-            (ecc,             sdc, [('outputnode.out_file', 'inputnode.in_dwi')]),  # noqa
-            (hmc,             sdc, [('outputnode.out_bvec', 'inputnode.in_bvec')]),  # noqa
-            # Apply all corrections
-            (prepare_b0,      aac, [('out_b0_dwi_merge',    'inputnode.in_dwi')]),  # noqa
-            (hmc,             aac, [('outputnode.out_xfms', 'inputnode.in_hmc')]),  # noqa
-            (ecc,             aac, [('outputnode.out_xfms', 'inputnode.in_ecc')]),  # noqa
-            (sdc,             aac, [('outputnode.out_warp', 'inputnode.in_sdc_syb')]),  # noqa
-            (self.input_node, aac, [('T1w',                 'inputnode.in_t1')]),  # noqa
-            # Bias correction
-            (aac, bias, [('outputnode.out_file', 'inputnode.in_file')]),
-            # Outputnode:
+            (eddy_fsl, sdc, [('outputnode.out_corrected', 'inputnode.DWI')]),
+            (self.input_node, sdc, [('T1w', 'inputnode.T1')]),
+            (eddy_fsl, sdc, [('outputnode.out_rotated_bvecs', 'inputnode.bvec')]),
 
+            # Bias correction
+            (sdc, bias, [('outputnode.DWIs_epicorrected', 'inputnode.in_file')]),
+            # Outputnode:
             (bias,       self.output_node, [('outputnode.out_file', 'preproc_dwi')]),  # noqa
-            #(hmc,        self.output_node, [('outputnode.out_bvec', 'preproc_bvec')]),  # noqa
             (sdc,        self.output_node, [('outputnode.out_bvec', 'preproc_bvec')]),  # noqa
             (prepare_b0, self.output_node, [('out_updated_bval',    'preproc_bval')]),  # noqa
             (bias,       self.output_node, [('outputnode.b0_mask',  'b0_mask')])   # noqa

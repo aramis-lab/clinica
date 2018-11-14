@@ -11,6 +11,7 @@ from clinica.pipelines.machine_learning import base
 import clinica.pipelines.machine_learning.voxel_based_io as vbio
 import clinica.pipelines.machine_learning.vertex_based_io as vtxbio
 import clinica.pipelines.machine_learning.region_based_io as rbio
+import clinica.pipelines.machine_learning.tsv_based_io as tbio
 import clinica.pipelines.machine_learning.svm_utils as utils
 
 
@@ -394,3 +395,169 @@ class CAPSVertexBasedInput(CAPSInput):
 
     def save_weights_as_nifti(self, weights, output_dir):
         pass
+
+
+class CAPSTSVBasedInput(CAPSInput):
+
+    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, atlas, dataset,
+                 pvc=None, precomputed_kernel=None):
+        """
+
+        Args:
+            caps_directory:
+            subjects_visits_tsv:
+            diagnoses_tsv:
+            group_id:
+            image_type: 'T1', 'fdg', 'av45', 'pib' or 'flute'
+            atlas:
+            precomputed_kernel:
+        """
+
+        super(CAPSTSVBasedInput, self).__init__(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
+                                                image_type, precomputed_kernel)
+
+        self._atlas = atlas
+        self._pvc = pvc
+        self._dataset = dataset
+
+        self._orig_shape = None
+        self._data_mask = None
+
+        if atlas not in ['AAL2', 'Neuromorphometrics', 'AICHA', 'LPBA40', 'Hammers']:
+            raise Exception("Incorrect atlas name. It must be one of the values 'AAL2', 'Neuromorphometrics', 'AICHA', 'LPBA40', 'Hammers' ")
+
+    def get_images(self):
+        """
+
+        Returns: string
+
+        """
+
+        pass
+
+
+    def get_x(self):
+        """
+
+        Returns: a numpy 2d-array.
+
+        """
+
+        #if self._x is not None:
+        #    return self._x
+
+
+
+        print 'Loading TSV subjects'
+        string = str('group-' + self._group_id + '_T1w_space-' + self._atlas + '_map-graymatter')
+
+        self._x = tbio.load_data(string, self._caps_directory, self._subjects, self._sessions, self._dataset)
+
+        print 'Subjects loaded'
+
+        return self._x
+
+    def save_weights_as_nifti(self, weights, output_dir):
+        """
+
+        Args:
+            weights:
+            output_dir:
+
+        Returns:
+
+        """
+
+        #output_filename = path.join(output_dir, 'weights.nii.gz')
+
+
+        #rbio.weights_to_nifti(weights, self._atlas, output_filename)
+        pass
+
+
+class CAPSVoxelBasedInputREGSVM(CAPSInput):
+
+    def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, fwhm=0,
+                 modulated="on", pvc=None, mask_zeros=True, precomputed_kernel=None):
+        """
+
+        Args:
+            caps_directory:
+            subjects_visits_tsv:
+            diagnoses_tsv:
+            group_id:
+            image_type: 'T1', 'fdg', 'av45', 'pib' or 'flute'
+            fwhm:
+            modulated:
+            mask_zeros:
+            precomputed_kernel:
+        """
+
+        super(CAPSVoxelBasedInputREGSVM, self).__init__(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
+                                                  image_type, precomputed_kernel=precomputed_kernel)
+
+        self._fwhm = fwhm
+        self._modulated = modulated
+        self._pvc = pvc
+        self._mask_zeros = mask_zeros
+        self._orig_shape = None
+        self._data_mask = None
+
+        if modulated not in ['on', 'off']:
+            raise Exception("Incorrect modulation parameter. It must be one of the values 'on' or 'off'")
+
+    def get_images(self):
+        """
+
+        Returns: a list of filenames
+
+        """
+        if self._images is not None:
+            return self._images
+
+        if self._image_type == 'T1':
+            fwhm = '' if self._fwhm == 0 else '_fwhm-%dmm' % int(self._fwhm)
+
+            self._images = [path.join(self._caps_directory,
+                                      'regul_%s_%s_T1w_segm-graymatter_space-Ixi549Space_modulated-%s%s_probability.nii'
+                                      % (self._subjects[i], self._sessions[i], self._modulated, fwhm))
+                            for i in range(len(self._subjects))]
+        else:
+            pvc = '' if self._pvc is None else '_pvc-%s' % self._pvc
+            fwhm = '' if self._fwhm == 0 else '_fwhm-%dmm' % int(self._fwhm)
+            suvr = 'pons' if self._image_type == 'fdg' else 'cerebellumPons'
+            self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
+                                      'pet/preprocessing/group-' + self._group_id,
+                                      '%s_%s_task-rest_acq-%s_pet_space-Ixi549Space%s_suvr-%s_mask-brain%s_pet.nii.gz'
+                                      % (self._subjects[i], self._sessions[i], self._image_type, pvc, suvr, fwhm))
+                            for i in range(len(self._subjects))]
+
+        for image in self._images:
+            if not path.exists(image):
+                raise Exception("File %s doesn't exists." % image)
+
+        return self._images
+
+    def get_x(self):
+        """
+
+        Returns: a numpy 2d-array.
+
+        """
+        if self._x is not None:
+            return self._x
+
+        print 'Loading ' + str(len(self.get_images())) + ' subjects'
+        self._x, self._orig_shape, self._data_mask = vbio.load_data(self._images, mask=self._mask_zeros)
+        print 'Subjects loaded'
+
+        return self._x
+
+    def save_weights_as_nifti(self, weights, output_dir):
+
+        if self._images is None:
+            self.get_images()
+
+        output_filename = path.join(output_dir, 'weights.nii.gz')
+        data = vbio.revert_mask(weights, self._data_mask, self._orig_shape)
+        vbio.weights_to_nifti(data, self._images[0], output_filename)

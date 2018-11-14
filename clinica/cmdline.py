@@ -91,15 +91,15 @@ class ClinicaClassLoader:
 def execute():
     import argparse
     from colorama import Fore
-    MANDATORY_TITLE = '%sMandatory arguments%s' % (Fore.BLUE, Fore.RESET)
-    OPTIONAL_TITLE = '%sOptional arguments%s' % (Fore.BLUE, Fore.RESET)
+    MANDATORY_TITLE = '%sMandatory arguments%s' % (Fore.YELLOW, Fore.RESET)
+    OPTIONAL_TITLE = '%sOptional arguments%s' % (Fore.YELLOW, Fore.RESET)
     """
     Define and parse the command line argument
     """
     parser = ArgumentParser(add_help=False)
     parser.add_argument('-h', '--help', action='help',
                         default=argparse.SUPPRESS, help=argparse.SUPPRESS)
-    parser._positionals.title = '%sclinica expects one of the following keywords%s'  % (Fore.BLUE, Fore.RESET)
+    parser._positionals.title = '%sclinica expects one of the following keywords%s'  % (Fore.YELLOW, Fore.RESET)
     parser._optionals.title = OPTIONAL_TITLE
 
     sub_parser = parser.add_subparsers(metavar='')
@@ -119,36 +119,46 @@ def execute():
     from clinica.engine import CmdParser
 
     from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_cli import T1FreeSurferCrossSectionalCLI  # noqa
-    from clinica.pipelines.t1_spm_segmentation.t1_spm_segmentation_cli import T1SPMSegmentationCLI  # noqa
-    from clinica.pipelines.t1_spm_dartel.t1_spm_dartel_cli import T1SPMDartelCLI  # noqa
-    from clinica.pipelines.t1_spm_dartel2mni.t1_spm_dartel2mni_cli import T1SPMDartel2MNICLI  # noqa
-    from clinica.pipelines.t1_spm_full_prep.t1_spm_full_prep_cli import T1SPMFullPrepCLI  # noqa
-    from clinica.pipelines.t1_spm_dartel_existing_template.t1_spm_dartel_existing_template_cli import T1SPMDartelExistingTemplateCLI #noqa
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DWIPreprocessingUsingT1CLI  # noqa
+    from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import T1VolumeTissueSegmentationCLI  # noqa
+    from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_cli import T1VolumeCreateDartelCLI  # noqa
+    from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_cli import T1VolumeDartel2MNICLI  # noqa
+    from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_cli import T1VolumeNewTemplateCLI  # noqa
+    from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import T1VolumeExistingTemplateCLI #noqa
+    from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
+    from clinica.pipelines.dwi_preprocessing_noddi.dwi_preprocessing_noddi_cli import DwiPreprocessingNoddiCLI  # noqa
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DWIPreprocessingUsingPhaseDiffFieldmapCLI # noqa
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DWIPreprocessingUsingT1CLI  # noqa
     from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_cli import DWIProcessingDTICLI  # noqa
     from clinica.pipelines.tractography.tractography_cli import TractographyCLI # noqa
+    from clinica.pipelines.dwi_processing_noddi.dwi_processing_noddi_cli import DwiProcessingNoddiCLI  # noqa
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI  # noqa
-    from clinica.pipelines.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI  # noqa
+    from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI  # noqa
+    from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI  # noqa
     from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI  # noqa
+    from clinica.pipelines.svm_regularization.svm_regularization_cli import SVMRegularizationCLI
 
 
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
                                    extra_dir="pipelines").load()
     pipelines += [
         T1FreeSurferCrossSectionalCLI(),
-        T1SPMSegmentationCLI(),
-        T1SPMDartelCLI(),
-        T1SPMDartel2MNICLI(),
-        T1SPMFullPrepCLI(),
-        T1SPMDartelExistingTemplateCLI(),
+        T1VolumeTissueSegmentationCLI(),
+        T1VolumeCreateDartelCLI(),
+        T1VolumeDartel2MNICLI(),
+        T1VolumeNewTemplateCLI(),
+        T1VolumeExistingTemplateCLI(),
+        T1VolumeParcellationCLI(),
         DWIPreprocessingUsingT1CLI(),
+        DwiPreprocessingNoddiCLI(),
+        DwiProcessingNoddiCLI(),
         DWIPreprocessingUsingPhaseDiffFieldmapCLI(),
         DWIProcessingDTICLI(),
         TractographyCLI(),
         fMRIPreprocessingCLI(),
-        PETPreprocessVolumeCLI(),
-        StatisticsSurfaceCLI()
+        PETVolumeCLI(),
+        PetSurfaceCLI(),
+        StatisticsSurfaceCLI(),
+        SVMRegularizationCLI()
     ]
 
     run_parser = sub_parser.add_parser(
@@ -158,7 +168,7 @@ def execute():
         help='To run pipelines on BIDS/CAPS datasets.',
     )
     run_parser.description = '%sRun pipelines on BIDS/CAPS datasets.%s' % (Fore.GREEN, Fore.RESET)
-    run_parser._positionals.title = '%sclinica run expects one of the following pipelines%s' % (Fore.BLUE, Fore.RESET)
+    run_parser._positionals.title = '%sclinica run expects one of the following pipelines%s' % (Fore.YELLOW, Fore.RESET)
 
     init_cmdparser_objects(parser, run_parser.add_subparsers(metavar=''), pipelines)
 
@@ -183,7 +193,7 @@ def execute():
         help='To convert unorganized datasets into a BIDS hierarchy.',
     )
     convert_parser.description = '%sTools to convert unorganized datasets into a BIDS hierarchy.%s' % (Fore.GREEN, Fore.RESET)
-    convert_parser._positionals.title = '%sclinica convert expects one of the following datasets%s' % (Fore.BLUE, Fore.RESET)
+    convert_parser._positionals.title = '%sclinica convert expects one of the following datasets%s' % (Fore.YELLOW, Fore.RESET)
     convert_parser._optionals.title = OPTIONAL_TITLE
     init_cmdparser_objects(parser, convert_parser.add_subparsers(metavar=''), converters)
 
@@ -206,7 +216,7 @@ def execute():
                                       help=HELP_IO_TOOLS,
                                       )
     io_parser.description = '%s%s%s' % (Fore.GREEN, HELP_IO_TOOLS, Fore.RESET)
-    io_parser._positionals.title = '%sclinica iotools expects one of the following BIDS/CAPS utilities%s' % (Fore.BLUE, Fore.RESET)
+    io_parser._positionals.title = '%sclinica iotools expects one of the following BIDS/CAPS utilities%s' % (Fore.YELLOW, Fore.RESET)
     io_parser._optionals.title = OPTIONAL_TITLE
 
     init_cmdparser_objects(parser, io_parser.add_subparsers(metavar=''), io_tools)
@@ -220,7 +230,7 @@ def execute():
         help='To generate pre-filled files when creating new pipelines (for  developers).',
     )
     generate_parser.description = '%sGenerate pre-filled files when creating new pipelines (for  developers).%s' % (Fore.GREEN, Fore.RESET)
-    generate_parser._positionals.title = '%sclinica generate expects one of the following tools%s' % (Fore.BLUE, Fore.RESET)
+    generate_parser._positionals.title = '%sclinica generate expects one of the following tools%s' % (Fore.YELLOW, Fore.RESET)
     generate_parser._optionals.title = OPTIONAL_TITLE
 
     from clinica.engine.template import CmdGenerateTemplates

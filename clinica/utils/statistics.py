@@ -226,36 +226,30 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
                               % (fname, in_atlas.get_name_atlas()))
 
     atlas_labels = nib.load(in_atlas.get_atlas_labels())
-    atlas_image_data = atlas_labels.get_data()
-    list_roi = list(set(atlas_image_data.ravel()))
+    atlas_labels_data = atlas_labels.get_data()
 
-    in_image = nib.load(in_normalized_map)
-    scalar_image_data = in_image.get_data()
+    img = nib.load(in_normalized_map)
+    img_data = img.get_data()
 
-    subjects_visits = pandas.io.parsers.read_csv(
-        in_atlas.get_tsv_roi(), sep='\t')
-    label_list = list(subjects_visits.roi_name)
+    atlas_correspondance = pandas.io.parsers.read_csv(in_atlas.get_tsv_roi(), sep='\t')
+    label_name = list(atlas_correspondance.roi_name)
+    label_value = list(atlas_correspondance.roi_value) # TODO create roi_value column in lut_*.txt and remove irrelevant RGB information
 
-    stats_scalar = np.zeros((len(list_roi), 2))
-    for index, index_label in enumerate(list_roi):
-        atlas_label_index = np.array(np.where(atlas_image_data == index_label))
-        stats_scalar[index, 0] = index
-        labeled_voxel = scalar_image_data[
-            atlas_label_index[0, :],
-            atlas_label_index[1, :],
-            atlas_label_index[2, :]
-        ]
-        average_voxel = labeled_voxel.mean()
-        stats_scalar[index, 1] = average_voxel
+    mean_signal_value = []
+    for label in label_value:
+        current_mask_label = atlas_labels_data == label
+        masked_data = np.array(img_data, copy=True)
+        masked_data[np.invert(current_mask_label)] = 0
+        mean_signal_value.append(np.sum(masked_data) / np.sum(current_mask_label))
 
     try:
-        data = pandas.DataFrame({'index': stats_scalar[:, 0],
-                                 'label_name': label_list,
-                                 'mean_scalar': stats_scalar[:, 1]
+        data = pandas.DataFrame({'label_name': label_name,
+                                 'mean_scalar': mean_signal_value
                                  })
-        data.to_csv(out_file, sep='\t', index=False, encoding='utf-8')
+        data.to_csv(out_file, sep='\t', index=True, encoding='utf-8')
     except Exception as e:
         cprint("Impossible to save %s with pandas" % out_file)
         raise e
 
     return out_file
+
