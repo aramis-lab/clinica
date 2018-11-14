@@ -1,8 +1,22 @@
-## test if pipeline can run until the very end
+"""
+    This file contains a set of functional tests designed to check the correct execution of the pipeline and the
+    different functions available in Clinica
+"""
+
+__author__ = "Arnaud Marcoux"
+__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
+__credits__ = ["Arnaud Marcoux"]
+__license__ = "See LICENSE.txt file"
+__version__ = "0.2.0"
+__maintainer__ = "Arnaud Marcoux"
+__email__ = "arnaud.marcoux@inria.fr"
+__status__ = "Development"
+
+
 import warnings
 import sys
 
-## Determine location for working_directory
+# Determine location for working_directory
 warnings.filterwarnings("ignore")
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -16,7 +30,7 @@ else:
 
 def test_run_T1FreeSurferCrossSectional():
     from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_pipeline import T1FreeSurferCrossSectional
-    from os.path import dirname, join, abspath, exists
+    from os.path import dirname, join, abspath
 
     root = join(dirname(abspath(__file__)), 'data', 'T1FreeSurferCrossSectional')
 
@@ -35,12 +49,10 @@ def test_run_T1FreeSurferCrossSectional():
 
 
 def test_run_T1VolumeTissueSegmentation():
-    import nibabel as nib
-    import shutil
-    import numpy as np
     import os
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
     from os.path import dirname, join, abspath
+    from clinica.test.comparison_functions import likeliness_measure
 
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeTissueSegmentation')
     clean_folder(join(working_dir, 'T1VolumeTissueSegmentation'))
@@ -61,7 +73,7 @@ def test_run_T1VolumeTissueSegmentation():
     ref_file = join(root, 'ref/caps/subjects/sub-ADNI011S4105/ses-M00/t1/spm/segmentation/dartel_input/'
                     + 'sub-ADNI011S4105_ses-M00_T1w_segm-graymatter_dartelinput.nii.gz')
 
-    assert np.allclose(nib.load(out_file).get_data(), nib.load(ref_file).get_data(), rtol=1e-8, equal_nan=True)
+    assert likeliness_measure(out_file, ref_file, (1e-4, 0.05), (1e-2, 0.01))
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
@@ -69,8 +81,7 @@ def test_run_T1VolumeCreateDartel():
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
     from os.path import dirname, join, abspath, exists
     import shutil
-    import nibabel as nib
-    import numpy as np
+    from clinica.test.comparison_functions import likeliness_measure
 
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeCreateDartel')
 
@@ -89,18 +100,21 @@ def test_run_T1VolumeCreateDartel():
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
 
     # Check output vs ref
-    out_data_template = nib.load(join(root, 'out/caps/groups/group-UnitTest/t1/group-UnitTest_template.nii.gz')).get_data()
-    ref_data_template = nib.load(join(root, 'ref/group-UnitTest_template.nii.gz')).get_data()
-    assert np.allclose(out_data_template, ref_data_template, rtol=1e-8, equal_nan=True)
+    out_data_template = join(root, 'out/caps/groups/group-UnitTest/t1/group-UnitTest_template.nii.gz')
+    ref_data_template = join(root, 'ref/group-UnitTest_template.nii.gz')
+    assert likeliness_measure(out_data_template, ref_data_template, (1e-3, 0.1), (1e-2, 0.1))
 
     subjects = ['sub-ADNI011S4105', 'sub-ADNI023S4020', 'sub-ADNI035S4082', 'sub-ADNI128S4832']
-    out_data_forward_def = [nib.load(join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 't1', 'spm', 'dartel', 'group-UnitTest',
-                                          sub + '_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz')).get_data() for sub in subjects]
-    ref_data_forward_def = [nib.load(join(root, 'ref', sub + '_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz')).get_data()
+    out_data_forward_def = [join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 't1', 'spm', 'dartel',
+                                 'group-UnitTest', sub +
+                                 '_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz')
+                            for sub in subjects]
+    ref_data_forward_def = [join(root, 'ref', sub
+                                 + '_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz')
                             for sub in subjects]
 
     for i in range(len(out_data_forward_def)):
-        assert np.allclose(out_data_forward_def[i], ref_data_forward_def[i], rtol=1e-8, equal_nan=True)
+        assert likeliness_measure(out_data_forward_def[i], ref_data_forward_def[i], (1e-3, 0.25), (1e-2, 0.1))
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -271,13 +285,10 @@ def test_run_T1VolumeParcellation():
 
 
 def test_run_DWIPreprocessingUsingT1():
-    # TODO : Alex must resolve the repetability issue (out file is never the same) -  assert deactivated
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DWIPreprocessingUsingT1
-    from os.path import dirname, join, abspath, exists
-    from os import makedirs
-    import shutil
-    import nibabel as nib
-    import numpy as np
+    from os.path import dirname, join, abspath
+    from clinica.test.comparison_functions import similarity_measure
+
 
     root = join(dirname(abspath(__file__)), 'data', 'DWIPreprocessingUsingT1')
 
@@ -298,12 +309,7 @@ def test_run_DWIPreprocessingUsingT1():
     out_file = join(root, 'out', 'caps', 'subjects', 'sub-CAPP01001TMM', 'ses-M00', 'dwi', 'preprocessing', 'sub-CAPP01001TMM_ses-M00_dwi_space-T1w_preproc.nii.gz')
     ref_file = join(root, 'ref', 'sub-CAPP01001TMM_ses-M00_dwi_space-T1w_preproc.nii.gz')
 
-
-    ## Uncomment when problem is solved !
-    #out_data = np.array(nib.load(out_file).get_data())
-    #ref_data = np.array(nib.load(ref_file).get_data())
-
-    #assert np.allclose(out_data, ref_data, rtol=1e-8, equal_nan=True)
+    assert similarity_measure(out_file, ref_file, 0.97)
 
     # Delete out/caps folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -311,11 +317,10 @@ def test_run_DWIPreprocessingUsingT1():
 
 
 def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
-    # TODO : Alex must resolve the repetability issue (out file is never the same) -  assert deactivated
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DWIPreprocessingUsingPhaseDiffFieldmap
     from os.path import dirname, join, abspath
-    import nibabel as nib
-    import numpy as np
+    from clinica.test.comparison_functions import similarity_measure
+
 
     root = join(dirname(abspath(__file__)), 'data', 'DWIPreprocessingUsingPhaseDiffFieldmap')
 
@@ -335,11 +340,7 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
     out_file = join(root, 'out', 'caps', 'subjects', 'sub-CAPP01001TMM', 'ses-M00', 'dwi', 'preprocessing', 'sub-CAPP01001TMM_ses-M00_dwi_space-bo_preproc.nii.gz')
     ref_file = join(root, 'ref', 'sub-CAPP01001TMM_ses-M00_dwi_space-T1w_preproc.nii.gz')
 
-    ## Uncomment when repetability problem is solved
-    # out_data = np.array(nib.load(out_file).get_data())
-    # ref_data = np.array(nib.load(ref_file).get_data())
-    #
-    # assert np.allclose(out_data, ref_data, rtol=1e-8, equal_nan=True)
+    assert similarity_measure(out_file, ref_file, 0.97)
 
     # Delete out/caps folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -377,8 +378,8 @@ def test_run_DWIProcessingDTI():
         out_mean_scalar = np.array(out_csv.mean_scalar)
         ref_csv = pds.read_csv(ref_files[i], sep='\t')
         ref_mean_scalar = np.array(ref_csv.mean_scalar)
-        ## Uncomment when problem is solved
-        #assert np.allclose(out_mean_scalar, ref_mean_scalar, rtol=1e-8, equal_nan=True)
+        # Uncomment when problem is solved
+        assert np.allclose(out_mean_scalar, ref_mean_scalar, rtol=1e-8, equal_nan=True)
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
@@ -426,8 +427,7 @@ def test_run_PETVolume():
     from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
     from os.path import dirname, join, abspath, exists
     import shutil
-    import nibabel as nib
-    import numpy as np
+    from clinica.test.comparison_functions import likeliness_measure
 
     root = join(dirname(abspath(__file__)), 'data', 'PETVolume')
 
@@ -452,7 +452,7 @@ def test_run_PETVolume():
                  for sub in subjects]
 
     for i in range(len(out_files)):
-        assert np.allclose(nib.load(out_files[i]).get_data(), nib.load(ref_files[i]).get_data(), rtol=1e-8, equal_nan=True)
+        assert likeliness_measure(out_files[i], ref_files[i], (1e-2, 0.25), (1e-1, 0.001))
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
@@ -670,13 +670,10 @@ def test_run_Adni2Bids():
     clean_folder(join(root, 'out', 'bids'), recreate=True)
     pass
 
+
 def test_run_Aibl2Bids():
     from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import convert_clinical_data, convert_images
     from os.path import dirname, join, abspath
-    from os import system, remove
-    from filecmp import cmp
-
-    # TODO
 
     root = join(dirname(abspath(__file__)), 'data', 'Aibl2Bids')
 
@@ -689,6 +686,7 @@ def test_run_Aibl2Bids():
     convert_images(dataset_directory, clinical_data_directory, bids_directory)
     convert_clinical_data(bids_directory, clinical_data_directory)
     pass
+
 
 def clean_folder(path, recreate=True):
     from os.path import abspath, exists
