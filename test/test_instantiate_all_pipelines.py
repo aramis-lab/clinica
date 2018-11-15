@@ -195,7 +195,7 @@ def test_PETSurface(tmpdir):
     pipeline.build()
     pass
 
-def test_instantiate_SVMRegularization():
+def test_SVMRegularization():
 
     from clinica.pipelines.svm_regularization.svm_regularization_pipeline import SVMRegularization
     from os.path import dirname, join, abspath
