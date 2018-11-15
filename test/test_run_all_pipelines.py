@@ -52,7 +52,7 @@ def test_run_T1VolumeTissueSegmentation():
     import os
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
     from os.path import dirname, join, abspath
-    from clinica.test.comparison_functions import likeliness_measure
+    from comparison_functions import likeliness_measure
 
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeTissueSegmentation')
     clean_folder(join(working_dir, 'T1VolumeTissueSegmentation'))
@@ -81,7 +81,7 @@ def test_run_T1VolumeCreateDartel():
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
     from os.path import dirname, join, abspath, exists
     import shutil
-    from clinica.test.comparison_functions import likeliness_measure
+    from comparison_functions import likeliness_measure
 
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeCreateDartel')
 
@@ -287,7 +287,7 @@ def test_run_T1VolumeParcellation():
 def test_run_DWIPreprocessingUsingT1():
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DWIPreprocessingUsingT1
     from os.path import dirname, join, abspath
-    from clinica.test.comparison_functions import similarity_measure
+    from comparison_functions import similarity_measure
 
 
     root = join(dirname(abspath(__file__)), 'data', 'DWIPreprocessingUsingT1')
@@ -319,7 +319,7 @@ def test_run_DWIPreprocessingUsingT1():
 def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DWIPreprocessingUsingPhaseDiffFieldmap
     from os.path import dirname, join, abspath
-    from clinica.test.comparison_functions import similarity_measure
+    from comparison_functions import similarity_measure
 
 
     root = join(dirname(abspath(__file__)), 'data', 'DWIPreprocessingUsingPhaseDiffFieldmap')
@@ -427,7 +427,7 @@ def test_run_PETVolume():
     from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
     from os.path import dirname, join, abspath, exists
     import shutil
-    from clinica.test.comparison_functions import likeliness_measure
+    from comparison_functions import likeliness_measure
 
     root = join(dirname(abspath(__file__)), 'data', 'PETVolume')
 
@@ -538,6 +538,7 @@ def test_run_PETSurface():
 
 
 def test_run_WorkflowsML():
+    # TODO check end results
     from clinica.pipelines.machine_learning.ml_workflows import RB_RepHoldOut_LogisticRegression, VertexB_RepHoldOut_dualSVM, RB_RepHoldOut_RandomForest, VB_KFold_DualSVM
     from os.path import dirname, join, abspath
     from os import makedirs
@@ -601,8 +602,8 @@ def test_run_Oasis2Bids():
     oasis_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
 
     # Generate tree of output files
-    bids_out_txt = './bids_out_oasis.txt'
-    bids_ref_txt = './bids_ref_oasis.txt'
+    bids_out_txt = join(root, 'out', 'bids_out_oasis.txt')
+    bids_ref_txt = join(root, 'ref', 'bids_ref_oasis.txt')
     system('tree ' + bids_directory + ' > ' + bids_out_txt)
     system('tree ' + join(root, 'ref', 'bids') + ' > ' + bids_ref_txt)
 
@@ -614,7 +615,8 @@ def test_run_Oasis2Bids():
             ref_message = fin.read()
         remove(bids_out_txt)
         remove(bids_ref_txt)
-        raise ValueError('Comparison of out and ref directories shows mismatch :\n OUT :\n' + out_message + '\n REF :\n' + ref_message)
+        raise ValueError('Comparison of out and ref directories shows mismatch :\n '
+                         'OUT :\n' + out_message + '\n REF :\n' + ref_message)
 
     # Clean folders
     remove(bids_out_txt)
@@ -668,6 +670,87 @@ def test_run_Adni2Bids():
     remove(bids_out_txt)
     remove(bids_ref_txt)
     clean_folder(join(root, 'out', 'bids'), recreate=True)
+    pass
+
+
+def test_run_CreateSubjectSessionList():
+    from os.path import join, dirname, abspath
+    from os import remove
+    from filecmp import cmp
+    from clinica.iotools.utils import data_handling as dt
+
+    root = join(dirname(abspath(__file__)), 'data', 'CreateSubjectSessionList')
+
+    # Set variables
+    bids_directory = join(root, 'in', 'bids')
+    output_directory = join(root, 'out')
+    tsv_name = 'subject_session_list.tsv'
+
+    # Create subject_session file
+    dt.create_subs_sess_list(bids_directory, output_directory, tsv_name)
+
+    # Comparison bitwise
+    out_tsv = join(output_directory, tsv_name)
+    ref_tsv = join(root, 'ref', tsv_name)
+    assert cmp(out_tsv, ref_tsv)
+    remove(out_tsv)
+    pass
+
+
+def test_run_CreateMergeFile():
+    from os.path import join, dirname, abspath
+    from os import remove
+    from filecmp import cmp
+    from clinica.iotools.utils import data_handling as dt
+
+    root = join(dirname(abspath(__file__)), 'data', 'CreateMergeFile')
+
+    bids_directory = join(root, 'in', 'bids')
+    out_tsv = join(root, 'ou', 'output_file.tsv')
+    caps_directory = join(root, 'out', 'caps')
+
+    dt.create_merge_file(bids_directory,
+                         out_tsv,
+                         caps_dir=caps_directory,
+                         pipelines=args.pipelines,
+                         atlas_selection=args.atlas_selection,
+                         pvc_restriction=args.pvc_restriction,
+                         tsv_file=out_tsv,
+                         group_selection=args.group_selection
+    )
+
+    # Comparison step
+    out_tsv = ''
+    ref_tsv =''
+    assert cmp(out_tsv, ref_tsv)
+    remove(out_tsv)
+    pass
+
+
+def test_run_ComputeMissingModalities():
+    from os.path import join, dirname, abspath
+    from os import remove
+    from filecmp import cmp
+    from clinica.iotools.utils import data_handling as dt
+
+    root = join(dirname(abspath(__file__)), 'data', 'ComputeMissingMod')
+
+    bids_directory = join(root, 'in', 'bids')
+    output_directory = join(root, 'out')
+    output_name = 'missing_modalities'
+
+    dt.compute_missing_mods(bids_directory, output_directory, output_name)
+
+    filenames = ['missing_modalities_ses-M00.tsv',
+                 'missing_modalities_ses-M03.tsv',
+                 'missing_modalities_ses-M06.tsv',
+                 'missing_modalities_ses-M12.tsv',
+                 'missing_modalities_ses-M24.tsv',
+                 'missing_modalities_ses-M48.tsv',
+                 'missing_modalities_summary.txt']
+    for i in range(len(filenames)):
+        assert cmp(join(root, 'out', filenames[i]), join(root, 'ref', filenames[i]))
+        remove(join(root, 'out', filenames[i]))
     pass
 
 
