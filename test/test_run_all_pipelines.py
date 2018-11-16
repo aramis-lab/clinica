@@ -676,7 +676,6 @@ def test_run_Adni2Bids():
 def test_run_CreateSubjectSessionList():
     from os.path import join, dirname, abspath
     from os import remove
-    from filecmp import cmp
     from clinica.iotools.utils import data_handling as dt
     from comparison_functions import identical_subject_list
 
@@ -702,27 +701,29 @@ def test_run_CreateMergeFile():
     from os.path import join, dirname, abspath
     from os import remove
     from filecmp import cmp
+    import shutil
     from clinica.iotools.utils import data_handling as dt
 
     root = join(dirname(abspath(__file__)), 'data', 'CreateMergeFile')
 
     bids_directory = join(root, 'in', 'bids')
-    out_tsv = join(root, 'ou', 'output_file.tsv')
+    out_tsv = join(root, 'out', 'output_file.tsv')
+    subject_session_tsv = join(root, 'in', 'subjects_sessions.tsv')
+
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
     caps_directory = join(root, 'out', 'caps')
 
     dt.create_merge_file(bids_directory,
                          out_tsv,
                          caps_dir=caps_directory,
-                         pipelines=args.pipelines,
-                         atlas_selection=args.atlas_selection,
-                         pvc_restriction=args.pvc_restriction,
-                         tsv_file=out_tsv,
-                         group_selection=args.group_selection
-    )
-
+                         pipelines=None,
+                         atlas_selection=None,
+                         pvc_restriction=None,
+                         tsv_file=subject_session_tsv,
+                         group_selection=None)
     # Comparison step
-    out_tsv = ''
-    ref_tsv =''
+    ref_tsv = join(root, 'ref', 'output_file.tsv')
     assert cmp(out_tsv, ref_tsv)
     remove(out_tsv)
     pass
