@@ -604,8 +604,8 @@ def test_run_Oasis2Bids():
     # Generate tree of output files
     bids_out_txt = join(root, 'out', 'bids_out_oasis.txt')
     bids_ref_txt = join(root, 'ref', 'bids_ref_oasis.txt')
-    system('tree ' + bids_directory + ' > ' + bids_out_txt)
-    system('tree ' + join(root, 'ref', 'bids') + ' > ' + bids_ref_txt)
+    system('cd ' + bids_directory + ' && tree > ' + bids_out_txt)
+    system('cd ' + join(root, 'ref', 'bids') + ' && tree > ' + bids_ref_txt)
 
     # Compare them
     if not cmp(bids_out_txt, bids_ref_txt):
