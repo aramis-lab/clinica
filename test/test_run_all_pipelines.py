@@ -678,6 +678,7 @@ def test_run_CreateSubjectSessionList():
     from os import remove
     from filecmp import cmp
     from clinica.iotools.utils import data_handling as dt
+    from comparison_functions import identical_subject_list
 
     root = join(dirname(abspath(__file__)), 'data', 'CreateSubjectSessionList')
 
@@ -692,7 +693,7 @@ def test_run_CreateSubjectSessionList():
     # Comparison bitwise
     out_tsv = join(output_directory, tsv_name)
     ref_tsv = join(root, 'ref', tsv_name)
-    assert cmp(out_tsv, ref_tsv)
+    assert identical_subject_list(out_tsv, ref_tsv)
     remove(out_tsv)
     pass
 

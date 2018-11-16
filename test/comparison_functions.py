@@ -1,3 +1,14 @@
+
+__author__ = "Arnaud Marcoux"
+__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
+__credits__ = ["Arnaud Marcoux"]
+__license__ = "See LICENSE.txt file"
+__version__ = "0.2.0"
+__maintainer__ = "Arnaud Marcoux"
+__email__ = "arnaud.marcoux@inria.fr"
+__status__ = "Development"
+
+
 def likeliness_measure(file1, file2, threshold1, threshold2, display=False):
     """
         Function that compares 2 Nifti inputs, with 2 different thresholds.
@@ -35,11 +46,11 @@ def likeliness_measure(file1, file2, threshold1, threshold2, display=False):
     data2[mask] = 1
     metric = (2 * np.abs(data1 - data2)) / (np.abs(data1) + np.abs(data1))
     metric_flattened = np.ndarray.flatten(metric)
-    thresholds = np.logspace(-8, 0, 20)
-    percents = np.array([np.sum((metric_flattened > T)) / metric_flattened.size for T in thresholds])
 
     # Display fig
     if display:
+        thresholds = np.logspace(-8, 0, 20)
+        percents = np.array([np.sum((metric_flattened > T)) / metric_flattened.size for T in thresholds])
         fig, ax = plt.subplots()
         ax.semilogx(thresholds, percents)
         ax.grid()
@@ -79,3 +90,51 @@ def similarity_measure(file1, file2, threshold):
     res = img_similarity.run()
 
     return np.mean(res.outputs.similarity) > threshold
+
+
+def identical_subject_list(sub_ses_list1, sub_ses_list2):
+    """
+        Function that ensures that both subject_session files are describing the same list
+
+        Args:
+            (string) sub_ses_list1: path to first nifti input
+            (string) sub_ses_list2: path to second nifti to compare
+
+        Returns:
+            (bool) True if sub_ses_list1 and sub_ses_list2 contains the same sessions
+
+    """
+    def is_included(list1, list2):
+        from pandas import read_csv
+
+        # Read csv files
+        readlist1 = read_csv(list1, sep='\t')
+        readlist2 = read_csv(list2, sep='\t')
+
+        # If columns are different, files are different
+        if list(readlist1.columns) != list(readlist2.columns):
+            return False
+        else:
+
+            # Extract subject and corresponding session names
+            subjects1 = list(readlist1.participant_id)
+            sessions1 = list(readlist1.session_id)
+            subjects2 = list(readlist2.participant_id)
+            sessions2 = list(readlist2.session_id)
+
+            if len(subjects1) != len(subjects2):
+                return False
+            else:
+                for i in range(len(subjects1)):
+                    current_sub = subjects1[i]
+                    current_ses = sessions1[i]
+                    # Compute all the indices in the second list corresponding to the current subject
+                    idx_same_sub = [j for j in range(len(subjects2)) if subjects2[j] == current_sub]
+                    if len(idx_same_sub) == 0:  # Current subject not found in
+                        return False
+                    ses_same_sub = [sessions2[idx] for idx in idx_same_sub]
+                    if current_ses not in ses_same_sub:
+                        return False
+        return True
+    # The operation is performed both sides because is_included(list1, list2) != is_included(list2, list1)
+    return is_included(sub_ses_list1, sub_ses_list2) & is_included(sub_ses_list2, sub_ses_list1)
