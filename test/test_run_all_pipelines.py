@@ -730,10 +730,10 @@ def test_run_CreateMergeFile():
 
 
 def test_run_ComputeMissingModalities():
-    from os.path import join, dirname, abspath
+    from os.path import join, dirname, abspath, exists
     from os import remove
-    from filecmp import cmp
     from clinica.iotools.utils import data_handling as dt
+    from comparison_functions import same_missing_modality_tsv
 
     root = join(dirname(abspath(__file__)), 'data', 'ComputeMissingMod')
 
@@ -748,10 +748,13 @@ def test_run_ComputeMissingModalities():
                  'missing_modalities_ses-M06.tsv',
                  'missing_modalities_ses-M12.tsv',
                  'missing_modalities_ses-M24.tsv',
-                 'missing_modalities_ses-M48.tsv',
-                 'missing_modalities_summary.txt']
+                 'missing_modalities_ses-M48.tsv']
     for i in range(len(filenames)):
-        assert cmp(join(root, 'out', filenames[i]), join(root, 'ref', filenames[i]))
+        outname = join(root, 'out', filenames[i])
+        refname = join(root, 'ref', filenames[i])
+        if not exists(outname):
+            raise FileNotFoundError('A file called ' + outname + ' should have been generated, but it does not exists')
+        assert same_missing_modality_tsv(outname, refname)
         remove(join(root, 'out', filenames[i]))
     pass
 
