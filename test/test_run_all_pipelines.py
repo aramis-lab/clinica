@@ -650,10 +650,10 @@ def test_run_Adni2Bids():
                                 modalities)
 
     # Generate tree of output files
-    bids_out_txt = './bids_out_adni.txt'
-    bids_ref_txt = './bids_ref_adni.txt'
-    system('tree ' + bids_directory + ' > ' + bids_out_txt)
-    system('tree ' + join(root, 'ref', 'bids') + ' > ' + bids_ref_txt)
+    bids_out_txt = join(root, 'out', 'bids_out_adni.txt')
+    bids_ref_txt = join(root, 'ref', 'bids_ref_adni.txt')
+    system('cd ' + bids_directory + ' && tree  > ' + bids_out_txt)
+    system('cd ' + join(root, 'ref', 'bids') + ' && tree  > ' + bids_ref_txt)
 
     # Compare them
     if not cmp(bids_out_txt, bids_ref_txt):
@@ -663,7 +663,8 @@ def test_run_Adni2Bids():
             ref_message = fin.read()
         remove(bids_out_txt)
         remove(bids_ref_txt)
-        raise ValueError('Comparison of out and ref directories shows mismatch :\n OUT :\n' + out_message + '\n REF :\n' + ref_message)
+        raise ValueError('Comparison of out and ref directories shows mismatch :\n '
+                         'OUT :\n' + out_message + '\n REF :\n' + ref_message)
 
     # Clean folders
     remove(bids_out_txt)

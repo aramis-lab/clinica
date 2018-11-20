@@ -601,28 +601,33 @@ def eddy_fsl_pipeline(epi_param, name='eddy_fsl'):
                         'in_bvec', 'in_bval', 'in_mask', 'ref_b0']), name='inputnode')
 
     generate_acq = pe.Node(niu.Function(function=generate_acq,
-                    input_names=['in_b0', 'epi_param'],
-                    output_names=['out_file']),
-                    name='generate_acq')
+                                        input_names=['in_b0', 'epi_param'],
+                                        output_names=['out_file']),
+                           name='generate_acq')
     generate_acq.inputs.epi_param = epi_param
 
-    list_b0 = pe.Node(niu.Function(
-        input_names=['in_bval'], output_names=['out_idx'],
-        function=b0_indices), name='find_b0_indices')
+    list_b0 = pe.Node(niu.Function(input_names=['in_bval'],
+                                   output_names=['out_idx'],
+                                   function=b0_indices),
+                      name='find_b0_indices')
 
     generate_index = pe.Node(niu.Function(function=generate_index,
-                    input_names=['in_bval', 'b0_index'],
-                    output_names=['eddy_index']),
-                    name='generate_index')
+                                          input_names=['in_bval', 'b0_index'],
+                                          output_names=['eddy_index']),
+                             name='generate_index')
 
     eddy = pe.Node(niu.Function(input_names=['in_bvec', 'in_bval', 'in_file', 'in_mask', 'in_acqp', 'in_index'],
-                     output_names=['out_parameter', 'out_corrected', 'out_rotated_bvecs'], function=eddy_fsl), name='eddy_fsl')
+                                output_names=['out_parameter', 'out_corrected', 'out_rotated_bvecs'],
+                                function=eddy_fsl),
+                   name='eddy_fsl')
 
     # eddy = pe.Node(interface=Eddy(), name='eddy_fsl')
     # eddy.inputs.flm = 'linear'
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['out_parameter',
-                         'out_corrected', 'out_rotated_bvecs']), name='outputnode')
+                                                       'out_corrected',
+                                                       'out_rotated_bvecs']),
+                         name='outputnode')
 
     wf = pe.Workflow(name=name)
     wf.connect([
@@ -641,7 +646,6 @@ def eddy_fsl_pipeline(epi_param, name='eddy_fsl'):
         (eddy,   outputnode, [('out_parameter', 'out_parameter')]),
         (eddy,      outputnode, [('out_corrected', 'out_corrected')]),
         (eddy,      outputnode, [('out_rotated_bvecs', 'out_rotated_bvecs')])
-
     ])
     return wf
 
