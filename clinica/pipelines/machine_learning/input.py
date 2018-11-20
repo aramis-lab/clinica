@@ -12,7 +12,7 @@ import clinica.pipelines.machine_learning.voxel_based_io as vbio
 import clinica.pipelines.machine_learning.vertex_based_io as vtxbio
 import clinica.pipelines.machine_learning.region_based_io as rbio
 import clinica.pipelines.machine_learning.tsv_based_io as tbio
-import clinica.pipelines.machine_learning.svm_utils as utils
+import clinica.pipelines.machine_learning.ml_utils as utils
 
 
 __author__ = "Jorge Samper Gonzalez"
