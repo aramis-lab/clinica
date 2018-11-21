@@ -406,7 +406,7 @@ class RandomForest(base.MLAlgorithm):
             accuracies.append(best_acc)
 
         # TODO For exploratory purpose only. Erase later
-        pd.concat(all_params_acc).to_csv('all_params_acc_%s.tsv' % datetime.datetime.now(), sep='\t', index=False, encoding='utf-8')
+        # pd.concat(all_params_acc).to_csv('all_params_acc_%s.tsv' % datetime.datetime.now(), sep='\t', index=False, encoding='utf-8')
 
         best_acc = np.mean(accuracies)
         best_n_estimators = int(round(np.mean([x[0] for x in params_list])))
