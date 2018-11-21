@@ -524,9 +524,13 @@ def test_run_PETSurface():
     # Check files
     out_files = [join(root, 'out/caps/subjects/sub-ADNI011S4105/ses-M00/pet/surface',
                       'sub-ADNI011S4105_ses-M00_task-rest_acq-FDG_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
-                      + h + '_fwhm-' + str(f) + '_projection.mgh') for h in ['lh', 'rh'] for f in [0, 5, 10, 15, 20, 25]]
+                      + h + '_fwhm-' + str(f) + '_projection.mgh')
+                 for h in ['lh', 'rh']
+                 for f in [0, 5, 10, 15, 20, 25]]
     ref_files = [join(root, 'ref/sub-ADNI011S4105_ses-M00_task-rest_acq-FDG_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
-                      + h + '_fwhm-' + str(f) + '_projection.mgh') for h in ['lh', 'rh'] for f in [0, 5, 10, 15, 20, 25]]
+                      + h + '_fwhm-' + str(f) + '_projection.mgh')
+                 for h in ['lh', 'rh']
+                 for f in [0, 5, 10, 15, 20, 25]]
 
     # for i in range(len(out_files)):
     #     assert np.allclose(np.squeeze(nib.load(out_files[i]).get_data()),
@@ -541,8 +545,11 @@ def test_run_WorkflowsML():
     from clinica.pipelines.machine_learning.ml_workflows import RB_RepHoldOut_LogisticRegression, VertexB_RepHoldOut_dualSVM, RB_RepHoldOut_RandomForest, VB_KFold_DualSVM
     from os.path import dirname, join, abspath
     from os import makedirs
+    import shutil
     import warnings
     warnings.filterwarnings("ignore", category=DeprecationWarning)
+    warnings.filterwarnings("ignore", category=UserWarning)
+    warnings.filterwarnings("ignore", category=FutureWarning)
 
     root = join(dirname(abspath(__file__)), 'data', 'WorkflowsML')
     root_input = join(dirname(abspath(__file__)), 'data', 'InputsML')
@@ -552,32 +559,33 @@ def test_run_WorkflowsML():
     diagnoses_tsv = join(root_input, 'in', 'diagnosis.tsv')
     group_id = 'allADNIdartel'
 
-    clean_folder(join(root, 'out'), recreate=True)
-
     output_dir1 = join(root, 'out', 'VertexB_RepHoldOut_dualSVM')
-    makedirs(output_dir1)
+    clean_folder(output_dir1, recreate=True)
     wf1 = VertexB_RepHoldOut_dualSVM(caps_dir, tsv, diagnoses_tsv, group_id, output_dir1, image_type='fdg', fwhm=20,
                                      n_threads=8, n_iterations=10, grid_search_folds=3, test_size=0.3)
+    wf1.run()
+    shutil.rmtree(output_dir1)
 
     output_dir2 = join(root, 'out', 'RB_RepHoldOut_LogisticRegression')
-    makedirs(output_dir2)
+    clean_folder(output_dir2, recreate=True)
     wf2 = RB_RepHoldOut_LogisticRegression(caps_dir, tsv, diagnoses_tsv, group_id, 'fdg', 'AICHA', output_dir2,
                                            n_threads=8, n_iterations=10, grid_search_folds=3, test_size=0.3)
+    wf2.run()
+    shutil.rmtree(output_dir2)
 
     output_dir3 = join(root, 'out', 'RB_RepHoldOut_RandomForest')
-    makedirs(output_dir3)
+    clean_folder(output_dir3, recreate=True)
     wf3 = RB_RepHoldOut_RandomForest(caps_dir, tsv, diagnoses_tsv, group_id, 'T1', 'AAL2', output_dir3, n_threads=8,
                                      n_iterations=10, grid_search_folds=3, test_size=0.3)
+    wf3.run()
+    shutil.rmtree(output_dir3)
 
     output_dir4 = join(root, 'out', 'VB_KFold_DualSVM')
-    makedirs(output_dir4)
+    clean_folder(output_dir4, recreate=True)
     wf4 = VB_KFold_DualSVM(caps_dir, tsv, diagnoses_tsv, group_id, 'fdg', output_dir4, fwhm=8, n_threads=8, n_folds=5,
                            grid_search_folds=3)
-
-    wf1.run()
-    wf2.run()
-    wf3.run()
     wf4.run()
+    shutil.rmtree(output_dir4)
     pass
 
 
