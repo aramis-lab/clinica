@@ -16,6 +16,7 @@ __maintainer__ = "Jorge Samper Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
+
 def get_class_images(class_images, index_list):
     """
     utility method to extract class images

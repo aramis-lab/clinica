@@ -121,6 +121,7 @@ def execute():
     from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_cli import T1FreeSurferCrossSectionalCLI  # noqa
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import T1VolumeTissueSegmentationCLI  # noqa
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_cli import T1VolumeCreateDartelCLI  # noqa
+    from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_cli import T1VolumeExistingDartelCLI # noqa
     from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_cli import T1VolumeDartel2MNICLI  # noqa
     from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_cli import T1VolumeNewTemplateCLI  # noqa
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import T1VolumeExistingTemplateCLI #noqa
@@ -142,6 +143,7 @@ def execute():
         T1FreeSurferCrossSectionalCLI(),
         T1VolumeTissueSegmentationCLI(),
         T1VolumeCreateDartelCLI(),
+        T1VolumeExistingDartelCLI(),
         T1VolumeDartel2MNICLI(),
         T1VolumeNewTemplateCLI(),
         T1VolumeExistingTemplateCLI(),

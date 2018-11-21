@@ -192,7 +192,8 @@ def pet_container_from_filename(pet_filename):
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', pet_filename)
 
     if m is None:
-        raise ValueError('Input filename is not in a BIDS or CAPS compliant format. It doesn\'t contain the subject and session informations.')
+        raise ValueError('Input filename is not in a BIDS or CAPS compliant format. It doesn\'t contain the subject' +
+                         ' and session informations.')
 
     subject = m.group(1)
     session = m.group(2)
@@ -206,4 +207,3 @@ def expand_into_list(in_field, n_tissues):
 
 def get_from_list(in_list, index):
     return in_list[index]
-

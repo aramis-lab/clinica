@@ -88,11 +88,10 @@ class T1VolumeNewTemplateCLI(ce.CmdParser):
         """
         from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_pipeline import T1VolumeNewTemplate
 
-        pipeline = T1VolumeNewTemplate (bids_directory=self.absolute_path(args.bids_directory),
-                                 caps_directory=self.absolute_path(args.caps_directory),
-                                 tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-                                 group_id=args.group_id
-                                 )
+        pipeline = T1VolumeNewTemplate(bids_directory=self.absolute_path(args.bids_directory),
+                                       caps_directory=self.absolute_path(args.caps_directory),
+                                       tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+                                       group_id=args.group_id)
 
         pipeline.parameters.update({
             'tissue_classes': args.tissue_classes,

@@ -44,7 +44,8 @@ class PETVolumeCLI(ce.CmdParser):
                                 help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to use for masking the PET image. Ex: 1 2 3 is GM, WM and CSF")
         self._args.add_argument("-threshold", "--mask_threshold", type=float, default=0.3,
                                 help='Value to be used as threshold to binarize the tissues mask.')
-        self._args.add_argument("-pvc_mask", "--pvc_mask_tissues", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
+        self._args.add_argument("-pvc_mask", "--pvc_mask_tissues", nargs='+', type=int, default=[1, 2, 3],
+                                choices=range(1, 7),
                                 help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to use as mask for PVC. Ex: 1 2 3 is GM, WM and CSF")
         self._args.add_argument("-smooth", "--smooth", nargs='+', type=int, default=[8],
                                 help="A list of integers specifying the different isomorphic fwhm in milimeters to smooth the image")

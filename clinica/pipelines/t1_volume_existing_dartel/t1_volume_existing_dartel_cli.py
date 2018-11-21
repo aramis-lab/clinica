@@ -12,18 +12,17 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-class T1VolumeCreateDartelCLI(ce.CmdParser):
+class T1VolumeExistingDartelCLI(ce.CmdParser):
 
     def define_name(self):
         """Define the sub-command name to run this pipelines.
         """
-        self._name = 't1-volume-create-dartel'
+        self._name = 't1-volume-existing-dartel'
 
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = ('DARTEL creation with SPM:\n'
-                            'http://clinica.run/doc/Pipelines/T1_Volume/')
+        self._description = 'Create new DARTEL template based on a current DARTEL template:\nhttp://clinica.run/doc/Pipelines/T1_Volume/'
 
     def define_options(self):
         """Define the sub-command arguments
@@ -36,8 +35,8 @@ class T1VolumeCreateDartelCLI(ce.CmdParser):
                                 help='User-defined identifier for the provided group of subjects.')
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
                                 help='TSV file containing a list of subjects with their sessions.')
-        self._args.add_argument("-dt", "--dartel_tissues", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
-                                help='Tissues to use for DARTEL template calculation. Ex: 1 is only GM')
+        self._args.add_argument("-t", "--tissues", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
+                                help='Tissues to create flow fields to DARTEL template. Ex: 1 is only GM')
         self._args.add_argument("-wd", "--working_directory",
                                 help='Temporary directory to store pipelines intermediate results')
         self._args.add_argument("-np", "--n_procs", type=int,
@@ -46,20 +45,18 @@ class T1VolumeCreateDartelCLI(ce.CmdParser):
     def run_command(self, args):
         """
         """
+        from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_pipeline import T1VolumeExistingDartel
 
-        from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
+        pipeline = T1VolumeExistingDartel(bids_directory=self.absolute_path(args.bids_directory),
+                                          caps_directory=self.absolute_path(args.caps_directory),
+                                          tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+                                          group_id=args.group_id)
 
-        pipeline = T1VolumeCreateDartel(bids_directory=self.absolute_path(args.bids_directory),
-                                        caps_directory=self.absolute_path(args.caps_directory),
-                                        tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-                                        group_id=args.group_id)
-
-        pipeline.parameters.update({'dartel_tissues': args.dartel_tissues})
+        pipeline.parameters.update({'tissues': args.tissues})
 
         pipeline.base_dir = self.absolute_path(args.working_directory)
 
         if args.n_procs:
-            pipeline.run(plugin='MultiProc',
-                         plugin_args={'n_procs': args.n_procs})
+            pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.run()

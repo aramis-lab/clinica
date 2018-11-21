@@ -58,7 +58,8 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         self._group_id = group_id
         # Check that group already exists
         if not os.path.exists(os.path.join(os.path.abspath(caps_directory), 'groups', 'group-' + group_id)):
-            error_message = group_id + ' does not exists, please choose an other one (or maybe you need to run t1-spm-dartel).' \
+            error_message = group_id \
+                            + ' does not exists, please choose an other one (or maybe you need to run t1-spm-dartel).' \
                             + '\nGroups that already exists in your CAPS directory are : \n'
             list_groups = os.listdir(os.path.join(os.path.abspath(caps_directory), 'groups'))
             is_empty = True
@@ -142,7 +143,9 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                                                           outfields=['out_files']),
                                           name="flowfields_caps_reader")
         flowfields_caps_reader.inputs.base_directory = self.caps_directory
-        flowfields_caps_reader.inputs.template = 'subjects/%s/%s/t1/spm/dartel/group-' + self._group_id + '/%s_%s_T1w_target-' + self._group_id + '_transformation-forward_deformation.nii*'
+        flowfields_caps_reader.inputs.template = 'subjects/%s/%s/t1/spm/dartel/group-' + self._group_id \
+                                                 + '/%s_%s_T1w_target-' + self._group_id \
+                                                 + '_transformation-forward_deformation.nii*'
         flowfields_caps_reader.inputs.subject_id = self.subjects
         flowfields_caps_reader.inputs.session = self.sessions
         flowfields_caps_reader.inputs.subject_repeat = self.subjects
@@ -179,7 +182,8 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         # ==================================================
         write_normalized_node = npe.MapNode(name='write_normalized_node',
                                             iterfield=['container', 'normalized_files', 'smoothed_normalized_files'],
-                                            interface=nio.DataSink(infields=['normalized_files', 'smoothed_normalized_files']))
+                                            interface=nio.DataSink(infields=['normalized_files',
+                                                                             'smoothed_normalized_files']))
         write_normalized_node.inputs.base_directory = self.caps_directory
         write_normalized_node.inputs.parameterization = False
         write_normalized_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
@@ -195,10 +199,8 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
             (r'(.*)mw(sub-.*)_probability(\.nii(\.gz)?)$', r'\1\2_space-Ixi549Space_modulated-on_probability\3'),
             (r'(.*)w(sub-.*)_probability(\.nii(\.gz)?)$', r'\1\2_space-Ixi549Space_modulated-off_probability\3'),
             (r'(.*)/normalized_files/(sub-.*)$', r'\1/\2'),
-            (r'(.*)/smoothed_normalized_files/(fwhm-[0-9]+mm)_(sub-.*)_probability(\.nii(\.gz)?)$', r'\1/\3_\2_probability\4'),
-
-            # (r'(.*)/atlas_statistics/(fwhm-[0-9]+mm)_(sub-.*)_probability(\.nii(\.gz)?)$', r'\1/\3_\2_probability\4'),
-
+            (r'(.*)/smoothed_normalized_files/(fwhm-[0-9]+mm)_(sub-.*)_probability(\.nii(\.gz)?)$',
+             r'\1/\3_\2_probability\4'),
             (r'trait_added', r'')
         ]
 
@@ -213,14 +215,17 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                                              '/t1/spm/dartel/group-' + self._group_id + '/atlas_statistics'
                                              for i in range(len(self.subjects))]
         write_atlas_node.inputs.regexp_substitutions = [
-            (r'(.*atlas_statistics)/atlas_statistics/mwc1(sub-.*)(_space-.*_map-graymatter_statistics\.tsv)$', r'\1/\2\3'),
-            (r'(.*atlas_statistics)/atlas_statistics/(m?w)?(sub-.*_T1w).*(_space-.*_map-graymatter_statistics).*(\.tsv)$', r'\1/\3\4\5'),
+            (r'(.*atlas_statistics)/atlas_statistics/mwc1(sub-.*)(_space-.*_map-graymatter_statistics\.tsv)$',
+             r'\1/\2\3'),
+            (r'(.*atlas_statistics)/atlas_statistics/(m?w)?(sub-.*_T1w).*(_space-.*_map-graymatter_statistics).*(\.tsv)$',
+             r'\1/\3\4\5'),
             (r'trait_added', r'')
         ]
 
         self.connect([
             (self.output_node, write_normalized_node, [(('normalized_files', zip_nii, True), 'normalized_files'),
-                                                       (('smoothed_normalized_files', zip_nii, True), 'smoothed_normalized_files')]),
+                                                       (('smoothed_normalized_files', zip_nii, True),
+                                                        'smoothed_normalized_files')]),
             (self.output_node, write_atlas_node, [('atlas_statistics', 'atlas_statistics')])
         ])
 
@@ -346,7 +351,8 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
             (self.input_node, unzip_flowfields_node, [('flowfield_files', 'in_file')]),
             (self.input_node, unzip_template_node, [('template_file', 'in_file')]),
             (unzip_tissues_node, dartel2mni_node, [('out_file', 'apply_to_files')]),
-            (unzip_flowfields_node, dartel2mni_node, [(('out_file', prepare_flowfields, self.parameters['tissues']), 'flowfield_files')]),
+            (unzip_flowfields_node, dartel2mni_node, [(('out_file', prepare_flowfields, self.parameters['tissues']),
+                                                       'flowfield_files')]),
             (unzip_template_node, dartel2mni_node, [('out_file', 'template_file')]),
             (dartel2mni_node, self.output_node, [('normalized_files', 'normalized_files')]),
             (dartel2mni_node, atlas_stats_node, [(('normalized_files', select_gm_images), 'in_image')]),

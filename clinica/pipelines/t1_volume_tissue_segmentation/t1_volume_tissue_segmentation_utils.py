@@ -105,8 +105,10 @@ def get_tissue_tuples(tissue_map, tissue_classes, dartel_tissues, save_warped_un
         if i in dartel_tissues:
             dartel_input = True
 
-        tissues.append(((tissue_map, i), n_gaussians, (native_space, dartel_input), (warped_unmodulated, warped_modulated)))
-
+        tissues.append(((tissue_map, i),
+                        n_gaussians,
+                        (native_space, dartel_input),
+                        (warped_unmodulated, warped_modulated)))
     return tissues
 
 

@@ -170,10 +170,13 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
             (r'(.*)c5(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-softtissue\3'),
             (r'(.*)c6(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-background\3'),
             (r'(.*)(/native_space/sub-.*)(\.nii(\.gz)?)$', r'\1\2_probability\3'),
-            (r'(.*)(/([a-z]+)_deformation_field/)i?y_(sub-.*)(\.nii(\.gz)?)$', r'\1/normalized_space/\4_target-Ixi549Space_transformation-\3_deformation\5'),
+            (r'(.*)(/([a-z]+)_deformation_field/)i?y_(sub-.*)(\.nii(\.gz)?)$',
+             r'\1/normalized_space/\4_target-Ixi549Space_transformation-\3_deformation\5'),
             (r'(.*)(/t1_mni/)w(sub-.*)_T1w(\.nii(\.gz)?)$', r'\1/normalized_space/\3_space-Ixi549Space_T1w\4'),
-            (r'(.*)(/modulated_normalized/)mw(sub-.*)(\.nii(\.gz)?)$', r'\1/normalized_space/\3_space-Ixi549Space_modulated-on_probability\4'),
-            (r'(.*)(/normalized/)w(sub-.*)(\.nii(\.gz)?)$', r'\1/normalized_space/\3_space-Ixi549Space_modulated-off_probability\4'),
+            (r'(.*)(/modulated_normalized/)mw(sub-.*)(\.nii(\.gz)?)$',
+             r'\1/normalized_space/\3_space-Ixi549Space_modulated-on_probability\4'),
+            (r'(.*)(/normalized/)w(sub-.*)(\.nii(\.gz)?)$',
+             r'\1/normalized_space/\3_space-Ixi549Space_modulated-off_probability\4'),
             (r'(.*/dartel_input/)r(sub-.*)(\.nii(\.gz)?)$', r'\1\2_dartelinput\3'),
             (r'trait_added', r'')
         ]
@@ -188,7 +191,6 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         """
 
         import os
-        import os.path as op
         import nipype.interfaces.spm as spm
         import nipype.interfaces.matlab as mlab
         import nipype.pipeline.engine as npe
