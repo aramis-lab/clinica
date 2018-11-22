@@ -107,7 +107,7 @@ test:instantiate:mac:
     - source deactivate
 
   
- test:instantiate:linux:
+test:instantiate:linux:
   stage: test
   tags:
     - linux
@@ -121,8 +121,6 @@ test:instantiate:mac:
     - taskset -c 0-21 pytest --verbose --timeout=0 -n 6 -k 'test_instantiate'
     - module purge
     - source deactivate
-
-
 
 
 pkg:
