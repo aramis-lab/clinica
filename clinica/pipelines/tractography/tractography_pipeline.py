@@ -1,6 +1,8 @@
 """Tractography - Clinica Pipeline.
 This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
+command line tool. See here for more details:
+https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs
+/InteractingWithClinica.
 """
 
 # WARNING: Don't put any import statement here except if it's absolutly
@@ -8,7 +10,6 @@ command line tool. See here for more details: https://gitlab.icm-institute.org/a
 # Otherwise it will slow down the dynamic loading of the pipelines list by the
 # command line tool.
 import clinica.pipelines.engine as cpe
-from clinica.utils.stream import cprint
 
 
 class Tractography(cpe.Pipeline):
@@ -23,8 +24,10 @@ class Tractography(cpe.Pipeline):
 
     Args:
         input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
+        output_dir: An empty output directory where CAPS structured data will
+        be written.
+        subjects_sessions_list: The Subjects-Sessions list file (in .tsv
+        format).
 
     Returns:
         A clinica pipeline object containing the Tractography pipeline.
@@ -33,7 +36,7 @@ class Tractography(cpe.Pipeline):
 
 
     Example:
-        >>> from tractography import Tractography
+        >>> from clinica.pipelines.tractography import Tractography
         >>> pipeline = Tractography('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipeline.parameters = {
         >>>     # ...
@@ -64,7 +67,8 @@ class Tractography(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        return ['response', 'fod', 'tracts', 'nodes', 'connectomes']  # Fill here the list
+        return ['response', 'fod', 'tracts', 'nodes',
+                'connectomes']  # Fill here the list
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -97,7 +101,9 @@ class Tractography(cpe.Pipeline):
         atlas_files = []
         cprint('Extracting files...')
         for i in range(len(self.subjects)):
-            cprint('\t...subject \'' + str(self.subjects[i][4:]) + '\', session \'' + str(self.sessions[i][4:]) + '\'')
+            cprint('\t...subject \'' + str(
+                    self.subjects[i][4:]) + '\', session \'' + str(
+                    self.sessions[i][4:]) + '\'')
 
             wm_mask_file.append(caps_layout.get(freesurfer_file='wm.seg.mgz',
                                                 session=self.sessions[i][4:],
@@ -167,17 +173,14 @@ class Tractography(cpe.Pipeline):
 
             grad_fsl.append((bvec[i], bval[i]))
 
-
         # Return an error if all the DWI files are not in the same space
         if any(a != dwi_file_space[0] for a in dwi_file_space):
-
             raise ClinicaCAPSError('Preprocessed DWI files are not all in the '
                                    'same space. Please process them separately '
                                    'using the appropriate subjects/sessions '
                                    '`.tsv` file (-tsv option).')
 
         elif dwi_file_space[0] == 'b0':
-
             self.parameters['dwi_space'] = 'b0'
             read_node = npe.Node(name="ReadingFiles",
                                  iterables=[
@@ -192,16 +195,21 @@ class Tractography(cpe.Pipeline):
                                  interface=nutil.IdentityInterface(
                                          fields=self.get_input_fields()))
             self.connect([
-                (read_node, self.input_node, [('t1_brain_file',           't1_brain_file')]),
-                (read_node, self.input_node, [('wm_mask_file',             'wm_mask_file')]),
-                (read_node, self.input_node, [('dwi_file',                     'dwi_file')]),
-                (read_node, self.input_node, [('dwi_brainmask_file', 'dwi_brainmask_file')]),
-                (read_node, self.input_node, [('grad_fsl',                     'grad_fsl')]),
-                (read_node, self.input_node, [('atlas_files',               'atlas_files')]),
+                (read_node, self.input_node,
+                 [('t1_brain_file', 't1_brain_file')]),
+                (read_node, self.input_node,
+                 [('wm_mask_file', 'wm_mask_file')]),
+                (read_node, self.input_node,
+                 [('dwi_file', 'dwi_file')]),
+                (read_node, self.input_node,
+                 [('dwi_brainmask_file', 'dwi_brainmask_file')]),
+                (read_node, self.input_node,
+                 [('grad_fsl', 'grad_fsl')]),
+                (read_node, self.input_node,
+                 [('atlas_files', 'atlas_files')]),
             ])
 
         elif dwi_file_space[0] == 'T1w':
-
             self.parameters['dwi_space'] = 'T1w'
             read_node = npe.Node(name="ReadingFiles",
                                  iterables=[
@@ -215,11 +223,16 @@ class Tractography(cpe.Pipeline):
                                  interface=nutil.IdentityInterface(
                                          fields=self.get_input_fields()))
             self.connect([
-                (read_node, self.input_node, [('wm_mask_file',             'wm_mask_file')]),
-                (read_node, self.input_node, [('dwi_file',                     'dwi_file')]),
-                (read_node, self.input_node, [('dwi_brainmask_file', 'dwi_brainmask_file')]),
-                (read_node, self.input_node, [('grad_fsl',                     'grad_fsl')]),
-                (read_node, self.input_node, [('atlas_files',               'atlas_files')]),
+                (read_node, self.input_node,
+                 [('wm_mask_file', 'wm_mask_file')]),
+                (read_node, self.input_node,
+                 [('dwi_file', 'dwi_file')]),
+                (read_node, self.input_node,
+                 [('dwi_brainmask_file', 'dwi_brainmask_file')]),
+                (read_node, self.input_node,
+                 [('grad_fsl', 'grad_fsl')]),
+                (read_node, self.input_node,
+                 [('atlas_files', 'atlas_files')]),
             ])
 
         else:
@@ -245,32 +258,35 @@ class Tractography(cpe.Pipeline):
 
         join_node = npe.JoinNode(name='JoinOutputs',
                                  joinsource='ReadingFiles',
-                                interface=nutil.IdentityInterface(
-                                    fields=self.get_output_fields()))
+                                 interface=nutil.IdentityInterface(
+                                         fields=self.get_output_fields()))
 
         write_node = npe.MapNode(name='WritingCAPS',
                                  iterfield=['container'] +
                                            ['tractography.@' + o
                                             for o in self.get_output_fields()],
                                  interface=nio.DataSink(
-                                         infields=['tractography.@' + o for o in self.get_output_fields()]))
+                                         infields=['tractography.@' + o for o in
+                                                   self.get_output_fields()]))
         write_node.inputs.base_directory = self.caps_directory
-        write_node.inputs.container = utils.get_containers(self.subjects, self.sessions)
+        write_node.inputs.container = utils.get_containers(self.subjects,
+                                                           self.sessions)
         write_node.inputs.substitutions = [('trait_added', '')]
         write_node.inputs.parameterization = False
 
         self.connect([
             # Writing CAPS
-            (self.output_node, join_node, [('response',   'response')]),
-            (self.output_node, join_node, [('fod',   'fod')]),
-            (self.output_node, join_node, [('tracts',   'tracts')]),
-            (self.output_node, join_node, [('nodes',     'nodes')]),
-            (self.output_node, join_node, [('connectomes',     'connectomes')]),
-            (join_node, write_node, [('response',       'tractography.@response')]),
-            (join_node, write_node, [('fod',                'tractography.@fod')]),
-            (join_node, write_node, [('tracts',         'tractography.@tracts')]),
-            (join_node, write_node, [('nodes',         'tractography.@nodes')]),
-            (join_node, write_node, [('connectomes',   'tractography.@connectomes')]),
+            (self.output_node, join_node, [('response', 'response')]),
+            (self.output_node, join_node, [('fod', 'fod')]),
+            (self.output_node, join_node, [('tracts', 'tracts')]),
+            (self.output_node, join_node, [('nodes', 'nodes')]),
+            (self.output_node, join_node, [('connectomes', 'connectomes')]),
+            (join_node, write_node, [('response', 'tractography.@response')]),
+            (join_node, write_node, [('fod', 'tractography.@fod')]),
+            (join_node, write_node, [('tracts', 'tractography.@tracts')]),
+            (join_node, write_node, [('nodes', 'tractography.@nodes')]),
+            (join_node, write_node,
+             [('connectomes', 'tractography.@connectomes')]),
         ])
 
         self.write_graph()
@@ -328,7 +344,7 @@ class Tractography(cpe.Pipeline):
         t1_brain_conv_node = npe.Node(name="T1BrainConvertion",
                                       interface=fs.MRIConvert())
         wm_mask_conv_node = npe.Node(name="WMMaskConvertion",
-                                      interface=fs.MRIConvert())
+                                     interface=fs.MRIConvert())
 
         # WM Transformation
         # -----------------
@@ -352,7 +368,7 @@ class Tractography(cpe.Pipeline):
         # -----------------
         tck_gen_node = npe.Node(name="TractsGeneration",
                                 interface=mrtrix3.Tractography())
-        # tck_gen_node.inputs.n_tracks = self.parameters['n_tracks']
+        tck_gen_node.inputs.n_tracts = self.parameters['n_tracks']
 
         # Nodes Generation
         # ----------------
@@ -387,21 +403,36 @@ class Tractography(cpe.Pipeline):
         if self.parameters['dwi_space'] == 'b0':
             self.connect([
                 # MGZ Files Convertion
-                (self.input_node,       t1_brain_conv_node, [('t1_brain_file',          'in_file')]), #noqa
-                (self.input_node,       wm_mask_conv_node,  [('wm_mask_file',           'in_file')]), #noqa
+                (self.input_node, t1_brain_conv_node,
+                 [('t1_brain_file', 'in_file')]),
+
+                # noqa
+                (self.input_node, wm_mask_conv_node,
+                 [('wm_mask_file', 'in_file')]),
+                # noqa
                 # B0 Extraction
-                (self.input_node,       split_node,         [('dwi_file',               'in_file')]), #noqa
-                (split_node,            select_node,        [('out_files',               'inlist')]), #noqa
+                (self.input_node, split_node, [('dwi_file', 'in_file')]),
+                # noqa
+                (split_node, select_node, [('out_files', 'inlist')]),
+                # noqa
                 # Masking
-                (select_node,           mask_node,          [('out',                    'in_file')]), # B0 #noqa
-                (self.input_node,       mask_node,          [('dwi_brainmask_file',   'mask_file')]), # Brain mask #noqa #noqa
+                (select_node, mask_node, [('out', 'in_file')]),  # B0 #noqa
+                (self.input_node, mask_node,
+                 [('dwi_brainmask_file', 'mask_file')]),
+                # Brain mask #noqa #noqa
                 # T1-to-B0 Registration
-                (t1_brain_conv_node,    t12b0_reg_node,     [('out_file',               'in_file')]), # Brain #noqa
-                (mask_node,             t12b0_reg_node,     [('out_file',             'reference')]), # B0 brain-masked #noqa
+                (t1_brain_conv_node, t12b0_reg_node, [('out_file', 'in_file')]),
+                # Brain #noqa
+                (mask_node, t12b0_reg_node, [('out_file', 'reference')]),
+                # B0 brain-masked #noqa
                 # WM Transformation
-                (wm_mask_conv_node,     wm_transform_node,  [('out_file',               'in_file')]), # Brain mask #noqa
-                (mask_node,             wm_transform_node,  [('out_file',             'reference')]), # BO brain-masked #noqa
-                (t12b0_reg_node,        wm_transform_node,  [('out_matrix_file', 'in_matrix_file')]), # T1-to-B0 matrix file #noqa
+                (wm_mask_conv_node, wm_transform_node,
+                 [('out_file', 'in_file')]),  # Brain mask #noqa
+                (mask_node, wm_transform_node, [('out_file', 'reference')]),
+                # BO brain-masked #noqa
+                (t12b0_reg_node, wm_transform_node,
+                 [('out_matrix_file', 'in_matrix_file')]),
+                # T1-to-B0 matrix file #noqa
             ])
 
         # Tractography
@@ -409,48 +440,74 @@ class Tractography(cpe.Pipeline):
         self.connect([
             (self.input_node, caps_filenames_node, [('dwi_file', 'dwi_file')]),
             # Response Estimation
-            (self.input_node,        resp_estim_node, [('dwi_file',             'in_file')]), # Preproc. DWI #noqa
-            (self.input_node,        resp_estim_node, [('dwi_brainmask_file',   'in_mask')]), # B0 brain mask #noqa
-            (self.input_node,        resp_estim_node, [('grad_fsl',            'grad_fsl')]), # bvecs and bvals #noqa
-            (caps_filenames_node,    resp_estim_node, [('response',             'wm_file')]), # output response filename #noqa
+            (self.input_node, resp_estim_node, [('dwi_file', 'in_file')]),
+            # Preproc. DWI #noqa
+            (self.input_node, resp_estim_node,
+             [('dwi_brainmask_file', 'in_mask')]),  # B0 brain mask #noqa
+            (self.input_node, resp_estim_node, [('grad_fsl', 'grad_fsl')]),
+            # bvecs and bvals #noqa
+            (caps_filenames_node, resp_estim_node, [('response', 'wm_file')]),
+            # output response filename #noqa
             # FOD Estimation
-            (self.input_node,         fod_estim_node, [('dwi_file',             'in_file')]), # Preproc. DWI #noqa
-            (resp_estim_node,         fod_estim_node, [('wm_file',               'wm_txt')]), # Response (txt file) #noqa
-            (self.input_node,         fod_estim_node, [('dwi_brainmask_file', 'mask_file')]), # B0 brain mask #noqa
-            (self.input_node,         fod_estim_node, [('grad_fsl',            'grad_fsl')]), # T1-to-B0 matrix file #noqa
-            (caps_filenames_node,     fod_estim_node, [('fod',                   'wm_odf')]), # output odf filename #noqa
+            (self.input_node, fod_estim_node, [('dwi_file', 'in_file')]),
+            # Preproc. DWI #noqa
+            (resp_estim_node, fod_estim_node, [('wm_file', 'wm_txt')]),
+            # Response (txt file) #noqa
+            (self.input_node, fod_estim_node,
+             [('dwi_brainmask_file', 'mask_file')]),  # B0 brain mask #noqa
+            (self.input_node, fod_estim_node, [('grad_fsl', 'grad_fsl')]),
+            # T1-to-B0 matrix file #noqa
+            (caps_filenames_node, fod_estim_node, [('fod', 'wm_odf')]),
+            # output odf filename #noqa
             # Tracts Generation
-            (fod_estim_node,            tck_gen_node, [('wm_odf',               'in_file')]), # ODF file #noqa
-            (caps_filenames_node,       tck_gen_node, [('tracts',              'out_file')]), # output tck filename #noqa
+            (fod_estim_node, tck_gen_node, [('wm_odf', 'in_file')]),
+            # ODF file #noqa
+            (caps_filenames_node, tck_gen_node, [('tracts', 'out_file')]),
+            # output tck filename #noqa
             # Label Conversion
-            (self.input_node,     label_convert_node, [('atlas_files',          'in_file')]), # atlas image files #noqa
-            (caps_filenames_node, label_convert_node, [('nodes',               'out_file')]), # converted atlas image filenames #noqa
+            (self.input_node, label_convert_node, [('atlas_files', 'in_file')]),
+            # atlas image files #noqa
+            (caps_filenames_node, label_convert_node, [('nodes', 'out_file')]),
+            # converted atlas image filenames #noqa
             # Connectomes Generation
-            (tck_gen_node,             conn_gen_node, [('out_file',             'in_file')]), # output odf filename #noqa
-            (label_convert_node,       conn_gen_node, [('out_file',             'in_parc')]), # output odf filename #noqa
-            (caps_filenames_node,      conn_gen_node, [('connectomes',         'out_file')]), # output odf filename #noqa
+            (tck_gen_node, conn_gen_node, [('out_file', 'in_file')]),
+            # output odf filename #noqa
+            (label_convert_node, conn_gen_node, [('out_file', 'in_parc')]),
+            # output odf filename #noqa
+            (caps_filenames_node, conn_gen_node, [('connectomes', 'out_file')]),
+            # output odf filename #noqa
         ])
 
         if self.parameters['dwi_space'] == 'b0':
             self.connect([
-                (wm_transform_node,     tck_gen_node,       [('out_file',            'seed_image')]) # ODF file #noqa
+                (wm_transform_node, tck_gen_node, [('out_file', 'seed_image')])
+                # ODF file #noqa
             ])
         elif self.parameters['dwi_space'] == 'T1w':
             self.connect([
-                (self.input_node,       tck_gen_node,       [('wm_mask_file',        'seed_image')]) # ODF file #noqa
+                (
+                    self.input_node, tck_gen_node,
+                    [('wm_mask_file', 'seed_image')])
+                # ODF file #noqa
             ])
         else:
-            raise ClinicaCAPSError('Bad preprocessed DWI space. Please check your CAPS folder.')
+            raise ClinicaCAPSError(
+                    'Bad preprocessed DWI space. Please check your CAPS '
+                    'folder.')
 
         # Ouputs
         # ------
         self.connect([
-            (resp_estim_node,       self.output_node,   [('wm_file',               'response')]), # T1-to-B0 matrix file #noqa
-            (fod_estim_node,        self.output_node,   [('wm_odf',                     'fod')]), # T1-to-B0 matrix file #noqa
-            (tck_gen_node,          self.output_node,   [('out_file',                'tracts')]), # T1-to-B0 matrix file #noqa
-            (label_convert_node,    self.output_node,   [('out_file',                 'nodes')]), # T1-to-B0 matrix file #noqa
-            (conn_gen_node,         self.output_node,   [('out_file',           'connectomes')]), # T1-to-B0 matrix file #noqa
+            (resp_estim_node, self.output_node, [('wm_file', 'response')]),
+            # T1-to-B0 matrix file #noqa
+            (fod_estim_node, self.output_node, [('wm_odf', 'fod')]),
+            # T1-to-B0 matrix file #noqa
+            (tck_gen_node, self.output_node, [('out_file', 'tracts')]),
+            # T1-to-B0 matrix file #noqa
+            (label_convert_node, self.output_node, [('out_file', 'nodes')]),
+            # T1-to-B0 matrix file #noqa
+            (conn_gen_node, self.output_node, [('out_file', 'connectomes')]),
+            # T1-to-B0 matrix file #noqa
         ])
 
         cprint('Pipeline built')
-

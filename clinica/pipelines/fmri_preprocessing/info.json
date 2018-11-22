@@ -17,10 +17,6 @@
             "type": "pipeline",
             "name": "aramislab/t1-freesurfer",
             "version": ">=0.1"
-        },
-        {
-            "type": "binary",
-            "name": "which"
         }
     ]
 }
