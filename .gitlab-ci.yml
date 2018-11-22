@@ -93,7 +93,7 @@ launch:linux:
     - source deactivate
 
       
-unittest:mac:
+test:instantiate:mac:
   stage: test
   tags:
     - macOS
@@ -102,12 +102,12 @@ unittest:mac:
     - module load clinica.all
     - cd test
     - ln -s /Volumes/builds/Clinica/data_ci_mac ./data
-    - pytest --verbose -k instantiate
+    - pytest --verbose -k 'test_instantiate'
     - module purge
     - source deactivate
 
   
-unittest:linux:
+ test:instantiate:linux:
   stage: test
   tags:
     - linux
@@ -118,9 +118,12 @@ unittest:linux:
     - module load clinica/freesurfer/6.0.0
     - cd test
     - ln -s /localdrive10TB/data/data_ci_linux_branch-upgrade_dep ./data
-    - taskset -c 0-21 pytest --verbose --timeout=0 -n 6 -k run
+    - taskset -c 0-21 pytest --verbose --timeout=0 -n 6 -k 'test_instantiate'
     - module purge
     - source deactivate
+
+
+
 
 pkg:
   stage: package
