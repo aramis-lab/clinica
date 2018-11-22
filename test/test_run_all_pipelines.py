@@ -162,7 +162,6 @@ def test_run_T1VolumeDartel2MNI():
 def test_run_T1VolumeNewTemplate():
     from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_pipeline import T1VolumeNewTemplate
     from os.path import dirname, join, abspath, exists, basename
-    import shutil
     import numpy as np
     import nibabel as nib
 
@@ -195,7 +194,7 @@ def test_run_T1VolumeNewTemplate():
 
     for i in range(len(out_data_GM_MNI)):
         print('Checking file ' + subjects[i] + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')
-        assert np.allclose(out_data_GM_MNI[i], ref_data_GM_MNI[i], rtol=1e-8, equal_nan=True)
+        assert np.allclose(out_data_GM_MNI[i], ref_data_GM_MNI[i], rtol=1e-4, equal_nan=True)
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -206,8 +205,7 @@ def test_run_T1VolumeExistingDartel():
     from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_pipeline import T1VolumeExistingDartel
     from os.path import dirname, join, abspath
     import shutil
-    import nibabel as nib
-    import numpy as np
+    from comparison_functions import likeliness_measure
 
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeExistingDartel')
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -227,14 +225,61 @@ def test_run_T1VolumeExistingDartel():
 
     # Check output vs ref
     subjects = ['sub-ADNI011S4105', 'sub-ADNI023S4020', 'sub-ADNI035S4082', 'sub-ADNI128S4832']
-    out_data_forward_def = [nib.load(join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 't1', 'spm', 'dartel', 'group-UnitTest',
-                                          sub + '_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz')).get_data()
+    out_data_forward_def = [join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 't1', 'spm', 'dartel',
+                                 'group-UnitTest',
+                                 sub + '_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz')
                             for sub in subjects]
-    ref_data_forward_def = [nib.load(join(root, 'ref', sub + '_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz')).get_data()
+    ref_data_forward_def = [join(root, 'ref',
+                                 sub + '_ses-M00_T1w_target-UnitTest_transformation-forward_deformation.nii.gz')
                             for sub in subjects]
 
     for i in range(len(out_data_forward_def)):
-        assert np.allclose(out_data_forward_def[i], ref_data_forward_def[i], rtol=1e-8, equal_nan=True)
+        assert likeliness_measure(out_data_forward_def[i], ref_data_forward_def[i], (1e-3, 0.25), (1e-2, 0.1))
+
+    # Remove data in out folder
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    pass
+
+def test_run_T1VolumeExistingTemplate():
+    from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
+    from os.path import dirname, join, abspath
+    import shutil
+    import numpy as np
+    import nibabel as nib
+
+    root = join(dirname(abspath(__file__)), 'data', 'T1VolumeExistingTemplate')
+
+    # Remove residual files from out folder
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+    clean_folder(join(working_dir, 'T1VolumeExistingTemplate'))
+
+    pipeline = T1VolumeExistingTemplate(bids_directory=join(root, 'in', 'bids'),
+                                        caps_directory=join(root, 'out', 'caps'),
+                                        tsv_file=join(root, 'in', 'subjects.tsv'),
+                                        group_id='UnitTest')
+    pipeline.base_dir = join(working_dir, 'T1VolumeExistingTemplate')
+    pipeline.build()
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+
+    # Check generated vs ref
+    subjects = ['sub-ADNI011S4105', 'sub-ADNI023S4020', 'sub-ADNI035S4082', 'sub-ADNI128S4832']
+    out_data_GM_MNI = [nib.load(join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 't1', 'spm', 'dartel', 'group-UnitTest',
+                      sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')).get_data()
+        for sub in subjects]
+    ref_data_GM_MNI = [nib.load(join(root, 'ref',sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')).get_data()
+                       for sub in subjects]
+
+    # Check output vs ref
+    out_data_template = nib.load(
+        join(root, 'out/caps/groups/group-UnitTest/t1/group-UnitTest_template.nii.gz')).get_data()
+    ref_data_template = nib.load(join(root, 'ref/group-UnitTest_template.nii.gz')).get_data()
+    assert np.allclose(out_data_template, ref_data_template, rtol=1e-8, equal_nan=True)
+
+    for i in range(len(out_data_GM_MNI)):
+        print('Checking file ' + subjects[i]
+              + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')
+        assert np.allclose(out_data_GM_MNI[i], ref_data_GM_MNI[i], rtol=1e-4, equal_nan=True)
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)

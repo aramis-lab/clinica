@@ -119,7 +119,7 @@ unittest:linux:
     - module load clinica/freesurfer/6.0.0
     - cd test
     - ln -s /localdrive10TB/data/data_ci_linux_branch-upgrade_dep ./data
-    - taskset -c 0-21 pytest --verbose --timeout=0 -n 6 -k run
+    - taskset -c 0-21 pytest --verbose --disable-warnings --timeout=0 -n 6 -k run
     - module purge
     - source deactivate
 

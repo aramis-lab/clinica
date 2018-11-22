@@ -77,6 +77,18 @@ def test_instantiate_T1VolumeExistingDartel():
     pipeline.build()
     pass
 
+def test_instantiate_T1VolumeExistingTemplate():
+    from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
+    from os.path import dirname, join, abspath
+
+    root = join(dirname(abspath(__file__)), 'data', 'T1VolumeExistingTemplate')
+    pipeline = T1VolumeExistingTemplate(bids_directory=join(root, 'in', 'bids'),
+                                        caps_directory=join(root, 'in', 'caps'),
+                                        tsv_file=join(root, 'in', 'subjects.tsv'),
+                                        group_id='UnitTest')
+    pipeline.build()
+    pass
+
 def test_instantiate_T1VolumeParcellation():
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import T1VolumeParcellation
     from os.path import dirname, join, abspath
