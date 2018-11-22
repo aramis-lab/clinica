@@ -58,7 +58,7 @@ class T1VolumeParcellation(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        pass # Fill here the list
+        pass
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -74,7 +74,6 @@ class T1VolumeParcellation(cpe.Pipeline):
                                             fields=self.get_input_fields(),
                                             mandatory_inputs=True))
         read_parameters_node.inputs.atlas_list = self.parameters['atlases']
-
 
         caps_layout = CAPSLayout(self.caps_directory)
 
@@ -93,13 +92,9 @@ class T1VolumeParcellation(cpe.Pipeline):
             raise IOError(str(len(caps_file)) + ' file(s) grabbed, but there is ' + str(len(self.subjects)) + ' sessions')
         read_parameters_node.inputs.file_list = caps_file
 
-
-
-        self.connect([
-            (read_parameters_node,      self.input_node,    [('file_list',    'file_list')]),
-            (read_parameters_node,      self.input_node,    [('atlas_list',    'atlas_list')])
-
-        ])
+        self.connect([(read_parameters_node, self.input_node, [('file_list', 'file_list')]),
+                      (read_parameters_node, self.input_node, [('atlas_list', 'atlas_list')])
+                      ])
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
@@ -110,11 +105,10 @@ class T1VolumeParcellation(cpe.Pipeline):
         # if this pipeline output is not already connected to a next Clinica
         # pipeline.
         pass
+
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
         """
-
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_utils as spu

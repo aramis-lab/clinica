@@ -22,7 +22,8 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'Tissue segmentation, bias correction and spatial normalization to MNI space of T1w images with SPM:\nhttp://clinica.run/doc/Pipelines/T1_Volume/'
+        self._description = 'Tissue segmentation, bias correction and spatial normalization to MNI space' \
+                            + ' of T1w images with SPM:\nhttp://clinica.run/doc/Pipelines/T1_Volume/'
 
     def define_options(self):
         """Define the sub-command arguments

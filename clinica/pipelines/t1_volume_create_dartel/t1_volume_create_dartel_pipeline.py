@@ -47,7 +47,8 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
         # Check that group does not already exists
         if os.path.exists(os.path.join(os.path.abspath(caps_directory), 'groups', 'group-' + group_id)):
-            error_message = 'group_id : ' + group_id + ' already exists, please choose an other one. Groups that exists in your CAPS directory are : \n'
+            error_message = 'group_id : ' + group_id + ' already exists, please choose an other one.' \
+                            + ' Groups that exists in your CAPS directory are : \n'
             list_groups = os.listdir(os.path.join(os.path.abspath(caps_directory), 'groups'))
             for e in list_groups:
                 if e.startswith('group-'):
@@ -156,7 +157,8 @@ class T1VolumeCreateDartel(cpe.Pipeline):
             (r'(.*)c6(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-background\3'),
             (r'(.*)r(sub-.*)(\.nii(\.gz)?)$', r'\1\2\3'),
             (r'(.*)_dartelinput(\.nii(\.gz)?)$', r'\1\2'),
-            (r'(.*)flow_fields/u_(sub-.*)_segm-.*(\.nii(\.gz)?)$', r'\1\2_target-' + re.escape(self._group_id) + r'_transformation-forward_deformation\3'),
+            (r'(.*)flow_fields/u_(sub-.*)_segm-.*(\.nii(\.gz)?)$',
+             r'\1\2_target-' + re.escape(self._group_id) + r'_transformation-forward_deformation\3'),
             (r'trait_added', r'')
         ]
 
@@ -167,8 +169,10 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         write_template_node.inputs.base_directory = self.caps_directory
         write_template_node.inputs.container = op.join('groups/group-' + self._group_id, 't1')
         write_template_node.inputs.regexp_substitutions = [
-            (r'(.*)final_template_file/.*(\.nii(\.gz)?)$', r'\1group-' + re.escape(self._group_id) + r'_template\2'),
-            (r'(.*)template_files/.*([0-9])(\.nii(\.gz)?)$', r'\1group-' + re.escape(self._group_id) + r'_iteration-\2_template\3')
+            (r'(.*)final_template_file/.*(\.nii(\.gz)?)$',
+             r'\1group-' + re.escape(self._group_id) + r'_template\2'),
+            (r'(.*)template_files/.*([0-9])(\.nii(\.gz)?)$',
+             r'\1group-' + re.escape(self._group_id) + r'_iteration-\2_template\3')
         ]
 
         self.connect([

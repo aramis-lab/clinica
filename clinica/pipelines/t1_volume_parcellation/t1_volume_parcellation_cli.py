@@ -1,5 +1,7 @@
 # coding: utf8
 
+import clinica.engine as ce
+
 __author__ = "Simona Bottani"
 __copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
 __credits__ = ["Simona Bottani"]
@@ -8,7 +10,6 @@ __version__ = "0.1.0"
 __maintainer__ = "Simona Bottani"
 __email__ = "simona.bottani@icm-institute.org"
 __status__ = "Development"
-import clinica.engine as ce
 
 
 class T1VolumeParcellationCLI(ce.CmdParser):
@@ -21,7 +22,8 @@ class T1VolumeParcellationCLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'Computation of mean GM concentration for a set of regions:\nhttp://clinica.run/doc/Pipelines/T1_Volume/'
+        self._description = 'Computation of mean GM concentration for a set of regions:\n' \
+                            + 'http://clinica.run/doc/Pipelines/T1_Volume/'
 
     def define_options(self):
         """Define the sub-command arguments
@@ -37,9 +39,6 @@ class T1VolumeParcellationCLI(ce.CmdParser):
                                 help='Specify if modulation must be enabled. Default : on', default='on')
         self._args.add_argument("-tsv", "--subjects_sessions_tsv",
                                 help='TSV file containing a list of subjects with their sessions.')
-        #self._args.add_argument("-im_type", "--image_type", type = str, default = 'T1',
-        #                        choices =['T1', 'pet'],
-        #                        help = 'image type. Possible values are T1 and pet')
         self._args.add_argument("-atlases", "--atlases", nargs='+', type=str,
                                 default=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
                                 choices=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
