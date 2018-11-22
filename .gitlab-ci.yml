@@ -114,6 +114,7 @@ unittest:linux:
   script:
     - source activate clinica_env_upgrade_dep
     - module load clinica.all
+    - module load clinica/freesurfer/6.0.0
     - export PATH="/home/gitlab-runner/dcm2nii":${PATH}
     - cd test
     - ln -s /localdrive10TB/data/data_ci_linux_branch-upgrade_dep ./data

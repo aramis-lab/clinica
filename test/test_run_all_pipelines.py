@@ -18,7 +18,6 @@ import sys
 
 # Determine location for working_directory
 warnings.filterwarnings("ignore")
-warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 if sys.platform == 'darwin':
     working_dir = '/Users/arnaud.marcoux/CI/working_dir_FU_python3'
@@ -320,6 +319,8 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DWIPreprocessingUsingPhaseDiffFieldmap
     from os.path import dirname, join, abspath
     from comparison_functions import similarity_measure
+    import warnings
+    warnings.filterwarnings("ignore")
 
 
     root = join(dirname(abspath(__file__)), 'data', 'DWIPreprocessingUsingPhaseDiffFieldmap')
@@ -337,7 +338,7 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
 
     # Assert :
-    out_file = join(root, 'out', 'caps', 'subjects', 'sub-CAPP01001TMM', 'ses-M00', 'dwi', 'preprocessing', 'sub-CAPP01001TMM_ses-M00_dwi_space-bo_preproc.nii.gz')
+    out_file = join(root, 'out', 'caps', 'subjects', 'sub-CAPP01001TMM', 'ses-M00', 'dwi', 'preprocessing', 'sub-CAPP01001TMM_ses-M00_dwi_space-b0_preproc.nii.gz')
     ref_file = join(root, 'ref', 'sub-CAPP01001TMM_ses-M00_dwi_space-T1w_preproc.nii.gz')
 
     assert similarity_measure(out_file, ref_file, 0.955)

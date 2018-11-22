@@ -621,8 +621,8 @@ def eddy_fsl_pipeline(epi_param, name='eddy_fsl'):
                                 function=eddy_fsl),
                    name='eddy_fsl')
 
-    # eddy = pe.Node(interface=Eddy(), name='eddy_fsl')
-    # eddy.inputs.flm = 'linear'
+    eddy = pe.Node(interface=Eddy(), name='eddy_fsl')
+    eddy.inputs.flm = 'linear'
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['out_parameter',
                                                        'out_corrected',
