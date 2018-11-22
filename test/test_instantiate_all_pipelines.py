@@ -8,7 +8,7 @@ def test_instantiate_T1FreeSurferCrossSectional():
     from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_pipeline import T1FreeSurferCrossSectional
     from os.path import dirname, join, abspath
 
-    root= dirname(abspath(__file__))
+    root = dirname(abspath(__file__))
     pipeline = T1FreeSurferCrossSectional(bids_directory=join(root, 'data', 'T1FreeSurferCrossSectional', 'in', 'bids'),
                                           caps_directory=join(root, 'data', 'T1FreeSurferCrossSectional', 'in', 'caps'),
                                           tsv_file=join(root, 'data', 'T1FreeSurferCrossSectional', 'in', 'subjects.tsv'))
@@ -20,7 +20,7 @@ def test_instantiate_T1VolumeTissueSegmentation():
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
     from os.path import dirname, join, abspath
 
-    root= dirname(abspath(__file__))
+    root = dirname(abspath(__file__))
     pipeline = T1VolumeTissueSegmentation(bids_directory=join(root, 'data', 'T1VolumeTissueSegmentation', 'in', 'bids'),
                                           caps_directory=join(root, 'data', 'T1VolumeTissueSegmentation', 'in', 'caps'),
                                           tsv_file=join(root, 'data', 'T1VolumeTissueSegmentation', 'in', 'subjects.tsv'))
@@ -31,7 +31,7 @@ def test_instantiate_T1VolumeCreateDartel():
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
     from os.path import dirname, join, abspath
 
-    root= dirname(abspath(__file__))
+    root = dirname(abspath(__file__))
     pipeline = T1VolumeCreateDartel(bids_directory=join(root, 'data', 'T1VolumeCreateDartel', 'in', 'bids'),
                                     caps_directory=join(root, 'data', 'T1VolumeCreateDartel', 'in', 'caps'),
                                     tsv_file=join(root, 'data', 'T1VolumeCreateDartel', 'in', 'subjects.tsv'),
@@ -44,7 +44,7 @@ def test_instantiate_T1VolumeDartel2MNI():
     from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_pipeline import T1VolumeDartel2MNI
     from os.path import dirname, join, abspath
 
-    root= dirname(abspath(__file__))
+    root = dirname(abspath(__file__))
     pipeline = T1VolumeDartel2MNI(bids_directory=join(root, 'data', 'T1VolumeDartel2MNI', 'in', 'bids'),
                                   caps_directory=join(root, 'data', 'T1VolumeDartel2MNI', 'in', 'caps'),
                                   tsv_file=join(root, 'data', 'T1VolumeDartel2MNI', 'in', 'subjects.tsv'),
@@ -56,7 +56,7 @@ def test_instantiate_T1VolumeNewTemplate():
     from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_pipeline import T1VolumeNewTemplate
     from os.path import dirname, join, abspath
 
-    root= dirname(abspath(__file__))
+    root = dirname(abspath(__file__))
     pipeline = T1VolumeNewTemplate(bids_directory=join(root, 'data', 'T1VolumeNewTemplate', 'in', 'bids'),
                                    caps_directory=join(root, 'data', 'T1VolumeNewTemplate', 'in', 'caps'),
                                    tsv_file=join(root, 'data', 'T1VolumeNewTemplate', 'in', 'subjects.tsv'),
@@ -65,15 +65,15 @@ def test_instantiate_T1VolumeNewTemplate():
     pass
 
 
-def test_instantiate_T1VolumeExistingTemplate():
-    from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
+def test_instantiate_T1VolumeExistingDartel():
+    from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_pipeline import T1VolumeExistingDartel
     from os.path import dirname, join, abspath
 
-    root= dirname(abspath(__file__))
-    pipeline = T1VolumeExistingTemplate(bids_directory=join(root, 'data', 'T1VolumeExistingTemplate', 'in', 'bids'),
-                                        caps_directory=join(root, 'data', 'T1VolumeExistingTemplate', 'in', 'caps'),
-                                        tsv_file=join(root, 'data', 'T1VolumeExistingTemplate', 'in', 'subjects.tsv'),
-                                        group_id='UnitTest')
+    root = dirname(abspath(__file__))
+    pipeline = T1VolumeExistingDartel(bids_directory=join(root, 'data', 'T1VolumeExistingDartel', 'in', 'bids'),
+                                      caps_directory=join(root, 'data', 'T1VolumeExistingDartel', 'in', 'caps'),
+                                      tsv_file=join(root, 'data', 'T1VolumeExistingDartel', 'in', 'subjects.tsv'),
+                                      group_id='UnitTest')
     pipeline.build()
     pass
 
@@ -81,7 +81,7 @@ def test_instantiate_T1VolumeParcellation():
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import T1VolumeParcellation
     from os.path import dirname, join, abspath
 
-    root= dirname(abspath(__file__))
+    root = dirname(abspath(__file__))
     pipeline = T1VolumeParcellation(bids_directory='./4',
                                     caps_directory=join(root, 'data', 'T1VolumeParcellation', 'in', 'caps'),
                                     tsv_file=join(root, 'data', 'T1VolumeParcellation', 'in', 'subjects.tsv'))
@@ -95,7 +95,7 @@ def test_instantiate_DWIPreprocessingUsingT1():
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DWIPreprocessingUsingT1
     from os.path import dirname, join, abspath
 
-    root= dirname(abspath(__file__))
+    root = dirname(abspath(__file__))
     pipeline = DWIPreprocessingUsingT1(bids_directory=join(root, 'data', 'DWIPreprocessingUsingT1', 'in', 'bids'),
                                        caps_directory=join(root, 'data', 'DWIPreprocessingUsingT1', 'in', 'caps'),
                                        tsv_file=join(root, 'data', 'DWIPreprocessingUsingT1', 'in', 'subjects.tsv'),
@@ -110,7 +110,7 @@ def test_instantiate_DWIPreprocessingUsingPhaseDiffFieldmap():
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DWIPreprocessingUsingPhaseDiffFieldmap
     from os.path import dirname, join, abspath
 
-    root= dirname(abspath(__file__))
+    root = dirname(abspath(__file__))
     pipeline = DWIPreprocessingUsingPhaseDiffFieldmap(bids_directory=join(root, 'data', 'DWIPreprocessingUsingPhaseDiffFieldmap', 'in', 'bids'),
                                                       caps_directory=join(root, 'data', 'DWIPreprocessingUsingPhaseDiffFieldmap', 'in', 'caps'),
                                                       tsv_file=join(root, 'data', 'DWIPreprocessingUsingPhaseDiffFieldmap', 'in', 'subjects.tsv'),
@@ -122,7 +122,7 @@ def test_instantiate_DWIProcessingDTI():
     from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_pipeline import DWIProcessingDTI
     from os.path import dirname, join, abspath
 
-    root= dirname(abspath(__file__))
+    root = dirname(abspath(__file__))
     pipeline = DWIProcessingDTI(caps_directory=join(root, 'data', 'DWIProcessingDTI', 'in', 'caps'),
                                 tsv_file=join(root, 'data', 'DWIProcessingDTI', 'in', 'subjects.tsv'))
     pipeline.build()
@@ -133,7 +133,7 @@ def test_instantiate_fMRIPreprocessing():
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
     from os.path import dirname, join, abspath
 
-    root= dirname(abspath(__file__))
+    root = dirname(abspath(__file__))
     pipeline = fMRIPreprocessing(bids_directory=join(root, 'data', 'fMRIPreprocessing', 'in', 'bids'),
                                  caps_directory=join(root, 'data', 'fMRIPreprocessing', 'in', 'caps'),
                                  tsv_file=join(root, 'data', 'fMRIPreprocessing', 'in', 'subjects.tsv'))

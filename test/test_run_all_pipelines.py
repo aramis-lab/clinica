@@ -202,26 +202,26 @@ def test_run_T1VolumeNewTemplate():
     pass
 
 
-def test_run_T1VolumeExistingTemplate():
-    from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
+def test_run_T1VolumeExistingDartel():
+    from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_pipeline import T1VolumeExistingDartel
     from os.path import dirname, join, abspath
     import shutil
     import nibabel as nib
     import numpy as np
 
-    root = join(dirname(abspath(__file__)), 'data', 'T1VolumeExistingTemplate')
+    root = join(dirname(abspath(__file__)), 'data', 'T1VolumeExistingDartel')
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-    clean_folder(join(working_dir, 'T1VolumeExistingTemplate'))
+    clean_folder(join(working_dir, 'T1VolumeExistingDartel'))
 
     # Copy necessary data to run pipeline
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     # Instantiate and run pipeline
-    pipeline = T1VolumeExistingTemplate(bids_directory=join(root, 'in', 'bids'),
-                                        caps_directory=join(root, 'out', 'caps'),
-                                        tsv_file=join(root, 'in', 'subjects.tsv'),
-                                        group_id='UnitTest')
-    pipeline.base_dir = join(working_dir, 'T1VolumeExistingTemplate')
+    pipeline = T1VolumeExistingDartel(bids_directory=join(root, 'in', 'bids'),
+                                      caps_directory=join(root, 'out', 'caps'),
+                                      tsv_file=join(root, 'in', 'subjects.tsv'),
+                                      group_id='UnitTest')
+    pipeline.base_dir = join(working_dir, 'T1VolumeExistingDartel')
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
 
