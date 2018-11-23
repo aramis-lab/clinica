@@ -91,7 +91,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
             A list of (string) input fields name.
         """
 
-        return ['input_images', 'dartel_iteration_templates']
+        return ['input_images', 'dartel_iteration_templates', 'dartel_final_template']
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipelines.
@@ -134,7 +134,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
                                                                     'T1w',
                                                                     self.bids_layout)
 
-        # Dartel Templates DataGrabber
+        # Dartel Iterations Templates DataGrabber
         # ============================
         templates_reader = npe.MapNode(nio.DataGrabber(infields=['iteration'],
                                                        outfields=['out_files']),
@@ -146,9 +146,21 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         templates_reader.inputs.iteration = range(1, 7)
         templates_reader.inputs.sort_filelist = False
 
+        # Dartel Template DataGrabber
+        # ===========================
+        final_template_reader = npe.Node(nio.DataGrabber(infields=['group_id', 'group_id_repeat'],
+                                                        outfields=['out_files']),
+                                         name="final_template_reader")
+        final_template_reader.inputs.base_directory = self.caps_directory
+        final_template_reader.inputs.template = 'groups/group-%s/t1/group-%s_template.nii*'
+        final_template_reader.inputs.group_id = self._group_id
+        final_template_reader.inputs.group_id_repeat = self._group_id
+        final_template_reader.inputs.sort_filelist = False
+
         self.connect([
             (read_node, self.input_node, [('bids_images', 'input_images')]),
-            (templates_reader, self.input_node, [('out_files', 'dartel_iteration_templates')])
+            (templates_reader, self.input_node, [('out_files', 'dartel_iteration_templates')]),
+            (final_template_reader, self.input_node, [('out_files', 'dartel_final_template')])
         ])
 
     def build_output_node(self):
@@ -503,7 +515,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
                                              'apply_to_files')]),
             (dartel_existing_template, dartel2mni_node, [(('dartel_flow_fields', dartel2mni_utils.prepare_flowfields,
                                                            self.parameters['tissue_classes']), 'flowfield_files')]),
-            (dartel_existing_template, dartel2mni_node, [('final_template_file', 'template_file')]),
+            (self.input_node, dartel2mni_node, [('dartel_final_template', 'template_file')]),
             (dartel2mni_node, self.output_node, [('normalized_files', 'normalized_files')]),
             (dartel2mni_node, atlas_stats_node, [(('normalized_files', dartel2mni_utils.select_gm_images),
                                                   'in_image')]),
