@@ -27,6 +27,16 @@ def prepare_flowfields(flow_fields, tissues):
     return [[f] * len(tissues) for f in flow_fields]
 
 
+def prepare_existing_dartel_flowfields(flow_fields, tissues):
+    """
+
+    :param flow_fields:
+    :param tissues:
+    :return:
+    """
+    return [f * len(tissues) for f in flow_fields]
+
+
 def join_smoothed_files(smoothed_normalized_files):
     """
     Joins outputs

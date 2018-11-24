@@ -327,7 +327,6 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as seg_utils
-        import clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_utils as dartel_utils
         import clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_utils as existing_dartel_utils
         import clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_utils as dartel2mni_utils
         from clinica.utils.io import unzip_nii
@@ -441,6 +440,13 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         if self.parameters['regularization_form'] is not None:
             dartel_existing_template.inputs.regularization_form = self.parameters['regularization_form']
 
+        # Unzipping Template
+        # ============================
+        unzip_template_node = npe.Node(nutil.Function(input_names=['in_file'],
+                                                      output_names=['out_file'],
+                                                      function=unzip_nii),
+                                       name='unzip_template_node')
+
         # DARTEL2MNI Registration
         # =======================
         dartel2mni_node = npe.MapNode(spm.DARTELNorm2MNI(),
@@ -494,6 +500,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         self.connect([
             (self.input_node, unzip_node, [('input_images', 'in_file')]),
             (self.input_node, unzip_templates_node, [('dartel_iteration_templates', 'in_file')]),
+            (self.input_node, unzip_template_node, [('dartel_final_template', 'in_file')]),
             (unzip_node, new_segment, [('out_file', 'channel_files')]),
             (new_segment, self.output_node, [('bias_corrected_images', 'bias_corrected_images'),
                                              ('bias_field_images', 'bias_field_images'),
@@ -504,8 +511,9 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
                                              ('native_class_images', 'native_class_images'),
                                              ('normalized_class_images', 'normalized_class_images'),
                                              ('transformation_mat', 'transformation_mat')]),
-            (new_segment, dartel_existing_template, [(('dartel_input_images', dartel_utils.get_class_images,
-                                                       self.parameters['dartel_tissues']), 'image_files')]),
+            (new_segment, dartel_existing_template, [(('dartel_input_images',
+                                                       existing_dartel_utils.prepare_images_from_segmentation),
+                                                      'image_files')]),
             (unzip_templates_node, dartel_existing_template, [(('out_file',
                                                                 existing_dartel_utils.create_iteration_parameters,
                                                                 self.parameters['iteration_parameters']),
@@ -513,9 +521,10 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
             (dartel_existing_template, self.output_node, [('dartel_flow_fields', 'dartel_flow_fields')]),
             (new_segment, dartel2mni_node, [(('native_class_images', seg_utils.group_nested_images_by_subject),
                                              'apply_to_files')]),
-            (dartel_existing_template, dartel2mni_node, [(('dartel_flow_fields', dartel2mni_utils.prepare_flowfields,
+            (dartel_existing_template, dartel2mni_node, [(('dartel_flow_fields',
+                                                           dartel2mni_utils.prepare_existing_dartel_flowfields,
                                                            self.parameters['tissue_classes']), 'flowfield_files')]),
-            (self.input_node, dartel2mni_node, [('dartel_final_template', 'template_file')]),
+            (unzip_template_node, dartel2mni_node, [('out_file', 'template_file')]),
             (dartel2mni_node, self.output_node, [('normalized_files', 'normalized_files')]),
             (dartel2mni_node, atlas_stats_node, [(('normalized_files', dartel2mni_utils.select_gm_images),
                                                   'in_image')]),
