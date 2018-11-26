@@ -36,7 +36,7 @@ build:mac:
     # (by editing the environment.yml file), the environment
     # is recreated.
     - >
-      if conda env list|grep -w $CLINICA_ENV_BRANCH; then
+      if conda env list|grep -w $CLINICA_ENV_BRANCH|tr -dc '[:alnum:]\-\_'; then
         if git diff HEAD~ --name-only|grep environment.yml; then
           echo "REcreate environment $CLINICA_ENV_BRANCH"
           conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
@@ -55,7 +55,7 @@ build:linux:
     # (by editing the environment.yml file), the environment
     # is recreated.
     - >
-      if conda env list|grep -w $CLINICA_ENV_BRANCH; then
+      if conda env list|grep -w $CLINICA_ENV_BRANCH|tr -dc '[:alnum:]\-\_'; then
         if git diff HEAD~ --name-only|grep environment.yml; then
           echo "REcreate environment $CLINICA_ENV_BRANCH"
           conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
