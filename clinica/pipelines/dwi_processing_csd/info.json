@@ -1,5 +1,5 @@
 {
-    "id": "aramislab/tractography",
+    "id": "aramislab/dwi-processing-csd",
     "author": "Jeremy Guillon",
     "version": "0.1.0",
     "dependencies": [

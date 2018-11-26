@@ -63,14 +63,14 @@ def get_caps_filenames(dwi_file):
 
     source_file = m.group(1)
 
-    response = source_file + '_responsefunction.txt'
-    fod =  source_file + '_fod.mif'
-    tracts = source_file + '_tract.tck'
-    nodes = [source_file + '_parcellation-desikan_nodes.mif',
-             source_file + '_parcellation-destrieux_nodes.mif']
+    response = source_file + '_model-CSD_diffmodel.txt'
+    fod =  source_file + '_model-CSD_FOD.mif'
+    tracts = source_file + '_model-CSD_tractography.tck'
+    nodes = [source_file + '_parcellation-desikan_node.nii.gz',
+             source_file + '_parcellation-destrieux_node.nii.gz']
     # TODO: Add custom Lausanne2008 node files here.
-    connectomes = [source_file + '_parcellation-desikan_connectome.csv',
-             source_file + '_parcellation-destrieux_connectome.csv']
+    connectomes = [source_file + '_model-CSD_parcellation-desikan_connectivity.tsv',
+             source_file + '_model-CSD_parcellation-destrieux_connectivity.tsv']
     # TODO: Add custom Lausanne2008 connectome files here.
 
     return response, fod, tracts, nodes, connectomes

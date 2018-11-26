@@ -1,4 +1,4 @@
-"""Tractography - Clinica Pipeline.
+"""DWIProcessingCSD - Clinica Pipeline.
 This file has been generated automatically by the `clinica generate template`
 command line tool. See here for more details:
 https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs
@@ -11,9 +11,14 @@ https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs
 # command line tool.
 import clinica.pipelines.engine as cpe
 
+# Use hash instead of parameters for iterables folder names
+from nipype import config
+cfg = dict(execution={'parameterize_dirs': False})
+config.update_config(cfg)
 
-class Tractography(cpe.Pipeline):
-    """Tractography SHORT DESCRIPTION.
+
+class DWIProcessingCSD(cpe.Pipeline):
+    """DWIProcessingCSD SHORT DESCRIPTION.
 
     Warnings:
         - A WARNING.
@@ -30,14 +35,14 @@ class Tractography(cpe.Pipeline):
         format).
 
     Returns:
-        A clinica pipeline object containing the Tractography pipeline.
+        A clinica pipeline object containing the DWIProcessingCSD pipeline.
 
     Raises:
 
 
     Example:
-        >>> from clinica.pipelines.tractography import Tractography
-        >>> pipeline = Tractography('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
+        >>> from clinica.pipelines.dwi_processing_csd import DWIProcessingCSD
+        >>> pipeline = DWIProcessingCSD('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipeline.parameters = {
         >>>     # ...
         >>> }
@@ -239,11 +244,6 @@ class Tractography(cpe.Pipeline):
             raise ClinicaCAPSError('Bad preprocessed DWI space. Please check '
                                    'your CAPS folder.')
 
-        # Use hash instead of parameters for iterables folder names
-        from nipype import config
-        cfg = dict(execution={'parameterize_dirs': False})
-        config.update_config(cfg)
-
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
         """
@@ -251,7 +251,7 @@ class Tractography(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         import nipype.interfaces.io as nio
-        import tractography_utils as utils
+        import dwi_processing_csd_utils as utils
 
         # Writing CAPS
         # ============
@@ -263,10 +263,10 @@ class Tractography(cpe.Pipeline):
 
         write_node = npe.MapNode(name='WritingCAPS',
                                  iterfield=['container'] +
-                                           ['tractography.@' + o
+                                           ['csd_based_processing.@' + o
                                             for o in self.get_output_fields()],
                                  interface=nio.DataSink(
-                                         infields=['tractography.@' + o for o in
+                                         infields=['csd_based_processing.@' + o for o in
                                                    self.get_output_fields()]))
         write_node.inputs.base_directory = self.caps_directory
         write_node.inputs.container = utils.get_containers(self.subjects,
@@ -281,12 +281,12 @@ class Tractography(cpe.Pipeline):
             (self.output_node, join_node, [('tracts', 'tracts')]),
             (self.output_node, join_node, [('nodes', 'nodes')]),
             (self.output_node, join_node, [('connectomes', 'connectomes')]),
-            (join_node, write_node, [('response', 'tractography.@response')]),
-            (join_node, write_node, [('fod', 'tractography.@fod')]),
-            (join_node, write_node, [('tracts', 'tractography.@tracts')]),
-            (join_node, write_node, [('nodes', 'tractography.@nodes')]),
+            (join_node, write_node, [('response', 'csd_based_processing.@response')]),
+            (join_node, write_node, [('fod', 'csd_based_processing.@fod')]),
+            (join_node, write_node, [('tracts', 'csd_based_processing.@tracts')]),
+            (join_node, write_node, [('nodes', 'csd_based_processing.@nodes')]),
             (join_node, write_node,
-             [('connectomes', 'tractography.@connectomes')]),
+             [('connectomes', 'csd_based_processing.@connectomes')]),
         ])
 
         self.write_graph()
@@ -311,7 +311,7 @@ class Tractography(cpe.Pipeline):
         import nipype.interfaces.mrtrix3 as mrtrix3
         from clinica.utils.exceptions import ClinicaCAPSError
         from clinica.utils.stream import cprint
-        import tractography_utils as utils
+        import dwi_processing_csd_utils as utils
 
         cprint('Building the pipeline...')
 
@@ -368,7 +368,7 @@ class Tractography(cpe.Pipeline):
         # -----------------
         tck_gen_node = npe.Node(name="TractsGeneration",
                                 interface=mrtrix3.Tractography())
-        tck_gen_node.inputs.n_tracts = self.parameters['n_tracks']
+        tck_gen_node.inputs.n_tracks = self.parameters['n_tracks']
 
         # Nodes Generation
         # ----------------
