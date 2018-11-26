@@ -1,0 +1,138 @@
+{
+    "entities": [
+        {
+            "name": "subject",
+            "pattern": "sub-([a-zA-Z0-9]+)",
+            "directory": "{{root}}/subjects/{subject}"
+        },
+        {
+            "name": "session",
+            "mandatory": false,
+            "pattern": "ses-([a-zA-Z0-9]+)",
+            "directory": "{{root}}/subjects/{subject}/{session}"
+        },
+        {
+            "name": "group",
+            "mandatory": false,
+            "pattern": "group-([a-zA-Z0-9]+)",
+            "directory": "{{root}}/subjects/{subject}/{session}/{group}"
+        },
+        {
+            "name": "run",
+            "pattern": "run-(\\d+)"
+        },
+        {
+            "name": "type",
+            "pattern": "^(?!.*freesurfer_cross_sectional).*/[^/\\\\]*?_([a-zA-Z0-9]*?)_[^/\\\\]+\\.[^/\\\\]+$"
+        },
+        {
+            "name": "task",
+            "pattern": "task-(.*?)(?:_+)"
+        },
+        {
+            "name": "echo",
+            "pattern": "echo-([0-9]+)\\_bold\\_"
+        },
+        {
+            "name": "acquisition",
+            "pattern": "acq-(.*?)(?:_+)"
+        },
+        {
+            "name": "bval",
+            "pattern": "(.*\\.bval)$"
+        },
+        {
+            "name": "bvec",
+            "pattern": "(.*\\.bvec)$"
+        },
+        {
+            "name": "fmap",
+            "pattern": "\\_(phasediff|magnitude[1-2]|phase[1-2]|fieldmap|epi)\\_"
+        },
+        {
+            "name": "dir",
+            "pattern": "dir-([a-zA-Z0-9]+)"
+        },
+        {
+            "name": "acq",
+            "pattern": "acq-([a-zA-Z0-9]+)"
+        },
+        {
+            "name": "freesurfer_file",
+            "pattern": ".*[/\\\\]+?(.*\\.[^/\\\\]+$)",
+            "directory":"{{root}}/subjects/{subject}/{session}/t1/freesurfer_cross_sectional/{subject}_{session}/.*/{freesurfer_file}"
+        },
+        {
+            "name": "suffix",
+            "pattern": "^(?!.*/freesurfer_cross_sectional/.*).*\\_([a-zA-Z0-9]*?)\\.[^/\\\\]+$"
+        },
+        {
+            "name": "target",
+            "pattern": "target-([a-zA-Z0-9]+)"
+        },
+        {
+            "name": "space",
+            "pattern": "space-([a-zA-Z0-9]+)"
+        },
+        {
+            "name": "res",
+            "pattern": "res-([a-zA-Z0-9]+)"
+        },
+        {
+            "name": "class",
+            "pattern": "class-([a-zA-Z0-9]+)"
+        },
+        {
+            "name": "atlas",
+            "pattern": "atlas-([a-zA-Z0-9]+)"
+        },
+        {
+            "name": "roi",
+            "pattern": "roi-([a-zA-Z0-9]+)"
+        },
+        {
+            "name": "label",
+            "pattern": "label-([a-zA-Z0-9]+)"
+        },
+        {
+            "name": "variant",
+            "pattern": "variant-([a-zA-Z0-9]+)"
+        },
+        {
+            "name": "pvc",
+            "pattern": "pvc-([a-zA-Z0-9]+)"
+        },
+        {
+            "name": "parcellation",
+            "pattern": "parcellation-([a-zA-Z0-9]+)"
+        },
+        {
+            "name": "hemi",
+            "pattern": "hemi-(left|right)"
+        },
+        {
+            "name": "map",
+            "pattern": "map-([a-zA-Z0-9]+)"
+        },
+        {
+            "name": "suvr",
+            "pattern": "suvr-([a-zA-Z0-9]+)"
+        },
+        {
+            "name": "transformation",
+            "pattern": "transformation-(inverse|forward)"
+        },
+        {
+            "name": "modulated",
+            "pattern": "modulated-(on|off)"
+        },
+        {
+            "name": "segm",
+            "pattern": "segm-(graymatter|whitematter|csf)"
+        },
+        {
+            "name": "fwhm",
+            "pattern": "fwhm-([a-zA-Z0-9]+)"
+        }
+    ]
+}

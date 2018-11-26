@@ -24,6 +24,7 @@ cache:
 
 before_script:
   - pwd
+  - export CLINICA_ENV_BRANCH_CLEAN=$(echo $CLINICA_ENV_BRANCH | tr -dc '[:alnum:]\-\_')
 after_script:
   #  - conda env remove -y  --name clinica_env
 
@@ -36,14 +37,14 @@ build:mac:
     # (by editing the environment.yml file), the environment
     # is recreated.
     - >
-      if conda env list|grep -w $CLINICA_ENV_BRANCH; then
+      if conda env list|grep -w $CLINICA_ENV_BRANCH_CLEAN; then
         if git diff HEAD~ --name-only|grep environment.yml; then
           echo "REcreate environment $CLINICA_ENV_BRANCH"
-          conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
+          conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH_CLEAN
         fi;
       else
-        echo "Create environment $CLINICA_ENV_BRANCH"
-        conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
+        echo "Create environment $CLINICA_ENV_BRANCH_CLEAN"
+        conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH_CLEAN
       fi;
 
 build:linux:
@@ -55,14 +56,14 @@ build:linux:
     # (by editing the environment.yml file), the environment
     # is recreated.
     - >
-      if conda env list|grep -w $CLINICA_ENV_BRANCH; then
+      if conda env list|grep -w $CLINICA_ENV_BRANCH_CLEAN|tr -dc '[:alnum:]\-\_'; then
         if git diff HEAD~ --name-only|grep environment.yml; then
-          echo "REcreate environment $CLINICA_ENV_BRANCH"
-          conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
+          echo "REcreate environment $CLINICA_ENV_BRANCH_CLEAN"
+          conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH_CLEAN
         fi;
       else
-        echo "Create environment $CLINICA_ENV_BRANCH"
-        conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
+        echo "Create environment $CLINICA_ENV_BRANCH_CLEAN"
+        conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH_CLEAN
       fi;
 
 launch:mac:
@@ -72,7 +73,7 @@ launch:mac:
     - install
     - macOS
   script:
-    - source activate $CLINICA_ENV_BRANCH
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
     - pip install --ignore-installed .
     - eval "$(register-python-argcomplete clinica)"
     - clinica --help
@@ -86,7 +87,7 @@ launch:linux:
     - install
     - linux
   script:
-    - source activate $CLINICA_ENV_BRANCH
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
     - pip install --ignore-installed .
     - eval "$(register-python-argcomplete clinica)"
     - clinica --help
@@ -98,7 +99,7 @@ unittest:mac:
   tags:
     - macOS
   script:
-    - source activate $CLINICA_ENV_BRANCH
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
     - module load clinica.all
     - cd test
     - ln -s /Volumes/builds/Clinica/data_ci ./data
@@ -112,7 +113,7 @@ unittest:linux:
   tags:
     - linux
   script:
-    - source activate $CLINICA_ENV_BRANCH
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
     - module load clinica.all
     - cd test
     - ln -s /localdrive10TB/data/data_ci ./data
