@@ -982,10 +982,11 @@ def get_wf(subject_id,
                                         joinsource='reformat_surface_name',
                                         joinfield=['pet_projection_lh_rh'])
 
-    atlas_tsv = pe.Node(niu.Function(input_names=['pet', 'atlas_files'],
-                                     output_names=['destrieux_tsv', 'desikan_tsv'],
-                                     function=utils.produce_tsv),
-                            name='atlas_tsv')
+    atlas_tsv = pe.Node(
+            niu.Function(input_names=['pet', 'atlas_files'],
+                         output_names=['destrieux_tsv', 'desikan_tsv'],
+                         function=utils.produce_tsv),
+                         name='atlas_tsv')
     atlas_tsv.inputs.atlas_files = surface_atlas
 
     #2 creation of workflow : working dir, inputnode, outputnode and datasink

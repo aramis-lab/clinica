@@ -116,14 +116,14 @@ def compute_t1_paths( source_dir, csv_dir, dest_dir, subjs_list, new_download):
                 if new_download == False:
                     ida_meta_subj = ida_meta[ida_meta.Subject == subj]
                     image_dict = adni1_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
-                                              ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj)
+                                             ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj)
                 else:
                     image_dict = adni1_image_refactoring(csv_dir, adni_merge, subj, visit_info[0], visits[visit_info],
                                              mprage_meta_subj, mri_quality_subj, mayo_mri_qc_subj)
             elif visit_info[1] == 'ADNIGO':
                 if new_download == False:
                     image_dict = adnigo_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
-                                               ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj, visit_info[2])
+                                              ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj, visit_info[2])
                 else:
                     image_dict = adnigo_image_refactoring(csv_dir, adni_merge, subj, visit_info[0], visits[visit_info],
                                              mprage_meta_subj, mri_quality_subj, mayo_mri_qc_subj, visit_info[2])
@@ -349,8 +349,8 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
         # print 'QC found but NOT passed'
         # print 'Subject ' + subject_id + ' - Series: ' + str(scan.SeriesID) + ' - Study: ' + str(scan.StudyID)
         mprage_meta_subj_alt = mprage_meta_subj[(mprage_meta_subj['Orig/Proc'] == 'Original')
-                                                 & (mprage_meta_subj.Visit == visit_str)
-                                                 & (mprage_meta_subj.SeriesID != series_id)]
+                                                & (mprage_meta_subj.Visit == visit_str)
+                                                & (mprage_meta_subj.SeriesID != series_id)]
 
         qc_prev_sequence = scan.Sequence
         scan = mprage_meta_subj_alt.iloc[0]
@@ -751,8 +751,8 @@ def adni1_image_refactoring(csv_dir, adnimerge, subject_id, timepoint, visit_str
         # print 'QC found but NOT passed'
         # print 'Subject ' + subject_id + ' - Series: ' + str(scan.SeriesID) + ' - Study: ' + str(scan.StudyID)
         mprage_meta_subj_alt = mprage_meta_subj[(mprage_meta_subj['Orig/Proc'] == 'Original')
-                                                 & (mprage_meta_subj.Visit == visit_str)
-                                                 & (mprage_meta_subj.SeriesID != series_id)]
+                                                & (mprage_meta_subj.Visit == visit_str)
+                                                & (mprage_meta_subj.SeriesID != series_id)]
 
         qc_prev_sequence = scan.Sequence
         scan = mprage_meta_subj_alt.iloc[0]

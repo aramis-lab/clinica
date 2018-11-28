@@ -509,10 +509,12 @@ def noddi_preprocessing_twoped(caps_directory, name='noddi_preprocessing_topup_e
     merge_two_ped = pe.Node(niu.Function(input_names=['in_file', 'in_bvec', 'in_bval', 'alt_file', 'alt_bvec', 'alt_bval'],
                                          output_names=['out_file', 'out_bvals', 'out_bvecs'], function=merge_noddi_ped), name='merge_ped_images')
 
-    extract_b0_dwis = pe.Node(niu.Function(input_names=['in_dwi', 'in_bval', 'in_bvec'],
-                                      output_names=['out_b0', 'out_dwi', 'out_bvals', 'out_bvecs'],
-                                      function=b0_dwi_split),
-                                      name='extract_dwis_b0')
+    extract_b0_dwis = pe.Node(
+            niu.Function(
+                input_names=['in_dwi', 'in_bval', 'in_bvec'],
+                output_names=['out_b0', 'out_dwi', 'out_bvals', 'out_bvecs'],
+                function=b0_dwi_split),
+            name='extract_dwis_b0')
 
     list_b0 = pe.Node(niu.Function(
         input_names=['in_bval'], output_names=['out_idx'],
@@ -526,8 +528,9 @@ def noddi_preprocessing_twoped(caps_directory, name='noddi_preprocessing_topup_e
         input_names=['in_dwi', 'in_bval'], output_names=['out_file'],
         function=b0_average), name='b0_avg_post')
 
-    bet_dwi = pe.Node(fsl.BET(frac=0.5, mask=True, robust=True),
-                       name='bet_dwi_post')
+    bet_dwi = pe.Node(
+            fsl.BET(frac=0.5, mask=True, robust=True),
+            name='bet_dwi_post')
 
     sdc = sdc_peb_noddi(epi_params=epi_params, alt_epi_params=alt_epi_params)
 

@@ -146,7 +146,7 @@ def list_of_paths():
         It lists all the folders which not contain PET images
     """
     return ['.DS_Store', 'localizer',  'Space_3D_T2_FLAIR_sag_p2', 'AXIAL_FLAIR',  'MPRAGE_ADNI_confirmed_REPEATX2', 'Axial_PD-T2_TSE',
-             'Axial_PD-T2_TSE_repeat', 'MPRAGE_SAG_ISO_p2_ND', 'Axial_PD-T2_TSE_confirmed', 'MPRAGESAGISOp2ND',  'MPRAGE_ADNI_confirmed',
+            'Axial_PD-T2_TSE_repeat', 'MPRAGE_SAG_ISO_p2_ND', 'Axial_PD-T2_TSE_confirmed', 'MPRAGESAGISOp2ND',  'MPRAGE_ADNI_confirmed',
             'MPRAGE_ADNI_confirmed_repeat', 'MPRAGE_SAG_ISO_p2',  'MPRAGE', 'MPRAGE_ADNI_confirmed_REPEAT', 'Axial_PD-T2_TSE_confirmed_repeat',
             'MPRAGE_ADNI_conf_REPEAT',  'Space_3D_T2_FLAIR_sag_p2_REPEAT', 'MPRAGE_ADNI_confirmed_RPT', 'Brain_256_1.6_zoom_4_x_4_iter',
             'Space_3D_T2_FLAIR_sag_REPEAT',  'Axial_PD-T2_TSE_RPTconfirmed', 'Axial_PD-T2_TSE_RPT_confirmed', 'Axial_PD-T2_TSE_confirmed_REPEAT',

@@ -219,8 +219,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         # Writing CAPS
         # ============
         write_node = npe.MapNode(name='WritingCAPS',
-                                 iterfield=['container']
-                                           + self.get_output_fields(),
+                                 iterfield=['container'] + self.get_output_fields(),
                                  interface=nio.DataSink(
                                          infields=self.get_output_fields()))
         write_node.inputs.base_directory = self.caps_directory

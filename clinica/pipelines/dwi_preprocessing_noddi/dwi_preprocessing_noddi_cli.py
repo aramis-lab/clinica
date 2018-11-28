@@ -27,9 +27,9 @@ class DwiPreprocessingNoddiCLI(ce.CmdParser):
         """Define a description of this pipeline.
         """
         self._description = ('Preprocessing of raw DWI datasets with '
-                              'multi-shell acquisitions and opposite phase '
-                              'encoding directions:\n'
-                              'http://clinica.run/doc/Pipelines/DWI_Preprocessing/')
+                             'multi-shell acquisitions and opposite phase '
+                             'encoding directions:\n'
+                             'http://clinica.run/doc/Pipelines/DWI_Preprocessing/')
 
     def define_options(self):
         """Define the sub-command arguments
