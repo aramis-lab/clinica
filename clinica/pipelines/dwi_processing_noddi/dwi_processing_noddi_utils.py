@@ -161,8 +161,7 @@ def grab_noddi_preprocessed_files(caps_directory, tsv):
     num_subject = len(subject_list)
     for i in xrange(num_subject):
         ############## AP
-        subject_nii = os.path.join(caps_directory, 'subjects', subject_list[i], session_list[i], 'dwi', 'preprocessing', subject_id_list[i] + '_dwi_space-b0_preproc.nii.gz'
-                                  )
+        subject_nii = os.path.join(caps_directory, 'subjects', subject_list[i], session_list[i], 'dwi', 'preprocessing', subject_id_list[i] + '_dwi_space-b0_preproc.nii.gz')
         noddi_preprocessed_dwi += [subject_nii]
 
         subject_bvec = os.path.join(caps_directory, 'subjects', subject_list[i], session_list[i], 'dwi', 'preprocessing', subject_id_list[i]  + '_dwi_space-b0_preproc.bvec')
@@ -220,8 +219,7 @@ def grab_noddi_preprocessed_files_oneshell_adni(caps_directory, tsv):
     num_subject = len(subject_list)
     for i in xrange(num_subject):
         ############## AP
-        subject_nii = os.path.join(caps_directory, 'subjects', subject_list[i], session_list[i], 'dwi', 'preprocessing', subject_id_list[i] + '_acq-axial_dwi_space-T1w_preproc.nii.gz'
-                                  )
+        subject_nii = os.path.join(caps_directory, 'subjects', subject_list[i], session_list[i], 'dwi', 'preprocessing', subject_id_list[i] + '_acq-axial_dwi_space-T1w_preproc.nii.gz')
         noddi_preprocessed_dwi += [subject_nii]
 
         subject_bvec = os.path.join(caps_directory, 'subjects', subject_list[i], session_list[i], 'dwi', 'preprocessing',  subject_id_list[i]  + '_acq-axial_dwi_space-T1w_preproc.bvec')

@@ -54,18 +54,19 @@ class MissingModsTracker:
         self.ses = ses
         if mod_list!=False:
             for s in ses:
-                self.missing.update({s:{'session':0}})
+                self.missing.update({s: {'session':0}})
                 for mod in mod_list:
                     self.missing[s].update({mod: 0})
         else:
             for s in ses:
-                self.missing.update({s: {'session': 0,
-                                            'dwi': 0,
-                                            'func': 0,
-                                            'fieldmap': 0,
-                                            'flair': 0,
-                                            't1w': 0}
-                                    })
+                self.missing.update({
+                    s: {'session': 0,
+                        'dwi': 0,
+                        'func': 0,
+                        'fieldmap': 0,
+                        'flair': 0,
+                        't1w': 0}
+                    })
 
     def add_missing_mod(self, ses, mod):
         """

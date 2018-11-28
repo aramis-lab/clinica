@@ -287,9 +287,9 @@ def dwi_paths_to_bids(images, dest_dir, mod_to_update=False):
 
                     # If dcm2niix didn't work use dcm2nii
                     # print path.join(dest_dir, bids_name + '.nii.gz')
-                    if not os.path.exists(path.join(bids_dest_dir, bids_name + '.nii.gz')) or not os.path.exists(
-                                    path.join(bids_dest_dir, bids_name + '.bvec') or not os.path.exists(
-                                    path.join(bids_dest_dir, bids_name + '.bval'))):
+                    if (not os.path.exists(path.join(bids_dest_dir, bids_name + '.nii.gz'))
+                            or not os.path.exists(path.join(bids_dest_dir, bids_name + '.bvec'))
+                            or not os.path.exists(path.join(bids_dest_dir, bids_name + '.bval'))):
                         cprint('\nConversion with dcm2niix failed, trying with dcm2nii')
 
                         # Find all the files eventually created by dcm2niix and remove them

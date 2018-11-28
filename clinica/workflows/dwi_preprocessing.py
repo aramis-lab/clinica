@@ -739,9 +739,13 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
     merge = pe.Node(fsl.Merge(dimension='t'), name='MergeDWIs')
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['DWI_2_T1_Coregistration_matrix',
-                                                       'epi_correction_deformation_field', 'epi_correction_affine_transform',
-                                                       'epi_correction_image_warped', 'DWIs_epicorrected', 'warp_epi', 'out_bvec'
-                                                    ]), name='outputnode')
+                                                       'epi_correction_deformation_field', 
+                                                       'epi_correction_affine_transform',
+                                                       'epi_correction_image_warped', 
+                                                       'DWIs_epicorrected', 
+                                                       'warp_epi', 
+                                                       'out_bvec'
+                                                       ]), name='outputnode')
 
     wf = pe.Workflow(name='epi_pipeline')
 

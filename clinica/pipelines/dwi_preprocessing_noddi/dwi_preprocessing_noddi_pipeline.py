@@ -93,14 +93,14 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
         parallelsubjects.inputs.bids_pa_dwi_bvec = bids_pa_dwi_bvec
         parallelsubjects.inputs.bids_pa_dwi_bval = bids_pa_dwi_bval
 
-        self.connect(
-            [(parallelsubjects, self.input_node, [('bids_ap_dwi', 'bids_ap_dwi')]),
+        self.connect([
+            (parallelsubjects, self.input_node, [('bids_ap_dwi', 'bids_ap_dwi')]),
             (parallelsubjects, self.input_node, [('bids_ap_dwi_bvec', 'bids_ap_dwi_bvec')]),
             (parallelsubjects, self.input_node, [('bids_ap_dwi_bval', 'bids_ap_dwi_bval')]),
             (parallelsubjects, self.input_node, [('bids_pa_dwi', 'bids_pa_dwi')]),
             (parallelsubjects, self.input_node, [('bids_pa_dwi_bvec', 'bids_pa_dwi_bvec')]),
             (parallelsubjects, self.input_node, [('bids_pa_dwi_bval', 'bids_pa_dwi_bval')]),
-        ])
+            ])
 
 
     def build_output_node(self):
