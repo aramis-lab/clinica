@@ -141,8 +141,7 @@ def compute_fmri_path(source_dir, clinical_dir, dest_dir, subjs_list):
                             cprint('No Philips scanner for ' + subj + ' visit ' + viscode + '. Skipped.')
                             continue
 
-                        elif 4 in mayo_mri_imageqc[mayo_mri_imageqc['loni_image'] == 'I' + str(fmri_imageuid)][
-                            'series_quality'].values:
+                        elif 4 in mayo_mri_imageqc[mayo_mri_imageqc['loni_image'] == 'I' + str(fmri_imageuid)]['series_quality'].values:
                             cprint('Bad scan quality for ' + subj + ' visit ' + viscode + '. Skipped.')
                             continue
 
@@ -405,8 +404,7 @@ def compute_fmri_path_refactoring(source_dir, clinical_dir, dest_dir, subjs_list
                             cprint('No Philips scanner for ' + subj + ' visit ' + viscode + '. Skipped.')
                             continue
 
-                        elif 4 in mayo_mri_imageqc[mayo_mri_imageqc['loni_image'] == 'I' + str(fmri_imageuid)][
-                            'series_quality'].values:
+                        elif 4 in mayo_mri_imageqc[mayo_mri_imageqc['loni_image'] == 'I' + str(fmri_imageuid)]['series_quality'].values:
                             cprint('Bad scan quality for ' + subj + ' visit ' + viscode + '. Skipped.')
                             continue
 
