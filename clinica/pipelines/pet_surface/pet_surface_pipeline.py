@@ -320,7 +320,7 @@ class PetSurface(cpe.Pipeline):
         full_pipe.inputs.matscript_folder_inverse_deformation = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 
 
-            # Connection
+        # Connection
         # ==========
         self.connect([
             (self.input_node, full_pipe, [('pet', 'pet')]),
