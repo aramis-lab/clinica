@@ -27,9 +27,9 @@ def listdir_nohidden(path):
     result = []
     for x in os.listdir(path):
         if not x.startswith(".") :
-        # check if there is the folder .DS_STORE, if it's present, we do not save them
+            # check if there is the folder .DS_STORE, if it's present, we do not save them
             result.append(x)
-        #yield x
+            #yield x
     return result
 
 

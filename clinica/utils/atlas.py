@@ -34,7 +34,7 @@ class AtlasAbstract:
         if (voxels_map[0] != voxels_labels[0]) or \
                 (voxels_map[1] != voxels_labels[1]) or \
                 (voxels_map[2] != voxels_labels[2]):
-        #if voxels_map != voxels_labels:
+            #if voxels_map != voxels_labels:
             print("Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas()))
             #raise Exception(
             #       "Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas()))
