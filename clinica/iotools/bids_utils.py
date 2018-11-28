@@ -85,7 +85,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
                 # Convert the alternative_id_1 to string if is an integer/float
                 value_to_read = file_to_read[participant_fields_db[i]]
                 if participant_fields_bids[i] == 'alternative_id_1' and\
-                        (value_to_read.dtype == np.float64 or value_to_read.dtype == np.int64) :
+                        (value_to_read.dtype == np.float64 or value_to_read.dtype == np.int64):
                     if not pd.isnull(file_to_read.get_value(j, participant_fields_db[i])):
                         value_to_append = str(file_to_read.get_value(j, participant_fields_db[i])).rstrip('.0')
                     else:
@@ -643,7 +643,7 @@ def create_path_corr_file(out_dir):
     import os
     from os import path
 
-    path_corr = path.join(out_dir, 'conversion_info', 'filename_correspondance.tsv' )
+    path_corr = path.join(out_dir, 'conversion_info', 'filename_correspondance.tsv')
     if os.path.exists(path_corr):
         os.remove(path_corr)
 
@@ -683,7 +683,7 @@ def convert_T1(t1_path, output_path, t1_bids_name):
             compress_nii(path.join(bids_file))
 
 
-def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name , acquisition = ''):
+def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name, acquisition = ''):
     """
     Convert PET to BIDS
 
@@ -961,7 +961,7 @@ def merge_DTI(folder_input, folder_output, name, fixed_dti_list=False):
                     line_no = 0
                 lines_out_bval[line_no] = lines_out_bval[line_no]+" "+line.rstrip()
                 line_no +=1
-            for i in range (0, len(lines_out_bval)):
+            for i in range(0, len(lines_out_bval)):
                 lines_out_bval[i] = lines_out_bval[i].lstrip()
 
                 fout.write(lines_out_bval[i]+"\n")

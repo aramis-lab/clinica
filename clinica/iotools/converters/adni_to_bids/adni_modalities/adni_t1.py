@@ -56,7 +56,7 @@ def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('T1 conversion done.')
 
 
-def compute_t1_paths( source_dir, csv_dir, dest_dir, subjs_list, new_download):
+def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download):
     """
 
     Compute paths to t1 images of ADNI.

@@ -12,7 +12,7 @@ __status__ = "Development"
 from nipype.interfaces import utility as niu
 from nipype.interfaces import fsl
 from nipype.pipeline import engine as pe
-from nipype.workflows.dmri.fsl.utils import ( b0_average, compute_readout,)
+from nipype.workflows.dmri.fsl.utils import (b0_average, compute_readout,)
 
 
 

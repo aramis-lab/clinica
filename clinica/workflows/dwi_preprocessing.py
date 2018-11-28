@@ -782,7 +782,7 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
     wf.connect([(flirt_b0_2_T1, outputnode, [('out_matrix_file','DWI_2_T1_Coregistration_matrix')])])
     wf.connect([(antsRegistrationSyNQuick, outputnode, [('warp','epi_correction_deformation_field'),
                                                         ('affine_matrix','epi_correction_affine_transform'),
-                                                        ('image_warped', 'epi_correction_image_warped' )])])
+                                                        ('image_warped', 'epi_correction_image_warped')])])
     wf.connect([(merge_transform, outputnode, [('out','warp_epi')])])
     wf.connect([(rot_bvec, outputnode, [('out_file','out_bvec')])])
 

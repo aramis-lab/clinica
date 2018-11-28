@@ -15,7 +15,7 @@ def roundbval(bvalsFilename, newbvalsFilename, bStep):
     """
 
     if not os.path.exists(bvalsFilename):
-        raise RuntimeError( 'bvals file not exist:' + bvalsFilename )
+        raise RuntimeError('bvals file not exist:' + bvalsFilename)
 
     #if newbvalsFilename is None:
         #newbvalsFilename = os.path.splitext(bvalsFilename)[0]+".scheme"
@@ -46,7 +46,7 @@ def roundbval(bvalsFilename, newbvalsFilename, bStep):
 
             bvals[i] = bStep[ind]
 
-    np.savetxt( newbvalsFilename, bvals.T, fmt="%.06f", newline=' ' )
+    np.savetxt(newbvalsFilename, bvals.T, fmt="%.06f", newline=' ')
     print("-> Writing new rounded bval file to [ %s ]" % newbvalsFilename)
     return newbvalsFilename
 
@@ -55,4 +55,4 @@ if __name__ == '__main__':
     bvalsFilename = sys.argv[1]
     newbvalsFilename = sys.argv[2]
     bStep = sys.argv[3] 
-    roundbval( bvalsFilename, newbvalsFilename, bStep)
+    roundbval(bvalsFilename, newbvalsFilename, bStep)

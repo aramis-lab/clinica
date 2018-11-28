@@ -23,7 +23,7 @@ def convert_images(path_to_dataset, path_to_csv, bids_dir):
         pib_paths_to_bids
     from clinica.iotools.converters.aibl_to_bids.aibl_utils import t1_paths_to_bids
 
-    for converter in [av45_paths_to_bids, flute_paths_to_bids, pib_paths_to_bids, t1_paths_to_bids] :
+    for converter in [av45_paths_to_bids, flute_paths_to_bids, pib_paths_to_bids, t1_paths_to_bids]:
         try:
             converter(path_to_dataset, path_to_csv, bids_dir)
         except:

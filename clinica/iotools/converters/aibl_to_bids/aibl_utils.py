@@ -26,7 +26,7 @@ def listdir_nohidden(path):
     import os
     result = []
     for x in os.listdir(path):
-        if not x.startswith(".") :
+        if not x.startswith("."):
             # check if there is the folder .DS_STORE, if it's present, we do not save them
             result.append(x)
             #yield x
@@ -315,7 +315,7 @@ def find_path_to_pet_modality(path_to_dataset, csv_file):
 
     # Iteration through all the subjects_ID
     def is_int(x):
-        for i in x :
+        for i in x:
             if int(i) in list(csv_file.RID): yield i
 
 #    def append_path(image_ID):
@@ -522,9 +522,9 @@ def av45_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
         image_path = image.Path_to_pet
         count += 1
         if image_path is nan:
-            cprint( 'No path specified for ' + subject + ' in session ' + session)
+            cprint('No path specified for ' + subject + ' in session ' + session)
             continue
-        cprint ('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
+        cprint('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
         session = viscode_to_session(session)
         output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'pet')
         output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_task-rest_acq-av45_pet'
@@ -567,9 +567,9 @@ def pib_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix
         image_path = image.Path_to_pet
         count += 1
         if image_path is nan:
-            cprint ('No path specified for ' + subject + ' in session ' + session)
+            cprint('No path specified for ' + subject + ' in session ' + session)
             continue
-        cprint ('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
+        cprint('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
         session = viscode_to_session(session)
         output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'pet')
         output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_task-rest_acq-pib_pet'
@@ -613,9 +613,9 @@ def flute_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2ni
         image_path = image.Path_to_pet
         count += 1
         if image_path is nan:
-            cprint ('No path specified for ' + subject + ' in session ' + session)
+            cprint('No path specified for ' + subject + ' in session ' + session)
             continue
-        cprint ('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
+        cprint('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
 
         session = viscode_to_session(session)
         output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'pet')
@@ -660,9 +660,9 @@ def t1_paths_to_bids(path_to_dataset,path_to_csv, bids_dir):
         count += 1
 
         if image_path is nan:
-            cprint ('No path specified for ' + subject + ' in session ' + session)
+            cprint('No path specified for ' + subject + ' in session ' + session)
             continue
-        cprint ('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
+        cprint('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
 
         session=viscode_to_session(session)
         #creation of the path

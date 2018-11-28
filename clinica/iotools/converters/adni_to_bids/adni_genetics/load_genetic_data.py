@@ -71,7 +71,7 @@ def import_genetics(path_to_plink_files):
     matrix_patient_snp = np.zeros((num_snp, num_patient))
     patient_list = np.zeros(num_patient, dtype='|S30')
     snp_list = np.zeros(num_snp, dtype='|S30')
-    for i, row, locus in zip( range(num_snp), plink_file, locus_list):
+    for i, row, locus in zip(range(num_snp), plink_file, locus_list):
         matrix_patient_snp[i] = row
         snp_list[i] = locus.name
     matrix_patient_snp = matrix_patient_snp.T
