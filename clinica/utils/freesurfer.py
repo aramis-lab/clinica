@@ -336,8 +336,8 @@ def write_reconall_log_summary(caps_dir, subjects_visits_tsv):
 
     # get the list for subject_ids
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
-    if (list(subjects_visits.columns.values)[0] != 'participant_id') 
-            and (list(subjects_visits.columns.values)[1] != 'session_id'):
+    if ((list(subjects_visits.columns.values)[0] != 'participant_id')
+            and (list(subjects_visits.columns.values)[1] != 'session_id')):
         raise Exception('Subjects and visits file is not in the correct format.')
     subject_list = list(subjects_visits.participant_id)
     session_list = list(subjects_visits.session_id)
