@@ -37,7 +37,7 @@ class AtlasAbstract:
         #if voxels_map != voxels_labels:
             print("Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas()))
             #raise Exception(
-             #       "Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas()))
+            #       "Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas()))
         #else:
         # Will display integers without decimals
         if int(voxels_map[0]) == voxels_map[0]:

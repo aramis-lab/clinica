@@ -355,7 +355,7 @@ def compute_fmri_path_refactoring(source_dir, clinical_dir, dest_dir, subjs_list
     #ida_mr_metadata_path = path.join(clinical_dir, 'IDA_MR_Metadata_Listing.csv')
 
     mayo_mri_fmri = pd.io.parsers.read_csv(mayo_mri_fmri_path, sep=',')
-   # ida_mr_metadata = pd.io.parsers.read_csv(ida_mr_metadata_path, sep=',')
+    #ida_mr_metadata = pd.io.parsers.read_csv(ida_mr_metadata_path, sep=',')
     mayo_mri_imageqc = pd.io.parsers.read_csv(mayo_mri_imageqc_path, sep=',')
 
     for subj in subjs_list:
