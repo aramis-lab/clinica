@@ -718,7 +718,7 @@ def adni1_select_scanner(subj, csv_dir, adnimerge, timepoint):
                 else:
                     scanner = 'GE_Siemens'
         if mri3meta.empty:
-           scanner = 'PROBLEM_SCANNER_NOT_FOUND'
+            scanner = 'PROBLEM_SCANNER_NOT_FOUND'
 
     return scanner
 
