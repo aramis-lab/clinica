@@ -37,7 +37,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
 
     fields_bids = ['participant_id']
     prev_location = ''
-    index_to_drop=[]
+    index_to_drop = []
     location_name = study_name + ' location'
 
     # Load the data from the clincal specification file
@@ -246,7 +246,7 @@ def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids
         if not pd.isnull(field):
             fields_dataset.append(field)
             fields_bids.append(scans_specs['BIDS CLINICA'][i])
-            fields_location.append(scans_specs[study_name +' location'][i])
+            fields_location.append(scans_specs[study_name + ' location'][i])
             fields_mod.append(scans_specs['Modalities related'][i])
 
     # For each field available extract the original name, extract from the file all the values and fill a data structure
@@ -415,10 +415,10 @@ def dcm_to_nii(input_path, output_path, bids_name):
         #generation of the json file
         os.system('dcm2niix -b y -o ' + output_path + ' -f ' + bids_name + ' ' + input_path)
     else:
-        os.system('dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name  + ' ' + input_path)
+        os.system('dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name + ' ' + input_path)
 
     # If dcm2niix didn't work use dcm2nii
-    if not os.path.exists(path.join(output_path, bids_name  + '.nii.gz')):
+    if not os.path.exists(path.join(output_path, bids_name + '.nii.gz')):
         print('Conversion with dcm2niix failed, trying with dcm2nii')
         os.system('dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + input_path)
 
@@ -702,7 +702,7 @@ def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name, acq
     import os
 
 
-    if acquisition!='':
+    if acquisition != '':
         pet_bids_name = bids_name+'_task-'+task_name+'_acq-'+acquisition
     else:
         pet_bids_name = bids_name+'_task-'+task_name
@@ -715,7 +715,7 @@ def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name, acq
             os.mkdir(folder_output)
 
         #If a prefixed pet is chosen for the conversion use it, otherwise extracts the pet file available into the folder
-        if pet_name!='':
+        if pet_name != '':
             pet_path = path.join(folder_input, pet_name)
         else:
             print('WARNING: feature to be implemented')
@@ -836,7 +836,7 @@ def convert_flair(folder_input, folder_output, name, fixed_file = False):
     import os
 
     # If a given T2FLAIR is given for the conversion use it
-    if fixed_file!=False:
+    if fixed_file != False:
         fixed_flair_path = glob(path.join(folder_input,fixed_file,'*'))[0]
         copy(fixed_flair_path, path.join(folder_output, name + (get_bids_suff('Flair')) + '.nii.gz'))
     else:
@@ -849,7 +849,7 @@ def convert_flair(folder_input, folder_output, name, fixed_file = False):
             copy(flair_path, path.join(folder_output, name + (get_bids_suff('Flair')) + '.nii.gz'))
         elif len(flair_lst) == 0:
                 return -1
-        elif len(flair_lst)>1:
+        elif len(flair_lst) > 1:
                 logging.warning('Multiple FLAIR found, computation aborted.')
                 raise('Aborted')
 
@@ -873,7 +873,7 @@ def convert_fmri(folder_input, folder_output, name, fixed_fmri=False, task_name 
     from shutil import copy
     import os
 
-    bids_name = name + '_task-'+ task_name + get_bids_suff('fMRI')
+    bids_name = name + '_task-' + task_name + get_bids_suff('fMRI')
 
     if contain_dicom(folder_input):
         dcm_to_nii(folder_input, folder_output, bids_name)
@@ -960,7 +960,7 @@ def merge_DTI(folder_input, folder_output, name, fixed_dti_list=False):
                 if fileinput.isfirstline():
                     line_no = 0
                 lines_out_bval[line_no] = lines_out_bval[line_no]+" "+line.rstrip()
-                line_no +=1
+                line_no += 1
             for i in range(0, len(lines_out_bval)):
                 lines_out_bval[i] = lines_out_bval[i].lstrip()
 
@@ -997,7 +997,7 @@ def concatenate_bvec_bval(files_list, output_file, type):
     if type == 'bval':
         lines_out = ['']
     else:
-        lines_out= ['', '', '']
+        lines_out = ['', '', '']
 
     for line in files_list:
         if fileinput.isfirstline():
@@ -1036,7 +1036,7 @@ def merge_noddi_dti(folder_input, folder_output, name):
 
     dti_list = remove_rescan(glob(path.join(folder_input, '*DTI*')))
 
-    if len(dti_list)!=6:
+    if len(dti_list) != 6:
         raise Exception('Number of DTI found different from 6')
 
     if not os.path.exists(folder_output):

@@ -16,7 +16,7 @@ def print_statistics(summary_file, num_subjs, ses_aval, mmt):
     missing_list = mmt.get_missing_list()
     summary_file.write('**********************************************\n')
     summary_file.write('Number of subjects converted: ' + str(num_subjs) + '\n')
-    summary_file.write('Sessions available: '+ses_aval[0] +'\n')
+    summary_file.write('Sessions available: '+ses_aval[0] + '\n')
 
     for ses in ses_aval:
         ses_miss = missing_list[ses]['session']
@@ -52,7 +52,7 @@ class MissingModsTracker:
     def __init__(self, ses, mod_list=False):
         self.missing = {}
         self.ses = ses
-        if mod_list!=False:
+        if mod_list != False:
             for s in ses:
                 self.missing.update({s: {'session':0}})
                 for mod in mod_list:

@@ -131,7 +131,7 @@ def grab_noddi_preprocessed_files(caps_directory, tsv):
 
     subject_list = []
     session_list = []
-    subject_id_list =[]
+    subject_id_list = []
     with open(tsv, 'rb') as tsvin:
         tsv_reader = csv.reader(tsvin, delimiter='\t')
 
@@ -164,7 +164,7 @@ def grab_noddi_preprocessed_files(caps_directory, tsv):
         subject_nii = os.path.join(caps_directory, 'subjects', subject_list[i], session_list[i], 'dwi', 'preprocessing', subject_id_list[i] + '_dwi_space-b0_preproc.nii.gz')
         noddi_preprocessed_dwi += [subject_nii]
 
-        subject_bvec = os.path.join(caps_directory, 'subjects', subject_list[i], session_list[i], 'dwi', 'preprocessing', subject_id_list[i]  + '_dwi_space-b0_preproc.bvec')
+        subject_bvec = os.path.join(caps_directory, 'subjects', subject_list[i], session_list[i], 'dwi', 'preprocessing', subject_id_list[i] + '_dwi_space-b0_preproc.bvec')
         noddi_preprocessed_bvec += [subject_bvec]
 
         subject_bval = os.path.join(caps_directory, 'subjects', subject_list[i], session_list[i], 'dwi', 'preprocessing', subject_id_list[i] + '_dwi_space-b0_preproc.bval')
@@ -189,7 +189,7 @@ def grab_noddi_preprocessed_files_oneshell_adni(caps_directory, tsv):
 
     subject_list = []
     session_list = []
-    subject_id_list =[]
+    subject_id_list = []
     with open(tsv, 'rb') as tsvin:
         tsv_reader = csv.reader(tsvin, delimiter='\t')
 
@@ -222,7 +222,7 @@ def grab_noddi_preprocessed_files_oneshell_adni(caps_directory, tsv):
         subject_nii = os.path.join(caps_directory, 'subjects', subject_list[i], session_list[i], 'dwi', 'preprocessing', subject_id_list[i] + '_acq-axial_dwi_space-T1w_preproc.nii.gz')
         noddi_preprocessed_dwi += [subject_nii]
 
-        subject_bvec = os.path.join(caps_directory, 'subjects', subject_list[i], session_list[i], 'dwi', 'preprocessing',  subject_id_list[i]  + '_acq-axial_dwi_space-T1w_preproc.bvec')
+        subject_bvec = os.path.join(caps_directory, 'subjects', subject_list[i], session_list[i], 'dwi', 'preprocessing',  subject_id_list[i] + '_acq-axial_dwi_space-T1w_preproc.bvec')
         noddi_preprocessed_bvec += [subject_bvec]
 
         subject_bval = os.path.join(caps_directory, 'subjects', subject_list[i], session_list[i], 'dwi', 'preprocessing', subject_id_list[i] + '_acq-axial_dwi_space-T1w_preproc.bval')

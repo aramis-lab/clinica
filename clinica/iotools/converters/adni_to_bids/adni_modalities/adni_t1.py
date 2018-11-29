@@ -152,7 +152,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download):
     if new_download == False:
         #conversion errors known
         subj_ind = (t1_df.Subject_ID == '141_S_0726') & (t1_df.VISCODE == 'bl')
-        t1_df.loc[subj_ind, 'Sequence'] ='MPR-R__GradWarp__B1_Correction'
+        t1_df.loc[subj_ind, 'Sequence'] = 'MPR-R__GradWarp__B1_Correction'
         t1_df.loc[subj_ind, 'Series_ID'] = '18355'
         t1_df.loc[subj_ind, 'Image_ID'] = '94827'
 
@@ -279,7 +279,7 @@ def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", m
         # If updated mode is selected, check if an old T1 image is existing and remove it
         existing_t1 = glob(path.join(output_path, output_filename + '*'))
 
-        if mod_to_update and len(existing_t1)>0:
+        if mod_to_update and len(existing_t1) > 0:
             print('Removing the old T1 image...')
             for t1 in existing_t1:
                 os.remove(t1)

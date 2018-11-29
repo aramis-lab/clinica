@@ -83,7 +83,7 @@ class AtlasAbstract:
         img_labels = nib.load(self.get_atlas_labels())
         img_labels = img_labels.get_data()
         labels = list(set(img_labels.ravel()))
-        index_vector=np.zeros(len(labels))
+        index_vector = np.zeros(len(labels))
         for index, n in enumerate(labels):
             index_vector[index] = index
         return index_vector

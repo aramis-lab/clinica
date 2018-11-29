@@ -36,7 +36,7 @@ class ClinicaClassLoader:
     def __init__(self, env='CLINICAPATH',
                  baseclass=None, reg=r".*_cli\.py$", extra_dir=""):
         self.env = env
-        if baseclass==None:
+        if baseclass == None:
             import clinica.pipelines.engine as cpe
             self.baseclass = cpe.Pipeline
         else:
@@ -99,7 +99,7 @@ def execute():
     parser = ArgumentParser(add_help=False)
     parser.add_argument('-h', '--help', action='help',
                         default=argparse.SUPPRESS, help=argparse.SUPPRESS)
-    parser._positionals.title = '%sclinica expects one of the following keywords%s'  % (Fore.YELLOW, Fore.RESET)
+    parser._positionals.title = '%sclinica expects one of the following keywords%s' % (Fore.YELLOW, Fore.RESET)
     parser._optionals.title = OPTIONAL_TITLE
 
     sub_parser = parser.add_subparsers(metavar='')

@@ -133,14 +133,14 @@ class fMRIPreprocessing(cpe.Pipeline):
         # Reading BIDS json
         # =================
 
-        read_node.inputs.et=[]
-        read_node.inputs.blipdir=[]
-        read_node.inputs.tert=[]
-        read_node.inputs.time_repetition=[]
-        read_node.inputs.num_slices=[]
-        read_node.inputs.slice_order=[]
-        read_node.inputs.ref_slice=[]
-        read_node.inputs.time_acquisition=[]
+        read_node.inputs.et = []
+        read_node.inputs.blipdir = []
+        read_node.inputs.tert = []
+        read_node.inputs.time_repetition = []
+        read_node.inputs.num_slices = []
+        read_node.inputs.slice_order = []
+        read_node.inputs.ref_slice = []
+        read_node.inputs.time_acquisition = []
 
         for i in range(len(self.subjects)):
 
@@ -160,7 +160,7 @@ class fMRIPreprocessing(cpe.Pipeline):
                     # SPM blip direction
                     # TODO: Verifiy that it is the correct way to get the blipdir
                     blipdir_raw = data['PhaseEncodingDirection']
-                    if len(blipdir_raw) > 1 and blipdir_raw[1]=='-':
+                    if len(blipdir_raw) > 1 and blipdir_raw[1] == '-':
                         read_node.inputs.blipdir.append(-1)
                     else:
                         read_node.inputs.blipdir.append(1)

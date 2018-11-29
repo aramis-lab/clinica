@@ -249,7 +249,7 @@ def av45_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2n
         # ------------------
 
         bids_subj = subject.replace('_', '')
-        output_path = os.path.join(bids_dir, 'sub-ADNI' + bids_subj +'/ses-' + session + '/pet')
+        output_path = os.path.join(bids_dir, 'sub-ADNI' + bids_subj + '/ses-' + session + '/pet')
         output_filename = 'sub-ADNI' + bids_subj + '_ses-' + session + '_task-rest_acq-av45_pet'
 
         # ADDED lines

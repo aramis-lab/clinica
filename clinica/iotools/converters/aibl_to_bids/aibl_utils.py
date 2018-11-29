@@ -532,7 +532,7 @@ def av45_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
         if path.exists(path.join(output_path,output_filename + '.nii.gz')):
             pass
         else:
-            output_image=dicom_to_nii(subject,output_path,output_filename, image_path,dcm2niix='dcm2niix',dcm2nii='dcm2nii',mri_convert='mri_convert')
+            output_image = dicom_to_nii(subject,output_path,output_filename, image_path,dcm2niix='dcm2niix',dcm2nii='dcm2nii',mri_convert='mri_convert')
 
 
 def pib_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
@@ -655,8 +655,8 @@ def t1_paths_to_bids(path_to_dataset,path_to_csv, bids_dir):
         #it iterates for each row of the dataframe which contains the T1_paths
         image = row[1]
         subject = image.Subjects_ID
-        session=image.Session_ID
-        image_path=image.Path_to_T1
+        session = image.Session_ID
+        image_path = image.Path_to_T1
         count += 1
 
         if image_path is nan:
@@ -664,7 +664,7 @@ def t1_paths_to_bids(path_to_dataset,path_to_csv, bids_dir):
             continue
         cprint('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
 
-        session=viscode_to_session(session)
+        session = viscode_to_session(session)
         #creation of the path
         output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'anat')
         output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_T1w'

@@ -251,7 +251,7 @@ def is_nan(value):
     from math import isnan
     import numpy as np
 
-    if type(value)!=float and type(value)!=np.float64:
+    if type(value) != float and type(value) != np.float64:
         return False
 
     if isnan(value):
@@ -360,7 +360,7 @@ def update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_f
 
     """
 
-    if visit_id=='sc' or visit_id == 'uns1':
+    if visit_id == 'sc' or visit_id == 'uns1':
         return sessions_dict
 
     visit_id = viscode_to_session(visit_id)

@@ -246,9 +246,9 @@ def fmri_paths_to_bids(dest_dir, fmri_paths, mod_to_update=False):
                     fmri_path = fmri_info['Path'].values[0]
                     dcm_to_convert = adni_utils.check_two_dcm_folder(fmri_path, dest_dir,
                                                                 fmri_info['IMAGEUID'].values[0])
-                    cprint(os.path.join(ses_path, 'func', bids_file_name +'_task-rest_bold.nii.gz'))
+                    cprint(os.path.join(ses_path, 'func', bids_file_name + '_task-rest_bold.nii.gz'))
 
-                    if not os.path.isfile(os.path.join(ses_path, 'func', bids_file_name +'_task-rest_bold.nii.gz')):
+                    if not os.path.isfile(os.path.join(ses_path, 'func', bids_file_name + '_task-rest_bold.nii.gz')):
 
                         bids.convert_fmri(dcm_to_convert, path.join(ses_path, 'func'), bids_file_name)
                     else:

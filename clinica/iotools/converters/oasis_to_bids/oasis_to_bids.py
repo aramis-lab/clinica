@@ -87,7 +87,7 @@ class OasisToBids(Converter):
             subj_id = os.path.basename(subj_folder)
             print('Converting ', subj_id)
             numerical_id = (subj_id.split("_"))[1]
-            bids_id = 'sub-OASIS1'+ str(numerical_id)
+            bids_id = 'sub-OASIS1' + str(numerical_id)
             bids_subj_folder = path.join(dest_dir, bids_id)
             if not os.path.isdir(bids_subj_folder):
                 os.mkdir(bids_subj_folder)

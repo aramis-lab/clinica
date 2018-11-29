@@ -161,7 +161,7 @@ def checkfov(t1_list, recon_all_args):
     f = nib.load(t1_list[0])
     voxel_size = f.header.get_zooms()
     t1_size = f.header.get_data_shape()
-    if (voxel_size[0] * t1_size[0] > 256) or (voxel_size[1] * t1_size[1]> 256) or (voxel_size[2] * t1_size[2]> 256):
+    if (voxel_size[0] * t1_size[0] > 256) or (voxel_size[1] * t1_size[1] > 256) or (voxel_size[2] * t1_size[2] > 256):
         cprint("Setting MRI Convert to crop images to 256 FOV")
         optional_flag = '-cw256'
     else:

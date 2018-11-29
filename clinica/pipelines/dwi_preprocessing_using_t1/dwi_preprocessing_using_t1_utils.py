@@ -113,7 +113,7 @@ def eddy_fsl(in_bvec, in_bval, in_file, in_mask, in_acqp, in_index):
     out_corrected = op.abspath('eddy_corrected.nii.gz')
     out_rotated_bvecs = op.abspath('eddy_corrected.eddy_rotated_bvecs')
 
-    cmd = 'eddy --imain=' + in_file + ' --bvecs=' + in_bvec +' --bvals=' + in_bval + ' --out=eddy_corrected' + ' --mask=' + in_mask + ' --acqp=' + in_acqp + ' --index=' + in_index + ' --flm=linear'
+    cmd = 'eddy --imain=' + in_file + ' --bvecs=' + in_bvec + ' --bvals=' + in_bval + ' --out=eddy_corrected' + ' --mask=' + in_mask + ' --acqp=' + in_acqp + ' --index=' + in_index + ' --flm=linear'
     os.system(cmd)
     if not os.path.exists(out_corrected):
         print('Output file not generated. Trying with the binary eddy_opemp...')
@@ -319,7 +319,7 @@ def create_jacobian_determinant_image(imageDimension, deformationField, outputIm
 
     outputImage = op.abspath(outputImage)
 
-    cmd = 'CreateJacobianDeterminantImage ' + str(imageDimension) + ' ' + deformationField + ' '+ outputImage
+    cmd = 'CreateJacobianDeterminantImage ' + str(imageDimension) + ' ' + deformationField + ' ' + outputImage
     os.system(cmd)
 
     return outputImage

@@ -419,9 +419,9 @@ class RandomForest(base.MLAlgorithm):
             if type(m) is int:
                 return float(m) / float(self._x.shape[1])
             if m == 'auto' or m == 'sqrt':
-                return np.sqrt(self._x.shape[1])/ float(self._x.shape[1])
+                return np.sqrt(self._x.shape[1]) / float(self._x.shape[1])
             if m == 'log2':
-                return np.log2(self._x.shape[1])/ float(self._x.shape[1])
+                return np.log2(self._x.shape[1]) / float(self._x.shape[1])
             raise ValueError('Not valid value for max_feature: %s' % m)
 
         float_max_feat = [max_feature_to_float(x[3]) for x in params_list]

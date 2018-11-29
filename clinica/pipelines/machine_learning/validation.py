@@ -344,7 +344,7 @@ class RepeatedHoldOut(base.MLValidation):
                                index=False, sep='\t', encoding='utf-8')
 
         print("Mean results of the classification:")
-        print("Balanced accuracy: %s" %(mean_results_df['balanced_accuracy'].to_string(index = False)))
+        print("Balanced accuracy: %s" % (mean_results_df['balanced_accuracy'].to_string(index = False)))
         print("specificity: %s" % (mean_results_df['specificity'].to_string(index=False)))
         print("sensitivity: %s" % (mean_results_df['sensitivity'].to_string(index=False)))
         print("auc: %s" % (mean_results_df['auc'].to_string(index=False)))
