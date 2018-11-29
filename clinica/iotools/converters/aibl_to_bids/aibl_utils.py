@@ -30,7 +30,6 @@ def listdir_nohidden(path):
         if not x.startswith("."):
             # check if there is the folder .DS_STORE, if it's present, we do not save them
             result.append(x)
-            #yield x
     return result
 
 
@@ -50,7 +49,7 @@ def find_T1_folder(subdirectory, path_to_T1_1):
                        'MPRAGE_ADNI_conf_REPEAT'}
     for j in path_to_convert:
         path = []
-        #if conditions which checks if the subfolder contain a T1 image
+        # if conditions which checks if the subfolder contain a T1 image
         if j == subdirectory:
             path = os.path.join(path_to_T1_1, subdirectory)
             return path
@@ -75,7 +74,7 @@ def find_T1_folder_nodata(subdirectory, path_to_T1_1):
     path_to_convert = {'MPRAGESAGISOp2ND', 'MPRAGE_SAG_ISO_p2_ND', 'MPRAGE_SAG_ISO_p2'}
     for j in path_to_convert:
         path = []
-        #if conditions which checks if the subfolder contain a T1 image
+        # if conditions which checks if the subfolder contain a T1 image
         if j == subdirectory:
             path = os.path.join(path_to_T1_1, subdirectory)
             return path
@@ -304,7 +303,7 @@ def find_path_to_pet_modality(path_to_dataset, csv_file):
     import pandas
 
 
-    #TODO
+    # TODO
     #exclude_subjects = get_exclude_subject(file.txt)
 
 
@@ -498,8 +497,9 @@ def find_path_to_T1(path_to_dataset, path_to_csv):
     # data= final dataframe
     return data
 
-#Covert the AIBL PET images into the BIDS specification.
-#There are three pet modalities: av45, pib, flute. All of them are converted in BIDS
+# Covert the AIBL PET images into the BIDS specification.
+# There are three pet modalities: av45, pib, flute. All of them are converted
+# in BIDS
 
 
 def av45_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
@@ -658,14 +658,14 @@ def t1_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
     from numpy import nan
     from clinica.utils.stream import cprint
 
-    #it reads the dataframe where subject_ID, session_ID and path are saved
+    # it reads the dataframe where subject_ID, session_ID and path are saved
     images = find_path_to_T1(path_to_dataset, path_to_csv)
     images.to_csv(path.join(bids_dir, 'T1_MRI_paths.tsv'), sep='\t', index=False, encoding='utf-8')
     count = 0
     total = images.shape[0]
 
     for row in images.iterrows():
-        #it iterates for each row of the dataframe which contains the T1_paths
+        # it iterates for each row of the dataframe which contains the T1_paths
         image = row[1]
         subject = image.Subjects_ID
         session = image.Session_ID
@@ -678,10 +678,10 @@ def t1_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
         cprint('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
 
         session = viscode_to_session(session)
-        #creation of the path
+        # creation of the path
         output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'anat')
         output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_T1w'
-        #image are saved following BIDS specifications
+        # image are saved following BIDS specifications
         if path.exists(path.join(output_path, output_filename + '.nii.gz')):
             pass
         else:

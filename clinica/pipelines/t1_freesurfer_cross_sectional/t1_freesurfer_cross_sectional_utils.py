@@ -52,7 +52,7 @@ def bids_datagrabber(input_dir, subject_list, session_list):
             else:
                 anat_t1.append(t1)
 
-    ### check if pybids works well tp find all the T1 images
+    # check if pybids works well tp find all the T1 images
     if len(missing_subject_session) > 0:
         error_string = 'Please verify there is no error in your tsv file. Clinica could not find T1 for those ' + str(len(missing_subject_session)) + ' subjects - session :'
         for e in missing_subject_session:
@@ -100,7 +100,7 @@ def get_dirs_check_reconalled(output_dir, subject_list, session_list):
         if exception.errno != errno.EEXIST:  # if the error is not exist error, raise, otherwise, pass
             raise
 
-    ## subject_dir is the real path to FreeSurfer output path
+    # subject_dir is the real path to FreeSurfer output path
     subject_dir = []
     subject_dir_without_reconalled = []
 
@@ -375,7 +375,7 @@ def write_statistics_per_subject(subject_id, output_dir):
     cmd_aparc_destrieux_rh_meancurv = 'aparcstats2table --subjects ' + subject + ' --hemi rh --parc aparc.a2009s --meas meancurv --tablefile ' + aparc_destrieux_rh_meancurv_tsv
     os.system(cmd_aparc_destrieux_rh_meancurv)
 
-    #### BA atals does not work for FreeSurfer 6.0
+    # BA atals does not work for FreeSurfer 6.0
     # cmd_aparc_BA_lh_volume = 'aparcstats2table --subjects ' + subject + ' --hemi lh --parc BA --meas volume --tablefile ' + aparc_BA_lh_volume_tsv
     # os.system(cmd_aparc_BA_lh_volume)
     # cmd_aparc_BA_rh_volume = 'aparcstats2table --subjects ' + subject + ' --hemi rh --parc BA --meas volume --tablefile ' + aparc_BA_rh_volume_tsv

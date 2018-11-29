@@ -126,16 +126,16 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
             function=utils.get_subid_sesid), name='get_subid_sesid', iterfield=['in_file'])
         get_identifiers.inputs.caps_directory = self.caps_directory
 
-        ### datasink
+        # datasink
         datasink = npe.MapNode(nio.DataSink(infields=['@preproc_bval', '@preproc_dwi', '@preproc_bvec', '@b0_mask']),
                               name='datasinker',
                               iterfield=['base_directory', 'substitutions', '@preproc_bval', '@preproc_dwi', '@preproc_bvec', '@b0_mask'])
         self.connect([
-            ### datasink
+            # datasink
             (self.input_node, get_identifiers, [('bids_ap_dwi', 'in_file')]),
             (get_identifiers, datasink, [('base_directory', 'base_directory')]),
             (get_identifiers, datasink, [('subst_tuple_list', 'substitutions')]),
-            ## original files
+            # original files
             (self.output_node, datasink, [('preproc_bval', '@preproc_bval')]),
             (self.output_node, datasink, [('preproc_dwi', '@preproc_dwi')]),
             (self.output_node, datasink, [('preproc_bvec', '@preproc_bvec')]),
@@ -160,7 +160,7 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
             (self.input_node,      one_subj_noddi,    [('bids_pa_dwi_bvec',    'inputnode.alt_bvec')]),
             (self.input_node,      one_subj_noddi,    [('bids_pa_dwi_bval',    'inputnode.alt_bval')]),
 
-            ## output
+            # output
             (one_subj_noddi, self.output_node, [('outputnode.ecc_out_file', 'preproc_dwi')]),  # noqa
             (one_subj_noddi, self.output_node, [('outputnode.out_bvec', 'preproc_bvec')]),  # noqa
             (one_subj_noddi, self.output_node, [('outputnode.original_merged_bval', 'preproc_bval')]),  # noqa

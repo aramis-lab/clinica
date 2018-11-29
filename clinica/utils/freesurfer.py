@@ -219,7 +219,7 @@ def volumetric_summary(subject_dir, subject_id, caps_dir):
     cmd_aparc_destrieux_rh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc aparc.a2009s --meas meancurv --tablefile ' + aparc_destrieux_rh_meancurv_tsv
     os.system(cmd_aparc_destrieux_rh_meancurv)
 
-    #### BA atals does not work for FreeSurfer 6.0
+    # BA atals does not work for FreeSurfer 6.0
     # cmd_aparc_BA_lh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc BA --meas volume --tablefile ' + aparc_BA_lh_volume_tsv
     # os.system(cmd_aparc_BA_lh_volume)
     # cmd_aparc_BA_rh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas volume --tablefile ' + aparc_BA_rh_volume_tsv
@@ -249,8 +249,8 @@ def write_volumetric_summary(caps_dir, subjects_visits_tsv):
     Returns:
 
     """
-    ### TODO, this should be done after we define the name of the tsv file for each subject, otherwise this will be changed often....
-    #### NOT USE
+    # TODO, this should be done after we define the name of the tsv file for each subject, otherwise this will be changed often....
+    # NOT USE
 
     import nipype.pipeline.engine as pe
     from nipype.interfaces.utility import Function

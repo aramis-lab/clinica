@@ -23,13 +23,13 @@ def amico_noddi(root_dir, subject_id, in_bval, in_bvec, noddi_preprocessed, mask
     from os.path import join as opj
     from os import chdir as oc
 
-    #########checking if the files exist
+    # checking if the files exist
     try:
         os.path.isfile(in_bval) and os.path.isfile(in_bvec) and os.path.isfile(noddi_preprocessed) and os.path.isfile(mask_file)
     except OSError:
         raise
 
-    ## Get the name of the bvec and bval files
+    # Get the name of the bvec and bval files
     bval_name = in_bval.split('/')[-1]
     bvec_name = in_bvec.split('/')[-1]
     noddi_preprocessed = noddi_preprocessed.split('/')[-1]
@@ -45,7 +45,7 @@ def amico_noddi(root_dir, subject_id, in_bval, in_bvec, noddi_preprocessed, mask
     # load the data
     ae.load_data(dwi_filename=noddi_preprocessed, scheme_filename=scheme_filename, mask_filename=mask_file)
 
-    #Compute the response functions
+    # Compute the response functions
     ae.set_model("NODDI")
     ae.generate_kernels()
     ae.load_kernels()
@@ -54,7 +54,7 @@ def amico_noddi(root_dir, subject_id, in_bval, in_bvec, noddi_preprocessed, mask
     ae.fit()
     ae.save_results()
 
-    ## get the output file for datasinker
+    # get the output file for datasinker
     FIT_ICVF = os.path.join(subject_path, 'AMICO', 'NODDI', 'FIT_ICVF.nii.gz')
     FIT_ISOVF = os.path.join(subject_path, 'AMICO', 'NODDI', 'FIT_ISOVF.nii.gz')
     FIT_OD = os.path.join(subject_path, 'AMICO', 'NODDI', 'FIT_OD.nii.gz')
@@ -151,7 +151,7 @@ def grab_noddi_preprocessed_files(caps_directory, tsv):
     noddi_preprocessed_mask = []
 
 
-    ###### the number of subject_list and session_list should be the same
+    # the number of subject_list and session_list should be the same
     try:
         len(subject_list) == len(session_list)
     except RuntimeError:
@@ -160,7 +160,7 @@ def grab_noddi_preprocessed_files(caps_directory, tsv):
 
     num_subject = len(subject_list)
     for i in xrange(num_subject):
-        ############## AP
+        # AP
         subject_nii = os.path.join(caps_directory, 'subjects', subject_list[i], session_list[i], 'dwi', 'preprocessing', subject_id_list[i] + '_dwi_space-b0_preproc.nii.gz')
         noddi_preprocessed_dwi += [subject_nii]
 
@@ -209,7 +209,7 @@ def grab_noddi_preprocessed_files_oneshell_adni(caps_directory, tsv):
     noddi_preprocessed_mask = []
 
 
-    ###### the number of subject_list and session_list should be the same
+    # the number of subject_list and session_list should be the same
     try:
         len(subject_list) == len(session_list)
     except RuntimeError:
@@ -218,7 +218,7 @@ def grab_noddi_preprocessed_files_oneshell_adni(caps_directory, tsv):
 
     num_subject = len(subject_list)
     for i in xrange(num_subject):
-        ############## AP
+        # AP
         subject_nii = os.path.join(caps_directory, 'subjects', subject_list[i], session_list[i], 'dwi', 'preprocessing', subject_id_list[i] + '_acq-axial_dwi_space-T1w_preproc.nii.gz')
         noddi_preprocessed_dwi += [subject_nii]
 
@@ -314,7 +314,7 @@ def runmatlab(output_dir, noddi_img, brain_mask, roi_mask, bval, bvec, prefix, b
 
     matlab.run()
 
-    #grab the output images
+    # grab the output images
     fit_icvf = os.path.join(output_dir, prefix+'_ficvf.nii')
     fit_isovf = os.path.join(output_dir, prefix+'_fiso.nii')
     fit_od = os.path.join(output_dir, prefix+'_odi.nii')
@@ -430,7 +430,7 @@ def matlab_noddi_processing(caps_directory, num_cores, bStep, name='NoddiMatlab'
     # output node
     outputnode = pe.Node(niu.IdentityInterface(fields=['fit_icvf', 'fit_isovf', 'fit_od']), name='outputnode')
 
-    #### gzip the nii.gz img to nii img
+    # gzip the nii.gz img to nii img
     # Gunzip - unzip functional
     gunzip_dwi = pe.MapNode(Gunzip(), name="gunzipdwi", iterfield=['in_file'])
     gunzip_mask = pe.MapNode(Gunzip(), name="gunzipmask", iterfield=['in_file'])
@@ -445,7 +445,7 @@ def matlab_noddi_processing(caps_directory, num_cores, bStep, name='NoddiMatlab'
     nodditoolbox.inputs.num_cores = num_cores
     nodditoolbox.inputs.bStep = bStep
 
-    #zip the result imgs
+    # zip the result imgs
     zip_icvf = pe.MapNode(name='zip_icvf',
                        interface=niu.Function(input_names=['in_file'],
                                           output_names=['out_file'],

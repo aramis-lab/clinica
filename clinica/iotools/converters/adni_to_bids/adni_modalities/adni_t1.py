@@ -34,7 +34,7 @@ def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None):
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
         adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
         subjs_list = list(adni_merge.PTID.unique())
-    #new_download: indicates the version of csv Downloaded
+    # new_download: indicates the version of csv Downloaded
     if path.isfile(path.join(csv_dir, 'IDA_MR_Metadata_Listing.csv')):
         new_download = False
     else:
@@ -150,7 +150,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download):
     # ==========
     # Subject 141_S_0726
     if new_download == False:
-        #conversion errors known
+        # conversion errors known
         subj_ind = (t1_df.Subject_ID == '141_S_0726') & (t1_df.VISCODE == 'bl')
         t1_df.loc[subj_ind, 'Sequence'] = 'MPR-R__GradWarp__B1_Correction'
         t1_df.loc[subj_ind, 'Series_ID'] = '18355'
@@ -358,7 +358,7 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
         qc_passed = False
 
 
-    #TODO replace by the function to find if the scanner is_philips
+    # TODO replace by the function to find if the scanner is_philips
 
     filtered_scan = ida_meta_subj[ida_meta_subj.LONIUID == series_id]
 
@@ -676,8 +676,6 @@ def adni1_select_scanner(subj, csv_dir, adnimerge, timepoint):
         #    print mrimeta
         #rid_double = [40, 43, 72, 91, 118, 126, 166, 173, 176]
 
-        #if len(mrimeta) > 1 and rid in rid_double:
-        #    mrimeta.drop(mrimeta.index[0], inplace=True)
 
     if not mrimeta.empty:
         scan = mrimeta.MMB1HEAD.item()
@@ -698,7 +696,6 @@ def adni1_select_scanner(subj, csv_dir, adnimerge, timepoint):
                 scanner = 'Philips'
             else:
                 scanner = 'GE_Siemens'
-    #else:
     if mrimeta.empty:
         # 3T
         mri3meta_rid = mri3meta_tsv[mri3meta_tsv.RID == rid]
@@ -760,7 +757,7 @@ def adni1_image_refactoring(csv_dir, adnimerge, subject_id, timepoint, visit_str
         qc_passed = False
 
 
-    #TODO replace by the function to find if the scanner is_philips
+    # TODO replace by the function to find if the scanner is_philips
 
     scanner = adni1_select_scanner(subject_id, csv_dir, adnimerge, timepoint)
 

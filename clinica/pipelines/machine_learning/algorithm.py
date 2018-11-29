@@ -108,7 +108,6 @@ class DualSVMAlgorithm(base.MLAlgorithm):
                 async_result[i][c] = inner_pool.apply_async(self._grid_search,
                                                             (inner_kernel, x_test_inner,
                                                              y_train_inner, y_test_inner, c))
-                #print i, c, async_result[i][c]
         inner_pool.close()
         inner_pool.join()
 
@@ -571,8 +570,8 @@ class RandomForest(base.MLAlgorithm):
 
     def save_classifier(self, classifier, output_dir):
         np.savetxt(path.join(output_dir, 'feature_importances.txt'), classifier.feature_importances_)
-        #print classifier.estimators_
-        #np.savetxt(path.join(output_dir, 'estimators.txt'), str(classifier.estimators_))
+        # print classifier.estimators_
+        # np.savetxt(path.join(output_dir, 'estimators.txt'), str(classifier.estimators_))
 
     def save_weights(self, classifier, output_dir):
 

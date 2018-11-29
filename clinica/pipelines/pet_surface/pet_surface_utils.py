@@ -14,9 +14,10 @@ def perform_gtmseg(caps_dir, subject_id, session_id):
     """gtmseg is a freesurfer command used to perform a segmentation used in some partial volume correction methods.
 
     Warnings:
-        - This method changes the environnement variable $SUBJECTS_DIR (but put the original one back after execution).
-        This has not been intensely tested wether it can lead to some problems : (for instance if 2 subjects are running
-        in parallel)
+        - This method changes the environnement variable $SUBJECTS_DIR (but put
+          the original one back after execution).  This has not been intensely
+          tested wether it can lead to some problems : (for instance if 2
+          subjects are running in parallel)
 
     Args:
         (string) caps_dir : CAPS directory.
@@ -24,8 +25,9 @@ def perform_gtmseg(caps_dir, subject_id, session_id):
         (string) session_id: The session id ( something like : ses-M12)
 
     Returns:
-        (string) Path to the segmentation volume : a volume where each voxel has a label (ranging [0 2035] ), see
-        Freesurfer lookup table to see the labels with their corresponding names.
+        (string) Path to the segmentation volume : a volume where each voxel
+        has a label (ranging [0 2035] ), see Freesurfer lookup table to see the
+        labels with their corresponding names.
     """
     import os
     import shutil
@@ -523,7 +525,7 @@ def vol2surf(volume, surface, subject_id, session_id, caps_dir, gtmsegfile):
                            subject_id + '_' + session_id,
                            'surf',
                            os.path.basename(surface)))
-    #TODO carreful here...
+    # TODO carreful here...
     # Removing gtmseg.mgz may lead to problems as other vol2surf are using it
     os.remove(os.path.join(os.path.expandvars('$SUBJECTS_DIR'),
                            subject_id + '_' + session_id,
@@ -817,8 +819,8 @@ def get_wf(subject_id,
 
     cprint('***** Beginning processing of ' + subject_id + ' on ' + session_id + ' *****')
 
-    ### Creation of workflow
-    #1 Creation of node
+    # Creation of workflow
+    # 1 Creation of node
 
     unzip_pet = pe.Node(Gunzip(), name='unzip_pet')
 
@@ -989,7 +991,7 @@ def get_wf(subject_id,
             name='atlas_tsv')
     atlas_tsv.inputs.atlas_files = surface_atlas
 
-    #2 creation of workflow : working dir, inputnode, outputnode and datasink
+    # 2 creation of workflow : working dir, inputnode, outputnode and datasink
 
     wf = pe.Workflow(name=subject_id.replace('-', '_') + '_' + session_id.replace('-', '_'))
     wf.base_dir = working_directory_subjects
@@ -1044,7 +1046,7 @@ def get_wf(subject_id,
     ]
 
 
-    #3 Connecting the nodes
+    # 3 Connecting the nodes
 
     # TODO(@arnaud.marcoux): Add titles for sections of connections.
     #   Could be useful to add sections title to group similar connections
@@ -1116,6 +1118,6 @@ def get_wf(subject_id,
                 (outputnode, datasink, [('destrieux_tsv', 'destrieux_tsv')]),
                 (outputnode, datasink, [('desikan_tsv', 'desikan_tsv')])
                 ])
-    #wf.write_graph(graph2use='flat')
+    # wf.write_graph(graph2use='flat')
     wf.run()
     pass

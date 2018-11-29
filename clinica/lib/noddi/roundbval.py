@@ -5,7 +5,8 @@ import os.path
 def roundbval(bvalsFilename, newbvalsFilename, bStep):
     """round the bvals in the .bval file.
 
-    If required, b-values can be rounded up to a specific threshold (bStep parameter).
+    If required, b-values can be rounded up to a specific threshold (bStep
+    parameter).
 
     Parameters
     ----------
@@ -20,8 +21,6 @@ def roundbval(bvalsFilename, newbvalsFilename, bStep):
     if not os.path.exists(bvalsFilename):
         raise RuntimeError('bvals file not exist:' + bvalsFilename)
 
-    #if newbvalsFilename is None:
-        #newbvalsFilename = os.path.splitext(bvalsFilename)[0]+".scheme"
 
     # load files and check size
     bvals = np.loadtxt(bvalsFilename)

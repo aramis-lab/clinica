@@ -22,9 +22,11 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
     Args:
         study_name: name of the study (Ex. ADNI)
         clinical_spec_path: path to the clinical file
-        clinical_data_dir: path to the directory where the clinical data are stored
+        clinical_data_dir: path to the directory where the clinical data are
+        stored
         bids_ids: list of bids ids
-        delete_non_bids_info: if True delete all the rows of the subjects that are not available in the BIDS dataset
+        delete_non_bids_info: if True delete all the rows of the subjects that
+        are not available in the BIDS dataset
 
     Returns: a pandas dataframe that contains the participants data
     """
@@ -412,7 +414,7 @@ def dcm_to_nii(input_path, output_path, bids_name):
         os.mkdir(output_path)
 
     if 'bold' in bids_name:
-        #generation of the json file
+        # generation of the json file
         os.system('dcm2niix -b y -o ' + output_path + ' -f ' + bids_name + ' ' + input_path)
     else:
         os.system('dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name + ' ' + input_path)
@@ -714,7 +716,7 @@ def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name, acq
         if not os.path.exists(folder_output):
             os.mkdir(folder_output)
 
-        #If a prefixed pet is chosen for the conversion use it, otherwise extracts the pet file available into the folder
+        # If a prefixed pet is chosen for the conversion use it, otherwise extracts the pet file available into the folder
         if pet_name != '':
             pet_path = path.join(folder_input, pet_name)
         else:

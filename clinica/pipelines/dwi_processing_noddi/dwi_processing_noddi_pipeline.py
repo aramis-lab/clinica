@@ -1,6 +1,7 @@
 """dwi_processing_noddi - Clinica Pipeline.
 This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
+command line tool. See here for more details:
+https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
 """
 
 # WARNING: Don't put any import statement here except if it's absolutly
@@ -127,17 +128,17 @@ class DwiProcessingNoddi(cpe.Pipeline):
             function=utils.get_subid_sesid), name='get_subid_sesid', iterfield=['in_file'])
         get_identifiers.inputs.caps_directory = self.caps_directory
 
-        ### datasink
+        # datasink
         datasink = npe.MapNode(nio.DataSink(infields=['@fit_icvf', '@fit_isovf', '@fit_od']),
                               name='datasinker',
                               iterfield=['base_directory', 'substitutions', '@fit_icvf', '@fit_isovf', '@fit_od'])
 
         self.connect([
-            ### datasink
+            # datasink
             (self.output_node, get_identifiers, [('fit_icvf', 'in_file')]),
             (get_identifiers, datasink, [('base_directory', 'base_directory')]),
             (get_identifiers, datasink, [('subst_tuple_list', 'substitutions')]),
-            ## original files
+            # original files
             (self.output_node, datasink, [('fit_icvf', '@fit_icvf')]),
             (self.output_node, datasink, [('fit_isovf', '@fit_isovf')]),
             (self.output_node, datasink, [('fit_od', '@fit_od')]),
@@ -164,7 +165,7 @@ class DwiProcessingNoddi(cpe.Pipeline):
             (self.input_node,      processing_pipeline,    [('noddi_preprocessed_mask',    'inputnode.noddi_preprocessed_mask')]),
             (self.input_node,      processing_pipeline,    [('noddi_toolbox_dir',    'inputnode.noddi_toolbox_dir')]),
             (self.input_node,      processing_pipeline,    [('nifti_matlib_dir',    'inputnode.nifti_matlib_dir')]),
-            ## output
+            # output
             (processing_pipeline, self.output_node, [('outputnode.fit_icvf', 'fit_icvf')]),  # noqa
             (processing_pipeline, self.output_node, [('outputnode.fit_isovf', 'fit_isovf')]),  # noqa
             (processing_pipeline, self.output_node, [('outputnode.fit_od', 'fit_od')])  # noqa

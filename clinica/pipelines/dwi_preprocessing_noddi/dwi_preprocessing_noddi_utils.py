@@ -17,7 +17,7 @@ from nipype.workflows.dmri.fsl.utils import (b0_average, compute_readout,)
 
 
 ########################################################################
-############################## NODDI
+# NODDI
 ########################################################################
 
 from nipype.interfaces.fsl.base import FSLCommand, FSLCommandInputSpec
@@ -248,10 +248,7 @@ def sdc_peb_noddi(name='sdc_ped_noddi',
     return wf
 
 ################################################################################
-################################################################################
-################################################################################
-########################Utilities for the pipeline
-################################################################################
+# Utilities for the pipeline
 ################################################################################
 
 
@@ -388,7 +385,7 @@ def grab_noddi_bids_files(bids_directory, tsv):
     bids_pa_dwi_bvec = []
     bids_pa_dwi_bval = []
 
-    ###### the number of subject_list and session_list should be the same
+    # the number of subject_list and session_list should be the same
     try:
         len(subject_list) == len(session_list)
     except RuntimeError:
@@ -397,7 +394,7 @@ def grab_noddi_bids_files(bids_directory, tsv):
 
     num_subject = len(subject_list)
     for i in xrange(num_subject):
-        ############## AP
+        # AP
         subjec_nii = os.path.join(bids_directory, subject_list[i], session_list[i], 'dwi', subject_list[i] + '_' + session_list[i] + '_seq-mshellAP_dwi.nii.gz')
         bids_ap_dwi += [subjec_nii]
 
@@ -407,7 +404,7 @@ def grab_noddi_bids_files(bids_directory, tsv):
         subjec_bval = os.path.join(bids_directory, subject_list[i], session_list[i], 'dwi', subject_list[i] + '_' + session_list[i] + '_seq-mshellAP_dwi.bval')
         bids_ap_dwi_bval += [subjec_bval]
 
-        ############# PA
+        # PA
         subjec_nii = os.path.join(bids_directory, subject_list[i], session_list[i], 'dwi',
                                   subject_list[i] + '_' + session_list[i] + '_seq-mshellPA_dwi.nii.gz')
         bids_pa_dwi += [subjec_nii]
@@ -574,7 +571,7 @@ def noddi_preprocessing_twoped(caps_directory, name='noddi_preprocessing_topup_e
         (avg_b0,  bet_dwi,   [('out_file', 'in_file')]),
         # orginal files
         (merge_two_ped,    outputnode, [('out_bvals', 'original_merged_bval')]),
-        ### ecc files
+        # ecc files
         (ecc, outputnode, [('out_corrected', 'ecc_out_file')]),
         (rot_bvec, outputnode, [('out_file', 'out_bvec')]),
         (bet_dwi, outputnode, [('mask_file', 'out_mask')])

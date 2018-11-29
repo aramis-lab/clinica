@@ -107,7 +107,8 @@ def eddy_fsl(in_bvec, in_bval, in_file, in_mask, in_acqp, in_index):
     import os
     import os.path as op
 
-    ## TODO, using EDDY interface in nipype, but to make sure using the right version of FSL.
+    # TODO, using EDDY interface in nipype, but to make sure using the right
+    # version of FSL.
 
     out_parameter = op.abspath('eddy_corrected.eddy_parameters')
     out_corrected = op.abspath('eddy_corrected.nii.gz')
@@ -341,7 +342,7 @@ def convvert_eddy_2_hmc_ecc_flirt(eddy_parameters):
     num_vols = df_hmc.shape[0]
     for i in range(num_vols):
 
-        ### HMC
+        # HMC
         hmc_affine = np.ones([4, 4])
         # for translation
         hmc_affine[0, 3], hmc_affine[1, 3], hmc_affine[2, 3] = df_hmc.iloc[i, :][0], df_hmc.iloc[i, :][1], df_hmc.iloc[i, :][2]
@@ -366,8 +367,8 @@ def convvert_eddy_2_hmc_ecc_flirt(eddy_parameters):
         np.savetxt(op.abspath("hmc_vol" + str(i) + '_affine.mat'), hmc_affine, delimiter='  ')
         hmc_affine_list.append(op.abspath("hmc_vol" + str(i) + '_affine.mat'))
 
-        ##ecc
-        ##TODO, just set it into an identity matrix
+        # ecc
+        # TODO, just set it into an identity matrix
         ecc_affine = np.array([[1, 0, 0, 0],
                        [0, 1, 0, 0],
                        [0, 0, 1, 0],

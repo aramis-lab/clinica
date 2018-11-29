@@ -13,9 +13,11 @@ import clinica.pipelines.engine as cpe
 
 
 class T1FreeSurferCrossSectional(cpe.Pipeline):
-    """Creates a pipelines that performs Freesurfer commander, recon-all, It takes the input files of MRI T1 images and
-        executes the 31 steps to reconstruct the surface of the brain, this progress includes surface-based and Volume-based
-        piepeline, which including gray(GM)and white matter(WM) segementation, pial and white surface extraction!.
+    """Creates a pipelines that performs Freesurfer commander, recon-all, It
+    takes the input files of MRI T1 images and executes the 31 steps to
+    reconstruct the surface of the brain, this progress includes surface-based
+    and Volume-based piepeline, which including gray(GM)and white matter(WM)
+    segementation, pial and white surface extraction!.
 
     Warnings:
         - A WARNING.
@@ -147,7 +149,7 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
                 raise RuntimeError('ReconAll version should at least be version of 0.11.0')
         except Exception as e:
             cprint(str(e))
-            #exit(1)
+            # exit(1)
 
         # MapNode to check out if we need -cw256 for every subject, and -qcache is default for every subject.
         flagnode = npe.MapNode(name='flagnode',

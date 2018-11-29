@@ -445,7 +445,7 @@ class CAPSTSVBasedInput(CAPSInput):
 
         """
 
-        #if self._x is not None:
+        # if self._x is not None:
         #    return self._x
 
 

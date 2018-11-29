@@ -2,7 +2,8 @@
 
 """T1 SPM Dartel Existing Dartel - Clinica Pipeline.
 This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
+command line tool. See here for more details:
+https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
 """
 
 import clinica.pipelines.engine as cpe
@@ -29,11 +30,13 @@ class T1VolumeExistingDartel(cpe.Pipeline):
 
     Args:
         input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
+        output_dir: An empty output directory where CAPS structured data will
+        be written.  subjects_sessions_list: The Subjects-Sessions list file
+        (in .tsv format).
 
     Returns:
-        A clinica pipelines object containing the T1 SPM Dartel Existing Template pipelines.
+        A clinica pipelines object containing the T1 SPM Dartel Existing
+        Template pipelines.
 
     Raises:
 
@@ -102,7 +105,7 @@ class T1VolumeExistingDartel(cpe.Pipeline):
                         }
 
         # Dartel Input Tissues DataGrabber
-        #=================================
+        # =================================
         dartel_input_reader = npe.MapNode(nio.DataGrabber(infields=['subject_id', 'session',
                                                                     'subject_repeat', 'session_repeat',
                                                                     'tissue'],

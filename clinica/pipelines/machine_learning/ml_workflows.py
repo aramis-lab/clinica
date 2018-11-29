@@ -648,7 +648,7 @@ class TB_RepHoldOut_RandomForest(base.MLWorkflow):
         # self._validation.save_results(self._output_dir)
 
 
-###############################################svm reg
+# SVM reg
 
 class VBREG_RepHoldOut_DualSVM(base.MLWorkflow):
 
