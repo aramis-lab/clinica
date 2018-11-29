@@ -640,9 +640,7 @@ def flute_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2ni
                                     dcm2nii='dcm2nii', mri_convert='mri_convert')
 
 
-
 # Covert the AIBL T1 images into the BIDS specification.
-
 
 def t1_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
     ''' 
