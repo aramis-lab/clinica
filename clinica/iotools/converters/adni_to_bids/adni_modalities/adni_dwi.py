@@ -145,7 +145,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     for conv_error in conversion_errors:
         error_indices.append((dwi_df.Enhanced == False)
                              & (dwi_df.Subject_ID == conv_error[0])
-                             & (dwi_df.VISCODE == conv_error[1]))
+                             & (dwi_df.VISCODE == conv_error[1])) # noqa
 
     indices_to_remove = dwi_df.index[reduce(operator.or_, error_indices, False)]
     dwi_df.drop(indices_to_remove, inplace=True)
