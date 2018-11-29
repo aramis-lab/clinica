@@ -812,7 +812,7 @@ def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False, False
                       path.join(folder_output, bids_name_ph + '2.nii.gz'))
     # The modalities is missing or incomplete
     else:
-        if mag_missing == True and  map_ph_missing == True:
+        if mag_missing == True and map_ph_missing == True:
             return -1
         else:
             return 0

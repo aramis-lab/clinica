@@ -198,7 +198,7 @@ def change_itk_transform_type(input_affine_file):
         compatible with the antsApplyTransforms tool and produces a new affine
         file titled 'updated_affine.txt'
         """
-        import  os
+        import os
 
         new_file_lines = []
 
