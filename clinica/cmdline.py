@@ -36,7 +36,7 @@ class ClinicaClassLoader:
     def __init__(self, env='CLINICAPATH',
                  baseclass=None, reg=r".*_cli\.py$", extra_dir=""):
         self.env = env
-        if baseclass == None:
+        if baseclass is None:
             import clinica.pipelines.engine as cpe
             self.baseclass = cpe.Pipeline
         else:

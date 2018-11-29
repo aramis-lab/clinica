@@ -117,7 +117,7 @@ def grab_noddi_preprocessed_files(caps_directory, tsv):
     from time import time, strftime, localtime
     import clinica.iotools.utils.data_handling as cdh
 
-    if tsv == None:
+    if tsv is None:
         output_dir = tempfile.mkdtemp()
         timestamp = strftime('%Y%m%d_%H%M%S', localtime(time()))
         tsv_file = '%s_subjects_sessions_list.tsv' % timestamp
