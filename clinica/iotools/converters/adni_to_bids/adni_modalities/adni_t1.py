@@ -101,8 +101,6 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download):
         mprage_meta_subj = mprage_meta[mprage_meta.SubjectID == subj]
         mprage_meta_subj = mprage_meta_subj.sort_values('ScanDate')
 
-        #ida_meta_subj = ida_meta[ida_meta.Subject == subj]
-
         mri_quality_subj = mri_quality[mri_quality.RID == int(subj[-4:])]
         mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(subj[-4:])]
 
@@ -674,7 +672,6 @@ def adni1_select_scanner(subj, csv_dir, adnimerge, timepoint):
 
             mrimeta.drop(mrimeta.index[0], inplace=True)
         #    print mrimeta
-        #rid_double = [40, 43, 72, 91, 118, 126, 166, 173, 176]
 
 
     if not mrimeta.empty:
@@ -688,7 +685,6 @@ def adni1_select_scanner(subj, csv_dir, adnimerge, timepoint):
         else:
             com = com.item()
 
-        #com = mrimeta.MMB1BDCOM.item()
         if scan == '-4' or not scan:
             scanner = 'Philips'
         else:

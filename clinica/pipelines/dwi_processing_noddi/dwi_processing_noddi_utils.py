@@ -1,7 +1,5 @@
 # coding: utf8
 
-#! usr/bin/python
-
 def amico_noddi(root_dir, subject_id, in_bval, in_bvec, noddi_preprocessed, mask_file, bStep):
     """
      This is a function to call AMICO based on amico dataset structure

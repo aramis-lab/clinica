@@ -470,10 +470,10 @@ class CAPSTSVBasedInput(CAPSInput):
 
         """
 
-        #output_filename = path.join(output_dir, 'weights.nii.gz')
+        # output_filename = path.join(output_dir, 'weights.nii.gz')
 
 
-        #rbio.weights_to_nifti(weights, self._atlas, output_filename)
+        # rbio.weights_to_nifti(weights, self._atlas, output_filename)
         pass
 
 

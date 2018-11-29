@@ -44,7 +44,7 @@ class OasisToBids(Converter):
         participants_df['diagnosis_bl'].replace([0.0, np.nan], 'CN', inplace=True)
         participants_df['diagnosis_bl'].replace([0.5, 1.0, 1.5, 2.0], 'AD', inplace=True)
         # Following line has no sense
-        #participants_df['diagnosis_bl'].replace(participants_df['diagnosis_bl']>0.0, 'AD', inplace=True)
+        # participants_df['diagnosis_bl'].replace(participants_df['diagnosis_bl']>0.0, 'AD', inplace=True)
         participants_df.to_csv(path.join(bids_dir, 'participants.tsv'), sep='\t', index=False, encoding='utf-8')
 
         # --Create sessions files--

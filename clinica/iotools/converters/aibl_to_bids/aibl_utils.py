@@ -304,7 +304,7 @@ def find_path_to_pet_modality(path_to_dataset, csv_file):
 
 
     # TODO
-    #exclude_subjects = get_exclude_subject(file.txt)
+    # exclude_subjects = get_exclude_subject(file.txt)
 
 
     no_pet = list_of_paths()
@@ -848,7 +848,6 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
         dict = []
         for i in files_to_read:
             file_to_read = pd.read_csv(i, dtype={'text': str})
-            #file_to_read = pd.io.parsers.read_csv(i, sep=',')
             if len(file_to_read.columns) == 1:
                 file_to_read = pd.read_csv(i, sep=';')
             # information are written following the BIDS specifications

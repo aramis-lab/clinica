@@ -241,7 +241,6 @@ def sdc_peb_noddi(name='sdc_ped_noddi',
         (topup, outputnode, [('out_movpar', 'out_movpar')]),
         (topup, outputnode, [('out_corrected', 'out_file')]),
         (topup, outputnode, [('out_field', 'out_field_hz')]),
-        #(topup, outputnode, [('out_enc_file', 'out_enc_file')]),
         (topup_acq, outputnode, [('out_file', 'out_enc_file')]),
         (undis_mask, outputnode, [('mask_file', 'out_mask')])
     ])
