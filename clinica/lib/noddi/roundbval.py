@@ -11,7 +11,10 @@ def roundbval(bvalsFilename, newbvalsFilename, bStep):
     ----------
     :param str bvalsFilename: The path to bval file.
     :param str newbvalsFilename: The path to output scheme file (optional).
-    :param float or list or np.bStep: If bStep is a scalar, round b-values to nearest integer multiple of bStep. If bStep is a list, it is treated as an array of shells in increasing order. B-values will be forced to the nearest shell value.
+    :param float or list or np.bStep: If bStep is a scalar, round b-values to
+    nearest integer multiple of bStep. If bStep is a list, it is treated as an
+    array of shells in increasing order. B-values will be forced to the nearest
+    shell value.
     """
 
     if not os.path.exists(bvalsFilename):
@@ -27,7 +30,7 @@ def roundbval(bvalsFilename, newbvalsFilename, bStep):
     bStep = eval(bStep)
 
     # if requested, round the b-values
-    bStep = np.array(bStep, dtype = np.float)
+    bStep = np.array(bStep, dtype=np.float)
     print(bStep)
     print(bStep.size)
     if bStep.size == 1 and bStep > 1.0:

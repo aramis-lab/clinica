@@ -511,7 +511,7 @@ def av45_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
     except Exception as e:
         cprint("csv file not found")
     images = find_path_to_pet_modality(path_to_dataset, csv_file)
-    images.to_csv(os.path.join(bids_dir, 'pet_av45_paths_aibl.tsv'), sep='\t', encoding = 'utf-8')
+    images.to_csv(os.path.join(bids_dir, 'pet_av45_paths_aibl.tsv'), sep='\t', encoding='utf-8')
     count = 0
     total = images.shape[0]
     for row in images.iterrows():
@@ -556,7 +556,7 @@ def pib_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix
     except Exception as e:
         cprint("csv file not found")
     images = find_path_to_pet_modality(path_to_dataset, csv_file)
-    images.to_csv(os.path.join(bids_dir, 'pet_pib_paths_aibl.tsv'), sep='\t', encoding = 'utf-8')
+    images.to_csv(os.path.join(bids_dir, 'pet_pib_paths_aibl.tsv'), sep='\t', encoding='utf-8')
     count = 0
     total = images.shape[0]
     for row in images.iterrows():
@@ -602,7 +602,7 @@ def flute_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2ni
     except Exception as e:
         cprint("csv file not found")
     images = find_path_to_pet_modality(path_to_dataset, csv_file)
-    images.to_csv(os.path.join(bids_dir, 'pet_flute_paths_aibl.tsv'), sep='\t', encoding = 'utf-8')
+    images.to_csv(os.path.join(bids_dir, 'pet_flute_paths_aibl.tsv'), sep='\t', encoding='utf-8')
     count = 0
     total = images.shape[0]
     for row in images.iterrows():
@@ -647,7 +647,7 @@ def t1_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
 
     #it reads the dataframe where subject_ID, session_ID and path are saved
     images = find_path_to_T1(path_to_dataset, path_to_csv)
-    images.to_csv(path.join(bids_dir, 'T1_MRI_paths.tsv'), sep='\t', index=False, encoding ='utf-8')
+    images.to_csv(path.join(bids_dir, 'T1_MRI_paths.tsv'), sep='\t', index=False, encoding='utf-8')
     count = 0
     total = images.shape[0]
 
@@ -834,7 +834,7 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
             file_to_read = pd.read_csv(i, dtype={'text': str})
             #file_to_read = pd.io.parsers.read_csv(i, sep=',')
             if len(file_to_read.columns) == 1:
-                file_to_read = pd.read_csv(i, sep = ';')
+                file_to_read = pd.read_csv(i, sep=';')
             # information are written following the BIDS specifications
             viscode = file_to_read.loc[(file_to_read["RID"] == r), "VISCODE"]
             viscode[viscode == 'bl'] = 'M00'

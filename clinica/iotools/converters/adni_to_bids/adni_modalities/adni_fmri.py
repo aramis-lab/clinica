@@ -37,7 +37,7 @@ def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
 
     cprint('Calculating paths of fMRI images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
     if path.isfile(path.join(dest_dir, 'conversion_info', 'fmri_paths.tsv')):
-        images = pd.io.parsers.read_csv(path.join(dest_dir, 'conversion_info', 'fmri_paths.tsv'), sep = '\t')
+        images = pd.io.parsers.read_csv(path.join(dest_dir, 'conversion_info', 'fmri_paths.tsv'), sep='\t')
     else:
 
         images = compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list)

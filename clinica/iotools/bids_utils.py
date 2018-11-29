@@ -123,7 +123,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
     return participant_df
 
 
-def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids_ids, name_column_ids, subj_to_remove = []):
+def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids_ids, name_column_ids, subj_to_remove=[]):
     """
 
     Extract the information regarding the sessions and store them in a dictionary (session M00 only)
@@ -683,7 +683,7 @@ def convert_T1(t1_path, output_path, t1_bids_name):
             compress_nii(path.join(bids_file))
 
 
-def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name, acquisition = ''):
+def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name, acquisition=''):
     """
     Convert PET to BIDS
 
@@ -816,7 +816,7 @@ def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False, False
             return 0
 
 
-def convert_flair(folder_input, folder_output, name, fixed_file = False):
+def convert_flair(folder_input, folder_output, name, fixed_file=False):
     """
     Extracts and converts T2Flair data.
 
@@ -854,7 +854,7 @@ def convert_flair(folder_input, folder_output, name, fixed_file = False):
                 raise('Aborted')
 
 
-def convert_fmri(folder_input, folder_output, name, fixed_fmri=False, task_name = 'rest'):
+def convert_fmri(folder_input, folder_output, name, fixed_fmri=False, task_name='rest'):
     """
     Extracts and converts into the BIDS specification fmri data.
 

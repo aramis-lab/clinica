@@ -683,7 +683,7 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
     pick_ref = pe.Node(niu.Select(), name='Pick_b0')
     pick_ref.inputs.index = [0]
 
-    flirt_b0_2_T1 = pe.Node(interface=fsl.FLIRT(dof=6), name = 'flirt_B0_2_T1')
+    flirt_b0_2_T1 = pe.Node(interface=fsl.FLIRT(dof=6), name='flirt_B0_2_T1')
     flirt_b0_2_T1.inputs.interp = "spline"
     flirt_b0_2_T1.inputs.cost = 'normmi'
     flirt_b0_2_T1.inputs.cost_func = 'normmi'
