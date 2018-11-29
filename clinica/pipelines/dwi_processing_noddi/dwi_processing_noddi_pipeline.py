@@ -56,8 +56,14 @@ class DwiProcessingNoddi(cpe.Pipeline):
             A list of (string) input fields name.
         """
 
-        return ['subject_id_list', 'noddi_preprocessed_dwi', 'noddi_preprocessed_bvec', 'noddi_preprocessed_bval',
-                'noddi_preprocessed_mask', 'n_procs', 'noddi_toolbox_dir', 'nifti_matlib_dir'] # Fill here the list
+        return ['subject_id_list', 
+                'noddi_preprocessed_dwi', 
+                'noddi_preprocessed_bvec', 
+                'noddi_preprocessed_bval',
+                'noddi_preprocessed_mask', 
+                'n_procs', 
+                'noddi_toolbox_dir', 
+                'nifti_matlib_dir']  # Fill here the list
 
 
     def get_output_fields(self):
@@ -67,7 +73,7 @@ class DwiProcessingNoddi(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        return ['fit_icvf', 'fit_isovf', 'fit_od'] # Fill here the list
+        return ['fit_icvf', 'fit_isovf', 'fit_od']  # Fill here the list
 
 
     def build_input_node(self):

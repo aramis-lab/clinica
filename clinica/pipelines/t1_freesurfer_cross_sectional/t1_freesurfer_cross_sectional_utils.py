@@ -12,11 +12,10 @@ __status__ = "Development"
 
 def bids_datagrabber(input_dir, subject_list, session_list):
     """
-        Fetch t1 images from a BIDS directory based on subject_list and a session_list
-    Args:
-        input_dir: BIDS directory
-        subject_list: a list containing all the participant_id
-        session_list: a list containing all the session_id
+        Fetch t1 images from a BIDS directory based on subject_list and a
+        session_list Args: input_dir: BIDS directory subject_list: a list
+        containing all the participant_id session_list: a list containing all
+        the session_id
 
     Returns: a list containing all the t1 images
 
@@ -301,7 +300,7 @@ def write_statistics_per_subject(subject_id, output_dir):
     try:
         os.makedirs(dest_dir)
     except OSError as exception:
-        if exception.errno != errno.EEXIST: # if dest_dir exists, go on, if its other error, raise
+        if exception.errno != errno.EEXIST:  # if dest_dir exists, go on, if its other error, raise
             raise
     subject = os.path.join(cs_dir, subject_id)
 

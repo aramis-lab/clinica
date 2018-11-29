@@ -324,12 +324,30 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
 
             sessions_df = sessions_df[columns_order]
 
-            sessions_df[['adas_Q1', 'adas_Q2', 'adas_Q3', 'adas_Q4', 'adas_Q5', 'adas_Q6', 'adas_Q7', 'adas_Q8', 'adas_Q9', 'adas_Q10', 'adas_Q11', 'adas_Q12', 'adas_Q13']] = sessions_df[['adas_Q1', 'adas_Q2', 'adas_Q3', 'adas_Q4', 'adas_Q5', 'adas_Q6', 'adas_Q7', 'adas_Q8', 'adas_Q9', 'adas_Q10', 'adas_Q11', 'adas_Q12', 'adas_Q13']].apply(pd.to_numeric)
+            sessions_df[[
+                'adas_Q1', 'adas_Q2', 'adas_Q3', 'adas_Q4', 
+                'adas_Q5', 'adas_Q6', 'adas_Q7', 'adas_Q8', 
+                'adas_Q9', 'adas_Q10', 'adas_Q11', 'adas_Q12', 
+                'adas_Q13'
+                ]] = sessions_df[[
+                    'adas_Q1', 'adas_Q2', 'adas_Q3', 'adas_Q4', 
+                    'adas_Q5', 'adas_Q6', 'adas_Q7', 'adas_Q8', 
+                    'adas_Q9', 'adas_Q10', 'adas_Q11', 'adas_Q12', 
+                    'adas_Q13']].apply(pd.to_numeric)
 
-            sessions_df['adas_memory'] = sessions_df['adas_Q1'] + sessions_df['adas_Q4'] + sessions_df['adas_Q7'] + sessions_df['adas_Q8'] + sessions_df['adas_Q9'] #/ 45
-            sessions_df['adas_language'] = sessions_df['adas_Q2'] + sessions_df['adas_Q5'] + sessions_df['adas_Q10'] + sessions_df['adas_Q11'] + sessions_df['adas_Q12'] #/ 25
-            sessions_df['adas_praxis'] = sessions_df['adas_Q3'] + sessions_df['adas_Q6'] #/ 10
-            sessions_df['adas_concentration'] = sessions_df['adas_Q13'] #/ 5
+            sessions_df['adas_memory'] = sessions_df['adas_Q1'] 
+                                        + sessions_df['adas_Q4'] 
+                                        + sessions_df['adas_Q7'] 
+                                        + sessions_df['adas_Q8'] 
+                                        + sessions_df['adas_Q9']  # / 45
+            sessions_df['adas_language'] = sessions_df['adas_Q2'] 
+                                        + sessions_df['adas_Q5'] 
+                                        + sessions_df['adas_Q10'] 
+                                        + sessions_df['adas_Q11'] 
+                                        + sessions_df['adas_Q12']  # / 25
+            sessions_df['adas_praxis'] = sessions_df['adas_Q3'] 
+                                        + sessions_df['adas_Q6']  # / 10
+            sessions_df['adas_concentration'] = sessions_df['adas_Q13']  # / 5
 
             list_diagnosis_nan = np.where(pd.isnull(sessions_df['diagnosis']))
             diagnosis_change = {1: 'CN', 2: 'MCI', 3: 'AD'}
@@ -345,15 +363,16 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
 
 def update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_field_name):
     """
-    Update the sessions dictionary for the bids subject specified by subj_bids created by the method
-    create_adni_sessions_dict
+    Update the sessions dictionary for the bids subject specified by subj_bids
+    created by the method create_adni_sessions_dict
 
     Args:
-        sessions_dict: the session_dict created by the method create_adni_sessions_dict
-        subj_bids: bids is of the subject for which the information need to be updated
-        visit_id: session name (ex m54)
-        field_value: value of the field extracted from the original clinical data
-        bids_field_name: BIDS name of the field to update (Ex: diagnosis or examination date)
+        sessions_dict: the session_dict created by the method
+        create_adni_sessions_dict subj_bids: bids is of the subject for which
+        the information need to be updated visit_id: session name (ex m54)
+        field_value: value of the field extracted from the original clinical
+        data bids_field_name: BIDS name of the field to update (Ex: diagnosis
+        or examination date)
 
     Returns:
         session_dict: the dictonary updated
@@ -369,8 +388,8 @@ def update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_f
         field_value = convert_diagnosis_code(field_value)
 
 
-    # If the dictionary already contain the subject add or update information regarding a specific session,
-    #  otherwise create the entry
+    # If the dictionary already contain the subject add or update information
+    # regarding a specific session, otherwise create the entry
     if sessions_dict.has_key(subj_bids):
         sess_available = sessions_dict[subj_bids].keys()
 
@@ -396,13 +415,12 @@ def update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_f
 
 def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bids_subjs_paths):
     """
-    Extract all the data required for the sessions files and organize them in a dictionary
+    Extract all the data required for the sessions files and organize them in a
+    dictionary
 
-    Args:
-        bids_ids:
-        clinic_specs_path: path to the specifications for converting the clinical data
-        clinical_data_dir: path to the clinical data folder
-        bids_subjs_paths: a list with the path to all the BIDS subjects
+    Args: bids_ids: clinic_specs_path: path to the specifications for
+    converting the clinical data clinical_data_dir: path to the clinical data
+    folder bids_subjs_paths: a list with the path to all the BIDS subjects
 
     Returns:
 
@@ -442,8 +460,9 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                 for r in range(0, len(file_to_read.values)):
                     row = file_to_read.iloc[r]
 
-                    # Depending of the file that needs to be open, identify and do needed preprocessing on the column
-                    #  that contains the subjects ids
+                    # Depending of the file that needs to be open, identify and
+                    # do needed preprocessing on the column that contains the
+                    # subjects ids
                     if location == 'ADNIMERGE.csv':
                         id_ref = 'PTID'
                         subj_id = row[id_ref.decode('utf-8')]
@@ -459,7 +478,8 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                         else:
                             subj_id = rid
 
-                    # Extract the BIDS subject id related with the original subject id
+                    # Extract the BIDS subject id related with the original
+                    # subject id
                     subj_bids = [s for s in bids_ids if subj_id in s]
 
                     if len(subj_bids) == 0:

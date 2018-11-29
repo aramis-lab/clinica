@@ -23,13 +23,13 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
         - [x] A FILLED TODO ITEM.
         - [ ] AN ON-GOING TODO ITEM.
 
-    Args:
-        input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
+    Args: input_dir: A BIDS directory.  output_dir: An empty output directory
+    where CAPS structured data will be written.  subjects_sessions_list: The
+    Subjects-Sessions list file (in .tsv format).
 
     Returns:
-        A clinica pipeline object containing the dwi_preprocessing_noddi pipeline.
+        A clinica pipeline object containing the dwi_preprocessing_noddi
+        pipeline.
 
     Raises:
 
@@ -57,8 +57,14 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
             A list of (string) input fields name.
         """
 
-        return ['bids_ap_dwi', 'bids_ap_dwi_bvec', 'bids_ap_dwi_bval', 'bids_pa_dwi', 'bids_pa_dwi_bvec', 'bids_pa_dwi_bval',
-                'epi_param', 'epi_param_alt'] # Fill here the list
+        return ['bids_ap_dwi', 
+                'bids_ap_dwi_bvec', 
+                'bids_ap_dwi_bval', 
+                'bids_pa_dwi', 
+                'bids_pa_dwi_bvec', 
+                'bids_pa_dwi_bval',
+                'epi_param', 
+                'epi_param_alt']  # Fill here the list
 
 
     def get_output_fields(self):
@@ -68,7 +74,7 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        return ['preproc_dwi', 'preproc_bvec', 'preproc_bval', 'b0_mask'] # Fill here the list
+        return ['preproc_dwi', 'preproc_bvec', 'preproc_bval', 'b0_mask']  # Fill here the list
 
 
     def build_input_node(self):

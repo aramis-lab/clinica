@@ -53,12 +53,13 @@ def freesurfer_volume_to_native_volume(
 
 def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv):
     """
-        This function is to transfer caps recon-all output structure to standard FreeSurfer recon-all output structure.
+        This function is to transfer caps recon-all output structure to
+        standard FreeSurfer recon-all output structure.
 
-    Args:
-        caps_dir: CAPS directory containing the outputs in CAPS hierarchy
-        dest_dir: the destination folder containing the FreeSurfer output structure
-        subjects_visits_tsv: tsv files containing the subjects that you want to convert
+    Args: caps_dir: CAPS directory containing the outputs in CAPS hierarchy
+    dest_dir: the destination folder containing the FreeSurfer output structure
+    subjects_visits_tsv: tsv files containing the subjects that you want to
+    convert
 
     Returns:
 
@@ -92,12 +93,12 @@ def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv):
 
 def volumetric_summary(subject_dir, subject_id, caps_dir):
     """
-        To write statistics summary for all the subjects after reconall pipelines.
+        To write statistics summary for all the subjects after reconall
+        pipelines.
 
-    Args:
-        subject_dir: a list containing all the CAPS directory path
-        subject_id: a list containing all the participant_id
-        caps_dir: destination folder containing the summarized statistics tsv
+    Args: subject_dir: a list containing all the CAPS directory path
+    subject_id: a list containing all the participant_id caps_dir: destination
+    folder containing the summarized statistics tsv
 
     Returns:
 
@@ -139,7 +140,7 @@ def volumetric_summary(subject_dir, subject_id, caps_dir):
     try:
         os.makedirs(dest_dir)
     except OSError as exception:
-        if exception.errno != errno.EEXIST: # if dest_dir exists, go on, if its other error, raise
+        if exception.errno != errno.EEXIST:  # if dest_dir exists, go on, if its other error, raise
             raise
 
     # fetch the paths for all the 26 tsv files.
@@ -283,11 +284,11 @@ def write_volumetric_summary(caps_dir, subjects_visits_tsv):
 
 def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
     """
-        This func is to write the volumetric measurement after recon-all pipelines for each subjects in the subjects_visits_tsv
+        This func is to write the volumetric measurement after recon-all
+        pipelines for each subjects in the subjects_visits_tsv
 
-    Args:
-        caps_dir: CAPS directory
-        subjects_visits_tsv: tsv contains all the particiapnt_id and session_id
+    Args: caps_dir: CAPS directory subjects_visits_tsv: tsv contains all the
+    particiapnt_id and session_id
 
     Returns:
 
@@ -320,11 +321,11 @@ def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
 
 def write_reconall_log_summary(caps_dir, subjects_visits_tsv):
     """
-        This func is to write the recon_all.log summary for all the subjects, the first step quality check
+        This func is to write the recon_all.log summary for all the subjects,
+        the first step quality check
 
-    Args:
-        caps_dir: CAPS directory
-        subjects_visits_tsv: tsv contains all the particiapnt_id and session_id
+    Args: caps_dir: CAPS directory subjects_visits_tsv: tsv contains all the
+    particiapnt_id and session_id
 
     Returns:
 

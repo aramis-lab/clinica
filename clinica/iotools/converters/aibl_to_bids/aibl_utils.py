@@ -17,10 +17,11 @@ __status__ = "Development"
 def listdir_nohidden(path):
     """
 
-       This method lists all the subdirectories of path except the hidden folders'
+       This method lists all the subdirectories of path except the hidden
+       folders'
 
-        :param path: path whose subdirectories are needed
-        :return: list of all the subdirectories of path
+        :param path: path whose subdirectories are needed :return: list of all
+        the subdirectories of path
     """
 
     import os
@@ -36,10 +37,11 @@ def listdir_nohidden(path):
 def find_T1_folder(subdirectory, path_to_T1_1):
     """
 
-        This method checks if the subdirectory contains a T1 image, and it returns the h
+        This method checks if the subdirectory contains a T1 image, and it
+        returns the h
 
-        :param subdirectory: name of the folder
-        :return: previous path to arrive to the T1 image
+        :param subdirectory: name of the folder :return: previous path to
+        arrive to the T1 image
     """
 
     import os
@@ -53,18 +55,20 @@ def find_T1_folder(subdirectory, path_to_T1_1):
             path = os.path.join(path_to_T1_1, subdirectory)
             return path
     if path == []:
-        return 'NaN' # there are no more folders which could contain T1 images
+        return 'NaN'  # there are no more folders which could contain T1 images
 
 
 def find_T1_folder_nodata(subdirectory, path_to_T1_1):
     """
 
-       This method checks if the subdirectory contains a T1 image, and it returns the path. This method differs from the 
-       find_T1_folder since for these folders the exame_date is not present in the clinical excel file and we will not check if the exame_date corresponds
-       to the date stored in the path to the image, but they will be converted anyway 
+       This method checks if the subdirectory contains a T1 image, and it
+       returns the path. This method differs from the find_T1_folder since for
+       these folders the exame_date is not present in the clinical excel file
+       and we will not check if the exame_date corresponds to the date stored
+       in the path to the image, but they will be converted anyway 
 
-        :param subdirectory: name of the folder
-        :return: previous path to arrive to the T1 image
+        :param subdirectory: name of the folder :return: previous path to
+        arrive to the T1 image
     """
     import os
 
@@ -76,17 +80,17 @@ def find_T1_folder_nodata(subdirectory, path_to_T1_1):
             path = os.path.join(path_to_T1_1, subdirectory)
             return path
     if path == []:
-        return 'NaN' # there are no more folders which could contain T1 images
+        return 'NaN'  # there are no more folders which could contain T1 images
 
 
 def find_correspondance_index(i, csv_file):
     """
 
-        This method gives as output the index of the csv file analysed which correspond to the 'i' subject
+        This method gives as output the index of the csv file analysed which
+        correspond to the 'i' subject
 
-        :param i: subject_ID
-        :param csv_file: csv file where all the information are listed
-        :return: index
+        :param i: subject_ID :param csv_file: csv file where all the
+        information are listed :return: index
     """
 
     index = []
@@ -112,15 +116,16 @@ def find_correspondance_date(index, csv_file):
 def match_data(exame_date, i, csv_file):
     """
 
-        This method returns the session_ID. It controls if the dates corresponding to the image (from the name
-        of the subdirectory) correspond to one of the dates listed from the csv_file for the subject analysed. The session_ID 
-        is the corresponding session for that patient in that date.
-        It returns -4 if there are no information.
+        This method returns the session_ID. It controls if the dates
+        corresponding to the image (from the name of the subdirectory)
+        correspond to one of the dates listed from the csv_file for the subject
+        analysed. The session_ID is the corresponding session for that patient
+        in that date.  It returns -4 if there are no information.
 
-        :param exame_date: date where the image has been taken, it is saved from the name of the corresponding subdirector
-        :param i: subject_ID
-        :param csv_file: csv file where all the information are listed
-        :return session_id of the patient
+        :param exame_date: date where the image has been taken, it is saved
+        from the name of the corresponding subdirector :param i: subject_ID
+        :param csv_file: csv file where all the information are listed :return
+        session_id of the patient
     """
 
     import re
@@ -156,13 +161,13 @@ def list_of_paths():
 def check_subdirectories_pet(subdirectories, sub, no_pet):
     """ 
 
-        It returns the correct subdirectories for the PET images, they should belong to the list where there all the possible
-        names of the PET images 
+        It returns the correct subdirectories for the PET images, they should
+        belong to the list where there all the possible names of the PET images 
 
-        :param subdirectories: 
-        :param sub: all the possible subdirectories which need to be checked
-        :param no pet: list of names of folders which not contain PET images 
-        :return subdirectory which is containing a PET image which needs to be converted
+        :param subdirectories: :param sub: all the possible subdirectories
+        which need to be checked :param no pet: list of names of folders which
+        not contain PET images :return subdirectory which is containing a PET
+        image which needs to be converted
     """
 
     for j in range(len(sub)):
@@ -203,13 +208,12 @@ def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dc
                  mri_convert='mri_convert'):
     """ 
 
-        From dicom to nifti converts the dicom images in a nifti files using dicom2nii or mri_convert
+        From dicom to nifti converts the dicom images in a nifti files using
+        dicom2nii or mri_convert
 
-        :param subject: 
-        :param output_path: where nifti image is stored
-        :param output_filename: name of the nifti image 
-        :param image_path: where dicom files are stored 
-        :return: Image in a nifti format 
+        :param subject: :param output_path: where nifti image is stored :param
+        output_filename: name of the nifti image :param image_path: where dicom
+        files are stored :return: Image in a nifti format 
     """
     import os
     import gzip
@@ -272,11 +276,11 @@ def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dc
 def viscode_to_session(viscode):
     """
 
-        Replace the session label 'bl' with 'M00' or capitalize the session name passed
-        as input.
+        Replace the session label 'bl' with 'M00' or capitalize the session
+        name passed as input.
 
-        :param viscode: session name
-        :return: M00 if is the baseline session or the original session name capitalized
+        :param viscode: session name :return: M00 if is the baseline session or
+        the original session name capitalized
     """
     if viscode == 'bl':
         return 'M00'
@@ -287,12 +291,13 @@ def viscode_to_session(viscode):
 def find_path_to_pet_modality(path_to_dataset, csv_file):
     """
 
-        This method creates a Dataframe which contains all the paths to the PET image of a modality (for example AV45 or PIB)
+        This method creates a Dataframe which contains all the paths to the PET
+        image of a modality (for example AV45 or PIB)
 
-        :param path_to_dataset: path to AIBL dataset  
-        :param csv_file: file which correspond to the modality
-        :return: A dataframe which contains the path for PET images for a single modality and subject_ID and session_ID are 
-        reported for each path
+        :param path_to_dataset: path to AIBL dataset  :param csv_file: file
+        which correspond to the modality :return: A dataframe which contains
+        the path for PET images for a single modality and subject_ID and
+        session_ID are reported for each path
     """
 
     import os
@@ -364,15 +369,17 @@ def find_path_to_pet_modality(path_to_dataset, csv_file):
 def find_path_to_T1_ADNI(file_mri, subjects_ID, path_to_dataset):
     """
 
-        This method creates a Dataframe which contains all the paths to the T1 images which are ADNI compliant (as
-        explained in the AIBL website). This images differ from the others T1 of the dataset since in the cvs_file is 
-        reported the exame date.
+        This method creates a Dataframe which contains all the paths to the T1
+        images which are ADNI compliant (as explained in the AIBL website).
+        This images differ from the others T1 of the dataset since in the
+        cvs_file is reported the exame date.
 
-        :param file_mri: in the clinical data there are two files which describe the  parameters of the T1 images (MRI 1.5 T 
-        and MRI 3T)
-        :param subjects_ID: subjects_id in the dataset dowloaded
-        :param path_to_dataset: path to AIBL dataset
-        :return: A dataframe which contains the path for T1 images and subject_ID and session_ID are reported for each path
+        :param file_mri: in the clinical data there are two files which
+        describe the  parameters of the T1 images (MRI 1.5 T and MRI 3T) :param
+        subjects_ID: subjects_id in the dataset dowloaded :param
+        path_to_dataset: path to AIBL dataset :return: A dataframe which
+        contains the path for T1 images and subject_ID and session_ID are
+        reported for each path
     """
     import os
 
@@ -412,15 +419,18 @@ def find_path_to_T1_ADNI(file_mri, subjects_ID, path_to_dataset):
 def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
     """
 
-        This method creates a Dataframe which contains all the paths to the T1 images which are not ADNI compliant, 
-        they contain the word "SAG" in their name
+        This method creates a Dataframe which contains all the paths to the T1
+        images which are not ADNI compliant, they contain the word "SAG" in
+        their name
 
-        :param path_to_dataset: path to AIBL dataset
-        :param subjects_ID: subjects_id in the dataset dowloaded
-        :param sub_ID: the previous list (from T1_ADNI) where new subjects ID will be appended
-        :param ses_ID: the previous list (from T1_ADNI) where new session ID will be appended
-        :param path_T1:the previous list (from T1_ADNI) where new paths will be appended
-        :return: it completes the list of all the T1 paths including all the images where we didn't find the exame-data but we can fix it with a further analysis
+        :param path_to_dataset: path to AIBL dataset :param subjects_ID:
+        subjects_id in the dataset dowloaded :param sub_ID: the previous list
+        (from T1_ADNI) where new subjects ID will be appended :param ses_ID:
+        the previous list (from T1_ADNI) where new session ID will be appended
+        :param path_T1:the previous list (from T1_ADNI) where new paths will be
+        appended :return: it completes the list of all the T1 paths including
+        all the images where we didn't find the exame-data but we can fix it
+        with a further analysis
     """
     import os
 
@@ -458,12 +468,14 @@ def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
 
 def find_path_to_T1(path_to_dataset, path_to_csv):
     """
-        This method creates a DataFrame for the T1 images, where for each of them the subject ID, the session ID
-        and the path to the image are reported
+        This method creates a DataFrame for the T1 images, where for each of
+        them the subject ID, the session ID and the path to the image are
+        reported
 
-        :param path_to_dataset:  path to AIBL dataset 
-        :param path_to_csv: path to the csv files downloaded 
-        :return: pandas dataframe which contains all the paths for the T1 images, and the correisponding subject_ID and session_ID 
+        :param path_to_dataset:  path to AIBL dataset :param path_to_csv: path
+        to the csv files downloaded :return: pandas dataframe which contains
+        all the paths for the T1 images, and the correisponding subject_ID and
+        session_ID 
     """
     import os
     import pandas
@@ -494,10 +506,10 @@ def av45_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
     """
         This methods converts all the PET images-av45 in BIDS
 
-        :param path_to_dataset: path_to_dataset
-        :param path_to_csv: path_to_csv with clinical data
-        :param bids_dir: path to save the AIBL-PET-dataset converted in a BIDS format
-        :return: all the images are converted in a BIDS format and saved in the bids_dir        
+        :param path_to_dataset: path_to_dataset :param path_to_csv: path_to_csv
+        with clinical data :param bids_dir: path to save the AIBL-PET-dataset
+        converted in a BIDS format :return: all the images are converted in a
+        BIDS format and saved in the bids_dir        
     """
     import os
     import pandas
@@ -539,10 +551,10 @@ def pib_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix
     """
         This methods converts all the PET images-pib in BIDS
 
-        :param path_to_dataset: path_to_dataset
-        :param path_to_csv: path_to_csv with clinical data
-        :param bids_dir: path to save the AIBL-PET-dataset converted in a BIDS format
-        :return: all the images are converted in a BIDS format and saved in the bids_dir
+        :param path_to_dataset: path_to_dataset :param path_to_csv: path_to_csv
+        with clinical data :param bids_dir: path to save the AIBL-PET-dataset
+        converted in a BIDS format :return: all the images are converted in a
+        BIDS format and saved in the bids_dir
     """
     import os
     import pandas
@@ -585,10 +597,10 @@ def flute_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2ni
     """
         This methods converts all the PET images-flute in BIDS
 
-        :param path_to_dataset: path_to_dataset
-        :param path_to_csv: path_to_csv with clinical data
-        :param bids_dir: path to save the AIBL-PET-dataset converted in a BIDS format
-        :return: all the images are converted in a BIDS format and saved in the bids_dir
+        :param path_to_dataset: path_to_dataset :param path_to_csv: path_to_csv
+        with clinical data :param bids_dir: path to save the AIBL-PET-dataset
+        converted in a BIDS format :return: all the images are converted in a
+        BIDS format and saved in the bids_dir
     """
     import os
     import pandas
@@ -634,12 +646,13 @@ def flute_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2ni
 
 def t1_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
     ''' 
-        This method converts all the T1 images found in the AIBL dataset downloaded in BIDS
+        This method converts all the T1 images found in the AIBL dataset
+        downloaded in BIDS
 
-        :param path_to_dataset: path_to_dataset
-        :param path_to_csv: path to the csv file containing clinical data
-        :param bids_dir: path to save the AIBL-T1-dataset converted in a BIDS format
-        :return: all the images are converted in a BIDS format and saved in the bids_dir
+        :param path_to_dataset: path_to_dataset :param path_to_csv: path to the
+        csv file containing clinical data :param bids_dir: path to save the
+        AIBL-T1-dataset converted in a BIDS format :return: all the images are
+        converted in a BIDS format and saved in the bids_dir
     '''
     from os import path
     from numpy import nan
@@ -680,13 +693,15 @@ def t1_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
 
 def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_dir, delete_non_bids_info=True):
     """
-        This methods create a participants file for the AIBL dataset where information regarding the patients are reported
+        This methods create a participants file for the AIBL dataset where
+        information regarding the patients are reported
 
-        :param input_path: path to the input directory
-        :param clinical_spec_path: path to the clinical file
-        :param clinical_data_dir: directory to the clinical data files
-        :param delete_non_bids_info: if True delete all the rows of the subjects that are not available in the BIDS dataset
-        :return: a pandas dataframe that contains the participants data and it is saved in a tsv file
+        :param input_path: path to the input directory :param
+        clinical_spec_path: path to the clinical file :param clinical_data_dir:
+        directory to the clinical data files :param delete_non_bids_info: if
+        True delete all the rows of the subjects that are not available in the
+        BIDS dataset :return: a pandas dataframe that contains the participants
+        data and it is saved in a tsv file
     """
     import pandas as pd
     import os
@@ -786,12 +801,13 @@ def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_di
 
 def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path):
     """
-        Extract the information regarding the sessions and store them in a dictionary (session M0 only)
+        Extract the information regarding the sessions and store them in a
+        dictionary (session M0 only)
 
-        :param input_path: path to the input folder
-        :param clinical_spec_path: path to the clinical file
-        :param clinical_data_dir: directory to the clinical data files
-        :return: A dataframe saved in a tsv file which contains information for each session
+        :param input_path: path to the input folder :param clinical_spec_path:
+        path to the clinical file :param clinical_data_dir: directory to the
+        clinical data files :return: A dataframe saved in a tsv file which
+        contains information for each session
     """
     import pandas as pd
     from os import path

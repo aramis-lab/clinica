@@ -233,7 +233,7 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
 
     atlas_correspondance = pandas.io.parsers.read_csv(in_atlas.get_tsv_roi(), sep='\t')
     label_name = list(atlas_correspondance.roi_name)
-    label_value = list(atlas_correspondance.roi_value) # TODO create roi_value column in lut_*.txt and remove irrelevant RGB information
+    label_value = list(atlas_correspondance.roi_value)  # TODO create roi_value column in lut_*.txt and remove irrelevant RGB information
 
     mean_signal_value = []
     for label in label_value:
