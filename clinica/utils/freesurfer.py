@@ -64,7 +64,8 @@ def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv):
     Returns:
 
     """
-    import os, csv
+    import os
+    import csv
     from shutil import copytree
 
     subject_list = []
@@ -103,7 +104,8 @@ def volumetric_summary(subject_dir, subject_id, caps_dir):
     Returns:
 
     """
-    import os, errno
+    import os
+    import errno
 
     # name all the 26 tsv output files.
     all_seg_volume = '_parcellation-wm_volume.tsv'

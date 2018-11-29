@@ -363,7 +363,8 @@ def grab_noddi_bids_files(bids_directory, tsv):
     :param tsv:
     :return:
     """
-    import os, csv
+    import os
+    import csv
 
     subject_list = []
     session_list = []

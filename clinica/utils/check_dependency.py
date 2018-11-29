@@ -222,7 +222,8 @@ def check_matlab():
 
     This function checks if matlab is present (matlab for linux and MATLABCMD for mac).
     """
-    import os, sys
+    import os
+    import sys
     from clinica.utils.stream import cprint
 
     if not is_binary_present("matlab"):

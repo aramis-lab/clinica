@@ -79,7 +79,8 @@ def get_dirs_check_reconalled(output_dir, subject_list, session_list):
 
     """
 
-    import os, errno
+    import os
+    import errno
     from copy import deepcopy as cp
     import subprocess
     from clinica.utils.stream import cprint
@@ -253,7 +254,8 @@ def write_statistics_per_subject(subject_id, output_dir):
     Returns:
 
     """
-    import os, errno
+    import os
+    import errno
     from clinica.utils.stream import cprint
 
     subject_list = subject_id.split('_')[0]

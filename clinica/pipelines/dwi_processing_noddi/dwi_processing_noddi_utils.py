@@ -18,7 +18,8 @@ def amico_noddi(root_dir, subject_id, in_bval, in_bvec, noddi_preprocessed, mask
 
     """
 
-    import amico, os
+    import amico
+    import os
     from os.path import join as opj
     from os import chdir as oc
 
@@ -110,7 +111,8 @@ def grab_noddi_preprocessed_files(caps_directory, tsv):
     Returns:
 
     """
-    import os, csv
+    import os
+    import csv
     import tempfile
     from time import time, strftime, localtime
     import clinica.iotools.utils.data_handling as cdh
@@ -182,7 +184,8 @@ def grab_noddi_preprocessed_files_oneshell_adni(caps_directory, tsv):
     Returns:
 
     """
-    import os, csv
+    import os
+    import csv
 
     subject_list = []
     session_list = []
@@ -268,7 +271,8 @@ def runmatlab(output_dir, noddi_img, brain_mask, roi_mask, bval, bvec, prefix, b
     """
     from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
     from os.path import join
-    import sys, os
+    import sys
+    import os
     # here, we check out the os, basically, clinica works for linux and MAC OS X.
     if sys.platform.startswith('linux'):
         print "###Note: your platform is linux, the default command line for Matlab(matlab_cmd) is matlab, but you can also export a variable MATLABCMD,  which points to your matlab,  in your .bashrc to set matlab_cmd, this can help you to choose which Matlab to run when you have more than one Matlab. "
@@ -493,7 +497,9 @@ def make_processing_caps(subject_id_list, caps_directory):
     :param subject_id_list:
     :return:
     """
-    import os, errno, tempfile
+    import os
+    import errno
+    import tempfile
 
     processed_path = os.path.join(caps_directory, 'subjects', subject_id_list.split('_')[0], subject_id_list.split('_')[1], 'dwi', 'noddi_based_processing')
 

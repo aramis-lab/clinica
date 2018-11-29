@@ -68,7 +68,8 @@ class DwiPreprocessingNoddiCLI(ce.CmdParser):
 
         from tempfile import mkdtemp
         from clinica.pipelines.dwi_preprocessing_noddi.dwi_preprocessing_noddi_pipeline import DwiPreprocessingNoddi
-        import os, errno
+        import os
+        import errno
         from clinica.iotools.utils.data_handling import create_subs_sess_list
         from nipype import config
         cfg = dict(execution={'parameterize_dirs': False})
