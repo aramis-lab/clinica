@@ -29,7 +29,6 @@ def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None):
     from os import path
     from clinica.utils.stream import cprint
 
-
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
         adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
@@ -175,7 +174,6 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download):
         indices_to_remove = t1_df.index[reduce(operator.or_, error_indices, False)]
         t1_df.drop(indices_to_remove, inplace=True)
 
-
     images = t1_df
     is_dicom = []
     nifti_paths = []
@@ -214,7 +212,6 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download):
         is_dicom.append(dicom)
         nifti_paths.append(nifti_path)
 
-
     images.loc[:, 'Is_Dicom'] = pd.Series(is_dicom, index=images.index)
     images.loc[:, 'Path'] = pd.Series(nifti_paths, index=images.index)
 
@@ -225,8 +222,6 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download):
                 images.Path[images.Path == j] = ''
 
         images = images[images.Path != '']
-
-
 
     # Store the paths inside a file called conversion_info inside the input directory
     t1_tsv_path = path.join(dest_dir, 'conversion_info')
@@ -355,7 +350,6 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
         series_id = scan.SeriesID
         qc_passed = False
 
-
     # TODO replace by the function to find if the scanner is_philips
 
     filtered_scan = ida_meta_subj[ida_meta_subj.LONIUID == series_id]
@@ -373,8 +367,6 @@ def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_sub
             cprint('NO IDA Meta: ' + subject_id + ' for visit ' + timepoint + ' - ' + visit_str)
             return None
     ida_scan = filtered_scan.iloc[0]
-
-
 
     original = True
 
@@ -673,7 +665,6 @@ def adni1_select_scanner(subj, csv_dir, adnimerge, timepoint):
             mrimeta.drop(mrimeta.index[0], inplace=True)
         #    print mrimeta
 
-
     if not mrimeta.empty:
         scan = mrimeta.MMB1HEAD.item()
         com = mrimeta.MMB1BDCOM
@@ -752,11 +743,9 @@ def adni1_image_refactoring(csv_dir, adnimerge, subject_id, timepoint, visit_str
         series_id = scan.SeriesID
         qc_passed = False
 
-
     # TODO replace by the function to find if the scanner is_philips
 
     scanner = adni1_select_scanner(subject_id, csv_dir, adnimerge, timepoint)
-
 
     original = True
 

@@ -254,7 +254,6 @@ def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dc
             f_out.close()
             f_in.close()
 
-
             # Remove the original file
             os.remove(nifti_file_1)
         except Exception as e:
@@ -302,10 +301,8 @@ def find_path_to_pet_modality(path_to_dataset, csv_file):
     import os
     import pandas
 
-
     # TODO
     # exclude_subjects = get_exclude_subject(file.txt)
-
 
     no_pet = list_of_paths()
     subjects_ID = listdir_nohidden(path_to_dataset)

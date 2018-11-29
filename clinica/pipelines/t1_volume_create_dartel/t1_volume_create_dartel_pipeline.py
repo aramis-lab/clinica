@@ -211,7 +211,6 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         else:
             version = spm.Info.getinfo()
         
-                
         if version:
             if isinstance(version, dict):
                 spm_path = version['path']

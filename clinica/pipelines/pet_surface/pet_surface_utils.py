@@ -103,7 +103,6 @@ def remove_nan(volname):
 
 
 def make_label_conversion(gtmsegfile, csv):
-
     """make_label_conversion is a method used on the segmentation from gtmsegmentation. The purpose is to reduce the
     number of label. The gathering of labels is specified in a separate file
 
@@ -725,7 +724,6 @@ def produce_tsv(pet, atlas_files):
     lh_pet_mgh = np.squeeze(nib.load(pet[0]).get_data())
     rh_pet_mgh = np.squeeze(nib.load(pet[1]).get_data())
 
-
     filename_tsv = []
     for atlas in atlas_files:
 
@@ -786,7 +784,6 @@ def get_wf(subject_id,
            destrieux_right,
            desikan_left,
            desikan_right):
-
     """get_wf create a full workflow for only one subject, and then executes it
 
             Args:
@@ -894,7 +891,6 @@ def get_wf(subject_id,
                                                      function=utils.runApplyInverseDeformationField),
                                         name='applyInverseDeformation')
     apply_inverse_deformation.inputs.matscript_folder = matscript_folder_inverse_deformation
-
 
     pons_normalization = pe.Node(niu.Function(input_names=['pet_path',
                                                            'mask'],
@@ -1046,7 +1042,6 @@ def get_wf(subject_id,
         (r'(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/desikan_tsv\/desikan.tsv',
          r'\1/atlas_statistics/\2_\3_task-rest_acq-' + pet_type.lower() + '_pet_space-desikan_pvc-iy_suvr-' + utils.normalization_areas(pet_type) + '_statistics.tsv')
     ]
-
 
     # 3 Connecting the nodes
 

@@ -109,8 +109,6 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
                                        output_names=['anat_t1']))
         datagrabbernode.inputs.input_dir = self.bids_directory
 
-
-
         self.connect([
             (read_parameters_node, self.input_node, [('recon_all_args', 'recon_all_args')]),
             (dataprepr, datagrabbernode, [('subject_list', 'subject_list')]),

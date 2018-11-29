@@ -15,7 +15,6 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-
 def replace_sequence_chars(sequence_name):
     """
     Replace some special character with the sequence name given in input
@@ -356,9 +355,7 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
                 if not is_nan(sessions_df['adni_diagnosis_change'][j]) and int(sessions_df['adni_diagnosis_change'][j]) < 4:
                     sessions_df['diagnosis'][j] = diagnosis_change[int(sessions_df['adni_diagnosis_change'][j])]
 
-
             sessions_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf-8')
-
 
 
 def update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_field_name):
@@ -386,7 +383,6 @@ def update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_f
 
     if bids_field_name == 'diagnosis':
         field_value = convert_diagnosis_code(field_value)
-
 
     # If the dictionary already contain the subject add or update information
     # regarding a specific session, otherwise create the entry
@@ -510,7 +506,6 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
 
             else:
                 continue
-
 
     # Write the sessions dictionary created in several tsv files
     write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths)

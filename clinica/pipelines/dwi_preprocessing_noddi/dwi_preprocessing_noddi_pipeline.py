@@ -43,12 +43,10 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
         >>> pipeline.run()
     """
 
-
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
         pass
-
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
@@ -66,7 +64,6 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
                 'epi_param', 
                 'epi_param_alt']  # Fill here the list
 
-
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
 
@@ -75,7 +72,6 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
         """
 
         return ['preproc_dwi', 'preproc_bvec', 'preproc_bval', 'b0_mask']  # Fill here the list
-
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -107,7 +103,6 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
             (parallelsubjects, self.input_node, [('bids_pa_dwi_bvec', 'bids_pa_dwi_bvec')]),
             (parallelsubjects, self.input_node, [('bids_pa_dwi_bval', 'bids_pa_dwi_bval')]),
             ])
-
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline.

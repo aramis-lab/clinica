@@ -42,7 +42,6 @@ class DwiProcessingNoddi(cpe.Pipeline):
         >>> pipeline.run()
     """
 
-
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
@@ -66,7 +65,6 @@ class DwiProcessingNoddi(cpe.Pipeline):
                 'noddi_toolbox_dir', 
                 'nifti_matlib_dir']  # Fill here the list
 
-
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
 
@@ -75,7 +73,6 @@ class DwiProcessingNoddi(cpe.Pipeline):
         """
 
         return ['fit_icvf', 'fit_isovf', 'fit_od']  # Fill here the list
-
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -111,7 +108,6 @@ class DwiProcessingNoddi(cpe.Pipeline):
             (read_parameters_node,      self.input_node,    [('noddi_toolbox_dir',    'noddi_toolbox_dir')]),
             (read_parameters_node,      self.input_node,    [('nifti_matlib_dir',    'nifti_matlib_dir')]),
         ])
-
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline.

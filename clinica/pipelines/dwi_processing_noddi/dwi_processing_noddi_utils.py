@@ -100,7 +100,6 @@ def create_amico_structure(working_directory, subject_id, noddi_preprocessed, in
     return root_dir, subject_id, noddi_preprocessed, in_bval, in_bvec, mask_file
 
 
-
 def grab_noddi_preprocessed_files(caps_directory, tsv):
     """
         This is a function to grab the files from the preprocessed data
@@ -143,12 +142,10 @@ def grab_noddi_preprocessed_files(caps_directory, tsv):
                 subject_id_list.append((row[0]+'_'+row[1]))
         caps_directory = os.path.expanduser(caps_directory)
 
-
     noddi_preprocessed_dwi = []
     noddi_preprocessed_bvec = []
     noddi_preprocessed_bval = []
     noddi_preprocessed_mask = []
-
 
     # the number of subject_list and session_list should be the same
     try:
@@ -202,12 +199,10 @@ def grab_noddi_preprocessed_files_oneshell_adni(caps_directory, tsv):
                 subject_id_list.append((row[0]+'_'+row[1]))
         caps_directory = os.path.expanduser(caps_directory)
 
-
     noddi_preprocessed_dwi = []
     noddi_preprocessed_bvec = []
     noddi_preprocessed_bval = []
     noddi_preprocessed_mask = []
-
 
     # the number of subject_list and session_list should be the same
     try:
@@ -428,7 +423,6 @@ def matlab_noddi_processing(caps_directory, num_cores, bStep, name='NoddiMatlab'
     capsnode.inputs.caps_directory = caps_directory
 
     path_to_matscript = os.path.join(os.path.dirname(clp.__path__[0]), 'lib/noddi')
-
 
     # output node
     outputnode = pe.Node(niu.IdentityInterface(fields=['fit_icvf', 'fit_isovf', 'fit_od']), name='outputnode')

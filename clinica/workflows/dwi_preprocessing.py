@@ -651,7 +651,6 @@ def eddy_fsl_pipeline(epi_param, name='eddy_fsl'):
 
 
 def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
-
     """
     This workflow allows to correct for echo-planareinduced susceptibility artifacts without fieldmap
     (e.g. ADNI Database) by elastically register DWIs to their respective baseline T1-weighted
@@ -701,7 +700,6 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
     antsRegistrationSyNQuick = pe.Node(interface=niu.Function(input_names=['fix_image', 'moving_image'], output_names=['image_warped', 'affine_matrix', 'warp', 'inverse_warped', 'inverse_warp'],
                                                               function=ants_registration_syn_quick), name='antsRegistrationSyNQuick')
 
-
     c3d_flirt2ants = pe.Node(c3.C3dAffineTool(), name='fsl_reg_2_itk')
     c3d_flirt2ants.inputs.itk_transform = True
     c3d_flirt2ants.inputs.fsl2ras = True
@@ -711,7 +709,6 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
             output_names=['updated_affine_file'],
             function=change_itk_transform_type),
             name='change_transform_type')
-
 
     merge_transform = pe.Node(niu.Merge(3), name='MergeTransforms')
 

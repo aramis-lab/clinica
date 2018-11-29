@@ -204,7 +204,6 @@ def add_apoe_ped_files(path_to_adnimerge, path_to_apoe, path_to_plink_files, pat
         tab2.append(row2[0].split("\t"))
     snp_list = np.array(tab2)
 
-
     # put in BIM file  (position starts with 0)
     # 19	rs769451	71.5539	50102751	G	T (563951)
     # 19	rs429358	71.5558	50103781	T	C (to be added)

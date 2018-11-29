@@ -103,7 +103,6 @@ class fMRIPreprocessing(cpe.Pipeline):
         import numpy as np
         from clinica.utils.stream import cprint
 
-
         # Reading BIDS files
         # ==================
         read_node = npe.Node(name="ReadingBIDS",
@@ -189,8 +188,6 @@ class fMRIPreprocessing(cpe.Pipeline):
                         / float(len(slice_timing)))
 
             cprint(read_node.inputs)
-
-
 
         self.connect([
             # Reading BIDS json
@@ -319,7 +316,6 @@ class fMRIPreprocessing(cpe.Pipeline):
                                   iterfield=["in_files"],
                                   interface=spm.Realign())
             mc_node.inputs.register_to_mean = True
-
 
         # Brain extraction
         # ================

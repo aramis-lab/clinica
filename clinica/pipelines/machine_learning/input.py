@@ -437,7 +437,6 @@ class CAPSTSVBasedInput(CAPSInput):
 
         pass
 
-
     def get_x(self):
         """
 
@@ -447,8 +446,6 @@ class CAPSTSVBasedInput(CAPSInput):
 
         # if self._x is not None:
         #    return self._x
-
-
 
         print('Loading TSV subjects')
         string = str('group-' + self._group_id + '_T1w_space-' + self._atlas + '_map-graymatter')
@@ -471,7 +468,6 @@ class CAPSTSVBasedInput(CAPSInput):
         """
 
         # output_filename = path.join(output_dir, 'weights.nii.gz')
-
 
         # rbio.weights_to_nifti(weights, self._atlas, output_filename)
         pass

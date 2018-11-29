@@ -136,7 +136,6 @@ def execute():
     from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI  # noqa
     from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI  # noqa
 
-
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
                                    extra_dir="pipelines").load()
     pipelines += [

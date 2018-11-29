@@ -22,7 +22,6 @@ def roundbval(bvalsFilename, newbvalsFilename, bStep):
     if not os.path.exists(bvalsFilename):
         raise RuntimeError('bvals file not exist:' + bvalsFilename)
 
-
     # load files and check size
     bvals = np.loadtxt(bvalsFilename)
     

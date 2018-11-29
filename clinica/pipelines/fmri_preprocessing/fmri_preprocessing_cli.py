@@ -12,7 +12,6 @@ class fMRIPreprocessingCLI(ce.CmdParser):
         """
         self._name = 'fmri-preprocessing'
 
-
     def define_description(self):
         """Define a description of this pipeline.
         """
@@ -47,7 +46,6 @@ class fMRIPreprocessingCLI(ce.CmdParser):
         self._args.add_argument("-u", "--unwarping",
                                 action='store_true',
                                 help="Add SPM's Unwarping to the Realign step.")
-
 
     def run_command(self, args):
         """

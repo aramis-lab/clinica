@@ -269,7 +269,6 @@ def write_volumetric_summary(caps_dir, subjects_visits_tsv):
         sub_dir = os.path.join(caps_dir, 'subjects', subject_list[i], session_list[i], 't1', 'freesurfer_cross_sectional')
         subject_dir.append(sub_dir)
 
-
     fs_tsv_summary = pe.Node(name='volumetric_summary_node',
                             interface=Function(
                                 input_names=['subject_dir', 'subject_id', 'caps_dir'],

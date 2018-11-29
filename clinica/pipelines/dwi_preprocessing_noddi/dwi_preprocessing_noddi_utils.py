@@ -15,7 +15,6 @@ from nipype.pipeline import engine as pe
 from nipype.workflows.dmri.fsl.utils import (b0_average, compute_readout,)
 
 
-
 ########################################################################
 # NODDI
 ########################################################################
@@ -378,7 +377,6 @@ def grab_noddi_bids_files(bids_directory, tsv):
                 subject_list.append(row[0])
                 session_list.append(row[1])
         bids_directory = os.path.expanduser(bids_directory)  # change the relative path to be absolute path
-
 
     bids_ap_dwi = []
     bids_ap_dwi_bvec = []

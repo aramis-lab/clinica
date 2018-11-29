@@ -36,7 +36,6 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
     import numpy as np
     from clinica.utils.stream import cprint
 
-
     fields_bids = ['participant_id']
     prev_location = ''
     index_to_drop = []
@@ -649,7 +648,6 @@ def create_path_corr_file(out_dir):
     if os.path.exists(path_corr):
         os.remove(path_corr)
 
-
     f = open(path_corr, 'a')
     return f
 
@@ -702,7 +700,6 @@ def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name, acq
     from os import path
     from shutil import copy
     import os
-
 
     if acquisition != '':
         pet_bids_name = bids_name+'_task-'+task_name+'_acq-'+acquisition

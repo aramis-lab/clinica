@@ -68,7 +68,6 @@ class PETVolume(cpe.Pipeline):
                 error_message += 'NO GROUP FOUND'
             raise ValueError(error_message)
 
-
         self._group_id = group_id
         self._suvr_region = ''
         self._fwhm = None
@@ -188,7 +187,6 @@ class PETVolume(cpe.Pipeline):
         flowfields_caps_reader.inputs.template = '%s/%s/t1/spm/dartel/group-' + self._group_id + '/%s_%s_T1w_target-' \
                                                  + self._group_id + '_transformation-forward_deformation.nii*'
         flowfields_caps_reader.inputs.sort_filelist = False
-
 
         # Dartel Template DataGrabber
         # ============================

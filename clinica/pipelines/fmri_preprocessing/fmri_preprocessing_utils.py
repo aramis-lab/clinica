@@ -171,7 +171,6 @@ class RealignUnwarp(SPMCommand):
 
         outputs['modified_scans'] = self.inputs.scans
 
-
         first_image = filename_to_list(self.inputs.scans)[0]
         if resliced_mean:
             outputs['mean_image'] = fname_presuffix(first_image,
