@@ -29,6 +29,7 @@ if 'SPMSTANDALONE_HOME' in os.environ:
                 + ' script'
         SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
 
+
 class DARTELExistingTemplateInputSpec(SPMCommandInputSpec):
     image_files = traits.List(traits.List(File(exists=True)),
                               desc="A list of files to be segmented",

@@ -272,6 +272,7 @@ def suvr_normalization(pet_path, mask):
     nib.save(suvr, suvr_filename)
     return suvr_filename
 
+
 def suvr_normalization2(pet_path, gtmseg_path, pet_type):
     """OLD VERSION OF SUVR_NORMALIZATION - NOT USED ANYMORE
     suvr_normalization is a way of getting suvr from your pet image, based on the segmentation performed by
@@ -766,6 +767,7 @@ def produce_tsv(pet, atlas_files):
                                                                              'label_name',
                                                                              'mean_scalar'])
     return os.path.abspath(filename_tsv[0]), os.path.abspath(filename_tsv[1])
+
 
 def get_wf(subject_id,
            session_id,

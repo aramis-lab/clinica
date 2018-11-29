@@ -1,5 +1,6 @@
 # coding: utf8
 
+
 def ants_combine_transform(in_file, transforms_list, reference):
     import os
     import os.path as op
@@ -102,6 +103,7 @@ def rename_into_caps(in_bids_dwi,
     return out_caps_dwi.outputs.out_file, out_caps_bval.outputs.out_file, \
         out_caps_bvec.outputs.out_file, out_caps_brainmask.outputs.out_file
 
+
 def eddy_fsl(in_bvec, in_bval, in_file, in_mask, in_acqp, in_index):
 
     import os
@@ -124,6 +126,7 @@ def eddy_fsl(in_bvec, in_bval, in_file, in_mask, in_acqp, in_index):
             raise ValueError('File ' + out_corrected + ' does not exist even though following command line has been run : ' + cmd)
     return out_parameter, out_corrected, out_rotated_bvecs
 
+
 def b0_indices(in_bval, max_b=10.0):
     """
     Extract the indices of slices in a b-values file with a low b value
@@ -131,6 +134,7 @@ def b0_indices(in_bval, max_b=10.0):
     import numpy as np
     bval = np.loadtxt(in_bval)
     return np.argwhere(bval <= max_b).flatten().tolist()
+
 
 def generate_index(in_bval, b0_index):
     """
@@ -158,6 +162,7 @@ def generate_index(in_bval, b0_index):
     np.savetxt(out_file, index_array.T)
 
     return out_file
+
 
 def generate_acq(in_b0, epi_param):
     """
@@ -189,6 +194,7 @@ def generate_acq(in_b0, epi_param):
     np.savetxt(out_file, arr)
 
     return out_file
+
 
 def change_itk_transform_type(input_affine_file):
         """
@@ -231,6 +237,7 @@ def expend_matrix_list(in_matrix, in_bvec):
 
     return out_matrix_list
 
+
 def ants_registration_syn_quick(fix_image, moving_image):
 
     import subprocess
@@ -249,6 +256,7 @@ def ants_registration_syn_quick(fix_image, moving_image):
 
     return image_warped, affine_matrix, warp, inverse_warped, inverse_warp
 
+
 def ants_warp_image_multi_transform(fix_image, moving_image, ants_warp_affine):
 
     import os
@@ -260,6 +268,7 @@ def ants_warp_image_multi_transform(fix_image, moving_image, ants_warp_affine):
     os.system(cmd)
 
     return out_warp
+
 
 def rotate_bvecs(in_bvec, in_matrix):
     """
@@ -295,6 +304,7 @@ def rotate_bvecs(in_bvec, in_matrix):
     np.savetxt(out_file, np.array(new_bvecs).T, fmt='%0.15f')
     return out_file
 
+
 def ants_combin_transform(fix_image, moving_image, ants_warp_affine):
         import os
         import os.path as op
@@ -324,6 +334,7 @@ def create_jacobian_determinant_image(imageDimension, deformationField, outputIm
     os.system(cmd)
 
     return outputImage
+
 
 def convvert_eddy_2_hmc_ecc_flirt(eddy_parameters):
 

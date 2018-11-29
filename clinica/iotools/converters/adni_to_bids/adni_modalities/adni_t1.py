@@ -801,6 +801,7 @@ def adni1_image_refactoring(csv_dir, adnimerge, subject_id, timepoint, visit_str
             'Field_Strength': scan.MagStrength,
             'Original': original}
 
+
 def adnigo_image_refactoring(csv_dir, adnimerge, subject_id, timepoint, visit_str, mprage_meta_subj, mri_quality_subj, mayo_mri_qc_subj, original_phase):
 
     if original_phase == 'ADNI1':

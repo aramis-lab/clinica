@@ -21,6 +21,7 @@ if 'SPMSTANDALONE_HOME' in os.environ:
                 + ' script'
         spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
 
+
 class RealignUnwarpInputSpec(SPMCommandInputSpec):
     scans = traits.Either(traits.List(File(exists=True)), File(exists=True),
         mandatory=True, copyfile=True,

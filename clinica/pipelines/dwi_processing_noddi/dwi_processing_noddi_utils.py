@@ -1,5 +1,6 @@
 # coding: utf8
 
+
 def amico_noddi(root_dir, subject_id, in_bval, in_bvec, noddi_preprocessed, mask_file, bStep):
     """
      This is a function to call AMICO based on amico dataset structure
@@ -173,6 +174,7 @@ def grab_noddi_preprocessed_files(caps_directory, tsv):
 
     return subject_id_list, noddi_preprocessed_dwi, noddi_preprocessed_bvec, noddi_preprocessed_bval, noddi_preprocessed_mask
 
+
 def grab_noddi_preprocessed_files_oneshell_adni(caps_directory, tsv):
     """
         This is a function to grab the files from the preprocessed data
@@ -251,6 +253,7 @@ def delete_amico(root_dir, subject_id):
     else:
         [os.remove(f) for f in files_list]
 
+
 def runmatlab(output_dir, noddi_img, brain_mask, roi_mask, bval, bvec, prefix, bStep, num_cores, path_to_matscript, noddi_toolbox_dir, nifti_matlib_dir):
     """
     The wrapper to call noddi matlab script.
@@ -319,6 +322,7 @@ def runmatlab(output_dir, noddi_img, brain_mask, roi_mask, bval, bvec, prefix, b
 
     return fit_icvf, fit_isovf, fit_od
 
+
 def get_subid_sesid(in_file, caps_directory):
     """
     This is to extract the base_directory for the DataSink including participant_id and sesion_id in CAPS directory, also the tuple_list for substitution
@@ -344,6 +348,7 @@ def get_subid_sesid(in_file, caps_directory):
     ]
 
     return base_directory, subst_tuple_list
+
 
 def compress_nii(in_file, same_dir=True):
     """
@@ -486,6 +491,7 @@ def matlab_noddi_processing(caps_directory, num_cores, bStep, name='NoddiMatlab'
     nodditoolbox_wf.connect(zip_odi, 'out_file', outputnode, 'fit_od')
 
     return nodditoolbox_wf
+
 
 def make_processing_caps(subject_id_list, caps_directory):
     """

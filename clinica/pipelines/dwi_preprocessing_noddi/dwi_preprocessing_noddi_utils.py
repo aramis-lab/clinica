@@ -155,6 +155,7 @@ class EddyNoddi(FSLCommand):
         outputs['out_parameter'] = os.path.abspath('%s.eddy_parameters' % self.inputs.out_base)
         return outputs
 
+
 def sdc_peb_noddi(name='sdc_ped_noddi',
             epi_params=dict(echospacing=0.77e-3,
                             acc_factor=3,
@@ -278,6 +279,7 @@ def gen_index_noddi(in_bval, b0_index):
 
     return out_file
 
+
 def gen_acq_noddi(in_file, epi_params, alt_epi_params, readout, readout_alt):
     """
     This is a function to generate the FSL topup acq.txt file
@@ -325,6 +327,7 @@ def gen_acq_noddi(in_file, epi_params, alt_epi_params, readout, readout_alt):
 
     return out_file
 
+
 def merge_noddi_ped(in_file, in_bvec, in_bval, alt_file, alt_bvec, alt_bval):
     """
     This is to merge the two ped images and also concatenate the bvecs and bvals
@@ -352,6 +355,7 @@ def merge_noddi_ped(in_file, in_bvec, in_bval, alt_file, alt_bvec, alt_bval):
     out_file = merge_volumes_tdim(in_file, alt_file)
 
     return out_file, out_bvals, out_bvecs
+
 
 def grab_noddi_bids_files(bids_directory, tsv):
     """
@@ -418,6 +422,7 @@ def grab_noddi_bids_files(bids_directory, tsv):
 
     return bids_ap_dwi, bids_ap_dwi_bvec, bids_ap_dwi_bval, bids_pa_dwi, bids_pa_dwi_bvec, bids_pa_dwi_bval
 
+
 def get_subid_sesid(in_file, caps_directory):
     """
     This is to extract the base_directory for the DataSink including participant_id and sesion_id in CAPS directory, also the tuple_list for substitution
@@ -446,6 +451,7 @@ def get_subid_sesid(in_file, caps_directory):
     ]
 
     return base_directory, subst_tuple_list
+
 
 def noddi_preprocessing_twoped(caps_directory, name='noddi_preprocessing_topup_eddy',
                      epi_params=dict(echo_spacing=0.77e-3,
@@ -576,6 +582,7 @@ def noddi_preprocessing_twoped(caps_directory, name='noddi_preprocessing_topup_e
         (bet_dwi, outputnode, [('mask_file', 'out_mask')])
     ])
     return wf
+
 
 def epi_params(echo_spacing, acc_factor, enc_dir, enc_dir_alt, epi_factor):
     """

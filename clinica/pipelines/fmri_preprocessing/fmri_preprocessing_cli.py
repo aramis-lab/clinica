@@ -2,6 +2,7 @@
 
 import clinica.engine as ce
 
+
 class fMRIPreprocessingCLI(ce.CmdParser):
     """
     """

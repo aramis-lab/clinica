@@ -649,6 +649,7 @@ def eddy_fsl_pipeline(epi_param, name='eddy_fsl'):
     ])
     return wf
 
+
 def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
 
     """

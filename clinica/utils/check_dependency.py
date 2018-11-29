@@ -86,6 +86,7 @@ def check_freesurfer():
 
     cprint('FreeSurfer has been detected')
 
+
 def check_noddi_matlab_toolbox():
     """
     Check NODDI Matlab toolbox.
@@ -126,6 +127,7 @@ def check_nifti_matlib_toolbox():
     cprint('Niftimatlib toolbox has been detected')
 
     return nifti_matlib_toolbox
+
 
 def check_fsl():
     """
@@ -212,6 +214,7 @@ def check_spm():
     #             'PATH environment.' % binary)
 
     cprint('SPM has been detected')
+
 
 def check_matlab():
     """

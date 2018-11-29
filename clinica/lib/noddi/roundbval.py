@@ -2,6 +2,7 @@ import sys
 import numpy as np
 import os.path
 
+
 def roundbval(bvalsFilename, newbvalsFilename, bStep):
     """round the bvals in the .bval file.
 
