@@ -32,7 +32,7 @@ def print_statistics(summary_file, num_subjs, ses_aval, mmt):
         for mod in missing_list[ses]:
             if mod != 'session':
                 num_miss_mod = missing_list[ses][mod]
-                percentage_missing = round((num_miss_mod*100/float(num_subjs - missing_list[ses]['session'])),2)
+                percentage_missing = round((num_miss_mod*100/float(num_subjs - missing_list[ses]['session'])), 2)
                 summary_file.write(mod+': ' + str(num_miss_mod) + ' ('+str(percentage_missing) + '%) \n')
 
 
@@ -54,7 +54,7 @@ class MissingModsTracker:
         self.ses = ses
         if mod_list != False:
             for s in ses:
-                self.missing.update({s: {'session':0}})
+                self.missing.update({s: {'session': 0}})
                 for mod in mod_list:
                     self.missing[s].update({mod: 0})
         else:

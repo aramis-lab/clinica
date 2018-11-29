@@ -220,7 +220,7 @@ def sdc_peb_noddi(name='sdc_ped_noddi',
     #                               readout_alt]
 
     topup_acq = pe.Node(niu.Function(input_names=['in_file', 'epi_params', 'alt_epi_params', 'readout', 'readout_alt'],
-                                     output_names=['out_file'],function=gen_acq_noddi), name='generate_acq_txt_topup')
+                                     output_names=['out_file'], function=gen_acq_noddi), name='generate_acq_txt_topup')
     topup_acq.inputs.epi_params = epi_params
     topup_acq.inputs.alt_epi_params = alt_epi_params
     topup_acq.inputs.readout = readout
@@ -301,30 +301,30 @@ def gen_acq_noddi(in_file, epi_params, alt_epi_params, readout, readout_alt):
     for i in range(vols):
         if i < vols/2:
             if epi_params['enc_dir'] == 'y-':
-                arr[i,:] = np.array((0,-1,0, readout))
+                arr[i, :] = np.array((0, -1, 0, readout))
             elif epi_params['enc_dir'] == 'y':
-                arr[i,:] = np.array((0, 1, 0, readout))
+                arr[i, :] = np.array((0, 1, 0, readout))
             elif epi_params['enc_dir'] == 'x':
-                arr[i,:] = np.array((0, 1, 0, readout))
+                arr[i, :] = np.array((0, 1, 0, readout))
             elif epi_params['enc_dir'] == 'x-':
-                arr[i,:] = np.array((0, -1, 0, readout))
+                arr[i, :] = np.array((0, -1, 0, readout))
             elif epi_params['enc_dir'] == 'z':
-                arr[i,:] = np.array((0, 1, 0, readout))
+                arr[i, :] = np.array((0, 1, 0, readout))
             elif epi_params['enc_dir'] == 'x-':
-                arr[i,:] = np.array((0, -1, 0, readout))
+                arr[i, :] = np.array((0, -1, 0, readout))
         else:
             if alt_epi_params['enc_dir_alt'] == 'y-':
-                arr[i,:] = np.array((0,-1,0, readout_alt))
+                arr[i, :] = np.array((0, -1, 0, readout_alt))
             elif alt_epi_params['enc_dir_alt'] == 'y':
-                arr[i,:] = np.array((0, 1, 0, readout_alt))
+                arr[i, :] = np.array((0, 1, 0, readout_alt))
             elif alt_epi_params['enc_dir_alt'] == 'x':
-                arr[i,:] = np.array((0, 1, 0, readout_alt))
+                arr[i, :] = np.array((0, 1, 0, readout_alt))
             elif alt_epi_params['enc_dir_alt'] == 'x-':
-                arr[i,:] = np.array((0, -1, 0, readout_alt))
+                arr[i, :] = np.array((0, -1, 0, readout_alt))
             elif alt_epi_params['enc_dir_alt'] == 'z':
-                arr[i,:] = np.array((0, 1, 0, readout_alt))
+                arr[i, :] = np.array((0, 1, 0, readout_alt))
             elif alt_epi_params['enc_dir_alt'] == 'x-':
-                arr[i,:] = np.array((0, -1, 0, readout_alt))
+                arr[i, :] = np.array((0, -1, 0, readout_alt))
     np.savetxt(out_file, arr)
 
     return out_file

@@ -99,6 +99,6 @@ class OasisToBids(Converter):
 
             # In order do convert the Analyze format to NIFTI the path to the .img file is required
             img_file_path = glob(path.join(t1_folder, '*.img'))[0]
-            output_path = path.join(session_folder,'anat',bids_id+'_ses-M00_T1w.nii')
+            output_path = path.join(session_folder, 'anat', bids_id+'_ses-M00_T1w.nii')
             os.system('mri_convert'+' '+img_file_path+' '+output_path)
             bids.compress_nii(output_path)

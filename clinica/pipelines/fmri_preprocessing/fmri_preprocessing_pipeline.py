@@ -326,7 +326,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         import os.path as path
         from nipype.interfaces.freesurfer import MRIConvert
         if self.parameters['freesurfer_brain_mask']:
-            brain_masks = [path.join(self.caps_directory,'subjects',
+            brain_masks = [path.join(self.caps_directory, 'subjects',
                                      self.subjects[i], self.sessions[i],
                                      't1/freesurfer_cross_sectional',
                                      self.subjects[i] + '_' + self.sessions[i],

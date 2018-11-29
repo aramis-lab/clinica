@@ -344,19 +344,19 @@ def convvert_eddy_2_hmc_ecc_flirt(eddy_parameters):
         ### HMC
         hmc_affine = np.ones([4, 4])
         # for translation
-        hmc_affine[0, 3], hmc_affine[1, 3], hmc_affine[2, 3] = df_hmc.iloc[i,:][0], df_hmc.iloc[i,:][1], df_hmc.iloc[i,:][2]
+        hmc_affine[0, 3], hmc_affine[1, 3], hmc_affine[2, 3] = df_hmc.iloc[i, :][0], df_hmc.iloc[i, :][1], df_hmc.iloc[i, :][2]
         hmc_affine[3, 0], hmc_affine[3, 1], hmc_affine[3, 2] = 0, 0, 0
         # for rotation
         Rx = np.array([[1, 0, 0],
-                      [0, np.cos(df_hmc.iloc[i,:][3]), -np.sin(df_hmc.iloc[i,:][3])],
-                      [0, np.sin(df_hmc.iloc[i,:][3]), np.cos(df_hmc.iloc[i,:][3])]])
+                      [0, np.cos(df_hmc.iloc[i, :][3]), -np.sin(df_hmc.iloc[i, :][3])],
+                      [0, np.sin(df_hmc.iloc[i, :][3]), np.cos(df_hmc.iloc[i, :][3])]])
 
-        Ry = np.array([[np.cos(df_hmc.iloc[i,:][4]), 0, np.sin(df_hmc.iloc[i,:][4])],
+        Ry = np.array([[np.cos(df_hmc.iloc[i, :][4]), 0, np.sin(df_hmc.iloc[i, :][4])],
                       [0, 1, 0],
-                      [-np.sin(df_hmc.iloc[i,:][4]), 0, np.cos(df_hmc.iloc[i,:][4])]])
+                      [-np.sin(df_hmc.iloc[i, :][4]), 0, np.cos(df_hmc.iloc[i, :][4])]])
 
-        Rz = np.array([[np.cos(df_hmc.iloc[i,:][5]), -np.sin(df_hmc.iloc[i,:][5]), 0],
-                      [np.sin(df_hmc.iloc[i,:][5]), np.cos(df_hmc.iloc[i,:][5]), 0],
+        Rz = np.array([[np.cos(df_hmc.iloc[i, :][5]), -np.sin(df_hmc.iloc[i, :][5]), 0],
+                      [np.sin(df_hmc.iloc[i, :][5]), np.cos(df_hmc.iloc[i, :][5]), 0],
                       [0, 0, 1]])
 
         R = np.multiply(np.multiply(Rz, Ry), Rx)

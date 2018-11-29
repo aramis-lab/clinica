@@ -498,7 +498,7 @@ class VB_LearningCurveRepHoldOut_DualSVM(base.MLWorkflow):
 class RB_RepKFold_DualSVM(base.MLWorkflow):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type,  atlas,
-                 output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3,n_folds = 10,
+                 output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3, n_folds = 10,
                  grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17), splits_indices=None):
         self._output_dir = output_dir
         self._n_threads = n_threads

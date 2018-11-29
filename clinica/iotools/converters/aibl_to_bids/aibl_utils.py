@@ -529,10 +529,10 @@ def av45_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
         output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'pet')
         output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_task-rest_acq-av45_pet'
         # image are saved following BIDS specifications
-        if path.exists(path.join(output_path,output_filename + '.nii.gz')):
+        if path.exists(path.join(output_path, output_filename + '.nii.gz')):
             pass
         else:
-            output_image = dicom_to_nii(subject,output_path,output_filename, image_path,dcm2niix='dcm2niix',dcm2nii='dcm2nii',mri_convert='mri_convert')
+            output_image = dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dcm2niix', dcm2nii='dcm2nii', mri_convert='mri_convert')
 
 
 def pib_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
@@ -574,7 +574,7 @@ def pib_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix
         output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'pet')
         output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_task-rest_acq-pib_pet'
         # image are saved following BIDS specifications
-        if path.exists(path.join(output_path,output_filename + '.nii.gz')):
+        if path.exists(path.join(output_path, output_filename + '.nii.gz')):
             pass
         else:
             output_image = dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dcm2niix',
@@ -621,7 +621,7 @@ def flute_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2ni
         output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'pet')
         output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_task-rest_acq-flute_pet'
         # image are saved following BIDS specifications
-        if path.exists(path.join(output_path,output_filename + '.nii.gz')):
+        if path.exists(path.join(output_path, output_filename + '.nii.gz')):
             pass
         else:
             output_image = dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dcm2niix',
@@ -632,7 +632,7 @@ def flute_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2ni
 # Covert the AIBL T1 images into the BIDS specification.
 
 
-def t1_paths_to_bids(path_to_dataset,path_to_csv, bids_dir):
+def t1_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
     ''' 
         This method converts all the T1 images found in the AIBL dataset downloaded in BIDS
 
@@ -669,7 +669,7 @@ def t1_paths_to_bids(path_to_dataset,path_to_csv, bids_dir):
         output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'anat')
         output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_T1w'
         #image are saved following BIDS specifications
-        if path.exists(path.join(output_path,output_filename + '.nii.gz')):
+        if path.exists(path.join(output_path, output_filename + '.nii.gz')):
             pass
         else:
             output_image = dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dcm2niix',

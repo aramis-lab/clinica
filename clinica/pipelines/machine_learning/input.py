@@ -273,7 +273,7 @@ class CAPSRegionBasedInput(CAPSInput):
         if self._image_type == 'T1':
             self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
                                       't1/spm/dartel/group-' + self._group_id,
-                                      'atlas_statistics/','%s_%s_T1w_space-%s_map-graymatter_statistics.tsv'
+                                      'atlas_statistics/', '%s_%s_T1w_space-%s_map-graymatter_statistics.tsv'
                                       % (self._subjects[i], self._sessions[i], self._atlas))
                             for i in range(len(self._subjects))]
         else:

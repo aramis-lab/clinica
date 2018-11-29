@@ -454,7 +454,7 @@ def get_bids_subjs_paths(bids_path):
     import os
     from os import path
 
-    return [path.join(bids_path,d) for d in os.listdir(bids_path) if os.path.isdir(path.join(bids_path, d))]
+    return [path.join(bids_path, d) for d in os.listdir(bids_path) if os.path.isdir(path.join(bids_path, d))]
 
 
 def compute_new_subjects(original_ids, bids_ids):
@@ -727,7 +727,7 @@ def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name, acq
             compress_nii(path.join(folder_output, pet_bids_name + get_bids_suff('pet') + file_ext))
 
 
-def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False,False]):
+def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False, False]):
     """
     Extract and convert into the BIDS specification fieldmap data.
 
@@ -752,10 +752,10 @@ def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False,False]
 
     # Check if there is a map or mapPh fixed to convert
     if fixed_file[0] is False and fixed_file[1] is False:
-        map = remove_rescan(glob(path.join(folder_input, "*MAP_*",'*.nii.gz')))
+        map = remove_rescan(glob(path.join(folder_input, "*MAP_*", '*.nii.gz')))
         map_ph = remove_rescan(glob(path.join(folder_input, "*MAPph_*", '*.nii.gz')))
     elif fixed_file[0] is False and fixed_file[1] is not False:
-        map = remove_rescan(glob(path.join(folder_input, "*MAP_*",'*.nii.gz')))
+        map = remove_rescan(glob(path.join(folder_input, "*MAP_*", '*.nii.gz')))
         map_ph = glob(path.join(folder_input, fixed_file[1], '*.nii.gz'))
     elif fixed_file[0] is not False and fixed_file[1] is False:
         map = glob(path.join(folder_input, fixed_file[0], '*.nii.gz'))
@@ -786,7 +786,7 @@ def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False,False]
             if dim_map_ph == 1 and dim_map > 0:
                 copy(map_ph[0], path.join(folder_output, name + get_bids_suff('SingleMapPh') + '.nii.gz'))
                 os.system('fslsplit ' + map[0] + ' ' + path.join(folder_output, name + get_bids_suff('Map')))
-                mag_list = glob(path.join(folder_output,name+get_bids_suff('Map')+'*'))
+                mag_list = glob(path.join(folder_output, name+get_bids_suff('Map')+'*'))
 
                 for i in range(0, len(mag_list)):
                     old_mag_name = mag_list[i].split(os.sep)[-1]
@@ -837,10 +837,10 @@ def convert_flair(folder_input, folder_output, name, fixed_file = False):
 
     # If a given T2FLAIR is given for the conversion use it
     if fixed_file != False:
-        fixed_flair_path = glob(path.join(folder_input,fixed_file,'*'))[0]
+        fixed_flair_path = glob(path.join(folder_input, fixed_file, '*'))[0]
         copy(fixed_flair_path, path.join(folder_output, name + (get_bids_suff('Flair')) + '.nii.gz'))
     else:
-        list_path = glob(path.join(folder_input,'*T2FLAIR*'))
+        list_path = glob(path.join(folder_input, '*T2FLAIR*'))
         flair_lst = remove_rescan(list_path)
         if len(flair_lst) == 1:
             if not os.path.exists(folder_output):
@@ -941,9 +941,9 @@ def merge_DTI(folder_input, folder_output, name, fixed_dti_list=False):
             os.mkdir(folder_output)
         for folder in dti_list:
             if len(glob(path.join(folder, '*.bval'))) != 0 and len(glob(path.join(folder, '*.bvec'))) != 0:
-                img.append(glob(path.join(folder,'*.nii*'))[0])
-                bval.append(glob(path.join(folder,'*.bval'))[0])
-                bvec.append(glob(path.join(folder,'*.bvec'))[0])
+                img.append(glob(path.join(folder, '*.nii*'))[0])
+                bval.append(glob(path.join(folder, '*.bval'))[0])
+                bvec.append(glob(path.join(folder, '*.bvec'))[0])
             else:
                 incomp_folders.append(folder)
 

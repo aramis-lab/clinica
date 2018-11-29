@@ -40,7 +40,7 @@ def amico_noddi(root_dir, subject_id, in_bval, in_bvec, noddi_preprocessed, mask
     ae = amico.Evaluation(root_dir, subject_id)
     subject_path = opj(root_dir, subject_id)
 
-    scheme_filename = amico.util.fsl2scheme(opj(subject_path, bval_name), opj(subject_path,bvec_name), bStep=bStep)
+    scheme_filename = amico.util.fsl2scheme(opj(subject_path, bval_name), opj(subject_path, bvec_name), bStep=bStep)
     oc(subject_path)
     # load the data
     ae.load_data(dwi_filename=noddi_preprocessed, scheme_filename=scheme_filename, mask_filename=mask_file)

@@ -693,7 +693,7 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
 
     expend_matrix = pe.Node(interface=niu.Function(input_names=['in_matrix', 'in_bvec'], output_names=['out_matrix_list'], function=expend_matrix_list), name='expend_matrix')
 
-    rot_bvec = pe.Node(niu.Function(input_names=['in_matrix','in_bvec'],
+    rot_bvec = pe.Node(niu.Function(input_names=['in_matrix', 'in_bvec'],
                        output_names=['out_file'], function=rotate_bvecs),
                        name='Rotate_Bvec')
 
@@ -749,41 +749,41 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
 
     wf = pe.Workflow(name='epi_pipeline')
 
-    wf.connect([(inputnode, split,[('DWI','in_file')])])
-    wf.connect([(split, pick_ref, [('out_files','inlist')])])
-    wf.connect([(pick_ref, flirt_b0_2_T1, [('out','in_file')])])
-    wf.connect([(inputnode, flirt_b0_2_T1, [('T1','reference')])])
+    wf.connect([(inputnode, split, [('DWI', 'in_file')])])
+    wf.connect([(split, pick_ref, [('out_files', 'inlist')])])
+    wf.connect([(pick_ref, flirt_b0_2_T1, [('out', 'in_file')])])
+    wf.connect([(inputnode, flirt_b0_2_T1, [('T1', 'reference')])])
     wf.connect([(inputnode, rot_bvec, [('bvec', 'in_bvec')])])
-    wf.connect([(flirt_b0_2_T1, expend_matrix, [('out_matrix_file','in_matrix')])])
-    wf.connect([(inputnode, expend_matrix, [('bvec','in_bvec')])])
-    wf.connect([(expend_matrix, rot_bvec, [('out_matrix_list','in_matrix')])])
-    wf.connect([(inputnode, antsRegistrationSyNQuick, [('T1','fix_image')])])
-    wf.connect([(flirt_b0_2_T1, antsRegistrationSyNQuick,[('out_file','moving_image')])])
+    wf.connect([(flirt_b0_2_T1, expend_matrix, [('out_matrix_file', 'in_matrix')])])
+    wf.connect([(inputnode, expend_matrix, [('bvec', 'in_bvec')])])
+    wf.connect([(expend_matrix, rot_bvec, [('out_matrix_list', 'in_matrix')])])
+    wf.connect([(inputnode, antsRegistrationSyNQuick, [('T1', 'fix_image')])])
+    wf.connect([(flirt_b0_2_T1, antsRegistrationSyNQuick, [('out_file', 'moving_image')])])
 
-    wf.connect([(inputnode, c3d_flirt2ants, [('T1','reference_file')])])
-    wf.connect([(pick_ref, c3d_flirt2ants, [('out','source_file')])])
-    wf.connect([(flirt_b0_2_T1, c3d_flirt2ants, [('out_matrix_file','transform_file')])])
-    wf.connect([(c3d_flirt2ants, change_transform, [('itk_transform','input_affine_file')])])
+    wf.connect([(inputnode, c3d_flirt2ants, [('T1', 'reference_file')])])
+    wf.connect([(pick_ref, c3d_flirt2ants, [('out', 'source_file')])])
+    wf.connect([(flirt_b0_2_T1, c3d_flirt2ants, [('out_matrix_file', 'transform_file')])])
+    wf.connect([(c3d_flirt2ants, change_transform, [('itk_transform', 'input_affine_file')])])
 
-    wf.connect([(antsRegistrationSyNQuick, merge_transform, [('warp','in1')])])
-    wf.connect([(antsRegistrationSyNQuick, merge_transform, [('affine_matrix','in2')])])
-    wf.connect([(change_transform, merge_transform, [('updated_affine_file','in3')])])
-    wf.connect([(inputnode, apply_transform, [('T1','fix_image')])])
-    wf.connect([(split, apply_transform, [('out_files','moving_image')])])
+    wf.connect([(antsRegistrationSyNQuick, merge_transform, [('warp', 'in1')])])
+    wf.connect([(antsRegistrationSyNQuick, merge_transform, [('affine_matrix', 'in2')])])
+    wf.connect([(change_transform, merge_transform, [('updated_affine_file', 'in3')])])
+    wf.connect([(inputnode, apply_transform, [('T1', 'fix_image')])])
+    wf.connect([(split, apply_transform, [('out_files', 'moving_image')])])
 
-    wf.connect([(merge_transform, apply_transform, [('out','ants_warp_affine')])])
+    wf.connect([(merge_transform, apply_transform, [('out', 'ants_warp_affine')])])
     wf.connect([(apply_transform, jacobian, [('out_warp_field', 'deformationField')])])
     wf.connect([(apply_transform, jacmult, [('out_warped', 'operand_files')])])
     wf.connect([(jacobian, jacmult, [('outputImage', 'in_file')])])
     wf.connect([(jacmult, thres, [('out_file', 'in_file')])])
     wf.connect([(thres, merge, [('out_file', 'in_files')])])
 
-    wf.connect([(merge, outputnode, [('merged_file','DWIs_epicorrected')])])
-    wf.connect([(flirt_b0_2_T1, outputnode, [('out_matrix_file','DWI_2_T1_Coregistration_matrix')])])
-    wf.connect([(antsRegistrationSyNQuick, outputnode, [('warp','epi_correction_deformation_field'),
-                                                        ('affine_matrix','epi_correction_affine_transform'),
+    wf.connect([(merge, outputnode, [('merged_file', 'DWIs_epicorrected')])])
+    wf.connect([(flirt_b0_2_T1, outputnode, [('out_matrix_file', 'DWI_2_T1_Coregistration_matrix')])])
+    wf.connect([(antsRegistrationSyNQuick, outputnode, [('warp', 'epi_correction_deformation_field'),
+                                                        ('affine_matrix', 'epi_correction_affine_transform'),
                                                         ('image_warped', 'epi_correction_image_warped')])])
-    wf.connect([(merge_transform, outputnode, [('out','warp_epi')])])
-    wf.connect([(rot_bvec, outputnode, [('out_file','out_bvec')])])
+    wf.connect([(merge_transform, outputnode, [('out', 'warp_epi')])])
+    wf.connect([(rot_bvec, outputnode, [('out_file', 'out_bvec')])])
 
     return wf
