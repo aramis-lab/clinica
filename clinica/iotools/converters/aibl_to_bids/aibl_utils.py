@@ -317,7 +317,8 @@ def find_path_to_pet_modality(path_to_dataset, csv_file):
     # Iteration through all the subjects_ID
     def is_int(x):
         for i in x:
-            if int(i) in list(csv_file.RID): yield i
+            if int(i) in list(csv_file.RID):
+                yield i
 
 #    def append_path(image_ID):
 
