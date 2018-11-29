@@ -216,61 +216,61 @@ class FieldMapInputSpec(SPMCommandInputSpec):
         desc='total EPI readout time')
     epifm = traits.Bool(False, usedefault=True,
         field='subj.defaults.defaultsval.epifm',
-        desc='epi-based field map');
+        desc='epi-based field map')
     ajm = traits.Bool(False, usedefault=True,
         field='subj.defaults.defaultsval.ajm',
-        desc='jacobian modulation');
+        desc='jacobian modulation')
     # Unwarping defaults parameters
     method = traits.Enum('Mark3D', 'Mark2D', 'Huttonish', usedefault=True,
         desc='One of: Mark3D, Mark2D, Huttonish',
-        field='subj.defaults.defaultsval.uflags.method');
+        field='subj.defaults.defaultsval.uflags.method')
     fwhm = traits.Range(low=0, value=10, usedefault=True,
         field='subj.defaults.defaultsval.uflags.fwhm',
-        desc='gaussian smoothing kernel width');
+        desc='gaussian smoothing kernel width')
     pad = traits.Range(low=0, value=0, usedefault=True,
         field='subj.defaults.defaultsval.uflags.pad',
-        desc='padding kernel width');
+        desc='padding kernel width')
     ws = traits.Bool(True, usedefault=True,
         field='subj.defaults.defaultsval.uflags.ws',
-        desc='weighted smoothing');
+        desc='weighted smoothing')
     # Brain mask defaults parameters
     template = traits.File(copyfile=False, exists=True,
         field='subj.defaults.defaultsval.mflags.template',
-        desc='template image for brain masking');
+        desc='template image for brain masking')
     fwhm = traits.Range(low=0, value=5, usedefault=True,
         field='subj.defaults.defaultsval.mflags.fwhm',
-        desc='gaussian smoothing kernel width');
+        desc='gaussian smoothing kernel width')
     nerode = traits.Range(low=0, value=2, usedefault=True,
         field='subj.defaults.defaultsval.mflags.nerode',
-        desc='number of erosions');
+        desc='number of erosions')
     ndilate = traits.Range(low=0, value=4, usedefault=True,
         field='subj.defaults.defaultsval.mflags.ndilate',
-        desc='number of erosions');
+        desc='number of erosions')
     thresh = traits.Float(0.5, usedefault=True,
         field='subj.defaults.defaultsval.mflags.thresh',
-        desc='threshold used to create brain mask from segmented data');
+        desc='threshold used to create brain mask from segmented data')
     reg = traits.Float(0.02, usedefault=True,
         field='subj.defaults.defaultsval.mflags.reg',
-        desc='regularization value used in the segmentation');
+        desc='regularization value used in the segmentation')
     # EPI unwarping for quality check
     epi = traits.File(copyfile=False, exists=True, mandatory=True,
         field='subj.session.epi',
-        desc='EPI to unwarp');
+        desc='EPI to unwarp')
     matchvdm = traits.Bool(True, usedefault=True,
         field='subj.matchvdm',
-        desc='match VDM to EPI');
+        desc='match VDM to EPI')
     sessname = traits.String('_run-', usedefault=True,
         field='subj.sessname',
-        desc='VDM filename extension');
+        desc='VDM filename extension')
     writeunwarped = traits.Bool(False, usedefault=True,
         field='subj.writeunwarped',
-        desc='write unwarped EPI');
+        desc='write unwarped EPI')
     anat = traits.File(copyfile=False, exists=True,
         field='subj.anat',
-        desc='anatomical image for comparison');
+        desc='anatomical image for comparison')
     matchanat = traits.Bool(True, usedefault=True,
         field='subj.matchanat',
-        desc='match anatomical image to EPI');
+        desc='match anatomical image to EPI')
 
 
 class FieldMapOutputSpec(TraitedSpec):
