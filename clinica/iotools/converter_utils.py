@@ -52,7 +52,7 @@ class MissingModsTracker:
     def __init__(self, ses, mod_list=False):
         self.missing = {}
         self.ses = ses
-        if mod_list != False:
+        if mod_list:
             for s in ses:
                 self.missing.update({s: {'session': 0}})
                 for mod in mod_list:

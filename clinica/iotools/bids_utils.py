@@ -118,7 +118,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
             participant_df.set_value(i, 'participant_id', bids_id[0])
 
     # Delete all the rows of the subjects that are not available in the BIDS dataset
-    if delete_non_bids_info == True:
+    if delete_non_bids_info:
         participant_df = participant_df.drop(index_to_drop)
 
     return participant_df
@@ -809,7 +809,7 @@ def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False, False
                       path.join(folder_output, bids_name_ph + '2.nii.gz'))
     # The modalities is missing or incomplete
     else:
-        if mag_missing == True and map_ph_missing == True:
+        if mag_missing and map_ph_missing:
             return -1
         else:
             return 0
@@ -835,7 +835,7 @@ def convert_flair(folder_input, folder_output, name, fixed_file=False):
     import os
 
     # If a given T2FLAIR is given for the conversion use it
-    if fixed_file != False:
+    if fixed_file:
         fixed_flair_path = glob(path.join(folder_input, fixed_file, '*'))[0]
         copy(fixed_flair_path, path.join(folder_output, name + (get_bids_suff('Flair')) + '.nii.gz'))
     else:

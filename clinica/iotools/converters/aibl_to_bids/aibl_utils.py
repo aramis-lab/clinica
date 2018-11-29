@@ -787,7 +787,7 @@ def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_di
     participant_df.replace('-4', np.nan)
 
     # Delete all the rows of the subjects that are not available in the BIDS dataset
-    if delete_non_bids_info == True:
+    if delete_non_bids_info:
         participant_df = participant_df.drop(index_to_drop)
 
     participant_df.to_csv(os.path.join(input_path, 'participants.tsv'), sep='\t', index=False, encoding='utf8')

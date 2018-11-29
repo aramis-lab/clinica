@@ -110,7 +110,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download):
         keys.sort()
         for visit_info in visits.keys():
             if visit_info[1] == 'ADNI1':
-                if new_download == False:
+                if not new_download:
                     ida_meta_subj = ida_meta[ida_meta.Subject == subj]
                     image_dict = adni1_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
                                              ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj)
@@ -118,7 +118,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download):
                     image_dict = adni1_image_refactoring(csv_dir, adni_merge, subj, visit_info[0], visits[visit_info],
                                              mprage_meta_subj, mri_quality_subj, mayo_mri_qc_subj)
             elif visit_info[1] == 'ADNIGO':
-                if new_download == False:
+                if not new_download:
                     image_dict = adnigo_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
                                               ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj, visit_info[2])
                 else:
@@ -146,7 +146,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download):
     # Exceptions
     # ==========
     # Subject 141_S_0726
-    if new_download == False:
+    if not new_download:
         # conversion errors known
         subj_ind = (t1_df.Subject_ID == '141_S_0726') & (t1_df.VISCODE == 'bl')
         t1_df.loc[subj_ind, 'Sequence'] = 'MPR-R__GradWarp__B1_Correction'
@@ -215,7 +215,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download):
     images.loc[:, 'Is_Dicom'] = pd.Series(is_dicom, index=images.index)
     images.loc[:, 'Path'] = pd.Series(nifti_paths, index=images.index)
 
-    if new_download == True:
+    if new_download:
         images = images.drop_duplicates()
         for j in images.Path:
             if not path.exists(j):
