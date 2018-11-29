@@ -228,7 +228,7 @@ def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids
     prev_file = ''
     prev_sheet = ''
 
-    if not study_name in get_supported_dataset():
+    if study_name not in get_supported_dataset():
         raise Exception('Dataset not supported. Supported datasets are:', get_supported_dataset())
 
     # Init the dictionary with the subject ids

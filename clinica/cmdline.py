@@ -77,7 +77,7 @@ class ClinicaClassLoader:
 
     def add_to_python_path(self, paths):
         for p in paths:
-            if not p in sys.path:
+            if p not in sys.path:
                 sys.path.append(p)
 
     def discover_path_with_subdir(self, path):

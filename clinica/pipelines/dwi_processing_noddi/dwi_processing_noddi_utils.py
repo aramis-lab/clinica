@@ -278,7 +278,7 @@ def runmatlab(output_dir, noddi_img, brain_mask, roi_mask, bval, bvec, prefix, b
         print "###Note: your platform is linux, the default command line for Matlab(matlab_cmd) is matlab, but you can also export a variable MATLABCMD,  which points to your matlab,  in your .bashrc to set matlab_cmd, this can help you to choose which Matlab to run when you have more than one Matlab. "
     elif sys.platform.startswith('darwin'):
         try:
-            if not 'MATLABCMD' in os.environ:
+            if 'MATLABCMD' not in os.environ:
                 raise RuntimeError(
                     "###Note: your platform is MAC OS X, the default command line for Matlab(matlab_cmd) is matlab, but it does not work on OS X, you mush export a variable MATLABCMD, which points to your matlab, in your .bashrc to set matlab_cmd. Note, Mac os x will always choose to use OpengGl hardware mode.")
         except Exception as e:

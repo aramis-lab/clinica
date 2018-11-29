@@ -135,7 +135,7 @@ def compute_fmri_path(source_dir, clinical_dir, dest_dir, subjs_list):
                     if not fmri_metadata.empty:
                         fmri_metadata = fmri_metadata.iloc[0]
 
-                        if not 'Philips' in fmri_metadata['Scanner']:
+                        if 'Philips' not in fmri_metadata['Scanner']:
                             cprint('No Philips scanner for ' + subj + ' visit ' + viscode + '. Skipped.')
                             continue
 
@@ -395,7 +395,7 @@ def compute_fmri_path_refactoring(source_dir, clinical_dir, dest_dir, subjs_list
                     if not fmri_metadata.empty:
                         fmri_metadata = fmri_metadata.iloc[0]
 
-                        if not 'Philips' in fmri_metadata['Scanner']:
+                        if 'Philips' not in fmri_metadata['Scanner']:
                             cprint('No Philips scanner for ' + subj + ' visit ' + viscode + '. Skipped.')
                             continue
 
