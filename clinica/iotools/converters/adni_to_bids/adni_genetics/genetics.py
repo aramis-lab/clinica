@@ -146,8 +146,8 @@ def update_ID_fam(path_to_plink_files):
     with open(path_to_plink_files + ".fam", "wb") as stream:
         c = csv.writer(stream)
         for i in range(len(patient_table)):
-            l = new_patient_table[i, :].tolist()
-            c.writerow([' '.join(l)])
+            l_new_pat = new_patient_table[i, :].tolist()
+            c.writerow([' '.join(l_new_pat)])
     print "subjects' ID in fam file has changed."
 
 
@@ -193,8 +193,8 @@ def add_apoe_ped_files(path_to_adnimerge, path_to_apoe, path_to_plink_files, pat
     with open(path_to_new_plink_files + ".ped", "wb") as stream:
         c = csv.writer(stream)
         for r in range(len(final_snp)):
-            l = final_snp[r, :].tolist()
-            c.writerow([' '.join(l)])
+            l_new_pat = final_snp[r, :].tolist()
+            c.writerow([' '.join(l_new_pat)])
     print 'new ped file created'
 
     # load map file and write new map file
@@ -218,8 +218,8 @@ def add_apoe_ped_files(path_to_adnimerge, path_to_apoe, path_to_plink_files, pat
     with open(path_to_new_plink_files + ".map", "wb") as stream:
         c = csv.writer(stream)
         for r in range(len(final_snp_list)):
-            l = final_snp_list[r, :].tolist()
-            c.writerow(['\t'.join(l)])
+            l_new_pat = final_snp_list[r, :].tolist()
+            c.writerow(['\t'.join(l_new_pat)])
     print 'new map file created'
 
 
