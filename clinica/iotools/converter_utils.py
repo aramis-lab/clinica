@@ -3,9 +3,10 @@
 
 def print_statistics(summary_file, num_subjs, ses_aval, mmt):
     """
-    Print to a given input file statistics about missing files and modalities in a dataset.
-    This metod takes in input a MissingModsTracker object (mmt) that contains the number
-    of missing modalities for each session and the number of missing sessions for each subject.
+    Print to a given input file statistics about missing files and modalities
+    in a dataset.  This metod takes in input a MissingModsTracker object (mmt)
+    that contains the number of missing modalities for each session and the
+    number of missing sessions for each subject.
 
     Args:
         summary_file: path of the output file where write.
@@ -90,4 +91,3 @@ class MissingModsTracker:
 
         """
         return self.missing
-

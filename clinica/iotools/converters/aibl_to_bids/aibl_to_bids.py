@@ -44,4 +44,3 @@ def convert_clinical_data(bids_dir, path_to_csv):
         create_sessions_dict_AIBL(bids_dir, path_to_csv, clinical_spec_path)
     except BaseException:
         cprint("Convertion clinical data failed")
-

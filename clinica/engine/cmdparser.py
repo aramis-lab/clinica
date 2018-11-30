@@ -227,5 +227,3 @@ def get_cmdparser_names(objects=None):
 #     def run_command(self, args):
 #         from clinica.iotools import hmtc_to_bids
 #         hmtc_to_bids.convert(args.dataset_directory, args.bids_directory)
-
-

@@ -579,5 +579,3 @@ def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
                     scans_df.to_csv(scans_tsv, header=False, sep='\t', index=False, encoding='utf-8')
 
             scans_df = pd.DataFrame(columns=(fields_bids))
-
-

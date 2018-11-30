@@ -610,4 +610,3 @@ def create_list_tuple(bids_ap_dwi, bids_ap_dwi_bvec, bids_ap_dwi_bval, bids_pa_d
         ls = tuple(ls)
         list_tuple.append(ls)
     return list_tuple
-

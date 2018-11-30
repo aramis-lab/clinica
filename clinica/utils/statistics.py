@@ -252,4 +252,3 @@ def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
         raise e
 
     return out_file
-

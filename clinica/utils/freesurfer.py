@@ -356,5 +356,3 @@ def write_reconall_log_summary(caps_dir, subjects_visits_tsv):
     lognode.inputs.output_dir = caps_dir
 
     return lognode
-
-

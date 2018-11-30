@@ -902,4 +902,3 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
         if path.exists(bids_paths):
             dict.to_csv(path.join(input_path, 'sub-AIBL' + str(r), 'sub-AIBL' + str(r) + '_sessions.tsv'), sep='\t',
                         index=False, encoding='utf8')
-

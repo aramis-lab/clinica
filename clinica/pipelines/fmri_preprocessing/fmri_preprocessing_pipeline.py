@@ -448,4 +448,3 @@ class fMRIPreprocessing(cpe.Pipeline):
             (zip_smooth_node, self.output_node, [('out_file',
                                                   'mni_smoothed_fmri')]),
         ])
-

@@ -141,4 +141,3 @@ class T1VolumeParcellation(cpe.Pipeline):
             (atlas_stats_node,     outputnode,          [('atlas_statistics',  'atlas_statistics')]),
             (outputnode,           datasink,            [('atlas_statistics', 'atlas_statistics')])
         ])
-
