@@ -334,18 +334,18 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
                     'adas_Q9', 'adas_Q10', 'adas_Q11', 'adas_Q12',
                     'adas_Q13']].apply(pd.to_numeric)
 
-            sessions_df['adas_memory'] = sessions_df['adas_Q1']
-                                        + sessions_df['adas_Q4']
-                                        + sessions_df['adas_Q7']
-                                        + sessions_df['adas_Q8']
-                                        + sessions_df['adas_Q9']  # / 45
-            sessions_df['adas_language'] = sessions_df['adas_Q2']
-                                        + sessions_df['adas_Q5']
-                                        + sessions_df['adas_Q10']
-                                        + sessions_df['adas_Q11']
-                                        + sessions_df['adas_Q12']  # / 25
-            sessions_df['adas_praxis'] = sessions_df['adas_Q3']
-                                        + sessions_df['adas_Q6']  # / 10
+            sessions_df['adas_memory'] = (sessions_df['adas_Q1']
+                    + sessions_df['adas_Q4']
+                    + sessions_df['adas_Q7']
+                    + sessions_df['adas_Q8']
+                    + sessions_df['adas_Q9'])  # / 45
+            sessions_df['adas_language'] = (sessions_df['adas_Q2']
+                    + sessions_df['adas_Q5']
+                    + sessions_df['adas_Q10']
+                    + sessions_df['adas_Q11']
+                    + sessions_df['adas_Q12'])  # / 25
+            sessions_df['adas_praxis'] = (sessions_df['adas_Q3']
+                    + sessions_df['adas_Q6'])  # / 10
             sessions_df['adas_concentration'] = sessions_df['adas_Q13']  # / 5
 
             list_diagnosis_nan = np.where(pd.isnull(sessions_df['diagnosis']))
