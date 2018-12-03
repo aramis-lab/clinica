@@ -388,7 +388,7 @@ class PETVolume(cpe.Pipeline):
                         + ' ' + os.environ['MCR_HOME'] \
                         + ' script'
                 spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
-        
+
         # Unzipping
         # ==================
         unzip_pet_image = npe.Node(nutil.Function(input_names=['in_file'],

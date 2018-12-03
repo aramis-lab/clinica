@@ -54,7 +54,7 @@ def import_genetics(path_to_plink_files):
     if not plink_file.one_locus_per_row():
         print("This script requires that snps are rows and samples columns.")
         exit(1)
-    
+
     sample_list = plink_file.get_samples()
     locus_list = plink_file.get_loci()
 
@@ -64,10 +64,10 @@ def import_genetics(path_to_plink_files):
     for locus in locus_list:
         print locus.chromosome, locus.name, locus.position, locus.bp_position, locus.allele1, locus.allele2
     """
-    
+
     num_snp = len(locus_list)
     num_patient = len(sample_list)
-    
+
     matrix_patient_snp = np.zeros((num_snp, num_patient))
     patient_list = np.zeros(num_patient, dtype='|S30')
     snp_list = np.zeros(num_snp, dtype='|S30')

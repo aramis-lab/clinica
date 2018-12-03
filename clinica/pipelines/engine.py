@@ -266,12 +266,12 @@ class Pipeline(Workflow):
 
     def check_dependencies(self):
         """Checks if listed dependencies are present.
-        
+
         Loads the pipelines related `info.json` file and check each one of the
         dependencies listed in the JSON "dependencies" field. Its raises
         exception if a program in the list does not exist or if environment
         variables are not properly defined.
-    
+
         Todos:
             - [ ] MATLAB toolbox dependency checking
             - [x] check MATLAB

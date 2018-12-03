@@ -315,7 +315,7 @@ class JHUTracts502mm(AtlasAbstract):
         if not FSLDIR:
             raise Exception('FSLDIR variable from FSL software is not set')
         return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
-    
+
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath

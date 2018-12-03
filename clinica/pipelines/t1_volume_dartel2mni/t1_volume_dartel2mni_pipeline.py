@@ -279,7 +279,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                     raise RuntimeError('SPM standalone version not supported. Please upgrade SPM standalone.')
         else:
             raise RuntimeError('SPM could not be found. Please verify your SPM_HOME environment variable.')
-        
+
         # Unzipping
         # =========
         unzip_tissues_node = npe.MapNode(nutil.Function(input_names=['in_file'],

@@ -196,7 +196,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         mlab_home = os.getenv("MATLABCMD")
         mlab.MatlabCommand.set_default_matlab_cmd(mlab_home)
         mlab.MatlabCommand.set_default_paths(spm_home)
-        
+
         if 'SPMSTANDALONE_HOME' in os.environ:
             if 'MCR_HOME' in os.environ:
                 matlab_cmd = os.path.join(os.environ['SPMSTANDALONE_HOME'],
@@ -210,7 +210,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
                                        + 'SPMSTANDALONE_HOME has been found')
         else:
             version = spm.Info.getinfo()
-        
+
         if version:
             if isinstance(version, dict):
                 spm_path = version['path']
@@ -229,7 +229,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
                     raise RuntimeError('SPM standalone version not supported. Please upgrade SPM standalone.')
         else:
             raise RuntimeError('SPM could not be found. Please verify your SPM_HOME environment variable.')
-        
+
         # Unzipping
         # =========
         unzip_node = npe.MapNode(nutil.Function(input_names=['in_file'],

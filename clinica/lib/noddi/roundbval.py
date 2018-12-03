@@ -24,7 +24,7 @@ def roundbval(bvalsFilename, newbvalsFilename, bStep):
 
     # load files and check size
     bvals = np.loadtxt(bvalsFilename)
-    
+
     # convert bStep(str) to tuple to the np.array
     bStep = eval(bStep)
 

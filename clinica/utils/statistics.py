@@ -8,12 +8,12 @@ def permutation_test(vector_1, vector_2, number_of_permutation, tails=2):
     If permutation not done, p_value is set to 1.
     This function performs a two tails permutation on *non-nul values*
     If tails is set to 1 the contrast is supposed to be vector_1 > vector_2
-    
+
     WARNING: here 0 are not removed from the dataset
     If tails is set to 1 the contrast is supposed to be vector_1 > vector_2
     """
     import numpy as np
-    
+
     def exact_mc_perm_test(xs, ys, nmc, tails=2):
         n, k = len(xs), 0.
         if tails == 2:
@@ -29,16 +29,16 @@ def permutation_test(vector_1, vector_2, number_of_permutation, tails=2):
                 diff_random = np.mean(zs[:n]) - np.mean(zs[n:])
             k += diff < diff_random
         return k/float(nmc)
-    
+
     p_value = 1.
-    
+
     x = vector_1
     y = vector_2
-    
+
     if x != np.array([]) and y != np.array([]):
         if x.sum() != 0 or y.sum() != 0:
             p_value = exact_mc_perm_test(x, y, number_of_permutation, tails)
-    
+
     return p_value
 
 
@@ -81,28 +81,28 @@ def mann_whitney(vector_1, vector_2, tails=2):
     the p_value of a  Mann_Whitney U test.
     If the U test not done (only 0 in both vectors), p_value is set to 1.
     This function performs a U test on *non-nul values*
-    
+
     WARNING: here 0 are not removed from the dataset
     If tails is set to 1 the contrast is supposed to be vector_1 > vector_2
     """
-    
+
     import numpy as np
     from scipy.stats import mannwhitneyu
-    
+
     p_value = 1.
-    
+
     x = vector_1
     non_zero_x = [x[k] for k in np.nonzero(x)[0].tolist()]
- 
+
     y = vector_2
     non_zero_y = [y[k] for k in np.nonzero(y)[0].tolist()]
-    
+
     if x != np.array([]) and y != np.array([]):
         if non_zero_x != np.array([]) or non_zero_y != np.array([]):
             p_value = mannwhitneyu(x, y).pvalue
             if tails == 2:
                 p_value = 2*p_value
-    
+
     return p_value
 
 
@@ -115,15 +115,15 @@ def fdr_correction_matrix(p_value_matrix, template=None):
     if the test is performed and 0 else) with the same shape as p_value_matrix
     input of the actually performed test can be provide at input.
     """
-    
+
     import numpy as np
     from mne.stats import fdr_correction
-    
+
     if type(template) == type(p_value_matrix):
         if p_value_matrix.shape != template.shape:
             raise IOError(
                 'p_value_matrix and template should have the same shape.')
-         
+
     if type(template) == type(p_value_matrix):
         p_value_corrected = np.ones(p_value_matrix.shape)
         reject_test = np.zeros(p_value_matrix.shape, dtype=bool)

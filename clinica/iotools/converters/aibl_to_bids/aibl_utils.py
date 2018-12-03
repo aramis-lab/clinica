@@ -21,7 +21,7 @@ def listdir_nohidden(path):
        folders'
 
         :param path: path whose subdirectories are needed
-        
+
         :return: list of all the subdirectories of path
     """
 
@@ -41,7 +41,7 @@ def find_T1_folder(subdirectory, path_to_T1_1):
         returns the h
 
         :param subdirectory: name of the folder
-        
+
         :return: previous path to arrive to the T1 image
     """
 
@@ -69,7 +69,7 @@ def find_T1_folder_nodata(subdirectory, path_to_T1_1):
        in the path to the image, but they will be converted anyway
 
         :param subdirectory: name of the folder
-        
+
         :return: previous path to arrive to the T1 image
     """
     import os
@@ -93,7 +93,7 @@ def find_correspondance_index(i, csv_file):
 
         :param i: subject_ID
         :param csv_file: csv file where all the information are listed
-        
+
         :return: index
     """
 
@@ -130,7 +130,7 @@ def match_data(exame_date, i, csv_file):
         from the name of the corresponding subdirector
         :param i: subject_ID
         :param csv_file: csv file where all the information are listed
-        
+
         :return session_id of the patient
     """
 
@@ -173,7 +173,7 @@ def check_subdirectories_pet(subdirectories, sub, no_pet):
         :param subdirectories:
         :param sub: all the possible subdirectories which need to be checked
         :param no pet: list of names of folders which not contain PET images
-        
+
         :return subdirectory which is containing a PET image which needs to be
         converted
     """
@@ -223,7 +223,7 @@ def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dc
         :param output_path: where nifti image is stored
         :param output_filename: name of the nifti image
         :param image_path: where dicom files are stored
-        
+
         :return: Image in a nifti format
     """
     import os
@@ -290,7 +290,7 @@ def viscode_to_session(viscode):
         name passed as input.
 
         :param viscode: session name
-        
+
         :return: M00 if is the baseline session or the original session name
         capitalized
     """
@@ -308,7 +308,7 @@ def find_path_to_pet_modality(path_to_dataset, csv_file):
 
         :param path_to_dataset: path to AIBL dataset
         :param csv_file: file which correspond to the modality
-        
+
         :return: A dataframe which contains the path for PET images for a
         single modality and subject_ID and session_ID are reported for each
         path
@@ -391,7 +391,7 @@ def find_path_to_T1_ADNI(file_mri, subjects_ID, path_to_dataset):
         describe the  parameters of the T1 images (MRI 1.5 T and MRI 3T)
         :param subjects_ID: subjects_id in the dataset dowloaded
         :param path_to_dataset: path to AIBL dataset
-        
+
         :return: A dataframe which contains the path for T1 images and
         subject_ID and session_ID are reported for each path
     """
@@ -445,7 +445,7 @@ def find_path_to_T1_SAG(path_to_dataset, subjects_ID, sub_ID, ses_ID, path_T1):
         will be appended
         :param path_T1:the previous list (from T1_ADNI) where new paths will be
         appended
-        
+
         :return: it completes the list of all the T1 paths including all the
         images where we didn't find the exame-data but we can fix it with a
         further analysis

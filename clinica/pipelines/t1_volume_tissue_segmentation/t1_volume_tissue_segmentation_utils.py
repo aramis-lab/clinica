@@ -57,7 +57,7 @@ def select_image(participant_id, session_id, image_type, bids_layout):
 
 def group_nested_images_by_subject(class_images, zip_files=False):
     """
-    
+
     """
     from clinica.utils.io import zip_nii
 
