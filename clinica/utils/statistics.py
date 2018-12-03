@@ -77,8 +77,8 @@ def t_test(vector_1, vector_2, tails=2):
 
 def mann_whitney(vector_1, vector_2, tails=2):
     """
-    This function take two vectors as entry and return 
-    the p_value of a  Mann_Whitney U test. 
+    This function take two vectors as entry and return
+    the p_value of a  Mann_Whitney U test.
     If the U test not done (only 0 in both vectors), p_value is set to 1.
     This function performs a U test on *non-nul values*
     
@@ -126,15 +126,15 @@ def fdr_correction_matrix(p_value_matrix, template=None):
          
     if type(template) == type(p_value_matrix):
         p_value_corrected = np.ones(p_value_matrix.shape)
-        reject_test = np.zeros(p_value_matrix.shape, dtype=bool)     
+        reject_test = np.zeros(p_value_matrix.shape, dtype=bool)
         eff_p_value = []
-        index_of_eff_p_value = []    
+        index_of_eff_p_value = []
         for i in np.arange(0, p_value_matrix.shape[0]):
             for j in np.arange(0, i):
                 if template[j, i] == 1:
                     eff_p_value += [p_value_matrix[j, i]]
                     index_of_eff_p_value += [(j, i)]
-        reject, p_corrected = fdr_correction(eff_p_value)     
+        reject, p_corrected = fdr_correction(eff_p_value)
         for i, corrected in enumerate(p_corrected):
             p_value_corrected[
                 index_of_eff_p_value[i][0], index_of_eff_p_value[i][1]

@@ -56,5 +56,5 @@ def roundbval(bvalsFilename, newbvalsFilename, bStep):
 if __name__ == '__main__':
     bvalsFilename = sys.argv[1]
     newbvalsFilename = sys.argv[2]
-    bStep = sys.argv[3] 
+    bStep = sys.argv[3]
     roundbval(bvalsFilename, newbvalsFilename, bStep)

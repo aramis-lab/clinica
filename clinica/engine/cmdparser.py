@@ -69,7 +69,7 @@ class CmdParser:
             self._description = self._name
             self._args.description = (
                     Fore.GREEN
-                    + 'If you are not familiar with Clinica, see:' 
+                    + 'If you are not familiar with Clinica, see:'
                     'http://clinica.run/doc/InteractingWithClinica/'
                     + Fore.RESET
                     )

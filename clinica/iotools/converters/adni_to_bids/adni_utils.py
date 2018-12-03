@@ -324,27 +324,27 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
             sessions_df = sessions_df[columns_order]
 
             sessions_df[[
-                'adas_Q1', 'adas_Q2', 'adas_Q3', 'adas_Q4', 
-                'adas_Q5', 'adas_Q6', 'adas_Q7', 'adas_Q8', 
-                'adas_Q9', 'adas_Q10', 'adas_Q11', 'adas_Q12', 
+                'adas_Q1', 'adas_Q2', 'adas_Q3', 'adas_Q4',
+                'adas_Q5', 'adas_Q6', 'adas_Q7', 'adas_Q8',
+                'adas_Q9', 'adas_Q10', 'adas_Q11', 'adas_Q12',
                 'adas_Q13'
                 ]] = sessions_df[[
-                    'adas_Q1', 'adas_Q2', 'adas_Q3', 'adas_Q4', 
-                    'adas_Q5', 'adas_Q6', 'adas_Q7', 'adas_Q8', 
-                    'adas_Q9', 'adas_Q10', 'adas_Q11', 'adas_Q12', 
+                    'adas_Q1', 'adas_Q2', 'adas_Q3', 'adas_Q4',
+                    'adas_Q5', 'adas_Q6', 'adas_Q7', 'adas_Q8',
+                    'adas_Q9', 'adas_Q10', 'adas_Q11', 'adas_Q12',
                     'adas_Q13']].apply(pd.to_numeric)
 
-            sessions_df['adas_memory'] = sessions_df['adas_Q1'] 
-                                        + sessions_df['adas_Q4'] 
-                                        + sessions_df['adas_Q7'] 
-                                        + sessions_df['adas_Q8'] 
+            sessions_df['adas_memory'] = sessions_df['adas_Q1']
+                                        + sessions_df['adas_Q4']
+                                        + sessions_df['adas_Q7']
+                                        + sessions_df['adas_Q8']
                                         + sessions_df['adas_Q9']  # / 45
-            sessions_df['adas_language'] = sessions_df['adas_Q2'] 
-                                        + sessions_df['adas_Q5'] 
-                                        + sessions_df['adas_Q10'] 
-                                        + sessions_df['adas_Q11'] 
+            sessions_df['adas_language'] = sessions_df['adas_Q2']
+                                        + sessions_df['adas_Q5']
+                                        + sessions_df['adas_Q10']
+                                        + sessions_df['adas_Q11']
                                         + sessions_df['adas_Q12']  # / 25
-            sessions_df['adas_praxis'] = sessions_df['adas_Q3'] 
+            sessions_df['adas_praxis'] = sessions_df['adas_Q3']
                                         + sessions_df['adas_Q6']  # / 10
             sessions_df['adas_concentration'] = sessions_df['adas_Q13']  # / 5
 

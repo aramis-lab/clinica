@@ -17,7 +17,7 @@
      - BIM: original file plus APOE
 
     The information regarding APOE will be extracted from the  ADNI clinical
-    file APOERS.tsv. 
+    file APOERS.tsv.
     The output name chosen for the BIDS converted files is
     "ADNI_1_GWAS_Human610-Quad_PlusAPOE".
 """

@@ -56,13 +56,13 @@ class DwiProcessingNoddi(cpe.Pipeline):
             A list of (string) input fields name.
         """
 
-        return ['subject_id_list', 
-                'noddi_preprocessed_dwi', 
-                'noddi_preprocessed_bvec', 
+        return ['subject_id_list',
+                'noddi_preprocessed_dwi',
+                'noddi_preprocessed_bvec',
                 'noddi_preprocessed_bval',
-                'noddi_preprocessed_mask', 
-                'n_procs', 
-                'noddi_toolbox_dir', 
+                'noddi_preprocessed_mask',
+                'n_procs',
+                'noddi_toolbox_dir',
                 'nifti_matlib_dir']  # Fill here the list
 
     def get_output_fields(self):

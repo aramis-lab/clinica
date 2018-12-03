@@ -22,7 +22,7 @@ __status__ = "Development"
 
 def select_bids_images(subjects, sessions, image_type, bids_layout):
     """
-    read the subjects_visits_tsv 
+    read the subjects_visits_tsv
     """
     if len(subjects) != len(sessions):
         raise RuntimeError("Subjects list and sessions list must have the same length.")

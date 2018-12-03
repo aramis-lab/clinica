@@ -55,13 +55,13 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
             A list of (string) input fields name.
         """
 
-        return ['bids_ap_dwi', 
-                'bids_ap_dwi_bvec', 
-                'bids_ap_dwi_bval', 
-                'bids_pa_dwi', 
-                'bids_pa_dwi_bvec', 
+        return ['bids_ap_dwi',
+                'bids_ap_dwi_bvec',
+                'bids_ap_dwi_bval',
+                'bids_pa_dwi',
+                'bids_pa_dwi_bvec',
                 'bids_pa_dwi_bval',
-                'epi_param', 
+                'epi_param',
                 'epi_param_alt']  # Fill here the list
 
     def get_output_fields(self):
