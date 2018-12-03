@@ -122,7 +122,7 @@ def compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                         (subject_pet_meta['Orig/Proc'] == 'Original')
                         & (subject_pet_meta.Sequence.map(
                             lambda x: (x.lower().find('av45') > -1) & (x.lower().find('early') < 0))
-                            )
+                           )
                         & (subject_pet_meta['Scan Date'] == qc_visit.EXAMDATE)]
                 if original_pet_meta.shape[0] < 1:
                     # TODO Log somewhere subjects with problems

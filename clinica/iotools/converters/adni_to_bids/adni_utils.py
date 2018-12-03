@@ -316,7 +316,7 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
         fields_bids = list(set(fields_bids))
         sessions_df = pd.DataFrame(columns=fields_bids)
 
-        if sessions_dict.has_key(bids_id):
+        if bids_id in sessions_dict:
             sess_aval = sessions_dict[bids_id].keys()
             for ses in sess_aval:
                 sessions_df = sessions_df.append(pd.DataFrame(sessions_dict[bids_id][ses], index=['i', ]))
@@ -386,12 +386,12 @@ def update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_f
 
     # If the dictionary already contain the subject add or update information
     # regarding a specific session, otherwise create the entry
-    if sessions_dict.has_key(subj_bids):
+    if subj_bids in sessions_dict:
         sess_available = sessions_dict[subj_bids].keys()
 
         if visit_id in sess_available:
             # If a value is already contained, update it only if the previous value is nan
-            if sessions_dict[subj_bids][visit_id].has_key(bids_field_name):
+            if bids_field_name in sessions_dict[subj_bids][visit_id]:
 
                 if is_nan(sessions_dict[subj_bids][visit_id][bids_field_name]):
                     sessions_dict[subj_bids][visit_id].update(

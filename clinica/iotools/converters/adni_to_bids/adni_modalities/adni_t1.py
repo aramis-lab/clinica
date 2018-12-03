@@ -417,11 +417,11 @@ def adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig, mayo_mr
     from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
     from clinica.utils.stream import cprint
 
-    cond_mprage = ((mprage_meta_subj_orig.Visit == visit_str) 
+    cond_mprage = ((mprage_meta_subj_orig.Visit == visit_str)
             & mprage_meta_subj_orig.Sequence.map(
-                lambda x: ((x.lower().find('mprage') > -1) 
-                    | (x.lower().find('mp-rage') > -1) 
-                    | (x.lower().find('mp rage') > -1)) 
+                lambda x: ((x.lower().find('mprage') > -1)
+                    | (x.lower().find('mp-rage') > -1)
+                    | (x.lower().find('mp rage') > -1))
                 & (x.find('2') < 0))
             )
 
