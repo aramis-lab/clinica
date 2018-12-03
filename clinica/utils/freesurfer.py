@@ -272,7 +272,7 @@ def write_volumetric_summary(caps_dir, subjects_visits_tsv):
         subject_dir.append(sub_dir)
 
     fs_tsv_summary = pe.Node(name='volumetric_summary_node',
-                            interface=Function(
+                             interface=Function(
                                 input_names=['subject_dir', 'subject_id', 'caps_dir'],
                                 output_names=[],
                                 function=volumetric_summary))

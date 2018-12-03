@@ -57,8 +57,8 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
         from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
 
         pipeline = T1VolumeTissueSegmentation(bids_directory=self.absolute_path(args.bids_directory),
-                                     caps_directory=self.absolute_path(args.caps_directory),
-                                     tsv_file=self.absolute_path(args.subjects_sessions_tsv))
+                                              caps_directory=self.absolute_path(args.caps_directory),
+                                              tsv_file=self.absolute_path(args.subjects_sessions_tsv))
 
         pipeline.parameters.update({'tissue_classes': args.tissue_classes,
                                     'dartel_tissues': args.dartel_tissues,

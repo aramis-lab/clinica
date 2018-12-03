@@ -492,7 +492,7 @@ class CAPSVoxelBasedInputREGSVM(CAPSInput):
         """
 
         super(CAPSVoxelBasedInputREGSVM, self).__init__(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
-                                                  image_type, precomputed_kernel=precomputed_kernel)
+                                                        image_type, precomputed_kernel=precomputed_kernel)
 
         self._fwhm = fwhm
         self._modulated = modulated

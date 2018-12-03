@@ -664,7 +664,7 @@ class VBREG_RepHoldOut_DualSVM(base.MLWorkflow):
         self._splits_indices = splits_indices
 
         self._input = input.CAPSVoxelBasedInputREGSVM(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
-                                                image_type, fwhm, modulated, pvc, mask_zeros, precomputed_kernel)
+                                                      image_type, fwhm, modulated, pvc, mask_zeros, precomputed_kernel)
 
         self._validation = None
         self._algorithm = None

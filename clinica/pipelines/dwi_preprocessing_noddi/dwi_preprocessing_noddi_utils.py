@@ -20,8 +20,7 @@ from nipype.workflows.dmri.fsl.utils import (b0_average, compute_readout,)
 ########################################################################
 
 from nipype.interfaces.fsl.base import FSLCommand, FSLCommandInputSpec
-from nipype.interfaces.base import (traits, TraitedSpec, File,
-                    isdefined)
+from nipype.interfaces.base import traits, TraitedSpec, File, isdefined
 import os
 
 
@@ -71,7 +70,7 @@ class EddyNoddiInputSpec(FSLCommandInputSpec):
     num_threads = traits.Int(1, usedefault=True, nohash=True,
                              desc="Number of openmp threads to use")
     data_is_shelled = traits.Bool(False, argstr='--data_is_shelled',
-                        desc='Bypass any checking and eddy will proceed as if data was shelled')
+                                  desc='Bypass any checking and eddy will proceed as if data was shelled')
 
 
 class EddyNoddiOutputSpec(TraitedSpec):
@@ -156,14 +155,14 @@ class EddyNoddi(FSLCommand):
 
 
 def sdc_peb_noddi(name='sdc_ped_noddi',
-            epi_params=dict(echospacing=0.77e-3,
-                            acc_factor=3,
-                            enc_dir='y-',
-                            epi_factor=1),
-            alt_epi_params=dict(echospacing=0.77e-3,
-                               acc_factor=3,
-                               enc_dir='y',
-                               epi_factor=1)):
+                  epi_params=dict(echospacing=0.77e-3,
+                                  acc_factor=3,
+                                  enc_dir='y-',
+                                  epi_factor=1),
+                  alt_epi_params=dict(echospacing=0.77e-3,
+                                      acc_factor=3,
+                                      enc_dir='y',
+                                      epi_factor=1)):
     """
     SDC stands for susceptibility distortion correction. PEB stands for
     phase-encoding-based.
@@ -227,7 +226,7 @@ def sdc_peb_noddi(name='sdc_ped_noddi',
     topup_acq.inputs.readout_alt = readout_alt
 
     undis_mask = pe.Node(fsl.BET(frac=0.3, mask=True, robust=True),
-                       name='mask_from_topup')
+                         name='mask_from_topup')
 
     wf = pe.Workflow(name=name)
     wf.connect([
@@ -452,14 +451,15 @@ def get_subid_sesid(in_file, caps_directory):
     return base_directory, subst_tuple_list
 
 
-def noddi_preprocessing_twoped(caps_directory, name='noddi_preprocessing_topup_eddy',
-                     epi_params=dict(echo_spacing=0.77e-3,
-                                     acc_factor=3,
-                                     enc_dir='y-',
-                                     epi_factor=1),
-                     alt_epi_params=dict(echo_spacing=0.77e-3,
-                                        acc_factor=3,
-                                        enc_dir='y',)):
+def noddi_preprocessing_twoped(caps_directory, 
+                               name='noddi_preprocessing_topup_eddy',
+                               epi_params=dict(echo_spacing=0.77e-3,
+                                               acc_factor=3,
+                                               enc_dir='y-',
+                                               epi_factor=1),
+                               alt_epi_params=dict(echo_spacing=0.77e-3,
+                                                   acc_factor=3,
+                                                   enc_dir='y',)):
     """
     This is a preprocessing pipeline for typical NODDI data with two phase encoding direction(ap/j-/y-, pa/j/y) images which will implement the new tool
     from FSL (topup and eddy) to correct the susceptibility-induced off-resonance field distortion by topup, eddy current-induced off-resonance
@@ -522,8 +522,9 @@ def noddi_preprocessing_twoped(caps_directory, name='noddi_preprocessing_topup_e
         function=b0_indices), name='find_b0_indices')
 
     generate_index_eddy = pe.Node(niu.Function(input_names=['in_bval', 'b0_index'],
-        output_names=['eddy_index'],
-        function=gen_index_noddi), name='generate_index_eddy')
+                                               output_names=['eddy_index'],
+                                               function=gen_index_noddi), 
+                                               name='generate_index_eddy')
 
     avg_b0 = pe.Node(niu.Function(
         input_names=['in_dwi', 'in_bval'], output_names=['out_file'],
@@ -546,11 +547,11 @@ def noddi_preprocessing_twoped(caps_directory, name='noddi_preprocessing_topup_e
     wf = pe.Workflow(name=name)
     wf.connect([
         (inputnode, merge_two_ped, [('in_file', 'in_file'),
-                               ('in_bval', 'in_bval'),
-                               ('in_bvec', 'in_bvec'),
-                               ('alt_file', 'alt_file'),
-                               ('alt_bvec', 'alt_bvec'),
-                               ('alt_bval', 'alt_bval')]),
+                                    ('in_bval', 'in_bval'),
+                                    ('in_bvec', 'in_bvec'),
+                                    ('alt_file', 'alt_file'),
+                                    ('alt_bvec', 'alt_bvec'),
+                                    ('alt_bval', 'alt_bval')]),
         (merge_two_ped, extract_b0_dwis,  [('out_file', 'in_dwi'),
                                            ('out_bvals', 'in_bval'),
                                            ('out_bvecs', 'in_bvec')]),

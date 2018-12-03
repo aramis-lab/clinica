@@ -13,20 +13,20 @@ from colorama import Fore
 
 PIPELINE_CATEGORIES = {
     'CLINICA_COMPULSORY': (Fore.BLUE
-        + 'Clinica mandatory arguments'
-        + Fore.RESET),
+                           + 'Clinica mandatory arguments'
+                           + Fore.RESET),
     'OPTIONAL': (Fore.BLUE
-        + 'Pipeline options'
-        + Fore.RESET),
+                 + 'Pipeline options'
+                 + Fore.RESET),
     'CLINICA_OPTIONAL': (Fore.BLUE
-        + 'Clinica standard options'
-        + Fore.RESET),
+                         + 'Clinica standard options'
+                         + Fore.RESET),
     'ADVANCED': (Fore.BLUE
-        + 'Pipelines advanced options'
-        + Fore.RESET),
+                 + 'Pipelines advanced options'
+                 + Fore.RESET),
     'IOTOOLS_OPTIONS': (Fore.BLUE
-        + 'Optional arguments'
-        + Fore.RESET)
+                        + 'Optional arguments'
+                        + Fore.RESET)
     }
 
 

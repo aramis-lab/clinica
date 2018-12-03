@@ -39,28 +39,28 @@ class DwiPreprocessingNoddiCLI(ce.CmdParser):
 
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("bids_directory",
-                                help='Path to the BIDS directory.')
+                                  help='Path to the BIDS directory.')
         clinica_comp.add_argument("caps_directory",
-                                help='Path to the CAPS directory.')
+                                  help='Path to the CAPS directory.')
         clinica_comp.add_argument("echo_spacing", type=float,
-                                help='The echo spacing such that EffectiveEchoSpacing=echo_spacing/acceleration_factor (see BIDS specifications and https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/topup/Faq for details).')
+                                  help='The echo spacing such that EffectiveEchoSpacing=echo_spacing/acceleration_factor (see BIDS specifications and https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/topup/Faq for details).')
         clinica_comp.add_argument("acceleration_factor", type=int,
-                                help='Acceleration factor such that EffectiveEchoSpacing=echo_spacing/acceleration_factor (see BIDS specifications and https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/topup/Faq for details).')
+                                  help='Acceleration factor such that EffectiveEchoSpacing=echo_spacing/acceleration_factor (see BIDS specifications and https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/topup/Faq for details).')
         clinica_comp.add_argument("phase_encoding_direction", type=str,
-                                help='Phase encoding direction using FSL convention (e.g. y- or y). Be careful, this is currently not the BIDS convention (i.e. j- or j).')
+                                  help='Phase encoding direction using FSL convention (e.g. y- or y). Be careful, this is currently not the BIDS convention (i.e. j- or j).')
         clinica_comp.add_argument("phase_encoding_direction_alternative", type=str,
-                                help='The opposite phase encoding direction (e.g. if phase_encoding_direction is y- then phase_encoding_direction_alternative will be y).')
+                                  help='The opposite phase encoding direction (e.g. if phase_encoding_direction is y- then phase_encoding_direction_alternative will be y).')
         clinica_comp.add_argument("epi_factor", type=int,
-                                help='EPI factor (e.g. 128) used for the computation of the TotalReadoutTime (see https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/eddy/Faq for details)')
+                                  help='EPI factor (e.g. 128) used for the computation of the TotalReadoutTime (see https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/eddy/Faq for details)')
 
         # Optional arguments
         clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
         clinica_opt.add_argument("-wd", "--working_directory",
-                                help='Temporary directory to store pipeline intermediate results')
+                                 help='Temporary directory to store pipeline intermediate results')
         clinica_opt.add_argument("-np", "--n_procs", type=int,
-                                help='Number of cores used to run in parallel')
+                                 help='Number of cores used to run in parallel')
         clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
-                                help='TSV file containing a list of subjects with their sessions.')
+                                 help='TSV file containing a list of subjects with their sessions.')
 
     def run_command(self, args):
         """

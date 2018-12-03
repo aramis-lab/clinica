@@ -25,8 +25,8 @@ def get_caps_t1_list(input_directory, subjects_visits_tsv, group_id, fwhm, modul
     sessions = list(subjects_visits.session_id)
     if fwhm == 0:
         image_list = [join(input_directory, 'subjects/' + subjects[i] + '/'
-                      + sessions[i] + '/t1/spm/dartel/group-' + group_id + '/'
-                      + subjects[i] + '_' + sessions[i] + '_T1w_segm-graymatter'+'_space-Ixi549Space_modulated-'+modulated+'_probability.nii.gz') for i in range(len(subjects))]
+                           + sessions[i] + '/t1/spm/dartel/group-' + group_id + '/'
+                           + subjects[i] + '_' + sessions[i] + '_T1w_segm-graymatter'+'_space-Ixi549Space_modulated-'+modulated+'_probability.nii.gz') for i in range(len(subjects))]
     else:
         image_list = [join(input_directory, 'subjects/' + subjects[i] + '/'
                            + sessions[i] + '/t1/spm/dartel/group-' + group_id + '/'

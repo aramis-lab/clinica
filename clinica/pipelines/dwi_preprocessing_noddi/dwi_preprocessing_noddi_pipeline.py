@@ -86,7 +86,7 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
         parallelsubjects = npe.Node(name="noddi_preprocessing_parallelization", interface=nutil.IdentityInterface(
             fields=['bids_ap_dwi', 'bids_ap_dwi_bvec', 'bids_ap_dwi_bval', 'bids_pa_dwi', 'bids_pa_dwi_bvec',
                     'bids_pa_dwi_bval'], mandatory_inputs=True), synchronize=True, iterables=[('bids_ap_dwi', 'bids_ap_dwi_bvec', 'bids_ap_dwi_bval', 'bids_pa_dwi',
-                                       'bids_pa_dwi_bvec', 'bids_pa_dwi_bval'), list_tuple])
+                                                                                               'bids_pa_dwi_bvec', 'bids_pa_dwi_bval'), list_tuple])
 
         parallelsubjects.inputs.bids_ap_dwi = bids_ap_dwi
         parallelsubjects.inputs.bids_ap_dwi_bvec = bids_ap_dwi_bvec
@@ -123,8 +123,8 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
 
         # datasink
         datasink = npe.MapNode(nio.DataSink(infields=['@preproc_bval', '@preproc_dwi', '@preproc_bvec', '@b0_mask']),
-                              name='datasinker',
-                              iterfield=['base_directory', 'substitutions', '@preproc_bval', '@preproc_dwi', '@preproc_bvec', '@b0_mask'])
+                               name='datasinker',
+                               iterfield=['base_directory', 'substitutions', '@preproc_bval', '@preproc_dwi', '@preproc_bvec', '@b0_mask'])
         self.connect([
             # datasink
             (self.input_node, get_identifiers, [('bids_ap_dwi', 'in_file')]),
@@ -143,7 +143,7 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
         import dwi_preprocessing_noddi_utils as utils
 
         one_subj_noddi = utils.noddi_preprocessing_twoped(self.caps_directory, epi_params=self.parameters['epi_param'],
-                                                    alt_epi_params=self.parameters['alt_epi_params'])
+                                                          alt_epi_params=self.parameters['alt_epi_params'])
 
         # Connection
         # ==========
