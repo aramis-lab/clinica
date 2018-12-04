@@ -451,7 +451,7 @@ def get_subid_sesid(in_file, caps_directory):
     return base_directory, subst_tuple_list
 
 
-def noddi_preprocessing_twoped(caps_directory, 
+def noddi_preprocessing_twoped(caps_directory,
                                name='noddi_preprocessing_topup_eddy',
                                epi_params=dict(echo_spacing=0.77e-3,
                                                acc_factor=3,
@@ -523,8 +523,8 @@ def noddi_preprocessing_twoped(caps_directory,
 
     generate_index_eddy = pe.Node(niu.Function(input_names=['in_bval', 'b0_index'],
                                                output_names=['eddy_index'],
-                                               function=gen_index_noddi), 
-                                               name='generate_index_eddy')
+                                               function=gen_index_noddi),
+                                  name='generate_index_eddy')
 
     avg_b0 = pe.Node(niu.Function(
         input_names=['in_dwi', 'in_bval'], output_names=['out_file'],
