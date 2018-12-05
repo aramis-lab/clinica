@@ -243,8 +243,7 @@ class FieldMapInputSpec(SPMCommandInputSpec):
             'calculatevdm',
             'applyvdm',
             usedefault=True,
-            desc='one of: calculatevdm,
-            applyvdm')
+            desc='one of: calculatevdm, applyvdm')
     phase = File(
             mandatory=True,
             exists=True,
