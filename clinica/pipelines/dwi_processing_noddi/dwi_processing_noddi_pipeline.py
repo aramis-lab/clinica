@@ -126,8 +126,8 @@ class DwiProcessingNoddi(cpe.Pipeline):
 
         # datasink
         datasink = npe.MapNode(nio.DataSink(infields=['@fit_icvf', '@fit_isovf', '@fit_od']),
-                              name='datasinker',
-                              iterfield=['base_directory', 'substitutions', '@fit_icvf', '@fit_isovf', '@fit_od'])
+                               name='datasinker',
+                               iterfield=['base_directory', 'substitutions', '@fit_icvf', '@fit_isovf', '@fit_od'])
 
         self.connect([
             # datasink

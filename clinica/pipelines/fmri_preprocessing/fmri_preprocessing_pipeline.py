@@ -70,8 +70,8 @@ class fMRIPreprocessing(cpe.Pipeline):
         """
 
         input_fields = ['et', 'blipdir', 'tert', 'time_repetition', 'num_slices',
-                'magnitude1', 'slice_order', 'ref_slice',
-                'time_acquisition', 'phasediff', 'bold', 'T1w']
+                        'magnitude1', 'slice_order', 'ref_slice',
+                        'time_acquisition', 'phasediff', 'bold', 'T1w']
 
         return input_fields
 

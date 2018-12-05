@@ -804,9 +804,9 @@ def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False, False
                 os.rename(path.join(folder_output, bids_name_mag + '0001.nii.gz'),
                           path.join(folder_output, bids_name_mag + '2.nii.gz'))
                 os.rename(path.join(folder_output, bids_name_ph + '0000.nii.gz'),
-                      path.join(folder_output, bids_name_ph + '1.nii.gz'))
+                          path.join(folder_output, bids_name_ph + '1.nii.gz'))
                 os.rename(path.join(folder_output, bids_name_ph + '0001.nii.gz'),
-                      path.join(folder_output, bids_name_ph + '2.nii.gz'))
+                          path.join(folder_output, bids_name_ph + '2.nii.gz'))
     # The modalities is missing or incomplete
     else:
         if mag_missing and map_ph_missing:

@@ -112,21 +112,31 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download):
             if visit_info[1] == 'ADNI1':
                 if not new_download:
                     ida_meta_subj = ida_meta[ida_meta.Subject == subj]
-                    image_dict = adni1_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
-                                             ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj)
+                    image_dict = adni1_image(
+                            subj, visit_info[0], visits[visit_info],
+                            mprage_meta_subj, ida_meta_subj,
+                            mri_quality_subj, mayo_mri_qc_subj)
                 else:
-                    image_dict = adni1_image_refactoring(csv_dir, adni_merge, subj, visit_info[0], visits[visit_info],
-                                             mprage_meta_subj, mri_quality_subj, mayo_mri_qc_subj)
+                    image_dict = adni1_image_refactoring(
+                            csv_dir, adni_merge, subj,
+                            visit_info[0], visits[visit_info], mprage_meta_subj,
+                            mri_quality_subj, mayo_mri_qc_subj)
             elif visit_info[1] == 'ADNIGO':
                 if not new_download:
-                    image_dict = adnigo_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj,
-                                              ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj, visit_info[2])
+                    image_dict = adnigo_image(
+                            subj, visit_info[0], visits[visit_info],
+                            mprage_meta_subj, ida_meta_subj, mri_quality_subj,
+                            mayo_mri_qc_subj, visit_info[2])
                 else:
-                    image_dict = adnigo_image_refactoring(csv_dir, adni_merge, subj, visit_info[0], visits[visit_info],
-                                             mprage_meta_subj, mri_quality_subj, mayo_mri_qc_subj, visit_info[2])
+                    image_dict = adnigo_image_refactoring(
+                            csv_dir, adni_merge, subj, visit_info[0],
+                            visits[visit_info], mprage_meta_subj,
+                            mri_quality_subj, mayo_mri_qc_subj, visit_info[2])
 
             else:  # ADNI2
-                image_dict = adni2_image(subj, visit_info[0], visits[visit_info], mprage_meta_subj_orig, mayo_mri_qc_subj)
+                image_dict = adni2_image(
+                        subj, visit_info[0], visits[visit_info],
+                        mprage_meta_subj_orig, mayo_mri_qc_subj)
 
             if image_dict is None:
                 image_dict = {'Subject_ID': subj,
@@ -169,7 +179,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download):
         error_indices = []
         for conv_error in conversion_errors:
             error_indices.append((t1_df.Subject_ID == conv_error[0])
-                             & (t1_df.VISCODE == conv_error[1]))
+                                 & (t1_df.VISCODE == conv_error[1]))
 
         indices_to_remove = t1_df.index[reduce(operator.or_, error_indices, False)]
         t1_df.drop(indices_to_remove, inplace=True)
@@ -418,12 +428,13 @@ def adni2_image(subject_id, timepoint, visit_str, mprage_meta_subj_orig, mayo_mr
     from clinica.utils.stream import cprint
 
     cond_mprage = ((mprage_meta_subj_orig.Visit == visit_str)
-            & mprage_meta_subj_orig.Sequence.map(
-                lambda x: ((x.lower().find('mprage') > -1)
-                    | (x.lower().find('mp-rage') > -1)
-                    | (x.lower().find('mp rage') > -1))
-                & (x.find('2') < 0))
-            )
+                   & mprage_meta_subj_orig.Sequence.map(
+                       lambda x: ((x.lower().find('mprage') > -1)
+                                  | (x.lower().find('mp-rage') > -1)
+                                  | (x.lower().find('mp rage') > -1))
+                       & (x.find('2') < 0)
+                       )
+                   )
 
     cond_spgr = ((mprage_meta_subj_orig.Visit == visit_str) & mprage_meta_subj_orig.Sequence.map(
         lambda x: (x.lower().find('spgr') > -1) & (x.lower().find('acc') < 0)))

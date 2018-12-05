@@ -416,14 +416,21 @@ def matlab_noddi_processing(caps_directory, num_cores, bStep, name='NoddiMatlab'
     import clinica.pipelines as clp
 
     inputnode = pe.Node(niu.IdentityInterface(
-        fields=['subject_id_list', 'noddi_preprocessed_dwi', 'noddi_preprocessed_bvec',
-                'noddi_preprocessed_bval', 'noddi_preprocessed_mask', 'noddi_toolbox_dir', 'nifti_matlib_dir']),
+        fields=['subject_id_list',
+                'noddi_preprocessed_dwi',
+                'noddi_preprocessed_bvec',
+                'noddi_preprocessed_bval',
+                'noddi_preprocessed_mask',
+                'noddi_toolbox_dir',
+                'nifti_matlib_dir']),
         name='inputnode')
 
     capsnode = pe.MapNode(name='capsnode',
-                       interface=niu.Function(input_names=['subject_id_list', 'caps_directory'],
-                                          output_names=['temp_folder'],
-                                          function=make_processing_caps), iterfield=['subject_id_list'])
+                          interface=niu.Function(
+                              input_names=['subject_id_list', 'caps_directory'],
+                              output_names=['temp_folder'],
+                              function=make_processing_caps),
+                          iterfield=['subject_id_list'])
     capsnode.inputs.caps_directory = caps_directory
 
     path_to_matscript = os.path.join(os.path.dirname(clp.__path__[0]), 'lib/noddi')
@@ -438,55 +445,132 @@ def matlab_noddi_processing(caps_directory, num_cores, bStep, name='NoddiMatlab'
 
     # Node to wrap noddi matlab toolbox script.
     nodditoolbox = pe.MapNode(name='nodditoolbox',
-                       interface=niu.Function(input_names=['output_dir', 'noddi_img', 'brain_mask', 'roi_mask', 'bval', 'bvec', 'prefix', 'bStep', 'num_cores',
-                                                       'path_to_matscript', 'noddi_toolbox_dir', 'nifti_matlib_dir'],
-                                          output_names=['fit_icvf', 'fit_isovf', 'fit_od'],
-                                          function=runmatlab), iterfield=['output_dir', 'noddi_img', 'brain_mask', 'roi_mask', 'bval', 'bvec', 'prefix'])
+                              interface=niu.Function(
+                                  input_names=['output_dir',
+                                               'noddi_img',
+                                               'brain_mask',
+                                               'roi_mask',
+                                               'bval',
+                                               'bvec',
+                                               'prefix',
+                                               'bStep',
+                                               'num_cores',
+                                               'path_to_matscript',
+                                               'noddi_toolbox_dir',
+                                               'nifti_matlib_dir'],
+                                  output_names=['fit_icvf',
+                                                'fit_isovf',
+                                                'fit_od'],
+                                  function=runmatlab),
+                              iterfield=['output_dir',
+                                         'noddi_img',
+                                         'brain_mask',
+                                         'roi_mask',
+                                         'bval',
+                                         'bvec',
+                                         'prefix'])
     nodditoolbox.inputs.path_to_matscript = path_to_matscript
     nodditoolbox.inputs.num_cores = num_cores
     nodditoolbox.inputs.bStep = bStep
 
     # zip the result imgs
     zip_icvf = pe.MapNode(name='zip_icvf',
-                       interface=niu.Function(input_names=['in_file'],
-                                          output_names=['out_file'],
-                                          function=compress_nii), iterfield=['in_file'])
+                          interface=niu.Function(input_names=['in_file'],
+                                                 output_names=['out_file'],
+                                                 function=compress_nii),
+                          iterfield=['in_file'])
 
     zip_isovf = pe.MapNode(name='zip_isovf',
-                       interface=niu.Function(input_names=['in_file'],
-                                          output_names=['out_file'],
-                                          function=compress_nii), iterfield=['in_file'])
+                           interface=niu.Function(input_names=['in_file'],
+                                                  output_names=['out_file'],
+                                                  function=compress_nii),
+                           iterfield=['in_file'])
 
     zip_odi = pe.MapNode(name='zip_odi',
-                       interface=niu.Function(input_names=['in_file'],
-                                          output_names=['out_file'],
-                                          function=compress_nii), iterfield=['in_file'])
+                         interface=niu.Function(input_names=['in_file'],
+                                                output_names=['out_file'],
+                                                function=compress_nii),
+                         iterfield=['in_file'])
 
     # workflow
     nodditoolbox_wf = pe.Workflow(name=name)
     # unzip
-    nodditoolbox_wf.connect(inputnode, 'noddi_preprocessed_dwi', gunzip_dwi, 'in_file')
-    nodditoolbox_wf.connect(inputnode, 'noddi_preprocessed_mask', gunzip_mask, 'in_file')
+    nodditoolbox_wf.connect(inputnode,
+                            'noddi_preprocessed_dwi',
+                            gunzip_dwi,
+                            'in_file')
+    nodditoolbox_wf.connect(inputnode,
+                            'noddi_preprocessed_mask',
+                            gunzip_mask,
+                            'in_file')
     # fit matlab toolbox
-    nodditoolbox_wf.connect(gunzip_dwi, 'out_file', nodditoolbox, 'noddi_img')
-    nodditoolbox_wf.connect(gunzip_mask, 'out_file', nodditoolbox, 'brain_mask')
-    nodditoolbox_wf.connect(gunzip_mask, 'out_file', nodditoolbox, 'roi_mask')
-    nodditoolbox_wf.connect(inputnode, 'noddi_preprocessed_bvec', nodditoolbox, 'bvec')
-    nodditoolbox_wf.connect(inputnode, 'noddi_preprocessed_bval', nodditoolbox, 'bval')
-    nodditoolbox_wf.connect(inputnode, 'subject_id_list', nodditoolbox, 'prefix')
+    nodditoolbox_wf.connect(gunzip_dwi,
+                            'out_file',
+                            nodditoolbox,
+                            'noddi_img')
+    nodditoolbox_wf.connect(gunzip_mask,
+                            'out_file',
+                            nodditoolbox,
+                            'brain_mask')
+    nodditoolbox_wf.connect(gunzip_mask,
+                            'out_file',
+                            nodditoolbox,
+                            'roi_mask')
+    nodditoolbox_wf.connect(inputnode,
+                            'noddi_preprocessed_bvec',
+                            nodditoolbox,
+                            'bvec')
+    nodditoolbox_wf.connect(inputnode,
+                            'noddi_preprocessed_bval',
+                            nodditoolbox,
+                            'bval')
+    nodditoolbox_wf.connect(inputnode,
+                            'subject_id_list',
+                            nodditoolbox,
+                            'prefix')
     # nodditoolbox_wf.connect(inputnode, 'bStep', nodditoolbox, 'bStep')
-    nodditoolbox_wf.connect(inputnode, 'noddi_toolbox_dir', nodditoolbox, 'noddi_toolbox_dir')
-    nodditoolbox_wf.connect(inputnode, 'nifti_matlib_dir', nodditoolbox, 'nifti_matlib_dir')
-    nodditoolbox_wf.connect(inputnode, 'subject_id_list', capsnode, 'subject_id_list')
-    nodditoolbox_wf.connect(capsnode, 'temp_folder', nodditoolbox, 'output_dir')
+    nodditoolbox_wf.connect(inputnode,
+                            'noddi_toolbox_dir',
+                            nodditoolbox,
+                            'noddi_toolbox_dir')
+    nodditoolbox_wf.connect(inputnode,
+                            'nifti_matlib_dir',
+                            nodditoolbox,
+                            'nifti_matlib_dir')
+    nodditoolbox_wf.connect(inputnode,
+                            'subject_id_list',
+                            capsnode,
+                            'subject_id_list')
+    nodditoolbox_wf.connect(capsnode,
+                            'temp_folder',
+                            nodditoolbox,
+                            'output_dir')
 
-    nodditoolbox_wf.connect(nodditoolbox, 'fit_icvf', zip_icvf, 'in_file')
-    nodditoolbox_wf.connect(nodditoolbox, 'fit_isovf', zip_isovf, 'in_file')
-    nodditoolbox_wf.connect(nodditoolbox, 'fit_od', zip_odi, 'in_file')
+    nodditoolbox_wf.connect(nodditoolbox,
+                            'fit_icvf',
+                            zip_icvf,
+                            'in_file')
+    nodditoolbox_wf.connect(nodditoolbox,
+                            'fit_isovf',
+                            zip_isovf,
+                            'in_file')
+    nodditoolbox_wf.connect(nodditoolbox,
+                            'fit_od',
+                            zip_odi,
+                            'in_file')
     # output node
-    nodditoolbox_wf.connect(zip_icvf, 'out_file', outputnode, 'fit_icvf')
-    nodditoolbox_wf.connect(zip_isovf, 'out_file', outputnode, 'fit_isovf')
-    nodditoolbox_wf.connect(zip_odi, 'out_file', outputnode, 'fit_od')
+    nodditoolbox_wf.connect(zip_icvf,
+                            'out_file',
+                            outputnode,
+                            'fit_icvf')
+    nodditoolbox_wf.connect(zip_isovf,
+                            'out_file',
+                            outputnode,
+                            'fit_isovf')
+    nodditoolbox_wf.connect(zip_odi,
+                            'out_file',
+                            outputnode,
+                            'fit_od')
 
     return nodditoolbox_wf
 

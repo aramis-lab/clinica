@@ -63,8 +63,11 @@ def compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     from clinica.utils.stream import cprint
     from functools import reduce
 
-    pet_av45_col = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
-                   'Series_ID', 'Image_ID', 'Original']
+    pet_av45_col = [
+            'Subject_ID', 'VISCODE', 'Visit',
+            'Sequence', 'Scan_Date', 'Study_ID',
+            'Series_ID', 'Image_ID', 'Original'
+            ]
 
     pet_av45_df = pd.DataFrame(columns=pet_av45_col)
     av45qc_path = path.join(csv_dir, 'AV45QC.csv')

@@ -609,7 +609,7 @@ def pib_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix
             pass
         else:
             output_image = dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dcm2niix',
-                                    dcm2nii='dcm2nii', mri_convert='mri_convert')
+                                        dcm2nii='dcm2nii', mri_convert='mri_convert')
 
 
 def flute_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
@@ -656,7 +656,7 @@ def flute_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2ni
             pass
         else:
             output_image = dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dcm2niix',
-                                    dcm2nii='dcm2nii', mri_convert='mri_convert')
+                                        dcm2nii='dcm2nii', mri_convert='mri_convert')
 
 
 # Covert the AIBL T1 images into the BIDS specification.
@@ -703,7 +703,7 @@ def t1_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
             pass
         else:
             output_image = dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dcm2niix',
-                                    dcm2nii='dcm2nii', mri_convert='mri_convert')
+                                        dcm2nii='dcm2nii', mri_convert='mri_convert')
 
 
 # -- Methods for the clinical data --

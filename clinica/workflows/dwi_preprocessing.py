@@ -155,8 +155,11 @@ def b0_flirt_pipeline(num_b0s, name='b0_coregistration'):
     bet_ref = pe.Node(fsl.BET(frac=0.3, mask=True, robust=True),
                       name='bet_ref')
 
-    dilate = pe.Node(fsl.maths.MathsCommand(nan2zeros=True,
-                     args='-kernel sphere 5 -dilM'), name='mask_dilate')
+    dilate = pe.Node(
+            fsl.maths.MathsCommand(
+                nan2zeros=True,
+                args='-kernel sphere 5 -dilM'),
+            name='mask_dilate')
 
     flirt = pe.MapNode(fsl.FLIRT(
         interp='spline', dof=6, bins=50, save_log=True,
@@ -225,16 +228,29 @@ def dwi_flirt(name='DWICoregistration', excl_nodiff=False, flirt_param={}):
 
     from nipype.workflows.dmri.fsl.utils import enhance
 
-    inputnode = pe.Node(niu.IdentityInterface(fields=['reference',
-                        'in_file', 'ref_mask', 'in_xfms', 'in_bval']),
-                        name='inputnode')
+    inputnode = pe.Node(
+            niu.IdentityInterface(
+                fields=['reference',
+                        'in_file',
+                        'ref_mask',
+                        'in_xfms',
+                        'in_bval']),
+            name='inputnode')
 
-    initmat = pe.Node(niu.Function(input_names=['in_bval', 'in_xfms',
-                      'excl_nodiff'], output_names=['init_xfms'],
-                                   function=_checkinitxfm), name='InitXforms')
+    initmat = pe.Node(
+            niu.Function(
+                input_names=['in_bval',
+                             'in_xfms',
+                             'excl_nodiff'],
+                output_names=['init_xfms'],
+                function=_checkinitxfm),
+            name='InitXforms')
     initmat.inputs.excl_nodiff = excl_nodiff
-    dilate = pe.Node(fsl.maths.MathsCommand(nan2zeros=True,
-                     args='-kernel sphere 5 -dilM'), name='MskDilate')
+    dilate = pe.Node(
+            fsl.maths.MathsCommand(
+                nan2zeros=True,
+                args='-kernel sphere 5 -dilM'),
+            name='MskDilate')
     split = pe.Node(fsl.Split(dimension='t'), name='SplitDWIs')
     n4 = pe.Node(ants.N4BiasFieldCorrection(dimension=3), name='Bias')
     flirt = pe.MapNode(fsl.FLIRT(**flirt_param), name='CoRegistration',
@@ -242,8 +258,12 @@ def dwi_flirt(name='DWICoregistration', excl_nodiff=False, flirt_param={}):
     thres = pe.MapNode(fsl.Threshold(thresh=0.0), iterfield=['in_file'],
                        name='RemoveNegative')
     merge = pe.Node(fsl.Merge(dimension='t'), name='MergeDWIs')
-    outputnode = pe.Node(niu.IdentityInterface(fields=['out_file',
-                         'out_xfms', 'out_ref']), name='outputnode')
+    outputnode = pe.Node(
+            niu.IdentityInterface(
+                fields=['out_file',
+                        'out_xfms',
+                        'out_ref']),
+            name='outputnode')
     enhb0 = pe.Node(niu.Function(
         input_names=['in_file', 'in_mask', 'clip_limit'],
         output_names=['out_file'], function=enhance), name='B0Equalize')
@@ -352,10 +372,12 @@ def hmc_pipeline(name='motion_correct'):
         fields=['in_file', 'in_bvec', 'in_bval', 'in_mask', 'ref_num']),
         name='inputnode')
 
-    split = pe.Node(niu.Function(function=hmc_split,
-                    input_names=['in_file', 'in_bval', 'ref_num'],
-                    output_names=['out_ref', 'out_mov', 'out_bval', 'volid']),
-                    name='split_ref_moving')
+    split = pe.Node(
+            niu.Function(
+                function=hmc_split,
+                input_names=['in_file', 'in_bval', 'ref_num'],
+                output_names=['out_ref', 'out_mov', 'out_bval', 'volid']),
+            name='split_ref_moving')
 
     flirt = dwi_flirt(flirt_param=params)
 
@@ -597,8 +619,14 @@ def eddy_fsl_pipeline(epi_param, name='eddy_fsl'):
     import nipype.pipeline.engine as pe          # pypeline engine
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import eddy_fsl, generate_acq, generate_index, b0_indices
 
-    inputnode = pe.Node(niu.IdentityInterface(fields=['in_file',
-                        'in_bvec', 'in_bval', 'in_mask', 'ref_b0']), name='inputnode')
+    inputnode = pe.Node(
+            niu.IdentityInterface(
+                fields=['in_file',
+                        'in_bvec',
+                        'in_bval',
+                        'in_mask',
+                        'ref_b0']),
+            name='inputnode')
 
     generate_acq = pe.Node(niu.Function(function=generate_acq,
                                         input_names=['in_b0', 'epi_param'],
@@ -691,14 +719,30 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
     apply_xfm = pe.Node(interface=fsl.preprocess.ApplyXFM(), name='apply_xfm')
     apply_xfm.inputs.apply_xfm = True
 
-    expend_matrix = pe.Node(interface=niu.Function(input_names=['in_matrix', 'in_bvec'], output_names=['out_matrix_list'], function=expend_matrix_list), name='expend_matrix')
+    expend_matrix = pe.Node(
+            interface=niu.Function(
+                input_names=['in_matrix', 'in_bvec'],
+                output_names=['out_matrix_list'],
+                function=expend_matrix_list),
+            name='expend_matrix')
 
-    rot_bvec = pe.Node(niu.Function(input_names=['in_matrix', 'in_bvec'],
-                       output_names=['out_file'], function=rotate_bvecs),
-                       name='Rotate_Bvec')
+    rot_bvec = pe.Node(
+            niu.Function(
+                input_names=['in_matrix', 'in_bvec'],
+                output_names=['out_file'],
+                function=rotate_bvecs),
+            name='Rotate_Bvec')
 
-    antsRegistrationSyNQuick = pe.Node(interface=niu.Function(input_names=['fix_image', 'moving_image'], output_names=['image_warped', 'affine_matrix', 'warp', 'inverse_warped', 'inverse_warp'],
-                                                              function=ants_registration_syn_quick), name='antsRegistrationSyNQuick')
+    antsRegistrationSyNQuick = pe.Node(
+            interface=niu.Function(
+                input_names=['fix_image', 'moving_image'],
+                output_names=['image_warped',
+                              'affine_matrix',
+                              'warp',
+                              'inverse_warped',
+                              'inverse_warp'],
+                function=ants_registration_syn_quick),
+            name='antsRegistrationSyNQuick')
 
     c3d_flirt2ants = pe.Node(c3.C3dAffineTool(), name='fsl_reg_2_itk')
     c3d_flirt2ants.inputs.itk_transform = True
