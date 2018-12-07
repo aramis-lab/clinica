@@ -498,7 +498,7 @@ class VB_LearningCurveRepHoldOut_DualSVM(base.MLWorkflow):
 class RB_RepKFold_DualSVM(base.MLWorkflow):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type,  atlas,
-                 output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3,n_folds = 10,
+                 output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3, n_folds=10,
                  grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17), splits_indices=None):
         self._output_dir = output_dir
         self._n_threads = n_threads
@@ -590,8 +590,6 @@ class TB_RepHoldOut_DualSVM(base.MLWorkflow):
         self._algorithm.save_parameters(best_params, classifier_dir)
         weights = self._algorithm.save_weights(classifier, x, classifier_dir)
 
-        #self._input.save_weights_as_nifti(weights, classifier_dir)
-
         self._validation.save_results(self._output_dir)
 
 
@@ -648,7 +646,7 @@ class TB_RepHoldOut_RandomForest(base.MLWorkflow):
         # self._validation.save_results(self._output_dir)
 
 
-###############################################svm reg
+# SVM reg
 
 class VBREG_RepHoldOut_DualSVM(base.MLWorkflow):
 
@@ -666,7 +664,7 @@ class VBREG_RepHoldOut_DualSVM(base.MLWorkflow):
         self._splits_indices = splits_indices
 
         self._input = input.CAPSVoxelBasedInputREGSVM(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
-                                                image_type, fwhm, modulated, pvc, mask_zeros, precomputed_kernel)
+                                                      image_type, fwhm, modulated, pvc, mask_zeros, precomputed_kernel)
 
         self._validation = None
         self._algorithm = None

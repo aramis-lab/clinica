@@ -4,7 +4,7 @@ import clinica.pipelines.engine as cpe
 
 __author__ = "Jorge Samper Gonzalez"
 __copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
-__credits__ = [ "Jorge Samper Gonzalez"]
+__credits__ = ["Jorge Samper Gonzalez"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Jorge Samper Gonzalez"
@@ -196,13 +196,14 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         mlab_home = os.getenv("MATLABCMD")
         mlab.MatlabCommand.set_default_matlab_cmd(mlab_home)
         mlab.MatlabCommand.set_default_paths(spm_home)
-        
+
         if 'SPMSTANDALONE_HOME' in os.environ:
             if 'MCR_HOME' in os.environ:
-                matlab_cmd = os.path.join(os.environ['SPMSTANDALONE_HOME'],
-                        'run_spm12.sh') \
-                        + ' ' + os.environ['MCR_HOME'] \
-                        + ' script'
+                matlab_cmd = (
+                        os.path.join(
+                            os.environ['SPMSTANDALONE_HOME'], 'run_spm12.sh')
+                        + ' ' + os.environ['MCR_HOME']
+                        + ' script')
                 spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
                 version = spm.SPMCommand().version
             else:
@@ -210,8 +211,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
                                        + 'SPMSTANDALONE_HOME has been found')
         else:
             version = spm.Info.getinfo()
-        
-                
+
         if version:
             if isinstance(version, dict):
                 spm_path = version['path']
@@ -230,7 +230,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
                     raise RuntimeError('SPM standalone version not supported. Please upgrade SPM standalone.')
         else:
             raise RuntimeError('SPM could not be found. Please verify your SPM_HOME environment variable.')
-        
+
         # Unzipping
         # =========
         unzip_node = npe.MapNode(nutil.Function(input_names=['in_file'],

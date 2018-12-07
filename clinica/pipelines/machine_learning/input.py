@@ -273,7 +273,7 @@ class CAPSRegionBasedInput(CAPSInput):
         if self._image_type == 'T1':
             self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
                                       't1/spm/dartel/group-' + self._group_id,
-                                      'atlas_statistics/','%s_%s_T1w_space-%s_map-graymatter_statistics.tsv'
+                                      'atlas_statistics/', '%s_%s_T1w_space-%s_map-graymatter_statistics.tsv'
                                       % (self._subjects[i], self._sessions[i], self._atlas))
                             for i in range(len(self._subjects))]
         else:
@@ -437,7 +437,6 @@ class CAPSTSVBasedInput(CAPSInput):
 
         pass
 
-
     def get_x(self):
         """
 
@@ -445,10 +444,8 @@ class CAPSTSVBasedInput(CAPSInput):
 
         """
 
-        #if self._x is not None:
+        # if self._x is not None:
         #    return self._x
-
-
 
         print('Loading TSV subjects')
         string = str('group-' + self._group_id + '_T1w_space-' + self._atlas + '_map-graymatter')
@@ -470,10 +467,9 @@ class CAPSTSVBasedInput(CAPSInput):
 
         """
 
-        #output_filename = path.join(output_dir, 'weights.nii.gz')
+        # output_filename = path.join(output_dir, 'weights.nii.gz')
 
-
-        #rbio.weights_to_nifti(weights, self._atlas, output_filename)
+        # rbio.weights_to_nifti(weights, self._atlas, output_filename)
         pass
 
 
@@ -496,7 +492,7 @@ class CAPSVoxelBasedInputREGSVM(CAPSInput):
         """
 
         super(CAPSVoxelBasedInputREGSVM, self).__init__(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
-                                                  image_type, precomputed_kernel=precomputed_kernel)
+                                                        image_type, precomputed_kernel=precomputed_kernel)
 
         self._fwhm = fwhm
         self._modulated = modulated

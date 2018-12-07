@@ -29,7 +29,7 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         """Define the sub-command arguments
         """
 
-        #self._args.add_argument("bids_directory",
+        # self._args.add_argument("bids_directory",
         #                        help='Path to the BIDS directory.')
         self._args.add_argument("caps_directory",
                                 help='Path to the CAPS directory.')

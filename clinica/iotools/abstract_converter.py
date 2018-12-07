@@ -11,5 +11,3 @@ class Converter:
 
     @abc.abstractmethod
     def convert_clinical_data(self, src, dst): pass
-
-

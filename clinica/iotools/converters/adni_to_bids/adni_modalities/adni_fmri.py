@@ -13,7 +13,6 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-
 def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
     """
 
@@ -37,13 +36,12 @@ def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
 
     cprint('Calculating paths of fMRI images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
     if path.isfile(path.join(dest_dir, 'conversion_info', 'fmri_paths.tsv')):
-        images = pd.io.parsers.read_csv(path.join(dest_dir, 'conversion_info', 'fmri_paths.tsv'), sep = '\t')
+        images = pd.io.parsers.read_csv(path.join(dest_dir, 'conversion_info', 'fmri_paths.tsv'), sep='\t')
     else:
 
         images = compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list)
 
     cprint('Paths of fMRI images found. Exporting images into BIDS ...')
-
 
     fmri_paths_to_bids(dest_dir, images)
     cprint('fMRI conversion done.')
@@ -137,12 +135,11 @@ def compute_fmri_path(source_dir, clinical_dir, dest_dir, subjs_list):
                     if not fmri_metadata.empty:
                         fmri_metadata = fmri_metadata.iloc[0]
 
-                        if not 'Philips' in fmri_metadata['Scanner']:
+                        if 'Philips' not in fmri_metadata['Scanner']:
                             cprint('No Philips scanner for ' + subj + ' visit ' + viscode + '. Skipped.')
                             continue
 
-                        elif 4 in mayo_mri_imageqc[mayo_mri_imageqc['loni_image'] == 'I' + str(fmri_imageuid)][
-                            'series_quality'].values:
+                        elif 4 in mayo_mri_imageqc[mayo_mri_imageqc['loni_image'] == 'I' + str(fmri_imageuid)]['series_quality'].values:
                             cprint('Bad scan quality for ' + subj + ' visit ' + viscode + '. Skipped.')
                             continue
 
@@ -236,7 +233,6 @@ def fmri_paths_to_bids(dest_dir, fmri_paths, mod_to_update=False):
                 if not os.path.exists(path.join(dest_dir, bids_id)):
                     os.mkdir(path.join(dest_dir, bids_id))
                 os.mkdir(path.join(dest_dir, bids_id, bids_ses_id))
-                #os.mkdir(ses_path)
 
             fmri_info = fmri_paths[(fmri_paths['Subject_ID'] == subjs_list[i]) & (fmri_paths['VISCODE'] == ses)]
 
@@ -245,11 +241,14 @@ def fmri_paths_to_bids(dest_dir, fmri_paths, mod_to_update=False):
                     if not os.path.exists(path.join(ses_path, 'func')):
                         os.mkdir(path.join(ses_path, 'func'))
                     fmri_path = fmri_info['Path'].values[0]
-                    dcm_to_convert = adni_utils.check_two_dcm_folder(fmri_path, dest_dir,
-                                                                fmri_info['IMAGEUID'].values[0])
-                    cprint(os.path.join(ses_path, 'func', bids_file_name +'_task-rest_bold.nii.gz'))
+                    dcm_to_convert = adni_utils.check_two_dcm_folder(
+                            fmri_path, dest_dir,
+                            fmri_info['IMAGEUID'].values[0])
+                    cprint(os.path.join(
+                        ses_path, 'func',
+                        bids_file_name + '_task-rest_bold.nii.gz'))
 
-                    if not os.path.isfile(os.path.join(ses_path, 'func', bids_file_name +'_task-rest_bold.nii.gz')):
+                    if not os.path.isfile(os.path.join(ses_path, 'func', bids_file_name + '_task-rest_bold.nii.gz')):
 
                         bids.convert_fmri(dcm_to_convert, path.join(ses_path, 'func'), bids_file_name)
                     else:
@@ -352,10 +351,8 @@ def compute_fmri_path_refactoring(source_dir, clinical_dir, dest_dir, subjs_list
     # Load the requested clinical data
     mayo_mri_fmri_path = path.join(clinical_dir, 'MAYOADIRL_MRI_FMRI_09_15_16.csv')
     mayo_mri_imageqc_path = path.join(clinical_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
-    #ida_mr_metadata_path = path.join(clinical_dir, 'IDA_MR_Metadata_Listing.csv')
 
     mayo_mri_fmri = pd.io.parsers.read_csv(mayo_mri_fmri_path, sep=',')
-   # ida_mr_metadata = pd.io.parsers.read_csv(ida_mr_metadata_path, sep=',')
     mayo_mri_imageqc = pd.io.parsers.read_csv(mayo_mri_imageqc_path, sep=',')
 
     for subj in subjs_list:
@@ -401,12 +398,11 @@ def compute_fmri_path_refactoring(source_dir, clinical_dir, dest_dir, subjs_list
                     if not fmri_metadata.empty:
                         fmri_metadata = fmri_metadata.iloc[0]
 
-                        if not 'Philips' in fmri_metadata['Scanner']:
+                        if 'Philips' not in fmri_metadata['Scanner']:
                             cprint('No Philips scanner for ' + subj + ' visit ' + viscode + '. Skipped.')
                             continue
 
-                        elif 4 in mayo_mri_imageqc[mayo_mri_imageqc['loni_image'] == 'I' + str(fmri_imageuid)][
-                            'series_quality'].values:
+                        elif 4 in mayo_mri_imageqc[mayo_mri_imageqc['loni_image'] == 'I' + str(fmri_imageuid)]['series_quality'].values:
                             cprint('Bad scan quality for ' + subj + ' visit ' + viscode + '. Skipped.')
                             continue
 

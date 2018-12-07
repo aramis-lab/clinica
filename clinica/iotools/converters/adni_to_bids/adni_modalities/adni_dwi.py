@@ -145,7 +145,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     for conv_error in conversion_errors:
         error_indices.append((dwi_df.Enhanced == False)
                              & (dwi_df.Subject_ID == conv_error[0])
-                             & (dwi_df.VISCODE == conv_error[1]))
+                             & (dwi_df.VISCODE == conv_error[1]))  # noqa
 
     indices_to_remove = dwi_df.index[reduce(operator.or_, error_indices, False)]
     dwi_df.drop(indices_to_remove, inplace=True)
@@ -287,9 +287,9 @@ def dwi_paths_to_bids(images, dest_dir, mod_to_update=False):
 
                     # If dcm2niix didn't work use dcm2nii
                     # print path.join(dest_dir, bids_name + '.nii.gz')
-                    if not os.path.exists(path.join(bids_dest_dir, bids_name + '.nii.gz')) or not os.path.exists(
-                                    path.join(bids_dest_dir, bids_name + '.bvec') or not os.path.exists(
-                                    path.join(bids_dest_dir, bids_name + '.bval'))):
+                    if (not os.path.exists(path.join(bids_dest_dir, bids_name + '.nii.gz'))
+                            or not os.path.exists(path.join(bids_dest_dir, bids_name + '.bvec'))
+                            or not os.path.exists(path.join(bids_dest_dir, bids_name + '.bval'))):
                         cprint('\nConversion with dcm2niix failed, trying with dcm2nii')
 
                         # Find all the files eventually created by dcm2niix and remove them

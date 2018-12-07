@@ -15,106 +15,152 @@ import os
 
 if 'SPMSTANDALONE_HOME' in os.environ:
     if 'MCR_HOME' in os.environ:
-        matlab_cmd = os.path.join(os.environ['SPMSTANDALONE_HOME'],
-                '/run_spm12.sh') \
-                + ' ' + os.environ['MCR_HOME'] \
-                + ' script'
+        matlab_cmd = (
+                os.path.join(
+                    os.environ['SPMSTANDALONE_HOME'], '/run_spm12.sh')
+                + ' ' + os.environ['MCR_HOME']
+                + ' script')
         spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
 
+
 class RealignUnwarpInputSpec(SPMCommandInputSpec):
-    scans = traits.Either(traits.List(File(exists=True)), File(exists=True),
-        mandatory=True, copyfile=True,
-        field='data.scans',
-        desc='scans for this session')
-    pmscan = File(mandatory=True, exists=True, copyfile=False,
-        field='data.pmscan',
-        desc='phase map (vdm* file)')
+    scans = traits.Either(
+            traits.List(File(exists=True)),
+            File(exists=True),
+            mandatory=True, copyfile=True,
+            field='data.scans',
+            desc='scans for this session')
+    pmscan = File(
+            mandatory=True,
+            exists=True,
+            copyfile=False,
+            field='data.pmscan',
+            desc='phase map (vdm* file)')
     # Estimation Options
-    quality = traits.Range(low=0.0, high=1.0,
-        field='eoptions.quality',
-        desc='0.1 = fast, 1.0 = precise')
-    fwhm = traits.Range(low=0.0,
-        field='eoptions.fwhm',
-        desc='gaussian smoothing kernel width')
-    separation = traits.Range(low=0.0,
-        field='eoptions.sep',
-        desc='sampling separation in mm')
+    quality = traits.Range(
+            low=0.0,
+            high=1.0,
+            field='eoptions.quality',
+            desc='0.1 = fast, 1.0 = precise')
+    fwhm = traits.Range(
+            low=0.0,
+            field='eoptions.fwhm',
+            desc='gaussian smoothing kernel width')
+    separation = traits.Range(
+            low=0.0,
+            field='eoptions.sep',
+            desc='sampling separation in mm')
     register_to_mean = traits.Bool(
-        field='eoptions.rtm',
-        desc='Indicate whether realignment is done to the mean image')
-    weight_img = File(exists=True,
-        field='eoptions.weight',
-        desc='filename of weighting image')
-    interp = traits.Range(low=0, high=7,
-        field='eoptions.interp',
-        desc='degree of b-spline used for interpolation')
-    wrap = traits.List(traits.Int(), minlen=3, maxlen=3,
-        field='eoptions.wrap',
-        desc='Check if interpolation should wrap in [x,y,z]')
+            field='eoptions.rtm',
+            desc='Indicate whether realignment is done to the mean image')
+    weight_img = File(
+            exists=True,
+            field='eoptions.weight',
+            desc='filename of weighting image')
+    interp = traits.Range(
+            low=0,
+            high=7,
+            field='eoptions.interp',
+            desc='degree of b-spline used for interpolation')
+    wrap = traits.List(
+            traits.Int(),
+            minlen=3,
+            maxlen=3,
+            field='eoptions.wrap',
+            desc='Check if interpolation should wrap in [x,y,z]')
     # Unwarp Options
-    basfcn = traits.List(traits.Int(), minlen=2, maxlen=2,
-        field='uweoptions.basfcn',
-        desc='basic functions')
-    regorder = traits.Range(low=0, high=3,
-        field='uweoptions.regorder',
-        desc='regularization')
-    regfactor = traits.Range(low=0,
-        field='uweoptions.lambda',
-        desc='regularization factor')
+    basfcn = traits.List(
+            traits.Int(),
+            minlen=2,
+            maxlen=2,
+            field='uweoptions.basfcn',
+            desc='basic functions')
+    regorder = traits.Range(
+            low=0,
+            high=3,
+            field='uweoptions.regorder',
+            desc='regularization')
+    regfactor = traits.Range(
+            low=0,
+            field='uweoptions.lambda',
+            desc='regularization factor')
     jm = traits.Bool(
-        field='uweoptions.jm',
-        desc='Jacobian deformations')
-    fot = traits.List(traits.Int(), minlen=2, maxlen=2,
-        field='uweoptions.fot',
-        desc='first-order effects')
-    sot = traits.List(traits.Int(), minlen=2, maxlen=2,
-        field='uweoptions.sot',
-        desc='second-order effects')
-    uwfwhm = traits.Range(low=0,
-        field='uweoptions.uwfwhm',
-        desc='smoothing for unwarp')
+            field='uweoptions.jm',
+            desc='Jacobian deformations')
+    fot = traits.List(
+            traits.Int(),
+            minlen=2,
+            maxlen=2,
+            field='uweoptions.fot',
+            desc='first-order effects')
+    sot = traits.List(
+            traits.Int(),
+            minlen=2,
+            maxlen=2,
+            field='uweoptions.sot',
+            desc='second-order effects')
+    uwfwhm = traits.Range(
+            low=0,
+            field='uweoptions.uwfwhm',
+            desc='smoothing for unwarp')
     rem = traits.Bool(
-        field='uweoptions.rem',
-        desc='')
-    noi = traits.Range(low=0,
-        field='uweoptions.noi',
-        desc='maximum number of iterations')
-    expround = traits.Enum('Average', 'First', 'Last',
-        field='uweoptions.expround',
-        desc='one of: Average, First, Last')
+            field='uweoptions.rem',
+            desc='')
+    noi = traits.Range(
+            low=0,
+            field='uweoptions.noi',
+            desc='maximum number of iterations')
+    expround = traits.Enum(
+            'Average',
+            'First',
+            'Last',
+            field='uweoptions.expround',
+            desc='one of: Average, First, Last')
     # Reslice Options
-    write_which = traits.ListInt([2, 1],
-        minlen=2, maxlen=2, usedefault=True,
-        field='uwroptions.uwwhich',
-        desc='determines which images to reslice')
-    write_interp = traits.Range(low=0, high=7,
-        field='uwroptions.rinterp',
-        desc='degree of b-spline used for interpolation')
-    write_wrap = traits.List(traits.Int(), minlen=3, maxlen=3,
-        field='uwroptions.wrap',
-        desc='Check if interpolation should wrap in [x,y,z]')
+    write_which = traits.ListInt(
+            [2, 1],
+            minlen=2,
+            maxlen=2,
+            usedefault=True,
+            field='uwroptions.uwwhich',
+            desc='determines which images to reslice')
+    write_interp = traits.Range(
+            low=0,
+            high=7,
+            field='uwroptions.rinterp',
+            desc='degree of b-spline used for interpolation')
+    write_wrap = traits.List(
+            traits.Int(),
+            minlen=3,
+            maxlen=3,
+            field='uwroptions.wrap',
+            desc='Check if interpolation should wrap in [x,y,z]')
     write_mask = traits.Bool(
-        field='uwroptions.mask',
-        desc='True/False mask output image')
-    out_prefix = traits.String('u', usedefault=True,
-        field='uwroptions.prefix',
-        desc='realigned output prefix')
+            field='uwroptions.mask',
+            desc='True/False mask output image')
+    out_prefix = traits.String(
+            'u',
+            usedefault=True,
+            field='uwroptions.prefix',
+            desc='realigned output prefix')
 
 
 class RealignUnwarpOutputSpec(TraitedSpec):
     mean_image = File(exists=True, desc='Mean image file from the realignment')
     modified_scans = traits.Either(
-        traits.List(File(exists=True)), File(exists=True),
-        desc=('Copies of all files passed to '
-              'scans. Headers will have '
-              'been modified to align all '
-              'images with the first, or '
-              'optionally to first do that, '
-              'extract a mean image, and '
-              're-align to that mean image.'))
+            traits.List(File(exists=True)),
+            File(exists=True),
+            desc=('Copies of all files passed to '
+                  'scans. Headers will have '
+                  'been modified to align all '
+                  'images with the first, or '
+                  'optionally to first do that, '
+                  'extract a mean image, and '
+                  're-align to that mean image.')
+            )
     runwarped_files = traits.Either(
-        traits.List(File(exists=True)), File(exists=True),
-        desc='These will be the resliced and unwarped files.')
+            traits.List(File(exists=True)), File(exists=True),
+            desc='These will be the resliced and unwarped files.')
     realignment_parameters = OutputMultiPath(File(exists=True),
                                              desc=('Estimated translation and '
                                                    'rotation parameters'))
@@ -170,7 +216,6 @@ class RealignUnwarp(SPMCommand):
 
         outputs['modified_scans'] = self.inputs.scans
 
-
         first_image = filename_to_list(self.inputs.scans)[0]
         if resliced_mean:
             outputs['mean_image'] = fname_presuffix(first_image,
@@ -194,83 +239,146 @@ class RealignUnwarp(SPMCommand):
 
 
 class FieldMapInputSpec(SPMCommandInputSpec):
-    jobtype = traits.Enum('calculatevdm', 'applyvdm', usedefault=True,
-        desc='one of: calculatevdm, applyvdm')
-    phase = File(mandatory=True, exists=True, copyfile=False,
-        field='subj.data.presubphasemag.phase',
-        desc='presubstracted phase file')
-    magnitude = File(mandatory=True, exists=True, copyfile=False,
-        field='subj.data.presubphasemag.magnitude',
-        desc='presubstracted magnitude file')
-    et = traits.List(traits.Float(), minlen=2, maxlen=2, mandatory=True,
-        field='subj.defaults.defaultsval.et',
-        desc='short and long echo times')
-    maskbrain = traits.Bool(True, usedefault=True,
-        field='subj.defaults.defaultsval.maskbrain',
-        desc='masking or no masking of the brain')
-    blipdir = traits.Enum(1, -1, mandatory=True,
-        field='subj.defaults.defaultsval.blipdir',
-        desc='polarity of the phase-encode blips')
-    tert = traits.Float(mandatory=True,
-        field='subj.defaults.defaultsval.tert',
-        desc='total EPI readout time')
-    epifm = traits.Bool(False, usedefault=True,
-        field='subj.defaults.defaultsval.epifm',
-        desc='epi-based field map');
-    ajm = traits.Bool(False, usedefault=True,
-        field='subj.defaults.defaultsval.ajm',
-        desc='jacobian modulation');
+    jobtype = traits.Enum(
+            'calculatevdm',
+            'applyvdm',
+            usedefault=True,
+            desc='one of: calculatevdm, applyvdm')
+    phase = File(
+            mandatory=True,
+            exists=True,
+            copyfile=False,
+            field='subj.data.presubphasemag.phase',
+            desc='presubstracted phase file')
+    magnitude = File(
+            mandatory=True,
+            exists=True,
+            copyfile=False,
+            field='subj.data.presubphasemag.magnitude',
+            desc='presubstracted magnitude file')
+    et = traits.List(
+            traits.Float(),
+            minlen=2,
+            maxlen=2,
+            mandatory=True,
+            field='subj.defaults.defaultsval.et',
+            desc='short and long echo times')
+    maskbrain = traits.Bool(
+            True,
+            usedefault=True,
+            field='subj.defaults.defaultsval.maskbrain',
+            desc='masking or no masking of the brain')
+    blipdir = traits.Enum(
+            1,
+            -1,
+            mandatory=True,
+            field='subj.defaults.defaultsval.blipdir',
+            desc='polarity of the phase-encode blips')
+    tert = traits.Float(
+            mandatory=True,
+            field='subj.defaults.defaultsval.tert',
+            desc='total EPI readout time')
+    epifm = traits.Bool(
+            False,
+            usedefault=True,
+            field='subj.defaults.defaultsval.epifm',
+            desc='epi-based field map')
+    ajm = traits.Bool(
+            False,
+            usedefault=True,
+            field='subj.defaults.defaultsval.ajm',
+            desc='jacobian modulation')
     # Unwarping defaults parameters
-    method = traits.Enum('Mark3D', 'Mark2D', 'Huttonish', usedefault=True,
-        desc='One of: Mark3D, Mark2D, Huttonish',
-        field='subj.defaults.defaultsval.uflags.method');
-    fwhm = traits.Range(low=0, value=10, usedefault=True,
-        field='subj.defaults.defaultsval.uflags.fwhm',
-        desc='gaussian smoothing kernel width');
-    pad = traits.Range(low=0, value=0, usedefault=True,
-        field='subj.defaults.defaultsval.uflags.pad',
-        desc='padding kernel width');
-    ws = traits.Bool(True, usedefault=True,
-        field='subj.defaults.defaultsval.uflags.ws',
-        desc='weighted smoothing');
+    method = traits.Enum(
+            'Mark3D',
+            'Mark2D',
+            'Huttonish',
+            usedefault=True,
+            desc='One of: Mark3D, Mark2D, Huttonish',
+            field='subj.defaults.defaultsval.uflags.method')
+    fwhm = traits.Range(
+            low=0,
+            value=10,
+            usedefault=True,
+            field='subj.defaults.defaultsval.uflags.fwhm',
+            desc='gaussian smoothing kernel width')
+    pad = traits.Range(
+            low=0,
+            value=0,
+            usedefault=True,
+            field='subj.defaults.defaultsval.uflags.pad',
+            desc='padding kernel width')
+    ws = traits.Bool(
+            True,
+            usedefault=True,
+            field='subj.defaults.defaultsval.uflags.ws',
+            desc='weighted smoothing')
     # Brain mask defaults parameters
-    template = traits.File(copyfile=False, exists=True,
-        field='subj.defaults.defaultsval.mflags.template',
-        desc='template image for brain masking');
-    fwhm = traits.Range(low=0, value=5, usedefault=True,
-        field='subj.defaults.defaultsval.mflags.fwhm',
-        desc='gaussian smoothing kernel width');
-    nerode = traits.Range(low=0, value=2, usedefault=True,
-        field='subj.defaults.defaultsval.mflags.nerode',
-        desc='number of erosions');
-    ndilate = traits.Range(low=0, value=4, usedefault=True,
-        field='subj.defaults.defaultsval.mflags.ndilate',
-        desc='number of erosions');
-    thresh = traits.Float(0.5, usedefault=True,
-        field='subj.defaults.defaultsval.mflags.thresh',
-        desc='threshold used to create brain mask from segmented data');
-    reg = traits.Float(0.02, usedefault=True,
-        field='subj.defaults.defaultsval.mflags.reg',
-        desc='regularization value used in the segmentation');
+    template = traits.File(
+            copyfile=False,
+            exists=True,
+            field='subj.defaults.defaultsval.mflags.template',
+            desc='template image for brain masking')
+    fwhm = traits.Range(
+            low=0,
+            value=5,
+            usedefault=True,
+            field='subj.defaults.defaultsval.mflags.fwhm',
+            desc='gaussian smoothing kernel width')
+    nerode = traits.Range(
+            low=0,
+            value=2,
+            usedefault=True,
+            field='subj.defaults.defaultsval.mflags.nerode',
+            desc='number of erosions')
+    ndilate = traits.Range(
+            low=0,
+            value=4,
+            usedefault=True,
+            field='subj.defaults.defaultsval.mflags.ndilate',
+            desc='number of erosions')
+    thresh = traits.Float(
+            0.5,
+            usedefault=True,
+            field='subj.defaults.defaultsval.mflags.thresh',
+            desc='threshold used to create brain mask from segmented data')
+    reg = traits.Float(
+            0.02,
+            usedefault=True,
+            field='subj.defaults.defaultsval.mflags.reg',
+            desc='regularization value used in the segmentation')
     # EPI unwarping for quality check
-    epi = traits.File(copyfile=False, exists=True, mandatory=True,
-        field='subj.session.epi',
-        desc='EPI to unwarp');
-    matchvdm = traits.Bool(True, usedefault=True,
-        field='subj.matchvdm',
-        desc='match VDM to EPI');
-    sessname = traits.String('_run-', usedefault=True,
-        field='subj.sessname',
-        desc='VDM filename extension');
-    writeunwarped = traits.Bool(False, usedefault=True,
-        field='subj.writeunwarped',
-        desc='write unwarped EPI');
-    anat = traits.File(copyfile=False, exists=True,
-        field='subj.anat',
-        desc='anatomical image for comparison');
-    matchanat = traits.Bool(True, usedefault=True,
-        field='subj.matchanat',
-        desc='match anatomical image to EPI');
+    epi = traits.File(
+            copyfile=False,
+            exists=True,
+            mandatory=True,
+            field='subj.session.epi',
+            desc='EPI to unwarp')
+    matchvdm = traits.Bool(
+            True,
+            usedefault=True,
+            field='subj.matchvdm',
+            desc='match VDM to EPI')
+    sessname = traits.String(
+            '_run-',
+            usedefault=True,
+            field='subj.sessname',
+            desc='VDM filename extension')
+    writeunwarped = traits.Bool(
+            False,
+            usedefault=True,
+            field='subj.writeunwarped',
+            desc='write unwarped EPI')
+    anat = traits.File(
+            copyfile=False,
+            exists=True,
+            field='subj.anat',
+            desc='anatomical image for comparison')
+    matchanat = traits.Bool(
+            True,
+            usedefault=True,
+            field='subj.matchanat',
+            desc='match anatomical image to EPI')
 
 
 class FieldMapOutputSpec(TraitedSpec):
@@ -374,17 +482,17 @@ class BrainExtractionWorkflow(npe.Workflow):
         mask_node = npe.MapNode(name="ApplyMask",
                                 iterfield=["in_file", "mask_file"],
                                 interface=fsl.ApplyMask())
-        
+
         mask_node.inputs.output_type = str("NIFTI")
 
         self.connect([
-            (seg_node   , add1_node   , [('native_gm_image' , 'in_file'     )]),
+            (seg_node   , add1_node   , [('native_gm_image' , 'in_file')]),
             (seg_node   , add1_node   , [('native_wm_image' , 'operand_file')]),
-            (seg_node   , add2_node   , [('native_csf_image', 'in_file'     )]),
+            (seg_node   , add2_node   , [('native_csf_image', 'in_file')]),
             (add1_node  , add2_node   , [('out_file'        , 'operand_file')]),
-            (add2_node  , dil_node    , [('out_file'        , 'in_file'     )]),
-            (dil_node   , ero_node    , [('out_file'        , 'in_file'     )]),
-            (ero_node   , thre_node   , [('out_file'        , 'in_file'     )]),
-            (thre_node  , fill_node   , [('out_file'        , 'in_file'     )]),
-            (fill_node  , mask_node   , [('out_file'        , 'mask_file'   )]),
+            (add2_node  , dil_node    , [('out_file'        , 'in_file')]),
+            (dil_node   , ero_node    , [('out_file'        , 'in_file')]),
+            (ero_node   , thre_node   , [('out_file'        , 'in_file')]),
+            (thre_node  , fill_node   , [('out_file'        , 'in_file')]),
+            (fill_node  , mask_node   , [('out_file'        , 'mask_file')]),
         ])

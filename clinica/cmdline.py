@@ -36,7 +36,7 @@ class ClinicaClassLoader:
     def __init__(self, env='CLINICAPATH',
                  baseclass=None, reg=r".*_cli\.py$", extra_dir=""):
         self.env = env
-        if baseclass==None:
+        if baseclass is None:
             import clinica.pipelines.engine as cpe
             self.baseclass = cpe.Pipeline
         else:
@@ -77,7 +77,7 @@ class ClinicaClassLoader:
 
     def add_to_python_path(self, paths):
         for p in paths:
-            if not p in sys.path:
+            if p not in sys.path:
                 sys.path.append(p)
 
     def discover_path_with_subdir(self, path):
@@ -99,7 +99,7 @@ def execute():
     parser = ArgumentParser(add_help=False)
     parser.add_argument('-h', '--help', action='help',
                         default=argparse.SUPPRESS, help=argparse.SUPPRESS)
-    parser._positionals.title = '%sclinica expects one of the following keywords%s'  % (Fore.YELLOW, Fore.RESET)
+    parser._positionals.title = '%sclinica expects one of the following keywords%s' % (Fore.YELLOW, Fore.RESET)
     parser._optionals.title = OPTIONAL_TITLE
 
     sub_parser = parser.add_subparsers(metavar='')
@@ -121,13 +121,13 @@ def execute():
     from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_cli import T1FreeSurferCrossSectionalCLI  # noqa
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import T1VolumeTissueSegmentationCLI  # noqa
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_cli import T1VolumeCreateDartelCLI  # noqa
-    from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_cli import T1VolumeExistingDartelCLI # noqa
+    from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_cli import T1VolumeExistingDartelCLI  # noqa
     from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_cli import T1VolumeDartel2MNICLI  # noqa
     from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_cli import T1VolumeNewTemplateCLI  # noqa
-    from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import T1VolumeExistingTemplateCLI #noqa
+    from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import T1VolumeExistingTemplateCLI  # noqa
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
     from clinica.pipelines.dwi_preprocessing_noddi.dwi_preprocessing_noddi_cli import DwiPreprocessingNoddiCLI  # noqa
-    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DWIPreprocessingUsingPhaseDiffFieldmapCLI # noqa
+    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DWIPreprocessingUsingPhaseDiffFieldmapCLI  # noqa
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DWIPreprocessingUsingT1CLI  # noqa
     from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_cli import DWIProcessingDTICLI  # noqa
     from clinica.pipelines.dwi_processing_noddi.dwi_processing_noddi_cli import DwiProcessingNoddiCLI  # noqa
@@ -135,7 +135,6 @@ def execute():
     from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI  # noqa
     from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI  # noqa
     from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI  # noqa
-
 
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
                                    extra_dir="pipelines").load()

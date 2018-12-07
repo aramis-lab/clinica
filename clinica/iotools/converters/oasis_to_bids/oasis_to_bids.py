@@ -44,7 +44,7 @@ class OasisToBids(Converter):
         participants_df['diagnosis_bl'].replace([0.0, np.nan], 'CN', inplace=True)
         participants_df['diagnosis_bl'].replace([0.5, 1.0, 1.5, 2.0], 'AD', inplace=True)
         # Following line has no sense
-        #participants_df['diagnosis_bl'].replace(participants_df['diagnosis_bl']>0.0, 'AD', inplace=True)
+        # participants_df['diagnosis_bl'].replace(participants_df['diagnosis_bl']>0.0, 'AD', inplace=True)
         participants_df.to_csv(path.join(bids_dir, 'participants.tsv'), sep='\t', index=False, encoding='utf-8')
 
         # --Create sessions files--
@@ -87,7 +87,7 @@ class OasisToBids(Converter):
             subj_id = os.path.basename(subj_folder)
             print('Converting ', subj_id)
             numerical_id = (subj_id.split("_"))[1]
-            bids_id = 'sub-OASIS1'+ str(numerical_id)
+            bids_id = 'sub-OASIS1' + str(numerical_id)
             bids_subj_folder = path.join(dest_dir, bids_id)
             if not os.path.isdir(bids_subj_folder):
                 os.mkdir(bids_subj_folder)
@@ -99,6 +99,6 @@ class OasisToBids(Converter):
 
             # In order do convert the Analyze format to NIFTI the path to the .img file is required
             img_file_path = glob(path.join(t1_folder, '*.img'))[0]
-            output_path = path.join(session_folder,'anat',bids_id+'_ses-M00_T1w.nii')
+            output_path = path.join(session_folder, 'anat', bids_id+'_ses-M00_T1w.nii')
             os.system('mri_convert'+' '+img_file_path+' '+output_path)
             bids.compress_nii(output_path)

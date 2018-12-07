@@ -70,8 +70,8 @@ class fMRIPreprocessing(cpe.Pipeline):
         """
 
         input_fields = ['et', 'blipdir', 'tert', 'time_repetition', 'num_slices',
-                'magnitude1', 'slice_order', 'ref_slice',
-                'time_acquisition', 'phasediff', 'bold', 'T1w']
+                        'magnitude1', 'slice_order', 'ref_slice',
+                        'time_acquisition', 'phasediff', 'bold', 'T1w']
 
         return input_fields
 
@@ -103,7 +103,6 @@ class fMRIPreprocessing(cpe.Pipeline):
         import numpy as np
         from clinica.utils.stream import cprint
 
-
         # Reading BIDS files
         # ==================
         read_node = npe.Node(name="ReadingBIDS",
@@ -133,14 +132,14 @@ class fMRIPreprocessing(cpe.Pipeline):
         # Reading BIDS json
         # =================
 
-        read_node.inputs.et=[]
-        read_node.inputs.blipdir=[]
-        read_node.inputs.tert=[]
-        read_node.inputs.time_repetition=[]
-        read_node.inputs.num_slices=[]
-        read_node.inputs.slice_order=[]
-        read_node.inputs.ref_slice=[]
-        read_node.inputs.time_acquisition=[]
+        read_node.inputs.et = []
+        read_node.inputs.blipdir = []
+        read_node.inputs.tert = []
+        read_node.inputs.time_repetition = []
+        read_node.inputs.num_slices = []
+        read_node.inputs.slice_order = []
+        read_node.inputs.ref_slice = []
+        read_node.inputs.time_acquisition = []
 
         for i in range(len(self.subjects)):
 
@@ -160,7 +159,7 @@ class fMRIPreprocessing(cpe.Pipeline):
                     # SPM blip direction
                     # TODO: Verifiy that it is the correct way to get the blipdir
                     blipdir_raw = data['PhaseEncodingDirection']
-                    if len(blipdir_raw) > 1 and blipdir_raw[1]=='-':
+                    if len(blipdir_raw) > 1 and blipdir_raw[1] == '-':
                         read_node.inputs.blipdir.append(-1)
                     else:
                         read_node.inputs.blipdir.append(1)
@@ -190,8 +189,6 @@ class fMRIPreprocessing(cpe.Pipeline):
 
             cprint(read_node.inputs)
 
-
-
         self.connect([
             # Reading BIDS json
             (read_node, self.input_node, [('et', 'et')]),
@@ -219,8 +216,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         # Writing CAPS
         # ============
         write_node = npe.MapNode(name='WritingCAPS',
-                                 iterfield=['container']
-                                           + self.get_output_fields(),
+                                 iterfield=['container'] + self.get_output_fields(),
                                  interface=nio.DataSink(
                                          infields=self.get_output_fields()))
         write_node.inputs.base_directory = self.caps_directory
@@ -275,7 +271,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         import nipype.interfaces.spm as spm
         import nipype.pipeline.engine as npe
         from clinica.utils.io import zip_nii, unzip_nii
-        
+
         # Zipping
         # =======
         unzip_node = npe.MapNode(name='Unzipping',
@@ -321,13 +317,12 @@ class fMRIPreprocessing(cpe.Pipeline):
                                   interface=spm.Realign())
             mc_node.inputs.register_to_mean = True
 
-
         # Brain extraction
         # ================
         import os.path as path
         from nipype.interfaces.freesurfer import MRIConvert
         if self.parameters['freesurfer_brain_mask']:
-            brain_masks = [path.join(self.caps_directory,'subjects',
+            brain_masks = [path.join(self.caps_directory, 'subjects',
                                      self.subjects[i], self.sessions[i],
                                      't1/freesurfer_cross_sectional',
                                      self.subjects[i] + '_' + self.sessions[i],
@@ -453,4 +448,3 @@ class fMRIPreprocessing(cpe.Pipeline):
             (zip_smooth_node, self.output_node, [('out_file',
                                                   'mni_smoothed_fmri')]),
         ])
-

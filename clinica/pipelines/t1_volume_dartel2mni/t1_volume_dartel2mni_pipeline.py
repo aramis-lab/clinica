@@ -29,8 +29,9 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
 
     Args:
         input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
+        output_dir: An empty output directory where CAPS structured data will
+        be written.  subjects_sessions_list: The Subjects-Sessions list file
+        (in .tsv format).
 
     Returns:
         A clinica pipelines object containing the T1 SPM Dartel2MNI pipelines.
@@ -119,7 +120,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                         }
 
         # Segmented Tissues DataGrabber
-        #==============================
+        # ==============================
         tissues_caps_reader = npe.MapNode(nio.DataGrabber(infields=['subject_id', 'session',
                                                                     'subject_repeat', 'session_repeat',
                                                                     'tissue'],
@@ -137,7 +138,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         tissues_caps_reader.inputs.sort_filelist = False
 
         # Flow Fields DataGrabber
-        #==============================
+        # ==============================
         flowfields_caps_reader = npe.Node(nio.DataGrabber(infields=['subject_id', 'session',
                                                                     'subject_repeat', 'session_repeat'],
                                                           outfields=['out_files']),
@@ -278,7 +279,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                     raise RuntimeError('SPM standalone version not supported. Please upgrade SPM standalone.')
         else:
             raise RuntimeError('SPM could not be found. Please verify your SPM_HOME environment variable.')
-        
+
         # Unzipping
         # =========
         unzip_tissues_node = npe.MapNode(nutil.Function(input_names=['in_file'],

@@ -15,7 +15,6 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-
 def replace_sequence_chars(sequence_name):
     """
     Replace some special character with the sequence name given in input
@@ -146,7 +145,7 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
     dest_path = path.join(bids_folder, temp_folder_name)
 
     # Check if there is more than one xml file inside the folder
-    xml_list = glob(path.join(dicom_path,'*.xml*'))
+    xml_list = glob(path.join(dicom_path, '*.xml*'))
 
     if len(xml_list) > 1:
         # Remove the precedent tmp_dcm_folder if is existing
@@ -251,7 +250,7 @@ def is_nan(value):
     from math import isnan
     import numpy as np
 
-    if type(value)!=float and type(value)!=np.float64:
+    if type(value) != float and type(value) != np.float64:
         return False
 
     if isnan(value):
@@ -317,19 +316,37 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
         fields_bids = list(set(fields_bids))
         sessions_df = pd.DataFrame(columns=fields_bids)
 
-        if sessions_dict.has_key(bids_id):
+        if bids_id in sessions_dict:
             sess_aval = sessions_dict[bids_id].keys()
             for ses in sess_aval:
                 sessions_df = sessions_df.append(pd.DataFrame(sessions_dict[bids_id][ses], index=['i', ]))
 
             sessions_df = sessions_df[columns_order]
 
-            sessions_df[['adas_Q1','adas_Q2','adas_Q3','adas_Q4','adas_Q5','adas_Q6','adas_Q7','adas_Q8','adas_Q9','adas_Q10','adas_Q11','adas_Q12','adas_Q13']] = sessions_df[['adas_Q1','adas_Q2','adas_Q3','adas_Q4','adas_Q5','adas_Q6','adas_Q7','adas_Q8','adas_Q9','adas_Q10','adas_Q11','adas_Q12','adas_Q13']].apply(pd.to_numeric)
+            sessions_df[[
+                'adas_Q1', 'adas_Q2', 'adas_Q3', 'adas_Q4',
+                'adas_Q5', 'adas_Q6', 'adas_Q7', 'adas_Q8',
+                'adas_Q9', 'adas_Q10', 'adas_Q11', 'adas_Q12',
+                'adas_Q13'
+                ]] = sessions_df[[
+                    'adas_Q1', 'adas_Q2', 'adas_Q3', 'adas_Q4',
+                    'adas_Q5', 'adas_Q6', 'adas_Q7', 'adas_Q8',
+                    'adas_Q9', 'adas_Q10', 'adas_Q11', 'adas_Q12',
+                    'adas_Q13']].apply(pd.to_numeric)
 
-            sessions_df['adas_memory'] = sessions_df['adas_Q1'] + sessions_df['adas_Q4'] + sessions_df['adas_Q7'] + sessions_df['adas_Q8'] + sessions_df['adas_Q9'] #/ 45
-            sessions_df['adas_language'] = sessions_df['adas_Q2'] + sessions_df['adas_Q5'] + sessions_df['adas_Q10'] + sessions_df['adas_Q11'] + sessions_df['adas_Q12'] #/ 25
-            sessions_df['adas_praxis'] = sessions_df['adas_Q3'] + sessions_df['adas_Q6'] #/ 10
-            sessions_df['adas_concentration'] = sessions_df['adas_Q13'] #/ 5
+            sessions_df['adas_memory'] = (sessions_df['adas_Q1']
+                                          + sessions_df['adas_Q4']
+                                          + sessions_df['adas_Q7']
+                                          + sessions_df['adas_Q8']
+                                          + sessions_df['adas_Q9'])  # / 45
+            sessions_df['adas_language'] = (sessions_df['adas_Q2']
+                                            + sessions_df['adas_Q5']
+                                            + sessions_df['adas_Q10']
+                                            + sessions_df['adas_Q11']
+                                            + sessions_df['adas_Q12'])  # / 25
+            sessions_df['adas_praxis'] = (sessions_df['adas_Q3']
+                                          + sessions_df['adas_Q6'])  # / 10
+            sessions_df['adas_concentration'] = sessions_df['adas_Q13']  # / 5
 
             list_diagnosis_nan = np.where(pd.isnull(sessions_df['diagnosis']))
             diagnosis_change = {1: 'CN', 2: 'MCI', 3: 'AD'}
@@ -338,29 +355,28 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
                 if not is_nan(sessions_df['adni_diagnosis_change'][j]) and int(sessions_df['adni_diagnosis_change'][j]) < 4:
                     sessions_df['diagnosis'][j] = diagnosis_change[int(sessions_df['adni_diagnosis_change'][j])]
 
-
             sessions_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf-8')
-
 
 
 def update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_field_name):
     """
-    Update the sessions dictionary for the bids subject specified by subj_bids created by the method
-    create_adni_sessions_dict
+    Update the sessions dictionary for the bids subject specified by subj_bids
+    created by the method create_adni_sessions_dict
 
     Args:
-        sessions_dict: the session_dict created by the method create_adni_sessions_dict
-        subj_bids: bids is of the subject for which the information need to be updated
-        visit_id: session name (ex m54)
-        field_value: value of the field extracted from the original clinical data
-        bids_field_name: BIDS name of the field to update (Ex: diagnosis or examination date)
+        sessions_dict: the session_dict created by the method
+        create_adni_sessions_dict subj_bids: bids is of the subject for which
+        the information need to be updated visit_id: session name (ex m54)
+        field_value: value of the field extracted from the original clinical
+        data bids_field_name: BIDS name of the field to update (Ex: diagnosis
+        or examination date)
 
     Returns:
         session_dict: the dictonary updated
 
     """
 
-    if visit_id=='sc' or visit_id == 'uns1':
+    if visit_id == 'sc' or visit_id == 'uns1':
         return sessions_dict
 
     visit_id = viscode_to_session(visit_id)
@@ -368,15 +384,14 @@ def update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_f
     if bids_field_name == 'diagnosis':
         field_value = convert_diagnosis_code(field_value)
 
-
-    # If the dictionary already contain the subject add or update information regarding a specific session,
-    #  otherwise create the entry
-    if sessions_dict.has_key(subj_bids):
+    # If the dictionary already contain the subject add or update information
+    # regarding a specific session, otherwise create the entry
+    if subj_bids in sessions_dict:
         sess_available = sessions_dict[subj_bids].keys()
 
         if visit_id in sess_available:
             # If a value is already contained, update it only if the previous value is nan
-            if sessions_dict[subj_bids][visit_id].has_key(bids_field_name):
+            if bids_field_name in sessions_dict[subj_bids][visit_id]:
 
                 if is_nan(sessions_dict[subj_bids][visit_id][bids_field_name]):
                     sessions_dict[subj_bids][visit_id].update(
@@ -396,13 +411,12 @@ def update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_f
 
 def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bids_subjs_paths):
     """
-    Extract all the data required for the sessions files and organize them in a dictionary
+    Extract all the data required for the sessions files and organize them in a
+    dictionary
 
-    Args:
-        bids_ids:
-        clinic_specs_path: path to the specifications for converting the clinical data
-        clinical_data_dir: path to the clinical data folder
-        bids_subjs_paths: a list with the path to all the BIDS subjects
+    Args: bids_ids: clinic_specs_path: path to the specifications for
+    converting the clinical data clinical_data_dir: path to the clinical data
+    folder bids_subjs_paths: a list with the path to all the BIDS subjects
 
     Returns:
 
@@ -442,8 +456,9 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                 for r in range(0, len(file_to_read.values)):
                     row = file_to_read.iloc[r]
 
-                    # Depending of the file that needs to be open, identify and do needed preprocessing on the column
-                    #  that contains the subjects ids
+                    # Depending of the file that needs to be open, identify and
+                    # do needed preprocessing on the column that contains the
+                    # subjects ids
                     if location == 'ADNIMERGE.csv':
                         id_ref = 'PTID'
                         subj_id = row[id_ref.decode('utf-8')]
@@ -459,7 +474,8 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                         else:
                             subj_id = rid
 
-                    # Extract the BIDS subject id related with the original subject id
+                    # Extract the BIDS subject id related with the original
+                    # subject id
                     subj_bids = [s for s in bids_ids if subj_id in s]
 
                     if len(subj_bids) == 0:
@@ -490,7 +506,6 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
 
             else:
                 continue
-
 
     # Write the sessions dictionary created in several tsv files
     write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths)
@@ -564,5 +579,3 @@ def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
                     scans_df.to_csv(scans_tsv, header=False, sep='\t', index=False, encoding='utf-8')
 
             scans_df = pd.DataFrame(columns=(fields_bids))
-
-

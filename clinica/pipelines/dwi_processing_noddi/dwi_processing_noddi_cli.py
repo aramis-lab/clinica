@@ -27,7 +27,7 @@ class DwiProcessingNoddiCLI(ce.CmdParser):
         """Define a description of this pipeline.
         """
         self._description = ('NODDI-based processing of DWI datasets:\n'
-                            'http://clinica.run/doc/DWIProcessing')
+                             'http://clinica.run/doc/DWIProcessing')
 
     def define_options(self):
         """Define the sub-command arguments
@@ -38,16 +38,16 @@ class DwiProcessingNoddiCLI(ce.CmdParser):
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
 
         clinica_comp.add_argument("caps_directory",
-                                help='Path to the CAPS directory.')
+                                  help='Path to the CAPS directory.')
         clinica_comp.add_argument("list_bvalues", type=str,
-                                help='String listing all the shells (i.e. the b-values) in the corrected DWI datasets comma separated (e.g, 0,300,700,2200)')
+                                  help='String listing all the shells (i.e. the b-values) in the corrected DWI datasets comma separated (e.g, 0,300,700,2200)')
         # Optional arguments
         clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
 
         clinica_opt.add_argument("-wd", "--working_directory",
-                                help='Temporary directory to store pipeline intermediate results')
+                                 help='Temporary directory to store pipeline intermediate results')
         clinica_opt.add_argument("-np", "--n_procs", type=int, default=4,
-                                help='Number of cores used to run in parallel')
+                                 help='Number of cores used to run in parallel')
         clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
                                  help='TSV file containing a list of subjects with their sessions.')
 

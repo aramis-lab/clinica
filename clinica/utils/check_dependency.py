@@ -86,6 +86,7 @@ def check_freesurfer():
 
     cprint('FreeSurfer has been detected')
 
+
 def check_noddi_matlab_toolbox():
     """
     Check NODDI Matlab toolbox.
@@ -126,6 +127,7 @@ def check_nifti_matlib_toolbox():
     cprint('Niftimatlib toolbox has been detected')
 
     return nifti_matlib_toolbox
+
 
 def check_fsl():
     """
@@ -213,13 +215,15 @@ def check_spm():
 
     cprint('SPM has been detected')
 
+
 def check_matlab():
     """
     Check matlab toolbox.
 
     This function checks if matlab is present (matlab for linux and MATLABCMD for mac).
     """
-    import os, sys
+    import os
+    import sys
     from clinica.utils.stream import cprint
 
     if not is_binary_present("matlab"):

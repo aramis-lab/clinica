@@ -68,7 +68,6 @@ class PETVolume(cpe.Pipeline):
                 error_message += 'NO GROUP FOUND'
             raise ValueError(error_message)
 
-
         self._group_id = group_id
         self._suvr_region = ''
         self._fwhm = None
@@ -188,7 +187,6 @@ class PETVolume(cpe.Pipeline):
         flowfields_caps_reader.inputs.template = '%s/%s/t1/spm/dartel/group-' + self._group_id + '/%s_%s_T1w_target-' \
                                                  + self._group_id + '_transformation-forward_deformation.nii*'
         flowfields_caps_reader.inputs.sort_filelist = False
-
 
         # Dartel Template DataGrabber
         # ============================
@@ -385,12 +383,13 @@ class PETVolume(cpe.Pipeline):
 
         if 'SPMSTANDALONE_HOME' in os.environ:
             if 'MCR_HOME' in os.environ:
-                matlab_cmd = os.path.join(os.environ['SPMSTANDALONE_HOME'],
-                        '/run_spm12.sh') \
-                        + ' ' + os.environ['MCR_HOME'] \
-                        + ' script'
+                matlab_cmd = (
+                        os.path.join(
+                            os.environ['SPMSTANDALONE_HOME'], '/run_spm12.sh')
+                        + ' ' + os.environ['MCR_HOME']
+                        + ' script')
                 spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
-        
+
         # Unzipping
         # ==================
         unzip_pet_image = npe.Node(nutil.Function(input_names=['in_file'],

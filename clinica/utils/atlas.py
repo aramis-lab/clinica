@@ -34,11 +34,11 @@ class AtlasAbstract:
         if (voxels_map[0] != voxels_labels[0]) or \
                 (voxels_map[1] != voxels_labels[1]) or \
                 (voxels_map[2] != voxels_labels[2]):
-        #if voxels_map != voxels_labels:
+            # if voxels_map != voxels_labels:
             print("Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas()))
-            #raise Exception(
-             #       "Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas()))
-        #else:
+            # raise Exception(
+            #       "Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas()))
+        # else:
         # Will display integers without decimals
         if int(voxels_map[0]) == voxels_map[0]:
             s_x = str(int(voxels_map[0]))
@@ -83,7 +83,7 @@ class AtlasAbstract:
         img_labels = nib.load(self.get_atlas_labels())
         img_labels = img_labels.get_data()
         labels = list(set(img_labels.ravel()))
-        index_vector=np.zeros(len(labels))
+        index_vector = np.zeros(len(labels))
         for index, n in enumerate(labels):
             index_vector[index] = index
         return index_vector
@@ -315,7 +315,7 @@ class JHUTracts502mm(AtlasAbstract):
         if not FSLDIR:
             raise Exception('FSLDIR variable from FSL software is not set')
         return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
-    
+
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath

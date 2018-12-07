@@ -2,6 +2,7 @@
 
 import clinica.engine as ce
 
+
 class fMRIPreprocessingCLI(ce.CmdParser):
     """
     """
@@ -10,7 +11,6 @@ class fMRIPreprocessingCLI(ce.CmdParser):
         """Define the sub-command name to run this pipelines.
         """
         self._name = 'fmri-preprocessing'
-
 
     def define_description(self):
         """Define a description of this pipeline.
@@ -47,7 +47,6 @@ class fMRIPreprocessingCLI(ce.CmdParser):
                                 action='store_true',
                                 help="Add SPM's Unwarping to the Realign step.")
 
-
     def run_command(self, args):
         """
         """
@@ -67,7 +66,7 @@ class fMRIPreprocessingCLI(ce.CmdParser):
         if args.n_procs:
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         elif args.slurm:
-            pipeline.run(plugin='SLURMGraph', plugin_args = {
+            pipeline.run(plugin='SLURMGraph', plugin_args={
                 'dont_resubmit_completed_jobs': True, 'sbatch_args':
                     args.sbatch_args})
         else:

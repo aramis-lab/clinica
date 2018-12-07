@@ -9,7 +9,7 @@ command line tool. See here for more details: https://gitlab.icm-institute.org/a
 
 __author__ = "Jorge Samper Gonzalez"
 __copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
-__credits__ = [ "Jorge Samper Gonzalez"]
+__credits__ = ["Jorge Samper Gonzalez"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Jorge Samper Gonzalez"

@@ -149,7 +149,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         # Dartel Template DataGrabber
         # ===========================
         final_template_reader = npe.Node(nio.DataGrabber(infields=['group_id', 'group_id_repeat'],
-                                                        outfields=['out_files']),
+                                                         outfields=['out_files']),
                                          name="final_template_reader")
         final_template_reader.inputs.base_directory = self.caps_directory
         final_template_reader.inputs.template = 'groups/group-%s/t1/group-%s_template.nii*'

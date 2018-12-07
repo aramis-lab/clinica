@@ -29,12 +29,9 @@ def load_data(images, caps_directory, subjects, sessions, dataset):
 
     """
 
-
     df = pd.io.parsers.read_csv(os.path.join(caps_directory), sep='\t')
 
     all_vector = np.array([])
-
-
 
     participant_id = subjects
 
@@ -42,7 +39,6 @@ def load_data(images, caps_directory, subjects, sessions, dataset):
 
     for i in range(len(participant_id)):
         df_sub = df[df.participant_id == participant_id[i]]
-
 
         df_analysis = df_sub[[col for col in df_sub.columns if images in col]]
 
@@ -53,6 +49,5 @@ def load_data(images, caps_directory, subjects, sessions, dataset):
     for i in range(len(participant_id)):
         for j in range(df_analysis.shape[1]):
             data[i][j] = data_temp[i][j]
-
 
     return data

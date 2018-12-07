@@ -23,7 +23,7 @@ class T1VolumeCreateDartelCLI(ce.CmdParser):
         """Define a description of this pipeline.
         """
         self._description = ('DARTEL creation with SPM:\n'
-                            'http://clinica.run/doc/Pipelines/T1_Volume/')
+                             'http://clinica.run/doc/Pipelines/T1_Volume/')
 
     def define_options(self):
         """Define the sub-command arguments

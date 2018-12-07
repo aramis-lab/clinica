@@ -15,13 +15,12 @@ __status__ = "Development"
 class T1VolumeParcellation(cpe.Pipeline):
     """T1 Volume parcellation
 
-    Args:
-        input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
+    Args: input_dir: A BIDS directory.  output_dir: An empty output directory
+    where CAPS structured data will be written.  subjects_sessions_list: The
+    Subjects-Sessions list file (in .tsv format).
 
-    Returns:
-        A clinica pipeline object containing the spm_parcellation pipeline.
+    Returns: A clinica pipeline object containing the spm_parcellation
+    pipeline.
 
     Raises:
 
@@ -49,7 +48,7 @@ class T1VolumeParcellation(cpe.Pipeline):
             A list of (string) input fields name.
         """
 
-        return ['file_list', 'atlas_list'] # Fill here the list
+        return ['file_list', 'atlas_list']  # Fill here the list
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
@@ -142,4 +141,3 @@ class T1VolumeParcellation(cpe.Pipeline):
             (atlas_stats_node,     outputnode,          [('atlas_statistics',  'atlas_statistics')]),
             (outputnode,           datasink,            [('atlas_statistics', 'atlas_statistics')])
         ])
-

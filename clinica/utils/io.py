@@ -60,4 +60,3 @@ def fix_join(path, *paths):
     # In the workflow.connect part, you can use some function that are used as string, causing an import error
     import os
     return os.path.join(path, *paths)
-

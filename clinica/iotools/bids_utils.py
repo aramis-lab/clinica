@@ -22,9 +22,11 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
     Args:
         study_name: name of the study (Ex. ADNI)
         clinical_spec_path: path to the clinical file
-        clinical_data_dir: path to the directory where the clinical data are stored
+        clinical_data_dir: path to the directory where the clinical data are
+        stored
         bids_ids: list of bids ids
-        delete_non_bids_info: if True delete all the rows of the subjects that are not available in the BIDS dataset
+        delete_non_bids_info: if True delete all the rows of the subjects that
+        are not available in the BIDS dataset
 
     Returns: a pandas dataframe that contains the participants data
     """
@@ -34,10 +36,9 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
     import numpy as np
     from clinica.utils.stream import cprint
 
-
     fields_bids = ['participant_id']
     prev_location = ''
-    index_to_drop=[]
+    index_to_drop = []
     location_name = study_name + ' location'
 
     # Load the data from the clincal specification file
@@ -85,7 +86,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
                 # Convert the alternative_id_1 to string if is an integer/float
                 value_to_read = file_to_read[participant_fields_db[i]]
                 if participant_fields_bids[i] == 'alternative_id_1' and\
-                        (value_to_read.dtype == np.float64 or value_to_read.dtype == np.int64) :
+                        (value_to_read.dtype == np.float64 or value_to_read.dtype == np.int64):
                     if not pd.isnull(file_to_read.get_value(j, participant_fields_db[i])):
                         value_to_append = str(file_to_read.get_value(j, participant_fields_db[i])).rstrip('.0')
                     else:
@@ -117,13 +118,13 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
             participant_df.set_value(i, 'participant_id', bids_id[0])
 
     # Delete all the rows of the subjects that are not available in the BIDS dataset
-    if delete_non_bids_info == True:
+    if delete_non_bids_info:
         participant_df = participant_df.drop(index_to_drop)
 
     return participant_df
 
 
-def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids_ids, name_column_ids, subj_to_remove = []):
+def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids_ids, name_column_ids, subj_to_remove=[]):
     """
 
     Extract the information regarding the sessions and store them in a dictionary (session M00 only)
@@ -227,7 +228,7 @@ def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids
     prev_file = ''
     prev_sheet = ''
 
-    if not study_name in get_supported_dataset():
+    if study_name not in get_supported_dataset():
         raise Exception('Dataset not supported. Supported datasets are:', get_supported_dataset())
 
     # Init the dictionary with the subject ids
@@ -246,7 +247,7 @@ def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids
         if not pd.isnull(field):
             fields_dataset.append(field)
             fields_bids.append(scans_specs['BIDS CLINICA'][i])
-            fields_location.append(scans_specs[study_name +' location'][i])
+            fields_location.append(scans_specs[study_name + ' location'][i])
             fields_mod.append(scans_specs['Modalities related'][i])
 
     # For each field available extract the original name, extract from the file all the values and fill a data structure
@@ -412,13 +413,13 @@ def dcm_to_nii(input_path, output_path, bids_name):
         os.mkdir(output_path)
 
     if 'bold' in bids_name:
-        #generation of the json file
+        # generation of the json file
         os.system('dcm2niix -b y -o ' + output_path + ' -f ' + bids_name + ' ' + input_path)
     else:
-        os.system('dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name  + ' ' + input_path)
+        os.system('dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name + ' ' + input_path)
 
     # If dcm2niix didn't work use dcm2nii
-    if not os.path.exists(path.join(output_path, bids_name  + '.nii.gz')):
+    if not os.path.exists(path.join(output_path, bids_name + '.nii.gz')):
         print('Conversion with dcm2niix failed, trying with dcm2nii')
         os.system('dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + input_path)
 
@@ -454,7 +455,7 @@ def get_bids_subjs_paths(bids_path):
     import os
     from os import path
 
-    return [path.join(bids_path,d) for d in os.listdir(bids_path) if os.path.isdir(path.join(bids_path, d))]
+    return [path.join(bids_path, d) for d in os.listdir(bids_path) if os.path.isdir(path.join(bids_path, d))]
 
 
 def compute_new_subjects(original_ids, bids_ids):
@@ -643,10 +644,9 @@ def create_path_corr_file(out_dir):
     import os
     from os import path
 
-    path_corr = path.join(out_dir, 'conversion_info', 'filename_correspondance.tsv' )
+    path_corr = path.join(out_dir, 'conversion_info', 'filename_correspondance.tsv')
     if os.path.exists(path_corr):
         os.remove(path_corr)
-
 
     f = open(path_corr, 'a')
     return f
@@ -683,7 +683,7 @@ def convert_T1(t1_path, output_path, t1_bids_name):
             compress_nii(path.join(bids_file))
 
 
-def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name , acquisition = ''):
+def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name, acquisition=''):
     """
     Convert PET to BIDS
 
@@ -701,8 +701,7 @@ def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name , ac
     from shutil import copy
     import os
 
-
-    if acquisition!='':
+    if acquisition != '':
         pet_bids_name = bids_name+'_task-'+task_name+'_acq-'+acquisition
     else:
         pet_bids_name = bids_name+'_task-'+task_name
@@ -714,8 +713,8 @@ def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name , ac
         if not os.path.exists(folder_output):
             os.mkdir(folder_output)
 
-        #If a prefixed pet is chosen for the conversion use it, otherwise extracts the pet file available into the folder
-        if pet_name!='':
+        # If a prefixed pet is chosen for the conversion use it, otherwise extracts the pet file available into the folder
+        if pet_name != '':
             pet_path = path.join(folder_input, pet_name)
         else:
             print('WARNING: feature to be implemented')
@@ -727,7 +726,7 @@ def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name , ac
             compress_nii(path.join(folder_output, pet_bids_name + get_bids_suff('pet') + file_ext))
 
 
-def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False,False]):
+def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False, False]):
     """
     Extract and convert into the BIDS specification fieldmap data.
 
@@ -752,10 +751,10 @@ def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False,False]
 
     # Check if there is a map or mapPh fixed to convert
     if fixed_file[0] is False and fixed_file[1] is False:
-        map = remove_rescan(glob(path.join(folder_input, "*MAP_*",'*.nii.gz')))
+        map = remove_rescan(glob(path.join(folder_input, "*MAP_*", '*.nii.gz')))
         map_ph = remove_rescan(glob(path.join(folder_input, "*MAPph_*", '*.nii.gz')))
     elif fixed_file[0] is False and fixed_file[1] is not False:
-        map = remove_rescan(glob(path.join(folder_input, "*MAP_*",'*.nii.gz')))
+        map = remove_rescan(glob(path.join(folder_input, "*MAP_*", '*.nii.gz')))
         map_ph = glob(path.join(folder_input, fixed_file[1], '*.nii.gz'))
     elif fixed_file[0] is not False and fixed_file[1] is False:
         map = glob(path.join(folder_input, fixed_file[0], '*.nii.gz'))
@@ -786,7 +785,7 @@ def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False,False]
             if dim_map_ph == 1 and dim_map > 0:
                 copy(map_ph[0], path.join(folder_output, name + get_bids_suff('SingleMapPh') + '.nii.gz'))
                 os.system('fslsplit ' + map[0] + ' ' + path.join(folder_output, name + get_bids_suff('Map')))
-                mag_list = glob(path.join(folder_output,name+get_bids_suff('Map')+'*'))
+                mag_list = glob(path.join(folder_output, name+get_bids_suff('Map')+'*'))
 
                 for i in range(0, len(mag_list)):
                     old_mag_name = mag_list[i].split(os.sep)[-1]
@@ -805,18 +804,18 @@ def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False,False]
                 os.rename(path.join(folder_output, bids_name_mag + '0001.nii.gz'),
                           path.join(folder_output, bids_name_mag + '2.nii.gz'))
                 os.rename(path.join(folder_output, bids_name_ph + '0000.nii.gz'),
-                      path.join(folder_output, bids_name_ph + '1.nii.gz'))
+                          path.join(folder_output, bids_name_ph + '1.nii.gz'))
                 os.rename(path.join(folder_output, bids_name_ph + '0001.nii.gz'),
-                      path.join(folder_output, bids_name_ph + '2.nii.gz'))
+                          path.join(folder_output, bids_name_ph + '2.nii.gz'))
     # The modalities is missing or incomplete
     else:
-        if mag_missing == True and  map_ph_missing == True:
+        if mag_missing and map_ph_missing:
             return -1
         else:
             return 0
 
 
-def convert_flair(folder_input, folder_output, name, fixed_file = False):
+def convert_flair(folder_input, folder_output, name, fixed_file=False):
     """
     Extracts and converts T2Flair data.
 
@@ -836,11 +835,11 @@ def convert_flair(folder_input, folder_output, name, fixed_file = False):
     import os
 
     # If a given T2FLAIR is given for the conversion use it
-    if fixed_file!=False:
-        fixed_flair_path = glob(path.join(folder_input,fixed_file,'*'))[0]
+    if fixed_file:
+        fixed_flair_path = glob(path.join(folder_input, fixed_file, '*'))[0]
         copy(fixed_flair_path, path.join(folder_output, name + (get_bids_suff('Flair')) + '.nii.gz'))
     else:
-        list_path = glob(path.join(folder_input,'*T2FLAIR*'))
+        list_path = glob(path.join(folder_input, '*T2FLAIR*'))
         flair_lst = remove_rescan(list_path)
         if len(flair_lst) == 1:
             if not os.path.exists(folder_output):
@@ -849,12 +848,12 @@ def convert_flair(folder_input, folder_output, name, fixed_file = False):
             copy(flair_path, path.join(folder_output, name + (get_bids_suff('Flair')) + '.nii.gz'))
         elif len(flair_lst) == 0:
                 return -1
-        elif len(flair_lst)>1:
+        elif len(flair_lst) > 1:
                 logging.warning('Multiple FLAIR found, computation aborted.')
                 raise('Aborted')
 
 
-def convert_fmri(folder_input, folder_output, name, fixed_fmri=False, task_name = 'rest'):
+def convert_fmri(folder_input, folder_output, name, fixed_fmri=False, task_name='rest'):
     """
     Extracts and converts into the BIDS specification fmri data.
 
@@ -873,7 +872,7 @@ def convert_fmri(folder_input, folder_output, name, fixed_fmri=False, task_name 
     from shutil import copy
     import os
 
-    bids_name = name + '_task-'+ task_name + get_bids_suff('fMRI')
+    bids_name = name + '_task-' + task_name + get_bids_suff('fMRI')
 
     if contain_dicom(folder_input):
         dcm_to_nii(folder_input, folder_output, bids_name)
@@ -941,9 +940,9 @@ def merge_DTI(folder_input, folder_output, name, fixed_dti_list=False):
             os.mkdir(folder_output)
         for folder in dti_list:
             if len(glob(path.join(folder, '*.bval'))) != 0 and len(glob(path.join(folder, '*.bvec'))) != 0:
-                img.append(glob(path.join(folder,'*.nii*'))[0])
-                bval.append(glob(path.join(folder,'*.bval'))[0])
-                bvec.append(glob(path.join(folder,'*.bvec'))[0])
+                img.append(glob(path.join(folder, '*.nii*'))[0])
+                bval.append(glob(path.join(folder, '*.bval'))[0])
+                bvec.append(glob(path.join(folder, '*.bvec'))[0])
             else:
                 incomp_folders.append(folder)
 
@@ -960,8 +959,8 @@ def merge_DTI(folder_input, folder_output, name, fixed_dti_list=False):
                 if fileinput.isfirstline():
                     line_no = 0
                 lines_out_bval[line_no] = lines_out_bval[line_no]+" "+line.rstrip()
-                line_no +=1
-            for i in range (0, len(lines_out_bval)):
+                line_no += 1
+            for i in range(0, len(lines_out_bval)):
                 lines_out_bval[i] = lines_out_bval[i].lstrip()
 
                 fout.write(lines_out_bval[i]+"\n")
@@ -997,7 +996,7 @@ def concatenate_bvec_bval(files_list, output_file, type):
     if type == 'bval':
         lines_out = ['']
     else:
-        lines_out= ['', '', '']
+        lines_out = ['', '', '']
 
     for line in files_list:
         if fileinput.isfirstline():
@@ -1036,7 +1035,7 @@ def merge_noddi_dti(folder_input, folder_output, name):
 
     dti_list = remove_rescan(glob(path.join(folder_input, '*DTI*')))
 
-    if len(dti_list)!=6:
+    if len(dti_list) != 6:
         raise Exception('Number of DTI found different from 6')
 
     if not os.path.exists(folder_output):
