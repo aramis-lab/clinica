@@ -48,7 +48,7 @@ class ClinicaClassLoader:
         import os
         pipeline_cli_parsers = []
 
-        if not os.environ.has_key(self.env):
+        if not self.env in os.environ.keys():
             return pipeline_cli_parsers
 
         clinica_pipelines_path = join(os.environ[self.env], self.extra_dir)
