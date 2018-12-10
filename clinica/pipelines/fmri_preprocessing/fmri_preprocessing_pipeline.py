@@ -213,6 +213,7 @@ class fMRIPreprocessing(cpe.Pipeline):
                 (read_node, self.input_node, [('tert', 'tert')]),
                 # Reading BIDS files
                 (read_node, self.input_node, [('phasediff', 'phasediff')]),
+                (read_node, self.input_node, [('magnitude1', 'magnitude1')]),
             ])
 
         self.connect([
@@ -225,7 +226,6 @@ class fMRIPreprocessing(cpe.Pipeline):
             (read_node, self.input_node,
              [('time_acquisition', 'time_acquisition')]),
             # Reading BIDS files
-            (read_node, self.input_node, [('magnitude1', 'magnitude1')]),
             (read_node, self.input_node, [('bold', 'bold')]),
             (read_node, self.input_node, [('T1w', 'T1w')]),
         ])
