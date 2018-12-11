@@ -318,7 +318,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         if self.parameters['unwarping']:
             fm_node = npe.MapNode(name="FieldMapCalculation",
                                   iterfield=['phase', 'magnitude', 'epi',
-                                             'et', 'bipdir', 'tert'],
+                                             'et', 'blipdir', 'tert'],
                                   interface=utils.FieldMap())
 
         # Slice timing correction
