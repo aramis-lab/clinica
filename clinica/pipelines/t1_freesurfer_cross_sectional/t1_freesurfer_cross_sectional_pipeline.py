@@ -35,14 +35,6 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
     Returns:
         A clinica pipelines object containing the T1 FreeSurfer pipelines.
 
-    Raises:
-
-
-    Example:
-        >>> from t1_freesurfer_cross_sectional import T1FreeSurferCrossSectional
-        >>> pipelines = T1FreeSurferCrossSectional('~/MYDATASET_BIDS', '~/MYDATASET_CAPS', 'TSV')
-        >>> pipelines.base_dir = '/tmp/'
-        >>> pipelines.run()
     """
 
     def check_custom_dependencies(self):

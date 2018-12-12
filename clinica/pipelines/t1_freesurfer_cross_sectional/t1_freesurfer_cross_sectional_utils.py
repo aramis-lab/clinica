@@ -217,7 +217,7 @@ def log_summary(subject_list, session_list, subject_id, output_dir):
     log_name = os.path.join(dest_dir, 'recon_all_summary.log')
     input_logs = []
 
-    for i in xrange(len(subject_list)):
+    for i in range(len(subject_list)):
         input_log = os.path.join(dest_dir, subject_list[i], session_list[i], 't1', 'freesurfer_cross_sectional', subject_id[i], 'scripts', 'recon-all-status.log')
         input_logs.append(input_log)
 
