@@ -252,16 +252,18 @@ class fMRIPreprocessing(cpe.Pipeline):
         write_node.inputs.remove_dest_dir = True
         write_node.inputs.regexp_substitutions = [
             (r't1_brain_mask/(.+)\.nii\.gz$', r'\1_brainmask.nii.gz'),
-            (r'mc_params/rp_a(.+)\.txt$', r'\1_confounds.tsv'),
-            (r'native_fmri/[u|r]a(.+)\.nii.gz$', r'\1_space-meanBOLD.nii.gz'),
-            (r't1_fmri/r[u|r]a(.+)\.nii.gz$', r'\1_space-T1w.nii.gz'),
-            (r'mni_fmri/wr[u|r]a(.+)\.nii.gz$', r'\1_space-Ixi549Space.nii.gz'),
+            (r'mc_params/rp_a(.+)\.txt$', r'\1_desc-mcparams_regressors.tsv'),
+            (r'native_fmri/[u|r]a(.+)\.nii.gz$', r'\1_space-meanBOLD_preproc.nii.gz'),
+            (r't1_fmri/r[u|r]a(.+)\.nii.gz$', r'\1_space-T1w_preproc.nii.gz'),
+            (r'mni_fmri/wr[u|r]a(.+)\.nii.gz$', r'\1_space-Ixi549Space_preproc.nii.gz'),
             (r'mni_smoothed_fmri/swr[u|r]a(.+)\.nii.gz$',
              r'\1_space-Ixi549Space_fwhm-' + '-'.join(map(str, self.parameters[
-                 'full_width_at_half_maximum'])) + '.nii.gz'),
+                 'full_width_at_half_maximum'])) + '_preproc.nii.gz'),
             # I don't know why it's adding this empty folder, so I remove it:
             (r'trait_added', r''),
         ]
+        if ('freesurfer_brain_mask' in self.parameters) and not(self.parameters['freesurfer_brain_mask']):
+            write_node.inputs.regexp_substitutions[0] = (r't1_brain_mask/c3(.+)_maths_dil_ero_thresh_fillh\.nii\.gz$', r'\1_brainmask.nii.gz')
 
         # fMRI images in the subject's T1 native space are large, we add it
         # only if specified:
@@ -318,8 +320,8 @@ class fMRIPreprocessing(cpe.Pipeline):
         if self.parameters['unwarping']:
             fm_node = npe.MapNode(name="FieldMapCalculation",
                                   iterfield=['phase', 'magnitude', 'epi',
-                                             'et', 'bipdir', 'tert'],
-                                  interface=utils.FieldMap())
+                                             'et', 'blipdir', 'tert'],
+                                  interface=spm.FieldMap())
 
         # Slice timing correction
         # =======================
@@ -335,7 +337,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         if self.parameters['unwarping']:
             mc_node = npe.MapNode(name="MotionCorrectionUnwarping",
                                   iterfield=["scans", "pmscan"],
-                                  interface=utils.RealignUnwarp())
+                                  interface=spm.RealignUnwarp())
             mc_node.inputs.register_to_mean = True
             mc_node.inputs.write_mask = False
         else:
