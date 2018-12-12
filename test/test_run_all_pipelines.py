@@ -856,7 +856,7 @@ def test_run_SVMRegularization():
     ref_data_REG_NIFTI = [nib.load(join(root, 'ref', sub + '_ses-M00_segm-graymatter_space-Ixi549Space_modulated-on_regularization-Fisher_fwhm-4.0_probability.nii.gz')).get_data()
                           for sub in subjects]
     for i in range(len(out_data_REG_NIFTI)):
-        assert np.allclose(out_data_REG_NIFTI[i], ref_data_REG_NIFTI[i], rtol=1e-8, equal_nan=True)
+        assert np.allclose(out_data_REG_NIFTI[i], ref_data_REG_NIFTI[i], rtol=1e-3, equal_nan=True)
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=True)
