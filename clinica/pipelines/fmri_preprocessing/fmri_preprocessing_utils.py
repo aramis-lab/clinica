@@ -486,13 +486,13 @@ class BrainExtractionWorkflow(npe.Workflow):
         mask_node.inputs.output_type = str("NIFTI")
 
         self.connect([
-            (seg_node   , add1_node   , [('native_gm_image' , 'in_file')]),
-            (seg_node   , add1_node   , [('native_wm_image' , 'operand_file')]),
-            (seg_node   , add2_node   , [('native_csf_image', 'in_file')]),
-            (add1_node  , add2_node   , [('out_file'        , 'operand_file')]),
-            (add2_node  , dil_node    , [('out_file'        , 'in_file')]),
-            (dil_node   , ero_node    , [('out_file'        , 'in_file')]),
-            (ero_node   , thre_node   , [('out_file'        , 'in_file')]),
-            (thre_node  , fill_node   , [('out_file'        , 'in_file')]),
-            (fill_node  , mask_node   , [('out_file'        , 'mask_file')]),
+            (seg_node, add1_node, [('native_gm_image', 'in_file')]),
+            (seg_node, add1_node, [('native_wm_image', 'operand_file')]),
+            (seg_node, add2_node, [('native_csf_image', 'in_file')]),
+            (add1_node, add2_node, [('out_file', 'operand_file')]),
+            (add2_node, dil_node, [('out_file', 'in_file')]),
+            (dil_node, ero_node, [('out_file', 'in_file')]),
+            (ero_node, thre_node, [('out_file', 'in_file')]),
+            (thre_node, fill_node, [('out_file', 'in_file')]),
+            (fill_node, mask_node, [('out_file', 'mask_file')]),
         ])
