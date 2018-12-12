@@ -262,6 +262,8 @@ class fMRIPreprocessing(cpe.Pipeline):
             # I don't know why it's adding this empty folder, so I remove it:
             (r'trait_added', r''),
         ]
+        if ('freesurfer_brain_mask' in self.parameters) and not(self.parameters['freesurfer_brain_mask']):
+            write_node.inputs.regexp_substitutions[0] = (r't1_brain_mask/c3(.+)_maths_dil_ero_thresh_fillh\.nii\.gz$', r'\1_brainmask.nii.gz')
 
         # fMRI images in the subject's T1 native space are large, we add it
         # only if specified:
