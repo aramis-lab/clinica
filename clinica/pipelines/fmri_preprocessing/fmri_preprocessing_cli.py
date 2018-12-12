@@ -47,15 +47,15 @@ class fMRIPreprocessingCLI(ce.CmdParser):
                 PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("-fwhm", "--full_width_at_half_maximum",
                                 nargs=3, type=int, default=[8, 8, 8],
-                                help="Size of the fwhm filter in milimeters to smooth the image.")
+                                help="Size of the FWHM filter in milimeters to smooth the image (default: --full_width_at_half_maximum 8 8 8).")
         optional.add_argument("-t1s", "--t1_native_space", action='store_true',
                                 help="Also return images in T1 native space.")
         optional.add_argument("-fsbm", "--freesurfer_brain_mask",
                                 action='store_true',
-                                help="Use FreeSurfer's pre-computed brain mask.")
+                                help="Use FreeSurfer's pre-computed brain mask from the CAPS folder instead of running FSL bet.")
         optional.add_argument("-u", "--unwarping",
                                 action='store_true',
-                                help="Add SPM's Unwarping to the Realign step.")
+                                help="Add SPM's Unwarping to the Realign step (magnitude and phasediff files are necessary in the BIDS directory).")
 
 
     def run_command(self, args):
