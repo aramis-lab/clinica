@@ -243,7 +243,7 @@ def test_instantiate_InputsML():
     pass
 
 
-def test_SVMRegularization():
+def test_instantiate_SVMRegularization():
     from clinica.pipelines.svm_regularization.svm_regularization_pipeline import SVMRegularization
     from os.path import dirname, join, abspath
 

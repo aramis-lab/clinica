@@ -42,7 +42,7 @@ def test_run_T1FreeSurferCrossSectional():
     pipeline.parameters['recon_all_args'] = '-qcache'
     pipeline.base_dir = join(working_dir, 'T1FreeSurferCrossSectional')
     pipeline.build()
-    #pipeline.run()
+    pipeline.run()
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
@@ -571,10 +571,10 @@ def test_run_PETSurface():
                  for h in ['lh', 'rh']
                  for f in [0, 5, 10, 15, 20, 25]]
 
-    # for i in range(len(out_files)):
-    #     assert np.allclose(np.squeeze(nib.load(out_files[i]).get_data()),
-    #                        np.squeeze(nib.load(ref_files[i]).get_data()),
-    #                        rtol=1e-8, equal_nan=True)
+    for i in range(len(out_files)):
+         assert np.allclose(np.squeeze(nib.load(out_files[i]).get_data()),
+                            np.squeeze(nib.load(ref_files[i]).get_data()),
+                            rtol=1e-8, equal_nan=True)
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
@@ -844,9 +844,7 @@ def test_run_SVMRegularization():
     pipeline.parameters['h'] = 1.5
     pipeline.parameters['image_type'] = 't1'
     pipeline.parameters['pet_type'] = 'fdg'
-
-    pipeline.base_dir = ''
-
+    pipeline.base_dir = join(working_dir, 'SVMRegularization')
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
 
