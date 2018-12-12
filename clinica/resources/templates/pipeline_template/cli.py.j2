@@ -50,7 +50,7 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
         """
 
         from tempfile import mkdtemp
-        from {{ pipeline.module_name }}_pipeline import {{ pipeline.class_name }}
+        from .{{ pipeline.module_name }}_pipeline import {{ pipeline.class_name }}
 
         # Most of the time, you will want to instantiate your pipeline with a
         # BIDS and CAPS directory as inputs:

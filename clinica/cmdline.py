@@ -48,7 +48,8 @@ class ClinicaClassLoader:
         import os
         pipeline_cli_parsers = []
 
-        if self.env not in os.environ:
+        if not self.env in os.environ.keys():
+
             return pipeline_cli_parsers
 
         clinica_pipelines_path = join(os.environ[self.env], self.extra_dir)
@@ -133,11 +134,13 @@ def execute():
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DWIPreprocessingUsingPhaseDiffFieldmapCLI  # noqa
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DWIPreprocessingUsingT1CLI  # noqa
     from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_cli import DWIProcessingDTICLI  # noqa
+    from clinica.pipelines.dwi_processing_csd.dwi_processing_csd_cli import DWIProcessingCSDCLI # noqa
     from clinica.pipelines.dwi_processing_noddi.dwi_processing_noddi_cli import DwiProcessingNoddiCLI  # noqa
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI  # noqa
     from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI  # noqa
     from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI  # noqa
     from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI  # noqa
+    from clinica.pipelines.svm_regularization.svm_regularization_cli import SVMRegularizationCLI
 
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
                                    extra_dir="pipelines").load()
@@ -155,10 +158,12 @@ def execute():
         DwiProcessingNoddiCLI(),
         DWIPreprocessingUsingPhaseDiffFieldmapCLI(),
         DWIProcessingDTICLI(),
+        DWIProcessingCSDCLI(),
         fMRIPreprocessingCLI(),
         PETVolumeCLI(),
         PetSurfaceCLI(),
         StatisticsSurfaceCLI(),
+        SVMRegularizationCLI()
     ]
 
     run_parser = sub_parser.add_parser(
