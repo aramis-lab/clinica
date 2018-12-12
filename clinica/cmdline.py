@@ -20,7 +20,7 @@ from clinica.utils.stream import cprint
 
 __author__ = "Michael Bacci"
 __copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
-__credits__ = ["Michael Bacci", "Alexandre Routier","Mauricio Diaz"]
+__credits__ = ["Michael Bacci", "Alexandre Routier", "Mauricio Diaz"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Mauricio Diaz"
@@ -92,8 +92,8 @@ class ClinicaClassLoader:
 def execute():
     import argparse
     from colorama import Fore
-    MANDATORY_TITLE = '%sMandatory arguments%s' % (Fore.YELLOW, Fore.RESET)
-    OPTIONAL_TITLE = '%sOptional arguments%s' % (Fore.YELLOW, Fore.RESET)
+    MANDATORY_TITLE = (Fore.YELLOW + 'Mandatory arguments' + Fore.RESET)
+    OPTIONAL_TITLE = (Fore.YELLOW + 'Optional arguments' + Fore.RESET)
     """
     Define and parse the command line argument
     """
@@ -121,7 +121,7 @@ def execute():
     run category: run one of the available pipelines
     """
     from clinica.engine import CmdParser
-    
+
     from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_cli import T1FreeSurferCrossSectionalCLI  # noqa
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import T1VolumeTissueSegmentationCLI  # noqa
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_cli import T1VolumeCreateDartelCLI  # noqa
@@ -213,18 +213,18 @@ def execute():
             + Fore.RESET)
     convert_parser._positionals.title = (
             Fore.YELLOW
-            + 'clinica convert expects one of the following datasets' 
+            + 'clinica convert expects one of the following datasets'
             + Fore.RESET)
     convert_parser._optionals.title = OPTIONAL_TITLE
     init_cmdparser_objects(
-            parser, 
-            convert_parser.add_subparsers(metavar=''), 
+            parser,
+            convert_parser.add_subparsers(metavar=''),
             converters)
 
     """
     iotools category
     """
-    
+
     from clinica.iotools.utils.data_handling_cli import CmdParserSubjectsSessions
     from clinica.iotools.utils.data_handling_cli import CmdParserMergeTsv
     from clinica.iotools.utils.data_handling_cli import CmdParserMissingModalities
@@ -248,8 +248,8 @@ def execute():
     io_parser._optionals.title = OPTIONAL_TITLE
 
     init_cmdparser_objects(
-            parser, 
-            io_parser.add_subparsers(metavar=''), 
+            parser,
+            io_parser.add_subparsers(metavar=''),
             io_tools)
 
     """
@@ -273,9 +273,10 @@ def execute():
     generate_parser._optionals.title = OPTIONAL_TITLE
 
     from clinica.engine.template import CmdGenerateTemplates
-    init_cmdparser_objects(parser, generate_parser.add_subparsers(metavar=''), [
-        CmdGenerateTemplates()
-    ])
+    init_cmdparser_objects(
+            parser,
+            generate_parser.add_subparsers(metavar=''),
+            [CmdGenerateTemplates()])
 
     """
     Silent all sub-parser errors methods except the one which is called
