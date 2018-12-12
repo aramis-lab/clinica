@@ -275,7 +275,7 @@ def test_run_T1VolumeExistingTemplate():
         assert likeliness_measure(out_data_GM_MNI[i], ref_data_GM_MNI[i], (1e-2, 0.04), (1e-1, 0.01))
 
     # Remove data in out folder
-    #clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
 
