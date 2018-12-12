@@ -24,6 +24,7 @@ cache:
 
 before_script:
   - pwd
+  - export CLINICA_ENV_BRANCH_CLEAN=$(echo $CLINICA_ENV_BRANCH | tr -dc '[:alnum:]\-\_')
 after_script:
   #  - conda env remove -y  --name clinica_env_upgrade_dep
 
@@ -36,14 +37,14 @@ build:mac:
     # (by editing the environment.yml file), the environment
     # is recreated.
     - >
-      if conda env list|grep -w "clinica_env_upgrade_dep"; then
+      if conda env list|grep -w $CLINICA_ENV_BRANCH_CLEAN; then
         if git diff HEAD~ --name-only|grep environment.yml; then
-          echo "REcreate environment clinica_env_upgrade_dep"
-          conda env create --force --file environment.yml -n clinica_env_upgrade_dep
+          echo "REcreate environment $CLINICA_ENV_BRANCH_CLEAN"
+          conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH_CLEAN
         fi;
       else
-        echo "Create environment clinica_env_upgrade_dep"
-        conda env create --force --file environment.yml -n clinica_env_upgrade_dep
+        echo "Create environment $CLINICA_ENV_BRANCH_CLEAN"
+        conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH_CLEAN
       fi;
 
 build:linux:
@@ -55,14 +56,14 @@ build:linux:
     # (by editing the environment.yml file), the environment
     # is recreated.
     - >
-      if conda env list|grep -w "clinica_env_upgrade_dep"; then
+      if conda env list|grep -w $CLINICA_ENV_BRANCH_CLEAN; then
         if git diff HEAD~ --name-only|grep environment.yml; then
-          echo "REcreate environment clinica_env_upgrade_dep"
-          conda env create --force --file environment.yml -n clinica_env_upgrade_dep
+          echo "REcreate environment $CLINICA_ENV_BRANCH_CLEAN"
+          conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH_CLEAN
         fi;
       else
-        echo "Create environment clinica_env_upgrade_dep"
-        conda env create --force --file environment.yml -n clinica_env_upgrade_dep
+        echo "Create environment $CLINICA_ENV_BRANCH_CLEAN"
+        conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH_CLEAN
       fi;
 
 launch:mac:
@@ -72,7 +73,7 @@ launch:mac:
     - install
     - macOS
   script:
-    - source activate clinica_env_upgrade_dep
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
     - pip install --ignore-installed .
     - eval "$(register-python-argcomplete clinica)"
     - clinica --help
@@ -86,19 +87,26 @@ launch:linux:
     - install
     - linux
   script:
-    - source activate clinica_env_upgrade_dep
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
     - pip install --ignore-installed .
     - eval "$(register-python-argcomplete clinica)"
     - clinica --help
     - source deactivate
 
+test:style:
+  stage: test
+  tags:
+    - linux
+  script:
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
+    - pytest --verbose -k 'test_coding_style'
       
 test:instantiate:mac:
   stage: test
   tags:
     - macOS
   script:
-    - source activate clinica_env_upgrade_dep
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
     - module load clinica.all
     - cd test
     - ln -s /Volumes/builds/Clinica/data_ci ./data
@@ -112,8 +120,7 @@ test:instantiate:linux:
   tags:
     - linux
   script:
-    - source activate clinica_env_upgrade_dep
-    - export PATH="/home/gitlab-runner/dcm2nii":${PATH}
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
     - module load clinica.all
     - module unload clinica/freesurfer/5.3.0
     - module load clinica/freesurfer/6.0.0
@@ -123,6 +130,37 @@ test:instantiate:linux:
     - module purge
     - source deactivate
 
+test:run:mac:
+  stage: test
+  tags:
+    - macOS
+  script:
+    - source activate $CLINICA_ENV_BRANCH_CLEAN 
+    - module load clinica.all
+    - module unload clinica/freesurfer/5.3.0
+    - module load clinica/freesurfer/6.0.0
+    - cd test
+    - ln -s /Volumes/builds/Clinica/data_ci ./data
+    - pytest --verbose -k 'test_run'
+    - module purge
+    - source deactivate
+
+  
+test:run:linux:
+  stage: test
+  tags:
+    - linux
+  script:
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
+    - module load clinica.all
+    - module unload clinica/freesurfer/5.3.0
+    - module load clinica/freesurfer/6.0.0
+    - cd test
+    - ln -s /localdrive10TB/data/ci/data_ci_upgrade ./data
+    - taskset -c 0-21 pytest --verbose --disable-warnings --timeout=0 -n 6 -k 'test_run'
+    - module purge
+    - source deactivate
+ 
 
 pkg:
   stage: package
