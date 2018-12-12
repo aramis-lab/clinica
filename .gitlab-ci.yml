@@ -101,7 +101,7 @@ test:instantiate:mac:
     - source activate clinica_env_upgrade_dep
     - module load clinica.all
     - cd test
-    - ln -s /Volumes/builds/Clinica/data_ci_mac ./data
+    - ln -s /Volumes/builds/Clinica/data_ci ./data
     - pytest --verbose -k 'test_instantiate'
     - module purge
     - source deactivate
@@ -118,7 +118,7 @@ test:instantiate:linux:
     - module unload clinica/freesurfer/5.3.0
     - module load clinica/freesurfer/6.0.0
     - cd test
-    - ln -s /localdrive10TB/data/data_ci_linux_branch-upgrade_dep ./data
+    - ln -s /localdrive10TB/data/ci/data_ci_upgrade ./data
     - taskset -c 0-21 pytest --verbose --disable-warnings --timeout=0 -n 6 -k 'test_instantiate'
     - module purge
     - source deactivate

@@ -33,3 +33,4 @@ dependencies:
       - duecredit==0.6.4
       - xgboost==0.80
       - nipy==0.4.2
+      - pycodestyle
