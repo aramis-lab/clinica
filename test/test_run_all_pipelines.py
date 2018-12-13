@@ -51,7 +51,7 @@ def test_run_T1VolumeTissueSegmentation():
     import os
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
     from os.path import dirname, join, abspath
-    from comparison_functions import likeliness_measure
+    from .comparison_functions import likeliness_measure
 
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeTissueSegmentation')
     clean_folder(join(working_dir, 'T1VolumeTissueSegmentation'))
@@ -80,7 +80,7 @@ def test_run_T1VolumeCreateDartel():
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
     from os.path import dirname, join, abspath, exists
     import shutil
-    from comparison_functions import likeliness_measure
+    from .comparison_functions import likeliness_measure
 
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeCreateDartel')
 
@@ -205,7 +205,7 @@ def test_run_T1VolumeExistingDartel():
     from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_pipeline import T1VolumeExistingDartel
     from os.path import dirname, join, abspath
     import shutil
-    from comparison_functions import likeliness_measure
+    from .comparison_functions import likeliness_measure
 
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeExistingDartel')
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -244,7 +244,7 @@ def test_run_T1VolumeExistingTemplate():
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
     from os.path import dirname, join, abspath
     import shutil
-    from comparison_functions import likeliness_measure
+    from .comparison_functions import likeliness_measure
 
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeExistingTemplate')
 
@@ -324,8 +324,7 @@ def test_run_T1VolumeParcellation():
 def test_run_DWIPreprocessingUsingT1():
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DWIPreprocessingUsingT1
     from os.path import dirname, join, abspath
-    from comparison_functions import similarity_measure
-
+    from .comparison_functions import similarity_measure
 
     root = join(dirname(abspath(__file__)), 'data', 'DWIPreprocessingUsingT1')
 
@@ -356,7 +355,7 @@ def test_run_DWIPreprocessingUsingT1():
 def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DWIPreprocessingUsingPhaseDiffFieldmap
     from os.path import dirname, join, abspath
-    from comparison_functions import similarity_measure
+    from .comparison_functions import similarity_measure
     import warnings
     warnings.filterwarnings("ignore")
 
@@ -425,7 +424,7 @@ def test_run_DWIProcessingDTI():
 
 def test_run_fMRIPreprocessing():
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
-    from comparison_functions import similarity_measure
+    from .comparison_functions import similarity_measure
     from os.path import dirname, join, abspath
     import shutil
 
@@ -465,7 +464,7 @@ def test_run_PETVolume():
     from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
     from os.path import dirname, join, abspath, exists
     import shutil
-    from comparison_functions import likeliness_measure
+    from .comparison_functions import likeliness_measure
 
     root = join(dirname(abspath(__file__)), 'data', 'PETVolume')
 
@@ -724,7 +723,7 @@ def test_run_CreateSubjectSessionList():
     from os.path import join, dirname, abspath
     from os import remove
     from clinica.iotools.utils import data_handling as dt
-    from comparison_functions import identical_subject_list
+    from .comparison_functions import identical_subject_list
 
     root = join(dirname(abspath(__file__)), 'data', 'CreateSubjectSessionList')
 
@@ -780,7 +779,7 @@ def test_run_ComputeMissingModalities():
     from os.path import join, dirname, abspath, exists
     from os import remove
     from clinica.iotools.utils import data_handling as dt
-    from comparison_functions import same_missing_modality_tsv
+    from .comparison_functions import same_missing_modality_tsv
 
     root = join(dirname(abspath(__file__)), 'data', 'ComputeMissingMod')
 
