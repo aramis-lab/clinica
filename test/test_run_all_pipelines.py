@@ -447,11 +447,11 @@ def test_run_fMRIPreprocessing():
     pipeline.build()
     pipeline.run()
 
-    out_files = [join(root, 'out/caps/subjects/sub-20110506MEMEPPAT27/ses-M00/fmri/preprocessing/sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-Ixi549Space.nii.gz'),
-                 join(root, 'out/caps/subjects/sub-20110506MEMEPPAT27/ses-M00/fmri/preprocessing/sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-meanBOLD.nii.gz')]
+    out_files = [join(root, 'out/caps/subjects/sub-20110506MEMEPPAT27/ses-M00/fmri/preprocessing/sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-Ixi549Space_preproc.nii.gz'),
+                 join(root, 'out/caps/subjects/sub-20110506MEMEPPAT27/ses-M00/fmri/preprocessing/sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-meanBOLD_preproc.nii.gz')]
 
-    ref_files = [join(root, 'ref', 'sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-Ixi549Space.nii.gz'),
-                 join(root, 'ref', 'sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-meanBOLD.nii.gz')]
+    ref_files = [join(root, 'ref', 'sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-Ixi549Space_preproc.nii.gz'),
+                 join(root, 'ref', 'sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-meanBOLD_preproc.nii.gz')]
 
     for i in range(len(out_files)):
         assert similarity_measure(out_files[i], ref_files[i], 0.99)
