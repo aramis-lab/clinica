@@ -58,11 +58,11 @@ session_id= # Example: "M00"
 atlas_id= # Example: "desikan"
 
 mrview -mode 2 \
-	-load 			${caps_directory}/subjects/sub-${subject_id}/ses-${session_id}/t1/freesurfer_cross_sectional/sub-${subject_id}_ses-${session_id}/mri/orig.mgz \
-	-tractography.load 	${caps_directory}/subjects/sub-${subject_id}/ses-${session_id}/dwi/tractography/*.tck \
-	-odf.load_sh		${caps_directory}/subjects/sub-${subject_id}/ses-${session_id}/dwi/tractography/*_fod.mif \
-	-connectome.init 	${caps_directory}/subjects/sub-${subject_id}/ses-${session_id}/dwi/tractography/*_parcellation-${atlas_id}_nodes.mif \
-	-connectome.load 	${caps_directory}/subjects/sub-${subject_id}/ses-${session_id}/dwi/tractography/*_parcellation-${atlas_id}_connectome.csv
+        -load                   ${caps_directory}/subjects/sub-${subject_id}/ses-${session_id}/dwi/preprocessing/sub-${subject_id}_ses-${session_id}_preproc.nii.gz \
+        -tractography.load      ${caps_directory}/subjects/sub-${subject_id}/ses-${session_id}/dwi/csd_based_processing/*_tractography.tck \
+        -odf.load_sh            ${caps_directory}/subjects/sub-${subject_id}/ses-${session_id}/dwi/csd_based_processing/*_FOD.mif \
+        -connectome.init        ${caps_directory}/subjects/sub-${subject_id}/ses-${session_id}/dwi/csd_based_processing/*_parcellation-${atlas_id}_node.nii.gz \
+        -connectome.load        ${caps_directory}/subjects/sub-${subject_id}/ses-${session_id}/dwi/csd_based_processing/*_parcellation-${atlas_id}_connectivity.tsv
 ```
 
 Do not forget to fill in the missing information (after the `=` signs) and do not hesitate to remove lines of the `mrview` command that you may not be interested in or that may take to much time to load.
