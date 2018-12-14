@@ -250,20 +250,43 @@ class fMRIPreprocessing(cpe.Pipeline):
             'subjects/' + self.subjects[i] + '/' + self.sessions[i] +
             '/fmri/preprocessing' for i in range(len(self.subjects))]
         write_node.inputs.remove_dest_dir = True
-        write_node.inputs.regexp_substitutions = [
-            (r't1_brain_mask/(.+)\.nii\.gz$', r'\1_brainmask.nii.gz'),
-            (r'mc_params/rp_a(.+)\.txt$', r'\1_motion.tsv'),
-            (r'native_fmri/[u|r]a(.+)\.nii.gz$', r'\1_space-meanBOLD_preproc.nii.gz'),
-            (r't1_fmri/r[u|r]a(.+)\.nii.gz$', r'\1_space-T1w_preproc.nii.gz'),
-            (r'mni_fmri/wr[u|r]a(.+)\.nii.gz$', r'\1_space-Ixi549Space_preproc.nii.gz'),
-            (r'mni_smoothed_fmri/swr[u|r]a(.+)\.nii.gz$',
-             r'\1_space-Ixi549Space_fwhm-' + 'x'.join(map(str, self.parameters[
-                 'full_width_at_half_maximum'])) + '_preproc.nii.gz'),
-            # I don't know why it's adding this empty folder, so I remove it:
-            (r'trait_added', r''),
-        ]
         if ('freesurfer_brain_mask' in self.parameters) and not(self.parameters['freesurfer_brain_mask']):
-            write_node.inputs.regexp_substitutions[0] = (r't1_brain_mask/c3(.+)_maths_dil_ero_thresh_fillh\.nii\.gz$', r'\1_brainmask.nii.gz')
+            write_node.inputs.regexp_substitutions = [
+                (r't1_brain_mask/c3(.+)_maths_dil_ero_thresh_fillh\.nii\.gz$',
+                 r'\1_brainmask.nii.gz'),
+                (r'mc_params/rp_a(.+)\.txt$', r'\1_motion.tsv'),
+                (r'native_fmri/[u|r]a(.+)\.nii.gz$',
+                 r'\1_space-meanBOLD_preproc.nii.gz'),
+                (r't1_fmri/r[u|r]a(.+)\.nii.gz$',
+                 r'\1_space-T1w_preproc.nii.gz'),
+                (r'mni_fmri/wr[u|r]a(.+)\.nii.gz$',
+                 r'\1_space-Ixi549Space_preproc.nii.gz'),
+                (r'mni_smoothed_fmri/swr[u|r]a(.+)\.nii.gz$',
+                 r'\1_space-Ixi549Space_fwhm-' + 'x'.join(
+                     map(str, self.parameters[
+                         'full_width_at_half_maximum'])) + '_preproc.nii.gz'),
+                # I don't know why it's adding this empty folder, so I remove it:
+                (r'trait_added', r''),
+            ]
+        else:
+            write_node.inputs.regexp_substitutions = [
+                (r't1_brain_mask/(.+)\.nii\.gz$', r'\1_brainmask.nii.gz'),
+                (r'mc_params/rp_a(.+)\.txt$', r'\1_motion.tsv'),
+                (r'native_fmri/[u|r]a(.+)\.nii.gz$',
+                 r'\1_space-meanBOLD_preproc.nii.gz'),
+                (r't1_fmri/r[u|r]a(.+)\.nii.gz$',
+                 r'\1_space-T1w_preproc.nii.gz'),
+                (r'mni_fmri/wr[u|r]a(.+)\.nii.gz$',
+                 r'\1_space-Ixi549Space_preproc.nii.gz'),
+                (r'mni_smoothed_fmri/swr[u|r]a(.+)\.nii.gz$',
+                 r'\1_space-Ixi549Space_fwhm-' + 'x'.join(
+                         map(str, self.parameters[
+                             'full_width_at_half_maximum'])) +
+                 '_preproc.nii.gz'),
+                # I don't know why it's adding this empty folder, so I remove
+                # it:
+                (r'trait_added', r''),
+            ]
 
         # fMRI images in the subject's T1 native space are large, we add it
         # only if specified:
