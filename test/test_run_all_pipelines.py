@@ -565,7 +565,7 @@ def test_run_PETSurface():
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     pipeline = PetSurface(bids_directory=join(root, 'in', 'bids'),
-                          caps_directory=join(root, 'in', 'caps'),
+                          caps_directory=join(root, 'out', 'caps'),
                           tsv_file=join(root, 'in', 'subjects.tsv'))
     pipeline.parameters['pet_type'] = 'fdg'
     pipeline.parameters['wd'] = join(working_dir, 'PETSurface')
@@ -574,11 +574,11 @@ def test_run_PETSurface():
 
     # Check files
     out_files = [join(root, 'out/caps/subjects/sub-ADNI011S4105/ses-M00/pet/surface',
-                      'sub-ADNI011S4105_ses-M00_task-rest_acq-FDG_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
+                      'sub-ADNI011S4105_ses-M00_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
                       + h + '_fwhm-' + str(f) + '_projection.mgh')
                  for h in ['lh', 'rh']
                  for f in [0, 5, 10, 15, 20, 25]]
-    ref_files = [join(root, 'ref/sub-ADNI011S4105_ses-M00_task-rest_acq-FDG_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
+    ref_files = [join(root, 'ref/sub-ADNI011S4105_ses-M00_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
                       + h + '_fwhm-' + str(f) + '_projection.mgh')
                  for h in ['lh', 'rh']
                  for f in [0, 5, 10, 15, 20, 25]]
@@ -586,7 +586,7 @@ def test_run_PETSurface():
     for i in range(len(out_files)):
          assert np.allclose(np.squeeze(nib.load(out_files[i]).get_data()),
                             np.squeeze(nib.load(ref_files[i]).get_data()),
-                            rtol=1e-8, equal_nan=True)
+                            rtol=1e-4, equal_nan=True)
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
