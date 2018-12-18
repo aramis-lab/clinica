@@ -120,7 +120,7 @@ test:instantiate:linux:
     - module load clinica/freesurfer/6.0.0
     - cd test
     - ln -s /localdrive10TB/data/ci/data_ci_upgrade ./data
-    - taskset -c 0-21 pytest --verbose --disable-warnings --timeout=0 -n 6 -k 'test_run'
+    - taskset -c 0-21 pytest --verbose --disable-warnings --timeout=0 -n 6 -k 'test_run_PETSurface'
     - module purge
     - source deactivate
 

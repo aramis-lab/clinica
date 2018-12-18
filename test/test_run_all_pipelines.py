@@ -29,7 +29,8 @@ else:
 
 def test_run_T1FreeSurferCrossSectional():
     from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_pipeline import T1FreeSurferCrossSectional
-    from os.path import dirname, join, abspath
+    from os.path import dirname, join, abspath, isfile
+    import subprocess
 
     root = join(dirname(abspath(__file__)), 'data', 'T1FreeSurferCrossSectional')
 
@@ -43,6 +44,19 @@ def test_run_T1FreeSurferCrossSectional():
     pipeline.base_dir = join(working_dir, 'T1FreeSurferCrossSectional')
     pipeline.build()
     pipeline.run()
+
+    log_file = join(root, 'out', 'caps', 'subjects', 'sub-ADNI082S5029',
+                   'ses-M00', 't1', 'freesurfer_cross_sectional',
+                   'sub-ADNI082S5029_ses-M00', 'scripts',
+                   'recon-all-status.log')
+    if isfile(log_file):
+        last_line = str(subprocess.check_output(['tail', '-1', log_file]))
+        if 'finished without error' not in last_line.lower():
+            raise ValueError('FreeSurfer did not mark subject '
+                             'sub-ADNI082S5029 as -finished without error-')
+    else:
+        raise FileNotFoundError(log_file
+                                + ' was not found, something went wrong...')
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
@@ -538,7 +552,6 @@ def test_run_StatisticsSurface():
     pass
 
 def test_run_PETSurface():
-    # TODO once freesurfer6 is available, uncomment lines !
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
     from os.path import dirname, join, abspath
     import shutil
@@ -557,7 +570,7 @@ def test_run_PETSurface():
     pipeline.parameters['pet_type'] = 'fdg'
     pipeline.parameters['wd'] = join(working_dir, 'PETSurface')
     pipeline.build()
-    #pipeline.run()
+    pipeline.run()
 
     # Check files
     out_files = [join(root, 'out/caps/subjects/sub-ADNI011S4105/ses-M00/pet/surface',
@@ -834,6 +847,7 @@ def test_run_SVMRegularization():
 
     #Copy necessary data from in to out
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+
     # Instantiate pipeline and run()
     pipeline = SVMRegularization(caps_directory=join(root, 'out', 'caps'),
                                  tsv_file=join(root, 'in', 'subjects.tsv'))
@@ -855,11 +869,13 @@ def test_run_SVMRegularization():
     ref_data_REG_NIFTI = [nib.load(join(root, 'ref', sub + '_ses-M00_segm-graymatter_space-Ixi549Space_modulated-on_regularization-Fisher_fwhm-4.0_probability.nii.gz')).get_data()
                           for sub in subjects]
     for i in range(len(out_data_REG_NIFTI)):
-        assert np.allclose(out_data_REG_NIFTI[i], ref_data_REG_NIFTI[i], rtol=1e-3, equal_nan=True)
+        assert np.allclose(out_data_REG_NIFTI[i], ref_data_REG_NIFTI[i],
+                           rtol=1e-3, equal_nan=True)
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=True)
     pass
+
 
 def clean_folder(path, recreate=True):
     from os.path import abspath, exists
