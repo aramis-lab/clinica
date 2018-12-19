@@ -373,7 +373,6 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
     import warnings
     warnings.filterwarnings("ignore")
 
-
     root = join(dirname(abspath(__file__)), 'data', 'DWIPreprocessingUsingPhaseDiffFieldmap')
 
     # Remove old instance of UT
@@ -390,7 +389,7 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
 
     # Assert :
     out_file = join(root, 'out', 'caps', 'subjects', 'sub-CAPP01001TMM', 'ses-M00', 'dwi', 'preprocessing', 'sub-CAPP01001TMM_ses-M00_dwi_space-b0_preproc.nii.gz')
-    ref_file = join(root, 'ref', 'sub-CAPP01001TMM_ses-M00_dwi_space-T1w_preproc.nii.gz')
+    ref_file = join(root, 'ref', 'sub-CAPP01001TMM_ses-M00_dwi_space-b0_preproc.nii.gz')
 
     assert similarity_measure(out_file, ref_file, 0.955)
 
@@ -398,8 +397,8 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
+
 def test_run_DWIProcessingDTI():
-    # TODO : Alex must resolve the repetability issue (out file is never the same) -  assert deactivated
     from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_pipeline import DWIProcessingDTI
     from os.path import dirname, join, abspath, exists
     import shutil
