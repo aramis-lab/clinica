@@ -272,7 +272,7 @@ def gen_index_noddi(in_bval, b0_index):
     try:
         len(index_list) == vols
     except ValueError:
-        print "It seems that you do not define the index file for FSL eddy correctly!"
+        raise ValueError("It seems that you do not define the index file for FSL eddy correctly!")
     np.savetxt(out_file, index_array.T)
 
     return out_file
@@ -390,11 +390,10 @@ def grab_noddi_bids_files(bids_directory, tsv):
     try:
         len(subject_list) == len(session_list)
     except RuntimeError:
-        print "It seems that the nuber of session_list and subject_list are not in the same length, please check"
-        raise
+        raise RuntimeError("Session_list(" + str(len(session_list)) + ") and subject_list(" + str(len(subject_list)) + ") do not have the same length, please check")
 
     num_subject = len(subject_list)
-    for i in xrange(num_subject):
+    for i in range(num_subject):
         # AP
         subjec_nii = os.path.join(bids_directory, subject_list[i], session_list[i], 'dwi', subject_list[i] + '_' + session_list[i] + '_seq-mshellAP_dwi.nii.gz')
         bids_ap_dwi += [subjec_nii]
@@ -600,7 +599,7 @@ def epi_params(echo_spacing, acc_factor, enc_dir, enc_dir_alt, epi_factor):
 
 def create_list_tuple(bids_ap_dwi, bids_ap_dwi_bvec, bids_ap_dwi_bval, bids_pa_dwi, bids_pa_dwi_bvec, bids_pa_dwi_bval):
     list_tuple = []
-    for i in xrange(len(bids_ap_dwi)):
+    for i in range(len(bids_ap_dwi)):
         ls = []
         ls.append(bids_ap_dwi[i])
         ls.append(bids_ap_dwi_bvec[i])

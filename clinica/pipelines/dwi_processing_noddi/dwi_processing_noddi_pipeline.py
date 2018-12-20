@@ -33,7 +33,7 @@ class DwiProcessingNoddi(cpe.Pipeline):
 
 
     Example:
-        >>> import DwiProcessingNoddi
+        >>> from clinica.pipelines.dwi_processing_noddi.dwi_processing_noddi_pipeline import DwiProcessingNoddi
         >>> pipeline = dwi_processing_noddi('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipeline.parameters = {
         >>>     # ...
@@ -80,7 +80,7 @@ class DwiProcessingNoddi(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        import dwi_processing_noddi_utils as utils
+        import clinica.pipelines.dwi_processing_noddi.dwi_processing_noddi_utils as utils
 
         subject_id_list, noddi_preprocessed_dwi, noddi_preprocessed_bvec, noddi_preprocessed_bval, noddi_preprocessed_mask = utils.grab_noddi_preprocessed_files(
             self.caps_directory, self.tsv_file)
@@ -115,7 +115,7 @@ class DwiProcessingNoddi(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        import dwi_processing_noddi_utils as utils
+        import clinica.pipelines.dwi_processing_noddi.dwi_processing_noddi_utils as utils
 
         # Find container path from DWI filename
         # =====================================
@@ -144,12 +144,11 @@ class DwiProcessingNoddi(cpe.Pipeline):
         """Build and connect the core nodes of the pipeline.
         """
 
-        import dwi_processing_noddi_utils as utils
-        import nipype.interfaces.utility as nutil
-        import nipype.pipeline.engine as npe
+        import clinica.pipelines.dwi_processing_noddi.dwi_processing_noddi_utils as utils
 
         processing_pipeline = utils.matlab_noddi_processing(self.caps_directory,
-                                                            num_cores=self.parameters['n_procs']['n_procs'], bStep=self.parameters['bvalue_str']['bvalue_str'])
+                                                            num_cores=self.parameters['n_procs']['n_procs'],
+                                                            bStep=self.parameters['bvalue_str']['bvalue_str'])
 
         # Connection
         # ==========
