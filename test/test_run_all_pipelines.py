@@ -29,7 +29,8 @@ else:
 
 def test_run_T1FreeSurferCrossSectional():
     from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_pipeline import T1FreeSurferCrossSectional
-    from os.path import dirname, join, abspath
+    from os.path import dirname, join, abspath, isfile
+    import subprocess
 
     root = join(dirname(abspath(__file__)), 'data', 'T1FreeSurferCrossSectional')
 
@@ -42,7 +43,20 @@ def test_run_T1FreeSurferCrossSectional():
     pipeline.parameters['recon_all_args'] = '-qcache'
     pipeline.base_dir = join(working_dir, 'T1FreeSurferCrossSectional')
     pipeline.build()
-    #pipeline.run()
+    pipeline.run()
+
+    log_file = join(root, 'out', 'caps', 'subjects', 'sub-ADNI082S5029',
+                   'ses-M00', 't1', 'freesurfer_cross_sectional',
+                   'sub-ADNI082S5029_ses-M00', 'scripts',
+                   'recon-all-status.log')
+    if isfile(log_file):
+        last_line = str(subprocess.check_output(['tail', '-1', log_file]))
+        if 'finished without error' not in last_line.lower():
+            raise ValueError('FreeSurfer did not mark subject '
+                             'sub-ADNI082S5029 as -finished without error-')
+    else:
+        raise FileNotFoundError(log_file
+                                + ' was not found, something went wrong...')
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
@@ -51,7 +65,7 @@ def test_run_T1VolumeTissueSegmentation():
     import os
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
     from os.path import dirname, join, abspath
-    from comparison_functions import likeliness_measure
+    from .comparison_functions import likeliness_measure
 
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeTissueSegmentation')
     clean_folder(join(working_dir, 'T1VolumeTissueSegmentation'))
@@ -80,7 +94,7 @@ def test_run_T1VolumeCreateDartel():
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
     from os.path import dirname, join, abspath, exists
     import shutil
-    from comparison_functions import likeliness_measure
+    from .comparison_functions import likeliness_measure
 
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeCreateDartel')
 
@@ -205,7 +219,7 @@ def test_run_T1VolumeExistingDartel():
     from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_pipeline import T1VolumeExistingDartel
     from os.path import dirname, join, abspath
     import shutil
-    from comparison_functions import likeliness_measure
+    from .comparison_functions import likeliness_measure
 
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeExistingDartel')
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -244,7 +258,7 @@ def test_run_T1VolumeExistingTemplate():
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
     from os.path import dirname, join, abspath
     import shutil
-    from comparison_functions import likeliness_measure
+    from .comparison_functions import likeliness_measure
 
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeExistingTemplate')
 
@@ -324,8 +338,7 @@ def test_run_T1VolumeParcellation():
 def test_run_DWIPreprocessingUsingT1():
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DWIPreprocessingUsingT1
     from os.path import dirname, join, abspath
-    from comparison_functions import similarity_measure
-
+    from .comparison_functions import similarity_measure
 
     root = join(dirname(abspath(__file__)), 'data', 'DWIPreprocessingUsingT1')
 
@@ -356,10 +369,9 @@ def test_run_DWIPreprocessingUsingT1():
 def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DWIPreprocessingUsingPhaseDiffFieldmap
     from os.path import dirname, join, abspath
-    from comparison_functions import similarity_measure
+    from .comparison_functions import similarity_measure
     import warnings
     warnings.filterwarnings("ignore")
-
 
     root = join(dirname(abspath(__file__)), 'data', 'DWIPreprocessingUsingPhaseDiffFieldmap')
 
@@ -377,7 +389,7 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
 
     # Assert :
     out_file = join(root, 'out', 'caps', 'subjects', 'sub-CAPP01001TMM', 'ses-M00', 'dwi', 'preprocessing', 'sub-CAPP01001TMM_ses-M00_dwi_space-b0_preproc.nii.gz')
-    ref_file = join(root, 'ref', 'sub-CAPP01001TMM_ses-M00_dwi_space-T1w_preproc.nii.gz')
+    ref_file = join(root, 'ref', 'sub-CAPP01001TMM_ses-M00_dwi_space-b0_preproc.nii.gz')
 
     assert similarity_measure(out_file, ref_file, 0.955)
 
@@ -385,8 +397,8 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
+
 def test_run_DWIProcessingDTI():
-    # TODO : Alex must resolve the repetability issue (out file is never the same) -  assert deactivated
     from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_pipeline import DWIProcessingDTI
     from os.path import dirname, join, abspath, exists
     import shutil
@@ -425,7 +437,7 @@ def test_run_DWIProcessingDTI():
 
 def test_run_fMRIPreprocessing():
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
-    from comparison_functions import similarity_measure
+    from .comparison_functions import similarity_measure
     from os.path import dirname, join, abspath
     import shutil
 
@@ -448,11 +460,11 @@ def test_run_fMRIPreprocessing():
     pipeline.build()
     pipeline.run()
 
-    out_files = [join(root, 'out/caps/subjects/sub-20110506MEMEPPAT27/ses-M00/fmri/preprocessing/sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-Ixi549Space.nii.gz'),
-                 join(root, 'out/caps/subjects/sub-20110506MEMEPPAT27/ses-M00/fmri/preprocessing/sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-meanBOLD.nii.gz')]
+    out_files = [join(root, 'out/caps/subjects/sub-20110506MEMEPPAT27/ses-M00/fmri/preprocessing/sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-Ixi549Space_preproc.nii.gz'),
+                 join(root, 'out/caps/subjects/sub-20110506MEMEPPAT27/ses-M00/fmri/preprocessing/sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-meanBOLD_preproc.nii.gz')]
 
-    ref_files = [join(root, 'ref', 'sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-Ixi549Space.nii.gz'),
-                 join(root, 'ref', 'sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-meanBOLD.nii.gz')]
+    ref_files = [join(root, 'ref', 'sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-Ixi549Space_preproc.nii.gz'),
+                 join(root, 'ref', 'sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-meanBOLD_preproc.nii.gz')]
 
     for i in range(len(out_files)):
         assert similarity_measure(out_files[i], ref_files[i], 0.99)
@@ -465,7 +477,7 @@ def test_run_PETVolume():
     from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
     from os.path import dirname, join, abspath, exists
     import shutil
-    from comparison_functions import likeliness_measure
+    from .comparison_functions import likeliness_measure
 
     root = join(dirname(abspath(__file__)), 'data', 'PETVolume')
 
@@ -539,7 +551,6 @@ def test_run_StatisticsSurface():
     pass
 
 def test_run_PETSurface():
-    # TODO once freesurfer6 is available, uncomment lines !
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
     from os.path import dirname, join, abspath
     import shutil
@@ -553,28 +564,28 @@ def test_run_PETSurface():
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     pipeline = PetSurface(bids_directory=join(root, 'in', 'bids'),
-                          caps_directory=join(root, 'in', 'caps'),
+                          caps_directory=join(root, 'out', 'caps'),
                           tsv_file=join(root, 'in', 'subjects.tsv'))
     pipeline.parameters['pet_type'] = 'fdg'
     pipeline.parameters['wd'] = join(working_dir, 'PETSurface')
     pipeline.build()
-    #pipeline.run()
+    pipeline.run()
 
     # Check files
     out_files = [join(root, 'out/caps/subjects/sub-ADNI011S4105/ses-M00/pet/surface',
-                      'sub-ADNI011S4105_ses-M00_task-rest_acq-FDG_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
+                      'sub-ADNI011S4105_ses-M00_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
                       + h + '_fwhm-' + str(f) + '_projection.mgh')
                  for h in ['lh', 'rh']
                  for f in [0, 5, 10, 15, 20, 25]]
-    ref_files = [join(root, 'ref/sub-ADNI011S4105_ses-M00_task-rest_acq-FDG_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
+    ref_files = [join(root, 'ref/sub-ADNI011S4105_ses-M00_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
                       + h + '_fwhm-' + str(f) + '_projection.mgh')
                  for h in ['lh', 'rh']
                  for f in [0, 5, 10, 15, 20, 25]]
 
-    # for i in range(len(out_files)):
-    #     assert np.allclose(np.squeeze(nib.load(out_files[i]).get_data()),
-    #                        np.squeeze(nib.load(ref_files[i]).get_data()),
-    #                        rtol=1e-8, equal_nan=True)
+    for i in range(len(out_files)):
+         assert np.allclose(np.squeeze(nib.load(out_files[i]).get_data()),
+                            np.squeeze(nib.load(ref_files[i]).get_data()),
+                            rtol=1e-4, equal_nan=True)
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
@@ -724,7 +735,7 @@ def test_run_CreateSubjectSessionList():
     from os.path import join, dirname, abspath
     from os import remove
     from clinica.iotools.utils import data_handling as dt
-    from comparison_functions import identical_subject_list
+    from .comparison_functions import identical_subject_list
 
     root = join(dirname(abspath(__file__)), 'data', 'CreateSubjectSessionList')
 
@@ -780,7 +791,7 @@ def test_run_ComputeMissingModalities():
     from os.path import join, dirname, abspath, exists
     from os import remove
     from clinica.iotools.utils import data_handling as dt
-    from comparison_functions import same_missing_modality_tsv
+    from .comparison_functions import same_missing_modality_tsv
 
     root = join(dirname(abspath(__file__)), 'data', 'ComputeMissingMod')
 
@@ -820,6 +831,48 @@ def test_run_Aibl2Bids():
 
     convert_images(dataset_directory, clinical_data_directory, bids_directory)
     convert_clinical_data(bids_directory, clinical_data_directory)
+    pass
+
+def test_run_SVMRegularization():
+    from clinica.pipelines.svm_regularization.svm_regularization_pipeline import SVMRegularization
+    from os.path import dirname, join, abspath, exists
+    import shutil
+    import numpy as np
+    import nibabel as nib
+    root = join(dirname(abspath(__file__)), 'data', 'SVMReg')
+
+    # Remove potential residual of previous UT
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+
+    #Copy necessary data from in to out
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+
+    # Instantiate pipeline and run()
+    pipeline = SVMRegularization(caps_directory=join(root, 'out', 'caps'),
+                                 tsv_file=join(root, 'in', 'subjects.tsv'))
+
+    pipeline.parameters['group_id'] = 'ADCNbaseline'
+    pipeline.parameters['fwhm'] = 4
+    pipeline.parameters['h'] = 1.5
+    pipeline.parameters['image_type'] = 't1'
+    pipeline.parameters['pet_type'] = 'fdg'
+    pipeline.base_dir = join(working_dir, 'SVMRegularization')
+    pipeline.build()
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+
+    # Check output vs ref
+    subjects = ['sub-ADNI002S4213', 'sub-ADNI011S4075']
+    out_data_REG_NIFTI = [nib.load(join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 't1', 'input_regularised_svm', 'group-ADCNbaseline',
+                                        sub + '_ses-M00_segm-graymatter_space-Ixi549Space_modulated-on_regularization-Fisher_fwhm-4_probability.nii.gz')).get_data()
+                          for sub in subjects]
+    ref_data_REG_NIFTI = [nib.load(join(root, 'ref', sub + '_ses-M00_segm-graymatter_space-Ixi549Space_modulated-on_regularization-Fisher_fwhm-4.0_probability.nii.gz')).get_data()
+                          for sub in subjects]
+    for i in range(len(out_data_REG_NIFTI)):
+        assert np.allclose(out_data_REG_NIFTI[i], ref_data_REG_NIFTI[i],
+                           rtol=1e-3, equal_nan=True)
+
+    # Remove data in out folder
+    clean_folder(join(root, 'out', 'caps'), recreate=True)
     pass
 
 

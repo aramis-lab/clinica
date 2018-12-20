@@ -1,0 +1,22 @@
+{
+    "id": "aramislab/dwi-processing-csd",
+    "author": "Jeremy Guillon",
+    "version": "0.1.0",
+    "dependencies": [
+        {
+            "type": "binary",
+            "name": "clinica",
+            "version": ">=0.1.0"
+        },
+        {
+            "type": "software",
+            "name": "fsl",
+            "version": ""
+        },
+        {
+            "type": "software",
+            "name": "mrtrix",
+            "version": ""
+        }
+    ]
+}

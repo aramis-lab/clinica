@@ -241,3 +241,20 @@ def test_instantiate_InputsML():
             else:
                 raise ValueError('An error occured...')
     pass
+
+
+def test_instantiate_SVMRegularization():
+    from clinica.pipelines.svm_regularization.svm_regularization_pipeline import SVMRegularization
+    from os.path import dirname, join, abspath
+
+    root = join(dirname(abspath(__file__)), 'data', 'SVMReg')
+    pipeline = SVMRegularization(caps_directory=join(root, 'in', 'caps'),
+                                 tsv_file=join(root, 'in', 'subjects.tsv'))
+    pipeline.parameters['group_id'] = 'ADCNbaseline'
+    pipeline.parameters['fwhm'] = 4
+    pipeline.parameters['h'] = 1.5
+    pipeline.parameters['image_type'] = 't1'
+    pipeline.parameters['pet_type'] = 'fdg'
+    pipeline.build()
+    pass
+
