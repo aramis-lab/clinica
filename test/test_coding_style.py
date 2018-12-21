@@ -22,6 +22,7 @@ def test_coding_style():
                     'E226', 'E241', 'E242', 'E704', 'W503',
                     'E501', 'W504', 'W505'])
     result = style.check_files(['clinica/'])
+    result.print_statistics()
     assert result.total_errors ==  0, "Found code style errors (and warnings)."
     pass
 
