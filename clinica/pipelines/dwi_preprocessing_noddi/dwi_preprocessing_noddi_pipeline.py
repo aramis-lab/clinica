@@ -16,13 +16,6 @@ import clinica.pipelines.engine as cpe
 class DwiPreprocessingNoddi(cpe.Pipeline):
     """dwi_preprocessing_noddi SHORT DESCRIPTION.
 
-    Warnings:
-        - A WARNING.
-
-    Todos:
-        - [x] A FILLED TODO ITEM.
-        - [ ] AN ON-GOING TODO ITEM.
-
     Args: input_dir: A BIDS directory.  output_dir: An empty output directory
     where CAPS structured data will be written.  subjects_sessions_list: The
     Subjects-Sessions list file (in .tsv format).
@@ -79,7 +72,7 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        import dwi_preprocessing_noddi_utils as utils
+        import clinica.pipelines.dwi_preprocessing_noddi.dwi_preprocessing_noddi_utils as utils
 
         bids_ap_dwi, bids_ap_dwi_bvec, bids_ap_dwi_bval, bids_pa_dwi, bids_pa_dwi_bvec, bids_pa_dwi_bval = utils.grab_noddi_bids_files(self.bids_directory, self.tsv_file)
         list_tuple = utils.create_list_tuple(bids_ap_dwi, bids_ap_dwi_bvec, bids_ap_dwi_bval, bids_pa_dwi, bids_pa_dwi_bvec, bids_pa_dwi_bval)
@@ -111,8 +104,7 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        from os.path import join
-        import dwi_preprocessing_noddi_utils as utils
+        import clinica.pipelines.dwi_preprocessing_noddi.dwi_preprocessing_noddi_utils as utils
 
         # Find container path from DWI filename
         # =====================================
@@ -140,7 +132,7 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
         """
-        import dwi_preprocessing_noddi_utils as utils
+        import clinica.pipelines.dwi_preprocessing_noddi.dwi_preprocessing_noddi_utils as utils
 
         one_subj_noddi = utils.noddi_preprocessing_twoped(self.caps_directory, epi_params=self.parameters['epi_param'],
                                                           alt_epi_params=self.parameters['alt_epi_params'])
