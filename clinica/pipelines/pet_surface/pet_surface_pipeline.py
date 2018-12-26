@@ -51,7 +51,6 @@ class PetSurface(cpe.Pipeline):
 
         return []
 
-
     def build_input_node(self):
         """We iterate over subjects to get all the files needed to run the pipeline
         """
@@ -89,7 +88,6 @@ class PetSurface(cpe.Pipeline):
         read_parameters_node.inputs.desikan_left = []
         read_parameters_node.inputs.desikan_right = []
         caps_layout = CAPSLayout(self.caps_directory)
-
 
         cprint('------- INPUT FILES FOR EACH SUBJECTS -------')
         subjects_regex = '|'.join(sub[4:] for sub in self.subjects)
@@ -165,7 +163,6 @@ class PetSurface(cpe.Pipeline):
                                               subject=subjects_regex,
                                               session=sessions_regex)
 
-
         missing_files = []
         for i in range(len(self.subjects)):
             read_parameters_node.inputs.pet.append(handle_files(self.subjects[i],
@@ -232,7 +229,6 @@ class PetSurface(cpe.Pipeline):
             (read_parameters_node,      self.input_node,    [('desikan_right',          'desikan_right')])
         ])
 
-
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
         """
@@ -243,7 +239,6 @@ class PetSurface(cpe.Pipeline):
         # pipeline.
 
         pass
-
 
     def build_core_nodes(self):
         """The function get_wf constructs a pipeline for one subject (in pet_surface_utils.py) and runs it.
@@ -258,7 +253,7 @@ class PetSurface(cpe.Pipeline):
         import os
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as niu
-        import pet_surface_utils as utils
+        import clinica.pipelines.pet_surface.pet_surface_utils as utils
 
         full_pipe = npe.MapNode(niu.Function(input_names=['subject_id',
                                                           'session_id',
@@ -319,8 +314,7 @@ class PetSurface(cpe.Pipeline):
 
         full_pipe.inputs.matscript_folder_inverse_deformation = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 
-
-            # Connection
+        # Connection
         # ==========
         self.connect([
             (self.input_node, full_pipe, [('pet', 'pet')]),

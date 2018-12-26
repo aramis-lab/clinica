@@ -139,7 +139,7 @@ class SVMRegularization(cpe.Pipeline):
         """Build and connect the core nodes of the pipeline.
         """
 
-        import svm_regularization_utils as utils
+        import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio

@@ -30,7 +30,7 @@ class OasisToBids(Converter):
         from os import path
         import os
         import numpy as np
-        print 'Converting clinical data...'
+        print('Converting clinical data...')
         bids_ids = bids.get_bids_subjs_list(bids_dir)
 
         iotools_folder = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -42,15 +42,15 @@ class OasisToBids(Converter):
 
         # Replace the values of the diagnosis_bl column
         participants_df['diagnosis_bl'].replace([0.0, np.nan], 'CN', inplace=True)
-        participants_df['diagnosis_bl'].replace([0.5], 'AD', inplace=True)
-        participants_df['diagnosis_bl'].replace([2.0], 'AD', inplace=True)
-        participants_df['diagnosis_bl'].replace(participants_df['diagnosis_bl']>0.0, 'AD', inplace=True)
+        participants_df['diagnosis_bl'].replace([0.5, 1.0, 1.5, 2.0], 'AD', inplace=True)
+        # Following line has no sense
+        # participants_df['diagnosis_bl'].replace(participants_df['diagnosis_bl']>0.0, 'AD', inplace=True)
         participants_df.to_csv(path.join(bids_dir, 'participants.tsv'), sep='\t', index=False, encoding='utf-8')
 
         # --Create sessions files--
         sessions_dict = bids.create_sessions_dict(clinical_data_dir, 'OASIS', clinic_specs_path, bids_ids, 'ID')
         for y in bids_ids:
-            if sessions_dict[y]['M00']['diagnosis'] >0 :
+            if sessions_dict[y]['M00']['diagnosis'] > 0:
                 sessions_dict[y]['M00']['diagnosis'] = 'AD'
             else:
                 sessions_dict[y]['M00']['diagnosis'] = 'CN'
@@ -85,9 +85,9 @@ class OasisToBids(Converter):
         for subj_folder in subjs_folders:
             t1_folder = path.join(subj_folder, 'PROCESSED', 'MPRAGE', 'SUBJ_111')
             subj_id = os.path.basename(subj_folder)
-            print 'Converting ', subj_id
+            print('Converting ', subj_id)
             numerical_id = (subj_id.split("_"))[1]
-            bids_id = 'sub-OASIS1'+ str(numerical_id)
+            bids_id = 'sub-OASIS1' + str(numerical_id)
             bids_subj_folder = path.join(dest_dir, bids_id)
             if not os.path.isdir(bids_subj_folder):
                 os.mkdir(bids_subj_folder)
@@ -99,6 +99,6 @@ class OasisToBids(Converter):
 
             # In order do convert the Analyze format to NIFTI the path to the .img file is required
             img_file_path = glob(path.join(t1_folder, '*.img'))[0]
-            output_path = path.join(session_folder,'anat',bids_id+'_ses-M00_T1w.nii')
+            output_path = path.join(session_folder, 'anat', bids_id+'_ses-M00_T1w.nii')
             os.system('mri_convert'+' '+img_file_path+' '+output_path)
             bids.compress_nii(output_path)

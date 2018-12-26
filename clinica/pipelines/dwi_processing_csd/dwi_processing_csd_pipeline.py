@@ -41,7 +41,7 @@ class DWIProcessingCSD(cpe.Pipeline):
 
 
     Example:
-        >>> from clinica.pipelines.dwi_processing_csd import DWIProcessingCSD
+        >>> from clinica.pipelines.dwi_processing_csd.dwi_processing_csd_pipeline import DWIProcessingCSD
         >>> pipeline = DWIProcessingCSD('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
         >>> pipeline.parameters = {
         >>>     # ...
@@ -251,7 +251,7 @@ class DWIProcessingCSD(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         import nipype.interfaces.io as nio
-        import dwi_processing_csd_utils as utils
+        import clinica.pipelines.dwi_processing_csd.dwi_processing_csd_utils as utils
 
         # Writing CAPS
         # ============
@@ -311,7 +311,7 @@ class DWIProcessingCSD(cpe.Pipeline):
         import nipype.interfaces.mrtrix3 as mrtrix3
         from clinica.utils.exceptions import ClinicaCAPSError
         from clinica.utils.stream import cprint
-        import dwi_processing_csd_utils as utils
+        import clinica.pipelines.dwi_processing_csd.dwi_processing_csd_utils as utils
 
         cprint('Building the pipeline...')
 

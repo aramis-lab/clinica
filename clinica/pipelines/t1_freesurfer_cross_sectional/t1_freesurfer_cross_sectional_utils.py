@@ -12,11 +12,10 @@ __status__ = "Development"
 
 def bids_datagrabber(input_dir, subject_list, session_list):
     """
-        Fetch t1 images from a BIDS directory based on subject_list and a session_list
-    Args:
-        input_dir: BIDS directory
-        subject_list: a list containing all the participant_id
-        session_list: a list containing all the session_id
+        Fetch t1 images from a BIDS directory based on subject_list and a
+        session_list Args: input_dir: BIDS directory subject_list: a list
+        containing all the participant_id session_list: a list containing all
+        the session_id
 
     Returns: a list containing all the t1 images
 
@@ -53,7 +52,7 @@ def bids_datagrabber(input_dir, subject_list, session_list):
             else:
                 anat_t1.append(t1)
 
-    ### check if pybids works well tp find all the T1 images
+    # check if pybids works well tp find all the T1 images
     if len(missing_subject_session) > 0:
         error_string = 'Please verify there is no error in your tsv file. Clinica could not find T1 for those ' + str(len(missing_subject_session)) + ' subjects - session :'
         for e in missing_subject_session:
@@ -80,7 +79,8 @@ def get_dirs_check_reconalled(output_dir, subject_list, session_list):
 
     """
 
-    import os, errno
+    import os
+    import errno
     from copy import deepcopy as cp
     import subprocess
     from clinica.utils.stream import cprint
@@ -101,7 +101,7 @@ def get_dirs_check_reconalled(output_dir, subject_list, session_list):
         if exception.errno != errno.EEXIST:  # if the error is not exist error, raise, otherwise, pass
             raise
 
-    ## subject_dir is the real path to FreeSurfer output path
+    # subject_dir is the real path to FreeSurfer output path
     subject_dir = []
     subject_dir_without_reconalled = []
 
@@ -161,7 +161,7 @@ def checkfov(t1_list, recon_all_args):
     f = nib.load(t1_list[0])
     voxel_size = f.header.get_zooms()
     t1_size = f.header.get_data_shape()
-    if (voxel_size[0] * t1_size[0] > 256) or (voxel_size[1] * t1_size[1]> 256) or (voxel_size[2] * t1_size[2]> 256):
+    if (voxel_size[0] * t1_size[0] > 256) or (voxel_size[1] * t1_size[1] > 256) or (voxel_size[2] * t1_size[2] > 256):
         cprint("Setting MRI Convert to crop images to 256 FOV")
         optional_flag = '-cw256'
     else:
@@ -217,8 +217,8 @@ def log_summary(subject_list, session_list, subject_id, output_dir):
     log_name = os.path.join(dest_dir, 'recon_all_summary.log')
     input_logs = []
 
-    for i in xrange(len(subject_list)):
-        input_log = os.path.join(dest_dir, subject_list[i], session_list[i], 't1', 'freesurfer_cross_sectional', subject_id[i], 'scripts', 'recon-all-status.log' )
+    for i in range(len(subject_list)):
+        input_log = os.path.join(dest_dir, subject_list[i], session_list[i], 't1', 'freesurfer_cross_sectional', subject_id[i], 'scripts', 'recon-all-status.log')
         input_logs.append(input_log)
 
     bad_log = 0
@@ -254,7 +254,8 @@ def write_statistics_per_subject(subject_id, output_dir):
     Returns:
 
     """
-    import os, errno
+    import os
+    import errno
     from clinica.utils.stream import cprint
 
     subject_list = subject_id.split('_')[0]
@@ -301,7 +302,7 @@ def write_statistics_per_subject(subject_id, output_dir):
     try:
         os.makedirs(dest_dir)
     except OSError as exception:
-        if exception.errno != errno.EEXIST: # if dest_dir exists, go on, if its other error, raise
+        if exception.errno != errno.EEXIST:  # if dest_dir exists, go on, if its other error, raise
             raise
     subject = os.path.join(cs_dir, subject_id)
 
@@ -376,7 +377,7 @@ def write_statistics_per_subject(subject_id, output_dir):
     cmd_aparc_destrieux_rh_meancurv = 'aparcstats2table --subjects ' + subject + ' --hemi rh --parc aparc.a2009s --meas meancurv --tablefile ' + aparc_destrieux_rh_meancurv_tsv
     os.system(cmd_aparc_destrieux_rh_meancurv)
 
-    #### BA atals does not work for FreeSurfer 6.0
+    # BA atals does not work for FreeSurfer 6.0
     # cmd_aparc_BA_lh_volume = 'aparcstats2table --subjects ' + subject + ' --hemi lh --parc BA --meas volume --tablefile ' + aparc_BA_lh_volume_tsv
     # os.system(cmd_aparc_BA_lh_volume)
     # cmd_aparc_BA_rh_volume = 'aparcstats2table --subjects ' + subject + ' --hemi rh --parc BA --meas volume --tablefile ' + aparc_BA_rh_volume_tsv

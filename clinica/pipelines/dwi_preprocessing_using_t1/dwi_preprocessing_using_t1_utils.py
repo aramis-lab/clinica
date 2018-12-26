@@ -1,5 +1,6 @@
 # coding: utf8
 
+
 def ants_combine_transform(in_file, transforms_list, reference):
     import os
     import os.path as op
@@ -102,21 +103,29 @@ def rename_into_caps(in_bids_dwi,
     return out_caps_dwi.outputs.out_file, out_caps_bval.outputs.out_file, \
         out_caps_bvec.outputs.out_file, out_caps_brainmask.outputs.out_file
 
+
 def eddy_fsl(in_bvec, in_bval, in_file, in_mask, in_acqp, in_index):
 
     import os
     import os.path as op
 
-    ## TODO, using EDDY interface in nipype, but to make sure using the right version of FSL.
+    # TODO, using EDDY interface in nipype, but to make sure using the right
+    # version of FSL.
 
     out_parameter = op.abspath('eddy_corrected.eddy_parameters')
     out_corrected = op.abspath('eddy_corrected.nii.gz')
     out_rotated_bvecs = op.abspath('eddy_corrected.eddy_rotated_bvecs')
 
-    cmd = 'eddy --imain=' + in_file + ' --bvecs=' + in_bvec +' --bvals=' + in_bval + ' --out=eddy_corrected' + ' --mask=' + in_mask + ' --acqp=' + in_acqp + ' --index=' + in_index + ' --flm=linear'
+    cmd = 'eddy --imain=' + in_file + ' --bvecs=' + in_bvec + ' --bvals=' + in_bval + ' --out=eddy_corrected' + ' --mask=' + in_mask + ' --acqp=' + in_acqp + ' --index=' + in_index + ' --flm=linear'
     os.system(cmd)
-
+    if not os.path.exists(out_corrected):
+        print('Output file not generated. Trying with the binary eddy_opemp...')
+        cmd = 'eddy_openmp --imain=' + in_file + ' --bvecs=' + in_bvec + ' --bvals=' + in_bval + ' --out=eddy_corrected' + ' --mask=' + in_mask + ' --acqp=' + in_acqp + ' --index=' + in_index + ' --flm=linear'
+        os.system(cmd)
+        if not os.path.exists(out_corrected):
+            raise ValueError('File ' + out_corrected + ' does not exist even though following command line has been run : ' + cmd)
     return out_parameter, out_corrected, out_rotated_bvecs
+
 
 def b0_indices(in_bval, max_b=10.0):
     """
@@ -125,6 +134,7 @@ def b0_indices(in_bval, max_b=10.0):
     import numpy as np
     bval = np.loadtxt(in_bval)
     return np.argwhere(bval <= max_b).flatten().tolist()
+
 
 def generate_index(in_bval, b0_index):
     """
@@ -148,10 +158,11 @@ def generate_index(in_bval, b0_index):
     try:
         len(index_list) == vols
     except ValueError:
-        print "It seems that you do not define the index file for FSL eddy correctly!"
+        print("It seems that you do not define the index file for FSL eddy correctly!")
     np.savetxt(out_file, index_array.T)
 
     return out_file
+
 
 def generate_acq(in_b0, epi_param):
     """
@@ -184,6 +195,7 @@ def generate_acq(in_b0, epi_param):
 
     return out_file
 
+
 def change_itk_transform_type(input_affine_file):
         """
         this function takes in the affine.txt produced by the c3d_affine_tool
@@ -192,7 +204,7 @@ def change_itk_transform_type(input_affine_file):
         compatible with the antsApplyTransforms tool and produces a new affine
         file titled 'updated_affine.txt'
         """
-        import  os
+        import os
 
         new_file_lines = []
 
@@ -225,6 +237,7 @@ def expend_matrix_list(in_matrix, in_bvec):
 
     return out_matrix_list
 
+
 def ants_registration_syn_quick(fix_image, moving_image):
 
     import subprocess
@@ -243,6 +256,7 @@ def ants_registration_syn_quick(fix_image, moving_image):
 
     return image_warped, affine_matrix, warp, inverse_warped, inverse_warp
 
+
 def ants_warp_image_multi_transform(fix_image, moving_image, ants_warp_affine):
 
     import os
@@ -254,6 +268,7 @@ def ants_warp_image_multi_transform(fix_image, moving_image, ants_warp_affine):
     os.system(cmd)
 
     return out_warp
+
 
 def rotate_bvecs(in_bvec, in_matrix):
     """
@@ -289,6 +304,7 @@ def rotate_bvecs(in_bvec, in_matrix):
     np.savetxt(out_file, np.array(new_bvecs).T, fmt='%0.15f')
     return out_file
 
+
 def ants_combin_transform(fix_image, moving_image, ants_warp_affine):
         import os
         import os.path as op
@@ -314,10 +330,11 @@ def create_jacobian_determinant_image(imageDimension, deformationField, outputIm
 
     outputImage = op.abspath(outputImage)
 
-    cmd = 'CreateJacobianDeterminantImage ' + str(imageDimension) + ' ' + deformationField + ' '+ outputImage
+    cmd = 'CreateJacobianDeterminantImage ' + str(imageDimension) + ' ' + deformationField + ' ' + outputImage
     os.system(cmd)
 
     return outputImage
+
 
 def convvert_eddy_2_hmc_ecc_flirt(eddy_parameters):
 
@@ -336,23 +353,23 @@ def convvert_eddy_2_hmc_ecc_flirt(eddy_parameters):
     num_vols = df_hmc.shape[0]
     for i in range(num_vols):
 
-        ### HMC
+        # HMC
         hmc_affine = np.ones([4, 4])
         # for translation
-        hmc_affine[0, 3], hmc_affine[1, 3], hmc_affine[2, 3] = df_hmc.iloc[i,:][0], df_hmc.iloc[i,:][1], df_hmc.iloc[i,:][2]
+        hmc_affine[0, 3], hmc_affine[1, 3], hmc_affine[2, 3] = df_hmc.iloc[i, :][0], df_hmc.iloc[i, :][1], df_hmc.iloc[i, :][2]
         hmc_affine[3, 0], hmc_affine[3, 1], hmc_affine[3, 2] = 0, 0, 0
         # for rotation
         Rx = np.array([[1, 0, 0],
-                      [0, np.cos(df_hmc.iloc[i,:][3]), -np.sin(df_hmc.iloc[i,:][3])],
-                      [0, np.sin(df_hmc.iloc[i,:][3]), np.cos(df_hmc.iloc[i,:][3])]])
+                       [0, np.cos(df_hmc.iloc[i, :][3]), -np.sin(df_hmc.iloc[i, :][3])],
+                       [0, np.sin(df_hmc.iloc[i, :][3]), np.cos(df_hmc.iloc[i, :][3])]])
 
-        Ry = np.array([[np.cos(df_hmc.iloc[i,:][4]), 0, np.sin(df_hmc.iloc[i,:][4])],
-                      [0, 1, 0],
-                      [-np.sin(df_hmc.iloc[i,:][4]), 0, np.cos(df_hmc.iloc[i,:][4])]])
+        Ry = np.array([[np.cos(df_hmc.iloc[i, :][4]), 0, np.sin(df_hmc.iloc[i, :][4])],
+                       [0, 1, 0],
+                       [-np.sin(df_hmc.iloc[i, :][4]), 0, np.cos(df_hmc.iloc[i, :][4])]])
 
-        Rz = np.array([[np.cos(df_hmc.iloc[i,:][5]), -np.sin(df_hmc.iloc[i,:][5]), 0],
-                      [np.sin(df_hmc.iloc[i,:][5]), np.cos(df_hmc.iloc[i,:][5]), 0],
-                      [0, 0, 1]])
+        Rz = np.array([[np.cos(df_hmc.iloc[i, :][5]), -np.sin(df_hmc.iloc[i, :][5]), 0],
+                       [np.sin(df_hmc.iloc[i, :][5]), np.cos(df_hmc.iloc[i, :][5]), 0],
+                       [0, 0, 1]])
 
         R = np.multiply(np.multiply(Rz, Ry), Rx)
 
@@ -361,12 +378,12 @@ def convvert_eddy_2_hmc_ecc_flirt(eddy_parameters):
         np.savetxt(op.abspath("hmc_vol" + str(i) + '_affine.mat'), hmc_affine, delimiter='  ')
         hmc_affine_list.append(op.abspath("hmc_vol" + str(i) + '_affine.mat'))
 
-        ##ecc
-        ##TODO, just set it into an identity matrix
+        # ecc
+        # TODO, just set it into an identity matrix
         ecc_affine = np.array([[1, 0, 0, 0],
-                       [0, 1, 0, 0],
-                       [0, 0, 1, 0],
-                       [0, 0, 0, 1]])
+                               [0, 1, 0, 0],
+                               [0, 0, 1, 0],
+                               [0, 0, 0, 1]])
 
         np.savetxt(op.abspath("ecc_vol" + str(i) + '_affine.mat'), ecc_affine, delimiter='  ')
         ecc_affine_list.append(op.abspath("ecc_vol" + str(i) + '_affine.mat'))

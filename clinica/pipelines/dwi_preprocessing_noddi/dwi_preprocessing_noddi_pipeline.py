@@ -16,20 +16,13 @@ import clinica.pipelines.engine as cpe
 class DwiPreprocessingNoddi(cpe.Pipeline):
     """dwi_preprocessing_noddi SHORT DESCRIPTION.
 
-    Warnings:
-        - A WARNING.
-
-    Todos:
-        - [x] A FILLED TODO ITEM.
-        - [ ] AN ON-GOING TODO ITEM.
-
-    Args:
-        input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
+    Args: input_dir: A BIDS directory.  output_dir: An empty output directory
+    where CAPS structured data will be written.  subjects_sessions_list: The
+    Subjects-Sessions list file (in .tsv format).
 
     Returns:
-        A clinica pipeline object containing the dwi_preprocessing_noddi pipeline.
+        A clinica pipeline object containing the dwi_preprocessing_noddi
+        pipeline.
 
     Raises:
 
@@ -43,12 +36,10 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
         >>> pipeline.run()
     """
 
-
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
         pass
-
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
@@ -57,9 +48,14 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
             A list of (string) input fields name.
         """
 
-        return ['bids_ap_dwi', 'bids_ap_dwi_bvec', 'bids_ap_dwi_bval', 'bids_pa_dwi', 'bids_pa_dwi_bvec', 'bids_pa_dwi_bval',
-                'epi_param', 'epi_param_alt'] # Fill here the list
-
+        return ['bids_ap_dwi',
+                'bids_ap_dwi_bvec',
+                'bids_ap_dwi_bval',
+                'bids_pa_dwi',
+                'bids_pa_dwi_bvec',
+                'bids_pa_dwi_bval',
+                'epi_param',
+                'epi_param_alt']  # Fill here the list
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
@@ -68,8 +64,7 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        return ['preproc_dwi', 'preproc_bvec', 'preproc_bval', 'b0_mask'] # Fill here the list
-
+        return ['preproc_dwi', 'preproc_bvec', 'preproc_bval', 'b0_mask']  # Fill here the list
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -77,14 +72,14 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        import dwi_preprocessing_noddi_utils as utils
+        import clinica.pipelines.dwi_preprocessing_noddi.dwi_preprocessing_noddi_utils as utils
 
         bids_ap_dwi, bids_ap_dwi_bvec, bids_ap_dwi_bval, bids_pa_dwi, bids_pa_dwi_bvec, bids_pa_dwi_bval = utils.grab_noddi_bids_files(self.bids_directory, self.tsv_file)
         list_tuple = utils.create_list_tuple(bids_ap_dwi, bids_ap_dwi_bvec, bids_ap_dwi_bval, bids_pa_dwi, bids_pa_dwi_bvec, bids_pa_dwi_bval)
         parallelsubjects = npe.Node(name="noddi_preprocessing_parallelization", interface=nutil.IdentityInterface(
             fields=['bids_ap_dwi', 'bids_ap_dwi_bvec', 'bids_ap_dwi_bval', 'bids_pa_dwi', 'bids_pa_dwi_bvec',
                     'bids_pa_dwi_bval'], mandatory_inputs=True), synchronize=True, iterables=[('bids_ap_dwi', 'bids_ap_dwi_bvec', 'bids_ap_dwi_bval', 'bids_pa_dwi',
-                                       'bids_pa_dwi_bvec', 'bids_pa_dwi_bval'), list_tuple])
+                                                                                               'bids_pa_dwi_bvec', 'bids_pa_dwi_bval'), list_tuple])
 
         parallelsubjects.inputs.bids_ap_dwi = bids_ap_dwi
         parallelsubjects.inputs.bids_ap_dwi_bvec = bids_ap_dwi_bvec
@@ -93,15 +88,14 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
         parallelsubjects.inputs.bids_pa_dwi_bvec = bids_pa_dwi_bvec
         parallelsubjects.inputs.bids_pa_dwi_bval = bids_pa_dwi_bval
 
-        self.connect(
-            [(parallelsubjects, self.input_node, [('bids_ap_dwi', 'bids_ap_dwi')]),
+        self.connect([
+            (parallelsubjects, self.input_node, [('bids_ap_dwi', 'bids_ap_dwi')]),
             (parallelsubjects, self.input_node, [('bids_ap_dwi_bvec', 'bids_ap_dwi_bvec')]),
             (parallelsubjects, self.input_node, [('bids_ap_dwi_bval', 'bids_ap_dwi_bval')]),
             (parallelsubjects, self.input_node, [('bids_pa_dwi', 'bids_pa_dwi')]),
             (parallelsubjects, self.input_node, [('bids_pa_dwi_bvec', 'bids_pa_dwi_bvec')]),
             (parallelsubjects, self.input_node, [('bids_pa_dwi_bval', 'bids_pa_dwi_bval')]),
-        ])
-
+            ])
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
@@ -110,8 +104,7 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        from os.path import join
-        import dwi_preprocessing_noddi_utils as utils
+        import clinica.pipelines.dwi_preprocessing_noddi.dwi_preprocessing_noddi_utils as utils
 
         # Find container path from DWI filename
         # =====================================
@@ -120,16 +113,16 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
             function=utils.get_subid_sesid), name='get_subid_sesid', iterfield=['in_file'])
         get_identifiers.inputs.caps_directory = self.caps_directory
 
-        ### datasink
+        # datasink
         datasink = npe.MapNode(nio.DataSink(infields=['@preproc_bval', '@preproc_dwi', '@preproc_bvec', '@b0_mask']),
-                              name='datasinker',
-                              iterfield=['base_directory', 'substitutions', '@preproc_bval', '@preproc_dwi', '@preproc_bvec', '@b0_mask'])
+                               name='datasinker',
+                               iterfield=['base_directory', 'substitutions', '@preproc_bval', '@preproc_dwi', '@preproc_bvec', '@b0_mask'])
         self.connect([
-            ### datasink
+            # datasink
             (self.input_node, get_identifiers, [('bids_ap_dwi', 'in_file')]),
             (get_identifiers, datasink, [('base_directory', 'base_directory')]),
             (get_identifiers, datasink, [('subst_tuple_list', 'substitutions')]),
-            ## original files
+            # original files
             (self.output_node, datasink, [('preproc_bval', '@preproc_bval')]),
             (self.output_node, datasink, [('preproc_dwi', '@preproc_dwi')]),
             (self.output_node, datasink, [('preproc_bvec', '@preproc_bvec')]),
@@ -139,10 +132,10 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
         """
-        import dwi_preprocessing_noddi_utils as utils
+        import clinica.pipelines.dwi_preprocessing_noddi.dwi_preprocessing_noddi_utils as utils
 
         one_subj_noddi = utils.noddi_preprocessing_twoped(self.caps_directory, epi_params=self.parameters['epi_param'],
-                                                    alt_epi_params=self.parameters['alt_epi_params'])
+                                                          alt_epi_params=self.parameters['alt_epi_params'])
 
         # Connection
         # ==========
@@ -154,7 +147,7 @@ class DwiPreprocessingNoddi(cpe.Pipeline):
             (self.input_node,      one_subj_noddi,    [('bids_pa_dwi_bvec',    'inputnode.alt_bvec')]),
             (self.input_node,      one_subj_noddi,    [('bids_pa_dwi_bval',    'inputnode.alt_bval')]),
 
-            ## output
+            # output
             (one_subj_noddi, self.output_node, [('outputnode.ecc_out_file', 'preproc_dwi')]),  # noqa
             (one_subj_noddi, self.output_node, [('outputnode.out_bvec', 'preproc_bvec')]),  # noqa
             (one_subj_noddi, self.output_node, [('outputnode.original_merged_bval', 'preproc_bval')]),  # noqa

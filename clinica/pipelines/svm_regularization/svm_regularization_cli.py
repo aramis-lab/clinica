@@ -62,7 +62,7 @@ class SVMRegularizationCLI(ce.CmdParser):
         """
 
         from tempfile import mkdtemp
-        from svm_regularization_pipeline import SVMRegularization
+        from clinica.pipelines.svm_regularization.svm_regularization_pipeline import SVMRegularization
 
         pipeline = SVMRegularization(
             caps_directory=self.absolute_path(args.caps_directory),

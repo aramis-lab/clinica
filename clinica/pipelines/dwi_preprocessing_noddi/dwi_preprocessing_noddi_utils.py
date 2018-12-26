@@ -12,17 +12,15 @@ __status__ = "Development"
 from nipype.interfaces import utility as niu
 from nipype.interfaces import fsl
 from nipype.pipeline import engine as pe
-from nipype.workflows.dmri.fsl.utils import ( b0_average, compute_readout,)
-
+from nipype.workflows.dmri.fsl.utils import (b0_average, compute_readout,)
 
 
 ########################################################################
-############################## NODDI
+# NODDI
 ########################################################################
 
 from nipype.interfaces.fsl.base import FSLCommand, FSLCommandInputSpec
-from nipype.interfaces.base import (traits, TraitedSpec, File,
-                    isdefined)
+from nipype.interfaces.base import traits, TraitedSpec, File, isdefined
 import os
 
 
@@ -72,7 +70,7 @@ class EddyNoddiInputSpec(FSLCommandInputSpec):
     num_threads = traits.Int(1, usedefault=True, nohash=True,
                              desc="Number of openmp threads to use")
     data_is_shelled = traits.Bool(False, argstr='--data_is_shelled',
-                        desc='Bypass any checking and eddy will proceed as if data was shelled')
+                                  desc='Bypass any checking and eddy will proceed as if data was shelled')
 
 
 class EddyNoddiOutputSpec(TraitedSpec):
@@ -155,15 +153,16 @@ class EddyNoddi(FSLCommand):
         outputs['out_parameter'] = os.path.abspath('%s.eddy_parameters' % self.inputs.out_base)
         return outputs
 
+
 def sdc_peb_noddi(name='sdc_ped_noddi',
-            epi_params=dict(echospacing=0.77e-3,
-                            acc_factor=3,
-                            enc_dir='y-',
-                            epi_factor=1),
-            alt_epi_params=dict(echospacing=0.77e-3,
-                               acc_factor=3,
-                               enc_dir='y',
-                               epi_factor=1)):
+                  epi_params=dict(echospacing=0.77e-3,
+                                  acc_factor=3,
+                                  enc_dir='y-',
+                                  epi_factor=1),
+                  alt_epi_params=dict(echospacing=0.77e-3,
+                                      acc_factor=3,
+                                      enc_dir='y',
+                                      epi_factor=1)):
     """
     SDC stands for susceptibility distortion correction. PEB stands for
     phase-encoding-based.
@@ -220,14 +219,14 @@ def sdc_peb_noddi(name='sdc_ped_noddi',
     #                               readout_alt]
 
     topup_acq = pe.Node(niu.Function(input_names=['in_file', 'epi_params', 'alt_epi_params', 'readout', 'readout_alt'],
-                                     output_names=['out_file'],function=gen_acq_noddi), name='generate_acq_txt_topup')
+                                     output_names=['out_file'], function=gen_acq_noddi), name='generate_acq_txt_topup')
     topup_acq.inputs.epi_params = epi_params
     topup_acq.inputs.alt_epi_params = alt_epi_params
     topup_acq.inputs.readout = readout
     topup_acq.inputs.readout_alt = readout_alt
 
     undis_mask = pe.Node(fsl.BET(frac=0.3, mask=True, robust=True),
-                       name='mask_from_topup')
+                         name='mask_from_topup')
 
     wf = pe.Workflow(name=name)
     wf.connect([
@@ -241,17 +240,13 @@ def sdc_peb_noddi(name='sdc_ped_noddi',
         (topup, outputnode, [('out_movpar', 'out_movpar')]),
         (topup, outputnode, [('out_corrected', 'out_file')]),
         (topup, outputnode, [('out_field', 'out_field_hz')]),
-        #(topup, outputnode, [('out_enc_file', 'out_enc_file')]),
         (topup_acq, outputnode, [('out_file', 'out_enc_file')]),
         (undis_mask, outputnode, [('mask_file', 'out_mask')])
     ])
     return wf
 
 ################################################################################
-################################################################################
-################################################################################
-########################Utilities for the pipeline
-################################################################################
+# Utilities for the pipeline
 ################################################################################
 
 
@@ -277,10 +272,11 @@ def gen_index_noddi(in_bval, b0_index):
     try:
         len(index_list) == vols
     except ValueError:
-        print "It seems that you do not define the index file for FSL eddy correctly!"
+        raise ValueError("It seems that you do not define the index file for FSL eddy correctly!")
     np.savetxt(out_file, index_array.T)
 
     return out_file
+
 
 def gen_acq_noddi(in_file, epi_params, alt_epi_params, readout, readout_alt):
     """
@@ -301,33 +297,34 @@ def gen_acq_noddi(in_file, epi_params, alt_epi_params, readout, readout_alt):
     for i in range(vols):
         if i < vols/2:
             if epi_params['enc_dir'] == 'y-':
-                arr[i,:] = np.array((0,-1,0, readout))
+                arr[i, :] = np.array((0, -1, 0, readout))
             elif epi_params['enc_dir'] == 'y':
-                arr[i,:] = np.array((0, 1, 0, readout))
+                arr[i, :] = np.array((0, 1, 0, readout))
             elif epi_params['enc_dir'] == 'x':
-                arr[i,:] = np.array((0, 1, 0, readout))
+                arr[i, :] = np.array((0, 1, 0, readout))
             elif epi_params['enc_dir'] == 'x-':
-                arr[i,:] = np.array((0, -1, 0, readout))
+                arr[i, :] = np.array((0, -1, 0, readout))
             elif epi_params['enc_dir'] == 'z':
-                arr[i,:] = np.array((0, 1, 0, readout))
+                arr[i, :] = np.array((0, 1, 0, readout))
             elif epi_params['enc_dir'] == 'x-':
-                arr[i,:] = np.array((0, -1, 0, readout))
+                arr[i, :] = np.array((0, -1, 0, readout))
         else:
             if alt_epi_params['enc_dir_alt'] == 'y-':
-                arr[i,:] = np.array((0,-1,0, readout_alt))
+                arr[i, :] = np.array((0, -1, 0, readout_alt))
             elif alt_epi_params['enc_dir_alt'] == 'y':
-                arr[i,:] = np.array((0, 1, 0, readout_alt))
+                arr[i, :] = np.array((0, 1, 0, readout_alt))
             elif alt_epi_params['enc_dir_alt'] == 'x':
-                arr[i,:] = np.array((0, 1, 0, readout_alt))
+                arr[i, :] = np.array((0, 1, 0, readout_alt))
             elif alt_epi_params['enc_dir_alt'] == 'x-':
-                arr[i,:] = np.array((0, -1, 0, readout_alt))
+                arr[i, :] = np.array((0, -1, 0, readout_alt))
             elif alt_epi_params['enc_dir_alt'] == 'z':
-                arr[i,:] = np.array((0, 1, 0, readout_alt))
+                arr[i, :] = np.array((0, 1, 0, readout_alt))
             elif alt_epi_params['enc_dir_alt'] == 'x-':
-                arr[i,:] = np.array((0, -1, 0, readout_alt))
+                arr[i, :] = np.array((0, -1, 0, readout_alt))
     np.savetxt(out_file, arr)
 
     return out_file
+
 
 def merge_noddi_ped(in_file, in_bvec, in_bval, alt_file, alt_bvec, alt_bval):
     """
@@ -357,6 +354,7 @@ def merge_noddi_ped(in_file, in_bvec, in_bval, alt_file, alt_bvec, alt_bval):
 
     return out_file, out_bvals, out_bvecs
 
+
 def grab_noddi_bids_files(bids_directory, tsv):
     """
     This is a function to get all the files that need for noddi preprocessing in BIDS structure
@@ -364,7 +362,8 @@ def grab_noddi_bids_files(bids_directory, tsv):
     :param tsv:
     :return:
     """
-    import os, csv
+    import os
+    import csv
 
     subject_list = []
     session_list = []
@@ -379,7 +378,6 @@ def grab_noddi_bids_files(bids_directory, tsv):
                 session_list.append(row[1])
         bids_directory = os.path.expanduser(bids_directory)  # change the relative path to be absolute path
 
-
     bids_ap_dwi = []
     bids_ap_dwi_bvec = []
     bids_ap_dwi_bval = []
@@ -388,16 +386,15 @@ def grab_noddi_bids_files(bids_directory, tsv):
     bids_pa_dwi_bvec = []
     bids_pa_dwi_bval = []
 
-    ###### the number of subject_list and session_list should be the same
+    # the number of subject_list and session_list should be the same
     try:
         len(subject_list) == len(session_list)
     except RuntimeError:
-        print "It seems that the nuber of session_list and subject_list are not in the same length, please check"
-        raise
+        raise RuntimeError("Session_list(" + str(len(session_list)) + ") and subject_list(" + str(len(subject_list)) + ") do not have the same length, please check")
 
     num_subject = len(subject_list)
-    for i in xrange(num_subject):
-        ############## AP
+    for i in range(num_subject):
+        # AP
         subjec_nii = os.path.join(bids_directory, subject_list[i], session_list[i], 'dwi', subject_list[i] + '_' + session_list[i] + '_seq-mshellAP_dwi.nii.gz')
         bids_ap_dwi += [subjec_nii]
 
@@ -407,7 +404,7 @@ def grab_noddi_bids_files(bids_directory, tsv):
         subjec_bval = os.path.join(bids_directory, subject_list[i], session_list[i], 'dwi', subject_list[i] + '_' + session_list[i] + '_seq-mshellAP_dwi.bval')
         bids_ap_dwi_bval += [subjec_bval]
 
-        ############# PA
+        # PA
         subjec_nii = os.path.join(bids_directory, subject_list[i], session_list[i], 'dwi',
                                   subject_list[i] + '_' + session_list[i] + '_seq-mshellPA_dwi.nii.gz')
         bids_pa_dwi += [subjec_nii]
@@ -421,6 +418,7 @@ def grab_noddi_bids_files(bids_directory, tsv):
         bids_pa_dwi_bval += [subjec_bval]
 
     return bids_ap_dwi, bids_ap_dwi_bvec, bids_ap_dwi_bval, bids_pa_dwi, bids_pa_dwi_bvec, bids_pa_dwi_bval
+
 
 def get_subid_sesid(in_file, caps_directory):
     """
@@ -451,14 +449,16 @@ def get_subid_sesid(in_file, caps_directory):
 
     return base_directory, subst_tuple_list
 
-def noddi_preprocessing_twoped(caps_directory, name='noddi_preprocessing_topup_eddy',
-                     epi_params=dict(echo_spacing=0.77e-3,
-                                     acc_factor=3,
-                                     enc_dir='y-',
-                                     epi_factor=1),
-                     alt_epi_params=dict(echo_spacing=0.77e-3,
-                                        acc_factor=3,
-                                        enc_dir='y',)):
+
+def noddi_preprocessing_twoped(caps_directory,
+                               name='noddi_preprocessing_topup_eddy',
+                               epi_params=dict(echo_spacing=0.77e-3,
+                                               acc_factor=3,
+                                               enc_dir='y-',
+                                               epi_factor=1),
+                               alt_epi_params=dict(echo_spacing=0.77e-3,
+                                                   acc_factor=3,
+                                                   enc_dir='y',)):
     """
     This is a preprocessing pipeline for typical NODDI data with two phase encoding direction(ap/j-/y-, pa/j/y) images which will implement the new tool
     from FSL (topup and eddy) to correct the susceptibility-induced off-resonance field distortion by topup, eddy current-induced off-resonance
@@ -509,25 +509,29 @@ def noddi_preprocessing_twoped(caps_directory, name='noddi_preprocessing_topup_e
     merge_two_ped = pe.Node(niu.Function(input_names=['in_file', 'in_bvec', 'in_bval', 'alt_file', 'alt_bvec', 'alt_bval'],
                                          output_names=['out_file', 'out_bvals', 'out_bvecs'], function=merge_noddi_ped), name='merge_ped_images')
 
-    extract_b0_dwis = pe.Node(niu.Function(input_names=['in_dwi', 'in_bval', 'in_bvec'],
-                                      output_names=['out_b0', 'out_dwi', 'out_bvals', 'out_bvecs'],
-                                      function=b0_dwi_split),
-                                      name='extract_dwis_b0')
+    extract_b0_dwis = pe.Node(
+            niu.Function(
+                input_names=['in_dwi', 'in_bval', 'in_bvec'],
+                output_names=['out_b0', 'out_dwi', 'out_bvals', 'out_bvecs'],
+                function=b0_dwi_split),
+            name='extract_dwis_b0')
 
     list_b0 = pe.Node(niu.Function(
         input_names=['in_bval'], output_names=['out_idx'],
         function=b0_indices), name='find_b0_indices')
 
     generate_index_eddy = pe.Node(niu.Function(input_names=['in_bval', 'b0_index'],
-        output_names=['eddy_index'],
-        function=gen_index_noddi), name='generate_index_eddy')
+                                               output_names=['eddy_index'],
+                                               function=gen_index_noddi),
+                                  name='generate_index_eddy')
 
     avg_b0 = pe.Node(niu.Function(
         input_names=['in_dwi', 'in_bval'], output_names=['out_file'],
         function=b0_average), name='b0_avg_post')
 
-    bet_dwi = pe.Node(fsl.BET(frac=0.5, mask=True, robust=True),
-                       name='bet_dwi_post')
+    bet_dwi = pe.Node(
+            fsl.BET(frac=0.5, mask=True, robust=True),
+            name='bet_dwi_post')
 
     sdc = sdc_peb_noddi(epi_params=epi_params, alt_epi_params=alt_epi_params)
 
@@ -542,11 +546,11 @@ def noddi_preprocessing_twoped(caps_directory, name='noddi_preprocessing_topup_e
     wf = pe.Workflow(name=name)
     wf.connect([
         (inputnode, merge_two_ped, [('in_file', 'in_file'),
-                               ('in_bval', 'in_bval'),
-                               ('in_bvec', 'in_bvec'),
-                               ('alt_file', 'alt_file'),
-                               ('alt_bvec', 'alt_bvec'),
-                               ('alt_bval', 'alt_bval')]),
+                                    ('in_bval', 'in_bval'),
+                                    ('in_bvec', 'in_bvec'),
+                                    ('alt_file', 'alt_file'),
+                                    ('alt_bvec', 'alt_bvec'),
+                                    ('alt_bval', 'alt_bval')]),
         (merge_two_ped, extract_b0_dwis,  [('out_file', 'in_dwi'),
                                            ('out_bvals', 'in_bval'),
                                            ('out_bvecs', 'in_bvec')]),
@@ -571,12 +575,13 @@ def noddi_preprocessing_twoped(caps_directory, name='noddi_preprocessing_topup_e
         (avg_b0,  bet_dwi,   [('out_file', 'in_file')]),
         # orginal files
         (merge_two_ped,    outputnode, [('out_bvals', 'original_merged_bval')]),
-        ### ecc files
+        # ecc files
         (ecc, outputnode, [('out_corrected', 'ecc_out_file')]),
         (rot_bvec, outputnode, [('out_file', 'out_bvec')]),
         (bet_dwi, outputnode, [('mask_file', 'out_mask')])
     ])
     return wf
+
 
 def epi_params(echo_spacing, acc_factor, enc_dir, enc_dir_alt, epi_factor):
     """
@@ -594,7 +599,7 @@ def epi_params(echo_spacing, acc_factor, enc_dir, enc_dir_alt, epi_factor):
 
 def create_list_tuple(bids_ap_dwi, bids_ap_dwi_bvec, bids_ap_dwi_bval, bids_pa_dwi, bids_pa_dwi_bvec, bids_pa_dwi_bval):
     list_tuple = []
-    for i in xrange(len(bids_ap_dwi)):
+    for i in range(len(bids_ap_dwi)):
         ls = []
         ls.append(bids_ap_dwi[i])
         ls.append(bids_ap_dwi_bvec[i])
@@ -605,4 +610,3 @@ def create_list_tuple(bids_ap_dwi, bids_ap_dwi_bvec, bids_ap_dwi_bval, bids_pa_d
         ls = tuple(ls)
         list_tuple.append(ls)
     return list_tuple
-

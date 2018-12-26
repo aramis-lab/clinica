@@ -4,7 +4,7 @@ import clinica.engine as ce
 
 __author__ = "Jorge Samper Gonzalez"
 __copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
-__credits__ = [ "Jorge Samper Gonzalez"]
+__credits__ = ["Jorge Samper Gonzalez"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Jorge Samper Gonzalez"
@@ -22,7 +22,8 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'Tissue segmentation, bias correction and spatial normalization to MNI space of T1w images with SPM:\nhttp://clinica.run/doc/Pipelines/T1_Volume/'
+        self._description = 'Tissue segmentation, bias correction and spatial normalization to MNI space' \
+                            + ' of T1w images with SPM:\nhttp://clinica.run/doc/Pipelines/T1_Volume/'
 
     def define_options(self):
         """Define the sub-command arguments
@@ -53,11 +54,11 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
     def run_command(self, args):
         """
         """
-        from t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
+        from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
 
         pipeline = T1VolumeTissueSegmentation(bids_directory=self.absolute_path(args.bids_directory),
-                                     caps_directory=self.absolute_path(args.caps_directory),
-                                     tsv_file=self.absolute_path(args.subjects_sessions_tsv))
+                                              caps_directory=self.absolute_path(args.caps_directory),
+                                              tsv_file=self.absolute_path(args.subjects_sessions_tsv))
 
         pipeline.parameters.update({'tissue_classes': args.tissue_classes,
                                     'dartel_tissues': args.dartel_tissues,

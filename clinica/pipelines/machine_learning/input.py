@@ -12,7 +12,7 @@ import clinica.pipelines.machine_learning.voxel_based_io as vbio
 import clinica.pipelines.machine_learning.vertex_based_io as vtxbio
 import clinica.pipelines.machine_learning.region_based_io as rbio
 import clinica.pipelines.machine_learning.tsv_based_io as tbio
-import clinica.pipelines.machine_learning.svm_utils as utils
+import clinica.pipelines.machine_learning.ml_utils as utils
 
 
 __author__ = "Jorge Samper Gonzalez"
@@ -119,9 +119,9 @@ class CAPSInput(base.MLInput):
         if self._x is None:
             self.get_x()
 
-        print "Computing kernel ..."
+        print("Computing kernel ...")
         self._kernel = kernel_function(self._x)
-        print "Kernel computed"
+        print("Kernel computed")
         return self._kernel
 
     def save_kernel(self, output_dir):
@@ -218,9 +218,9 @@ class CAPSVoxelBasedInput(CAPSInput):
         if self._x is not None:
             return self._x
 
-        print 'Loading ' + str(len(self.get_images())) + ' subjects'
+        print('Loading ' + str(len(self.get_images())) + ' subjects')
         self._x, self._orig_shape, self._data_mask = vbio.load_data(self._images, mask=self._mask_zeros)
-        print 'Subjects loaded'
+        print('Subjects loaded')
 
         return self._x
 
@@ -273,7 +273,7 @@ class CAPSRegionBasedInput(CAPSInput):
         if self._image_type == 'T1':
             self._images = [path.join(self._caps_directory, 'subjects', self._subjects[i], self._sessions[i],
                                       't1/spm/dartel/group-' + self._group_id,
-                                      'atlas_statistics/','%s_%s_T1w_space-%s_map-graymatter_statistics.tsv'
+                                      'atlas_statistics/', '%s_%s_T1w_space-%s_map-graymatter_statistics.tsv'
                                       % (self._subjects[i], self._sessions[i], self._atlas))
                             for i in range(len(self._subjects))]
         else:
@@ -301,9 +301,9 @@ class CAPSRegionBasedInput(CAPSInput):
         if self._x is not None:
             return self._x
 
-        print 'Loading ' + str(len(self.get_images())) + ' subjects'
+        print('Loading ' + str(len(self.get_images())) + ' subjects')
         self._x = rbio.load_data(self._images, self._subjects)
-        print 'Subjects loaded'
+        print('Subjects loaded')
 
         return self._x
 
@@ -384,11 +384,13 @@ class CAPSVertexBasedInput(CAPSInput):
 
         sample = nib.load(self._images[0][0])
 
-        left_hemi_data = np.atleast_3d(weights[:weights.size / 2])
+        infinite_norm = np.max(np.abs(weights))
+
+        left_hemi_data = np.atleast_3d(np.divide(weights[:np.int(weights.size / 2)], infinite_norm))
         left_hemi_mgh = nib.MGHImage(left_hemi_data, affine=sample.affine, header=sample.header)
         nib.save(left_hemi_mgh, os.path.join(output_dir, 'weights_lh.mgh'))
 
-        right_hemi_data = np.atleast_3d(weights[weights.size/2:])
+        right_hemi_data = np.atleast_3d(np.divide(weights[np.int(weights.size/2):], infinite_norm))
         right_hemi_mgh = nib.MGHImage(right_hemi_data, affine=sample.affine, header=sample.header)
         nib.save(right_hemi_mgh, os.path.join(output_dir, 'weights_rh.mgh'))
         pass
@@ -435,7 +437,6 @@ class CAPSTSVBasedInput(CAPSInput):
 
         pass
 
-
     def get_x(self):
         """
 
@@ -443,17 +444,15 @@ class CAPSTSVBasedInput(CAPSInput):
 
         """
 
-        #if self._x is not None:
+        # if self._x is not None:
         #    return self._x
 
-
-
-        print 'Loading TSV subjects'
+        print('Loading TSV subjects')
         string = str('group-' + self._group_id + '_T1w_space-' + self._atlas + '_map-graymatter')
 
         self._x = tbio.load_data(string, self._caps_directory, self._subjects, self._sessions, self._dataset)
 
-        print 'Subjects loaded'
+        print('Subjects loaded')
 
         return self._x
 
@@ -468,10 +467,9 @@ class CAPSTSVBasedInput(CAPSInput):
 
         """
 
-        #output_filename = path.join(output_dir, 'weights.nii.gz')
+        # output_filename = path.join(output_dir, 'weights.nii.gz')
 
-
-        #rbio.weights_to_nifti(weights, self._atlas, output_filename)
+        # rbio.weights_to_nifti(weights, self._atlas, output_filename)
         pass
 
 
@@ -494,7 +492,7 @@ class CAPSVoxelBasedInputREGSVM(CAPSInput):
         """
 
         super(CAPSVoxelBasedInputREGSVM, self).__init__(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
-                                                  image_type, precomputed_kernel=precomputed_kernel)
+                                                        image_type, precomputed_kernel=precomputed_kernel)
 
         self._fwhm = fwhm
         self._modulated = modulated
@@ -547,9 +545,9 @@ class CAPSVoxelBasedInputREGSVM(CAPSInput):
         if self._x is not None:
             return self._x
 
-        print 'Loading ' + str(len(self.get_images())) + ' subjects'
+        print('Loading ' + str(len(self.get_images())) + ' subjects')
         self._x, self._orig_shape, self._data_mask = vbio.load_data(self._images, mask=self._mask_zeros)
-        print 'Subjects loaded'
+        print('Subjects loaded')
 
         return self._x
 

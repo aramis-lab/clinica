@@ -107,9 +107,9 @@ def tensor_scalar_product(sc, g1):
     g1 = np.array(g1, dtype=np.complex128)
     g = np.zeros(g1.shape, dtype=np.complex128)  # new vector
 
-    for i in xrange(g1.shape[0]):
-        for j in xrange(g1.shape[1]):
-            for k in xrange(g1.shape[0]):
+    for i in range(g1.shape[0]):
+        for j in range(g1.shape[1]):
+            for k in range(g1.shape[0]):
                 g[i][j] = g1[i][j] * sc
 
     # g is the final tensor
@@ -161,10 +161,10 @@ def tensor_product(g1, g2):
 
     g = np.zeros(g1.shape)
 
-    for i in xrange(g1.shape[0]):
-        for j in xrange(g2.shape[0]):
+    for i in range(g1.shape[0]):
+        for j in range(g2.shape[0]):
             g[i][j] = 0
-            for k in xrange(g1.shape[0]):
+            for k in range(g1.shape[0]):
                 g[i][j] = g[i][j] + np.multiply(g1[i][k], g2[k][j])
 
     # g = g1 * g2 (dim of the tensor: 3*3*xg*yg*zg)
@@ -189,7 +189,7 @@ def tensor_determinant(g):
     if s[0] == 3:
         # if the tensor is 3*3
 
-        for i in xrange(s[0]):
+        for i in range(s[0]):
 
             if np.mod(i, 2) == 0:
                 epsilon = 1
@@ -208,7 +208,7 @@ def tensor_determinant(g):
 
     elif s[0] == 2:
         # if the tensor is 2*2
-        for i in xrange(s[0]):
+        for i in range(s[0]):
             if np.mod(i, 2) == 0:
                 epsilon = 1
             else:
@@ -261,7 +261,7 @@ def roots_poly(C):
 
     elif C.shape[0] < 4:
         # implementation of delta
-        delta = np.array([cmath.sqrt((C[1, i] * C[1, i]) - (4 * C[0, i] * C[2, i])) for i in xrange(C.shape[1])])
+        delta = np.array([cmath.sqrt((C[1, i] * C[1, i]) - (4 * C[0, i] * C[2, i])) for i in range(C.shape[1])])
         # two roots
         rts1 = (-C[1, :] + delta) * (1 / ((2 * C[0, :])))
         rts2 = (-C[1, :] - delta) * (1 / ((2 * C[0, :])))
@@ -347,7 +347,7 @@ def tensor_eigenvalues(g):
 
     lamb = np.zeros(shape=(g.shape[0], g.shape[2], g.shape[3], g.shape[4]), dtype='complex128')
 
-    for i in xrange(g.shape[0]):
+    for i in range(g.shape[0]):
         lamb[i, :, :, :] = rts2[:, i].reshape(g.shape[2], g.shape[3], g.shape[4], order='F')
 
     # lamb[0] is the smallest eigenvalues, lamb[2] is the biggest
@@ -364,8 +364,8 @@ def tensor_transpose(g):
 
     g = np.array(g)
     tg = np.array(g)
-    for i in xrange(g.shape[0]):
-        for j in xrange(g.shape[0]):
+    for i in range(g.shape[0]):
+        for j in range(g.shape[0]):
             tg[i][j] = g[j][i]
     # tg is the transposed tensor
     return tg
@@ -383,8 +383,8 @@ def tensor_commatrix(g):
     g = np.array(g)
     g_com = []
 
-    for i in xrange(g.shape[0]):
-        for j in xrange(g.shape[0]):
+    for i in range(g.shape[0]):
+        for j in range(g.shape[0]):
             if np.mod(i + j, 2) == 0:
                 epsilon = 1
             else:
@@ -458,8 +458,8 @@ def create_fisher_tensor(atlas):
         proba = np.maximum(np.minimum(proba, upper_bound), lower_bound)
         gr = np.array(np.gradient(np.log(proba)))
 
-        for x in xrange(3):
-            for y in xrange(3):
+        for x in range(3):
+            for y in range(3):
                 g[x][y] = (g[x][y] + (proba * gr[x] * gr[y]))
 
     return g
@@ -488,7 +488,7 @@ def tensor_helmholtz(x, h, detg, k):
         h_ = h[:, :, 0, :, :, :, ]
     else:
         h_ = h
-    for i in xrange(len(h)):  # from 1 to 3
+    for i in range(len(h)):  # from 1 to 3
         mat = h_[i][i]
         weight = weight + mat[1:-1, 1:-1, 1:-1]
 
@@ -672,7 +672,7 @@ def heat_finite_elt_3D_tensor2(x0, t_final, t_step, h, g):
 
     ##LOOP
     x = x0
-    for i in xrange(nb_step):
+    for i in range(nb_step):
         x = np.array(x - t_step * (np.divide(np.array(utils.operateur(x, ginv, detg)) * h, detg2)) / h / h / h)
 
     return x
@@ -705,7 +705,7 @@ def heat_finite_elt_2D_tensor2(x0, t_final, t_step, h, g):
 
     ##LOOP
     x = x0
-    for i in xrange(nb_step):
+    for i in range(nb_step):
         m = t_step / h / h
         x = np.sum(x, -(
             utils.tensor_scalar_product(m,
@@ -856,7 +856,7 @@ def heat_solver_tensor_2D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
 #
 #     dist_av = []
 #
-#     for i in xrange(g.shape[0]):
+#     for i in range(g.shape[0]):
 #         dist_av.append(np.sqrt(abs(eigenv[i])))
 #     dist_av = np.mean(dist_av)
 #
@@ -944,7 +944,7 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
 
     dist_av = []
 
-    for i in xrange(g.shape[0]):
+    for i in range(g.shape[0]):
         dist_av.append(np.sqrt(abs(eigenv[i])))
     dist_av = np.mean(dist_av)
 

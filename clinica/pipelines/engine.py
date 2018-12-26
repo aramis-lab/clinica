@@ -185,14 +185,16 @@ class Pipeline(Workflow):
         if self.output_node:
             self.add_nodes([self.output_node])
 
-
     def has_input_connections(self):
         """Checks if the Pipeline's input node has been connected.
 
         Returns:
             True if the input node is connected, False otherwise.
         """
-        return self._graph.in_degree(self.input_node) > 0
+        if self.input_node:
+            return self._graph.in_degree(self.input_node) > 0
+        else:
+            return False
 
     def has_output_connections(self):
         """Checks if the Pipeline's output node has been connected.
@@ -200,7 +202,10 @@ class Pipeline(Workflow):
         Returns:
             True if the output node is connected, False otherwise.
         """
-        return self._graph.out_degree(self.output_node) > 0
+        if self.output_node:
+            return self._graph.out_degree(self.output_node) > 0
+        else:
+            return False
 
     @postset('is_built', True)
     def build(self):
@@ -261,12 +266,12 @@ class Pipeline(Workflow):
 
     def check_dependencies(self):
         """Checks if listed dependencies are present.
-        
+
         Loads the pipelines related `info.json` file and check each one of the
         dependencies listed in the JSON "dependencies" field. Its raises
         exception if a program in the list does not exist or if environment
         variables are not properly defined.
-    
+
         Todos:
             - [ ] MATLAB toolbox dependency checking
             - [x] check MATLAB

@@ -66,7 +66,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                               type=str, default=None,
                               help='Pattern of file inside CAPS directory using @subject, @session, @fwhm, @hemi. No --feature_type must be specified in order to use this flag. If you use this flag, you must specify a label with the --feature_label flag). See Wiki for an example.')  # noqa
         advanced.add_argument("-fl", "--feature_label",
-                              type = str, default = None,
+                              type=str, default=None,
                               help='Name of the feature type, it will be saved on the CAPS _measure-FEATURE_LABEL key-value association.')  # noqa
         advanced.add_argument("-tup", "--threshold_uncorrected_pvalue",
                               type=float, default=0.001,
@@ -82,8 +82,8 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         """
         Run the pipelines with defined args
         """
-        from statistics_surface_pipeline import StatisticsSurface
-        from statistics_surface_utils import check_inputs
+        from clinica.pipelines.statistics_surface.statistics_surface_pipeline import StatisticsSurface
+        from clinica.pipelines.statistics_surface.statistics_surface_utils import check_inputs
         from clinica.utils.stream import cprint
         import os
 

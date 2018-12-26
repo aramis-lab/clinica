@@ -53,17 +53,19 @@ def freesurfer_volume_to_native_volume(
 
 def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv):
     """
-        This function is to transfer caps recon-all output structure to standard FreeSurfer recon-all output structure.
+        This function is to transfer caps recon-all output structure to
+        standard FreeSurfer recon-all output structure.
 
-    Args:
-        caps_dir: CAPS directory containing the outputs in CAPS hierarchy
-        dest_dir: the destination folder containing the FreeSurfer output structure
-        subjects_visits_tsv: tsv files containing the subjects that you want to convert
+    Args: caps_dir: CAPS directory containing the outputs in CAPS hierarchy
+    dest_dir: the destination folder containing the FreeSurfer output structure
+    subjects_visits_tsv: tsv files containing the subjects that you want to
+    convert
 
     Returns:
 
     """
-    import os, csv
+    import os
+    import csv
     from shutil import copytree
 
     subject_list = []
@@ -92,17 +94,18 @@ def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv):
 
 def volumetric_summary(subject_dir, subject_id, caps_dir):
     """
-        To write statistics summary for all the subjects after reconall pipelines.
+        To write statistics summary for all the subjects after reconall
+        pipelines.
 
-    Args:
-        subject_dir: a list containing all the CAPS directory path
-        subject_id: a list containing all the participant_id
-        caps_dir: destination folder containing the summarized statistics tsv
+    Args: subject_dir: a list containing all the CAPS directory path
+    subject_id: a list containing all the participant_id caps_dir: destination
+    folder containing the summarized statistics tsv
 
     Returns:
 
     """
-    import os, errno
+    import os
+    import errno
 
     # name all the 26 tsv output files.
     all_seg_volume = '_parcellation-wm_volume.tsv'
@@ -139,7 +142,7 @@ def volumetric_summary(subject_dir, subject_id, caps_dir):
     try:
         os.makedirs(dest_dir)
     except OSError as exception:
-        if exception.errno != errno.EEXIST: # if dest_dir exists, go on, if its other error, raise
+        if exception.errno != errno.EEXIST:  # if dest_dir exists, go on, if its other error, raise
             raise
 
     # fetch the paths for all the 26 tsv files.
@@ -218,7 +221,7 @@ def volumetric_summary(subject_dir, subject_id, caps_dir):
     cmd_aparc_destrieux_rh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc aparc.a2009s --meas meancurv --tablefile ' + aparc_destrieux_rh_meancurv_tsv
     os.system(cmd_aparc_destrieux_rh_meancurv)
 
-    #### BA atals does not work for FreeSurfer 6.0
+    # BA atals does not work for FreeSurfer 6.0
     # cmd_aparc_BA_lh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc BA --meas volume --tablefile ' + aparc_BA_lh_volume_tsv
     # os.system(cmd_aparc_BA_lh_volume)
     # cmd_aparc_BA_rh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas volume --tablefile ' + aparc_BA_rh_volume_tsv
@@ -248,8 +251,8 @@ def write_volumetric_summary(caps_dir, subjects_visits_tsv):
     Returns:
 
     """
-    ### TODO, this should be done after we define the name of the tsv file for each subject, otherwise this will be changed often....
-    #### NOT USE
+    # TODO, this should be done after we define the name of the tsv file for each subject, otherwise this will be changed often....
+    # NOT USE
 
     import nipype.pipeline.engine as pe
     from nipype.interfaces.utility import Function
@@ -268,9 +271,8 @@ def write_volumetric_summary(caps_dir, subjects_visits_tsv):
         sub_dir = os.path.join(caps_dir, 'subjects', subject_list[i], session_list[i], 't1', 'freesurfer_cross_sectional')
         subject_dir.append(sub_dir)
 
-
     fs_tsv_summary = pe.Node(name='volumetric_summary_node',
-                            interface=Function(
+                             interface=Function(
                                 input_names=['subject_dir', 'subject_id', 'caps_dir'],
                                 output_names=[],
                                 function=volumetric_summary))
@@ -283,11 +285,11 @@ def write_volumetric_summary(caps_dir, subjects_visits_tsv):
 
 def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
     """
-        This func is to write the volumetric measurement after recon-all pipelines for each subjects in the subjects_visits_tsv
+        This func is to write the volumetric measurement after recon-all
+        pipelines for each subjects in the subjects_visits_tsv
 
-    Args:
-        caps_dir: CAPS directory
-        subjects_visits_tsv: tsv contains all the particiapnt_id and session_id
+    Args: caps_dir: CAPS directory subjects_visits_tsv: tsv contains all the
+    particiapnt_id and session_id
 
     Returns:
 
@@ -308,10 +310,10 @@ def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
     fs_tsv_subject = pe.MapNode(name='volumetric_summary_node',
                                 iterfield=['subject_id'],
                                 interface=Function(
-                                input_names=['subject_id', 'output_dir'],
-                                output_names=[],
-                                function=write_statistics_per_subject,
-                                imports=['import os', 'import errno']))
+                                    input_names=['subject_id', 'output_dir'],
+                                    output_names=[],
+                                    function=write_statistics_per_subject,
+                                    imports=['import os', 'import errno']))
     fs_tsv_subject.inputs.subject_id = subject_id
     fs_tsv_subject.inputs.output_dir = caps_dir
 
@@ -320,11 +322,11 @@ def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
 
 def write_reconall_log_summary(caps_dir, subjects_visits_tsv):
     """
-        This func is to write the recon_all.log summary for all the subjects, the first step quality check
+        This func is to write the recon_all.log summary for all the subjects,
+        the first step quality check
 
-    Args:
-        caps_dir: CAPS directory
-        subjects_visits_tsv: tsv contains all the particiapnt_id and session_id
+    Args: caps_dir: CAPS directory subjects_visits_tsv: tsv contains all the
+    particiapnt_id and session_id
 
     Returns:
 
@@ -336,8 +338,8 @@ def write_reconall_log_summary(caps_dir, subjects_visits_tsv):
 
     # get the list for subject_ids
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
-    if (list(subjects_visits.columns.values)[0] != 'participant_id') and (
-        list(subjects_visits.columns.values)[1] != 'session_id'):
+    if ((list(subjects_visits.columns.values)[0] != 'participant_id')
+            and (list(subjects_visits.columns.values)[1] != 'session_id')):
         raise Exception('Subjects and visits file is not in the correct format.')
     subject_list = list(subjects_visits.participant_id)
     session_list = list(subjects_visits.session_id)
@@ -354,5 +356,3 @@ def write_reconall_log_summary(caps_dir, subjects_visits_tsv):
     lognode.inputs.output_dir = caps_dir
 
     return lognode
-
-

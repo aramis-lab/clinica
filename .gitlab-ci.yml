@@ -26,7 +26,7 @@ before_script:
   - pwd
   - export CLINICA_ENV_BRANCH_CLEAN=$(echo $CLINICA_ENV_BRANCH | tr -dc '[:alnum:]\-\_')
 after_script:
-  #  - conda env remove -y  --name clinica_env
+  #  - conda env remove -y  --name clinica_env_upgrade_dep
 
 build:mac:
   stage: build
@@ -94,7 +94,7 @@ launch:linux:
     - source deactivate
 
       
-unittest:mac:
+test:instantiate:mac:
   stage: test
   tags:
     - macOS
@@ -103,23 +103,27 @@ unittest:mac:
     - module load clinica.all
     - cd test
     - ln -s /Volumes/builds/Clinica/data_ci ./data
-    - pytest -v
+    - pytest --verbose -k 'test_instantiate'
     - module purge
     - source deactivate
 
   
-unittest:linux:
+test:instantiate:linux:
   stage: test
   tags:
     - linux
   script:
     - source activate $CLINICA_ENV_BRANCH_CLEAN
+    - export PATH="/home/gitlab-runner/dcm2nii":${PATH}
     - module load clinica.all
+    - module unload clinica/freesurfer/5.3.0
+    - module load clinica/freesurfer/6.0.0
     - cd test
-    - ln -s /localdrive10TB/data/data_ci ./data
-    - pytest -v
+    - ln -s /localdrive10TB/data/ci/data_ci_upgrade ./data
+    - taskset -c 0-21 pytest --verbose --disable-warnings --timeout=0 -n 6 -k 'test_instantiate'
     - module purge
     - source deactivate
+
 
 pkg:
   stage: package
