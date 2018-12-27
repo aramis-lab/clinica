@@ -31,12 +31,10 @@ class SVMRegularization(cpe.Pipeline):
     Raises:
     """
 
-
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
         pass
-
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
@@ -45,8 +43,7 @@ class SVMRegularization(cpe.Pipeline):
             A list of (string) input fields name.
         """
 
-        return ['dartel_input', 'input_image'] # Fill here the list
-
+        return ['dartel_input', 'input_image']  # Fill here the list
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
@@ -55,8 +52,7 @@ class SVMRegularization(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        return ['regularized_image'] # Fill here the list
-
+        return ['regularized_image']  # Fill here the list
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -78,9 +74,8 @@ class SVMRegularization(cpe.Pipeline):
                                         interface=nutil.IdentityInterface(fields=self.get_input_fields(),
                                                                           mandatory_inputs=True))
 
-
         caps_layout = CAPSLayout(self.caps_directory)
-    #@TODO: correct subject + list
+    # @TODO: correct subject + list
         unique_subject = set(list(self.subjects))
         subjects_regex = '|'.join(sub[4:] for sub in unique_subject)
         unique_session = set(list(self.sessions))
@@ -122,7 +117,6 @@ class SVMRegularization(cpe.Pipeline):
 
         ])
 
-
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
         """
@@ -133,7 +127,6 @@ class SVMRegularization(cpe.Pipeline):
         # pipeline.
 
         pass
-
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
@@ -167,21 +160,21 @@ class SVMRegularization(cpe.Pipeline):
         heat_solver_equation.inputs.FWHM = self.parameters['fwhm']
 
         datasink = npe.Node(nio.DataSink(),
-                          name='sinker')
+                            name='sinker')
         datasink.inputs.base_directory = self.caps_directory
         datasink.inputs.parameterization = True
         if self.parameters['image_type'] == 't1':
             datasink.inputs.regexp_substitutions = [
-            (r'(.*)/regularized_image/.*/(.*(sub-(.*)_ses-(.*))_T1w(.*)_(probability.*))$',
-             r'\1/subjects/sub-\4/ses-\5/t1/input_regularised_svm/group-' + self.parameters['group_id'] + r'/\3\6_regularization-Fisher_fwhm-' + str(self.parameters['fwhm']) + r'_\7'),
-             (r'(.*)json_file/(output_data.json)$',
-            r'\1/groups/group-' + self.parameters['group_id'] + r'/t1/input_regularised_svm/group-' + self.parameters['group_id'] + r'_space-Ixi549Space_modulated-on_regularization-Fisher_fwhm-'
-              + str(self.parameters['fwhm']) + r'_parameters.json'),
+                (r'(.*)/regularized_image/.*/(.*(sub-(.*)_ses-(.*))_T1w(.*)_(probability.*))$',
+                 r'\1/subjects/sub-\4/ses-\5/t1/input_regularised_svm/group-' + self.parameters['group_id'] + r'/\3\6_regularization-Fisher_fwhm-' + str(self.parameters['fwhm']) + r'_\7'),
+                (r'(.*)json_file/(output_data.json)$',
+                    r'\1/groups/group-' + self.parameters['group_id'] + r'/t1/input_regularised_svm/group-' + self.parameters['group_id'] + r'_space-Ixi549Space_modulated-on_regularization-Fisher_fwhm-'
+                    + str(self.parameters['fwhm']) + r'_parameters.json'),
 
-             (r'(.*)fisher_tensor_path/(output_fisher_tensor.npy)$',
-              r'\1/groups/group-' + self.parameters['group_id'] + r'/t1/input_regularised_svm/group-' + self.parameters[
-                  'group_id'] + r'_space-Ixi549Space_modulated-on_regularization-Fisher_fwhm-'
-              + str(self.parameters['fwhm']) + r'_gram.npy')
+                (r'(.*)fisher_tensor_path/(output_fisher_tensor.npy)$',
+                    r'\1/groups/group-' + self.parameters['group_id'] + r'/t1/input_regularised_svm/group-' + self.parameters[
+                        'group_id'] + r'_space-Ixi549Space_modulated-on_regularization-Fisher_fwhm-'
+                    + str(self.parameters['fwhm']) + r'_gram.npy')
             ]
 
         elif self.parameters['image_type'] == 'pet':

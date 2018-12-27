@@ -8,9 +8,10 @@ http://clinica.run/doc/InteractingWithClinica/
 
 from __future__ import division
 
+
 def atlas_decomposition(dartel_input):
     '''
-    
+
     :param dartel_input: path to the dartel input
     :return: 3 atlases (gm, wm, csf)
     '''
@@ -119,7 +120,7 @@ def tensor_scalar_product(sc, g1):
 def tensor_eye(atlas):
     """
 
-    :param atlas: list of atlases 
+    :param atlas: list of atlases
     :return: the identity matrix of a tensor
     """
     import numpy as np
@@ -138,7 +139,7 @@ def tensor_eye(atlas):
 def tensor_sum(g1, g2):
     """
 
-    :param g1: first tensor 
+    :param g1: first tensor
     :param g2: second tensor
     :return: sum of the two tensor
     """
@@ -151,7 +152,7 @@ def tensor_sum(g1, g2):
 def tensor_product(g1, g2):
     """
 
-    :param g1: first tensor 
+    :param g1: first tensor
     :param g2: second tensor
     :return: product between the two tensors
     """
@@ -174,7 +175,7 @@ def tensor_product(g1, g2):
 def tensor_determinant(g):
     """
 
-    :param g: tensor dim = 3*3*xg*yg*z       
+    :param g: tensor dim = 3*3*xg*yg*z
     :return: determinant of the tensor dim = xg*yg*zg
     """
     import numpy as np
@@ -183,7 +184,6 @@ def tensor_determinant(g):
     g = np.array(g)
     d = 0
     s = g.shape
-    l = []
     # recursive function we have a matrix of 3*3 and then we divide it in different blocks of 2*2 and we calculate the determinant
     # of them making a um of the different determinants. The resulting determinant it's a sum of the different blocks.
     if s[0] == 3:
@@ -229,7 +229,7 @@ def tensor_determinant(g):
 def tensor_trace(g):
     """
 
-    :param g: tensor 
+    :param g: tensor
     :return: trace of a tensor
     """
     import numpy as np
@@ -308,7 +308,7 @@ def roots_poly(C):
                 ind[ind2] = np.minimum(2, ind[ind2] + 1)
 
     else:
-        print( "For degree > 3 use roots ")
+        print("For degree > 3 use roots ")
 
     return rts
 
@@ -316,7 +316,7 @@ def roots_poly(C):
 def tensor_eigenvalues(g):
     """
 
-    :param g: tensor 
+    :param g: tensor
     :return: eigenvalues of the tensor
 
     """
@@ -340,7 +340,7 @@ def tensor_eigenvalues(g):
         rts = utils.roots_poly(C)
 
     else:
-        print ('Degree too big : not still implemented')
+        print('Degree too big : not still implemented')
 
     rts2 = rts.real.copy()
     rts2.sort()
@@ -357,7 +357,7 @@ def tensor_eigenvalues(g):
 def tensor_transpose(g):
     """
 
-    :param g: tensor 
+    :param g: tensor
     :return: tranpose of the tensor
     """
     import numpy as np
@@ -472,7 +472,7 @@ def tensor_helmholtz(x, h, detg, k):
     :param h: sqrt(det(g)) * inverse(g)^2 -> g is he metric tensor of the 3D manifold M
     :param detg: sqrt(det(g))
     :param k: constant( 0 - gives laplacian)
-    :return: 
+    :return:
 
     """
 
@@ -539,7 +539,7 @@ def tensor_helmholtz(x, h, detg, k):
 def tensor_inverse(g):
     """
 
-    :param g: tensor 
+    :param g: tensor
     :return: inverse of the tensor
     """
     import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
@@ -557,10 +557,10 @@ def tensor_inverse(g):
 def operateur(x, ginv, detg):
     """
 
-    :param x: 
-    :param ginv: 
-    :param detg: 
-    :return: 
+    :param x:
+    :param ginv:
+    :param detg:
+    :return:
     """
     import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
     import numpy as np
@@ -590,11 +590,11 @@ def largest_eigenvalue_heat_3D_tensor2(g, h, epsilon):
     import cmath
 
     # parameters
-    if epsilon == None:
+    if epsilon is None:
         epsilon = 1e-6
     erreur = 1 + epsilon
 
-    ##tensors
+    # tensors
 
     detg = utils.tensor_determinant(g)
     detg = np.array(detg, dtype=np.complex128)  # complex tensor
@@ -611,14 +611,14 @@ def largest_eigenvalue_heat_3D_tensor2(g, h, epsilon):
     detg[detg != detg] = 0
     ginv[ginv != ginv] = 0
 
-    ##initialisation
+    # initialisation
 
     s = [g[0][0].shape[0] - 2, g[0][0].shape[1] - 2, g[0][0].shape[2] - 2]
     b1 = np.ones([s[0], s[1], s[2]])
 
     b1 = np.divide(b1, np.array(cmath.sqrt(np.dot(b1.flatten('F').transpose(), b1.flatten('F'))), dtype=np.complex128))
 
-    print ("Computation of the largest eigenvalue ...")
+    print("Computation of the largest eigenvalue ...")
     while erreur > epsilon:
         b0 = b1
         b2 = np.array(np.divide(np.array(utils.operateur(b1, ginv, detg)) * h, detg2) / h / h / h, dtype=np.complex128)
@@ -627,7 +627,7 @@ def largest_eigenvalue_heat_3D_tensor2(g, h, epsilon):
 
         erreur = np.linalg.norm(b1.flatten('F') - b0.flatten('F'))
 
-    print ("done")
+    print("done")
 
     lam = (cmath.sqrt(np.dot(b2.flatten('F').transpose(), b2.flatten('F'))))
 
@@ -640,7 +640,7 @@ def heat_finite_elt_3D_tensor2(x0, t_final, t_step, h, g):
     :param x0: vector x (at t = 0)
     :param t_final: time
     :param t_step: time step (must satisfy the CFL max(lambda) < 2)
-    :param h: 
+    :param h:
     :param g: metric tensor
     :return: vector x (at t = t_final)
 
@@ -651,12 +651,12 @@ def heat_finite_elt_3D_tensor2(x0, t_final, t_step, h, g):
     if len(x0.shape) == 4:
         x0 = x0[0, :, :, :]
 
-    ##parameters
+    # parameters
     nb_step = np.ceil(t_final / t_step)  # number of time step
     nb_step = nb_step.astype(int)
     t_step = t_final / nb_step
 
-    ##tensors
+    # tensors
     detg = utils.tensor_determinant(g)
     detg = np.sqrt(detg)
     ginv = utils.tensor_inverse(g)
@@ -670,7 +670,7 @@ def heat_finite_elt_3D_tensor2(x0, t_final, t_step, h, g):
     detg = np.array(detg.real, dtype='float64')
     detg2 = np.array(detg2.real, dtype='float64')
 
-    ##LOOP
+    # LOOP
     x = x0
     for i in range(nb_step):
         x = np.array(x - t_step * (np.divide(np.array(utils.operateur(x, ginv, detg)) * h, detg2)) / h / h / h)
@@ -684,7 +684,7 @@ def heat_finite_elt_2D_tensor2(x0, t_final, t_step, h, g):
     :param x0: vector x (at t = 0)
     :param t_final: time
     :param t_step: time step (must satisfy the CFL max(lambda) < 2)
-    :param h: 
+    :param h:
     :param g: metric tensor
     :return: vector x (at t = t_final)
 
@@ -692,24 +692,24 @@ def heat_finite_elt_2D_tensor2(x0, t_final, t_step, h, g):
     import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
     import numpy as np
 
-    ##parameters
+    # parameters
     nb_step = np.ceil(t_final / t_step)  # number of time step
     t_step = t_final / nb_step
 
-    ##tensors
+    # tensors
     detg = utils.tensor_determinant(g)
     detg = np.sqrt(detg)
     ginv = utils.tensor_inverse(g)
     ginv = utils.tensor_scalar_product(detg, ginv)
     detg2 = detg[1:-1, 1:-1]
 
-    ##LOOP
+    # LOOP
     x = x0
     for i in range(nb_step):
         m = t_step / h / h
         x = np.sum(x, -(
             utils.tensor_scalar_product(m,
-                                  np.divide(utils.tensor_scalar_product(h, utils.operateur(x, ginv, detg)), detg2, dtype=object))))
+                                        np.divide(utils.tensor_scalar_product(h, utils.operateur(x, ginv, detg)), detg2, dtype=object))))
 
     return x
 
@@ -719,22 +719,22 @@ def heat_solver_tensor_3D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     It solves the poisson's equation in 1D on the regular mesh (with mesh of size h)
     :param f: approximation of a funcion of L^(/Omega)
     :param g: tensor
-    :param t_final: 
+    :param t_final:
     :param h:
-    :param t_step: 
-    :param CL_value: 
-    :param epsilon: 
+    :param t_step:
+    :param CL_value:
+    :param epsilon:
     :return: u= solution of the poisson's equation
     """
     import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
     import numpy as np
 
-    ##initialisation
-    if h == None:
+    # initialisation
+    if h is None:
         h = 1
-    if CL_value == None:
+    if CL_value is None:
         CL_value = np.zeros(f.shape)
-    if epsilon == None:
+    if epsilon is None:
         epsilon = 1e-4
         epsilon = 0.1
 
@@ -742,7 +742,7 @@ def heat_solver_tensor_3D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     b_h = f[1:-1, 1:-1, 1:-1] * (h * h * h)
 
     b_h[:, :, 0] = b_h[:, :, 0] + (
-    CL_value[1:-1, 1:-1, 0] * h)  # not sure about b_h third value is 0 -> I need to avoid the column (HOW??)
+        CL_value[1:-1, 1:-1, 0] * h)  # not sure about b_h third value is 0 -> I need to avoid the column (HOW??)
     b_h[:, 0, :] = b_h[:, 0, :] + (CL_value[1:-1, 0, 1:-1] * h)
     b_h[0, :, :] = b_h[0, :, :] + (CL_value[0, 1:-1, 1:-1] * h)
 
@@ -764,29 +764,29 @@ def heat_solver_tensor_2D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     It solves the poisson's equation in 1D on the regular mesh (with mesh of size h)
     :param f: approximation of a funcion of L^(/Omega)
     :param g: tensor
-    :param t_final: 
+    :param t_final:
     :param h:
-    :param t_step: 
-    :param CL_value: 
-    :param epsilon: 
+    :param t_step:
+    :param CL_value:
+    :param epsilon:
     :return: u= solution of the poisson's equation
     """
     import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
     import numpy as np
 
     # intiialisation
-    if h == None:
+    if h is None:
         h = 1
-    if CL_value == None:
+    if CL_value is None:
         CL_value = np.zeros(f.shape)
-    if epsilon == None:
+    if epsilon is None:
         epsilon = 1e-4
 
     # rigidity matrix
     b_h = utils.tensor_scalar_product((h * h), f[1:-1, 1:-1])
     b_h[:, 0] = b_h[:, 0] + utils.tensor_scalar_product(h, CL_value[1:-1, 0])
     b_h[0, :] = b_h[0, :] + utils.tensor_scalar_product(h, CL_value[0, 1:-1])
-    b_h = b_h  ##what is the sense of doing this?
+    b_h = b_h  # what is the sense of doing this?
 
     # inversion of the linear system
     U_h = utils.heat_finite_elt_2D_tensor2(b_h, t_final, t_step, h, g)
@@ -898,37 +898,44 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
     import numpy as np
     import os
 
-    ########################################## PARAMETERS ##########################################
+    #
+    # PARAMETERS
+    #
     sigma_loc = 10
     error_tol = 0.001  # error for the estimation of the largest eigenvalue
     alpha_time = 0.9  # time_step = alpha_time * (time_step_max)
     max_proba = 0.999  # proba must be > 0 & < 1
     min_proba = 0.001
-    h = 1.5   #voxel size
-    ########################################## PARSE INPUTS/INIT ###################################
+    h = 1.5  # voxel size
 
+    #
+    # PARSE INPUTS/INIT
+    #
     sigma = FWHM / (2 * math.sqrt(2 * math.log(2)))  # sigma of voxels
     beta = sigma ** 2 / 2
 
-    ########################################## SCALE MAPS ##########################################
-
+    #
+    # SCALE MAPS
+    #
     xxx = []
 
     atlas = utils.atlas_decomposition(dartel_input[0])
 
     for i in atlas:
-        #[image, volu] = utils.spm_read(i)
-        #mask = (image != image)
-        #image[mask] = 0
-        #image = utils.rescaleImage(image, [min_proba, max_proba])
+        # [image, volu] = utils.spm_read(i)
+        # mask = (image != image)
+        # image[mask] = 0
+        # image = utils.rescaleImage(image, [min_proba, max_proba])
         image = utils.rescaleImage(i, [min_proba, max_proba])
 
         xxx.append(image)
 
     atlas = xxx
     si = atlas[0].shape
-    ########################################## CREATE TENSOR ########################################
 
+    #
+    # CREATE TENSOR
+    #
     g_atlas = utils.create_fisher_tensor(atlas)
     g_atlas = utils.tensor_scalar_product(h * h, g_atlas)
     g_pos = utils.tensor_eye(atlas)
@@ -940,7 +947,7 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
 
     eigenv = utils.tensor_eigenvalues(g)
 
-    print ('done')
+    print('done')
 
     dist_av = []
 
@@ -948,7 +955,7 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
         dist_av.append(np.sqrt(abs(eigenv[i])))
     dist_av = np.mean(dist_av)
 
-    print ("average distance ", dist_av)
+    print("average distance ", dist_av)
 
     g = utils.tensor_scalar_product((1 / dist_av) / dist_av, g)
 
@@ -959,11 +966,11 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
 
 def obtain_time_step_estimation(h, FWHM, g):
     """
-    
+
     :param h: 1,5 voxel size
     :param FWHM: mm of smoothing, defined by the user, default value = 4
     :param g: fisher tensor
-    :return: 
+    :return:
     """
     import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
 
@@ -979,7 +986,7 @@ def obtain_time_step_estimation(h, FWHM, g):
 
     lam = utils.largest_eigenvalue_heat_3D_tensor2(g, h,
                                                    error_tol)
-    print ("lambda: ", lam)
+    print("lambda: ", lam)
     lam = np.array(lam.real, dtype='float64')
     t_step_max = 2 / lam
 
@@ -987,7 +994,7 @@ def obtain_time_step_estimation(h, FWHM, g):
     nbiter = np.ceil(beta / t_step)
     t_step = beta / nbiter
 
-    ##after t_step calculation: creation of json file
+    # after t_step calculation: creation of json file
     data = {
         "Alpha": 0.9, "Epsilon": 1e-6, "BoundaryConditions": 'TimeInvariant', "sigma_loc": 10, "TimeStepMax": t_step_max
     }
@@ -998,8 +1005,6 @@ def obtain_time_step_estimation(h, FWHM, g):
     return t_step, os.path.abspath('./output_data.json')
 
 
-
-
 def heat_solver_equation(input_image, g, FWHM, h, t_step, dartel_input):
     import math
     import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
@@ -1007,14 +1012,12 @@ def heat_solver_equation(input_image, g, FWHM, h, t_step, dartel_input):
     import numpy as np
     import os
 
-
     sigma = FWHM / (2 * math.sqrt(2 * math.log(2)))  # sigma of voxels
     beta = sigma ** 2 / 2
 
     input_image_read = nib.load(input_image)
     input_image_data = input_image_read.get_data()
     input_image_data.dtype = np.dtype('float32')
-
 
     u = utils.heat_solver_tensor_3D_P1_grad_conj(input_image_data, g, beta, h, t_step, CL_value=None, epsilon=None)
 
