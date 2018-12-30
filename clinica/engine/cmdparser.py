@@ -69,16 +69,16 @@ class CmdParser:
             self._description = self._name
             self._args.description = (
                     Fore.GREEN
-                    + 'If you are not familiar with Clinica, see:'
-                    'http://clinica.run/doc/InteractingWithClinica/'
+                    + ('If you are not familiar with Clinica, see:'
+                       'http://clinica.run/doc/InteractingWithClinica/')
                     + Fore.RESET
                     )
         else:
             self._args.description = (
                     (
                         Fore.GREEN
-                        + '%s\n\nIf you are not familiar with Clinica, see:'
-                        'http://clinica.run/doc/InteractingWithClinica'
+                        + ('%s\n\nIf you are not familiar with Clinica, see:'
+                           'http://clinica.run/doc/InteractingWithClinica')
                         + Fore.RESET
                     ) % (self._description)
                 )
@@ -206,8 +206,7 @@ def get_cmdparser_names(objects=None):
 #         self._args.add_argument("bids_directory",
 #                                 help='Path to the BIDS directory.')
 #         self._args.add_argument("-co", type=bool, default=False,
-#                                 help='(Optional) Given an already existing BIDS output folder, convert only the clinical data.')
-#
+#                                 help='(Optional) Given an already existing BIDS output folder, convert only the clinical data.
 #     def run_command(self, args):
 #         from clinica.bids import prevdemals_to_bids
 #         prevdemals_to_bids.convert(args.dataset_directory, args.bids_directory)

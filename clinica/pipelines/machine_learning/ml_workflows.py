@@ -752,4 +752,3 @@ class RB_RepHoldOut_RandomForest_Multiclass(base.MLWorkflow):
         self._input.save_weights_as_nifti(weights, classifier_dir)
 
         self._validation.save_results(self._output_dir)
-
