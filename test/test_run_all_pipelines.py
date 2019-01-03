@@ -20,7 +20,7 @@ import sys
 warnings.filterwarnings("ignore")
 
 if sys.platform == 'darwin':
-    working_dir = '/Users/arnaud.marcoux/CI/working_dir_FU_python3'
+    working_dir = '/Volumes/builds/Clinica/working_directory_ci_mac'
 elif sys.platform.startswith('linux'):
     working_dir = '/localdrive10TB/data/working_directory_ci_linux'
 else:
