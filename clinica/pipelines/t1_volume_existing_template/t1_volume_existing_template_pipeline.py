@@ -362,7 +362,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
                 else:
                     raise RuntimeError('SPM version 8 or 12 could not be found. Please upgrade your SPM toolbox.')
             if isinstance(version, str):
-                if version == '12.7169':
+                if float(version) >= 12.7169:
                     tissue_map = os.path.join(str(spm_home), 'spm12_mcr/spm/spm12/tpm/TPM.nii')
                 else:
                     raise RuntimeError('SPM standalone version not supported. Please upgrade SPM standalone.')
