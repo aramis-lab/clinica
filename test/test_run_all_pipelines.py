@@ -51,7 +51,7 @@ def test_run_T1FreeSurferCrossSectional():
                    'recon-all-status.log')
     if isfile(log_file):
         last_line = str(subprocess.check_output(['tail', '-1', log_file]))
-        if 'finished without error' not in last_line.lower():
+        if b'finished without error' not in last_line.lower():
             raise ValueError('FreeSurfer did not mark subject '
                              'sub-ADNI082S5029 as -finished without error-')
     else:

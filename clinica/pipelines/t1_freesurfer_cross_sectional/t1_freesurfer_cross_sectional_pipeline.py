@@ -133,14 +133,6 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
         from nipype.interfaces.freesurfer.preprocess import ReconAll
         from clinica.utils.stream import cprint
 
-        # check out ReconAll version
-        try:
-            if ReconAll.version.fget.func_globals['__version__'].split(".") < ['0', '11', '0']:
-                raise RuntimeError('ReconAll version should at least be version of 0.11.0')
-        except Exception as e:
-            cprint(str(e))
-            # exit(1)
-
         # MapNode to check out if we need -cw256 for every subject, and -qcache is default for every subject.
         flagnode = npe.MapNode(name='flagnode',
                                iterfield=['t1_list'],
