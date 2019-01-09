@@ -361,7 +361,7 @@ def execute():
                     cprint("An ERROR was generated: please check the log file for more information")
                 return True
 
-        logger = logging.getLogger('workflow')
+        logger = logging.getLogger('nipype.workflow')
         logger.addFilter(LogFilter())
 
         # Remove all handlers associated with the root logger object
