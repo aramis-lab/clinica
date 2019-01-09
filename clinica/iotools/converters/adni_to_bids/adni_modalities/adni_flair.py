@@ -2,7 +2,7 @@
 """
  Module for converting FLAIR of ADNI
 """
-__author__ = "Jorge Samper Gonzalez and Sabrina Fontanella"
+__author__ = "Simona Bottani and Jorge Sampler Gonzalez"
 __copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
 __credits__ = [""]
 __license__ = "See LICENSE.txt file"
@@ -62,22 +62,17 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
                   'Study_ID', 'Series_ID', 'Image_ID', 'Field_Strength', 'Scanner', 'Enhanced']
 
     flair_df = pd.DataFrame(columns=flair_col_df)
-
     adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
 
     ida_meta_path = path.join(csv_dir, 'MRILIST.csv')
-
-    #ida_meta_path = path.join(csv_dir, 'IDA_MR_Metadata_Listing.csv')
     mri_qc_path = path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
 
     adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
     ida_meta = pd.io.parsers.read_csv(ida_meta_path, sep=',')
 
     ida_meta = ida_meta[ida_meta.SEQUENCE.map(lambda x: x.lower().find('flair') > -1)]
-
     mri_qc = pd.io.parsers.read_csv(mri_qc_path, sep=',')
     mri_qc = mri_qc[mri_qc.series_type == 'AFL']
-    # print '=================================================='
 
     for subj in subjs_list:
         # print 'Computing path for subj', subj
@@ -90,60 +85,19 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
         ida_meta_subj = ida_meta_subj.sort_values('SCANDATE')
 
         mri_qc_subj = mri_qc[mri_qc.RID == int(subj[-4:])]
-
-        visits = visits_to_timepoints_flair_refactoring(subj, ida_meta_subj, adnimerge_subj)
-
+        visits = visits_to_timepoints_flair(subj, ida_meta_subj, adnimerge_subj)
         keys = visits.keys()
         keys.sort()
 
         for visit_info in visits.keys():
 
-            # visit_info = (VISCODE, COLPROT, ORIGPROT)
 
             visit_str = visits[visit_info]
-
             visit_ida_meta = ida_meta_subj[ida_meta_subj.VISIT == visit_str]
             axial_ida_meta = visit_ida_meta[visit_ida_meta.SEQUENCE.map(lambda x: x.lower().find('enhanced') < 0)]
-            axial = flair_image_refactoring(subj, visit_info[0], visits[visit_info], axial_ida_meta, mri_qc_subj, False)
-
+            axial = flair_image(subj, visit_info[0], visits[visit_info], axial_ida_meta, mri_qc_subj, False)
             row_to_append = pd.DataFrame(axial, index=['i', ])
             flair_df = flair_df.append(row_to_append, ignore_index=True)
-
-    # Exceptions
-    # ==========
-    #conversion_errors = [('029_S_2395', 'm60'),
-#                         ('029_S_0824', 'm108'),
-#                         ('029_S_0914', 'm108'),
-#                         ('027_S_2219', 'm36'),
-#                         ('129_S_2332', 'm12'),
-#                         ('029_S_4384', 'm48'),
-#                         ('029_S_4385', 'm48'),
-#                         ('029_S_4585', 'm48'),
-#                         ('016_S_4591', 'm24'),
-#                         ('094_S_4630', 'm06'),
-#                         ('094_S_4649', 'm06'),
-#                         ('029_S_5219', 'm24'),
-#                         ('094_S_2238', 'm48'),
-#                         ('129_S_4287', 'bl'),
-#                         ('007_S_4611', 'm03'),
-#                         ('016_S_4638', 'bl'),
-#                         ('027_S_5118', 'bl'),
-#                         ('098_S_4018', 'bl'),
-#                         ('098_S_4003', 'm12'),
-#                         ('016_S_4584', 'm24'),
-#                         ('129_S_2347', 'm06'),
-#                         ('129_S_4220', 'bl'),
-#                         ('007_S_2058', 'm12'),
-#                         ('016_S_2007', 'm06')]
-
-    error_indices = []
-    #for conv_error in conversion_errors:
-    #    error_indices.append((dwi_df.Enhanced == False)
-    #                         & (dwi_df.Subject_ID == conv_error[0])
-    #                         & (dwi_df.VISCODE == conv_error[1]))
-
-    #indices_to_remove = dwi_df.index[reduce(operator.or_, error_indices, False)]
-    #dwi_df.drop(indices_to_remove, inplace=True)
 
     images = flair_df
     is_dicom = []
@@ -155,8 +109,8 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
         seq_path = path.join(source_dir, str(image.Subject_ID), str(image.Sequence))
 
         count += 1
-        # print 'Processing Subject ' + str(image.Subject_ID) + ' - Session ' + image.VISCODE + ', ' + str(
-        #     count) + ' / ' + str(total)
+        cprint ('Processing Subject ' + str(image.Subject_ID) + ' - Session ' + image.VISCODE + ', ' + str(
+             count) + ' / ' + str(total))
 
         series_path = ''
         s = 'S' + str(image.Series_ID)
@@ -173,14 +127,6 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
         nifti_path = series_path
         dicom = True
-
-        # for (dirpath, dirnames, filenames) in walk(series_path):
-        #     for f in filenames:
-        #         if f.endswith(".nii"):
-        #             dicom = False
-        #             nifti_path = path.join(dirpath, f)
-        #             break
-
         is_dicom.append(dicom)
         nifti_paths.append(nifti_path)
 
@@ -195,9 +141,8 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
     if not path.exists(flair_tsv_path):
         mkdir(flair_tsv_path)
 
-    # print '\nDone! Saving the results into', path.join(dwi_tsv_path, 'dwi_paths.tsv')
+    cprint ('\nDone! Saving the results into', path.join(dwi_tsv_path, 'dwi_paths.tsv'))
     images.to_csv(path.join(flair_tsv_path, 'flair_paths.tsv'), sep='\t', index=False)
-    # print '=================================================='
 
     return images
 
@@ -246,19 +191,11 @@ def flair_paths_to_bids(images, dest_dir, mod_to_update=False):
             bids_file_name = bids_id + '_ses-' + ses_bids
             ses_path = path.join(dest_dir, bids_id, bids_ses_id)
 
-            # existing_nii = glob(path.join(ses_path, 'func', '*nii*'))
-            #
-            # if mod_to_add:
-            #     if len(existing_nii) > 0:
-            #         print 'DWI folder already existing. Skipped.'
-            #         continue
 
             if mod_to_update:
                 if os.path.exists(path.join(ses_path, 'FLAIR')):
-                    # print 'Removing the old dwi file for session', ses
                     shutil.rmtree(path.join(ses_path, 'FLAIR'))
-                # else:
-                #     print 'Adding a new dwi file for session', ses
+
 
             if not os.path.exists(ses_path):
                 os.mkdir(ses_path)
@@ -292,21 +229,18 @@ def flair_paths_to_bids(images, dest_dir, mod_to_update=False):
 
                         # Find all the files eventually created by dcm2niix and remove them
                         flair_dcm2niix = glob(path.join(bids_dest_dir, bids_name + '*'))
-
                         for d in flair_dcm2niix:
-                            # print 'Removing the old', d
                             os.remove(d)
 
                         os.system(
                             'dcm2nii -a n -d n -e n -i y -g y -p n -m n -r n -x n -o ' + bids_dest_dir + ' ' + flair_path)
                         nii_file = path.join(bids_dest_dir, subjs_list[i].replace('_', '') + '.nii.gz')
-
                         if os.path.exists(nii_file):
                             os.rename(nii_file, path.join(bids_dest_dir, bids_name + '.nii.gz'))
                         else:
                             cprint('WARNING: CONVERSION FAILED...')
 
-        # print '--Conversion finished--\n'
+        cprint ('--Conversion finished--\n')
 
 
 
@@ -361,15 +295,13 @@ def select_image_qc(id_list, mri_qc_subj):
         else:
             best_ids = [int(x[1:]) for x in images_best_qc.loni_image.unique()]
             selected_image = min(best_ids)
-            # TODO verify if new code above works. Previously we had this:
-            # selected_image = min(int_ids)
 
     return int(selected_image)
 
 
 
 
-def visits_to_timepoints_flair_refactoring(subject, ida_meta_subj, adnimerge_subj):
+def visits_to_timepoints_flair(subject, ida_meta_subj, adnimerge_subj):
     """
 
     Args:
@@ -467,7 +399,6 @@ def visits_to_timepoints_flair_refactoring(subject, ida_meta_subj, adnimerge_sub
                 dif = days_between(min_visit.EXAMDATE, min_visit2.EXAMDATE)
                 if abs((dif / 2.0) - min_db) < 30:
                     min_visit = min_visit2
-
             cprint('We prefer ' + min_visit.VISCODE)
 
         key_min_visit = (min_visit.VISCODE, min_visit.COLPROT, min_visit.ORIGPROT)
@@ -475,14 +406,11 @@ def visits_to_timepoints_flair_refactoring(subject, ida_meta_subj, adnimerge_sub
             visits[key_min_visit] = image.VISIT
         elif visits[key_min_visit] != image.VISIT:
             cprint('Multiple visits for one timepoint!')
-            #cprint(subject)
-            #cprint(key_min_visit)
-            #cprint(visits[key_min_visit])
-            #cprint(image.Visit)
+
 
     return visits
 
-def flair_image_refactoring(subject_id, timepoint, visit_str, ida_meta_scans, mri_qc_subj, enhanced):
+def flair_image(subject_id, timepoint, visit_str, ida_meta_scans, mri_qc_subj, enhanced):
     """
 
     Args:
@@ -503,10 +431,8 @@ def flair_image_refactoring(subject_id, timepoint, visit_str, ida_meta_scans, mr
         return None
 
     sel_scan = ida_meta_scans[ida_meta_scans.IMAGEUID == sel_image].iloc[0]
-
     sequence = sel_scan.SEQUENCE
     sequence = replace_sequence_chars(sequence)
-
     image_dict = {'Subject_ID': subject_id,
                   'VISCODE': timepoint,
                   'Visit': visit_str,
@@ -516,7 +442,6 @@ def flair_image_refactoring(subject_id, timepoint, visit_str, ida_meta_scans, mr
                   'Series_ID': str(int(sel_scan.SERIESID)),
                   'Image_ID': str(int(sel_scan.IMAGEUID)),
                   'Field_Strength': sel_scan.MAGSTRENGTH,
-                  #'Scanner': sel_scan.Scanner, #@information to find somewhere else
                   'Enhanced': enhanced}
 
     return image_dict
