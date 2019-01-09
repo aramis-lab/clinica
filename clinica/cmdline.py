@@ -175,21 +175,23 @@ def execute():
     run_parser.description = (
             Fore.GREEN
             + 'Run pipelines on BIDS/CAPS datasets.'
-            + Fore.RESET)
+            + Fore.RESET
+    )
     run_parser._positionals.title = (
             Fore.YELLOW
             + 'clinica run expects one of the following pipelines'
-            + Fore.RESET)
+            + Fore.RESET
+    )
 
     init_cmdparser_objects(
             parser,
-            run_parser.add_subparsers(metavar=''),
-            pipelines)
+            run_parser.add_subparsers(metavar='', dest='run'),
+            pipelines
+    )
 
     """
     convert category: convert one of the supported datasets into BIDS hierarchy
     """
-
     from clinica.iotools.converters.aibl_to_bids.aibl_to_bids_cli import AiblToBidsCLI  # noqa
     from clinica.iotools.converters.adni_to_bids.adni_to_bids_cli import AdniToBidsCLI  # noqa
     from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_cli import OasisToBidsCLI  # noqa
@@ -210,21 +212,23 @@ def execute():
     convert_parser.description = (
             Fore.GREEN
             + 'Tools to convert unorganized datasets into a BIDS hierarchy.'
-            + Fore.RESET)
+            + Fore.RESET
+    )
     convert_parser._positionals.title = (
             Fore.YELLOW
             + 'clinica convert expects one of the following datasets'
-            + Fore.RESET)
+            + Fore.RESET
+    )
     convert_parser._optionals.title = OPTIONAL_TITLE
     init_cmdparser_objects(
             parser,
-            convert_parser.add_subparsers(metavar=''),
-            converters)
+            convert_parser.add_subparsers(metavar='', dest='convert'),
+            converters
+    )
 
     """
     iotools category
     """
-
     from clinica.iotools.utils.data_handling_cli import CmdParserSubjectsSessions
     from clinica.iotools.utils.data_handling_cli import CmdParserMergeTsv
     from clinica.iotools.utils.data_handling_cli import CmdParserMissingModalities
@@ -244,13 +248,15 @@ def execute():
     io_parser._positionals.title = (
             Fore.YELLOW
             + 'clinica iotools expects one of the following BIDS/CAPS utilities'
-            + Fore.RESET)
+            + Fore.RESET
+    )
     io_parser._optionals.title = OPTIONAL_TITLE
 
     init_cmdparser_objects(
             parser,
-            io_parser.add_subparsers(metavar=''),
-            io_tools)
+            io_parser.add_subparsers(metavar='', dest='iotools'),
+            io_tools
+    )
 
     """
     generate category: template
@@ -259,24 +265,27 @@ def execute():
         'generate',
         add_help=False,
         help=('To generate pre-filled files when creating '
-              'new pipelines (for  developers).'),
+              'new pipelines (for developers).'),
     )
     generate_parser.description = (
             Fore.GREEN
             + ('Generate pre-filled files when creating new pipelines '
                '(for  developers).')
-            + Fore.RESET)
+            + Fore.RESET
+    )
     generate_parser._positionals.title = (
             Fore.YELLOW
             + 'clinica generate expects one of the following tools'
-            + Fore.RESET)
+            + Fore.RESET
+    )
     generate_parser._optionals.title = OPTIONAL_TITLE
 
     from clinica.engine.template import CmdGenerateTemplates
     init_cmdparser_objects(
             parser,
-            generate_parser.add_subparsers(metavar=''),
-            [CmdGenerateTemplates()])
+            generate_parser.add_subparsers(metavar='', dest='generate'),
+            [CmdGenerateTemplates()]
+    )
 
     """
     Silent all sub-parser errors methods except the one which is called
@@ -315,14 +324,32 @@ def execute():
         parser.print_help()
         exit(-1)
 
-    if unknown_args:
-        if '--verbose' or '-v' in unknown_args:
-            cprint('Verbose flag detected')
-        raise ValueError('Unknown flag detected: %s' % unknown_args)
+    #if unknown_args:
+    #    if '--verbose' or '-v' in unknown_args:
+    #        cprint('Verbose flag detected')
+    #    raise ValueError('Unknown flag detected: %s' % unknown_args)
 
-    if args is None or hasattr(args, 'func') is False:
+    if 'run' in args and hasattr(args, 'func') is False:
+        # Case when we type `clinica run` on the terminal
+        run_parser.print_help()
+        exit(0)
+    elif 'convert' in args and hasattr(args, 'func') is False:
+        # Case when we type `clinica convert` on the terminal
+        convert_parser.print_help()
+        exit(0)
+    elif 'iotools' in args and hasattr(args, 'func') is False:
+        # Case when we type `clinica iotools` on the terminal
+        io_parser.print_help()
+        exit(0)
+    elif 'generate' in args and hasattr(args, 'func') is False:
+        # Case when we type `clinica generate` on the terminal
+        generate_parser.print_help()
+        exit(0)
+    elif args is None or hasattr(args, 'func') is False:
+        # Case when we type `clinica` on the terminal
         parser.print_help()
         exit(0)
+
 
     import clinica.utils.stream as var
     var.clinica_verbose = args.verbose
@@ -361,7 +388,7 @@ def execute():
                     cprint("An ERROR was generated: please check the log file for more information")
                 return True
 
-        logger = logging.getLogger('workflow')
+        logger = logging.getLogger('nipype.workflow')
         logger.addFilter(LogFilter())
 
         # Remove all handlers associated with the root logger object
