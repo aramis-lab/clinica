@@ -44,7 +44,7 @@ def likeliness_measure(file1, file2, threshold1, threshold2, display=False):
     mask = (data1 == 0) & (data2 == 0)
     data1[mask] = 1
     data2[mask] = 1
-    metric = (2 * np.abs(data1 - data2)) / (np.abs(data1) + np.abs(data1))
+    metric = (2 * np.abs(data1 - data2)) / (np.abs(data1) + np.abs(data2))
     metric_flattened = np.ndarray.flatten(metric)
 
     # Display fig
