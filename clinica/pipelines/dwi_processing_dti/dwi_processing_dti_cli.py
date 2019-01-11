@@ -41,7 +41,7 @@ class DWIProcessingDTICLI(ce.CmdParser):
         """
         """
         from tempfile import mkdtemp
-        from dwi_processing_dti_pipeline import DWIProcessingDTI
+        from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_pipeline import DWIProcessingDTI
 
         pipeline = DWIProcessingDTI(
             caps_directory=self.absolute_path(args.caps_directory),

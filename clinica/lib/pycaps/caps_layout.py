@@ -18,4 +18,3 @@ class CAPSLayout(Layout):
 
         super(CAPSLayout, self).__init__(path, config,
                                          dynamic_getters=True, **kwargs)
-

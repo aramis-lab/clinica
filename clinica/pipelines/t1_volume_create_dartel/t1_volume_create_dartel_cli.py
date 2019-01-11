@@ -23,7 +23,7 @@ class T1VolumeCreateDartelCLI(ce.CmdParser):
         """Define a description of this pipeline.
         """
         self._description = ('DARTEL creation with SPM:\n'
-                            'http://clinica.run/doc/Pipelines/T1_Volume/')
+                             'http://clinica.run/doc/Pipelines/T1_Volume/')
 
     def define_options(self):
         """Define the sub-command arguments
@@ -47,13 +47,12 @@ class T1VolumeCreateDartelCLI(ce.CmdParser):
         """
         """
 
-        from t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
+        from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
 
         pipeline = T1VolumeCreateDartel(bids_directory=self.absolute_path(args.bids_directory),
-                               caps_directory=self.absolute_path(args.caps_directory),
-                               tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-                               group_id=args.group_id
-                               )
+                                        caps_directory=self.absolute_path(args.caps_directory),
+                                        tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+                                        group_id=args.group_id)
 
         pipeline.parameters.update({'dartel_tissues': args.dartel_tissues})
 

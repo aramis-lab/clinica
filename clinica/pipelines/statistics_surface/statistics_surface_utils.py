@@ -43,14 +43,14 @@ def prepare_data(input_directory, subjects_visits_tsv, group_label, glm_type):
         if not os.path.exists(output_directory):
             try:
                 os.makedirs(output_directory)
-            except:
+            except BaseException:
                 raise OSError("SurfStat: can't create destination directory (%s)!" % (output_directory))
     elif glm_type == "correlation":
         output_directory = os.path.join(input_directory, 'groups', group_id, 'statistics', 'surfstat_correlation_analysis')
         if not os.path.exists(output_directory):
             try:
                 os.makedirs(output_directory)
-            except:
+            except BaseException:
                 raise OSError("SurfStat: can't create destination directory (%s)!" % (output_directory))
     else:
         cprint("The other GLM situations have not been implemented in this pipeline.")
@@ -70,7 +70,7 @@ def prepare_data(input_directory, subjects_visits_tsv, group_label, glm_type):
         dif_list = list(set(participant_list) - set(subjects_visits_tsv_list))
         try:
             len(dif_list) == 0
-        except:
+        except BaseException:
             raise ValueError("It seems that this round of analysis does not contain the same subjects where you want to put the results, please check it!")
 
         group_tsv = 'group-' + group_label + '_participants.tsv'

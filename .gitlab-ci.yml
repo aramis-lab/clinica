@@ -26,7 +26,7 @@ before_script:
   - pwd
   - export CLINICA_ENV_BRANCH_CLEAN=$(echo $CLINICA_ENV_BRANCH | tr -dc '[:alnum:]\-\_')
 after_script:
-  #  - conda env remove -y  --name clinica_env
+  #  - conda env remove -y  --name clinica_env_upgrade_dep
 
 build:mac:
   stage: build
@@ -39,7 +39,7 @@ build:mac:
     - >
       if conda env list|grep -w $CLINICA_ENV_BRANCH_CLEAN; then
         if git diff HEAD~ --name-only|grep environment.yml; then
-          echo "REcreate environment $CLINICA_ENV_BRANCH"
+          echo "REcreate environment $CLINICA_ENV_BRANCH_CLEAN"
           conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH_CLEAN
         fi;
       else
@@ -56,7 +56,7 @@ build:linux:
     # (by editing the environment.yml file), the environment
     # is recreated.
     - >
-      if conda env list|grep -w $CLINICA_ENV_BRANCH_CLEAN|tr -dc '[:alnum:]\-\_'; then
+      if conda env list|grep -w $CLINICA_ENV_BRANCH_CLEAN; then
         if git diff HEAD~ --name-only|grep environment.yml; then
           echo "REcreate environment $CLINICA_ENV_BRANCH_CLEAN"
           conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH_CLEAN
@@ -93,8 +93,15 @@ launch:linux:
     - clinica --help
     - source deactivate
 
+test:style:
+  stage: test
+  tags:
+    - linux
+  script:
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
+    - pytest --verbose -k 'test_coding_style'
       
-unittest:mac:
+test:instantiate:mac:
   stage: test
   tags:
     - macOS
@@ -103,23 +110,57 @@ unittest:mac:
     - module load clinica.all
     - cd test
     - ln -s /Volumes/builds/Clinica/data_ci ./data
-    - pytest -v
+    - pytest --verbose -k 'test_instantiate'
     - module purge
     - source deactivate
 
   
-unittest:linux:
+test:instantiate:linux:
   stage: test
   tags:
     - linux
   script:
     - source activate $CLINICA_ENV_BRANCH_CLEAN
+    - export PATH="/home/gitlab-runner/dcm2nii":${PATH}
     - module load clinica.all
     - cd test
-    - ln -s /localdrive10TB/data/data_ci ./data
-    - pytest -v
+    - ln -s /localdrive10TB/data/ci/data_ci_upgrade ./data
+    - taskset -c 0-21 pytest --verbose --disable-warnings --timeout=0 -n 6 -k 'test_instantiate'
     - module purge
     - source deactivate
+
+test:run:mac:
+  stage: test
+  tags:
+    - macOS
+  only:
+    - schedules
+  script:
+    - source activate $CLINICA_ENV_BRANCH_CLEAN 
+    - module load clinica.all
+    - cd test
+    - ln -s /Volumes/builds/Clinica/data_ci ./data
+    - pytest --verbose -k 'test_run'
+    - module purge
+    - source deactivate
+
+  
+test:run:linux:
+  stage: test
+  tags:
+    - linux
+  only:
+    - schedules
+  script:
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
+    - export PATH="/home/gitlab-runner/dcm2nii":${PATH}
+    - module load clinica.all
+    - cd test
+    - ln -s /localdrive10TB/data/ci/data_ci_upgrade ./data
+    - taskset -c 0-21 pytest --verbose --disable-warnings --timeout=0 -n 6 -k 'test_run'
+    - module purge
+    - source deactivate
+ 
 
 pkg:
   stage: package

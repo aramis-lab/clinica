@@ -86,14 +86,14 @@ def load_data(image_list, subjects):
     read_file = read_file.mean_scalar
     data = np.zeros((len(subjects), len(read_file)))
 
-    for i in xrange(len(image_list)):
+    for i in range(len(image_list)):
         tsv_file = pd.io.parsers.read_csv(image_list[i], sep='\t', usecols=[2], header=0)
         subj_average = tsv_file.mean_scalar
         all_vector = np.append(all_vector, subj_average)
     data_temp = np.split(all_vector, len(image_list))
 
-    for i in xrange(len(image_list)):
-        for j in xrange(len(subj_average)):
+    for i in range(len(image_list)):
+        for j in range(len(subj_average)):
             data[i][j] = data_temp[i][j]
     return data
 
@@ -112,8 +112,8 @@ def features_weights(image_list, dual_coefficients, sv_indices, scaler=None):
     """
 
     if len(sv_indices) != len(dual_coefficients):
-        print "Length dual coefficients: " + str(len(dual_coefficients))
-        print "Length indices: " + str(len(sv_indices))
+        print("Length dual coefficients: " + str(len(dual_coefficients)))
+        print("Length indices: " + str(len(sv_indices)))
         raise ValueError('The number of support vectors indices and the number of coefficients must be the same.')
 
     if len(image_list) == 0:

@@ -19,12 +19,12 @@ class SVMRegularizationCLI(ce.CmdParser):
         self._name = 'machinelearning-prepare-regularized-svm'
 
     def define_description(self):
-        self._description = 'Spatial and anatomical regularization for SVM\n'  ###link to the doc
+        self._description = 'Spatial and anatomical regularization for SVM\n'  # link to the doc
 
     def define_options(self):
         """Define the sub-command arguments
         """
-        #@todo mettere i parametri di default nell'help
+        # @todo mettere i parametri di default nell'help
 
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         # self._args.add_argument("bids_directory",
@@ -44,7 +44,7 @@ class SVMRegularizationCLI(ce.CmdParser):
                               help='voxel size (in mm)')
         optional.add_argument("-image_type", "--image_type", default='t1',
                               help='Possible values: t1/pet')
-        optional.add_argument("-pet_type", "--pet_type", default = 'FDG',
+        optional.add_argument("-pet_type", "--pet_type", default='FDG',
                               help='Type of pet used, ex: fdg/av45')
 
         clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
@@ -62,7 +62,7 @@ class SVMRegularizationCLI(ce.CmdParser):
         """
 
         from tempfile import mkdtemp
-        from svm_regularization_pipeline import SVMRegularization
+        from clinica.pipelines.svm_regularization.svm_regularization_pipeline import SVMRegularization
 
         pipeline = SVMRegularization(
             caps_directory=self.absolute_path(args.caps_directory),

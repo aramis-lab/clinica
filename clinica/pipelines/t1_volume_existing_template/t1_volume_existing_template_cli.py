@@ -11,6 +11,7 @@ __maintainer__ = "Jorge Samper Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
+
 class T1VolumeExistingTemplateCLI(ce.CmdParser):
 
     def define_name(self):
@@ -26,33 +27,85 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments
         """
-        self._args.add_argument("bids_directory",
-                                help='Path to the BIDS directory.')
-        self._args.add_argument("caps_directory",
-                                help='Path to the CAPS directory.')
-        self._args.add_argument("group_id",
-                                help='User-defined identifier for the provided group of subjects.')
-        self._args.add_argument("-tsv", "--subjects_sessions_tsv",
-                                help='TSV file containing a list of subjects with their sessions.')
-        self._args.add_argument("-t", "--tissues", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
-                                help='Tissues to create flow fields to DARTEL template. Ex: 1 is only GM')
-        self._args.add_argument("-wd", "--working_directory",
-                                help='Temporary directory to store pipelines intermediate results')
-        self._args.add_argument("-np", "--n_procs", type=int,
-                                help='Number of cores used to run in parallel')
+        from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
+        clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
+        clinica_comp.add_argument("bids_directory",
+                                  help='Path to the BIDS directory.')
+        clinica_comp.add_argument("caps_directory",
+                                  help='Path to the CAPS directory.')
+        clinica_comp.add_argument("group_id",
+                                  help='User-defined identifier for the provided group of subjects.')
+        # Optional arguments (e.g. FWHM)
+        optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
+        optional.add_argument("-fwhm", "--fwhm",
+                              nargs='+', type=int, default=[8],
+                              help="A list of integers specifying the different isomorphic fwhm in millimeters to smooth the image")
+        # Clinica standard arguments (e.g. --n_procs)
+        clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
+        clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
+                                 help='TSV file containing a list of subjects with their sessions.')
+        clinica_opt.add_argument("-wd", "--working_directory",
+                                 help='Temporary directory to store pipelines intermediate results')
+        clinica_opt.add_argument("-np", "--n_procs",
+                                 metavar=('N'), type=int,
+                                 help='Number of cores used to run in parallel')
+        # Advanced arguments (i.e. tricky parameters)
+        advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
+        advanced.add_argument("-ti", "--tissue_classes",
+                              metavar=('1 2 3 4 5 6'),
+                              nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
+                              help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to save. Up to 6 tissue classes can be saved. Ex: 1 2 3 is GM, WM and CSF")
+        advanced.add_argument("-dt", "--dartel_tissues",
+                              metavar=('1 2 3 4 5 6'),
+                              nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
+                              help='Tissues to use to create flow fields to existing DARTEL template. Ex: 1 is only GM')
+        advanced.add_argument("-tpm", "--tissue_probability_maps",
+                              metavar=('TissueProbabilityMap.nii'),
+                              help='Tissue probability maps to use for segmentation.')
+        advanced.add_argument("-swu", "--save_warped_unmodulated",
+                              action='store_true', default=True,
+                              help="Save warped unmodulated images for tissues specified in --tissue_classes")
+        advanced.add_argument("-swm", "--save_warped_modulated",
+                              action='store_true',
+                              help="Save warped modulated images for tissues specified in --tissue_classes")
+        advanced.add_argument("-m", "--modulate",
+                              type=bool, default=True,
+                              metavar=('True/False'),
+                              help='A boolean. Modulate output images - no modulation preserves concentrations')
+        advanced.add_argument("-vs", "--voxel_size",
+                              metavar=('float'),
+                              nargs=3, type=float,
+                              help="A list of 3 floats specifying voxel sizes for each dimension of output image")
+        list_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
+        advanced.add_argument("-atlases", "--atlases",
+                              nargs='+', type=str,
+                              default=list_atlases, choices=list_atlases,
+                              help='A list of atlases to use to calculate the mean GM concentration at each region')
 
     def run_command(self, args):
         """
         """
-        from t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
+        from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
 
         pipeline = T1VolumeExistingTemplate(bids_directory=self.absolute_path(args.bids_directory),
-                                               caps_directory=self.absolute_path(args.caps_directory),
-                                               tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-                                               group_id=args.group_id
-                                               )
+                                            caps_directory=self.absolute_path(args.caps_directory),
+                                            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+                                            group_id=args.group_id)
 
-        pipeline.parameters.update({'tissues': args.tissues})
+        pipeline.parameters.update({
+            'tissue_classes': args.tissue_classes,
+            'dartel_tissues': args.dartel_tissues,
+            'tpm': args.tissue_probability_maps,
+            'save_warped_unmodulated': args.save_warped_unmodulated,
+            'save_warped_modulated': args.save_warped_modulated,
+            'write_deformation_fields': [True, True],  # args.write_deformation_fields
+            'save_t1_mni': True,
+            'voxel_size': tuple(args.voxel_size) if args.voxel_size is not None else None,
+            'modulation': args.modulate,
+            'fwhm': args.fwhm,
+            'atlas_list': args.atlases
+        })
 
         pipeline.base_dir = self.absolute_path(args.working_directory)
 

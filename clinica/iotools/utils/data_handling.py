@@ -278,7 +278,7 @@ def find_mods_and_sess(bids_dir):
         for session in ses_paths:
             ses_name = session.split(os.sep)[-1]
             mods_avail = []
-            if mods_dict.has_key('sessions'):
+            if 'sessions' in mods_dict:
                 if ses_name not in mods_dict['sessions']:
                     mods_dict['sessions'].append(ses_name)
             else:
@@ -295,7 +295,7 @@ def find_mods_and_sess(bids_dir):
                     func_name = func_path.split(os.sep)[-1]
                     func_name_tokens = func_name.split('_')
                     func_task = func_name_tokens[2]
-                if mods_dict.has_key('func'):
+                if 'func' in mods_dict:
                     if 'func_' + func_task not in mods_dict['func']:
                         mods_dict['func'].append('func_' + func_task)
                 else:
@@ -305,19 +305,19 @@ def find_mods_and_sess(bids_dir):
                     mods_list.append('func_' + func_task)
 
             if 'dwi' in mods_avail:
-                if not mods_dict.has_key('dwi'):
+                if 'dwi' not in mods_dict:
                     mods_dict.update({'dwi': ['dwi']})
                 if 'dwi' not in mods_list:
                     mods_list.append('dwi')
 
             if 'fmap' in mods_avail:
-                if not mods_dict.has_key('fmap'):
+                if 'fmap' not in mods_dict:
                     mods_dict.update({'fmap': ['fmap']})
                 if 'fmap' not in mods_list:
                     mods_list.append('fmap')
 
             if 'pet' in mods_avail:
-                if not mods_dict.has_key('pet'):
+                if 'pet' not in mods_dict:
                     mods_dict.update({'pet': ['pet']})
                 if 'pet' not in mods_list:
                     mods_list.append('pet')
@@ -339,7 +339,7 @@ def find_mods_and_sess(bids_dir):
                     if anat_ext != 'json':
                         file_parts = anat_name.split("_")
                         anat_type = str.lower(file_parts[len(file_parts) - 1])
-                        if mods_dict.has_key('anat'):
+                        if 'anat' in mods_dict:
                             if anat_type not in mods_dict['anat']:
                                 anat_aval = mods_dict['anat']
                                 anat_aval.append(anat_type)
@@ -454,7 +454,7 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=''):
                             row_to_append_df[m] = pd.Series('0')
                             mmt.add_missing_mod(ses, m)
                 else:
-                    if mods_avail_dict.has_key('anat'):
+                    if 'anat' in mods_avail_dict:
                         for m in mods_avail_dict['anat']:
                             row_to_append_df[m] = pd.Series('0')
                             mmt.add_missing_mod(ses, m)

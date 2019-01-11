@@ -46,7 +46,7 @@ class T1FreeSurferCrossSectionalCLI(ce.CmdParser):
         """
         Run the pipelines with defined args
         """
-        from t1_freesurfer_cross_sectional_pipeline import T1FreeSurferCrossSectional
+        from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_pipeline import T1FreeSurferCrossSectional
         from tempfile import mkdtemp
 
         pipeline = T1FreeSurferCrossSectional(

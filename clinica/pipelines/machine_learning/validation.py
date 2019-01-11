@@ -2,7 +2,6 @@
 
 import os
 from os import path
-import json
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
@@ -29,10 +28,14 @@ class KFoldCV(base.MLValidation):
         self._best_params = None
         self._cv = None
 
-    def validate(self, y, n_folds=10, n_threads=15):
+    def validate(self, y, n_folds=10, splits_indices=None, n_threads=15):
 
-        skf = StratifiedKFold(n_splits=n_folds, shuffle=True)
-        self._cv = list(skf.split(np.zeros(len(y)), y))
+        if splits_indices is None:
+            skf = StratifiedKFold(n_splits=n_folds, shuffle=True)
+            self._cv = list(skf.split(np.zeros(len(y)), y))
+        else:
+            self._cv = splits_indices
+
         async_pool = ThreadPool(n_threads)
         async_result = {}
 
@@ -76,7 +79,15 @@ class KFoldCV(base.MLValidation):
                                        'sensitivity': self._fold_results[i]['evaluation']['sensitivity'],
                                        'specificity': self._fold_results[i]['evaluation']['specificity'],
                                        'ppv': self._fold_results[i]['evaluation']['ppv'],
-                                       'npv': self._fold_results[i]['evaluation']['npv']}, index=['i', ])
+                                       'npv': self._fold_results[i]['evaluation']['npv'],
+                                       'train_balanced_accuracy': self._fold_results[i]['evaluation_train']['balanced_accuracy'],
+                                       'train_accuracy': self._fold_results[i]['evaluation_train']['accuracy'],
+                                       'train_sensitivity': self._fold_results[i]['evaluation_train']['sensitivity'],
+                                       'train_specificity': self._fold_results[i]['evaluation_train']['specificity'],
+                                       'train_ppv': self._fold_results[i]['evaluation_train']['ppv'],
+                                       'train_npv': self._fold_results[i]['evaluation_train']['npv']
+                                       }, index=['i', ])
+
             results_df.to_csv(path.join(container_dir, 'results_fold-' + str(i) + '.tsv'),
                               index=False, sep='\t', encoding='utf-8')
             results_folds.append(results_df)
@@ -92,11 +103,12 @@ class KFoldCV(base.MLValidation):
         mean_results = pd.DataFrame(all_results.apply(np.nanmean).to_dict(), columns=all_results.columns, index=[0, ])
         mean_results.to_csv(path.join(output_dir, 'mean_results.tsv'),
                             index=False, sep='\t', encoding='utf-8')
-        print "Mean results of the classification:"
-        print "Balanced accuracy: %s" %(mean_results_df['balanced_accuracy'].to_string(index = False))
-        print "specificity: %s" % (mean_results_df['specificity'].to_string(index=False))
-        print "sensitivity: %s" % (mean_results_df['sensitivity'].to_string(index=False))
-        print "auc: %s" % (mean_results_df['auc'].to_string(index=False))
+
+        print("Mean results of the classification:")
+        print("Balanced accuracy: %s" % (mean_results['balanced_accuracy'].to_string(index=False)))
+        print("specificity: %s" % (mean_results['specificity'].to_string(index=False)))
+        print("sensitivity: %s" % (mean_results['sensitivity'].to_string(index=False)))
+        print("auc: %s" % (mean_results['auc'].to_string(index=False)))
 
 
 class RepeatedKFoldCV(base.MLValidation):
@@ -143,7 +155,7 @@ class RepeatedKFoldCV(base.MLValidation):
 
         all_results_list = []
         all_subjects_list = []
-        
+
         for iteration in range(len(self._repeated_fold_results)):
 
             iteration_dir = path.join(output_dir, 'iteration-' + str(iteration))
@@ -172,7 +184,14 @@ class RepeatedKFoldCV(base.MLValidation):
                      'sensitivity': self._repeated_fold_results[iteration][i]['evaluation']['sensitivity'],
                      'specificity': self._repeated_fold_results[iteration][i]['evaluation']['specificity'],
                      'ppv': self._repeated_fold_results[iteration][i]['evaluation']['ppv'],
-                     'npv': self._repeated_fold_results[iteration][i]['evaluation']['npv']}, index=['i', ])
+                     'npv': self._repeated_fold_results[iteration][i]['evaluation']['npv'],
+                     'train_balanced_accuracy': self._repeated_fold_results[iteration][i]['evaluation_train']['balanced_accuracy'],
+                     'train_accuracy': self._repeated_fold_results[iteration][i]['evaluation_train']['accuracy'],
+                     'train_sensitivity': self._repeated_fold_results[iteration][i]['evaluation_train']['sensitivity'],
+                     'train_specificity': self._repeated_fold_results[iteration][i]['evaluation_train']['specificity'],
+                     'train_ppv': self._repeated_fold_results[iteration][i]['evaluation_train']['ppv'],
+                     'train_npv': self._repeated_fold_results[iteration][i]['evaluation_train']['npv']
+                     }, index=['i', ])
                 results_df.to_csv(path.join(folds_dir, 'results_fold-' + str(i) + '.tsv'),
                                   index=False, sep='\t', encoding='utf-8')
                 iteration_results_list.append(results_df)
@@ -204,6 +223,12 @@ class RepeatedKFoldCV(base.MLValidation):
                                        columns=all_results_df.columns, index=[0, ])
         mean_results_df.to_csv(path.join(output_dir, 'mean_results.tsv'),
                                index=False, sep='\t', encoding='utf-8')
+
+        print("Mean results of the classification:")
+        print("Balanced accuracy: %s" % (mean_results_df['balanced_accuracy'].to_string(index=False)))
+        print("specificity: %s" % (mean_results_df['specificity'].to_string(index=False)))
+        print("sensitivity: %s" % (mean_results_df['sensitivity'].to_string(index=False)))
+        print("auc: %s" % (mean_results_df['auc'].to_string(index=False)))
 
 
 class RepeatedHoldOut(base.MLValidation):
@@ -317,11 +342,12 @@ class RepeatedHoldOut(base.MLValidation):
                                        columns=all_results_df.columns, index=[0, ])
         mean_results_df.to_csv(path.join(output_dir, 'mean_results.tsv'),
                                index=False, sep='\t', encoding='utf-8')
-        print "Mean results of the classification:"
-        print "Balanced accuracy: %s" %(mean_results_df['balanced_accuracy'].to_string(index = False))
-        print "specificity: %s" % (mean_results_df['specificity'].to_string(index=False))
-        print "sensitivity: %s" % (mean_results_df['sensitivity'].to_string(index=False))
-        print "auc: %s" % (mean_results_df['auc'].to_string(index=False))
+
+        print("Mean results of the classification:")
+        print("Balanced accuracy: %s" % (mean_results_df['balanced_accuracy'].to_string(index=False)))
+        print("specificity: %s" % (mean_results_df['specificity'].to_string(index=False)))
+        print("sensitivity: %s" % (mean_results_df['sensitivity'].to_string(index=False)))
+        print("auc: %s" % (mean_results_df['auc'].to_string(index=False)))
 
         self.compute_error_variance()
         self.compute_accuracy_variance()
@@ -378,7 +404,7 @@ class RepeatedHoldOut(base.MLValidation):
 
     def _compute_average_test_accuracy(self, y_list, yhat_list):
 
-        from clinica.pipelines.machine_learning.svm_utils import evaluate_prediction
+        from clinica.pipelines.machine_learning.ml_utils import evaluate_prediction
 
         return evaluate_prediction(y_list, yhat_list)['balanced_accuracy']
 
@@ -437,7 +463,6 @@ class LearningCurveRepeatedHoldOut(base.MLValidation):
         return self._classifier, self._best_params, self._split_results
 
     def save_results(self, output_dir):
-        from clinica.utils.stream import cprint
         if self._split_results is None:
             raise Exception("No results to save. Method validate() must be run before save_results().")
 
@@ -468,20 +493,18 @@ class LearningCurveRepeatedHoldOut(base.MLValidation):
                          'specificity': self._split_results[learning_point][iteration]['evaluation']['specificity'],
                          'ppv': self._split_results[learning_point][iteration]['evaluation']['ppv'],
                          'npv': self._split_results[learning_point][iteration]['evaluation']['npv'],
-
-                         'train_balanced_accuracy': self._split_results[learning_point][iteration]['evaluation_training']['balanced_accuracy'],
-                         'train_accuracy': self._split_results[learning_point][iteration]['evaluation_training']['accuracy'],
-                         'train_sensitivity': self._split_results[learning_point][iteration]['evaluation_training']['sensitivity'],
-                         'train_specificity': self._split_results[learning_point][iteration]['evaluation_training']['specificity'],
-                         'train_ppv': self._split_results[learning_point][iteration]['evaluation_training']['ppv'],
-                         'train_npv': self._split_results[learning_point][iteration]['evaluation_training']['npv']}, index=['i', ])
+                         'train_balanced_accuracy': self._split_results[learning_point][iteration]['evaluation_train']['balanced_accuracy'],
+                         'train_accuracy': self._split_results[learning_point][iteration]['evaluation_train']['accuracy'],
+                         'train_sensitivity': self._split_results[learning_point][iteration]['evaluation_train']['sensitivity'],
+                         'train_specificity': self._split_results[learning_point][iteration]['evaluation_train']['specificity'],
+                         'train_ppv': self._split_results[learning_point][iteration]['evaluation_train']['ppv'],
+                         'train_npv': self._split_results[learning_point][iteration]['evaluation_train']['npv']}, index=['i', ])
 
                 iteration_results_df.to_csv(path.join(iteration_dir, 'results.tsv'),
                                             index=False, sep='\t', encoding='utf-8')
 
                 mean_results_df = pd.DataFrame(iteration_results_df.apply(np.nanmean).to_dict(),
                                                columns=iteration_results_df.columns, index=[0, ])
-
                 mean_results_df.to_csv(path.join(iteration_dir, 'mean_results.tsv'),
                                        index=False, sep='\t', encoding='utf-8')
                 all_results_list.append(mean_results_df)
@@ -554,6 +577,6 @@ class LearningCurveRepeatedHoldOut(base.MLValidation):
 
     def _compute_average_test_accuracy(self, y_list, yhat_list):
 
-        from clinica.pipelines.machine_learning.svm_utils import evaluate_prediction
+        from clinica.pipelines.machine_learning.ml_utils import evaluate_prediction
 
         return evaluate_prediction(y_list, yhat_list)['balanced_accuracy']

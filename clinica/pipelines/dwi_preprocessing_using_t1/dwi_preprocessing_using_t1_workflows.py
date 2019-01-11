@@ -1,7 +1,7 @@
 # coding: utf8
 
 
-#def susceptibility_distortion_correction_using_t1_old(
+# def susceptibility_distortion_correction_using_t1_old(
 #        name='susceptibility_distortion_correction_using_t1'):
 #    """
 #    Susceptibility distortion correction using the T1w image.
@@ -159,7 +159,7 @@
 #    return wf
 #
 #
-#def apply_all_corrections_using_ants_old(name='apply_all_corrections_using_ants'):
+# def apply_all_corrections_using_ants_old(name='apply_all_corrections_using_ants'):
 #    """
 #    Combines two lists of linear transforms with the deformation field
 #    map obtained epi_correction by Ants.

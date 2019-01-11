@@ -102,7 +102,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
 
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
-        import t1_volume_tissue_segmentation_utils as utils
+        import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as utils
 
         # Reading BIDS
         # ============
@@ -120,7 +120,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         """
 
         import nipype.pipeline.engine as npe
-        import t1_volume_tissue_segmentation_utils as utils
+        import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as utils
         import nipype.interfaces.io as nio
         from clinica.utils.io import zip_nii
 
@@ -170,10 +170,13 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
             (r'(.*)c5(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-softtissue\3'),
             (r'(.*)c6(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-background\3'),
             (r'(.*)(/native_space/sub-.*)(\.nii(\.gz)?)$', r'\1\2_probability\3'),
-            (r'(.*)(/([a-z]+)_deformation_field/)i?y_(sub-.*)(\.nii(\.gz)?)$', r'\1/normalized_space/\4_target-Ixi549Space_transformation-\3_deformation\5'),
+            (r'(.*)(/([a-z]+)_deformation_field/)i?y_(sub-.*)(\.nii(\.gz)?)$',
+             r'\1/normalized_space/\4_target-Ixi549Space_transformation-\3_deformation\5'),
             (r'(.*)(/t1_mni/)w(sub-.*)_T1w(\.nii(\.gz)?)$', r'\1/normalized_space/\3_space-Ixi549Space_T1w\4'),
-            (r'(.*)(/modulated_normalized/)mw(sub-.*)(\.nii(\.gz)?)$', r'\1/normalized_space/\3_space-Ixi549Space_modulated-on_probability\4'),
-            (r'(.*)(/normalized/)w(sub-.*)(\.nii(\.gz)?)$', r'\1/normalized_space/\3_space-Ixi549Space_modulated-off_probability\4'),
+            (r'(.*)(/modulated_normalized/)mw(sub-.*)(\.nii(\.gz)?)$',
+             r'\1/normalized_space/\3_space-Ixi549Space_modulated-on_probability\4'),
+            (r'(.*)(/normalized/)w(sub-.*)(\.nii(\.gz)?)$',
+             r'\1/normalized_space/\3_space-Ixi549Space_modulated-off_probability\4'),
             (r'(.*/dartel_input/)r(sub-.*)(\.nii(\.gz)?)$', r'\1\2_dartelinput\3'),
             (r'trait_added', r'')
         ]
@@ -188,12 +191,11 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         """
 
         import os
-        import os.path as op
         import nipype.interfaces.spm as spm
         import nipype.interfaces.matlab as mlab
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
-        import t1_volume_tissue_segmentation_utils as utils
+        import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as utils
         from clinica.utils.io import unzip_nii
 
         spm_home = os.getenv("SPM_HOME")
@@ -204,33 +206,36 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         if 'SPMSTANDALONE_HOME' in os.environ:
             if 'MCR_HOME' in os.environ:
                 matlab_cmd = os.path.join(os.environ['SPMSTANDALONE_HOME'],
-                        'run_spm12.sh') \
-                        + ' ' + os.environ['MCR_HOME'] \
-                        + ' script'
+                                          'run_spm12.sh') \
+                             + ' ' + os.environ['MCR_HOME'] \
+                             + ' script'
                 spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
                 version = spm.SPMCommand().version
+            else:
+                raise EnvironmentError('MCR_HOME variable not in environnement. Althought, '
+                                       + 'SPMSTANDALONE_HOME has been found')
         else:
-            version = spm.Info.version()
-                
+            version = spm.Info.getinfo()
+
         if version:
             if isinstance(version, dict):
                 spm_path = version['path']
                 if version['name'] == 'SPM8':
-                    print 'You are using SPM version 8. The recommended version to use with Clinica is SPM 12. ' \
-                          'Please upgrade your SPM toolbox.'
+                    print('You are using SPM version 8. The recommended version to use with Clinica is SPM 12. '
+                          + 'Please upgrade your SPM toolbox.')
                     tissue_map = os.path.join(spm_path, 'toolbox/Seg/TPM.nii')
                 elif version['name'] == 'SPM12':
                     tissue_map = os.path.join(spm_path, 'tpm/TPM.nii')
                 else:
                     raise RuntimeError('SPM version 8 or 12 could not be found. Please upgrade your SPM toolbox.')
-            if isinstance(version, unicode):
-                if version == '12.7169':
-                    tissue_map = os.path.join(unicode(spm_home), 'spm12_mcr/spm/spm12/tpm/TPM.nii')
+            if isinstance(version, str):
+                if float(version) >= 12.7169:
+                    tissue_map = os.path.join(str(spm_home), 'spm12_mcr/spm/spm12/tpm/TPM.nii')
                 else:
                     raise RuntimeError('SPM standalone version not supported. Please upgrade SPM standalone.')
         else:
             raise RuntimeError('SPM could not be found. Please verify your SPM_HOME environment variable.')
-        
+
         # Unzipping
         # ===============================
         unzip_node = npe.MapNode(nutil.Function(input_names=['in_file'],

@@ -229,9 +229,9 @@ class DWIProcessingDTI(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        from os.path import join
+        from clinica.utils.io import fix_join
 
-        import dwi_processing_dti_utils as utils
+        import clinica.pipelines.dwi_processing_dti.dwi_processing_dti_utils as utils
 
         # Find container path from filename
         # =================================
@@ -261,7 +261,7 @@ class DWIProcessingDTI(cpe.Pipeline):
         self.connect([
            (self.input_node, container_path, [('preproc_dwi', 'dwi_filename')]),  # noqa
 
-           (container_path,   write_results, [(('container', join, 'dwi', 'dti_based_processing'), 'container')]),  # noqa
+           (container_path,   write_results, [(('container', fix_join, 'dwi', 'dti_based_processing'), 'container')]),  # noqa
            (self.output_node, write_results, [('dti', 'native_space.@dti')]),  # noqa
            (self.output_node, write_results, [('fa', 'native_space.@fa'),  # noqa
                                               ('md', 'native_space.@md'),  # noqa
@@ -293,8 +293,8 @@ class DWIProcessingDTI(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.
         """
-        import dwi_processing_dti_workflows as workflows
-        import dwi_processing_dti_utils as utils
+        import clinica.pipelines.dwi_processing_dti.dwi_processing_dti_workflows as workflows
+        import clinica.pipelines.dwi_processing_dti.dwi_processing_dti_utils as utils
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe

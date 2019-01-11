@@ -13,9 +13,11 @@ import clinica.pipelines.engine as cpe
 
 
 class T1FreeSurferCrossSectional(cpe.Pipeline):
-    """Creates a pipelines that performs Freesurfer commander, recon-all, It takes the input files of MRI T1 images and
-        executes the 31 steps to reconstruct the surface of the brain, this progress includes surface-based and Volume-based
-        piepeline, which including gray(GM)and white matter(WM) segementation, pial and white surface extraction!.
+    """Creates a pipelines that performs Freesurfer commander, recon-all, It
+    takes the input files of MRI T1 images and executes the 31 steps to
+    reconstruct the surface of the brain, this progress includes surface-based
+    and Volume-based piepeline, which including gray(GM)and white matter(WM)
+    segementation, pial and white surface extraction!.
 
     Warnings:
         - A WARNING.
@@ -33,14 +35,6 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
     Returns:
         A clinica pipelines object containing the T1 FreeSurfer pipelines.
 
-    Raises:
-
-
-    Example:
-        >>> from t1_freesurfer_cross_sectional import T1FreeSurferCrossSectional
-        >>> pipelines = T1FreeSurferCrossSectional('~/MYDATASET_BIDS', '~/MYDATASET_CAPS', 'TSV')
-        >>> pipelines.base_dir = '/tmp/'
-        >>> pipelines.run()
     """
 
     def check_custom_dependencies(self):
@@ -70,7 +64,7 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
         """Build and connect an input node to the pipelines.
         """
 
-        import t1_freesurfer_cross_sectional_utils as utils
+        import clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
@@ -107,8 +101,6 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
                                        output_names=['anat_t1']))
         datagrabbernode.inputs.input_dir = self.bids_directory
 
-
-
         self.connect([
             (read_parameters_node, self.input_node, [('recon_all_args', 'recon_all_args')]),
             (dataprepr, datagrabbernode, [('subject_list', 'subject_list')]),
@@ -135,7 +127,7 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
         """Build and connect the core nodes of the pipelines.
         """
 
-        import t1_freesurfer_cross_sectional_utils as utils
+        import clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces.freesurfer.preprocess import ReconAll
@@ -147,7 +139,7 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
                 raise RuntimeError('ReconAll version should at least be version of 0.11.0')
         except Exception as e:
             cprint(str(e))
-            exit(1)
+            # exit(1)
 
         # MapNode to check out if we need -cw256 for every subject, and -qcache is default for every subject.
         flagnode = npe.MapNode(name='flagnode',

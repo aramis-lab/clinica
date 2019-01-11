@@ -260,8 +260,8 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        from os.path import join
-        import dwi_preprocessing_using_t1_utils as utils
+        from clinica.utils.io import fix_join
+        import clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils as utils
 
         # Find container path from DWI filename
         # =====================================
@@ -293,7 +293,7 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
                                                   ('preproc_bval',                    'fname_bval'),  # noqa
                                                   ('preproc_bvec',                    'fname_bvec'),  # noqa
                                                   ('b0_mask',                  'fname_brainmask')]),  # noqa
-            (container_path, write_results,      [(('container', join, 'dwi'),       'container')]),  # noqa
+            (container_path, write_results,      [(('container', fix_join, 'dwi'),       'container')]),  # noqa
             (rename_into_caps, write_results,    [('out_caps_dwi',    'preprocessing.@preproc_dwi'),  # noqa
                                                   ('out_caps_bval',  'preprocessing.@preproc_bval'),  # noqa
                                                   ('out_caps_bvec',  'preprocessing.@preproc_bvec'),  # noqa

@@ -10,13 +10,24 @@ from os import getcwd
 from os.path import expanduser
 
 from colorama import Fore
+
 PIPELINE_CATEGORIES = {
-    'CLINICA_COMPULSORY': '%sClinica mandatory arguments%s' % (Fore.BLUE, Fore.RESET),
-    'OPTIONAL': '%sPipeline options%s' % (Fore.BLUE, Fore.RESET),
-    'CLINICA_OPTIONAL': '%sClinica standard options%s' % (Fore.BLUE, Fore.RESET),
-    'ADVANCED': '%sPipelines advanced options%s' % (Fore.BLUE, Fore.RESET),
-    'IOTOOLS_OPTIONS': '%sOptional arguments%s' % (Fore.BLUE, Fore.RESET)
-}
+    'CLINICA_COMPULSORY': (Fore.BLUE
+                           + 'Clinica mandatory arguments'
+                           + Fore.RESET),
+    'OPTIONAL': (Fore.BLUE
+                 + 'Pipeline options'
+                 + Fore.RESET),
+    'CLINICA_OPTIONAL': (Fore.BLUE
+                         + 'Clinica standard options'
+                         + Fore.RESET),
+    'ADVANCED': (Fore.BLUE
+                 + 'Pipelines advanced options'
+                 + Fore.RESET),
+    'IOTOOLS_OPTIONS': (Fore.BLUE
+                        + 'Optional arguments'
+                        + Fore.RESET)
+    }
 
 
 class CmdParser:
@@ -44,15 +55,33 @@ class CmdParser:
 
     def set_content(self):
         from colorama import Fore
-        self._args._positionals.title = '%sMandatory arguments%s' % (Fore.BLUE, Fore.RESET)
-        self._args._optionals.title = '%sOptional arguments%s' % (Fore.BLUE, Fore.RESET)
+        self._args._positionals.title = (
+                Fore.BLUE
+                + 'Mandatory arguments'
+                + Fore.RESET
+                )
+        self._args._optionals.title = (
+                Fore.BLUE
+                + 'Optional arguments'
+                + Fore.RESET
+                )
         if self._description is None:
             self._description = self._name
-            self._args.description = '%sIf you are not familiar with Clinica, see: http://clinica.run/doc/InteractingWithClinica/%s' % \
-                                     (Fore.GREEN, Fore.RESET)
+            self._args.description = (
+                    Fore.GREEN
+                    + ('If you are not familiar with Clinica, see:'
+                       'http://clinica.run/doc/InteractingWithClinica/')
+                    + Fore.RESET
+                    )
         else:
-            self._args.description = '%s%s\n\nIf you are not familiar with Clinica, see: http://clinica.run/doc/InteractingWithClinica/%s' % \
-                                     (Fore.GREEN, self._description, Fore.RESET)
+            self._args.description = (
+                    (
+                        Fore.GREEN
+                        + ('%s\n\nIf you are not familiar with Clinica, see:'
+                           'http://clinica.run/doc/InteractingWithClinica')
+                        + Fore.RESET
+                    ) % (self._description)
+                )
 
     @property
     def options(self): return self._args
@@ -128,7 +157,7 @@ def init_cmdparser_objects(root_parser, parser, objects):
     for x in objects:
         try:
             init(x)
-        except:
+        except BaseException:
             pass
 
 
@@ -177,8 +206,7 @@ def get_cmdparser_names(objects=None):
 #         self._args.add_argument("bids_directory",
 #                                 help='Path to the BIDS directory.')
 #         self._args.add_argument("-co", type=bool, default=False,
-#                                 help='(Optional) Given an already existing BIDS output folder, convert only the clinical data.')
-#
+#                                 help='(Optional) Given an already existing BIDS output folder, convert only the clinical data.
 #     def run_command(self, args):
 #         from clinica.bids import prevdemals_to_bids
 #         prevdemals_to_bids.convert(args.dataset_directory, args.bids_directory)
@@ -198,5 +226,3 @@ def get_cmdparser_names(objects=None):
 #     def run_command(self, args):
 #         from clinica.iotools import hmtc_to_bids
 #         hmtc_to_bids.convert(args.dataset_directory, args.bids_directory)
-
-

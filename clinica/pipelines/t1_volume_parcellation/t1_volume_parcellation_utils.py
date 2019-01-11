@@ -9,6 +9,7 @@ __maintainer__ = "Simona Bottani"
 __email__ = "simona.bottani@icm-institute.org"
 __status__ = "Development"
 
+
 def atlas_statistics(file_list, atlas_list):
     """
     For each atlas name provided it ƒcalculates for the input image the mean for each region in the atlas and saves it to a TSV file.
@@ -16,13 +17,11 @@ def atlas_statistics(file_list, atlas_list):
     :param in_atlas_list: List of names of atlas to be applied
     :return: List of paths to tsv files
     """
-    from os import getcwd
     from os.path import abspath, join
     from nipype.utils.filemanip import split_filename
     from clinica.utils.atlas import AtlasAbstract
     from clinica.utils.statistics import statistics_on_atlas
     from clinica.utils.stream import cprint
-
 
     orig_dir, base, ext = split_filename(file_list)
     atlas_classes = AtlasAbstract.__subclasses__()
@@ -30,11 +29,9 @@ def atlas_statistics(file_list, atlas_list):
     for atlas in atlas_list:
         for atlas_class in atlas_classes:
             if atlas_class.get_name_atlas() == atlas:
-                #out_atlas_statistics = abspath(join(getcwd(), base + '_space-' + atlas + '_map-graymatter_statistics.tsv'))
                 out_atlas_statistics = abspath(
                     join('./' + base + '_space-' + atlas + '_map-graymatter_statistics.tsv'))
                 cprint(out_atlas_statistics)
                 statistics_on_atlas(file_list, atlas_class(), out_atlas_statistics)
                 atlas_statistics_list.append(out_atlas_statistics)
     return atlas_statistics_list
-

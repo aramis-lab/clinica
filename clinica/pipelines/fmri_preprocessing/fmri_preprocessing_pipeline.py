@@ -93,7 +93,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         """
 
         if ('t1_native_space' in self.parameters) and self.parameters[
-            't1_native_space']:
+                't1_native_space']:
             return ['t1_brain_mask', 'mc_params', 'native_fmri', 't1_fmri',
                     'mni_fmri', 'mni_smoothed_fmri']
         else:
@@ -198,7 +198,7 @@ class fMRIPreprocessing(cpe.Pipeline):
                 # Slice order
                 slice_order = np.argsort(slice_timing) + 1
                 read_node.inputs.slice_order.append(slice_order.tolist())
-                read_node.inputs.ref_slice.append(len(slice_timing) / 2)
+                read_node.inputs.ref_slice.append(np.argmin(slice_timing) + 1)
                 read_node.inputs.time_acquisition.append(
                         data['RepetitionTime'] - data['RepetitionTime']
                         / float(len(slice_timing)))
@@ -240,8 +240,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         # Writing CAPS
         # ============
         write_node = npe.MapNode(name='WritingCAPS',
-                                 iterfield=['container']
-                                           + self.get_output_fields(),
+                                 iterfield=['container'] + self.get_output_fields(),
                                  interface=nio.DataSink(
                                          infields=self.get_output_fields()))
         write_node.inputs.base_directory = self.caps_directory
@@ -250,7 +249,8 @@ class fMRIPreprocessing(cpe.Pipeline):
             'subjects/' + self.subjects[i] + '/' + self.sessions[i] +
             '/fmri/preprocessing' for i in range(len(self.subjects))]
         write_node.inputs.remove_dest_dir = True
-        if ('freesurfer_brain_mask' in self.parameters) and not(self.parameters['freesurfer_brain_mask']):
+        if ('freesurfer_brain_mask' in self.parameters) and \
+                not (self.parameters['freesurfer_brain_mask']):
             write_node.inputs.regexp_substitutions = [
                 (r't1_brain_mask/c3(.+)_maths_dil_ero_thresh_fillh\.nii\.gz$',
                  r'\1_brainmask.nii.gz'),
@@ -265,7 +265,8 @@ class fMRIPreprocessing(cpe.Pipeline):
                  r'\1_space-Ixi549Space_fwhm-' + 'x'.join(
                      map(str, self.parameters[
                          'full_width_at_half_maximum'])) + '_preproc.nii.gz'),
-                # I don't know why it's adding this empty folder, so I remove it:
+                # I don't know why it's adding this empty folder, so I remove
+                # it:
                 (r'trait_added', r''),
             ]
         else:
@@ -280,8 +281,8 @@ class fMRIPreprocessing(cpe.Pipeline):
                  r'\1_space-Ixi549Space_preproc.nii.gz'),
                 (r'mni_smoothed_fmri/swr[u|r]a(.+)\.nii.gz$',
                  r'\1_space-Ixi549Space_fwhm-' + 'x'.join(
-                         map(str, self.parameters[
-                             'full_width_at_half_maximum'])) +
+                     map(str, self.parameters[
+                         'full_width_at_half_maximum'])) +
                  '_preproc.nii.gz'),
                 # I don't know why it's adding this empty folder, so I remove
                 # it:
@@ -291,7 +292,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         # fMRI images in the subject's T1 native space are large, we add it
         # only if specified:
         if ('t1_native_space' in self.parameters) and self.parameters[
-            't1_native_space']:
+                't1_native_space']:
             self.connect([
                 (self.output_node, write_node, [('t1_fmri', 't1_fmri')]),
             ])
@@ -317,7 +318,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         """Build and connect the core nodes of the pipelines.
         """
 
-        import fmri_preprocessing_utils as utils
+        import clinica.pipelines.fmri_preprocessing.fmri_preprocessing_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.interfaces.spm as spm
         import nipype.pipeline.engine as npe
@@ -362,7 +363,7 @@ class fMRIPreprocessing(cpe.Pipeline):
                                   iterfield=["scans", "pmscan"],
                                   interface=spm.RealignUnwarp())
             mc_node.inputs.register_to_mean = True
-            mc_node.inputs.write_mask = False
+            mc_node.inputs.reslice_mask = False
         else:
             mc_node = npe.MapNode(name="MotionCorrection",
                                   iterfield=["in_files"],
@@ -459,8 +460,8 @@ class fMRIPreprocessing(cpe.Pipeline):
                 # Motion correction and unwarping
                 (st_node, mc_node, [('timecorrected_files', 'scans')]),
                 (fm_node, mc_node, [('vdm', 'pmscan')]),
-                (mc_node, reg_node, [('runwarped_files', 'apply_to_files')]),
-                (mc_node, zip_mc_node, [('runwarped_files', 'in_file')]),
+                (mc_node, reg_node, [('realigned_unwarped_files', 'apply_to_files')]),
+                (mc_node, zip_mc_node, [('realigned_unwarped_files', 'in_file')]),
             ])
         else:
             self.connect([

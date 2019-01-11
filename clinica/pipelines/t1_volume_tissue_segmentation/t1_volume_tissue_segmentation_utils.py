@@ -22,7 +22,7 @@ __status__ = "Development"
 
 def select_bids_images(subjects, sessions, image_type, bids_layout):
     """
-    read the subjects_visits_tsv 
+    read the subjects_visits_tsv
     """
     if len(subjects) != len(sessions):
         raise RuntimeError("Subjects list and sessions list must have the same length.")
@@ -57,7 +57,7 @@ def select_image(participant_id, session_id, image_type, bids_layout):
 
 def group_nested_images_by_subject(class_images, zip_files=False):
     """
-    
+
     """
     from clinica.utils.io import zip_nii
 
@@ -105,8 +105,10 @@ def get_tissue_tuples(tissue_map, tissue_classes, dartel_tissues, save_warped_un
         if i in dartel_tissues:
             dartel_input = True
 
-        tissues.append(((tissue_map, i), n_gaussians, (native_space, dartel_input), (warped_unmodulated, warped_modulated)))
-
+        tissues.append(((tissue_map, i),
+                        n_gaussians,
+                        (native_space, dartel_input),
+                        (warped_unmodulated, warped_modulated)))
     return tissues
 
 

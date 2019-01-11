@@ -27,7 +27,7 @@ class OasisToBidsCLI(ce.CmdParser):
         """Define the sub-command arguments
         """
         self._args.add_argument("dataset_directory",
-                               help='Path to the OASIS images directory.')
+                                help='Path to the OASIS images directory.')
         self._args.add_argument("clinical_data_directory",
                                 help='Path to the OASIS clinical data directory.')
         self._args.add_argument("bids_directory",

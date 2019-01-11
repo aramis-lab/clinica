@@ -37,8 +37,8 @@ def pet_pipeline(caps_dir, df, **kwargs):
     Returns:
          final_df: a DataFrame containing the information of the bids and the pipeline
     """
-    from ...pipelines.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI
-    instance = PETPreprocessVolumeCLI()
+    from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI
+    instance = PETVolumeCLI()
     pipeline_name = instance.name
     del instance
 

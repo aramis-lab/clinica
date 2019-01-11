@@ -14,9 +14,10 @@ def perform_gtmseg(caps_dir, subject_id, session_id):
     """gtmseg is a freesurfer command used to perform a segmentation used in some partial volume correction methods.
 
     Warnings:
-        - This method changes the environnement variable $SUBJECTS_DIR (but put the original one back after execution).
-        This has not been intensely tested wether it can lead to some problems : (for instance if 2 subjects are running
-        in parallel)
+        - This method changes the environnement variable $SUBJECTS_DIR (but put
+          the original one back after execution).  This has not been intensely
+          tested wether it can lead to some problems : (for instance if 2
+          subjects are running in parallel)
 
     Args:
         (string) caps_dir : CAPS directory.
@@ -24,8 +25,9 @@ def perform_gtmseg(caps_dir, subject_id, session_id):
         (string) session_id: The session id ( something like : ses-M12)
 
     Returns:
-        (string) Path to the segmentation volume : a volume where each voxel has a label (ranging [0 2035] ), see
-        Freesurfer lookup table to see the labels with their corresponding names.
+        (string) Path to the segmentation volume : a volume where each voxel
+        has a label (ranging [0 2035] ), see Freesurfer lookup table to see the
+        labels with their corresponding names.
     """
     import os
     import shutil
@@ -101,7 +103,6 @@ def remove_nan(volname):
 
 
 def make_label_conversion(gtmsegfile, csv):
-
     """make_label_conversion is a method used on the segmentation from gtmsegmentation. The purpose is to reduce the
     number of label. The gathering of labels is specified in a separate file
 
@@ -269,6 +270,7 @@ def suvr_normalization(pet_path, mask):
     suvr_filename = os.path.abspath('./' + suvr_filename)
     nib.save(suvr, suvr_filename)
     return suvr_filename
+
 
 def suvr_normalization2(pet_path, gtmseg_path, pet_type):
     """OLD VERSION OF SUVR_NORMALIZATION - NOT USED ANYMORE
@@ -523,7 +525,7 @@ def vol2surf(volume, surface, subject_id, session_id, caps_dir, gtmsegfile):
                            subject_id + '_' + session_id,
                            'surf',
                            os.path.basename(surface)))
-    #TODO carreful here...
+    # TODO carreful here...
     # Removing gtmseg.mgz may lead to problems as other vol2surf are using it
     os.remove(os.path.join(os.path.expandvars('$SUBJECTS_DIR'),
                            subject_id + '_' + session_id,
@@ -722,7 +724,6 @@ def produce_tsv(pet, atlas_files):
     lh_pet_mgh = np.squeeze(nib.load(pet[0]).get_data())
     rh_pet_mgh = np.squeeze(nib.load(pet[1]).get_data())
 
-
     filename_tsv = []
     for atlas in atlas_files:
 
@@ -734,9 +735,9 @@ def produce_tsv(pet, atlas_files):
         average_region = []
         region_names = []
         for r in range(len(annot_atlas_left[2])):
-
-                region_names.append(annot_atlas_left[2][r] + '_lh')
-                region_names.append(annot_atlas_left[2][r] + '_rh')
+                cprint(annot_atlas_left[2][r])
+                region_names.append(annot_atlas_left[2][r].astype(str) + '_lh')
+                region_names.append(annot_atlas_left[2][r].astype(str) + '_rh')
 
                 mask_left = annot_atlas_left[0] == r
                 mask_left = np.uint(mask_left)
@@ -765,6 +766,7 @@ def produce_tsv(pet, atlas_files):
                                                                              'mean_scalar'])
     return os.path.abspath(filename_tsv[0]), os.path.abspath(filename_tsv[1])
 
+
 def get_wf(subject_id,
            session_id,
            psf,
@@ -782,7 +784,6 @@ def get_wf(subject_id,
            destrieux_right,
            desikan_left,
            desikan_right):
-
     """get_wf create a full workflow for only one subject, and then executes it
 
             Args:
@@ -817,8 +818,8 @@ def get_wf(subject_id,
 
     cprint('***** Beginning processing of ' + subject_id + ' on ' + session_id + ' *****')
 
-    ### Creation of workflow
-    #1 Creation of node
+    # Creation of workflow
+    # 1 Creation of node
 
     unzip_pet = pe.Node(Gunzip(), name='unzip_pet')
 
@@ -890,7 +891,6 @@ def get_wf(subject_id,
                                                      function=utils.runApplyInverseDeformationField),
                                         name='applyInverseDeformation')
     apply_inverse_deformation.inputs.matscript_folder = matscript_folder_inverse_deformation
-
 
     pons_normalization = pe.Node(niu.Function(input_names=['pet_path',
                                                            'mask'],
@@ -982,13 +982,14 @@ def get_wf(subject_id,
                                         joinsource='reformat_surface_name',
                                         joinfield=['pet_projection_lh_rh'])
 
-    atlas_tsv = pe.Node(niu.Function(input_names=['pet', 'atlas_files'],
-                                     output_names=['destrieux_tsv', 'desikan_tsv'],
-                                     function=utils.produce_tsv),
-                            name='atlas_tsv')
+    atlas_tsv = pe.Node(
+            niu.Function(input_names=['pet', 'atlas_files'],
+                         output_names=['destrieux_tsv', 'desikan_tsv'],
+                         function=utils.produce_tsv),
+            name='atlas_tsv')
     atlas_tsv.inputs.atlas_files = surface_atlas
 
-    #2 creation of workflow : working dir, inputnode, outputnode and datasink
+    # 2 creation of workflow : working dir, inputnode, outputnode and datasink
 
     wf = pe.Workflow(name=subject_id.replace('-', '_') + '_' + session_id.replace('-', '_'))
     wf.base_dir = working_directory_subjects
@@ -1042,8 +1043,7 @@ def get_wf(subject_id,
          r'\1/atlas_statistics/\2_\3_task-rest_acq-' + pet_type.lower() + '_pet_space-desikan_pvc-iy_suvr-' + utils.normalization_areas(pet_type) + '_statistics.tsv')
     ]
 
-
-    #3 Connecting the nodes
+    # 3 Connecting the nodes
 
     # TODO(@arnaud.marcoux): Add titles for sections of connections.
     #   Could be useful to add sections title to group similar connections
@@ -1115,6 +1115,6 @@ def get_wf(subject_id,
                 (outputnode, datasink, [('destrieux_tsv', 'destrieux_tsv')]),
                 (outputnode, datasink, [('desikan_tsv', 'desikan_tsv')])
                 ])
-    #wf.write_graph(graph2use='flat')
+    # wf.write_graph(graph2use='flat')
     wf.run()
     pass

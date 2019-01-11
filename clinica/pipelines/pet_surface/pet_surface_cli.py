@@ -53,7 +53,7 @@ class PetSurfaceCLI(ce.CmdParser):
     def run_command(self, args):
 
         from tempfile import mkdtemp
-        from pet_surface_pipeline import PetSurface
+        from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
         if args.working_directory is None:
             args.working_directory = mkdtemp()
 
