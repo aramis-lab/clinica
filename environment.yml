@@ -1,4 +1,4 @@
-name: clinica_env_upgrade_dep
+name: clinica_env
 channels:
   - defaults
 dependencies:
