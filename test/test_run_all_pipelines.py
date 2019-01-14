@@ -1,3 +1,5 @@
+# coding: utf8
+
 """
     This file contains a set of functional tests designed to check the correct execution of the pipeline and the
     different functions available in Clinica
@@ -833,13 +835,13 @@ def test_run_Aibl2Bids():
     convert_clinical_data(bids_directory, clinical_data_directory)
     pass
 
-def test_run_SVMRegularization():
-    from clinica.pipelines.svm_regularization.svm_regularization_pipeline import SVMRegularization
+def test_run_SpatialSVM():
+    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
     from os.path import dirname, join, abspath, exists
     import shutil
     import numpy as np
     import nibabel as nib
-    root = join(dirname(abspath(__file__)), 'data', 'SVMReg')
+    root = join(dirname(abspath(__file__)), 'data', 'SpatialSVM')
 
     # Remove potential residual of previous UT
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -848,15 +850,15 @@ def test_run_SVMRegularization():
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     # Instantiate pipeline and run()
-    pipeline = SVMRegularization(caps_directory=join(root, 'out', 'caps'),
-                                 tsv_file=join(root, 'in', 'subjects.tsv'))
+    pipeline = SpatialSVM(caps_directory=join(root, 'out', 'caps'),
+                          tsv_file=join(root, 'in', 'subjects.tsv'))
 
     pipeline.parameters['group_id'] = 'ADCNbaseline'
     pipeline.parameters['fwhm'] = 4
     pipeline.parameters['h'] = 1.5
     pipeline.parameters['image_type'] = 't1'
     pipeline.parameters['pet_type'] = 'fdg'
-    pipeline.base_dir = join(working_dir, 'SVMRegularization')
+    pipeline.base_dir = join(working_dir, 'SpatialSVM')
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
 

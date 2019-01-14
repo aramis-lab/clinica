@@ -140,8 +140,7 @@ def execute():
     from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI  # noqa
     from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI  # noqa
     from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI  # noqa
-    from clinica.pipelines.svm_regularization.svm_regularization_cli import SVMRegularizationCLI
-
+    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_cli import SpatialSVMCLI  # noqa
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
                                    extra_dir="pipelines").load()
     pipelines += [
@@ -163,7 +162,7 @@ def execute():
         PETVolumeCLI(),
         PetSurfaceCLI(),
         StatisticsSurfaceCLI(),
-        SVMRegularizationCLI()
+        SpatialSVMCLI()
     ]
 
     run_parser = sub_parser.add_parser(

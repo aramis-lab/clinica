@@ -1,11 +1,5 @@
 # coding: utf8
 
-"""svm_regularization - Clinica Utilities.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details:
-http://clinica.run/doc/InteractingWithClinica/
-"""
-
 from __future__ import division
 
 
@@ -179,7 +173,7 @@ def tensor_determinant(g):
     :return: determinant of the tensor dim = xg*yg*zg
     """
     import numpy as np
-    import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     g = np.array(g)
     d = 0
@@ -250,7 +244,7 @@ def roots_poly(C):
     import math
 
     import cmath
-    import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     C = np.array(C)
     if C.shape[0] < 2:
@@ -321,7 +315,7 @@ def tensor_eigenvalues(g):
 
     """
     import numpy as np
-    import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
     g = np.array(g)
 
     if g.shape[0] < 4:
@@ -377,7 +371,7 @@ def tensor_commatrix(g):
     :param g: tensor
     :return: commatrix of the tensor
     """
-    import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     import numpy as np
     g = np.array(g)
@@ -542,7 +536,7 @@ def tensor_inverse(g):
     :param g: tensor
     :return: inverse of the tensor
     """
-    import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
     import numpy as np
 
     h = utils.tensor_transpose(utils.tensor_commatrix(g))
@@ -562,7 +556,7 @@ def operateur(x, ginv, detg):
     :param detg:
     :return:
     """
-    import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
     import numpy as np
 
     if len(x.shape) == 4:
@@ -584,7 +578,7 @@ def largest_eigenvalue_heat_3D_tensor2(g, h, epsilon):
     :return: lamba = the largest eigenvalues
 
     """
-    import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     import numpy as np
     import cmath
@@ -645,7 +639,7 @@ def heat_finite_elt_3D_tensor2(x0, t_final, t_step, h, g):
     :return: vector x (at t = t_final)
 
     """
-    import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     import numpy as np
     if len(x0.shape) == 4:
@@ -689,7 +683,7 @@ def heat_finite_elt_2D_tensor2(x0, t_final, t_step, h, g):
     :return: vector x (at t = t_final)
 
     """
-    import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
     import numpy as np
 
     # parameters
@@ -726,7 +720,7 @@ def heat_solver_tensor_3D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     :param epsilon:
     :return: u= solution of the poisson's equation
     """
-    import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
     import numpy as np
 
     # initialisation
@@ -771,7 +765,7 @@ def heat_solver_tensor_2D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     :param epsilon:
     :return: u= solution of the poisson's equation
     """
-    import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
     import numpy as np
 
     # intiialisation
@@ -892,7 +886,7 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
 
     """
 
-    import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     import math
     import numpy as np
@@ -972,7 +966,7 @@ def obtain_time_step_estimation(h, FWHM, g):
     :param g: fisher tensor
     :return:
     """
-    import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
 
     import math
     import numpy as np
@@ -1007,7 +1001,7 @@ def obtain_time_step_estimation(h, FWHM, g):
 
 def heat_solver_equation(input_image, g, FWHM, h, t_step, dartel_input):
     import math
-    import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
+    import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
     import nibabel as nib
     import numpy as np
     import os

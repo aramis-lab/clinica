@@ -1,3 +1,5 @@
+# coding: utf8
+
 """
    Test to verify coding style dans clinica
 """

@@ -1,3 +1,5 @@
+# coding: utf8
+
 ## Small unit tests for all pipelines
 ##
 ## test if instantiation and building of workflows is working
@@ -244,12 +246,12 @@ def test_instantiate_InputsML():
 
 
 def test_instantiate_SVMRegularization():
-    from clinica.pipelines.svm_regularization.svm_regularization_pipeline import SVMRegularization
+    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
     from os.path import dirname, join, abspath
 
     root = join(dirname(abspath(__file__)), 'data', 'SVMReg')
-    pipeline = SVMRegularization(caps_directory=join(root, 'in', 'caps'),
-                                 tsv_file=join(root, 'in', 'subjects.tsv'))
+    pipeline = SpatialSVM(caps_directory=join(root, 'in', 'caps'),
+                          tsv_file=join(root, 'in', 'subjects.tsv'))
     pipeline.parameters['group_id'] = 'ADCNbaseline'
     pipeline.parameters['fwhm'] = 4
     pipeline.parameters['h'] = 1.5

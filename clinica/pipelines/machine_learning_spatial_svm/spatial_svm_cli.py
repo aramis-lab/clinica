@@ -1,22 +1,15 @@
 # coding: utf8
 
-"""svm_regularization - Clinica Command Line Interface.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details:
-http://clinica.run/doc/InteractingWithClinica/
-"""
-
-
 import clinica.engine as ce
 
 
-class SVMRegularizationCLI(ce.CmdParser):
+class SpatialSVMCLI(ce.CmdParser):
 
     def define_name(self):
         """Define the sub-command name to run this pipeline.
         """
 
-        self._name = 'machinelearning-prepare-regularized-svm'
+        self._name = 'machinelearning-prepare-spatial-svm'
 
     def define_description(self):
         self._description = 'Spatial and anatomical regularization for SVM\n'  # link to the doc
@@ -27,19 +20,15 @@ class SVMRegularizationCLI(ce.CmdParser):
         # @todo mettere i parametri di default nell'help
 
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
-        # self._args.add_argument("bids_directory",
-        #                         help='Path to the BIDS directory.')
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
-
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
         clinica_comp.add_argument("group_id",
                                   help='User-defined identifier for the provided group of subjects.')
 
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-
         optional.add_argument("-fwhm", "--full_width_half_maximum", type=float, default=4,
-                              help='fwhm value for regularization (in mm )')
+                              help='fwhm value for regularization (in mm)')
         optional.add_argument("-vs", "--voxel_size", type=float, default=1.5,
                               help='voxel size (in mm)')
         optional.add_argument("-image_type", "--image_type", default='t1',
@@ -60,11 +49,10 @@ class SVMRegularizationCLI(ce.CmdParser):
     def run_command(self, args):
         """
         """
-
         from tempfile import mkdtemp
-        from clinica.pipelines.svm_regularization.svm_regularization_pipeline import SVMRegularization
+        from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
 
-        pipeline = SVMRegularization(
+        pipeline = SpatialSVM(
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv))
 

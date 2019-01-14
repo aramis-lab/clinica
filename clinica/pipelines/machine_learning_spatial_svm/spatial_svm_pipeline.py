@@ -1,17 +1,14 @@
-"""svm_regularization - Clinica Pipeline.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
-"""
+# coding: utf8
 
-# WARNING: Don't put any import statement here except if it's absolutly
+# WARNING: Don't put any import statement here except if it's absolutely
 # necessary. Put it *inside* the different methods.
 # Otherwise it will slow down the dynamic loading of the pipelines list by the
 # command line tool.
 import clinica.pipelines.engine as cpe
 
 
-class SVMRegularization(cpe.Pipeline):
-    """svm_regularization SHORT DESCRIPTION.
+class SpatialSVM(cpe.Pipeline):
+    """machine_learning_spatial_svm SHORT DESCRIPTION.
 
     Warnings:
         - A WARNING.
@@ -26,7 +23,7 @@ class SVMRegularization(cpe.Pipeline):
         subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
 
     Returns:
-        A clinica pipeline object containing the svm_regularization pipeline.
+        A clinica pipeline object containing the machine_learning_spatial_svm pipeline.
 
     Raises:
     """
@@ -132,7 +129,7 @@ class SVMRegularization(cpe.Pipeline):
         """Build and connect the core nodes of the pipeline.
         """
 
-        import clinica.pipelines.svm_regularization.svm_regularization_utils as utils
+        import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio

@@ -1,6 +1,6 @@
 {
-    "id": "aramislab/svm_regularization",
-    "author": "John Doe",
+    "id": "aramislab/machine_learning_spatial_svm",
+    "author": "Simona Bottani",
     "version": "0.1.0",
     "dependencies": [
         {
