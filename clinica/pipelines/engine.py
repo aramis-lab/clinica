@@ -143,12 +143,19 @@ class Pipeline(Workflow):
             if self._caps_directory is None:
                 raise IOError('%s does not contain BIDS nor CAPS directory' %
                               self._name)
+            if not os.path.isdir(self._caps_directory):
+                raise IOError('The CAPS parameter is not a folder (given path:%s)' %
+                              self._caps_directory)
+
             self._sessions, self._subjects = get_subject_session_list(
                 input_dir=self._caps_directory,
                 ss_file=self._tsv_file,
                 is_bids_dir=False
             )
         else:
+            if not os.path.isdir(self._bids_directory):
+                raise IOError('The BIDS parameter is not a folder (given path:%s)' %
+                              self._bids_directory)
             self._sessions, self._subjects = get_subject_session_list(
                 input_dir=self._bids_directory,
                 ss_file=self._tsv_file,
