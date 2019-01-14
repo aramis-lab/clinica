@@ -1,7 +1,6 @@
 # Python and system files
 build/
 dist/
-examples/external-data
 Clinica.egg-info
 *egg-info
 *.log
@@ -23,23 +22,7 @@ Clinica.egg-info
 crash*
 
 # Clinica specific files
-clinica/lib/weighted_prototypes_lib/cpp_code/bin/CMakeCache.txt
-clinica/lib/weighted_prototypes_lib/cpp_code/bin/CMakeFiles
-clinica/lib/weighted_prototypes_lib/cpp_code/bin/ITKIOFactoryRegistration
-clinica/lib/weighted_prototypes_lib/cpp_code/bin/Makefile
-clinica/lib/weighted_prototypes_lib/cpp_code/bin/cmake_install.cmake
-clinica/lib/weighted_prototypes_lib/cpp_code/bin/gramiam
-clinica/lib/weighted_prototypes_lib/cpp_code/bin/medoids
-clinica/lib/weighted_prototypes_lib/cpp_code/bin/write_tube
-clinica/lib/weighted_prototypes_lib/community_latest/community
-clinica/lib/weighted_prototypes_lib/community_latest/community.o
-clinica/lib/weighted_prototypes_lib/community_latest/convert
-clinica/lib/weighted_prototypes_lib/community_latest/graph.o
-clinica/lib/weighted_prototypes_lib/community_latest/graph_binary.o
-clinica/lib/weighted_prototypes_lib/community_latest/hierarchy
-clinica/lib/weighted_prototypes_lib/community_latest/main_community.o
-clinica/lib/weighted_prototypes_lib/community_latest/main_convert.o
-clinica/lib/weighted_prototypes_lib/community_latest/main_hierarchy.o
+
 
 # Pytest files
 .pytest_cache/
