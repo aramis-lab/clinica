@@ -1,10 +1,9 @@
-"""
-
-"""
+# coding: utf8
 
 from os.path import dirname
 from os.path import realpath
 from os.path import join as pathjoin
+
 from grabbit import Layout
 
 __all__ = ['CAPSLayout']
