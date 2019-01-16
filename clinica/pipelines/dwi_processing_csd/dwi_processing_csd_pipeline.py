@@ -309,6 +309,8 @@ class DWIProcessingCSD(cpe.Pipeline):
         import nipype.interfaces.fsl as fsl
         import nipype.interfaces.freesurfer as fs
         import nipype.interfaces.mrtrix3 as mrtrix3
+        from clinica.lib.nipype.interfaces.mrtrix3.reconst import EstimateFOD
+        from clinica.lib.nipype.interfaces.mrtrix3.tracking import Tractography
         from clinica.utils.exceptions import ClinicaCAPSError
         from clinica.utils.stream import cprint
         import clinica.pipelines.dwi_processing_csd.dwi_processing_csd_utils as utils
@@ -361,13 +363,13 @@ class DWIProcessingCSD(cpe.Pipeline):
         # FOD Estimation
         # --------------
         fod_estim_node = npe.Node(name="FODEstimation",
-                                  interface=mrtrix3.EstimateFOD())
+                                  interface=EstimateFOD())
         fod_estim_node.inputs.algorithm = 'csd'
 
         # Tracts Generation
         # -----------------
         tck_gen_node = npe.Node(name="TractsGeneration",
-                                interface=mrtrix3.Tractography())
+                                interface=Tractography())
         tck_gen_node.inputs.n_tracks = self.parameters['n_tracks']
 
         # Nodes Generation
