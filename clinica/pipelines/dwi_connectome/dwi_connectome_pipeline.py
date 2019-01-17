@@ -1,11 +1,6 @@
-"""DWIProcessingCSD - Clinica Pipeline.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details:
-https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs
-/InteractingWithClinica.
-"""
+# coding: utf8
 
-# WARNING: Don't put any import statement here except if it's absolutly
+# WARNING: Don't put any import statement here except if it's absolutely
 # necessary. Put it *inside* the different methods.
 # Otherwise it will slow down the dynamic loading of the pipelines list by the
 # command line tool.
@@ -17,15 +12,8 @@ cfg = dict(execution={'parameterize_dirs': False})
 config.update_config(cfg)
 
 
-class DWIProcessingCSD(cpe.Pipeline):
-    """DWIProcessingCSD SHORT DESCRIPTION.
-
-    Warnings:
-        - A WARNING.
-
-    Todos:
-        - [x] A FILLED TODO ITEM.
-        - [ ] AN ON-GOING TODO ITEM.
+class DwiConnectome(cpe.Pipeline):
+    """Computation of structural connectome.
 
     Args:
         input_dir: A BIDS directory.
@@ -35,19 +23,10 @@ class DWIProcessingCSD(cpe.Pipeline):
         format).
 
     Returns:
-        A clinica pipeline object containing the DWIProcessingCSD pipeline.
+        A clinica pipeline object containing the DwiConnectome pipeline.
 
     Raises:
 
-
-    Example:
-        >>> from clinica.pipelines.dwi_processing_csd.dwi_processing_csd_pipeline import DWIProcessingCSD
-        >>> pipeline = DWIProcessingCSD('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
-        >>> pipeline.parameters = {
-        >>>     # ...
-        >>> }
-        >>> pipeline.base_dir = '/tmp/'
-        >>> pipeline.run()
     """
 
     def check_custom_dependencies(self):
@@ -73,12 +52,11 @@ class DWIProcessingCSD(cpe.Pipeline):
         """
 
         return ['response', 'fod', 'tracts', 'nodes',
-                'connectomes']  # Fill here the list
+                'connectomes']
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
         """
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.iotools.grabcaps import CAPSLayout
@@ -251,7 +229,7 @@ class DWIProcessingCSD(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         import nipype.interfaces.io as nio
-        import clinica.pipelines.dwi_processing_csd.dwi_processing_csd_utils as utils
+        import clinica.pipelines.dwi_connectome.dwi_connectome_utils as utils
 
         # Writing CAPS
         # ============
@@ -313,7 +291,7 @@ class DWIProcessingCSD(cpe.Pipeline):
         from clinica.lib.nipype.interfaces.mrtrix3.tracking import Tractography
         from clinica.utils.exceptions import ClinicaCAPSError
         from clinica.utils.stream import cprint
-        import clinica.pipelines.dwi_processing_csd.dwi_processing_csd_utils as utils
+        import clinica.pipelines.dwi_connectome.dwi_connectome_utils as utils
 
         cprint('Building the pipeline...')
 

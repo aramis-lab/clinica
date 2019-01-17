@@ -1,29 +1,22 @@
 # coding: utf8
 
-"""DWIProcessingCSD - Clinica Command Line Interface.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details:
-http://clinica.run/doc/InteractingWithClinica/
-"""
-
 import clinica.engine as ce
 
 
-class DWIProcessingCSDCLI(ce.CmdParser):
+class DwiConnectomeCli(ce.CmdParser):
 
     def define_name(self):
         """Define the sub-command name to run this pipeline.
         """
 
-        self._name = 'dwi-processing-csd'
+        self._name = 'dwi-connectome'
 
     def define_description(self):
         """Define a description of this pipeline.
         """
         self._description = 'Run tractography algorithm using preprocessed ' \
-                            'DWI ' \
-                            'images:\nhttp://clinica.run/doc/Pipelines' \
-                            '/DWIProcessingCSD/'
+                            'DWI images:\n' \
+                            'http://clinica.run/doc/Pipelines/DWI_Connectome'
 
     def define_options(self):
         """Define the sub-command arguments
@@ -51,11 +44,9 @@ class DWIProcessingCSDCLI(ce.CmdParser):
         """
 
         from tempfile import mkdtemp
-        from .dwi_processing_csd_pipeline import DWIProcessingCSD
+        from .dwi_connectome_pipeline import DwiConnectome
 
-        # Most of the time, you will want to instantiate your pipeline with a
-        # BIDS and CAPS directory as inputs:
-        pipeline = DWIProcessingCSD(
+        pipeline = DwiConnectome(
                 bids_directory=self.absolute_path(args.bids_directory),
                 caps_directory=self.absolute_path(args.caps_directory),
                 tsv_file=self.absolute_path(args.subjects_sessions_tsv))

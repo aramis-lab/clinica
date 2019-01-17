@@ -1,6 +1,6 @@
 {
-    "id": "aramislab/dwi-processing-csd",
-    "author": "Jeremy Guillon",
+    "id": "aramislab/dwi-connectome",
+    "author": ["Jeremy Guillon", "Alexandre Routier", "Thomas Jacquemont"],
     "version": "0.1.0",
     "dependencies": [
         {
