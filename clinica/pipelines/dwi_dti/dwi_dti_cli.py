@@ -3,20 +3,20 @@
 import clinica.engine as ce
 
 
-class DWIProcessingDTICLI(ce.CmdParser):
+class DwiDtiCli(ce.CmdParser):
 
     def __init__(self):
-        super(DWIProcessingDTICLI, self).__init__()
+        super(DwiDtiCli, self).__init__()
 
     def define_name(self):
         """Define the sub-command name to run this pipeline.
         """
-        self._name = 'dwi-processing-dti'
+        self._name = 'dwi-dti'
 
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'DTI-based processing of DWI datasets:\nhttp://clinica.run/doc/DWIProcessing'
+        self._description = 'DTI-based processing of DWI datasets:\nhttp://clinica.run/doc/DWI_DTI'
 
     def define_options(self):
         """Define the sub-command arguments
@@ -41,9 +41,9 @@ class DWIProcessingDTICLI(ce.CmdParser):
         """
         """
         from tempfile import mkdtemp
-        from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_pipeline import DWIProcessingDTI
+        from clinica.pipelines.dwi_dti.dwi_dti_pipeline import DwiDti
 
-        pipeline = DWIProcessingDTI(
+        pipeline = DwiDti(
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv)
         )

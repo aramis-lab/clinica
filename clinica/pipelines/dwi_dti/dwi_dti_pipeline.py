@@ -3,15 +3,15 @@
 import clinica.pipelines.engine as cpe
 
 __author__ = ["Alexandre Routier", "Thomas Jacquemont"]
-__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = ["Nipype"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __status__ = "Development"
 
 
-class DWIProcessingDTI(cpe.Pipeline):
-    """DWI Processing with tractography and connectome construction.
+class DwiDti(cpe.Pipeline):
+    """DTI-based processing of DWI datasets.
 
     Args:
         input_dir(str): Input directory in a BIDS hierarchy.
@@ -27,7 +27,7 @@ class DWIProcessingDTI(cpe.Pipeline):
 
 
     Example:
-        >>> pipelines = DWIProcessingDTI('~/MYDATASET_CAPS')
+        >>> pipelines = DwiDti('~/MYDATASET_CAPS')
         >>> pipelines.parameters = {
         >>>     # ...
         >>> }
@@ -95,7 +95,7 @@ class DWIProcessingDTI(cpe.Pipeline):
                               + self.sessions[i]
                               + ' but found '
                               + str(len(bval_file))
-                              + ' bval instead.')
+                              + ' bval files instead.')
 
             # Check b-vec file:
             bvec_file = caps_layout.get(
@@ -113,7 +113,7 @@ class DWIProcessingDTI(cpe.Pipeline):
                               + self.sessions[i]
                               + ' but found '
                               + str(len(bvec_file))
-                              + ' bvec instead.')
+                              + ' bvec files instead.')
 
             # Check DWI file:
             dwi_file = caps_layout.get(
@@ -125,13 +125,13 @@ class DWIProcessingDTI(cpe.Pipeline):
                 subject=self.subjects[i].replace('sub-', '')
             )
             if len(dwi_file) != 1:
-                raise IOError('Expected to find 1 dwi file for subject '
+                raise IOError('Expected to find 1 DWI NIfTI file for subject '
                               + self.subjects[i]
                               + ' and session '
                               + self.sessions[i]
                               + ' but found '
                               + str(len(dwi_file))
-                              + ' dwi instead.')
+                              + ' DWI files instead.')
 
             # Check B0 file:
             b0_mask_file = caps_layout.get(
@@ -143,13 +143,13 @@ class DWIProcessingDTI(cpe.Pipeline):
                 subject=self.subjects[i].replace('sub-', '')
             )
             if len(b0_mask_file) != 1:
-                raise IOError('Expected to find 1 B0 brainmask for subject '
+                raise IOError('Expected to find 1 b=0 brainmask for subject '
                               + self.subjects[i]
                               + ' and session '
                               + self.sessions[i]
                               + ' but found '
                               + str(len(b0_mask_file))
-                              + ' dwi instead.')
+                              + ' brainmasks instead.')
 
         # Iterables:
         iterables_node = npe.Node(name="LoadingCLIArguments",
@@ -231,7 +231,7 @@ class DWIProcessingDTI(cpe.Pipeline):
         import nipype.interfaces.io as nio
         from clinica.utils.io import fix_join
 
-        import clinica.pipelines.dwi_processing_dti.dwi_processing_dti_utils as utils
+        import clinica.pipelines.dwi_dti.dwi_dti_utils as utils
 
         # Find container path from filename
         # =================================
@@ -293,8 +293,8 @@ class DWIProcessingDTI(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.
         """
-        import clinica.pipelines.dwi_processing_dti.dwi_processing_dti_workflows as workflows
-        import clinica.pipelines.dwi_processing_dti.dwi_processing_dti_utils as utils
+        import clinica.pipelines.dwi_dti.dwi_dti_workflows as workflows
+        import clinica.pipelines.dwi_dti.dwi_dti_utils as utils
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe

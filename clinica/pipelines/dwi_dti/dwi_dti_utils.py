@@ -554,7 +554,7 @@ def rename_into_caps(in_caps_dwi,
     from nipype.interfaces.utility import Rename
     import os
 
-    from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_utils import extract_bids_identifier_from_caps_filename
+    from clinica.pipelines.dwi_dti.dwi_dti_utils import extract_bids_identifier_from_caps_filename
 
     bids_identifier = extract_bids_identifier_from_caps_filename(in_caps_dwi)
 
@@ -613,15 +613,6 @@ def rename_into_caps(in_caps_dwi,
         base_dir_affine_matrix,
         bids_identifier + "_space-MNI152Lin_res-1x1x1_affine.mat")
     out_caps_affine_matrix = rename_affine.run()
-
-    from clinica.utils.stream import cprint
-    cprint("Renamed files:")
-    cprint(out_caps_fa.outputs.out_file)
-    cprint(out_caps_md.outputs.out_file)
-    cprint(out_caps_ad.outputs.out_file)
-    cprint(out_caps_rd.outputs.out_file)
-    cprint(out_caps_b_spline_transform.outputs.out_file)
-    cprint(out_caps_affine_matrix.outputs.out_file)
 
     return out_caps_fa.outputs.out_file, out_caps_md.outputs.out_file,\
         out_caps_ad.outputs.out_file, out_caps_rd.outputs.out_file, \

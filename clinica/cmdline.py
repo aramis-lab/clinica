@@ -132,7 +132,7 @@ def execute():
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DWIPreprocessingUsingPhaseDiffFieldmapCLI  # noqa
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DWIPreprocessingUsingT1CLI  # noqa
-    from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_cli import DWIProcessingDTICLI  # noqa
+    from clinica.pipelines.dwi_dti.dwi_dti_cli import DwiDtiCli  # noqa
     from clinica.pipelines.dwi_processing_csd.dwi_processing_csd_cli import DWIProcessingCSDCLI  # noqa
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI  # noqa
     from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI  # noqa
@@ -152,7 +152,7 @@ def execute():
         T1VolumeParcellationCLI(),
         DWIPreprocessingUsingT1CLI(),
         DWIPreprocessingUsingPhaseDiffFieldmapCLI(),
-        DWIProcessingDTICLI(),
+        DwiDtiCli(),
         DWIProcessingCSDCLI(),
         fMRIPreprocessingCLI(),
         PETVolumeCLI(),

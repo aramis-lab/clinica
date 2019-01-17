@@ -401,7 +401,7 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
 
 
 def test_run_DWIProcessingDTI():
-    from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_pipeline import DWIProcessingDTI
+    from clinica.pipelines.dwi_dti.dwi_dti_pipeline import DwiDti
     from os.path import dirname, join, abspath, exists
     import shutil
     import pandas as pds
@@ -413,8 +413,8 @@ def test_run_DWIProcessingDTI():
     clean_folder(join(working_dir, 'DWIProcessingDTI'))
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
-    pipeline = DWIProcessingDTI(caps_directory=join(root, 'out', 'caps'),
-                                tsv_file=join(root, 'in', 'subjects.tsv'))
+    pipeline = DwiDti(caps_directory=join(root, 'out', 'caps'),
+                      tsv_file=join(root, 'in', 'subjects.tsv'))
     pipeline.base_dir = join(working_dir, 'DWIProcessingDTI')
     pipeline.build()
     pipeline.run()

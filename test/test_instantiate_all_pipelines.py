@@ -133,12 +133,12 @@ def test_instantiate_DWIPreprocessingUsingPhaseDiffFieldmap():
     pass
 
 def test_instantiate_DWIProcessingDTI():
-    from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_pipeline import DWIProcessingDTI
+    from clinica.pipelines.dwi_dti.dwi_dti_pipeline import DwiDti
     from os.path import dirname, join, abspath
 
     root = dirname(abspath(__file__))
-    pipeline = DWIProcessingDTI(caps_directory=join(root, 'data', 'DWIProcessingDTI', 'in', 'caps'),
-                                tsv_file=join(root, 'data', 'DWIProcessingDTI', 'in', 'subjects.tsv'))
+    pipeline = DwiDti(caps_directory=join(root, 'data', 'DWIProcessingDTI', 'in', 'caps'),
+                      tsv_file=join(root, 'data', 'DWIProcessingDTI', 'in', 'subjects.tsv'))
     pipeline.build()
     pass
 
