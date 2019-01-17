@@ -14,25 +14,16 @@ class DwiDti(cpe.Pipeline):
     """DTI-based processing of DWI datasets.
 
     Args:
-        input_dir(str): Input directory in a BIDS hierarchy.
+        input_dir(str): Input directory in a CAPS hierarchy.
         output_dir(str): Output directory in a CAPS hierarchy.
         subjects_sessions_list(str): The Subjects-Sessions list file (in .tsv
             format).
 
     Returns:
-        A clinica pipelines object containing the DWI Processing with DTI
-        pipelines.
+        A clinica pipelines object containing the DwiDti pipeline.
 
     Raises:
 
-
-    Example:
-        >>> pipelines = DwiDti('~/MYDATASET_CAPS')
-        >>> pipelines.parameters = {
-        >>>     # ...
-        >>> }
-        >>> pipelines.base_dir = '/tmp/'
-        >>> pipelines.run()
     """
 
     def check_custom_dependencies(self): pass

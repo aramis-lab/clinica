@@ -13,7 +13,7 @@ config.update_config(cfg)
 
 
 class DwiConnectome(cpe.Pipeline):
-    """Computation of structural connectome.
+    """Connectome-based processing of DWI datasets.
 
     Args:
         input_dir: A BIDS directory.
