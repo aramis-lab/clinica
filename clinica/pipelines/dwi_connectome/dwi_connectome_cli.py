@@ -56,7 +56,6 @@ class DwiConnectomeCli(ce.CmdParser):
         if args.working_directory is None:
             args.working_directory = mkdtemp()
         pipeline.base_dir = self.absolute_path(args.working_directory)
-        pipeline.write_graph()
         if args.n_procs:
             pipeline.run(plugin='MultiProc',
                          plugin_args={'n_procs': args.n_procs})

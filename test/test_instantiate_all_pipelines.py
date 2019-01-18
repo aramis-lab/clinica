@@ -151,6 +151,20 @@ def test_instantiate_DWIDTI():
     pass
 
 
+def test_instantiate_DWIConnectome():
+    from clinica.pipelines.dwi_connectome.dwi_connectome_pipeline import DwiConnectome
+    from os.path import dirname, join, abspath
+
+    root = dirname(abspath(__file__))
+    pipeline = DwiConnectome(caps_directory=join(root, 'data', 'DWIConnectome', 'in', 'caps'),
+                             tsv_file=join(root, 'data', 'DWIConnectome', 'in', 'subjects.tsv'))
+    pipeline.parameters = {
+            'n_tracks' : 1000
+    }
+    pipeline.build()
+    pass
+
+
 def test_instantiate_fMRIPreprocessing():
     # Need to add json file in BIDS
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
