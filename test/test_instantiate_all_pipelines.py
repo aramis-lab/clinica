@@ -102,8 +102,7 @@ def test_instantiate_T1VolumeParcellation():
     from os.path import dirname, join, abspath
 
     root = dirname(abspath(__file__))
-    pipeline = T1VolumeParcellation(bids_directory='./4',
-                                    caps_directory=join(root, 'data', 'T1VolumeParcellation', 'in', 'caps'),
+    pipeline = T1VolumeParcellation(caps_directory=join(root, 'data', 'T1VolumeParcellation', 'in', 'caps'),
                                     tsv_file=join(root, 'data', 'T1VolumeParcellation', 'in', 'subjects.tsv'))
     pipeline.parameters['group_id'] = 'UnitTest'
     pipeline.parameters['atlases'] = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']

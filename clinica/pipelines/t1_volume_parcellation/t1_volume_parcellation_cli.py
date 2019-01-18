@@ -28,9 +28,6 @@ class T1VolumeParcellationCLI(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments
         """
-
-        # self._args.add_argument("bids_directory",
-        #                        help='Path to the BIDS directory.')
         self._args.add_argument("caps_directory",
                                 help='Path to the CAPS directory.')
         self._args.add_argument("group_id",
@@ -58,7 +55,6 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         # Most of the time, you will want to instantiate your pipeline with a
         # BIDS and CAPS directory as inputs:
         pipeline = T1VolumeParcellation(
-             bids_directory='./4',
              caps_directory=self.absolute_path(args.caps_directory),
              tsv_file=self.absolute_path(args.subjects_sessions_tsv))
         assert args.modulation in ['on', 'off']

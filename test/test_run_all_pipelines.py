@@ -62,6 +62,7 @@ def test_run_T1FreeSurferCrossSectional():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
+
 def test_run_T1VolumeTissueSegmentation():
     import os
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
@@ -90,6 +91,7 @@ def test_run_T1VolumeTissueSegmentation():
     assert likeliness_measure(out_file, ref_file, (1e-4, 0.05), (1e-2, 0.01))
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
+
 
 def test_run_T1VolumeCreateDartel():
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
@@ -134,6 +136,7 @@ def test_run_T1VolumeCreateDartel():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
+
 def test_run_T1VolumeDartel2MNI():
     from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_pipeline import T1VolumeDartel2MNI
     from os.path import dirname, join, abspath, exists
@@ -172,6 +175,7 @@ def test_run_T1VolumeDartel2MNI():
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
+
 
 def test_run_T1VolumeNewTemplate():
     from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_pipeline import T1VolumeNewTemplate
@@ -214,6 +218,7 @@ def test_run_T1VolumeNewTemplate():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
+
 def test_run_T1VolumeExistingDartel():
     from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_pipeline import T1VolumeExistingDartel
     from os.path import dirname, join, abspath
@@ -253,6 +258,7 @@ def test_run_T1VolumeExistingDartel():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
+
 def test_run_T1VolumeExistingTemplate():
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
     from os.path import dirname, join, abspath
@@ -291,6 +297,7 @@ def test_run_T1VolumeExistingTemplate():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
+
 def test_run_T1VolumeParcellation():
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import T1VolumeParcellation
     from os.path import dirname, join, abspath, exists
@@ -306,8 +313,7 @@ def test_run_T1VolumeParcellation():
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     # Instantiate pipeline
-    pipeline = T1VolumeParcellation(bids_directory='./4',
-                                    caps_directory=join(root, 'out', 'caps'),
+    pipeline = T1VolumeParcellation(caps_directory=join(root, 'out', 'caps'),
                                     tsv_file=join(root, 'in', 'subjects.tsv'))
     pipeline.parameters['group_id'] = 'UnitTest'
     pipeline.parameters['atlases'] = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
@@ -331,6 +337,7 @@ def test_run_T1VolumeParcellation():
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
+
 
 def test_run_DWIPreprocessingUsingT1():
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DWIPreprocessingUsingT1
@@ -361,6 +368,7 @@ def test_run_DWIPreprocessingUsingT1():
     # Delete out/caps folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
+
 
 def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DWIPreprocessingUsingPhaseDiffFieldmap
@@ -431,6 +439,7 @@ def test_run_DWIDTI():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
+
 def test_run_DWIConnectome():
     from clinica.pipelines.dwi_connectome.dwi_connectome_pipeline import DwiConnectome
     from os.path import dirname, join, abspath, exists
@@ -467,6 +476,7 @@ def test_run_DWIConnectome():
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
+
 
 def test_run_fMRIPreprocessing():
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
@@ -540,6 +550,7 @@ def test_run_PETVolume():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
+
 def test_run_StatisticsSurface():
     from clinica.pipelines.statistics_surface.statistics_surface_pipeline import StatisticsSurface
     from os.path import dirname, join, abspath, exists
@@ -582,6 +593,7 @@ def test_run_StatisticsSurface():
         assert np.allclose(out_file_mat[0][0][i], ref_file_mat[0][0][i], rtol=1e-8, equal_nan=True)
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
+
 
 def test_run_PETSurface():
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
@@ -865,6 +877,7 @@ def test_run_Aibl2Bids():
     convert_images(dataset_directory, clinical_data_directory, bids_directory)
     convert_clinical_data(bids_directory, clinical_data_directory)
     pass
+
 
 def test_run_SpatialSVM():
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
