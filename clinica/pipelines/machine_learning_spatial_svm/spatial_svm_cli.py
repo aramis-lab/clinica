@@ -8,34 +8,28 @@ class SpatialSVMCLI(ce.CmdParser):
     def define_name(self):
         """Define the sub-command name to run this pipeline.
         """
-
         self._name = 'machinelearning-prepare-spatial-svm'
 
     def define_description(self):
-        self._description = 'Spatial and anatomical regularization for SVM\n'  # link to the doc
+        self._description = 'Prepare input data for SVM with spatial and anatomical regularization:\nhttp://clinica.run/doc/MachineLeaning_PrepareSpatialSVM'
 
     def define_options(self):
         """Define the sub-command arguments
         """
-        # @todo mettere i parametri di default nell'help
-
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
         clinica_comp.add_argument("group_id",
                                   help='User-defined identifier for the provided group of subjects.')
-
+        # Optional arguments
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("-fwhm", "--full_width_half_maximum", type=float, default=4,
-                              help='fwhm value for regularization (in mm)')
-        optional.add_argument("-vs", "--voxel_size", type=float, default=1.5,
-                              help='voxel size (in mm)')
-        optional.add_argument("-image_type", "--image_type", default='t1',
-                              help='Possible values: t1/pet')
-        optional.add_argument("-pet_type", "--pet_type", default='FDG',
-                              help='Type of pet used, ex: fdg/av45')
-
+        optional.add_argument("-it", "--image_type", default='t1',
+                              help='Imaging modality. Can be t1 or pet (default: --image_type t1)')
+        optional.add_argument("-pt", "--pet_type", default='FDG',
+                              help='PET tracer. Can be fdg or av45 (default: --pet_tracer fdg)')
+        # Clinica standard arguments (e.g. --n_procs)
         clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
         clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
                                  help='TSV file containing a list of subjects with their sessions.')
@@ -43,8 +37,12 @@ class SpatialSVMCLI(ce.CmdParser):
                                  help='Temporary directory to store pipeline intermediate results')
         clinica_opt.add_argument("-np", "--n_procs", type=int,
                                  help='Number of cores used to run in parallel')
-        clinica_opt.add_argument("-sl", "--slurm", action='store_true',
-                                 help='Run the pipeline using SLURM')
+        # Advanced arguments (i.e. tricky parameters)
+        advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
+        advanced.add_argument("-fwhm", "--full_width_half_maximum", type=float, default=4,
+                              help='Amount of regularization (in mm). In practice, we found the default value (--full_width_half_maximum 4) to be optimal. We therefore do not recommend to change it unless you have a specific reason to do so.')
+        advanced.add_argument("-vs", "--voxel_size", type=float, default=1.5,
+                              help='Voxel size of the input image (e.g. --voxel_size 1.5)')
 
     def run_command(self, args):
         """
@@ -68,7 +66,5 @@ class SpatialSVMCLI(ce.CmdParser):
         pipeline.base_dir = self.absolute_path(args.working_directory)
         if args.n_procs:
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
-        elif args.slurm:
-            pipeline.run(plugin='SLURM')
         else:
             pipeline.run()

@@ -8,14 +8,11 @@ import clinica.pipelines.engine as cpe
 
 
 class SpatialSVM(cpe.Pipeline):
-    """machine_learning_spatial_svm SHORT DESCRIPTION.
-
-    Warnings:
-        - A WARNING.
+    """SpatialSVM - Prepare input data for SVM with spatial and anatomical regularization.
 
     Todos:
-        - [x] A FILLED TODO ITEM.
-        - [ ] AN ON-GOING TODO ITEM.
+        - [ ] Final version of CAPS.
+        - [ ] Remove --voxel_size flag and detect automatically this parameter.
 
     Args:
         input_dir: A BIDS directory.
@@ -23,7 +20,7 @@ class SpatialSVM(cpe.Pipeline):
         subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
 
     Returns:
-        A clinica pipeline object containing the machine_learning_spatial_svm pipeline.
+        A clinica pipeline object containing the SpatialSVM pipeline.
 
     Raises:
     """
@@ -40,7 +37,7 @@ class SpatialSVM(cpe.Pipeline):
             A list of (string) input fields name.
         """
 
-        return ['dartel_input', 'input_image']  # Fill here the list
+        return ['dartel_input', 'input_image']
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
@@ -49,7 +46,7 @@ class SpatialSVM(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        return ['regularized_image']  # Fill here the list
+        return ['regularized_image']
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -72,7 +69,7 @@ class SpatialSVM(cpe.Pipeline):
                                                                           mandatory_inputs=True))
 
         caps_layout = CAPSLayout(self.caps_directory)
-    # @TODO: correct subject + list
+        # @TODO: correct subject + list
         unique_subject = set(list(self.subjects))
         subjects_regex = '|'.join(sub[4:] for sub in unique_subject)
         unique_session = set(list(self.sessions))
