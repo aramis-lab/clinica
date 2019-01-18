@@ -6,6 +6,7 @@
 import warnings
 warnings.filterwarnings("ignore")
 
+
 def test_instantiate_T1FreeSurferCrossSectional():
     from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_pipeline import T1FreeSurferCrossSectional
     from os.path import dirname, join, abspath
@@ -18,6 +19,7 @@ def test_instantiate_T1FreeSurferCrossSectional():
     pipeline.build()
     pass
 
+
 def test_instantiate_T1VolumeTissueSegmentation():
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
     from os.path import dirname, join, abspath
@@ -28,6 +30,7 @@ def test_instantiate_T1VolumeTissueSegmentation():
                                           tsv_file=join(root, 'data', 'T1VolumeTissueSegmentation', 'in', 'subjects.tsv'))
     pipeline.build()
     pass
+
 
 def test_instantiate_T1VolumeCreateDartel():
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
@@ -54,6 +57,7 @@ def test_instantiate_T1VolumeDartel2MNI():
     pipeline.build()
     pass
 
+
 def test_instantiate_T1VolumeNewTemplate():
     from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_pipeline import T1VolumeNewTemplate
     from os.path import dirname, join, abspath
@@ -79,6 +83,7 @@ def test_instantiate_T1VolumeExistingDartel():
     pipeline.build()
     pass
 
+
 def test_instantiate_T1VolumeExistingTemplate():
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
     from os.path import dirname, join, abspath
@@ -90,6 +95,7 @@ def test_instantiate_T1VolumeExistingTemplate():
                                         group_id='UnitTest')
     pipeline.build()
     pass
+
 
 def test_instantiate_T1VolumeParcellation():
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import T1VolumeParcellation
@@ -104,6 +110,7 @@ def test_instantiate_T1VolumeParcellation():
     pipeline.parameters['modulate'] = 'on'
     pipeline.build()
     pass
+
 
 def test_instantiate_DWIPreprocessingUsingT1():
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DWIPreprocessingUsingT1
@@ -120,6 +127,7 @@ def test_instantiate_DWIPreprocessingUsingT1():
     pipeline.build()
     pass
 
+
 def test_instantiate_DWIPreprocessingUsingPhaseDiffFieldmap():
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DWIPreprocessingUsingPhaseDiffFieldmap
     from os.path import dirname, join, abspath
@@ -132,15 +140,17 @@ def test_instantiate_DWIPreprocessingUsingPhaseDiffFieldmap():
     pipeline.build()
     pass
 
-def test_instantiate_DWIProcessingDTI():
+
+def test_instantiate_DWIDTI():
     from clinica.pipelines.dwi_dti.dwi_dti_pipeline import DwiDti
     from os.path import dirname, join, abspath
 
     root = dirname(abspath(__file__))
-    pipeline = DwiDti(caps_directory=join(root, 'data', 'DWIProcessingDTI', 'in', 'caps'),
-                      tsv_file=join(root, 'data', 'DWIProcessingDTI', 'in', 'subjects.tsv'))
+    pipeline = DwiDti(caps_directory=join(root, 'data', 'DWIDTI', 'in', 'caps'),
+                      tsv_file=join(root, 'data', 'DWIDTI', 'in', 'subjects.tsv'))
     pipeline.build()
     pass
+
 
 def test_instantiate_fMRIPreprocessing():
     # Need to add json file in BIDS
@@ -160,6 +170,7 @@ def test_instantiate_fMRIPreprocessing():
     pipeline.build()
     pass
 
+
 def test_instantiate_PETVolume():
     from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
     from os.path import dirname, join, abspath
@@ -172,6 +183,7 @@ def test_instantiate_PETVolume():
                          fwhm_tsv=None)
     pipeline.build()
     pass
+
 
 def test_instantiate_StatisticsSurface():
     from clinica.pipelines.statistics_surface.statistics_surface_pipeline import StatisticsSurface
@@ -195,6 +207,7 @@ def test_instantiate_StatisticsSurface():
     }
     pipeline.build()
     pass
+
 
 def test_instantiate_PETSurface(tmpdir):
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
@@ -245,11 +258,11 @@ def test_instantiate_InputsML():
     pass
 
 
-def test_instantiate_SVMRegularization():
+def test_instantiate_SpatialSVM():
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
     from os.path import dirname, join, abspath
 
-    root = join(dirname(abspath(__file__)), 'data', 'SVMReg')
+    root = join(dirname(abspath(__file__)), 'data', 'SpatialSVM')
     pipeline = SpatialSVM(caps_directory=join(root, 'in', 'caps'),
                           tsv_file=join(root, 'in', 'subjects.tsv'))
     pipeline.parameters['group_id'] = 'ADCNbaseline'
@@ -259,4 +272,3 @@ def test_instantiate_SVMRegularization():
     pipeline.parameters['pet_type'] = 'fdg'
     pipeline.build()
     pass
-

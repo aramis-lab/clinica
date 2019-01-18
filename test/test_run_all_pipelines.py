@@ -62,7 +62,6 @@ def test_run_T1FreeSurferCrossSectional():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
-
 def test_run_T1VolumeTissueSegmentation():
     import os
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
@@ -174,7 +173,6 @@ def test_run_T1VolumeDartel2MNI():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
-
 def test_run_T1VolumeNewTemplate():
     from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_pipeline import T1VolumeNewTemplate
     from os.path import dirname, join, abspath, exists, basename
@@ -215,7 +213,6 @@ def test_run_T1VolumeNewTemplate():
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
-
 
 def test_run_T1VolumeExistingDartel():
     from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_pipeline import T1VolumeExistingDartel
@@ -294,7 +291,6 @@ def test_run_T1VolumeExistingTemplate():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
-
 def test_run_T1VolumeParcellation():
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import T1VolumeParcellation
     from os.path import dirname, join, abspath, exists
@@ -336,7 +332,6 @@ def test_run_T1VolumeParcellation():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
 
-
 def test_run_DWIPreprocessingUsingT1():
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DWIPreprocessingUsingT1
     from os.path import dirname, join, abspath
@@ -366,7 +361,6 @@ def test_run_DWIPreprocessingUsingT1():
     # Delete out/caps folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
-
 
 def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DWIPreprocessingUsingPhaseDiffFieldmap
@@ -400,7 +394,7 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
     pass
 
 
-def test_run_DWIProcessingDTI():
+def test_run_DWIDTI():
     from clinica.pipelines.dwi_dti.dwi_dti_pipeline import DwiDti
     from os.path import dirname, join, abspath, exists
     import shutil
@@ -425,6 +419,43 @@ def test_run_DWIProcessingDTI():
                  for m in maps]
     ref_files = [join(root, 'ref', 'sub-CAPP01001TMM_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-' + m + '_statistics.tsv')
                  for m in maps]
+
+    for i in range(len(out_files)):
+        out_csv = pds.read_csv(out_files[i], sep='\t')
+        out_mean_scalar = np.array(out_csv.mean_scalar)
+        ref_csv = pds.read_csv(ref_files[i], sep='\t')
+        ref_mean_scalar = np.array(ref_csv.mean_scalar)
+        # Uncomment when problem is solved
+        assert np.allclose(out_mean_scalar, ref_mean_scalar, rtol=0.025, equal_nan=True)
+
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    pass
+
+def test_run_DWIConnectome():
+    from clinica.pipelines.dwi_connectome.dwi_connectome_pipeline import DwiConnectome
+    from os.path import dirname, join, abspath, exists
+    import shutil
+    import pandas as pds
+    import numpy as np
+
+    root = join(dirname(abspath(__file__)), 'data', 'DWIConnectome')
+
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'DWIConnectome'))
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+
+    pipeline = DwiConnectome(caps_directory=join(root, 'out', 'caps'),
+                             tsv_file=join(root, 'in', 'subjects.tsv'))
+    pipeline.base_dir = join(working_dir, 'DWIConnectome')
+    pipeline.build()
+    pipeline.run()
+
+    # Check files
+    atlases = ['desikan', 'destrieux']
+    out_files = [join(root, 'out/caps/subjects/sub-CAPP01001TMM/ses-M00/dwi/dti_based_processing/atlas_statistics/sub-CAPP01001TMM_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-' + a + '_statistics.tsv')
+                 for a in atlases]
+    ref_files = [join(root, 'ref', 'sub-CAPP01001TMM_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-' + a + '_statistics.tsv')
+                 for a in atlases]
 
     for i in range(len(out_files)):
         out_csv = pds.read_csv(out_files[i], sep='\t')
