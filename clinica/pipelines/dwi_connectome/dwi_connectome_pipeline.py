@@ -241,10 +241,10 @@ class DwiConnectome(cpe.Pipeline):
 
         write_node = npe.MapNode(name='WritingCAPS',
                                  iterfield=['container'] +
-                                           ['csd_based_processing.@' + o
+                                           ['connectome_based_processing.@' + o
                                             for o in self.get_output_fields()],
                                  interface=nio.DataSink(
-                                         infields=['csd_based_processing.@' + o for o in
+                                         infields=['connectome_based_processing.@' + o for o in
                                                    self.get_output_fields()]))
         write_node.inputs.base_directory = self.caps_directory
         write_node.inputs.container = utils.get_containers(self.subjects,
@@ -259,12 +259,11 @@ class DwiConnectome(cpe.Pipeline):
             (self.output_node, join_node, [('tracts', 'tracts')]),
             (self.output_node, join_node, [('nodes', 'nodes')]),
             (self.output_node, join_node, [('connectomes', 'connectomes')]),
-            (join_node, write_node, [('response', 'csd_based_processing.@response')]),
-            (join_node, write_node, [('fod', 'csd_based_processing.@fod')]),
-            (join_node, write_node, [('tracts', 'csd_based_processing.@tracts')]),
-            (join_node, write_node, [('nodes', 'csd_based_processing.@nodes')]),
-            (join_node, write_node,
-             [('connectomes', 'csd_based_processing.@connectomes')]),
+            (join_node, write_node, [('response', 'connectome_based_processing.@response')]),
+            (join_node, write_node, [('fod', 'connectome_based_processing.@fod')]),
+            (join_node, write_node, [('tracts', 'connectome_based_processing.@tracts')]),
+            (join_node, write_node, [('nodes', 'connectome_based_processing.@nodes')]),
+            (join_node, write_node, [('connectomes', 'connectome_based_processing.@connectomes')]),
         ])
 
         self.write_graph()
