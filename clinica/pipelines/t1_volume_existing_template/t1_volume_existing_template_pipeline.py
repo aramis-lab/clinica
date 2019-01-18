@@ -322,6 +322,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         """
 
         import os
+        import platform
         import nipype.interfaces.spm as spm
         import nipype.interfaces.matlab as mlab
         import nipype.pipeline.engine as npe
@@ -363,7 +364,10 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
                     raise RuntimeError('SPM version 8 or 12 could not be found. Please upgrade your SPM toolbox.')
             if isinstance(version, str):
                 if float(version) >= 12.7169:
-                    tissue_map = os.path.join(str(spm_home), 'spm12_mcr/spm/spm12/tpm/TPM.nii')
+                    if platform.system() == 'Darwin':
+                        tissue_map = os.path.join(str(spm_home), 'spm12.app/Contents/MacOS/spm12_mcr/spm12/spm12/tpm/TPM.nii')
+                    else:
+                        tissue_map = os.path.join(str(spm_home), 'spm12_mcr/spm/spm12/tpm/TPM.nii')
                 else:
                     raise RuntimeError('SPM standalone version not supported. Please upgrade SPM standalone.')
         else:
