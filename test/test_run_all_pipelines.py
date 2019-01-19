@@ -409,15 +409,15 @@ def test_run_DWIDTI():
     import pandas as pds
     import numpy as np
 
-    root = join(dirname(abspath(__file__)), 'data', 'DWIProcessingDTI')
+    root = join(dirname(abspath(__file__)), 'data', 'DWIDTI')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-    clean_folder(join(working_dir, 'DWIProcessingDTI'))
+    clean_folder(join(working_dir, 'DWIDTI'))
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     pipeline = DwiDti(caps_directory=join(root, 'out', 'caps'),
                       tsv_file=join(root, 'in', 'subjects.tsv'))
-    pipeline.base_dir = join(working_dir, 'DWIProcessingDTI')
+    pipeline.base_dir = join(working_dir, 'DWIDTI')
     pipeline.build()
     pipeline.run()
 
