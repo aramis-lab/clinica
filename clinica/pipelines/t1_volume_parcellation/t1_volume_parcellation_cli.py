@@ -28,32 +28,39 @@ class T1VolumeParcellationCLI(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments
         """
-        self._args.add_argument("caps_directory",
-                                help='Path to the CAPS directory.')
-        self._args.add_argument("group_id",
-                                help='User-defined identifier for the provided group of subjects.')
-        self._args.add_argument("-m", "--modulation",
-                                help='Specify if modulation must be enabled. Default : on', default='on')
-        self._args.add_argument("-tsv", "--subjects_sessions_tsv",
-                                help='TSV file containing a list of subjects with their sessions.')
-        self._args.add_argument("-atlases", "--atlases", nargs='+', type=str,
-                                default=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
-                                choices=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
-                                help='A list of atlases to use to calculate the mean GM concentration at each region')
-        self._args.add_argument("-wd", "--working_directory",
-                                help='Temporary directory to store pipeline intermediate results')
-        self._args.add_argument("-np", "--n_procs", type=int,
-                                help='Number of cores used to run in parallel')
+        from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
+        clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
+        clinica_comp.add_argument("caps_directory",
+                                  help='Path to the CAPS directory.')
+        clinica_comp.add_argument("group_id",
+                                  help='User-defined identifier for the provided group of subjects.')
+        # Clinica standard arguments (e.g. --n_procs)
+        clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
+        clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
+                                 help='TSV file containing a list of subjects with their sessions.')
+        clinica_opt.add_argument("-wd", "--working_directory",
+                                 help='Temporary directory to store pipelines intermediate results')
+        clinica_opt.add_argument("-np", "--n_procs",
+                                 type=int,
+                                 help='Number of cores used to run in parallel')
+        # Advanced arguments (i.e. tricky parameters)
+        advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
+        advanced.add_argument("-m", "--modulation",
+                              metavar="[on|off]", default='on',
+                              help='Specify if modulation must be enabled (dafault: --modulation on')
+        advanced.add_argument("-atlases", "--atlases",
+                              nargs='+', type=str, metavar="",
+                              default=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
+                              choices=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
+                              help='A list of atlases to use to calculate the mean GM concentration at each region (default: all atlases i.e. --atlases AAL2 AICHA Hammers LPBA40 Neuromorphometrics).')
 
     def run_command(self, args):
         """
         """
-
         from tempfile import mkdtemp
         from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import T1VolumeParcellation
 
-        # Most of the time, you will want to instantiate your pipeline with a
-        # BIDS and CAPS directory as inputs:
         pipeline = T1VolumeParcellation(
              caps_directory=self.absolute_path(args.caps_directory),
              tsv_file=self.absolute_path(args.subjects_sessions_tsv))
