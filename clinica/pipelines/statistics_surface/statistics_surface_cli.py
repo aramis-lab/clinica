@@ -2,16 +2,6 @@
 
 import clinica.engine as ce
 
-__author__ = "Junhao Wen"
-__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
-__credits__ = ["Junhao Wen"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Junhao Wen"
-__email__ = "Junhao.Wen@inria.fr"
-__status__ = "Development"
-
-
 class StatisticsSurfaceCLI(ce.CmdParser):
 
     def define_name(self):

@@ -12,7 +12,7 @@ https://gitlab.icm-institute.org/aramis/clinica/wikis/docs
 import clinica.pipelines.engine as cpe
 
 __author__ = "Jeremy Guillon"
-__copyright__ = "Copyright 2016,2017 The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = ["Jeremy Guillon", "Romain Valabregue"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"

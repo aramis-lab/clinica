@@ -1,14 +1,9 @@
 # coding: utf8
 
-"""T1 SPM Dartel2MNI - Clinica Pipeline.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramis/clinica/wikis/docs/InteractingWithClinica.
-"""
-
 import clinica.pipelines.engine as cpe
 
 __author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = ["Jorge Samper Gonzalez"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
@@ -19,13 +14,6 @@ __status__ = "Development"
 
 class T1VolumeDartel2MNI(cpe.Pipeline):
     """T1 SPM Dartel2MNI SHORT DESCRIPTION.
-
-    Warnings:
-        - A WARNING.
-
-    Todos:
-        - [x] A FILLED TODO ITEM.
-        - [ ] AN ON-GOING TODO ITEM.
 
     Args:
         input_dir: A BIDS directory.

@@ -1,7 +1,7 @@
 # coding: utf8
 
 """
-Utils for the implementation of t1-spm-segmentation pipeline
+Utils for the implementation of t1-volume-tissue-segmentation pipeline
 """
 
 import os
@@ -11,7 +11,7 @@ from nipype.interfaces.base import TraitedSpec, OutputMultiPath, InputMultiPath,
 from nipype.utils.filemanip import filename_to_list, list_to_filename
 
 __author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = ["Jorge Samper Gonzalez"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"

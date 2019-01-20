@@ -6,6 +6,14 @@
 # command line tool.
 import clinica.pipelines.engine as cpe
 
+__author__ = "Simona Bottani"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
+__license__ = "See LICENSE.txt file"
+__version__ = "0.1.0"
+__maintainer__ = "Simona Bottani"
+__email__ = "simona.bottani@icm-institute.org"
+__status__ = "Development"
+
 
 class SpatialSVM(cpe.Pipeline):
     """SpatialSVM - Prepare input data for SVM with spatial and anatomical regularization.

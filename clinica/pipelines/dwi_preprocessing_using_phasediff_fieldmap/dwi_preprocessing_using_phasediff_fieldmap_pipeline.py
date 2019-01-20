@@ -3,7 +3,7 @@
 import clinica.pipelines.engine as cpe
 
 __author__ = ["Alexandre Routier"]
-__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = ["Nipype", "Junhao Wen"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
