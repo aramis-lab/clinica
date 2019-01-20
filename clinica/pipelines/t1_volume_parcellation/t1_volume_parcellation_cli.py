@@ -48,11 +48,11 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
         advanced.add_argument("-m", "--modulation",
                               metavar="[on|off]", default='on',
-                              help='Specify if modulation must be enabled (dafault: --modulation on')
+                              help='Specify if modulation must be enabled (default: --modulation on')
+        list_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
         advanced.add_argument("-atlases", "--atlases",
                               nargs='+', type=str, metavar="",
-                              default=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
-                              choices=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],
+                              default=list_atlases, choices=list_atlases,
                               help='A list of atlases to use to calculate the mean GM concentration at each region (default: all atlases i.e. --atlases AAL2 AICHA Hammers LPBA40 Neuromorphometrics).')
 
     def run_command(self, args):
