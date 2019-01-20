@@ -159,7 +159,7 @@ def test_instantiate_DWIConnectome():
     pipeline = DwiConnectome(caps_directory=join(root, 'data', 'DWIConnectome', 'in', 'caps'),
                              tsv_file=join(root, 'data', 'DWIConnectome', 'in', 'subjects.tsv'))
     pipeline.parameters = {
-            'n_tracks' : 1000
+        'n_tracks' : 1000
     }
     pipeline.build()
     pass

@@ -22,7 +22,8 @@ import sys
 warnings.filterwarnings("ignore")
 
 if sys.platform == 'darwin':
-    working_dir = '/Users/arnaud.marcoux/CI/working_dir_FU_python3'
+    working_dir = '/Users/alexandre.routier/Data/WorkingDirectory'
+    #working_dir = '/Users/arnaud.marcoux/CI/working_dir_FU_python3'
 elif sys.platform.startswith('linux'):
     working_dir = '/localdrive10TB/data/working_directory_ci_linux'
 else:
@@ -422,10 +423,11 @@ def test_run_DWIDTI():
     pipeline.run()
 
     # Check files
+    subject_id = 'sub-CAPP01001TMM'
     maps = ['AD', 'FA', 'MD', 'RD']
-    out_files = [join(root, 'out/caps/subjects/sub-CAPP01001TMM/ses-M00/dwi/dti_based_processing/atlas_statistics/sub-CAPP01001TMM_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-' + m + '_statistics.tsv')
+    out_files = [join(root, 'out', 'caps', 'subjects', subject_id, 'ses-M00', 'dwi', 'dti_based_processing', 'atlas_statistics', subject_id + '_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-' + m + '_statistics.tsv')
                  for m in maps]
-    ref_files = [join(root, 'ref', 'sub-CAPP01001TMM_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-' + m + '_statistics.tsv')
+    ref_files = [join(root, 'ref', subject_id + '_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-' + m + '_statistics.tsv')
                  for m in maps]
 
     for i in range(len(out_files)):
@@ -433,7 +435,7 @@ def test_run_DWIDTI():
         out_mean_scalar = np.array(out_csv.mean_scalar)
         ref_csv = pds.read_csv(ref_files[i], sep='\t')
         ref_mean_scalar = np.array(ref_csv.mean_scalar)
-        # Uncomment when problem is solved
+
         assert np.allclose(out_mean_scalar, ref_mean_scalar, rtol=0.025, equal_nan=True)
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -455,24 +457,28 @@ def test_run_DWIConnectome():
 
     pipeline = DwiConnectome(caps_directory=join(root, 'out', 'caps'),
                              tsv_file=join(root, 'in', 'subjects.tsv'))
+    pipeline.parameters = {
+        'n_tracks' : 1000000
+    }
     pipeline.base_dir = join(working_dir, 'DWIConnectome')
     pipeline.build()
     pipeline.run()
 
     # Check files
+    subject_id = 'sub-HMTC20110506MEMEPPAT27'
     atlases = ['desikan', 'destrieux']
-    out_files = [join(root, 'out/caps/subjects/sub-CAPP01001TMM/ses-M00/dwi/dti_based_processing/atlas_statistics/sub-CAPP01001TMM_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-' + a + '_statistics.tsv')
+    out_files = [join(root, 'out', 'caps', 'subjects', subject_id, 'ses-M00', 'dwi', 'connectome_based_processing', subject_id + '_ses-M00_dwi_space-b0_model-CSD_atlas-' + a + '_connectivity.tsv')
                  for a in atlases]
-    ref_files = [join(root, 'ref', 'sub-CAPP01001TMM_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-' + a + '_statistics.tsv')
+    ref_files = [join(root, 'ref', subject_id + '_ses-M00_dwi_space-b0_model-CSD_atlas-' + a + '_connectivity.tsv')
                  for a in atlases]
 
     for i in range(len(out_files)):
-        out_csv = pds.read_csv(out_files[i], sep='\t')
-        out_mean_scalar = np.array(out_csv.mean_scalar)
-        ref_csv = pds.read_csv(ref_files[i], sep='\t')
-        ref_mean_scalar = np.array(ref_csv.mean_scalar)
-        # Uncomment when problem is solved
-        assert np.allclose(out_mean_scalar, ref_mean_scalar, rtol=0.025, equal_nan=True)
+        out_connectome = pds.read_csv(out_files[i], sep='\t')
+        out_connectome = np.array(out_connectome)
+        ref_connectome = pds.read_csv(ref_files[i], sep='\t')
+        ref_connectome = np.array(ref_connectome)
+
+        assert np.allclose(out_connectome, ref_connectome, rtol=0.025, equal_nan=True)
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     pass
