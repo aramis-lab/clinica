@@ -1,9 +1,4 @@
-"""fMRI Preprocessing - Clinica Pipeline.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details:
-https://gitlab.icm-institute.org/aramis/clinica/wikis/docs
-/InteractingWithClinica.
-"""
+# coding: utf8
 
 # WARNING: Don't put any import statement here except if it's absolutly
 # necessary. Put it *inside* the different methods.
