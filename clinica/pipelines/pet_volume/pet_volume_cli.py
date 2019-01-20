@@ -53,7 +53,7 @@ class PETVolumeCLI(ce.CmdParser):
                               nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
                               help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to use as mask for PVC. Ex: 1 2 3 is GM, WM and CSF")
         advanced.add_argument("-smooth", "--smooth", nargs='+', type=int, default=[8],
-                                help="A list of integers specifying the different isomorphic fwhm in millimeters to smooth the image")
+                              help="A list of integers specifying the different isomorphic fwhm in millimeters to smooth the image")
         advanced.add_argument("-atlases", "--atlases",
                               nargs='+', type=str, metavar="",
                               default=['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers'],

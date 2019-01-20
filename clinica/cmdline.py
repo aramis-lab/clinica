@@ -319,7 +319,7 @@ def execute():
         parser.print_help()
         exit(-1)
 
-    #if unknown_args:
+    # if unknown_args:
     #    if '--verbose' or '-v' in unknown_args:
     #        cprint('Verbose flag detected')
     #    raise ValueError('Unknown flag detected: %s' % unknown_args)
@@ -344,7 +344,6 @@ def execute():
         # Case when we type `clinica` on the terminal
         parser.print_help()
         exit(0)
-
 
     import clinica.utils.stream as var
     var.clinica_verbose = args.verbose
