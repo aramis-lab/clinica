@@ -2,6 +2,7 @@
 
 import clinica.engine as ce
 
+
 class T1FreeSurferCrossSectionalCLI(ce.CmdParser):
 
     def define_name(self):

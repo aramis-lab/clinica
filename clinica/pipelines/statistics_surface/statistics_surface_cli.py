@@ -2,6 +2,7 @@
 
 import clinica.engine as ce
 
+
 class StatisticsSurfaceCLI(ce.CmdParser):
 
     def define_name(self):
