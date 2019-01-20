@@ -13,7 +13,7 @@ __status__ = "Development"
 
 
 class T1VolumeNewTemplate(cpe.Pipeline):
-    """T1 SPM Full Prep SHORT DESCRIPTION.
+    """T1VolumeNewTemplate
 
     Args:
         input_dir: A BIDS directory.
@@ -21,19 +21,11 @@ class T1VolumeNewTemplate(cpe.Pipeline):
         subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
 
     Returns:
-        A clinica pipelines object containing the T1 SPM Full Prep pipelines.
+        A clinica pipeline object containing the T1VolumeNewTemplate pipeline.
 
     Raises:
 
 
-    Example:
-        >>> from clinica.pipelines.t1_volume_new_template import T1VolumeNewTemplate
-        >>> pipelines = T1VolumeNewTemplate('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
-        >>> pipelines.parameters = {
-        >>>     # ...
-        >>> }
-        >>> pipelines.base_dir = '/tmp/'
-        >>> pipelines.run()
     """
 
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):

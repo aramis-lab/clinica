@@ -13,7 +13,8 @@ __status__ = "Development"
 
 
 class T1VolumeTissueSegmentation(cpe.Pipeline):
-    """T1 SPM Segmentation SHORT DESCRIPTION.
+    """T1VolumeTissueSegmentation - Tissue segmentation, bias correction and
+    spatial normalization to MNI space.
 
     Args:
         bids_directory: A BIDS directory.
@@ -21,19 +22,10 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
 
     Returns:
-        A clinica pipelines object containing the T1 SPM Segmentation pipelines.
+        A clinica pipeline object containing the T1VolumeTissueSegmentation pipeline.
 
     Raises:
 
-
-    Example:
-        >>> from t1_volume_tissue_segmentation import T1VolumeTissueSegmentation
-        >>> pipelines = T1VolumeTissueSegmentation('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
-        >>> pipelines.parameters = {
-        >>>     # ...
-        >>> }
-        >>> pipelines.base_dir = '/tmp/'
-        >>> pipelines.run()
     """
 
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None):

@@ -64,20 +64,22 @@ class PETVolumeCLI(ce.CmdParser):
 
         from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
 
-        pipeline = PETVolume(bids_directory=self.absolute_path(args.bids_directory),
-                             caps_directory=self.absolute_path(args.caps_directory),
-                             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-                             group_id=args.group_id,
-                             fwhm_tsv=self.absolute_path(args.fwhm_tsv)
-                             )
+        pipeline = PETVolume(
+            bids_directory=self.absolute_path(args.bids_directory),
+            caps_directory=self.absolute_path(args.caps_directory),
+            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+            group_id=args.group_id,
+            fwhm_tsv=self.absolute_path(args.fwhm_tsv)
+        )
 
-        pipeline.parameters.update({'pet_type': args.pet_type,
-                                    'mask_tissues': args.mask_tissues,
-                                    'mask_threshold': args.mask_threshold,
-                                    'pvc_mask_tissues': args.pvc_mask_tissues,
-                                    'smooth': args.smooth,
-                                    'atlas_list': args.atlases
-                                    })
+        pipeline.parameters.update({
+            'pet_type': args.pet_type,
+            'mask_tissues': args.mask_tissues,
+            'mask_threshold': args.mask_threshold,
+            'pvc_mask_tissues': args.pvc_mask_tissues,
+            'smooth': args.smooth,
+            'atlas_list': args.atlases
+        })
 
         pipeline.base_dir = self.absolute_path(args.working_directory)
 

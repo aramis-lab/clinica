@@ -13,14 +13,7 @@ __status__ = "Development"
 
 
 class T1VolumeExistingDartel(cpe.Pipeline):
-    """T1 SPM Dartel Existing Dartel SHORT DESCRIPTION.
-
-    Warnings:
-        - A WARNING.
-
-    Todos:
-        - [x] A FILLED TODO ITEM.
-        - [ ] AN ON-GOING TODO ITEM.
+    """T1VolumeExistingDartel - Reuse existing Dartel template.
 
     Args:
         input_dir: A BIDS directory.
@@ -29,20 +22,11 @@ class T1VolumeExistingDartel(cpe.Pipeline):
         (in .tsv format).
 
     Returns:
-        A clinica pipelines object containing the T1 SPM Dartel Existing
-        Template pipelines.
+        A clinica pipeline object containing the T1VolumeExistingDartel pipeline.
 
     Raises:
 
 
-    Example:
-        >>> from t1_volume_existing_dartel import T1VolumeExistingDartel
-        >>> pipelines = T1VolumeExistingDartel('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
-        >>> pipelines.parameters = {
-        >>>     # ...
-        >>> }
-        >>> pipelines.base_dir = '/tmp/'
-        >>> pipelines.run()
     """
 
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):

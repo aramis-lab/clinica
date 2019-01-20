@@ -13,7 +13,7 @@ __status__ = "Development"
 
 
 class T1VolumeDartel2MNI(cpe.Pipeline):
-    """T1 SPM Dartel2MNI SHORT DESCRIPTION.
+    """T1VolumeDartel2MNI - Dartel template to MNI.
 
     Args:
         input_dir: A BIDS directory.
@@ -22,19 +22,11 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         (in .tsv format).
 
     Returns:
-        A clinica pipelines object containing the T1 SPM Dartel2MNI pipelines.
+        A clinica pipeline object containing the T1VolumeDartel2MNI pipeline.
 
     Raises:
 
 
-    Example:
-        >>> from t1_volume_dartel2mni import T1VolumeDartel2MNI
-        >>> pipelines = T1VolumeDartel2MNI('myGroup', '~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
-        >>> pipelines.parameters.update({
-        >>>     # ...
-        >>> })
-        >>> pipelines.base_dir = '/tmp/'
-        >>> pipelines.run()
     """
 
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):

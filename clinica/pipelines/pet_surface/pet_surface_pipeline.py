@@ -23,7 +23,7 @@ class PetSurface(cpe.Pipeline):
             format).
 
     Returns:
-        A clinica pipeline object containing the pet-surface pipeline.
+        A clinica pipeline object containing the PetSurface pipeline.
 
     """
 

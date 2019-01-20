@@ -20,18 +20,10 @@ class DWIPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             format).
 
     Returns:
-        A clinica pipeline object containing the DWI Preprocessing Using PhaseDiff Fieldmap pipeline.
+        A clinica pipeline object containing the DWIPreprocessingUsingPhaseDiffFieldmap pipeline.
 
     Raises:
 
-
-    Example:
-        >>> pipeline = DWIPreprocessingUsingPhaseDiffFieldmap('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
-        >>> pipeline.parameters = {
-        >>>     'low_bval' : 10
-        >>> }
-        >>> pipeline.base_dir = '/tmp/'
-        >>> pipeline.run()
     """
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None,
                  name=None, low_bval=5):

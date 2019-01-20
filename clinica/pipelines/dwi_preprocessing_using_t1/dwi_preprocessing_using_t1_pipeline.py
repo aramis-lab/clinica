@@ -23,20 +23,11 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
             format).
 
     Returns:
-        A clinica pipelines object containing the DWI Preprocessing using T1
-        pipelines.
+        A clinica pipeline object containing the DWIPreprocessingUsingT1 pipeline.
 
     Raises:
 
 
-    Example:
-        >>> pipeline = DWIPreprocessingUsingT1('~/MYDATASET_BIDS',
-        >>>                                    '~/MYDATASET_CAPS')
-        >>> pipeline.parameters = {
-        >>>     'low_bval': 10
-        >>> }
-        >>> pipeline.base_dir = '/tmp/'
-        >>> pipeline.run()
     """
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None,
                  name=None, low_bval=5):

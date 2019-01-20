@@ -23,15 +23,13 @@ class fMRIPreprocessingCLI(ce.CmdParser):
 
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
 
-        clinica_comp = self._args.add_argument_group(
-                PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
+        clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("bids_directory",
                                   help='Path to the BIDS directory.')
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
 
-        clinica_opt = self._args.add_argument_group(
-                PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
+        clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
         clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
                                  help='TSV file containing a list of subjects with their sessions.')
         clinica_opt.add_argument("-wd", "--working_directory",
@@ -43,8 +41,7 @@ class fMRIPreprocessingCLI(ce.CmdParser):
         clinica_opt.add_argument("-sa", "--sbatch_args",
                                  help='SLURM\'s sbatch tool arguments.')
 
-        optional = self._args.add_argument_group(
-                PIPELINE_CATEGORIES['OPTIONAL'])
+        optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("-fwhm", "--full_width_at_half_maximum",
                               nargs=3, type=int, default=[8, 8, 8],
                               help="Size of the FWHM filter in milimeters to smooth the image (default: --full_width_at_half_maximum 8 8 8).")

@@ -24,16 +24,6 @@ class T1VolumeParcellation(cpe.Pipeline):
 
     Raises:
 
-
-    Example:
-        >>> from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import T1VolumeParcellation
-        >>> pipeline = T1VolumeParcellation('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
-        >>> pipeline.parameters = {
-        >>>     # ...
-        >>> }
-
-        >>> pipeline.base_dir = '/tmp/'
-        >>> pipeline.run()
     """
 
     def check_custom_dependencies(self):

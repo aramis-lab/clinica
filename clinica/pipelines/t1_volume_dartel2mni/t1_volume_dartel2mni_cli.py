@@ -66,13 +66,14 @@ class T1VolumeDartel2MNICLI(ce.CmdParser):
                 group_id=args.group_id
                 )
 
-        pipeline.parameters.update({'tissues': args.tissues,
-                                    # 'bounding_box': None,
-                                    'voxel_size': tuple(args.voxel_size) if args.voxel_size is not None else None,
-                                    'modulation': args.modulate,
-                                    'fwhm': args.fwhm,
-                                    'atlas_list': args.atlases
-                                    })
+        pipeline.parameters.update({
+            'tissues': args.tissues,
+            # 'bounding_box': None,
+            'voxel_size': tuple(args.voxel_size) if args.voxel_size is not None else None,
+            'modulation': args.modulate,
+            'fwhm': args.fwhm,
+            'atlas_list': args.atlases
+        })
 
         pipeline.base_dir = self.absolute_path(args.working_directory)
 

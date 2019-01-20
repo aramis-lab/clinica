@@ -41,7 +41,7 @@ class StatisticsSurface(cpe.Pipeline):
         n_procs: define how many cores to run this workflow.
 
     Returns:
-        A clinica pipelines object containing the StatisticsSurface pipelines.
+        A clinica pipeline object containing the StatisticsSurface pipeline.
 
     """
     def check_custom_dependencies(self):

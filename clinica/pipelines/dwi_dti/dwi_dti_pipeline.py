@@ -20,7 +20,7 @@ class DwiDti(cpe.Pipeline):
             format).
 
     Returns:
-        A clinica pipelines object containing the DwiDti pipeline.
+        A clinica pipeline object containing the DwiDti pipeline.
 
     Raises:
 

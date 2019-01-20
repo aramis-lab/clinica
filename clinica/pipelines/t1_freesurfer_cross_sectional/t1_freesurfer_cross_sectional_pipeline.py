@@ -16,10 +16,11 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
     """Creates a pipelines that performs Freesurfer commander, recon-all, It
     takes the input files of MRI T1 images and executes the 31 steps to
     reconstruct the surface of the brain, this progress includes surface-based
-    and Volume-based piepeline, which including gray(GM)and white matter(WM)
-    segementation, pial and white surface extraction!.
+    and Volume-based piepeline, which including gray and white matter
+    segementation, pial and white surface extraction.
 
-    Todos: Transfer print to clinica log???
+    Todos:
+        - [ ] Transfer print to clinica log???.
 
     Args:
         bids_directory: Path to the BIDS directory.
@@ -30,7 +31,7 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
         np: Number of cores used to run in parallel
 
     Returns:
-        A clinica pipelines object containing the T1 FreeSurfer pipelines.
+        A clinica pipeline object containing the T1FreeSurferCrossSectional pipeline.
 
     """
 

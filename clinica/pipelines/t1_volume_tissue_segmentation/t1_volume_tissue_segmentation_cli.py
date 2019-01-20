@@ -60,14 +60,15 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
                                               caps_directory=self.absolute_path(args.caps_directory),
                                               tsv_file=self.absolute_path(args.subjects_sessions_tsv))
 
-        pipeline.parameters.update({'tissue_classes': args.tissue_classes,
-                                    'dartel_tissues': args.dartel_tissues,
-                                    'tpm': args.tissue_probability_maps,
-                                    'save_warped_unmodulated': args.save_warped_unmodulated,
-                                    'save_warped_modulated': args.save_warped_modulated,
-                                    'write_deformation_fields': [True, True],  # args.write_deformation_fields
-                                    'save_t1_mni': True
-                                    })
+        pipeline.parameters.update({
+            'tissue_classes': args.tissue_classes,
+            'dartel_tissues': args.dartel_tissues,
+            'tpm': args.tissue_probability_maps,
+            'save_warped_unmodulated': args.save_warped_unmodulated,
+            'save_warped_modulated': args.save_warped_modulated,
+            'write_deformation_fields': [True, True],  # args.write_deformation_fields
+            'save_t1_mni': True
+            })
 
         pipeline.base_dir = self.absolute_path(args.working_directory)
 

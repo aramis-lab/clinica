@@ -13,7 +13,7 @@ __status__ = "Development"
 
 
 class T1VolumeExistingTemplate(cpe.Pipeline):
-    """T1 SPM Dartel Existing Template SHORT DESCRIPTION.
+    """T1VolumeExistingTemplate
 
     Args:
         input_dir: A BIDS directory.
@@ -21,19 +21,11 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
 
     Returns:
-        A clinica pipelines object containing the T1 SPM Dartel Existing Template pipelines.
+        A clinica pipeline object containing the T1VolumeExistingTemplate pipelines.
 
     Raises:
 
 
-    Example:
-        >>> from t1_volume_existing_template import T1VolumeExistingTemplate
-        >>> pipelines = T1VolumeExistingTemplate('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
-        >>> pipelines.parameters = {
-        >>>     # ...
-        >>> }
-        >>> pipelines.base_dir = '/tmp/'
-        >>> pipelines.run()
     """
 
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):

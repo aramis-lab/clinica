@@ -66,9 +66,6 @@ class T1VolumeParcellationCLI(ce.CmdParser):
              tsv_file=self.absolute_path(args.subjects_sessions_tsv))
         assert args.modulation in ['on', 'off']
         pipeline.parameters = {
-            # Add your own pipeline parameters here to use them inside your
-            # pipeline. See the file `spm_parcellation_pipeline.py` to
-            # see an example of use.
             'group_id': args.group_id,
             'atlases': args.atlases,
             'wd': self.absolute_path(args.working_directory),
