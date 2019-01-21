@@ -17,7 +17,7 @@ dependencies:
       - networkx<2.0.0
       - plinkio>=0.9.6
       - six>=1.9.0
-      - numpy>=1.8.2
+      - numpy==1.15
       - scipy>=0.13.3
       - scikit-learn==0.20.0
       - scikit-image==0.14.1
