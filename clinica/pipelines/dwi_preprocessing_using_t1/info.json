@@ -1,7 +1,7 @@
 {
     "id": "aramislab/dwi-preprocessing-using-t1",
-    "author": ["Alexandre Routier", "Junhao Wen", "Thomas Jacquemont"],
-    "version": "0.2.0",
+    "author": ["Thomas Jacquemont", "Alexandre Routier"],
+    "version": "0.1.0",
     "dependencies": [
         {
             "type": "software",

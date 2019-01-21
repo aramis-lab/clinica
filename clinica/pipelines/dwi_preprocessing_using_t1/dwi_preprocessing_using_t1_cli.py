@@ -13,40 +13,25 @@ class DWIPreprocessingUsingT1CLI(ce.CmdParser):
         """
         self._name = 'dwi-preprocessing-using-t1'
 
-    def define_description(self):
-        """Define a description of this pipeline.
-        """
-        self._description = 'Preprocessing of raw DWI datasets using a T1w image:\nhttp://clinica.run/doc/Pipelines/DWI_Preprocessing/'
-
     def define_options(self):
         """Define the sub-command arguments.
         """
-        from clinica.engine.cmdparser import PIPELINE_CATEGORIES
-        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
-        clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
-        clinica_comp.add_argument("bids_directory",
-                                  help='Path to the BIDS directory.')
-        clinica_comp.add_argument("caps_directory",
-                                  help='Path to the CAPS directory.')
-        clinica_comp.add_argument("phase_encoding_direction", type=str,
-                                  help='The phase encoding direction (e.g. For ADNI data, the phase_encoding_direction is y(j).')
-        clinica_comp.add_argument("total_readout_time", type=str,
-                                  help='The total readout time (see https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/eddy/Faq for details)')
+        self._args.add_argument("bids_directory",
+                                help='Path to the BIDS directory.')
+        self._args.add_argument("caps_directory",
+                                help='Path to the CAPS directory.')
+        self._args.add_argument("-tsv", "--subjects_sessions_tsv",
+                                help='TSV file containing the subjects with their sessions.')  # noqa
 
-        # Optional arguments (e.g. FWHM)
-        optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("--low_bval",
-                              metavar=('N'), type=int, default=5,
-                              help='Define the b0 volumes as all volume bval <= lowbval. (default: --low_bval 5)')  # noqa
-        # Clinica standard arguments (e.g. --n_procs)
-        clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
-        clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
-                                 help='TSV file containing a list of subjects with their sessions.')
-        clinica_opt.add_argument("-wd", "--working_directory",
-                                 help='Temporary directory to store pipelines intermediate results')
-        clinica_opt.add_argument("-np", "--n_procs",
-                                 metavar=('N'), type=int,
-                                 help='Number of cores used to run in parallel')
+        self._args.add_argument("--low_bval",
+                                type=int, default=5,
+                                help='Define the b0 volumes as all volume bval <= lowbval. (Default: --low_bval 5)')  # noqa
+
+        self._args.add_argument("-wd", "--working_directory",
+                                help='Temporary directory to store pipeline intermediate results')  # noqa
+        self._args.add_argument("-np", "--n_procs",
+                                type=int,
+                                help='Number of cores used to run in parallel')
 
     def run_command(self, args):
         """
@@ -61,11 +46,6 @@ class DWIPreprocessingUsingT1CLI(ce.CmdParser):
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
             low_bval=args.low_bval
         )
-
-        pipeline.parameters = {
-            # pass these args by using self.parameters in a dictionary
-            'epi_param': dict([('readout_time', args.total_readout_time),  ('enc_dir', args.phase_encoding_direction)]),
-        }
 
         if args.working_directory is None:
             args.working_directory = mkdtemp()
