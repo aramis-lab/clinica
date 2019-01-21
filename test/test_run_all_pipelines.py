@@ -25,7 +25,8 @@ if sys.platform == 'darwin':
     working_dir = '/Users/alexandre.routier/Data/WorkingDirectory'
     #working_dir = '/Users/arnaud.marcoux/CI/working_dir_FU_python3'
 elif sys.platform.startswith('linux'):
-    working_dir = '/localdrive10TB/data/working_directory_ci_linux'
+    working_dir = '/localdrive10TB/data/alexandre.routier/WorkingDirectory/'
+    #working_dir = '/localdrive10TB/data/working_directory_ci_linux'
 else:
     raise SystemError('Could not determine which CI machine is running : sys.platform must return darwin or linux2')
 
