@@ -3,7 +3,7 @@
 """
 Methods to find information in the different pipelines of Clinica
 """
-__author__ = "Elina THIBEAU-SUTRE"
+__author__ = "Elina Thubeau--Sutre"
 __copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = [""]
 __license__ = "See LICENSE.txt file"

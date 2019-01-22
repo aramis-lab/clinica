@@ -1,6 +1,6 @@
 {
     "id": "aramislab/fmri-preprocessing",
-    "author": "GUILLON Jeremy",
+    "author": "Jeremy Guillon",
     "version": "0.1",
     "dependencies": [
         {
