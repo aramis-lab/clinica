@@ -8,7 +8,7 @@ class T1VolumeNewTemplateCLI(ce.CmdParser):
     def define_name(self):
         """Define the sub-command name to run this pipelines.
         """
-        self._name = 't1-volume-new-template'
+        self._name = 't1-volume'
 
     def define_description(self):
         """Define a description of this pipeline.

@@ -10,7 +10,7 @@ __version__ = "0.1.0"
 __status__ = "Development"
 
 
-class DWIPreprocessingUsingT1(cpe.Pipeline):
+class DwiPreprocessingUsingT1(cpe.Pipeline):
     """DWI Preprocessing using T1 image for susceptibility distortion step.
 
     Warnings:
@@ -44,7 +44,7 @@ class DWIPreprocessingUsingT1(cpe.Pipeline):
         """
         import warnings
 
-        super(DWIPreprocessingUsingT1, self).__init__(
+        super(DwiPreprocessingUsingT1, self).__init__(
             bids_directory=bids_directory,
             caps_directory=caps_directory,
             tsv_file=tsv_file,

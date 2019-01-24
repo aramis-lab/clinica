@@ -8,7 +8,7 @@ class T1VolumeExistingDartelCLI(ce.CmdParser):
     def define_name(self):
         """Define the sub-command name to run this pipelines.
         """
-        self._name = 't1-volume-existing-dartel'
+        self._name = 't1-volume-register-dartel'
 
     def define_description(self):
         """Define a description of this pipeline.

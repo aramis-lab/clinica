@@ -342,7 +342,7 @@ def test_run_T1VolumeParcellation():
 
 
 def test_run_DWIPreprocessingUsingT1():
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DWIPreprocessingUsingT1
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DwiPreprocessingUsingT1
     from os.path import dirname, join, abspath
     from .comparison_functions import similarity_measure
 
@@ -352,7 +352,7 @@ def test_run_DWIPreprocessingUsingT1():
     clean_folder(join(root, 'out', 'caps'))
     clean_folder(join(working_dir, 'DWIPreprocessingUsingT1'))
 
-    pipeline = DWIPreprocessingUsingT1(bids_directory=join(root, 'in', 'bids'),
+    pipeline = DwiPreprocessingUsingT1(bids_directory=join(root, 'in', 'bids'),
                                        caps_directory=join(root, 'out', 'caps'),
                                        tsv_file=join(root, 'in', 'subjects.tsv'),
                                        low_bval=5)
@@ -373,7 +373,7 @@ def test_run_DWIPreprocessingUsingT1():
 
 
 def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
-    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DWIPreprocessingUsingPhaseDiffFieldmap
+    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DwiPreprocessingUsingPhaseDiffFieldmap
     from os.path import dirname, join, abspath
     from .comparison_functions import similarity_measure
     import warnings
@@ -385,7 +385,7 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
     clean_folder(join(root, 'out', 'caps'))
     clean_folder(join(working_dir, 'DWIPreprocessingUsingPhaseDiffFieldmap'))
 
-    pipeline = DWIPreprocessingUsingPhaseDiffFieldmap(bids_directory=join(root, 'in', 'bids'),
+    pipeline = DwiPreprocessingUsingPhaseDiffFieldmap(bids_directory=join(root, 'in', 'bids'),
                                                       caps_directory=join(root, 'out', 'caps'),
                                                       tsv_file=join(root, 'in', 'subjects.tsv'),
                                                       low_bval=5)

@@ -10,7 +10,7 @@ __version__ = "0.1.0"
 __status__ = "Development"
 
 
-class DWIPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
+class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
     """DWI Preprocessing using phase difference fieldmap.
 
     Args:
@@ -40,7 +40,7 @@ class DWIPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         """
         import warnings
 
-        super(DWIPreprocessingUsingPhaseDiffFieldmap, self).__init__(
+        super(DwiPreprocessingUsingPhaseDiffFieldmap, self).__init__(
             bids_directory=bids_directory,
             caps_directory=caps_directory,
             tsv_file=tsv_file,

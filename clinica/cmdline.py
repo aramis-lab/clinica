@@ -130,35 +130,35 @@ def execute():
     from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_cli import T1VolumeNewTemplateCLI  # noqa
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import T1VolumeExistingTemplateCLI  # noqa
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
-    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DWIPreprocessingUsingPhaseDiffFieldmapCLI  # noqa
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DWIPreprocessingUsingT1CLI  # noqa
+    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DwiPreprocessingUsingPhaseDiffFieldmapCli  # noqa
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DwiPreprocessingUsingT1Cli  # noqa
     from clinica.pipelines.dwi_dti.dwi_dti_cli import DwiDtiCli  # noqa
     from clinica.pipelines.dwi_connectome.dwi_connectome_cli import DwiConnectomeCli  # noqa
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI  # noqa
     from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI  # noqa
     from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI  # noqa
-    from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI  # noqa
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_cli import SpatialSVMCLI  # noqa
+    from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI  # noqa
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
                                    extra_dir="pipelines").load()
     pipelines += [
         T1FreeSurferCrossSectionalCLI(),
-        T1VolumeTissueSegmentationCLI(),
-        T1VolumeCreateDartelCLI(),
-        T1VolumeExistingDartelCLI(),
-        T1VolumeDartel2MNICLI(),
         T1VolumeNewTemplateCLI(),
-        T1VolumeExistingTemplateCLI(),
-        T1VolumeParcellationCLI(),
-        DWIPreprocessingUsingT1CLI(),
-        DWIPreprocessingUsingPhaseDiffFieldmapCLI(),
+        DwiPreprocessingUsingPhaseDiffFieldmapCli(),
+        DwiPreprocessingUsingT1Cli(),
         DwiDtiCli(),
         DwiConnectomeCli(),
         fMRIPreprocessingCLI(),
         PETVolumeCLI(),
         PetSurfaceCLI(),
+        SpatialSVMCLI(),
         StatisticsSurfaceCLI(),
-        SpatialSVMCLI()
+        T1VolumeExistingTemplateCLI(),
+        T1VolumeTissueSegmentationCLI(),
+        T1VolumeCreateDartelCLI(),
+        T1VolumeExistingDartelCLI(),
+        T1VolumeDartel2MNICLI(),
+        T1VolumeParcellationCLI()
     ]
 
     run_parser = sub_parser.add_parser(

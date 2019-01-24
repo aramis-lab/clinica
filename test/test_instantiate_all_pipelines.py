@@ -112,11 +112,11 @@ def test_instantiate_T1VolumeParcellation():
 
 
 def test_instantiate_DWIPreprocessingUsingT1():
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DWIPreprocessingUsingT1
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DwiPreprocessingUsingT1
     from os.path import dirname, join, abspath
 
     root = dirname(abspath(__file__))
-    pipeline = DWIPreprocessingUsingT1(bids_directory=join(root, 'data', 'DWIPreprocessingUsingT1', 'in', 'bids'),
+    pipeline = DwiPreprocessingUsingT1(bids_directory=join(root, 'data', 'DWIPreprocessingUsingT1', 'in', 'bids'),
                                        caps_directory=join(root, 'data', 'DWIPreprocessingUsingT1', 'in', 'caps'),
                                        tsv_file=join(root, 'data', 'DWIPreprocessingUsingT1', 'in', 'subjects.tsv'),
                                        low_bval=5)
@@ -128,11 +128,11 @@ def test_instantiate_DWIPreprocessingUsingT1():
 
 
 def test_instantiate_DWIPreprocessingUsingPhaseDiffFieldmap():
-    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DWIPreprocessingUsingPhaseDiffFieldmap
+    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DwiPreprocessingUsingPhaseDiffFieldmap
     from os.path import dirname, join, abspath
 
     root = dirname(abspath(__file__))
-    pipeline = DWIPreprocessingUsingPhaseDiffFieldmap(bids_directory=join(root, 'data', 'DWIPreprocessingUsingPhaseDiffFieldmap', 'in', 'bids'),
+    pipeline = DwiPreprocessingUsingPhaseDiffFieldmap(bids_directory=join(root, 'data', 'DWIPreprocessingUsingPhaseDiffFieldmap', 'in', 'bids'),
                                                       caps_directory=join(root, 'data', 'DWIPreprocessingUsingPhaseDiffFieldmap', 'in', 'caps'),
                                                       tsv_file=join(root, 'data', 'DWIPreprocessingUsingPhaseDiffFieldmap', 'in', 'subjects.tsv'),
                                                       low_bval=5)
