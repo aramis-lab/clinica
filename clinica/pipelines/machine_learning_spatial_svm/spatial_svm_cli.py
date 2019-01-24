@@ -27,7 +27,7 @@ class SpatialSVMCLI(ce.CmdParser):
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("-it", "--image_type", default='t1',
                               help='Imaging modality. Can be t1 or pet (default: --image_type t1)')
-        optional.add_argument("-pt", "--pet_type", default='FDG',
+        optional.add_argument("-pt", "--pet_tracer", default='FDG',
                               help='PET tracer. Can be fdg or av45 (default: --pet_tracer fdg)')
         # Clinica standard arguments (e.g. --n_procs)
         clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
@@ -59,7 +59,7 @@ class SpatialSVMCLI(ce.CmdParser):
             'h': args.voxel_size,
             'fwhm': args.full_width_half_maximum,
             'image_type': args.image_type,
-            'pet_type': args.pet_type,
+            'pet_type': args.pet_tracer,
         }
         if args.working_directory is None:
             args.working_directory = mkdtemp()
