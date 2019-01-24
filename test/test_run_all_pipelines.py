@@ -898,7 +898,7 @@ def test_run_SpatialSVM():
     # Remove potential residual of previous UT
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
-    #Copy necessary data from in to out
+    # Copy necessary data from in to out
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     # Instantiate pipeline and run()

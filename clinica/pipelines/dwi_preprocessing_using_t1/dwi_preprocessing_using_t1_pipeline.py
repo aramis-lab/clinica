@@ -364,9 +364,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             # Bias correction
             (aac, bias, [('outputnode.out_file', 'inputnode.in_file')]),
             # Outputnode:
-
             (bias,       self.output_node, [('outputnode.out_file', 'preproc_dwi')]),  # noqa
-            #(hmc,        self.output_node, [('outputnode.out_bvec', 'preproc_bvec')]),  # noqa
             (sdc,        self.output_node, [('outputnode.out_bvec', 'preproc_bvec')]),  # noqa
             (prepare_b0, self.output_node, [('out_updated_bval',    'preproc_bval')]),  # noqa
             (bias,       self.output_node, [('outputnode.b0_mask',  'b0_mask')])   # noqa

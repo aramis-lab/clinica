@@ -1,8 +1,8 @@
 # coding: utf8
 
-## Small unit tests for all pipelines
+# Small unit tests for all pipelines
 ##
-## test if instantiation and building of workflows is working
+# test if instantiation and building of workflows is working
 import warnings
 warnings.filterwarnings("ignore")
 
