@@ -33,11 +33,13 @@ def convert_adni_flair(source_dir, csv_dir, dest_dir, subjs_list=None):
         adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
         subjs_list = list(adni_merge.PTID.unique())
 
-    cprint('Calculating paths of FLAIR images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
+    cprint('Calculating paths of FLAIR images. Output will be stored in '
+           + path.join(dest_dir, 'conversion_info') + '.')
     images = compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of FLAIR images found. Exporting images into BIDS ...')
     flair_paths_to_bids(images, dest_dir)
     cprint('FLAIR conversion done.')
+    pass
 
 
 def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
@@ -55,11 +57,11 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     """
     import pandas as pd
-    import operator
     from os import path, walk, mkdir
+    from clinica.utils.stream import cprint
 
     flair_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
-                  'Study_ID', 'Series_ID', 'Image_ID', 'Field_Strength', 'Scanner', 'Enhanced']
+                    'Study_ID', 'Series_ID', 'Image_ID', 'Field_Strength', 'Scanner', 'Enhanced']
 
     flair_df = pd.DataFrame(columns=flair_col_df)
     adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
@@ -87,11 +89,10 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
         mri_qc_subj = mri_qc[mri_qc.RID == int(subj[-4:])]
         visits = visits_to_timepoints_flair(subj, ida_meta_subj, adnimerge_subj)
         keys = visits.keys()
-        keys.sort()
+        # What is supposed to do the line below ????
+        # keys.sort()
 
         for visit_info in visits.keys():
-
-
             visit_str = visits[visit_info]
             visit_ida_meta = ida_meta_subj[ida_meta_subj.VISIT == visit_str]
             axial_ida_meta = visit_ida_meta[visit_ida_meta.SEQUENCE.map(lambda x: x.lower().find('enhanced') < 0)]
@@ -107,14 +108,9 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
     for row in images.iterrows():
         image = row[1]
         seq_path = path.join(source_dir, str(image.Subject_ID), str(image.Sequence))
-
         count += 1
-        cprint ('Processing Subject ' + str(image.Subject_ID) + ' - Session ' + image.VISCODE + ', ' + str(
-             count) + ' / ' + str(total))
-
         series_path = ''
         s = 'S' + str(image.Series_ID)
-
         for (dirpath, dirnames, filenames) in walk(seq_path):
             found = False
             for d in dirnames:
@@ -141,9 +137,10 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
     if not path.exists(flair_tsv_path):
         mkdir(flair_tsv_path)
 
-    cprint ('\nDone! Saving the results into', path.join(dwi_tsv_path, 'dwi_paths.tsv'))
-    images.to_csv(path.join(flair_tsv_path, 'flair_paths.tsv'), sep='\t', index=False)
-
+    cprint('\nDone! Saving the results into' + path.join(flair_tsv_path, 'flair_paths.tsv'))
+    images.to_csv(path.join(flair_tsv_path, 'flair_paths.tsv'),
+                  sep='\t',
+                  index=False)
     return images
 
 
@@ -174,7 +171,7 @@ def flair_paths_to_bids(images, dest_dir, mod_to_update=False):
 
     for i in range(0, len(subjs_list)):
         # print '--Converting flair for subject ', subjs_list[i], '--'
-        print subjs_list[i]
+        print(subjs_list[i])
         alpha_id = bids.remove_space_and_symbols(subjs_list[i])
         bids_id = 'sub-ADNI' + alpha_id
         # Extract the list of sessions available from the flair paths files, removing the duplicates
@@ -185,23 +182,16 @@ def flair_paths_to_bids(images, dest_dir, mod_to_update=False):
 
         # For each session available, create the folder if doesn't exist and convert the files
         for ses in sess_list:
-
             ses_bids = adni_utils.viscode_to_session(ses)
             bids_ses_id = 'ses-' + ses_bids
             bids_file_name = bids_id + '_ses-' + ses_bids
             ses_path = path.join(dest_dir, bids_id, bids_ses_id)
-
-
             if mod_to_update:
                 if os.path.exists(path.join(ses_path, 'FLAIR')):
                     shutil.rmtree(path.join(ses_path, 'FLAIR'))
-
-
             if not os.path.exists(ses_path):
                 os.mkdir(ses_path)
-
             flair_info = images[(images['Subject_ID'] == subjs_list[i]) & (images['VISCODE'] == ses)]
-
             # For the same subject, same session there could be multiple flar with different acq label
             for j in range(0, len(flair_info)):
                 flair_subj = flair_info.iloc[j]
@@ -239,8 +229,8 @@ def flair_paths_to_bids(images, dest_dir, mod_to_update=False):
                             os.rename(nii_file, path.join(bids_dest_dir, bids_name + '.nii.gz'))
                         else:
                             cprint('WARNING: CONVERSION FAILED...')
-
-        cprint ('--Conversion finished--\n')
+        cprint('--Conversion finished--\n')
+        pass
 
 
 
@@ -406,7 +396,6 @@ def visits_to_timepoints_flair(subject, ida_meta_subj, adnimerge_subj):
             visits[key_min_visit] = image.VISIT
         elif visits[key_min_visit] != image.VISIT:
             cprint('Multiple visits for one timepoint!')
-
 
     return visits
 
