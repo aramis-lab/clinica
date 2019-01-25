@@ -839,7 +839,7 @@ def test_run_SVMRegularization():
     pipeline.parameters['h'] = 1.5
     pipeline.parameters['image_type'] = 't1'
     pipeline.parameters['pet_type'] = 'fdg'
-    pipeline.base_dir = join(working_dir, 'SVMRegularization')
+    pipeline.base_dir = join(working_dir, 'SpatialSVM')
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
 
