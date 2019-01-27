@@ -22,13 +22,11 @@ import sys
 warnings.filterwarnings("ignore")
 
 if sys.platform == 'darwin':
-    working_dir = '/Users/alexandre.routier/Data/WorkingDirectory'
-    #working_dir = '/Users/arnaud.marcoux/CI/working_dir_FU_python3'
+    working_dir = '/Users/arnaud.marcoux/CI/working_dir_FU_python3'
 elif sys.platform.startswith('linux'):
-    working_dir = '/localdrive10TB/data/alexandre.routier/WorkingDirectory/'
-    #working_dir = '/localdrive10TB/data/working_directory_ci_linux'
+    working_dir = '/localdrive10TB/data/working_directory_ci_linux'
 else:
-    raise SystemError('Could not determine which CI machine is running : sys.platform must return darwin or linux2')
+    raise SystemError('Could not determine which CI machine is running : sys.platform must return darwin or linux.')
 
 
 def test_run_T1FreeSurferCrossSectional():
@@ -421,7 +419,7 @@ def test_run_DWIDTI():
                       tsv_file=join(root, 'in', 'subjects.tsv'))
     pipeline.base_dir = join(working_dir, 'DWIDTI')
     pipeline.build()
-    pipeline.run()
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
 
     # Check files
     subject_id = 'sub-CAPP01001TMM'
@@ -463,7 +461,7 @@ def test_run_DWIConnectome():
     }
     pipeline.base_dir = join(working_dir, 'DWIConnectome')
     pipeline.build()
-    pipeline.run()
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
 
     # Check files
     subject_id = 'sub-HMTC20110506MEMEPPAT27'
@@ -472,6 +470,9 @@ def test_run_DWIConnectome():
                  for a in atlases]
     ref_files = [join(root, 'ref', subject_id + '_ses-M00_dwi_space-b0_model-CSD_atlas-' + a + '_connectivity.tsv')
                  for a in atlases]
+
+    # @TODO: Find the adequate threshold for DWI-Connectome pipeline
+    pass
 
     for i in range(len(out_files)):
         out_connectome = pds.read_csv(out_files[i], sep='\t')
