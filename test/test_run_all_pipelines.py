@@ -354,7 +354,7 @@ def test_run_DWIPreprocessingUsingT1():
                                        caps_directory=join(root, 'out', 'caps'),
                                        tsv_file=join(root, 'in', 'subjects.tsv'),
                                        low_bval=5)
-    pipeline.parameters['epi_param'] = dict([('readout_time', 0.0348756),  ('enc_dir', 'y')])
+    #pipeline.parameters['epi_param'] = dict([('readout_time', 0.0348756),  ('enc_dir', 'y')])
     pipeline.base_dir = join(working_dir, 'DWIPreprocessingUsingT1')
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
