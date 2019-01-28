@@ -33,15 +33,15 @@ def get_conversion_luts():
 
     try:
         # For aparc+aseg.mgz file:
-        default = os.path.join(os.environ['MRTRIX3_HOME'],
+        default = os.path.join(os.environ['MRTRIX_HOME'],
                                'share/mrtrix3/labelconvert/fs_default.txt')
         # For aparc.a2009s+aseg.mgz file:
-        a2009s = os.path.join(os.environ['MRTRIX3_HOME'],
+        a2009s = os.path.join(os.environ['MRTRIX_HOME'],
                               'share/mrtrix3/labelconvert/fs_a2009s.txt')
 
         # TODO: Add custom Lausanne2008 conversion LUTs here.
     except KeyError:
-        raise ClinicaException('Could not find MRTRIX3_HOME environment variable.')
+        raise ClinicaException('Could not find MRTRIX_HOME environment variable.')
 
     return [default, a2009s]
 
