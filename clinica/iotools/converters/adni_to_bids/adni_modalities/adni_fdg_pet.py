@@ -228,7 +228,6 @@ def fdg_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2ni
     from clinica.iotools.converters.adni_to_bids import adni_utils
     import os
     from os import path
-    import numpy
     import glob
     from clinica.utils.stream import cprint
 
@@ -240,7 +239,7 @@ def fdg_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2ni
         subject = image.Subject_ID
         count += 1
 
-        if image.Path is numpy.nan:
+        if image.Path == '':
             cprint('No path specified for ' + image.Subject_ID + ' in session ' + image.VISCODE)
             continue
 

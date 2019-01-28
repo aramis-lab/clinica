@@ -236,7 +236,7 @@ def av45_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2n
         subject = image.Subject_ID
         count += 1
 
-        if image.Path is nan:
+        if image.Path == '':
             cprint('No path specified for ' + image.Subject_ID + ' in session ' + image.VISCODE)
             continue
 

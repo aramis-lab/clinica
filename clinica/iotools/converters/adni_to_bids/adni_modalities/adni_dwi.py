@@ -57,6 +57,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     import pandas as pd
     import operator
     from os import path, walk, mkdir
+    from functools import reduce
 
     dwi_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
                   'Study_ID', 'Series_ID', 'Image_ID', 'Field_Strength', 'Scanner', 'Enhanced']
@@ -65,10 +66,12 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
 
-    if os.path.exists(path.join(csv_dir, 'IDA_MR_Metadata_Listing.csv')):
+    if path.exists(path.join(csv_dir, 'IDA_MR_Metadata_Listing.csv')):
         new_download = False
+    else:
+        new_download = True
 
-    if new_download == True:
+    if new_download:
         ida_meta_path = path.join(csv_dir, 'MRILIST.csv')
     else:
 
@@ -78,7 +81,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
     ida_meta = pd.io.parsers.read_csv(ida_meta_path, sep=',')
 
-    if new_download == True:
+    if new_download:
         ida_meta = ida_meta[ida_meta.SEQUENCE.map(lambda x: x.lower().find('dti') > -1)]
     else:
         ida_meta = ida_meta[ida_meta.Sequence.map(lambda x: x.lower().find('dti') > -1)]
@@ -94,7 +97,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
         # Sort the values by examination date
         adnimerge_subj = adnimerge_subj.sort_values('EXAMDATE')
-        if new_download == True:
+        if new_download:
             ida_meta_subj = ida_meta[ida_meta.SUBJECT == subj]
             ida_meta_subj = ida_meta_subj.sort_values('SCANDATE')
         else:
@@ -102,18 +105,19 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
             ida_meta_subj = ida_meta_subj.sort_values('Scan Date')
         mri_qc_subj = mri_qc[mri_qc.RID == int(subj[-4:])]
 
-        if new_download == True:
+        if new_download:
             visits = visits_to_timepoints_dwi_refactoring(subj, ida_meta_subj, adnimerge_subj)
         else:
             visits = visits_to_timepoints_dwi(subj, ida_meta_subj, adnimerge_subj)
 
         keys = visits.keys()
-        keys.sort()
+        # What is the purpose of the following line ?
+        #keys.sort()
 
         for visit_info in visits.keys():
             visit_str = visits[visit_info]
 
-            if new_download == True:
+            if new_download:
                 visit_ida_meta = ida_meta_subj[ida_meta_subj.VISIT == visit_str]
                 axial_ida_meta = visit_ida_meta[visit_ida_meta.SEQUENCE.map(lambda x: x.lower().find('enhanced') < 0)]
                 enhanced_ida_meta = visit_ida_meta[visit_ida_meta.SEQUENCE.map(lambda x: x.lower().find('enhanced') > -1)]

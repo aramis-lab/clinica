@@ -687,7 +687,7 @@ def test_run_Adni2Bids():
     bids_directory = join(root, 'out', 'bids')
     subjects_list = join(root, 'in', 'subjects.txt')
     # modalities = ['T1', 'PET_FDG', 'PET_AV45', 'DWI', 'fMRI']
-    modalities = ['T1', 'PET_FDG', 'PET_AV45', 'FLAIR']
+    modalities = ['T1', 'PET_FDG', 'PET_AV45', 'DWI', 'FLAIR']
     adni_to_bids.convert_images(dataset_directory,
                                 clinical_data_directory,
                                 bids_directory,
@@ -868,4 +868,3 @@ def clean_folder(path, recreate=True):
         rmtree(abs_path)
         if recreate:
             makedirs(abs_path)
-
