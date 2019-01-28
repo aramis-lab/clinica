@@ -361,14 +361,24 @@ class DWIProcessingCSD(cpe.Pipeline):
         # FOD Estimation
         # --------------
         fod_estim_node = npe.Node(name="FODEstimation",
-                                  interface=mrtrix3.EstimateFOD())
+                                  interface=utils.EstimateFOD())
         fod_estim_node.inputs.algorithm = 'csd'
 
         # Tracts Generation
         # -----------------
         tck_gen_node = npe.Node(name="TractsGeneration",
-                                interface=mrtrix3.Tractography())
-        tck_gen_node.inputs.n_tracks = self.parameters['n_tracks']
+                                interface=utils.Tractography())
+
+        from nipype.interfaces.mrtrix3.base import Info
+        from distutils.version import LooseVersion
+
+        if Info.looseversion() >= LooseVersion("3.0"):
+            tck_gen_node.inputs.select = self.parameters['n_tracks']
+        elif Info.looseversion() <= LooseVersion("0.4"):
+            tck_gen_node.inputs.n_tracks = self.parameters['n_tracks']
+        else:
+            from clinica.utils.exceptions import ClinicaException
+            raise ClinicaException("Your MRtrix version is not supported.")
 
         # Nodes Generation
         # ----------------

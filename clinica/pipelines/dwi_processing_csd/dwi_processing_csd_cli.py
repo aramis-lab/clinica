@@ -29,22 +29,32 @@ class DWIProcessingCSDCLI(ce.CmdParser):
         """Define the sub-command arguments
         """
 
-        self._args.add_argument("bids_directory",
-                                help='Path to the BIDS directory.')
-        self._args.add_argument("caps_directory",
-                                help='Path to the CAPS directory.')
-        self._args.add_argument("-tsv", "--subjects_sessions_tsv",
-                                help='TSV file containing the subjects with '
-                                     'their sessions.')
-        self._args.add_argument("-wd", "--working_directory",
-                                help='Temporary directory to store pipeline '
-                                     'intermediate results')
-        self._args.add_argument("-np", "--n_procs", type=int,
-                                help='Number of cores used to run in parallel')
-        self._args.add_argument("-nt", "--n_tracks", type=int,
-                                help='Number of tracts gene')
-        self._args.add_argument("-sl", "--slurm", action='store_true',
-                                help='Run the pipeline using SLURM')
+        from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+
+        clinica_comp = self._args.add_argument_group(
+                PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
+        clinica_comp.add_argument("bids_directory",
+                                  help='Path to the BIDS directory.')
+        clinica_comp.add_argument("caps_directory",
+                                  help='Path to the CAPS directory.')
+
+        clinica_opt = self._args.add_argument_group(
+                PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
+        clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
+                                help='TSV file containing a list of subjects with their sessions.')
+        clinica_opt.add_argument("-wd", "--working_directory",
+                                help='Temporary directory to store pipelines intermediate results.')
+        clinica_opt.add_argument("-np", "--n_procs", type=int,
+                                help='Number of processors to run in parallel.')
+        clinica_opt.add_argument("-sl", "--slurm", action='store_true',
+                                help='Run the pipelines using SLURM.')
+        clinica_opt.add_argument("-sa", "--sbatch_args",
+                                help='SLURM\'s sbatch tool arguments.')
+
+        optional = self._args.add_argument_group(
+                PIPELINE_CATEGORIES['OPTIONAL'])
+        optional.add_argument("-nt", "--n_tracks", type=int,
+                              help='Number of tracks generated (default: 100000).')
 
     def run_command(self, args):
         """
@@ -70,6 +80,8 @@ class DWIProcessingCSDCLI(ce.CmdParser):
             pipeline.run(plugin='MultiProc',
                          plugin_args={'n_procs': args.n_procs})
         elif args.slurm:
-            pipeline.run(plugin='SLURM')
+            pipeline.run(plugin='SLURMGraph', plugin_args = {
+                'dont_resubmit_completed_jobs': True, 'sbatch_args':
+                    args.sbatch_args})
         else:
             pipeline.run()
