@@ -17,7 +17,7 @@ def test_instantiate_T1FreeSurferCrossSectional():
                                           tsv_file=join(root, 'data', 'T1FreeSurferCrossSectional', 'in', 'subjects.tsv'))
     pipeline.parameters['recon_all_args'] = '-qcache'
     pipeline.build()
-    pass
+
 
 
 def test_instantiate_T1VolumeTissueSegmentation():
@@ -29,7 +29,7 @@ def test_instantiate_T1VolumeTissueSegmentation():
                                           caps_directory=join(root, 'data', 'T1VolumeTissueSegmentation', 'in', 'caps'),
                                           tsv_file=join(root, 'data', 'T1VolumeTissueSegmentation', 'in', 'subjects.tsv'))
     pipeline.build()
-    pass
+
 
 
 def test_instantiate_T1VolumeCreateDartel():
@@ -42,7 +42,6 @@ def test_instantiate_T1VolumeCreateDartel():
                                     tsv_file=join(root, 'data', 'T1VolumeCreateDartel', 'in', 'subjects.tsv'),
                                     group_id='UnitTest')
     pipeline.build()
-    pass
 
 
 def test_instantiate_T1VolumeDartel2MNI():
@@ -55,7 +54,7 @@ def test_instantiate_T1VolumeDartel2MNI():
                                   tsv_file=join(root, 'data', 'T1VolumeDartel2MNI', 'in', 'subjects.tsv'),
                                   group_id='UnitTest')
     pipeline.build()
-    pass
+
 
 
 def test_instantiate_T1VolumeNewTemplate():
@@ -68,7 +67,6 @@ def test_instantiate_T1VolumeNewTemplate():
                                    tsv_file=join(root, 'data', 'T1VolumeNewTemplate', 'in', 'subjects.tsv'),
                                    group_id='UnitTest')
     pipeline.build()
-    pass
 
 
 def test_instantiate_T1VolumeExistingDartel():
@@ -81,7 +79,7 @@ def test_instantiate_T1VolumeExistingDartel():
                                       tsv_file=join(root, 'data', 'T1VolumeExistingDartel', 'in', 'subjects.tsv'),
                                       group_id='UnitTest')
     pipeline.build()
-    pass
+
 
 
 def test_instantiate_T1VolumeExistingTemplate():
@@ -108,7 +106,7 @@ def test_instantiate_T1VolumeParcellation():
     pipeline.parameters['atlases'] = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
     pipeline.parameters['modulate'] = 'on'
     pipeline.build()
-    pass
+
 
 
 def test_instantiate_DWIPreprocessingUsingT1():
@@ -124,7 +122,7 @@ def test_instantiate_DWIPreprocessingUsingT1():
             'epi_param': dict([('readout_time', 0.14),  ('enc_dir', 'y')]),
     }
     pipeline.build()
-    pass
+
 
 
 def test_instantiate_DWIPreprocessingUsingPhaseDiffFieldmap():
@@ -137,7 +135,7 @@ def test_instantiate_DWIPreprocessingUsingPhaseDiffFieldmap():
                                                       tsv_file=join(root, 'data', 'DWIPreprocessingUsingPhaseDiffFieldmap', 'in', 'subjects.tsv'),
                                                       low_bval=5)
     pipeline.build()
-    pass
+
 
 
 def test_instantiate_DWIDTI():
@@ -162,7 +160,7 @@ def test_instantiate_DWIConnectome():
         'n_tracks' : 1000
     }
     pipeline.build()
-    pass
+
 
 
 def test_instantiate_fMRIPreprocessing():
@@ -181,7 +179,7 @@ def test_instantiate_fMRIPreprocessing():
             'unwarping'                  : True
     }
     pipeline.build()
-    pass
+
 
 
 def test_instantiate_PETVolume():
@@ -195,7 +193,7 @@ def test_instantiate_PETVolume():
                          group_id='UnitTest',
                          fwhm_tsv=None)
     pipeline.build()
-    pass
+
 
 
 def test_instantiate_StatisticsSurface():
@@ -219,7 +217,7 @@ def test_instantiate_StatisticsSurface():
             'cluster_threshold': 0.001
     }
     pipeline.build()
-    pass
+
 
 
 def test_instantiate_PETSurface(tmpdir):
@@ -233,7 +231,6 @@ def test_instantiate_PETSurface(tmpdir):
     pipeline.parameters['pet_type'] = 'fdg'
     pipeline.parameters['wd'] = str(tmpdir)
     pipeline.build()
-    pass
 
 
 def test_instantiate_InputsML():
@@ -268,7 +265,6 @@ def test_instantiate_InputsML():
                 assert exists(file[1])
             else:
                 raise ValueError('An error occured...')
-    pass
 
 
 def test_instantiate_SpatialSVM():
@@ -284,4 +280,3 @@ def test_instantiate_SpatialSVM():
     pipeline.parameters['image_type'] = 't1'
     pipeline.parameters['pet_type'] = 'fdg'
     pipeline.build()
-    pass

@@ -22,7 +22,7 @@ import sys
 warnings.filterwarnings("ignore")
 
 if sys.platform == 'darwin':
-    working_dir = '/Users/arnaud.marcoux/CI/working_dir_FU_python3'
+    working_dir = '/Volumes/builds/Clinica/working_directory_ci_mac'
 elif sys.platform.startswith('linux'):
     working_dir = '/localdrive10TB/data/working_directory_ci_linux'
 else:
@@ -60,7 +60,6 @@ def test_run_T1FreeSurferCrossSectional():
         raise FileNotFoundError(log_file
                                 + ' was not found, something went wrong...')
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-    pass
 
 
 def test_run_T1VolumeTissueSegmentation():
@@ -90,7 +89,7 @@ def test_run_T1VolumeTissueSegmentation():
 
     assert likeliness_measure(out_file, ref_file, (1e-4, 0.05), (1e-2, 0.01))
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-    pass
+
 
 
 def test_run_T1VolumeCreateDartel():
@@ -134,7 +133,7 @@ def test_run_T1VolumeCreateDartel():
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-    pass
+
 
 
 def test_run_T1VolumeDartel2MNI():
@@ -174,7 +173,6 @@ def test_run_T1VolumeDartel2MNI():
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-    pass
 
 
 def test_run_T1VolumeNewTemplate():
@@ -216,7 +214,6 @@ def test_run_T1VolumeNewTemplate():
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-    pass
 
 
 def test_run_T1VolumeExistingDartel():
@@ -256,7 +253,7 @@ def test_run_T1VolumeExistingDartel():
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-    pass
+
 
 
 def test_run_T1VolumeExistingTemplate():
@@ -295,7 +292,6 @@ def test_run_T1VolumeExistingTemplate():
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-    pass
 
 
 def test_run_T1VolumeParcellation():
@@ -336,7 +332,6 @@ def test_run_T1VolumeParcellation():
         assert np.allclose(np.array(out_csv.mean_scalar), np.array(ref_csv.mean_scalar), rtol=1e-8, equal_nan=True)
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-    pass
 
 
 def test_run_DWIPreprocessingUsingT1():
@@ -367,7 +362,6 @@ def test_run_DWIPreprocessingUsingT1():
 
     # Delete out/caps folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-    pass
 
 
 def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
@@ -399,7 +393,6 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
 
     # Delete out/caps folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-    pass
 
 
 def test_run_DWIDTI():
@@ -438,7 +431,7 @@ def test_run_DWIDTI():
         assert np.allclose(out_mean_scalar, ref_mean_scalar, rtol=0.025, equal_nan=True)
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-    pass
+
 
 
 def test_run_DWIConnectome():
@@ -522,7 +515,6 @@ def test_run_fMRIPreprocessing():
         assert similarity_measure(out_files[i], ref_files[i], 0.99)
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-    pass
 
 
 def test_run_PETVolume():
@@ -557,7 +549,7 @@ def test_run_PETVolume():
         assert likeliness_measure(out_files[i], ref_files[i], (1e-2, 0.25), (1e-1, 0.001))
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-    pass
+
 
 
 def test_run_StatisticsSurface():
@@ -601,7 +593,7 @@ def test_run_StatisticsSurface():
     for i in range(4):
         assert np.allclose(out_file_mat[0][0][i], ref_file_mat[0][0][i], rtol=1e-8, equal_nan=True)
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-    pass
+
 
 
 def test_run_PETSurface():
@@ -641,14 +633,11 @@ def test_run_PETSurface():
                             np.squeeze(nib.load(ref_files[i]).get_data()),
                             rtol=1e-4, equal_nan=True)
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-    pass
 
 
 def test_run_WorkflowsML():
-    # TODO check end results
     from clinica.pipelines.machine_learning.ml_workflows import RB_RepHoldOut_LogisticRegression, VertexB_RepHoldOut_dualSVM, RB_RepHoldOut_RandomForest, VB_KFold_DualSVM
     from os.path import dirname, join, abspath
-    from os import makedirs
     import shutil
     import warnings
     warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -690,7 +679,6 @@ def test_run_WorkflowsML():
                            grid_search_folds=3)
     wf4.run()
     shutil.rmtree(output_dir4)
-    pass
 
 
 def test_run_Oasis2Bids():
@@ -733,7 +721,6 @@ def test_run_Oasis2Bids():
     remove(bids_out_txt)
     remove(bids_ref_txt)
     clean_folder(join(root, 'out', 'bids'), recreate=True)
-    pass
 
 
 def test_run_Adni2Bids():
@@ -754,7 +741,7 @@ def test_run_Adni2Bids():
     bids_directory = join(root, 'out', 'bids')
     subjects_list = join(root, 'in', 'subjects.txt')
     # modalities = ['T1', 'PET_FDG', 'PET_AV45', 'DWI', 'fMRI']
-    modalities = ['T1', 'PET_FDG', 'PET_AV45']
+    modalities = ['T1', 'PET_FDG', 'PET_AV45', 'FLAIR']
     adni_to_bids.convert_images(dataset_directory,
                                 clinical_data_directory,
                                 bids_directory,
@@ -782,7 +769,6 @@ def test_run_Adni2Bids():
     remove(bids_out_txt)
     remove(bids_ref_txt)
     clean_folder(join(root, 'out', 'bids'), recreate=True)
-    pass
 
 
 def test_run_CreateSubjectSessionList():
@@ -806,7 +792,6 @@ def test_run_CreateSubjectSessionList():
     ref_tsv = join(root, 'ref', tsv_name)
     assert identical_subject_list(out_tsv, ref_tsv)
     remove(out_tsv)
-    pass
 
 
 def test_run_CreateMergeFile():
@@ -838,7 +823,6 @@ def test_run_CreateMergeFile():
     ref_tsv = join(root, 'ref', 'output_file.tsv')
     assert cmp(out_tsv, ref_tsv)
     remove(out_tsv)
-    pass
 
 
 def test_run_ComputeMissingModalities():
@@ -868,7 +852,6 @@ def test_run_ComputeMissingModalities():
             raise FileNotFoundError('A file called ' + outname + ' should have been generated, but it does not exists')
         assert same_missing_modality_tsv(outname, refname)
         remove(join(root, 'out', filenames[i]))
-    pass
 
 
 def test_run_Aibl2Bids():
@@ -885,7 +868,7 @@ def test_run_Aibl2Bids():
 
     convert_images(dataset_directory, clinical_data_directory, bids_directory)
     convert_clinical_data(bids_directory, clinical_data_directory)
-    pass
+
 
 
 def test_run_SpatialSVM():
@@ -928,7 +911,6 @@ def test_run_SpatialSVM():
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=True)
-    pass
 
 
 def clean_folder(path, recreate=True):
@@ -941,4 +923,3 @@ def clean_folder(path, recreate=True):
         rmtree(abs_path)
         if recreate:
             makedirs(abs_path)
-    pass

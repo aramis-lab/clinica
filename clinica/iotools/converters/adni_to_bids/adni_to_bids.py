@@ -21,7 +21,7 @@ class AdniToBids(Converter):
         Returns: a list containing the modalities supported by the converter (T1, PET_FDG, PET_AV45)
 
         """
-        return ['T1', 'PET_FDG', 'PET_AV45', 'DWI', 'fMRI']
+        return ['T1', 'PET_FDG', 'PET_AV45', 'DWI', 'fMRI', 'FLAIR']
 
     def check_adni_dependencies(self):
         """
@@ -97,7 +97,7 @@ class AdniToBids(Converter):
             clinical_dir: path to the clinical data directory
             dest_dir: path to the BIDS directory
             subjs_list_path: list of subjects to process
-            modalities: modalities to convert (T1, PET_FDG, PET_AV45, DWI)
+            modalities: modalities to convert (T1, PET_FDG, PET_AV45, DWI, FLAIR)
 
         """
 
@@ -109,6 +109,7 @@ class AdniToBids(Converter):
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet as adni_fdg
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_dwi as adni_dwi
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fmri as adni_fmri
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_flair as adni_flair
         from clinica.utils.stream import cprint
 
         adni_merge_path = path.join(clinical_dir, 'ADNIMERGE.csv')
@@ -141,3 +142,6 @@ class AdniToBids(Converter):
 
         if 'fMRI' in modalities:
             adni_fmri.convert_adni_fmri(source_dir, clinical_dir, dest_dir, subjs_list)
+
+        if 'FLAIR' in modalities:
+            adni_flair.convert_adni_flair(source_dir, clinical_dir, dest_dir, subjs_list)

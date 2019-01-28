@@ -123,8 +123,6 @@ test:instantiate:linux:
     - source activate $CLINICA_ENV_BRANCH_CLEAN
     - export PATH="/home/gitlab-runner/dcm2nii":${PATH}
     - module load clinica.all
-    - module unload clinica/freesurfer/5.3.0
-    - module load clinica/freesurfer/6.0.0
     - cd test
     - ln -s /localdrive10TB/data/ci/data_ci_upgrade ./data
     - taskset -c 0-21 pytest --verbose --disable-warnings --timeout=0 -n 6 -k 'test_instantiate'
@@ -140,8 +138,6 @@ test:run:mac:
   script:
     - source activate $CLINICA_ENV_BRANCH_CLEAN 
     - module load clinica.all
-    - module unload clinica/freesurfer/5.3.0
-    - module load clinica/freesurfer/6.0.0
     - cd test
     - ln -s /Volumes/builds/Clinica/data_ci ./data
     - pytest --verbose -k 'test_run'
@@ -159,8 +155,6 @@ test:run:linux:
     - source activate $CLINICA_ENV_BRANCH_CLEAN
     - export PATH="/home/gitlab-runner/dcm2nii":${PATH}
     - module load clinica.all
-    - module unload clinica/freesurfer/5.3.0
-    - module load clinica/freesurfer/6.0.0
     - cd test
     - ln -s /localdrive10TB/data/ci/data_ci_upgrade ./data
     - taskset -c 0-21 pytest --verbose --disable-warnings --timeout=0 -n 6 -k 'test_run'
