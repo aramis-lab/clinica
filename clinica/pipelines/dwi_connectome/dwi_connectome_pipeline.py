@@ -266,8 +266,6 @@ class DwiConnectome(cpe.Pipeline):
             (join_node, write_node, [('connectomes', 'connectome_based_processing.@connectomes')]),
         ])
 
-        self.write_graph()
-
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
 
