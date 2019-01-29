@@ -1,10 +1,11 @@
 # coding: utf-8
+
 """
  Module for converting FLAIR of ADNI
 """
-__author__ = "Simona Bottani and Jorge Sampler Gonzalez"
-__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
-__credits__ = [""]
+
+__author__ = "Jorge Samper-Gonzalez and Sabrina Fontanella"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Jorge Samper Gonzalez"
@@ -233,7 +234,6 @@ def flair_paths_to_bids(images, dest_dir, mod_to_update=False):
         pass
 
 
-
 def select_image_qc(id_list, mri_qc_subj):
     """
 
@@ -287,8 +287,6 @@ def select_image_qc(id_list, mri_qc_subj):
             selected_image = min(best_ids)
 
     return int(selected_image)
-
-
 
 
 def visits_to_timepoints_flair(subject, ida_meta_subj, adnimerge_subj):
@@ -398,6 +396,7 @@ def visits_to_timepoints_flair(subject, ida_meta_subj, adnimerge_subj):
             cprint('Multiple visits for one timepoint!')
 
     return visits
+
 
 def flair_image(subject_id, timepoint, visit_str, ida_meta_scans, mri_qc_subj, enhanced):
     """

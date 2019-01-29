@@ -2,25 +2,18 @@
 
 import clinica.pipelines.engine as cpe
 
-__author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
-__credits__ = ["Jorge Samper Gonzalez"]
+__author__ = "Jorge Samper-Gonzalez"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
+__credits__ = ["Jorge Samper-Gonzalez"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
-__maintainer__ = "Jorge Samper Gonzalez"
+__maintainer__ = "Jorge Samper-Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
 class PETVolume(cpe.Pipeline):
-    """PET Preprocess Volume SHORT DESCRIPTION.
-
-    Warnings:
-        - A WARNING.
-
-    Todos:
-        - [x] A FILLED TODO ITEM.
-        - [ ] AN ON-GOING TODO ITEM.
+    """PETVolume - Pre-processing of PET images using SPM.
 
     Args:
         input_dir: A BIDS directory.
@@ -28,19 +21,11 @@ class PETVolume(cpe.Pipeline):
         subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
 
     Returns:
-        A clinica pipelines object containing the PET Preprocess Volume pipelines.
+        A clinica pipeline object containing the PETVolume pipeline.
 
     Raises:
 
 
-    Example:
-        >>> from pet_volume import PETVolume
-        >>> pipelines = PETVolume('myGroup', '~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
-        >>> pipelines.parameters = {
-        >>>     # ...
-        >>> }
-        >>> pipelines.base_dir = '/tmp/'
-        >>> pipelines.run()
     """
 
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default',

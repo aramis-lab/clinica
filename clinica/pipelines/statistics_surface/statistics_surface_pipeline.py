@@ -3,8 +3,8 @@
 import clinica.pipelines.engine as cpe
 
 __author__ = "Junhao Wen"
-__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
-__credits__ = ["Junhao Wen"]
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
+__credits__ = ["Junhao Wen", "Arnaud Marcoux", "Alexandre Routier"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Junhao Wen"
@@ -14,11 +14,11 @@ __status__ = "Development"
 
 class StatisticsSurface(cpe.Pipeline):
     """
-        Based on the Matlab toolbox [SurfStat](http://www.math.mcgill.ca/keith/surfstat/), which performs statistical
-        analyses of univariate and multivariate surface and volumetric data using the generalized linear model (GLM),
-        this pipelines performs analyses including group comparison and correlation with the surface-based features.
-        Currently, this pipelines fits the normalised cortical thickness on FsAverage from `t1-freesurfer` pipelines.
-        New features will be added in the future.
+    Based on the Matlab toolbox [SurfStat](http://www.math.mcgill.ca/keith/surfstat/), which performs statistical
+    analyses of univariate and multivariate surface and volumetric data using the generalized linear model (GLM),
+    this pipelines performs analyses including group comparison and correlation with the surface-based features.
+    Currently, this pipelines fits the normalised cortical thickness on FsAverage from `t1-freesurfer` pipelines.
+    New features will be added in the future.
 
 
     Args:
@@ -41,7 +41,7 @@ class StatisticsSurface(cpe.Pipeline):
         n_procs: define how many cores to run this workflow.
 
     Returns:
-        A clinica pipelines object containing the StatisticsSurface pipelines.
+        A clinica pipeline object containing the StatisticsSurface pipeline.
 
     """
     def check_custom_dependencies(self):

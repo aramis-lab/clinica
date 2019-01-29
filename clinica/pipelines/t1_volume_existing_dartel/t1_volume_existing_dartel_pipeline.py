@@ -1,32 +1,19 @@
 # coding: utf8
 
-"""T1 SPM Dartel Existing Dartel - Clinica Pipeline.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details:
-https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
-"""
-
 import clinica.pipelines.engine as cpe
 
-__author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
-__credits__ = ["Jorge Samper Gonzalez"]
+__author__ = "Jorge Samper-Gonzalez"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
+__credits__ = ["Jorge Samper-Gonzalez"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
-__maintainer__ = "Jorge Samper Gonzalez"
+__maintainer__ = "Jorge Samper-Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
 class T1VolumeExistingDartel(cpe.Pipeline):
-    """T1 SPM Dartel Existing Dartel SHORT DESCRIPTION.
-
-    Warnings:
-        - A WARNING.
-
-    Todos:
-        - [x] A FILLED TODO ITEM.
-        - [ ] AN ON-GOING TODO ITEM.
+    """T1VolumeExistingDartel - Reuse existing Dartel template.
 
     Args:
         input_dir: A BIDS directory.
@@ -35,20 +22,11 @@ class T1VolumeExistingDartel(cpe.Pipeline):
         (in .tsv format).
 
     Returns:
-        A clinica pipelines object containing the T1 SPM Dartel Existing
-        Template pipelines.
+        A clinica pipeline object containing the T1VolumeExistingDartel pipeline.
 
     Raises:
 
 
-    Example:
-        >>> from t1_volume_existing_dartel import T1VolumeExistingDartel
-        >>> pipelines = T1VolumeExistingDartel('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
-        >>> pipelines.parameters = {
-        >>>     # ...
-        >>> }
-        >>> pipelines.base_dir = '/tmp/'
-        >>> pipelines.run()
     """
 
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):

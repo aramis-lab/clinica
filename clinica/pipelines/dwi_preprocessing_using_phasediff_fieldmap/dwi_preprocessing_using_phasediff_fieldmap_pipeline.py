@@ -3,14 +3,14 @@
 import clinica.pipelines.engine as cpe
 
 __author__ = ["Alexandre Routier"]
-__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = ["Nipype", "Junhao Wen"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __status__ = "Development"
 
 
-class DWIPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
+class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
     """DWI Preprocessing using phase difference fieldmap.
 
     Args:
@@ -20,18 +20,10 @@ class DWIPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             format).
 
     Returns:
-        A clinica pipeline object containing the DWI Preprocessing Using PhaseDiff Fieldmap pipeline.
+        A clinica pipeline object containing the DWIPreprocessingUsingPhaseDiffFieldmap pipeline.
 
     Raises:
 
-
-    Example:
-        >>> pipeline = DWIPreprocessingUsingPhaseDiffFieldmap('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
-        >>> pipeline.parameters = {
-        >>>     'low_bval' : 10
-        >>> }
-        >>> pipeline.base_dir = '/tmp/'
-        >>> pipeline.run()
     """
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None,
                  name=None, low_bval=5):
@@ -48,7 +40,7 @@ class DWIPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         """
         import warnings
 
-        super(DWIPreprocessingUsingPhaseDiffFieldmap, self).__init__(
+        super(DwiPreprocessingUsingPhaseDiffFieldmap, self).__init__(
             bids_directory=bids_directory,
             caps_directory=caps_directory,
             tsv_file=tsv_file,
@@ -449,40 +441,40 @@ class DWIPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         # Connection
         # ==========
         self.connect([
-             # Preliminary step (possible computation of a mean b0)
-             (self.input_node, prepare_b0, [('dwi',  'in_dwi'),  # noqa
-                                            ('bval', 'in_bval'),  # noqa
-                                            ('bvec', 'in_bvec')]),  # noqa
-             # Mask b0 before corrections
-             (prepare_b0, mask_b0_pre, [('out_reference_b0', 'in_file')]),  # noqa
-             # Head-motion correction
-             (prepare_b0,  hmc, [('out_b0_dwi_merge', 'inputnode.in_file'),  # noqa
-                                ('out_updated_bval',  'inputnode.in_bval'),  # noqa
-                                ('out_updated_bvec',  'inputnode.in_bvec')]),  # noqa
-             (mask_b0_pre, hmc, [('mask_file',        'inputnode.in_mask')]),  # noqa
-             # Eddy-current correction
-             (hmc,         ecc, [('outputnode.out_xfms', 'inputnode.in_xfms')]),  # noqa
-             (prepare_b0,  ecc, [('out_b0_dwi_merge',    'inputnode.in_file')]),  # noqa
-             (prepare_b0,  ecc, [('out_updated_bval',    'inputnode.in_bval')]),  # noqa
-             (mask_b0_pre, ecc, [('mask_file',           'inputnode.in_mask')]),  # noqa
-             # Magnetic susceptibility correction
-             (ecc,             sdc, [('outputnode.out_file',      'inputnode.in_dwi')]),  # noqa
-             (mask_b0_pre,     sdc, [('mask_file',                'inputnode.in_mask')]),  # noqa
-             (self.input_node, sdc, [('fmap_phasediff',           'inputnode.in_fmap_phasediff')]),  # noqa
-             (self.input_node, sdc, [('fmap_magnitude',           'inputnode.in_fmap_magnitude')]),  # noqa
-             (self.input_node, sdc, [('delta_echo_time',          'inputnode.delta_echo_time')]),  # noqa
-             (self.input_node, sdc, [('effective_echo_spacing',   'inputnode.effective_echo_spacing')]),  # noqa
-             (self.input_node, sdc, [('phase_encoding_direction', 'inputnode.phase_encoding_direction')]),  # noqa
-             # Apply all corrections
-             (prepare_b0, unwarp, [('out_b0_dwi_merge',    'inputnode.in_dwi')]),  # noqa
-             (hmc,        unwarp, [('outputnode.out_xfms', 'inputnode.in_hmc')]),  # noqa
-             (ecc,        unwarp, [('outputnode.out_xfms', 'inputnode.in_ecc')]),  # noqa
-             (sdc,        unwarp, [('outputnode.out_warp', 'inputnode.in_sdc')]),  # noqa
-             # Bias correction
-             (unwarp, bias, [('outputnode.out_file', 'inputnode.in_file')]),
-             # Outputnode
-             (bias,       self.output_node, [('outputnode.out_file', 'preproc_dwi')]),  # noqa
-             (hmc,        self.output_node, [('outputnode.out_bvec', 'preproc_bvec')]),  # noqa
-             (prepare_b0, self.output_node, [('out_updated_bval',    'preproc_bval')]),  # noqa
-             (bias,       self.output_node, [('outputnode.b0_mask',  'b0_mask')])   # noqa
+            # Preliminary step (possible computation of a mean b0)
+            (self.input_node, prepare_b0, [('dwi',  'in_dwi'),  # noqa
+                                           ('bval', 'in_bval'),  # noqa
+                                           ('bvec', 'in_bvec')]),  # noqa
+            # Mask b0 before corrections
+            (prepare_b0, mask_b0_pre, [('out_reference_b0', 'in_file')]),  # noqa
+            # Head-motion correction
+            (prepare_b0,  hmc, [('out_b0_dwi_merge', 'inputnode.in_file'),  # noqa
+                               ('out_updated_bval',  'inputnode.in_bval'),  # noqa
+                               ('out_updated_bvec',  'inputnode.in_bvec')]),  # noqa
+            (mask_b0_pre, hmc, [('mask_file',        'inputnode.in_mask')]),  # noqa
+            # Eddy-current correction
+            (hmc,         ecc, [('outputnode.out_xfms', 'inputnode.in_xfms')]),  # noqa
+            (prepare_b0,  ecc, [('out_b0_dwi_merge',    'inputnode.in_file')]),  # noqa
+            (prepare_b0,  ecc, [('out_updated_bval',    'inputnode.in_bval')]),  # noqa
+            (mask_b0_pre, ecc, [('mask_file',           'inputnode.in_mask')]),  # noqa
+            # Magnetic susceptibility correction
+            (ecc,             sdc, [('outputnode.out_file',      'inputnode.in_dwi')]),  # noqa
+            (mask_b0_pre,     sdc, [('mask_file',                'inputnode.in_mask')]),  # noqa
+            (self.input_node, sdc, [('fmap_phasediff',           'inputnode.in_fmap_phasediff')]),  # noqa
+            (self.input_node, sdc, [('fmap_magnitude',           'inputnode.in_fmap_magnitude')]),  # noqa
+            (self.input_node, sdc, [('delta_echo_time',          'inputnode.delta_echo_time')]),  # noqa
+            (self.input_node, sdc, [('effective_echo_spacing',   'inputnode.effective_echo_spacing')]),  # noqa
+            (self.input_node, sdc, [('phase_encoding_direction', 'inputnode.phase_encoding_direction')]),  # noqa
+            # Apply all corrections
+            (prepare_b0, unwarp, [('out_b0_dwi_merge',    'inputnode.in_dwi')]),  # noqa
+            (hmc,        unwarp, [('outputnode.out_xfms', 'inputnode.in_hmc')]),  # noqa
+            (ecc,        unwarp, [('outputnode.out_xfms', 'inputnode.in_ecc')]),  # noqa
+            (sdc,        unwarp, [('outputnode.out_warp', 'inputnode.in_sdc')]),  # noqa
+            # Bias correction
+            (unwarp, bias, [('outputnode.out_file', 'inputnode.in_file')]),
+            # Outputnode
+            (bias,       self.output_node, [('outputnode.out_file', 'preproc_dwi')]),  # noqa
+            (hmc,        self.output_node, [('outputnode.out_bvec', 'preproc_bvec')]),  # noqa
+            (prepare_b0, self.output_node, [('out_updated_bval',    'preproc_bval')]),  # noqa
+            (bias,       self.output_node, [('outputnode.b0_mask',  'b0_mask')])   # noqa
         ])

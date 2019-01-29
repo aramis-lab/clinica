@@ -21,7 +21,8 @@ class CmdParserSubjectsSessions(ce.CmdParser):
         import os
         import errno
         from clinica.iotools.utils import data_handling as dt
-        output_directory = os.path.dirname(args.out_tsv)
+        from clinica.utils.stream import cprint
+        output_directory = os.path.dirname(os.path.abspath(args.out_tsv))
         if not os.path.exists(output_directory):
             try:
                 os.makedirs(output_directory)
@@ -29,6 +30,7 @@ class CmdParserSubjectsSessions(ce.CmdParser):
                 if exc.errno != errno.EEXIST:
                     raise
         dt.create_subs_sess_list(args.bids_directory, output_directory, os.path.basename(args.out_tsv))
+        cprint("The TSV file was saved to %s" % os.path.abspath(args.out_tsv))
 
 
 class CmdParserMergeTsv(ce.CmdParser):

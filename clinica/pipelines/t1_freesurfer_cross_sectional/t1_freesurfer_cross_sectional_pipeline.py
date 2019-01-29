@@ -1,7 +1,7 @@
 # coding: utf8
 
 __author__ = "Junhao Wen"
-__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = ["Junhao Wen"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
@@ -16,13 +16,11 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
     """Creates a pipelines that performs Freesurfer commander, recon-all, It
     takes the input files of MRI T1 images and executes the 31 steps to
     reconstruct the surface of the brain, this progress includes surface-based
-    and Volume-based piepeline, which including gray(GM)and white matter(WM)
-    segementation, pial and white surface extraction!.
+    and Volume-based piepeline, which including gray and white matter
+    segementation, pial and white surface extraction.
 
-    Warnings:
-        - A WARNING.
-
-    Todos: Transfer print to clinica log???
+    Todos:
+        - [ ] Transfer print to clinica log???.
 
     Args:
         bids_directory: Path to the BIDS directory.
@@ -33,7 +31,7 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
         np: Number of cores used to run in parallel
 
     Returns:
-        A clinica pipelines object containing the T1 FreeSurfer pipelines.
+        A clinica pipeline object containing the T1FreeSurferCrossSectional pipeline.
 
     """
 
@@ -132,14 +130,6 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from nipype.interfaces.freesurfer.preprocess import ReconAll
         from clinica.utils.stream import cprint
-
-        # check out ReconAll version
-        try:
-            if ReconAll.version.fget.func_globals['__version__'].split(".") < ['0', '11', '0']:
-                raise RuntimeError('ReconAll version should at least be version of 0.11.0')
-        except Exception as e:
-            cprint(str(e))
-            # exit(1)
 
         # MapNode to check out if we need -cw256 for every subject, and -qcache is default for every subject.
         flagnode = npe.MapNode(name='flagnode',

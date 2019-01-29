@@ -3,10 +3,10 @@
 import clinica.engine as ce
 
 
-class DWIPreprocessingUsingT1CLI(ce.CmdParser):
+class DwiPreprocessingUsingT1Cli(ce.CmdParser):
 
     def __init__(self):
-        super(DWIPreprocessingUsingT1CLI, self).__init__()
+        super(DwiPreprocessingUsingT1Cli, self).__init__()
 
     def define_name(self):
         """Define the sub-command name to run this pipeline.
@@ -28,11 +28,6 @@ class DWIPreprocessingUsingT1CLI(ce.CmdParser):
                                   help='Path to the BIDS directory.')
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
-        clinica_comp.add_argument("phase_encoding_direction", type=str,
-                                  help='The phase encoding direction (e.g. For ADNI data, the phase_encoding_direction is y(j).')
-        clinica_comp.add_argument("total_readout_time", type=str,
-                                  help='The total readout time (see https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/eddy/Faq for details)')
-
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("--low_bval",
@@ -53,19 +48,14 @@ class DWIPreprocessingUsingT1CLI(ce.CmdParser):
         Run the DWIPreprocessingUsingT1 Pipeline from command line.
         """
         from tempfile import mkdtemp
-        from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DWIPreprocessingUsingT1
+        from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DwiPreprocessingUsingT1
 
-        pipeline = DWIPreprocessingUsingT1(
+        pipeline = DwiPreprocessingUsingT1(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
             low_bval=args.low_bval
         )
-
-        pipeline.parameters = {
-            # pass these args by using self.parameters in a dictionary
-            'epi_param': dict([('readout_time', args.total_readout_time),  ('enc_dir', args.phase_encoding_direction)]),
-        }
 
         if args.working_directory is None:
             args.working_directory = mkdtemp()

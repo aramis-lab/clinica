@@ -2,15 +2,6 @@
 
 import clinica.engine as ce
 
-__author__ = "Junhao Wen"
-__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
-__credits__ = ["Junhao Wen"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Junhao Wen"
-__email__ = "Junhao.Wen@inria.fr"
-__status__ = "Development"
-
 
 class StatisticsSurfaceCLI(ce.CmdParser):
 
@@ -30,7 +21,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         from colorama import Fore
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
-        clinica_comp = self._args.add_argument_group('%sMandatory arguments%s' % (Fore.YELLOW, Fore.RESET))
+        clinica_comp = self._args.add_argument_group('%sMandatory arguments%s' % (Fore.BLUE , Fore.RESET))
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
         clinica_comp.add_argument("subject_visits_with_covariates_tsv",

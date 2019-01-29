@@ -2,15 +2,6 @@
 
 import clinica.engine as ce
 
-__author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
-__credits__ = ["Jorge Samper Gonzalez"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Jorge Samper Gonzalez"
-__email__ = "jorge.samper-gonzalez@inria.fr"
-__status__ = "Development"
-
 
 class T1VolumeExistingTemplateCLI(ce.CmdParser):
 
@@ -40,7 +31,7 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("-fwhm", "--fwhm",
                               nargs='+', type=int, default=[8],
-                              help="A list of integers specifying the different isomorphic fwhm in millimeters to smooth the image")
+                              help="A list of integers specifying the different isomorphic fwhm in millimeters to smooth the image (default: -fwhm 8).")
         # Clinica standard arguments (e.g. --n_procs)
         clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
         clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
@@ -53,35 +44,35 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
         # Advanced arguments (i.e. tricky parameters)
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
         advanced.add_argument("-ti", "--tissue_classes",
-                              metavar=('1 2 3 4 5 6'),
-                              nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
-                              help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to save. Up to 6 tissue classes can be saved. Ex: 1 2 3 is GM, WM and CSF")
+                              metavar='', nargs='+', type=int, default=[1, 2, 3],
+                              choices=range(1, 7),
+                              help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to save. Up to 6 tissue classes can be saved  (default: GM, WM and CSF i.e. --tissue_classes 1 2 3).")
         advanced.add_argument("-dt", "--dartel_tissues",
-                              metavar=('1 2 3 4 5 6'),
-                              nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
-                              help='Tissues to use to create flow fields to existing DARTEL template. Ex: 1 is only GM')
+                              metavar='', nargs='+', type=int, default=[1, 2, 3],
+                              choices=range(1, 7),
+                              help='Tissues to use for DARTEL template calculation (default: GM, WM and CSF i.e. --dartel_tissues 1 2 3).')
         advanced.add_argument("-tpm", "--tissue_probability_maps",
                               metavar=('TissueProbabilityMap.nii'),
-                              help='Tissue probability maps to use for segmentation.')
+                              help='Tissue probability maps to use for segmentation (default: TPM from SPM software).')
         advanced.add_argument("-swu", "--save_warped_unmodulated",
                               action='store_true', default=True,
-                              help="Save warped unmodulated images for tissues specified in --tissue_classes")
+                              help="Save warped unmodulated images for tissues specified in --tissue_classes flag.")
         advanced.add_argument("-swm", "--save_warped_modulated",
                               action='store_true',
-                              help="Save warped modulated images for tissues specified in --tissue_classes")
+                              help="Save warped modulated images for tissues specified in --tissue_classes flag.")
         advanced.add_argument("-m", "--modulate",
                               type=bool, default=True,
                               metavar=('True/False'),
-                              help='A boolean. Modulate output images - no modulation preserves concentrations')
+                              help='A boolean. Modulate output images - no modulation preserves concentrations.')
         advanced.add_argument("-vs", "--voxel_size",
                               metavar=('float'),
                               nargs=3, type=float,
-                              help="A list of 3 floats specifying voxel sizes for each dimension of output image")
+                              help="A list of 3 floats specifying voxel sizes for each dimension of output image (default: --voxel_size 1.5 1.5 1.5).")
         list_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
         advanced.add_argument("-atlases", "--atlases",
-                              nargs='+', type=str,
+                              nargs='+', type=str, metavar='',
                               default=list_atlases, choices=list_atlases,
-                              help='A list of atlases to use to calculate the mean GM concentration at each region')
+                              help='A list of atlases to use to calculate the mean GM concentration at each region (default: all atlases i.e. --atlases AAL2 AICHA Hammers LPBA40 Neuromorphometrics).')
 
     def run_command(self, args):
         """

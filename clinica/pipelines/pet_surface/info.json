@@ -1,6 +1,6 @@
 {
-    "id": "aramislab/pet_surface",
-    "author": "MARCOUX Arnaud",
+    "id": "aramislab/pet-surface",
+    "author": "Arnaud Marcoux",
     "version": "0.1",
     "dependencies": [
         {

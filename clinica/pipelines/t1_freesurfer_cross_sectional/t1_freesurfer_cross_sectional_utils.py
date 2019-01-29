@@ -1,7 +1,7 @@
 # coding: utf8
 
 __author__ = "Junhao Wen"
-__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = ["Junhao Wen"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
@@ -121,7 +121,7 @@ def get_dirs_check_reconalled(output_dir, subject_list, session_list):
         log_file = os.path.join(subject_path_abs, 'scripts', 'recon-all.log')
         if os.path.isfile(log_file):
             last_line = subprocess.check_output(['tail', '-1', log_file])
-            if 'finished without error' in last_line:
+            if b'finished without error' in last_line:
                 cprint("This subject has been run recon-all successfully, just skip this subject: %s" % subject_id[i])
                 subject_id_without_reconalled.remove(subject_id[i])
                 subject_list_without_reconalled.remove(subject_list[i])
@@ -231,7 +231,7 @@ def log_summary(subject_list, session_list, subject_id, output_dir):
             with open(log, 'r') as f2:
                 lines = f2.readlines()
                 for line in lines:
-                    if (line.startswith(search_query)) and ('without error' not in line):
+                    if (line.startswith(search_query)) and (b'without error' not in line):
                         f1.write(line)
                         bad_log += 1
                         break

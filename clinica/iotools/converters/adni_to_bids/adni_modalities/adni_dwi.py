@@ -1,13 +1,14 @@
 # coding: utf-8
+
 """
  Module for converting DWI of ADNI
 """
-__author__ = "Jorge Samper Gonzalez and Sabrina Fontanella and Simona Bottani"
-__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
-__credits__ = [""]
+
+__author__ = "Jorge Samper-Gonzalez and Sabrina Fontanella"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
-__maintainer__ = "Jorge Samper Gonzalez"
+__maintainer__ = "Jorge Samper-Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
@@ -168,7 +169,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     error_indices = []
     for conv_error in conversion_errors:
-        error_indices.append((dwi_df.Enhanced == False)
+        error_indices.append((dwi_df.Enhanced is False)
                              & (dwi_df.Subject_ID == conv_error[0])
                              & (dwi_df.VISCODE == conv_error[1]))
 
@@ -286,7 +287,7 @@ def dwi_paths_to_bids(images, dest_dir, mod_to_update=False):
                     # print path.join(dest_dir, bids_name + '.nii.gz')
                     if not os.path.exists(path.join(bids_dest_dir, bids_name + '.nii.gz')) or not os.path.exists(
                                     path.join(bids_dest_dir, bids_name + '.bvec') or not os.path.exists(
-                                    path.join(bids_dest_dir, bids_name + '.bval'))):
+                                        path.join(bids_dest_dir, bids_name + '.bval'))):
                         cprint('\nConversion with dcm2niix failed, trying with dcm2nii')
 
                         # Find all the files eventually created by dcm2niix and remove them
@@ -312,6 +313,7 @@ def dwi_paths_to_bids(images, dest_dir, mod_to_update=False):
                             os.rename(nii_file, path.join(bids_dest_dir, bids_name + '.nii.gz'))
                         else:
                             cprint('WARNING: CONVERSION FAILED...')
+
 
 def dwi_image(subject_id, timepoint, visit_str, ida_meta_scans, mri_qc_subj, enhanced):
     """
@@ -628,12 +630,13 @@ def visits_to_timepoints_dwi_refactoring(subject, ida_meta_subj, adnimerge_subj)
             visits[key_min_visit] = image.VISIT
         elif visits[key_min_visit] != image.VISIT:
             cprint('Multiple visits for one timepoint!')
-            #cprint(subject)
-            #cprint(key_min_visit)
-            #cprint(visits[key_min_visit])
-            #cprint(image.Visit)
+            # cprint(subject)
+            # cprint(key_min_visit)
+            # cprint(visits[key_min_visit])
+            # cprint(image.Visit)
 
     return visits
+
 
 def dwi_image_refactoring(subject_id, timepoint, visit_str, ida_meta_scans, mri_qc_subj, enhanced):
     """

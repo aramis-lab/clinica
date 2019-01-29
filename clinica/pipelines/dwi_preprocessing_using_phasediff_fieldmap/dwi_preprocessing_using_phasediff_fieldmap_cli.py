@@ -3,15 +3,15 @@
 import clinica.engine as ce
 
 
-class DWIPreprocessingUsingPhaseDiffFieldmapCLI(ce.CmdParser):
+class DwiPreprocessingUsingPhaseDiffFieldmapCli(ce.CmdParser):
 
     def __init__(self):
-        super(DWIPreprocessingUsingPhaseDiffFieldmapCLI, self).__init__()
+        super(DwiPreprocessingUsingPhaseDiffFieldmapCli, self).__init__()
 
     def define_name(self):
         """Define the sub-command name to run this pipeline.
         """
-        self._name = 'dwi-preprocessing-using-phasediff-fieldmap'
+        self._name = 'dwi-preprocessing-using-fieldmap'
 
     def define_description(self):
         """Define a description of this pipeline.
@@ -48,9 +48,9 @@ class DWIPreprocessingUsingPhaseDiffFieldmapCLI(ce.CmdParser):
         Run the DWIPreprocessingUsingPhaseDiffFieldmap pipeline from command line.
         """
         from tempfile import mkdtemp
-        from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DWIPreprocessingUsingPhaseDiffFieldmap
+        from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DwiPreprocessingUsingPhaseDiffFieldmap
 
-        pipeline = DWIPreprocessingUsingPhaseDiffFieldmap(
+        pipeline = DwiPreprocessingUsingPhaseDiffFieldmap(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),

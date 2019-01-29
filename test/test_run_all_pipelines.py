@@ -1,10 +1,12 @@
+# coding: utf8
+
 """
-    This file contains a set of functional tests designed to check the correct execution of the pipeline and the
-    different functions available in Clinica
+This file contains a set of functional tests designed to check the correct execution of the pipeline and the
+different functions available in Clinica
 """
 
 __author__ = "Arnaud Marcoux"
-__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = ["Arnaud Marcoux"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.2.0"
@@ -24,7 +26,7 @@ if sys.platform == 'darwin':
 elif sys.platform.startswith('linux'):
     working_dir = '/localdrive10TB/data/working_directory_ci_linux'
 else:
-    raise SystemError('Could not determine which CI machine is running : sys.platform must return darwin or linux2')
+    raise SystemError('Could not determine which CI machine is running : sys.platform must return darwin or linux.')
 
 
 def test_run_T1FreeSurferCrossSectional():
@@ -51,7 +53,7 @@ def test_run_T1FreeSurferCrossSectional():
                    'recon-all-status.log')
     if isfile(log_file):
         last_line = str(subprocess.check_output(['tail', '-1', log_file]))
-        if 'finished without error' not in last_line.lower():
+        if b'finished without error' not in last_line.lower():
             raise ValueError('FreeSurfer did not mark subject '
                              'sub-ADNI082S5029 as -finished without error-')
     else:
@@ -87,6 +89,7 @@ def test_run_T1VolumeTissueSegmentation():
 
     assert likeliness_measure(out_file, ref_file, (1e-4, 0.05), (1e-2, 0.01))
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+
 
 
 def test_run_T1VolumeCreateDartel():
@@ -130,6 +133,7 @@ def test_run_T1VolumeCreateDartel():
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+
 
 
 def test_run_T1VolumeDartel2MNI():
@@ -251,6 +255,7 @@ def test_run_T1VolumeExistingDartel():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
+
 def test_run_T1VolumeExistingTemplate():
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
     from os.path import dirname, join, abspath
@@ -304,8 +309,7 @@ def test_run_T1VolumeParcellation():
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     # Instantiate pipeline
-    pipeline = T1VolumeParcellation(bids_directory='./4',
-                                    caps_directory=join(root, 'out', 'caps'),
+    pipeline = T1VolumeParcellation(caps_directory=join(root, 'out', 'caps'),
                                     tsv_file=join(root, 'in', 'subjects.tsv'))
     pipeline.parameters['group_id'] = 'UnitTest'
     pipeline.parameters['atlases'] = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
@@ -331,7 +335,7 @@ def test_run_T1VolumeParcellation():
 
 
 def test_run_DWIPreprocessingUsingT1():
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DWIPreprocessingUsingT1
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DwiPreprocessingUsingT1
     from os.path import dirname, join, abspath
     from .comparison_functions import similarity_measure
 
@@ -341,11 +345,11 @@ def test_run_DWIPreprocessingUsingT1():
     clean_folder(join(root, 'out', 'caps'))
     clean_folder(join(working_dir, 'DWIPreprocessingUsingT1'))
 
-    pipeline = DWIPreprocessingUsingT1(bids_directory=join(root, 'in', 'bids'),
+    pipeline = DwiPreprocessingUsingT1(bids_directory=join(root, 'in', 'bids'),
                                        caps_directory=join(root, 'out', 'caps'),
                                        tsv_file=join(root, 'in', 'subjects.tsv'),
                                        low_bval=5)
-    pipeline.parameters['epi_param'] = dict([('readout_time', 0.0348756),  ('enc_dir', 'y')])
+    #pipeline.parameters['epi_param'] = dict([('readout_time', 0.0348756),  ('enc_dir', 'y')])
     pipeline.base_dir = join(working_dir, 'DWIPreprocessingUsingT1')
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
@@ -361,7 +365,7 @@ def test_run_DWIPreprocessingUsingT1():
 
 
 def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
-    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DWIPreprocessingUsingPhaseDiffFieldmap
+    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DwiPreprocessingUsingPhaseDiffFieldmap
     from os.path import dirname, join, abspath
     from .comparison_functions import similarity_measure
     import warnings
@@ -373,7 +377,7 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
     clean_folder(join(root, 'out', 'caps'))
     clean_folder(join(working_dir, 'DWIPreprocessingUsingPhaseDiffFieldmap'))
 
-    pipeline = DWIPreprocessingUsingPhaseDiffFieldmap(bids_directory=join(root, 'in', 'bids'),
+    pipeline = DwiPreprocessingUsingPhaseDiffFieldmap(bids_directory=join(root, 'in', 'bids'),
                                                       caps_directory=join(root, 'out', 'caps'),
                                                       tsv_file=join(root, 'in', 'subjects.tsv'),
                                                       low_bval=5)
@@ -391,30 +395,31 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
-def test_run_DWIProcessingDTI():
-    from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_pipeline import DWIProcessingDTI
+def test_run_DWIDTI():
+    from clinica.pipelines.dwi_dti.dwi_dti_pipeline import DwiDti
     from os.path import dirname, join, abspath, exists
     import shutil
     import pandas as pds
     import numpy as np
 
-    root = join(dirname(abspath(__file__)), 'data', 'DWIProcessingDTI')
+    root = join(dirname(abspath(__file__)), 'data', 'DWIDTI')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-    clean_folder(join(working_dir, 'DWIProcessingDTI'))
+    clean_folder(join(working_dir, 'DWIDTI'))
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
-    pipeline = DWIProcessingDTI(caps_directory=join(root, 'out', 'caps'),
-                                tsv_file=join(root, 'in', 'subjects.tsv'))
-    pipeline.base_dir = join(working_dir, 'DWIProcessingDTI')
+    pipeline = DwiDti(caps_directory=join(root, 'out', 'caps'),
+                      tsv_file=join(root, 'in', 'subjects.tsv'))
+    pipeline.base_dir = join(working_dir, 'DWIDTI')
     pipeline.build()
-    pipeline.run()
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
 
     # Check files
+    subject_id = 'sub-CAPP01001TMM'
     maps = ['AD', 'FA', 'MD', 'RD']
-    out_files = [join(root, 'out/caps/subjects/sub-CAPP01001TMM/ses-M00/dwi/dti_based_processing/atlas_statistics/sub-CAPP01001TMM_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-' + m + '_statistics.tsv')
+    out_files = [join(root, 'out', 'caps', 'subjects', subject_id, 'ses-M00', 'dwi', 'dti_based_processing', 'atlas_statistics', subject_id + '_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-' + m + '_statistics.tsv')
                  for m in maps]
-    ref_files = [join(root, 'ref', 'sub-CAPP01001TMM_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-' + m + '_statistics.tsv')
+    ref_files = [join(root, 'ref', subject_id + '_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-' + m + '_statistics.tsv')
                  for m in maps]
 
     for i in range(len(out_files)):
@@ -422,10 +427,56 @@ def test_run_DWIProcessingDTI():
         out_mean_scalar = np.array(out_csv.mean_scalar)
         ref_csv = pds.read_csv(ref_files[i], sep='\t')
         ref_mean_scalar = np.array(ref_csv.mean_scalar)
-        # Uncomment when problem is solved
+
         assert np.allclose(out_mean_scalar, ref_mean_scalar, rtol=0.025, equal_nan=True)
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+
+
+
+def test_run_DWIConnectome():
+    from clinica.pipelines.dwi_connectome.dwi_connectome_pipeline import DwiConnectome
+    from os.path import dirname, join, abspath, exists
+    import shutil
+    import pandas as pds
+    import numpy as np
+
+    root = join(dirname(abspath(__file__)), 'data', 'DWIConnectome')
+
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'DWIConnectome'))
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+
+    pipeline = DwiConnectome(caps_directory=join(root, 'out', 'caps'),
+                             tsv_file=join(root, 'in', 'subjects.tsv'))
+    pipeline.parameters = {
+        'n_tracks' : 1000000
+    }
+    pipeline.base_dir = join(working_dir, 'DWIConnectome')
+    pipeline.build()
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+
+    # Check files
+    subject_id = 'sub-HMTC20110506MEMEPPAT27'
+    atlases = ['desikan', 'destrieux']
+    out_files = [join(root, 'out', 'caps', 'subjects', subject_id, 'ses-M00', 'dwi', 'connectome_based_processing', subject_id + '_ses-M00_dwi_space-b0_model-CSD_atlas-' + a + '_connectivity.tsv')
+                 for a in atlases]
+    ref_files = [join(root, 'ref', subject_id + '_ses-M00_dwi_space-b0_model-CSD_atlas-' + a + '_connectivity.tsv')
+                 for a in atlases]
+
+    # @TODO: Find the adequate threshold for DWI-Connectome pipeline
+    pass
+
+    for i in range(len(out_files)):
+        out_connectome = pds.read_csv(out_files[i], sep='\t')
+        out_connectome = np.array(out_connectome)
+        ref_connectome = pds.read_csv(ref_files[i], sep='\t')
+        ref_connectome = np.array(ref_connectome)
+
+        assert np.allclose(out_connectome, ref_connectome, rtol=0.025, equal_nan=True)
+
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    pass
 
 
 def test_run_fMRIPreprocessing():
@@ -453,11 +504,12 @@ def test_run_fMRIPreprocessing():
     pipeline.build()
     pipeline.run()
 
-    out_files = [join(root, 'out/caps/subjects/sub-20110506MEMEPPAT27/ses-M00/fmri/preprocessing/sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-Ixi549Space_preproc.nii.gz'),
-                 join(root, 'out/caps/subjects/sub-20110506MEMEPPAT27/ses-M00/fmri/preprocessing/sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-meanBOLD_preproc.nii.gz')]
+    subject_id = 'sub-01001TMM'
+    out_files = [join(root, 'out', 'caps', 'subjects', subject_id, 'ses-M00', 'fmri', 'preprocessing', subject_id + '_ses-M00_task-rest_bold_space-Ixi549Space_preproc.nii.gz'),
+                 join(root, 'out', 'caps', 'subjects', subject_id, 'ses-M00', 'fmri', 'preprocessing', subject_id + '_ses-M00_task-rest_bold_space-meanBOLD_preproc.nii.gz')]
 
-    ref_files = [join(root, 'ref', 'sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-Ixi549Space_preproc.nii.gz'),
-                 join(root, 'ref', 'sub-20110506MEMEPPAT27_ses-M00_task-rest_bold_space-meanBOLD_preproc.nii.gz')]
+    ref_files = [join(root, 'ref', subject_id + '_ses-M00_task-rest_bold_space-Ixi549Space_preproc.nii.gz'),
+                 join(root, 'ref', subject_id + '_ses-M00_task-rest_bold_space-meanBOLD_preproc.nii.gz')]
 
     for i in range(len(out_files)):
         assert similarity_measure(out_files[i], ref_files[i], 0.99)
@@ -497,6 +549,7 @@ def test_run_PETVolume():
         assert likeliness_measure(out_files[i], ref_files[i], (1e-2, 0.25), (1e-1, 0.001))
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+
 
 
 def test_run_StatisticsSurface():
@@ -540,6 +593,7 @@ def test_run_StatisticsSurface():
     for i in range(4):
         assert np.allclose(out_file_mat[0][0][i], ref_file_mat[0][0][i], rtol=1e-8, equal_nan=True)
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+
 
 
 def test_run_PETSurface():
@@ -816,8 +870,9 @@ def test_run_Aibl2Bids():
     convert_clinical_data(bids_directory, clinical_data_directory)
 
 
-def test_run_SVMRegularization():
-    from clinica.pipelines.svm_regularization.svm_regularization_pipeline import SVMRegularization
+
+def test_run_SpatialSVM():
+    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
     from os.path import dirname, join, abspath, exists
     import shutil
     import numpy as np
@@ -827,12 +882,12 @@ def test_run_SVMRegularization():
     # Remove potential residual of previous UT
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
-    #Copy necessary data from in to out
+    # Copy necessary data from in to out
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     # Instantiate pipeline and run()
-    pipeline = SVMRegularization(caps_directory=join(root, 'out', 'caps'),
-                                 tsv_file=join(root, 'in', 'subjects.tsv'))
+    pipeline = SpatialSVM(caps_directory=join(root, 'out', 'caps'),
+                          tsv_file=join(root, 'in', 'subjects.tsv'))
 
     pipeline.parameters['group_id'] = 'ADCNbaseline'
     pipeline.parameters['fwhm'] = 4

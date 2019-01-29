@@ -5,7 +5,7 @@ Load bed/bim/fam files.
 """
 
 __author__ = "Pascal Lu"
-__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = ["Sabrina Fontanella"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"

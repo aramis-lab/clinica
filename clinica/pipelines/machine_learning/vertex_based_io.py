@@ -6,7 +6,7 @@ import nibabel as nib
 import os
 
 __author__ = "Arnaud Marcoux"
-__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = ["Arnaud Marcoux"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"

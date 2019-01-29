@@ -1,5 +1,7 @@
 {
-    "entities": [
+        "name": "caps",
+        "root": ".",
+        "entities": [
         {
             "name": "subject",
             "pattern": "sub-([a-zA-Z0-9]+)",

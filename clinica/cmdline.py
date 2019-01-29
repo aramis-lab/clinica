@@ -19,7 +19,7 @@ from clinica.engine.cmdparser import *
 from clinica.utils.stream import cprint
 
 __author__ = "Michael Bacci"
-__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = ["Michael Bacci", "Alexandre Routier", "Mauricio Diaz"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
@@ -130,40 +130,35 @@ def execute():
     from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_cli import T1VolumeNewTemplateCLI  # noqa
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import T1VolumeExistingTemplateCLI  # noqa
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
-    from clinica.pipelines.dwi_preprocessing_noddi.dwi_preprocessing_noddi_cli import DwiPreprocessingNoddiCLI  # noqa
-    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DWIPreprocessingUsingPhaseDiffFieldmapCLI  # noqa
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DWIPreprocessingUsingT1CLI  # noqa
-    from clinica.pipelines.dwi_processing_dti.dwi_processing_dti_cli import DWIProcessingDTICLI  # noqa
-    from clinica.pipelines.dwi_processing_csd.dwi_processing_csd_cli import DWIProcessingCSDCLI  # noqa
-    from clinica.pipelines.dwi_processing_noddi.dwi_processing_noddi_cli import DwiProcessingNoddiCLI  # noqa
+    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DwiPreprocessingUsingPhaseDiffFieldmapCli  # noqa
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DwiPreprocessingUsingT1Cli  # noqa
+    from clinica.pipelines.dwi_dti.dwi_dti_cli import DwiDtiCli  # noqa
+    from clinica.pipelines.dwi_connectome.dwi_connectome_cli import DwiConnectomeCli  # noqa
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI  # noqa
     from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI  # noqa
     from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI  # noqa
+    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_cli import SpatialSVMCLI  # noqa
     from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI  # noqa
-    from clinica.pipelines.svm_regularization.svm_regularization_cli import SVMRegularizationCLI
-
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
                                    extra_dir="pipelines").load()
     pipelines += [
         T1FreeSurferCrossSectionalCLI(),
+        T1VolumeNewTemplateCLI(),
+        DwiPreprocessingUsingPhaseDiffFieldmapCli(),
+        DwiPreprocessingUsingT1Cli(),
+        DwiDtiCli(),
+        DwiConnectomeCli(),
+        fMRIPreprocessingCLI(),
+        PETVolumeCLI(),
+        PetSurfaceCLI(),
+        SpatialSVMCLI(),
+        StatisticsSurfaceCLI(),
+        T1VolumeExistingTemplateCLI(),
         T1VolumeTissueSegmentationCLI(),
         T1VolumeCreateDartelCLI(),
         T1VolumeExistingDartelCLI(),
         T1VolumeDartel2MNICLI(),
-        T1VolumeNewTemplateCLI(),
-        T1VolumeExistingTemplateCLI(),
-        T1VolumeParcellationCLI(),
-        DWIPreprocessingUsingT1CLI(),
-        DwiPreprocessingNoddiCLI(),
-        DwiProcessingNoddiCLI(),
-        DWIPreprocessingUsingPhaseDiffFieldmapCLI(),
-        DWIProcessingDTICLI(),
-        DWIProcessingCSDCLI(),
-        fMRIPreprocessingCLI(),
-        PETVolumeCLI(),
-        PetSurfaceCLI(),
-        StatisticsSurfaceCLI(),
-        SVMRegularizationCLI()
+        T1VolumeParcellationCLI()
     ]
 
     run_parser = sub_parser.add_parser(
@@ -175,21 +170,23 @@ def execute():
     run_parser.description = (
             Fore.GREEN
             + 'Run pipelines on BIDS/CAPS datasets.'
-            + Fore.RESET)
+            + Fore.RESET
+    )
     run_parser._positionals.title = (
             Fore.YELLOW
             + 'clinica run expects one of the following pipelines'
-            + Fore.RESET)
+            + Fore.RESET
+    )
 
     init_cmdparser_objects(
             parser,
-            run_parser.add_subparsers(metavar=''),
-            pipelines)
+            run_parser.add_subparsers(metavar='', dest='run'),
+            pipelines
+    )
 
     """
     convert category: convert one of the supported datasets into BIDS hierarchy
     """
-
     from clinica.iotools.converters.aibl_to_bids.aibl_to_bids_cli import AiblToBidsCLI  # noqa
     from clinica.iotools.converters.adni_to_bids.adni_to_bids_cli import AdniToBidsCLI  # noqa
     from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_cli import OasisToBidsCLI  # noqa
@@ -210,21 +207,23 @@ def execute():
     convert_parser.description = (
             Fore.GREEN
             + 'Tools to convert unorganized datasets into a BIDS hierarchy.'
-            + Fore.RESET)
+            + Fore.RESET
+    )
     convert_parser._positionals.title = (
             Fore.YELLOW
             + 'clinica convert expects one of the following datasets'
-            + Fore.RESET)
+            + Fore.RESET
+    )
     convert_parser._optionals.title = OPTIONAL_TITLE
     init_cmdparser_objects(
             parser,
-            convert_parser.add_subparsers(metavar=''),
-            converters)
+            convert_parser.add_subparsers(metavar='', dest='convert'),
+            converters
+    )
 
     """
     iotools category
     """
-
     from clinica.iotools.utils.data_handling_cli import CmdParserSubjectsSessions
     from clinica.iotools.utils.data_handling_cli import CmdParserMergeTsv
     from clinica.iotools.utils.data_handling_cli import CmdParserMissingModalities
@@ -244,13 +243,15 @@ def execute():
     io_parser._positionals.title = (
             Fore.YELLOW
             + 'clinica iotools expects one of the following BIDS/CAPS utilities'
-            + Fore.RESET)
+            + Fore.RESET
+    )
     io_parser._optionals.title = OPTIONAL_TITLE
 
     init_cmdparser_objects(
             parser,
-            io_parser.add_subparsers(metavar=''),
-            io_tools)
+            io_parser.add_subparsers(metavar='', dest='iotools'),
+            io_tools
+    )
 
     """
     generate category: template
@@ -259,24 +260,27 @@ def execute():
         'generate',
         add_help=False,
         help=('To generate pre-filled files when creating '
-              'new pipelines (for  developers).'),
+              'new pipelines (for developers).'),
     )
     generate_parser.description = (
             Fore.GREEN
             + ('Generate pre-filled files when creating new pipelines '
                '(for  developers).')
-            + Fore.RESET)
+            + Fore.RESET
+    )
     generate_parser._positionals.title = (
             Fore.YELLOW
             + 'clinica generate expects one of the following tools'
-            + Fore.RESET)
+            + Fore.RESET
+    )
     generate_parser._optionals.title = OPTIONAL_TITLE
 
     from clinica.engine.template import CmdGenerateTemplates
     init_cmdparser_objects(
             parser,
-            generate_parser.add_subparsers(metavar=''),
-            [CmdGenerateTemplates()])
+            generate_parser.add_subparsers(metavar='', dest='generate'),
+            [CmdGenerateTemplates()]
+    )
 
     """
     Silent all sub-parser errors methods except the one which is called
@@ -315,12 +319,29 @@ def execute():
         parser.print_help()
         exit(-1)
 
-    if unknown_args:
-        if '--verbose' or '-v' in unknown_args:
-            cprint('Verbose flag detected')
-        raise ValueError('Unknown flag detected: %s' % unknown_args)
+    # if unknown_args:
+    #    if '--verbose' or '-v' in unknown_args:
+    #        cprint('Verbose flag detected')
+    #    raise ValueError('Unknown flag detected: %s' % unknown_args)
 
-    if args is None or hasattr(args, 'func') is False:
+    if 'run' in args and hasattr(args, 'func') is False:
+        # Case when we type `clinica run` on the terminal
+        run_parser.print_help()
+        exit(0)
+    elif 'convert' in args and hasattr(args, 'func') is False:
+        # Case when we type `clinica convert` on the terminal
+        convert_parser.print_help()
+        exit(0)
+    elif 'iotools' in args and hasattr(args, 'func') is False:
+        # Case when we type `clinica iotools` on the terminal
+        io_parser.print_help()
+        exit(0)
+    elif 'generate' in args and hasattr(args, 'func') is False:
+        # Case when we type `clinica generate` on the terminal
+        generate_parser.print_help()
+        exit(0)
+    elif args is None or hasattr(args, 'func') is False:
+        # Case when we type `clinica` on the terminal
         parser.print_help()
         exit(0)
 
