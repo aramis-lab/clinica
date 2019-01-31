@@ -140,7 +140,7 @@ test:run:mac:
     - module load clinica.all
     - cd test
     - ln -s /Volumes/builds/Clinica/data_ci ./data
-    - pytest --verbose -k 'test_run'
+    - pytest --verbose --test_dir=/Volumes/builds/Clinica/working_directory_ci_mac -k 'test_run'
     - module purge
     - source deactivate
 
@@ -157,7 +157,7 @@ test:run:linux:
     - module load clinica.all
     - cd test
     - ln -s /localdrive10TB/data/ci/data_ci_upgrade ./data
-    - taskset -c 0-21 pytest --verbose --disable-warnings --timeout=0 -n 6 -k 'test_run'
+    - taskset -c 0-21 pytest --verbose --test_dir=/localdrive10TB/data/working_directory_ci_linux  --disable-warnings --timeout=0 -n 6 -k 'test_run'
     - module purge
     - source deactivate
  
