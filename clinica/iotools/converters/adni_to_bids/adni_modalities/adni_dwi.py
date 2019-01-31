@@ -113,7 +113,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
         keys = visits.keys()
         # What is the purpose of the following line ?
-        #keys.sort()
+        # keys.sort()
 
         for visit_info in visits.keys():
             visit_str = visits[visit_info]

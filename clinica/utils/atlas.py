@@ -355,9 +355,17 @@ class Hammers(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        SPM_HOME = os.environ.get('SPM_HOME', '')
-        if not SPM_HOME:
+        import platform
+        if "SPM_HOME" not in os.environ:
             raise Exception('SPM_HOME variable from SPM software is not set')
+        else:
+            if "SPMSTANDALONE_HOME" in os.environ:
+                if platform.system() == 'Darwin':
+                    SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12.app/Contents/MacOS/spm12_mcr"
+                else:
+                    SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12_mcr"
+            else:
+                SPM_HOME = os.environ['SPM_HOME']
         if not os.path.exists(os.path.join(SPM_HOME, 'toolbox', 'cat12')):
             raise Exception('CAT12 not included in SPM_HOME/toolbox')
         return os.path.join(SPM_HOME, 'toolbox', 'cat12', 'templates_1.50mm', 'hammers.nii')
@@ -383,11 +391,20 @@ class LPBA40(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        SPM_HOME = os.environ.get('SPM_HOME', '')
-        if not SPM_HOME:
+        import platform
+        if "SPM_HOME" not in os.environ:
             raise Exception('SPM_HOME variable from SPM software is not set')
+        else:
+            if "SPMSTANDALONE_HOME" in os.environ:
+                if platform.system() == 'Darwin':
+                    SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12.app/Contents/MacOS/spm12_mcr"
+                else:
+                    SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12_mcr"
+            else:
+                SPM_HOME = os.environ['SPM_HOME']
         if not os.path.exists(os.path.join(SPM_HOME, 'toolbox', 'cat12')):
-            raise Exception('CAT12 not included in ${SPM_HOME}/toolbox')
+            print(SPM_HOME)
+            raise Exception('CAT12 not included in SPM_HOME/toolbox')
         return os.path.join(SPM_HOME, 'toolbox', 'cat12', 'templates_1.50mm', 'lpba40.nii')
 
     @staticmethod
@@ -434,9 +451,17 @@ class Neuromorphometrics(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        SPM_HOME = os.environ.get('SPM_HOME', '')
-        if not SPM_HOME:
+        import platform
+        if "SPM_HOME" not in os.environ:
             raise Exception('SPM_HOME variable from SPM software is not set')
+        else:
+            if "SPMSTANDALONE_HOME" in os.environ:
+                if platform.system() == 'Darwin':
+                    SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12.app/Contents/MacOS/spm12_mcr"
+                else:
+                    SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12_mcr"
+            else:
+                SPM_HOME = os.environ['SPM_HOME']
         if not os.path.exists(os.path.join(SPM_HOME, 'toolbox', 'cat12')):
             raise Exception('CAT12 not included in SPM_HOME/toolbox')
         return os.path.join(SPM_HOME, 'toolbox', 'cat12', 'templates_1.50mm', 'neuromorphometrics.nii')
