@@ -18,7 +18,7 @@ import pytest
 
 def pytest_addoption(parser):
     parser.addoption(
-            "--test_dir", 
+            "--working_directory", 
         action="store", 
         help="Working directory for tests"
     )
@@ -26,5 +26,5 @@ def pytest_addoption(parser):
 
 @pytest.fixture
 def cmdopt(request):
-    return request.config.getoption("--test_dir")
+    return request.config.getoption("--working_directory")
 

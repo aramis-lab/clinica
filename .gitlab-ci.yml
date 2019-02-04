@@ -145,7 +145,7 @@ test:run:mac:
     - cd test
     - ln -s /Volumes/builds/Clinica/data_ci ./data
     - pytest --verbose 
-         --test_dir=/Volumes/builds/Clinica/working_directory_ci_mac 
+         --working_directory=/Volumes/builds/Clinica/working_directory_ci_mac 
          -k 'test_run'
     - module purge
     - source deactivate
@@ -165,7 +165,7 @@ test:run:linux:
     - ln -s /localdrive10TB/data/ci/data_ci_upgrade ./data
     - taskset -c 0-21 pytest 
          --verbose 
-         --test_dir=/localdrive10TB/data/working_directory_ci_linux  
+         --working_directory=/localdrive10TB/data/working_directory_ci_linux  
          --disable-warnings 
          --timeout=0 
          -n 6 
