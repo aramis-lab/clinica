@@ -21,19 +21,12 @@ import sys
 # Determine location for working_directory
 warnings.filterwarnings("ignore")
 
-if sys.platform == 'darwin':
-    working_dir = '/Volumes/builds/Clinica/working_directory_ci_mac'
-elif sys.platform.startswith('linux'):
-    working_dir = '/localdrive10TB/data/working_directory_ci_linux'
-else:
-    raise SystemError('Could not determine which CI machine is running : sys.platform must return darwin or linux.')
-
-
-def test_run_T1FreeSurferCrossSectional():
+def test_run_T1FreeSurferCrossSectional(cmdopt):
     from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_pipeline import T1FreeSurferCrossSectional
     from os.path import dirname, join, abspath, isfile
     import subprocess
 
+    working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1FreeSurferCrossSectional')
 
     clean_folder(join(root, 'out', 'caps'))
@@ -62,12 +55,13 @@ def test_run_T1FreeSurferCrossSectional():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
-def test_run_T1VolumeTissueSegmentation():
+def test_run_T1VolumeTissueSegmentation(cmdopt):
     import os
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
     from os.path import dirname, join, abspath
     from .comparison_functions import likeliness_measure
 
+    working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeTissueSegmentation')
     clean_folder(join(working_dir, 'T1VolumeTissueSegmentation'))
     clean_folder(join(root, 'out', 'caps'))
@@ -92,12 +86,13 @@ def test_run_T1VolumeTissueSegmentation():
 
 
 
-def test_run_T1VolumeCreateDartel():
+def test_run_T1VolumeCreateDartel(cmdopt):
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
     from os.path import dirname, join, abspath, exists
     import shutil
     from .comparison_functions import likeliness_measure
 
+    working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeCreateDartel')
 
     # Remove potential residual of previous UT
@@ -136,13 +131,14 @@ def test_run_T1VolumeCreateDartel():
 
 
 
-def test_run_T1VolumeDartel2MNI():
+def test_run_T1VolumeDartel2MNI(cmdopt):
     from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_pipeline import T1VolumeDartel2MNI
     from os.path import dirname, join, abspath, exists
     import shutil
     import numpy as np
     import nibabel as nib
 
+    working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeDartel2MNI')
 
     # Remove potential residual of previous UT
@@ -175,12 +171,13 @@ def test_run_T1VolumeDartel2MNI():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
-def test_run_T1VolumeNewTemplate():
+def test_run_T1VolumeNewTemplate(cmdopt):
     from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_pipeline import T1VolumeNewTemplate
     from os.path import dirname, join, abspath, exists, basename
     import numpy as np
     import nibabel as nib
 
+    working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeNewTemplate')
 
     # Remove residual files from out folder
@@ -216,12 +213,13 @@ def test_run_T1VolumeNewTemplate():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
-def test_run_T1VolumeExistingDartel():
+def test_run_T1VolumeExistingDartel(cmdopt):
     from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_pipeline import T1VolumeExistingDartel
     from os.path import dirname, join, abspath
     import shutil
     from .comparison_functions import likeliness_measure
 
+    working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeExistingDartel')
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     clean_folder(join(working_dir, 'T1VolumeExistingDartel'))
@@ -256,12 +254,13 @@ def test_run_T1VolumeExistingDartel():
 
 
 
-def test_run_T1VolumeExistingTemplate():
+def test_run_T1VolumeExistingTemplate(cmdopt):
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
     from os.path import dirname, join, abspath
     import shutil
     from .comparison_functions import likeliness_measure
 
+    working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeExistingTemplate')
 
     # Remove residual files from out folder
@@ -294,13 +293,14 @@ def test_run_T1VolumeExistingTemplate():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
-def test_run_T1VolumeParcellation():
+def test_run_T1VolumeParcellation(cmdopt):
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import T1VolumeParcellation
     from os.path import dirname, join, abspath, exists
     import shutil
     import pandas as pds
     import numpy as np
 
+    working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeParcellation')
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     clean_folder(join(working_dir, 'T1VolumeParcellation'))
@@ -334,11 +334,12 @@ def test_run_T1VolumeParcellation():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
-def test_run_DWIPreprocessingUsingT1():
+def test_run_DWIPreprocessingUsingT1(cmdopt):
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DwiPreprocessingUsingT1
     from os.path import dirname, join, abspath
     from .comparison_functions import similarity_measure
 
+    working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'DWIPreprocessingUsingT1')
 
     # Remove old instance of UT
@@ -364,13 +365,14 @@ def test_run_DWIPreprocessingUsingT1():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
-def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
+def test_run_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DwiPreprocessingUsingPhaseDiffFieldmap
     from os.path import dirname, join, abspath
     from .comparison_functions import similarity_measure
     import warnings
     warnings.filterwarnings("ignore")
 
+    working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'DWIPreprocessingUsingPhaseDiffFieldmap')
 
     # Remove old instance of UT
@@ -395,13 +397,14 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
-def test_run_DWIDTI():
+def test_run_DWIDTI(cmdopt):
     from clinica.pipelines.dwi_dti.dwi_dti_pipeline import DwiDti
     from os.path import dirname, join, abspath, exists
     import shutil
     import pandas as pds
     import numpy as np
 
+    working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'DWIDTI')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -434,13 +437,14 @@ def test_run_DWIDTI():
 
 
 
-def test_run_DWIConnectome():
+def test_run_DWIConnectome(cmdopt):
     from clinica.pipelines.dwi_connectome.dwi_connectome_pipeline import DwiConnectome
     from os.path import dirname, join, abspath, exists
     import shutil
     import pandas as pds
     import numpy as np
 
+    working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'DWIConnectome')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -479,12 +483,13 @@ def test_run_DWIConnectome():
     pass
 
 
-def test_run_fMRIPreprocessing():
+def test_run_fMRIPreprocessing(cmdopt):
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
     from .comparison_functions import similarity_measure
     from os.path import dirname, join, abspath
     import shutil
 
+    working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'fMRIPreprocessing')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -517,12 +522,13 @@ def test_run_fMRIPreprocessing():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
-def test_run_PETVolume():
+def test_run_PETVolume(cmdopt):
     from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
     from os.path import dirname, join, abspath, exists
     import shutil
     from .comparison_functions import likeliness_measure
 
+    working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'PETVolume')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -552,13 +558,14 @@ def test_run_PETVolume():
 
 
 
-def test_run_StatisticsSurface():
+def test_run_StatisticsSurface(cmdopt):
     from clinica.pipelines.statistics_surface.statistics_surface_pipeline import StatisticsSurface
     from os.path import dirname, join, abspath, exists
     import shutil
     import numpy as np
     from scipy.io import loadmat
 
+    working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'StatisticsSurface')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -596,13 +603,14 @@ def test_run_StatisticsSurface():
 
 
 
-def test_run_PETSurface():
+def test_run_PETSurface(cmdopt):
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
     from os.path import dirname, join, abspath
     import shutil
     import nibabel as nib
     import numpy as np
 
+    working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'PETSurface')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -635,7 +643,7 @@ def test_run_PETSurface():
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
-def test_run_WorkflowsML():
+def test_run_WorkflowsML(cmdopt):
     from clinica.pipelines.machine_learning.ml_workflows import RB_RepHoldOut_LogisticRegression, VertexB_RepHoldOut_dualSVM, RB_RepHoldOut_RandomForest, VB_KFold_DualSVM
     from os.path import dirname, join, abspath
     import shutil
@@ -681,7 +689,7 @@ def test_run_WorkflowsML():
     shutil.rmtree(output_dir4)
 
 
-def test_run_Oasis2Bids():
+def test_run_Oasis2Bids(cmdopt):
     from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import OasisToBids
     from os.path import dirname, join, abspath
     from os import system, remove
@@ -723,7 +731,7 @@ def test_run_Oasis2Bids():
     clean_folder(join(root, 'out', 'bids'), recreate=True)
 
 
-def test_run_Adni2Bids():
+def test_run_Adni2Bids(cmdopt):
     from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
     from os.path import dirname, join, abspath
     from os import system, remove
@@ -771,7 +779,7 @@ def test_run_Adni2Bids():
     clean_folder(join(root, 'out', 'bids'), recreate=True)
 
 
-def test_run_CreateSubjectSessionList():
+def test_run_CreateSubjectSessionList(cmdopt):
     from os.path import join, dirname, abspath
     from os import remove
     from clinica.iotools.utils import data_handling as dt
@@ -794,7 +802,7 @@ def test_run_CreateSubjectSessionList():
     remove(out_tsv)
 
 
-def test_run_CreateMergeFile():
+def test_run_CreateMergeFile(cmdopt):
     from os.path import join, dirname, abspath
     from os import remove
     from filecmp import cmp
@@ -825,7 +833,7 @@ def test_run_CreateMergeFile():
     remove(out_tsv)
 
 
-def test_run_ComputeMissingModalities():
+def test_run_ComputeMissingModalities(cmdopt):
     from os.path import join, dirname, abspath, exists
     from os import remove
     from clinica.iotools.utils import data_handling as dt
@@ -854,7 +862,7 @@ def test_run_ComputeMissingModalities():
         remove(join(root, 'out', filenames[i]))
 
 
-def test_run_Aibl2Bids():
+def test_run_Aibl2Bids(cmdopt):
     from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import convert_clinical_data, convert_images
     from os.path import dirname, join, abspath
 
@@ -871,12 +879,14 @@ def test_run_Aibl2Bids():
 
 
 
-def test_run_SpatialSVM():
+def test_run_SpatialSVM(cmdopt):
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
     from os.path import dirname, join, abspath, exists
     import shutil
     import numpy as np
     import nibabel as nib
+    
+    working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'SpatialSVM')
 
     # Remove potential residual of previous UT
