@@ -42,9 +42,9 @@ class T1VolumeParcellationCLI(ce.CmdParser):
                               help='Specify if modulation must be enabled (default: --modulation on')
         list_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
         advanced.add_argument("-atlases", "--atlases",
-                              nargs='+', type=str, metavar="",
+                              nargs='+', type=str, metavar='',
                               default=list_atlases, choices=list_atlases,
-                              help='A list of atlases to use to calculate the mean GM concentration at each region (default: all atlases i.e. --atlases AAL2 AICHA Hammers LPBA40 Neuromorphometrics).')
+                              help='A list of atlases used to calculate the regional mean GM concentrations (default: all atlases i.e. --atlases AAL2 AICHA Hammers LPBA40 Neuromorphometrics).')
 
     def run_command(self, args):
         """

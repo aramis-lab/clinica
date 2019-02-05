@@ -13,7 +13,7 @@ class T1VolumeDartel2MNICLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'Register DARTEL template to MNI space with SPM:\n'\
+        self._description = 'Register DARTEL template to MNI space:\n'\
                             + 'http://clinica.run/doc/Pipelines/T1_Volume/'
 
     def define_options(self):
@@ -30,9 +30,9 @@ class T1VolumeDartel2MNICLI(ce.CmdParser):
                                   help='User-defined identifier for the provided group of subjects.')
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("-fwhm", "--fwhm",
+        optional.add_argument("-s", "--smooth",
                               nargs='+', type=int, default=[8],
-                              help="A list of integers specifying the different isomorphic fwhm in millimeters to smooth the image (default: -fwhm 8).")
+                              help="A list of integers specifying the different isomorphic FWHM in millimeters to smooth the image (default: --smooth 8).")
         # Clinica standard arguments (e.g. --n_procs)
         clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
         clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
@@ -49,16 +49,16 @@ class T1VolumeDartel2MNICLI(ce.CmdParser):
         advanced.add_argument("-m", "--modulate",
                               type=bool, default=True,
                               metavar=('True/False'),
-                              help='A boolean. Modulate output images - no modulation preserves concentrations.')
+                              help='A boolean. Modulate output images - no modulation preserves concentrations (default: --modulate True).')
         advanced.add_argument("-vs", "--voxel_size",
                               metavar=('float'),
                               nargs=3, type=float,
-                              help="A list of 3 floats specifying voxel sizes for each dimension of output image (default: --voxel_size 1.5 1.5 1.5).")
+                              help="A list of 3 floats specifying the voxel size of the output image (default: --voxel_size 1.5 1.5 1.5).")
         list_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
         advanced.add_argument("-atlases", "--atlases",
                               nargs='+', type=str, metavar='',
                               default=list_atlases, choices=list_atlases,
-                              help='A list of atlases to use to calculate the mean GM concentration at each region (default: all atlases i.e. --atlases AAL2 AICHA Hammers LPBA40 Neuromorphometrics).')
+                              help='A list of atlases used to calculate the regional mean GM concentrations (default: all atlases i.e. --atlases AAL2 AICHA Hammers LPBA40 Neuromorphometrics).')
 
     def run_command(self, args):
         """
@@ -78,7 +78,7 @@ class T1VolumeDartel2MNICLI(ce.CmdParser):
             # 'bounding_box': None,
             'voxel_size': tuple(args.voxel_size) if args.voxel_size is not None else None,
             'modulation': args.modulate,
-            'fwhm': args.fwhm,
+            'fwhm': args.smooth,
             'atlas_list': args.atlases
         })
 
