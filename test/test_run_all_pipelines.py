@@ -443,6 +443,10 @@ def test_run_DWIConnectome():
 
     root = join(dirname(abspath(__file__)), 'data', 'DWIConnectome')
 
+    n_tracks = 1000000
+    subject_id = 'sub-HMTC20110506MEMEPPAT27'
+    session_id = 'ses-M00'
+
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     clean_folder(join(working_dir, 'DWIConnectome'))
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
@@ -450,18 +454,17 @@ def test_run_DWIConnectome():
     pipeline = DwiConnectome(caps_directory=join(root, 'out', 'caps'),
                              tsv_file=join(root, 'in', 'subjects.tsv'))
     pipeline.parameters = {
-        'n_tracks' : 1000000
+        'n_tracks' : n_tracks
     }
     pipeline.base_dir = join(working_dir, 'DWIConnectome')
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
 
     # Check files
-    subject_id = 'sub-HMTC20110506MEMEPPAT27'
     atlases = ['desikan', 'destrieux']
-    out_files = [join(root, 'out', 'caps', 'subjects', subject_id, 'ses-M00', 'dwi', 'connectome_based_processing', subject_id + '_ses-M00_dwi_space-b0_model-CSD_atlas-' + a + '_connectivity.tsv')
+    out_files = [join(root, 'out', 'caps', 'subjects', subject_id, session_id, 'dwi', 'connectome_based_processing', subject_id + '_' + session_id + '_dwi_space-b0_model-CSD_atlas-' + a + '_connectivity.tsv')
                  for a in atlases]
-    ref_files = [join(root, 'ref', subject_id + '_ses-M00_dwi_space-b0_model-CSD_atlas-' + a + '_connectivity.tsv')
+    ref_files = [join(root, 'ref', subject_id + '_' + session_id + '_dwi_space-b0_model-CSD_atlas-' + a + '_connectivity.tsv')
                  for a in atlases]
 
     # @TODO: Find the adequate threshold for DWI-Connectome pipeline
