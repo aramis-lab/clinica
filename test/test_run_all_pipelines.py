@@ -621,7 +621,9 @@ def test_run_PETSurface(cmdopt):
                           caps_directory=join(root, 'out', 'caps'),
                           tsv_file=join(root, 'in', 'subjects.tsv'))
     pipeline.parameters['pet_type'] = 'fdg'
-    pipeline.parameters['wd'] = join(working_dir, 'PETSurface')
+    wd = join(working_dir, 'PETSurface')
+    pipeline.base_dir = wd
+    pipeline.parameters['wd'] = wd
     pipeline.build()
     pipeline.run()
 
@@ -637,9 +639,9 @@ def test_run_PETSurface(cmdopt):
                  for f in [0, 5, 10, 15, 20, 25]]
 
     for i in range(len(out_files)):
-         assert np.allclose(np.squeeze(nib.load(out_files[i]).get_data()),
-                            np.squeeze(nib.load(ref_files[i]).get_data()),
-                            rtol=1e-4, equal_nan=True)
+        assert np.allclose(np.squeeze(nib.load(out_files[i]).get_data()),
+                           np.squeeze(nib.load(ref_files[i]).get_data()),
+                           rtol=1e-4, equal_nan=True)
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
