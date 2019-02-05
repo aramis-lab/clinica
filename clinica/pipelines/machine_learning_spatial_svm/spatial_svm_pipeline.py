@@ -178,16 +178,16 @@ class SpatialSVM(cpe.Pipeline):
         datasink.inputs.parameterization = True
         if self.parameters['image_type'] == 't1':
             datasink.inputs.regexp_substitutions = [
-                (r'(.*)/regularized_image/.*/(.*(sub-(.*)_ses-(.*))_T1w(.*)_(probability.*))$',
-                 r'\1/subjects/sub-\4/ses-\5/t1/input_regularised_svm/group-' + self.parameters['group_id'] + r'/\3\6_regularization-Fisher_fwhm-' + str(self.parameters['fwhm']) + r'_\7'),
+                (r'(.*)/regularized_image/.*/(.*(sub-(.*)_ses-(.*))_T1w(.*)_probability(.*))$',
+                 r'\1/subjects/sub-\4/ses-\5/machine_learning/input_spatial_svm/group-' + self.parameters['group_id'] + r'/\3_T1w\6_spatialregularization\7'),
                 (r'(.*)json_file/(output_data.json)$',
-                    r'\1/groups/group-' + self.parameters['group_id'] + r'/t1/input_regularised_svm/group-' + self.parameters['group_id'] + r'_space-Ixi549Space_modulated-on_regularization-Fisher_fwhm-'
-                    + str(self.parameters['fwhm']) + r'_parameters.json'),
+                 r'\1/groups/group-' + self.parameters['group_id'] + r'/machine_learning/input_spatial_svm/group-' + self.parameters['group_id'] + r'_space-Ixi549Space_regularization-Fisher_fwhm-'
+                 + str(int(self.parameters['fwhm'])) + r'_parameters.json'),
 
                 (r'(.*)fisher_tensor_path/(output_fisher_tensor.npy)$',
-                    r'\1/groups/group-' + self.parameters['group_id'] + r'/t1/input_regularised_svm/group-' + self.parameters[
-                        'group_id'] + r'_space-Ixi549Space_modulated-on_regularization-Fisher_fwhm-'
-                    + str(self.parameters['fwhm']) + r'_gram.npy')
+                 r'\1/groups/group-' + self.parameters['group_id'] + r'/machine_learning/input_spatial_svm/group-' + self.parameters[
+                     'group_id'] + r'_space-Ixi549Space_regularization-Fisher_fwhm-'
+                 + str(int(self.parameters['fwhm'])) + r'_gram.npy')
             ]
 
         elif self.parameters['image_type'] == 'pet':

@@ -999,8 +999,11 @@ def obtain_time_step_estimation(dartel_input, FWHM, g):
 
     # after t_step calculation: creation of json file
     data = {
-        "Alpha": 0.9, "Epsilon": 1e-6, "BoundaryConditions": 'TimeInvariant', "sigma_loc": 10, "TimeStepMax": t_step_max
+        "MaxDeltaT": 0.0025, "Alpha": 0.9, "Epsilon": 1e-6, "BoundaryConditions": 'TimeInvariant', "sigma_loc": 10,
+        "TimeStepMax": t_step_max,
+        "SpatialPrior": "Tissues (GM, WM, CSF)", "RegularizationType": 'Fisher', "FWHM": FWHM
     }
+
     json_data = json.dumps(data)
     with open('./output_data.json', 'w') as f:
         json.dump(json_data, f)
