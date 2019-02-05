@@ -103,12 +103,24 @@ class SpatialSVM(cpe.Pipeline):
 
 
         elif image_type == 'pet':
-            input_image = caps_layout.get(return_type='file',
-                                          subject=subjects_regex,
-                                          session=sessions_regex,
-                                          group_id=self.parameters['group_id'],
-                                          pet_file=pet_type
-                                          )
+            subjects_not_found = []
+            for i, sub in enumerate(self.subjects):
+
+                input_image_single_subject = join(self.caps_directory,
+                                                  'subjects', sub, self.sessions[i], 'pet/preprocessing/group-'
+                                                  + self.parameters['group_id'], sub + '_' + self.sessions[i]
+                                                  + '_task-rest_acq-' + pet_type + '_pet_space-Ixi549Space_suvr-pons_pet.nii.gz')
+                if not exists(input_image_single_subject):
+                    subjects_not_found.append(input_image_single_subject)
+                else:
+                    input_image.append(input_image_single_subject)
+
+            if len(subjects_not_found) > 0:
+                error_string = ''
+                for file in subjects_not_found:
+                    error_string = error_string + file + '\n'
+                raise IOError('Following files were not found :\n' + error_string)
+
         else:
             raise IOError('Image type ' + image_type + ' unknown')
 
@@ -192,21 +204,19 @@ class SpatialSVM(cpe.Pipeline):
 
         elif self.parameters['image_type'] == 'pet':
             datasink.inputs.regexp_substitutions = [
-                (r'(.*)/regularized_image/.*/(.*(sub-(.*)_ses-(.*))_(task.*)_(pet.*))$',
-                 r'\1/subjects/sub-\4/ses-\5/pet/input_regularised_svm/group-' + self.parameters[
-                     'group_id'] + r'/\3\6_regularization-Fisher_fwhm-' + str(self.parameters['fwhm']) + r'_\7'),
-
+                (r'(.*)/regularized_image/.*/(.*(sub-(.*)_ses-(.*))_(task.*)_pet(.*))$',
+                 r'\1/subjects/sub-\4/ses-\5/machine_learning/input_spatial_svm/group-' + self.parameters[
+                     'group_id'] + r'/\3_\6_spatialregularization\7'),
                 (r'(.*)json_file/(output_data.json)$',
-                 r'\1/groups/group-' + self.parameters['group_id'] + r'/t1/input_regularised_svm/group-' +
-                 self.parameters['group_id'] + r'_space-Ixi549Space_modulated-on_regularization-Fisher_fwhm-'
-                 + str(self.parameters['fwhm']) + r'_parameters.json'),
+                 r'\1/groups/group-' + self.parameters['group_id'] + r'/machine_learning/input_spatial_svm/group-' +
+                 self.parameters['group_id'] + r'_space-Ixi549Space_regularization-Fisher_fwhm-'
+                 + str(int(self.parameters['fwhm'])) + r'_parameters.json'),
                 (r'(.*)fisher_tensor_path/(output_fisher_tensor.npy)$',
-                 r'\1/groups/group-' + self.parameters['group_id'] + r'/t1/input_regularised_svm/group-' +
+                 r'\1/groups/group-' + self.parameters['group_id'] + r'/machine_learning/input_spatial_svm/group-' +
                  self.parameters[
-                     'group_id'] + r'_space-Ixi549Space_modulated-on_regularization-Fisher_fwhm-'
-                 + str(self.parameters['fwhm']) + r'_gram.npy')
+                     'group_id'] + r'_space-Ixi549Space_regularization-Fisher_fwhm-'
+                 + str(int(self.parameters['fwhm'])) + r'_gram.npy')
             ]
-
         # Connection
         # ==========
         self.connect([
