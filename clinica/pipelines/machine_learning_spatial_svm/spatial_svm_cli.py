@@ -29,7 +29,7 @@ class SpatialSVMCLI(ce.CmdParser):
                               help='Imaging modality. Can be t1 or pet (default: --image_type t1)')
         optional.add_argument("-pt", "--pet_tracer", default='FDG',
                               help='PET tracer. Can be fdg or av45 (default: --pet_tracer fdg)')
-        # Clinica standard arguments (e.g. --n_procs)
+         # Clinica standard arguments (e.g. --n_procs)
         clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
         clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
                                  help='TSV file containing a list of subjects with their sessions.')
@@ -41,8 +41,7 @@ class SpatialSVMCLI(ce.CmdParser):
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
         advanced.add_argument("-fwhm", "--full_width_half_maximum", type=float, default=4,
                               help='Amount of regularization (in mm). In practice, we found the default value (--full_width_half_maximum 4) to be optimal. We therefore do not recommend to change it unless you have a specific reason to do so.')
-        advanced.add_argument("-vs", "--voxel_size", type=float, default=1.5,
-                              help='Voxel size of the input image (e.g. --voxel_size 1.5)')
+
 
     def run_command(self, args):
         """
@@ -56,7 +55,6 @@ class SpatialSVMCLI(ce.CmdParser):
 
         pipeline.parameters = {
             'group_id': args.group_id,
-            'h': args.voxel_size,
             'fwhm': args.full_width_half_maximum,
             'image_type': args.image_type,
             'pet_type': args.pet_tracer,

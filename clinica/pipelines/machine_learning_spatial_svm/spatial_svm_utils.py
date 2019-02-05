@@ -958,7 +958,7 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
     return g, os.path.abspath('./output_fisher_tensor.npy')
 
 
-def obtain_time_step_estimation(h, FWHM, g):
+def obtain_time_step_estimation(dartel_input, FWHM, g):
     """
 
     :param h: 1,5 voxel size
@@ -972,6 +972,15 @@ def obtain_time_step_estimation(h, FWHM, g):
     import numpy as np
     import json
     import os
+    import nibabel as nib
+
+    #obtain voxel size with dartel_input
+    head = nib.load(dartel_input[0])
+    head_ = head.header
+    for i in range(len(head_['pixdim'])):
+        if head_['pixdim'][i] > 0:
+            h = head_['pixdim'][i]
+
 
     error_tol = 0.001  # error for the estimation of the largest eigenvalue
     alpha_time = 0.9  # time_step = alpha_time * (time_step_max)
@@ -999,12 +1008,20 @@ def obtain_time_step_estimation(h, FWHM, g):
     return t_step, os.path.abspath('./output_data.json')
 
 
-def heat_solver_equation(input_image, g, FWHM, h, t_step, dartel_input):
+def heat_solver_equation(input_image, g, FWHM, t_step, dartel_input):
     import math
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
     import nibabel as nib
     import numpy as np
     import os
+
+    #obtain voxel size with dartel_input
+    head = nib.load(dartel_input[0])
+    head_ = head.header
+    for i in range(len(head_['pixdim'])):
+        if head_['pixdim'][i] > 0:
+            h = head_['pixdim'][i]
+
 
     sigma = FWHM / (2 * math.sqrt(2 * math.log(2)))  # sigma of voxels
     beta = sigma ** 2 / 2
