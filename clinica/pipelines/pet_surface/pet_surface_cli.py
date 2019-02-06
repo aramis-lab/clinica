@@ -65,7 +65,7 @@ class PetSurfaceCLI(ce.CmdParser):
             'wd': self.absolute_path(args.working_directory),
             'n_procs': args.n_procs
         }
-        pipeline.base_dir = self.absolute_path(mkdtemp())
+        pipeline.base_dir = self.absolute_path(args.working_directory)
         if args.n_procs:
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         else:
