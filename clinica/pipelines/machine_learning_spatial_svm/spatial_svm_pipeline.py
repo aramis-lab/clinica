@@ -102,16 +102,15 @@ class SpatialSVM(cpe.Pipeline):
                     error_string = error_string + file + '\n'
                 raise IOError('Following files were not found :\n' + error_string)
 
-
-        elif image_type == 'pet':
-            if no_pvc == True:
+        elif image_type is 'pet':
+            if no_pvc is True:
                 subjects_not_found = []
                 for i, sub in enumerate(self.subjects):
 
                     input_image_single_subject = join(self.caps_directory,
-                                                  'subjects', sub, self.sessions[i], 'pet/preprocessing/group-'
-                                                  + self.parameters['group_id'], sub + '_' + self.sessions[i]
-                                                  + '_task-rest_acq-' + pet_type + '_pet_space-Ixi549Space_suvr-pons_pet.nii.gz')
+                                                      'subjects', sub, self.sessions[i], 'pet/preprocessing/group-'
+                                                      + self.parameters['group_id'], sub + '_' + self.sessions[i]
+                                                      + '_task-rest_acq-' + pet_type + '_pet_space-Ixi549Space_suvr-pons_pet.nii.gz')
                     if not exists(input_image_single_subject):
                         subjects_not_found.append(input_image_single_subject)
                     else:
@@ -127,9 +126,9 @@ class SpatialSVM(cpe.Pipeline):
                 for i, sub in enumerate(self.subjects):
 
                     input_image_single_subject = join(self.caps_directory,
-                                                  'subjects', sub, self.sessions[i], 'pet/preprocessing/group-'
-                                                  + self.parameters['group_id'], sub + '_' + self.sessions[i]
-                                                  + '_task-rest_acq-' + pet_type + '_pet_space-Ixi549Space_pvc-rbv_suvr-pons_pet.nii.gz')
+                                                      'subjects', sub, self.sessions[i], 'pet/preprocessing/group-'
+                                                      + self.parameters['group_id'], sub + '_' + self.sessions[i]
+                                                      + '_task-rest_acq-' + pet_type + '_pet_space-Ixi549Space_pvc-rbv_suvr-pons_pet.nii.gz')
                     if not exists(input_image_single_subject):
                         subjects_not_found.append(input_image_single_subject)
                     else:
@@ -140,8 +139,6 @@ class SpatialSVM(cpe.Pipeline):
                     for file in subjects_not_found:
                         error_string = error_string + file + '\n'
                     raise IOError('Following files were not found :\n' + error_string)
-
-
         else:
             raise IOError('Image type ' + image_type + ' unknown')
 

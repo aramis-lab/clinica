@@ -29,7 +29,7 @@ class SpatialSVMCLI(ce.CmdParser):
                               help='Imaging modality. Can be t1 or pet (default: --image_type t1)')
         optional.add_argument("-pt", "--pet_tracer", default='FDG',
                               help='PET tracer. Can be fdg or av45 (default: --pet_tracer fdg)')
-         # Clinica standard arguments (e.g. --n_procs)
+        # Clinica standard arguments (e.g. --n_procs)
         clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
         clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
                                  help='TSV file containing a list of subjects with their sessions.')

@@ -787,6 +787,7 @@ def heat_solver_tensor_2D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
 
     return u
 
+
 def obtain_g_fisher_tensor(dartel_input, FWHM):
     """
     heat regularization based on the Fisher metric
@@ -877,13 +878,12 @@ def obtain_time_step_estimation(dartel_input, FWHM, g):
     import os
     import nibabel as nib
 
-    #obtain voxel size with dartel_input
+    # obtain voxel size with dartel_input
     head = nib.load(dartel_input[0])
     head_ = head.header
     for i in range(len(head_['pixdim'])):
         if head_['pixdim'][i] > 0:
             h = head_['pixdim'][i]
-
 
     error_tol = 0.001  # error for the estimation of the largest eigenvalue
     alpha_time = 0.9  # time_step = alpha_time * (time_step_max)
@@ -921,13 +921,12 @@ def heat_solver_equation(input_image, g, FWHM, t_step, dartel_input):
     import numpy as np
     import os
 
-    #obtain voxel size with dartel_input
+    # obtain voxel size with dartel_input
     head = nib.load(dartel_input[0])
     head_ = head.header
     for i in range(len(head_['pixdim'])):
         if head_['pixdim'][i] > 0:
             h = head_['pixdim'][i]
-
 
     sigma = FWHM / (2 * math.sqrt(2 * math.log(2)))  # sigma of voxels
     beta = sigma ** 2 / 2
