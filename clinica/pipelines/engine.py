@@ -252,6 +252,7 @@ class Pipeline(Workflow):
         """
         if not self.is_built:
             self.build()
+        self.check_size()
         return Workflow.run(self, plugin, plugin_args, update_hash)
 
     def load_info(self):
@@ -328,6 +329,72 @@ class Pipeline(Workflow):
         self.check_custom_dependencies()
 
         return self
+
+    def check_size(self):
+        """ Checks if the pipeline has enough space on the disk for both
+        working directory and caps directory"""
+        from os import statvfs
+        from os.path import dirname, abspath, join
+        from pandas import read_csv
+
+        def convert2byte(string):
+            if '.' in string:
+                raise ValueError('Can not handle . (dot) '
+                                 + 'in space_required_by_pipeline.csv')
+            if string[-1].isalpha():
+                if string[-1].lower() == 'k':
+                    coeff = 1e3
+                elif string[-1].lower() == 'm':
+                    coeff = 1e6
+                elif string[-1].lower() == 'g':
+                    coeff = 1e9
+                elif string[-1].lower() == 't':
+                    coeff = 1e12
+                return int(string[:-1]) * coeff
+            else:
+                return int(string)
+
+        # Get the number of sessions
+        n_sessions = len(self.subjects)
+
+        caps_stat = statvfs(self.caps_directory)
+        wd_stat = statvfs(dirname(self.parameters['wd']))
+
+        # Estimate space left on partition/disk/whatever caps and wd is located
+        free_space_caps = caps_stat.f_bavail * caps_stat.f_frsize
+        free_space_wd = wd_stat.f_bavail * wd_stat.f_frsize
+
+        # space estimation file location
+        info_pipelines = read_csv(join(dirname(abspath(__file__)),
+                                       'space_required_by_pipeline.csv'),
+                                  sep=';')
+        pipeline_list = list(info_pipelines.pipeline_name)
+
+        idx_pipeline = pipeline_list.index(self._name)
+        space_needed_caps_1_session = info_pipelines.space_caps[idx_pipeline]
+        space_needed_wd_1_session = info_pipelines.space_wd[idx_pipeline]
+        space_needed_caps = n_sessions * convert2byte(space_needed_caps_1_session)
+        space_needed_wd = n_sessions * convert2byte(space_needed_wd_1_session)
+        error = ''
+        if free_space_caps == free_space_wd:
+            if space_needed_caps + space_needed_wd < free_space_wd:
+                # We assume this is the same disk
+                error = error + 'Space needed for CAPS and working directory ('
+                + str(space_needed_caps + space_needed_wd)
+                + ') is greater than what is left on your hard drive ('
+                + str(free_space_wd) + ')'
+        else:
+            if space_needed_caps > free_space_caps:
+                error = error + ('Space needed for CAPS (' + str(space_needed_caps)
+                                 + ') is greater than what is left on your hard '
+                                 + 'drive (' + str(free_space_caps) + ')\n')
+            if space_needed_wd > free_space_wd:
+                error = error + ('Space needed for working_directory ('
+                                 + str(space_needed_caps) + ') is greater than what is left on your hard '
+                                 + 'drive (' + str(free_space_caps) + ')\n')
+        if error != '':
+            raise RuntimeError(error)
+
 
     @property
     def is_built(self): return self._is_built
