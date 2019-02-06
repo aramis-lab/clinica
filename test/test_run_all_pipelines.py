@@ -870,7 +870,6 @@ def test_run_Aibl2Bids():
     convert_clinical_data(bids_directory, clinical_data_directory)
 
 
-
 def test_run_SpatialSVM():
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
     from os.path import dirname, join, abspath, exists
@@ -881,6 +880,7 @@ def test_run_SpatialSVM():
 
     # Remove potential residual of previous UT
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'SpatialSVM'), recreate=False)
 
     # Copy necessary data from in to out
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
@@ -889,21 +889,21 @@ def test_run_SpatialSVM():
     pipeline = SpatialSVM(caps_directory=join(root, 'out', 'caps'),
                           tsv_file=join(root, 'in', 'subjects.tsv'))
 
-    pipeline.parameters['group_id'] = 'ADCNbaseline'
+    pipeline.parameters['group_id'] = 'ADNIbl'
     pipeline.parameters['fwhm'] = 4
-    pipeline.parameters['h'] = 1.5
     pipeline.parameters['image_type'] = 't1'
     pipeline.parameters['pet_type'] = 'fdg'
+    pipeline.parameters['no_pvc'] = True
     pipeline.base_dir = join(working_dir, 'SpatialSVM')
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
 
     # Check output vs ref
-    subjects = ['sub-ADNI002S4213', 'sub-ADNI011S4075']
-    out_data_REG_NIFTI = [nib.load(join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 't1', 'input_regularised_svm', 'group-ADCNbaseline',
-                                        sub + '_ses-M00_segm-graymatter_space-Ixi549Space_modulated-on_regularization-Fisher_fwhm-4_probability.nii.gz')).get_data()
+    subjects = ['sub-ADNI011S0023', 'sub-ADNI013S0325']
+    out_data_REG_NIFTI = [nib.load(join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 'machine_learning', 'input_spatial_svm', 'group-ADNIbl',
+                                        sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz')).get_data()
                           for sub in subjects]
-    ref_data_REG_NIFTI = [nib.load(join(root, 'ref', sub + '_ses-M00_segm-graymatter_space-Ixi549Space_modulated-on_regularization-Fisher_fwhm-4.0_probability.nii.gz')).get_data()
+    ref_data_REG_NIFTI = [nib.load(join(root, 'ref', sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz')).get_data()
                           for sub in subjects]
     for i in range(len(out_data_REG_NIFTI)):
         assert np.allclose(out_data_REG_NIFTI[i], ref_data_REG_NIFTI[i],
@@ -911,6 +911,8 @@ def test_run_SpatialSVM():
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=True)
+
+
 
 
 def clean_folder(path, recreate=True):

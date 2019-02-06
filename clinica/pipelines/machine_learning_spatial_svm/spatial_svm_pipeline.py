@@ -78,6 +78,7 @@ class SpatialSVM(cpe.Pipeline):
                                                                           mandatory_inputs=True))
         image_type = self.parameters['image_type']
         pet_type = self.parameters['pet_type']
+        no_pvc = self.parameters['no_pvc']
 
         participant_id_pycaps = [sub[4:] for sub in self.subjects]
         session_id_pycaps = [ses[4:] for ses in self.sessions]
@@ -103,23 +104,43 @@ class SpatialSVM(cpe.Pipeline):
 
 
         elif image_type == 'pet':
-            subjects_not_found = []
-            for i, sub in enumerate(self.subjects):
+            if no_pvc == True:
+                subjects_not_found = []
+                for i, sub in enumerate(self.subjects):
 
-                input_image_single_subject = join(self.caps_directory,
+                    input_image_single_subject = join(self.caps_directory,
                                                   'subjects', sub, self.sessions[i], 'pet/preprocessing/group-'
                                                   + self.parameters['group_id'], sub + '_' + self.sessions[i]
                                                   + '_task-rest_acq-' + pet_type + '_pet_space-Ixi549Space_suvr-pons_pet.nii.gz')
-                if not exists(input_image_single_subject):
-                    subjects_not_found.append(input_image_single_subject)
-                else:
-                    input_image.append(input_image_single_subject)
+                    if not exists(input_image_single_subject):
+                        subjects_not_found.append(input_image_single_subject)
+                    else:
+                        input_image.append(input_image_single_subject)
 
-            if len(subjects_not_found) > 0:
-                error_string = ''
-                for file in subjects_not_found:
-                    error_string = error_string + file + '\n'
-                raise IOError('Following files were not found :\n' + error_string)
+                if len(subjects_not_found) > 0:
+                    error_string = ''
+                    for file in subjects_not_found:
+                        error_string = error_string + file + '\n'
+                    raise IOError('Following files were not found :\n' + error_string)
+            else:
+                subjects_not_found = []
+                for i, sub in enumerate(self.subjects):
+
+                    input_image_single_subject = join(self.caps_directory,
+                                                  'subjects', sub, self.sessions[i], 'pet/preprocessing/group-'
+                                                  + self.parameters['group_id'], sub + '_' + self.sessions[i]
+                                                  + '_task-rest_acq-' + pet_type + '_pet_space-Ixi549Space_pvc-rbv_suvr-pons_pet.nii.gz')
+                    if not exists(input_image_single_subject):
+                        subjects_not_found.append(input_image_single_subject)
+                    else:
+                        input_image.append(input_image_single_subject)
+
+                if len(subjects_not_found) > 0:
+                    error_string = ''
+                    for file in subjects_not_found:
+                        error_string = error_string + file + '\n'
+                    raise IOError('Following files were not found :\n' + error_string)
+
 
         else:
             raise IOError('Image type ' + image_type + ' unknown')

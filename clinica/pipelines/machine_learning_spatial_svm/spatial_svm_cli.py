@@ -41,7 +41,9 @@ class SpatialSVMCLI(ce.CmdParser):
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
         advanced.add_argument("-fwhm", "--full_width_half_maximum", type=float, default=4,
                               help='Amount of regularization (in mm). In practice, we found the default value (--full_width_half_maximum 4) to be optimal. We therefore do not recommend to change it unless you have a specific reason to do so.')
-
+        advanced.add_argument("-no_pvc", "--no_pvc",
+                              action='store_true', default='False',
+                              help="Force the use of non PVC PET data (by default, PVC PET data are used)")
 
     def run_command(self, args):
         """
@@ -58,6 +60,7 @@ class SpatialSVMCLI(ce.CmdParser):
             'fwhm': args.full_width_half_maximum,
             'image_type': args.image_type,
             'pet_type': args.pet_tracer,
+            'no_pvc': args.no_pvc
         }
         if args.working_directory is None:
             args.working_directory = mkdtemp()

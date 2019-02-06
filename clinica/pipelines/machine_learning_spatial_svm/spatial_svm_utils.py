@@ -35,7 +35,7 @@ def spm_read(fname):
 
     img = nib.load(fname)
     pico = img.get_data()
-    pico.dtype = np.dtype('float32')
+    pico = np.array(pico, dtype='float32')
     mask = (pico != pico)
     pico[mask] = 0
     volu = img.header
@@ -52,7 +52,6 @@ def spm_write_vol(fname, regularized_features):
     """
 
     import nibabel as nib
-    import numpy as np
 
     i = nib.load(fname)
     data = regularized_features
@@ -537,7 +536,6 @@ def tensor_inverse(g):
     :return: inverse of the tensor
     """
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
-    import numpy as np
 
     h = utils.tensor_transpose(utils.tensor_commatrix(g))
     detg = utils.tensor_determinant(g)
@@ -729,7 +727,6 @@ def heat_solver_tensor_3D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     if CL_value is None:
         CL_value = np.zeros(f.shape)
     if epsilon is None:
-        epsilon = 1e-4
         epsilon = 0.1
 
     # rigidity matrix
@@ -809,7 +806,7 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
 
     #
     # PARAMETERS
-    #
+
     sigma_loc = 10
     error_tol = 0.001  # error for the estimation of the largest eigenvalue
     alpha_time = 0.9  # time_step = alpha_time * (time_step_max)
@@ -817,24 +814,17 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
     min_proba = 0.001
     h = 1.5  # voxel size
 
-    #
     # PARSE INPUTS/INIT
-    #
     sigma = FWHM / (2 * math.sqrt(2 * math.log(2)))  # sigma of voxels
     beta = sigma ** 2 / 2
 
-    #
     # SCALE MAPS
-    #
     xxx = []
 
     atlas = utils.atlas_decomposition(dartel_input[0])
 
     for i in atlas:
-        # [image, volu] = utils.spm_read(i)
-        # mask = (image != image)
-        # image[mask] = 0
-        # image = utils.rescaleImage(image, [min_proba, max_proba])
+
         image = utils.rescaleImage(i, [min_proba, max_proba])
 
         xxx.append(image)
@@ -842,9 +832,7 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
     atlas = xxx
     si = atlas[0].shape
 
-    #
     # CREATE TENSOR
-    #
     g_atlas = utils.create_fisher_tensor(atlas)
     g_atlas = utils.tensor_scalar_product(h * h, g_atlas)
     g_pos = utils.tensor_eye(atlas)
@@ -946,7 +934,7 @@ def heat_solver_equation(input_image, g, FWHM, t_step, dartel_input):
 
     input_image_read = nib.load(input_image)
     input_image_data = input_image_read.get_data()
-    input_image_data.dtype = np.dtype('float32')
+    input_image_data = np.array(input_image_data, dtype='float32')
 
     u = utils.heat_solver_tensor_3D_P1_grad_conj(input_image_data, g, beta, h, t_step, CL_value=None, epsilon=None)
 
