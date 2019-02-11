@@ -35,7 +35,7 @@ def spm_read(fname):
 
     img = nib.load(fname)
     pico = img.get_data()
-    pico.dtype = np.dtype('float32')
+    pico = np.array(pico, dtype='float32')
     mask = (pico != pico)
     pico[mask] = 0
     volu = img.header
@@ -52,7 +52,6 @@ def spm_write_vol(fname, regularized_features):
     """
 
     import nibabel as nib
-    import numpy as np
 
     i = nib.load(fname)
     data = regularized_features
@@ -537,7 +536,6 @@ def tensor_inverse(g):
     :return: inverse of the tensor
     """
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
-    import numpy as np
 
     h = utils.tensor_transpose(utils.tensor_commatrix(g))
     detg = utils.tensor_determinant(g)
@@ -729,7 +727,6 @@ def heat_solver_tensor_3D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     if CL_value is None:
         CL_value = np.zeros(f.shape)
     if epsilon is None:
-        epsilon = 1e-4
         epsilon = 0.1
 
     # rigidity matrix
@@ -791,90 +788,6 @@ def heat_solver_tensor_2D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     return u
 
 
-# def regul_withFisher(x, atlas, sigma_loc, h, FWHM, g, t_step_max):
-#     """
-#     heat regularization based on the Fisher metric
-#     :param x:
-#     :param atlas:
-#     :param sigma_loc:
-#     :param h:
-#     :param FWHM:
-#     :param g:
-#     :param t_step_ma:
-#     :return:
-#
-#     """
-#     import math
-#     import numpy as np
-#
-#     ########################################## PARAMETERS ##########################################
-#
-#     error_tol = 0.001  # error for the estimation of the largest eigenvalue
-#     alpha_time = 0.9  # time_step = alpha_time * (time_step_max)
-#     max_proba = 0.999  # proba must be > 0 & < 1
-#     min_proba = 0.001
-#
-#     ########################################## PARSE INPUTS/INIT ###################################
-#
-#     sigma = FWHM / (2 * math.sqrt(2 * math.log(2)))  # sigma of voxels
-#     beta = sigma ** 2 / 2
-#
-#     ########################################## SCALE MAPS ##########################################
-#
-#     xxx = []
-#     for i in atlas:
-#         [image, volu] = spm_read(i)
-#         mask = (image != image)
-#         image[mask] = 0
-#         image = rescaleImage(image, [min_proba, max_proba])
-#         xxx.append(image)
-#
-#     atlas = xxx
-#     si = atlas[0].shape
-#
-#     ########################################## CREATE TENSOR ########################################
-#
-#     g_atlas = create_fisher_tensor(atlas)
-#     h = 1.5
-#     g_atlas = tensor_scalar_product(h * h, g_atlas)
-#     g_pos = tensor_eye(atlas)
-#     g_pos = tensor_scalar_product(1 / float(sigma_loc ** 2), g_pos)
-#
-#     g = tensor_sum(g_atlas, g_pos)
-#
-#     print "computing mean distance ... "
-#
-#     eigenv = tensor_eigenvalues(g)
-#
-#     print 'done'
-#
-#     dist_av = []
-#
-#     for i in range(g.shape[0]):
-#         dist_av.append(np.sqrt(abs(eigenv[i])))
-#     dist_av = np.mean(dist_av)
-#
-#     print "average distance ", dist_av
-#
-#     g = tensor_scalar_product(1 / dist_av / dist_av, g)
-#
-#     ########################################## ESTIMATE TIME STEP ########################################
-#     # if t_step_max or isempty(t_step_max):
-#     lam = largest_eigenvalue_heat_3D_tensor2(g, h,
-#                                              error_tol)
-#     t_step_max = 2 / lam
-#
-#     t_step = alpha_time * t_step_max
-#     nbiter = beta / t_step
-#     t_step = beta / nbiter
-#
-#     ##solving the heat equation
-#
-#     u = heat_solver_tensor_3D_P1_grad_conj(x, g, beta, h, t_step, CL_value=None, epsilon=None)
-#
-#     return u
-#
-
 def obtain_g_fisher_tensor(dartel_input, FWHM):
     """
     heat regularization based on the Fisher metric
@@ -894,7 +807,7 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
 
     #
     # PARAMETERS
-    #
+
     sigma_loc = 10
     error_tol = 0.001  # error for the estimation of the largest eigenvalue
     alpha_time = 0.9  # time_step = alpha_time * (time_step_max)
@@ -902,24 +815,17 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
     min_proba = 0.001
     h = 1.5  # voxel size
 
-    #
     # PARSE INPUTS/INIT
-    #
     sigma = FWHM / (2 * math.sqrt(2 * math.log(2)))  # sigma of voxels
     beta = sigma ** 2 / 2
 
-    #
     # SCALE MAPS
-    #
     xxx = []
 
     atlas = utils.atlas_decomposition(dartel_input[0])
 
     for i in atlas:
-        # [image, volu] = utils.spm_read(i)
-        # mask = (image != image)
-        # image[mask] = 0
-        # image = utils.rescaleImage(image, [min_proba, max_proba])
+
         image = utils.rescaleImage(i, [min_proba, max_proba])
 
         xxx.append(image)
@@ -927,9 +833,7 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
     atlas = xxx
     si = atlas[0].shape
 
-    #
     # CREATE TENSOR
-    #
     g_atlas = utils.create_fisher_tensor(atlas)
     g_atlas = utils.tensor_scalar_product(h * h, g_atlas)
     g_pos = utils.tensor_eye(atlas)
@@ -958,7 +862,7 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
     return g, os.path.abspath('./output_fisher_tensor.npy')
 
 
-def obtain_time_step_estimation(h, FWHM, g):
+def obtain_time_step_estimation(dartel_input, FWHM, g):
     """
 
     :param h: 1,5 voxel size
@@ -972,6 +876,14 @@ def obtain_time_step_estimation(h, FWHM, g):
     import numpy as np
     import json
     import os
+    import nibabel as nib
+
+    # obtain voxel size with dartel_input
+    head = nib.load(dartel_input[0])
+    head_ = head.header
+    for i in range(len(head_['pixdim'])):
+        if head_['pixdim'][i] > 0:
+            h = head_['pixdim'][i]
 
     error_tol = 0.001  # error for the estimation of the largest eigenvalue
     alpha_time = 0.9  # time_step = alpha_time * (time_step_max)
@@ -990,8 +902,11 @@ def obtain_time_step_estimation(h, FWHM, g):
 
     # after t_step calculation: creation of json file
     data = {
-        "Alpha": 0.9, "Epsilon": 1e-6, "BoundaryConditions": 'TimeInvariant', "sigma_loc": 10, "TimeStepMax": t_step_max
+        "MaxDeltaT": 0.0025, "Alpha": 0.9, "Epsilon": 1e-6, "BoundaryConditions": 'TimeInvariant', "sigma_loc": 10,
+        "TimeStepMax": t_step_max,
+        "SpatialPrior": "Tissues (GM, WM, CSF)", "RegularizationType": 'Fisher', "FWHM": FWHM
     }
+
     json_data = json.dumps(data)
     with open('./output_data.json', 'w') as f:
         json.dump(json_data, f)
@@ -999,19 +914,26 @@ def obtain_time_step_estimation(h, FWHM, g):
     return t_step, os.path.abspath('./output_data.json')
 
 
-def heat_solver_equation(input_image, g, FWHM, h, t_step, dartel_input):
+def heat_solver_equation(input_image, g, FWHM, t_step, dartel_input):
     import math
     import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
     import nibabel as nib
     import numpy as np
     import os
 
+    # obtain voxel size with dartel_input
+    head = nib.load(dartel_input[0])
+    head_ = head.header
+    for i in range(len(head_['pixdim'])):
+        if head_['pixdim'][i] > 0:
+            h = head_['pixdim'][i]
+
     sigma = FWHM / (2 * math.sqrt(2 * math.log(2)))  # sigma of voxels
     beta = sigma ** 2 / 2
 
     input_image_read = nib.load(input_image)
     input_image_data = input_image_read.get_data()
-    input_image_data.dtype = np.dtype('float32')
+    input_image_data = np.array(input_image_data, dtype='float32')
 
     u = utils.heat_solver_tensor_3D_P1_grad_conj(input_image_data, g, beta, h, t_step, CL_value=None, epsilon=None)
 
