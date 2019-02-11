@@ -62,7 +62,8 @@ class SpatialSVM(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from clinica.lib.pycaps.caps_layout import CAPSLayout
+        from clinica.utils.stream import cprint
+        from os.path import join, exists
 
         # This node is supposedly used to load BIDS inputs when this pipeline is
         # not already connected to the output of a previous Clinica pipeline.
@@ -75,40 +76,82 @@ class SpatialSVM(cpe.Pipeline):
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(fields=self.get_input_fields(),
                                                                           mandatory_inputs=True))
-
-        caps_layout = CAPSLayout(self.caps_directory)
-        # @TODO: correct subject + list
-        unique_subject = set(list(self.subjects))
-        subjects_regex = '|'.join(sub[4:] for sub in unique_subject)
-        unique_session = set(list(self.sessions))
-        sessions_regex = '|'.join(sub[4:] for sub in unique_session)
-
         image_type = self.parameters['image_type']
         pet_type = self.parameters['pet_type']
+        no_pvc = self.parameters['no_pvc']
 
+        participant_id_pycaps = [sub[4:] for sub in self.subjects]
+        session_id_pycaps = [ses[4:] for ses in self.sessions]
+
+        input_image = []
         if image_type == 't1':
-            input_image = caps_layout.get(return_type='file',
-                                          subject=subjects_regex,
-                                          session=sessions_regex,
-                                          group_id=self.parameters['group_id'],
-                                          modulation='on')
-        elif image_type == 'pet':
-            input_image = caps_layout.get(return_type='file',
-                                          subject=subjects_regex,
-                                          session=sessions_regex,
-                                          group_id=self.parameters['group_id'],
-                                          pet_file=pet_type
-                                          )
+            subjects_not_found = []
+            for i, sub in enumerate(self.subjects):
+                input_image_single_subject = join(self.caps_directory,
+                                                  'subjects', sub, self.sessions[i], 't1/spm/dartel/group-'
+                                                  + self.parameters['group_id'], sub + '_' + self.sessions[i]
+                                                  + '_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability.nii.gz')
+                if not exists(input_image_single_subject):
+                    subjects_not_found.append(input_image_single_subject)
+                else:
+                    input_image.append(input_image_single_subject)
+
+            if len(subjects_not_found) > 0:
+                error_string = ''
+                for file in subjects_not_found:
+                    error_string = error_string + file + '\n'
+                raise IOError('Following files were not found :\n' + error_string)
+
+        elif image_type is 'pet':
+            if no_pvc is True:
+                subjects_not_found = []
+                for i, sub in enumerate(self.subjects):
+
+                    input_image_single_subject = join(self.caps_directory,
+                                                      'subjects', sub, self.sessions[i], 'pet/preprocessing/group-'
+                                                      + self.parameters['group_id'], sub + '_' + self.sessions[i]
+                                                      + '_task-rest_acq-' + pet_type + '_pet_space-Ixi549Space_suvr-pons_pet.nii.gz')
+                    if not exists(input_image_single_subject):
+                        subjects_not_found.append(input_image_single_subject)
+                    else:
+                        input_image.append(input_image_single_subject)
+
+                if len(subjects_not_found) > 0:
+                    error_string = ''
+                    for file in subjects_not_found:
+                        error_string = error_string + file + '\n'
+                    raise IOError('Following files were not found :\n' + error_string)
+            else:
+                subjects_not_found = []
+                for i, sub in enumerate(self.subjects):
+
+                    input_image_single_subject = join(self.caps_directory,
+                                                      'subjects', sub, self.sessions[i], 'pet/preprocessing/group-'
+                                                      + self.parameters['group_id'], sub + '_' + self.sessions[i]
+                                                      + '_task-rest_acq-' + pet_type + '_pet_space-Ixi549Space_pvc-rbv_suvr-pons_pet.nii.gz')
+                    if not exists(input_image_single_subject):
+                        subjects_not_found.append(input_image_single_subject)
+                    else:
+                        input_image.append(input_image_single_subject)
+
+                if len(subjects_not_found) > 0:
+                    error_string = ''
+                    for file in subjects_not_found:
+                        error_string = error_string + file + '\n'
+                    raise IOError('Following files were not found :\n' + error_string)
         else:
             raise IOError('Image type ' + image_type + ' unknown')
 
         if len(input_image) != len(self.subjects):
             raise IOError(str(len(input_image)) + ' file(s) found. ' + str(len(self.subjects)) + ' are expected')
 
-        dartel_input = caps_layout.get(return_type='file',
-                                       dartel_input=self.parameters['group_id'])
-        if len(dartel_input) != 1:
-            raise IOError(str(len(dartel_input)) + ' file(s) found for dartel. Only 1 is expected')
+        dartel_input = [join(self.caps_directory,
+                             'groups',
+                             'group-' + self.parameters['group_id'],
+                             't1',
+                             'group-' + self.parameters['group_id'] + '_template.nii.gz')]
+        if not exists(dartel_input[0]):
+            raise IOError('Dartel Input ' + dartel_input[0] + ' does not seem to exist')
 
         read_parameters_node.inputs.dartel_input = dartel_input
         read_parameters_node.inputs.input_image = input_image
@@ -146,19 +189,17 @@ class SpatialSVM(cpe.Pipeline):
         fisher_tensor_generation.inputs.FWHM = self.parameters['fwhm']
 
         time_step_generation = npe.Node(name='estimation_time_step',
-                                        interface=nutil.Function(input_names=['h', 'FWHM', 'g'],
+                                        interface=nutil.Function(input_names=['dartel_input', 'FWHM', 'g'],
                                                                  output_names=['t_step', 'json_file'],
                                                                  function=utils.obtain_time_step_estimation))
-        time_step_generation.inputs.h = self.parameters['h']
         time_step_generation.inputs.FWHM = self.parameters['fwhm']
 
         heat_solver_equation = npe.MapNode(name='heat_solver_equation',
                                            interface=nutil.Function(input_names=['input_image', 'g',
-                                                                                 'FWHM', 'h', 't_step', 'dartel_input'],
+                                                                                 'FWHM', 't_step', 'dartel_input'],
                                                                     output_names=['regularized_image'],
                                                                     function=utils.heat_solver_equation),
                                            iterfield=['input_image'])
-        heat_solver_equation.inputs.h = self.parameters['h']
         heat_solver_equation.inputs.FWHM = self.parameters['fwhm']
 
         datasink = npe.Node(nio.DataSink(),
@@ -167,41 +208,40 @@ class SpatialSVM(cpe.Pipeline):
         datasink.inputs.parameterization = True
         if self.parameters['image_type'] == 't1':
             datasink.inputs.regexp_substitutions = [
-                (r'(.*)/regularized_image/.*/(.*(sub-(.*)_ses-(.*))_T1w(.*)_(probability.*))$',
-                 r'\1/subjects/sub-\4/ses-\5/t1/input_regularised_svm/group-' + self.parameters['group_id'] + r'/\3\6_regularization-Fisher_fwhm-' + str(self.parameters['fwhm']) + r'_\7'),
+                (r'(.*)/regularized_image/.*/(.*(sub-(.*)_ses-(.*))_T1w(.*)_probability(.*))$',
+                 r'\1/subjects/sub-\4/ses-\5/machine_learning/input_spatial_svm/group-' + self.parameters['group_id'] + r'/\3_T1w\6_spatialregularization\7'),
                 (r'(.*)json_file/(output_data.json)$',
-                    r'\1/groups/group-' + self.parameters['group_id'] + r'/t1/input_regularised_svm/group-' + self.parameters['group_id'] + r'_space-Ixi549Space_modulated-on_regularization-Fisher_fwhm-'
-                    + str(self.parameters['fwhm']) + r'_parameters.json'),
+                 r'\1/groups/group-' + self.parameters['group_id'] + r'/machine_learning/input_spatial_svm/group-' + self.parameters['group_id'] + r'_space-Ixi549Space_regularization-Fisher_fwhm-'
+                 + str(int(self.parameters['fwhm'])) + r'_parameters.json'),
 
                 (r'(.*)fisher_tensor_path/(output_fisher_tensor.npy)$',
-                    r'\1/groups/group-' + self.parameters['group_id'] + r'/t1/input_regularised_svm/group-' + self.parameters[
-                        'group_id'] + r'_space-Ixi549Space_modulated-on_regularization-Fisher_fwhm-'
-                    + str(self.parameters['fwhm']) + r'_gram.npy')
+                 r'\1/groups/group-' + self.parameters['group_id'] + r'/machine_learning/input_spatial_svm/group-' + self.parameters[
+                     'group_id'] + r'_space-Ixi549Space_regularization-Fisher_fwhm-'
+                 + str(int(self.parameters['fwhm'])) + r'_gram.npy')
             ]
 
         elif self.parameters['image_type'] == 'pet':
             datasink.inputs.regexp_substitutions = [
-                (r'(.*)/regularized_image/.*/(.*(sub-(.*)_ses-(.*))_(task.*)_(pet.*))$',
-                 r'\1/subjects/sub-\4/ses-\5/pet/input_regularised_svm/group-' + self.parameters[
-                     'group_id'] + r'/\3\6_regularization-Fisher_fwhm-' + str(self.parameters['fwhm']) + r'_\7'),
-
+                (r'(.*)/regularized_image/.*/(.*(sub-(.*)_ses-(.*))_(task.*)_pet(.*))$',
+                 r'\1/subjects/sub-\4/ses-\5/machine_learning/input_spatial_svm/group-' + self.parameters[
+                     'group_id'] + r'/\3_\6_spatialregularization\7'),
                 (r'(.*)json_file/(output_data.json)$',
-                 r'\1/groups/group-' + self.parameters['group_id'] + r'/t1/input_regularised_svm/group-' +
-                 self.parameters['group_id'] + r'_space-Ixi549Space_modulated-on_regularization-Fisher_fwhm-'
-                 + str(self.parameters['fwhm']) + r'_parameters.json'),
+                 r'\1/groups/group-' + self.parameters['group_id'] + r'/machine_learning/input_spatial_svm/group-' +
+                 self.parameters['group_id'] + r'_space-Ixi549Space_regularization-Fisher_fwhm-'
+                 + str(int(self.parameters['fwhm'])) + r'_parameters.json'),
                 (r'(.*)fisher_tensor_path/(output_fisher_tensor.npy)$',
-                 r'\1/groups/group-' + self.parameters['group_id'] + r'/t1/input_regularised_svm/group-' +
+                 r'\1/groups/group-' + self.parameters['group_id'] + r'/machine_learning/input_spatial_svm/group-' +
                  self.parameters[
-                     'group_id'] + r'_space-Ixi549Space_modulated-on_regularization-Fisher_fwhm-'
-                 + str(self.parameters['fwhm']) + r'_gram.npy')
+                     'group_id'] + r'_space-Ixi549Space_regularization-Fisher_fwhm-'
+                 + str(int(self.parameters['fwhm'])) + r'_gram.npy')
             ]
-
         # Connection
         # ==========
         self.connect([
             (self.input_node,      fisher_tensor_generation,    [('dartel_input',    'dartel_input')]),
             (fisher_tensor_generation,      time_step_generation,    [('fisher_tensor',    'g')]),
 
+            (self.input_node, time_step_generation, [('dartel_input', 'dartel_input')]),
             (self.input_node, heat_solver_equation, [('input_image', 'input_image')]),
             (fisher_tensor_generation, heat_solver_equation, [('fisher_tensor', 'g')]),
             (time_step_generation, heat_solver_equation, [('t_step', 't_step')]),
