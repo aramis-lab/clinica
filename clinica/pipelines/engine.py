@@ -446,13 +446,13 @@ class Pipeline(Workflow):
                             + bytes2human(free_space_wd) + ')'
             else:
                 if space_needed_caps > free_space_caps:
-                    error = error + ('Space needed for CAPS (' + str(space_needed_caps)
+                    error = error + ('Space needed for CAPS (' + bytes2human(space_needed_caps)
                                      + ') is greater than what is left on your hard '
-                                     + 'drive (' + str(free_space_caps) + ')\n')
+                                     + 'drive (' + bytes2human(free_space_caps) + ')\n')
                 if space_needed_wd > free_space_wd:
                     error = error + ('Space needed for working_directory ('
-                                     + str(space_needed_caps) + ') is greater than what is left on your hard '
-                                     + 'drive (' + str(free_space_caps) + ')\n')
+                                     + bytes2human(space_needed_wd) + ') is greater than what is left on your hard '
+                                     + 'drive (' + bytes2human(free_space_wd) + ')\n')
             if error != '':
                 raise RuntimeError(error)
         except ValueError:
