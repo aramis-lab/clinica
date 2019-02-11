@@ -1,0 +1,3 @@
+pipeline_name;space_caps;space_wd
+PetSurface;25M;1G
+SpatialSVM;5M;700M

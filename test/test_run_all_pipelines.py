@@ -905,7 +905,7 @@ def test_run_SpatialSVM(cmdopt):
     pipeline.parameters['fwhm'] = 4
     pipeline.parameters['image_type'] = 't1'
     pipeline.parameters['pet_type'] = 'fdg'
-    pipeline.parameters['no_pvc'] = True
+    pipeline.parameters['no_pvc'] = 'True'
     pipeline.base_dir = join(working_dir, 'SpatialSVM')
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})

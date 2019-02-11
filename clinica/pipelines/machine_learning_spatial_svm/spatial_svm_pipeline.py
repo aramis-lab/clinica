@@ -84,8 +84,8 @@ class SpatialSVM(cpe.Pipeline):
         session_id_pycaps = [ses[4:] for ses in self.sessions]
 
         input_image = []
+        subjects_not_found = []
         if image_type == 't1':
-            subjects_not_found = []
             for i, sub in enumerate(self.subjects):
                 input_image_single_subject = join(self.caps_directory,
                                                   'subjects', sub, self.sessions[i], 't1/spm/dartel/group-'
@@ -96,15 +96,8 @@ class SpatialSVM(cpe.Pipeline):
                 else:
                     input_image.append(input_image_single_subject)
 
-            if len(subjects_not_found) > 0:
-                error_string = ''
-                for file in subjects_not_found:
-                    error_string = error_string + file + '\n'
-                raise IOError('Following files were not found :\n' + error_string)
-
         elif image_type is 'pet':
-            if no_pvc is True:
-                subjects_not_found = []
+            if no_pvc.lower() == 'true':
                 for i, sub in enumerate(self.subjects):
 
                     input_image_single_subject = join(self.caps_directory,
@@ -116,12 +109,7 @@ class SpatialSVM(cpe.Pipeline):
                     else:
                         input_image.append(input_image_single_subject)
 
-                if len(subjects_not_found) > 0:
-                    error_string = ''
-                    for file in subjects_not_found:
-                        error_string = error_string + file + '\n'
-                    raise IOError('Following files were not found :\n' + error_string)
-            else:
+            elif no_pvc.lower() == 'false':
                 subjects_not_found = []
                 for i, sub in enumerate(self.subjects):
 
@@ -133,14 +121,17 @@ class SpatialSVM(cpe.Pipeline):
                         subjects_not_found.append(input_image_single_subject)
                     else:
                         input_image.append(input_image_single_subject)
-
-                if len(subjects_not_found) > 0:
-                    error_string = ''
-                    for file in subjects_not_found:
-                        error_string = error_string + file + '\n'
-                    raise IOError('Following files were not found :\n' + error_string)
+            else:
+                raise ValueError(no_pvc + ' is not a valid keyword for -no_pvc'
+                                 + ':only True or False are accepted (string)')
         else:
-            raise IOError('Image type ' + image_type + ' unknown')
+            raise ValueError('Image type ' + image_type + ' unknown')
+
+        if len(subjects_not_found) > 0:
+            error_string = ''
+            for file in subjects_not_found:
+                error_string = error_string + file + '\n'
+            raise IOError('Following files were not found :\n' + error_string)
 
         if len(input_image) != len(self.subjects):
             raise IOError(str(len(input_image)) + ' file(s) found. ' + str(len(self.subjects)) + ' are expected')
