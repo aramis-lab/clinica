@@ -336,29 +336,89 @@ class Pipeline(Workflow):
         from os import statvfs
         from os.path import dirname, abspath, join
         from pandas import read_csv
+        import warnings
 
-        def convert2byte(string):
-            if '.' in string:
-                raise ValueError('Can not handle . (dot) '
-                                 + 'in space_required_by_pipeline.csv')
-            if string[-1].isalpha():
-                if string[-1].lower() == 'k':
-                    coeff = 1e3
-                elif string[-1].lower() == 'm':
-                    coeff = 1e6
-                elif string[-1].lower() == 'g':
-                    coeff = 1e9
-                elif string[-1].lower() == 't':
-                    coeff = 1e12
-                return int(string[:-1]) * coeff
+        SYMBOLS = {
+            'customary': ('B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'),
+            'customary_ext': (
+                'byte', 'kilo', 'mega', 'giga', 'tera', 'peta', 'exa',
+                'zetta', 'iotta'),
+            'iec': ('Bi', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi', 'Yi'),
+            'iec_ext': ('byte', 'kibi', 'mebi', 'gibi', 'tebi', 'pebi', 'exbi',
+                        'zebi', 'yobi'),
+        }
+
+        def bytes2human(n,
+                        format='%(value).1f %(symbol)s',
+                        symbols='customary'):
+            """
+            Convert n bytes into a human readable string based on format.
+            symbols can be either "customary", "customary_ext", "iec" or "iec_ext",
+            see: http://goo.gl/kTQMs
+
+            License :
+            Bytes-to-human / human-to-bytes converter.
+            Based on: http://goo.gl/kTQMs
+            Working with Python 2.x and 3.x.
+            Author: Giampaolo Rodola' <g.rodola [AT] gmail [DOT] com>
+            License: MIT
+            """
+            n = int(n)
+            if n < 0:
+                raise ValueError("n < 0")
+            symbols = SYMBOLS[symbols]
+            prefix = {}
+            for i, s in enumerate(symbols[1:]):
+                prefix[s] = 1 << (i + 1) * 10
+            for symbol in reversed(symbols[1:]):
+                if n >= prefix[symbol]:
+                    value = float(n) / prefix[symbol]
+                    return format % locals()
+            return format % dict(symbol=symbols[0], value=n)
+
+        def human2bytes(s):
+            """
+            Attempts to guess the string format based on default symbols
+            set and return the corresponding bytes as an integer.
+            When unable to recognize the format ValueError is raised.
+
+            License :
+            Bytes-to-human / human-to-bytes converter.
+            Based on: http://goo.gl/kTQMs
+            Working with Python 2.x and 3.x.
+            Author: Giampaolo Rodola' <g.rodola [AT] gmail [DOT] com>
+            License: MIT
+            """
+            init = s
+            num = ""
+            while s and s[0:1].isdigit() or s[0:1] == '.':
+                num += s[0]
+                s = s[1:]
+            num = float(num)
+            letter = s.strip()
+            for name, sset in SYMBOLS.items():
+                if letter in sset:
+                    break
             else:
-                return int(string)
+                if letter == 'k':
+                    # treat 'k' as an alias for 'K' as per: http://goo.gl/kTQMs
+                    sset = SYMBOLS['customary']
+                    letter = letter.upper()
+                else:
+                    raise ValueError("can't interpret %r" % init)
+            prefix = {sset[0]: 1}
+            for i, s in enumerate(sset[1:]):
+                prefix[s] = 1 << (i + 1) * 10
+            return int(num * prefix[letter])
 
         # Get the number of sessions
         n_sessions = len(self.subjects)
 
         caps_stat = statvfs(self.caps_directory)
-        wd_stat = statvfs(dirname(self.parameters['wd']))
+        try:
+            wd_stat = statvfs(dirname(self.parameters['wd']))
+        except KeyError:
+            wd_stat = statvfs(dirname(self.base_dir))
 
         # Estimate space left on partition/disk/whatever caps and wd is located
         free_space_caps = caps_stat.f_bavail * caps_stat.f_frsize
@@ -369,32 +429,35 @@ class Pipeline(Workflow):
                                        'space_required_by_pipeline.csv'),
                                   sep=';')
         pipeline_list = list(info_pipelines.pipeline_name)
-
-        idx_pipeline = pipeline_list.index(self._name)
-        space_needed_caps_1_session = info_pipelines.space_caps[idx_pipeline]
-        space_needed_wd_1_session = info_pipelines.space_wd[idx_pipeline]
-        space_needed_caps = n_sessions * convert2byte(space_needed_caps_1_session)
-        space_needed_wd = n_sessions * convert2byte(space_needed_wd_1_session)
-        error = ''
-        if free_space_caps == free_space_wd:
-            if space_needed_caps + space_needed_wd < free_space_wd:
-                # We assume this is the same disk
-                error = error + 'Space needed for CAPS and working directory ('
-                + str(space_needed_caps + space_needed_wd)
-                + ') is greater than what is left on your hard drive ('
-                + str(free_space_wd) + ')'
-        else:
-            if space_needed_caps > free_space_caps:
-                error = error + ('Space needed for CAPS (' + str(space_needed_caps)
-                                 + ') is greater than what is left on your hard '
-                                 + 'drive (' + str(free_space_caps) + ')\n')
-            if space_needed_wd > free_space_wd:
-                error = error + ('Space needed for working_directory ('
-                                 + str(space_needed_caps) + ') is greater than what is left on your hard '
-                                 + 'drive (' + str(free_space_caps) + ')\n')
-        if error != '':
-            raise RuntimeError(error)
-
+        try:
+            idx_pipeline = pipeline_list.index(self._name)
+            space_needed_caps_1_session = info_pipelines.space_caps[idx_pipeline]
+            space_needed_wd_1_session = info_pipelines.space_wd[idx_pipeline]
+            space_needed_caps = n_sessions * human2bytes(space_needed_caps_1_session)
+            space_needed_wd = n_sessions * human2bytes(space_needed_wd_1_session)
+            error = ''
+            if free_space_caps == free_space_wd:
+                if space_needed_caps + space_needed_wd > free_space_wd:
+                    # We assume this is the same disk
+                    error = error \
+                            + 'Space needed for CAPS and working directory (' \
+                            + bytes2human(space_needed_caps + space_needed_wd) \
+                            + ') is greater than what is left on your hard drive (' \
+                            + bytes2human(free_space_wd) + ')'
+            else:
+                if space_needed_caps > free_space_caps:
+                    error = error + ('Space needed for CAPS (' + str(space_needed_caps)
+                                     + ') is greater than what is left on your hard '
+                                     + 'drive (' + str(free_space_caps) + ')\n')
+                if space_needed_wd > free_space_wd:
+                    error = error + ('Space needed for working_directory ('
+                                     + str(space_needed_caps) + ') is greater than what is left on your hard '
+                                     + 'drive (' + str(free_space_caps) + ')\n')
+            if error != '':
+                raise RuntimeError(error)
+        except ValueError:
+            warnings.warn('No info on how much size the pipeline takes. '
+                          + 'Running anyway...')
 
     @property
     def is_built(self): return self._is_built
