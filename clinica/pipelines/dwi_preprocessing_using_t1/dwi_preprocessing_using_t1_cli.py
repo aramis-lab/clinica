@@ -48,7 +48,8 @@ class DwiPreprocessingUsingT1Cli(ce.CmdParser):
         Run the DWIPreprocessingUsingT1 Pipeline from command line.
         """
         from tempfile import mkdtemp
-        from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DwiPreprocessingUsingT1
+        from clinica.utils.stream import cprint
+        from .dwi_preprocessing_using_t1_pipeline import DwiPreprocessingUsingT1
 
         pipeline = DwiPreprocessingUsingT1(
             bids_directory=self.absolute_path(args.bids_directory),
@@ -66,3 +67,5 @@ class DwiPreprocessingUsingT1Cli(ce.CmdParser):
                          plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.run()
+
+        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")

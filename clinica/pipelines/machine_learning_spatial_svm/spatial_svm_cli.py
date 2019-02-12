@@ -48,6 +48,7 @@ class SpatialSVMCLI(ce.CmdParser):
         """
         """
         from tempfile import mkdtemp
+        from clinica.utils.stream import cprint
         from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
 
         pipeline = SpatialSVM(
@@ -68,3 +69,5 @@ class SpatialSVMCLI(ce.CmdParser):
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.run()
+
+        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")

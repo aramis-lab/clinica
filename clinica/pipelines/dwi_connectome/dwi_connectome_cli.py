@@ -44,6 +44,7 @@ class DwiConnectomeCli(ce.CmdParser):
         """
 
         from tempfile import mkdtemp
+        from clinica.utils.stream import cprint
         from .dwi_connectome_pipeline import DwiConnectome
 
         pipeline = DwiConnectome(
@@ -61,3 +62,5 @@ class DwiConnectomeCli(ce.CmdParser):
                          plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.run()
+
+        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")

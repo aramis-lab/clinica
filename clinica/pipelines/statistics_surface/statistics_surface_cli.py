@@ -161,3 +161,5 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         else:
             print(pipeline.parameters)
             pipeline.run()
+
+        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")

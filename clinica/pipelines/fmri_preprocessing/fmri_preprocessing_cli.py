@@ -58,8 +58,8 @@ class fMRIPreprocessingCLI(ce.CmdParser):
     def run_command(self, args):
         """
         """
-
-        from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
+        from clinica.utils.stream import cprint
+        from .fmri_preprocessing_pipeline import fMRIPreprocessing
 
         pipeline = fMRIPreprocessing(bids_directory=self.absolute_path(args.bids_directory),
                                      caps_directory=self.absolute_path(args.caps_directory),
@@ -79,3 +79,5 @@ class fMRIPreprocessingCLI(ce.CmdParser):
 #                    args.sbatch_args})
         else:
             pipeline.run()
+
+        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")

@@ -42,6 +42,7 @@ class DwiDtiCli(ce.CmdParser):
         """
         from tempfile import mkdtemp
         from clinica.pipelines.dwi_dti.dwi_dti_pipeline import DwiDti
+        from clinica.utils.stream import cprint
 
         pipeline = DwiDti(
             caps_directory=self.absolute_path(args.caps_directory),
@@ -56,3 +57,5 @@ class DwiDtiCli(ce.CmdParser):
                          plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.run()
+
+        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")

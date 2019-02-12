@@ -43,7 +43,8 @@ class T1FreeSurferCrossSectionalCLI(ce.CmdParser):
         """
         Run the pipelines with defined args
         """
-        from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_pipeline import T1FreeSurferCrossSectional
+        from clinica.utils.stream import cprint
+        from .t1_freesurfer_cross_sectional_pipeline import T1FreeSurferCrossSectional
         from tempfile import mkdtemp
 
         pipeline = T1FreeSurferCrossSectional(
@@ -65,3 +66,5 @@ class T1FreeSurferCrossSectionalCLI(ce.CmdParser):
                          plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.run()
+
+        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")

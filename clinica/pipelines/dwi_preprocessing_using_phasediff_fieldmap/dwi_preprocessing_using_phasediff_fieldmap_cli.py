@@ -48,7 +48,8 @@ class DwiPreprocessingUsingPhaseDiffFieldmapCli(ce.CmdParser):
         Run the DWIPreprocessingUsingPhaseDiffFieldmap pipeline from command line.
         """
         from tempfile import mkdtemp
-        from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DwiPreprocessingUsingPhaseDiffFieldmap
+        from clinica.utils.stream import cprint
+        from .dwi_preprocessing_using_phasediff_fieldmap_pipeline import DwiPreprocessingUsingPhaseDiffFieldmap
 
         pipeline = DwiPreprocessingUsingPhaseDiffFieldmap(
             bids_directory=self.absolute_path(args.bids_directory),
@@ -66,3 +67,5 @@ class DwiPreprocessingUsingPhaseDiffFieldmapCli(ce.CmdParser):
                          plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.run()
+
+        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")
