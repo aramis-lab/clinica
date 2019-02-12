@@ -63,6 +63,7 @@ class PETVolumeCLI(ce.CmdParser):
     def run_command(self, args):
         """
         """
+        from clinica.utils.stream import cprint
         from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
 
         pipeline = PETVolume(
@@ -88,3 +89,5 @@ class PETVolumeCLI(ce.CmdParser):
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.run()
+
+        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")
