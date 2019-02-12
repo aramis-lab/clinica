@@ -49,6 +49,8 @@ class T1VolumeExistingDartelCLI(ce.CmdParser):
     def run_command(self, args):
         """
         """
+        from tempfile import mkdtemp
+        from clinica.utils.stream import cprint
         from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_pipeline import T1VolumeExistingDartel
 
         pipeline = T1VolumeExistingDartel(bids_directory=self.absolute_path(args.bids_directory),
@@ -60,9 +62,13 @@ class T1VolumeExistingDartelCLI(ce.CmdParser):
             'tissues': args.tissues
         })
 
+        if args.working_directory is None:
+            args.working_directory = mkdtemp()
         pipeline.base_dir = self.absolute_path(args.working_directory)
 
         if args.n_procs:
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.run()
+
+        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")

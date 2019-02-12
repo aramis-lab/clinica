@@ -48,6 +48,7 @@ class DwiDtiCli(ce.CmdParser):
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv)
         )
+
         if args.working_directory is None:
             args.working_directory = mkdtemp()
         pipeline.base_dir = self.absolute_path(args.working_directory)
