@@ -50,6 +50,7 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         """
         """
         from tempfile import mkdtemp
+        from clinica.utils.stream import cprint
         from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import T1VolumeParcellation
 
         pipeline = T1VolumeParcellation(
@@ -67,7 +68,10 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         if args.working_directory is None:
             args.working_directory = mkdtemp()
         pipeline.base_dir = self.absolute_path(args.working_directory)
+
         if args.n_procs:
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.run()
+
+        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")

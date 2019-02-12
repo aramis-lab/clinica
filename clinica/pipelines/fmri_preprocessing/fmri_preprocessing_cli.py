@@ -59,6 +59,7 @@ class fMRIPreprocessingCLI(ce.CmdParser):
         """
         """
         from clinica.utils.stream import cprint
+        from tempfile import mkdtemp
         from .fmri_preprocessing_pipeline import fMRIPreprocessing
 
         pipeline = fMRIPreprocessing(bids_directory=self.absolute_path(args.bids_directory),
@@ -70,6 +71,8 @@ class fMRIPreprocessingCLI(ce.CmdParser):
             'freesurfer_brain_mask'      : args.freesurfer_brain_mask,
             'unwarping'                  : args.unwarping
         }
+        if args.working_directory is None:
+            args.working_directory = mkdtemp()
         pipeline.base_dir = self.absolute_path(args.working_directory)
         if args.n_procs:
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})

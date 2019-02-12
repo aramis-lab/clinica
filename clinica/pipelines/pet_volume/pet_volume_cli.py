@@ -63,6 +63,7 @@ class PETVolumeCLI(ce.CmdParser):
     def run_command(self, args):
         """
         """
+        from tempfile import mkdtemp
         from clinica.utils.stream import cprint
         from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
 
@@ -83,6 +84,8 @@ class PETVolumeCLI(ce.CmdParser):
             'atlas_list': args.atlases
         })
 
+        if args.working_directory is None:
+            args.working_directory = mkdtemp()
         pipeline.base_dir = self.absolute_path(args.working_directory)
 
         if args.n_procs:

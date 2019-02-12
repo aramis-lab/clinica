@@ -63,6 +63,8 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
     def run_command(self, args):
         """
         """
+        from tempfile import mkdtemp
+        from clinica.utils.stream import cprint
         from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
 
         pipeline = T1VolumeTissueSegmentation(
@@ -81,9 +83,13 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
             'save_t1_mni': True
             })
 
+        if args.working_directory is None:
+            args.working_directory = mkdtemp()
         pipeline.base_dir = self.absolute_path(args.working_directory)
 
         if args.n_procs:
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.run()
+
+        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")
