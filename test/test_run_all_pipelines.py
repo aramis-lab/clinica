@@ -81,7 +81,7 @@ def test_run_T1VolumeTissueSegmentation(cmdopt):
     ref_file = join(root, 'ref/caps/subjects/sub-ADNI011S4105/ses-M00/t1/spm/segmentation/dartel_input/'
                     + 'sub-ADNI011S4105_ses-M00_T1w_segm-graymatter_dartelinput.nii.gz')
 
-    assert likeliness_measure(out_file, ref_file, (1e-4, 0.05), (1e-2, 0.01))
+    assert likeliness_measure(out_file, ref_file, (1e-1, 0.02), (0.4, 0.01))
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
@@ -641,7 +641,7 @@ def test_run_PETSurface(cmdopt):
     for i in range(len(out_files)):
         assert np.allclose(np.squeeze(nib.load(out_files[i]).get_data()),
                            np.squeeze(nib.load(ref_files[i]).get_data()),
-                           rtol=1e-4, equal_nan=True)
+                           rtol=3e-2, equal_nan=True)
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 

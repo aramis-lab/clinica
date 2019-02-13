@@ -332,7 +332,9 @@ class Pipeline(Workflow):
 
     def check_size(self):
         """ Checks if the pipeline has enough space on the disk for both
-        working directory and caps directory"""
+        working directory and caps directory
+
+        Author : Arnaud Marcoux"""
         from os import statvfs
         from os.path import dirname, abspath, join
         from pandas import read_csv
@@ -413,11 +415,16 @@ class Pipeline(Workflow):
 
         # Get the number of sessions
         n_sessions = len(self.subjects)
-
-        caps_stat = statvfs(self.caps_directory)
+        try:
+            caps_stat = statvfs(self.caps_directory)
+        except FileNotFoundError:
+            # CAPS folder may not exist yet
+            caps_stat = statvfs(dirname(self.caps_directory))
         try:
             wd_stat = statvfs(dirname(self.parameters['wd']))
-        except KeyError:
+        except (KeyError, FileNotFoundError):
+            # Not all pipelines has a 'wd' parameter
+            # todo : maybe more relevant to always take base_dir ?
             wd_stat = statvfs(dirname(self.base_dir))
 
         # Estimate space left on partition/disk/whatever caps and wd is located
