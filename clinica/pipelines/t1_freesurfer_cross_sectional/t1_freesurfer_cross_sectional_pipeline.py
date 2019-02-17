@@ -16,11 +16,11 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
     """Creates a pipelines that performs Freesurfer commander, recon-all, It
     takes the input files of MRI T1 images and executes the 31 steps to
     reconstruct the surface of the brain, this progress includes surface-based
-    and Volume-based piepeline, which including gray and white matter
-    segementation, pial and white surface extraction.
+    and Volume-based pipeline, which including gray and white matter
+    segmentation, pial and white surface extraction.
 
     Todos:
-        - [ ] Transfer print to clinica log???.
+        - [ ] Transfer print to clinica.log???.
 
     Args:
         bids_directory: Path to the BIDS directory.
@@ -32,7 +32,6 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
 
     Returns:
         A clinica pipeline object containing the T1FreeSurferCrossSectional pipeline.
-
     """
 
     def check_custom_dependencies(self):
@@ -46,7 +45,6 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
         Returns:
             A list of (string) input fields name.
         """
-
         return ['recon_all_args', 'subject_list', 'session_list', 'subject_id', 'subject_dir', 'anat_t1']
 
     def get_output_fields(self):
@@ -55,16 +53,15 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
         Returns:
             A list of (string) output fields name.
         """
-
         return ['subject_id']
 
     def build_input_node(self):
         """Build and connect an input node to the pipelines.
         """
-
         import clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from clinica.utils.stream import cprint
 
         # This node is supposedly used to load BIDS inputs when this pipelines is
         # not already connected to the output of a previous Clinica pipelines.
@@ -110,26 +107,20 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
             (datagrabbernode, self.input_node, [('anat_t1', 'anat_t1')]),
         ])
 
+        cprint('The pipeline will last around 10 hours per image.')
+
     def build_output_node(self):
         """Build and connect an output node to the pipelines.
         """
-
-        # In the same idea as the input node, this output node is supposedly
-        # used to write the output fields in a CAPS. It should be executed only
-        # if this pipelines output is not already connected to a next Clinica
-        # pipelines.
-
         pass
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.
         """
-
         import clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces.freesurfer.preprocess import ReconAll
-        from clinica.utils.stream import cprint
 
         # MapNode to check out if we need -cw256 for every subject, and -qcache is default for every subject.
         flagnode = npe.MapNode(name='flagnode',
@@ -137,7 +128,7 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
                                interface=nutil.Function(
                                    input_names=['t1_list', 'recon_all_args'],
                                    output_names=['output_flags'],
-                                   function=utils.checkfov))
+                                   function=utils.check_fov))
 
         # MapNode to transfer every subject's flag to string.
         create_flags = npe.MapNode(interface=nutil.Function(
@@ -159,34 +150,51 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
                                  interface=nutil.Function(
                                      input_names=['subject_id', 'output_dir'],
                                      output_names=[],
-                                     function=utils.write_statistics_per_subject,
+                                     function=utils.write_tsv_files,
                                      imports=['import os', 'import errno']))
         tsvmapnode.inputs.output_dir = self.caps_directory
 
         # Node to create the log file doing the first step quality check
-        lognode = npe.Node(name='lognode',
-                           interface=nutil.Function(
-                               input_names=['subject_list', 'session_list', 'subject_id', 'output_dir'],
-                               output_names=[],
-                               function=utils.log_summary))
-        lognode.inputs.output_dir = self.caps_directory
+#        lognode = npe.Node(name='lognode',
+#                           interface=nutil.Function(
+#                               input_names=['subject_list', 'session_list', 'subject_id', 'output_dir'],
+#                               output_names=[],
+#                               function=utils.log_summary))
+#        lognode.inputs.output_dir = self.caps_directory
+
+        # Node to create the log file doing the first step quality check
+        print_begin_message = npe.MapNode(
+            interface=nutil.Function(
+                input_names=['subject_id'],
+                function=utils.print_begin_pipeline),
+            iterfield='subject_id',
+            name='Write-Begin_Message')
+
+        print_end_message = npe.MapNode(
+            interface=nutil.Function(
+                input_names=['subject_id', 'final_file'],
+                function=utils.print_end_pipeline),
+            iterfield='subject_id',
+            name='Write-End_Message')
 
         # Connection
         # ==========
         self.connect([
-            # FieldMap calculation
+            (self.input_node, print_begin_message, [('subject_id', 'subject_id')]),
             (self.input_node, flagnode, [('recon_all_args', 'recon_all_args')]),
-            (self.input_node, recon_all, [('subject_dir', 'subjects_dir')]),
-            (self.input_node, recon_all, [('subject_id', 'subject_id')]),
-            (self.input_node, recon_all, [('anat_t1', 'T1_files')]),
-            (self.input_node, flagnode, [('anat_t1', 't1_list')]),
-            (self.input_node, lognode, [('subject_list', 'subject_list')]),
-            (self.input_node, lognode, [('session_list', 'session_list')]),
+            (self.input_node, flagnode, [('anat_t1',        't1_list')]),
             (flagnode, create_flags, [('output_flags', 'input_flags')]),
-            (create_flags, recon_all, [('output_str', 'flags')]),
+            (create_flags,    recon_all, [('output_str',  'flags')]),
+            (self.input_node, recon_all, [('subject_dir', 'subjects_dir')]),
+            (self.input_node, recon_all, [('subject_id',  'subject_id')]),
+            (self.input_node, recon_all, [('anat_t1',     'T1_files')]),
+            #            (self.input_node, lognode, [('subject_list', 'subject_list')]),
+            #            (self.input_node, lognode, [('session_list', 'session_list')]),
             (recon_all, tsvmapnode, [('subject_id', 'subject_id')]),
-            (recon_all, lognode, [('subject_id', 'subject_id')]),
+            #            (recon_all, lognode, [('subject_id', 'subject_id')]),
             (recon_all, self.output_node, [('subject_id', 'subject_id')]),
+            (self.input_node, print_end_message, [('subject_id', 'subject_id')]),
+            (recon_all,       print_end_message, [('subject_id', 'final_file')]),
         ])
 
         return self

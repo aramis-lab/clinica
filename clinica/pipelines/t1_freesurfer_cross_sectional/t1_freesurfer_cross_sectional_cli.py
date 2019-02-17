@@ -43,6 +43,9 @@ class T1FreeSurferCrossSectionalCLI(ce.CmdParser):
         """
         Run the pipelines with defined args
         """
+        import os
+        import datetime
+        from colorama import Fore
         from clinica.utils.stream import cprint
         from .t1_freesurfer_cross_sectional_pipeline import T1FreeSurferCrossSectional
         from tempfile import mkdtemp
@@ -67,4 +70,6 @@ class T1FreeSurferCrossSectionalCLI(ce.CmdParser):
         else:
             pipeline.run()
 
-        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")
+        now = datetime.datetime.now().strftime('%H:%M:%S')
+        cprint('%s[%s]%s The %s pipeline has completed. You can now delete the working directory (%s).' %
+               (Fore.GREEN, now, Fore.RESET, self._name, os.path.join(os.path.abspath(args.working_directory), pipeline.__class__.__name__)))
