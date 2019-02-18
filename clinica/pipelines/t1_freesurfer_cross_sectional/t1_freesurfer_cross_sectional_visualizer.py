@@ -34,6 +34,7 @@ class T1FreeSurferVisualizer(ce.CmdParser):
         import os
         from clinica.utils.stream import cprint
         from clinica.utils.check_dependency import check_freesurfer
+        import subprocess
 
         check_freesurfer()
 
@@ -46,17 +47,57 @@ class T1FreeSurferVisualizer(ce.CmdParser):
             args.caps_directory, 'subjects', participant_id, session_id,
             't1', 'freesurfer_cross_sectional', subject_id
         )
+
+        # Check that freesurfer has run properly
+        log_file = os.path.join(caps_participant,
+                                'scripts',
+                                'recon-all-status.log')
+        if os.path.isfile(log_file):
+            last_line = str(subprocess.check_output(['tail', '-1', log_file]))
+            if 'finished without error' not in last_line.lower():
+                raise ValueError('FreeSurfer did not mark subject '
+                                 + subject_id + ' as -finished without '
+                                 + 'error-. If the pipeline is still running'
+                                 + ', wait for it to finish. Otherwise, '
+                                 + 'relaunch it.')
+        else:
+            raise FileNotFoundError('File ' + log_file + ' was not found. '
+                                    + 't1-freesurfer must be run before '
+                                    + 'using: clinica visualize t1-freesurfer')
+
+        # Check that
+        files = {'nu': os.path.join(caps_participant, 'mri', 'nu.mgz'),
+                 'aseg': os.path.join(caps_participant, 'mri', 'aseg.mgz'),
+                 'lhwhite': os.path.join(caps_participant, 'surf', 'lh.white'),
+                 'lhpial': os.path.join(caps_participant, 'surf', 'lh.pial'),
+                 'rhwhite': os.path.join(caps_participant, 'surf', 'rh.white'),
+                 'rhpial': os.path.join(caps_participant, 'surf', 'rh.pial')}
+
+        files_not_found = []
+        for element in files:
+            if not os.path.exists(files[element]):
+                files_not_found.append(files[element])
+        if len(files_not_found) > 0:
+            error_string = 'The following file(s) has(ve) not been found :\n'
+            for f in files_not_found:
+                error_string = error_string + f + '\n'
+            raise FileNotFoundError(error_string)
+
         command_line = \
             'freeview' \
             ' -v' \
-            ' %s/mri/T1.mgz' \
-            ' %s/mri/aseg.mgz:colormap=lut:opacity=0.2' \
+            ' %s:name=T1w-nu-corrected' \
+            ' %s:colormap=lut:opacity=0.2:name=segmentation' \
             ' -f' \
-            ' %s/surf/lh.white:edgecolor=blue' \
-            ' %s/surf/lh.pial:edgecolor=green' \
-            ' %s/surf/rh.white:edgecolor=blue' \
-            ' %s/surf/rh.pial:edgecolor=green' % \
-            (caps_participant, caps_participant,
-             caps_participant, caps_participant, caps_participant, caps_participant)
+            ' %s:edgecolor=blue:name=left_white_surface' \
+            ' %s:edgecolor=green:name=left_pial_surface' \
+            ' %s:edgecolor=blue:name=righ_pial_surface' \
+            ' %s:edgecolor=green:name=right_pial_surface' % \
+            (files['nu'],
+             files['aseg'],
+             files['lhwhite'],
+             files['lhpial'],
+             files['rhwhite'],
+             files['rhpial'])
 
         os.system(command_line)
