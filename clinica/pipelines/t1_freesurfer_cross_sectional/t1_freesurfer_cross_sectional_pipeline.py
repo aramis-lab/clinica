@@ -2,7 +2,7 @@
 
 __author__ = "Junhao Wen"
 __copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Junhao Wen"]
+__credits__ = ["Junhao Wen", "Alexandre Routier"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Junhao Wen"
@@ -13,14 +13,13 @@ import clinica.pipelines.engine as cpe
 
 
 class T1FreeSurferCrossSectional(cpe.Pipeline):
-    """Creates a pipelines that performs Freesurfer commander, recon-all, It
-    takes the input files of MRI T1 images and executes the 31 steps to
-    reconstruct the surface of the brain, this progress includes surface-based
-    and Volume-based pipeline, which including gray and white matter
-    segmentation, pial and white surface extraction.
-
-    Todos:
-        - [ ] Transfer print to clinica.log???.
+    """Performs cortical surface extraction, segmentation of subcortical
+    structures, cortical thickness estimation, spatial normalization onto the
+    FreeSurfer surface template (FsAverage), and parcellation of cortical
+    regions based on different atlases using the FreeSurfer recon-all command.
+    It also generate TSV files containing a summary of the regional statistics
+    (e.g. regional volume, mean cortical thickness) to ease subsequent
+    statistical analysis.
 
     Args:
         bids_directory: Path to the BIDS directory.
@@ -107,7 +106,7 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
             (datagrabbernode, self.input_node, [('anat_t1', 'anat_t1')]),
         ])
 
-        cprint('The pipeline will last around 10 hours per image.')
+        cprint('The pipeline will last approximately 10 hours per image.')
 
     def build_output_node(self):
         """Build and connect an output node to the pipelines.
