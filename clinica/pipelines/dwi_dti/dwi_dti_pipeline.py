@@ -293,7 +293,6 @@ class DwiDti(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.fsl as fsl
         import nipype.interfaces.mrtrix as mrtrix
-        #import nipype.interfaces.mrtrix3 as mrtrix3
         from clinica.lib.nipype.interfaces.mrtrix3.utils import TensorMetrics
         from clinica.lib.nipype.interfaces.mrtrix.preprocess import DWI2Tensor
 
