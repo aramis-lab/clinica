@@ -259,8 +259,6 @@ def execute():
     from clinica.engine import CmdParser
 
     from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_visualizer import T1FreeSurferVisualizer
-    from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_visualizer import T1VolumeTissueSegmentationVisualizer
-    from clinica.pipelines.dwi_dti.dwi_dti_visualizer import DwiDtiVisualizer
 
     visualizers = ClinicaClassLoader(baseclass=CmdParser,
                                      extra_dir="pipelines").load()
