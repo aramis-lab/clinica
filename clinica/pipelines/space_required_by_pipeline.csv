@@ -1,9 +1,12 @@
 pipeline_name;space_caps;space_wd
+T1VolumeNewTemplate;300M;275M
+T1VolumeTissueSegmentation;35M;147M
+T1VolumeCreateDartel;130M;140M
+T1VolumeExistingTemplate;55M;320M
+T1VolumeParcellation;760K;520K
+DWIPreprocessingUsingPhaseDiffFieldmap;250M;6GB
+DwiDti;400MB de CAPS;700MB de WD
+fMRIPreprocessing;300M;7G
+PETVolume;55M;245M
 PetSurface;25M;1G
 SpatialSVM;5M;700M
-T1VolumeNewTemplate;300M;275M
-T1VolumeParcellation;760K;520K
-PETVolume;55M;245M
-T1VolumeCreateDartel;130M;140M
-fMRIPreprocessing;300M;7G
-T1VolumeTissueSegmentation;35M;147M
