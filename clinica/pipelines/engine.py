@@ -339,6 +339,8 @@ class Pipeline(Workflow):
         from os.path import dirname, abspath, join
         from pandas import read_csv
         import warnings
+        from clinica.utils.stream import cprint
+        import sys
 
         SYMBOLS = {
             'customary': ('B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'),
@@ -461,10 +463,23 @@ class Pipeline(Workflow):
                                      + bytes2human(space_needed_wd) + ') is greater than what is left on your hard '
                                      + 'drive (' + bytes2human(free_space_wd) + ')\n')
             if error != '':
-                raise RuntimeError(error)
+                cprint("\x1b[1;%dm" % 31 + '[SpaceError] ' + error + "\x1b[0m")
+                while True:
+                    cprint('Do you still want to run the pipeline ? (yes/no): ')
+                    answer = input('')
+                    if answer.lower() in ['yes', 'no']:
+                        break
+                    else:
+                        cprint('Possible answers are yes or no.\n')
+                if answer.lower() == 'yes':
+                    cprint('Running the pipeline anyway.')
+                if answer.lower() == 'no':
+                    cprint('Exiting clinica...')
+                    sys.exit()
+
         except ValueError:
-            warnings.warn('No info on how much size the pipeline takes. '
-                          + 'Running anyway...')
+            cprint('No info on how much size the pipeline takes. '
+                   + 'Running anyway...')
 
     @property
     def is_built(self): return self._is_built
