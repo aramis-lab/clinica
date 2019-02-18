@@ -1,7 +1,7 @@
 {
     "id": "aramislab/dwi-dti",
     "author": ["Alexandre Routier", "Thomas Jacquemont"],
-    "version": "0.1.0",
+    "version": "0.1.1",
     "dependencies": [
         {
             "type": "software",
