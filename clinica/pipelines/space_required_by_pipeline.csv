@@ -7,3 +7,6 @@ PETVolume;55M;245M
 T1VolumeCreateDartel;130M;140M
 fMRIPreprocessing;300M;7G
 T1VolumeTissueSegmentation;35M;147M
+T1FreeSurferLongitudinal;400M;400M
+T1FreeSurferCrossSectional;1G;100K
+T1VolumeExistingTemplate;55M;320M
