@@ -42,11 +42,28 @@ class T1FreeSurferVisualizer(ce.CmdParser):
         session_id = args.session_id
         subject_id = participant_id + '_' + session_id
 
-        cprint('Visualizing outputs of t1-freesurfer pipeline for ' + participant_id + ' at session ' + session_id)
+        cprint('Visualizing outputs of t1-freesurfer pipeline for '
+               + participant_id + ' at session ' + session_id)
         caps_participant = os.path.join(
             args.caps_directory, 'subjects', participant_id, session_id,
             't1', 'freesurfer_cross_sectional', subject_id
         )
+
+        # Check that
+        # 1) subject and session are present in CAPS
+        # 2) a freesurfer folder has been launched
+        if not os.path.exists(caps_participant):
+            if os.path.exists(os.path.join(args.caps_directory,
+                                           'subjects',
+                                           participant_id,
+                                           session_id)):
+                raise RuntimeError('Subject ' + participant_id + ' and session '
+                                   + session_id + ' exists in CAPS but no '
+                                   + 'freesurfer related directory found')
+            else:
+                raise RuntimeError('Subject ' + participant_id + ' and session '
+                                   + session_id + ' are not present in CAPS '
+                                   + args.caps_directory)
 
         # Check that freesurfer has run properly
         log_file = os.path.join(caps_participant,
@@ -65,7 +82,7 @@ class T1FreeSurferVisualizer(ce.CmdParser):
                                     + 't1-freesurfer must be run before '
                                     + 'using: clinica visualize t1-freesurfer')
 
-        # Check that
+        # Check that files exists
         files = {'nu': os.path.join(caps_participant, 'mri', 'nu.mgz'),
                  'aseg': os.path.join(caps_participant, 'mri', 'aseg.mgz'),
                  'lhwhite': os.path.join(caps_participant, 'surf', 'lh.white'),
@@ -83,6 +100,7 @@ class T1FreeSurferVisualizer(ce.CmdParser):
                 error_string = error_string + f + '\n'
             raise FileNotFoundError(error_string)
 
+        # Launch command
         command_line = \
             'freeview' \
             ' -v' \
