@@ -338,8 +338,8 @@ class Pipeline(Workflow):
         from os import statvfs
         from os.path import dirname, abspath, join
         from pandas import read_csv
-        import warnings
         from clinica.utils.stream import cprint
+        from colorama import Fore
         import sys
 
         SYMBOLS = {
@@ -463,7 +463,7 @@ class Pipeline(Workflow):
                                      + bytes2human(space_needed_wd) + ') is greater than what is left on your hard '
                                      + 'drive (' + bytes2human(free_space_wd) + ')\n')
             if error != '':
-                cprint("\x1b[1;%dm" % 31 + '[SpaceError] ' + error + "\x1b[0m")
+                cprint(Fore.RED + '[SpaceError] ' + error + Fore.RESET)
                 while True:
                     cprint('Do you still want to run the pipeline ? (yes/no): ')
                     answer = input('')
@@ -478,8 +478,8 @@ class Pipeline(Workflow):
                     sys.exit()
 
         except ValueError:
-            cprint('No info on how much size the pipeline takes. '
-                   + 'Running anyway...')
+            cprint(Fore.RED + 'No info on how much size the pipeline takes. '
+                   + 'Running anyway...' + Fore.RESET)
 
     @property
     def is_built(self): return self._is_built
