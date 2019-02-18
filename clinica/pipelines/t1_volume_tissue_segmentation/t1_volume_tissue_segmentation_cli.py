@@ -28,9 +28,9 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
                                   help='Path to the CAPS directory.')
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("-fwhm", "--fwhm",
+        optional.add_argument("-s", "--smooth",
                               nargs='+', type=int, default=[8],
-                              help="A list of integers specifying the different isomorphic fwhm in millimeters to smooth the image (default: -fwhm 8).")
+                              help="A list of integers specifying the different isomorphic FWHM in millimeters to smooth the image (default: --smooth 8).")
         # Clinica standard arguments (e.g. --n_procs)
         clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
         clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
@@ -42,9 +42,9 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
                                  help='Number of cores used to run in parallel')
         # Advanced arguments (i.e. tricky parameters)
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
-        advanced.add_argument("-ti", "--tissue_classes",
+        advanced.add_argument("-t", "--tissue_classes",
                               metavar='', nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
-                              help="Tissue classes (gray matter, GM; white matter, WM; cerebro-spinal fluid, CSF...) to save. Up to 6 tissue classes can be saved  (default: GM, WM and CSF i.e. --tissue_classes 1 2 3).")
+                              help="Tissue classes (1: gray matter (GM), 2: white matter (WM), 3: cerebrospinal fluid (CSF), 4: bone, 5: soft-tissue, 6: background) to save (default: GM, WM and CSF i.e. --tissue_classes 1 2 3).")
         advanced.add_argument("-dt", "--dartel_tissues",
                               metavar='', nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
                               help='Tissues to use for DARTEL template calculation (default: GM, WM and CSF i.e. --dartel_tissues 1 2 3).')
@@ -63,6 +63,8 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
     def run_command(self, args):
         """
         """
+        from tempfile import mkdtemp
+        from clinica.utils.stream import cprint
         from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
 
         pipeline = T1VolumeTissueSegmentation(
@@ -81,9 +83,13 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
             'save_t1_mni': True
             })
 
+        if args.working_directory is None:
+            args.working_directory = mkdtemp()
         pipeline.base_dir = self.absolute_path(args.working_directory)
 
         if args.n_procs:
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.run()
+
+        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")

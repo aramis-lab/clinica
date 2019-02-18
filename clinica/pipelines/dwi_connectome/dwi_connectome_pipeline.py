@@ -67,9 +67,9 @@ class DwiConnectome(cpe.Pipeline):
         # Reading BIDS files
         # ==================
 
-        cprint('Loading CAPS folder...')
+        # cprint('Loading CAPS folder...')
         caps_layout = CAPSLayout(self.caps_directory)
-        cprint('CAPS folder loaded')
+        # cprint('CAPS folder loaded')
 
         wm_mask_file = []
         dwi_file_space = []
@@ -178,18 +178,12 @@ class DwiConnectome(cpe.Pipeline):
                                  interface=nutil.IdentityInterface(
                                          fields=self.get_input_fields()))
             self.connect([
-                (read_node, self.input_node,
-                 [('t1_brain_file', 't1_brain_file')]),
-                (read_node, self.input_node,
-                 [('wm_mask_file', 'wm_mask_file')]),
-                (read_node, self.input_node,
-                 [('dwi_file', 'dwi_file')]),
-                (read_node, self.input_node,
-                 [('dwi_brainmask_file', 'dwi_brainmask_file')]),
-                (read_node, self.input_node,
-                 [('grad_fsl', 'grad_fsl')]),
-                (read_node, self.input_node,
-                 [('atlas_files', 'atlas_files')]),
+                (read_node, self.input_node, [('t1_brain_file', 't1_brain_file')]),
+                (read_node, self.input_node, [('wm_mask_file', 'wm_mask_file')]),
+                (read_node, self.input_node, [('dwi_file', 'dwi_file')]),
+                (read_node, self.input_node, [('dwi_brainmask_file', 'dwi_brainmask_file')]),
+                (read_node, self.input_node, [('grad_fsl', 'grad_fsl')]),
+                (read_node, self.input_node, [('atlas_files', 'atlas_files')]),
             ])
 
         elif dwi_file_space[0] == 'T1w':
@@ -206,16 +200,11 @@ class DwiConnectome(cpe.Pipeline):
                                  interface=nutil.IdentityInterface(
                                          fields=self.get_input_fields()))
             self.connect([
-                (read_node, self.input_node,
-                 [('wm_mask_file', 'wm_mask_file')]),
-                (read_node, self.input_node,
-                 [('dwi_file', 'dwi_file')]),
-                (read_node, self.input_node,
-                 [('dwi_brainmask_file', 'dwi_brainmask_file')]),
-                (read_node, self.input_node,
-                 [('grad_fsl', 'grad_fsl')]),
-                (read_node, self.input_node,
-                 [('atlas_files', 'atlas_files')]),
+                (read_node, self.input_node, [('wm_mask_file', 'wm_mask_file')]),
+                (read_node, self.input_node, [('dwi_file', 'dwi_file')]),
+                (read_node, self.input_node, [('dwi_brainmask_file', 'dwi_brainmask_file')]),
+                (read_node, self.input_node, [('grad_fsl', 'grad_fsl')]),
+                (read_node, self.input_node, [('atlas_files', 'atlas_files')]),
             ])
 
         else:
@@ -278,7 +267,6 @@ class DwiConnectome(cpe.Pipeline):
             - [ ] Allow for custom parcellations (See TODOs in utils).
 
         """
-
         import nipype.interfaces.utility as niu
         import nipype.pipeline.engine as npe
         import nipype.interfaces.fsl as fsl
@@ -290,7 +278,7 @@ class DwiConnectome(cpe.Pipeline):
         from clinica.utils.stream import cprint
         import clinica.pipelines.dwi_connectome.dwi_connectome_utils as utils
 
-        cprint('Building the pipeline...')
+        # cprint('Building the pipeline...')
 
         # Nodes
         # =====
@@ -375,6 +363,24 @@ class DwiConnectome(cpe.Pipeline):
                                     iterfield=['in_parc', 'out_file'],
                                     interface=mrtrix3.BuildConnectome())
 
+        # Print begin message
+        # -------------------
+        print_begin_message = npe.Node(
+            interface=niu.Function(
+                input_names=['in_bids_or_caps_file'],
+                function=utils.print_begin_pipeline),
+            iterfield='in_bids_or_caps_file',
+            name='WriteBeginMessage')
+
+        # Print end message
+        # -----------------
+        print_end_message = npe.Node(
+            interface=niu.Function(
+                input_names=['in_bids_or_caps_file', 'final_file', 'final_file'],
+                function=utils.print_end_pipeline),
+            iterfield=['in_bids_or_caps_file', 'final_file'],
+            name='WriteEndMessage')
+
         # CAPS FIlenames Generation
         # -------------------------
         caps_filenames_node = npe.Node(name='CAPSFilenamesGeneration',
@@ -385,7 +391,9 @@ class DwiConnectome(cpe.Pipeline):
 
         # Connections
         # ===========
-
+        self.connect([
+            (self.input_node, print_begin_message, [('dwi_file', 'in_bids_or_caps_file')]),  # noqa
+        ])
         # WM in B0-space Transformation
         # -----------------------------
         if self.parameters['dwi_space'] == 'b0':
@@ -483,7 +491,7 @@ class DwiConnectome(cpe.Pipeline):
                     'Bad preprocessed DWI space. Please check your CAPS '
                     'folder.')
 
-        # Ouputs
+        # Outputs
         # ------
         self.connect([
             (resp_estim_node, self.output_node, [('wm_file', 'response')]),
@@ -496,6 +504,8 @@ class DwiConnectome(cpe.Pipeline):
             # T1-to-B0 matrix file #noqa
             (conn_gen_node, self.output_node, [('out_file', 'connectomes')]),
             # T1-to-B0 matrix file #noqa
+            (self.input_node, print_end_message, [('dwi_file', 'in_bids_or_caps_file')]),  # noqa
+            (conn_gen_node,   print_end_message, [('out_file', 'final_file')]),  # noqa
         ])
 
-        cprint('Pipeline built')
+        # cprint('Pipeline built')
