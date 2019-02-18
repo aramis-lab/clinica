@@ -118,8 +118,8 @@ class CmdParser:
             return None
         elif arg[:1] == '~':
             return expanduser(arg)
-        elif arg[:1] == '.':
-            return getcwd()
+        elif arg[:2] == './':
+            return join(getcwd(), arg[2:])
         else:
             return join(getcwd(), arg)
 
