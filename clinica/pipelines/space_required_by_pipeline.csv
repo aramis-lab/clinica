@@ -5,7 +5,7 @@ T1VolumeCreateDartel;130M;140M
 T1VolumeExistingTemplate;55M;320M
 T1VolumeParcellation;760K;520K
 DWIPreprocessingUsingPhaseDiffFieldmap;250M;6GB
-DwiDti;400MB de CAPS;700MB de WD
+DwiDti;400MB;700MB
 fMRIPreprocessing;300M;7G
 PETVolume;55M;245M
 PetSurface;25M;1G
