@@ -42,14 +42,15 @@ class T1VolumeParcellationCLI(ce.CmdParser):
                               help='Specify if modulation must be enabled (default: --modulation on')
         list_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
         advanced.add_argument("-atlases", "--atlases",
-                              nargs='+', type=str, metavar="",
+                              nargs='+', type=str, metavar='',
                               default=list_atlases, choices=list_atlases,
-                              help='A list of atlases to use to calculate the mean GM concentration at each region (default: all atlases i.e. --atlases AAL2 AICHA Hammers LPBA40 Neuromorphometrics).')
+                              help='A list of atlases used to calculate the regional mean GM concentrations (default: all atlases i.e. --atlases AAL2 AICHA Hammers LPBA40 Neuromorphometrics).')
 
     def run_command(self, args):
         """
         """
         from tempfile import mkdtemp
+        from clinica.utils.stream import cprint
         from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import T1VolumeParcellation
 
         pipeline = T1VolumeParcellation(
@@ -67,7 +68,10 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         if args.working_directory is None:
             args.working_directory = mkdtemp()
         pipeline.base_dir = self.absolute_path(args.working_directory)
+
         if args.n_procs:
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.run()
+
+        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")

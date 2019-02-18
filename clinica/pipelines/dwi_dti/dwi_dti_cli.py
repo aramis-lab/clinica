@@ -40,13 +40,18 @@ class DwiDtiCli(ce.CmdParser):
     def run_command(self, args):
         """
         """
+        import os
+        import datetime
+        from colorama import Fore
         from tempfile import mkdtemp
-        from clinica.pipelines.dwi_dti.dwi_dti_pipeline import DwiDti
+        from .dwi_dti_pipeline import DwiDti
+        from clinica.utils.stream import cprint
 
         pipeline = DwiDti(
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv)
         )
+
         if args.working_directory is None:
             args.working_directory = mkdtemp()
         pipeline.base_dir = self.absolute_path(args.working_directory)
@@ -56,3 +61,8 @@ class DwiDtiCli(ce.CmdParser):
                          plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.run()
+
+        now = datetime.datetime.now().strftime('%H:%M:%S')
+        cprint('%s[%s]%s The %s pipeline has completed. You can now delete the working directory (%s).' %
+               (Fore.GREEN, now, Fore.RESET, self._name,
+                os.path.join(os.path.abspath(args.working_directory), pipeline.__class__.__name__)))

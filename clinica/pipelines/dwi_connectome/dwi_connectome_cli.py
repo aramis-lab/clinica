@@ -42,8 +42,11 @@ class DwiConnectomeCli(ce.CmdParser):
     def run_command(self, args):
         """
         """
-
+        import os
+        import datetime
+        from colorama import Fore
         from tempfile import mkdtemp
+        from clinica.utils.stream import cprint
         from .dwi_connectome_pipeline import DwiConnectome
 
         pipeline = DwiConnectome(
@@ -61,3 +64,8 @@ class DwiConnectomeCli(ce.CmdParser):
                          plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.run()
+
+        now = datetime.datetime.now().strftime('%H:%M:%S')
+        cprint('%s[%s]%s The %s pipeline has completed. You can now delete the working directory (%s).' %
+               (Fore.GREEN, now, Fore.RESET, self._name,
+                os.path.join(os.path.abspath(args.working_directory), pipeline.__class__.__name__)))

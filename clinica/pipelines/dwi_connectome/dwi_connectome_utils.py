@@ -1,6 +1,6 @@
 # coding: utf8
 
-# The 3 imports are required for merge @jguillon's requests.
+# The 3 imports are required for @jguillon's merge requests.
 
 from nipype.interfaces.mrtrix3.base import MRTrix3BaseInputSpec, MRTrix3Base
 from nipype.interfaces.base import traits, TraitedSpec, File, Undefined
@@ -76,6 +76,44 @@ def get_caps_filenames(dwi_file):
     # TODO: Add custom Lausanne2008 connectome files here.
 
     return response, fod, tracts, nodes, connectomes
+
+
+def print_begin_pipeline(in_bids_or_caps_file):
+    """
+    """
+    from clinica.utils.stream import cprint
+    import re
+    import datetime
+    from colorama import Fore
+
+    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)',
+                  in_bids_or_caps_file)
+    if m is None:
+        raise ValueError(
+            'Input filename is not in a BIDS or CAPS compliant format.')
+    now = datetime.datetime.now().strftime('%H:%M:%S')
+
+    cprint('%s[%s]%s Running pipeline for %s...' % (
+        Fore.BLUE, now, Fore.RESET, m.group(0)))
+
+
+def print_end_pipeline(in_bids_or_caps_file, final_file):
+    """
+    """
+    from clinica.utils.stream import cprint
+    import re
+    import datetime
+    from colorama import Fore
+
+    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)',
+                  in_bids_or_caps_file)
+    if m is None:
+        raise ValueError(
+            'Input filename is not in a BIDS or CAPS compliant format.')
+    now = datetime.datetime.now().strftime('%H:%M:%S')
+
+    cprint('%s[%s]%s ...%s has completed.' % (
+        Fore.GREEN, now, Fore.RESET, m.group(0)))
 
 
 # From this line, everything that is defined was to avoid waiting for nipype's
@@ -235,7 +273,7 @@ class TractographyInputSpec(MRTrix3BaseInputSpec):
         desc=('set the maximum angle between successive steps (default '
               'is 90deg x stepsize / voxelsize)'))
     n_tracks = traits.Int(
-        argstr='-number %d',
+        argstr='-select %d',
         max_ver=0.4,
         desc=('set the desired number of tracks. The program will continue'
               ' to generate tracks until this number of tracks have been '

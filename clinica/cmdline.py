@@ -254,6 +254,42 @@ def execute():
     )
 
     """
+    visualize category: run one of the available pipelines
+    """
+    from clinica.engine import CmdParser
+
+    from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_visualizer import T1FreeSurferVisualizer
+
+    visualizers = ClinicaClassLoader(baseclass=CmdParser,
+                                     extra_dir="pipelines").load()
+    visualizers += [
+        T1FreeSurferVisualizer(),
+    ]
+
+    visualize_parser = sub_parser.add_parser(
+        'visualize',
+        add_help=False,
+        formatter_class=argparse.RawTextHelpFormatter,
+        help='To visualize outputs of Clinica pipelines.'
+    )
+    visualize_parser.description = (
+        Fore.GREEN
+        + 'Visualize outputs of Clinica pipelines.'
+        + Fore.RESET
+    )
+    visualize_parser._positionals.title = (
+        Fore.YELLOW
+        + 'clinica visualize expects one of the following pipelines'
+        + Fore.RESET
+    )
+
+    init_cmdparser_objects(
+        parser,
+        visualize_parser.add_subparsers(metavar='', dest='visualize'),
+        visualizers
+    )
+
+    """
     generate category: template
     """
     generate_parser = sub_parser.add_parser(
@@ -335,6 +371,10 @@ def execute():
     elif 'iotools' in args and hasattr(args, 'func') is False:
         # Case when we type `clinica iotools` on the terminal
         io_parser.print_help()
+        exit(0)
+    elif 'visualize' in args and hasattr(args, 'func') is False:
+        # Case when we type `clinica visualize` on the terminal
+        visualize_parser.print_help()
         exit(0)
     elif 'generate' in args and hasattr(args, 'func') is False:
         # Case when we type `clinica generate` on the terminal

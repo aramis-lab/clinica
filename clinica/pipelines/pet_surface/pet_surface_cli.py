@@ -50,9 +50,10 @@ class PetSurfaceCLI(ce.CmdParser):
                                  help='Number of cores to use when running the pipeline in parallel (default: --n_procs 1).')
 
     def run_command(self, args):
-
         from tempfile import mkdtemp
+        from clinica.utils.stream import cprint
         from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
+
         if args.working_directory is None:
             args.working_directory = mkdtemp()
 
@@ -70,3 +71,5 @@ class PetSurfaceCLI(ce.CmdParser):
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         else:
             pipeline.run()
+
+        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")
