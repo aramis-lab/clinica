@@ -59,7 +59,7 @@ class T1FreeSurferVisualizer(ce.CmdParser):
                                            session_id)):
                 raise RuntimeError('Subject ' + participant_id + ' and session '
                                    + session_id + ' exists in CAPS but no '
-                                   + 'freesurfer related directory found')
+                                   + 'FreeSurfer related directory found')
             else:
                 raise RuntimeError('Subject ' + participant_id + ' and session '
                                    + session_id + ' are not present in CAPS '
@@ -85,10 +85,10 @@ class T1FreeSurferVisualizer(ce.CmdParser):
         # Check that files exists
         files = {'nu': os.path.join(caps_participant, 'mri', 'nu.mgz'),
                  'aseg': os.path.join(caps_participant, 'mri', 'aseg.mgz'),
-                 'lhwhite': os.path.join(caps_participant, 'surf', 'lh.white'),
-                 'lhpial': os.path.join(caps_participant, 'surf', 'lh.pial'),
-                 'rhwhite': os.path.join(caps_participant, 'surf', 'rh.white'),
-                 'rhpial': os.path.join(caps_participant, 'surf', 'rh.pial')}
+                 'lh_white': os.path.join(caps_participant, 'surf', 'lh.white'),
+                 'lh_pial': os.path.join(caps_participant, 'surf', 'lh.pial'),
+                 'rh_white': os.path.join(caps_participant, 'surf', 'rh.white'),
+                 'rh_pial': os.path.join(caps_participant, 'surf', 'rh.pial')}
 
         files_not_found = []
         for element in files:
@@ -105,17 +105,17 @@ class T1FreeSurferVisualizer(ce.CmdParser):
             'freeview' \
             ' -v' \
             ' %s:name=T1w-nu-corrected' \
-            ' %s:colormap=lut:opacity=0.2:name=segmentation' \
+            ' %s:colormap=lut:opacity=0.2:name=Segmentation' \
             ' -f' \
-            ' %s:edgecolor=blue:name=left_white_surface' \
-            ' %s:edgecolor=green:name=left_pial_surface' \
-            ' %s:edgecolor=blue:name=righ_pial_surface' \
-            ' %s:edgecolor=green:name=right_pial_surface' % \
+            ' %s:edgecolor=blue:name=Left_WM/GM_Interface' \
+            ' %s:edgecolor=green:name=Left_GM/CSF_Interface' \
+            ' %s:edgecolor=blue:name=Right_WM/GM_Interface' \
+            ' %s:edgecolor=green:name=Right_GM/CSF_Interface' % \
             (files['nu'],
              files['aseg'],
-             files['lhwhite'],
-             files['lhpial'],
-             files['rhwhite'],
-             files['rhpial'])
+             files['lh_white'],
+             files['lh_pial'],
+             files['rh_white'],
+             files['rh_pial'])
 
         os.system(command_line)
