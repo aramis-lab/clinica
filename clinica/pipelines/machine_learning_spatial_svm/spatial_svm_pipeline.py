@@ -200,15 +200,16 @@ class SpatialSVM(cpe.Pipeline):
         if self.parameters['image_type'] == 't1':
             datasink.inputs.regexp_substitutions = [
                 (r'(.*)/regularized_image/.*/(.*(sub-(.*)_ses-(.*))_T1w(.*)_probability(.*))$',
-                 r'\1/subjects/sub-\4/ses-\5/machine_learning/input_spatial_svm/group-' + self.parameters['group_id'] + r'/\3_T1w\6_spatialregularization\7'),
+                 r'\1/subjects/sub-\4/ses-\5/machine_learning/input_spatial_svm/group-' + self.parameters[
+                     'group_id'] + r'/\3_T1w\6_spatialregularization\7'),
+
                 (r'(.*)json_file/(output_data.json)$',
-                 r'\1/groups/group-' + self.parameters['group_id'] + r'/machine_learning/input_spatial_svm/group-' + self.parameters['group_id'] + r'_space-Ixi549Space_regularization-Fisher_fwhm-'
-                 + str(int(self.parameters['fwhm'])) + r'_parameters.json'),
+                 r'\1/groups/group-' + self.parameters['group_id'] + r'/machine_learning/input_spatial_svm/group-' + self.parameters[
+                     'group_id'] + r'_space-Ixi549Space_parameters.json'),
 
                 (r'(.*)fisher_tensor_path/(output_fisher_tensor.npy)$',
                  r'\1/groups/group-' + self.parameters['group_id'] + r'/machine_learning/input_spatial_svm/group-' + self.parameters[
-                     'group_id'] + r'_space-Ixi549Space_regularization-Fisher_fwhm-'
-                 + str(int(self.parameters['fwhm'])) + r'_gram.npy')
+                     'group_id'] + r'_space-Ixi549Space_gram.npy')
             ]
 
         elif self.parameters['image_type'] == 'pet':

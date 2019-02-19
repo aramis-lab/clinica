@@ -6,6 +6,7 @@ T1VolumeExistingTemplate;55M;320M
 T1VolumeParcellation;760K;520K
 T1FreeSurferLongitudinal;400M;400M
 T1FreeSurferCrossSectional;1G;100K
+DwiPreprocessingUsingT1;150M;3G
 DWIPreprocessingUsingPhaseDiffFieldmap;250M;6G
 DwiDti;400M;700M
 fMRIPreprocessing;300M;7G
