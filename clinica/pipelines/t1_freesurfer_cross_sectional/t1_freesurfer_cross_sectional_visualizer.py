@@ -34,6 +34,7 @@ class T1FreeSurferVisualizer(ce.CmdParser):
         import os
         from clinica.utils.stream import cprint
         from clinica.utils.check_dependency import check_freesurfer
+        import subprocess
 
         check_freesurfer()
 
@@ -41,22 +42,80 @@ class T1FreeSurferVisualizer(ce.CmdParser):
         session_id = args.session_id
         subject_id = participant_id + '_' + session_id
 
-        cprint('Visualizing outputs of t1-freesurfer pipeline for ' + participant_id + ' at session ' + session_id)
+        cprint('Visualizing outputs of t1-freesurfer pipeline for '
+               + participant_id + ' at session ' + session_id)
         caps_participant = os.path.join(
             args.caps_directory, 'subjects', participant_id, session_id,
             't1', 'freesurfer_cross_sectional', subject_id
         )
+
+        # Check that
+        # 1) subject and session are present in CAPS
+        # 2) a freesurfer folder has been launched
+        if not os.path.exists(caps_participant):
+            if os.path.exists(os.path.join(args.caps_directory,
+                                           'subjects',
+                                           participant_id,
+                                           session_id)):
+                raise RuntimeError('Subject ' + participant_id + ' and session '
+                                   + session_id + ' exists in CAPS but no '
+                                   + 'FreeSurfer related directory found')
+            else:
+                raise RuntimeError('Subject ' + participant_id + ' and session '
+                                   + session_id + ' are not present in CAPS '
+                                   + args.caps_directory)
+
+        # Check that freesurfer has run properly
+        log_file = os.path.join(caps_participant,
+                                'scripts',
+                                'recon-all-status.log')
+        if os.path.isfile(log_file):
+            last_line = str(subprocess.check_output(['tail', '-1', log_file]))
+            if 'finished without error' not in last_line.lower():
+                raise ValueError('FreeSurfer did not mark subject '
+                                 + subject_id + ' as -finished without '
+                                 + 'error-. If the pipeline is still running'
+                                 + ', wait for it to finish. Otherwise, '
+                                 + 'relaunch it.')
+        else:
+            raise FileNotFoundError('File ' + log_file + ' was not found. '
+                                    + 't1-freesurfer must be run before '
+                                    + 'using: clinica visualize t1-freesurfer')
+
+        # Check that files exists
+        files = {'nu': os.path.join(caps_participant, 'mri', 'nu.mgz'),
+                 'aseg': os.path.join(caps_participant, 'mri', 'aseg.mgz'),
+                 'lh_white': os.path.join(caps_participant, 'surf', 'lh.white'),
+                 'lh_pial': os.path.join(caps_participant, 'surf', 'lh.pial'),
+                 'rh_white': os.path.join(caps_participant, 'surf', 'rh.white'),
+                 'rh_pial': os.path.join(caps_participant, 'surf', 'rh.pial')}
+
+        files_not_found = []
+        for element in files:
+            if not os.path.exists(files[element]):
+                files_not_found.append(files[element])
+        if len(files_not_found) > 0:
+            error_string = 'The following file(s) has(ve) not been found :\n'
+            for f in files_not_found:
+                error_string = error_string + f + '\n'
+            raise FileNotFoundError(error_string)
+
+        # Launch command
         command_line = \
             'freeview' \
             ' -v' \
-            ' %s/mri/T1.mgz' \
-            ' %s/mri/aseg.mgz:colormap=lut:opacity=0.2' \
+            ' %s:name=T1w-nu-corrected' \
+            ' %s:colormap=lut:opacity=0.2:name=Segmentation' \
             ' -f' \
-            ' %s/surf/lh.white:edgecolor=blue' \
-            ' %s/surf/lh.pial:edgecolor=green' \
-            ' %s/surf/rh.white:edgecolor=blue' \
-            ' %s/surf/rh.pial:edgecolor=green' % \
-            (caps_participant, caps_participant,
-             caps_participant, caps_participant, caps_participant, caps_participant)
+            ' %s:edgecolor=blue:name=Left_WM/GM_Interface' \
+            ' %s:edgecolor=green:name=Left_GM/CSF_Interface' \
+            ' %s:edgecolor=blue:name=Right_WM/GM_Interface' \
+            ' %s:edgecolor=green:name=Right_GM/CSF_Interface' % \
+            (files['nu'],
+             files['aseg'],
+             files['lh_white'],
+             files['lh_pial'],
+             files['rh_white'],
+             files['rh_pial'])
 
         os.system(command_line)
