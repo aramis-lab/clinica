@@ -38,7 +38,7 @@ def test_run_T1FreeSurferCrossSectional(cmdopt):
     pipeline.parameters['recon_all_args'] = '-qcache'
     pipeline.base_dir = join(working_dir, 'T1FreeSurferCrossSectional')
     pipeline.build()
-    pipeline.run()
+    pipeline.run(bypass_check=True)
 
     log_file = join(root, 'out', 'caps', 'subjects', 'sub-ADNI082S5029',
                    'ses-M00', 't1', 'freesurfer_cross_sectional',
@@ -71,7 +71,7 @@ def test_run_T1VolumeTissueSegmentation(cmdopt):
                                           tsv_file=join(root, 'in', 'subjects.tsv'))
     pipeline.base_dir = join(working_dir, 'T1VolumeTissueSegmentation')
     pipeline.build()
-    pipeline.run()
+    pipeline.run(bypass_check=True)
 
     out_file = join(root, 'out/caps/subjects/sub-ADNI011S4105/ses-M00/t1/spm/segmentation/dartel_input/'
                     + 'sub-ADNI011S4105_ses-M00_T1w_segm-graymatter_dartelinput.nii.gz')
@@ -510,7 +510,7 @@ def test_run_fMRIPreprocessing(cmdopt):
     }
     pipeline.base_dir = join(working_dir, 'fMRIPreprocessing')
     pipeline.build()
-    pipeline.run()
+    pipeline.run(bypass_check=True)
 
     subject_id = 'sub-01001TMM'
     out_files = [join(root, 'out', 'caps', 'subjects', subject_id, 'ses-M00', 'fmri', 'preprocessing', subject_id + '_ses-M00_task-rest_bold_space-Ixi549Space_preproc.nii.gz'),
@@ -628,7 +628,7 @@ def test_run_PETSurface(cmdopt):
     pipeline.base_dir = wd
     pipeline.parameters['wd'] = wd
     pipeline.build()
-    pipeline.run()
+    pipeline.run(bypass_check=True)
 
     # Check files
     out_files = [join(root, 'out/caps/subjects/sub-ADNI011S4105/ses-M00/pet/surface',
