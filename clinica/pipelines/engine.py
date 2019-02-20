@@ -237,12 +237,15 @@ class Pipeline(Workflow):
                 self.build_output_node()
         return self
 
-    def run(self, plugin=None, plugin_args=None, update_hash=False):
+    def run(self, plugin=None, plugin_args=None, update_hash=False, bypass_check=False):
         """Executes the Pipeline.
 
         It overwrites the default Workflow method to check if the
         Pipeline is built before running it. If not, it builds it and then
         run it.
+        It also checks whether there is enough space left on the disks, and if
+        the number of threads to run in parallel is consistent with what is
+        possible on the CPU
 
         Args:
             Similar to those of Workflow.run.
@@ -252,7 +255,10 @@ class Pipeline(Workflow):
         """
         if not self.is_built:
             self.build()
-        self.check_size()
+        if not bypass_check:
+            self.check_size()
+            plugin_args = self.update_parallelize_info(plugin_args)
+            plugin = 'MultiProc'
         return Workflow.run(self, plugin, plugin_args, update_hash)
 
     def load_info(self):
@@ -480,6 +486,63 @@ class Pipeline(Workflow):
         except ValueError:
             cprint(Fore.RED + 'No info on how much size the pipeline takes. '
                    + 'Running anyway...' + Fore.RESET)
+
+    def update_parallelize_info(self, plugin_args):
+        """ Peforms some checks of the number of threads given in parameters,
+        given the number of CPUs of the machine in which clinica is running.
+        We force the use of plugin MultiProc
+
+        Author : Arnaud Marcoux"""
+        from clinica.utils.stream import cprint
+        from multiprocessing import cpu_count
+        from colorama import Fore
+
+        # count number of CPUs
+        n_cpu = cpu_count()
+        # Use this var to know in the end if we need to ask the user
+        # an other number
+        ask_user = False
+
+        try:
+            # if no --n_procs arg is used, plugin_arg is None
+            # so we need a try / except block
+            n_thread_cmdline = plugin_args['n_procs']
+            if n_thread_cmdline > n_cpu:
+                cprint(Fore.RED + '[Warning] You are trying to run clinica '
+                       + 'with a number of threads (' + str(n_thread_cmdline)
+                       + ') superior to your number of CPUs (' + str(n_cpu)
+                       + ').' + Fore.RESET)
+                ask_user = True
+        except TypeError:
+            cprint(Fore.RED + '[Warning] You did not specify the number of '
+                   + 'thread to run in parallel (--n_procs argument).'
+                   + Fore.RESET)
+            cprint(Fore.RED + 'Computation time can be shorten as you have '
+                   + str(n_cpu) + ' CPUs on this computer. We recommand using '
+                   + str(n_cpu - 1) + ' threads.\n' + Fore.RESET)
+            ask_user = True
+
+        if ask_user:
+            while True:
+                # While True allows to ask indefinitely until
+                # user gives a answer that has the correct format
+                # here, positive integer
+                cprint('How many threads do you want to use ?')
+                answer = input('')
+                if answer.isnumeric():
+                    if int(answer) > 0:
+                        break
+                cprint(Fore.RED + 'Your answer must be a positive integer.'
+                       + Fore.RESET)
+            # If plugin_args is None, create the dictionnary
+            # If it already a dict, just update (or create -it is the same
+            # code-) the correct key / value
+            if plugin_args is None:
+                plugin_args = {'n_procs': int(answer)}
+            else:
+                plugin_args['n_procs'] = int(answer)
+
+        return plugin_args
 
     @property
     def is_built(self): return self._is_built
