@@ -137,6 +137,7 @@ def test_run_T1VolumeDartel2MNI(cmdopt):
     import shutil
     import numpy as np
     import nibabel as nib
+    from .comparison_functions import likeliness_measure
 
     working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeDartel2MNI')
@@ -159,13 +160,14 @@ def test_run_T1VolumeDartel2MNI(cmdopt):
 
     # Check output vs ref
     subjects = ['sub-ADNI011S4105', 'sub-ADNI023S4020', 'sub-ADNI035S4082', 'sub-ADNI128S4832']
-    out_data_GM_MNI = [nib.load(join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 't1', 'spm', 'dartel', 'group-UnitTest',
-                                     sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')).get_data()
+    out_data_GM_MNI = [join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 't1', 'spm', 'dartel', 'group-UnitTest',
+                            sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')
                        for sub in subjects]
-    ref_data_GM_MNI = [nib.load(join(root, 'ref', sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')).get_data()
+    ref_data_GM_MNI = [join(root, 'ref', sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')
                        for sub in subjects]
     for i in range(len(out_data_GM_MNI)):
-        assert np.allclose(out_data_GM_MNI[i], ref_data_GM_MNI[i], rtol=1e-8, equal_nan=True)
+        assert likeliness_measure(out_data_GM_MNI[i], ref_data_GM_MNI[i],
+                                  (1e-4, 0.15), (1, 0.02))
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -174,8 +176,7 @@ def test_run_T1VolumeDartel2MNI(cmdopt):
 def test_run_T1VolumeNewTemplate(cmdopt):
     from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_pipeline import T1VolumeNewTemplate
     from os.path import dirname, join, abspath, exists, basename
-    import numpy as np
-    import nibabel as nib
+    from .comparison_functions import similarity_measure
 
     working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeNewTemplate')
@@ -194,20 +195,20 @@ def test_run_T1VolumeNewTemplate(cmdopt):
 
     # Check generated vs ref
     subjects = ['sub-ADNI011S4105', 'sub-ADNI023S4020', 'sub-ADNI035S4082', 'sub-ADNI128S4832']
-    out_data_GM_MNI = [nib.load(join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 't1', 'spm', 'dartel', 'group-UnitTest',
-                                     sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')).get_data()
+    out_data_GM_MNI = [join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 't1', 'spm', 'dartel', 'group-UnitTest',
+                            sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')
                        for sub in subjects]
-    ref_data_GM_MNI = [nib.load(join(root, 'ref', sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')).get_data()
+    ref_data_GM_MNI = [join(root, 'ref', sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')
                        for sub in subjects]
 
     # Check output vs ref
-    out_data_template = nib.load(join(root, 'out/caps/groups/group-UnitTest/t1/group-UnitTest_template.nii.gz')).get_data()
-    ref_data_template = nib.load(join(root, 'ref/group-UnitTest_template.nii.gz')).get_data()
-    assert np.allclose(out_data_template, ref_data_template, rtol=1e-8, equal_nan=True)
+    out_data_template = join(root, 'out/caps/groups/group-UnitTest/t1/group-UnitTest_template.nii.gz')
+    ref_data_template = join(root, 'ref/group-UnitTest_template.nii.gz')
+    assert similarity_measure(out_data_template, ref_data_template, 0.999)
 
     for i in range(len(out_data_GM_MNI)):
         print('Checking file ' + subjects[i] + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')
-        assert np.allclose(out_data_GM_MNI[i], ref_data_GM_MNI[i], rtol=1e-4, equal_nan=True)
+        assert similarity_measure(out_data_GM_MNI[i], ref_data_GM_MNI[i], 0.999)
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -258,7 +259,7 @@ def test_run_T1VolumeExistingTemplate(cmdopt):
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
     from os.path import dirname, join, abspath
     import shutil
-    from .comparison_functions import likeliness_measure
+    from .comparison_functions import similarity_measure
 
     working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeExistingTemplate')
@@ -287,7 +288,7 @@ def test_run_T1VolumeExistingTemplate(cmdopt):
     for i in range(len(out_data_GM_MNI)):
         print('Checking file ' + subjects[i]
               + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')
-        assert likeliness_measure(out_data_GM_MNI[i], ref_data_GM_MNI[i], (1e-2, 0.04), (1e-1, 0.01))
+        assert similarity_measure(ref_data_GM_MNI[i], out_data_GM_MNI[i], 0.99)
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
