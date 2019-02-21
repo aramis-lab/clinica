@@ -198,58 +198,6 @@ def create_flags_str(input_flags):
     return output_str
 
 
-# def log_summary(subject_list, session_list, subject_id, output_dir):
-#    """
-#        create a log file to summarize the recon-all result for all the subjects, the first step quality check
-#
-#    Args:
-#        subject_list: a list containing all the path to the subject
-#        session_list: a list containing all the session_id
-#        subject_id: a list containing all the participant_id
-#        output_dir: CAPS directory
-#
-#    Returns:
-#
-#    """
-#    import os
-#    from datetime import datetime
-#    from clinica.utils.stream import cprint
-#
-#    output_path = os.path.expanduser(output_dir)
-#    dest_dir = os.path.join(output_path, 'subjects')
-#    if not os.path.isdir(dest_dir):
-#        cprint("ERROR: directory subjects does not exist, it should be CAPS directory after running recon_all_pipeline!!!")
-#    else:
-#        pass
-#    log_name = os.path.join(dest_dir, 'recon_all_summary.log')
-#    input_logs = []
-#
-#    for i in range(len(subject_list)):
-#        input_log = os.path.join(dest_dir, subject_list[i], session_list[i], 't1', 'freesurfer_cross_sectional', subject_id[i], 'scripts', 'recon-all-status.log')
-#        input_logs.append(input_log)
-#
-#    bad_log = 0
-#    search_query = 'recon-all -s'
-#    with open(log_name, 'w') as f1:
-#        line1 = datetime.now().isoformat()
-#        line2 = 'Quality check: recon-all output summary'
-#        f1.write("%s\n%s\n\n" % (line1, line2))
-#        for log in input_logs:
-#            with open(log, 'r') as f2:
-#                lines = f2.readlines()
-#                for line in lines:
-#                    if (line.startswith(search_query)) and (b'without error' not in line):
-#                        f1.write(line)
-#                        bad_log += 1
-#                        break
-#                    elif line.startswith(search_query):
-#                            f1.write(line)
-#                    else:
-#                        pass
-#        line3 = 'Number of subjects: %s \nNumber of bad recon-all is: %s ' % (len(subject_list), bad_log)
-#        f1.write(line3)
-
-
 def write_tsv_files(subject_id, output_dir):
     """
     Generate statistics TSV files for a given subject.
