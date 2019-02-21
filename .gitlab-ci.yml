@@ -109,7 +109,7 @@ test:instantiate:mac:
     - source activate $CLINICA_ENV_BRANCH_CLEAN
     - module load clinica.all
     - cd test
-    - ln -s /Volumes/builds/Clinica/data_ci ./data
+    - ln -s /Volumes/data/data_ci ./data
     - pytest --verbose -k 'test_instantiate'
     - module purge
     - source deactivate
@@ -143,9 +143,9 @@ test:run:mac:
     - source activate $CLINICA_ENV_BRANCH_CLEAN 
     - module load clinica.all
     - cd test
-    - ln -s /Volumes/builds/Clinica/data_ci ./data
+    - ln -s /Volumes/data/data_ci ./data
     - pytest --verbose 
-         --working_directory=/Volumes/builds/Clinica/working_directory_ci_mac 
+         --working_directory=/Volumes/data/working_directory_ci_mac 
          -k 'test_run'
     - module purge
     - source deactivate
