@@ -208,12 +208,12 @@ def generate_regional_measures(path_segmentation, subject_id, output_dir=None):
     ]
     dict_hemi = {
         "left": "lh",
-        "right" : "rh"
+        "right": "rh"
     }
     dict_atlas = {
         "desikan": "aparc",
-        "destrieux" : "aparc.a2009s",
-        "ba" : "BA"
+        "destrieux": "aparc.a2009s",
+        "ba": "BA_exvivo"
     }
     for atlas in ('desikan', 'destrieux', 'ba'):
         for hemi in ('left', 'right'):
