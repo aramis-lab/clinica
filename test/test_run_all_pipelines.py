@@ -254,7 +254,6 @@ def test_run_T1VolumeExistingDartel(cmdopt):
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
-
 def test_run_T1VolumeExistingTemplate(cmdopt):
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
     from os.path import dirname, join, abspath
@@ -435,7 +434,6 @@ def test_run_DWIDTI(cmdopt):
         assert np.allclose(out_mean_scalar, ref_mean_scalar, rtol=0.025, equal_nan=True)
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-
 
 
 def test_run_DWIConnectome(cmdopt):
