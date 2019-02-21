@@ -436,7 +436,6 @@ def test_run_DWIDTI(cmdopt):
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
-
 def test_run_DWIConnectome(cmdopt):
     from clinica.pipelines.dwi_connectome.dwi_connectome_pipeline import DwiConnectome
     from os.path import dirname, join, abspath, exists
