@@ -107,7 +107,7 @@ def test_run_T1VolumeCreateDartel(cmdopt):
                                     group_id='UnitTest')
     pipeline.base_dir = join(working_dir, 'T1VolumeCreateDartel')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Check output vs ref
     out_data_template = join(root, 'out/caps/groups/group-UnitTest/t1/group-UnitTest_template.nii.gz')
@@ -156,7 +156,7 @@ def test_run_T1VolumeDartel2MNI(cmdopt):
                                   group_id='UnitTest')
     pipeline.base_dir = join(working_dir, 'T1VolumeDartel2MNI')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Check output vs ref
     subjects = ['sub-ADNI011S4105', 'sub-ADNI023S4020', 'sub-ADNI035S4082', 'sub-ADNI128S4832']
@@ -191,7 +191,7 @@ def test_run_T1VolumeNewTemplate(cmdopt):
                                    group_id='UnitTest')
     pipeline.base_dir = join(working_dir, 'T1VolumeNewTemplate')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Check generated vs ref
     subjects = ['sub-ADNI011S4105', 'sub-ADNI023S4020', 'sub-ADNI035S4082', 'sub-ADNI128S4832']
@@ -235,7 +235,7 @@ def test_run_T1VolumeExistingDartel(cmdopt):
                                       group_id='UnitTest')
     pipeline.base_dir = join(working_dir, 'T1VolumeExistingDartel')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Check output vs ref
     subjects = ['sub-ADNI011S4105', 'sub-ADNI023S4020', 'sub-ADNI035S4082', 'sub-ADNI128S4832']
@@ -274,7 +274,7 @@ def test_run_T1VolumeExistingTemplate(cmdopt):
                                         group_id='UnitTest')
     pipeline.base_dir = join(working_dir, 'T1VolumeExistingTemplate')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Check generated vs ref
     subjects = ['sub-ADNI011S4105', 'sub-ADNI023S4020']
@@ -316,7 +316,7 @@ def test_run_T1VolumeParcellation(cmdopt):
     pipeline.parameters['modulate'] = 'on'
     pipeline.base_dir = join(working_dir, 'T1VolumeParcellation')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     out_files = [join(root, 'out/caps/subjects/sub-ADNI018S4696/ses-M00/t1/spm/dartel/group-UnitTest/atlas_statistics',
                       'sub-ADNI018S4696_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability_space-'
@@ -353,7 +353,7 @@ def test_run_DWIPreprocessingUsingT1(cmdopt):
     #pipeline.parameters['epi_param'] = dict([('readout_time', 0.0348756),  ('enc_dir', 'y')])
     pipeline.base_dir = join(working_dir, 'DWIPreprocessingUsingT1')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Assert :
     out_file = join(root, 'out', 'caps', 'subjects', 'sub-CAPP01001TMM', 'ses-M00', 'dwi', 'preprocessing', 'sub-CAPP01001TMM_ses-M00_dwi_space-T1w_preproc.nii.gz')
@@ -385,7 +385,7 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
                                                       low_bval=5)
     pipeline.base_dir = join(working_dir, 'DWIPreprocessingUsingPhaseDiffFieldmap')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Assert :
     out_file = join(root, 'out', 'caps', 'subjects', 'sub-CAPP01001TMM', 'ses-M00', 'dwi', 'preprocessing', 'sub-CAPP01001TMM_ses-M00_dwi_space-b0_preproc.nii.gz')
@@ -415,7 +415,7 @@ def test_run_DWIDTI(cmdopt):
                       tsv_file=join(root, 'in', 'subjects.tsv'))
     pipeline.base_dir = join(working_dir, 'DWIDTI')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Check files
     subject_id = 'sub-CAPP01001TMM'
@@ -461,7 +461,7 @@ def test_run_DWIConnectome(cmdopt):
     }
     pipeline.base_dir = join(working_dir, 'DWIConnectome')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Check files
     atlases = ['desikan', 'destrieux']
@@ -544,7 +544,7 @@ def test_run_PETVolume(cmdopt):
                          fwhm_tsv=None)
     pipeline.base_dir = join(working_dir, 'PETVolume')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     subjects = ['sub-ADNI011S4105', 'sub-ADNI023S4020', 'sub-ADNI035S4082', 'sub-ADNI128S4832']
     out_files = [join(root, 'out/caps/subjects/' + sub + '/ses-M00/pet/preprocessing/group-UnitTest',
@@ -591,7 +591,7 @@ def test_run_StatisticsSurface(cmdopt):
     }
     pipeline.base_dir = join(working_dir, 'StatisticsSurface')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 8})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 8}, bypass_check=True)
 
     # Check files
     out_file = join(root, 'out/caps/groups/group-UnitTest/statistics/surfstat_group_comparison/group-UnitTest_AD-lt-CN_measure-cortical_thickness_fwhm-20_correctedPValue.mat')
@@ -910,7 +910,7 @@ def test_run_SpatialSVM(cmdopt):
     pipeline.parameters['no_pvc'] = 'True'
     pipeline.base_dir = join(working_dir, 'SpatialSVM')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Check output vs ref
     subjects = ['sub-ADNI011S0023', 'sub-ADNI013S0325']
