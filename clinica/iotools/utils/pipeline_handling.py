@@ -20,10 +20,10 @@ import os
 import warnings
 
 
-def pet_pipeline(caps_dir, df, **kwargs):
+def pet_volume_pipeline(caps_dir, df, **kwargs):
     """
-    This method merge the data of the PET pipeline to the merged file containing the
-    BIDS information.
+    This method merge the data of the PET-Volume pipeline to the merged file
+    containing the BIDS information.
 
     Args:
         caps_dir: the path to the CAPS directory
@@ -182,9 +182,9 @@ def pet_pipeline(caps_dir, df, **kwargs):
     return final_df, summary_df
 
 
-def t1_spm_pipeline(caps_dir, df, **kwargs):
+def t1_volume_pipeline(caps_dir, df, **kwargs):
     """
-    This method merge the data of the t1 spm pipeline to the merged file containing the
+    This method merge the data of the t1-volume pipeline to the merged file containing the
     BIDS information.
 
     Args:
@@ -193,7 +193,7 @@ def t1_spm_pipeline(caps_dir, df, **kwargs):
         atlas_selection: allows to choose the atlas to merge. If None all atlases are selected.
 
     Returns:
-         final_df: a DataFrame containing the information of the bids and the pipeline
+        final_df: a DataFrame containing the information of the bids and the pipeline
     """
     from ...pipelines.t1_volume_new_template.t1_volume_new_template_cli import T1VolumeNewTemplateCLI
     instance = T1VolumeNewTemplateCLI()
