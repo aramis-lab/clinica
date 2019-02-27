@@ -361,5 +361,3 @@ class TckSift(MRTrix3Base):
         outputs = self.output_spec().get()
         outputs['out_tracks'] = op.abspath(self.inputs.out_tracks)
         return outputs
-
-
