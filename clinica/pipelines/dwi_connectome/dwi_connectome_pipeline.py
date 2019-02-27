@@ -15,6 +15,9 @@ config.update_config(cfg)
 class DwiConnectome(cpe.Pipeline):
     """Connectome-based processing of DWI datasets.
 
+    Todos:
+        [ ] - Add registration of parcellation onto DWI space
+
     Args:
         input_dir: A BIDS directory.
         output_dir: An empty output directory where CAPS structured data will
