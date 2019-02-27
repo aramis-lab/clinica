@@ -153,15 +153,6 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
                                      imports=['import os', 'import errno']))
         tsvmapnode.inputs.output_dir = self.caps_directory
 
-        # Node to create the log file doing the first step quality check
-#        lognode = npe.Node(name='lognode',
-#                           interface=nutil.Function(
-#                               input_names=['subject_list', 'session_list', 'subject_id', 'output_dir'],
-#                               output_names=[],
-#                               function=utils.log_summary))
-#        lognode.inputs.output_dir = self.caps_directory
-
-        # Node to create the log file doing the first step quality check
         print_begin_message = npe.MapNode(
             interface=nutil.Function(
                 input_names=['subject_id'],

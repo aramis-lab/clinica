@@ -38,7 +38,7 @@ def test_run_T1FreeSurferCrossSectional(cmdopt):
     pipeline.parameters['recon_all_args'] = '-qcache'
     pipeline.base_dir = join(working_dir, 'T1FreeSurferCrossSectional')
     pipeline.build()
-    pipeline.run()
+    #pipeline.run(bypass_check=True)
 
     log_file = join(root, 'out', 'caps', 'subjects', 'sub-ADNI082S5029',
                    'ses-M00', 't1', 'freesurfer_cross_sectional',
@@ -46,7 +46,7 @@ def test_run_T1FreeSurferCrossSectional(cmdopt):
                    'recon-all-status.log')
     if isfile(log_file):
         last_line = str(subprocess.check_output(['tail', '-1', log_file]))
-        if b'finished without error' not in last_line.lower():
+        if 'finished without error' not in last_line.lower():
             raise ValueError('FreeSurfer did not mark subject '
                              'sub-ADNI082S5029 as -finished without error-')
     else:
@@ -71,7 +71,7 @@ def test_run_T1VolumeTissueSegmentation(cmdopt):
                                           tsv_file=join(root, 'in', 'subjects.tsv'))
     pipeline.base_dir = join(working_dir, 'T1VolumeTissueSegmentation')
     pipeline.build()
-    pipeline.run()
+    pipeline.run(bypass_check=True)
 
     out_file = join(root, 'out/caps/subjects/sub-ADNI011S4105/ses-M00/t1/spm/segmentation/dartel_input/'
                     + 'sub-ADNI011S4105_ses-M00_T1w_segm-graymatter_dartelinput.nii.gz')
@@ -107,7 +107,7 @@ def test_run_T1VolumeCreateDartel(cmdopt):
                                     group_id='UnitTest')
     pipeline.base_dir = join(working_dir, 'T1VolumeCreateDartel')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Check output vs ref
     out_data_template = join(root, 'out/caps/groups/group-UnitTest/t1/group-UnitTest_template.nii.gz')
@@ -137,6 +137,7 @@ def test_run_T1VolumeDartel2MNI(cmdopt):
     import shutil
     import numpy as np
     import nibabel as nib
+    from .comparison_functions import likeliness_measure
 
     working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeDartel2MNI')
@@ -155,17 +156,18 @@ def test_run_T1VolumeDartel2MNI(cmdopt):
                                   group_id='UnitTest')
     pipeline.base_dir = join(working_dir, 'T1VolumeDartel2MNI')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Check output vs ref
     subjects = ['sub-ADNI011S4105', 'sub-ADNI023S4020', 'sub-ADNI035S4082', 'sub-ADNI128S4832']
-    out_data_GM_MNI = [nib.load(join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 't1', 'spm', 'dartel', 'group-UnitTest',
-                                     sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')).get_data()
+    out_data_GM_MNI = [join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 't1', 'spm', 'dartel', 'group-UnitTest',
+                            sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')
                        for sub in subjects]
-    ref_data_GM_MNI = [nib.load(join(root, 'ref', sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')).get_data()
+    ref_data_GM_MNI = [join(root, 'ref', sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')
                        for sub in subjects]
     for i in range(len(out_data_GM_MNI)):
-        assert np.allclose(out_data_GM_MNI[i], ref_data_GM_MNI[i], rtol=1e-8, equal_nan=True)
+        assert likeliness_measure(out_data_GM_MNI[i], ref_data_GM_MNI[i],
+                                  (1e-4, 0.15), (1, 0.02))
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -174,8 +176,7 @@ def test_run_T1VolumeDartel2MNI(cmdopt):
 def test_run_T1VolumeNewTemplate(cmdopt):
     from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_pipeline import T1VolumeNewTemplate
     from os.path import dirname, join, abspath, exists, basename
-    import numpy as np
-    import nibabel as nib
+    from .comparison_functions import similarity_measure
 
     working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeNewTemplate')
@@ -190,24 +191,24 @@ def test_run_T1VolumeNewTemplate(cmdopt):
                                    group_id='UnitTest')
     pipeline.base_dir = join(working_dir, 'T1VolumeNewTemplate')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Check generated vs ref
     subjects = ['sub-ADNI011S4105', 'sub-ADNI023S4020', 'sub-ADNI035S4082', 'sub-ADNI128S4832']
-    out_data_GM_MNI = [nib.load(join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 't1', 'spm', 'dartel', 'group-UnitTest',
-                                     sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')).get_data()
+    out_data_GM_MNI = [join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 't1', 'spm', 'dartel', 'group-UnitTest',
+                            sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')
                        for sub in subjects]
-    ref_data_GM_MNI = [nib.load(join(root, 'ref', sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')).get_data()
+    ref_data_GM_MNI = [join(root, 'ref', sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')
                        for sub in subjects]
 
     # Check output vs ref
-    out_data_template = nib.load(join(root, 'out/caps/groups/group-UnitTest/t1/group-UnitTest_template.nii.gz')).get_data()
-    ref_data_template = nib.load(join(root, 'ref/group-UnitTest_template.nii.gz')).get_data()
-    assert np.allclose(out_data_template, ref_data_template, rtol=1e-8, equal_nan=True)
+    out_data_template = join(root, 'out/caps/groups/group-UnitTest/t1/group-UnitTest_template.nii.gz')
+    ref_data_template = join(root, 'ref/group-UnitTest_template.nii.gz')
+    assert similarity_measure(out_data_template, ref_data_template, 0.999)
 
     for i in range(len(out_data_GM_MNI)):
         print('Checking file ' + subjects[i] + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')
-        assert np.allclose(out_data_GM_MNI[i], ref_data_GM_MNI[i], rtol=1e-4, equal_nan=True)
+        assert similarity_measure(out_data_GM_MNI[i], ref_data_GM_MNI[i], 0.999)
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -234,7 +235,7 @@ def test_run_T1VolumeExistingDartel(cmdopt):
                                       group_id='UnitTest')
     pipeline.base_dir = join(working_dir, 'T1VolumeExistingDartel')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Check output vs ref
     subjects = ['sub-ADNI011S4105', 'sub-ADNI023S4020', 'sub-ADNI035S4082', 'sub-ADNI128S4832']
@@ -253,12 +254,11 @@ def test_run_T1VolumeExistingDartel(cmdopt):
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
-
 def test_run_T1VolumeExistingTemplate(cmdopt):
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
     from os.path import dirname, join, abspath
     import shutil
-    from .comparison_functions import likeliness_measure
+    from .comparison_functions import similarity_measure
 
     working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeExistingTemplate')
@@ -274,7 +274,7 @@ def test_run_T1VolumeExistingTemplate(cmdopt):
                                         group_id='UnitTest')
     pipeline.base_dir = join(working_dir, 'T1VolumeExistingTemplate')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Check generated vs ref
     subjects = ['sub-ADNI011S4105', 'sub-ADNI023S4020']
@@ -287,7 +287,7 @@ def test_run_T1VolumeExistingTemplate(cmdopt):
     for i in range(len(out_data_GM_MNI)):
         print('Checking file ' + subjects[i]
               + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.gz')
-        assert likeliness_measure(out_data_GM_MNI[i], ref_data_GM_MNI[i], (1e-2, 0.04), (1e-1, 0.01))
+        assert similarity_measure(ref_data_GM_MNI[i], out_data_GM_MNI[i], 0.99)
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -316,7 +316,7 @@ def test_run_T1VolumeParcellation(cmdopt):
     pipeline.parameters['modulate'] = 'on'
     pipeline.base_dir = join(working_dir, 'T1VolumeParcellation')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     out_files = [join(root, 'out/caps/subjects/sub-ADNI018S4696/ses-M00/t1/spm/dartel/group-UnitTest/atlas_statistics',
                       'sub-ADNI018S4696_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability_space-'
@@ -353,7 +353,7 @@ def test_run_DWIPreprocessingUsingT1(cmdopt):
     #pipeline.parameters['epi_param'] = dict([('readout_time', 0.0348756),  ('enc_dir', 'y')])
     pipeline.base_dir = join(working_dir, 'DWIPreprocessingUsingT1')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Assert :
     out_file = join(root, 'out', 'caps', 'subjects', 'sub-CAPP01001TMM', 'ses-M00', 'dwi', 'preprocessing', 'sub-CAPP01001TMM_ses-M00_dwi_space-T1w_preproc.nii.gz')
@@ -385,7 +385,7 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
                                                       low_bval=5)
     pipeline.base_dir = join(working_dir, 'DWIPreprocessingUsingPhaseDiffFieldmap')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Assert :
     out_file = join(root, 'out', 'caps', 'subjects', 'sub-CAPP01001TMM', 'ses-M00', 'dwi', 'preprocessing', 'sub-CAPP01001TMM_ses-M00_dwi_space-b0_preproc.nii.gz')
@@ -415,7 +415,7 @@ def test_run_DWIDTI(cmdopt):
                       tsv_file=join(root, 'in', 'subjects.tsv'))
     pipeline.base_dir = join(working_dir, 'DWIDTI')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Check files
     subject_id = 'sub-CAPP01001TMM'
@@ -434,7 +434,6 @@ def test_run_DWIDTI(cmdopt):
         assert np.allclose(out_mean_scalar, ref_mean_scalar, rtol=0.025, equal_nan=True)
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-
 
 
 #def test_run_DWIConnectome(cmdopt):
@@ -462,7 +461,7 @@ def test_run_DWIDTI(cmdopt):
 #    }
 #    pipeline.base_dir = join(working_dir, 'DWIConnectome')
 #    pipeline.build()
-#    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+#    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 #
 #    # Check files
 #    atlases = ['desikan', 'destrieux']
@@ -472,20 +471,18 @@ def test_run_DWIDTI(cmdopt):
 #                 for a in atlases]
 #
 #    # @TODO: Find the adequate threshold for DWI-Connectome pipeline
-#    pass
 #
 #    for i in range(len(out_files)):
-#        out_connectome = pds.read_csv(out_files[i], sep='\t')
+#        out_connectome = pds.read_csv(out_files[i], sep=' ')
 #        out_connectome = np.array(out_connectome)
-#        ref_connectome = pds.read_csv(ref_files[i], sep='\t')
+#        ref_connectome = pds.read_csv(ref_files[i], sep=' ')
 #        ref_connectome = np.array(ref_connectome)
 #
 #        assert np.allclose(out_connectome, ref_connectome, rtol=0.025, equal_nan=True)
 #
 #    clean_folder(join(root, 'out', 'caps'), recreate=False)
-#    pass
-#
-#
+
+
 def test_run_fMRIPreprocessing(cmdopt):
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
     from .comparison_functions import similarity_measure
@@ -510,7 +507,7 @@ def test_run_fMRIPreprocessing(cmdopt):
     }
     pipeline.base_dir = join(working_dir, 'fMRIPreprocessing')
     pipeline.build()
-    pipeline.run()
+    pipeline.run(bypass_check=True)
 
     subject_id = 'sub-01001TMM'
     out_files = [join(root, 'out', 'caps', 'subjects', subject_id, 'ses-M00', 'fmri', 'preprocessing', subject_id + '_ses-M00_task-rest_bold_space-Ixi549Space_preproc.nii.gz'),
@@ -545,7 +542,7 @@ def test_run_PETVolume(cmdopt):
                          fwhm_tsv=None)
     pipeline.base_dir = join(working_dir, 'PETVolume')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     subjects = ['sub-ADNI011S4105', 'sub-ADNI023S4020', 'sub-ADNI035S4082', 'sub-ADNI128S4832']
     out_files = [join(root, 'out/caps/subjects/' + sub + '/ses-M00/pet/preprocessing/group-UnitTest',
@@ -592,7 +589,7 @@ def test_run_StatisticsSurface(cmdopt):
     }
     pipeline.base_dir = join(working_dir, 'StatisticsSurface')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 8})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 8}, bypass_check=True)
 
     # Check files
     out_file = join(root, 'out/caps/groups/group-UnitTest/statistics/surfstat_group_comparison/group-UnitTest_AD-lt-CN_measure-cortical_thickness_fwhm-20_correctedPValue.mat')
@@ -628,7 +625,7 @@ def test_run_PETSurface(cmdopt):
     pipeline.base_dir = wd
     pipeline.parameters['wd'] = wd
     pipeline.build()
-    pipeline.run()
+    pipeline.run(bypass_check=True)
 
     # Check files
     out_files = [join(root, 'out/caps/subjects/sub-ADNI011S4105/ses-M00/pet/surface',
@@ -911,7 +908,7 @@ def test_run_SpatialSVM(cmdopt):
     pipeline.parameters['no_pvc'] = 'True'
     pipeline.base_dir = join(working_dir, 'SpatialSVM')
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4})
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Check output vs ref
     subjects = ['sub-ADNI011S0023', 'sub-ADNI013S0325']
