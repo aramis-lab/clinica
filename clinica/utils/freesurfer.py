@@ -53,18 +53,19 @@ def freesurfer_volume_to_native_volume(
 
 def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv):
     """
-        This function is to transfer caps recon-all output structure to standard FreeSurfer recon-all output structure.
+    This function transfers CAPS recon-all output structure to
+    standard FreeSurfer recon-all output structure.
 
     Args:
         caps_dir: CAPS directory containing the outputs in CAPS hierarchy
         dest_dir: the destination folder containing the FreeSurfer output structure
-        subjects_visits_tsv: tsv files containing the subjects that you want to convert
-
-    Returns:
-
+        subjects_visits_tsv: tsv files containing the subjects that you want
+            to convert
     """
-    import os, csv
+    import os
+    import csv
     from shutil import copytree
+    from clinica.utils.stream import cprint
 
     subject_list = []
     session_list = []
@@ -83,211 +84,20 @@ def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv):
 
     for i in range(len(subject_list)):
         if os.path.isdir(os.path.join(dest_dir, subject_list[i] + '_' + session_list[i])):
-            print "This subject: %s for FreeSurfer exits already!" % subject_list[i]
+            cprint("This subject: %s for FreeSurfer exits already!" % subject_list[i])
         else:
-            print "Convert subject: %s from CAPS to FreeSurfer output structure" % subject_list[i]
+            cprint("Convert subject: %s from CAPS to FreeSurfer output structure" % subject_list[i])
             copytree(os.path.join(caps_dir, subject_list[i], session_list[i], 't1/freesurfer_cross_sectional', subject_list[i] + '_' + session_list[i]), os.path.join(dest_dir, subject_list[i] + '_' + session_list[i]))
-            print "--------------Finish this subject!-----------------------"
-
-
-def volumetric_summary(subject_dir, subject_id, caps_dir):
-    """
-        To write statistics summary for all the subjects after reconall pipelines.
-
-    Args:
-        subject_dir: a list containing all the CAPS directory path
-        subject_id: a list containing all the participant_id
-        caps_dir: destination folder containing the summarized statistics tsv
-
-    Returns:
-
-    """
-    import os, errno
-
-    # name all the 26 tsv output files.
-    all_seg_volume = '_parcellation-wm_volume.tsv'
-    aseg_volume = '_segmentationVolumes.tsv'
-
-    aparc_desikan_lh_volume = '_hemi-left_parcellation-desikan_volume.tsv'
-    aparc_desikan_rh_volume = '_hemi-right_parcellation-desikan_volume.tsv'
-    aparc_desikan_lh_thickness = '_hemi-left_parcellation-desikan_thickness.tsv'
-    aparc_desikan_rh_thickness = '_hemi-right_parcellation-desikan_thickness.tsv'
-    aparc_desikan_lh_area = '_hemi-left_parcellation-desikan_area.tsv'
-    aparc_desikan_rh_area = '_hemi-right_parcellation-desikan_area.tsv'
-    aparc_desikan_lh_meancurv = '_hemi-left_parcellation-desikan_meancurv.tsv'
-    aparc_desikan_rh_meancurv = '_hemi-right_parcellation-desikan_meancurv.tsv'
-
-    aparc_destrieux_lh_volume = '_hemi-left_parcellation-destrieux_volume.tsv'
-    aparc_destrieux_rh_volume = '_hemi-right_parcellation-destrieux_volume.tsv'
-    aparc_destrieux_lh_thickness = '_hemi-left_parcellation-destrieux_thickness.tsv'
-    aparc_destrieux_rh_thickness = '_hemi-right_parcellation-destrieux_thickness.tsv'
-    aparc_destrieux_lh_area = '_hemi-left_parcellation-destrieux_area.tsv'
-    aparc_destrieux_rh_area = '_hemi-right_parcellation-destrieux_area.tsv'
-    aparc_destrieux_lh_meancurv = '_hemi-left_parcellation-destrieux_meancurv.tsv'
-    aparc_destrieux_rh_meancurv = '_hemi-right_parcellation-destrieux_meancurv.tsv'
-
-    aparc_BA_lh_volume = '_hemi-left_parcellation-ba_volume.tsv'
-    aparc_BA_rh_volume = '_hemi-right_parcellation-ba_volume.tsv'
-    aparc_BA_lh_thickness = '_hemi-left_parcellation-ba_thickness.tsv'
-    aparc_BA_rh_thickness = '_hemi-right_parcellation-ba_thickness.tsv'
-    aparc_BA_lh_area = '_hemi-left_parcellation-ba_area.tsv'
-    aparc_BA_rh_area = '_hemi-right_parcellation-ba_area.tsv'
-    aparc_BA_lh_meancurv = '_hemi-left_parcellation-ba_meancurv.tsv'
-    aparc_BA_rh_meancurv = '_hemi-right_parcellation-ba_meancurv.tsv'
-
-    dest_dir = os.path.join(caps_dir, 'subjects', 'regional_measures_summary')
-    try:
-        os.makedirs(dest_dir)
-    except OSError as exception:
-        if exception.errno != errno.EEXIST: # if dest_dir exists, go on, if its other error, raise
-            raise
-
-    # fetch the paths for all the 26 tsv files.
-    all_seg_volume_tsv = os.path.join(dest_dir, all_seg_volume)
-    aseg_volume_tsv = os.path.join(dest_dir, aseg_volume)
-    # DESIKAN atlas(?h.aparc.stats)
-    aparc_desikan_lh_volume_tsv = os.path.join(dest_dir, aparc_desikan_lh_volume)
-    aparc_desikan_rh_volume_tsv = os.path.join(dest_dir, aparc_desikan_rh_volume)
-    aparc_desikan_lh_thickness_tsv = os.path.join(dest_dir, aparc_desikan_lh_thickness)
-    aparc_desikan_rh_thickness_tsv = os.path.join(dest_dir, aparc_desikan_rh_thickness)
-    aparc_desikan_lh_area_tsv = os.path.join(dest_dir, aparc_desikan_lh_area)
-    aparc_desikan_rh_area_tsv = os.path.join(dest_dir, aparc_desikan_rh_area)
-    aparc_desikan_lh_meancurv_tsv = os.path.join(dest_dir, aparc_desikan_lh_meancurv)
-    aparc_desikan_rh_meancurv_tsv = os.path.join(dest_dir, aparc_desikan_rh_meancurv)
-    # DESTRIEUX atals
-    aparc_destrieux_lh_volume_tsv = os.path.join(dest_dir, aparc_destrieux_lh_volume)
-    aparc_destrieux_rh_volume_tsv = os.path.join(dest_dir, aparc_destrieux_rh_volume)
-    aparc_destrieux_lh_thickness_tsv = os.path.join(dest_dir, aparc_destrieux_lh_thickness)
-    aparc_destrieux_rh_thickness_tsv = os.path.join(dest_dir, aparc_destrieux_rh_thickness)
-    aparc_destrieux_lh_area_tsv = os.path.join(dest_dir, aparc_destrieux_lh_area)
-    aparc_destrieux_rh_area_tsv = os.path.join(dest_dir, aparc_destrieux_rh_area)
-    aparc_destrieux_lh_meancurv_tsv = os.path.join(dest_dir, aparc_destrieux_lh_meancurv)
-    aparc_destrieux_rh_meancurv_tsv = os.path.join(dest_dir, aparc_destrieux_rh_meancurv)
-    # Brodmann Area atlas
-    aparc_BA_lh_volume_tsv = os.path.join(dest_dir, aparc_BA_lh_volume)
-    aparc_BA_rh_volume_tsv = os.path.join(dest_dir, aparc_BA_rh_volume)
-    aparc_BA_lh_thickness_tsv = os.path.join(dest_dir, aparc_BA_lh_thickness)
-    aparc_BA_rh_thickness_tsv = os.path.join(dest_dir, aparc_BA_rh_thickness)
-    aparc_BA_lh_area_tsv = os.path.join(dest_dir, aparc_BA_lh_area)
-    aparc_BA_rh_area_tsv = os.path.join(dest_dir, aparc_BA_rh_area)
-    aparc_BA_lh_meancurv_tsv = os.path.join(dest_dir, aparc_BA_lh_meancurv)
-    aparc_BA_rh_meancurv_tsv = os.path.join(dest_dir, aparc_BA_rh_meancurv)
-
-    # get the cmd string for the command line wrappers
-    subjects = ''
-    for i in xrange(len(subject_dir)):
-        subject_path = (os.path.join(subject_dir[i], subject_id[i]))
-        subjects += subject_path + ' '
-
-    cmd_all_seg = 'asegstats2table --subjects ' + subjects + '--meas volume --statsfile wmparc.stats --all-seg --tablefile ' + all_seg_volume_tsv
-    os.system(cmd_all_seg)
-    cmd_aseg = 'asegstats2table --subjects ' + subjects + '--meas volume --tablefile ' + aseg_volume_tsv
-    os.system(cmd_aseg)
-
-    cmd_aparc_desikan_lh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi lh --meas volume --tablefile ' + aparc_desikan_lh_volume_tsv
-    os.system(cmd_aparc_desikan_lh_volume)
-    cmd_aparc_desikan_rh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi rh --meas volume --tablefile ' + aparc_desikan_rh_volume_tsv
-    os.system(cmd_aparc_desikan_rh_volume)
-    cmd_parc_desikan_lh_thickness = 'aparcstats2table --subjects ' + subjects + '--hemi lh --meas thickness --tablefile ' + aparc_desikan_lh_thickness_tsv
-    os.system(cmd_parc_desikan_lh_thickness)
-    cmd_parc_desikan_rh_thickness = 'aparcstats2table --subjects ' + subjects + '--hemi rh --meas thickness --tablefile ' + aparc_desikan_rh_thickness_tsv
-    os.system(cmd_parc_desikan_rh_thickness)
-    cmd_aparc_desikan_lh_area = 'aparcstats2table --subjects ' + subjects + '--hemi lh --meas area --tablefile ' + aparc_desikan_lh_area_tsv
-    os.system(cmd_aparc_desikan_lh_area)
-    cmd_aparc_desikan_rh_area = 'aparcstats2table --subjects ' + subjects + '--hemi rh --meas area --tablefile ' + aparc_desikan_rh_area_tsv
-    os.system(cmd_aparc_desikan_rh_area)
-    cmd_aparc_desikan_lh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi lh --meas meancurv --tablefile ' + aparc_desikan_lh_meancurv_tsv
-    os.system(cmd_aparc_desikan_lh_meancurv)
-    cmd_aparc_desikan_rh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi rh --meas meancurv --tablefile ' + aparc_desikan_rh_meancurv_tsv
-    os.system(cmd_aparc_desikan_rh_meancurv)
-
-    cmd_aparc_destrieux_lh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc aparc.a2009s --meas volume --tablefile ' + aparc_destrieux_lh_volume_tsv
-    os.system(cmd_aparc_destrieux_lh_volume)
-    cmd_aparc_destrieux_rh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc aparc.a2009s --meas volume --tablefile ' + aparc_destrieux_rh_volume_tsv
-    os.system(cmd_aparc_destrieux_rh_volume)
-    cmd_parc_destrieux_lh_thickness = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc aparc.a2009s --meas thickness --tablefile ' + aparc_destrieux_lh_thickness_tsv
-    os.system(cmd_parc_destrieux_lh_thickness)
-    cmd_parc_destrieux_rh_thickness = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc aparc.a2009s --meas thickness --tablefile ' + aparc_destrieux_rh_thickness_tsv
-    os.system(cmd_parc_destrieux_rh_thickness)
-    cmd_aparc_destrieux_lh_area = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc aparc.a2009s --meas area --tablefile ' + aparc_destrieux_lh_area_tsv
-    os.system(cmd_aparc_destrieux_lh_area)
-    cmd_aparc_destrieux_rh_area = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc aparc.a2009s --meas area --tablefile ' + aparc_destrieux_rh_area_tsv
-    os.system(cmd_aparc_destrieux_rh_area)
-    cmd_aparc_destrieux_lh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc aparc.a2009s --meas meancurv --tablefile ' + aparc_destrieux_lh_meancurv_tsv
-    os.system(cmd_aparc_destrieux_lh_meancurv)
-    cmd_aparc_destrieux_rh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc aparc.a2009s --meas meancurv --tablefile ' + aparc_destrieux_rh_meancurv_tsv
-    os.system(cmd_aparc_destrieux_rh_meancurv)
-
-    #### BA atals does not work for FreeSurfer 6.0
-    # cmd_aparc_BA_lh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc BA --meas volume --tablefile ' + aparc_BA_lh_volume_tsv
-    # os.system(cmd_aparc_BA_lh_volume)
-    # cmd_aparc_BA_rh_volume = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas volume --tablefile ' + aparc_BA_rh_volume_tsv
-    # os.system(cmd_aparc_BA_rh_volume)
-    # cmd_parc_BA_lh_thickness = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc BA --meas thickness --tablefile ' + aparc_BA_lh_thickness_tsv
-    # os.system(cmd_parc_BA_lh_thickness)
-    # cmd_parc_BA_rh_thickness = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas thickness --tablefile ' + aparc_BA_rh_thickness_tsv
-    # os.system(cmd_parc_BA_rh_thickness)
-    # cmd_aparc_BA_lh_area = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc BA --meas area --tablefile ' + aparc_BA_lh_area_tsv
-    # os.system(cmd_aparc_BA_lh_area)
-    # cmd_aparc_BA_rh_area = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas area --tablefile ' + aparc_BA_rh_area_tsv
-    # os.system(cmd_aparc_BA_rh_area)
-    # cmd_aparc_BA_lh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi lh --parc BA --meas meancurv --tablefile ' + aparc_BA_lh_meancurv_tsv
-    # os.system(cmd_aparc_BA_lh_meancurv)
-    # cmd_aparc_BA_rh_meancurv = 'aparcstats2table --subjects ' + subjects + '--hemi rh --parc BA --meas meancurv --tablefile ' + aparc_BA_rh_meancurv_tsv
-    # os.system(cmd_aparc_BA_rh_meancurv)
-
-
-def write_volumetric_summary(caps_dir, subjects_visits_tsv):
-    """
-        This func is to write the volumetric measurement after recon-all pipelines for all the subjects
-
-    Args:
-        caps_dir:
-        subjects_visits_tsv: tsv contains all the particiapnt_id and session_id
-
-    Returns:
-
-    """
-    ### TODO, this should be done after we define the name of the tsv file for each subject, otherwise this will be changed often....
-    #### NOT USE
-
-    import nipype.pipeline.engine as pe
-    from nipype.interfaces.utility import Function
-    import pandas as pd
-    import os
-
-    # get the list for subject_ids
-    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
-    if (list(subjects_visits.columns.values)[0] != 'participant_id') and (list(subjects_visits.columns.values)[1] != 'session_id'):
-        raise Exception('Subjects and visits file is not in the correct format.')
-    subject_list = list(subjects_visits.participant_id)
-    session_list = list(subjects_visits.session_id)
-    subject_id = list(subject_list[i] + '_' + session_list[i] for i in range(len(subject_list)))
-    subject_dir = []
-    for i in xrange(len(subject_id)):
-        sub_dir = os.path.join(caps_dir, 'subjects', subject_list[i], session_list[i], 't1', 'freesurfer_cross_sectional')
-        subject_dir.append(sub_dir)
-
-
-    fs_tsv_summary = pe.Node(name='volumetric_summary_node',
-                            interface=Function(
-                                input_names=['subject_dir', 'subject_id', 'caps_dir'],
-                                output_names=[],
-                                function=volumetric_summary))
-    fs_tsv_summary.inputs.subject_id = subject_id
-    fs_tsv_summary.inputs.caps_dir = caps_dir
-    fs_tsv_summary.inputs.subject_dir = subject_dir
-
-    return fs_tsv_summary
+            cprint("--------------Finish this subject!-----------------------")
 
 
 def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
     """
-        This func is to write the volumetric measurement after recon-all pipelines for each subjects in the subjects_visits_tsv
+        This func is to write the volumetric measurement after recon-all
+        pipelines for each subjects in the subjects_visits_tsv
 
-    Args:
-        caps_dir: CAPS directory
-        subjects_visits_tsv: tsv contains all the particiapnt_id and session_id
+    Args: caps_dir: CAPS directory subjects_visits_tsv: tsv contains all the
+    particiapnt_id and session_id
 
     Returns:
 
@@ -308,10 +118,10 @@ def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
     fs_tsv_subject = pe.MapNode(name='volumetric_summary_node',
                                 iterfield=['subject_id'],
                                 interface=Function(
-                                input_names=['subject_id', 'output_dir'],
-                                output_names=[],
-                                function=write_statistics_per_subject,
-                                imports=['import os', 'import errno']))
+                                    input_names=['subject_id', 'output_dir'],
+                                    output_names=[],
+                                    function=write_statistics_per_subject,
+                                    imports=['import os', 'import errno']))
     fs_tsv_subject.inputs.subject_id = subject_id
     fs_tsv_subject.inputs.output_dir = caps_dir
 
@@ -320,11 +130,11 @@ def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
 
 def write_reconall_log_summary(caps_dir, subjects_visits_tsv):
     """
-        This func is to write the recon_all.log summary for all the subjects, the first step quality check
+        This func is to write the recon_all.log summary for all the subjects,
+        the first step quality check
 
-    Args:
-        caps_dir: CAPS directory
-        subjects_visits_tsv: tsv contains all the particiapnt_id and session_id
+    Args: caps_dir: CAPS directory subjects_visits_tsv: tsv contains all the
+    particiapnt_id and session_id
 
     Returns:
 
@@ -336,8 +146,8 @@ def write_reconall_log_summary(caps_dir, subjects_visits_tsv):
 
     # get the list for subject_ids
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
-    if (list(subjects_visits.columns.values)[0] != 'participant_id') and (
-        list(subjects_visits.columns.values)[1] != 'session_id'):
+    if ((list(subjects_visits.columns.values)[0] != 'participant_id')
+            and (list(subjects_visits.columns.values)[1] != 'session_id')):
         raise Exception('Subjects and visits file is not in the correct format.')
     subject_list = list(subjects_visits.participant_id)
     session_list = list(subjects_visits.session_id)
@@ -356,3 +166,112 @@ def write_reconall_log_summary(caps_dir, subjects_visits_tsv):
     return lognode
 
 
+def generate_regional_measures(path_segmentation, subject_id, output_dir=None):
+    """
+    Read stats files located in <path_segmentation>/<subject_id>/stats/*.stats
+    and generate TSV files in <path_segmentation>/regional_measures folder.
+
+    Args:
+        path_segmentation: Path to the FreeSurfer segmentation.
+        subject_id: Subject ID in the form sub-CLNC01_ses-M00
+        output_dir: CAPS directory
+    """
+    import os
+    import errno
+    import pandas
+    from clinica.utils.stream import cprint
+    from clinica.utils.freesurfer import write_tsv_file
+
+    participant_id = subject_id.split('_')[0]
+    session_id = subject_id.split('_')[1]
+
+    stats_folder = os.path.join(path_segmentation, subject_id, 'stats')
+    if not os.path.isdir(stats_folder):
+        raise IOError("Folder %s/%s does not contain FreeSurfer segmentation" % (path_segmentation, subject_id))
+
+    if output_dir is None:
+        output_dir = os.path.join(path_segmentation, 'regional_measures')
+
+    try:
+        os.makedirs(output_dir)
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:  # if dest_dir exists, go on, if its other error, raise
+            raise
+
+    #
+    # Generate TSV files for parcellation files
+    #
+    # Columns in ?h.BA.stats, ?h.aparc.stats or ?h.aparc.a2009s.stats file
+    columns_parcellation = [
+        'StructName', 'NumVert', 'SurfArea', 'GrayVol', 'ThickAvg', 'ThickStd',
+        'MeanCurv', 'GausCurv', 'FoldInd', 'CurvInd'
+    ]
+    dict_hemi = {
+        "left": "lh",
+        "right": "rh"
+    }
+    dict_atlas = {
+        "desikan": "aparc",
+        "destrieux": "aparc.a2009s",
+        "ba": "BA_exvivo"
+    }
+    for atlas in ('desikan', 'destrieux', 'ba'):
+        for hemi in ('left', 'right'):
+            df = pandas.read_csv(
+                os.path.join(stats_folder, dict_hemi[hemi]+'.' + dict_atlas[atlas]+'.stats'),
+                names=columns_parcellation,
+                comment='#', header=None, delimiter='\s+', dtype=str)
+            write_tsv_file(os.path.join(output_dir, subject_id+'_hemi-'+hemi+'_parcellation-'+atlas+'_volume.tsv'),
+                           df['StructName'], 'volume', df['GrayVol'])
+            write_tsv_file(os.path.join(output_dir, subject_id+'_hemi-'+hemi+'_parcellation-'+atlas+'_thickness.tsv'),
+                           df['StructName'], 'thickness', df['ThickAvg'])
+            write_tsv_file(os.path.join(output_dir, subject_id+'_hemi-'+hemi+'_parcellation-'+atlas+'_area.tsv'),
+                           df['StructName'], 'area', df['SurfArea'])
+            write_tsv_file(os.path.join(output_dir, subject_id+'_hemi-'+hemi+'_parcellation-'+atlas+'_meancurv.tsv'),
+                           df['StructName'], 'meancurv', df['MeanCurv'])
+
+    #
+    # Generate TSV files for segmentation files
+    #
+    # Columns in aseg.stats or wmparc.stats file
+    columns_segmentation = [
+        'Index', 'SegId', 'NVoxels', 'Volume_mm3', 'StructName', 'normMean',
+        'normStdDev', 'normMin', 'normMax', 'normRange']
+
+    # Parsing aseg.stats
+    df = pandas.read_csv(os.path.join(stats_folder, 'aseg.stats'),
+                         comment='#', header=None, delimiter='\s+', dtype=str,
+                         names=columns_segmentation)
+    write_tsv_file(os.path.join(output_dir, subject_id + '_segmentationVolumes.tsv'),
+                   df['StructName'], 'volume', df['Volume_mm3'])
+
+    #  Parsing  wmparc.stats
+    df = pandas.read_csv(os.path.join(stats_folder, 'wmparc.stats'),
+                         comment='#', header=None, delimiter='\s+', dtype=str,
+                         names=columns_segmentation)
+    write_tsv_file(os.path.join(output_dir, subject_id + '_parcellation-wm_volume.tsv'),
+                   df['StructName'], 'volume', df['Volume_mm3'])
+
+
+def write_tsv_file(out_file, list_names, name_scalar, list_scalars):
+    # import pandas
+    import csv
+    from clinica.utils.stream import cprint
+
+    try:
+        with open(out_file, 'w', encoding='utf8', newline='') as tsv_file:
+            tsv_writer = csv.writer(tsv_file, delimiter='\t',
+                                    lineterminator='\n')
+            tsv_writer.writerow(list_names)
+            tsv_writer.writerow(list_scalars)
+        # TODO: Save data in lines instead of columns for Clinica 0.3
+        # data = pandas.DataFrame({
+        #     'label_name': list_names,
+        #     name_scalar: list_scalars
+        # })
+        # data.to_csv(out_file, sep='\t', index=True, encoding='utf-8')
+    except Exception as e:
+        cprint("Impossible to save %s file" % out_file)
+        raise e
+
+    return out_file

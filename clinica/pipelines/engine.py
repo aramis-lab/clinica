@@ -9,7 +9,7 @@ import abc
 from nipype.pipeline.engine import Workflow
 
 
-def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True):
+def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_session_tsv=False):
     """Parses a BIDS or CAPS directory to get the subjects and sessions.
 
     This function lists all the subjects and sessions based on the content of
@@ -20,6 +20,7 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True):
         input_dir: A BIDS or CAPS directory path.
         ss_file: A subjects-sessions file (.tsv format).
         is_bids_dir: Indicates if input_dir is a BIDS or CAPS directory
+        use_session_tsv (boolean): Specify if the list uses the sessions listed in the sessions.tsv files
 
     Returns:
         subjects: A subjects list.
@@ -41,7 +42,8 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True):
             input_dir=input_dir,
             output_dir=output_dir,
             file_name=tsv_file,
-            is_bids_dir=is_bids_dir)
+            is_bids_dir=is_bids_dir,
+            use_session_tsv=use_session_tsv)
 
     ss_df = pd.io.parsers.read_csv(ss_file, sep='\t')
     if 'participant_id' not in list(ss_df.columns.values):
@@ -141,12 +143,19 @@ class Pipeline(Workflow):
             if self._caps_directory is None:
                 raise IOError('%s does not contain BIDS nor CAPS directory' %
                               self._name)
+            if not os.path.isdir(self._caps_directory):
+                raise IOError('The CAPS parameter is not a folder (given path:%s)' %
+                              self._caps_directory)
+
             self._sessions, self._subjects = get_subject_session_list(
                 input_dir=self._caps_directory,
                 ss_file=self._tsv_file,
                 is_bids_dir=False
             )
         else:
+            if not os.path.isdir(self._bids_directory):
+                raise IOError('The BIDS parameter is not a folder (given path:%s)' %
+                              self._bids_directory)
             self._sessions, self._subjects = get_subject_session_list(
                 input_dir=self._bids_directory,
                 ss_file=self._tsv_file,
@@ -183,14 +192,16 @@ class Pipeline(Workflow):
         if self.output_node:
             self.add_nodes([self.output_node])
 
-
     def has_input_connections(self):
         """Checks if the Pipeline's input node has been connected.
 
         Returns:
             True if the input node is connected, False otherwise.
         """
-        return self._graph.in_degree(self.input_node) > 0
+        if self.input_node:
+            return self._graph.in_degree(self.input_node) > 0
+        else:
+            return False
 
     def has_output_connections(self):
         """Checks if the Pipeline's output node has been connected.
@@ -198,7 +209,10 @@ class Pipeline(Workflow):
         Returns:
             True if the output node is connected, False otherwise.
         """
-        return self._graph.out_degree(self.output_node) > 0
+        if self.output_node:
+            return self._graph.out_degree(self.output_node) > 0
+        else:
+            return False
 
     @postset('is_built', True)
     def build(self):
@@ -216,19 +230,22 @@ class Pipeline(Workflow):
         """
         if not self.is_built:
             self.check_dependencies()
-            self.build_core_nodes()
             if not self.has_input_connections():
                 self.build_input_node()
+            self.build_core_nodes()
             if not self.has_output_connections():
                 self.build_output_node()
         return self
 
-    def run(self, plugin=None, plugin_args=None, update_hash=False):
+    def run(self, plugin=None, plugin_args=None, update_hash=False, bypass_check=False):
         """Executes the Pipeline.
 
         It overwrites the default Workflow method to check if the
         Pipeline is built before running it. If not, it builds it and then
         run it.
+        It also checks whether there is enough space left on the disks, and if
+        the number of threads to run in parallel is consistent with what is
+        possible on the CPU
 
         Args:
             Similar to those of Workflow.run.
@@ -238,6 +255,10 @@ class Pipeline(Workflow):
         """
         if not self.is_built:
             self.build()
+        if not bypass_check:
+            self.check_size()
+            plugin_args = self.update_parallelize_info(plugin_args)
+            plugin = 'MultiProc'
         return Workflow.run(self, plugin, plugin_args, update_hash)
 
     def load_info(self):
@@ -259,12 +280,12 @@ class Pipeline(Workflow):
 
     def check_dependencies(self):
         """Checks if listed dependencies are present.
-        
+
         Loads the pipelines related `info.json` file and check each one of the
         dependencies listed in the JSON "dependencies" field. Its raises
         exception if a program in the list does not exist or if environment
         variables are not properly defined.
-    
+
         Todos:
             - [ ] MATLAB toolbox dependency checking
             - [x] check MATLAB
@@ -314,6 +335,214 @@ class Pipeline(Workflow):
         self.check_custom_dependencies()
 
         return self
+
+    def check_size(self):
+        """ Checks if the pipeline has enough space on the disk for both
+        working directory and caps directory
+
+        Author : Arnaud Marcoux"""
+        from os import statvfs
+        from os.path import dirname, abspath, join
+        from pandas import read_csv
+        from clinica.utils.stream import cprint
+        from colorama import Fore
+        import sys
+
+        SYMBOLS = {
+            'customary': ('B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'),
+            'customary_ext': (
+                'byte', 'kilo', 'mega', 'giga', 'tera', 'peta', 'exa',
+                'zetta', 'iotta'),
+            'iec': ('Bi', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi', 'Yi'),
+            'iec_ext': ('byte', 'kibi', 'mebi', 'gibi', 'tebi', 'pebi', 'exbi',
+                        'zebi', 'yobi'),
+        }
+
+        def bytes2human(n,
+                        format='%(value).1f %(symbol)s',
+                        symbols='customary'):
+            """
+            Convert n bytes into a human readable string based on format.
+            symbols can be either "customary", "customary_ext", "iec" or "iec_ext",
+            see: http://goo.gl/kTQMs
+
+            License :
+            Bytes-to-human / human-to-bytes converter.
+            Based on: http://goo.gl/kTQMs
+            Working with Python 2.x and 3.x.
+            Author: Giampaolo Rodola' <g.rodola [AT] gmail [DOT] com>
+            License: MIT
+            """
+            n = int(n)
+            if n < 0:
+                raise ValueError("n < 0")
+            symbols = SYMBOLS[symbols]
+            prefix = {}
+            for i, s in enumerate(symbols[1:]):
+                prefix[s] = 1 << (i + 1) * 10
+            for symbol in reversed(symbols[1:]):
+                if n >= prefix[symbol]:
+                    value = float(n) / prefix[symbol]
+                    return format % locals()
+            return format % dict(symbol=symbols[0], value=n)
+
+        def human2bytes(s):
+            """
+            Attempts to guess the string format based on default symbols
+            set and return the corresponding bytes as an integer.
+            When unable to recognize the format ValueError is raised.
+
+            License :
+            Bytes-to-human / human-to-bytes converter.
+            Based on: http://goo.gl/kTQMs
+            Working with Python 2.x and 3.x.
+            Author: Giampaolo Rodola' <g.rodola [AT] gmail [DOT] com>
+            License: MIT
+            """
+            init = s
+            num = ""
+            while s and s[0:1].isdigit() or s[0:1] == '.':
+                num += s[0]
+                s = s[1:]
+            num = float(num)
+            letter = s.strip()
+            for name, sset in SYMBOLS.items():
+                if letter in sset:
+                    break
+            else:
+                if letter == 'k':
+                    # treat 'k' as an alias for 'K' as per: http://goo.gl/kTQMs
+                    sset = SYMBOLS['customary']
+                    letter = letter.upper()
+                else:
+                    raise ValueError("can't interpret %r" % init)
+            prefix = {sset[0]: 1}
+            for i, s in enumerate(sset[1:]):
+                prefix[s] = 1 << (i + 1) * 10
+            return int(num * prefix[letter])
+
+        # Get the number of sessions
+        n_sessions = len(self.subjects)
+        try:
+            caps_stat = statvfs(self.caps_directory)
+        except FileNotFoundError:
+            # CAPS folder may not exist yet
+            caps_stat = statvfs(dirname(self.caps_directory))
+        try:
+            wd_stat = statvfs(dirname(self.parameters['wd']))
+        except (KeyError, FileNotFoundError):
+            # Not all pipelines has a 'wd' parameter
+            # todo : maybe more relevant to always take base_dir ?
+            wd_stat = statvfs(dirname(self.base_dir))
+
+        # Estimate space left on partition/disk/whatever caps and wd is located
+        free_space_caps = caps_stat.f_bavail * caps_stat.f_frsize
+        free_space_wd = wd_stat.f_bavail * wd_stat.f_frsize
+
+        # space estimation file location
+        info_pipelines = read_csv(join(dirname(abspath(__file__)),
+                                       'space_required_by_pipeline.csv'),
+                                  sep=';')
+        pipeline_list = list(info_pipelines.pipeline_name)
+        try:
+            idx_pipeline = pipeline_list.index(self._name)
+            space_needed_caps_1_session = info_pipelines.space_caps[idx_pipeline]
+            space_needed_wd_1_session = info_pipelines.space_wd[idx_pipeline]
+            space_needed_caps = n_sessions * human2bytes(space_needed_caps_1_session)
+            space_needed_wd = n_sessions * human2bytes(space_needed_wd_1_session)
+            error = ''
+            if free_space_caps == free_space_wd:
+                if space_needed_caps + space_needed_wd > free_space_wd:
+                    # We assume this is the same disk
+                    error = error \
+                            + 'Space needed for CAPS and working directory (' \
+                            + bytes2human(space_needed_caps + space_needed_wd) \
+                            + ') is greater than what is left on your hard drive (' \
+                            + bytes2human(free_space_wd) + ')'
+            else:
+                if space_needed_caps > free_space_caps:
+                    error = error + ('Space needed for CAPS (' + bytes2human(space_needed_caps)
+                                     + ') is greater than what is left on your hard '
+                                     + 'drive (' + bytes2human(free_space_caps) + ')\n')
+                if space_needed_wd > free_space_wd:
+                    error = error + ('Space needed for working_directory ('
+                                     + bytes2human(space_needed_wd) + ') is greater than what is left on your hard '
+                                     + 'drive (' + bytes2human(free_space_wd) + ')\n')
+            if error != '':
+                cprint(Fore.RED + '[SpaceError] ' + error + Fore.RESET)
+                while True:
+                    cprint('Do you still want to run the pipeline ? (yes/no): ')
+                    answer = input('')
+                    if answer.lower() in ['yes', 'no']:
+                        break
+                    else:
+                        cprint('Possible answers are yes or no.\n')
+                if answer.lower() == 'yes':
+                    cprint('Running the pipeline anyway.')
+                if answer.lower() == 'no':
+                    cprint('Exiting clinica...')
+                    sys.exit()
+
+        except ValueError:
+            cprint(Fore.RED + 'No info on how much size the pipeline takes. '
+                   + 'Running anyway...' + Fore.RESET)
+
+    def update_parallelize_info(self, plugin_args):
+        """ Peforms some checks of the number of threads given in parameters,
+        given the number of CPUs of the machine in which clinica is running.
+        We force the use of plugin MultiProc
+
+        Author : Arnaud Marcoux"""
+        from clinica.utils.stream import cprint
+        from multiprocessing import cpu_count
+        from colorama import Fore
+
+        # count number of CPUs
+        n_cpu = cpu_count()
+        # Use this var to know in the end if we need to ask the user
+        # an other number
+        ask_user = False
+
+        try:
+            # if no --n_procs arg is used, plugin_arg is None
+            # so we need a try / except block
+            n_thread_cmdline = plugin_args['n_procs']
+            if n_thread_cmdline > n_cpu:
+                cprint(Fore.RED + '[Warning] You are trying to run clinica '
+                       + 'with a number of threads (' + str(n_thread_cmdline)
+                       + ') superior to your number of CPUs (' + str(n_cpu)
+                       + ').' + Fore.RESET)
+                ask_user = True
+        except TypeError:
+            cprint(Fore.RED + '[Warning] You did not specify the number of '
+                   + 'thread to run in parallel (--n_procs argument).'
+                   + Fore.RESET)
+            cprint(Fore.RED + 'Computation time can be shorten as you have '
+                   + str(n_cpu) + ' CPUs on this computer. We recommand using '
+                   + str(n_cpu - 1) + ' threads.\n' + Fore.RESET)
+            ask_user = True
+
+        if ask_user:
+            while True:
+                # While True allows to ask indefinitely until
+                # user gives a answer that has the correct format
+                # here, positive integer
+                cprint('How many threads do you want to use ?')
+                answer = input('')
+                if answer.isnumeric():
+                    if int(answer) > 0:
+                        break
+                cprint(Fore.RED + 'Your answer must be a positive integer.'
+                       + Fore.RESET)
+            # If plugin_args is None, create the dictionnary
+            # If it already a dict, just update (or create -it is the same
+            # code-) the correct key / value
+            if plugin_args is None:
+                plugin_args = {'n_procs': int(answer)}
+            else:
+                plugin_args['n_procs'] = int(answer)
+
+        return plugin_args
 
     @property
     def is_built(self): return self._is_built

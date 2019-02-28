@@ -2,15 +2,6 @@
 
 import clinica.engine as ce
 
-__author__ = "Junhao Wen"
-__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
-__credits__ = ["Junhao Wen"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Junhao Wen"
-__email__ = "Junhao.Wen@inria.fr"
-__status__ = "Development"
-
 
 class StatisticsSurfaceCLI(ce.CmdParser):
 
@@ -30,7 +21,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         from colorama import Fore
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
-        clinica_comp = self._args.add_argument_group('%sMandatory arguments%s' % (Fore.YELLOW, Fore.RESET))
+        clinica_comp = self._args.add_argument_group('%sMandatory arguments%s' % (Fore.BLUE , Fore.RESET))
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
         clinica_comp.add_argument("subject_visits_with_covariates_tsv",
@@ -66,7 +57,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                               type=str, default=None,
                               help='Pattern of file inside CAPS directory using @subject, @session, @fwhm, @hemi. No --feature_type must be specified in order to use this flag. If you use this flag, you must specify a label with the --feature_label flag). See Wiki for an example.')  # noqa
         advanced.add_argument("-fl", "--feature_label",
-                              type = str, default = None,
+                              type=str, default=None,
                               help='Name of the feature type, it will be saved on the CAPS _measure-FEATURE_LABEL key-value association.')  # noqa
         advanced.add_argument("-tup", "--threshold_uncorrected_pvalue",
                               type=float, default=0.001,
@@ -82,8 +73,8 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         """
         Run the pipelines with defined args
         """
-        from statistics_surface_pipeline import StatisticsSurface
-        from statistics_surface_utils import check_inputs
+        from clinica.pipelines.statistics_surface.statistics_surface_pipeline import StatisticsSurface
+        from clinica.pipelines.statistics_surface.statistics_surface_utils import check_inputs
         from clinica.utils.stream import cprint
         import os
 
@@ -170,3 +161,5 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         else:
             print(pipeline.parameters)
             pipeline.run()
+
+        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")

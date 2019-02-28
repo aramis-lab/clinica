@@ -64,16 +64,6 @@ def t1_b0_registration(
         out_destrieux_in_diffusion_space (str): File containing the Desikan
             parcellation in diffusion space.
 
-    Example:
-        >>> from clinica.pipelines.dwi.dwi_registration import t1_b0_registration_pipeline
-        >>> t1_b0_registration = t1_b0_registration_pipeline(participant_id='sub-CLNC01', session_id='ses-M00', caps_directory='/path/to/output/results')
-        >>> t1_b0_registration.inputs.inputnode.in_bias_corrected_bet_t1 = 'sub-CLNC01_ses-M00_bias_corrected_brain_extracted_t1.nii'
-        >>> t1_b0_registration.inputs.inputnode.in_preprocessed_dwi = 'sub-CLNC01_ses-M00_preprocessed_dwi.nii'
-        >>> t1_b0_registration.inputs.inputnode.in_b0_mask = 'sub-CLNC01_ses-M00_b0_mask.nii'
-        >>> t1_b0_registration.inputs.inputnode.in_white_matter_binary_mask = 'sub-CLNC01_ses-M00_id_wm_mask.nii'
-        >>> t1_b0_registration.inputs.inputnode.in_desikan_parcellation = 'sub-CLNC01_ses-M00/mri/aparc+aseg.mgz'
-        >>> t1_b0_registration.inputs.inputnode.in_destrieux_parcellation = 'sub-CLNC01_ses-M00/mri/aparc.a2009s+aseg.mgz'
-        >>> t1_b0_registration.run()
     """
     from os.path import join
     import nipype.interfaces.fsl as fsl

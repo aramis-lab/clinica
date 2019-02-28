@@ -3,12 +3,13 @@
 """
  Module for converting PET_AV45 of ADNI
 """
-__author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
+
+__author__ = "Jorge Samper-Gonzalez"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = ["Sabrina Fontanella"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
-__maintainer__ = "Jorge Samper Gonzalez"
+__maintainer__ = "Jorge Samper-Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
@@ -61,9 +62,13 @@ def compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     from numpy import argsort
     from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
     from clinica.utils.stream import cprint
+    from functools import reduce
 
-    pet_av45_col = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
-                   'Series_ID', 'Image_ID', 'Original']
+    pet_av45_col = [
+            'Subject_ID', 'VISCODE', 'Visit',
+            'Sequence', 'Scan_Date', 'Study_ID',
+            'Series_ID', 'Image_ID', 'Original'
+            ]
 
     pet_av45_df = pd.DataFrame(columns=pet_av45_col)
     av45qc_path = path.join(csv_dir, 'AV45QC.csv')
@@ -117,10 +122,12 @@ def compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                 (subject_pet_meta['Orig/Proc'] == 'Original') & (subject_pet_meta['Image ID'] == int_image_id)
                 & (subject_pet_meta.Sequence.map(lambda s: (s.lower().find('early') < 0)))]
             if original_pet_meta.shape[0] < 1:
-                original_pet_meta = subject_pet_meta[(subject_pet_meta['Orig/Proc'] == 'Original')
-                                                     & (subject_pet_meta.Sequence.map(
-                    lambda x: (x.lower().find('av45') > -1) & (x.lower().find('early') < 0)))
-                                                     & (subject_pet_meta['Scan Date'] == qc_visit.EXAMDATE)]
+                original_pet_meta = subject_pet_meta[
+                        (subject_pet_meta['Orig/Proc'] == 'Original')
+                        & (subject_pet_meta.Sequence.map(
+                            lambda x: (x.lower().find('av45') > -1) & (x.lower().find('early') < 0))
+                           )
+                        & (subject_pet_meta['Scan Date'] == qc_visit.EXAMDATE)]
                 if original_pet_meta.shape[0] < 1:
                     # TODO Log somewhere subjects with problems
                     cprint('NO Screening: Subject - ' + subj + ' for visit ' + qc_visit.VISCODE2)
@@ -230,7 +237,7 @@ def av45_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2n
         subject = image.Subject_ID
         count += 1
 
-        if image.Path is nan:
+        if image.Path == '':
             cprint('No path specified for ' + image.Subject_ID + ' in session ' + image.VISCODE)
             continue
 
@@ -248,7 +255,7 @@ def av45_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2n
         # ------------------
 
         bids_subj = subject.replace('_', '')
-        output_path = os.path.join(bids_dir, 'sub-ADNI' + bids_subj +'/ses-' + session + '/pet')
+        output_path = os.path.join(bids_dir, 'sub-ADNI' + bids_subj + '/ses-' + session + '/pet')
         output_filename = 'sub-ADNI' + bids_subj + '_ses-' + session + '_task-rest_acq-av45_pet'
 
         # ADDED lines

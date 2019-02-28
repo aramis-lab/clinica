@@ -34,11 +34,11 @@ class AtlasAbstract:
         if (voxels_map[0] != voxels_labels[0]) or \
                 (voxels_map[1] != voxels_labels[1]) or \
                 (voxels_map[2] != voxels_labels[2]):
-        #if voxels_map != voxels_labels:
+            # if voxels_map != voxels_labels:
             print("Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas()))
-            #raise Exception(
-             #       "Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas()))
-        #else:
+            # raise Exception(
+            #       "Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas()))
+        # else:
         # Will display integers without decimals
         if int(voxels_map[0]) == voxels_map[0]:
             s_x = str(int(voxels_map[0]))
@@ -83,7 +83,7 @@ class AtlasAbstract:
         img_labels = nib.load(self.get_atlas_labels())
         img_labels = img_labels.get_data()
         labels = list(set(img_labels.ravel()))
-        index_vector=np.zeros(len(labels))
+        index_vector = np.zeros(len(labels))
         for index, n in enumerate(labels):
             index_vector[index] = index
         return index_vector
@@ -115,7 +115,7 @@ class JHUDTI812mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUDTI81_ROI.tsv')
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUDTI81_FS_LUT_newformat.txt')
 
 
 class JHUDTI811mm(AtlasAbstract):
@@ -145,7 +145,7 @@ class JHUDTI811mm(AtlasAbstract):
     def get_tsv_roi():
         import os
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUDTI81_ROI.tsv')
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUDTI81_FS_LUT_newformat.txt')
 
 
 class JHUTracts01mm(AtlasAbstract):
@@ -174,7 +174,7 @@ class JHUTracts01mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
 
 
 class JHUTracts02mm(AtlasAbstract):
@@ -203,7 +203,7 @@ class JHUTracts02mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
 
 
 class JHUTracts251mm(AtlasAbstract):
@@ -232,7 +232,7 @@ class JHUTracts251mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
 
 
 class JHUTracts252mm(AtlasAbstract):
@@ -261,7 +261,7 @@ class JHUTracts252mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
 
 
 class JHUTracts501mm(AtlasAbstract):
@@ -290,7 +290,7 @@ class JHUTracts501mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
 
 
 class JHUTracts502mm(AtlasAbstract):
@@ -315,11 +315,11 @@ class JHUTracts502mm(AtlasAbstract):
         if not FSLDIR:
             raise Exception('FSLDIR variable from FSL software is not set')
         return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
-    
+
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_ROI.tsv')
+        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
 
 
 class AAL2(AtlasAbstract):
@@ -355,9 +355,17 @@ class Hammers(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        SPM_HOME = os.environ.get('SPM_HOME', '')
-        if not SPM_HOME:
+        import platform
+        if "SPM_HOME" not in os.environ:
             raise Exception('SPM_HOME variable from SPM software is not set')
+        else:
+            if "SPMSTANDALONE_HOME" in os.environ:
+                if platform.system() == 'Darwin':
+                    SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12.app/Contents/MacOS/spm12_mcr"
+                else:
+                    SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12_mcr"
+            else:
+                SPM_HOME = os.environ['SPM_HOME']
         if not os.path.exists(os.path.join(SPM_HOME, 'toolbox', 'cat12')):
             raise Exception('CAT12 not included in SPM_HOME/toolbox')
         return os.path.join(SPM_HOME, 'toolbox', 'cat12', 'templates_1.50mm', 'hammers.nii')
@@ -383,11 +391,20 @@ class LPBA40(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        SPM_HOME = os.environ.get('SPM_HOME', '')
-        if not SPM_HOME:
+        import platform
+        if "SPM_HOME" not in os.environ:
             raise Exception('SPM_HOME variable from SPM software is not set')
+        else:
+            if "SPMSTANDALONE_HOME" in os.environ:
+                if platform.system() == 'Darwin':
+                    SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12.app/Contents/MacOS/spm12_mcr"
+                else:
+                    SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12_mcr"
+            else:
+                SPM_HOME = os.environ['SPM_HOME']
         if not os.path.exists(os.path.join(SPM_HOME, 'toolbox', 'cat12')):
-            raise Exception('CAT12 not included in ${SPM_HOME}/toolbox')
+            print(SPM_HOME)
+            raise Exception('CAT12 not included in SPM_HOME/toolbox')
         return os.path.join(SPM_HOME, 'toolbox', 'cat12', 'templates_1.50mm', 'lpba40.nii')
 
     @staticmethod
@@ -434,9 +451,17 @@ class Neuromorphometrics(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        SPM_HOME = os.environ.get('SPM_HOME', '')
-        if not SPM_HOME:
+        import platform
+        if "SPM_HOME" not in os.environ:
             raise Exception('SPM_HOME variable from SPM software is not set')
+        else:
+            if "SPMSTANDALONE_HOME" in os.environ:
+                if platform.system() == 'Darwin':
+                    SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12.app/Contents/MacOS/spm12_mcr"
+                else:
+                    SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12_mcr"
+            else:
+                SPM_HOME = os.environ['SPM_HOME']
         if not os.path.exists(os.path.join(SPM_HOME, 'toolbox', 'cat12')):
             raise Exception('CAT12 not included in SPM_HOME/toolbox')
         return os.path.join(SPM_HOME, 'toolbox', 'cat12', 'templates_1.50mm', 'neuromorphometrics.nii')

@@ -1,7 +1,7 @@
 # coding: utf8
 
 """
-Utils for the implementation of t1-spm-segmentation pipeline
+Utils for the implementation of t1-volume-tissue-segmentation pipeline
 """
 
 import os
@@ -10,19 +10,19 @@ from nipype.interfaces.spm.base import SPMCommandInputSpec, SPMCommand
 from nipype.interfaces.base import TraitedSpec, OutputMultiPath, InputMultiPath, File, traits
 from nipype.utils.filemanip import filename_to_list, list_to_filename
 
-__author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
-__credits__ = ["Jorge Samper Gonzalez"]
+__author__ = "Jorge Samper-Gonzalez"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
+__credits__ = ["Jorge Samper-Gonzalez"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
-__maintainer__ = "Jorge Samper Gonzalez"
+__maintainer__ = "Jorge Samper-Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
 def select_bids_images(subjects, sessions, image_type, bids_layout):
     """
-    read the subjects_visits_tsv 
+    read the subjects_visits_tsv
     """
     if len(subjects) != len(sessions):
         raise RuntimeError("Subjects list and sessions list must have the same length.")
@@ -57,7 +57,7 @@ def select_image(participant_id, session_id, image_type, bids_layout):
 
 def group_nested_images_by_subject(class_images, zip_files=False):
     """
-    
+
     """
     from clinica.utils.io import zip_nii
 
@@ -105,8 +105,10 @@ def get_tissue_tuples(tissue_map, tissue_classes, dartel_tissues, save_warped_un
         if i in dartel_tissues:
             dartel_input = True
 
-        tissues.append(((tissue_map, i), n_gaussians, (native_space, dartel_input), (warped_unmodulated, warped_modulated)))
-
+        tissues.append(((tissue_map, i),
+                        n_gaussians,
+                        (native_space, dartel_input),
+                        (warped_unmodulated, warped_modulated)))
     return tissues
 
 

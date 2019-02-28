@@ -10,14 +10,14 @@ with open(join(dirname(__file__), 'clinica/VERSION'), 'rb') as f:
 
 
 setup(
-    name='Clinica',
+    name='clinica',
     version=version,
     url='http://clinica.run',
     description='Software platform for clinical neuroimaging studies',
     long_description=open('README.md').read(),
     author='ARAMIS Lab',
     maintainer='Clinica developers',
-    maintainer_email='clinica-user@googlegroups.com',
+    maintainer_email='clinica-user@inria.fr',
     license='MIT license',
     packages=find_packages(exclude=('tests', 'tests.*')),
     include_package_data=True,
@@ -31,7 +31,7 @@ setup(
         'Environment :: Console',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
     ],
 )

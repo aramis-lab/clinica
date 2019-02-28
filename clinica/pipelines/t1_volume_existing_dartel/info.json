@@ -1,0 +1,12 @@
+{
+    "id": "aramislab/t1-volume-existing-dartel",
+    "author": "Jorge Samper-Gonzalez",
+    "version": "0.1.0",
+    "dependencies": [
+        {
+            "type": "software",
+            "name": "spm",
+            "version": ">=12"
+        }
+    ]
+}

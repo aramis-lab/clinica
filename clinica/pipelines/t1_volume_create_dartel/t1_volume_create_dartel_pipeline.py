@@ -2,18 +2,18 @@
 
 import clinica.pipelines.engine as cpe
 
-__author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
-__credits__ = [ "Jorge Samper Gonzalez"]
+__author__ = "Jorge Samper-Gonzalez"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
+__credits__ = ["Jorge Samper-Gonzalez"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
-__maintainer__ = "Jorge Samper Gonzalez"
+__maintainer__ = "Jorge Samper-Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
 class T1VolumeCreateDartel(cpe.Pipeline):
-    """T1 SPM Dartel SHORT DESCRIPTION.
+    """T1VolumeCreateDartel - Create new Dartel template.
 
     Args:
         input_dir: A BIDS directory.
@@ -21,19 +21,11 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
 
     Returns:
-        A clinica pipelines object containing the T1 SPM Dartel pipelines.
+        A clinica pipeline object containing the T1VolumeCreateDartel pipeline.
 
     Raises:
 
 
-    Example:
-        >>> from t1_volume_create_dartel import T1VolumeCreateDartel
-        >>> pipelines = T1VolumeCreateDartel('myGroup', '~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
-        >>> pipelines.parameters.update({
-        >>>     # ...
-        >>> })
-        >>> pipelines.base_dir = '/tmp/'
-        >>> pipelines.run()
     """
 
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
@@ -47,7 +39,8 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
         # Check that group does not already exists
         if os.path.exists(os.path.join(os.path.abspath(caps_directory), 'groups', 'group-' + group_id)):
-            error_message = 'group_id : ' + group_id + ' already exists, please choose an other one. Groups that exists in your CAPS directory are : \n'
+            error_message = 'group_id : ' + group_id + ' already exists, please choose an other one.' \
+                            + ' Groups that exists in your CAPS directory are : \n'
             list_groups = os.listdir(os.path.join(os.path.abspath(caps_directory), 'groups'))
             for e in list_groups:
                 if e.startswith('group-'):
@@ -156,7 +149,8 @@ class T1VolumeCreateDartel(cpe.Pipeline):
             (r'(.*)c6(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-background\3'),
             (r'(.*)r(sub-.*)(\.nii(\.gz)?)$', r'\1\2\3'),
             (r'(.*)_dartelinput(\.nii(\.gz)?)$', r'\1\2'),
-            (r'(.*)flow_fields/u_(sub-.*)_segm-.*(\.nii(\.gz)?)$', r'\1\2_target-' + re.escape(self._group_id) + r'_transformation-forward_deformation\3'),
+            (r'(.*)flow_fields/u_(sub-.*)_segm-.*(\.nii(\.gz)?)$',
+             r'\1\2_target-' + re.escape(self._group_id) + r'_transformation-forward_deformation\3'),
             (r'trait_added', r'')
         ]
 
@@ -167,8 +161,10 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         write_template_node.inputs.base_directory = self.caps_directory
         write_template_node.inputs.container = op.join('groups/group-' + self._group_id, 't1')
         write_template_node.inputs.regexp_substitutions = [
-            (r'(.*)final_template_file/.*(\.nii(\.gz)?)$', r'\1group-' + re.escape(self._group_id) + r'_template\2'),
-            (r'(.*)template_files/.*([0-9])(\.nii(\.gz)?)$', r'\1group-' + re.escape(self._group_id) + r'_iteration-\2_template\3')
+            (r'(.*)final_template_file/.*(\.nii(\.gz)?)$',
+             r'\1group-' + re.escape(self._group_id) + r'_template\2'),
+            (r'(.*)template_files/.*([0-9])(\.nii(\.gz)?)$',
+             r'\1group-' + re.escape(self._group_id) + r'_iteration-\2_template\3')
         ]
 
         self.connect([
@@ -193,38 +189,40 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         mlab.MatlabCommand.set_default_matlab_cmd(mlab_home)
         mlab.MatlabCommand.set_default_paths(spm_home)
 
-        
         if 'SPMSTANDALONE_HOME' in os.environ:
             if 'MCR_HOME' in os.environ:
-                matlab_cmd = os.path.join(os.environ['SPMSTANDALONE_HOME'],
-                        'run_spm12.sh') \
-                        + ' ' + os.environ['MCR_HOME'] \
-                        + ' script'
+                matlab_cmd = (
+                        os.path.join(
+                            os.environ['SPMSTANDALONE_HOME'], 'run_spm12.sh')
+                        + ' ' + os.environ['MCR_HOME']
+                        + ' script')
                 spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
                 version = spm.SPMCommand().version
+            else:
+                raise EnvironmentError('MCR_HOME variable not in environnement. Althought, '
+                                       + 'SPMSTANDALONE_HOME has been found')
         else:
-            version = spm.Info.version()
-        
-                
+            version = spm.Info.getinfo()
+
         if version:
             if isinstance(version, dict):
                 spm_path = version['path']
                 if version['name'] == 'SPM8':
-                    print 'You are using SPM version 8. The recommended version to use with Clinica is SPM 12. ' \
-                          'Please upgrade your SPM toolbox.'
+                    print('You are using SPM version 8. The recommended version to use with Clinica is SPM 12. '
+                          + 'Please upgrade your SPM toolbox.')
                     tissue_map = os.path.join(spm_path, 'toolbox/Seg/TPM.nii')
                 elif version['name'] == 'SPM12':
                     tissue_map = os.path.join(spm_path, 'tpm/TPM.nii')
                 else:
                     raise RuntimeError('SPM version 8 or 12 could not be found. Please upgrade your SPM toolbox.')
-            if isinstance(version, unicode):
-                if version == '12.7169':
-                    tissue_map = os.path.join(unicode(spm_home), 'spm12_mcr/spm/spm12/tpm/TPM.nii')
+            if isinstance(version, str):
+                if float(version) >= 12.7169:
+                    tissue_map = os.path.join(str(spm_home), 'spm12_mcr/spm/spm12/tpm/TPM.nii')
                 else:
                     raise RuntimeError('SPM standalone version not supported. Please upgrade SPM standalone.')
         else:
             raise RuntimeError('SPM could not be found. Please verify your SPM_HOME environment variable.')
-        
+
         # Unzipping
         # =========
         unzip_node = npe.MapNode(nutil.Function(input_names=['in_file'],

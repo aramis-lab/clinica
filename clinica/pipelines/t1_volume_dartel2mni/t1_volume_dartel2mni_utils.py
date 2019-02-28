@@ -1,20 +1,14 @@
 # coding: utf8
 
-
-"""T1 SPM Dartel2MNI - Clinica Utilities.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
-"""
-
-
-__author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
-__credits__ = ["Jorge Samper Gonzalez"]
+__author__ = "Jorge Samper-Gonzalez"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
+__credits__ = ["Jorge Samper-Gonzalez"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
-__maintainer__ = "Jorge Samper Gonzalez"
+__maintainer__ = "Jorge Samper-Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
+
 
 def prepare_flowfields(flow_fields, tissues):
     """
@@ -24,6 +18,16 @@ def prepare_flowfields(flow_fields, tissues):
     :return:
     """
     return [[f] * len(tissues) for f in flow_fields]
+
+
+def prepare_existing_dartel_flowfields(flow_fields, tissues):
+    """
+
+    :param flow_fields:
+    :param tissues:
+    :return:
+    """
+    return [f * len(tissues) for f in flow_fields]
 
 
 def join_smoothed_files(smoothed_normalized_files):
@@ -55,7 +59,8 @@ def atlas_statistics(in_image, in_atlas_list):
     for atlas in in_atlas_list:
         for atlas_class in atlas_classes:
             if atlas_class.get_name_atlas() == atlas:
-                out_atlas_statistics = abspath(join(getcwd(), base + '_space-' + atlas + '_map-graymatter_statistics.tsv'))
+                out_atlas_statistics = abspath(join(getcwd(), base + '_space-' + atlas
+                                                    + '_map-graymatter_statistics.tsv'))
                 statistics_on_atlas(in_image, atlas_class(), out_atlas_statistics)
                 atlas_statistics_list.append(out_atlas_statistics)
                 break

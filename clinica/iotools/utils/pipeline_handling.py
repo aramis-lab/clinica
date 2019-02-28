@@ -1,10 +1,10 @@
 # coding: utf8
 
 """
-Methods to find information in the different pipelines of CLINICA
+Methods to find information in the different pipelines of Clinica
 """
-__author__ = "Elina THIBEAU-SUTRE"
-__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
+__author__ = "Elina Thubeau--Sutre"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = [""]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
@@ -37,8 +37,8 @@ def pet_pipeline(caps_dir, df, **kwargs):
     Returns:
          final_df: a DataFrame containing the information of the bids and the pipeline
     """
-    from ...pipelines.pet_preprocess_volume.pet_preprocess_volume_cli import PETPreprocessVolumeCLI
-    instance = PETPreprocessVolumeCLI()
+    from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI
+    instance = PETVolumeCLI()
     pipeline_name = instance.name
     del instance
 

@@ -16,6 +16,7 @@ stages:
 
 variables:
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
+    CLINICA_ENV_BRANCH: "clinica_env_$CI_COMMIT_REF_NAME"
 
 cache:
   paths:
@@ -23,8 +24,9 @@ cache:
 
 before_script:
   - pwd
+  - export CLINICA_ENV_BRANCH_CLEAN=$(echo $CLINICA_ENV_BRANCH | tr -dc '[:alnum:]\-\_')
 after_script:
-  #  - conda env remove -y  --name clinica_env
+  #  - conda env remove -y  --name clinica_env_upgrade_dep
 
 build:mac:
   stage: build
@@ -35,14 +37,14 @@ build:mac:
     # (by editing the environment.yml file), the environment
     # is recreated.
     - >
-      if conda env list|grep -w "clinica_env"; then
+      if conda env list|grep -w $CLINICA_ENV_BRANCH_CLEAN; then
         if git diff HEAD~ --name-only|grep environment.yml; then
-          echo "REcreate environment clinica_env"
-          conda env create --force --file environment.yml
+          echo "REcreate environment $CLINICA_ENV_BRANCH_CLEAN"
+          conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH_CLEAN
         fi;
       else
-        echo "Create environment clinica_env"
-        conda env create --force --file environment.yml
+        echo "Create environment $CLINICA_ENV_BRANCH_CLEAN"
+        conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH_CLEAN
       fi;
 
 build:linux:
@@ -54,14 +56,14 @@ build:linux:
     # (by editing the environment.yml file), the environment
     # is recreated.
     - >
-      if conda env list|grep -w "clinica_env"; then
+      if conda env list|grep -w $CLINICA_ENV_BRANCH_CLEAN; then
         if git diff HEAD~ --name-only|grep environment.yml; then
-          echo "REcreate environment clinica_env"
-          conda env create --force --file environment.yml
+          echo "REcreate environment $CLINICA_ENV_BRANCH_CLEAN"
+          conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH_CLEAN
         fi;
       else
-        echo "Create environment clinica_env"
-        conda env create --force --file environment.yml
+        echo "Create environment $CLINICA_ENV_BRANCH_CLEAN"
+        conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH_CLEAN
       fi;
 
 launch:mac:
@@ -71,7 +73,7 @@ launch:mac:
     - install
     - macOS
   script:
-    - source activate clinica_env
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
     - pip install --ignore-installed .
     - eval "$(register-python-argcomplete clinica)"
     - clinica --help
@@ -85,39 +87,54 @@ launch:linux:
     - install
     - linux
   script:
-    - source activate clinica_env
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
     - pip install --ignore-installed .
     - eval "$(register-python-argcomplete clinica)"
     - clinica --help
     - source deactivate
 
-      
-unittest:mac:
-  stage: test
-  tags:
-    - macOS
-  script:
-    - source activate clinica_env
-    - module load clinica.all
-    - cd test
-    - ln -s /Volumes/builds/Clinica/data_ci ./data
-    - pytest -v
-    - module purge
-    - source deactivate
-
-  
-unittest:linux:
+test:style:
   stage: test
   tags:
     - linux
   script:
-    - source activate clinica_env
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
+    - pytest --verbose -k 'test_coding_style'
+      
+test:instantiate:mac:
+  stage: test
+  tags:
+    - macOS
+  script:
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
     - module load clinica.all
     - cd test
-    - ln -s /localdrive10TB/data/data_ci ./data 
-    - pytest -v
+    - ln -s /Volumes/data/data_ci ./data
+    - pytest --verbose -k 'test_instantiate'
     - module purge
     - source deactivate
+
+  
+test:instantiate:linux:
+  stage: test
+  tags:
+    - linux
+  script:
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
+    - module load clinica.all
+    - cd test
+    - ln -s /localdrive10TB/data/ci/data_ci_upgrade ./data
+    - taskset -c 0-21 pytest 
+         --verbose 
+         --working_directory=/localdrive10TB/data/working_directory_ci_linux  
+         --disable-warnings 
+         --timeout=0 
+         -n 6 
+         -k 'test_run'
+    - module purge
+    - source deactivate
+ 
+
 pkg:
   stage: package
   tags:

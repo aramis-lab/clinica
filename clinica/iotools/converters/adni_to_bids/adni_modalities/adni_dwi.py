@@ -1,13 +1,14 @@
 # coding: utf-8
+
 """
  Module for converting DWI of ADNI
 """
-__author__ = "Jorge Samper Gonzalez and Sabrina Fontanella"
-__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
-__credits__ = [""]
+
+__author__ = "Jorge Samper-Gonzalez and Sabrina Fontanella"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
-__maintainer__ = "Jorge Samper Gonzalez"
+__maintainer__ = "Jorge Samper-Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
@@ -57,6 +58,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     import pandas as pd
     import operator
     from os import path, walk, mkdir
+    from functools import reduce
 
     dwi_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
                   'Study_ID', 'Series_ID', 'Image_ID', 'Field_Strength', 'Scanner', 'Enhanced']
@@ -64,12 +66,26 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     dwi_df = pd.DataFrame(columns=dwi_col_df)
 
     adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
-    ida_meta_path = path.join(csv_dir, 'IDA_MR_Metadata_Listing.csv')
+
+    if path.exists(path.join(csv_dir, 'IDA_MR_Metadata_Listing.csv')):
+        new_download = False
+    else:
+        new_download = True
+
+    if new_download:
+        ida_meta_path = path.join(csv_dir, 'MRILIST.csv')
+    else:
+
+        ida_meta_path = path.join(csv_dir, 'IDA_MR_Metadata_Listing.csv')
     mri_qc_path = path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
 
     adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
     ida_meta = pd.io.parsers.read_csv(ida_meta_path, sep=',')
-    ida_meta = ida_meta[ida_meta.Sequence.map(lambda x: x.lower().find('dti') > -1)]
+
+    if new_download:
+        ida_meta = ida_meta[ida_meta.SEQUENCE.map(lambda x: x.lower().find('dti') > -1)]
+    else:
+        ida_meta = ida_meta[ida_meta.Sequence.map(lambda x: x.lower().find('dti') > -1)]
 
     mri_qc = pd.io.parsers.read_csv(mri_qc_path, sep=',')
     mri_qc = mri_qc[mri_qc.series_type == 'DTI']
@@ -82,27 +98,38 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
         # Sort the values by examination date
         adnimerge_subj = adnimerge_subj.sort_values('EXAMDATE')
-        ida_meta_subj = ida_meta[ida_meta.Subject == subj]
-        ida_meta_subj = ida_meta_subj.sort_values('Scan Date')
+        if new_download:
+            ida_meta_subj = ida_meta[ida_meta.SUBJECT == subj]
+            ida_meta_subj = ida_meta_subj.sort_values('SCANDATE')
+        else:
+            ida_meta_subj = ida_meta[ida_meta.Subject == subj]
+            ida_meta_subj = ida_meta_subj.sort_values('Scan Date')
         mri_qc_subj = mri_qc[mri_qc.RID == int(subj[-4:])]
 
-        visits = visits_to_timepoints_dwi(subj, ida_meta_subj, adnimerge_subj)
+        if new_download:
+            visits = visits_to_timepoints_dwi_refactoring(subj, ida_meta_subj, adnimerge_subj)
+        else:
+            visits = visits_to_timepoints_dwi(subj, ida_meta_subj, adnimerge_subj)
 
         keys = visits.keys()
-        keys.sort()
+        # What is the purpose of the following line ?
+        # keys.sort()
 
         for visit_info in visits.keys():
-
-            # visit_info = (VISCODE, COLPROT, ORIGPROT)
-
             visit_str = visits[visit_info]
-            visit_ida_meta = ida_meta_subj[ida_meta_subj.Visit == visit_str]
 
-            axial_ida_meta = visit_ida_meta[visit_ida_meta.Sequence.map(lambda x: x.lower().find('enhanced') < 0)]
-            enhanced_ida_meta = visit_ida_meta[visit_ida_meta.Sequence.map(lambda x: x.lower().find('enhanced') > -1)]
-
-            axial = dwi_image(subj, visit_info[0], visits[visit_info], axial_ida_meta, mri_qc_subj, False)
-            enhanced = dwi_image(subj, visit_info[0], visits[visit_info], enhanced_ida_meta, mri_qc_subj, True)
+            if new_download:
+                visit_ida_meta = ida_meta_subj[ida_meta_subj.VISIT == visit_str]
+                axial_ida_meta = visit_ida_meta[visit_ida_meta.SEQUENCE.map(lambda x: x.lower().find('enhanced') < 0)]
+                enhanced_ida_meta = visit_ida_meta[visit_ida_meta.SEQUENCE.map(lambda x: x.lower().find('enhanced') > -1)]
+                axial = dwi_image_refactoring(subj, visit_info[0], visits[visit_info], axial_ida_meta, mri_qc_subj, False)
+                enhanced = dwi_image_refactoring(subj, visit_info[0], visits[visit_info], enhanced_ida_meta, mri_qc_subj, True)
+            else:
+                visit_ida_meta = ida_meta_subj[ida_meta_subj.Visit == visit_str]
+                axial_ida_meta = visit_ida_meta[visit_ida_meta.Sequence.map(lambda x: x.lower().find('enhanced') < 0)]
+                enhanced_ida_meta = visit_ida_meta[visit_ida_meta.Sequence.map(lambda x: x.lower().find('enhanced') > -1)]
+                axial = dwi_image(subj, visit_info[0], visits[visit_info], axial_ida_meta, mri_qc_subj, False)
+                enhanced = dwi_image(subj, visit_info[0], visits[visit_info], enhanced_ida_meta, mri_qc_subj, True)
 
             if axial is not None:
                 row_to_append = pd.DataFrame(axial, index=['i', ])
@@ -142,7 +169,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     error_indices = []
     for conv_error in conversion_errors:
-        error_indices.append((dwi_df.Enhanced == False)
+        error_indices.append((dwi_df.Enhanced is False)
                              & (dwi_df.Subject_ID == conv_error[0])
                              & (dwi_df.VISCODE == conv_error[1]))
 
@@ -157,11 +184,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     for row in images.iterrows():
         image = row[1]
         seq_path = path.join(source_dir, str(image.Subject_ID), image.Sequence)
-
         count += 1
-        # print 'Processing Subject ' + str(image.Subject_ID) + ' - Session ' + image.VISCODE + ', ' + str(
-        #     count) + ' / ' + str(total)
-
         series_path = ''
         s = 'S' + str(image.Series_ID)
 
@@ -178,30 +201,16 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
         nifti_path = series_path
         dicom = True
 
-        # for (dirpath, dirnames, filenames) in walk(series_path):
-        #     for f in filenames:
-        #         if f.endswith(".nii"):
-        #             dicom = False
-        #             nifti_path = path.join(dirpath, f)
-        #             break
-
         is_dicom.append(dicom)
         nifti_paths.append(nifti_path)
 
     images.loc[:, 'Is_Dicom'] = pd.Series(is_dicom, index=images.index)
     images.loc[:, 'Path'] = pd.Series(nifti_paths, index=images.index)
 
-    # Drop all the lines that have the Path section empty
-    # images = images.drop(images[images.Path == ''].index)
-    # Store the paths inside a file called t1_paths inside the input directory
-
     dwi_tsv_path = path.join(dest_dir, 'conversion_info')
     if not path.exists(dwi_tsv_path):
         mkdir(dwi_tsv_path)
-
-    # print '\nDone! Saving the results into', path.join(dwi_tsv_path, 'dwi_paths.tsv')
     images.to_csv(path.join(dwi_tsv_path, 'dwi_paths.tsv'), sep='\t', index=False)
-    # print '=================================================='
 
     return images
 
@@ -244,19 +253,9 @@ def dwi_paths_to_bids(images, dest_dir, mod_to_update=False):
             bids_file_name = bids_id + '_ses-' + ses_bids
             ses_path = path.join(dest_dir, bids_id, bids_ses_id)
 
-            # existing_nii = glob(path.join(ses_path, 'func', '*nii*'))
-            #
-            # if mod_to_add:
-            #     if len(existing_nii) > 0:
-            #         print 'DWI folder already existing. Skipped.'
-            #         continue
-
             if mod_to_update:
                 if os.path.exists(path.join(ses_path, 'dwi')):
-                    # print 'Removing the old dwi file for session', ses
                     shutil.rmtree(path.join(ses_path, 'dwi'))
-                # else:
-                #     print 'Adding a new dwi file for session', ses
 
             if not os.path.exists(ses_path):
                 os.mkdir(ses_path)
@@ -288,7 +287,7 @@ def dwi_paths_to_bids(images, dest_dir, mod_to_update=False):
                     # print path.join(dest_dir, bids_name + '.nii.gz')
                     if not os.path.exists(path.join(bids_dest_dir, bids_name + '.nii.gz')) or not os.path.exists(
                                     path.join(bids_dest_dir, bids_name + '.bvec') or not os.path.exists(
-                                    path.join(bids_dest_dir, bids_name + '.bval'))):
+                                        path.join(bids_dest_dir, bids_name + '.bval'))):
                         cprint('\nConversion with dcm2niix failed, trying with dcm2nii')
 
                         # Find all the files eventually created by dcm2niix and remove them
@@ -314,8 +313,6 @@ def dwi_paths_to_bids(images, dest_dir, mod_to_update=False):
                             os.rename(nii_file, path.join(bids_dest_dir, bids_name + '.nii.gz'))
                         else:
                             cprint('WARNING: CONVERSION FAILED...')
-
-        # print '--Conversion finished--\n'
 
 
 def dwi_image(subject_id, timepoint, visit_str, ida_meta_scans, mri_qc_subj, enhanced):
@@ -409,8 +406,6 @@ def select_image_qc(id_list, mri_qc_subj):
         else:
             best_ids = [int(x[1:]) for x in images_best_qc.loni_image.unique()]
             selected_image = min(best_ids)
-            # TODO verify if new code above works. Previously we had this:
-            # selected_image = min(int_ids)
 
     return int(selected_image)
 
@@ -527,3 +522,156 @@ def visits_to_timepoints_dwi(subject, ida_meta_subj, adnimerge_subj):
             cprint(image.Visit)
 
     return visits
+
+
+def visits_to_timepoints_dwi_refactoring(subject, ida_meta_subj, adnimerge_subj):
+    """
+
+    Args:
+        subject:
+        ida_meta_subj:
+        adnimerge_subj:
+
+    Returns:
+
+    """
+    from datetime import datetime
+    from clinica.iotools.converters.adni_to_bids.adni_utils import days_between
+    from clinica.utils.stream import cprint
+
+    visits = dict()
+    unique_visits = list(ida_meta_subj.VISIT.unique())
+    pending_timepoints = []
+
+    # We try to obtain the corresponding image Visit for a given VISCODE
+    for adni_row in adnimerge_subj.iterrows():
+        visit = adni_row[1]
+        if visit.ORIGPROT == 'ADNI2':
+            if visit.VISCODE == 'bl':
+                preferred_visit_name = 'ADNI2 Screening MRI-New Pt'
+            elif visit.VISCODE == 'm03':
+                preferred_visit_name = 'ADNI2 Month 3 MRI-New Pt'
+            elif visit.VISCODE == 'm06':
+                preferred_visit_name = 'ADNI2 Month 6-New Pt'
+            else:
+                year = str(int(visit.VISCODE[1:]) / 12)
+                preferred_visit_name = 'ADNI2 Year ' + year + ' Visit'
+        else:
+            if visit.VISCODE == 'bl':
+                if visit.ORIGPROT == 'ADNI1':
+                    preferred_visit_name = 'ADNI Screening'
+                else:  # ADNIGO
+                    preferred_visit_name = 'ADNIGO Screening MRI'
+            elif visit.VISCODE == 'm03':  # Only for ADNIGO Month 3
+                preferred_visit_name = 'ADNIGO Month 3 MRI'
+            else:
+                month = int(visit.VISCODE[1:])
+                if month < 54:
+                    preferred_visit_name = 'ADNI1/GO Month ' + str(month)
+                else:
+                    preferred_visit_name = 'ADNIGO Month ' + str(month)
+
+        if preferred_visit_name in unique_visits:
+            key_preferred_visit = (visit.VISCODE, visit.COLPROT, visit.ORIGPROT)
+            if key_preferred_visit not in visits.keys():
+                visits[key_preferred_visit] = preferred_visit_name
+            elif visits[key_preferred_visit] != preferred_visit_name:
+                cprint('Multiple visits for one timepoint!')
+                cprint(subject)
+                cprint(key_preferred_visit)
+                cprint(visits[key_preferred_visit])
+                cprint(visit)
+            unique_visits.remove(preferred_visit_name)
+            continue
+
+        pending_timepoints.append(visit)
+
+    # Then for images.Visit non matching the expected labels we find the closest date in visits list
+    for visit in unique_visits:
+        image = (ida_meta_subj[ida_meta_subj.VISIT == visit]).iloc[0]
+        min_db = 100000
+        min_db2 = 0
+        min_visit = None
+        min_visit2 = None
+
+        for timepoint in pending_timepoints:
+            db = days_between(image['SCANDATE'], timepoint.EXAMDATE)
+            if db < min_db:
+                min_db2 = min_db
+                min_visit2 = min_visit
+
+                min_db = db
+                min_visit = timepoint
+
+        if min_visit is None:
+            cprint('No corresponding timepoint in ADNIMERGE for subject ' + subject + ' in visit ' + image.VISIT)
+            cprint(image)
+            continue
+
+        if min_visit2 is not None and min_db > 90:
+            cprint('More than 60 days for corresponding timepoint in ADNIMERGE for subject ' + subject + ' in visit ' + image.VISIT + ' on ' + image.SCANDATE)
+            cprint('Timepoint 1: ' + min_visit.VISCODE + ' - ' + min_visit.ORIGPROT + ' on ' + min_visit.EXAMDATE + ' (Distance: ' + str(
+                min_db) + ' days)')
+            cprint('Timepoint 2: ' + min_visit2.VISCODE + ' - ' + min_visit2.ORIGPROT + ' on ' + min_visit2.EXAMDATE + ' (Distance: ' + str(
+                min_db2) + ' days)')
+
+            # If image is too close to the date between two visits we prefer the earlier visit
+            if (datetime.strptime(min_visit.EXAMDATE, "%Y-%m-%d")
+                    > datetime.strptime(image.SCANDATE, "%Y-%m-%d")
+                    > datetime.strptime(min_visit2.EXAMDATE, "%Y-%m-%d")):
+                dif = days_between(min_visit.EXAMDATE, min_visit2.EXAMDATE)
+                if abs((dif / 2.0) - min_db) < 30:
+                    min_visit = min_visit2
+
+            cprint('We prefer ' + min_visit.VISCODE)
+
+        key_min_visit = (min_visit.VISCODE, min_visit.COLPROT, min_visit.ORIGPROT)
+        if key_min_visit not in visits.keys():
+            visits[key_min_visit] = image.VISIT
+        elif visits[key_min_visit] != image.VISIT:
+            cprint('Multiple visits for one timepoint!')
+            # cprint(subject)
+            # cprint(key_min_visit)
+            # cprint(visits[key_min_visit])
+            # cprint(image.Visit)
+
+    return visits
+
+
+def dwi_image_refactoring(subject_id, timepoint, visit_str, ida_meta_scans, mri_qc_subj, enhanced):
+    """
+
+    Args:
+        subject_id:
+        timepoint:
+        visit_str:
+        ida_meta_scans:
+        mri_qc_subj:
+        enhanced:
+
+    Returns:
+
+    """
+    from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
+
+    sel_image = select_image_qc(list(ida_meta_scans.IMAGEUID), mri_qc_subj)
+    if sel_image is None:
+        return None
+
+    sel_scan = ida_meta_scans[ida_meta_scans.IMAGEUID == sel_image].iloc[0]
+
+    sequence = sel_scan.SEQUENCE
+    sequence = replace_sequence_chars(sequence)
+
+    image_dict = {'Subject_ID': subject_id,
+                  'VISCODE': timepoint,
+                  'Visit': visit_str,
+                  'Sequence': sequence,
+                  'Scan_Date': sel_scan['SCANDATE'],
+                  'Study_ID': str(int(sel_scan.STUDYID)),
+                  'Series_ID': str(int(sel_scan.SERIESID)),
+                  'Image_ID': str(int(sel_scan.IMAGEUID)),
+                  'Field_Strength': sel_scan.MAGSTRENGTH,
+                  'Enhanced': enhanced}
+
+    return image_dict

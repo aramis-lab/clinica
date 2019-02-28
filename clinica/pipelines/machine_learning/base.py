@@ -3,12 +3,12 @@
 
 import abc
 
-__author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
-__credits__ = ["Jorge Samper Gonzalez"]
+__author__ = "Jorge Samper-Gonzalez"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
+__credits__ = ["Jorge Samper-Gonzalez"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
-__maintainer__ = "Jorge Samper Gonzalez"
+__maintainer__ = "Jorge Samper-Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
@@ -27,14 +27,11 @@ class MLWorkflow:
         pass
 
     def save_image(self):
+
         import os
         import pandas as pd
-        from neuropredict import visualize
 
-        df = pd.io.parsers.read_csv(os.path.join(self._output_dir, 'results.tsv'), sep='\t')
-        visualize.metric_distribution(df.as_matrix(['balanced_accuracy', 'auc', 'accuracy']),
-                                      ['balanced_accuracy', 'auc', 'accuracy'],
-                                      os.path.join(self._output_dir, 'metrics'))
+        pd.io.parsers.read_csv(os.path.join(self._output_dir, 'results.tsv'), sep='\t')
 
     @staticmethod
     def metric_distribution(metric, labels, output_path, num_classes=2, metric_label='balanced accuracy'):

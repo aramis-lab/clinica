@@ -3,8 +3,7 @@
 import clinica.engine as ce
 
 __author__ = "Sabrina Fontanella"
-__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
-__credits__ = [""]
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
 __maintainer__ = "Simona Bottani"
@@ -27,7 +26,7 @@ class OasisToBidsCLI(ce.CmdParser):
         """Define the sub-command arguments
         """
         self._args.add_argument("dataset_directory",
-                               help='Path to the OASIS images directory.')
+                                help='Path to the OASIS images directory.')
         self._args.add_argument("clinical_data_directory",
                                 help='Path to the OASIS clinical data directory.')
         self._args.add_argument("bids_directory",

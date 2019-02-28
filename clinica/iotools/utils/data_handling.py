@@ -4,7 +4,7 @@
 Data handling scripts
 """
 __author__ = "Sabrina Fontanella"
-__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = [""]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
@@ -46,7 +46,7 @@ def create_merge_file(bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines
         raise IOError('participants.tsv not found in the specified BIDS directory')
     participants_df = pd.read_csv(path.join(bids_dir, 'participants.tsv'), sep='\t')
 
-    sessions, subjects = get_subject_session_list(bids_dir, ss_file=tsv_file)
+    sessions, subjects = get_subject_session_list(bids_dir, ss_file=tsv_file, use_session_tsv=True)
     n_sessions = len(sessions)
 
     # Find what is dir and what is file_name
@@ -278,7 +278,7 @@ def find_mods_and_sess(bids_dir):
         for session in ses_paths:
             ses_name = session.split(os.sep)[-1]
             mods_avail = []
-            if mods_dict.has_key('sessions'):
+            if 'sessions' in mods_dict:
                 if ses_name not in mods_dict['sessions']:
                     mods_dict['sessions'].append(ses_name)
             else:
@@ -295,7 +295,7 @@ def find_mods_and_sess(bids_dir):
                     func_name = func_path.split(os.sep)[-1]
                     func_name_tokens = func_name.split('_')
                     func_task = func_name_tokens[2]
-                if mods_dict.has_key('func'):
+                if 'func' in mods_dict:
                     if 'func_' + func_task not in mods_dict['func']:
                         mods_dict['func'].append('func_' + func_task)
                 else:
@@ -305,19 +305,19 @@ def find_mods_and_sess(bids_dir):
                     mods_list.append('func_' + func_task)
 
             if 'dwi' in mods_avail:
-                if not mods_dict.has_key('dwi'):
+                if 'dwi' not in mods_dict:
                     mods_dict.update({'dwi': ['dwi']})
                 if 'dwi' not in mods_list:
                     mods_list.append('dwi')
 
             if 'fmap' in mods_avail:
-                if not mods_dict.has_key('fmap'):
+                if 'fmap' not in mods_dict:
                     mods_dict.update({'fmap': ['fmap']})
                 if 'fmap' not in mods_list:
                     mods_list.append('fmap')
 
             if 'pet' in mods_avail:
-                if not mods_dict.has_key('pet'):
+                if 'pet' not in mods_dict:
                     mods_dict.update({'pet': ['pet']})
                 if 'pet' not in mods_list:
                     mods_list.append('pet')
@@ -339,7 +339,7 @@ def find_mods_and_sess(bids_dir):
                     if anat_ext != 'json':
                         file_parts = anat_name.split("_")
                         anat_type = str.lower(file_parts[len(file_parts) - 1])
-                        if mods_dict.has_key('anat'):
+                        if 'anat' in mods_dict:
                             if anat_type not in mods_dict['anat']:
                                 anat_aval = mods_dict['anat']
                                 anat_aval.append(anat_type)
@@ -454,7 +454,7 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=''):
                             row_to_append_df[m] = pd.Series('0')
                             mmt.add_missing_mod(ses, m)
                 else:
-                    if mods_avail_dict.has_key('anat'):
+                    if 'anat' in mods_avail_dict:
                         for m in mods_avail_dict['anat']:
                             row_to_append_df[m] = pd.Series('0')
                             mmt.add_missing_mod(ses, m)
@@ -484,7 +484,7 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=''):
 
 
 def create_subs_sess_list(input_dir, output_dir,
-                          file_name=None, is_bids_dir=True):
+                          file_name=None, is_bids_dir=True, use_session_tsv=False):
     """
     Create the file subject_session_list.tsv that contains the list
     of the visits for each subject for a BIDS or CAPS compliant dataset.
@@ -495,9 +495,11 @@ def create_subs_sess_list(input_dir, output_dir,
         file_name: name of the output file
         is_bids_dir (boolean): Specify if input_dir is a BIDS directory or
             not (i.e. a CAPS directory)
+        use_session_tsv (boolean): Specify if the list uses the sessions listed in the sessions.tsv files
     """
     from os import path
     from glob import glob
+    import pandas as pd
     import os
 
     if not os.path.exists(output_dir):
@@ -522,10 +524,18 @@ def create_subs_sess_list(input_dir, output_dir,
 
     for sub_path in subjects_paths:
         subj_id = sub_path.split(os.sep)[-1]
-        sess_list = glob(path.join(sub_path, '*ses-*'))
 
-        for ses_path in sess_list:
-            session_name = ses_path.split(os.sep)[-1]
-            subjs_sess_tsv.write(subj_id + '\t' + session_name + '\n')
+        if use_session_tsv:
+            session_df = pd.read_csv(path.join(sub_path, subj_id + '_sessions.tsv'), sep='\t')
+            session_list = list(session_df['session_id'].values)
+            for session in session_list:
+                subjs_sess_tsv.write(subj_id + '\t' + session + '\n')
+
+        else:
+            sess_list = glob(path.join(sub_path, '*ses-*'))
+
+            for ses_path in sess_list:
+                session_name = ses_path.split(os.sep)[-1]
+                subjs_sess_tsv.write(subj_id + '\t' + session_name + '\n')
 
     subjs_sess_tsv.close()

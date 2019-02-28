@@ -5,7 +5,7 @@ Load bed/bim/fam files.
 """
 
 __author__ = "Pascal Lu"
-__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = ["Sabrina Fontanella"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
@@ -54,7 +54,7 @@ def import_genetics(path_to_plink_files):
     if not plink_file.one_locus_per_row():
         print("This script requires that snps are rows and samples columns.")
         exit(1)
-    
+
     sample_list = plink_file.get_samples()
     locus_list = plink_file.get_loci()
 
@@ -64,14 +64,14 @@ def import_genetics(path_to_plink_files):
     for locus in locus_list:
         print locus.chromosome, locus.name, locus.position, locus.bp_position, locus.allele1, locus.allele2
     """
-    
+
     num_snp = len(locus_list)
     num_patient = len(sample_list)
-    
+
     matrix_patient_snp = np.zeros((num_snp, num_patient))
     patient_list = np.zeros(num_patient, dtype='|S30')
     snp_list = np.zeros(num_snp, dtype='|S30')
-    for i, row, locus in zip( range(num_snp), plink_file, locus_list):
+    for i, row, locus in zip(range(num_snp), plink_file, locus_list):
         matrix_patient_snp[i] = row
         snp_list[i] = locus.name
     matrix_patient_snp = matrix_patient_snp.T

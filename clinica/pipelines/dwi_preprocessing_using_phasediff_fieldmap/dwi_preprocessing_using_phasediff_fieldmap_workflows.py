@@ -88,8 +88,11 @@ def susceptibility_distortion_correction_using_phasediff_fmap(
 
     bet = pe.Node(fsl.BET(frac=0.4, mask=True), name='BetN4MagnitudeFmap')
 
-    dilate = pe.Node(fsl.maths.MathsCommand(nan2zeros=True,
-                     args='-kernel sphere 5 -dilM'), name='DilateBet')
+    dilate = pe.Node(
+            fsl.maths.MathsCommand(
+                nan2zeros=True,
+                args='-kernel sphere 5 -dilM'),
+            name='DilateBet')
 
     pha2rads = pe.Node(niu.Function(
         input_names=['in_file'],
@@ -137,9 +140,12 @@ def susceptibility_distortion_correction_using_phasediff_fmap(
 
     pre_fugue = pe.Node(fsl.FUGUE(save_fmap=True), name='PreliminaryFugue')
 
-    demean = pe.Node(niu.Function(input_names=['in_file', 'in_mask'],
-                     output_names=['out_file'], function=demean_image),
-                     name='DemeanFmap')
+    demean = pe.Node(
+            niu.Function(
+                input_names=['in_file', 'in_mask'],
+                output_names=['out_file'],
+                function=demean_image),
+            name='DemeanFmap')
 
     cleanup = cleanup_edge_pipeline()
 

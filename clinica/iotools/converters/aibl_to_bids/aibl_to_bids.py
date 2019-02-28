@@ -1,11 +1,11 @@
 # coding: utf8
 
 """
-Convert the AIBL dataset into the BIDS specification.
+Convert the AIBL dataset (http://www.aibl.csiro.au/) into BIDS.
 """
 
 __author__ = "Simona Bottani"
-__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = ["Simona Bottani"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
@@ -23,11 +23,11 @@ def convert_images(path_to_dataset, path_to_csv, bids_dir):
         pib_paths_to_bids
     from clinica.iotools.converters.aibl_to_bids.aibl_utils import t1_paths_to_bids
 
-    for converter in [av45_paths_to_bids, flute_paths_to_bids, pib_paths_to_bids, t1_paths_to_bids] :
+    for converter in [av45_paths_to_bids, flute_paths_to_bids, pib_paths_to_bids, t1_paths_to_bids]:
         try:
             converter(path_to_dataset, path_to_csv, bids_dir)
-        except Exception as e:
-            cprint("Convertion failed")
+        except BaseException:
+            cprint("Convertion failed ")
 
 
 def convert_clinical_data(bids_dir, path_to_csv):
@@ -42,6 +42,5 @@ def convert_clinical_data(bids_dir, path_to_csv):
     try:
         create_participants_df_AIBL(bids_dir, clinical_spec_path, path_to_csv, delete_non_bids_info=True)
         create_sessions_dict_AIBL(bids_dir, path_to_csv, clinical_spec_path)
-    except Exception as e:
+    except BaseException:
         cprint("Convertion clinical data failed")
-

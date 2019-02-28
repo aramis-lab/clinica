@@ -1,17 +1,16 @@
 # coding: utf8
 
-
 import numpy as np
 import pandas as pd
 import nibabel as nib
 from os.path import join
 
-__author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
-__credits__ = ["Jorge Samper Gonzalez"]
+__author__ = "Jorge Samper-Gonzalez"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
+__credits__ = ["Jorge Samper-Gonzalez"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
-__maintainer__ = "Jorge Samper Gonzalez"
+__maintainer__ = "Jorge Samper-Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
@@ -25,8 +24,8 @@ def get_caps_t1_list(input_directory, subjects_visits_tsv, group_id, fwhm, modul
     sessions = list(subjects_visits.session_id)
     if fwhm == 0:
         image_list = [join(input_directory, 'subjects/' + subjects[i] + '/'
-                      + sessions[i] + '/t1/spm/dartel/group-' + group_id + '/'
-                      + subjects[i] + '_' + sessions[i] + '_T1w_segm-graymatter'+'_space-Ixi549Space_modulated-'+modulated+'_probability.nii.gz') for i in range(len(subjects))]
+                           + sessions[i] + '/t1/spm/dartel/group-' + group_id + '/'
+                           + subjects[i] + '_' + sessions[i] + '_T1w_segm-graymatter'+'_space-Ixi549Space_modulated-'+modulated+'_probability.nii.gz') for i in range(len(subjects))]
     else:
         image_list = [join(input_directory, 'subjects/' + subjects[i] + '/'
                            + sessions[i] + '/t1/spm/dartel/group-' + group_id + '/'
@@ -45,7 +44,7 @@ def get_caps_pet_list(input_directory, subjects_visits_tsv, group_id, pet_type):
     sessions = list(subjects_visits.session_id)
 
     image_list = [join(input_directory, 'subjects/' + subjects[i] + '/'
-                       + sessions[i] + '/pet/preprocessing/group-' +group_id +'/' + subjects[i]
+                       + sessions[i] + '/pet/preprocessing/group-' + group_id + '/' + subjects[i]
                        + '_' + sessions[i] + '_task-rest_acq-' + pet_type + '_pet_space-Ixi549Space_pet.nii.gz') for i in range(len(subjects))]
 
     return image_list
@@ -108,8 +107,8 @@ def revert_mask(weights, mask, shape):
 def features_weights(image_list, dual_coefficients, sv_indices, scaler=None, mask=None):
 
     if len(sv_indices) != len(dual_coefficients):
-        print "Length dual coefficients: " + str(len(dual_coefficients))
-        print "Length indices: " + str(len(sv_indices))
+        print("Length dual coefficients: " + str(len(dual_coefficients)))
+        print("Length indices: " + str(len(sv_indices)))
         raise ValueError('The number of support vectors indices and the number of coefficients must be the same.')
 
     if len(image_list) == 0:

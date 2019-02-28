@@ -1,15 +1,13 @@
 # coding: utf-8
-"""
 
-"""
 from clinica.iotools.abstract_converter import Converter
 
-__author__ = "Jorge Samper Gonzalez and Sabrina Fontanella"
-__copyright__ = "Copyright 2016-2018 The Aramis Lab Team"
+__author__ = "Jorge Samper-Gonzalez and Sabrina Fontanella"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = [""]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
-__maintainer__ = "Jorge Samper Gonzalez"
+__maintainer__ = "Jorge Samper-Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
@@ -23,7 +21,7 @@ class AdniToBids(Converter):
         Returns: a list containing the modalities supported by the converter (T1, PET_FDG, PET_AV45)
 
         """
-        return ['T1', 'PET_FDG', 'PET_AV45', 'DWI', 'fMRI']
+        return ['T1', 'PET_FDG', 'PET_AV45', 'DWI', 'fMRI', 'FLAIR']
 
     def check_adni_dependencies(self):
         """
@@ -55,13 +53,12 @@ class AdniToBids(Converter):
         from clinica.utils.stream import cprint
         import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
 
-
         clinic_specs_path = path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'data',
                                       'clinical_specifications_adni.xlsx')
         try:
             os.path.exists(out_path)
         except IOError:
-            print 'BIDS folder not found.'
+            print('BIDS folder not found.')
             raise
 
         bids_ids = bids.get_bids_subjs_list(out_path)
@@ -100,18 +97,19 @@ class AdniToBids(Converter):
             clinical_dir: path to the clinical data directory
             dest_dir: path to the BIDS directory
             subjs_list_path: list of subjects to process
-            modalities: modalities to convert (T1, PET_FDG, PET_AV45, DWI)
+            modalities: modalities to convert (T1, PET_FDG, PET_AV45, DWI, FLAIR)
 
         """
 
         import os
         from os import path
         import pandas as pd
-        import adni_modalities.adni_t1 as adni_t1
-        import adni_modalities.adni_av45_pet as adni_av45
-        import adni_modalities.adni_fdg_pet as adni_fdg
-        import adni_modalities.adni_dwi as adni_dwi
-        import adni_modalities.adni_fmri as adni_fmri
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_t1 as adni_t1
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_av45_pet as adni_av45
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet as adni_fdg
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_dwi as adni_dwi
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fmri as adni_fmri
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_flair as adni_flair
         from clinica.utils.stream import cprint
 
         adni_merge_path = path.join(clinical_dir, 'ADNIMERGE.csv')
@@ -144,3 +142,6 @@ class AdniToBids(Converter):
 
         if 'fMRI' in modalities:
             adni_fmri.convert_adni_fmri(source_dir, clinical_dir, dest_dir, subjs_list)
+
+        if 'FLAIR' in modalities:
+            adni_flair.convert_adni_flair(source_dir, clinical_dir, dest_dir, subjs_list)

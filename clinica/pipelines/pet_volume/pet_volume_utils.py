@@ -1,11 +1,11 @@
 # coding: utf8
 
-__author__ = "Jorge Samper Gonzalez"
-__copyright__ = "Copyright 2016-2018, The Aramis Lab Team"
-__credits__ = ["Jorge Samper Gonzalez"]
+__author__ = "Jorge Samper-Gonzalez"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
+__credits__ = ["Jorge Samper-Gonzalez"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.1.0"
-__maintainer__ = "Jorge Samper Gonzalez"
+__maintainer__ = "Jorge Samper-Gonzalez"
 __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
@@ -192,7 +192,8 @@ def pet_container_from_filename(pet_filename):
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', pet_filename)
 
     if m is None:
-        raise ValueError('Input filename is not in a BIDS or CAPS compliant format. It doesn\'t contain the subject and session informations.')
+        raise ValueError('Input filename is not in a BIDS or CAPS compliant format. It doesn\'t contain the subject' +
+                         ' and session informations.')
 
     subject = m.group(1)
     session = m.group(2)

@@ -1,0 +1,20 @@
+{
+    "id": "aramislab/dwi-dti",
+    "author": ["Alexandre Routier", "Thomas Jacquemont"],
+    "version": "0.1.1",
+    "dependencies": [
+        {
+            "type": "software",
+            "name": "fsl",
+            "version": ">=5.0.9"
+        },
+        {
+            "type": "software",
+            "name": "ants"
+        },
+        {
+            "type": "software",
+            "name": "mrtrix"
+        }
+    ]
+}
