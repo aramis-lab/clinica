@@ -211,10 +211,12 @@ def create_merge_file(bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines
     # CAPS
     if caps_dir is not None:
         # Call the different pipelines
-        from .pipeline_handling import t1_spm_pipeline, pet_pipeline
+        from .pipeline_handling import t1_volume_pipeline, pet_volume_pipeline
 
-        pipeline_options = {'t1-spm-full-prep': t1_spm_pipeline,
-                            'pet-preprocess-volume': pet_pipeline}
+        pipeline_options = {
+            't1-volume': t1_volume_pipeline,
+            'pet-volume': pet_volume_pipeline
+        }
         columns_summary = ['pipeline_name', 'group_id', 'atlas_id', 'regions_number', 'first_column_name', 'last_column_name']
         merged_summary_df = pd.DataFrame(columns=columns_summary)
         if pipelines is None:

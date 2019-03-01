@@ -55,7 +55,8 @@ class CmdParserMergeTsv(ce.CmdParser):
         iotools_options.add_argument('-caps', "--caps_directory", type=str, default=None,
                                      help='(Optional) path to a CAPS directory.')
         iotools_options.add_argument('-p', "--pipelines", nargs="*", type=str, default=None,
-                                     help='(Optional) pipelines which will be merged to the .tsv file. \n'
+                                     help='(Optional) pipelines which will be merged to the TSV file. \n'
+                                          'Currently, only t1-volume and pet-volume are supported.\n'
                                           'Default: all pipeline are merged')
         iotools_options.add_argument('-atlas', "--atlas_selection", nargs="*", type=str, default=None,
                                      help='(Optional) atlas that will be merged. \n'

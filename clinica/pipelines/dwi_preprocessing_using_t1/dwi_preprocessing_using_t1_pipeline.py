@@ -296,6 +296,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         """Build and connect the core nodes of the pipelines.
         """
         import clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows as workflows
+        import clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils as utils
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -332,10 +333,24 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         aac = workflows.apply_all_corrections_using_ants(
             name='ApplyAllCorrections')
 
+        print_begin_message = npe.Node(
+            interface=nutil.Function(
+                input_names=['in_bids_or_caps_file'],
+                function=utils.print_begin_pipeline),
+            name='Write-Begin_Message')
+
+        print_end_message = npe.Node(
+            interface=nutil.Function(
+                input_names=['in_bids_or_caps_file', 'final_file'],
+                function=utils.print_end_pipeline),
+            name='Write-End_Message')
+
         # Connection
         # ==========
 
         self.connect([
+            # Print begin message
+            (self.input_node, print_begin_message, [('dwi', 'in_bids_or_caps_file')]),  # noqa
             # Preliminary step (possible computation of a mean b0):
             (self.input_node, prepare_b0, [('dwi',  'in_dwi'),  # noqa
                                            ('bval', 'in_bval'),  # noqa
@@ -368,5 +383,8 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             (bias,       self.output_node, [('outputnode.out_file', 'preproc_dwi')]),  # noqa
             (sdc,        self.output_node, [('outputnode.out_bvec', 'preproc_bvec')]),  # noqa
             (prepare_b0, self.output_node, [('out_updated_bval',    'preproc_bval')]),  # noqa
-            (bias,       self.output_node, [('outputnode.b0_mask',  'b0_mask')])   # noqa
+            (bias,       self.output_node, [('outputnode.b0_mask',  'b0_mask')]),  # noqa
+            # Print end message
+            (self.input_node, print_end_message, [('dwi',         'in_bids_or_caps_file')]),  # noqa
+            (bias,            print_end_message, [('outputnode.out_file', 'final_file')]),  # noqa
         ])
