@@ -13,7 +13,7 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'Create new DARTEL template based on a current DARTEL template:\nhttp://clinica.run/doc/Pipelines/T1_Volume/'
+        self._description = 'Volume-based processing of T1-weighted MR images using an existing DARTEL template:\nhttp://clinica.run/doc/Pipelines/T1_Volume/'
 
     def define_options(self):
         """Define the sub-command arguments
