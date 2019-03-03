@@ -38,7 +38,7 @@ def test_run_T1FreeSurferCrossSectional(cmdopt):
     pipeline.parameters['recon_all_args'] = '-qcache'
     pipeline.base_dir = join(working_dir, 'T1FreeSurferCrossSectional')
     pipeline.build()
-    #pipeline.run(bypass_check=True)
+    pipeline.run(bypass_check=True)
 
     log_file = join(root, 'out', 'caps', 'subjects', 'sub-ADNI082S5029',
                    'ses-M00', 't1', 'freesurfer_cross_sectional',
