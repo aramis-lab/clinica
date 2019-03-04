@@ -61,9 +61,9 @@ def rename_into_caps(in_bids_dwi,
 
     Args:
         in_bids_dwi (str): Input BIDS DWI to extract the <source_file>
-        fname_dwi (str): Preprocessed DWI.
-        fname_bval (str): Preprocessed DWI.
-        fname_bvec (str): Preprocessed DWI.
+        fname_dwi (str): Preprocessed DWI file.
+        fname_bval (str): Preprocessed bval.
+        fname_bvec (str): Preprocessed bvec.
         fname_brainmask (str): B0 mask.
 
     Returns:
@@ -85,37 +85,64 @@ def rename_into_caps(in_bids_dwi,
     # Rename into CAPS DWI:
     rename_dwi = Rename()
     rename_dwi.inputs.in_file = fname_dwi
-    rename_dwi.inputs.format_string = os.path.join(
-        base_dir_dwi, source_file_dwi + "_space-T1w_preproc.nii.gz")
+    rename_dwi.inputs.format_string = source_file_dwi + "_space-T1w_preproc.nii.gz"
     out_caps_dwi = rename_dwi.run()
 
     # Rename into CAPS bval:
     rename_bval = Rename()
     rename_bval.inputs.in_file = fname_bval
-    rename_bval.inputs.format_string = os.path.join(
-        base_dir_bval, source_file_dwi + "_space-T1w_preproc.bval")
+    rename_bval.inputs.format_string = source_file_dwi + "_space-T1w_preproc.bval"
     out_caps_bval = rename_bval.run()
 
     # Rename into CAPS bvec:
     rename_bvec = Rename()
     rename_bvec.inputs.in_file = fname_bvec
-    rename_bvec.inputs.format_string = os.path.join(
-        base_dir_bvec, source_file_dwi + "_space-T1w_preproc.bvec")
+    rename_bvec.inputs.format_string = source_file_dwi + "_space-T1w_preproc.bvec"
     out_caps_bvec = rename_bvec.run()
 
     # Rename into CAPS DWI:
     rename_brainmask = Rename()
     rename_brainmask.inputs.in_file = fname_brainmask
-    rename_brainmask.inputs.format_string = os.path.join(
-        base_dir_brainmask, source_file_dwi + "_space-T1w_brainmask.nii.gz")
+    rename_brainmask.inputs.format_string = source_file_dwi + "_space-T1w_brainmask.nii.gz"
     out_caps_brainmask = rename_brainmask.run()
-
-    from clinica.utils.stream import cprint
-
-    cprint(out_caps_dwi.outputs.out_file)
-    cprint(out_caps_bval.outputs.out_file)
-    cprint(out_caps_bvec.outputs.out_file)
-    cprint(out_caps_brainmask.outputs.out_file)
 
     return out_caps_dwi.outputs.out_file, out_caps_bval.outputs.out_file, \
         out_caps_bvec.outputs.out_file, out_caps_brainmask.outputs.out_file
+
+
+def print_begin_pipeline(in_bids_or_caps_file):
+    """
+    """
+    from clinica.utils.stream import cprint
+    import re
+    import datetime
+    from colorama import Fore
+
+    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)',
+                  in_bids_or_caps_file)
+    if m is None:
+        raise ValueError(
+            'Input filename is not in a BIDS or CAPS compliant format.')
+    now = datetime.datetime.now().strftime('%H:%M:%S')
+
+    cprint('%s[%s]%s Running pipeline for %s...' % (
+        Fore.BLUE, now, Fore.RESET, m.group(0)))
+
+
+def print_end_pipeline(in_bids_or_caps_file, final_file):
+    """
+    """
+    from clinica.utils.stream import cprint
+    import re
+    import datetime
+    from colorama import Fore
+
+    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)',
+                  in_bids_or_caps_file)
+    if m is None:
+        raise ValueError(
+            'Input filename is not in a BIDS or CAPS compliant format.')
+    now = datetime.datetime.now().strftime('%H:%M:%S')
+
+    cprint('%s[%s]%s ...%s has completed.' % (
+        Fore.GREEN, now, Fore.RESET, m.group(0)))
