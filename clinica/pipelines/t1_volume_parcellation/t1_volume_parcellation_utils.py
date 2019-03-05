@@ -12,7 +12,7 @@ __status__ = "Development"
 
 def atlas_statistics(file_list, atlas_list):
     """
-    For each atlas name provided it ƒcalculates for the input image the mean for each region in the atlas and saves it to a TSV file.
+    For each atlas name provided it calculates for the input image the mean for each region in the atlas and saves it to a TSV file.
     :param in_image: A Nifti image
     :param in_atlas_list: List of names of atlas to be applied
     :return: List of paths to tsv files

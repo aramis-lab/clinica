@@ -138,7 +138,7 @@ def check_mrtrix():
     except Exception as e:
         print(str(e))
 
-    list_binaries = ['transformconvert', 'mrtransform']
+    list_binaries = ['transformconvert', 'mrtransform', 'dwi2response', 'tckgen']
     for binary in list_binaries:
         if not is_binary_present(binary):
             raise RuntimeError(
