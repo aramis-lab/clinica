@@ -20,31 +20,46 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-Several files present in Clinica came from other projects with a specific LICENSE file that is included below.
+Several files present in Clinica came from other projects with a specific
+LICENSE file that is included below.
 
-The following file is copyright of Rolls ET, Joliot M & Tzourio-Mazoyer N (2015) . NeuroImage 10.1016/j.neuroimage.2015.07.075:
-    clinica/resources/atlases_spm/AAL2.nii
-The details of license are included below.
-
-
-The following file is copyright of Joliot M, Jobard G, Naveau M, Delcroix N, Petit L, Zago L, Crivello F, Mellet E, Mazoyer B & Tzourio-Mazoyer N (2015) . Journal of Neuroscience Methods 10.1016/j.jneumeth.2015.07.013:
-    clinica/resources/atlases_spm/AICHA.nii
-The details of license are included below.
+The following file is copyright of Rolls ET, Joliot M & Tzourio-Mazoyer N
+(2015) . NeuroImage 10.1016/j.neuroimage.2015.07.075:
+clinica/resources/atlases_spm/AAL2.nii The details of license are included
+below.
 
 
-The following files based on Alexander Hammers' brain atlas, made available for the Euripides project, Nov 2009 (A):
-    clinica/resources/atlases_spm/Hammers.csv
-    clinica/resources/atlases_spm/Hammers.nii
-The details of license are included below.
+The following file is copyright of Joliot M, Jobard G, Naveau M, Delcroix N,
+Petit L, Zago L, Crivello F, Mellet E, Mazoyer B & Tzourio-Mazoyer N (2015) .
+Journal of Neuroscience Methods 10.1016/j.jneumeth.2015.07.013:
+clinica/resources/atlases_spm/AICHA.nii The details of license are included
+below.
 
 
-The following files are copyright of Shattuck DW, Mirza M, Adisetiyo V, Hojatkashani C, Salamon G, Narr KL, Poldrack RA, Bilder RM, Toga AW (2008) Construction of a 3D Probabilistic Atlas of Human Cortical Structures, NeuroImage 39 (3): 1064-1070. DOI:	10.1016/j.neuroimage.2007.09.031:
-    clinica/resources/atlases_spm/LPBA40.csv
-    clinica/resources/atlases_spm/LPBA40.nii
-The details of license are included below.
+The following files based on Alexander Hammers' brain atlas, made available for
+the Euripides project, Nov 2009 (A): clinica/resources/atlases_spm/Hammers.csv
+clinica/resources/atlases_spm/Hammers.nii The details of license are included
+below.
 
 
-The following files derived from the ``MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling'' (https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details). These data were released under the Creative Commons Attribution-NonCommercial (CC BY-NC) with no end date. Users should credit the MRI scans as originating from the OASIS project (http://www.oasis-brains.org/) and the labeled data as "provided by Neuromorphometrics, Inc. (http://Neuromorphometrics.com/) under academic subscription".  These references should be included in all workshop and final publications:
+The following files are copyright of Shattuck DW, Mirza M, Adisetiyo V,
+Hojatkashani C, Salamon G, Narr KL, Poldrack RA, Bilder RM, Toga AW (2008)
+Construction of a 3D Probabilistic Atlas of Human Cortical Structures,
+NeuroImage 39 (3): 1064-1070. DOI:	10.1016/j.neuroimage.2007.09.031:
+clinica/resources/atlases_spm/LPBA40.csv
+clinica/resources/atlases_spm/LPBA40.nii The details of license are included
+below.
+
+
+The following files derived from the ``MICCAI 2012 Grand Challenge and Workshop
+on Multi-Atlas Labeling''
+(https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details).
+These data were released under the Creative Commons Attribution-NonCommercial
+(CC BY-NC) with no end date. Users should credit the MRI scans as originating
+from the OASIS project (http://www.oasis-brains.org/) and the labeled data as
+"provided by Neuromorphometrics, Inc. (http://Neuromorphometrics.com/) under
+academic subscription".  These references should be included in all workshop
+and final publications:
     clinica/resources/atlases_spm/Neuromorphometrics.csv
     clinica/resources/atlases_spm/Neuromorphometrics.nii
 The details of license are included below.
@@ -53,39 +68,73 @@ The clinica/lib/clinicasurfstat/SurfStat library is Copyright 2003 K.J. Worsley.
 The details of license are included below.
 
 
-The following files are copyright of Tzourio-Mazoyer N, Landeau B, Papathanassiou D, Crivello F, Etard O, Delcroix N, Mazoyer B, Joliot M. Automated anatomical labeling of activations in SPM using a macroscopic anatomical parcellation of the MNI MRI single-subject brain. Neuroimage. 2002 Jan;15(1):273-89.PUBMED ID: 11771995.
+The following files are copyright of Tzourio-Mazoyer N, Landeau B,
+Papathanassiou D, Crivello F, Etard O, Delcroix N, Mazoyer B, Joliot M.
+Automated anatomical labeling of activations in SPM using a macroscopic
+anatomical parcellation of the MNI MRI single-subject brain. Neuroimage. 2002
+Jan;15(1):273-89.PUBMED ID: 11771995.
     clinica/resources/mask_cerebellum+pons_eroded_6mm.nii.gz
     clinica/resources/mask_pons_eroded_6mm.nii.gz
 The software used to produce those files is the WFU PickAtlas Standard Atlases:
-Maldjian JA, Laurienti PJ, Kraft RA, Burdette JH. An automated method for neuroanatomic and cytoarchitectonic atlas-based interrogation of fMRI data sets. Neuroimage. 2003 Jul;19(3):1233-9.
+Maldjian JA, Laurienti PJ, Kraft RA, Burdette JH. An automated method for
+neuroanatomic and cytoarchitectonic atlas-based interrogation of fMRI data
+sets. Neuroimage. 2003 Jul;19(3):1233-9.
 PUBMED ID: 12880848
-Maldjian JA, Laurienti PJ, Burdette JH. Precentral gyrus discrepancy in electronic versions of the Talairach atlas. Neuroimage. 2004 Jan;21(1):450-5.
+Maldjian JA, Laurienti PJ, Burdette JH. Precentral gyrus discrepancy in
+electronic versions of the Talairach atlas. Neuroimage. 2004 Jan;21(1):450-5.
 PUBMED ID: 14741682
-The above manuscripts provide a complete description of how the atlas volumes were generated and validated.
+The above manuscripts provide a complete description of how the atlas volumes
+were generated and validated.
 
 ----------------------------------------------------------------------
-AAL2 is the implementation of a new parcellation of the orbitofrontal cortex in the automated anatomical labeling atlas.
-Rolls ET, Joliot M & Tzourio-Mazoyer N (2015) . NeuroImage 10.1016/j.neuroimage.2015.07.075
+AAL2 is the implementation of a new parcellation of the orbitofrontal cortex in
+the automated anatomical labeling atlas.
+Rolls ET, Joliot M & Tzourio-Mazoyer N (2015) . NeuroImage
+10.1016/j.neuroimage.2015.07.075
 ———————
 Overview
-An alternative parcellation of the orbitofrontal cortex is described for the automated anatomical labeling atlas of Tzourio-Mazoyer et al. (2002) (Automated anatomical labeling of activations in SPM using a macroscopic anatomical parcellation of the MNI MRI single-subject brain. NeuroImage 15:273-289). The new parcellation of the orbitofrontal cortex follows the description provided by Chiavaras, Petrides, and colleagues (2000, 2001).
+An alternative parcellation of the orbitofrontal cortex is described for the
+automated anatomical labeling atlas of Tzourio-Mazoyer et al. (2002) (Automated
+anatomical labeling of activations in SPM using a macroscopic anatomical
+parcellation of the MNI MRI single-subject brain. NeuroImage 15:273-289). The
+new parcellation of the orbitofrontal cortex follows the description provided
+by Chiavaras, Petrides, and colleagues (2000, 2001).
 
 ———————
- The AAL atlas is probably the most widely used cortical parcellation map in connectomic literature. It can be downloaded from the website: http://www.gin.cnrs.fr/AAL2?lang=en and it consists on 120 regions which parcellate the cortical and subcortical area.
+ The AAL atlas is probably the most widely used cortical parcellation map in
+ connectomic literature. It can be downloaded from the website:
+ http://www.gin.cnrs.fr/AAL2?lang=en and it consists on 120 regions which
+ parcellate the cortical and subcortical area.
 
 ----------------------------------------------------------------------
 AICHA is an atlas of intrinsic connectivity of homotopic areas.
-It derives from Joliot M, Jobard G, Naveau M, Delcroix N, Petit L, Zago L, Crivello F, Mellet E, Mazoyer B & Tzourio-Mazoyer N (2015) . Journal of Neuroscience Methods 10.1016/j.jneumeth.2015.07.013. (PDF)
+It derives from Joliot M, Jobard G, Naveau M, Delcroix N, Petit L, Zago L,
+Crivello F, Mellet E, Mazoyer B & Tzourio-Mazoyer N (2015) . Journal of
+Neuroscience Methods 10.1016/j.jneumeth.2015.07.013. (PDF)
  ——————
 Overview:
-AICHA (for Atlas of Intrinsic Connectivity of Homotopic Areas) is a functional brain ROIs atlas based on resting-state fMRI data acquired in 281 individuals. AICHA ROIs cover the whole cerebrum, each having 1- homogeneity of its constituting voxels intrinsic activity, and 2- a unique homotopic contralateral counterpart with which it has maximal intrinsic connectivity.
-This atlas is protected by copyright; you can freely use it for none profit research purposes, providing the above reference is cited. For other use please contact us through aicha.gin.brainatlas at gmail.com
-The AICHA atlas includes 192 couples of homotopic regions for a total of 384 regions. AICHA is provided in the MNI stereotaxic space (MNI ICBM 152, Template sampling size of 2x2x2 mm3 voxels; bounding box, x = -90 to 90 mm, y = -126 to 91 mm, z = -72 to 109 mm).
+AICHA (for Atlas of Intrinsic Connectivity of Homotopic Areas) is a functional
+brain ROIs atlas based on resting-state fMRI data acquired in 281 individuals.
+AICHA ROIs cover the whole cerebrum, each having 1- homogeneity of its
+constituting voxels intrinsic activity, and 2- a unique homotopic contralateral
+counterpart with which it has maximal intrinsic connectivity.  This atlas is
+protected by copyright; you can freely use it for none profit research
+purposes, providing the above reference is cited. For other use please contact
+us through aicha.gin.brainatlas at gmail.com The AICHA atlas includes 192
+couples of homotopic regions for a total of 384 regions. AICHA is provided in
+the MNI stereotaxic space (MNI ICBM 152, Template sampling size of 2x2x2 mm3
+voxels; bounding box, x = -90 to 90 mm, y = -126 to 91 mm, z = -72 to 109 mm).
 
-AICHA atlas includes both regions located in the crown of the gyri (named Gyrus, region name beginning by “G_”) and regions located in the depth of the sulci (named Suclus, region name beginning by “S_”). In addition the subcortical nuclei were labeled separately (name Nucleus, region name beginning by “N_”).
-Different parcels belonging to the same anatomical region were labeled with numbers (starting to 1). For example the precuneus show as 9 subparts labeled from G_Precuneus-1-L to G_Precuneus-9-L.
+AICHA atlas includes both regions located in the crown of the gyri (named
+Gyrus, region name beginning by “G_”) and regions located in the depth of the
+sulci (named Suclus, region name beginning by “S_”). In addition the
+subcortical nuclei were labeled separately (name Nucleus, region name beginning
+by “N_”).  Different parcels belonging to the same anatomical region were
+labeled with numbers (starting to 1). For example the precuneus show as 9
+subparts labeled from G_Precuneus-1-L to G_Precuneus-9-L.
 ——————
-Information and download can be found in the website: http://www.gin.cnrs.fr/AICHA-344?lang=en
+Information and download can be found in the website:
+http://www.gin.cnrs.fr/AICHA-344?lang=en
 
 
 
@@ -121,7 +170,13 @@ of interest. Neuroimage 2008 Apr 1;40(2):672-684.
 LPBA40 atlas:
 --------------------------------------------------------------------------------
 
-The LONI Probabilistic Brain Atlas (LPBA40) is a series of maps of brain anatomic regions. These maps were produced from a set of whole-head MRI of 40 human volunteers. Each MRI was manually delineated to identify a set of 56 structures in the brain, most of which are within the cortex. These delineations were then transformed into a common atlas space to produce a set of coregistered anatomical labels. The original MRI data were also transformed into the atlas space.
+The LONI Probabilistic Brain Atlas (LPBA40) is a series of maps of brain
+anatomic regions. These maps were produced from a set of whole-head MRI of 40
+human volunteers. Each MRI was manually delineated to identify a set of 56
+structures in the brain, most of which are within the cortex. These
+delineations were then transformed into a common atlas space to produce a set
+of coregistered anatomical labels. The original MRI data were also transformed
+into the atlas space.
 
 Websites:
 A) http://www.loni.usc.edu/atlases/Atlas_Detail.php?atlas_id=12
@@ -129,10 +184,15 @@ B) http://www.loni.usc.edu/atlases/Atlas_Methods.php?atlas_id=12
 C) http://shattuck.bmap.ucla.edu/resources/lpba40/
 
 References:
-1) Shattuck DW, Mirza M, Adisetiyo V, Hojatkashani C, Salamon G, Narr KL, Poldrack RA, Bilder RM, Toga AW (2008) Construction of a 3D Probabilistic Atlas of Human Cortical Structures, NeuroImage 39 (3): 1064-1070. DOI:	10.1016/j.neuroimage.2007.09.031
+1) Shattuck DW, Mirza M, Adisetiyo V, Hojatkashani C, Salamon G, Narr KL,
+Poldrack RA, Bilder RM, Toga AW (2008) Construction of a 3D Probabilistic Atlas
+of Human Cortical Structures, NeuroImage 39 (3): 1064-1070. DOI:
+10.1016/j.neuroimage.2007.09.031
 
 This paper should be referenced in any works that use the data provided here.
-Any feedback regarding this collection of data can be addressed to David Shattuck (shattuck@loni.ucla.edu). We encourage investigators who develop projects based on this collection to let us know about their work.
+Any feedback regarding this collection of data can be addressed to David
+Shattuck (shattuck@loni.ucla.edu). We encourage investigators who develop
+projects based on this collection to let us know about their work.
 
 --------------------------------------------------------------------------------
 
@@ -140,7 +200,15 @@ MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling:
 Neuromorphometrics Atlas
 --------------------------------------------------------------------------------
 
-Maximum probability tissue labels derived from the ``MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling'' (https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details). These data were released under the Creative Commons Attribution-NonCommercial (CC BY-NC) with no end date. Users should credit the MRI scans as originating from the OASIS project (http://www.oasis-brains.org/) and the labeled data as "provided by Neuromorphometrics, Inc. (http://Neuromorphometrics.com/) under academic subscription".  These references should be included in all workshop and final publications.
+Maximum probability tissue labels derived from the ``MICCAI 2012 Grand
+Challenge and Workshop on Multi-Atlas Labeling''
+(https://masi.vuse.vanderbilt.edu/workshop2012/index.php/Challenge_Details).
+These data were released under the Creative Commons Attribution-NonCommercial
+(CC BY-NC) with no end date. Users should credit the MRI scans as originating
+from the OASIS project (http://www.oasis-brains.org/) and the labeled data as
+"provided by Neuromorphometrics, Inc. (http://Neuromorphometrics.com/) under
+academic subscription".  These references should be included in all workshop
+and final publications.
 
 
 Websites:
