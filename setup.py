@@ -8,6 +8,8 @@ except ImportError: # for pip <= 9.0.3
 with open(join(dirname(__file__), 'clinica/VERSION'), 'rb') as f:
     version = f.read().decode('ascii').strip()
 
+install_reqs = parse_requirements('requirements.txt', session='hack')
+reqs = [str(ir.req) for ir in install_reqs]
 
 setup(
     name='clinica',
