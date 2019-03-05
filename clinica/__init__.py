@@ -10,9 +10,9 @@ version = __version__
 # version = pkg_resources.require("Clinica")[0].version
 # __version__ = version
 
-# python 2.7 minimum version is required
-if sys.version_info < (2, 7):
-    print("Clinica %s requires Python 2.7" % __version__)
+# python 3.6 minimum version is required
+if sys.version_info < (3, 6):
+    print("Clinica %s requires Python 3.6" % __version__)
     sys.exit(1)
 
 # Note: The following lines have been commented for speed purposes.
