@@ -27,7 +27,7 @@ setup(
     },
     classifiers=[
         'Framework :: Clinica',
-        'Development Status :: 0.1.0 - Dev',
+        'Development Status :: 0.2.0 - Dev',
         'Environment :: Console',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
