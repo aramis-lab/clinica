@@ -35,4 +35,5 @@ setup(
         'Intended Audience :: Developers',
         'Programming Language :: Python',
     ],
+    install_requires=reqs
 )
