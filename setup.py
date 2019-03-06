@@ -14,7 +14,7 @@ reqs = [str(ir.req) for ir in install_reqs]
 setup(
     name='clinica',
     version=version,
-    url='http://clinica.run',
+    url='http://www.clinica.run',
     description='Software platform for clinical neuroimaging studies',
     long_description=open('README.md').read(),
     author='ARAMIS Lab',
