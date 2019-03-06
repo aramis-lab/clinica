@@ -130,7 +130,7 @@ test:instantiate:linux:
          --disable-warnings 
          --timeout=0 
          -n 6 
-         -k 'test_run'
+         -k 'test_instantiate'
     - module purge
     - source deactivate
  
