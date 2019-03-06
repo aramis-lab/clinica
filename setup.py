@@ -28,13 +28,11 @@ setup(
         'console_scripts': ['clinica = clinica.cmdline:execute']
     },
     classifiers=[
-        'Development Status :: 0.2.0 - Dev',
+        'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Operating System :: OS Independent',
         'Intended Audience :: End Users/Desktop',
         'Intended Audience :: Developers',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
     ],
 )
