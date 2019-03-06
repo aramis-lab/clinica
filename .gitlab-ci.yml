@@ -113,7 +113,6 @@ test:instantiate:mac:
     - pytest --verbose -k 'test_instantiate'
     - module purge
     - source deactivate
-
   
 test:instantiate:linux:
   stage: test
@@ -134,6 +133,44 @@ test:instantiate:linux:
     - module purge
     - source deactivate
  
+test:run:mac:
+  stage: test
+  tags:
+    - macOS
+  only:
+    - schedules
+  script:
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
+    - module load clinica.all
+    - cd test
+    - ln -s /Volumes/data/data_ci ./data
+    - pytest --verbose
+         --working_directory=/Volumes/data/working_directory_ci_mac
+         -k 'test_run'
+    - module purge
+    - source deactivate
+
+test:run:linux:
+  stage: test
+  tags:
+    - linux
+  only:
+    - schedules
+  script:
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
+    - export PATH="/home/gitlab-runner/dcm2nii":${PATH}
+    - module load clinica.all
+    - cd test
+    - ln -s /localdrive10TB/data/ci/data_ci_upgrade ./data
+    - taskset -c 0-21 pytest
+         --verbose
+         --working_directory=/localdrive10TB/data/working_directory_ci_linux
+         --disable-warnings
+         --timeout=0
+         -n 6
+         -k 'test_run'
+    - module purge
+    - source deactivate
 
 pkg:
   stage: package
