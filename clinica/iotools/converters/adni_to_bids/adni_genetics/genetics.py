@@ -148,7 +148,7 @@ def update_ID_fam(path_to_plink_files):
         for i in range(len(patient_table)):
             l_new_pat = new_patient_table[i, :].tolist()
             c.writerow([' '.join(l_new_pat)])
-    print "subjects' ID in fam file has changed."
+    print("subjects' ID in fam file has changed.")
 
 
 def add_apoe_ped_files(path_to_adnimerge, path_to_apoe, path_to_plink_files, path_to_new_plink_files):
@@ -189,13 +189,13 @@ def add_apoe_ped_files(path_to_adnimerge, path_to_apoe, path_to_plink_files, pat
     final_snp = np.concatenate((snp[:, :(563952 * 2 + 6)], apoe_snp_patient, snp[:, (563952 * 2 + 6):]), axis=1)
 
     # write to ped file
-    print 'ped file shape: ', final_snp.shape
+    print('ped file shape: ', final_snp.shape)
     with open(path_to_new_plink_files + ".ped", "wb") as stream:
         c = csv.writer(stream)
         for r in range(len(final_snp)):
             l_new_pat = final_snp[r, :].tolist()
             c.writerow([' '.join(l_new_pat)])
-    print 'new ped file created'
+    print('new ped file created')
 
     # load map file and write new map file
     cr2 = csv.reader(open(path_to_plink_files + ".map", "rb"))
@@ -220,7 +220,7 @@ def add_apoe_ped_files(path_to_adnimerge, path_to_apoe, path_to_plink_files, pat
         for r in range(len(final_snp_list)):
             l_new_pat = final_snp_list[r, :].tolist()
             c.writerow(['\t'.join(l_new_pat)])
-    print 'new map file created'
+    print('new map file created')
 
 
 def import_apoe_ACGT(file_path, bed=0):
@@ -337,5 +337,5 @@ def count_minor_allele_apoe_ACGT(epsilon_first_parent, epsilon_second_parent):
     else:
         sequence = []
         count = []
-        print 'missing combination for ', epsilon_first_parent, epsilon_second_parent
+        print('missing combination for ', epsilon_first_parent, epsilon_second_parent)
     return sequence, count
