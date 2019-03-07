@@ -1,6 +1,7 @@
 include README.md
 include clinica/VERSION
 include LICENSE.txt
+include clinica/pipelines/space_required_by_pipeline.csv
 recursive-include clinica/lib *
 recursive-include clinica/iotools *
 recursive-include clinica/bids/data *
