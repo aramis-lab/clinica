@@ -1,9 +1,9 @@
 # Clinica
 
-Welcome to the [**Clinica**](http://www.clinica.run).
+Welcome to the [**Clinica**](http://www.clinica.run):
 Software platform for clinical neuroimaging studies.
 
-Full instructions for installation and additional information can be found on
+Full instructions for installation and additional information can be found in
 the [user documentation](http://www.clinica.run/doc).
 
 
