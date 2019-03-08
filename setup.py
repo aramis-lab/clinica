@@ -1,4 +1,4 @@
-from os.path import dirname, join, path
+from os.path import dirname, join, abspath
 from setuptools import setup, find_packages
 try: # for pip >= 10
     from pip._internal.req import parse_requirements
@@ -8,8 +8,8 @@ except ImportError: # for pip <= 9.0.3
 with open(join(dirname(__file__), 'clinica/VERSION'), 'rb') as f:
     version = f.read().decode('ascii').strip()
 
-this_directory = path.abspath(path.dirname(__file__))
-with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+this_directory = abspath(dirname(__file__))
+with open(join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 install_reqs = parse_requirements('requirements.txt', session='hack')
@@ -21,7 +21,7 @@ setup(
     url='http://www.clinica.run',
     description='Software platform for clinical neuroimaging studies',
     long_description=long_description,
-    long_description_content_type='text/markdown'
+    long_description_content_type='text/markdown',
     author='ARAMIS Lab',
     maintainer='Clinica developers',
     maintainer_email='clinica-user@inria.fr',
