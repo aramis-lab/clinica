@@ -43,7 +43,7 @@ class AiblToBidsCLI(ce.CmdParser):
             import subprocess
             from colorama import Fore
 
-            completed_process = subprocess.run(bin_name, shell=True)
+            completed_process = subprocess.run(bin_name + ' &> /dev/null', shell=True)
             returncode = completed_process.returncode
             if returncode == 127:
                 cprint(Fore.RED + bin_name + ' not found in your system. '
@@ -59,7 +59,7 @@ class AiblToBidsCLI(ce.CmdParser):
         for binary in bin_to_test:
             missing_bin = missing_bin + check_bin(binary)
         if missing_bin > 0:
-            cprint(Fore.RED + str(missing_bin) + ' were found missing. '
+            cprint(Fore.RED + str(missing_bin) + ' binary(es) is (are) missing. '
                    + 'Most important are : dcm2nii and dcm2niix.' + Fore.RESET)
             while True:
                 cprint('Do you still want to run the converter ? (yes/no): ')
