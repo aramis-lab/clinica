@@ -35,9 +35,9 @@ def convert_clinical_data(bids_dir, path_to_csv):
     from clinica.iotools.converters.aibl_to_bids.aibl_utils import create_participants_df_AIBL, \
         create_sessions_dict_AIBL
 
-    clinical_spec_path = join(split(realpath(__file__))[0], '../../iotools/data/clinical_specifications.xlsx')
+    clinical_spec_path = join(split(realpath(__file__))[0], '../../data/clinical_specifications.xlsx')
     if not exists(clinical_spec_path):
-        raise FileNotFoundError(clinical_spec_path + ' file not found ! Have you downloaded all the clinical data ?')
+        raise FileNotFoundError(clinical_spec_path + ' file not found ! This is an internal file of Clinica.')
 
     create_participants_df_AIBL(bids_dir, clinical_spec_path, path_to_csv, delete_non_bids_info=True)
     create_sessions_dict_AIBL(bids_dir, path_to_csv, clinical_spec_path)

@@ -184,34 +184,6 @@ def check_subdirectories_pet(subdirectories, sub, no_pet):
     subdirectories = list(set(subdirectories))
     return subdirectories
 
-
-def compress_nii(file_path):
-    """
-
-        Compress .nii file
-
-        :param file_path:
-        :return: compressed image
-    """
-
-    from os import path
-    import os
-    import gzip
-    from clinica.utils.stream import cprint
-
-    try:
-        f_in = open(file_path)
-        f_out = gzip.open(path.join(file_path + '.gz'), 'wb')
-        f_out.writelines(f_in)
-        f_out.close()
-        f_in.close()
-
-        # Remove the original file in order to have only the compressed image
-        os.remove(file_path)
-    except Exception as e:
-        cprint("file NIFTI not found for compression")
-
-
 def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dcm2niix', dcm2nii='dcm2nii',
                  mri_convert='mri_convert'):
     """
@@ -227,9 +199,10 @@ def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dc
         :return: Image in a nifti format
     """
     import os
-    import gzip
     import subprocess
     from clinica.utils.stream import cprint
+    from os.path import exists
+    import shutil
 
     try:
         os.makedirs(output_path)
@@ -238,49 +211,35 @@ def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dc
             raise
 
     # if image.Is_Dicom:
-    command = dcm2niix + ' -b n -z n -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
-    subprocess.Popen(command)
-    nifti_file = os.path.join(output_path, output_filename + '.nii')
+    command = dcm2niix + ' -b n -z y -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
+    subprocess.run(command, shell=True)
+    nifti_file = os.path.join(output_path, output_filename + '.nii.gz')
 
     # Check if conversion worked (output file exists?)
-    if not os.path.isfile(nifti_file):
-        command = dcm2nii + ' -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
+    if not exists(nifti_file):
+        command = dcm2nii + ' -a n -d n -e n -i y -g y -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
+        subprocess.run(command, shell=True)
+        nifti_file_dcm2nii = os.path.join(output_path, 'DE-IDENTIFIED.nii.gz')
+        if os.path.isfile(nifti_file_dcm2nii):
+            shutil.move(nifti_file_dcm2nii, nifti_file)
 
-        subprocess.Popen(command)
-        nifti_file = os.path.join(output_path, subject.replace('_', '') + '.nii')
-
-    if nifti_file == os.path.join(output_path, 'DE-IDENTIFIED.nii') or nifti_file == os.path.join(output_path,
-                                                                                                  subject + '.nii'):
-        # if the conversion dcm2nii has not worked, freesurfer utils mri_convert is used
+    if not exists(nifti_file):
+        # if the conversion dcm2nii has not worked, freesurfer utils
+        # mri_convert is used
         dicom_image = listdir_nohidden(image_path)
         dicom_image = os.path.join(image_path, dicom_image[1])
+
         # it requires the installation of Freesurfer
-        command = mri_convert + ' ' + dicom_image + ' ' + os.path.join(output_path, output_filename + '.nii')
-        subprocess.Popen(command)
+        command = mri_convert + ' ' + dicom_image + ' ' + nifti_file
+        if exists(os.path.expandvars('$FREESURFER_HOME/bin/mri_convert')):
+            subprocess.run(command, shell=True)
+        else:
+            cprint('mri_convert (from Freesurfer) not detected. '
+                   + nifti_file + ' not created...')
 
-        nifti_file_1 = os.path.join(output_path, output_filename + '.nii')
-        try:
-            f_in = open(nifti_file_1)
-            f_out = gzip.open(os.path.join(nifti_file_1 + '.gz'), 'wb')
-            f_out.writelines(f_in)
-            f_out.close()
-            f_in.close()
-
-            # Remove the original file
-            os.remove(nifti_file_1)
-        except Exception as e:
-            cprint("file NIFTI not found")
-        if os.path.exists(os.path.join(output_path, 'DE-IDENTIFIED.nii')):
-            try:
-                os.remove(os.path.join(output_path, 'DE-IDENTIFIED.nii'))
-            except Exception as e:
-                cprint("file to delete not found")
-
-        output_image = os.path.join(output_path, output_filename + '.nii')
-    else:
-        output_image = compress_nii(nifti_file)
-    # it returns the image .nii.gz
-    return output_image
+    if not exists(nifti_file):
+        raise FileNotFoundError(nifti_file + ' should have been created but this did not happen')
+    return nifti_file
 
 
 def viscode_to_session(viscode):
