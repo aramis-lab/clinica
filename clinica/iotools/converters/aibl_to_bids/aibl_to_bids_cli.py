@@ -43,7 +43,10 @@ class AiblToBidsCLI(ce.CmdParser):
             import subprocess
             from colorama import Fore
 
-            completed_process = subprocess.run(bin_name + ' &> /dev/null', shell=True)
+            completed_process = subprocess.run(bin_name,
+                                               shell=True,
+                                               stdout=subprocess.DEVNULL,
+                                               stderr=subprocess.DEVNULL)
             returncode = completed_process.returncode
             if returncode == 127:
                 cprint(Fore.RED + bin_name + ' not found in your system. '

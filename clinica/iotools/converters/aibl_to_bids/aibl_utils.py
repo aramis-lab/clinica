@@ -212,13 +212,17 @@ def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dc
 
     # if image.Is_Dicom:
     command = dcm2niix + ' -b n -z y -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
-    subprocess.run(command, shell=True)
+    subprocess.run(command, shell=True,
+                   stdout=subprocess.DEVNULL,
+                   stderr=subprocess.DEVNULL)
     nifti_file = os.path.join(output_path, output_filename + '.nii.gz')
 
     # Check if conversion worked (output file exists?)
     if not exists(nifti_file):
         command = dcm2nii + ' -a n -d n -e n -i y -g y -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
-        subprocess.run(command, shell=True)
+        subprocess.run(command, shell=True,
+                       stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL)
         nifti_file_dcm2nii = os.path.join(output_path, 'DE-IDENTIFIED.nii.gz')
         if os.path.isfile(nifti_file_dcm2nii):
             shutil.move(nifti_file_dcm2nii, nifti_file)
@@ -232,7 +236,9 @@ def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dc
         # it requires the installation of Freesurfer
         command = mri_convert + ' ' + dicom_image + ' ' + nifti_file
         if exists(os.path.expandvars('$FREESURFER_HOME/bin/mri_convert')):
-            subprocess.run(command, shell=True)
+            subprocess.run(command, shell=True,
+                           stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
         else:
             cprint('mri_convert (from Freesurfer) not detected. '
                    + nifti_file + ' not created...')
