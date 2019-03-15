@@ -568,8 +568,6 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
     # it reads the dataframe where subject_ID, session_ID and path are saved
     if modality == 't1':
         images = find_path_to_T1(path_to_dataset, path_to_csv)
-        images.to_csv(join(bids_dir, 'T1_MRI_paths.tsv'), sep='\t',
-                      index=False, encoding='utf-8')
     else:
         path_to_csv_pet_modality = join(path_to_csv, 'aibl_' + modality
                                         + 'meta_28-Apr-2015.csv')
