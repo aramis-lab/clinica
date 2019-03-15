@@ -528,6 +528,8 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
                         'av45': 'Path_to_pet',
                         'flute': 'Path_to_pet',
                         'pib': 'Path_to_pet'}
+        # depending on the dataframe, there is different way of accessing
+        # the iage object
         image_path = image[name_of_path[modality]]
         with counter.get_lock():
             counter.value += 1
@@ -540,14 +542,17 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
                + str(total))
         session = viscode_to_session(session)
         # creation of the path
-        output_path = join(bids_dir, 'sub-AIBL' + subject,
-                           'ses-' + session, 'anat')
         if modality == 't1':
+            output_path = join(bids_dir, 'sub-AIBL' + subject,
+                               'ses-' + session, 'anat')
             output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_T1w'
         elif modality in ['flute', 'pib', 'av45']:
+            output_path = join(bids_dir, 'sub-AIBL' + subject,
+                               'ses-' + session, 'pet')
             output_filename = 'sub-AIBL' + subject + '_ses-' + session \
                               + '_task-rest_acq-' + modality + '_pet'
         # image is saved following BIDS specifications
+
         if exists(join(output_path, output_filename + '.nii.gz')):
             cprint('Subject ' + str(subject) + ' - session '
                    + session + ' already processed.')
@@ -570,8 +575,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
         if not exists(path_to_csv_pet_modality):
             raise FileNotFoundError(path_to_csv_pet_modality
                                     + ' file not found in clinical data folder')
-        # remove separator information : let python understand whether it
-        # is ; or ,
+        # separator information : either ; or ,
         df_pet = pds.read_csv(path_to_csv_pet_modality, sep=',|;')
         images = find_path_to_pet_modality(path_to_dataset,
                                            df_pet)
