@@ -31,9 +31,14 @@ class AiblToBidsCLI(ce.CmdParser):
     def run_command(self, args):
         from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import convert_clinical_data, convert_images
         from clinica.utils.stream import cprint
+        from os.path import exists
+        from os import makedirs
         from colorama import Fore
         import sys
 
+        # Check existence of binaries dcm2nii, dcm2niix and mri_convert
+        # If they are not found we warn the user and tell him that the bin
+        # were not foud. He then has the possibility to run the converter anyway
         def check_bin(bin_name):
             """
 
@@ -76,6 +81,9 @@ class AiblToBidsCLI(ce.CmdParser):
             if answer.lower() == 'no':
                 cprint('Exiting clinica...')
                 sys.exit()
+
+        if not exists(args.bids_directory):
+            makedirs(args.bids_directory)
 
         convert_images(args.dataset_directory, args.clinical_data_directory, args.bids_directory)
         convert_clinical_data(args.bids_directory, args.clinical_data_directory)

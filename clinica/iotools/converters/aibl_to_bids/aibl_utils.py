@@ -486,159 +486,32 @@ def find_path_to_T1(path_to_dataset, path_to_csv):
 # in BIDS
 
 
-def av45_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
+def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
     """
-        This methods converts all the PET images-av45 in BIDS
+         This method converts all the T1 images found in the AIBL dataset
+         downloaded in BIDS
 
-        :param path_to_dataset: path_to_dataset
-        :param path_to_csv: path_to_csv with clinical data
-        :param bids_dir: path to save the AIBL-PET-dataset converted in a BIDS format
-        :return: all the images are converted in a BIDS format and saved in the bids_dir
-    """
-    import os
-    import pandas
-    from os import path
+         :param path_to_dataset: path_to_dataset
+         :param path_to_csv: path to the csv file containing clinical data
+         :param bids_dir: path to save the AIBL-T1-dataset converted in a
+         BIDS format
+         :param modality: string 't1', 'av45', 'flute' or 'pib'
+
+         :return: list of all the images that are potentially converted in a
+         BIDS format and saved in the bids_dir. This does not guarantee
+         existence
+     """
+    from os.path import join, exists
     from numpy import nan
-    from clinica.utils.stream import cprint
-
-    # it reads the dataframe where subject_ID, session_ID and path are saved
-    try:
-        csv_file = pandas.read_csv(os.path.join(path_to_csv, 'aibl_av45meta_28-Apr-2015.csv'), sep=';')
-    except Exception as e:
-        cprint("csv file not found")
-    images = find_path_to_pet_modality(path_to_dataset, csv_file)
-    images.to_csv(os.path.join(bids_dir, 'pet_av45_paths_aibl.tsv'), sep='\t', encoding='utf-8')
-    count = 0
-    total = images.shape[0]
-    for row in images.iterrows():
-        # it iterates for each row of the dataframe which contains the T1_paths
-        image = row[1]
-        subject = image.Subjects_ID
-        session = image.Session_ID
-        image_path = image.Path_to_pet
-        count += 1
-        if image_path is nan:
-            cprint('No path specified for ' + subject + ' in session ' + session)
-            continue
-        cprint('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
-        session = viscode_to_session(session)
-        output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'pet')
-        output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_task-rest_acq-av45_pet'
-        # image are saved following BIDS specifications
-        if path.exists(path.join(output_path, output_filename + '.nii.gz')):
-            pass
-        else:
-            output_image = dicom_to_nii(subject, output_path, output_filename, image_path)
-
-
-def pib_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
-    """
-        This methods converts all the PET images-pib in BIDS
-
-        :param path_to_dataset: path_to_dataset :param path_to_csv: path_to_csv
-        with clinical data :param bids_dir: path to save the AIBL-PET-dataset
-        converted in a BIDS format :return: all the images are converted in a
-        BIDS format and saved in the bids_dir
-    """
-    import os
-    import pandas
-    from os import path
-    from numpy import nan
-    from clinica.utils.stream import cprint
-
-    # it reads the dataframe where subject_ID, session_ID and path are saved
-    try:
-        csv_file = pandas.read_csv(os.path.join(path_to_csv, 'aibl_pibmeta_28-Apr-2015.csv'))
-    except Exception as e:
-        cprint("csv file not found")
-    images = find_path_to_pet_modality(path_to_dataset, csv_file)
-    images.to_csv(os.path.join(bids_dir, 'pet_pib_paths_aibl.tsv'), sep='\t', encoding='utf-8')
-    count = 0
-    total = images.shape[0]
-    for row in images.iterrows():
-        # it iterates for each row of the dataframe which contains the T1_paths
-        image = row[1]
-        subject = image.Subjects_ID
-        session = image.Session_ID
-        image_path = image.Path_to_pet
-        count += 1
-        if image_path is nan:
-            cprint('No path specified for ' + subject + ' in session ' + session)
-            continue
-        cprint('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
-        session = viscode_to_session(session)
-        output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'pet')
-        output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_task-rest_acq-pib_pet'
-        # image are saved following BIDS specifications
-        if path.exists(path.join(output_path, output_filename + '.nii.gz')):
-            pass
-        else:
-            output_image = dicom_to_nii(subject, output_path, output_filename, image_path)
-
-
-def flute_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
-    """
-        This methods converts all the PET images-flute in BIDS
-
-        :param path_to_dataset: path_to_dataset :param path_to_csv: path_to_csv
-        with clinical data :param bids_dir: path to save the AIBL-PET-dataset
-        converted in a BIDS format :return: all the images are converted in a
-        BIDS format and saved in the bids_dir
-    """
-    import os
-    import pandas
-    from os import path
-    from numpy import nan
-    from clinica.utils.stream import cprint
-
-    # it reads the dataframe where subject_ID, session_ID and path are saved
-    try:
-        csv_file = pandas.read_csv(os.path.join(path_to_csv, 'aibl_flutemeta_28-Apr-2015.csv'))
-    except Exception as e:
-        cprint("csv file not found")
-    images = find_path_to_pet_modality(path_to_dataset, csv_file)
-    images.to_csv(os.path.join(bids_dir, 'pet_flute_paths_aibl.tsv'), sep='\t', encoding='utf-8')
-    count = 0
-    total = images.shape[0]
-    for row in images.iterrows():
-        # it iterates for each row of the dataframe which contains the T1_paths
-        image = row[1]
-        subject = image.Subjects_ID
-        session = image.Session_ID
-        image_path = image.Path_to_pet
-        count += 1
-        if image_path is nan:
-            cprint('No path specified for ' + subject + ' in session ' + session)
-            continue
-        cprint('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
-
-        session = viscode_to_session(session)
-        output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'pet')
-        output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_task-rest_acq-flute_pet'
-        # image are saved following BIDS specifications
-        if path.exists(path.join(output_path, output_filename + '.nii.gz')):
-            pass
-        else:
-            output_image = dicom_to_nii(subject, output_path, output_filename, image_path)
-
-
-# Covert the AIBL T1 images into the BIDS specification.
-
-def t1_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
-    '''
-        This method converts all the T1 images found in the AIBL dataset
-        downloaded in BIDS
-
-        :param path_to_dataset: path_to_dataset :param path_to_csv: path to the
-        csv file containing clinical data :param bids_dir: path to save the
-        AIBL-T1-dataset converted in a BIDS format :return: all the images are
-        converted in a BIDS format and saved in the bids_dir
-    '''
-    from os import path
-    from numpy import nan
+    import pandas as pds
     from clinica.utils.stream import cprint
     from multiprocessing.dummy import Pool
     from multiprocessing import cpu_count, Value
+
+    if modality.lower() not in ['t1', 'av45', 'flute', 'pib']:
+        # This should never be reached
+        raise RuntimeError(modality.lower()
+                           + ' is not supported for conversion')
 
     counter = None
 
@@ -651,22 +524,34 @@ def t1_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
         global counter
         subject = image.Subjects_ID
         session = image.Session_ID
-        image_path = image.Path_to_T1
+        name_of_path = {'t1': 'Path_to_T1',
+                        'av45': 'Path_to_pet',
+                        'flute': 'Path_to_pet',
+                        'pib': 'Path_to_pet'}
+        image_path = image[name_of_path[modality]]
         with counter.get_lock():
             counter.value += 1
-
         if image_path is nan:
-            cprint('No path specified for ' + subject + ' in session ' + session)
+            cprint('No path specified for ' + subject + ' in session '
+                   + session)
             return nan
-        cprint('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(counter.value) + ' / ' + str(total))
+        cprint('[' + modality.upper() + '] Processing subject ' + str(subject)
+               + ' - session ' + session + ', ' + str(counter.value) + ' / '
+               + str(total))
         session = viscode_to_session(session)
         # creation of the path
-        output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'anat')
-        output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_T1w'
+        output_path = join(bids_dir, 'sub-AIBL' + subject,
+                           'ses-' + session, 'anat')
+        if modality == 't1':
+            output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_T1w'
+        elif modality in ['flute', 'pib', 'av45']:
+            output_filename = 'sub-AIBL' + subject + '_ses-' + session \
+                              + '_task-rest_acq-' + modality + '_pet'
         # image is saved following BIDS specifications
-        if path.exists(path.join(output_path, output_filename + '.nii.gz')):
-            cprint('Subject ' + str(subject) + ' - session ' + session + ' already processed.')
-            output_image = path.join(output_path, output_filename + '.nii.gz')
+        if exists(join(output_path, output_filename + '.nii.gz')):
+            cprint('Subject ' + str(subject) + ' - session '
+                   + session + ' already processed.')
+            output_image = join(output_path, output_filename + '.nii.gz')
         else:
             output_image = dicom_to_nii(subject,
                                         output_path,
@@ -675,18 +560,36 @@ def t1_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
         return output_image
 
     # it reads the dataframe where subject_ID, session_ID and path are saved
-    images = find_path_to_T1(path_to_dataset, path_to_csv)
-    images.to_csv(path.join(bids_dir, 'T1_MRI_paths.tsv'), sep='\t', index=False, encoding='utf-8')
+    if modality == 't1':
+        images = find_path_to_T1(path_to_dataset, path_to_csv)
+        images.to_csv(join(bids_dir, 'T1_MRI_paths.tsv'), sep='\t',
+                      index=False, encoding='utf-8')
+    else:
+        path_to_csv_pet_modality = join(path_to_csv, 'aibl_' + modality
+                                        + 'meta_28-Apr-2015.csv')
+        if not exists(path_to_csv_pet_modality):
+            raise FileNotFoundError(path_to_csv_pet_modality
+                                    + ' file not found in clinical data folder')
+        # remove separator information : let python understand whether it
+        # is ; or ,
+        df_pet = pds.read_csv(path_to_csv_pet_modality, sep=',|;')
+        images = find_path_to_pet_modality(path_to_dataset,
+                                           df_pet)
+    images.to_csv(join(bids_dir, modality + '_paths_aibl.tsv'),
+                  index=False, sep='\t', encoding='utf-8')
+
     counter = Value('i', 0)
     total = images.shape[0]
+    # Reshape inputs to give it as a list to the workers
     images_list = []
     for i in range(total):
         images_list.append(images.ix[i])
 
-    poolrunner = Pool(cpu_count() - 1, initializer=init, initargs=(counter, ))
+    # intializer are used with the counter variable to keep track of how many
+    # files have been processed
+    poolrunner = Pool(cpu_count() - 1, initializer=init, initargs=(counter,))
     output_file_treated = poolrunner.map(create_file, images_list)
     return output_file_treated
-
 
 # -- Methods for the clinical data --
 
