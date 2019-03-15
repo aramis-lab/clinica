@@ -184,6 +184,7 @@ def check_subdirectories_pet(subdirectories, sub, no_pet):
     subdirectories = list(set(subdirectories))
     return subdirectories
 
+
 def dicom_to_nii(subject, output_path, output_filename, image_path):
     """
 
@@ -230,7 +231,7 @@ def dicom_to_nii(subject, output_path, output_filename, image_path):
         # if the conversion dcm2nii has not worked, freesurfer utils
         # mri_convert is used
         dicom_image = listdir_nohidden(image_path)
-        dicom_image = [dcm for dcm in dicom_image if dcm.endswith('.dcm') ]
+        dicom_image = [dcm for dcm in dicom_image if dcm.endswith('.dcm')]
         dicom_image = os.path.join(image_path, dicom_image[1])
 
         # it requires the installation of Freesurfer (checked at the beginning)
@@ -597,6 +598,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
 
 # -- Methods for the clinical data --
 
+
 def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_dir, delete_non_bids_info=True):
     """
         This methods create a participants file for the AIBL dataset where
@@ -614,7 +616,6 @@ def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_di
     from os import path
     import re
     import numpy as np
-    from clinica.utils.stream import cprint
 
     fields_bids = ['participant_id']
     fields_dataset = []
@@ -622,10 +623,11 @@ def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_di
     index_to_drop = []
 
     location_name = 'AIBL location'
-    try:
-        participants_specs = pd.read_excel(clinical_spec_path, sheetname='participant.tsv')
-    except Exception as e:
-        cprint("participants tsv file not found")
+    if not os.path.exists(clinical_spec_path):
+        raise FileNotFoundError(clinical_spec_path
+                                + ' not found in clinical data.')
+    participants_specs = pd.read_excel(clinical_spec_path,
+                                       sheetname='participant.tsv')
     participant_fields_db = participants_specs['AIBL']
     field_location = participants_specs[location_name]
     participant_fields_bids = participants_specs['BIDS CLINICA']

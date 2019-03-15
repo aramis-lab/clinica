@@ -41,6 +41,7 @@ def convert_images(path_to_dataset, path_to_csv, bids_dir):
                + error_string
                + Fore.RESET)
 
+
 def convert_clinical_data(bids_dir, path_to_csv):
     from os.path import exists
     # clinical specifications in BIDS
