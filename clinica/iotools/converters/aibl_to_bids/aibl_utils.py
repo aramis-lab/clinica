@@ -184,8 +184,7 @@ def check_subdirectories_pet(subdirectories, sub, no_pet):
     subdirectories = list(set(subdirectories))
     return subdirectories
 
-def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dcm2niix', dcm2nii='dcm2nii',
-                 mri_convert='mri_convert'):
+def dicom_to_nii(subject, output_path, output_filename, image_path):
     """
 
         From dicom to nifti converts the dicom images in a nifti files using
@@ -211,7 +210,7 @@ def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dc
             raise
 
     # if image.Is_Dicom:
-    command = dcm2niix + ' -b n -z y -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
+    command = 'dcm2niix -b n -z y -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
     subprocess.run(command, shell=True,
                    stdout=subprocess.DEVNULL,
                    stderr=subprocess.DEVNULL)
@@ -219,7 +218,7 @@ def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dc
 
     # Check if conversion worked (output file exists?)
     if not exists(nifti_file):
-        command = dcm2nii + ' -a n -d n -e n -i y -g y -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
+        command = 'dcm2nii -a n -d n -e n -i y -g y -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
         subprocess.run(command, shell=True,
                        stdout=subprocess.DEVNULL,
                        stderr=subprocess.DEVNULL)
@@ -231,10 +230,11 @@ def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dc
         # if the conversion dcm2nii has not worked, freesurfer utils
         # mri_convert is used
         dicom_image = listdir_nohidden(image_path)
+        dicom_image = [dcm for dcm in dicom_image if dcm.endswith('.dcm') ]
         dicom_image = os.path.join(image_path, dicom_image[1])
 
-        # it requires the installation of Freesurfer
-        command = mri_convert + ' ' + dicom_image + ' ' + nifti_file
+        # it requires the installation of Freesurfer (checked at the beginning)
+        command = 'mri_convert ' + dicom_image + ' ' + nifti_file
         if exists(os.path.expandvars('$FREESURFER_HOME/bin/mri_convert')):
             subprocess.run(command, shell=True,
                            stdout=subprocess.DEVNULL,
@@ -244,7 +244,7 @@ def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dc
                    + nifti_file + ' not created...')
 
     if not exists(nifti_file):
-        raise FileNotFoundError(nifti_file + ' should have been created but this did not happen')
+        cprint(nifti_file + ' should have been created but this did not happen')
     return nifti_file
 
 
@@ -528,7 +528,7 @@ def av45_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
         if path.exists(path.join(output_path, output_filename + '.nii.gz')):
             pass
         else:
-            output_image = dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dcm2niix', dcm2nii='dcm2nii', mri_convert='mri_convert')
+            output_image = dicom_to_nii(subject, output_path, output_filename, image_path)
 
 
 def pib_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
@@ -573,8 +573,7 @@ def pib_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix
         if path.exists(path.join(output_path, output_filename + '.nii.gz')):
             pass
         else:
-            output_image = dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dcm2niix',
-                                        dcm2nii='dcm2nii', mri_convert='mri_convert')
+            output_image = dicom_to_nii(subject, output_path, output_filename, image_path)
 
 
 def flute_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
@@ -620,8 +619,7 @@ def flute_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2ni
         if path.exists(path.join(output_path, output_filename + '.nii.gz')):
             pass
         else:
-            output_image = dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dcm2niix',
-                                        dcm2nii='dcm2nii', mri_convert='mri_convert')
+            output_image = dicom_to_nii(subject, output_path, output_filename, image_path)
 
 
 # Covert the AIBL T1 images into the BIDS specification.
@@ -639,36 +637,55 @@ def t1_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
     from os import path
     from numpy import nan
     from clinica.utils.stream import cprint
+    from multiprocessing.dummy import Pool
+    from multiprocessing import cpu_count, Value
 
-    # it reads the dataframe where subject_ID, session_ID and path are saved
-    images = find_path_to_T1(path_to_dataset, path_to_csv)
-    images.to_csv(path.join(bids_dir, 'T1_MRI_paths.tsv'), sep='\t', index=False, encoding='utf-8')
-    count = 0
-    total = images.shape[0]
+    counter = None
 
-    for row in images.iterrows():
-        # it iterates for each row of the dataframe which contains the T1_paths
-        image = row[1]
+    def init(args):
+        ''' store the counter for later use '''
+        global counter
+        counter = args
+
+    def create_file(image):
+        global counter
         subject = image.Subjects_ID
         session = image.Session_ID
         image_path = image.Path_to_T1
-        count += 1
+        with counter.get_lock():
+            counter.value += 1
 
         if image_path is nan:
             cprint('No path specified for ' + subject + ' in session ' + session)
-            continue
-        cprint('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
-
+            return nan
+        cprint('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(counter.value) + ' / ' + str(total))
         session = viscode_to_session(session)
         # creation of the path
         output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'anat')
         output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_T1w'
-        # image are saved following BIDS specifications
+        # image is saved following BIDS specifications
         if path.exists(path.join(output_path, output_filename + '.nii.gz')):
-            pass
+            cprint('Subject ' + str(subject) + ' - session ' + session + ' already processed.')
+            output_image = path.join(output_path, output_filename + '.nii.gz')
         else:
-            output_image = dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dcm2niix',
-                                        dcm2nii='dcm2nii', mri_convert='mri_convert')
+            output_image = dicom_to_nii(subject,
+                                        output_path,
+                                        output_filename,
+                                        image_path)
+        return output_image
+
+    # it reads the dataframe where subject_ID, session_ID and path are saved
+    images = find_path_to_T1(path_to_dataset, path_to_csv)
+    images.to_csv(path.join(bids_dir, 'T1_MRI_paths.tsv'), sep='\t', index=False, encoding='utf-8')
+    counter = Value('i', 0)
+    total = images.shape[0]
+    images_list = []
+    for i in range(total):
+        images_list.append(images.ix[i])
+
+    poolrunner = Pool(cpu_count() - 1, initializer=init, initargs=(counter, ))
+    output_file_treated = poolrunner.map(create_file, images_list)
+    return output_file_treated
 
 
 # -- Methods for the clinical data --
