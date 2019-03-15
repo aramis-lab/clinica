@@ -867,6 +867,8 @@ def test_run_ComputeMissingModalities(cmdopt):
 def test_run_Aibl2Bids(cmdopt):
     from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import convert_clinical_data, convert_images
     from os.path import dirname, join, abspath
+    from os import system, remove
+    from filecmp import cmp
 
     root = join(dirname(abspath(__file__)), 'data', 'Aibl2Bids')
 
@@ -878,6 +880,29 @@ def test_run_Aibl2Bids(cmdopt):
 
     convert_images(dataset_directory, clinical_data_directory, bids_directory)
     convert_clinical_data(bids_directory, clinical_data_directory)
+
+    # Generate tree of output files
+    bids_out_txt = join(root, 'out', 'bids_out_adni.txt')
+    bids_ref_txt = join(root, 'ref', 'bids_ref_adni.txt')
+    system('cd ' + bids_directory + ' && tree  > ' + bids_out_txt)
+    system('cd ' + join(root, 'ref', 'bids') + ' && tree  > ' + bids_ref_txt)
+
+    # Compare them
+    if not cmp(bids_out_txt, bids_ref_txt):
+        with open(bids_out_txt, 'r') as fin:
+            out_message = fin.read()
+        with open(bids_ref_txt, 'r') as fin:
+            ref_message = fin.read()
+        remove(bids_out_txt)
+        remove(bids_ref_txt)
+        raise ValueError(
+            'Comparison of out and ref directories shows mismatch :\n '
+            'OUT :\n' + out_message + '\n REF :\n' + ref_message)
+
+    # Clean folders
+    remove(bids_out_txt)
+    remove(bids_ref_txt)
+    clean_folder(join(root, 'out', 'bids'), recreate=True)
 
 
 def test_run_SpatialSVM(cmdopt):
