@@ -958,5 +958,5 @@ def clean_folder(path, recreate=True):
     abs_path = abspath(path)
     if exists(abs_path):
         rmtree(abs_path)
-        if recreate:
-            makedirs(abs_path)
+    if recreate:
+        makedirs(abs_path)
