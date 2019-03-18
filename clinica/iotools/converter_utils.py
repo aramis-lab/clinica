@@ -70,6 +70,7 @@ def check_bin(bin_name):
         res = 0
     return res
 
+
 class MissingModsTracker:
     """
     Class used for tracking the number of missing modalities in a database
