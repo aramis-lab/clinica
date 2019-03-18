@@ -46,6 +46,30 @@ def has_one_index(index_list):
         raise('Multiple indexes found')
 
 
+def check_bin(bin_name):
+    """
+
+    :param bin_name: name of the executable that needs to be accessed
+    :return: status code : 0 -> executable found. 1 -> not found
+    """
+    import subprocess
+    from colorama import Fore
+    from clinica.utils.stream import cprint
+
+    completed_process = subprocess.run(bin_name,
+                                       shell=True,
+                                       stdout=subprocess.DEVNULL,
+                                       stderr=subprocess.DEVNULL)
+    returncode = completed_process.returncode
+    if returncode == 127:
+        cprint(Fore.RED + bin_name + ' not found in your system. '
+               + 'Have you installed the corresponding software ?'
+               + Fore.RESET)
+        res = 1
+    else:
+        res = 0
+    return res
+
 class MissingModsTracker:
     """
     Class used for tracking the number of missing modalities in a database

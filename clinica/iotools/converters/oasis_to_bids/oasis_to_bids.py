@@ -73,16 +73,15 @@ class OasisToBids(Converter):
         from os import path
         from glob import glob
         import os
-        import clinica.iotools.bids_utils as bids
+        from multiprocessing.dummy import Pool
+        from multiprocessing import cpu_count
 
-        if not os.path.isdir(dest_dir):
-            os.mkdir(dest_dir)
+        def convert_single_subject(subj_folder):
+            import os
+            import subprocess
 
-        subjs_folders = glob(path.join(source_dir, 'OAS1_*'))
-
-        # For each subject, calculate the path to the T1 image and convert it
-        for subj_folder in subjs_folders:
-            t1_folder = path.join(subj_folder, 'PROCESSED', 'MPRAGE', 'SUBJ_111')
+            t1_folder = path.join(subj_folder, 'PROCESSED', 'MPRAGE',
+                                  'SUBJ_111')
             subj_id = os.path.basename(subj_folder)
             print('Converting ', subj_id)
             numerical_id = (subj_id.split("_"))[1]
@@ -98,6 +97,16 @@ class OasisToBids(Converter):
 
             # In order do convert the Analyze format to NIFTI the path to the .img file is required
             img_file_path = glob(path.join(t1_folder, '*.img'))[0]
-            output_path = path.join(session_folder, 'anat', bids_id+'_ses-M00_T1w.nii')
-            os.system('mri_convert'+' '+img_file_path+' '+output_path)
-            bids.compress_nii(output_path)
+            output_path = path.join(session_folder, 'anat',
+                                    bids_id + '_ses-M00_T1w.nii.gz')
+            subprocess.run('mri_convert' + ' ' + img_file_path + ' ' + output_path,
+                           shell=True,
+                           stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
+
+        if not os.path.isdir(dest_dir):
+            os.mkdir(dest_dir)
+
+        subjs_folders = glob(path.join(source_dir, 'OAS1_*'))
+        poolrunner = Pool(cpu_count() - 1)
+        poolrunner.map(convert_single_subject, subjs_folders)

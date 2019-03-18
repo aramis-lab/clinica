@@ -34,34 +34,12 @@ class AiblToBidsCLI(ce.CmdParser):
         from os.path import exists
         from os import makedirs
         from colorama import Fore
+        from clinica.iotools.converter_utils import check_bin
         import sys
 
         # Check existence of binaries dcm2nii, dcm2niix and mri_convert
         # If they are not found we warn the user and tell him that the bin
         # were not foud. He then has the possibility to run the converter anyway
-        def check_bin(bin_name):
-            """
-
-            :param bin_name: name of the executable that needs to be accessed
-            :return: status code : 0 -> executable found. 1 -> not found
-            """
-            import subprocess
-            from colorama import Fore
-
-            completed_process = subprocess.run(bin_name,
-                                               shell=True,
-                                               stdout=subprocess.DEVNULL,
-                                               stderr=subprocess.DEVNULL)
-            returncode = completed_process.returncode
-            if returncode == 127:
-                cprint(Fore.RED + bin_name + ' not found in your system. '
-                       + 'Have you installed the corresponding software ?'
-                       + Fore.RESET)
-                res = 1
-            else:
-                res = 0
-            return res
-
         missing_bin = 0
         bin_to_test = ['dcm2nii', 'dcm2niix', 'mri_convert']
         for binary in bin_to_test:
