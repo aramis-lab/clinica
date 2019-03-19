@@ -34,6 +34,17 @@ class OasisToBidsCLI(ce.CmdParser):
 
     def run_command(self, args):
         from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import OasisToBids
+        from clinica.iotools.converter_utils import check_bin
+        from clinica.utils.stream import cprint
+        from colorama import Fore
+        import sys
+
+        missing_bin = check_bin('mri_convert')
+        if missing_bin:
+            cprint(Fore.RED + 'mri_convert from FreeSurfer is required.'
+                   + ' Install it and re-run the converter.' + Fore.RESET)
+            cprint('Exiting clinica...')
+            sys.exit()
         oasis_to_bids = OasisToBids()
 
         oasis_to_bids.convert_images(args.dataset_directory, args.bids_directory)

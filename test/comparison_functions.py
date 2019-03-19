@@ -184,3 +184,71 @@ def same_missing_modality_tsv(file1, file2):
     # Test is positive when all the sorted list s are equals
     return (subjects1_sorted == subjects2_sorted) & (pet1 == pet2) \
            & (t1w1 == t1w2) & (func_task_rest1 == func_task_rest2)
+
+
+def compare_folders(out, ref, shared_folder_name):
+    from os.path import join
+    from filecmp import cmp
+    from os import remove
+
+    out_txt = join(out, 'out_folder.txt')
+    ref_txt = join(ref, 'ref_folder.txt')
+
+    list_files(join(out, shared_folder_name), filename=out_txt)
+    list_files(join(ref, shared_folder_name), filename=ref_txt)
+
+    # Compare them
+    if not cmp(out_txt, ref_txt):
+        with open(out_txt, 'r') as fin:
+            out_message = fin.read()
+        with open(ref_txt, 'r') as fin:
+            ref_message = fin.read()
+        remove(out_txt)
+        remove(ref_txt)
+        raise ValueError(
+            'Comparison of out and ref directories shows mismatch :\n '
+            'OUT :\n' + out_message + '\n REF :\n' + ref_message)
+
+    # Clean folders
+    remove(out_txt)
+    remove(ref_txt)
+    pass
+
+
+def list_files(startpath, filename=None):
+    """
+    :param startpath: starting point for the tree listing. Does not list hidden
+    files (to avoid problems with .DS_store for example
+    :param filename: if None, display to stdout, otherwise write in the file
+    :return: void
+    """
+    from os import sep, walk
+    from os.path import expanduser, expandvars, basename, abspath, exists
+
+    if exists(filename):
+        raise RuntimeError(filename + ' already exists. Remove it before '
+                           + 'launching this tree-like function.')
+    expanded_path = abspath(expanduser(expandvars(startpath)))
+    for root, dirs, files in walk(expanded_path):
+        level = root.replace(startpath, '').count(sep)
+        indent = ' ' * 4 * (level)
+        rootstring = '{}{}/'.format(indent, basename(root))
+        # Do not deal with hidden files
+        if not basename(root).startswith('.'):
+            if filename is not None:
+                # 'a' stands for 'append' rather than 'w' for 'write'. We must
+                # manually jump line with \n otherwise everything is
+                # concatenated
+                with open(filename, 'a') as fin:
+                    fin.write(rootstring + '\n')
+            else:
+                print(rootstring)
+            subindent = ' ' * 4 * (level + 1)
+            for f in files:
+                filestring = '{}{}'.format(subindent, f)
+                if not basename(f).startswith('.'):
+                    if filename is not None:
+                        with open(filename, 'a') as fin:
+                            fin.write(filestring + '\n')
+                    else:
+                        print(filestring)
