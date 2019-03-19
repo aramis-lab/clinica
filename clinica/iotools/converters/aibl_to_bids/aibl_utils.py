@@ -185,35 +185,7 @@ def check_subdirectories_pet(subdirectories, sub, no_pet):
     return subdirectories
 
 
-def compress_nii(file_path):
-    """
-
-        Compress .nii file
-
-        :param file_path:
-        :return: compressed image
-    """
-
-    from os import path
-    import os
-    import gzip
-    from clinica.utils.stream import cprint
-
-    try:
-        f_in = open(file_path)
-        f_out = gzip.open(path.join(file_path + '.gz'), 'wb')
-        f_out.writelines(f_in)
-        f_out.close()
-        f_in.close()
-
-        # Remove the original file in order to have only the compressed image
-        os.remove(file_path)
-    except Exception as e:
-        cprint("file NIFTI not found for compression")
-
-
-def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dcm2niix', dcm2nii='dcm2nii',
-                 mri_convert='mri_convert'):
+def dicom_to_nii(subject, output_path, output_filename, image_path):
     """
 
         From dicom to nifti converts the dicom images in a nifti files using
@@ -227,9 +199,10 @@ def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dc
         :return: Image in a nifti format
     """
     import os
-    import gzip
     import subprocess
     from clinica.utils.stream import cprint
+    from os.path import exists
+    import shutil
 
     try:
         os.makedirs(output_path)
@@ -238,49 +211,42 @@ def dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dc
             raise
 
     # if image.Is_Dicom:
-    command = dcm2niix + ' -b n -z n -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
-    subprocess.Popen(command)
-    nifti_file = os.path.join(output_path, output_filename + '.nii')
+    command = 'dcm2niix -b n -z y -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
+    subprocess.run(command, shell=True,
+                   stdout=subprocess.DEVNULL,
+                   stderr=subprocess.DEVNULL)
+    nifti_file = os.path.join(output_path, output_filename + '.nii.gz')
 
     # Check if conversion worked (output file exists?)
-    if not os.path.isfile(nifti_file):
-        command = dcm2nii + ' -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
+    if not exists(nifti_file):
+        command = 'dcm2nii -a n -d n -e n -i y -g y -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
+        subprocess.run(command, shell=True,
+                       stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL)
+        nifti_file_dcm2nii = os.path.join(output_path, 'DE-IDENTIFIED.nii.gz')
+        if os.path.isfile(nifti_file_dcm2nii):
+            shutil.move(nifti_file_dcm2nii, nifti_file)
 
-        subprocess.Popen(command)
-        nifti_file = os.path.join(output_path, subject.replace('_', '') + '.nii')
-
-    if nifti_file == os.path.join(output_path, 'DE-IDENTIFIED.nii') or nifti_file == os.path.join(output_path,
-                                                                                                  subject + '.nii'):
-        # if the conversion dcm2nii has not worked, freesurfer utils mri_convert is used
+    if not exists(nifti_file):
+        # if the conversion dcm2nii has not worked, freesurfer utils
+        # mri_convert is used
         dicom_image = listdir_nohidden(image_path)
+        dicom_image = [dcm for dcm in dicom_image if dcm.endswith('.dcm')]
         dicom_image = os.path.join(image_path, dicom_image[1])
-        # it requires the installation of Freesurfer
-        command = mri_convert + ' ' + dicom_image + ' ' + os.path.join(output_path, output_filename + '.nii')
-        subprocess.Popen(command)
 
-        nifti_file_1 = os.path.join(output_path, output_filename + '.nii')
-        try:
-            f_in = open(nifti_file_1)
-            f_out = gzip.open(os.path.join(nifti_file_1 + '.gz'), 'wb')
-            f_out.writelines(f_in)
-            f_out.close()
-            f_in.close()
+        # it requires the installation of Freesurfer (checked at the beginning)
+        command = 'mri_convert ' + dicom_image + ' ' + nifti_file
+        if exists(os.path.expandvars('$FREESURFER_HOME/bin/mri_convert')):
+            subprocess.run(command, shell=True,
+                           stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
+        else:
+            cprint('mri_convert (from Freesurfer) not detected. '
+                   + nifti_file + ' not created...')
 
-            # Remove the original file
-            os.remove(nifti_file_1)
-        except Exception as e:
-            cprint("file NIFTI not found")
-        if os.path.exists(os.path.join(output_path, 'DE-IDENTIFIED.nii')):
-            try:
-                os.remove(os.path.join(output_path, 'DE-IDENTIFIED.nii'))
-            except Exception as e:
-                cprint("file to delete not found")
-
-        output_image = os.path.join(output_path, output_filename + '.nii')
-    else:
-        output_image = compress_nii(nifti_file)
-    # it returns the image .nii.gz
-    return output_image
+    if not exists(nifti_file):
+        cprint(nifti_file + ' should have been created but this did not happen')
+    return nifti_file
 
 
 def viscode_to_session(viscode):
@@ -521,192 +487,116 @@ def find_path_to_T1(path_to_dataset, path_to_csv):
 # in BIDS
 
 
-def av45_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
+def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
     """
-        This methods converts all the PET images-av45 in BIDS
+         This method converts all the T1 images found in the AIBL dataset
+         downloaded in BIDS
 
-        :param path_to_dataset: path_to_dataset
-        :param path_to_csv: path_to_csv with clinical data
-        :param bids_dir: path to save the AIBL-PET-dataset converted in a BIDS format
-        :return: all the images are converted in a BIDS format and saved in the bids_dir
-    """
-    import os
-    import pandas
-    from os import path
+         :param path_to_dataset: path_to_dataset
+         :param path_to_csv: path to the csv file containing clinical data
+         :param bids_dir: path to save the AIBL-T1-dataset converted in a
+         BIDS format
+         :param modality: string 't1', 'av45', 'flute' or 'pib'
+
+         :return: list of all the images that are potentially converted in a
+         BIDS format and saved in the bids_dir. This does not guarantee
+         existence
+     """
+    from os.path import join, exists
     from numpy import nan
+    import pandas as pds
     from clinica.utils.stream import cprint
+    from multiprocessing.dummy import Pool
+    from multiprocessing import cpu_count, Value
 
-    # it reads the dataframe where subject_ID, session_ID and path are saved
-    try:
-        csv_file = pandas.read_csv(os.path.join(path_to_csv, 'aibl_av45meta_28-Apr-2015.csv'), sep=';')
-    except Exception as e:
-        cprint("csv file not found")
-    images = find_path_to_pet_modality(path_to_dataset, csv_file)
-    images.to_csv(os.path.join(bids_dir, 'pet_av45_paths_aibl.tsv'), sep='\t', encoding='utf-8')
-    count = 0
-    total = images.shape[0]
-    for row in images.iterrows():
-        # it iterates for each row of the dataframe which contains the T1_paths
-        image = row[1]
+    if modality.lower() not in ['t1', 'av45', 'flute', 'pib']:
+        # This should never be reached
+        raise RuntimeError(modality.lower()
+                           + ' is not supported for conversion')
+
+    counter = None
+
+    def init(args):
+        ''' store the counter for later use '''
+        global counter
+        counter = args
+
+    def create_file(image):
+        global counter
         subject = image.Subjects_ID
         session = image.Session_ID
-        image_path = image.Path_to_pet
-        count += 1
+        name_of_path = {'t1': 'Path_to_T1',
+                        'av45': 'Path_to_pet',
+                        'flute': 'Path_to_pet',
+                        'pib': 'Path_to_pet'}
+        # depending on the dataframe, there is different way of accessing
+        # the iage object
+        image_path = image[name_of_path[modality]]
+        with counter.get_lock():
+            counter.value += 1
         if image_path is nan:
-            cprint('No path specified for ' + subject + ' in session ' + session)
-            continue
-        cprint('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
-        session = viscode_to_session(session)
-        output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'pet')
-        output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_task-rest_acq-av45_pet'
-        # image are saved following BIDS specifications
-        if path.exists(path.join(output_path, output_filename + '.nii.gz')):
-            pass
-        else:
-            output_image = dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dcm2niix', dcm2nii='dcm2nii', mri_convert='mri_convert')
-
-
-def pib_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
-    """
-        This methods converts all the PET images-pib in BIDS
-
-        :param path_to_dataset: path_to_dataset :param path_to_csv: path_to_csv
-        with clinical data :param bids_dir: path to save the AIBL-PET-dataset
-        converted in a BIDS format :return: all the images are converted in a
-        BIDS format and saved in the bids_dir
-    """
-    import os
-    import pandas
-    from os import path
-    from numpy import nan
-    from clinica.utils.stream import cprint
-
-    # it reads the dataframe where subject_ID, session_ID and path are saved
-    try:
-        csv_file = pandas.read_csv(os.path.join(path_to_csv, 'aibl_pibmeta_28-Apr-2015.csv'))
-    except Exception as e:
-        cprint("csv file not found")
-    images = find_path_to_pet_modality(path_to_dataset, csv_file)
-    images.to_csv(os.path.join(bids_dir, 'pet_pib_paths_aibl.tsv'), sep='\t', encoding='utf-8')
-    count = 0
-    total = images.shape[0]
-    for row in images.iterrows():
-        # it iterates for each row of the dataframe which contains the T1_paths
-        image = row[1]
-        subject = image.Subjects_ID
-        session = image.Session_ID
-        image_path = image.Path_to_pet
-        count += 1
-        if image_path is nan:
-            cprint('No path specified for ' + subject + ' in session ' + session)
-            continue
-        cprint('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
-        session = viscode_to_session(session)
-        output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'pet')
-        output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_task-rest_acq-pib_pet'
-        # image are saved following BIDS specifications
-        if path.exists(path.join(output_path, output_filename + '.nii.gz')):
-            pass
-        else:
-            output_image = dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dcm2niix',
-                                        dcm2nii='dcm2nii', mri_convert='mri_convert')
-
-
-def flute_paths_to_bids(path_to_dataset, path_to_csv, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii"):
-    """
-        This methods converts all the PET images-flute in BIDS
-
-        :param path_to_dataset: path_to_dataset :param path_to_csv: path_to_csv
-        with clinical data :param bids_dir: path to save the AIBL-PET-dataset
-        converted in a BIDS format :return: all the images are converted in a
-        BIDS format and saved in the bids_dir
-    """
-    import os
-    import pandas
-    from os import path
-    from numpy import nan
-    from clinica.utils.stream import cprint
-
-    # it reads the dataframe where subject_ID, session_ID and path are saved
-    try:
-        csv_file = pandas.read_csv(os.path.join(path_to_csv, 'aibl_flutemeta_28-Apr-2015.csv'))
-    except Exception as e:
-        cprint("csv file not found")
-    images = find_path_to_pet_modality(path_to_dataset, csv_file)
-    images.to_csv(os.path.join(bids_dir, 'pet_flute_paths_aibl.tsv'), sep='\t', encoding='utf-8')
-    count = 0
-    total = images.shape[0]
-    for row in images.iterrows():
-        # it iterates for each row of the dataframe which contains the T1_paths
-        image = row[1]
-        subject = image.Subjects_ID
-        session = image.Session_ID
-        image_path = image.Path_to_pet
-        count += 1
-        if image_path is nan:
-            cprint('No path specified for ' + subject + ' in session ' + session)
-            continue
-        cprint('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
-
-        session = viscode_to_session(session)
-        output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'pet')
-        output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_task-rest_acq-flute_pet'
-        # image are saved following BIDS specifications
-        if path.exists(path.join(output_path, output_filename + '.nii.gz')):
-            pass
-        else:
-            output_image = dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dcm2niix',
-                                        dcm2nii='dcm2nii', mri_convert='mri_convert')
-
-
-# Covert the AIBL T1 images into the BIDS specification.
-
-def t1_paths_to_bids(path_to_dataset, path_to_csv, bids_dir):
-    '''
-        This method converts all the T1 images found in the AIBL dataset
-        downloaded in BIDS
-
-        :param path_to_dataset: path_to_dataset :param path_to_csv: path to the
-        csv file containing clinical data :param bids_dir: path to save the
-        AIBL-T1-dataset converted in a BIDS format :return: all the images are
-        converted in a BIDS format and saved in the bids_dir
-    '''
-    from os import path
-    from numpy import nan
-    from clinica.utils.stream import cprint
-
-    # it reads the dataframe where subject_ID, session_ID and path are saved
-    images = find_path_to_T1(path_to_dataset, path_to_csv)
-    images.to_csv(path.join(bids_dir, 'T1_MRI_paths.tsv'), sep='\t', index=False, encoding='utf-8')
-    count = 0
-    total = images.shape[0]
-
-    for row in images.iterrows():
-        # it iterates for each row of the dataframe which contains the T1_paths
-        image = row[1]
-        subject = image.Subjects_ID
-        session = image.Session_ID
-        image_path = image.Path_to_T1
-        count += 1
-
-        if image_path is nan:
-            cprint('No path specified for ' + subject + ' in session ' + session)
-            continue
-        cprint('Processing subject ' + str(subject) + ' - session ' + session + ', ' + str(count) + ' / ' + str(total))
-
+            cprint('No path specified for ' + subject + ' in session '
+                   + session)
+            return nan
+        cprint('[' + modality.upper() + '] Processing subject ' + str(subject)
+               + ' - session ' + session + ', ' + str(counter.value) + ' / '
+               + str(total))
         session = viscode_to_session(session)
         # creation of the path
-        output_path = path.join(bids_dir, 'sub-AIBL' + subject, 'ses-' + session, 'anat')
-        output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_T1w'
-        # image are saved following BIDS specifications
-        if path.exists(path.join(output_path, output_filename + '.nii.gz')):
-            pass
-        else:
-            output_image = dicom_to_nii(subject, output_path, output_filename, image_path, dcm2niix='dcm2niix',
-                                        dcm2nii='dcm2nii', mri_convert='mri_convert')
+        if modality == 't1':
+            output_path = join(bids_dir, 'sub-AIBL' + subject,
+                               'ses-' + session, 'anat')
+            output_filename = 'sub-AIBL' + subject + '_ses-' + session + '_T1w'
+        elif modality in ['flute', 'pib', 'av45']:
+            output_path = join(bids_dir, 'sub-AIBL' + subject,
+                               'ses-' + session, 'pet')
+            output_filename = 'sub-AIBL' + subject + '_ses-' + session \
+                              + '_task-rest_acq-' + modality + '_pet'
+        # image is saved following BIDS specifications
 
+        if exists(join(output_path, output_filename + '.nii.gz')):
+            cprint('Subject ' + str(subject) + ' - session '
+                   + session + ' already processed.')
+            output_image = join(output_path, output_filename + '.nii.gz')
+        else:
+            output_image = dicom_to_nii(subject,
+                                        output_path,
+                                        output_filename,
+                                        image_path)
+        return output_image
+
+    # it reads the dataframe where subject_ID, session_ID and path are saved
+    if modality == 't1':
+        images = find_path_to_T1(path_to_dataset, path_to_csv)
+    else:
+        path_to_csv_pet_modality = join(path_to_csv, 'aibl_' + modality
+                                        + 'meta_28-Apr-2015.csv')
+        if not exists(path_to_csv_pet_modality):
+            raise FileNotFoundError(path_to_csv_pet_modality
+                                    + ' file not found in clinical data folder')
+        # separator information : either ; or ,
+        df_pet = pds.read_csv(path_to_csv_pet_modality, sep=',|;')
+        images = find_path_to_pet_modality(path_to_dataset,
+                                           df_pet)
+    images.to_csv(join(bids_dir, modality + '_paths_aibl.tsv'),
+                  index=False, sep='\t', encoding='utf-8')
+
+    counter = Value('i', 0)
+    total = images.shape[0]
+    # Reshape inputs to give it as a list to the workers
+    images_list = []
+    for i in range(total):
+        images_list.append(images.ix[i])
+
+    # intializer are used with the counter variable to keep track of how many
+    # files have been processed
+    poolrunner = Pool(cpu_count() - 1, initializer=init, initargs=(counter,))
+    output_file_treated = poolrunner.map(create_file, images_list)
+    del counter
+    return output_file_treated
 
 # -- Methods for the clinical data --
+
 
 def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_dir, delete_non_bids_info=True):
     """
@@ -725,7 +615,6 @@ def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_di
     from os import path
     import re
     import numpy as np
-    from clinica.utils.stream import cprint
 
     fields_bids = ['participant_id']
     fields_dataset = []
@@ -733,10 +622,11 @@ def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_di
     index_to_drop = []
 
     location_name = 'AIBL location'
-    try:
-        participants_specs = pd.read_excel(clinical_spec_path, sheetname='participant.tsv')
-    except Exception as e:
-        cprint("participants tsv file not found")
+    if not os.path.exists(clinical_spec_path):
+        raise FileNotFoundError(clinical_spec_path
+                                + ' not found in clinical data.')
+    participants_specs = pd.read_excel(clinical_spec_path,
+                                       sheetname='participant.tsv')
     participant_fields_db = participants_specs['AIBL']
     field_location = participants_specs[location_name]
     participant_fields_bids = participants_specs['BIDS CLINICA']
