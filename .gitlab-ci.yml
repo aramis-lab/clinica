@@ -136,7 +136,7 @@ test:instantiate:linux:
 test:run:mac:
   stage: test
   tags:
-    - macOS
+    - macOS, long
   only:
     - schedules
   script:
@@ -146,6 +146,7 @@ test:run:mac:
     - ln -s /Volumes/data/data_ci ./data
     - pytest --verbose
          --working_directory=/Volumes/data/working_directory_ci_mac
+         --disable-warnings
          -k 'test_run'
     - module purge
     - source deactivate
