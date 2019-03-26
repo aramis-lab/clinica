@@ -574,3 +574,126 @@ def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
                     scans_df.to_csv(scans_tsv, header=False, sep='\t', index=False, encoding='utf-8')
 
             scans_df = pd.DataFrame(columns=(fields_bids))
+
+
+def t1_pet_paths_to_bids(images, bids_dir, modality, mod_to_update=False):
+    import os
+    from os import path
+    from numpy import nan
+    from clinica.iotools.converters.adni_to_bids import adni_utils
+    from glob import glob
+    from clinica.utils.stream import cprint
+    from multiprocessing import Pool, cpu_count, Value
+
+    if modality.lower() not in ['t1', 'av45', 'fdg']:
+        # This should never be reached
+        raise RuntimeError(modality.lower()
+                           + ' is not supported for conversion in paths_to_bids')
+
+    counter = None
+
+    def init(args):
+        ''' store the counter for later use '''
+        global counter
+        counter = args
+
+    def create_file(image):
+        import subprocess
+        from colorama import Fore
+
+        modality_specific = {'t1': {'output_path': 'anat',
+                                    'output_filename': '_T1w'},
+                             'av45': {'output_path': 'pet',
+                                      'output_filename': '_task-rest_acq-av45_pet'},
+                             'fdg': {'output_path': 'pet',
+                                     'output_filename': '_task-rest_acq-fdg_pet'}
+                             }
+
+        with counter.get_lock():
+            counter.value += 1
+        subject = image.Subject_ID
+        if image.Path is nan:
+            cprint(Fore.RED + 'No path specified for ' + image.Subject_ID
+                   + ' in session ' + image.VISCODE + Fore.RESET)
+            return nan
+        cprint('[' + modality.upper() + '] Processing subject ' + str(subject)
+               + ' - session ' + image.VISCODE + ', ' + str(counter.value)
+               + ' / ' + str(total))
+        session = adni_utils.viscode_to_session(image.VISCODE)
+        image_path = image.Path
+        image_id = image.Image_ID
+        # If the original image is a DICOM, check if contains two DICOM
+        # inside the same folder
+        if image.Is_Dicom:
+            image_path = adni_utils.check_two_dcm_folder(image_path,
+                                                         bids_dir,
+                                                         image_id)
+        bids_subj = subject.replace('_', '')
+        output_path = path.join(bids_dir, 'sub-ADNI' + bids_subj, 'ses-'
+                                + session, modality_specific[modality]['output_path'])
+        output_filename = 'sub-ADNI' + bids_subj + '_ses-' + session + modality_specific[modality]['output_filename']
+
+        # If updated mode is selected, check if an old T1 image is existing and remove it
+        existing_im = glob(path.join(output_path, output_filename + '*'))
+        if mod_to_update and len(existing_im) > 0:
+            print('Removing the old image...')
+            for im in existing_im:
+                os.remove(im)
+
+        try:
+            os.makedirs(output_path)
+        except OSError:
+            cprint(output_path + ' already exists')
+
+        if image.Is_Dicom:
+            command = 'dcm2niix -b n -z n -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
+            subprocess.run(command,
+                           shell=True,
+                           stderr=subprocess.DEVNULL,
+                           stdout=subprocess.DEVNULL)
+            nifti_file = path.join(output_path, output_filename + '.nii')
+            output_image = nifti_file + '.gz'
+
+            # Check if conversion worked (output file exists?)
+            if not path.isfile(nifti_file):
+                cprint('Conversion with dcm2niix failed, trying with dcm2nii')
+                command = 'dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
+                subprocess.run(command,
+                               shell=True,
+                               stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL)
+                nifti_file = path.join(output_path,
+                                       subject.replace('_', '') + '.nii')
+                output_image = path.join(output_path,
+                                         output_filename + '.nii.gz')
+
+                if not path.isfile(nifti_file):
+                    cprint('DICOM to NIFTI conversion error for ' + image_path)
+                    return nan
+
+            adni_utils.center_nifti_origin(nifti_file, output_image)
+            os.remove(nifti_file)
+
+        else:
+            output_image = path.join(output_path, output_filename + '.nii.gz')
+            adni_utils.center_nifti_origin(image_path, output_image)
+
+        # Check if there is still the folder tmp_dcm_folder and remove it
+        adni_utils.remove_tmp_dmc_folder(bids_dir)
+
+    counter = Value('i', 0)
+    total = images.shape[0]
+    # Reshape inputs to give it as a list to the workers
+    images_list = []
+    for i in range(total):
+        images_list.append(images.ix[i])
+
+    # intializer are used with the counter variable to keep track of how many
+    # files have been processed
+    poolrunner = Pool(max(cpu_count() - 1, 1), initializer=init, initargs=(counter,))
+    output_file_treated = poolrunner.map(create_file, images_list)
+    del counter
+    return output_file_treated
+
+
+

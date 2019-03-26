@@ -28,6 +28,7 @@ def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     import pandas as pd
     from os import path
     from clinica.utils.stream import cprint
+    from clinica.iotools.converters.adni_to_bids.adni_utils import t1_pet_paths_to_bids
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
@@ -37,7 +38,7 @@ def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('Calculating paths of FDG PET images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
     images = compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of FDG PET images found. Exporting images into BIDS ...')
-    fdg_pet_paths_to_bids(images, dest_dir)
+    t1_pet_paths_to_bids(images, dest_dir, 'fdg')
     cprint('FDG PET conversion done.')
 
 
@@ -213,7 +214,7 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     return images
 
 
-def fdg_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", mod_to_update=False):
+def fdg_pet_paths_to_bids(images, bids_dir, mod_to_update=False):
     """
 
     Args:
@@ -231,6 +232,7 @@ def fdg_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2ni
     from os import path
     import glob
     from clinica.utils.stream import cprint
+    import subprocess
 
     count = 0
     total = images.shape[0]
@@ -280,15 +282,21 @@ def fdg_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2ni
         if not image.Is_Dicom:
             adni_utils.center_nifti_origin(image_path, path.join(output_path, output_filename + '.nii.gz'))
         else:
-            command = dcm2niix + ' -b n -z n -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
-            os.system(command)
+            command = 'dcm2niix -b n -z n -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
+            subprocess.run(command,
+                           shell=True,
+                           stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
             nifti_file = path.join(output_path, output_filename + '.nii')
             output_image = nifti_file + '.gz'
 
             # Check if conversion worked (output file exists?)
             if not path.isfile(nifti_file):
-                command = dcm2nii + ' -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
-                os.system(command)
+                command = 'dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
+                subprocess.run(command,
+                               shell=True,
+                               stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL)
                 nifti_file = path.join(output_path, subject.replace('_', '') + '.nii')
                 output_image = path.join(output_path, output_filename + '.nii.gz')
 

@@ -28,6 +28,8 @@ def convert_adni_av45_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     import pandas as pd
     from os import path
     from clinica.utils.stream import cprint
+    from clinica.iotools.converters.adni_to_bids.adni_utils import t1_pet_paths_to_bids
+    from colorama import Fore
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
@@ -37,8 +39,8 @@ def convert_adni_av45_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('Calculating paths of AV45 PET images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
     images = compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of AV45 PET images found. Exporting images into BIDS ...')
-    av45_pet_paths_to_bids(images, dest_dir)
-    cprint('AV45 PET conversion done.')
+    t1_pet_paths_to_bids(images, dest_dir, 'av45')
+    cprint(Fore.GREEN + 'AV45 PET conversion done.' + Fore.RESET)
 
 
 def compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):

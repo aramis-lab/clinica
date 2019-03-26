@@ -29,6 +29,8 @@ def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None):
     import pandas as pd
     from os import path
     from clinica.utils.stream import cprint
+    from clinica.iotools.converters.adni_to_bids.adni_utils import t1_pet_paths_to_bids
+    from colorama import Fore
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
@@ -52,8 +54,8 @@ def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('Calculating paths of T1 images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
     images = compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download)
     cprint('Paths of T1 images found. Exporting images into BIDS ...')
-    t1_paths_to_bids(images, dest_dir)
-    cprint('T1 conversion done.')
+    t1_pet_paths_to_bids(images, dest_dir, 't1')
+    cprint(Fore.GREEN + 'T1 conversion done.' + Fore.RESET)
 
 
 def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download):
@@ -241,13 +243,14 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download):
     return images
 
 
-def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", mod_to_update=False):
+def t1_paths_to_bids(images, bids_dir, mod_to_update=False):
     import os
     from os import path
     from numpy import nan
     from clinica.iotools.converters.adni_to_bids import adni_utils
     from glob import glob
     from clinica.utils.stream import cprint
+    import subprocess
 
     count = 0
     total = images.shape[0]
@@ -260,7 +263,7 @@ def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", m
         if image.Path is nan:
             cprint('No path specified for ' + image.Subject_ID + ' in session ' + image.VISCODE)
             continue
-            cprint('Processing subject ' + str(subject) + ' - session ' + image.VISCODE + ', ' + str(count) + ' / ' + str(total))
+        cprint('Processing subject ' + str(subject) + ' - session ' + image.VISCODE + ', ' + str(count) + ' / ' + str(total))
 
         session = adni_utils.viscode_to_session(image.VISCODE)
         image_path = image.Path
@@ -294,16 +297,22 @@ def t1_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", m
                 raise
 
         if image.Is_Dicom:
-            command = dcm2niix + ' -b n -z n -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
-            os.system(command)
+            command = 'dcm2niix -b n -z n -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
+            subprocess.run(command,
+                           shell=True,
+                           stderr=subprocess.DEVNULL,
+                           stdout=subprocess.DEVNULL)
             nifti_file = path.join(output_path, output_filename + '.nii')
             output_image = nifti_file + '.gz'
 
             # Check if conversion worked (output file exists?)
             if not path.isfile(nifti_file):
                 cprint('Conversion with dcm2niix failed, trying with dcm2nii')
-                command = dcm2nii + ' -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
-                os.system(command)
+                command = 'dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
+                subprocess.run(command,
+                               shell=True,
+                               stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL)
                 nifti_file = path.join(output_path, subject.replace('_', '') + '.nii')
                 output_image = path.join(output_path, output_filename + '.nii.gz')
 
