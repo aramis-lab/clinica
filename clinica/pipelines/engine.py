@@ -255,6 +255,7 @@ class Pipeline(Workflow):
         """
         if not self.is_built:
             self.build()
+        self.check_not_cross_sectional()
         if not bypass_check:
             self.check_size()
             plugin_args = self.update_parallelize_info(plugin_args)
@@ -543,6 +544,85 @@ class Pipeline(Workflow):
                 plugin_args['n_procs'] = int(answer)
 
         return plugin_args
+
+    def check_not_cross_sectional(mybids):
+        from os import listdir
+        from os.path import join, isdir, dirname, abspath, basename
+        from colorama import Fore
+        from clinica.utils.stream import cprint
+        import sys
+
+        def convert_cross_sectional(bids_in, bids_out, cross_subjects, long_subjects):
+            from os.path import exists
+            from os import mkdir
+            from shutil import copytree
+
+            if not exists(bids_out):
+                mkdir(bids_out)
+            for sub in cross_subjects:
+                to_copy = listdir(join(bids_in, sub))
+                mkdir(join(bids_out, sub))
+                mkdir(join(bids_out, sub, 'ses-M00'))
+                for el in to_copy:
+                    if not exists(join(bids_out, sub, 'ses-M00', el)):
+                        copytree(join(bids_in, sub, el),
+                                 join(bids_out, sub, 'ses-M00'))
+            for sub in long_subjects:
+                to_copy = listdir(join(bids_in, sub))
+                mkdir(join(bids_out, sub))
+                for el in to_copy:
+                    if not exists(join(bids_out, sub, el)):
+                        copytree(join(bids_in, sub, el),
+                                 join(bids_out, sub))
+
+        bids_dir = abspath(mybids)
+        all_folders = listdir(bids_dir)
+        all_subs = [all_folders[i]
+                    for i in range(len(all_folders))
+                    if isdir(join(bids_dir, all_folders[i]))
+                    and all_folders[i].startswith('sub-')]
+        cross_subj = []
+        long_subj = []
+        for sub in all_subs:
+            is_cross_sectional = False
+            list_all = listdir(join(bids_dir, sub))
+            folder_list = [list_all[i]
+                           for i in range(len(list_all))
+                           if isdir(join(bids_dir, list_all[i]))]
+            for fold in folder_list:
+                if not fold.startswith('ses-'):
+                    is_cross_sectional = True
+            if is_cross_sectional:
+                cross_subj.append(sub)
+            else:
+                long_subj.append(sub)
+        if len(cross_subj) > 0:
+            cprint(Fore.RED + 'It has been determined that '
+                   + str(len(cross_subj)) + ' subjects  in your '
+                   + 'BIDS folder did not respect the longitudinal '
+                   + 'organisation from BIDS specification. Clinica does not '
+                   + 'know how to handle cross sectional dataset, but it can '
+                   + 'convert it to a Clinica compliant form (using session '
+                   + 'ses-M00)\n' + Fore.RESET)
+            proposed_bids = join(dirname(bids_dir),
+                                 basename(bids_dir) + '_clinica_compliant')
+
+            while True:
+                cprint('Do you want to proceed to the conversion in an other '
+                       + 'folder ? (your original BIDS folder will not be'
+                       + ' modified, the folder ' + proposed_bids
+                       + ' will be created) (yes/no): ')
+                answer = input('')
+                if answer.lower() in ['yes', 'no']:
+                    break
+                else:
+                    cprint('Possible answers are yes or no.\n')
+            if answer.lower() == 'no':
+                cprint('Exiting clinica...')
+                sys.exit()
+            else:
+                cprint('Converting cross-sectional dataset into longitudinal.')
+                convert_cross_sectional(bids_dir, proposed_bids, cross_subj, long_subj)
 
     @property
     def is_built(self): return self._is_built
