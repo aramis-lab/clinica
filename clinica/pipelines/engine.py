@@ -545,37 +545,77 @@ class Pipeline(Workflow):
 
         return plugin_args
 
-    def check_not_cross_sectional(mybids):
+    def check_not_cross_sectional(self):
+        """
+        This function checks if the dataset is longitudinal. If it is cross
+        sectional, clinica proposes to convert it in a clinica compliant form.
+        """
         from os import listdir
         from os.path import join, isdir, dirname, abspath, basename
         from colorama import Fore
         from clinica.utils.stream import cprint
         import sys
 
-        def convert_cross_sectional(bids_in, bids_out, cross_subjects, long_subjects):
-            from os.path import exists
+        def convert_cross_sectional(bids_in, bids_out, cross_subjects,
+                                    long_subjects):
+            from os.path import exists, isfile
             from os import mkdir
-            from shutil import copytree
+            from shutil import copytree, copy2
+
+            def add_ses(f):
+                import re
+                # If filename contains ses-..., returns the original filename
+                m = re.search(r'(^sub-[a-zA-Z0-9]*)_(?!ses-[a-zA-Z0-9])(.*)',
+                              f)
+                try:
+                    return m.group(1) + '_ses-M00_' + m.group(2)
+                except AttributeError:
+                    return f
+
+            def copy2_add_ses(src, dst):
+                from shutil import copy2
+                from os.path import join, dirname, basename
+                dst_modified = join(dirname(dst), add_ses(basename(src)))
+                return copy2(src, dst_modified)
 
             if not exists(bids_out):
                 mkdir(bids_out)
-            for sub in cross_subjects:
-                to_copy = listdir(join(bids_in, sub))
-                mkdir(join(bids_out, sub))
-                mkdir(join(bids_out, sub, 'ses-M00'))
+            for subj in cross_subjects:
+                to_copy = [f for f in listdir(join(bids_in, subj)) if
+                           not f.startswith('.')]
+                if not exists(join(bids_out, subj)):
+                    mkdir(join(bids_out, subj))
+                if not exists(join(bids_out, subj, 'ses-M00')):
+                    mkdir(join(bids_out, subj, 'ses-M00'))
                 for el in to_copy:
-                    if not exists(join(bids_out, sub, 'ses-M00', el)):
-                        copytree(join(bids_in, sub, el),
-                                 join(bids_out, sub, 'ses-M00'))
-            for sub in long_subjects:
-                to_copy = listdir(join(bids_in, sub))
-                mkdir(join(bids_out, sub))
+                    path_el = join(bids_in, subj, el)
+                    if not exists(join(bids_out, subj, 'ses-M00', el)):
+                        if isdir(path_el):
+                            copytree(path_el,
+                                     join(bids_out, subj, 'ses-M00',
+                                          basename(path_el)),
+                                     copy_function=copy2_add_ses)
+                        elif isfile(path_el):
+                            new_filename_wo_ses = add_ses(el)
+                            copy2(path_el,
+                                  join(bids_out, subj, 'ses-M00',
+                                       new_filename_wo_ses))
+            for su in long_subjects:
+                to_copy = [f for f in listdir(join(bids_in, su)) if
+                           not f.startswith('.')]
+                if not exists(join(bids_out, su)):
+                    mkdir(join(bids_out, su))
                 for el in to_copy:
-                    if not exists(join(bids_out, sub, el)):
-                        copytree(join(bids_in, sub, el),
-                                 join(bids_out, sub))
+                    path_el = join(bids_in, su, el)
+                    if not exists(join(bids_out, su, el)):
+                        if isdir(path_el):
+                            copytree(path_el,
+                                     join(bids_out, su, basename(path_el)))
+                        elif isfile(path_el):
+                            copy2(path_el,
+                                  join(bids_out, su))
 
-        bids_dir = abspath(mybids)
+        bids_dir = abspath(self.bids_directory)
         all_folders = listdir(bids_dir)
         all_subs = [all_folders[i]
                     for i in range(len(all_folders))
@@ -588,7 +628,7 @@ class Pipeline(Workflow):
             list_all = listdir(join(bids_dir, sub))
             folder_list = [list_all[i]
                            for i in range(len(list_all))
-                           if isdir(join(bids_dir, list_all[i]))]
+                           if isdir(join(bids_dir, sub, list_all[i]))]
             for fold in folder_list:
                 if not fold.startswith('ses-'):
                     is_cross_sectional = True
@@ -621,8 +661,14 @@ class Pipeline(Workflow):
                 cprint('Exiting clinica...')
                 sys.exit()
             else:
-                cprint('Converting cross-sectional dataset into longitudinal.')
-                convert_cross_sectional(bids_dir, proposed_bids, cross_subj, long_subj)
+                cprint(
+                    'Converting cross-sectional dataset into longitudinal...')
+                convert_cross_sectional(bids_dir, proposed_bids, cross_subj,
+                                        long_subj)
+                cprint(
+                    Fore.GREEN + 'Conversion succeeded. Your clinica-compliant'
+                    + ' dataset is located here : ' + proposed_bids
+                    + '.' + Fore.RESET)
 
     @property
     def is_built(self): return self._is_built
