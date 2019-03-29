@@ -137,7 +137,6 @@ test:run:mac:
   stage: test
   tags:
     - macOS
-    - long
   only:
     - schedules
   script:
