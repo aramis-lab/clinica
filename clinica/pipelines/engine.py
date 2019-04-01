@@ -549,6 +549,8 @@ class Pipeline(Workflow):
         """
         This function checks if the dataset is longitudinal. If it is cross
         sectional, clinica proposes to convert it in a clinica compliant form.
+
+        author: Arnaud Marcoux
         """
         from os import listdir
         from os.path import join, isdir, dirname, abspath, basename
@@ -556,33 +558,86 @@ class Pipeline(Workflow):
         from clinica.utils.stream import cprint
         import sys
 
-        def convert_cross_sectional(bids_in, bids_out, cross_subjects,
+        def convert_cross_sectional(bids_in,
+                                    bids_out,
+                                    cross_subjects,
                                     long_subjects):
+            """
+            This function converts a cross-sectional-bids dataset into a
+            longitudinal clinica-compliant dataset
+
+            :param bids_in: cross sectional bids dataset you want to convert
+            :param bids_out: converted longitudinal bids dataset
+            :param cross_subjects: list of subjects in cross sectional form
+            (they need some adjustment)
+            :param long_subjects: list of subjects in longitudinal form (they
+            just need to be copied)
+            :return: nothing
+            """
             from os.path import exists, isfile
             from os import mkdir
             from shutil import copytree, copy2
 
             def add_ses(f):
+                """
+                Use this function to transform a cross sectional filename into
+                a longitudinal one.
+                Examples :
+                sub-ADNI001_scans.tsv -> sub-ADNI001_ses-M00_scans.tsv
+                sub-023a_ses-M12_T1w.nii.gz -> sub-023a_ses-M12_T1w.nii.gz (no
+                    modification done if filename already has a session)
+
+
+                :param f: filename
+                :return: filename with '_ses-M00_ added just after
+                participant_id
+                """
                 import re
                 # If filename contains ses-..., returns the original filename
+                # Regex explication :
+                # ^ start of string
+                # ([a-zA-Z0-9]*) matches any number of characters from a to z,
+                #       A to Z, 0 to 9, and store it in group(1)
+                # (?!ses-[a-zA-Z0-9]) do not match if there is already a 'ses-'
+                # (.*) catches the rest of the string
                 m = re.search(r'(^sub-[a-zA-Z0-9]*)_(?!ses-[a-zA-Z0-9])(.*)',
                               f)
                 try:
                     return m.group(1) + '_ses-M00_' + m.group(2)
                 except AttributeError:
+                    # If something goes wrong, we return the original filename
                     return f
 
             def copy2_add_ses(src, dst):
+                """
+                copy2_add_ses calls copy2 function from shutil, but modifies
+                the filename of the copied files if they match the regex
+                template described in add_ses() function
+
+                :param src: path to the file that needs to be copied
+                :param dst: original destination for the copied file
+                :return: copy2 with modified filename
+                """
                 from shutil import copy2
                 from os.path import join, dirname, basename
+
                 dst_modified = join(dirname(dst), add_ses(basename(src)))
                 return copy2(src, dst_modified)
 
             if not exists(bids_out):
+                # Create the output folder if it does not exists yet
                 mkdir(bids_out)
+
+            # First part of the algorithm : deal with subjects that does not
+            # have longitudinal (session) information
             for subj in cross_subjects:
+                # Get list of of files/folders to copy. Remove hidden element
+                # ( if they start with a dot '.')
                 to_copy = [f for f in listdir(join(bids_in, subj)) if
                            not f.startswith('.')]
+                # Always check that folder are existing, otherwise an exception
+                # is raised even though that does not prevent the function from
+                # working
                 if not exists(join(bids_out, subj)):
                     mkdir(join(bids_out, subj))
                 if not exists(join(bids_out, subj, 'ses-M00')):
@@ -590,24 +645,36 @@ class Pipeline(Workflow):
                 for el in to_copy:
                     path_el = join(bids_in, subj, el)
                     if not exists(join(bids_out, subj, 'ses-M00', el)):
+                        # If the element to copy is a folder...
                         if isdir(path_el):
+                            # Copytree is used with a 'custom' copy function,
+                            # to give a correct filemename to the files inside
+                            # the copied folders
                             copytree(path_el,
                                      join(bids_out, subj, 'ses-M00',
                                           basename(path_el)),
                                      copy_function=copy2_add_ses)
+                        # If the element to copy is a file...
                         elif isfile(path_el):
+                            # Modify the filename with add_ses function
                             new_filename_wo_ses = add_ses(el)
                             copy2(path_el,
                                   join(bids_out, subj, 'ses-M00',
                                        new_filename_wo_ses))
+            # Second part of the algorithm : deal with subjects that do not
+            # have the problem. We only xopy the content of the folder, and no
+            # filename needs to be changed
             for su in long_subjects:
-                to_copy = [f for f in listdir(join(bids_in, su)) if
-                           not f.startswith('.')]
+                # Do not copy hidden files
+                to_copy = [f for f in listdir(join(bids_in, su))
+                           if not f.startswith('.')]
                 if not exists(join(bids_out, su)):
                     mkdir(join(bids_out, su))
                 for el in to_copy:
                     path_el = join(bids_in, su, el)
                     if not exists(join(bids_out, su, el)):
+                        # 2 possible cases : element to pcopy is a folder or a
+                        # file
                         if isdir(path_el):
                             copytree(path_el,
                                      join(bids_out, su, basename(path_el)))
@@ -616,19 +683,18 @@ class Pipeline(Workflow):
                                   join(bids_out, su))
 
         bids_dir = abspath(self.bids_directory)
-        all_folders = listdir(bids_dir)
-        all_subs = [all_folders[i]
-                    for i in range(len(all_folders))
-                    if isdir(join(bids_dir, all_folders[i]))
-                    and all_folders[i].startswith('sub-')]
+        # Extract all subjects in BIDS directory : element must be a folder and
+        # a name starting with 'sub-'
+        all_subs = [f for f in listdir(bids_dir)
+                    if isdir(join(bids_dir, f)) and f.startswith('sub-')]
         cross_subj = []
         long_subj = []
         for sub in all_subs:
+            # Use is_cross_sectional to know if the current subject needs to be
+            # labeled as cross sectional
             is_cross_sectional = False
-            list_all = listdir(join(bids_dir, sub))
-            folder_list = [list_all[i]
-                           for i in range(len(list_all))
-                           if isdir(join(bids_dir, sub, list_all[i]))]
+            folder_list = [f for f in listdir(join(bids_dir, sub))
+                           if isdir(join(bids_dir, sub, f))]
             for fold in folder_list:
                 if not fold.startswith('ses-'):
                     is_cross_sectional = True
@@ -636,6 +702,8 @@ class Pipeline(Workflow):
                 cross_subj.append(sub)
             else:
                 long_subj.append(sub)
+
+        # The following code is run if cross sectional subjects have been found
         if len(cross_subj) > 0:
             cprint(Fore.RED + 'It has been determined that '
                    + str(len(cross_subj)) + ' subjects  in your '
@@ -663,12 +731,14 @@ class Pipeline(Workflow):
             else:
                 cprint(
                     'Converting cross-sectional dataset into longitudinal...')
-                convert_cross_sectional(bids_dir, proposed_bids, cross_subj,
+                convert_cross_sectional(bids_dir,
+                                        proposed_bids,
+                                        cross_subj,
                                         long_subj)
                 cprint(
                     Fore.GREEN + 'Conversion succeeded. Your clinica-compliant'
                     + ' dataset is located here : ' + proposed_bids
-                    + '.' + Fore.RESET)
+                    + Fore.RESET)
 
     @property
     def is_built(self): return self._is_built
