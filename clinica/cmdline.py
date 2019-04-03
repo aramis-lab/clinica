@@ -399,7 +399,16 @@ def execute():
         import logging as python_logging
         from logging import Filter, ERROR
         import os
-        from nipype import config, logging
+
+        # Resolve bug
+        # "Assuming non interactive session since isatty found missing"
+        # at the begining of any pipeline caused by logger in duecredit package
+        # (utils.py)
+        # Deactivate stdout, then reactivate it
+        sys.stdout = open(os.devnull, 'w')
+        from nipype import config
+        sys.stdout = sys.__stdout__
+
         from nipype import logging
 
         # Configure Nipype logger for our needs
