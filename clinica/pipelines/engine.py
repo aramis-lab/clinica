@@ -681,64 +681,64 @@ class Pipeline(Workflow):
                         elif isfile(path_el):
                             copy2(path_el,
                                   join(bids_out, su))
-
-        bids_dir = abspath(self.bids_directory)
-        # Extract all subjects in BIDS directory : element must be a folder and
-        # a name starting with 'sub-'
-        all_subs = [f for f in listdir(bids_dir)
-                    if isdir(join(bids_dir, f)) and f.startswith('sub-')]
-        cross_subj = []
-        long_subj = []
-        for sub in all_subs:
-            # Use is_cross_sectional to know if the current subject needs to be
-            # labeled as cross sectional
-            is_cross_sectional = False
-            folder_list = [f for f in listdir(join(bids_dir, sub))
-                           if isdir(join(bids_dir, sub, f))]
-            for fold in folder_list:
-                if not fold.startswith('ses-'):
-                    is_cross_sectional = True
-            if is_cross_sectional:
-                cross_subj.append(sub)
-            else:
-                long_subj.append(sub)
-
-        # The following code is run if cross sectional subjects have been found
-        if len(cross_subj) > 0:
-            cprint(Fore.RED + 'It has been determined that '
-                   + str(len(cross_subj)) + ' subjects  in your '
-                   + 'BIDS folder did not respect the longitudinal '
-                   + 'organisation from BIDS specification. Clinica does not '
-                   + 'know how to handle cross sectional dataset, but it can '
-                   + 'convert it to a Clinica compliant form (using session '
-                   + 'ses-M00)\n' + Fore.RESET)
-            proposed_bids = join(dirname(bids_dir),
-                                 basename(bids_dir) + '_clinica_compliant')
-
-            while True:
-                cprint('Do you want to proceed to the conversion in an other '
-                       + 'folder ? (your original BIDS folder will not be'
-                       + ' modified, the folder ' + proposed_bids
-                       + ' will be created) (yes/no): ')
-                answer = input('')
-                if answer.lower() in ['yes', 'no']:
-                    break
+        if self.bids_directory is not None:
+            bids_dir = abspath(self.bids_directory)
+            # Extract all subjects in BIDS directory : element must be a folder and
+            # a name starting with 'sub-'
+            all_subs = [f for f in listdir(bids_dir)
+                        if isdir(join(bids_dir, f)) and f.startswith('sub-')]
+            cross_subj = []
+            long_subj = []
+            for sub in all_subs:
+                # Use is_cross_sectional to know if the current subject needs to be
+                # labeled as cross sectional
+                is_cross_sectional = False
+                folder_list = [f for f in listdir(join(bids_dir, sub))
+                               if isdir(join(bids_dir, sub, f))]
+                for fold in folder_list:
+                    if not fold.startswith('ses-'):
+                        is_cross_sectional = True
+                if is_cross_sectional:
+                    cross_subj.append(sub)
                 else:
-                    cprint('Possible answers are yes or no.\n')
-            if answer.lower() == 'no':
-                cprint('Exiting clinica...')
-                sys.exit()
-            else:
-                cprint(
-                    'Converting cross-sectional dataset into longitudinal...')
-                convert_cross_sectional(bids_dir,
-                                        proposed_bids,
-                                        cross_subj,
-                                        long_subj)
-                cprint(
-                    Fore.GREEN + 'Conversion succeeded. Your clinica-compliant'
-                    + ' dataset is located here : ' + proposed_bids
-                    + Fore.RESET)
+                    long_subj.append(sub)
+            
+            # The following code is run if cross sectional subjects have been found
+            if len(cross_subj) > 0:
+                cprint(Fore.RED + 'It has been determined that '
+                       + str(len(cross_subj)) + ' subjects  in your '
+                       + 'BIDS folder did not respect the longitudinal '
+                       + 'organisation from BIDS specification. Clinica does not '
+                       + 'know how to handle cross sectional dataset, but it can '
+                       + 'convert it to a Clinica compliant form (using session '
+                       + 'ses-M00)\n' + Fore.RESET)
+                proposed_bids = join(dirname(bids_dir),
+                                     basename(bids_dir) + '_clinica_compliant')
+            
+                while True:
+                    cprint('Do you want to proceed to the conversion in an other '
+                           + 'folder ? (your original BIDS folder will not be'
+                           + ' modified, the folder ' + proposed_bids
+                           + ' will be created) (yes/no): ')
+                    answer = input('')
+                    if answer.lower() in ['yes', 'no']:
+                        break
+                    else:
+                        cprint('Possible answers are yes or no.\n')
+                if answer.lower() == 'no':
+                    cprint('Exiting clinica...')
+                    sys.exit()
+                else:
+                    cprint(
+                        'Converting cross-sectional dataset into longitudinal...')
+                    convert_cross_sectional(bids_dir,
+                                            proposed_bids,
+                                            cross_subj,
+                                            long_subj)
+                    cprint(
+                        Fore.GREEN + 'Conversion succeeded. Your clinica-compliant'
+                        + ' dataset is located here : ' + proposed_bids
+                        + Fore.RESET)
 
     @property
     def is_built(self): return self._is_built
