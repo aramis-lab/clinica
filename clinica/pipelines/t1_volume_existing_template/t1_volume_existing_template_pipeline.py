@@ -29,11 +29,27 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
     """
 
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
+        from os.path import exists, join, abspath
+        from os import listdir
 
         super(T1VolumeExistingTemplate, self).__init__(bids_directory, caps_directory, tsv_file, name)
 
-        if not group_id.isalnum():
-            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
+        # Check that group already exists
+        if not exists(join(abspath(caps_directory), 'groups', 'group-' + group_id)):
+            error_message = 'group_id : ' + group_id + ' does not exists, ' \
+                            + 'please choose an other one. Groups that exist' \
+                            + 's in your CAPS directory are : \n'
+            list_groups = listdir(join(abspath(caps_directory), 'groups'))
+            has_one_group = False
+            for e in list_groups:
+                if e.startswith('group-'):
+                    error_message += e + ' \n'
+                    has_one_group = True
+            if not has_one_group:
+                error_message = error_message + 'No group found ! ' \
+                                + 'Use t1-volume pipeline if you do not ' \
+                                + 'have a template yet ! '
+            raise ValueError(error_message)
 
         self._group_id = group_id
 
