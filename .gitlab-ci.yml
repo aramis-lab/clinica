@@ -148,7 +148,7 @@ test:run:mac:
     - pytest --verbose
          --working_directory=/Volumes/data/working_directory_ci_mac
          --disable-warnings
-    --numprocesses 4
+         --numprocesses 4
          -k 'test_run'
     - module purge
     - source deactivate
