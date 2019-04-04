@@ -92,6 +92,28 @@ class ClinicaClassLoader:
 def execute():
     import argparse
     from colorama import Fore
+
+    ## Nice display
+    import sys
+    from os.path import abspath
+    import traceback
+
+    def foo(exctype, value, tb):
+        from colorama import Fore
+        import traceback
+        print(Fore.RED + '*' * 23 + '\n*** Clinica crashed ***\n' + '*' * 23 + Fore.RESET)
+        print(Fore.YELLOW + 'Type:' + Fore.RESET, exctype.__name__)
+        print(Fore.YELLOW + 'Value:' + Fore.RESET, value)
+        print(Fore.YELLOW + 'Traceback:' + Fore.RESET + ' Full traceback is available in ' + abspath('./clinica.log') + ' file')
+        print('Errors can come from various reasons : '
+              + '\n\t * third party softwares '
+              + '\n\t * wrong paths given as inputs'
+              + '\n\t * ...'
+              + '\nDocumentation can be found here : ' + Fore.BLUE + 'http://www.clinica.run/doc/' + Fore.RESET
+              + '\nIf you need support, do not hesitate to ask : ' + Fore.BLUE + 'https://groups.google.com/forum/#!forum/clinica-user' + Fore.RESET)
+    sys.excepthook = foo
+    ## End of nice display
+
     MANDATORY_TITLE = (Fore.YELLOW + 'Mandatory arguments' + Fore.RESET)
     OPTIONAL_TITLE = (Fore.YELLOW + 'Optional arguments' + Fore.RESET)
     """
