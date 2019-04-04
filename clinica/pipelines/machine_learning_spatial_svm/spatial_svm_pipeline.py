@@ -63,15 +63,25 @@ class SpatialSVM(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.stream import cprint
-        from os.path import join, exists
+        from os.path import exists, join, abspath
+        from os import listdir
 
-        # This node is supposedly used to load BIDS inputs when this pipeline is
-        # not already connected to the output of a previous Clinica pipeline.
-        # For the purpose of the example, we simply read input arguments given
-        # by the command line interface and transmitted here through the
-        # `self.parameters` dictionary and pass it to the `self.input_node` to
-        # further by used as input of the
-        # core nodes.
+        # Check that group-id already exists
+        if not exists(join(abspath(self.caps_directory), 'groups', 'group-' + self.parameters['group_id'])):
+            error_message = 'group_id : ' + self.parameters['group_id'] + ' does not exists, ' \
+                            + 'please choose an other one. Groups that exist' \
+                            + 's in your CAPS directory are : \n'
+            list_groups = listdir(join(abspath(self.caps_directory), 'groups'))
+            has_one_group = False
+            for e in list_groups:
+                if e.startswith('group-'):
+                    error_message += e + ' \n'
+                    has_one_group = True
+            if not has_one_group:
+                error_message = error_message + 'No group found ! ' \
+                                + 'Use t1-volume pipeline if you do not ' \
+                                + 'have a template yet ! '
+            raise ValueError(error_message)
 
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(fields=self.get_input_fields(),
