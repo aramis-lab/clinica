@@ -702,7 +702,7 @@ class Pipeline(Workflow):
                     cross_subj.append(sub)
                 else:
                     long_subj.append(sub)
-            
+
             # The following code is run if cross sectional subjects have been found
             if len(cross_subj) > 0:
                 cprint(Fore.RED + 'It has been determined that '
@@ -714,7 +714,7 @@ class Pipeline(Workflow):
                        + 'ses-M00)\n' + Fore.RESET)
                 proposed_bids = join(dirname(bids_dir),
                                      basename(bids_dir) + '_clinica_compliant')
-            
+
                 while True:
                     cprint('Do you want to proceed to the conversion in an other '
                            + 'folder ? (your original BIDS folder will not be'
