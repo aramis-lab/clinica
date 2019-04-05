@@ -92,6 +92,9 @@ class ClinicaClassLoader:
 def execute():
     import argparse
     from colorama import Fore
+    import warnings
+    
+    warnings.filterwarnings("ignore")
     MANDATORY_TITLE = (Fore.YELLOW + 'Mandatory arguments' + Fore.RESET)
     OPTIONAL_TITLE = (Fore.YELLOW + 'Optional arguments' + Fore.RESET)
     """
