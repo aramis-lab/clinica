@@ -92,11 +92,11 @@ class KFoldCV(base.MLValidation):
                               index=False, sep='\t', encoding='utf-8')
             results_folds.append(results_df)
 
-        all_subjects = pd.concat(subjects_folds)
+        all_subjects = pd.concat(subjects_folds, sort=True)
         all_subjects.to_csv(path.join(output_dir, 'subjects.tsv'),
                             index=False, sep='\t', encoding='utf-8')
 
-        all_results = pd.concat(results_folds)
+        all_results = pd.concat(results_folds, sort=True)
         all_results.to_csv(path.join(output_dir, 'results.tsv'),
                            index=False, sep='\t', encoding='utf-8')
 
@@ -196,12 +196,12 @@ class RepeatedKFoldCV(base.MLValidation):
                                   index=False, sep='\t', encoding='utf-8')
                 iteration_results_list.append(results_df)
 
-            iteration_subjects_df = pd.concat(iteration_subjects_list)
+            iteration_subjects_df = pd.concat(iteration_subjects_list, sort=True)
             iteration_subjects_df.to_csv(path.join(iteration_dir, 'subjects.tsv'),
                                          index=False, sep='\t', encoding='utf-8')
             all_subjects_list.append(iteration_subjects_df)
 
-            iteration_results_df = pd.concat(iteration_results_list)
+            iteration_results_df = pd.concat(iteration_results_list, sort=True)
             iteration_results_df.to_csv(path.join(iteration_dir, 'results.tsv'),
                                         index=False, sep='\t', encoding='utf-8')
 
@@ -211,11 +211,11 @@ class RepeatedKFoldCV(base.MLValidation):
                                    index=False, sep='\t', encoding='utf-8')
             all_results_list.append(mean_results_df)
 
-        all_subjects_df = pd.concat(all_subjects_list)
+        all_subjects_df = pd.concat(all_subjects_list, sort=True)
         all_subjects_df.to_csv(path.join(output_dir, 'subjects.tsv'),
                                index=False, sep='\t', encoding='utf-8')
 
-        all_results_df = pd.concat(all_results_list)
+        all_results_df = pd.concat(all_results_list, sort=True)
         all_results_df.to_csv(path.join(output_dir, 'results.tsv'),
                               index=False, sep='\t', encoding='utf-8')
 
@@ -326,15 +326,15 @@ class RepeatedHoldOut(base.MLValidation):
             #                        index=False, sep='\t', encoding='utf-8')
             all_results_list.append(iteration_results_df)
 
-        all_train_subjects_df = pd.concat(all_train_subjects_list)
+        all_train_subjects_df = pd.concat(all_train_subjects_list, sort=True)
         all_train_subjects_df.to_csv(path.join(output_dir, 'train_subjects.tsv'),
                                      index=False, sep='\t', encoding='utf-8')
 
-        all_test_subjects_df = pd.concat(all_test_subjects_list)
+        all_test_subjects_df = pd.concat(all_test_subjects_list, sort=True)
         all_test_subjects_df.to_csv(path.join(output_dir, 'test_subjects.tsv'),
                                     index=False, sep='\t', encoding='utf-8')
 
-        all_results_df = pd.concat(all_results_list)
+        all_results_df = pd.concat(all_results_list, sort=True)
         all_results_df.to_csv(path.join(output_dir, 'results.tsv'),
                               index=False, sep='\t', encoding='utf-8')
 
@@ -509,11 +509,11 @@ class LearningCurveRepeatedHoldOut(base.MLValidation):
                                        index=False, sep='\t', encoding='utf-8')
                 all_results_list.append(mean_results_df)
 
-            all_subjects_df = pd.concat(all_subjects_list)
+            all_subjects_df = pd.concat(all_subjects_list, sort=True)
             all_subjects_df.to_csv(path.join(learning_point_dir, 'subjects.tsv'),
                                    index=False, sep='\t', encoding='utf-8')
 
-            all_results_df = pd.concat(all_results_list)
+            all_results_df = pd.concat(all_results_list, sort=True)
             all_results_df.to_csv(path.join(learning_point_dir, 'results.tsv'),
                                   index=False, sep='\t', encoding='utf-8')
 

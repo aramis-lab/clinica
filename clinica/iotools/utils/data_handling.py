@@ -223,14 +223,14 @@ def create_merge_file(bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines
             for key, pipeline in pipeline_options.items():
                 try:
                     merged_df, summary_df = pipeline(caps_dir, merged_df, **kwargs)
-                    merged_summary_df = pd.concat([merged_summary_df, summary_df])
+                    merged_summary_df = pd.concat([merged_summary_df, summary_df], sort=True)
 
                 except InitException:
                     warnings.warn('This pipeline was not initialized: ' + key)
         else:
             for pipeline in pipelines:
                 merged_df, summary_df = pipeline_options[pipeline](caps_dir, merged_df, **kwargs)
-                merged_summary_df = pd.concat([merged_summary_df, summary_df])
+                merged_summary_df = pd.concat([merged_summary_df, summary_df], sort=True)
 
         n_atlas = len(merged_summary_df)
         index_column_df = pd.DataFrame(index=np.arange(n_atlas), columns=['first_column_index', 'last_column_index'])
@@ -241,7 +241,7 @@ def create_merge_file(bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines
             index_column_df.iat[i-1, 1] = index_column_df.iat[i, 0] - 1
 
         merged_summary_df.reset_index(inplace=True, drop=True)
-        merged_summary_df = pd.concat([merged_summary_df, index_column_df], axis=1)
+        merged_summary_df = pd.concat([merged_summary_df, index_column_df], axis=1, sort=True)
         summary_filename = out_file_name.split('.')[0] + '_summary.tsv'
         merged_summary_df.to_csv(path.join(out_dir, summary_filename), sep='\t', index=False)
 

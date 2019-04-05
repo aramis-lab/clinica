@@ -142,7 +142,7 @@ def pet_volume_pipeline(caps_dir, df, **kwargs):
 
             row_summary = [pipeline_name, group_id, atlas_id, n_regions, label_list[0], label_list[-1]]
             row_summary_df.iloc[0] = row_summary
-            summary_df = pd.concat([summary_df, row_summary_df])
+            summary_df = pd.concat([summary_df, row_summary_df], sort=True)
 
     # Initial empty DataFrame for the pipeline
     number_sessions = len(df)
@@ -177,7 +177,7 @@ def pet_volume_pipeline(caps_dir, df, **kwargs):
 
         pipeline_df.iloc[i] = ses_df.iloc[0]
 
-    final_df = pd.concat([df, pipeline_df], axis=1)
+    final_df = pd.concat([df, pipeline_df], axis=1, sort=True)
 
     return final_df, summary_df
 
@@ -282,7 +282,7 @@ def t1_volume_pipeline(caps_dir, df, **kwargs):
 
             row_summary = [pipeline_name, group_id, atlas_id, n_regions, label_list[0], label_list[-1]]
             row_summary_df.iloc[0] = row_summary
-            summary_df = pd.concat([summary_df, row_summary_df])
+            summary_df = pd.concat([summary_df, row_summary_df], sort=True)
 
     # Initial empty DataFrame for the pipeline
     number_sessions = len(df)
@@ -317,7 +317,7 @@ def t1_volume_pipeline(caps_dir, df, **kwargs):
 
         pipeline_df.iloc[i] = ses_df.iloc[0]
 
-    final_df = pd.concat([df, pipeline_df], axis=1)
+    final_df = pd.concat([df, pipeline_df], axis=1, sort=True)
 
     return final_df, summary_df
 
