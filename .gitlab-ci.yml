@@ -137,6 +137,7 @@ test:run:mac:
   stage: test
   tags:
     - macOS
+    - long
   only:
     - schedules
   script:
@@ -146,6 +147,8 @@ test:run:mac:
     - ln -s /Volumes/data/data_ci ./data
     - pytest --verbose
          --working_directory=/Volumes/data/working_directory_ci_mac
+         --disable-warnings
+         --numprocesses 4
          -k 'test_run'
     - module purge
     - source deactivate
@@ -154,6 +157,7 @@ test:run:linux:
   stage: test
   tags:
     - linux
+    - long
   only:
     - schedules
   script:
@@ -167,7 +171,7 @@ test:run:linux:
          --working_directory=/localdrive10TB/data/working_directory_ci_linux
          --disable-warnings
          --timeout=0
-         -n 6
+         --numprocesses 6
          -k 'test_run'
     - module purge
     - source deactivate
