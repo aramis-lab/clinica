@@ -119,7 +119,7 @@ test:instantiate:linux:
   tags:
     - linux
   script:
-    - source activate $CLINICA_ENV_BRANCH_CLEAN
+    - conda activate $CLINICA_ENV_BRANCH_CLEAN
     - module load clinica.all
     - cd test
     - ln -s /localdrive10TB/data/ci/data_ci_upgrade ./data
@@ -131,7 +131,7 @@ test:instantiate:linux:
          -n 6 
          -k 'test_instantiate'
     - module purge
-    - source deactivate
+    - conda deactivate
  
 test:run:mac:
   stage: test
@@ -161,7 +161,7 @@ test:run:linux:
   only:
     - schedules
   script:
-    - source activate $CLINICA_ENV_BRANCH_CLEAN
+    - conda activate $CLINICA_ENV_BRANCH_CLEAN
     - export PATH="/home/gitlab-runner/dcm2nii":${PATH}
     - module load clinica.all
     - cd test
@@ -174,7 +174,7 @@ test:run:linux:
          --numprocesses 6
          -k 'test_run'
     - module purge
-    - source deactivate
+    - conda deactivate
 
 pkg:
   stage: package
