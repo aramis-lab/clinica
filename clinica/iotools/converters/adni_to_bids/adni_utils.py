@@ -636,7 +636,7 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
     with counter.get_lock():
         counter.value += 1
     subject = image.Subject_ID
-    if image.Path is nan:
+    if image.Path == '':
         cprint(Fore.RED + 'No path specified for ' + image.Subject_ID
                + ' in session ' + image.VISCODE + Fore.RESET)
         return nan
