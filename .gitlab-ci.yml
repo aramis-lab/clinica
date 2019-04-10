@@ -149,7 +149,7 @@ test:run:mac:
          -k 'test_run'
     - module purge
     - source deactivate
-    - rm -rf $WORK_DIR_LINUX/*
+    - rm -rf $WORK_DIR_MAC/*
 
 test:run:linux:
   stage: test
