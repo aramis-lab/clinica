@@ -496,7 +496,6 @@ def visits_to_timepoints_t1(subject, mprage_meta_subj_orig, adnimerge_subj):
             cprint(key_min_visit)
             cprint(visits[key_min_visit])
             cprint(image.Visit)
-
     return visits
 
 
