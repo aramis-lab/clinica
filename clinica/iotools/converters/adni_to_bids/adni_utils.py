@@ -594,7 +594,6 @@ def t1_pet_paths_to_bids(images, bids_dir, modality, mod_to_update=False):
         global counter
         counter = args
 
-
     counter = Value('i', 0)
     total = images.shape[0]
     # Reshape inputs to give it as a list to the workers
