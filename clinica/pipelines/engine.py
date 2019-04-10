@@ -53,7 +53,8 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_sess
     subjects = list(ss_df.participant_id)
     sessions = list(ss_df.session_id)
 
-    return sessions, subjects
+    # Remove potential whitespace in participant_id or session_id
+    return [ses.strip(' ') for ses in sessions], [sub.strip(' ') for sub in subjects]
 
 
 def postset(attribute, value):
