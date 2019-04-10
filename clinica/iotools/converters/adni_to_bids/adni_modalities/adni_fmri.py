@@ -28,6 +28,7 @@ def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
     import pandas as pd
     from os import path
     from clinica.utils.stream import cprint
+    from colorama import Fore
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
@@ -44,7 +45,7 @@ def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('Paths of fMRI images found. Exporting images into BIDS ...')
 
     fmri_paths_to_bids(dest_dir, images)
-    cprint('fMRI conversion done.')
+    cprint(Fore.GREEN + 'fMRI conversion done.' + Fore.RESET)
 
 
 def compute_fmri_path(source_dir, clinical_dir, dest_dir, subjs_list):
@@ -205,7 +206,7 @@ def fmri_paths_to_bids(dest_dir, fmri_paths, mod_to_update=False):
 
     subjs_list = fmri_paths['Subject_ID'].drop_duplicates().values
 
-    for i in range(0, len(subjs_list)):
+    for i in range(len(subjs_list)):
         # print 'Converting fmri for subject', subjs_list[i]
         sess_list = fmri_paths[(fmri_paths['Subject_ID'] == subjs_list[i])]['VISCODE'].values
         alpha_id = adni_utils.remove_space_and_symbols(subjs_list[i])

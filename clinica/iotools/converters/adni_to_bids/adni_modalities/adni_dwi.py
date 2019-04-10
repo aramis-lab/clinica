@@ -28,6 +28,7 @@ def convert_adni_dwi(source_dir, csv_dir, dest_dir, subjs_list=None):
     import pandas as pd
     from os import path
     from clinica.utils.stream import cprint
+    from colorama import Fore
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
@@ -38,7 +39,7 @@ def convert_adni_dwi(source_dir, csv_dir, dest_dir, subjs_list=None):
     images = compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of DWI images found. Exporting images into BIDS ...')
     dwi_paths_to_bids(images, dest_dir)
-    cprint('DWI conversion done.')
+    cprint(Fore.GREEN + 'DWI conversion done.' + Fore.RESET)
 
 
 def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
@@ -235,19 +236,25 @@ def dwi_paths_to_bids(images, dest_dir, mod_to_update=False):
 
     subjs_list = images['Subject_ID'].unique()
 
-    for i in range(0, len(subjs_list)):
-        # print '--Converting dwi for subject ', subjs_list[i], '--'
-        alpha_id = bids.remove_space_and_symbols(subjs_list[i])
+    for subj in subjs_list:
+        import subprocess
+        from clinica.utils.stream import cprint
+
+        alpha_id = bids.remove_space_and_symbols(subj)
         bids_id = 'sub-ADNI' + alpha_id
         # Extract the list of sessions available from the dwi paths files, removing the duplicates
-        sess_list = images[(images['Subject_ID'] == subjs_list[i])]['VISCODE'].unique()
+        sess_list = images[(images['Subject_ID'] == subj)]['VISCODE'].unique()
 
         if not os.path.exists(path.join(dest_dir, bids_id)):
             os.mkdir(path.join(dest_dir, bids_id))
 
         # For each session available, create the folder if doesn't exist and convert the files
         for ses in sess_list:
-
+            #cprint('[DWI] Processing subject ' + str(subj)
+            #       + ' - session ' + ses + ', ' + str(counter.value)
+            #       + ' / ' + str(total))
+            cprint('[DWI] Processing subject ' + str(subj)
+                   + ' - session ' + ses)
             ses_bids = adni_utils.viscode_to_session(ses)
             bids_ses_id = 'ses-' + ses_bids
             bids_file_name = bids_id + '_ses-' + ses_bids
@@ -260,7 +267,7 @@ def dwi_paths_to_bids(images, dest_dir, mod_to_update=False):
             if not os.path.exists(ses_path):
                 os.mkdir(ses_path)
 
-            dwi_info = images[(images['Subject_ID'] == subjs_list[i]) & (images['VISCODE'] == ses)]
+            dwi_info = images[(images['Subject_ID'] == subj) & (images['VISCODE'] == ses)]
 
             # For the same subject, same session there could be multiple dwi with different acq label
             for j in range(0, len(dwi_info)):
@@ -281,14 +288,18 @@ def dwi_paths_to_bids(images, dest_dir, mod_to_update=False):
 
                     if not os.path.exists(bids_dest_dir):
                         os.mkdir(dest_dir)
-                    os.system('dcm2niix -b n -z y -o ' + bids_dest_dir + ' -f ' + bids_name + ' ' + dwi_path)
+                    command = 'dcm2niix -b n -z y -o ' + bids_dest_dir + ' -f ' + bids_name + ' ' + dwi_path
+                    subprocess.run(command,
+                                   shell=True,
+                                   stdout=subprocess.DEVNULL,
+                                   stderr=subprocess.DEVNULL)
 
                     # If dcm2niix didn't work use dcm2nii
                     # print path.join(dest_dir, bids_name + '.nii.gz')
                     if not os.path.exists(path.join(bids_dest_dir, bids_name + '.nii.gz')) or not os.path.exists(
                                     path.join(bids_dest_dir, bids_name + '.bvec') or not os.path.exists(
                                         path.join(bids_dest_dir, bids_name + '.bval'))):
-                        cprint('\nConversion with dcm2niix failed, trying with dcm2nii')
+                        cprint('\tConversion with dcm2niix failed, trying with dcm2nii')
 
                         # Find all the files eventually created by dcm2niix and remove them
                         dwi_dcm2niix = glob(path.join(bids_dest_dir, bids_name + '*'))
@@ -297,11 +308,14 @@ def dwi_paths_to_bids(images, dest_dir, mod_to_update=False):
                             # print 'Removing the old', d
                             os.remove(d)
 
-                        os.system(
-                            'dcm2nii -a n -d n -e n -i y -g y -p n -m n -r n -x n -o ' + bids_dest_dir + ' ' + dwi_path)
-                        nii_file = path.join(bids_dest_dir, subjs_list[i].replace('_', '') + '.nii.gz')
-                        bvec_file = path.join(bids_dest_dir, subjs_list[i].replace('_', '') + '.bvec')
-                        bval_file = path.join(bids_dest_dir, subjs_list[i].replace('_', '') + '.bval')
+                        command = 'dcm2nii -a n -d n -e n -i y -g y -p n -m n -r n -x n -o ' + bids_dest_dir + ' ' + dwi_path
+                        subprocess.run(command,
+                                       shell=True,
+                                       stdout=subprocess.DEVNULL,
+                                       stderr=subprocess.DEVNULL)
+                        nii_file = path.join(bids_dest_dir, subj.replace('_', '') + '.nii.gz')
+                        bvec_file = path.join(bids_dest_dir, subj.replace('_', '') + '.bvec')
+                        bval_file = path.join(bids_dest_dir, subj.replace('_', '') + '.bval')
 
                         if os.path.exists(bvec_file) and os.path.exists(bval_file):
                             os.rename(bvec_file, path.join(bids_dest_dir, bids_name + '.bvec'))

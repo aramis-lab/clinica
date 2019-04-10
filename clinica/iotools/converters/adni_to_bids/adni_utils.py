@@ -456,7 +456,9 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                     # subjects ids
                     if location == 'ADNIMERGE.csv':
                         id_ref = 'PTID'
-                        subj_id = row[id_ref.decode('utf-8')]
+                        # What was the meaning of this line ?
+                        # subj_id = row[id_ref.decode('utf-8')]
+                        subj_id = row[id_ref]
                         subj_id = bids.remove_space_and_symbols(subj_id)
                     else:
                         id_ref = 'RID'
@@ -493,7 +495,6 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                                             visit_id = 'bl'
                                     else:
                                         visit_id = row['VISCODE']
-
                                     field_value = row[sessions_fields[i]]
                                     bids_field_name = sessions_fields_bids[i]
 
@@ -577,7 +578,6 @@ def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
 
 
 def t1_pet_paths_to_bids(images, bids_dir, modality, mod_to_update=False):
-    from clinica.utils.stream import cprint
     from multiprocessing import Pool, cpu_count, Value
     from clinica.iotools.converters.adni_to_bids import adni_utils
     from functools import partial
@@ -637,8 +637,10 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
         counter.value += 1
     subject = image.Subject_ID
     if image.Path == '':
-        cprint(Fore.RED + 'No path specified for ' + image.Subject_ID
-               + ' in session ' + image.VISCODE + Fore.RESET)
+        cprint(Fore.RED + '[' + modality.upper() + '] No path specified for '
+               + image.Subject_ID + ' in session '
+               + image.VISCODE + ' ' + str(counter.value)
+               + ' / ' + str(total) + Fore.RESET)
         return nan
     cprint('[' + modality.upper() + '] Processing subject ' + str(subject)
            + ' - session ' + image.VISCODE + ', ' + str(counter.value)
@@ -657,7 +659,7 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
                             + session, modality_specific[modality]['output_path'])
     output_filename = 'sub-ADNI' + bids_subj + '_ses-' + session + modality_specific[modality]['output_filename']
 
-    # If updated mode is selected, check if an old T1 image is existing and remove it
+    # If updated mode is selected, check if an old image is existing and remove it
     existing_im = glob(path.join(output_path, output_filename + '*'))
     if mod_to_update and len(existing_im) > 0:
         print('Removing the old image...')
@@ -667,7 +669,8 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
     try:
         os.makedirs(output_path)
     except OSError:
-        cprint(output_path + ' already exists')
+        # Folder already created with previous instance
+        pass
 
     if image.Is_Dicom:
         command = 'dcm2niix -b n -z n -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
@@ -680,7 +683,7 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
 
         # Check if conversion worked (output file exists?)
         if not path.isfile(nifti_file):
-            cprint('Conversion with dcm2niix failed, trying with dcm2nii')
+            cprint('\tConversion with dcm2niix failed, trying with dcm2nii')
             command = 'dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
             subprocess.run(command,
                            shell=True,

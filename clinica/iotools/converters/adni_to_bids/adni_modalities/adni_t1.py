@@ -196,9 +196,6 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download):
         seq_path = path.join(source_dir, str(image.Subject_ID), image.Sequence)
 
         count += 1
-        # print 'Processing Subject ' + str(image.Subject_ID) + ' - Session ' + image.VISCODE + ', ' + str(
-        #     count) + ' / ' + str(total)
-
         series_path = ''
         for (dirpath, dirnames, filenames) in walk(seq_path):
             found = False
@@ -241,95 +238,6 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list, new_download):
     images.to_csv(path.join(t1_tsv_path, 't1_paths.tsv'), sep='\t', index=False)
 
     return images
-
-
-def t1_paths_to_bids(images, bids_dir, mod_to_update=False):
-    import os
-    from os import path
-    from numpy import nan
-    from clinica.iotools.converters.adni_to_bids import adni_utils
-    from glob import glob
-    from clinica.utils.stream import cprint
-    import subprocess
-
-    count = 0
-    total = images.shape[0]
-
-    for row in images.iterrows():
-        image = row[1]
-        subject = image.Subject_ID
-        count += 1
-
-        if image.Path is nan:
-            cprint('No path specified for ' + image.Subject_ID + ' in session ' + image.VISCODE)
-            continue
-        cprint('Processing subject ' + str(subject) + ' - session ' + image.VISCODE + ', ' + str(count) + ' / ' + str(total))
-
-        session = adni_utils.viscode_to_session(image.VISCODE)
-        image_path = image.Path
-        # ADDED lines
-        # ------------------
-        image_id = image.Image_ID
-        # If the original image is a DICOM, check if contains two DICOM inside the same folder
-        if image.Is_Dicom:
-            image_path = adni_utils.check_two_dcm_folder(image_path, bids_dir, image_id)
-        # ------------------
-
-        bids_subj = subject.replace('_', '')
-        output_path = path.join(bids_dir, 'sub-ADNI' + bids_subj, 'ses-' + session, 'anat')
-        output_filename = 'sub-ADNI' + bids_subj + '_ses-' + session + '_T1w'
-
-        # ADDED lines
-        # ------------------
-        # If updated mode is selected, check if an old T1 image is existing and remove it
-        existing_t1 = glob(path.join(output_path, output_filename + '*'))
-
-        if mod_to_update and len(existing_t1) > 0:
-            print('Removing the old T1 image...')
-            for t1 in existing_t1:
-                os.remove(t1)
-        # ------------------
-
-        try:
-            os.makedirs(output_path)
-        except OSError:
-            if not path.isdir(output_path):
-                raise
-
-        if image.Is_Dicom:
-            command = 'dcm2niix -b n -z n -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
-            subprocess.run(command,
-                           shell=True,
-                           stderr=subprocess.DEVNULL,
-                           stdout=subprocess.DEVNULL)
-            nifti_file = path.join(output_path, output_filename + '.nii')
-            output_image = nifti_file + '.gz'
-
-            # Check if conversion worked (output file exists?)
-            if not path.isfile(nifti_file):
-                cprint('Conversion with dcm2niix failed, trying with dcm2nii')
-                command = 'dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
-                subprocess.run(command,
-                               shell=True,
-                               stdout=subprocess.DEVNULL,
-                               stderr=subprocess.DEVNULL)
-                nifti_file = path.join(output_path, subject.replace('_', '') + '.nii')
-                output_image = path.join(output_path, output_filename + '.nii.gz')
-
-                if not path.isfile(nifti_file):
-                    # TODO - LOG THIS
-                    cprint('DICOM to NIFTI conversion error for ' + image_path)
-                    continue
-
-            adni_utils.center_nifti_origin(nifti_file, output_image)
-            os.remove(nifti_file)
-
-        else:
-            output_image = path.join(output_path, output_filename + '.nii.gz')
-            adni_utils.center_nifti_origin(image_path, output_image)
-
-    # Check if there is still the folder tmp_dcm_folder and remove it
-    adni_utils.remove_tmp_dmc_folder(bids_dir)
 
 
 def adni1_image(subject_id, timepoint, visit_str, mprage_meta_subj, ida_meta_subj, mri_quality_subj, mayo_mri_qc_subj):

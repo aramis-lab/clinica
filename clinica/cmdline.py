@@ -93,7 +93,7 @@ def execute():
     import argparse
     from colorama import Fore
     import warnings
-
+    print(sys.argv)
     warnings.filterwarnings("ignore")
     MANDATORY_TITLE = (Fore.YELLOW + 'Mandatory arguments' + Fore.RESET)
     OPTIONAL_TITLE = (Fore.YELLOW + 'Optional arguments' + Fore.RESET)
@@ -479,4 +479,13 @@ def execute():
 
 
 if __name__ == '__main__':
+    sys.argv = ['/Users/arnaud.marcoux/miniconda3/envs/clinica_env/bin/clinica',
+                'convert',
+                'adni-to-bids',
+                '/Users/arnaud.marcoux/gitlab/clinica_untouched/clinica/test/data/Adni2Bids/in/unorganized_data',
+                '/Users/arnaud.marcoux/gitlab/clinica_untouched/clinica/test/data/Adni2Bids/in/ADNI_clinical_data_new',
+                'bids',
+                '-sl',
+                '/Users/arnaud.marcoux/CI/new_data/Adni2Bids/in/subjects.txt']
     execute()
+

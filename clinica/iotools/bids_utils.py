@@ -38,6 +38,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
     fields_bids = ['participant_id']
     prev_location = ''
     index_to_drop = []
+    subjects_to_drop = []
     location_name = study_name + ' location'
 
     # Load the data from the clincal specification file
@@ -111,11 +112,14 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
         bids_id = [s for s in bids_ids if value in s]
 
         if len(bids_id) == 0:
-            cprint("Subject " + value + " not found in the BIDS converted version of the dataset.")
             index_to_drop.append(i)
+            subjects_to_drop.append(value)
         else:
             participant_df.set_value(i, 'participant_id', bids_id[0])
 
+    if len(subjects_to_drop) > 0:
+        cprint('The following subjects of ADNIMERGE were not found in your BIDS folder :\n'
+               + ', '.join(subjects_to_drop))
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
         participant_df = participant_df.drop(index_to_drop)
@@ -419,7 +423,7 @@ def dcm_to_nii(input_path, output_path, bids_name):
 
     # If dcm2niix didn't work use dcm2nii
     if not os.path.exists(path.join(output_path, bids_name + '.nii.gz')):
-        print('Conversion with dcm2niix failed, trying with dcm2nii')
+        print('\tConversion with dcm2niix failed, trying with dcm2nii')
         os.system('dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + input_path)
 
     # If the conversion failed with both tools
