@@ -136,7 +136,7 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
     import shutil
     import os
 
-    temp_folder_name = 'tmp_dcm_folder'
+    temp_folder_name = 'tmp_dcm_folder_' + image_uid
     dest_path = path.join(bids_folder, temp_folder_name)
 
     # Check if there is more than one xml file inside the folder
@@ -155,7 +155,7 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
         return dicom_path
 
 
-def remove_tmp_dmc_folder(bids_dir):
+def remove_tmp_dmc_folder(bids_dir, image_id):
     """
     Remove the folder tmp_dmc_folder created by the method check_two_dcm_folder (if existing)
 
@@ -168,7 +168,7 @@ def remove_tmp_dmc_folder(bids_dir):
     from os.path import exists, join
     from shutil import rmtree
 
-    tmp_dcm_folder_path = join(bids_dir, 'tmp_dcm_folder')
+    tmp_dcm_folder_path = join(bids_dir, 'tmp_dcm_folder_' + image_id)
     if exists(tmp_dcm_folder_path):
         rmtree(tmp_dcm_folder_path)
 
@@ -709,5 +709,5 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
         adni_utils.center_nifti_origin(image_path, output_image)
 
     # Check if there is still the folder tmp_dcm_folder and remove it
-    adni_utils.remove_tmp_dmc_folder(bids_dir)
+    adni_utils.remove_tmp_dmc_folder(bids_dir, image_id)
     return output_image
