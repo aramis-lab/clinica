@@ -632,8 +632,11 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
                                  'output_filename': '_task-rest_acq-fdg_pet'}
                          }
 
+    global counter
+
     with counter.get_lock():
         counter.value += 1
+
     subject = image.Subject_ID
     if image.Path == '':
         cprint(Fore.RED + '[' + modality.upper() + '] No path specified for '
