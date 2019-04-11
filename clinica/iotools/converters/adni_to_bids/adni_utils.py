@@ -165,12 +165,12 @@ def remove_tmp_dmc_folder(bids_dir):
     Returns:
 
     """
-    from os import path
-    import os
+    from os.path import exists, join
+    from shutil import rmtree
 
-    tmp_dcm_folder_path = path.join(bids_dir, 'tmp_dcm_folder')
-    if os.path.exists(tmp_dcm_folder_path):
-        os.remove(tmp_dcm_folder_path)
+    tmp_dcm_folder_path = join(bids_dir, 'tmp_dcm_folder')
+    if exists(tmp_dcm_folder_path):
+        rmtree(tmp_dcm_folder_path)
 
 
 def check_bids_t1(bids_path, container='anat', extension='_T1w.nii.gz', subjects=None):
@@ -613,6 +613,7 @@ def t1_pet_paths_to_bids(images, bids_dir, modality, mod_to_update=False):
     output_file_treated = poolrunner.map(partial_create_file, images_list)
     del counter
     return output_file_treated
+
 
 def create_file(image, modality, total, bids_dir, mod_to_update):
     import subprocess
