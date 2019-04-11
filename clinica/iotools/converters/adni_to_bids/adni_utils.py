@@ -136,7 +136,7 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
     import shutil
     import os
 
-    temp_folder_name = 'tmp_dcm_folder_' + image_uid
+    temp_folder_name = 'tmp_dcm_folder_' + str(image_uid).strip(' ')
     dest_path = path.join(bids_folder, temp_folder_name)
 
     # Check if there is more than one xml file inside the folder
@@ -168,7 +168,7 @@ def remove_tmp_dmc_folder(bids_dir, image_id):
     from os.path import exists, join
     from shutil import rmtree
 
-    tmp_dcm_folder_path = join(bids_dir, 'tmp_dcm_folder_' + image_id)
+    tmp_dcm_folder_path = join(bids_dir, 'tmp_dcm_folder_' + str(image_id).strip(' '))
     if exists(tmp_dcm_folder_path):
         rmtree(tmp_dcm_folder_path)
 
