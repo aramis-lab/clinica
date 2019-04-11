@@ -871,7 +871,10 @@ def get_wf(subject_id,
     vol2vol_mask = pe.Node(ApplyVolTransform(reg_header=True, interp='nearest'),
                            name='vol2vol_mask')
 
-    tpmnii = os.path.join(os.path.expandvars('$SPM_HOME'), 'tpm', 'TPM.nii')
+    if 'SPMSTANDALONE_HOME' in os.environ:
+        tpmnii = os.path.join(str(os.getenv("SPM_HOME")), 'spm12_mcr/spm12/spm12/tpm/TPM.nii')
+    else:
+        tpmnii = os.path.join(os.path.expandvars('$SPM_HOME'), 'tpm', 'TPM.nii')
     if not os.path.exists(tpmnii):
         raise IOError('Could not find TPM.nii in your SPM installation. Is your $SPM_HOME environnement variable correctly set ?')
 
