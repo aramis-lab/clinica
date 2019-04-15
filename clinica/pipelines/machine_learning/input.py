@@ -516,9 +516,9 @@ class CAPSVoxelBasedInputREGSVM(CAPSInput):
         if self._image_type == 'T1':
             fwhm = '' if self._fwhm == 0 else '_fwhm-%dmm' % int(self._fwhm)
 
-            self._images = [path.join(self._caps_directory,
-                                      'regul_%s_%s_T1w_segm-graymatter_space-Ixi549Space_modulated-%s%s_probability.nii'
-                                      % (self._subjects[i], self._sessions[i], self._modulated, fwhm))
+            self._images = [path.join(self._caps_directory,'subjects', self._subjects[i], self._sessions[i],'t1/input_regularised_svm/group-' + self._group_id,
+                                      '%s_%s_segm-graymatter_space-Ixi549Space_modulated-on_regularization-Fisher_fwhm-4_probability.nii.gz'
+                                      % (self._subjects[i], self._sessions[i]))
                             for i in range(len(self._subjects))]
         else:
             pvc = '' if self._pvc is None else '_pvc-%s' % self._pvc

@@ -2,6 +2,7 @@
 
 
 import numpy as np
+from sklearn.metrics import balanced_accuracy_score, accuracy_score, classification_report
 
 
 def evaluate_prediction(y, y_hat):
@@ -70,3 +71,20 @@ def evaluate_prediction(y, y_hat):
 
 def gram_matrix_linear(data):
     return np.dot(data, data.transpose())
+
+def evaluate_prediction_multiclass(y, y_hat):
+
+    balanced_accuracy = balanced_accuracy_score(y, y_hat)
+    accuracy = accuracy_score(y, y_hat)
+
+    results = {'accuracy': accuracy,
+               'balanced_accuracy': balanced_accuracy
+               #'sensitivity': sensitivity,
+               #'specificity': specificity,
+               #'ppv': ppv,
+               #'npv': npv,
+               #'confusion_matrix': {'tp': len(tp), 'tn': len(tn), 'fp': len(fp), 'fn': len(fn)}
+               }
+
+    return results
+

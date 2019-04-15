@@ -16,6 +16,7 @@ from xgboost import XGBClassifier
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_auc_score
 import itertools
+from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 
 from clinica.pipelines.machine_learning import base
 import clinica.pipelines.machine_learning.ml_utils as utils
@@ -807,3 +808,298 @@ class XGBoost(base.MLAlgorithm):
 
         with open(path.join(output_dir, 'best_parameters.json'), 'w') as f:
             json.dump(parameters_dict, f)
+
+class OneVsOneSVM(base.MLAlgorithm):
+    def __init__(self, kernel, y, balanced=True, grid_search_folds=10, c_range=np.logspace(-6, 2, 17), n_threads=15):
+        self._kernel = kernel
+        self._y = y
+        self._balanced = balanced
+        self._grid_search_folds = grid_search_folds
+        self._c_range = c_range
+        self._n_threads = n_threads
+
+    def _launch_svc(self, kernel_train, x_test, y_train, y_test, c):
+
+        if self._balanced:
+            svc = OneVsOneClassifier(SVC(C=c, kernel='precomputed', probability=True, tol=1e-6, class_weight='balanced'))
+        else:
+            svc = OneVsOneClassifier(SVC(C=c, kernel='precomputed', probability=True, tol=1e-6))
+
+        svc.fit(kernel_train, y_train)
+        y_hat_train = svc.predict(kernel_train)
+        y_hat = svc.predict(x_test)
+        proba_test = svc.predict_proba(x_test)[:, 1]
+        #auc = roc_auc_score(y_test, proba_test)
+
+        return svc, y_hat, y_hat_train
+
+    def _grid_search(self, kernel_train, x_test, y_train, y_test, c):
+        #y_hat is the value predicted
+
+        _, y_hat, _ = self._launch_svc(kernel_train, x_test, y_train, y_test, c)
+        res = utils.evaluate_prediction_multiclass(y_test, y_hat)
+
+        return res['balanced_accuracy']
+
+    def _select_best_parameter(self, async_result):
+
+        c_values = []
+        accuracies = []
+        for fold in async_result.keys():
+            best_c = -1
+            best_acc = -1
+
+            for c, async_acc in async_result[fold].items():
+
+                acc = async_acc.get()
+                if acc > best_acc:
+                    best_c = c
+                    best_acc = acc
+            c_values.append(best_c)
+            accuracies.append(best_acc)
+
+        best_acc = np.mean(accuracies)
+        best_c = np.power(10, np.mean(np.log10(c_values)))
+
+        return {'c': best_c, 'balanced_accuracy': best_acc}
+
+    def evaluate(self, train_index, test_index):
+
+        inner_pool = ThreadPool(self._n_threads)
+        async_result = {}
+        for i in range(self._grid_search_folds):
+            async_result[i] = {}
+
+        outer_kernel = self._kernel[train_index, :][:, train_index]
+        y_train = self._y[train_index]
+
+        skf = StratifiedKFold(n_splits=self._grid_search_folds, shuffle=True)
+        inner_cv = list(skf.split(np.zeros(len(y_train)), y_train))
+
+        for i in range(len(inner_cv)):
+            inner_train_index, inner_test_index = inner_cv[i]
+
+            inner_kernel = outer_kernel[inner_train_index, :][:, inner_train_index]
+            x_test_inner = outer_kernel[inner_test_index, :][:, inner_train_index]
+            y_train_inner, y_test_inner = y_train[inner_train_index], y_train[inner_test_index]
+
+            for c in self._c_range:
+                async_result[i][c] = inner_pool.apply_async(self._grid_search,
+                                                            (inner_kernel, x_test_inner,
+                                                             y_train_inner, y_test_inner, c))
+        inner_pool.close()
+        inner_pool.join()
+
+        best_parameter = self._select_best_parameter(async_result)
+        x_test = self._kernel[test_index, :][:, train_index]
+        y_train, y_test = self._y[train_index], self._y[test_index]
+
+        _, y_hat, y_hat_train = self._launch_svc(outer_kernel, x_test, y_train, y_test, best_parameter['c'])
+
+        result = dict()
+        result['best_parameter'] = best_parameter
+        result['evaluation'] = utils.evaluate_prediction_multiclass(y_test, y_hat)
+        result['evaluation_train'] = utils.evaluate_prediction_multiclass(y_train, y_hat_train)
+        result['y_hat'] = y_hat
+        result['y_hat_train'] = y_hat_train
+        result['y'] = y_test
+        result['y_train'] = y_train
+        result['y_index'] = test_index
+        result['x_index'] = train_index
+        #result['auc'] = auc
+
+        return result
+
+    def apply_best_parameters(self, results_list):
+
+        best_c_list = []
+        bal_acc_list = []
+
+        for result in results_list:
+            best_c_list.append(result['best_parameter']['c'])
+            bal_acc_list.append(result['best_parameter']['balanced_accuracy'])
+
+        # 10^(mean of log10 of best Cs of each fold) is selected
+        best_c = np.power(10, np.mean(np.log10(best_c_list)))
+        # Mean balanced accuracy
+        mean_bal_acc = np.mean(bal_acc_list)
+
+        if self._balanced:
+            svc = OneVsOneClassifier(SVC(C=best_c, kernel='precomputed', probability=True, tol=1e-6, class_weight='balanced'))
+        else:
+            svc = OneVsOneClassifier(SVC(C=best_c, kernel='precomputed', probability=True, tol=1e-6))
+
+        svc.fit(self._kernel, self._y)
+
+        return svc, {'c': best_c, 'balanced_accuracy': mean_bal_acc}
+
+    def save_classifier(self, classifier, output_dir):
+
+        #np.savetxt(path.join(output_dir, 'dual_coefficients.txt'), classifier.dual_coef_)
+        np.savetxt(path.join(output_dir, 'support_vectors_indices.txt'), classifier.support_)
+        np.savetxt(path.join(output_dir, 'intersect.txt'), classifier.intercept_)
+
+    def save_weights(self, classifier, x, output_dir):
+
+        dual_coefficients = classifier.dual_coef_
+        sv_indices = classifier.support_
+
+        weighted_sv = dual_coefficients.transpose() * x[sv_indices]
+        weights = np.sum(weighted_sv, 0)
+
+        np.savetxt(path.join(output_dir, 'weights.txt'), weights)
+
+        return weights
+
+    def save_parameters(self, parameters_dict, output_dir):
+        with open(path.join(output_dir, 'best_parameters.json'), 'w') as f:
+            json.dump(parameters_dict, f)
+
+
+class OneVsRestSVM(base.MLAlgorithm):
+    def __init__(self, kernel, y, balanced=True, grid_search_folds=10, c_range=np.logspace(-6, 2, 17), n_threads=15):
+        self._kernel = kernel
+        self._y = y
+        self._balanced = balanced
+        self._grid_search_folds = grid_search_folds
+        self._c_range = c_range
+        self._n_threads = n_threads
+
+    def _launch_svc(self, kernel_train, x_test, y_train, y_test, c):
+
+        if self._balanced:
+            svc = OneVsRestClassifier(SVC(C=c, kernel='precomputed', probability=True, tol=1e-6, class_weight='balanced'))
+        else:
+            svc = OneVsRestClassifier(SVC(C=c, kernel='precomputed', probability=True, tol=1e-6))
+
+        svc.fit(kernel_train, y_train)
+        y_hat_train = svc.predict(kernel_train)
+        y_hat = svc.predict(x_test)
+        proba_test = svc.predict_proba(x_test)[:, 1]
+        #auc = roc_auc_score(y_test, proba_test)
+
+        return svc, y_hat, y_hat_train
+
+    def _grid_search(self, kernel_train, x_test, y_train, y_test, c):
+        #y_hat is the value predicted
+
+        _, y_hat, _ = self._launch_svc(kernel_train, x_test, y_train, y_test, c)
+        res = utils.evaluate_prediction_multiclass(y_test, y_hat)
+
+        return res['balanced_accuracy']
+
+    def _select_best_parameter(self, async_result):
+
+        c_values = []
+        accuracies = []
+        for fold in async_result.keys():
+            best_c = -1
+            best_acc = -1
+
+            for c, async_acc in async_result[fold].items():
+
+                acc = async_acc.get()
+                if acc > best_acc:
+                    best_c = c
+                    best_acc = acc
+            c_values.append(best_c)
+            accuracies.append(best_acc)
+
+        best_acc = np.mean(accuracies)
+        best_c = np.power(10, np.mean(np.log10(c_values)))
+
+        return {'c': best_c, 'balanced_accuracy': best_acc}
+
+    def evaluate(self, train_index, test_index):
+
+        inner_pool = ThreadPool(self._n_threads)
+        async_result = {}
+        for i in range(self._grid_search_folds):
+            async_result[i] = {}
+
+        outer_kernel = self._kernel[train_index, :][:, train_index]
+        y_train = self._y[train_index]
+
+        skf = StratifiedKFold(n_splits=self._grid_search_folds, shuffle=True)
+        inner_cv = list(skf.split(np.zeros(len(y_train)), y_train))
+
+        for i in range(len(inner_cv)):
+            inner_train_index, inner_test_index = inner_cv[i]
+
+            inner_kernel = outer_kernel[inner_train_index, :][:, inner_train_index]
+            x_test_inner = outer_kernel[inner_test_index, :][:, inner_train_index]
+            y_train_inner, y_test_inner = y_train[inner_train_index], y_train[inner_test_index]
+
+            for c in self._c_range:
+                async_result[i][c] = inner_pool.apply_async(self._grid_search,
+                                                            (inner_kernel, x_test_inner,
+                                                             y_train_inner, y_test_inner, c))
+        inner_pool.close()
+        inner_pool.join()
+
+        best_parameter = self._select_best_parameter(async_result)
+        x_test = self._kernel[test_index, :][:, train_index]
+        y_train, y_test = self._y[train_index], self._y[test_index]
+
+        _, y_hat, y_hat_train = self._launch_svc(outer_kernel, x_test, y_train, y_test, best_parameter['c'])
+
+        result = dict()
+        result['best_parameter'] = best_parameter
+        result['evaluation'] = utils.evaluate_prediction_multiclass(y_test, y_hat)
+        result['evaluation_train'] = utils.evaluate_prediction_multiclass(y_train, y_hat_train)
+        result['y_hat'] = y_hat
+        result['y_hat_train'] = y_hat_train
+        result['y'] = y_test
+        result['y_train'] = y_train
+        result['y_index'] = test_index
+        result['x_index'] = train_index
+        #result['auc'] = auc
+
+        return result
+
+    def apply_best_parameters(self, results_list):
+
+        best_c_list = []
+        bal_acc_list = []
+
+        for result in results_list:
+            best_c_list.append(result['best_parameter']['c'])
+            bal_acc_list.append(result['best_parameter']['balanced_accuracy'])
+
+        # 10^(mean of log10 of best Cs of each fold) is selected
+        best_c = np.power(10, np.mean(np.log10(best_c_list)))
+        # Mean balanced accuracy
+        mean_bal_acc = np.mean(bal_acc_list)
+
+        if self._balanced:
+            svc = OneVsOneClassifier(SVC(C=best_c, kernel='precomputed', probability=True, tol=1e-6, class_weight='balanced'))
+        else:
+            svc = OneVsOneClassifier(SVC(C=best_c, kernel='precomputed', probability=True, tol=1e-6))
+
+        svc.fit(self._kernel, self._y)
+
+        return svc, {'c': best_c, 'balanced_accuracy': mean_bal_acc}
+
+    def save_classifier(self, classifier, output_dir):
+
+        #np.savetxt(path.join(output_dir, 'dual_coefficients.txt'), classifier.dual_coef_)
+        np.savetxt(path.join(output_dir, 'support_vectors_indices.txt'), classifier.support_)
+        np.savetxt(path.join(output_dir, 'intersect.txt'), classifier.intercept_)
+
+    def save_weights(self, classifier, x, output_dir):
+
+        dual_coefficients = classifier.dual_coef_
+        sv_indices = classifier.support_
+
+        weighted_sv = dual_coefficients.transpose() * x[sv_indices]
+        weights = np.sum(weighted_sv, 0)
+
+        np.savetxt(path.join(output_dir, 'weights.txt'), weights)
+
+        return weights
+
+    def save_parameters(self, parameters_dict, output_dir):
+        with open(path.join(output_dir, 'best_parameters.json'), 'w') as f:
+            json.dump(parameters_dict, f)
+
+

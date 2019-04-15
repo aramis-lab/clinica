@@ -12,7 +12,10 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-class AdniToBids(Converter):
+class AdniToBids(Con
+
+
+verter):
 
     def get_modalities_supported(self):
         """
