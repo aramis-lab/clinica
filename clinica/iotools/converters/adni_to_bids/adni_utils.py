@@ -155,6 +155,7 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
         return dicom_path
 
 
+
 def remove_tmp_dmc_folder(bids_dir, image_id):
     """
     Remove the folder tmp_dmc_folder created by the method check_two_dcm_folder (if existing)

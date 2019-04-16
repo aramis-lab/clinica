@@ -403,6 +403,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
 
         if self.parameters['tpm'] is not None:
             tissue_map = self.parameters['tpm']
+            
 
         new_segment.inputs.tissues = seg_utils.get_tissue_tuples(tissue_map,
                                                                  self.parameters['tissue_classes'],
