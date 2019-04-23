@@ -158,6 +158,8 @@ def flair_paths_to_bids(images, dest_dir, mod_to_update=False):
     """
     from multiprocessing import cpu_count, Pool, Value
     from functools import partial
+    from clinica.utils.stream import cprint
+    from colorama import Fore
 
     counter = None
 
@@ -166,6 +168,10 @@ def flair_paths_to_bids(images, dest_dir, mod_to_update=False):
         global counter
         counter = args
 
+    cprint(Fore.RED + 'Look here !!!')
+    for im in images['Subject_ID'].unique():
+        cprint(im)
+    cprint(Fore.RESET)
     subjs_list = [sub for sub in images['Subject_ID'].unique() if 'S' in sub]
 
     counter = Value('i', 0)
