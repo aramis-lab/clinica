@@ -16,8 +16,9 @@ __status__ = "Development"
 
 
 import warnings
-import sysi
-from .. import testing_tools
+import sys
+from os import pardir
+from testing_tools import *
 
 # Determine location for working_directory
 warnings.filterwarnings("ignore")
@@ -28,7 +29,8 @@ def test_run_T1FreeSurferCrossSectional(cmdopt):
     import subprocess
 
     working_dir = cmdopt
-    root = join(dirname(abspath(__file__)), 'data', 'T1FreeSurferCrossSectional')
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'T1FreeSurferCrossSectional')
 
     clean_folder(join(root, 'out', 'caps'))
     clean_folder(join(working_dir, 'T1FreeSurferCrossSectional'))
@@ -62,7 +64,8 @@ def test_run_T1VolumeTissueSegmentation(cmdopt):
     from os.path import dirname, join, abspath
 
     working_dir = cmdopt
-    root = join(dirname(abspath(__file__)), 'data', 'T1VolumeTissueSegmentation')
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'T1VolumeTissueSegmentation')
     clean_folder(join(working_dir, 'T1VolumeTissueSegmentation'))
     clean_folder(join(root, 'out', 'caps'))
 
@@ -92,7 +95,8 @@ def test_run_T1VolumeCreateDartel(cmdopt):
     import shutil
 
     working_dir = cmdopt
-    root = join(dirname(abspath(__file__)), 'data', 'T1VolumeCreateDartel')
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'T1VolumeCreateDartel')
 
     # Remove potential residual of previous UT
     clean_folder(join(working_dir, 'T1VolumeCreateDartel'))
@@ -138,7 +142,8 @@ def test_run_T1VolumeDartel2MNI(cmdopt):
     import nibabel as nib
 
     working_dir = cmdopt
-    root = join(dirname(abspath(__file__)), 'data', 'T1VolumeDartel2MNI')
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'T1VolumeDartel2MNI')
 
     # Remove potential residual of previous UT
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -176,7 +181,8 @@ def test_run_T1VolumeNewTemplate(cmdopt):
     from os.path import dirname, join, abspath, exists, basename
 
     working_dir = cmdopt
-    root = join(dirname(abspath(__file__)), 'data', 'T1VolumeNewTemplate')
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'T1VolumeNewTemplate')
 
     # Remove residual files from out folder
     clean_folder(join(root, 'out', 'caps'), recreate=True)
@@ -217,7 +223,8 @@ def test_run_T1VolumeExistingDartel(cmdopt):
     import shutil
 
     working_dir = cmdopt
-    root = join(dirname(abspath(__file__)), 'data', 'T1VolumeExistingDartel')
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'T1VolumeExistingDartel')
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     clean_folder(join(working_dir, 'T1VolumeExistingDartel'))
 
@@ -256,7 +263,8 @@ def test_run_T1VolumeExistingTemplate(cmdopt):
     import shutil
 
     working_dir = cmdopt
-    root = join(dirname(abspath(__file__)), 'data', 'T1VolumeExistingTemplate')
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'T1VolumeExistingTemplate')
 
     # Remove residual files from out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -296,7 +304,8 @@ def test_run_T1VolumeParcellation(cmdopt):
     import numpy as np
 
     working_dir = cmdopt
-    root = join(dirname(abspath(__file__)), 'data', 'T1VolumeParcellation')
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'T1VolumeParcellation')
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     clean_folder(join(working_dir, 'T1VolumeParcellation'))
 
@@ -334,7 +343,8 @@ def test_run_DWIPreprocessingUsingT1(cmdopt):
     from os.path import dirname, join, abspath
 
     working_dir = cmdopt
-    root = join(dirname(abspath(__file__)), 'data', 'DWIPreprocessingUsingT1')
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'DWIPreprocessingUsingT1')
 
     # Remove old instance of UT
     clean_folder(join(root, 'out', 'caps'))
@@ -366,7 +376,8 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
     warnings.filterwarnings("ignore")
 
     working_dir = cmdopt
-    root = join(dirname(abspath(__file__)), 'data', 'DWIPreprocessingUsingPhaseDiffFieldmap')
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'DWIPreprocessingUsingPhaseDiffFieldmap')
 
     # Remove old instance of UT
     clean_folder(join(root, 'out', 'caps'))
@@ -398,7 +409,8 @@ def test_run_DWIDTI(cmdopt):
     import numpy as np
 
     working_dir = cmdopt
-    root = join(dirname(abspath(__file__)), 'data', 'DWIDTI')
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'DWIDTI')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     clean_folder(join(working_dir, 'DWIDTI'))
@@ -482,7 +494,8 @@ def test_run_fMRIPreprocessing(cmdopt):
     import shutil
 
     working_dir = cmdopt
-    root = join(dirname(abspath(__file__)), 'data', 'fMRIPreprocessing')
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'fMRIPreprocessing')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     clean_folder(join(working_dir, 'fMRIPreprocessing'))
@@ -520,7 +533,8 @@ def test_run_PETVolume(cmdopt):
     import shutil
 
     working_dir = cmdopt
-    root = join(dirname(abspath(__file__)), 'data', 'PETVolume')
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'PETVolume')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     clean_folder(join(working_dir, 'PETVolume'))
@@ -557,7 +571,8 @@ def test_run_StatisticsSurface(cmdopt):
     from scipy.io import loadmat
 
     working_dir = cmdopt
-    root = join(dirname(abspath(__file__)), 'data', 'StatisticsSurface')
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'StatisticsSurface')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     clean_folder(join(working_dir, 'StatisticsSurface'))
@@ -602,7 +617,8 @@ def test_run_PETSurface(cmdopt):
     import numpy as np
 
     working_dir = cmdopt
-    root = join(dirname(abspath(__file__)), 'data', 'PETSurface')
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'PETSurface')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     clean_folder(join(working_dir, 'PETSurface'))
@@ -645,8 +661,10 @@ def test_run_WorkflowsML(cmdopt):
     warnings.filterwarnings("ignore", category=UserWarning)
     warnings.filterwarnings("ignore", category=FutureWarning)
 
-    root = join(dirname(abspath(__file__)), 'data', 'WorkflowsML')
-    root_input = join(dirname(abspath(__file__)), 'data', 'InputsML')
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'WorkflowsML')
+    root_input = dirname(abspath(join(abspath(__file__), pardir)))
+    root_input = join(root_input, 'data', 'InputsML')
 
     caps_dir = join(root_input, 'in', 'caps')
     tsv = join(root_input, 'in', 'subjects.tsv')
@@ -681,46 +699,47 @@ def test_run_WorkflowsML(cmdopt):
     wf4.run()
     shutil.rmtree(output_dir4)
 
-  def test_run_SpatialSVM(cmdopt):
-      from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
-      from os.path import dirname, join, abspath, exists
-      import shutil
-      import numpy as np
-      import nibabel as nib
+def test_run_SpatialSVM(cmdopt):
+    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
+    from os.path import dirname, join, abspath, exists
+    import shutil
+    import numpy as np
+    import nibabel as nib
 
-      working_dir = cmdopt
-      root = join(dirname(abspath(__file__)), 'data', 'SpatialSVM')
+    working_dir = cmdopt
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'SpatialSVM')
 
-      # Remove potential residual of previous UT
-      clean_folder(join(root, 'out', 'caps'), recreate=False)
-      clean_folder(join(working_dir, 'SpatialSVM'), recreate=False)
+    # Remove potential residual of previous UT
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'SpatialSVM'), recreate=False)
 
-      # Copy necessary data from in to out
-      shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+    # Copy necessary data from in to out
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
-      # Instantiate pipeline and run()
-      pipeline = SpatialSVM(caps_directory=join(root, 'out', 'caps'),
+    # Instantiate pipeline and run()
+    pipeline = SpatialSVM(caps_directory=join(root, 'out', 'caps'),
                             tsv_file=join(root, 'in', 'subjects.tsv'))
 
-      pipeline.parameters['group_id'] = 'ADNIbl'
-      pipeline.parameters['fwhm'] = 4
-      pipeline.parameters['image_type'] = 't1'
-      pipeline.parameters['pet_type'] = 'fdg'
-      pipeline.parameters['no_pvc'] = 'True'
-      pipeline.base_dir = join(working_dir, 'SpatialSVM')
-      pipeline.build()
-      pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
+    pipeline.parameters['group_id'] = 'ADNIbl'
+    pipeline.parameters['fwhm'] = 4
+    pipeline.parameters['image_type'] = 't1'
+    pipeline.parameters['pet_type'] = 'fdg'
+    pipeline.parameters['no_pvc'] = 'True'
+    pipeline.base_dir = join(working_dir, 'SpatialSVM')
+    pipeline.build()
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
-      # Check output vs ref
-      subjects = ['sub-ADNI011S0023', 'sub-ADNI013S0325']
-      out_data_REG_NIFTI = [nib.load(join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 'machine_learning', 'input_  spatial_svm', 'group-ADNIbl',
-                                          sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialre  gularization.nii.gz')).get_data()
-                            for sub in subjects]
-      ref_data_REG_NIFTI = [nib.load(join(root, 'ref', sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated  -on_spatialregularization.nii.gz')).get_data()
-                            for sub in subjects]
-      for i in range(len(out_data_REG_NIFTI)):
-          assert np.allclose(out_data_REG_NIFTI[i], ref_data_REG_NIFTI[i],
-                             rtol=1e-3, equal_nan=True)
+    # Check output vs ref
+    subjects = ['sub-ADNI011S0023', 'sub-ADNI013S0325']
+    out_data_REG_NIFTI = [nib.load(join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 'machine_learning', 'input_  spatial_svm', 'group-ADNIbl',
+                                        sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialre  gularization.nii.gz')).get_data()
+                          for sub in subjects]
+    ref_data_REG_NIFTI = [nib.load(join(root, 'ref', sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated  -on_spatialregularization.nii.gz')).get_data()
+                          for sub in subjects]
+    for i in range(len(out_data_REG_NIFTI)):
+        assert np.allclose(out_data_REG_NIFTI[i], ref_data_REG_NIFTI[i],
+                           rtol=1e-3, equal_nan=True)
 
-      # Remove data in out folder
-      clean_folder(join(root, 'out', 'caps'), recreate=True)
+    # Remove data in out folder
+    clean_folder(join(root, 'out', 'caps'), recreate=True)
