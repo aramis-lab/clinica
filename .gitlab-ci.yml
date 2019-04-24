@@ -175,7 +175,7 @@ test:run:mac:pipelines:
     - source deactivate
     - rm -rf $WORK_DIR_MAC/*
 
-  test:run:linux:iotools:
+test:run:linux:iotools:
   stage: long_tests
   tags:
     - linux
