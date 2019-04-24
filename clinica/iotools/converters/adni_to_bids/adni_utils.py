@@ -348,8 +348,8 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
             diagnosis_change = {1: 'CN', 2: 'MCI', 3: 'AD'}
 
             for j in list_diagnosis_nan[0]:
-                if not is_nan(sessions_df['adni_diagnosis_change'][j]) and int(sessions_df['adni_diagnosis_change'][j]) < 4:
-                    sessions_df['diagnosis'][j] = diagnosis_change[int(sessions_df['adni_diagnosis_change'][j])]
+                if not is_nan(sessions_df['adni_diagnosis_change'].iloc[j]) and int(sessions_df['adni_diagnosis_change'].iloc[j]) < 4:
+                    sessions_df['diagnosis'].iloc[j] = diagnosis_change[int(sessions_df['adni_diagnosis_change'].iloc[j])]
 
             sessions_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf-8')
 
@@ -420,6 +420,8 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
     import pandas as pd
     from os import path
     import clinica.iotools.bids_utils as bids
+    from colorama import Fore
+    from clinica.utils.stream import cprint
 
     # Load data
     sessions = pd.read_excel(clinic_specs_path, sheetname='sessions.tsv')
@@ -463,7 +465,7 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                         subj_id = bids.remove_space_and_symbols(subj_id)
                     else:
                         id_ref = 'RID'
-                        rid = str(row[id_ref.decode('utf-8')])
+                        rid = str(row[id_ref])
 
                         # Fill the rid with the needed number of zero
                         if 4 - len(rid) > 0:
@@ -496,10 +498,16 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                                             visit_id = 'bl'
                                     else:
                                         visit_id = row['VISCODE']
-                                    field_value = row[sessions_fields[i]]
-                                    bids_field_name = sessions_fields_bids[i]
+                                    try:
+                                        field_value = row[sessions_fields[i]]
+                                        bids_field_name = sessions_fields_bids[i]
+                                        sessions_dict = update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_field_name)
+                                    except KeyError:
+                                        pass
+                                        # cprint('Field value ' + Fore.RED + sessions_fields[i] + Fore.RESET + ' could not be added to sessions.tsv')
 
-                                    sessions_dict = update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_field_name)
+
+
 
             else:
                 continue
