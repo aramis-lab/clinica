@@ -690,14 +690,3 @@ def test_run_WorkflowsML(cmdopt):
     wf4.run()
     shutil.rmtree(output_dir4)
 
-
-def clean_folder(path, recreate=True):
-    from os.path import abspath, exists
-    from shutil import rmtree
-    from os import makedirs
-
-    abs_path = abspath(path)
-    if exists(abs_path):
-        rmtree(abs_path)
-    if recreate:
-        makedirs(abs_path)
