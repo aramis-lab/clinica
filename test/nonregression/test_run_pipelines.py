@@ -11,12 +11,13 @@ __credits__ = ["Arnaud Marcoux"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.2.0"
 __maintainer__ = "Arnaud Marcoux, Mauricio Diaz"
-__email__ = "arnaud.marcoux@inria.fr"
+__email__ = "arnaud.marcoux@inria.fr, mauricio.diaz@inria.fr"
 __status__ = "Development"
 
 
 import warnings
-import sys
+import sysi
+from .. import testing_tools
 
 # Determine location for working_directory
 warnings.filterwarnings("ignore")
@@ -59,7 +60,6 @@ def test_run_T1VolumeTissueSegmentation(cmdopt):
     import os
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
     from os.path import dirname, join, abspath
-    from .comparison_functions import likeliness_measure
 
     working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeTissueSegmentation')
@@ -90,7 +90,6 @@ def test_run_T1VolumeCreateDartel(cmdopt):
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
     from os.path import dirname, join, abspath, exists
     import shutil
-    from .comparison_functions import likeliness_measure
 
     working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeCreateDartel')
@@ -137,7 +136,6 @@ def test_run_T1VolumeDartel2MNI(cmdopt):
     import shutil
     import numpy as np
     import nibabel as nib
-    from .comparison_functions import likeliness_measure
 
     working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeDartel2MNI')
@@ -176,7 +174,6 @@ def test_run_T1VolumeDartel2MNI(cmdopt):
 def test_run_T1VolumeNewTemplate(cmdopt):
     from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_pipeline import T1VolumeNewTemplate
     from os.path import dirname, join, abspath, exists, basename
-    from .comparison_functions import similarity_measure
 
     working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeNewTemplate')
@@ -218,7 +215,6 @@ def test_run_T1VolumeExistingDartel(cmdopt):
     from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_pipeline import T1VolumeExistingDartel
     from os.path import dirname, join, abspath
     import shutil
-    from .comparison_functions import likeliness_measure
 
     working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeExistingDartel')
@@ -258,7 +254,6 @@ def test_run_T1VolumeExistingTemplate(cmdopt):
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
     from os.path import dirname, join, abspath
     import shutil
-    from .comparison_functions import similarity_measure
 
     working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'T1VolumeExistingTemplate')
@@ -337,7 +332,6 @@ def test_run_T1VolumeParcellation(cmdopt):
 def test_run_DWIPreprocessingUsingT1(cmdopt):
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_pipeline import DwiPreprocessingUsingT1
     from os.path import dirname, join, abspath
-    from .comparison_functions import similarity_measure
 
     working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'DWIPreprocessingUsingT1')
@@ -368,7 +362,6 @@ def test_run_DWIPreprocessingUsingT1(cmdopt):
 def test_run_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DwiPreprocessingUsingPhaseDiffFieldmap
     from os.path import dirname, join, abspath
-    from .comparison_functions import similarity_measure
     import warnings
     warnings.filterwarnings("ignore")
 
@@ -485,7 +478,6 @@ def test_run_DWIDTI(cmdopt):
 
 def test_run_fMRIPreprocessing(cmdopt):
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
-    from .comparison_functions import similarity_measure
     from os.path import dirname, join, abspath
     import shutil
 
@@ -526,7 +518,6 @@ def test_run_PETVolume(cmdopt):
     from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
     from os.path import dirname, join, abspath, exists
     import shutil
-    from .comparison_functions import likeliness_measure
 
     working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'PETVolume')
@@ -690,3 +681,46 @@ def test_run_WorkflowsML(cmdopt):
     wf4.run()
     shutil.rmtree(output_dir4)
 
+  def test_run_SpatialSVM(cmdopt):
+      from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
+      from os.path import dirname, join, abspath, exists
+      import shutil
+      import numpy as np
+      import nibabel as nib
+
+      working_dir = cmdopt
+      root = join(dirname(abspath(__file__)), 'data', 'SpatialSVM')
+
+      # Remove potential residual of previous UT
+      clean_folder(join(root, 'out', 'caps'), recreate=False)
+      clean_folder(join(working_dir, 'SpatialSVM'), recreate=False)
+
+      # Copy necessary data from in to out
+      shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+
+      # Instantiate pipeline and run()
+      pipeline = SpatialSVM(caps_directory=join(root, 'out', 'caps'),
+                            tsv_file=join(root, 'in', 'subjects.tsv'))
+
+      pipeline.parameters['group_id'] = 'ADNIbl'
+      pipeline.parameters['fwhm'] = 4
+      pipeline.parameters['image_type'] = 't1'
+      pipeline.parameters['pet_type'] = 'fdg'
+      pipeline.parameters['no_pvc'] = 'True'
+      pipeline.base_dir = join(working_dir, 'SpatialSVM')
+      pipeline.build()
+      pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
+
+      # Check output vs ref
+      subjects = ['sub-ADNI011S0023', 'sub-ADNI013S0325']
+      out_data_REG_NIFTI = [nib.load(join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 'machine_learning', 'input_  spatial_svm', 'group-ADNIbl',
+                                          sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialre  gularization.nii.gz')).get_data()
+                            for sub in subjects]
+      ref_data_REG_NIFTI = [nib.load(join(root, 'ref', sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated  -on_spatialregularization.nii.gz')).get_data()
+                            for sub in subjects]
+      for i in range(len(out_data_REG_NIFTI)):
+          assert np.allclose(out_data_REG_NIFTI[i], ref_data_REG_NIFTI[i],
+                             rtol=1e-3, equal_nan=True)
+
+      # Remove data in out folder
+      clean_folder(join(root, 'out', 'caps'), recreate=True)

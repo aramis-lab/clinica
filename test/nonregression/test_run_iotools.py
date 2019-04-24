@@ -17,6 +17,7 @@ __status__ = "Development"
 
 import warnings
 import sys
+from .. import testing_tools
 
 # Determine location for working_directory
 warnings.filterwarnings("ignore")
@@ -24,7 +25,6 @@ warnings.filterwarnings("ignore")
 def test_run_Oasis2Bids(cmdopt):
     from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import OasisToBids
     from os.path import dirname, join, abspath
-    from .comparison_functions import compare_folders
 
     root = join(dirname(abspath(__file__)), 'data', 'Oasis2Bids')
 
@@ -47,7 +47,6 @@ def test_run_Oasis2Bids(cmdopt):
 def test_run_Adni2Bids(cmdopt):
     from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
     from os.path import dirname, join, abspath
-    from .comparison_functions import compare_folders
 
     root = join(dirname(abspath(__file__)), 'data', 'Adni2Bids')
 
@@ -78,7 +77,6 @@ def test_run_CreateSubjectSessionList(cmdopt):
     from os.path import join, dirname, abspath
     from os import remove
     from clinica.iotools.utils import data_handling as dt
-    from .comparison_functions import identical_subject_list
 
     root = join(dirname(abspath(__file__)), 'data', 'CreateSubjectSessionList')
 
@@ -132,7 +130,6 @@ def test_run_ComputeMissingModalities(cmdopt):
     from os.path import join, dirname, abspath, exists
     from os import remove
     from clinica.iotools.utils import data_handling as dt
-    from .comparison_functions import same_missing_modality_tsv
 
     root = join(dirname(abspath(__file__)), 'data', 'ComputeMissingMod')
 
@@ -160,7 +157,6 @@ def test_run_ComputeMissingModalities(cmdopt):
 def test_run_Aibl2Bids(cmdopt):
     from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import convert_clinical_data, convert_images
     from os.path import dirname, join, abspath
-    from .comparison_functions import compare_folders
 
     root = join(dirname(abspath(__file__)), 'data', 'Aibl2Bids')
 
@@ -179,59 +175,3 @@ def test_run_Aibl2Bids(cmdopt):
                     shared_folder_name='bids')
     clean_folder(join(root, 'out', 'bids'), recreate=True)
 
-
-def test_run_SpatialSVM(cmdopt):
-    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
-    from os.path import dirname, join, abspath, exists
-    import shutil
-    import numpy as np
-    import nibabel as nib
-    
-    working_dir = cmdopt
-    root = join(dirname(abspath(__file__)), 'data', 'SpatialSVM')
-
-    # Remove potential residual of previous UT
-    clean_folder(join(root, 'out', 'caps'), recreate=False)
-    clean_folder(join(working_dir, 'SpatialSVM'), recreate=False)
-
-    # Copy necessary data from in to out
-    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
-
-    # Instantiate pipeline and run()
-    pipeline = SpatialSVM(caps_directory=join(root, 'out', 'caps'),
-                          tsv_file=join(root, 'in', 'subjects.tsv'))
-
-    pipeline.parameters['group_id'] = 'ADNIbl'
-    pipeline.parameters['fwhm'] = 4
-    pipeline.parameters['image_type'] = 't1'
-    pipeline.parameters['pet_type'] = 'fdg'
-    pipeline.parameters['no_pvc'] = 'True'
-    pipeline.base_dir = join(working_dir, 'SpatialSVM')
-    pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
-
-    # Check output vs ref
-    subjects = ['sub-ADNI011S0023', 'sub-ADNI013S0325']
-    out_data_REG_NIFTI = [nib.load(join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 'machine_learning', 'input_spatial_svm', 'group-ADNIbl',
-                                        sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz')).get_data()
-                          for sub in subjects]
-    ref_data_REG_NIFTI = [nib.load(join(root, 'ref', sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz')).get_data()
-                          for sub in subjects]
-    for i in range(len(out_data_REG_NIFTI)):
-        assert np.allclose(out_data_REG_NIFTI[i], ref_data_REG_NIFTI[i],
-                           rtol=1e-3, equal_nan=True)
-
-    # Remove data in out folder
-    clean_folder(join(root, 'out', 'caps'), recreate=True)
-
-
-def clean_folder(path, recreate=True):
-    from os.path import abspath, exists
-    from shutil import rmtree
-    from os import makedirs
-
-    abs_path = abspath(path)
-    if exists(abs_path):
-        rmtree(abs_path)
-    if recreate:
-        makedirs(abs_path)
