@@ -5,7 +5,8 @@
 stages:
   - build
   - install
-  - test
+  - short_tests
+  - long_tests
   - package 
 
 
@@ -91,7 +92,7 @@ launch:linux:
     - source deactivate
 
 test:style:
-  stage: test
+  stage: short_tests
   tags:
     - linux
   script:
@@ -99,7 +100,7 @@ test:style:
     - pytest --verbose -k 'test_coding_style'
       
 test:instantiate:mac:
-  stage: test
+  stage: short_tests
   tags:
     - macOS
   script:
@@ -112,7 +113,7 @@ test:instantiate:mac:
     - source deactivate
   
 test:instantiate:linux:
-  stage: test
+  stage: short_tests
   tags:
     - linux
   script:
@@ -130,8 +131,8 @@ test:instantiate:linux:
     - module purge
     - source deactivate
  
-test:run:mac:
-  stage: test
+test:run:mac:iotools:
+  stage: long_tests
   tags:
     - macOS
     - long
@@ -147,13 +148,35 @@ test:run:mac:
          --working_directory=$WORK_DIR_MAC
          --disable-warnings
          --numprocesses 4
-         -k 'test_run'
+         nonregression/test_run_iotools.py
     - module purge
     - source deactivate
     - rm -rf $WORK_DIR_MAC/*
 
-test:run:linux:
-  stage: test
+test:run:mac:pipelines:
+  stage: long_tests
+  tags:
+    - macOS
+    - long
+  only:
+    - schedules
+  script:
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
+    - module load clinica.all
+    - cd test
+    - ln -s /Volumes/data/data_ci ./data
+    - pytest 
+         --verbose
+         --working_directory=$WORK_DIR_MAC
+         --disable-warnings
+         --numprocesses 4
+         nonregression/test_run_pipelines.py
+    - module purge
+    - source deactivate
+    - rm -rf $WORK_DIR_MAC/*
+
+  test:run:linux:iotools:
+  stage: long_tests
   tags:
     - linux
     - long
@@ -170,11 +193,33 @@ test:run:linux:
          --disable-warnings
          --timeout=0
          --numprocesses 4
-         -k 'test_run'
+         nonregression/test_run_iotools.py
     - module purge
     - source deactivate
     - rm -rf WORK_DIR_LINUX/*
 
+test:run:linux:pipelines:
+  stage: long_tests
+  tags:
+    - linux
+    - long
+  only:
+    - schedules
+  script:
+    - source activate $CLINICA_ENV_BRANCH_CLEAN
+    - module load clinica.all
+    - cd test
+    - ln -s /localdrive10TB/data/ci/data_ci_upgrade ./data
+    - pytest
+         --verbose
+         --working_directory=$WORK_DIR_LINUX
+         --disable-warnings
+         --timeout=0
+         --numprocesses 4
+         nonregression/test_run_pipelines.py
+    - module purge
+    - source deactivate
+    - rm -rf WORK_DIR_LINUX/*
 pkg:
   stage: package
   tags:
