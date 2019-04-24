@@ -49,10 +49,23 @@ class AdniToBidsCLI(ce.CmdParser):
 
     def run_command(self, args):
         from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
+        from os.path import exists, join
+        from clinica.utils.stream import cprint
+        from colorama import Fore
+        from time import sleep
+
         adni_to_bids = AdniToBids()
 
         # Check dcm2nii and dcm2niix dependencies
         adni_to_bids.check_adni_dependencies()
+
+        if 'fMRI' in args.modalities and not exists(join(args.clinical_data_directory, 'IDA_MR_Metadata_Listing.csv')):
+            cprint(Fore.RED + '[Warning] We could not detect file IDA_MR_Metadata_Listing.csv in your clinical data folder.'
+                   + ' Therefore, fMRI conversion is disabled.' + Fore.GREEN
+                   + '\nADNI conversion will start in a few seconds...' + Fore.RESET)
+            # Enough time for the user to read the message
+            sleep(7)
+            args.modalities.remove('fMRI')
 
         if not args.clinical_data_only:
             adni_to_bids.convert_images(self.absolute_path(args.dataset_directory),
