@@ -196,68 +196,86 @@ def fmri_paths_to_bids(dest_dir, fmri_paths, mod_to_update=False):
         mod_to_update:  if True overwrite (or create if is missing) all the existing fmri
 
     """
-    from clinica.iotools.converters.adni_to_bids import adni_utils
-    from os import path
-    import os
-    import shutil
-    from glob import glob
-    import clinica.iotools.bids_utils as bids
-    from clinica.utils.stream import cprint
+    from multiprocessing import cpu_count, Pool, Value
+    from functools import partial
+
+    counter = None
+
+    def init(args):
+        ''' store the counter for later use '''
+        global counter
+        counter = args
 
     subjs_list = fmri_paths['Subject_ID'].drop_duplicates().values
 
-    for i in range(len(subjs_list)):
-        # print 'Converting fmri for subject', subjs_list[i]
-        sess_list = fmri_paths[(fmri_paths['Subject_ID'] == subjs_list[i])]['VISCODE'].values
-        alpha_id = adni_utils.remove_space_and_symbols(subjs_list[i])
-        bids_id = 'sub-ADNI' + alpha_id
+    counter = Value('i', 0)
+    partial_generate_subject_files = partial(generate_subject_files,
+                                             fmri_paths=fmri_paths,
+                                             dest_dir=dest_dir,
+                                             mod_to_update=mod_to_update)
+    poolrunner = Pool(cpu_count(), initializer=init, initargs=(counter,))
+    poolrunner.map(partial_generate_subject_files, subjs_list)
+    del counter
 
-        # For each session available, create the folder if doesn't exist and convert the files
-        for ses in sess_list:
-            ses_bids = adni_utils.viscode_to_session(ses)
-            bids_ses_id = 'ses-' + ses_bids
-            bids_file_name = bids_id + '_ses-' + ses_bids
-            ses_path = path.join(dest_dir, bids_id, bids_ses_id)
 
-            # If the fmri already exist
-            existing_fmri = glob(path.join(ses_path, 'func', '*_bold*'))
-            # if mod_to_add:
-            #     if len(existing_fmri) > 0:
-            #         print 'Fmri already existing. Skipped.'
-            #         continue
+def generate_subject_files(subj, fmri_paths, dest_dir, mod_to_update):
+    import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
+    import clinica.iotools.bids_utils as bids_utils
+    from clinica.utils.stream import cprint
+    import subprocess
+    import os
+    import shutil
+    from os import path
+    from glob import glob
 
-            if mod_to_update and len(existing_fmri) > 0:
-                # print 'Removing the old fmri folder...'
-                os.remove(existing_fmri[0])
+    sess_list = fmri_paths[(fmri_paths['Subject_ID'] == subj)]['VISCODE'].values
+    alpha_id = adni_utils.remove_space_and_symbols(subj)
+    bids_id = 'sub-ADNI' + alpha_id
 
-            if not os.path.exists(ses_path):
-                if not os.path.exists(path.join(dest_dir, bids_id)):
-                    os.mkdir(path.join(dest_dir, bids_id))
-                os.mkdir(path.join(dest_dir, bids_id, bids_ses_id))
+    # For each session available, create the folder if doesn't exist and convert the files
+    for ses in sess_list:
+        with counter.get_lock():
+            counter.value += 1
+        cprint('[FLAIR] Processing subject ' + str(subj)
+               + ' - session ' + ses + ', ' + str(counter.value)
+               + ' / ' + str(len(fmri_paths)))
+        ses_bids = adni_utils.viscode_to_session(ses)
+        bids_ses_id = 'ses-' + ses_bids
+        bids_file_name = bids_id + '_ses-' + ses_bids
+        ses_path = path.join(dest_dir, bids_id, bids_ses_id)
 
-            fmri_info = fmri_paths[(fmri_paths['Subject_ID'] == subjs_list[i]) & (fmri_paths['VISCODE'] == ses)]
+        # If the fmri already exist
+        existing_fmri = glob(path.join(ses_path, 'func', '*_bold*'))
+        # if mod_to_add:
+        #     if len(existing_fmri) > 0:
+        #         print 'Fmri already existing. Skipped.'
+        #         continue
 
-            if not fmri_info['Path'].empty:
-                if type(fmri_info['Path'].values[0]) != float:
-                    if not os.path.exists(path.join(ses_path, 'func')):
-                        os.mkdir(path.join(ses_path, 'func'))
-                    fmri_path = fmri_info['Path'].values[0]
-                    dcm_to_convert = adni_utils.check_two_dcm_folder(
-                            fmri_path, dest_dir,
-                            fmri_info['IMAGEUID'].values[0])
-                    cprint(os.path.join(
-                        ses_path, 'func',
-                        bids_file_name + '_task-rest_bold.nii.gz'))
+        if mod_to_update and len(existing_fmri) > 0:
+            # print 'Removing the old fmri folder...'
+            os.remove(existing_fmri[0])
 
-                    if not os.path.isfile(os.path.join(ses_path, 'func', bids_file_name + '_task-rest_bold.nii.gz')):
+        if not os.path.exists(ses_path):
+            if not os.path.exists(path.join(dest_dir, bids_id)):
+                os.mkdir(path.join(dest_dir, bids_id))
+            os.mkdir(path.join(dest_dir, bids_id, bids_ses_id))
 
-                        bids.convert_fmri(dcm_to_convert, path.join(ses_path, 'func'), bids_file_name)
-                    else:
-                        cprint("Images already converted")
+        fmri_info = fmri_paths[(fmri_paths['Subject_ID'] == subj) & (fmri_paths['VISCODE'] == ses)]
+        if not fmri_info['Path'].values[0] == '':
+            if type(fmri_info['Path'].values[0]) != float:
+                if not os.path.exists(path.join(ses_path, 'func')):
+                    os.mkdir(path.join(ses_path, 'func'))
+                fmri_path = fmri_info['Path'].values[0]
+                dcm_to_convert = adni_utils.check_two_dcm_folder(fmri_path,
+                                                                 dest_dir,
+                                                                 fmri_info['IMAGEUID'].values[0])
+                if not os.path.isfile(os.path.join(ses_path, 'func', bids_file_name + '_task-rest_bold.nii.gz')):
+                    bids_utils.convert_fmri(dcm_to_convert, path.join(ses_path, 'func'), bids_file_name)
+                else:
+                    cprint("Images already converted")
 
-                    # Delete the temporary folder used for copying fmri with 2 subjects inside the DICOM folder
-                    if os.path.exists(path.join(dest_dir, 'tmp_dcm_folder')):
-                        shutil.rmtree(path.join(dest_dir, 'tmp_dcm_folder'))
+                # Delete the temporary folder used for copying fmri with 2 subjects inside the DICOM folder
+                adni_utils.remove_tmp_dmc_folder(dest_dir, fmri_info['IMAGEUID'].values[0])
 
 
 def select_image_qc(id_list, mri_qc_subj):

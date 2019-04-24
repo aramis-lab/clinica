@@ -139,7 +139,7 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
     if not path.exists(flair_tsv_path):
         mkdir(flair_tsv_path)
 
-    cprint('\nDone! Saving the results into' + path.join(flair_tsv_path, 'flair_paths.tsv'))
+    cprint('\tDone! Saving the results into' + path.join(flair_tsv_path, 'flair_paths.tsv'))
     images.to_csv(path.join(flair_tsv_path, 'flair_paths.tsv'),
                   sep='\t',
                   index=False)
