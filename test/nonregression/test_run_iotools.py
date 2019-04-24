@@ -17,7 +17,9 @@ __status__ = "Development"
 
 import warnings
 import sys
-from .. import testing_tools
+from testing_tools import clean_folder, compare_folders
+from testing_tools import identical_subject_list, same_missing_modality_tsv
+from os import pardir
 
 # Determine location for working_directory
 warnings.filterwarnings("ignore")
@@ -26,7 +28,7 @@ def test_run_Oasis2Bids(cmdopt):
     from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import OasisToBids
     from os.path import dirname, join, abspath
 
-    root = join(dirname(abspath(__file__)), 'data', 'Oasis2Bids')
+    root = join(dirname(abspath(__file__)), pardir, 'data', 'Oasis2Bids')
 
     clean_folder(join(root, 'out', 'bids'), recreate=True)
 
@@ -48,7 +50,7 @@ def test_run_Adni2Bids(cmdopt):
     from clinica.iotools.converters.adni_to_bids.adni_to_bids import AdniToBids
     from os.path import dirname, join, abspath
 
-    root = join(dirname(abspath(__file__)), 'data', 'Adni2Bids')
+    root = join(dirname(abspath(__file__)), pardir, 'data', 'Adni2Bids')
 
     clean_folder(join(root, 'out', 'bids'), recreate=True)
 
@@ -78,7 +80,7 @@ def test_run_CreateSubjectSessionList(cmdopt):
     from os import remove
     from clinica.iotools.utils import data_handling as dt
 
-    root = join(dirname(abspath(__file__)), 'data', 'CreateSubjectSessionList')
+    root = join(dirname(abspath(__file__)), pardir, 'data', 'CreateSubjectSessionList')
 
     # Set variables
     bids_directory = join(root, 'in', 'bids')
@@ -102,7 +104,7 @@ def test_run_CreateMergeFile(cmdopt):
     import shutil
     from clinica.iotools.utils import data_handling as dt
 
-    root = join(dirname(abspath(__file__)), 'data', 'CreateMergeFile')
+    root = join(dirname(abspath(__file__)), pardir, 'data', 'CreateMergeFile')
 
     bids_directory = join(root, 'in', 'bids')
     out_tsv = join(root, 'out', 'output_file.tsv')
@@ -131,7 +133,7 @@ def test_run_ComputeMissingModalities(cmdopt):
     from os import remove
     from clinica.iotools.utils import data_handling as dt
 
-    root = join(dirname(abspath(__file__)), 'data', 'ComputeMissingMod')
+    root = join(dirname(abspath(__file__)), pardir, 'data', 'ComputeMissingMod')
 
     bids_directory = join(root, 'in', 'bids')
     output_directory = join(root, 'out')
@@ -158,7 +160,8 @@ def test_run_Aibl2Bids(cmdopt):
     from clinica.iotools.converters.aibl_to_bids.aibl_to_bids import convert_clinical_data, convert_images
     from os.path import dirname, join, abspath
 
-    root = join(dirname(abspath(__file__)), 'data', 'Aibl2Bids')
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'Aibl2Bids')
 
     dataset_directory = join(root, 'in', 'unorganized_data')
     clinical_data_directory = join(root, 'in', 'Data_extract_3.2.5')
