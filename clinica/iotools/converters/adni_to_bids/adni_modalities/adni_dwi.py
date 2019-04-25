@@ -540,7 +540,7 @@ def visits_to_timepoints_dwi(subject, ida_meta_subj, adnimerge_subj):
             continue
 
         if min_visit2 is not None and min_db > 90:
-            cprint('More than 60 days for corresponding timepoint in ADNIMERGE for subject ' + subject + ' in visit ' + image.Visit + ' on ' + image['ScanDate'])
+            cprint('More than 60 days for corresponding timepoint in ADNIMERGE for subject ' + subject + ' in visit ' + image.Visit + ' on ' + image.ScanDate)
             cprint('Timepoint 1: ' + min_visit.VISCODE + ' - ' + min_visit.ORIGPROT + ' on ' + min_visit.EXAMDATE + ' (Distance: ' + str(
                 min_db) + ' days)')
             cprint('Timepoint 2: ' + min_visit2.VISCODE + ' - ' + min_visit2.ORIGPROT + ' on ' + min_visit2.EXAMDATE + ' (Distance: ' + str(
@@ -548,7 +548,7 @@ def visits_to_timepoints_dwi(subject, ida_meta_subj, adnimerge_subj):
 
             # If image is too close to the date between two visits we prefer the earlier visit
             if (datetime.strptime(min_visit.EXAMDATE, "%Y-%m-%d")
-                    > datetime.strptime(image['ScanDate'], "%Y-%m-%d")
+                    > datetime.strptime(image.ScanDate, "%Y-%m-%d")
                     > datetime.strptime(min_visit2.EXAMDATE, "%Y-%m-%d")):
                 dif = days_between(min_visit.EXAMDATE, min_visit2.EXAMDATE)
                 if abs((dif / 2.0) - min_db) < 30:
