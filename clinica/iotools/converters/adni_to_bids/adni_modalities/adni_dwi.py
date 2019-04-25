@@ -73,6 +73,8 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     else:
         new_download = True
 
+    new_download = True
+
     if new_download:
         ida_meta_path = path.join(csv_dir, 'MRILIST.csv')
     else:
