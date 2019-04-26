@@ -73,8 +73,6 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     else:
         new_download = True
 
-    new_download = True
-
     if new_download:
         ida_meta_path = path.join(csv_dir, 'MRILIST.csv')
     else:
@@ -92,7 +90,6 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     mri_qc = pd.io.parsers.read_csv(mri_qc_path, sep=',')
     mri_qc = mri_qc[mri_qc.series_type == 'DTI']
-    # print '=================================================='
 
     for subj in subjs_list:
         # print 'Computing path for subj', subj

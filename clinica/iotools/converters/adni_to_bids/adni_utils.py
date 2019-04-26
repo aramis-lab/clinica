@@ -442,13 +442,14 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
 
     for i in range(0, len(field_location)):
         # If the i-th field is available
-        if not pd.isnull(field_location[i]):
+        if (not pd.isnull(field_location[i])) and path.exists(path.join(clinical_data_dir,field_location[i].split('/')[0])):
             # Load the file
             tmp = field_location[i].split('/')
             location = tmp[0]
             if location != previous_location:
                 previous_location = location
                 file_to_read_path = path.join(clinical_data_dir, location)
+                cprint('\tReading clinical data file : ' + location)
                 file_to_read = pd.read_csv(file_to_read_path, dtype=str)
 
                 for r in range(0, len(file_to_read.values)):
@@ -505,10 +506,6 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                                     except KeyError:
                                         pass
                                         # cprint('Field value ' + Fore.RED + sessions_fields[i] + Fore.RESET + ' could not be added to sessions.tsv')
-
-
-
-
             else:
                 continue
 
