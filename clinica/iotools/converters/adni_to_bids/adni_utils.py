@@ -83,8 +83,8 @@ def center_nifti_origin(input_image, output_image):
     img = nib.load(input_image)
     canonical_img = nib.as_closest_canonical(img)
     hd = canonical_img.header
-    if hd['quatern_b'] != 0 or hd['quatern_c'] != 0 or hd['quatern_d'] != 0:
-        print('Warning: Not all values in quatern are equal to zero')
+    #if hd['quatern_b'] != 0 or hd['quatern_c'] != 0 or hd['quatern_d'] != 0:
+    #    print('Warning: Not all values in quatern are equal to zero')
     qform = np.zeros((4, 4))
     for i in range(1, 4):
         qform[i - 1, i - 1] = hd['pixdim'][i]
