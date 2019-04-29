@@ -732,10 +732,14 @@ def test_run_SpatialSVM(cmdopt):
 
     # Check output vs ref
     subjects = ['sub-ADNI011S0023', 'sub-ADNI013S0325']
-    out_data_REG_NIFTI = [nib.load(join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 'machine_learning', 'input_  spatial_svm', 'group-ADNIbl', sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz')).get_data()
+    out_data_REG_NIFTI = [nib.load(join(root, 
+        'out', 'caps', 'subjects', sub, 'ses-M00', 
+        'machine_learning', 'input_spatial_svm', 'group-ADNIbl', 
+        sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz')).get_data()
                           for sub in subjects]
-    ref_data_REG_NIFTI = [nib.load(join(root, 'ref', sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated  -on_spatialregularization.nii.gz')).get_data()
-                          for sub in subjects]
+    ref_data_REG_NIFTI = [nib.load(join(root, 'ref', 
+        sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz')).get_data()
+        for sub in subjects]
     for i in range(len(out_data_REG_NIFTI)):
         assert np.allclose(out_data_REG_NIFTI[i], ref_data_REG_NIFTI[i],
                            rtol=1e-3, equal_nan=True)
