@@ -94,25 +94,48 @@ def execute():
     from colorama import Fore
 
     ## Nice display
-    import sys
-    from os.path import abspath
-    import traceback
-
-    def foo(exctype, value, tb):
+    def foo(exctype, value, traceback):
         from colorama import Fore
-        import traceback
-        print(Fore.RED + '*' * 23 + '\n*** Clinica crashed ***\n' + '*' * 23 + Fore.RESET)
-        print(Fore.YELLOW + 'Type:' + Fore.RESET, exctype.__name__)
-        print(Fore.YELLOW + 'Value:' + Fore.RESET, value)
-        print(Fore.YELLOW + 'Traceback:' + Fore.RESET + ' Full traceback is available in ' + abspath('./clinica.log') + ' file')
+        import traceback as tb
+        import sys
+
+        print(Fore.RED + '\n' + '*' * 23 + '\n*** Clinica crashed ***\n' + '*' * 23 + '\n' + Fore.RESET)
+        print(Fore.YELLOW + 'Exception type:' + Fore.RESET, exctype.__name__)
+        print(Fore.YELLOW + 'Exception value:' + Fore.RESET, value)
         print('Errors can come from various reasons : '
               + '\n\t * third party softwares '
               + '\n\t * wrong paths given as inputs'
               + '\n\t * ...'
               + '\nDocumentation can be found here : ' + Fore.BLUE + 'http://www.clinica.run/doc/' + Fore.RESET
-              + '\nIf you need support, do not hesitate to ask : ' + Fore.BLUE + 'https://groups.google.com/forum/#!forum/clinica-user' + Fore.RESET)
-    sys.excepthook = foo
+              + '\nIf you need support, do not hesitate to ask : ' + Fore.BLUE + 'https://groups.google.com/forum/#!forum/clinica-user' + Fore.RESET
+              + '\nBelow are displayed information that were gathered when Clinica crashed. This will help to understand what happened '
+              + 'if you transfert those information to the Clinica development team.' + Fore.RED)
+        tb.print_tb(traceback)
+        print(Fore.RESET)
+
+    def fsexcept(exc_type, exc_value, exc_traceback):
+        import sys, traceback, math
+        from colorama import Fore
+        frames = traceback.extract_tb(exc_traceback)
+        framewidth = int(math.ceil(math.log(len(frames)) / math.log(10)))
+        filewidth = 0
+        linewidth = 0
+        functionwidth = 0
+        for frame in frames:
+            filewidth = max(filewidth, len(frame[0]))
+            linewidth = max(linewidth, frame[1])
+            functionwidth = max(functionwidth, len(frame[2]))
+        linewidth = int(math.ceil(math.log(linewidth) / math.log(10)))
+        for i in range(len(frames)):
+            t = '{}' + str(framewidth) + Fore.RED + '{}' + str(filewidth) + Fore.RESET + '{}' + str(linewidth) + Fore.GREEN + '{}' + str(functionwidth) + Fore.RESET + '{}'
+            print(t.format(i,  frames[i][0],  frames[i][1], frames[i][2], frames[i][3]))
+    sys.excepthook = fsexcept
+
+
+    #sys.excepthook = foo
     ## End of nice display
+
+    raise FileNotFoundError(str(0/0))
 
     MANDATORY_TITLE = (Fore.YELLOW + 'Mandatory arguments' + Fore.RESET)
     OPTIONAL_TITLE = (Fore.YELLOW + 'Optional arguments' + Fore.RESET)
