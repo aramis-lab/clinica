@@ -17,8 +17,8 @@ __status__ = "Development"
 
 import warnings
 import sys
-from .testing_tools import clean_folder, compare_folders
-from .testing_tools import identical_subject_list, same_missing_modality_tsv
+from testing_tools import clean_folder, compare_folders
+from testing_tools import identical_subject_list, same_missing_modality_tsv
 from os import pardir
 
 # Determine location for working_directory

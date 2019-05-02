@@ -18,7 +18,7 @@ __status__ = "Development"
 import warnings
 import sys
 from os import pardir
-from .testing_tools import *
+from testing_tools import *
 
 # Determine location for working_directory
 warnings.filterwarnings("ignore")
