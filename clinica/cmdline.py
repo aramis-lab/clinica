@@ -89,9 +89,10 @@ class ClinicaClassLoader:
         return [os.path.join(path, file) for path in paths for file in os.listdir(path) if re.match(reg, file) is not None]
 
 
-## Nice display
+# Nice display
 def custom_traceback(exctype, value, exc_traceback):
-    import traceback, math
+    import traceback
+    import math
     from colorama import Fore
 
     print(Fore.RED + '\n' + '*' * 23 + '\n*** Clinica crashed ***\n' + '*' * 23 + '\n' + Fore.RESET)
@@ -124,6 +125,7 @@ def custom_traceback(exctype, value, exc_traceback):
             + '{}' + ' ' * (1 + functionwidth - len(frames[i][2])) + Fore.RESET + '{}'
         print(t.format(i, frames[i][0], frames[i][1], frames[i][2],
                        frames[i][3]))
+
 
 def execute():
     import argparse
