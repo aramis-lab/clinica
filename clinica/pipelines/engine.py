@@ -53,7 +53,8 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_sess
     subjects = list(ss_df.participant_id)
     sessions = list(ss_df.session_id)
 
-    return sessions, subjects
+    # Remove potential whitespace in participant_id or session_id
+    return [ses.strip(' ') for ses in sessions], [sub.strip(' ') for sub in subjects]
 
 
 def postset(attribute, value):
@@ -516,7 +517,7 @@ class Pipeline(Workflow):
                 ask_user = True
         except TypeError:
             cprint(Fore.RED + '[Warning] You did not specify the number of '
-                   + 'thread to run in parallel (--n_procs argument).'
+                   + 'threads to run in parallel (--n_procs argument).'
                    + Fore.RESET)
             cprint(Fore.RED + 'Computation time can be shorten as you have '
                    + str(n_cpu) + ' CPUs on this computer. We recommand using '
