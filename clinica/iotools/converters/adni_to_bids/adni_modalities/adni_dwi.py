@@ -73,10 +73,13 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     else:
         new_download = True
 
+    # If IDA_MR_Metadata_Listing.csv has been added manually, that will cause a
+    # bug
+    new_download = True
+
     if new_download:
         ida_meta_path = path.join(csv_dir, 'MRILIST.csv')
     else:
-
         ida_meta_path = path.join(csv_dir, 'IDA_MR_Metadata_Listing.csv')
     mri_qc_path = path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
 
