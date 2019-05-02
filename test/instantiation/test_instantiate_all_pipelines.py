@@ -7,6 +7,7 @@ import warnings
 warnings.filterwarnings("ignore")
 from os import pardir
 
+
 def test_instantiate_T1FreeSurferCrossSectional():
     from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_pipeline import T1FreeSurferCrossSectional
     from os.path import dirname, join, abspath
@@ -22,7 +23,6 @@ def test_instantiate_T1FreeSurferCrossSectional():
     pipeline.build()
 
 
-
 def test_instantiate_T1VolumeTissueSegmentation():
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
     from os.path import dirname, join, abspath
@@ -35,7 +35,6 @@ def test_instantiate_T1VolumeTissueSegmentation():
             tsv_file=join(root, 'in', 'subjects.tsv')
             )
     pipeline.build()
-
 
 
 def test_instantiate_T1VolumeCreateDartel():
@@ -67,7 +66,6 @@ def test_instantiate_T1VolumeDartel2MNI():
             group_id='UnitTest'
             )
     pipeline.build()
-
 
 
 def test_instantiate_T1VolumeNewTemplate():
@@ -114,7 +112,6 @@ def test_instantiate_T1VolumeExistingTemplate():
             group_id='UnitTest'
             )
     pipeline.build()
-    pass
 
 
 def test_instantiate_T1VolumeParcellation():
@@ -135,7 +132,6 @@ def test_instantiate_T1VolumeParcellation():
             ]
     pipeline.parameters['modulate'] = 'on'
     pipeline.build()
-
 
 
 def test_instantiate_DWIPreprocessingUsingT1():
@@ -171,6 +167,7 @@ def test_instantiate_DWIPreprocessingUsingPhaseDiffFieldmap():
             )
     pipeline.build()
 
+
 def test_instantiate_DWIDTI():
     from clinica.pipelines.dwi_dti.dwi_dti_pipeline import DwiDti
     from os.path import dirname, join, abspath
@@ -182,14 +179,13 @@ def test_instantiate_DWIDTI():
             tsv_file=join(root, 'in', 'subjects.tsv')
             )
     pipeline.build()
-    pass
 
 
 def test_instantiate_DWIConnectome():
     from clinica.pipelines.dwi_connectome.dwi_connectome_pipeline import DwiConnectome
     from os.path import dirname, join, abspath
 
-    root = dirname(abspath(join(abspath(__file__),pardir)))
+    root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'DWIConnectome')
     pipeline = DwiConnectome(
             caps_directory=join(root, 'in', 'caps'),
@@ -201,13 +197,12 @@ def test_instantiate_DWIConnectome():
     pipeline.build()
 
 
-
 def test_instantiate_fMRIPreprocessing():
     # Need to add json file in BIDS
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
     from os.path import dirname, join, abspath
 
-    root = dirname(abspath(join(abspath(__file__),pardir)))
+    root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'fMRIPreprocessing')
     pipeline = fMRIPreprocessing(
             bids_directory=join(root, 'in', 'bids'),
@@ -222,11 +217,12 @@ def test_instantiate_fMRIPreprocessing():
             }
     pipeline.build()
 
+
 def test_instantiate_PETVolume():
     from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
     from os.path import dirname, join, abspath
 
-    root = dirname(abspath(join(abspath(__file__),pardir)))
+    root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'PETVolume')
     pipeline = PETVolume(
             bids_directory=join(root, 'in', 'bids'),
@@ -242,7 +238,7 @@ def test_instantiate_StatisticsSurface():
     from clinica.pipelines.statistics_surface.statistics_surface_pipeline import StatisticsSurface
     from os.path import dirname, join, abspath
 
-    root = dirname(abspath(join(abspath(__file__),pardir)))
+    root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'StatisticsSurface') 
     pipeline = StatisticsSurface(
             caps_directory=join(root, 'in', 'caps'),
@@ -264,12 +260,11 @@ def test_instantiate_StatisticsSurface():
     pipeline.build()
 
 
-
 def test_instantiate_PETSurface(tmpdir):
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
     from os.path import dirname, join, abspath
 
-    root = dirname(abspath(join(abspath(__file__),pardir)))
+    root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'PETSurface')
     pipeline = PetSurface(
             bids_directory=join(root, 'in', 'bids'),

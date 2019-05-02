@@ -23,6 +23,7 @@ from testing_tools import *
 # Determine location for working_directory
 warnings.filterwarnings("ignore")
 
+
 def test_run_T1FreeSurferCrossSectional(cmdopt):
     from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_pipeline import T1FreeSurferCrossSectional
     from os.path import dirname, join, abspath, isfile
@@ -88,7 +89,6 @@ def test_run_T1VolumeTissueSegmentation(cmdopt):
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
-
 def test_run_T1VolumeCreateDartel(cmdopt):
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
     from os.path import dirname, join, abspath, exists
@@ -138,8 +138,6 @@ def test_run_T1VolumeDartel2MNI(cmdopt):
     from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_pipeline import T1VolumeDartel2MNI
     from os.path import dirname, join, abspath, exists
     import shutil
-    import numpy as np
-    import nibabel as nib
 
     working_dir = cmdopt
     root = dirname(abspath(join(abspath(__file__), pardir)))
@@ -354,7 +352,7 @@ def test_run_DWIPreprocessingUsingT1(cmdopt):
                                        caps_directory=join(root, 'out', 'caps'),
                                        tsv_file=join(root, 'in', 'subjects.tsv'),
                                        low_bval=5)
-    #pipeline.parameters['epi_param'] = dict([('readout_time', 0.0348756),  ('enc_dir', 'y')])
+    # pipeline.parameters['epi_param'] = dict([('readout_time', 0.0348756),  ('enc_dir', 'y')])
     pipeline.base_dir = join(working_dir, 'DWIPreprocessingUsingT1')
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
@@ -440,53 +438,53 @@ def test_run_DWIDTI(cmdopt):
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
+"""
+def test_run_DWIConnectome(cmdopt):
+    from clinica.pipelines.dwi_connectome.dwi_connectome_pipeline import DwiConnectome
+    from os.path import dirname, join, abspath, exists
+    import shutil
+    import pandas as pds
+    import numpy as np
 
-#def test_run_DWIConnectome(cmdopt):
-#    from clinica.pipelines.dwi_connectome.dwi_connectome_pipeline import DwiConnectome
-#    from os.path import dirname, join, abspath, exists
-#    import shutil
-#    import pandas as pds
-#    import numpy as np
-#
-#    working_dir = cmdopt
-#    root = join(dirname(abspath(__file__)), 'data', 'DWIConnectome')
-#
-#    n_tracks = 1000000
-#    subject_id = 'sub-HMTC20110506MEMEPPAT27'
-#    session_id = 'ses-M00'
-#
-#    clean_folder(join(root, 'out', 'caps'), recreate=False)
-#    clean_folder(join(working_dir, 'DWIConnectome'))
-#    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
-#
-#    pipeline = DwiConnectome(caps_directory=join(root, 'out', 'caps'),
-#                             tsv_file=join(root, 'in', 'subjects.tsv'))
-#    pipeline.parameters = {
-#        'n_tracks' : n_tracks
-#    }
-#    pipeline.base_dir = join(working_dir, 'DWIConnectome')
-#    pipeline.build()
-#    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
-#
-#    # Check files
-#    atlases = ['desikan', 'destrieux']
-#    out_files = [join(root, 'out', 'caps', 'subjects', subject_id, session_id, 'dwi', 'connectome_based_processing', subject_id + '_' + session_id + '_dwi_space-b0_model-CSD_atlas-' + a + '_connectivity.tsv')
-#                 for a in atlases]
-#    ref_files = [join(root, 'ref', subject_id + '_' + session_id + '_dwi_space-b0_model-CSD_atlas-' + a + '_connectivity.tsv')
-#                 for a in atlases]
-#
-#    # @TODO: Find the adequate threshold for DWI-Connectome pipeline
-#
-#    for i in range(len(out_files)):
-#        out_connectome = pds.read_csv(out_files[i], sep=' ')
-#        out_connectome = np.array(out_connectome)
-#        ref_connectome = pds.read_csv(ref_files[i], sep=' ')
-#        ref_connectome = np.array(ref_connectome)
-#
-#        assert np.allclose(out_connectome, ref_connectome, rtol=0.025, equal_nan=True)
-#
-#    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    working_dir = cmdopt
+    root = join(dirname(abspath(__file__)), 'data', 'DWIConnectome')
 
+    n_tracks = 1000000
+    subject_id = 'sub-HMTC20110506MEMEPPAT27'
+    session_id = 'ses-M00'
+
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'DWIConnectome'))
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+
+    pipeline = DwiConnectome(caps_directory=join(root, 'out', 'caps'),
+                             tsv_file=join(root, 'in', 'subjects.tsv'))
+    pipeline.parameters = {
+        'n_tracks' : n_tracks
+    }
+    pipeline.base_dir = join(working_dir, 'DWIConnectome')
+    pipeline.build()
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
+
+    # Check files
+    atlases = ['desikan', 'destrieux']
+    out_files = [join(root, 'out', 'caps', 'subjects', subject_id, session_id, 'dwi', 'connectome_based_processing', subject_id + '_' + session_id + '_dwi_space-b0_model-CSD_atlas-' + a + '_connectivity.tsv')
+                 for a in atlases]
+    ref_files = [join(root, 'ref', subject_id + '_' + session_id + '_dwi_space-b0_model-CSD_atlas-' + a + '_connectivity.tsv')
+                 for a in atlases]
+
+    # @TODO: Find the adequate threshold for DWI-Connectome pipeline
+
+    for i in range(len(out_files)):
+        out_connectome = pds.read_csv(out_files[i], sep=' ')
+        out_connectome = np.array(out_connectome)
+        ref_connectome = pds.read_csv(ref_files[i], sep=' ')
+        ref_connectome = np.array(ref_connectome)
+
+        assert np.allclose(out_connectome, ref_connectome, rtol=0.025, equal_nan=True)
+
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+"""
 
 def test_run_fMRIPreprocessing(cmdopt):
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
@@ -560,7 +558,6 @@ def test_run_PETVolume(cmdopt):
         assert likeliness_measure(out_files[i], ref_files[i], (1e-2, 0.25), (1e-1, 0.001))
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-
 
 
 def test_run_StatisticsSurface(cmdopt):
@@ -699,6 +696,7 @@ def test_run_WorkflowsML(cmdopt):
     wf4.run()
     shutil.rmtree(output_dir4)
 
+
 def test_run_SpatialSVM(cmdopt):
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
     from os.path import dirname, join, abspath, exists
@@ -737,8 +735,7 @@ def test_run_SpatialSVM(cmdopt):
         'machine_learning', 'input_spatial_svm', 'group-ADNIbl', 
         sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz')).get_data()
                           for sub in subjects]
-    ref_data_REG_NIFTI = [nib.load(join(root, 'ref', 
-        sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz')).get_data()
+    ref_data_REG_NIFTI = [nib.load(join(root, 'ref', sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz')).get_data()
         for sub in subjects]
     for i in range(len(out_data_REG_NIFTI)):
         assert np.allclose(out_data_REG_NIFTI[i], ref_data_REG_NIFTI[i],

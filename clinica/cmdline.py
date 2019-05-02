@@ -130,6 +130,10 @@ def custom_traceback(exctype, value, exc_traceback):
 def execute():
     import argparse
     from colorama import Fore
+    import warnings
+
+    # Suppress potential warnings
+    warnings.filterwarnings("ignore")
 
     # Nice traceback when clinica crashes
     sys.excepthook = custom_traceback

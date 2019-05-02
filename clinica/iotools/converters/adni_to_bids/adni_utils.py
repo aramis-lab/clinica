@@ -83,8 +83,8 @@ def center_nifti_origin(input_image, output_image):
     img = nib.load(input_image)
     canonical_img = nib.as_closest_canonical(img)
     hd = canonical_img.header
-    if hd['quatern_b'] != 0 or hd['quatern_c'] != 0 or hd['quatern_d'] != 0:
-        print('Warning: Not all values in quatern are equal to zero')
+    # if hd['quatern_b'] != 0 or hd['quatern_c'] != 0 or hd['quatern_d'] != 0:
+    #    print('Warning: Not all values in quatern are equal to zero')
     qform = np.zeros((4, 4))
     for i in range(1, 4):
         qform[i - 1, i - 1] = hd['pixdim'][i]
@@ -136,7 +136,7 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
     import shutil
     import os
 
-    temp_folder_name = 'tmp_dcm_folder'
+    temp_folder_name = 'tmp_dcm_folder_' + str(image_uid).strip(' ')
     dest_path = path.join(bids_folder, temp_folder_name)
 
     # Check if there is more than one xml file inside the folder
@@ -155,7 +155,7 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
         return dicom_path
 
 
-def remove_tmp_dmc_folder(bids_dir):
+def remove_tmp_dmc_folder(bids_dir, image_id):
     """
     Remove the folder tmp_dmc_folder created by the method check_two_dcm_folder (if existing)
 
@@ -165,12 +165,12 @@ def remove_tmp_dmc_folder(bids_dir):
     Returns:
 
     """
-    from os import path
-    import os
+    from os.path import exists, join
+    from shutil import rmtree
 
-    tmp_dcm_folder_path = path.join(bids_dir, 'tmp_dcm_folder')
-    if os.path.exists(tmp_dcm_folder_path):
-        os.remove(tmp_dcm_folder_path)
+    tmp_dcm_folder_path = join(bids_dir, 'tmp_dcm_folder_' + str(image_id).strip(' '))
+    if exists(tmp_dcm_folder_path):
+        rmtree(tmp_dcm_folder_path)
 
 
 def check_bids_t1(bids_path, container='anat', extension='_T1w.nii.gz', subjects=None):
@@ -347,8 +347,8 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
             diagnosis_change = {1: 'CN', 2: 'MCI', 3: 'AD'}
 
             for j in list_diagnosis_nan[0]:
-                if not is_nan(sessions_df['adni_diagnosis_change'][j]) and int(sessions_df['adni_diagnosis_change'][j]) < 4:
-                    sessions_df['diagnosis'][j] = diagnosis_change[int(sessions_df['adni_diagnosis_change'][j])]
+                if not is_nan(sessions_df['adni_diagnosis_change'].iloc[j]) and int(sessions_df['adni_diagnosis_change'].iloc[j]) < 4:
+                    sessions_df['diagnosis'].iloc[j] = diagnosis_change[int(sessions_df['adni_diagnosis_change'].iloc[j])]
 
             sessions_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf-8')
 
@@ -419,6 +419,8 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
     import pandas as pd
     from os import path
     import clinica.iotools.bids_utils as bids
+    from colorama import Fore
+    from clinica.utils.stream import cprint
 
     # Load data
     sessions = pd.read_excel(clinic_specs_path, sheetname='sessions.tsv')
@@ -439,13 +441,14 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
 
     for i in range(0, len(field_location)):
         # If the i-th field is available
-        if not pd.isnull(field_location[i]):
+        if (not pd.isnull(field_location[i])) and path.exists(path.join(clinical_data_dir, field_location[i].split('/')[0])):
             # Load the file
             tmp = field_location[i].split('/')
             location = tmp[0]
             if location != previous_location:
                 previous_location = location
                 file_to_read_path = path.join(clinical_data_dir, location)
+                cprint('\tReading clinical data file : ' + location)
                 file_to_read = pd.read_csv(file_to_read_path, dtype=str)
 
                 for r in range(0, len(file_to_read.values)):
@@ -456,11 +459,13 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                     # subjects ids
                     if location == 'ADNIMERGE.csv':
                         id_ref = 'PTID'
-                        subj_id = row[id_ref.decode('utf-8')]
+                        # What was the meaning of this line ?
+                        # subj_id = row[id_ref.decode('utf-8')]
+                        subj_id = row[id_ref]
                         subj_id = bids.remove_space_and_symbols(subj_id)
                     else:
                         id_ref = 'RID'
-                        rid = str(row[id_ref.decode('utf-8')])
+                        rid = str(row[id_ref])
 
                         # Fill the rid with the needed number of zero
                         if 4 - len(rid) > 0:
@@ -493,12 +498,13 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                                             visit_id = 'bl'
                                     else:
                                         visit_id = row['VISCODE']
-
-                                    field_value = row[sessions_fields[i]]
-                                    bids_field_name = sessions_fields_bids[i]
-
-                                    sessions_dict = update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_field_name)
-
+                                    try:
+                                        field_value = row[sessions_fields[i]]
+                                        bids_field_name = sessions_fields_bids[i]
+                                        sessions_dict = update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_field_name)
+                                    except KeyError:
+                                        pass
+                                        # cprint('Field value ' + Fore.RED + sessions_fields[i] + Fore.RESET + ' could not be added to sessions.tsv')
             else:
                 continue
 
@@ -574,3 +580,139 @@ def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
                     scans_df.to_csv(scans_tsv, header=False, sep='\t', index=False, encoding='utf-8')
 
             scans_df = pd.DataFrame(columns=(fields_bids))
+
+
+def t1_pet_paths_to_bids(images, bids_dir, modality, mod_to_update=False):
+    from multiprocessing import Pool, cpu_count, Value
+    from clinica.iotools.converters.adni_to_bids import adni_utils
+    from functools import partial
+
+    if modality.lower() not in ['t1', 'av45', 'fdg']:
+        # This should never be reached
+        raise RuntimeError(modality.lower()
+                           + ' is not supported for conversion in paths_to_bids')
+
+    counter = None
+
+    def init(args):
+        ''' store the counter for later use '''
+        global counter
+        counter = args
+
+    counter = Value('i', 0)
+    total = images.shape[0]
+    # Reshape inputs to give it as a list to the workers
+    images_list = []
+    for i in range(total):
+        images_list.append(images.iloc[i])
+
+    # Handle multiargument for create_file functions
+    partial_create_file = partial(adni_utils.create_file,
+                                  modality=modality,
+                                  total=total,
+                                  bids_dir=bids_dir,
+                                  mod_to_update=mod_to_update)
+    # intializer are used with the counter variable to keep track of how many
+    # files have been processed
+    poolrunner = Pool(max(cpu_count() - 1, 1), initializer=init, initargs=(counter,))
+    output_file_treated = poolrunner.map(partial_create_file, images_list)
+    del counter
+    return output_file_treated
+
+
+def create_file(image, modality, total, bids_dir, mod_to_update):
+    import subprocess
+    from colorama import Fore
+    from clinica.utils.stream import cprint
+    from clinica.iotools.converters.adni_to_bids import adni_utils
+    from numpy import nan
+    import os
+    from os import path
+    from glob import glob
+
+    modality_specific = {'t1': {'output_path': 'anat',
+                                'output_filename': '_T1w'},
+                         'av45': {'output_path': 'pet',
+                                  'output_filename': '_task-rest_acq-av45_pet'},
+                         'fdg': {'output_path': 'pet',
+                                 'output_filename': '_task-rest_acq-fdg_pet'}
+                         }
+
+    global counter
+
+    with counter.get_lock():
+        counter.value += 1
+
+    subject = image.Subject_ID
+    if image.Path == '':
+        cprint(Fore.RED + '[' + modality.upper() + '] No path specified for '
+               + image.Subject_ID + ' in session '
+               + image.VISCODE + ' ' + str(counter.value)
+               + ' / ' + str(total) + Fore.RESET)
+        return nan
+    cprint('[' + modality.upper() + '] Processing subject ' + str(subject)
+           + ' - session ' + image.VISCODE + ', ' + str(counter.value)
+           + ' / ' + str(total))
+    session = adni_utils.viscode_to_session(image.VISCODE)
+    image_path = image.Path
+    image_id = image.Image_ID
+    # If the original image is a DICOM, check if contains two DICOM
+    # inside the same folder
+    if image.Is_Dicom:
+        image_path = adni_utils.check_two_dcm_folder(image_path,
+                                                     bids_dir,
+                                                     image_id)
+    bids_subj = subject.replace('_', '')
+    output_path = path.join(bids_dir, 'sub-ADNI' + bids_subj, 'ses-'
+                            + session, modality_specific[modality]['output_path'])
+    output_filename = 'sub-ADNI' + bids_subj + '_ses-' + session + modality_specific[modality]['output_filename']
+
+    # If updated mode is selected, check if an old image is existing and remove it
+    existing_im = glob(path.join(output_path, output_filename + '*'))
+    if mod_to_update and len(existing_im) > 0:
+        print('Removing the old image...')
+        for im in existing_im:
+            os.remove(im)
+
+    try:
+        os.makedirs(output_path)
+    except OSError:
+        # Folder already created with previous instance
+        pass
+
+    if image.Is_Dicom:
+        command = 'dcm2niix -b n -z n -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
+        subprocess.run(command,
+                       shell=True,
+                       stderr=subprocess.DEVNULL,
+                       stdout=subprocess.DEVNULL)
+        nifti_file = path.join(output_path, output_filename + '.nii')
+        output_image = nifti_file + '.gz'
+
+        # Check if conversion worked (output file exists?)
+        if not path.isfile(nifti_file):
+            cprint('\tConversion with dcm2niix failed, trying with dcm2nii')
+            command = 'dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
+            subprocess.run(command,
+                           shell=True,
+                           stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
+            nifti_file = path.join(output_path,
+                                   subject.replace('_', '') + '.nii')
+            output_image = path.join(output_path,
+                                     output_filename + '.nii.gz')
+
+            if not path.isfile(nifti_file):
+                cprint('DICOM to NIFTI conversion error for ' + image_path)
+                return nan
+
+        adni_utils.center_nifti_origin(nifti_file, output_image)
+        os.remove(nifti_file)
+
+    else:
+        output_image = path.join(output_path, output_filename + '.nii.gz')
+        adni_utils.center_nifti_origin(image_path, output_image)
+
+    # Check if there is still the folder tmp_dcm_folder and remove it
+    adni_utils.remove_tmp_dmc_folder(bids_dir, image_id)
+    return output_image

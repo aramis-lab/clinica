@@ -517,7 +517,7 @@ class Pipeline(Workflow):
                 ask_user = True
         except TypeError:
             cprint(Fore.RED + '[Warning] You did not specify the number of '
-                   + 'thread to run in parallel (--n_procs argument).'
+                   + 'threads to run in parallel (--n_procs argument).'
                    + Fore.RESET)
             cprint(Fore.RED + 'Computation time can be shorten as you have '
                    + str(n_cpu) + ' CPUs on this computer. We recommand using '
