@@ -243,7 +243,7 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
                 # print path.join(dest_dir, bids_name + '.nii.gz')
                 if not os.path.exists(
                         path.join(bids_dest_dir, bids_name + '.nii.gz')):
-                    cprint( '\tConversion with dcm2niix failed, trying with dcm2nii')
+                    cprint('\tConversion with dcm2niix failed, trying with dcm2nii')
 
                     # Find all the files eventually created by dcm2niix and remove them
                     flair_dcm2niix = glob(
@@ -263,6 +263,7 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
                                                       bids_name + '.nii.gz'))
                     else:
                         cprint('WARNING: CONVERSION FAILED...')
+
 
 def select_image_qc(id_list, mri_qc_subj):
     """

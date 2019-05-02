@@ -83,7 +83,7 @@ def center_nifti_origin(input_image, output_image):
     img = nib.load(input_image)
     canonical_img = nib.as_closest_canonical(img)
     hd = canonical_img.header
-    #if hd['quatern_b'] != 0 or hd['quatern_c'] != 0 or hd['quatern_d'] != 0:
+    # if hd['quatern_b'] != 0 or hd['quatern_c'] != 0 or hd['quatern_d'] != 0:
     #    print('Warning: Not all values in quatern are equal to zero')
     qform = np.zeros((4, 4))
     for i in range(1, 4):
@@ -153,7 +153,6 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
         return dest_path
     else:
         return dicom_path
-
 
 
 def remove_tmp_dmc_folder(bids_dir, image_id):
@@ -442,7 +441,7 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
 
     for i in range(0, len(field_location)):
         # If the i-th field is available
-        if (not pd.isnull(field_location[i])) and path.exists(path.join(clinical_data_dir,field_location[i].split('/')[0])):
+        if (not pd.isnull(field_location[i])) and path.exists(path.join(clinical_data_dir, field_location[i].split('/')[0])):
             # Load the file
             tmp = field_location[i].split('/')
             location = tmp[0]

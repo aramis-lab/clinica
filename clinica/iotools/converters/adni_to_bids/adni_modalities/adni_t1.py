@@ -439,9 +439,9 @@ def visits_to_timepoints_t1(subject, mprage_meta_subj_orig, adnimerge_subj):
                 visits[key_preferred_visit] = preferred_visit_name
             elif visits[key_preferred_visit] != preferred_visit_name:
                 cprint('[T1] Subject ' + subject + ' has multiple visits for one timepoint. ')
-                #cprint(key_preferred_visit)
-                #cprint(visits[key_preferred_visit])
-                #cprint(visit)
+                # cprint(key_preferred_visit)
+                # cprint(visits[key_preferred_visit])
+                # cprint(visit)
             unique_visits.remove(preferred_visit_name)
             continue
 

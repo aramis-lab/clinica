@@ -132,7 +132,7 @@ def execute():
     from colorama import Fore
     import warnings
 
-    # Suppress potential warnings 
+    # Suppress potential warnings
     warnings.filterwarnings("ignore")
 
     # Nice traceback when clinica crashes
@@ -523,4 +523,3 @@ def execute():
 
 if __name__ == '__main__':
     execute()
-
