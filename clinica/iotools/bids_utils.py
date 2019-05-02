@@ -38,6 +38,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
     fields_bids = ['participant_id']
     prev_location = ''
     index_to_drop = []
+    subjects_to_drop = []
     location_name = study_name + ' location'
 
     # Load the data from the clincal specification file
@@ -111,11 +112,14 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
         bids_id = [s for s in bids_ids if value in s]
 
         if len(bids_id) == 0:
-            cprint("Subject " + value + " not found in the BIDS converted version of the dataset.")
             index_to_drop.append(i)
+            subjects_to_drop.append(value)
         else:
             participant_df.set_value(i, 'participant_id', bids_id[0])
 
+    if len(subjects_to_drop) > 0:
+        cprint('The following subjects of ADNIMERGE were not found in your BIDS folder :\n'
+               + ', '.join(subjects_to_drop))
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
         participant_df = participant_df.drop(index_to_drop)
@@ -405,26 +409,36 @@ def dcm_to_nii(input_path, output_path, bids_name):
     """
     import os
     from os import path
-
-    print(input_path)
+    import subprocess
+    from clinica.utils.stream import cprint
+    from colorama import Fore
 
     if not os.path.exists(output_path):
         os.mkdir(output_path)
 
     if 'bold' in bids_name:
         # generation of the json file
-        os.system('dcm2niix -b y -o ' + output_path + ' -f ' + bids_name + ' ' + input_path)
+        cmd = 'dcm2niix -b y -z y -o ' + output_path + ' -f ' + bids_name + ' ' + input_path
     else:
-        os.system('dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name + ' ' + input_path)
+        cmd = 'dcm2niix -b n -z y -o ' + output_path + ' -f ' + bids_name + ' ' + input_path
+
+    subprocess.run(cmd,
+                   shell=True,
+                   stderr=subprocess.DEVNULL,
+                   stdout=subprocess.DEVNULL)
 
     # If dcm2niix didn't work use dcm2nii
     if not os.path.exists(path.join(output_path, bids_name + '.nii.gz')):
-        print('Conversion with dcm2niix failed, trying with dcm2nii')
-        os.system('dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + input_path)
+        cprint('\tConversion with dcm2niix failed, trying with dcm2nii')
+        cmd = 'dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + input_path
+        subprocess.run(cmd,
+                       shell=True,
+                       stderr=subprocess.DEVNULL,
+                       stdout=subprocess.DEVNULL)
 
     # If the conversion failed with both tools
     if not os.path.exists(path.join(output_path, bids_name + '.nii.gz')):
-        print('Conversion of the dicom failed for ', input_path)
+        cprint(Fore.RED + 'Conversion of the dicom failed for ' + input_path + Fore.RESET)
 
 
 def get_bids_subjs_list(bids_path):
@@ -870,6 +884,8 @@ def convert_fmri(folder_input, folder_output, name, fixed_fmri=False, task_name=
     from glob import glob
     from shutil import copy
     import os
+    from clinica.utils.stream import cprint
+    from colorama import Fore
 
     bids_name = name + '_task-' + task_name + get_bids_suff('fMRI')
 
@@ -887,7 +903,7 @@ def convert_fmri(folder_input, folder_output, name, fixed_fmri=False, task_name=
             file_ext = get_ext(fmri_file_path)
             copy(fmri_file_path, path.join(folder_output, bids_name + file_ext))
             if file_ext == '.nii':
-                logging.warning('Non compressed file found: '+fmri_file_path)
+                cprint(Fore.YELLOW + 'Non compressed file found: ' + fmri_file_path + Fore.RESET)
                 compress_nii(path.join(folder_output, bids_name + file_ext))
         else:
             logging.info('Non fMRI found for ' + folder_input)

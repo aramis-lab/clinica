@@ -252,7 +252,8 @@ def list_files(startpath, filename=None):
                             fin.write(filestring + '\n')
                     else:
                         print(filestring)
-                        
+
+
 def clean_folder(path, recreate=True):
     from os.path import abspath, exists
     from shutil import rmtree
