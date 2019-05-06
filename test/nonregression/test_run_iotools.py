@@ -58,17 +58,16 @@ def test_run_Adni2Bids(cmdopt):
     adni_to_bids.check_adni_dependencies()
 
     dataset_directory = join(root, 'in', 'unorganized_data')
-    clinical_data_directory = join(root, 'in', 'ADNI_clinical_data_new')
+    clinical_data_directory = join(root, 'in', 'clinical_data_25-04-19')
     bids_directory = join(root, 'out', 'bids')
     subjects_list = join(root, 'in', 'subjects.txt')
-    # modalities = ['T1', 'PET_FDG', 'PET_AV45', 'DWI', 'fMRI']
-    modalities = ['T1', 'PET_FDG', 'PET_AV45', 'DWI', 'FLAIR']
+    modalities = ['T1', 'PET_FDG', 'PET_AV45', 'DWI', 'FLAIR', 'fMRI']
     adni_to_bids.convert_images(dataset_directory,
                                 clinical_data_directory,
                                 bids_directory,
                                 subjects_list,
                                 modalities)
-
+    adni_to_bids.convert_clinical_data(clinical_data_directory, bids_directory)
     # Generate tree of output files
     compare_folders(join(root, 'out'), join(root, 'ref'),
                     shared_folder_name='bids')
