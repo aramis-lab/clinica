@@ -5,8 +5,8 @@ __copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = ["Arnaud Marcoux"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.2.0"
-__maintainer__ = "Arnaud Marcoux"
-__email__ = "arnaud.marcoux@inria.fr"
+__maintainer__ = "Arnaud Marcoux, Mauricio Diaz"
+__email__ = "arnaud.marcoux@inria.fr, mauricio.diaz@inria.fr"
 __status__ = "Development"
 
 
@@ -252,3 +252,15 @@ def list_files(startpath, filename=None):
                             fin.write(filestring + '\n')
                     else:
                         print(filestring)
+
+
+def clean_folder(path, recreate=True):
+    from os.path import abspath, exists
+    from shutil import rmtree
+    from os import makedirs
+
+    abs_path = abspath(path)
+    if exists(abs_path):
+        rmtree(abs_path)
+    if recreate:
+        makedirs(abs_path)

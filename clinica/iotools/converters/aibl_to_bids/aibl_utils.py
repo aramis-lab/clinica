@@ -590,7 +590,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
 
     # intializer are used with the counter variable to keep track of how many
     # files have been processed
-    poolrunner = Pool(cpu_count() - 1, initializer=init, initargs=(counter,))
+    poolrunner = Pool(cpu_count(), initializer=init, initargs=(counter,))
     output_file_treated = poolrunner.map(create_file, images_list)
     del counter
     return output_file_treated
