@@ -652,7 +652,7 @@ class VBREG_RepKFold_DualSVM(base.MLWorkflow):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, output_dir, fwhm=0,
                  modulated="on", pvc=None, precomputed_kernel=None, mask_zeros=True, n_threads=15, n_iterations=100,
-                 n_folds = 10,
+                 n_folds=10,
                  test_size=0.1, grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17),
                  splits_indices=None):
 
@@ -665,11 +665,8 @@ class VBREG_RepKFold_DualSVM(base.MLWorkflow):
         self._c_range = c_range
         self._splits_indices = splits_indices
         self._n_folds = n_folds
-
-
         self._input = input.CAPSVoxelBasedInputREGSVM(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
                                                       image_type, fwhm, modulated, pvc, mask_zeros, precomputed_kernel)
-
         self._validation = None
         self._algorithm = None
 
@@ -687,14 +684,10 @@ class VBREG_RepKFold_DualSVM(base.MLWorkflow):
                                                      n_threads=self._n_threads)
 
         self._validation = validation.RepeatedKFoldCV(self._algorithm)
-        print ('K fold')
+        print('K fold')
 
         classifier, best_params, results = self._validation.validate(y, n_iterations=self._n_iterations,
                                                                      n_folds=self._n_folds, n_threads=self._n_threads)
-
-        #classifier, best_params, results = self._validation.validate(y,
-        #                                                             n_folds=self._n_folds, n_threads=self._n_threads)
-
 
         classifier_dir = path.join(self._output_dir, 'classifier')
         if not path.exists(classifier_dir):
@@ -766,7 +759,7 @@ class RB_RepHoldOut_RandomForest_Multiclass(base.MLWorkflow):
 class VBREG_RepKfold_SVMOV0(base.MLWorkflow):
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, output_dir, fwhm=0,
                  modulated="on", pvc=None, precomputed_kernel=None, mask_zeros=True, n_threads=15, n_iterations=100,
-                 n_folds = 10,
+                 n_folds=10,
                  test_size=0.3, grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17),
                  splits_indices=None):
 
@@ -779,11 +772,8 @@ class VBREG_RepKfold_SVMOV0(base.MLWorkflow):
         self._c_range = c_range
         self._splits_indices = splits_indices
         self._n_folds = n_folds
-
-
         self._input = input.CAPSVoxelBasedInputREGSVM(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
                                                       image_type, fwhm, modulated, pvc, mask_zeros, precomputed_kernel)
-
         self._validation = None
         self._algorithm = None
 
@@ -794,11 +784,11 @@ class VBREG_RepKfold_SVMOV0(base.MLWorkflow):
         kernel = self._input.get_kernel()
 
         self._algorithm = algorithm.OneVsOneSVM(kernel,
-                                                     y,
-                                                     balanced=self._balanced,
-                                                     grid_search_folds=self._grid_search_folds,
-                                                     c_range=self._c_range,
-                                                     n_threads=self._n_threads)
+                                                y,
+                                                balanced=self._balanced,
+                                                grid_search_folds=self._grid_search_folds,
+                                                c_range=self._c_range,
+                                                n_threads=self._n_threads)
 
         self._validation = validation.RepeatedKFoldCV_Multiclass(self._algorithm)
 
@@ -809,18 +799,15 @@ class VBREG_RepKfold_SVMOV0(base.MLWorkflow):
         if not path.exists(classifier_dir):
             os.makedirs(classifier_dir)
 
-        #self._algorithm.save_classifier(classifier, classifier_dir)
-        #weights = self._algorithm.save_weights(classifier, x, classifier_dir)
         self._algorithm.save_parameters(best_params, classifier_dir)
 
         self._validation.save_results(self._output_dir)
 
-        #self._input.save_weights_as_nifti(weights, classifier_dir)
 
 class VBREG_RepKfold_SVMOVR(base.MLWorkflow):
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, output_dir, fwhm=0,
                  modulated="on", pvc=None, precomputed_kernel=None, mask_zeros=True, n_threads=15, n_iterations=100,
-                 n_folds = 10,
+                 n_folds=10,
                  test_size=0.3, grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17),
                  splits_indices=None):
 
@@ -833,11 +820,8 @@ class VBREG_RepKfold_SVMOVR(base.MLWorkflow):
         self._c_range = c_range
         self._splits_indices = splits_indices
         self._n_folds = n_folds
-
-
         self._input = input.CAPSVoxelBasedInputREGSVM(caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id,
                                                       image_type, fwhm, modulated, pvc, mask_zeros, precomputed_kernel)
-
         self._validation = None
         self._algorithm = None
 
@@ -848,11 +832,11 @@ class VBREG_RepKfold_SVMOVR(base.MLWorkflow):
         kernel = self._input.get_kernel()
 
         self._algorithm = algorithm.OneVsRestSVM(kernel,
-                                                     y,
-                                                     balanced=self._balanced,
-                                                     grid_search_folds=self._grid_search_folds,
-                                                     c_range=self._c_range,
-                                                     n_threads=self._n_threads)
+                                                 y,
+                                                 balanced=self._balanced,
+                                                 grid_search_folds=self._grid_search_folds,
+                                                 c_range=self._c_range,
+                                                 n_threads=self._n_threads)
 
         self._validation = validation.RepeatedKFoldCV_Multiclass(self._algorithm)
 
@@ -863,13 +847,6 @@ class VBREG_RepKfold_SVMOVR(base.MLWorkflow):
         if not path.exists(classifier_dir):
             os.makedirs(classifier_dir)
 
-        #self._algorithm.save_classifier(classifier, classifier_dir)
-        #weights = self._algorithm.save_weights(classifier, x, classifier_dir)
         self._algorithm.save_parameters(best_params, classifier_dir)
 
         self._validation.save_results(self._output_dir)
-
-        #self._input.save_weights_as_nifti(weights, classifier_dir)
-
-
-

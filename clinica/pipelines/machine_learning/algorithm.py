@@ -809,6 +809,7 @@ class XGBoost(base.MLAlgorithm):
         with open(path.join(output_dir, 'best_parameters.json'), 'w') as f:
             json.dump(parameters_dict, f)
 
+
 class OneVsOneSVM(base.MLAlgorithm):
     def __init__(self, kernel, y, balanced=True, grid_search_folds=10, c_range=np.logspace(-6, 2, 17), n_threads=15):
         self._kernel = kernel
@@ -829,12 +830,11 @@ class OneVsOneSVM(base.MLAlgorithm):
         y_hat_train = svc.predict(kernel_train)
         y_hat = svc.predict(x_test)
         proba_test = svc.predict_proba(x_test)[:, 1]
-        #auc = roc_auc_score(y_test, proba_test)
 
         return svc, y_hat, y_hat_train
 
     def _grid_search(self, kernel_train, x_test, y_train, y_test, c):
-        #y_hat is the value predicted
+        # y_hat is the value predicted
 
         _, y_hat, _ = self._launch_svc(kernel_train, x_test, y_train, y_test, c)
         res = utils.evaluate_prediction_multiclass(y_test, y_hat)
@@ -906,7 +906,6 @@ class OneVsOneSVM(base.MLAlgorithm):
         result['y_train'] = y_train
         result['y_index'] = test_index
         result['x_index'] = train_index
-        #result['auc'] = auc
 
         return result
 
@@ -935,7 +934,6 @@ class OneVsOneSVM(base.MLAlgorithm):
 
     def save_classifier(self, classifier, output_dir):
 
-        #np.savetxt(path.join(output_dir, 'dual_coefficients.txt'), classifier.dual_coef_)
         np.savetxt(path.join(output_dir, 'support_vectors_indices.txt'), classifier.support_)
         np.savetxt(path.join(output_dir, 'intersect.txt'), classifier.intercept_)
 
@@ -976,12 +974,11 @@ class OneVsRestSVM(base.MLAlgorithm):
         y_hat_train = svc.predict(kernel_train)
         y_hat = svc.predict(x_test)
         proba_test = svc.predict_proba(x_test)[:, 1]
-        #auc = roc_auc_score(y_test, proba_test)
 
         return svc, y_hat, y_hat_train
 
     def _grid_search(self, kernel_train, x_test, y_train, y_test, c):
-        #y_hat is the value predicted
+        # y_hat is the value predicted
 
         _, y_hat, _ = self._launch_svc(kernel_train, x_test, y_train, y_test, c)
         res = utils.evaluate_prediction_multiclass(y_test, y_hat)
@@ -1053,7 +1050,6 @@ class OneVsRestSVM(base.MLAlgorithm):
         result['y_train'] = y_train
         result['y_index'] = test_index
         result['x_index'] = train_index
-        #result['auc'] = auc
 
         return result
 
@@ -1082,7 +1078,6 @@ class OneVsRestSVM(base.MLAlgorithm):
 
     def save_classifier(self, classifier, output_dir):
 
-        #np.savetxt(path.join(output_dir, 'dual_coefficients.txt'), classifier.dual_coef_)
         np.savetxt(path.join(output_dir, 'support_vectors_indices.txt'), classifier.support_)
         np.savetxt(path.join(output_dir, 'intersect.txt'), classifier.intercept_)
 
@@ -1101,5 +1096,3 @@ class OneVsRestSVM(base.MLAlgorithm):
     def save_parameters(self, parameters_dict, output_dir):
         with open(path.join(output_dir, 'best_parameters.json'), 'w') as f:
             json.dump(parameters_dict, f)
-
-

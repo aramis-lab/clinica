@@ -581,6 +581,7 @@ class LearningCurveRepeatedHoldOut(base.MLValidation):
 
         return evaluate_prediction(y_list, yhat_list)['balanced_accuracy']
 
+
 class RepeatedKFoldCV_Multiclass(base.MLValidation):
 
     def __init__(self, ml_algorithm):
@@ -649,18 +650,9 @@ class RepeatedKFoldCV_Multiclass(base.MLValidation):
 
                 results_df = pd.DataFrame(
                     {'balanced_accuracy': self._repeated_fold_results[iteration][i]['evaluation']['balanced_accuracy'],
-                     #'auc': self._repeated_fold_results[iteration][i]['auc'],
                      'accuracy': self._repeated_fold_results[iteration][i]['evaluation']['accuracy'],
-                     #'sensitivity': self._repeated_fold_results[iteration][i]['evaluation']['sensitivity'],
-                     #'specificity': self._repeated_fold_results[iteration][i]['evaluation']['specificity'],
-                     #'ppv': self._repeated_fold_results[iteration][i]['evaluation']['ppv'],
-                     #'npv': self._repeated_fold_results[iteration][i]['evaluation']['npv'],
                      'train_balanced_accuracy': self._repeated_fold_results[iteration][i]['evaluation_train']['balanced_accuracy'],
                      'train_accuracy': self._repeated_fold_results[iteration][i]['evaluation_train']['accuracy']
-                     #'train_sensitivity': self._repeated_fold_results[iteration][i]['evaluation_train']['sensitivity'],
-                     #'train_specificity': self._repeated_fold_results[iteration][i]['evaluation_train']['specificity'],
-                     #'train_ppv': self._repeated_fold_results[iteration][i]['evaluation_train']['ppv'],
-                     #'train_npv': self._repeated_fold_results[iteration][i]['evaluation_train']['npv']
                      }, index=['i', ])
                 results_df.to_csv(path.join(folds_dir, 'results_fold-' + str(i) + '.tsv'),
                                   index=False, sep='\t', encoding='utf-8')
@@ -696,7 +688,3 @@ class RepeatedKFoldCV_Multiclass(base.MLValidation):
 
         print("Mean results of the classification:")
         print("Balanced accuracy: %s" % (mean_results_df['balanced_accuracy'].to_string(index=False)))
-        #print("specificity: %s" % (mean_results_df['specificity'].to_string(index=False)))
-        #print("sensitivity: %s" % (mean_results_df['sensitivity'].to_string(index=False)))
-        #print("auc: %s" % (mean_results_df['auc'].to_string(index=False)))
-
