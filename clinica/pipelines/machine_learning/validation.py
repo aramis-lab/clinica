@@ -580,3 +580,111 @@ class LearningCurveRepeatedHoldOut(base.MLValidation):
         from clinica.pipelines.machine_learning.ml_utils import evaluate_prediction
 
         return evaluate_prediction(y_list, yhat_list)['balanced_accuracy']
+
+
+class RepeatedKFoldCV_Multiclass(base.MLValidation):
+
+    def __init__(self, ml_algorithm):
+        self._ml_algorithm = ml_algorithm
+        self._repeated_fold_results = []
+        self._classifier = None
+        self._best_params = None
+        self._cv = None
+
+    def validate(self, y, n_iterations=100, n_folds=10, n_threads=15):
+
+        async_pool = ThreadPool(n_threads)
+        async_result = {}
+        self._cv = []
+
+        for r in range(n_iterations):
+            skf = StratifiedKFold(n_splits=n_folds, shuffle=True)
+            self._cv.append(list(skf.split(np.zeros(len(y)), y)))
+            async_result[r] = {}
+            self._repeated_fold_results.append([])
+
+            for i in range(n_folds):
+
+                train_index, test_index = self._cv[r][i]
+                async_result[r][i] = async_pool.apply_async(self._ml_algorithm.evaluate, (train_index, test_index))
+
+        async_pool.close()
+        async_pool.join()
+        for r in range(n_iterations):
+            for i in range(n_folds):
+                self._repeated_fold_results[r].append(async_result[r][i].get())
+
+        # TODO Find a better way to estimate best parameter
+        flat_results = [result for fold in self._repeated_fold_results for result in fold]
+        self._classifier, self._best_params = self._ml_algorithm.apply_best_parameters(flat_results)
+
+        return self._classifier, self._best_params, self._repeated_fold_results
+
+    def save_results(self, output_dir):
+        if self._repeated_fold_results is None:
+            raise Exception("No results to save. Method validate() must be run before save_results().")
+
+        all_results_list = []
+        all_subjects_list = []
+
+        for iteration in range(len(self._repeated_fold_results)):
+
+            iteration_dir = path.join(output_dir, 'iteration-' + str(iteration))
+            if not path.exists(iteration_dir):
+                os.makedirs(iteration_dir)
+
+            iteration_subjects_list = []
+            iteration_results_list = []
+            folds_dir = path.join(iteration_dir, 'folds')
+
+            if not path.exists(folds_dir):
+                os.makedirs(folds_dir)
+
+            for i in range(len(self._repeated_fold_results[iteration])):
+                subjects_df = pd.DataFrame({'y': self._repeated_fold_results[iteration][i]['y'],
+                                            'y_hat': self._repeated_fold_results[iteration][i]['y_hat'],
+                                            'y_index': self._repeated_fold_results[iteration][i]['y_index']})
+                subjects_df.to_csv(path.join(folds_dir, 'subjects_fold-' + str(i) + '.tsv'),
+                                   index=False, sep='\t', encoding='utf-8')
+                iteration_subjects_list.append(subjects_df)
+
+                results_df = pd.DataFrame(
+                    {'balanced_accuracy': self._repeated_fold_results[iteration][i]['evaluation']['balanced_accuracy'],
+                     'accuracy': self._repeated_fold_results[iteration][i]['evaluation']['accuracy'],
+                     'train_balanced_accuracy': self._repeated_fold_results[iteration][i]['evaluation_train']['balanced_accuracy'],
+                     'train_accuracy': self._repeated_fold_results[iteration][i]['evaluation_train']['accuracy']
+                     }, index=['i', ])
+                results_df.to_csv(path.join(folds_dir, 'results_fold-' + str(i) + '.tsv'),
+                                  index=False, sep='\t', encoding='utf-8')
+                iteration_results_list.append(results_df)
+
+            iteration_subjects_df = pd.concat(iteration_subjects_list)
+            iteration_subjects_df.to_csv(path.join(iteration_dir, 'subjects.tsv'),
+                                         index=False, sep='\t', encoding='utf-8')
+            all_subjects_list.append(iteration_subjects_df)
+
+            iteration_results_df = pd.concat(iteration_results_list)
+            iteration_results_df.to_csv(path.join(iteration_dir, 'results.tsv'),
+                                        index=False, sep='\t', encoding='utf-8')
+
+            mean_results_df = pd.DataFrame(iteration_results_df.apply(np.nanmean).to_dict(),
+                                           columns=iteration_results_df.columns, index=[0, ])
+            mean_results_df.to_csv(path.join(iteration_dir, 'mean_results.tsv'),
+                                   index=False, sep='\t', encoding='utf-8')
+            all_results_list.append(mean_results_df)
+
+        all_subjects_df = pd.concat(all_subjects_list)
+        all_subjects_df.to_csv(path.join(output_dir, 'subjects.tsv'),
+                               index=False, sep='\t', encoding='utf-8')
+
+        all_results_df = pd.concat(all_results_list)
+        all_results_df.to_csv(path.join(output_dir, 'results.tsv'),
+                              index=False, sep='\t', encoding='utf-8')
+
+        mean_results_df = pd.DataFrame(all_results_df.apply(np.nanmean).to_dict(),
+                                       columns=all_results_df.columns, index=[0, ])
+        mean_results_df.to_csv(path.join(output_dir, 'mean_results.tsv'),
+                               index=False, sep='\t', encoding='utf-8')
+
+        print("Mean results of the classification:")
+        print("Balanced accuracy: %s" % (mean_results_df['balanced_accuracy'].to_string(index=False)))
