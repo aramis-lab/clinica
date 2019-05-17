@@ -1,0 +1,156 @@
+# `t1-volume` – Volume-based processing of T1-weighted MR images
+
+This pipeline performs four main processing steps on T1-weighted MR images using the [SPM](http://www.fil.ion.ucl.ac.uk/spm/) software:
+
+ - **Tissue segmentation, bias correction and spatial normalization to MNI space** This corresponds to the `Segmentation` procedure of SPM that simultaneously performs tissue segmentation, bias correction and spatial normalization, a procedure also known as "Unified segmentation" [[Ashburner and Friston, 2005](http://dx.doi.org/10.1016/j.neuroimage.2005.02.018)].
+
+- **Inter-subject registration using Dartel** A group template is created using DARTEL, an algorithm for diffeomorphic image registration, from the subjects' tissue probability maps in native space (usually GM, WM and CSF tissues) obtained at the previous step. Here, not only the group template is obtained, but also the deformation fields from each subject's native space into the Dartel template space. This is achieved by wrapping the `Run Dartel` procedure from SPM [[Ashburner, 2007](http://dx.doi.org/10.1016/j.neuroimage.2007.07.007)].
+
+- **Dartel template to MNI** Once the transformation from the subject’s T1-weighted MRI image to the Dartel template has been computed, the T1-weighted MRI image of each subject can be transported to the MNI space. More precisely, for a given subject, its flow field into the Dartel template is combined with the transformation of the Dartel template into MNI space, and the resulting transformation is applied to the subject’s different tissue maps. As a result, all the images are in a common space, providing a voxel-wise correspondence across subjects. This is achieved by wrapping the `Dartel2MNI`  procedure from SPM [[Ashburner, 2007](http://dx.doi.org/10.1016/j.neuroimage.2007.07.007)].
+
+- **Atlas statistics** A set of anatomical regions is obtained from different atlases in MNI space (list of available atlases [here](../../Atlases)). The average gray matter density (also in MNI space) is then computed in each of the regions.
+
+
+## Dependencies
+<!---If you installed the docker image of Clinica, nothing is required.-->
+
+If you only installed the core of Clinica, this pipeline needs the installation of **SPM12** and **CAT12**. You can find how to install these software packages on the [third-party](../../Third-party) page.
+
+## Running the pipeline
+
+ The pipeline `t1-volume` can be run with the following command line:
+
+```
+clinica run t1-volume bids_directory caps_directory group_id
+```
+
+where:
+
+- `bids_directory` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
+- `caps_directory` is the output folder containing the results in a [CAPS](../../CAPS) hierarchy.
+- `group_id` is the user-defined identifier for the provided group of subjects.
+
+Pipeline options:
+
+- `--tissue_classes`: a list of integers (possible values range from 1 to 6) that indicates the tissue classes to save after segmentation (in order: gray matter (GM), white matter (WM), cerebrospinal fluid (CSF), bone, soft-tissue, air/background). Default value is: `1, 2, 3` (GM, WM and CSF are saved).
+- `--dartel_tissues`: a list of integers (possible values range from 1 to 6) that indicates the tissue classes to use for the Dartel template calculation (in order: GM, WM, CSF, bone, soft-tissue, air/background). Default value is: `1, 2, 3` (GM, WM and CSF are used).
+- `--smooth`: a list of integers specifying the different isomorphic full width at half maximum (FWHM) in millimeters used to smooth the images. Default value is: `8`.
+- `--modulate`: a boolean. If `True` output images are modulated and tissue count is preserved. If `False` they are not modulated and concentrations are preserved. Default value: `True`.
+
+!!! note
+    The arguments common to all Clinica pipelines are described in [Interacting with clinica](../../InteractingWithClinica).
+
+!!! tip
+    Do not hesitate to type `t1-volume --help` to see the full list of parameters.
+
+## Outputs
+
+
+### Tissue segmentation, bias correction and spatial normalization
+Results are stored in the following folder of the [CAPS hierarchy](../../CAPS):
+`subjects/sub-<participant_label>/ses-<session_label>/t1/spm/segmentation`.
+
+The main output files are:
+
+- native_space/:
+    - `<source_file>_segm-[graymatter|whitematter|csf]_probability.nii.gz`: The tissue probability maps for the gray matter, white matter and CSF.
+- normalized_space/
+    - `<source_file>_space-Ixi549Space_T1w.nii.gz`: The T1-weighted image in MNI space.
+    - `<source_file>_segm-[graymatter|whitematter|csf]_space-Ixi549Space_modulated-on_probability.nii.gz`: The modulated tissue probability maps, i.e. the tissue probability maps multiplied by their relative volume before and after spatial normalisation, into the MNI space.
+
+<center>![](../../img/T1_Volume/ex_GM_WM_CSF.png)</center>
+*<center><small>Example of gray matter (GM), white matter (WM) and CSF tissue segmentation.</small></center>*
+
+
+### Inter-subject registration using Dartel
+The final estimation of the gray matter template is stored under the following folder of the [CAPS hierarchy](../../CAPS):
+`groups/group-<group_id>/t1/group-<group_id>_template.nii.gz`
+
+<center>![](../../img/T1_Volume/ex_Dartel_template_GM.png)</center>
+*<center><small>Example of a group template calculated using DARTEL. Only the gray matter class is shown.</small></center>*
+
+The flow fields containing the deformation from an image to the group template are stored in the folder
+`subjects/sub-<participant_label>/ses-<session_label>/t1/spm/dartel/group-<group_id>/`
+under the filename
+`<source_file>_target-<group-id>_transformation-forward_deformation.nii.gz`.
+
+### Dartel template to MNI
+Results are stored in the following folder of the [CAPS hierarchy](../../CAPS):
+`subjects/sub-<participant_label>/ses-<session_label>/t1/spm/dartel/group-<group_id>`.
+
+The main output file is:
+
+ - `<source_file>_segm-[graymatter|whitematter|csf]_space-Ixi549Space_modulated-on_fwhm-<label>_probability.nii.gz`: the different tissue maps that have been registered to the MNI space.
+
+ <center>![](../../img/T1_Volume/ex_GM_MNI_space.png)</center>
+ *<center><small>Final result: Probability Gray Matter in MNI space without smoothing (top) or smoothed using a 8 mm FWHM kernel (bottom).</small></center>*
+
+
+### Atlas statistics
+Results are stored in the following folder of the [CAPS hierarchy](../../CAPS):
+`subjects/sub-<participant_label>/ses-<session_label>/t1/spm/dartel/group-<group_id>/atlas_statistics/`.
+
+The main output file is:
+
+ - `<source_file>_space-<space>_map-graymatter_statistics.tsv`: TSV files summarizing the regional statistics on the labelled atlas <space>.
+
+!!! note
+    The full list of output files can be found in the [The ClinicA Processed Structure (CAPS) Specification](https://docs.google.com/document/d/14mjXbqRceHK0fD0BIONniLK713zY7DbQHJEV7kxqsd8/edit#).
+
+
+## Describing this pipeline in your paper
+
+!!! cite "Example of paragraph for the `t1-volume` pipeline:"
+    Theses results have been obtained using the `t1-volume` pipeline of Clinica. This pipeline is a wrapper of the `Segmentation`, `Run Dartel` and `Normalise to MNI Space` routines implemented in [SPM](http://www.fil.ion.ucl.ac.uk/spm/). First, the Unified Segmentation procedure [[Ashburner and Friston, 2005](http://dx.doi.org/10.1016/j.neuroimage.2005.02.018)] is used to simultaneously perform tissue segmentation, bias correction and spatial normalization of the input image. Next, a group template is created using DARTEL, an algorithm for diffeomorphic image registration [[Ashburner, 2007](http://dx.doi.org/10.1016/j.neuroimage.2007.07.007)], from the subjects’ tissue probability maps on the native space, usually GM, WM and CSF tissues, obtained at the previous step. The DARTEL to MNI method [[Ashburner, 2007](http://dx.doi.org/10.1016/j.neuroimage.2007.07.007)] is then applied, providing a registration of the native space images into the MNI space. Finally, a set of anatomical regions are obtained from different atlases in MNI space and the average gray matter density is computed in each of the regions.
+
+
+!!! tip
+    Easily access the papers cited on this page on [Zotero](https://www.zotero.org/groups/2240070/clinica_aramislab/items/collectionKey/TSSYS523).
+
+## Support
+
+-   You can use the [Clinica Google Group](https://groups.google.com/forum/#!forum/clinica-user) to ask for help!
+-   Report an issue on [GitLab](https://gitlab.icm-institute.org/aramislab/clinica/issues).
+
+## Advanced usage
+
+The four main processing steps of the `t1-volume` pipeline can be performed individually:
+
+ - **A: Tissue segmentation, bias correction and spatial normalization to MNI space**
+
+    Command line:
+    ```
+    clinica run t1-volume-segmentation bids_directory caps_directory
+    ```
+
+- **B1: Inter-subject registration using Dartel (creating a new Dartel template)**
+
+    Command line:
+    ```
+    clinica run t1-volume-create-dartel bids_directory caps_directory group_id
+    ```
+
+- **B2: Inter-subject registration using Dartel (using an existing Dartel template)**
+
+    Command line:
+    ```
+    clinica run t1-volume-register-dartel bids_directory caps_directory group_id
+    ```
+
+- **C: Dartel template to MNI**
+
+    Command line:
+    ```
+    clinica run t1-volume-dartel2mni bids_directory caps_directory group_id
+    ```
+- **D: Atlas statistics**
+
+    Command line:
+    ```
+    clinica run t1-volume-parcellation caps_directory group_id
+    ```
+
+These four processing steps can also be performed in one go with one of these two functions:
+
+- `t1-volume` = A + B1 + C + D (to create a new Dartel template)
+- `t1-volume-existing-template` = A + B2 + C + D (to reuse an existing Dartel template)
