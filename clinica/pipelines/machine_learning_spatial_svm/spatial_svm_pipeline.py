@@ -229,13 +229,11 @@ class SpatialSVM(cpe.Pipeline):
                      'group_id'] + r'/\3_\6_spatialregularization\7'),
                 (r'(.*)json_file/(output_data.json)$',
                  r'\1/groups/group-' + self.parameters['group_id'] + r'/machine_learning/input_spatial_svm/group-' +
-                 self.parameters['group_id'] + r'_space-Ixi549Space_regularization-Fisher_fwhm-'
-                 + str(int(self.parameters['fwhm'])) + r'_parameters.json'),
+                 self.parameters['group_id'] + r'_space-Ixi549Space_parameters.json'),
                 (r'(.*)fisher_tensor_path/(output_fisher_tensor.npy)$',
                  r'\1/groups/group-' + self.parameters['group_id'] + r'/machine_learning/input_spatial_svm/group-' +
                  self.parameters[
-                     'group_id'] + r'_space-Ixi549Space_regularization-Fisher_fwhm-'
-                 + str(int(self.parameters['fwhm'])) + r'_gram.npy')
+                     'group_id'] + r'_space-Ixi549Space_gram.npy')
             ]
         # Connection
         # ==========
