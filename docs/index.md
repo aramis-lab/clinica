@@ -6,8 +6,11 @@
 
 Clinica can be installed on Mac OS X and Linux (CentOS or Debian/Ubuntu) machines, and possibly on Windows computers with a Linux Virtual Machine. We assume that users installing and using Clinica are comfortable with using the command line.
 
-!!! info "New release: Clinica 0.2!"
-    We are very pleased to announce the release 0.2 of Clinica. The release notes are available here: [v0.2.0](https://gitlab.icm-institute.org/aramislab/clinica/tags/v0.2.0), [v0.2.1](https://gitlab.icm-institute.org/aramislab/clinica/tags/v0.2.1).
+!!! info "Clinica on GitHub!"
+    Clinica has moved to GitHub, you can find the repo [here](https://github.com/aramis-lab/clinica/).
+
+<!-- !!! info "New release: Clinica 0.2!"
+    We are very pleased to announce the release 0.2 of Clinica. The release notes are available here: [v0.2.0](https://github.com/aramis-lab/clinica/releases/tag/v0.2.0), [v0.2.1](https://github.com/aramis-lab/clinica/releases/tag/v0.2.1). -->
 
 <!-- ### Installing Clinica from source -->
   - [Installation](./Installation)
@@ -59,11 +62,11 @@ Clinica allows visualization of the main outputs of some pipelines. Currently on
 Find on [this page](ClinicaConferences) the presentations and demo materials used when we showcase Clinica.
 
 ## Support
-- [Report an issue on GitLab](https://gitlab.icm-institute.org/aramislab/clinica/issues)
+- [Report an issue on GitHub](https://github.com/aramis-lab/clinica/issues)
 - Use the [Clinica Google Group](https://groups.google.com/forum/#!forum/clinica-user) to ask for help!
 
 ## License
-Clinica is distributed under the terms of the MIT license given [here](https://gitlab.icm-institute.org/aramislab/clinica/blob/master/LICENSE.txt).
+Clinica is distributed under the terms of the MIT license given [here](https://github.com/aramis-lab/clinica/blob/dev/LICENSE.txt).
 
 ## Citing Clinica
 For publications or communications using Clinica, please include the following text:
@@ -78,4 +81,4 @@ Each pipeline's page includes text to cite the software packages that are used b
 
 ---
 
-![Clinica_Partners_Banner](https://gitlab.icm-institute.org/aramislab/clinica/uploads/dd3f2b5a93f9235c6e03f8067b180ef0/Clinica_Partners_Banner.png)
+![Clinica_Partners_Banner](img/Clinica_Partners_Banner.png)

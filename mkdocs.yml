@@ -8,7 +8,7 @@ site_dir: www.clinica.run/www/doc
 
 # Repository
 repo_name: 'aramislab/clinica'
-repo_url: 'https://gitlab.icm-institute.org/aramislab/clinica'
+repo_url: 'https://github.com/aramis-lab/clinica'
 #edit_uri: 'master/edit/doc'
 
 # Copyright
@@ -36,8 +36,8 @@ extra:
   feature:
     tabs: true
   social:
-    - type: 'gitlab'
-      link: 'https://gitlab.icm-institute.org/aramislab/'
+    - type: 'github'
+      link: 'https://github.com/aramis-lab/'
     - type: 'twitter'
       link: 'https://twitter.com/aramislabparis'
     - type: 'globe'
