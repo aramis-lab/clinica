@@ -1,6 +1,6 @@
 # Dataset converters
 
-Clinica provides tools to curate several publicly available neuroimaging datasets (currently ADNI, AIBL and OASIS) and convert them to BIDS.
+Clinica provides tools to curate several publicly available neuroimaging datasets (currently ADNI, AIBL and OASIS) and convert them to BIDS [[Samper-González et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042); [Wen et al., 2018](https://arxiv.org/abs/1812.11183)].
 
 !!! note
     We provide converters for the datasets used in the [Aramis Lab](www.aramislab.fr). Feel free to contact us if you are interested in another dataset or to contribute!
@@ -234,3 +234,14 @@ where:
     ```
     Example:
     If the original subject id is `OAS1_0001_MR1`, since the numerical id is `0001`, the final BIDS id will be `sub-OASIS10001`.
+
+## Citing the converters in your paper
+
+!!! cite "Example of paragraph:"
+    - **T1 and/or PET**:
+    The [ADNI | AIBL | OASIS] data have been curated and converted to the Brain Imaging Data Structure (BIDS) format [[Gorgolewski et al., 2016](https:// doi.org/10.1038/sdata.2016.44)] using Clinica [[Samper-González et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
+    - **DWI**:
+    The ADNI data have been curated and converted to the Brain Imaging Data Structure (BIDS) format [[Gorgolewski et al., 2016](https:// doi.org/10.1038/sdata.2016.44)] using Clinica [[Samper-González et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042); [Wen et al., 2018](https://arxiv.org/abs/1812.11183)].    
+
+!!! tip
+    Easily access the papers cited on this page on [Zotero](https://www.zotero.org/groups/2240070/clinica_aramislab/items/collectionKey/NASGJPVL).
