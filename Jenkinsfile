@@ -2,24 +2,52 @@
 // www.clinica.run
 // Author: mauricio.diaz@inria.fr
 
-
 pipeline {
-  agent none 
+  agent none
+    /*parameters {
+    string(name: 'WORK_DIR_LINUX', defaultValue: '/mnt/data/ci/working_dir_linux', decription: 'Working dir for Linux agents)
+    string(name: 'WORK_DIR_MAC', defaultValue: '/Volumes/data/working_directory_ci_mac', decription: 'Working dir for MacOS agents)
+    }*/
+    environment {
+      CLINICA_ENV_BRANCH = 'clinica_env' + env.BRANCH_NAME
+    }
     stages {
-      stage('Build') {
+      stage('Build Env') {
         parallel {
           stage('Build in Linux') {
             agent { label 'ubuntu' }
+            when { changeset "environment.yml" }
             steps {
-              echo 'Building..'
-                sh 'cd clinica && ls'
+              echo 'Building Conda environment...' + env.BRANCH_NAME
+              sh 'ls'
+              sh 'conda env create --force --file environment.yml -n ${env.CLINICA_ENV_BRANCH}'
             }
           }
           stage('Build Mac') {
             agent { label 'macos' }
+            when { changeset "environment.yml" }
             steps {
-              echo 'Building..'
-                sh 'cd clinica/ && ls'
+              echo 'Building Conda environment...' + env.BRANCH_NAME
+              sh 'ls'
+              sh 'conda env create --force --file environment.yml -n ${env.CLINICA_ENV_BRANCH}'
+            }
+          }
+        }
+      }
+      stage('Install') {
+        parallel {
+          stage('Launch in Linux') {
+            agent { label 'ubuntu' }
+            steps {
+            echo 'Installing Clinica in Linux...'
+
+            }
+          }
+          stage('Launch in MacOS') {
+            agent { label 'macos' }
+            steps {
+            echo 'Installing Clinica in MacOS...'
+
             }
           }
         }
@@ -30,14 +58,14 @@ pipeline {
             agent { label 'ubuntu' }
             steps {
               echo 'Testing..'
-                sh 'cd clinica/ && ls'
+              sh 'cd clinica/ && ls'
             }
           }
           stage('Test Mac') {
             agent { label 'macos' }
             steps {
               echo 'Testing..'
-                sh 'cd clinica/ && ls'
+              sh 'cd clinica/ && ls'
             }
           }
         }
