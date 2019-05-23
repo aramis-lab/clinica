@@ -35,8 +35,8 @@ pipeline {
           stage('Launch in Linux') {
             agent { label 'ubuntu' }
             steps {
-            echo 'Installing Clinica in Linux...'
-
+            echo 'Installing Clinica in Linux...' + 'env.BRANCH_NAME'
+            sh 'echo ${env.CLINICA_ENV_BRANCH}'
             }
           }
           stage('Launch in MacOS') {
