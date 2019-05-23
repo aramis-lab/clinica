@@ -5,7 +5,7 @@
 pipeline {
   agent none
     environment {
-      CLINICA_ENV_BRANCH = 'CLINICA_ENV' + env.GIT_BRANCH
+      CLINICA_ENV_BRANCH = 'CLINICA_ENV' + '${env.GIT_BRANCH}'
     }
     stages {
       stage('Build Env') {
