@@ -37,9 +37,9 @@ pipeline {
             steps {
             echo 'Installing Clinica in Linux...'
             echo 'My branch name is ${env.BRANCH}'
-            sh {
-              'printenv'
-              'echo "My conda env name is ${env.CLINICA_ENV_BRANCH}"'
+            script {
+              printenv
+              echo "My conda env name is ${env.CLINICA_ENV_BRANCH}"
               }
             }
           }
