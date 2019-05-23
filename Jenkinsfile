@@ -5,7 +5,7 @@
 pipeline {
   agent none
     environment {
-      CLINICA_ENV_BRANCH = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim() 
+      CLINICA_ENV_BRANCH = 'CLINICA_ENV' + env.GIT_BRANCH
     }
     stages {
       stage('Build Env') {
@@ -37,6 +37,7 @@ pipeline {
             steps {
             echo 'Installing Clinica in Linux...'
             echo 'My branch name is ${env.CLINICA_ENV_BRANCH}'
+            sh 'printenv'
             script {
               echo "My conda env name is ${env.CLINICA_ENV_BRANCH}"
               }
