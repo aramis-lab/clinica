@@ -5,7 +5,7 @@
 pipeline {
   agent none
     environment {
-      CLINICA_ENV_BRANCH = 'clinica_env' + 'env.BRANCH'
+      CLINICA_ENV_BRANCH = env.BRANCH
     }
     stages {
       stage('Build Env') {
@@ -14,7 +14,7 @@ pipeline {
             agent { label 'ubuntu' }
             when { changeset "environment.yml" }
             steps {
-              echo 'Building Conda environment...' + 'env.BRANCH_NAME'
+              echo 'Building Conda environment... ${env.CLINICA.BRANCH_NAME}'
               sh 'ls'
               sh 'conda env create --force --file environment.yml -n ${env.CLINICA_ENV_BRANCH}'
             }
@@ -36,9 +36,8 @@ pipeline {
             agent { label 'ubuntu' }
             steps {
             echo 'Installing Clinica in Linux...'
-            echo 'My branch name is ${env.BRANCH}'
+            echo 'My branch name is ${env.CLINICA_ENV_BRANCH}'
             script {
-              printenv
               echo "My conda env name is ${env.CLINICA_ENV_BRANCH}"
               }
             }
