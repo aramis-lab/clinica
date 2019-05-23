@@ -35,8 +35,9 @@ pipeline {
           stage('Launch in Linux') {
             agent { label 'ubuntu' }
             steps {
-            echo 'Installing Clinica in Linux...' + 'env.BRANCH_NAME'
-            sh 'echo ${env.CLINICA_ENV_BRANCH}'
+            echo 'Installing Clinica in Linux...'
+            echo 'My branch name is ${env.BRANCH_NAME}'
+            sh 'echo "My conda env name is ${env.CLINICA_ENV_BRANCH}"'
             }
           }
           stage('Launch in MacOS') {
