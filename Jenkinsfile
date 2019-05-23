@@ -4,10 +4,6 @@
 
 pipeline {
   agent none
-    /*parameters {
-    string(name: 'WORK_DIR_LINUX', defaultValue: '/mnt/data/ci/working_dir_linux', decription: 'Working dir for Linux agents)
-    string(name: 'WORK_DIR_MAC', defaultValue: '/Volumes/data/working_directory_ci_mac', decription: 'Working dir for MacOS agents)
-    }*/
     environment {
       CLINICA_ENV_BRANCH = 'clinica_env' + env.BRANCH_NAME
     }
