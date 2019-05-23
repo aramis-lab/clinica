@@ -4,9 +4,6 @@
 
 pipeline {
   agent none
-    environment {
-      CLINICA_ENV_BRANCH = 'CLINICA_ENV' + '${env.GIT_BRANCH}'
-    }
     stages {
       stage('Build Env') {
         parallel {
@@ -14,9 +11,9 @@ pipeline {
             agent { label 'ubuntu' }
             when { changeset "environment.yml" }
             steps {
-              echo 'Building Conda environment... ${env.CLINICA.BRANCH_NAME}'
+              echo 'Building Conda environment... ${BRANCH_NAME}'
               sh 'ls'
-              sh 'conda env create --force --file environment.yml -n ${env.CLINICA_ENV_BRANCH}'
+              sh 'conda env create --force --file environment.yml -n clinica_env_${BRANCH_NAME}'
             }
           }
           stage('Build Mac') {
@@ -25,7 +22,7 @@ pipeline {
             steps {
               echo 'Building Conda environment...' + 'env.BRANCH_NAME'
               sh 'ls'
-              sh 'conda env create --force --file environment.yml -n ${env.CLINICA_ENV_BRANCH}'
+              sh 'conda env create --force --file environment.yml -n clinica_env_${BRANCH_NAME}'
             }
           }
         }
@@ -36,10 +33,10 @@ pipeline {
             agent { label 'ubuntu' }
             steps {
             echo 'Installing Clinica in Linux...'
-            echo 'My branch name is ${env.CLINICA_ENV_BRANCH}'
+            echo 'My branch name is ${BRANCH_NAME}'
             sh 'printenv'
             script {
-              echo "My conda env name is ${env.CLINICA_ENV_BRANCH}"
+              echo "My conda env name is clinica_env_${BRANCH_NAME}"
               }
             }
           }
