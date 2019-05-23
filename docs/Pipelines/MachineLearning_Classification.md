@@ -1,6 +1,6 @@
 # Classification based on machine learning
 
-Clinica provides a modular way to perform classification based on machine learning. To build its own classification pipeline, the user can combine three modules based on [scikit-learn](http://scikit-learn.org/stable/index.html):
+Clinica provides a modular way to perform classification based on machine learning. To build its own classification pipeline, the user can combine three modules based on [scikit-learn](http://scikit-learn.org/stable/index.html) [[Pedregosa et al., 2011](http://www.jmlr.org/papers/volume12/pedregosa11a/pedregosa11a.pdf)]:
 
   - Input (e.g. gray matter maps obtained from T1-weighted MRI images, FDG PET images)
   - Algorithm (e.g. support vector machine, logistic regression, random forest)
@@ -129,7 +129,7 @@ If `image_type` is `fdg`:
 ## Describing this pipeline in your paper
 
 !!! cite "Example of paragraph:"
-		These results have been obtained using the machine learning-based classification modules of Clinica. Clinica provides a modular way to perform classification based on machine learning by combining different inputs (e.g. gray matter maps obtained from T1-weighted MRI images, FDG PET images), algorithms (e.g. support vector machine, logistic regression, random forest) and validation strategies (e.g. K-fold cross validation, repeated K-fold cross validation, repeated hold-out validation). These modules rely on [scikit-learn](http://scikit-learn.org/stable/index.html).
+		These results have been obtained using the machine learning-based classification modules of Clinica. Clinica provides a modular way to perform classification based on machine learning by combining different inputs (e.g. gray matter maps obtained from T1-weighted MRI images, FDG PET images), algorithms (e.g. support vector machine, logistic regression, random forest) and validation strategies (e.g. K-fold cross validation, repeated K-fold cross validation, repeated hold-out validation). These modules rely on [scikit-learn](http://scikit-learn.org/stable/index.html) [[Pedregosa et al., 2011](http://www.jmlr.org/papers/volume12/pedregosa11a/pedregosa11a.pdf)].
 
 ## Support
 
