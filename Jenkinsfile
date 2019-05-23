@@ -5,7 +5,7 @@
 pipeline {
   agent none
     environment {
-      CLINICA_ENV_BRANCH = env.BRANCH_NAME
+      CLINICA_ENV_BRANCH = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim() 
     }
     stages {
       stage('Build Env') {
