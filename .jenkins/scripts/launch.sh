@@ -10,7 +10,7 @@ set -e
 # create it.
 ENVS=$(conda env list | awk '{print $1}' )
 
-if ! [[ $ENVS = *"$CLINICA_ENV_BRANCH"* ]]
+if  [[ $ENVS = *"$CLINICA_ENV_BRANCH"* ]]
 then
   echo "Create Conda environment..."
   conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
