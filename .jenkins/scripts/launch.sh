@@ -19,11 +19,14 @@ else
 fi;
 
 # Activate conda environment
+echo "Activate conda environment $CLINICA_ENV_BRANCH ..."
 source activate $CLINICA_ENV_BRANCH
 # Install conda source using pip
+echo "Install clinica using pip..."
 pip install --ignore-installed .
 eval "$(register-python-argcomplete clinica)"
 # Show clinica help message
+echo "Display clinica help message"
 clinica --help
 # Desactivate conda environment
 source deactivate

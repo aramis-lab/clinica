@@ -47,6 +47,9 @@ pipeline {
           }
           stage('Launch in MacOS') {
             agent { label 'macos' }
+            environment {
+              PATH = "$HOME/miniconda3/bin:$PATH"
+              }
             steps {
             echo 'Installing Clinica sources in MacOS...'
             sh 'printenv'
