@@ -31,6 +31,9 @@ pipeline {
         parallel {
           stage('Launch in Linux') {
             agent { label 'ubuntu' }
+            environment {
+              PATH = "$HOME/miniconda/bin:$PATH"
+              }
             steps {
             echo 'Installing Clinica sources in Linux...'
             echo 'My branch name is ${BRANCH_NAME}'
