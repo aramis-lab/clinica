@@ -32,20 +32,21 @@ pipeline {
           stage('Launch in Linux') {
             agent { label 'ubuntu' }
             steps {
-            echo 'Installing Clinica in Linux...'
+            echo 'Installing Clinica sources in Linux...'
             echo 'My branch name is ${BRANCH_NAME}'
             sh 'echo "My branch name is ${BRANCH_NAME}"'
             sh 'printenv'
             script {
               echo "My conda env name is clinica_env_${BRANCH_NAME}"
               }
+            sh './.jenkins/scripts/launch.sh'
             }
           }
           stage('Launch in MacOS') {
             agent { label 'macos' }
             steps {
-            echo 'Installing Clinica in MacOS...'
-
+            echo 'Installing Clinica sources in MacOS...'
+            sh './.jenkins/scripts/launch.sh'
             }
           }
         }
