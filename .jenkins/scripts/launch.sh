@@ -12,14 +12,14 @@ ENVS=$(conda env list | awk '{print $1}' )
 
 if  [[ $ENVS = *"$CLINICA_ENV_BRANCH"* ]]
 then
-  echo "Create Conda environment..."
-  conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
+  echo "Conda environment exits, continue..."
 else
-  echo "Continue..."
+  echo "Create Conda environment $CLINICA_ENV_BRANCH because it does not exist."
+  conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
 fi;
 
 # Activate conda environment
-echo "Activate conda environment $CLINICA_ENV_BRANCH ..."
+echo "Activate conda environment $CLINICA_ENV_BRANCH..."
 source activate $CLINICA_ENV_BRANCH
 # Install conda source using pip
 echo "Install clinica using pip..."
