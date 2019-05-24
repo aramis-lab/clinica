@@ -46,6 +46,7 @@ pipeline {
             agent { label 'macos' }
             steps {
             echo 'Installing Clinica sources in MacOS...'
+            sh 'printenv'
             sh './.jenkins/scripts/launch.sh'
             }
           }
