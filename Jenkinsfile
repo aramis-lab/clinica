@@ -58,13 +58,26 @@ pipeline {
           }
         }
       }
-      stage('Test') {
+      stage('Test Intantiate') {
         parallel {
           stage('Test Linux') {
             agent { label 'ubuntu' }
+            environment {
+              PATH = "$HOME/miniconda3/bin:$PATH"
+              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+              WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
+              }
             steps {
-              echo 'Testing..'
-              sh 'cd clinica/ && ls'
+              echo 'Testing pipeline instantation...'
+              sh '''
+                 source activate $CLINICA_ENV_BRANCH
+                 module load clinica.all
+                 cd test
+                 ln -s /mnt/data/ci/data_ci_linux ./data
+                 taskset -c 0-21 pytest --verbose --working_directory=$WORK_DIR_LINUX --disable-warnings --timeout=0 -n 6 -k 'test_instantiate'
+                 module purge
+                 source deactivate
+                 '''
             }
           }
           stage('Test Mac') {
