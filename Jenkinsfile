@@ -69,9 +69,9 @@ pipeline {
               }
             steps {
               echo 'Testing pipeline instantation...'
-              sh 'source /usr/local/Modules/init/profile.sh'
               sh '''
                  source activate $CLINICA_ENV_BRANCH
+                 source /usr/local/Modules/init/profile.sh
                  module load clinica.all
                  cd test
                  ln -s /mnt/data/ci/data_ci_linux ./data
