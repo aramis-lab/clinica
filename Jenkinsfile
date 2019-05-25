@@ -63,7 +63,7 @@ pipeline {
           stage('Test Linux') {
             agent { label 'ubuntu' }
             environment {
-              PATH = "$HOME/miniconda/bin:$PATH"
+              PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
               WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
               }
