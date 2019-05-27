@@ -44,7 +44,7 @@ pipeline {
               }
             sh './.jenkins/scripts/launch.sh'
             sh 'printenv'
-            sh 'python --version
+            sh 'python --version'
             }
           }
           stage('Launch in MacOS') {
