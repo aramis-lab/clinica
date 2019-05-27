@@ -44,7 +44,7 @@ pipeline {
               }
             sh '''
                ./.jenkins/scripts/activate_env.sh
-               conda info --envs'
+               conda info --envs
                echo "Install clinica using pip..."
                pip install --ignore-installed .
                eval "$(register-python-argcomplete clinica)"
