@@ -16,7 +16,7 @@ pipeline {
               sh 'conda env create --force --file environment.yml -n clinica_env_${BRANCH_NAME}'
             }
           }
-          stage('Build Mac') {
+          stage('Build in Mac') {
             agent { label 'macos' }
             when { changeset "environment.yml" }
             steps {
@@ -43,6 +43,8 @@ pipeline {
               echo "My conda env name is clinica_env_${BRANCH_NAME}"
               }
             sh './.jenkins/scripts/launch.sh'
+            sh 'printenv'
+            sh 'python --version
             }
           }
           stage('Launch in MacOS') {
