@@ -70,9 +70,10 @@ class PETVolume(cpe.Pipeline):
             if fwhm_df.shape[0] != len(self.subjects):
                 raise ValueError('The number of rows in fwhm_tsv file must match the number of subject-session pairs.')
 
-            if any(elem not in list(fwhm_df.columns) for elem in ['participant_id', 'session_id', 'fwhm_x', 'fwhm_y', 'fwhm_z']):
+            if any(elem not in ['participant_id', 'session_id', 'fwhm_x', 'fwhm_y', 'fwhm_z'] for elem in list(fwhm_df.columns)):
                 raise IOError('The file ' + str(fwhm_tsv)
-                              + ' must contains the following columns (separated by tabulation : participant_id, session_id, fwhm_x, fwhm_y, fwhm_z)')
+                              + ' must contains the following columns (separated by tabulation : participant_id, session_id, fwhm_x, fwhm_y, fwhm_z), but we found '
+                              + str(list(fwhm_df.columns)) + '. Pay attention to the spaces (there should be none !)')
 
             subjects_fwhm = list(fwhm_df.participant_id)
             sessions_fwhm = list(fwhm_df.session_id)
@@ -83,7 +84,7 @@ class PETVolume(cpe.Pipeline):
                 if len(idx_sub) == 0:
                     raise RuntimeError('Subject ' + sub + ' with session ' + current_ses + ' that you want to proceed was not found in the PSF specifications ' + str(fwhm_tsv))
                 if len(idx_sub) > 1:
-                    raise RuntimeError('Subject ' + sub + ' with session ' + current_ses + ' xas found multiple times in ' + str(fwhm_tsv))
+                    raise RuntimeError('Subject ' + sub + ' with session ' + current_ses + ' were found multiple times in ' + str(fwhm_tsv))
                 idx_reordered.append(idx_sub[0])
 
             fwhm_x = list(fwhm_df.fwhm_x)
