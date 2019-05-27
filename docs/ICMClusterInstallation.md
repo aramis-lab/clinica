@@ -1,5 +1,11 @@
 # Installation of Clinica on the ICM cluster
 
+## Load Clinica
+Clinica is available through Module system. After an `ssh` on the Cluster (`ssh login01` or `ssh login02`), you will arrive on your home. Once done, type `module avail` to see all packages. Finally, type:
+```
+module load clinica/aramis
+```
+
 ## Configuration file
 
 ### Bash / Zsh
@@ -10,11 +16,8 @@ Either you copy the content of your `~/.bashrc` / `~/.zshrc` file (don't forget 
 
 ### Matlab ?
 
-`startup.m` to modify ?
+`matlab/startup.m` to modify ?
 
-
-### Check that `clinica` is loaded
-If it worked, the `which clinica` command should return the following path: `/export/applications/aramis/Cluster/Miniconda2/bin/clinica`.
 
 ## Submit a clinica pipeline
 Please read the [Wiki section](https://wiki.icm-institute.org/display/SIKB/CLUSTER) dedicated to the ICM cluster.

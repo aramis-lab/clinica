@@ -124,12 +124,12 @@ If you plan to contribute to Clinica or if you want to have the current developm
 version, you can either:
 
 * Download the tarball for a specific version from our
-[repository](https://gitlab.icm-institute.org/aramislab/clinica/tags).
+[repository](https://github.com/aramis-lab/clinica/releases).
 Then decompress it.
 * Clone Clinica's repository from Gitlab:
-  ```bash
-  git clone https://gitlab.icm-institute.org/aramislab/clinica.git`.
-  ```
+```bash
+git clone https://github.com/aramis-lab/clinica.git
+```
 
 We suggest creating a custom Conda environment and installing Clinica using the
 provided YML file:

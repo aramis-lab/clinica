@@ -9,7 +9,7 @@ Some Clinica pipelines use third-party sotfware. If you are planning to use any 
 Clinica installation is managed by [Conda](https://conda.io). If you want to develop your code using Clinica or you want to contribute to the project, you can also install the package from the code source. Detailed instructions are [here](./Installation).
 
 ## Installing Clinica using Docker
-Another way to install Clinica is to use [Docker](https://www.docker.com/what-docker). The installation procedure of the Clinica Docker image, which contains everything required to launch any pipeline of Clinica, is explained [here](https://gitlab.icm-institute.org/aramislab/clinica-docker).  
+Another way to install Clinica is to use [Docker](https://www.docker.com/what-docker). The installation procedure of the Clinica Docker image, which contains everything required to launch any pipeline of Clinica, is explained [here](https://gitlab.inria.fr/aramis/clinica_docker).  
 
 ## Using Clinica on the ICM cluster
 

@@ -17,7 +17,7 @@ Clinica can be installed on Mac OS X and Linux (CentOS or Debian/Ubuntu) machine
   - [Third-party software](./Third-party)  
 
 <!-- ### Installing Clinica using Docker
-Another way to install Clinica is to use [Docker](https://www.docker.com/what-docker). The installation procedure of the Clinica Docker image, which contains everything required to launch any pipeline of Clinica, is explained [here](https://gitlab.icm-institute.org/aramislab/clinica-docker).    -->
+Another way to install Clinica is to use [Docker](https://www.docker.com/what-docker). The installation procedure of the Clinica Docker image, which contains everything required to launch any pipeline of Clinica, is explained [here](https://gitlab.inria.fr/aramis/clinica_docker).    -->
 
 <!-- ### Using Clinica on the ICM cluster
 ICM members are encouraged to use the version of Clinica available on the cluster. Installation instructions are available [here](./ICMClusterInstallation). -->
@@ -72,7 +72,7 @@ Clinica is distributed under the terms of the MIT license given [here](https://g
 For publications or communications using Clinica, please include the following text:
 
 !!! quote "Citing Clinica"
-    Analyses were performed using the Clinica software platform (www.clinica.run) developed by the ARAMIS Lab ([www.aramislab.fr](www.aramislab.fr)).
+    Analyses were performed using the Clinica software platform (www.clinica.run) developed by the ARAMIS Lab ([www.aramislab.fr](http://www.aramislab.fr/)).
 
 Each pipeline's page includes text to cite the software packages that are used by Clinica. Use them depending on the specific pipelines that you used (for example, citing SPM when using the `t1-volume` pipeline).
 

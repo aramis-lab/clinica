@@ -9,4 +9,4 @@ A major application of pattern recognition in neuroimaging is the design of deci
 
 The slides, Jupyter notebook and example dataset can be found in this [Google drive folder](https://drive.google.com/open?id=17-DFtdDSJwIUMde0Fk6mP-UykQxRVqGG).
 
-To go further, check this [repository](https://gitlab.icm-institute.org/aramislab/AD-ML), which contains a software framework for reproducible machine learning experiments on automatic classification of Alzheimer's disease using multimodal MRI and PET data from three publicly available datasets (ADNI, AIBL and OASIS).
+To go further, check this [repository](https://github.com/aramis-lab/AD-ML), which contains a software framework for reproducible machine learning experiments on automatic classification of Alzheimer's disease using multimodal MRI and PET data from three publicly available datasets (ADNI, AIBL and OASIS).
