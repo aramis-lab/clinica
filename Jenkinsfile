@@ -42,9 +42,17 @@ pipeline {
             script {
               echo "My conda env name is clinica_env_${BRANCH_NAME}"
               }
-            sh './.jenkins/scripts/launch.sh'
-            sh 'conda info --envs'
-            sh 'python --version'
+            sh '''
+               ./.jenkins/scripts/activate_env.sh
+               conda info --envs'
+               echo "Install clinica using pip..."
+               pip install --ignore-installed .
+               eval "$(register-python-argcomplete clinica)"
+               # Show clinica help message
+               echo "Display clinica help message"
+               clinica --help
+               source deactivate
+               '''
             }
           }
           stage('Launch in MacOS') {
@@ -55,7 +63,16 @@ pipeline {
             steps {
             echo 'Installing Clinica sources in MacOS...'
             sh 'printenv'
-            sh './.jenkins/scripts/launch.sh'
+            sh '''
+               ./.jenkins/scripts/activate_env.sh
+               echo "Install clinica using pip..."
+               pip install --ignore-installed .
+               eval "$(register-python-argcomplete clinica)"
+               # Show clinica help message
+               echo "Display clinica help message"
+               clinica --help
+               source deactivate
+            '''
             }
           }
         }
@@ -72,7 +89,7 @@ pipeline {
             steps {
               echo 'Testing pipeline instantation...'
               sh '''
-                 source activate $CLINICA_ENV_BRANCH
+                 ./.jenkins/scripts/activate_env.sh
                  source /usr/local/Modules/init/profile.sh
                  module load clinica.all
                  cd test
@@ -92,15 +109,15 @@ pipeline {
             steps {
               echo 'Testing pipeline instantation...'
               sh '''
-                 source activate $CLINICA_ENV_BRANCH
-                 source /usr/local/opt/modules/init/bash
-                 module load clinica.all
-                 cd test
-                 ln -s /Volumes/data/data_ci ./data
-                 pytest --verbose --disable-warnings -k 'test_instantiate'
-                 module purge
-                 source deactivate
-                 '''
+                 ./.jenkins/scripts/activate_env.sh
+                  source /usr/local/opt/modules/init/bash
+                  module load clinica.all
+                  cd test
+                  ln -s /Volumes/data/data_ci ./data
+                  pytest --verbose --disable-warnings -k 'test_instantiate'
+                  module purge
+                  source deactivate
+                  '''
             }
           }  
           stage('Style test') {
@@ -113,7 +130,7 @@ pipeline {
             steps {
               echo 'Testing pipeline instantation...'
               sh '''
-                 source activate $CLINICA_ENV_BRANCH
+                 ./.jenkins/scripts/activate_env.sh
                  pytest --verbose -k 'test_coding_style'
                  source deactivate
                  '''
