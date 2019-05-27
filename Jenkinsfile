@@ -43,7 +43,7 @@ pipeline {
               echo "My conda env name is clinica_env_${BRANCH_NAME}"
               }
             sh './.jenkins/scripts/launch.sh'
-            sh 'printenv'
+            sh 'conda info --envs'
             sh 'python --version'
             }
           }

@@ -29,4 +29,4 @@ eval "$(register-python-argcomplete clinica)"
 echo "Display clinica help message"
 clinica --help
 # Desactivate conda environment
-source deactivate
+#source deactivate
