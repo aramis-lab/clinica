@@ -1,5 +1,5 @@
 #!/bin/bash
-# A shell script to launnch clinica in CI machines
+# A shell script to launch clinica in CI machines
 
 # Name of the Conda environment according to the branch
 CLINICA_ENV_BRANCH="clinica_env_$BRANCH_NAME"
@@ -21,12 +21,3 @@ fi;
 # Activate conda environment
 echo "Activate conda environment $CLINICA_ENV_BRANCH..."
 source activate $CLINICA_ENV_BRANCH
-# Install conda source using pip
-echo "Install clinica using pip..."
-pip install --ignore-installed .
-eval "$(register-python-argcomplete clinica)"
-# Show clinica help message
-echo "Display clinica help message"
-clinica --help
-# Desactivate conda environment
-#source deactivate
