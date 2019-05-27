@@ -58,9 +58,9 @@ pipeline {
           }
         }
       }
-      stage('Test Intantiate') {
+      stage('Short Tests') {
         parallel {
-          stage('Test Linux') {
+          stage('Instantiate Linux') {
             agent { label 'ubuntu' }
             environment {
               PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
@@ -81,7 +81,7 @@ pipeline {
                  '''
             }
           }
-          stage('Test Mac') {
+          stage('Instantiate Mac') {
             agent { label 'macos' }
             environment {
               PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH"
@@ -97,6 +97,22 @@ pipeline {
                  ln -s /Volumes/data/data_ci ./data
                  pytest --verbose --disable-warnings -k 'test_instantiate'
                  module purge
+                 source deactivate
+                 '''
+            }
+          }  
+          stage('Style test') {
+            agent { label 'ubuntu' }
+            environment {
+              PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
+              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+              WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
+              }
+            steps {
+              echo 'Testing pipeline instantation...'
+              sh '''
+                 source activate $CLINICA_ENV_BRANCH
+                 pytest --verbose -k 'test_coding_style'
                  source deactivate
                  '''
             }
