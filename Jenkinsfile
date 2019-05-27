@@ -83,9 +83,22 @@ pipeline {
           }
           stage('Test Mac') {
             agent { label 'macos' }
+            environment {
+              PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH"
+              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+              }
             steps {
-              echo 'Testing..'
-              sh 'cd clinica/ && ls'
+              echo 'Testing pipeline instantation...'
+              sh '''
+                 source activate $CLINICA_ENV_BRANCH
+                 source /usr/local/opt/modules/init/bash
+                 module load clinica.all
+                 cd test
+                 ln -s /Volumes/data/data_ci ./data
+                 pytest --verbose --disable-warnings -k 'test_instantiate'
+                 module purge
+                 source deactivate
+                 '''
             }
           }
         }
