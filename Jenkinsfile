@@ -45,6 +45,7 @@ pipeline {
             sh '''
                ./.jenkins/scripts/activate_env.sh
                conda info --envs
+               eval "$(conda shell.bash hook)"
                conda activate clinica_env_$BRANCH_NAME
                echo "Install clinica using pip..."
                pip install --ignore-installed .
