@@ -49,6 +49,11 @@ The main output files in `subjects` subfolder are:
 !!! tip
     Easily access the papers cited on this page on [Zotero](https://www.zotero.org/groups/1517933/aramis_clinica/items/collectionKey/78RQYITS).
 
+## Support
+
+-   You can use the [Clinica Google Group](https://groups.google.com/forum/#!forum/clinica-user) to ask for help!
+-   Report an issue on [GitHub](https://github.com/aramis-lab/clinica/issues).
+
 ## Advanced usage
 The approach is general and can make use of different types of spatial and anatomical regularizations, introduce different types of spatial priors and varying amounts of regularization. These different aspects are described in details in [[Cuingnet et al, 2013](https://doi.org/10.1109/TPAMI.2012.142)]. Currently, this pipeline implements only one type of regularization (Fisher regularization), which is the most general one and should fit the vast majority of purposes.
 As for the type of spatial prior, the pipeline currently only uses tissue maps (gray matter, white matter and cerebrospinal fluid). The decision function of the SVM is made regular with respect to these tissues. Other types of priors (such as atlases of anatomical regions) are currently not available and might be implemented in future releases. Finally, the amount of regularization can be changed using the  `fwhm` option. The default value is 4 mm. In practice, we found this value to be optimal. We therefore do not recommend to change it unless you have a specific reason to do so.

@@ -134,4 +134,4 @@ If `image_type` is `fdg`:
 ## Support
 
 -   You can use the [Clinica Google Group](https://groups.google.com/forum/#!forum/clinica-user) to ask for help!
--   Report an issue on [GitLab](https://gitlab.icm-institute.org/aramislab/clinica/issues).
+-   Report an issue on [GitHub](https://github.com/aramis-lab/clinica/issues).

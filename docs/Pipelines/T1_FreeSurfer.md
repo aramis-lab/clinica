@@ -71,7 +71,7 @@ The full list of features extracted from the FreeSurfer pipeline can be found in
 ## Support
 
 -   You can use the [Clinica Google Group](https://groups.google.com/forum/#!forum/clinica-user) to ask for help!
--   Report an issue on [GitLab](https://gitlab.icm-institute.org/aramislab/clinica/issues).
+-   Report an issue on [GitHub](https://github.com/aramis-lab/clinica/issues).
 
 ## Appendix: Main steps of the `t1-freesurfer` pipeline
 Following the links to visualize diagrams summarizing the main steps of the `t1-freesurfer` pipeline: [pre-processing](../../img/T1_FreeSurfer/t1-freesurfer_pipeline1.svg), [voxel-based processing](../../img/T1_FreeSurfer/t1-freesurfer_pipeline2.svg), [surface-based processing](../../img/T1_FreeSurfer/t1-freesurfer_pipeline3.svg). For a detailed explanation of the FreeSurfer `recon-all` pipeline, click [here](https://surfer.nmr.mgh.harvard.edu/fswiki/recon-all).

@@ -147,8 +147,8 @@ clinica run statistics-surface caps_directory ADvsHC_participants.tsv "1 + age +
 
 ## Support
 
-    -   You can use the [Clinica Google Group](https://groups.google.com/forum/#!forum/clinica-user) to ask for help!
-    -   Report an issue on [GitLab](https://gitlab.icm-institute.org/aramislab/clinica/issues).
+-   You can use the [Clinica Google Group](https://groups.google.com/forum/#!forum/clinica-user) to ask for help!
+-   Report an issue on [GitHub](https://github.com/aramis-lab/clinica/issues).
 
 
 ## (Advanced) Specifying what surface data to use

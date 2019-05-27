@@ -33,7 +33,7 @@ where:
 
 If you want to run the pipeline on a subset of your BIDS dataset, you can use the `-tsv` flag to specify in a TSV file the participants belonging to your subset.
 
-Please note that next to each PET file in your BIDS folder, a `json` file must be added to specify the `EffectiveResolutionInPlane` and `EffectiveResolutionAxial` in mm relative to the point spread function (PSF). 
+Please note that next to each PET file in your BIDS folder, a `json` file must be added to specify the `EffectiveResolutionInPlane` and `EffectiveResolutionAxial` in mm relative to the point spread function (PSF).
 
 Your bids hierarchy (for a given subject `sub-001`) must look like this :
 ```
@@ -94,8 +94,9 @@ The files are (where `*` stands for `sub-<participant_label>_ses-<session_label>
     Easily access the papers cited on this page on [Zotero](https://www.zotero.org/groups/2240070/clinica_aramislab/items/collectionKey/RGVVHC5W).
 
 ## Support
+
 -   You can use the [Clinica Google Group](https://groups.google.com/forum/#!forum/clinica-user) to ask for help!
--   Report an issue on [GitLab](https://gitlab.icm-institute.org/aramislab/clinica/issues).
+-   Report an issue on [GitHub](https://github.com/aramis-lab/clinica/issues).
 
 
 ## Appendix I: Diagram of the pipeline execution
