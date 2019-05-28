@@ -10,7 +10,7 @@ set -e
 # create it.
 ENVS=$(conda env list | awk '{print $1}' )
 
-if  [[ $ENVS = *"$CLINICA_ENV_BRANCH"* ]]
+if  [[ $ENVS = "$CLINICA_ENV_BRANCH" ]]
 then
   echo "Conda environment exists, continue script..."
 else
