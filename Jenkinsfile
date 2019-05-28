@@ -1,13 +1,13 @@
-#!/usr/bin/env groovy
+    #!/usr/bin/env groovy
 
-// Continuous Integration script for Clinica
-// www.clinica.run
-// Author: mauricio.diaz@inria.fr
+  // Continuous Integration script for Clinica
+  // www.clinica.run
+  // Author: mauricio.diaz@inria.fr
 
-pipeline {
-  agent none
-    stages {
-      stage('Build Env') {
+  pipeline {
+    agent none
+      stages {
+        stage('Build Env') {
         parallel {
           stage('Build in Linux') {
             agent { label 'ubuntu' }
@@ -166,85 +166,80 @@ pipeline {
         }
       }
       stage('Long Tests') {
-        when {
-          branch 'ci'
-        }
-        failFast true
-          parallel {
-            stage('Linux:iotools') {
-              agent { label 'ubuntu' }
-              environment {
-                PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
-                  CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
-                  WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
+        parallel {
+          stage('Linux:iotools') {
+            agent { label 'ubuntu' }
+            environment {
+              PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
+              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+              WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
               }
-              steps {
-                echo 'Testing pipeline run...'
-                  sh 'echo "Agent name: ${NODE_NAME}"' 
-                  sh '''
-                  set +x
-                  eval "$(conda shell.bash hook)"
-                  source /usr/local/Modules/init/profile.sh
-                  ./.jenkins/scripts/find_env.sh
-                  conda activate $CLINICA_ENV_BRANCH
-                  module load clinica.all
-                  cd test
-                  ln -s /mnt/data/ci/data_ci_linux ./data
-                  pytest \
-                  --verbose \
-                  --working_directory=$WORK_DIR_LINUX \
-                  --disable-warnings \
-                  --timeout=0 \
-                  -n 4 \
-                  nonregression/test_run_iotools.py
-                  module purge
-                  conda deactivate
-                  '''
-              }
-              post {
-                always {
-                  sh '''
-                    rm -rf "${WORK_DIR_LINUX}/*"
-                    '''
-                }
+            steps {
+              echo 'Testing pipeline run...'
+              sh 'echo "Agent name: ${NODE_NAME}"' 
+              sh '''
+                 set +x
+                 eval "$(conda shell.bash hook)"
+                 source /usr/local/Modules/init/profile.sh
+                 ./.jenkins/scripts/find_env.sh
+                 conda activate ${CLINICA_ENV_BRANCH}
+                 module load clinica.all
+                 cd test
+                 ln -s /mnt/data/ci/data_ci_linux ./data
+                 pytest \
+                    --verbose \
+                    --working_directory=$WORK_DIR_LINUX \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -n 4 \
+                    nonregression/test_run_iotools.py
+                 module purge
+                 conda deactivate
+                 '''
+            }
+            post {
+              always {
+                sh '''
+                   rm -rf "${WORK_DIR_LINUX}/*"
+                   '''
               }
             }
-            stage('Mac:iotools') {
-              agent { label 'macos' }
-              environment {
-                PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH" 
-                  CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
-                  WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
+          }
+          stage('Mac:iotools') {
+            agent { label 'macos' }
+            environment {
+              PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
+              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+              WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
               }
-              steps {
-                echo 'Testing pipeline instantation...'
-                  sh 'echo "Agent name: ${NODE_NAME}"' 
-                  sh '''
-                  set +x
-                  eval "$(conda shell.bash hook)"
-                  source /usr/local/opt/modules/init/bash
-                  ./.jenkins/scripts/find_env.sh
-                  conda activate $CLINICA_ENV_BRANCH
-                  module load clinica.all
-                  cd test
-                  ln -s /Volumes/data/data_ci ./data
-                  pytest \
-                  --verbose \
-                  --working_directory=$WORK_DIR_MAC \
-                  --disable-warnings \
-                  --timeout=0 \
-                  -n 4 \
-                  nonregression/test_run_iotools.py
-                  module purge
-                  conda deactivate
-                  '''
-              }
-              post {
-                always {
-                  sh '''
-                    rm -rf "${WORK_DIR_MAC}/*"
-                    '''
-                }
+            steps {
+              echo 'Testing pipeline instantation...'
+              sh 'echo "Agent name: ${NODE_NAME}"' 
+              sh '''
+                 set +x
+                 eval "$(conda shell.bash hook)"
+                 source /usr/local/opt/modules/init/bash
+                 ./.jenkins/scripts/find_env.sh
+                 conda activate ${CLINICA_ENV_BRANCH}
+                 module load clinica.all
+                 cd test
+                 ln -s /Volumes/data/data_ci ./data
+                 pytest \
+                    --verbose \
+                    --working_directory=$WORK_DIR_MAC \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -n 4 \
+                    nonregression/test_run_iotools.py
+                 module purge
+                 conda deactivate
+                 '''
+            }
+            post {
+              always {
+                sh '''
+                   rm -rf "${WORK_DIR_MAC}/*"
+                   '''
               }
             }
           }
