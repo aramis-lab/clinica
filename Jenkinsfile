@@ -38,7 +38,8 @@ pipeline {
             echo 'Installing Clinica sources in Linux...'
             echo 'My branch name is ${BRANCH_NAME}'
             sh 'echo "My branch name is ${BRANCH_NAME}"'
-            echo 'Agent name: $NODE_NAME' 
+            sh 'printenv'
+            sh 'echo "Agent name: ${NODE_NAME}"' 
             script {
               echo "My conda env name is clinica_env_${BRANCH_NAME}"
               }
@@ -64,7 +65,7 @@ pipeline {
               }
             steps {
             echo 'Installing Clinica sources in MacOS...'
-            echo 'Agent name: $NODE_NAME' 
+            sh 'echo "Agent name: ${NODE_NAME}"' 
             sh '''
                ./.jenkins/scripts/find_env.sh
                eval "$(conda shell.bash hook)"
@@ -92,7 +93,7 @@ pipeline {
               }
             steps {
               echo 'Testing pipeline instantation...'
-              echo 'Agent name: $NODE_NAME' 
+              sh 'echo "Agent name: ${NODE_NAME}"' 
               sh '''
                  ./.jenkins/scripts/find_env.sh
                  eval "$(conda shell.bash hook)"
@@ -121,7 +122,7 @@ pipeline {
               }
             steps {
               echo 'Testing pipeline instantation...'
-              echo 'Agent name: $NODE_NAME' 
+              sh 'echo "Agent name: ${NODE_NAME}"' 
               sh '''
                  ./.jenkins/scripts/find_env.sh
                  eval "$(conda shell.bash hook)"
@@ -145,7 +146,7 @@ pipeline {
               }
             steps {
               echo 'Testing pipeline instantation...'
-              echo 'Agent name: $NODE_NAME' 
+              sh 'echo "Agent name: ${NODE_NAME}"' 
               sh '''
                  ./.jenkins/scripts/find_env.sh
                  eval "$(conda shell.bash hook)"
