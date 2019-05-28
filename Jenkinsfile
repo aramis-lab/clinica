@@ -166,17 +166,16 @@ pipeline {
         }
       }
       stage('Long Tests') {
-        environment {
-          PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
-          CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
-          WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
-          WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
-          }
         parallel {
           stage('Linux:iotools') {
             agent { label 'ubuntu' }
+            environment {
+              PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
+              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+              WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
+              }
             steps {
-              echo 'Testing pipeline instantation...'
+              echo 'Testing pipeline run...'
               sh 'echo "Agent name: ${NODE_NAME}"' 
               sh '''
                  set +x
@@ -208,6 +207,11 @@ pipeline {
           }
           stage('Mac:iotools') {
             agent { label 'macos' }
+            environment {
+              PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
+              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+              WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
+              }
             steps {
               echo 'Testing pipeline instantation...'
               sh 'echo "Agent name: ${NODE_NAME}"' 
