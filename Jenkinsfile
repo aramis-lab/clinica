@@ -239,12 +239,12 @@ pipeline {
           }
         }
       }
-      post {
-        failure {
-          mail to: 'clinica-ci@inria.fr',
-            subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
-            body: "Something is wrong with ${env.BUILD_URL}"
-        }
+    }
+    post {
+      failure {
+        mail to: 'clinica-ci@inria.fr',
+          subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
+          body: "Something is wrong with ${env.BUILD_URL}"
       }
     }
   }
