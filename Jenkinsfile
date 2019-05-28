@@ -43,7 +43,7 @@ pipeline {
               echo "My conda env name is clinica_env_${BRANCH_NAME}"
               }
             sh '''
-               ./.jenkins/scripts/activate_env.sh
+               ./.jenkins/scripts/find_env.sh
                conda info --envs
                eval "$(conda shell.bash hook)"
                conda activate clinica_env_$BRANCH_NAME
@@ -53,7 +53,7 @@ pipeline {
                # Show clinica help message
                echo "Display clinica help message"
                clinica --help
-               source deactivate
+               conda deactivate
                '''
             }
           }
@@ -66,14 +66,16 @@ pipeline {
             echo 'Installing Clinica sources in MacOS...'
             sh 'printenv'
             sh '''
-               ./.jenkins/scripts/activate_env.sh
+               ./.jenkins/scripts/find_env.sh
+               eval "$(conda shell.bash hook)"
+               conda activate clinica_env_$BRANCH_NAME
                echo "Install clinica using pip..."
                pip install --ignore-installed .
                eval "$(register-python-argcomplete clinica)"
                # Show clinica help message
                echo "Display clinica help message"
                clinica --help
-               source deactivate
+               conda deactivate
             '''
             }
           }
@@ -91,14 +93,22 @@ pipeline {
             steps {
               echo 'Testing pipeline instantation...'
               sh '''
-                 ./.jenkins/scripts/activate_env.sh
+                 ./.jenkins/scripts/find_env.sh
+                 eval "$(conda shell.bash hook)"
+                 conda activate clinica_env_$BRANCH_NAME
                  source /usr/local/Modules/init/profile.sh
                  module load clinica.all
                  cd test
                  ln -s /mnt/data/ci/data_ci_linux ./data
-                 taskset -c 0-21 pytest --verbose --working_directory=$WORK_DIR_LINUX --disable-warnings --timeout=0 -n 6 -k 'test_instantiate'
+                 taskset -c 0-21 pytest \
+                    --verbose \
+                    --working_directory=$WORK_DIR_LINUX \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -n 6 \
+                    -k 'test_instantiate'
                  module purge
-                 source deactivate
+                 conda deactivate
                  '''
             }
           }
@@ -111,15 +121,17 @@ pipeline {
             steps {
               echo 'Testing pipeline instantation...'
               sh '''
-                 ./.jenkins/scripts/activate_env.sh
-                  source /usr/local/opt/modules/init/bash
-                  module load clinica.all
-                  cd test
-                  ln -s /Volumes/data/data_ci ./data
-                  pytest --verbose --disable-warnings -k 'test_instantiate'
-                  module purge
-                  source deactivate
-                  '''
+                 ./.jenkins/scripts/find_env.sh
+                 eval "$(conda shell.bash hook)"
+                 conda activate clinica_env_$BRANCH_NAME
+                 source /usr/local/opt/modules/init/bash
+                 module load clinica.all
+                 cd test
+                 ln -s /Volumes/data/data_ci ./data
+                 pytest --verbose --disable-warnings -k 'test_instantiate'
+                 module purge
+                 conda deactivate
+                 '''
             }
           }  
           stage('Style test') {
@@ -132,9 +144,11 @@ pipeline {
             steps {
               echo 'Testing pipeline instantation...'
               sh '''
-                 ./.jenkins/scripts/activate_env.sh
+                 ./.jenkins/scripts/find_env.sh
+                 eval "$(conda shell.bash hook)"
+                 conda activate clinica_env_$BRANCH_NAME
                  pytest --verbose -k 'test_coding_style'
-                 source deactivate
+                 conda deactivate
                  '''
             }
           }
