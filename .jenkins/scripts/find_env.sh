@@ -5,6 +5,7 @@
 CLINICA_ENV_BRANCH="clinica_env_$BRANCH_NAME"
 
 set -e
+set +x
 
 # Verify that the conda enviroment correponding to the branch exists, otherwise
 # create it.
