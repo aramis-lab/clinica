@@ -1,3 +1,5 @@
+#!/usr/bin/env groovy
+
 // Continuous Integration script for Clinica
 // www.clinica.run
 // Author: mauricio.diaz@inria.fr
@@ -181,7 +183,7 @@ pipeline {
                  eval "$(conda shell.bash hook)"
                  source /usr/local/Modules/init/profile.sh
                  ./.jenkins/scripts/find_env.sh
-                 conda activate $CLINICA_ENV_BRANCH
+                 conda activate ${CLINICA_ENV_BRANCH}
                  module load clinica.all
                  cd test
                  ln -s /mnt/data/ci/data_ci_linux ./data
@@ -214,7 +216,7 @@ pipeline {
                  eval "$(conda shell.bash hook)"
                  source /usr/local/opt/modules/init/bash
                  ./.jenkins/scripts/find_env.sh
-                 conda activate clinica_env_$BRANCH_NAME
+                 conda activate ${CLINICA_ENV_BRANCH}
                  module load clinica.all
                  cd test
                  ln -s /mnt/data/ci/data_ci_linux ./data
