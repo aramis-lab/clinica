@@ -165,6 +165,18 @@ pipeline {
           }
         }
       }
+    }
+    post {
+      failure {
+        mail to: 'clinica-ci@inria.fr',
+          subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
+          body: "Something is wrong with ${env.BUILD_URL}"
+      }
+    }
+  }
+pipeline {
+  agent none
+    stages {
       stage('Long Tests') {
         parallel {
           stage('Linux:iotools') {
@@ -245,12 +257,4 @@ pipeline {
           }
         }
       }
-    }
-    post {
-      failure {
-        mail to: 'clinica-ci@inria.fr',
-          subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
-          body: "Something is wrong with ${env.BUILD_URL}"
-      }
-    }
-  }
+
