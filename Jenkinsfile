@@ -208,7 +208,7 @@ pipeline {
           stage('Mac:iotools') {
             agent { label 'macos' }
             environment {
-              PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
+              PATH = "$HOME/miniconda3/bin:/usr/local/Cellar/modules/4.1.2/bin:$PATH" 
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
               WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
               }
