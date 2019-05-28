@@ -34,11 +34,14 @@ class FilterOut(object):
 def active_cprint():
     sys.stdout = FilterOut(sys.stdout)
 
-
 def cprint(msg):
     global clinica_verbose
     if clinica_verbose is True:
         print(msg)
     else:
-        print("@clinica@%s\n" % msg)
+        if type(msg) == tuple: 
+            msg = ", ".join(m for m in msg)
+            print("@clinica@ %s" % msg)
+        else: 
+            print("@clinica@ %s" % msg)
     sys.stdout.flush()
