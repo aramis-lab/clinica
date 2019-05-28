@@ -169,22 +169,17 @@ pipeline {
           CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
           WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
           WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
-          sh '''
-             set +x
-             eval "$(conda shell.bash hook)"
-             source /usr/local/Modules/init/profile.sh
-             '''
           }
         parallel {
           stage('Linux:iotools') {
             agent { label 'ubuntu' }
-            environment {
-              sh 'source /usr/local/Modules/init/profile.sh'
-            }
             steps {
               echo 'Testing pipeline instantation...'
               sh 'echo "Agent name: ${NODE_NAME}"' 
               sh '''
+                 set +x
+                 eval "$(conda shell.bash hook)"
+                 source /usr/local/Modules/init/profile.sh
                  ./.jenkins/scripts/find_env.sh
                  conda activate $CLINICA_ENV_BRANCH
                  module load clinica.all
@@ -211,13 +206,13 @@ pipeline {
           }
           stage('Mac:iotools') {
             agent { label 'macos' }
-            environment {
-              sh 'source /usr/local/opt/modules/init/bash'
-            }
             steps {
               echo 'Testing pipeline instantation...'
               sh 'echo "Agent name: ${NODE_NAME}"' 
               sh '''
+                 set +x
+                 eval "$(conda shell.bash hook)"
+                 source /usr/local/opt/modules/init/bash
                  ./.jenkins/scripts/find_env.sh
                  conda activate clinica_env_$BRANCH_NAME
                  module load clinica.all
