@@ -44,6 +44,7 @@ pipeline {
               echo "My conda env name is clinica_env_${BRANCH_NAME}"
               }
             sh '''
+               set +x
                ./.jenkins/scripts/find_env.sh
                conda info --envs
                eval "$(conda shell.bash hook)"
@@ -67,6 +68,7 @@ pipeline {
             echo 'Installing Clinica sources in MacOS...'
             sh 'echo "Agent name: ${NODE_NAME}"' 
             sh '''
+               set +x
                ./.jenkins/scripts/find_env.sh
                eval "$(conda shell.bash hook)"
                conda activate clinica_env_$BRANCH_NAME
