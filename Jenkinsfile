@@ -163,5 +163,92 @@ pipeline {
           }
         }
       }
+      stage('Long Tests') {
+        environment {
+          PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
+          CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
+          WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
+          WORK_DIR_MAC = "/Volumes/data/working_directory_ci_mac"
+          sh '''
+             set +x
+             eval "$(conda shell.bash hook)"
+             source /usr/local/Modules/init/profile.sh
+             '''
+          }
+        parallel {
+          stage('Linux:iotools') {
+            agent { label 'ubuntu' }
+            environment {
+              sh 'source /usr/local/Modules/init/profile.sh'
+            }
+            steps {
+              echo 'Testing pipeline instantation...'
+              sh 'echo "Agent name: ${NODE_NAME}"' 
+              sh '''
+                 ./.jenkins/scripts/find_env.sh
+                 conda activate $CLINICA_ENV_BRANCH
+                 module load clinica.all
+                 cd test
+                 ln -s /mnt/data/ci/data_ci_linux ./data
+                 pytest \
+                    --verbose \
+                    --working_directory=$WORK_DIR_LINUX \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -n 4 \
+                    nonregression/test_run_iotools.py
+                 module purge
+                 conda deactivate
+                 '''
+            }
+            post {
+              always {
+                sh '''
+                   rm -rf "${WORK_DIR_LINUX}/*"
+                   '''
+              }
+            }
+          }
+          stage('Mac:iotools') {
+            agent { label 'macos' }
+            environment {
+              sh 'source /usr/local/opt/modules/init/bash'
+            }
+            steps {
+              echo 'Testing pipeline instantation...'
+              sh 'echo "Agent name: ${NODE_NAME}"' 
+              sh '''
+                 ./.jenkins/scripts/find_env.sh
+                 conda activate clinica_env_$BRANCH_NAME
+                 module load clinica.all
+                 cd test
+                 ln -s /mnt/data/ci/data_ci_linux ./data
+                 pytest \
+                    --verbose \
+                    --working_directory=$WORK_DIR_MAC \
+                    --disable-warnings \
+                    --timeout=0 \
+                    -n 4 \
+                    nonregression/test_run_iotools.py
+                 module purge
+                 conda deactivate
+                 '''
+            }
+            post {
+              always {
+                sh '''
+                   rm -rf "${WORK_DIR_MAC}/*"
+                   '''
+              }
+          }
+        }
+      }
     }
+  post {
+    failure {
+      mail to: 'clinica-ci@inria.fr',
+           subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
+           body: "Something is wrong with ${env.BUILD_URL}"
+    }
+  }
 }
