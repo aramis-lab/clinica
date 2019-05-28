@@ -173,9 +173,6 @@ pipeline {
           body: "Something is wrong with ${env.BUILD_URL}"
       }
     }
-  }
-pipeline {
-  agent none
     stages {
       stage('Long Tests') {
         parallel {
