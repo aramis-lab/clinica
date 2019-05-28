@@ -223,7 +223,7 @@ pipeline {
                  conda activate ${CLINICA_ENV_BRANCH}
                  module load clinica.all
                  cd test
-                 ln -s /mnt/data/ci/data_ci_linux ./data
+                 ln -s /Volumes/data/data_ci ./data
                  pytest \
                     --verbose \
                     --working_directory=$WORK_DIR_MAC \
