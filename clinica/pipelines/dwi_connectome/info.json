@@ -10,11 +10,6 @@
         },
         {
             "type": "software",
-            "name": "fsl",
-            "version": ""
-        },
-        {
-            "type": "software",
             "name": "mrtrix",
             "version": ""
         }

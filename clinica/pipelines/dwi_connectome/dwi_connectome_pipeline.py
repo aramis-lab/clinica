@@ -402,36 +402,21 @@ class DwiConnectome(cpe.Pipeline):
         if self.parameters['dwi_space'] == 'b0':
             self.connect([
                 # MGZ Files Convertion
-                (self.input_node, t1_brain_conv_node,
-                 [('t1_brain_file', 'in_file')]),
-
-                # noqa
-                (self.input_node, wm_mask_conv_node,
-                 [('wm_mask_file', 'in_file')]),
-                # noqa
+                (self.input_node, t1_brain_conv_node, [('t1_brain_file', 'in_file')]), # noqa
+                (self.input_node, wm_mask_conv_node, [('wm_mask_file', 'in_file')]), # noqa
                 # B0 Extraction
-                (self.input_node, split_node, [('dwi_file', 'in_file')]),
-                # noqa
-                (split_node, select_node, [('out_files', 'inlist')]),
-                # noqa
+                (self.input_node, split_node, [('dwi_file', 'in_file')]), # noqa
+                (split_node, select_node, [('out_files', 'inlist')]), # noqa
                 # Masking
-                (select_node, mask_node, [('out', 'in_file')]),  # B0 #noqa
-                (self.input_node, mask_node,
-                 [('dwi_brainmask_file', 'mask_file')]),
-                # Brain mask #noqa #noqa
+                (select_node,     mask_node, [('out', 'in_file')]),  # B0 #noqa
+                (self.input_node, mask_node, [('dwi_brainmask_file', 'mask_file')]), # Brain mask #noqa #noqa
                 # T1-to-B0 Registration
-                (t1_brain_conv_node, t12b0_reg_node, [('out_file', 'in_file')]),
-                # Brain #noqa
-                (mask_node, t12b0_reg_node, [('out_file', 'reference')]),
-                # B0 brain-masked #noqa
+                (t1_brain_conv_node, t12b0_reg_node, [('out_file', 'in_file')]), # Brain #noqa
+                (mask_node,          t12b0_reg_node, [('out_file', 'reference')]), # B0 brain-masked #noqa
                 # WM Transformation
-                (wm_mask_conv_node, wm_transform_node,
-                 [('out_file', 'in_file')]),  # Brain mask #noqa
-                (mask_node, wm_transform_node, [('out_file', 'reference')]),
-                # BO brain-masked #noqa
-                (t12b0_reg_node, wm_transform_node,
-                 [('out_matrix_file', 'in_matrix_file')]),
-                # T1-to-B0 matrix file #noqa
+                (wm_mask_conv_node, wm_transform_node, [('out_file', 'in_file')]),  # Brain mask #noqa
+                (mask_node,         wm_transform_node, [('out_file', 'reference')]), # BO brain-masked #noqa
+                (t12b0_reg_node,    wm_transform_node, [('out_matrix_file', 'in_matrix_file')]), # T1-to-B0 matrix file #noqa
             ])
 
         # Tractography
@@ -439,55 +424,35 @@ class DwiConnectome(cpe.Pipeline):
         self.connect([
             (self.input_node, caps_filenames_node, [('dwi_file', 'dwi_file')]),
             # Response Estimation
-            (self.input_node, resp_estim_node, [('dwi_file', 'in_file')]),
-            # Preproc. DWI #noqa
-            (self.input_node, resp_estim_node,
-             [('dwi_brainmask_file', 'in_mask')]),  # B0 brain mask #noqa
-            (self.input_node, resp_estim_node, [('grad_fsl', 'grad_fsl')]),
-            # bvecs and bvals #noqa
-            (caps_filenames_node, resp_estim_node, [('response', 'wm_file')]),
-            # output response filename #noqa
+            (self.input_node, resp_estim_node, [('dwi_file', 'in_file')]), # Preproc. DWI #noqa
+            (self.input_node, resp_estim_node, [('dwi_brainmask_file', 'in_mask')]),  # B0 brain mask #noqa
+            (self.input_node, resp_estim_node, [('grad_fsl', 'grad_fsl')]), # bvecs and bvals #noqa
+            (caps_filenames_node, resp_estim_node, [('response', 'wm_file')]), # output response filename #noqa
             # FOD Estimation
-            (self.input_node, fod_estim_node, [('dwi_file', 'in_file')]),
-            # Preproc. DWI #noqa
-            (resp_estim_node, fod_estim_node, [('wm_file', 'wm_txt')]),
-            # Response (txt file) #noqa
-            (self.input_node, fod_estim_node,
-             [('dwi_brainmask_file', 'mask_file')]),  # B0 brain mask #noqa
-            (self.input_node, fod_estim_node, [('grad_fsl', 'grad_fsl')]),
-            # T1-to-B0 matrix file #noqa
-            (caps_filenames_node, fod_estim_node, [('fod', 'wm_odf')]),
-            # output odf filename #noqa
+            (self.input_node, fod_estim_node, [('dwi_file', 'in_file')]), # Preproc. DWI #noqa
+            (resp_estim_node, fod_estim_node, [('wm_file', 'wm_txt')]), # Response (txt file) #noqa
+            (self.input_node, fod_estim_node, [('dwi_brainmask_file', 'mask_file')]),  # B0 brain mask #noqa
+            (self.input_node, fod_estim_node, [('grad_fsl', 'grad_fsl')]), # T1-to-B0 matrix file #noqa
+            (caps_filenames_node, fod_estim_node, [('fod', 'wm_odf')]), # output odf filename #noqa
             # Tracts Generation
-            (fod_estim_node, tck_gen_node, [('wm_odf', 'in_file')]),
-            # ODF file #noqa
-            (caps_filenames_node, tck_gen_node, [('tracts', 'out_file')]),
-            # output tck filename #noqa
+            (fod_estim_node, tck_gen_node, [('wm_odf', 'in_file')]), # ODF file #noqa
+            (caps_filenames_node, tck_gen_node, [('tracts', 'out_file')]), # output tck filename #noqa
             # Label Conversion
-            (self.input_node, label_convert_node, [('atlas_files', 'in_file')]),
-            # atlas image files #noqa
-            (caps_filenames_node, label_convert_node, [('nodes', 'out_file')]),
-            # converted atlas image filenames #noqa
+            (self.input_node,     label_convert_node, [('atlas_files', 'in_file')]), # atlas image files #noqa
+            (caps_filenames_node, label_convert_node, [('nodes', 'out_file')]), # converted atlas image filenames #noqa
             # Connectomes Generation
-            (tck_gen_node, conn_gen_node, [('out_file', 'in_file')]),
-            # output odf filename #noqa
-            (label_convert_node, conn_gen_node, [('out_file', 'in_parc')]),
-            # output odf filename #noqa
-            (caps_filenames_node, conn_gen_node, [('connectomes', 'out_file')]),
-            # output odf filename #noqa
+            (tck_gen_node,        conn_gen_node, [('out_file', 'in_file')]), # output odf filename #noqa
+            (label_convert_node,  conn_gen_node, [('out_file', 'in_parc')]), # output odf filename #noqa
+            (caps_filenames_node, conn_gen_node, [('connectomes', 'out_file')]), # output odf filename #noqa
         ])
 
         if self.parameters['dwi_space'] == 'b0':
             self.connect([
-                (wm_transform_node, tck_gen_node, [('out_file', 'seed_image')])
-                # ODF file #noqa
+                (wm_transform_node, tck_gen_node, [('out_file', 'seed_image')]) # ODF file #noqa
             ])
         elif self.parameters['dwi_space'] == 'T1w':
             self.connect([
-                (
-                    self.input_node, tck_gen_node,
-                    [('wm_mask_file', 'seed_image')])
-                # ODF file #noqa
+                (self.input_node, tck_gen_node, [('wm_mask_file', 'seed_image')]) # ODF file #noqa
             ])
         else:
             raise ClinicaCAPSError(
@@ -497,16 +462,11 @@ class DwiConnectome(cpe.Pipeline):
         # Outputs
         # ------
         self.connect([
-            (resp_estim_node, self.output_node, [('wm_file', 'response')]),
-            # T1-to-B0 matrix file #noqa
-            (fod_estim_node, self.output_node, [('wm_odf', 'fod')]),
-            # T1-to-B0 matrix file #noqa
-            (tck_gen_node, self.output_node, [('out_file', 'tracts')]),
-            # T1-to-B0 matrix file #noqa
-            (label_convert_node, self.output_node, [('out_file', 'nodes')]),
-            # T1-to-B0 matrix file #noqa
-            (conn_gen_node, self.output_node, [('out_file', 'connectomes')]),
-            # T1-to-B0 matrix file #noqa
+            (resp_estim_node,    self.output_node, [('wm_file', 'response')]), # T1-to-B0 matrix file #noqa
+            (fod_estim_node,     self.output_node, [('wm_odf', 'fod')]), # T1-to-B0 matrix file #noqa
+            (tck_gen_node,       self.output_node, [('out_file', 'tracts')]), # T1-to-B0 matrix file #noqa
+            (label_convert_node, self.output_node, [('out_file', 'nodes')]), # T1-to-B0 matrix file #noqa
+            (conn_gen_node,      self.output_node, [('out_file', 'connectomes')]), # T1-to-B0 matrix file #noqa
             (self.input_node, print_end_message, [('dwi_file', 'in_bids_or_caps_file')]),  # noqa
             (conn_gen_node,   print_end_message, [('out_file', 'final_file')]),  # noqa
         ])
