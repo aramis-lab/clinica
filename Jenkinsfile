@@ -168,7 +168,12 @@ pipeline {
       stage('Long Tests') {
         parallel {
           stage('Linux:iotools') {
-            agent { label 'ubuntu' }
+            agent { 
+              allOf {
+                label 'ubuntu'
+                label 'long'
+              }
+            }
             environment {
               PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
               CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
