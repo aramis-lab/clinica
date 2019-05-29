@@ -46,7 +46,7 @@ ICM members are encouraged to use the version of Clinica available on the cluste
 - Statistics
     - `statistics-surface` - [Surface-based mass-univariate analysis with SurfStat](Pipelines/Stats_Surface)
 - Machine Learning
-    - `machinelearning-prepare-spatial-svm` [Prepare input data for spatially regularized SVM](Pipelines/MachineLearning_PrepareSVM)
+    - `machinelearning-prepare-spatial-svm` - [Prepare input data for spatially regularized SVM](Pipelines/MachineLearning_PrepareSVM)
     - [Classification based on machine learning](Pipelines/MachineLearning_Classification)
 
 ### Dataset converters (`clinica convert`)
