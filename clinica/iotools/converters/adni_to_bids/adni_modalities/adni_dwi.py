@@ -28,6 +28,7 @@ def convert_adni_dwi(source_dir, csv_dir, dest_dir, subjs_list=None):
     import pandas as pd
     from os import path
     from clinica.utils.stream import cprint
+    from colorama import Fore
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
@@ -38,7 +39,7 @@ def convert_adni_dwi(source_dir, csv_dir, dest_dir, subjs_list=None):
     images = compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of DWI images found. Exporting images into BIDS ...')
     dwi_paths_to_bids(images, dest_dir)
-    cprint('DWI conversion done.')
+    cprint(Fore.GREEN + 'DWI conversion done.' + Fore.RESET)
 
 
 def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
@@ -72,10 +73,13 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     else:
         new_download = True
 
+    # If IDA_MR_Metadata_Listing.csv has been added manually, that will cause a
+    # bug
+    new_download = True
+
     if new_download:
         ida_meta_path = path.join(csv_dir, 'MRILIST.csv')
     else:
-
         ida_meta_path = path.join(csv_dir, 'IDA_MR_Metadata_Listing.csv')
     mri_qc_path = path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
 
@@ -89,7 +93,6 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     mri_qc = pd.io.parsers.read_csv(mri_qc_path, sep=',')
     mri_qc = mri_qc[mri_qc.series_type == 'DTI']
-    # print '=================================================='
 
     for subj in subjs_list:
         # print 'Computing path for subj', subj
@@ -225,94 +228,138 @@ def dwi_paths_to_bids(images, dest_dir, mod_to_update=False):
         mod_to_update: if is true and an image is already existing it will overwrite the old version
 
     """
-    import clinica.iotools.bids_utils as bids
-    import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
-    from os import path
-    import os
-    from glob import glob
-    import shutil
-    from clinica.utils.stream import cprint
+    from multiprocessing import cpu_count, Pool, Value
+    from functools import partial
+
+    counter = None
+
+    def init(args):
+        ''' store the counter for later use '''
+        global counter
+        counter = args
 
     subjs_list = images['Subject_ID'].unique()
+    counter = Value('i', 0)
+    total = len(images)
+    partial_generate_subject_files = partial(generate_subject_files,
+                                             images=images,
+                                             dest_dir=dest_dir,
+                                             mod_to_update=mod_to_update)
+    poolrunner = Pool(cpu_count(), initializer=init, initargs=(counter,))
+    poolrunner.map(partial_generate_subject_files, subjs_list)
+    del counter
 
-    for i in range(0, len(subjs_list)):
-        # print '--Converting dwi for subject ', subjs_list[i], '--'
-        alpha_id = bids.remove_space_and_symbols(subjs_list[i])
-        bids_id = 'sub-ADNI' + alpha_id
-        # Extract the list of sessions available from the dwi paths files, removing the duplicates
-        sess_list = images[(images['Subject_ID'] == subjs_list[i])]['VISCODE'].unique()
 
-        if not os.path.exists(path.join(dest_dir, bids_id)):
-            os.mkdir(path.join(dest_dir, bids_id))
+def generate_subject_files(subj, images, dest_dir, mod_to_update):
+    import clinica.iotools.bids_utils as bids
+    import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
+    from clinica.utils.stream import cprint
+    import subprocess
+    import os
+    import shutil
+    from os import path
+    from glob import glob
 
-        # For each session available, create the folder if doesn't exist and convert the files
-        for ses in sess_list:
+    global counter
+    alpha_id = bids.remove_space_and_symbols(subj)
+    bids_id = 'sub-ADNI' + alpha_id
+    # Extract the list of sessions available from the dwi paths files, removing the duplicates
+    sess_list = images[(images['Subject_ID'] == subj)]['VISCODE'].unique()
 
-            ses_bids = adni_utils.viscode_to_session(ses)
-            bids_ses_id = 'ses-' + ses_bids
-            bids_file_name = bids_id + '_ses-' + ses_bids
-            ses_path = path.join(dest_dir, bids_id, bids_ses_id)
+    if not os.path.exists(path.join(dest_dir, bids_id)):
+        os.mkdir(path.join(dest_dir, bids_id))
 
-            if mod_to_update:
-                if os.path.exists(path.join(ses_path, 'dwi')):
-                    shutil.rmtree(path.join(ses_path, 'dwi'))
+    # For each session available, create the folder if doesn't exist and convert the files
+    for ses in sess_list:
+        with counter.get_lock():
+            counter.value += 1
+        cprint('[DWI] Processing subject ' + str(subj)
+               + ' - session ' + ses + ', ' + str(counter.value)
+               + ' / ' + str(len(images)))
+        ses_bids = adni_utils.viscode_to_session(ses)
+        bids_ses_id = 'ses-' + ses_bids
+        bids_file_name = bids_id + '_ses-' + ses_bids
+        ses_path = path.join(dest_dir, bids_id, bids_ses_id)
 
-            if not os.path.exists(ses_path):
-                os.mkdir(ses_path)
+        if mod_to_update:
+            if os.path.exists(path.join(ses_path, 'dwi')):
+                shutil.rmtree(path.join(ses_path, 'dwi'))
 
-            dwi_info = images[(images['Subject_ID'] == subjs_list[i]) & (images['VISCODE'] == ses)]
+        if not os.path.exists(ses_path):
+            os.mkdir(ses_path)
 
-            # For the same subject, same session there could be multiple dwi with different acq label
-            for j in range(0, len(dwi_info)):
-                dwi_subj = dwi_info.iloc[j]
-                # TODO For now in CLINICA we ignore Enhanced DWI.
-                if dwi_subj['Enhanced']:
-                    continue
-                if type(dwi_subj['Path']) != float and dwi_subj['Path'] != '':
-                    if not os.path.exists(path.join(ses_path, 'dwi')):
-                        os.mkdir(path.join(ses_path, 'dwi'))
-                    dwi_path = dwi_subj['Path']
+        dwi_info = images[
+            (images['Subject_ID'] == subj) & (images['VISCODE'] == ses)]
 
-                    bids_name = bids_file_name + '_acq-' + (
-                        'axialEnhanced' if dwi_subj['Enhanced'] else 'axial') + '_dwi'
-                    # bids.dcm_to_nii(dwi_path, path.join(ses_path, 'dwi'), bids_name)
+        # For the same subject, same session there could be multiple dwi with different acq label
+        for j in range(len(dwi_info)):
+            dwi_subj = dwi_info.iloc[j]
+            # TODO For now in CLINICA we ignore Enhanced DWI.
+            if dwi_subj['Enhanced']:
+                continue
+            if type(dwi_subj['Path']) != float and dwi_subj['Path'] != '':
+                if not os.path.exists(path.join(ses_path, 'dwi')):
+                    os.mkdir(path.join(ses_path, 'dwi'))
+                dwi_path = dwi_subj['Path']
 
-                    bids_dest_dir = path.join(ses_path, 'dwi')
+                bids_name = bids_file_name + '_acq-' + ('axialEnhanced'
+                                                        if dwi_subj['Enhanced'] else 'axial') + '_dwi'
 
-                    if not os.path.exists(bids_dest_dir):
-                        os.mkdir(dest_dir)
-                    os.system('dcm2niix -b n -z y -o ' + bids_dest_dir + ' -f ' + bids_name + ' ' + dwi_path)
+                bids_dest_dir = path.join(ses_path, 'dwi')
 
-                    # If dcm2niix didn't work use dcm2nii
-                    # print path.join(dest_dir, bids_name + '.nii.gz')
-                    if not os.path.exists(path.join(bids_dest_dir, bids_name + '.nii.gz')) or not os.path.exists(
-                                    path.join(bids_dest_dir, bids_name + '.bvec') or not os.path.exists(
-                                        path.join(bids_dest_dir, bids_name + '.bval'))):
-                        cprint('\nConversion with dcm2niix failed, trying with dcm2nii')
+                if not os.path.exists(bids_dest_dir):
+                    os.mkdir(dest_dir)
+                command = 'dcm2niix -b n -z y -o ' + bids_dest_dir + ' -f ' + bids_name + ' ' + dwi_path
+                subprocess.run(command,
+                               shell=True,
+                               stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL)
 
-                        # Find all the files eventually created by dcm2niix and remove them
-                        dwi_dcm2niix = glob(path.join(bids_dest_dir, bids_name + '*'))
+                # If dcm2niix didn't work use dcm2nii
+                # print path.join(dest_dir, bids_name + '.nii.gz')
+                if not os.path.exists(path.join(bids_dest_dir,
+                                                bids_name + '.nii.gz')) or not os.path.exists(
+                        path.join(bids_dest_dir,
+                                  bids_name + '.bvec') or not os.path.exists(
+                            path.join(bids_dest_dir,
+                                      bids_name + '.bval'))):
+                    cprint('\tConversion with dcm2niix failed, trying with dcm2nii')
 
-                        for d in dwi_dcm2niix:
-                            # print 'Removing the old', d
-                            os.remove(d)
+                    # Find all the files eventually created by dcm2niix and remove them
+                    dwi_dcm2niix = glob(path.join(bids_dest_dir, bids_name + '*'))
 
-                        os.system(
-                            'dcm2nii -a n -d n -e n -i y -g y -p n -m n -r n -x n -o ' + bids_dest_dir + ' ' + dwi_path)
-                        nii_file = path.join(bids_dest_dir, subjs_list[i].replace('_', '') + '.nii.gz')
-                        bvec_file = path.join(bids_dest_dir, subjs_list[i].replace('_', '') + '.bvec')
-                        bval_file = path.join(bids_dest_dir, subjs_list[i].replace('_', '') + '.bval')
+                    for d in dwi_dcm2niix:
+                        # print 'Removing the old', d
+                        os.remove(d)
 
-                        if os.path.exists(bvec_file) and os.path.exists(bval_file):
-                            os.rename(bvec_file, path.join(bids_dest_dir, bids_name + '.bvec'))
-                            os.rename(bval_file, path.join(bids_dest_dir, bids_name + '.bval'))
-                        else:
-                            cprint('WARNING: bvec and bval not generated by dcm2nii')
+                    command = 'dcm2nii -a n -d n -e n -i y -g y -p n -m n -r n -x n -o ' + bids_dest_dir + ' ' + dwi_path
+                    subprocess.run(command,
+                                   shell=True,
+                                   stdout=subprocess.DEVNULL,
+                                   stderr=subprocess.DEVNULL)
+                    nii_file = path.join(bids_dest_dir,
+                                         subj.replace('_', '') + '.nii.gz')
+                    bvec_file = path.join(bids_dest_dir,
+                                          subj.replace('_', '') + '.bvec')
+                    bval_file = path.join(bids_dest_dir,
+                                          subj.replace('_', '') + '.bval')
 
-                        if os.path.exists(nii_file):
-                            os.rename(nii_file, path.join(bids_dest_dir, bids_name + '.nii.gz'))
-                        else:
-                            cprint('WARNING: CONVERSION FAILED...')
+                    if os.path.exists(bvec_file) and os.path.exists(
+                            bval_file):
+                        os.rename(bvec_file, path.join(bids_dest_dir,
+                                                       bids_name + '.bvec'))
+                        os.rename(bval_file, path.join(bids_dest_dir,
+                                                       bids_name + '.bval'))
+                    else:
+                        cprint('WARNING: bvec and bval not generated by dcm2nii'
+                               + ' for subject ' + subj + ' and session ' + ses)
+
+                    if os.path.exists(nii_file):
+                        os.rename(nii_file, path.join(bids_dest_dir,
+                                                      bids_name + '.nii.gz'))
+                    else:
+                        cprint('WARNING: CONVERSION FAILED...'
+                               + ' for subject ' + subj + ' and session ' + ses)
 
 
 def dwi_image(subject_id, timepoint, visit_str, ida_meta_scans, mri_qc_subj, enhanced):

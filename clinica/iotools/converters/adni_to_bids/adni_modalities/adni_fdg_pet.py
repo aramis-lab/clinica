@@ -28,6 +28,8 @@ def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     import pandas as pd
     from os import path
     from clinica.utils.stream import cprint
+    from clinica.iotools.converters.adni_to_bids.adni_utils import t1_pet_paths_to_bids
+    from colorama import Fore
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
@@ -37,8 +39,8 @@ def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('Calculating paths of FDG PET images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
     images = compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of FDG PET images found. Exporting images into BIDS ...')
-    fdg_pet_paths_to_bids(images, dest_dir)
-    cprint('FDG PET conversion done.')
+    t1_pet_paths_to_bids(images, dest_dir, 'fdg')
+    cprint(Fore.GREEN + 'FDG PET conversion done.' + Fore.RESET)
 
 
 def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
@@ -200,7 +202,7 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         is_dicom.append(dicom)
         image_folders.append(image_path)
         if image_path == '':
-            cprint('Not found ' + str(image.Subject_ID))
+            cprint('No FDG image path found for subject ' + str(image.Subject_ID))
 
     images.loc[:, 'Is_Dicom'] = pd.Series(is_dicom, index=images.index)
     images.loc[:, 'Path'] = pd.Series(image_folders, index=images.index)
@@ -211,92 +213,3 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     images.to_csv(path.join(fdg_csv_path, 'fdg_pet_paths.tsv'), sep='\t', index=False)
 
     return images
-
-
-def fdg_pet_paths_to_bids(images, bids_dir, dcm2niix="dcm2niix", dcm2nii="dcm2nii", mod_to_update=False):
-    """
-
-    Args:
-        images:
-        bids_dir:
-        dcm2niix:
-        dcm2nii:
-        mod_to_update:
-
-    Returns:
-
-    """
-    from clinica.iotools.converters.adni_to_bids import adni_utils
-    import os
-    from os import path
-    import glob
-    from clinica.utils.stream import cprint
-
-    count = 0
-    total = images.shape[0]
-
-    for row in images.iterrows():
-        image = row[1]
-        subject = image.Subject_ID
-        count += 1
-
-        if image.Path == '':
-            cprint('No path specified for ' + image.Subject_ID + ' in session ' + image.VISCODE)
-            continue
-
-        cprint('Processing subject ' + str(subject) + ' - session ' + image.VISCODE + ', ' + str(count) + ' / ' + str(total))
-
-        session = adni_utils.viscode_to_session(image.VISCODE)
-        image_path = image.Path
-
-        # ADDED lines
-        # ------------------
-        image_id = image.Image_ID
-        # If the original image is a DICOM, check if contains two DICOM inside the same folder
-        if image.Is_Dicom:
-            image_path = adni_utils.check_two_dcm_folder(image_path, bids_dir, image_id)
-        # ------------------
-
-        bids_subj = subject.replace('_', '')
-        output_path = path.join(bids_dir, 'sub-ADNI' + bids_subj + '/ses-' + session + '/pet')
-        output_filename = 'sub-ADNI' + bids_subj + '_ses-' + session + '_task-rest_acq-fdg_pet'
-
-        # ADDED lines
-        # ------------------
-        # If updated mode is selected, check if an old FDG image is existing and remove it
-        existing_fdg = glob.glob(path.join(output_path, output_filename + '*'))
-        if mod_to_update and len(existing_fdg) > 0:
-            cprint('Removing the old FDG image...')
-            for fdg in existing_fdg:
-                os.remove(fdg)
-                # ------------------
-
-        try:
-            os.makedirs(output_path)
-        except OSError:
-            if not path.isdir(output_path):
-                raise
-
-        if not image.Is_Dicom:
-            adni_utils.center_nifti_origin(image_path, path.join(output_path, output_filename + '.nii.gz'))
-        else:
-            command = dcm2niix + ' -b n -z n -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
-            os.system(command)
-            nifti_file = path.join(output_path, output_filename + '.nii')
-            output_image = nifti_file + '.gz'
-
-            # Check if conversion worked (output file exists?)
-            if not path.isfile(nifti_file):
-                command = dcm2nii + ' -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
-                os.system(command)
-                nifti_file = path.join(output_path, subject.replace('_', '') + '.nii')
-                output_image = path.join(output_path, output_filename + '.nii.gz')
-
-                if not path.isfile(nifti_file):
-                    cprint('DICOM to NIFTI conversion error for ' + image_path)
-                    continue
-
-            adni_utils.center_nifti_origin(nifti_file, output_image)
-            os.remove(nifti_file)
-
-    adni_utils.remove_tmp_dmc_folder(bids_dir)

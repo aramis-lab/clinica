@@ -18,7 +18,7 @@ __status__ = "Development"
 if 'SPMSTANDALONE_HOME' in os.environ:
     if 'MCR_HOME' in os.environ:
         matlab_cmd = os.environ['SPMSTANDALONE_HOME'] \
-                + '/run_spm12.sh ' \
+                + 'run_spm12.sh ' \
                 + os.environ['MCR_HOME'] \
                 + ' script'
         SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)

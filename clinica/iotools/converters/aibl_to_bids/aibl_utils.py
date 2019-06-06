@@ -24,14 +24,9 @@ def listdir_nohidden(path):
 
         :return: list of all the subdirectories of path
     """
+    from os import listdir
 
-    import os
-    result = []
-    for x in os.listdir(path):
-        if not x.startswith("."):
-            # check if there is the folder .DS_STORE, if it's present, we do not save them
-            result.append(x)
-    return result
+    return [result for result in listdir(path) if not result.startswith('.')]
 
 
 def find_T1_folder(subdirectory, path_to_T1_1):
@@ -203,6 +198,7 @@ def dicom_to_nii(subject, output_path, output_filename, image_path):
     from clinica.utils.stream import cprint
     from os.path import exists
     import shutil
+    from colorama import Fore
 
     try:
         os.makedirs(output_path)
@@ -232,7 +228,11 @@ def dicom_to_nii(subject, output_path, output_filename, image_path):
         # mri_convert is used
         dicom_image = listdir_nohidden(image_path)
         dicom_image = [dcm for dcm in dicom_image if dcm.endswith('.dcm')]
-        dicom_image = os.path.join(image_path, dicom_image[1])
+        try:
+            dicom_image = os.path.join(image_path, dicom_image[0])
+        except IndexError:
+            cprint(Fore.RED + 'We did not found the dicom files associated with the following directory: '
+                   + image_path + Fore.RESET)
 
         # it requires the installation of Freesurfer (checked at the beginning)
         command = 'mri_convert ' + dicom_image + ' ' + nifti_file
@@ -590,7 +590,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
 
     # intializer are used with the counter variable to keep track of how many
     # files have been processed
-    poolrunner = Pool(cpu_count() - 1, initializer=init, initargs=(counter,))
+    poolrunner = Pool(cpu_count(), initializer=init, initargs=(counter,))
     output_file_treated = poolrunner.map(create_file, images_list)
     del counter
     return output_file_treated

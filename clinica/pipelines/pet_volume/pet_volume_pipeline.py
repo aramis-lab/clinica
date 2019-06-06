@@ -59,15 +59,38 @@ class PETVolume(cpe.Pipeline):
         self._apply_pvc = False
 
         if fwhm_tsv is not None:
-            fwhm_df = read_csv(fwhm_tsv, sep='\t')
+            if not os.path.isfile(fwhm_tsv):
+                raise FileNotFoundError('Could not find the fwhm_tsv file ' + str(fwhm_tsv))
+            try:
+                fwhm_df = read_csv(fwhm_tsv, sep='\t')
+            except (IOError, UnicodeDecodeError):
+                raise RuntimeError('An error while reading '
+                                   + str(fwhm_tsv) + ' happened')
 
             if fwhm_df.shape[0] != len(self.subjects):
                 raise ValueError('The number of rows in fwhm_tsv file must match the number of subject-session pairs.')
 
+            if any(elem not in ['participant_id', 'session_id', 'fwhm_x', 'fwhm_y', 'fwhm_z'] for elem in list(fwhm_df.columns)):
+                raise IOError('The file ' + str(fwhm_tsv)
+                              + ' must contains the following columns (separated by tabulation : participant_id, session_id, fwhm_x, fwhm_y, fwhm_z), but we found '
+                              + str(list(fwhm_df.columns)) + '. Pay attention to the spaces (there should be none !)')
+
+            subjects_fwhm = list(fwhm_df.participant_id)
+            sessions_fwhm = list(fwhm_df.session_id)
+            idx_reordered = []
+            for i, sub in enumerate(self.subjects):
+                current_ses = self.sessions[i]
+                idx_sub = [j for j in range(len(subjects_fwhm)) if sub == subjects_fwhm[j] and current_ses == sessions_fwhm[j]]
+                if len(idx_sub) == 0:
+                    raise RuntimeError('Subject ' + sub + ' with session ' + current_ses + ' that you want to proceed was not found in the PSF specifications ' + str(fwhm_tsv))
+                if len(idx_sub) > 1:
+                    raise RuntimeError('Subject ' + sub + ' with session ' + current_ses + ' were found multiple times in ' + str(fwhm_tsv))
+                idx_reordered.append(idx_sub[0])
+
             fwhm_x = list(fwhm_df.fwhm_x)
             fwhm_y = list(fwhm_df.fwhm_y)
             fwhm_z = list(fwhm_df.fwhm_z)
-            self._fwhm = [[fwhm_x[i], fwhm_y[i], fwhm_z[i]] for i in range(len(self.subjects))]
+            self._fwhm = [[fwhm_x[i], fwhm_y[i], fwhm_z[i]] for i in idx_reordered]
             self._apply_pvc = True
 
         # Default parameters
@@ -370,7 +393,7 @@ class PETVolume(cpe.Pipeline):
             if 'MCR_HOME' in os.environ:
                 matlab_cmd = (
                         os.path.join(
-                            os.environ['SPMSTANDALONE_HOME'], '/run_spm12.sh')
+                            os.environ['SPMSTANDALONE_HOME'], 'run_spm12.sh')
                         + ' ' + os.environ['MCR_HOME']
                         + ' script')
                 spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
