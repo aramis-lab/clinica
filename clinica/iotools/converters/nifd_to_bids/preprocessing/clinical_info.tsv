@@ -1,0 +1,126 @@
+COLUMN_NAME	BIDS_CLINICA	FILE	LOCATION	COLUMN_DESCRIPTION	COLUMN_TYPE	MAX_CHARACTER_LENGTH
+LONI_ID	participant_id	participants	NIFD_Clinical_Data_2017_final_updated.xlsx	Subject ID	String	8
+DX	dx	participants	NIFD_Clinical_Data_2017_final_updated.xlsx	Diagnosis: (CON) = CON, (BV) = BV,  (PNFA) = PNFA, (SV)= SV, (Oth) = Other Diagnosis	String	4
+SITE	site	participants	NIFD_Clinical_Data_2017_final_updated.xlsx	Research Site	String	4
+CLINICAL_LINKDATE	clinical_linkdate	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Date of Service	Date	
+VISIT_NUMBER	visit_number	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Visit Number: (1) Baseline, (2) Visit 2, (3) Visit 3, (4) Visit 4	Integer	1
+DOB	date_of_birth	participants	NIFD_Clinical_Data_2017_final_updated.xlsx	Date of Birth	Date	
+GENDER	sex	participants	NIFD_Clinical_Data_2017_final_updated.xlsx	Gender: (1) Male, (2) Female 	Integer	1
+EDUCATION	education_level	participants	NIFD_Clinical_Data_2017_final_updated.xlsx	Years of Education: (12) Highschool, (16) College, (18), (20)	Integer	2
+RACE	race	participants	NIFD_Clinical_Data_2017_final_updated.xlsx	Race: (1) White, (2) Black/African-American, (3) Asian, (4) Pacific Islander, (5) Multi-racial, (6) Not declared	Integer	1
+CDR_DCDATE	cdr_dcdate	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Clinical Dementia Rating: Data collection date	Date	
+CDR_LANG	cdr_lang	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Clinical Dementia Rating: Language subscore	Flt Point	3
+CDR_BEHAV	cdr_behav	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Clinical Dementia Rating: Behavior subscore	Flt Point	3
+CDR_TOT	cdr_global	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Clinical Dementia Rating: Total score	Flt Point	3
+CDR_BOX_SCORE	cdr_sb	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Clinical Dementia Rating: Box Score	Flt Point	3
+MMSE_DCDATE	mmse_dcdate	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Mini Mental State Exam: Data collection data	Date	
+MMSE_TOT	MMSE	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Mini Mental State Exam: Total score	Integer	2
+TRCOTOT	trcotot	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	California Verbal Learning Test: Total correctly recalled items over four learning trials	Integer	2
+CORR30	corr30	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	California Verbal Learning Test: Correctly recalled items after 30 second delay	Integer	1
+INTR30	intr30	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	California Verbal Learning Test: Intrusion in recall after 30 second delay	Integer	1
+CORR10	corr10	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	California Verbal Learning Test: Correctly recalled items after 10 minute delay	Integer	1
+INTR10	intr10	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	California Verbal Learning Test: Intrusion in recall after 10 second delay	Integer	1
+RECOG	recog	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	California Verbal Learning Test: Correctly recognized items	Integer	1
+MTTTIME	mtttime	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Modified Trails: Completion time, in seconds	Integer	3
+MTCORR	mtcorr	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Modified Trails: Correct lines	Integer	2
+MTERROR	mterror	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Modified Trails: Errors	Integer	2
+DIGITFW	digitfw	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Digit Span: Maximum forward recall span	Integer	2
+DIGITBW	digitbw	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Digit Span: Maximum backward recall span	Integer	2
+DCORR	dcorr	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Verbal Fluency - D Words: Correct D words generated	Integer	2
+ANCORR	ancorr	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Verbal Fluency - Animals: Correct animals generated	Integer	2
+BNTCORR	bntcorr	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Boston Naming Test (15-item):  BNT Total	Integer	2
+MODREY	modrey	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Montreal Cognitive Assessment	Integer	2
+REY10M	rey10m	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Modified Benson Figure	Integer	2
+PPVTVRB	ppvtvrb	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Peabody Picture Vocabulary Test: Verbal 	Integer	1
+PPVTDES	ppvtdes	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Peabody Picture Vocabulary Test: Descriptive	Integer	1
+PPVTANI	ppvtani	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Peabody Picture Vocabulary Test: Animate	Integer	1
+PPVTINA	ppvtina	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Peabody Picture Vocabulary Test: Inanimate	Integer	1
+GDSTOT	gdstot	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Geriatric Depression Scale: Total (30 item)	Integer	2
+GDS15TO	gds15to	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Geriatric Depression Scale: Total (15 item)	Integer	2
+PPTP_DCDATE	pptp_dcdate	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Pyramid Palm Tree Picture: Data collection date	Date	
+PPTP_COR	pptp_cor	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Pyramid Palm Tree Picture: Correct	Integer	2
+NPI_DCDATE	npi_dcdate	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory: Data collection date	Date	
+NPI_QINFX	npi_qinfx	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory: Relation to subject 	String	14
+NPI_DEL	npi_del	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Delusions (0) = No, (1) Yes	Integer	1
+NPI_DELSEV	npi_delsev	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Delusion Severity	Integer	1
+NPI_HALL	npi_hall	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Hallucination Distress	Integer	1
+NPI_HALLSEV	npi_hallsev	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Hallucination Severity	Integer	1
+NPI_AGIT	npi_agit	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Agitation (0) = No, (1) Yes	Integer	1
+NPI_AGITSEV	npi_agitsev	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Agitation Severity	Integer	1
+NPI_DEPD	npi_depd	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Depression (0) = No, (1) Yes	Integer	1
+NPI_DEPDSEV	npi_depdsev	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Depression Severity	Integer	1
+NPI_ANX	npi_anx	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Anxiety (0) = No, (1) Yes	Integer	1
+NPI_ANXSEV	npi_anxsev	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Anxiety Severity	Integer	1
+NPI_ELAT	npi_elat	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Elation/Euphoria (0) = No, (1) Yes	Integer	1
+NPI_ELATSEV	npi_elatsev	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Elation/Euphoria Severity	Integer	1
+NPI_APA	npi_apa	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Apathy/Indifference (0) = No, (1) Yes	Integer	1
+NPI_APASEV	npi_apasev	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Apathy/Indifference Severity	Integer	1
+NPI_DISN	npi_disn	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Disinhibition (0) = No, (1) Yes	Integer	1
+NPI_DISNSEV	npi_disnsev	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Disinhibition Severity	Integer	1
+NPI_IRR	npi_irr	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Irritability/Lability (0) = No, (1) Yes	Integer	1
+NPI_IRRSEV	npi_irrsev	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Irritability/Lability Severity	Integer	1
+NPI_MOT	npi_mot	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Motor Disturbance (0) = No, (1) Yes	Integer	1
+NPI_MOTSEV	npi_motsev	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Motor Disturbance Severity	Integer	1
+NPI_NITE	npi_nite	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Nighttime Behaviors (0) = No, (1) Yes	Integer	1
+NPI_NITESEV	npi_nitesev	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Nighttime Behaviors Severity	Integer	1
+NPI_APP	npi_app	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Appetite/Eating (0) = No, (1) Yes	Integer	1
+NPI_APPSEV	npi_appsev	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Neuropsychiatric Inventory - Q Form: Appetite/Eating Severity	Integer	1
+FAQ_DCDATE	faq_dcdate	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Functional Activites Questionnaire: Data collection data Date	Date	
+FAQ_BILLS	faq_bills	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Functional Activites Questionnaire: Bills	Integer	1
+FAQ_TAXES	faq_taxes	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Functional Activites Questionnaire: Taxes	Integer	1
+FAQ_SHOPPING	faq_shopping	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Functional Activites Questionnaire: Shopping	Integer	1
+FAQ_GAMES	faq_games	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Functional Activites Questionnaire: Games	Integer	1
+FAQ_STOVE	faq_stove	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Functional Activites Questionnaire: Stove	Integer	1
+FAQ_MEALPREP	faq_mealprep	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Functional Activites Questionnaire: Meal Preparation	Integer	1
+FAQ_EVENTS	faq_events	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Functional Activites Questionnaire: Events	Integer	1
+FAQ_PAYATTN	faq_payattn	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Functional Activites Questionnaire: Pay Attention	Integer	1
+FAQ_REMDATES	faq_remdates	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Functional Activites Questionnaire: Remember Dates	Integer	1
+FAQ_TRAVEL	faq_travel	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Functional Activites Questionnaire: Travel	Integer	1
+FAQ_TOTAL	FAQ	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Functional Activites Questionnaire: Total	Integer	2
+IRI_DCDATE	iri_dcdate	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Interpersonal Reactivity Index: Data collection data	Date	
+IRI_FTDIRIEC	iri_ftdiriec	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Interpersonal Reactivity Index: Empathic Concern Subscore	Integer	2
+IRI_FTDIRIPT	iri_ftdiript	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Interpersonal Reactivity Index: Perspective Taking Subscore	Integer	2
+BISBAS_DCDATE	bisbas_dcdate	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Behavioral Inhibition Scale: Data collection data	Date	
+BAS_TOT	bas_tot	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Behavioral Activation Scale: Total	Integer	2
+BIS_TOT	bis_tot	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Behavioral Inhibition Scale: Total	Integer	2
+MOCA_DCDATE	moca_dcdate	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Montreal Cognitive Assessment: Data collection data	Date	
+MOCA_TotWithEduc	moca_totwitheduc	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Montreal Cognitive Assessment: Total score, with adjustment for education level	Integer	2
+MOCA_BefAFtNp	moca_befaftnp	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Montreal Cognitive Assessment: Administered before or after the remaining neuropsychological battery	String	10
+MOCA_Lngth	moca_lngth	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Montreal Cognitive Assessment: Time to complete, in minutes	Integer	2
+SEADL_DCDATE	seadl_dcdate	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Schwab and England Activities of Daily Living: Data collection data	Date	
+SEADL	seadl	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Schwab and England Activities of Daily Living: Score	Integer	3
+CGI_DCDATE	cgi_dcdate	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Clinician's Global Impression-Disease Severity: Data collection data	Date	
+CGI_SEVERITY	cgi_severity	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Clinician's Global Impression-Disease Severity: Score	Integer	1
+CGI_CHANGE	cgi_change	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Clinician's Global Impression of Change: Score	Integer	
+PSPRS_DC_DATE	psprs_dc_date	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	PSP Rating Scale: Data collection data	Date	3
+PSPRS_TOTAL	psprs_total	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	PSP Rating Scale: Total	Integer	2
+PSPRS_SUBSCORE_HISTORY	psprs_subscore_history	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	PSP Rating Scale: History subscore	Integer	2
+PSPRS_SUBSCORE_MENTATION	psprs_subscore_mentation	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	PSP Rating Scale: Mentation subscore	Integer	2
+PSPRS_SUBSCORE_BULBAR	psprs_subscore_bulbar	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	PSP Rating Scale: Bulbar subscore	Integer	2
+PSPRS_SUBSCORE_OCULARMOTOR	psprs_subscore_ocularmotor	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	PSP Rating Scale: Oculomotor subscore	Integer	2
+PSPRS_SUBSCORE_LIMBMOTOR	psprs_subscore_limbmotor	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	PSP Rating Scale: Motor subscore	Integer	2
+PSPRS_SUBSCORE_GAITMIDLINE	psprs_subscore_gaitmidline	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	PSP Rating Scale: Gait-midline subscore	Integer	1
+PSPRS_MEDS	psprs_meds	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	PSP Rating Scale: On medication which could affect the scoring of the scale? (0) = No, (1) Yes	Integer	
+RSMSDCDATE	rsmsdcdate	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Revised Self-Monitoring Scale: Data collection data	Date	1
+RSMS_FTDCPC6F	rsms_ftdcpc6f	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Revised Self-Monitoring Scale: Co-Participants Questionnaire	Integer	1
+RSMS_FTDALTER	rsms_ftdalter	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Revised Self-Monitoring Scale: Ability to alter behavior appropriately	Integer	1
+RSMS_FTDEMOT	rsms_ftdemot	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Revised Self-Monitoring Scale: Ability to read true emotions	Integer	1
+RSMS_FTDACROS	rsms_ftdacros	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Revised Self-Monitoring Scale: Ability to control self	Integer	1
+RSMS_FTDCONV	rsms_ftdconv	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Revised Self-Monitoring Scale: Sensitivity to facial expression	Integer	1
+RSMS_FTDINTUI	rsms_ftdintui	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Revised Self-Monitoring Scale: Good power of intuition	Integer	1
+RSMS_FTDJOKE	rsms_ftdjoke	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Revised Self-Monitoring Scale: Perception of others distaste	Integer	1
+RSMS_FTDIMAGP	rsms_ftdimagp	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Revised Self-Monitoring Scale: Ability to modify analogy in conversation	Integer	1
+RSMS_FTDINAPP	rsms_ftdinapp	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Revised Self-Monitoring Scale: Ability acknowledge socio-emotional ques in conversation	Integer	1
+RSMS_FTDCHBEH	rsms_ftdchbeh	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Revised Self-Monitoring Scale: Ability to change behavior appropriately	Integer	1
+RSMS_FTDADBEH	rsms_ftdadbeh	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Revised Self-Monitoring Scale: Ability to adjust behavior appropriately	Integer	1
+RSMS_FTDLYING	rsms_ftdlying	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Revised Self-Monitoring Scale: Deception Preception	Integer	1
+RSMS_FTDGOODF	rsms_ftdgoodf	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Revised Self-Monitoring Scale: Ability to put up a good front	Integer	1
+RSMS_FTDREGUL	rsms_ftdregul	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Revised Self-Monitoring Scale: Ability to regulate actions accordingly	Integer	1
+RSMS_FTDSMSCR	rsms_ftdsmscr	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Revised Self-Monitoring Scale: Sensitivity to Socio-emotional Expressiveness Score	Integer	2
+RSMS_FTDSPSCR	rsms_ftdspscr	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	Revised Self-Monitoring Scale: Ability to Modify Self-presentation Score	Integer	 
+MDEXAM_DCDATE	mdexam_dcdate	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	MD Exam: Data collection data	Date	2
+MDEXAM_UHDRS	mdexam_uhdrs	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	MD Exam: Unified Huntington's Disease Rating Scale 	Integer	2
+MDEXAM_UPDRS	mdexam_updrs	sessions	NIFD_Clinical_Data_2017_final_updated.xlsx	MD Exam: Unified Parkinson's Disease Rating Scale 	Integer	
+Age						
+Research Group						
+Weight						

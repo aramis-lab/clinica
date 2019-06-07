@@ -236,6 +236,7 @@ def execute():
     from clinica.iotools.converters.aibl_to_bids.aibl_to_bids_cli import AiblToBidsCLI  # noqa
     from clinica.iotools.converters.adni_to_bids.adni_to_bids_cli import AdniToBidsCLI  # noqa
     from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_cli import OasisToBidsCLI  # noqa
+    from clinica.iotools.converters.nifd_to_bids.nifd_to_bids_cli import NifdToBidsCLI  # noga
 
     converters = ClinicaClassLoader(baseclass=CmdParser,
                                     extra_dir="iotools/converters").load()
@@ -243,6 +244,7 @@ def execute():
         AdniToBidsCLI(),
         AiblToBidsCLI(),
         OasisToBidsCLI(),
+        NifdToBidsCLI(),
     ]
 
     convert_parser = sub_parser.add_parser(
