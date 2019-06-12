@@ -294,17 +294,6 @@ class Parse_clinical():
             path_sessions = os.path.join(pathBIDS, pat)
             pat2 = pat[8] + '_S_' + pat[10:14]
 
-            # ses_list = os.listdir(path_sessions)
-            # ses_list = [elt for elt in ses_list if elt.startswith('ses')]
-            #
-            # for ses in ses_list:
-            #     path_scans = os.path.join(path_sessions, ses)
-            #
-            #     s = self.make_scans(path_scans)
-            #     f = open(os.path.join(path_scans, pat + '_' + ses + '_scans.tsv'), 'w')
-            #     f.write(s)
-            #     f.close()
-
             self.write(self.make_sessions_type(pat2), path_sessions, pat + '_sessions')
 
     def make_all_scans(self, to_convert):
@@ -382,6 +371,25 @@ class Parse_clinical():
                         (self.df_ida['Subject ID'] == s_path1[-1][8] + '_S_' + s_path1[-1][10:14]) &
                         (self.df_ida['Visit'] == 'Month ' + str(int(ses_num.split('M')[-1]))) &
                         (self.df_ida['Description'] == s_path0[-3])]
+
+                    if df_line_ida.empty:
+                        df_line_ida = self.df_ida[
+                            (self.df_ida['Subject ID'] == s_path1[-1][8] + '_S_' + s_path1[-1][10:14]) &
+                            (self.df_ida['Visit'] == 'Month ' + str(int(ses_num.split('M')[-1]))) &
+                            (self.df_ida['Description'] == s_path0[-3].replace('_', ' '))]
+
+                    #TR_BRAIN_3D_PIB_IR_CTAC -> TR:BRAIN 3D:PIB:IR CTAC
+                    if df_line_ida.empty:
+                        des = s_path0[-3].split('_')
+                        if len(des) == 6:
+                            des = des[0]+':'+des[1]+' '+des[2]+':'+des[3]+':'+des[4]+' '+des[5]
+                        else:
+                            des = des[0]+':'+des[1]+' '+des[2]+':'+des[3]+':'+des[4]+' '+des[5]+' '+des[6]
+                        df_line_ida = self.df_ida[
+                            (self.df_ida['Subject ID'] == s_path1[-1][8] + '_S_' + s_path1[-1][10:14]) &
+                            (self.df_ida['Visit'] == 'Month ' + str(int(ses_num.split('M')[-1]))) &
+                            (self.df_ida['Description'] == des)]
+
                     df_line_ida.insert(0, 'filename', filename)
                     df_line_ida = extend_line(df_line_ida, template)
 
