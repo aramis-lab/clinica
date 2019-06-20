@@ -34,12 +34,12 @@ Results are stored in the following folder of the [CAPS hierarchy](../../CAPS): 
 The main output files are:
 
 - native_space/:
-    - `<source_file>_space-[b0|T1w]_model-DTI_diffmodel.nii.gz`: The diffusion tensor imaging (DTI) data of the subject.
-    - `<source_file>_space-[b0|T1w]_[FA|MD|AD|RD].nii.gz`: The DTI-based measures, namely the fractional anisotropy (`FA`), mean diffusivity (`MD`), axial diffusivity (`AD`) and radial diffusivity (`RD`).
+    - `<source_file>_space-{b0|T1w}_model-DTI_diffmodel.nii.gz`: The diffusion tensor imaging (DTI) data of the subject.
+    - `<source_file>_space-[b0|T1w]_{FA|MD|AD|RD}.nii.gz`: The DTI-based measures, namely the fractional anisotropy (`FA`), mean diffusivity (`MD`), axial diffusivity (`AD`) and radial diffusivity (`RD`).
 - normalized_space/
-    - `<source_file>_space-<space>_[FA|MD|AD|RD].nii.gz`: The DTI-based measures registered to the space of an FA-atlas.
+    - `<source_file>_space-<space>_{FA|MD|AD|RD}.nii.gz`: The DTI-based measures registered to the space of an FA-atlas.
 - atlas_statistics/
-    - `<source_file>_space-<space>_map-[FA|MD|AD|RD]_statistics.tsv`: TSV files summarizing the regional statistics on the labelled atlas `<space>`.
+    - `<source_file>_space-<space>_map-{FA|MD|AD|RD}_statistics.tsv`: TSV files summarizing the regional statistics on the labelled atlas `<space>`.
 
 !!! note "Atlases available for the DTI-based processing pipeline:"
 	- [JHUDTI81](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases) [[Hua et al., 2008](https://doi.org/10.1016/j.neuroimage.2007.07.053); [Wakana et al., 2007](https://doi.org/10.1016/j.neuroimage.2007.02.049)]: This atlas contains 48 white matter tract labels that were created by manually segmenting a standard-space average of diffusion MRI tensor maps from 81 subjects.

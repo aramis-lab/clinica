@@ -53,10 +53,10 @@ Results are stored in the following folder of the [CAPS hierarchy](../../CAPS):
 The main output files are:
 
 - native_space/:
-    - `<source_file>_segm-[graymatter|whitematter|csf]_probability.nii.gz`: The tissue probability maps for the gray matter, white matter and CSF.
+    - `<source_file>_segm-{graymatter|whitematter|csf}_probability.nii.gz`: The tissue probability maps for the gray matter, white matter and CSF.
 - normalized_space/
     - `<source_file>_space-Ixi549Space_T1w.nii.gz`: The T1-weighted image in MNI space.
-    - `<source_file>_segm-[graymatter|whitematter|csf]_space-Ixi549Space_modulated-on_probability.nii.gz`: The modulated tissue probability maps, i.e. the tissue probability maps multiplied by their relative volume before and after spatial normalisation, into the MNI space.
+    - `<source_file>_segm-{graymatter|whitematter|csf}_space-Ixi549Space_modulated-on_probability.nii.gz`: The modulated tissue probability maps, i.e. the tissue probability maps multiplied by their relative volume before and after spatial normalisation, into the MNI space.
 
 <center>![](../../img/T1_Volume/ex_GM_WM_CSF.png)</center>
 *<center><small>Example of gray matter (GM), white matter (WM) and CSF tissue segmentation.</small></center>*
@@ -80,7 +80,7 @@ Results are stored in the following folder of the [CAPS hierarchy](../../CAPS):
 
 The main output file is:
 
- - `<source_file>_segm-[graymatter|whitematter|csf]_space-Ixi549Space_modulated-on_fwhm-<label>_probability.nii.gz`: the different tissue maps that have been registered to the MNI space.
+ - `<source_file>_segm-{graymatter|whitematter|csf}_space-Ixi549Space_modulated-on_fwhm-<label>_probability.nii.gz`: the different tissue maps that have been registered to the MNI space.
 
  <center>![](../../img/T1_Volume/ex_GM_MNI_space.png)</center>
  *<center><small>Final result: Probability Gray Matter in MNI space without smoothing (top) or smoothed using a 8 mm FWHM kernel (bottom).</small></center>*

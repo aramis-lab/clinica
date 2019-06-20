@@ -78,8 +78,8 @@ Results are stored in the following folder of the [CAPS hierarchy](../../CAPS): 
 The files are (where `*` stands for `sub-<participant_label>_ses-<session_label>`):
 
 - `atlas_statistics/*_task-<label>_acq-<label>_pet_space-<label>_pvc-iy_suvr-<label>_statistics.tsv`: TSV files summarizing the regional statistics on the labelled atlases (Desikan and Destrieux).
-- `*_hemi-<hemi_label>_midcorticalsurface`: surface at equal distance between the white matter/gray matter interface and the pial surface (one per hemisphere).
-- `*_task-rest_acq-<label>_pet_space-<label>_suvr-<label>_pvc-iy_hemi-<label>_fwhm-<value>_projection.mgh`: PET data that can be mapped onto meshes. If the `space` is `fsaverage`, it can be mapped either onto the white or pial surface of FsAverage. If the `space` is `native`, it can be mapped onto the white or pial surface of the subject’s surface (i.e. `*h.white`, `*h.pial` files from the `t1-freesurfer` pipeline).
+- `*_hemi-{left|right}_midcorticalsurface`: surface at equal distance between the white matter/gray matter interface and the pial surface (one per hemisphere).
+- `*_task-rest_acq-<label>_pet_space-<label>_suvr-<label>_pvc-iy_hemi-<label>_fwhm-<value>_projection.mgh`: PET data that can be mapped onto meshes. If the `space` is `fsaverage`, it can be mapped either onto the white or pial surface of FsAverage. If the `space` is `native`, it can be mapped onto the white or pial surface of the subject’s surface (i.e. `{l|r}h.white`, `{l|r}h.pial` files from the `t1-freesurfer` pipeline).
 
 <center>![PET surface results](../../img/PET_Surface.jpg)</center>
 *<center><small>FDG PET SUVR projected onto the cortical surface (left hemisphere) for (from left to right) a cognitively normal subject (CN), a patient with Alzheimer’s disease (AD), a patient with semantic variant primary progressive aphasia (svPPA) and a patient with logopenic variant primary progressive aphasia (lvPPA). The first row is the projection in the subject’s space. The second row is the same signal for each subject, but warped to FsAverage after smoothing with a 20 mm Gaussian kernel.</small></center>*

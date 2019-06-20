@@ -50,7 +50,7 @@ Results are stored in the following folder of the [CAPS hierarchy](../../CAPS): 
 
 The main output files are:
 
-  - `<source_file>_space-[T1w|b0]_preproc.[bval|bvec|nii.gz]`: corrected DWI dataset where the first volume of the dataset is the reference b0.
+  - `<source_file>_space-{T1w|b0}_preproc.{bval|bvec|nii.gz}`: corrected DWI dataset where the first volume of the dataset is the reference b0.
 
   - `<source_file>_brainmask.nii.gz`: brain extracted image based on the reference b0.
 

@@ -34,7 +34,7 @@ Results are stored in the following folder of the [CAPS hierarchy](../../CAPS): 
 
 The main output files in `subjects` subfolder are:
 
-  - `<source_file>_segm-[graymatter|whitematter|csf]_space-Ixi549Space_modulated-on_spatialregularization.nii.gz`: SVM regularization that accounts for the spatial and anatomical structure of neuroimaging data for gray matter, white matter or CSF maps.
+  - `<source_file>_segm-{graymatter|whitematter|csf}_space-Ixi549Space_modulated-on_spatialregularization.nii.gz`: SVM regularization that accounts for the spatial and anatomical structure of neuroimaging data for gray matter, white matter or CSF maps.
   - `<source_file>_space-Ixi549Space[_pvc-rbv]_suvr-<label>_spatialregularization.nii.gz`: SVM regularization of PET data that accounts for the spatial and anatomical structure of neuroimaging data.
 
 

@@ -39,9 +39,9 @@ Results are stored in the following folder of the [CAPS hierarchy](../../CAPS): 
 
 The main output files are:
 
-- `<source_file>_space-b0_model-CSD_diffmodel.mif`: Constrained spherical deconvolution (CSD) diffusion model.
-- `<source_file>_space-b0_model-CSD_tractography.tck`: The whole-brain tractography.
-- `<source_file>_space-b0_model-CSD_parcellation-[desikan|destrieux]_connectivity.tsv`: The connectivity matrix based on the [Desikan|Destrieux] parcellation.
+- `<source_file>_space-{b0|T1w}_model-CSD_diffmodel.mif`: Constrained spherical deconvolution (CSD) diffusion model.
+- `<source_file>_space-{b0|T1w}_model-CSD_tractography.tck`: The whole-brain tractography.
+- `<source_file>_space-{b0|T1w}_model-CSD_parcellation-{desikan|destrieux}_connectivity.tsv`: The connectivity matrix based on the Desikan or Destrieux parcellation.
 
 
 !!! note "Atlases available for the Connectome-based processing pipeline:"
