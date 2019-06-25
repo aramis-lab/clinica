@@ -15,7 +15,7 @@ Clinica uses the BIDS specification for the input (raw data). There is an ongoin
 
 ## Definitions
 
-We use the same definitions of BIDS Specifications 1.0.0 concerning **Dataset**, ** Subject**, **Session**, **MRI acquisition**, **Data type**, **Task**, **Event** and **Run**. On top on that, we define the notion of:
+We use the same definitions of BIDS Specifications 1.0.0 concerning **Dataset**, **Subject**, **Session**, **MRI acquisition**, **Data type**, **Task**, **Event** and **Run**. On top on that, we define the notion of:
 
 1. **Group** - a set of subjects. There is one flag that you will meet when working on any group-wise analysis (e.g. template creation from a list of subjects, statistical analysis). This is simply a label name that will define the group of subjects used for this analysis. It will be written in your output CAPS folder, for possible future reuses. For example, an `AD` group_id label could be used in case you create a template for a group of Alzheimer’s disease patients. Any time you would like to use this `AD` template you will need to provide the group_id used to identify the pipeline output obtained from this group. You might also use `CNvsAD`, for instance, as group_id for a statistical group comparison.
 
@@ -102,12 +102,13 @@ groups/
 
 # Detailed file descriptions
 
+In the following, the brackets `[`/`]` will denote optional key/values in the filename while the accolades `{`/`}` will indicate a list of compulsory values (e.g. `hemi-{left|right}` means that the key `hemi` only accepts `left` or `right` as values)
+
 ##  T1 MRI data
 
 ### `t1-volume` pipeline - Processing of T1w MR images using SPM
 
 #### Segmentation
-Template:
 ```
 subjects/
 └── sub-<participant_label>/
@@ -133,7 +134,6 @@ The T1 image in `Ixi549Space` (reference space of the TPM) is obtained by applyi
 
 
 #### DARTEL
-Template:
 ```
 groups/
 └── group-<group_label>/
@@ -149,7 +149,6 @@ The `group-<group_label>_iteration-<index>_template.nii.gz` obtained at each ite
 
 
 #### DARTEL to MNI
-Template:
 ```
 subjects/
 └── sub-<participant_label>/
@@ -159,11 +158,10 @@ subjects/
                 └── dartel/
                     └── group-<group_label>/
                         ├── <source_file>_target-<group_label>_transformation-forward_deformation.nii.gz
-                        └── <source_file>_segm-<segm>_space-Ixi549Space_modulated-[on|off][_fwhm-<X>mm]_probability.nii.gz
+                        └── <source_file>_segm-<segm>_space-Ixi549Space_modulated-{on|off}[_fwhm-<X>mm]_probability.nii.gz
 ```
 
 #### Atlas statistics
-Template:
 ```
 subjects/
 └── sub-<participant_label>/
@@ -175,7 +173,6 @@ subjects/
                         └── atlas_statistics/
                             └── <source_file>_space-<space>_map-graymatter_statistics.tsv
 ```
-
 Statistics files (with `_statistics.tsv` suffix) are detailed in appendix 2.
 
 
@@ -214,11 +211,11 @@ For the file: `*_hemi-{left|right}_parcellation-<parcellation>_thickness.tsv`, `
 
 
 | Name                    | Suffix       | Description |
-|------------------------------------------------------|
-| Cortical thickness      | `_thickness` | Cortical thickness between pial surface and white surface
-| Cortical volume         | `_volume`    | Volume of gray matter
-| Cortical surface area   | `_area`      | Cortical surface area
-| Cortical mean curvature | `_meancurv`  | Mean curvature of cortical surface
+|-------------------------|--------------|-------------|
+| Cortical thickness      | `_thickness` | Cortical thickness between pial surface and white surface|
+| Cortical volume         | `_volume`    | Volume of gray matter|
+| Cortical surface area   | `_area`      | Cortical surface area|
+| Cortical mean curvature | `_meancurv`  | Mean curvature of cortical surface|
 
 
 The `hemi-{left|right}` key/value stands for `left` or `right` hemisphere.
@@ -232,7 +229,7 @@ The details of the white matter parcellation of FreeSurfer can be found here: [h
 Content of `sub-CLNC01_ses­-M00_T1w_segmentationVolumes.tsv`:
 ```
 Measure:volume	Left-Lateral-Ventricle	Left-Inf-Lat-Vent	...
-/path/to/freesurfer/segmentation/	12345.6	12.334	…
+/path/to/freesurfer/segmentation/	12345.6	12.334	...
 ```
 
 This file contains the estimation of the volumes of the different subcortical structures after segmentation.
@@ -307,16 +304,15 @@ The naming convention `<subject_name>.long.<template_name>` is imposed by FreeSu
 
 ## Diffusion imaging data
 ### `dwi-preprocessing-*` - DWI pre-processing
-Template:
 ```
 subjects/
 └── sub-<participant_label>/
     └── ses-<session_label>/
         └── dwi/
             └── preprocessing/
-                ├── <source_file>_space-<space>_preproc.nii.gz
                 ├── <source_file>_space-<space>_preproc.bval
                 ├── <source_file>_space-<space>_preproc.bvec
+                ├── <source_file>_space-<space>_preproc.nii.gz
                 └── <source_file>_space-<space>_brainmask.nii.gz
 ```
 
@@ -324,7 +320,6 @@ The resulting DWI file after preprocessing. According to the subtype of pipeline
 
 
 ### `dwi-dti` - DTI scalar maps (FA, MD, AD, RD) and spatial normalization
-Template:
 ```
 subjects/
 └── sub-<participant_label>/
@@ -356,7 +351,6 @@ The naming convention for suffixes follows the BIDS derivative specifications ex
 
 ## Functional MRI data
 ### `fmri-preprocessing` - fMRI pre-processing
-Template:
 ```
 subjects/
 └── sub-<participant_label>/
@@ -374,13 +368,12 @@ subjects/
 The `<source_bold>_motion.tsv` corresponds to the translations (`TransX`, `TransY`, and `TransZ`) in mm and the rotations (`RotX`, `RotY`, and `RotZ`) in  of each volume as compared to the first one, generated by the Realign tool of **SPM**. Thus, the size of the array should be `Mx6`, `M` being the number of volumes in the original fMRI file.
 
 !!! note
-The naming convention for suffixes tried to follow the [BIDS Extension Proposal 12 (BEP012): BOLD processing derivatives](https://docs.google.com/document/d/16CvBwVMAs0IMhdoKmlmcm3W8254dQmNARo-7HhE-lJU/edit#) as much as possible.
+    The naming convention for suffixes tried to follow the [BIDS Extension Proposal 12 (BEP012): BOLD processing derivatives](https://docs.google.com/document/d/16CvBwVMAs0IMhdoKmlmcm3W8254dQmNARo-7HhE-lJU/edit#) as much as possible.
 
 
 ## PET imaging data
 
 ### `pet-volume` - Volume-based processing of PET images
-Template:
 ```
 subjects/
 └── sub-<participant_label>/
@@ -413,7 +406,6 @@ Statistics files (with `_statistics.tsv` suffix) are detailed in appendix 2.
 
 
 ### `pet-surface` - Surface-based processing of PET images
-Template:
 ```
 subjects/
 └── sub-<participant_label>/
@@ -442,7 +434,6 @@ Files with `statistics` suffix are text files that display average PET values on
 ### `statistics-surface` - Surface-based mass-univariate analysis with SurfStat
 
 #### Group comparison
-Template:
 ```
 groups/
 └── group-<group_label>/
@@ -463,11 +454,11 @@ In the case above, `_correctedPValue` indicates that these are maps of corrected
 
 
 | Name                | Suffix               | Description |
-|--------------------------------------------|
-| Corrected p-value   | `_correctedPValue`   | Corrected P-values for vertices and clusters level based on random field theory
-| Uncorrected p-value | `_uncorrectedPValue` | Uncorrected P-value for a  generalized linear model
-| T-statistics        | `_TStatistics`       | T statistics for a generalized linear model
-| FDR                 | `_FDR`               | Q-values for False Discovery Rate of resels
+|---------------------|----------------------|-------------|
+| Corrected p-value   | `_correctedPValue`   | Corrected P-values for vertices and clusters level based on random field theory|
+| Uncorrected p-value | `_uncorrectedPValue` | Uncorrected P-value for a  generalized linear model|
+| T-statistics        | `_TStatistics`       | T statistics for a generalized linear model|
+| FDR                 | `_FDR`               | Q-values for False Discovery Rate of resels|
 
 
 
@@ -496,15 +487,14 @@ Group comparison between patients with Alzheimer’s Disease (`group_1` = `AD`) 
 
 The `group-ADvsHC_glm.json` contains the information for your generalized linear model, for example:
 
-```
+```javascript
 {
-    "DesignMatrix": "1 + age + sex + group"
-    "StringFormatTSV": "%s %f %f"
-    "Contrast": "group"
+    "DesignMatrix": "1 + age + sex + group",
+    "StringFormatTSV": "%s %f %f",
+    "Contrast": "group",
     "ClusterThreshold": 0.001
 }
 ```
-
 
 This file describes the model that you want to create, you should include the factor and covariates in your generalized linear model as a column name in this TSV file. For example, the linear model formula is: `CorticalThickness = 1 + age + sex + group`, the contrasts (factors) `group`, `age` and `sex` are the covariates. All additional information is included in the log file.
 
@@ -533,7 +523,6 @@ The example image here maps statistically significant differences in cortical th
 
 
 ### Correlation analysis
-Template
 ```
 groups/
 └── group-<group_label>/
@@ -571,7 +560,6 @@ This section includes all the other situation for the generalized linear model. 
 
 ## Machine Learning
 ### `machinelearning-prepare-spatial-svm` - Prepare input data for spatially regularized SVM
-Template:
 ```
 subjects/
 └── sub-<participant_label>/
@@ -617,22 +605,20 @@ At the group level, it contains the Gram matrix with respect to gray matter/whit
 This appendix extends the table targets/spaces table defined in the [WIP BIDS Derivatives specifications](https://docs.google.com/document/d/1Wwc4A6Mow4ZPPszDIWfCUCRNstn7d_zzaWPcfcHmgI4/edit#heading=h.4xwnp2872y57) by proposing a table of ROI atlases. Atlases used in Clinica are summarized in the table below.
 
 | Label name         | Description |
-|----------------------------------|
-| JHUDTI81           | Also known as ICBM-DTI-81 white-matter labels atlas. 48 white matter tract labels were created by hand segmentation of a standard-space average of diffusion MRI tensor maps from 81 subjects; mean age 39 (18:59), M:42, F: 39. <p><p> See [Hua et al., 2008; Wakana et al., 2007] and http://www.loni.usc.edu/ICBM/Downloads/Downloads_DTI-81.shtml for details.
-| JHUTracts0 <p> JHUTracts25 <p> JHUTracts50 | Also known as JHU white-matter tractography atlas. 20 structures were identified probabilistically by averaging the results of running deterministic tractography on 28 normal subjects (mean age 29, M:17, F:11). <p><p> See [Mori et al., 2005] and https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases for details.
-| AAL2               | Updated version of Automated Anatomical Labeling [Tzourio-Mazoyer, 2002]) where 120 regions are extracted using a macroscopic anatomical parcellation of the MNI MRI single-subject brain. <p><p> See http://www.fz-juelich.de/inm/inm-1/DE/Forschung/_docs/SPMAnatomyToolbox/SPMAnatomyToolbox_node.html for details.
-| Neuromorphometrics | Maximum probability tissue labels derived from the "MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling" containing 140 cortical and subcortical regions in MNI space. <p><p> See http://www.neuromorphometrics.com/ for details.
-| AICHA | Atlas of Intrinsic Connectivity of Homotopic Areas, a functional brain ROIs atlas based on resting-state fMRI data acquired in 281 individuals containing 384 regions of the whole brain in MNI space.  <p><p> See http://www.gin.cnrs.fr/AICHA-344?lang=en for details.
-| LPBA40 | Atlas produced from a set of whole-head MRI of 40 human volunteers. Each MRI was manually delineated to identify a set of 56 cortical and subcortical regions in MNI space.  <p><p> See [Shattuck, 2008] for details.
-| Hammers | Adult brain probability maximum map based on 69 manually delineated regions drawn on MR images of 30 healthy adult subjects. <p><p> See [Hammers, 2003; Gousias, 2008] and http://brain-development.org/brain-atlases/ for details.
+|--------------------|-------------|
+| JHUDTI81           | Also known as ICBM-DTI-81 white-matter labels atlas. 48 white matter tract labels were created by hand segmentation of a standard-space average of diffusion MRI tensor maps from 81 subjects; mean age 39 (18:59), M:42, F: 39. <p><p> See [Hua et al., 2008; Wakana et al., 2007] and http://www.loni.usc.edu/ICBM/Downloads/Downloads_DTI-81.shtml for details.|
+| JHUTracts0 <p> JHUTracts25 <p> JHUTracts50 | Also known as JHU white-matter tractography atlas. 20 structures were identified probabilistically by averaging the results of running deterministic tractography on 28 normal subjects (mean age 29, M:17, F:11). <p><p> See [Mori et al., 2005] and https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases for details.|
+| AAL2               | Updated version of Automated Anatomical Labeling [Tzourio-Mazoyer, 2002]) where 120 regions are extracted using a macroscopic anatomical parcellation of the MNI MRI single-subject brain. <p><p> See http://www.fz-juelich.de/inm/inm-1/DE/Forschung/_docs/SPMAnatomyToolbox/SPMAnatomyToolbox_node.html for details.|
+| Neuromorphometrics | Maximum probability tissue labels derived from the "MICCAI 2012 Grand Challenge and Workshop on Multi-Atlas Labeling" containing 140 cortical and subcortical regions in MNI space. <p><p> See http://www.neuromorphometrics.com/ for details.|
+| AICHA | Atlas of Intrinsic Connectivity of Homotopic Areas, a functional brain ROIs atlas based on resting-state fMRI data acquired in 281 individuals containing 384 regions of the whole brain in MNI space.  <p><p> See http://www.gin.cnrs.fr/AICHA-344?lang=en for details.|
+| LPBA40 | Atlas produced from a set of whole-head MRI of 40 human volunteers. Each MRI was manually delineated to identify a set of 56 cortical and subcortical regions in MNI space.  <p><p> See [Shattuck, 2008] for details.|
+| Hammers | Adult brain probability maximum map based on 69 manually delineated regions drawn on MR images of 30 healthy adult subjects. <p><p> See [Hammers, 2003; Gousias, 2008] and http://brain-development.org/brain-atlases/ for details.|
 
 
 Table ROI atlases
 
 
 # Appendix 2. Content of a statistic file
-
-Template:
 ```
 <source_file>_space-<space>_map-<map>_statistics.tsv
 ```
