@@ -43,4 +43,4 @@ This should help you to:
 
 
 ## Who develops Clinica?
-Clinica is developed by the [ARAMIS Lab](www.aramislab.fr) at the [Brain and Spine Institute (ICM)](www.icm-institute.org) in Paris.
+Clinica is developed by the [ARAMIS Lab](http://www.aramislab.fr/) at the [Brain and Spine Institute (ICM)](https://icm-institute.org/) in Paris.

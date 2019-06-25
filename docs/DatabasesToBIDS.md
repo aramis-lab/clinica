@@ -3,7 +3,7 @@
 Clinica provides tools to curate several publicly available neuroimaging datasets (currently ADNI, AIBL and OASIS) and convert them to BIDS [[Samper-González et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042); [Wen et al., 2018](https://arxiv.org/abs/1812.11183)].
 
 !!! note
-    We provide converters for the datasets used in the [Aramis Lab](www.aramislab.fr). Feel free to contact us if you are interested in another dataset or to contribute!
+    We provide converters for the datasets used in the [Aramis Lab](http://www.aramislab.fr/). Feel free to contact us if you are interested in another dataset or to contribute!
 
 ## Dependencies
 

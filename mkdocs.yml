@@ -81,7 +81,10 @@ nav:
     - "What is Clinica?": "WhatIsClinica.md"
     - "Interacting with Clinica": "InteractingWithClinica.md"
     - "BIDS": "BIDS.md"
-    - "CAPS": "CAPS.md"
+    - CAPS:
+      - "Introduction": "CAPS/Introduction.md"
+      - "Overview": "CAPS/Overview.md"
+      - "Specifications": "CAPS/Specifications.md"
     - "Atlases": "Atlases.md"
   - Pipelines:
     - Anatomical MRI:
