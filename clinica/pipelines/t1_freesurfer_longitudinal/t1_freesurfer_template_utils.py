@@ -149,6 +149,24 @@ def get_unique_subjects(in_subject_list, in_session_list):
 
 
 
+def sessionid_to_sessionlabel(sessionid):
+    """Extract session label from session ID
+
+    Example:
+    if session_id='ses_M00', the session_label='M00'
+
+    Args:
+        sessionid (string): session ID
+
+    Returns:
+        sessionlabel (string): session ID
+    """
+    sessionlabel = sessionid[4:]
+
+    return sessionlabel
+
+
+
 def get_longsubdir_name(session_list):
     """Returns a subfolder name associated to a set of visits
 
@@ -157,12 +175,13 @@ def get_longsubdir_name(session_list):
     Used to be able to run the longitudinal processing at different
     points in time, where new visits are successively added.
     eg.
-    - 1. t=0 year, subject: sub01, sessions: M00, M01
-        -> identifier: M00M01
-    - 2. t=1 year, subject: sub01, sessions: M00, M01, M02
-        -> identifier: M00M01M02
-    - 2. t=2 year, subject: sub01, sessions: M00, M01, M02, M03, M04
-        -> identifier: M00M01M02M03M04
+    - 1. t=0 year, subject: sub01, sessions: ses-M00, ses-M01
+        -> identifier: long-M00M01
+    - 2. t=1 year, subject: sub01, sessions: ses-M00, ses-M01, ses-M02
+        -> identifier: long-M00M01M02
+    - 2. t=2 year, subject: sub01, sessions: ses-M00, ses-M01, ses-M02,
+            ses-M03, ses-M04
+        -> identifier: long-M00M01M02M03M04
 
     Args:
         session_list (list of strings):
@@ -175,8 +194,12 @@ def get_longsubdir_name(session_list):
                 sessions
             - the corresponding path for the longitudinal correction
     """
-    # concatenate all the sessions in session_list
-    long_subdirname = ''.join(session_list)
+    # get session label for each session ID
+    sessionlabel_list = [
+        sessionid_to_sessionlabel(session) for session in session_list]
+
+    # concatenate all the sessions labels
+    long_subdirname = ''.join(sessionlabel_list)
     long_subdirname = 'long-{0}'.format(long_subdirname)
 
     return long_subdirname
