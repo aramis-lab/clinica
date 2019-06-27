@@ -28,7 +28,7 @@ class DwiConnectomeCli(ce.CmdParser):
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("-nt", "--n_tracks",
                               metavar=('N'), type=int,
-                              help='Set the desired number of streamlines to generate the tractography and connectome (default: --n_tracks 100000).')
+                              help='Set the desired number of streamlines to generate the tractography and connectome (default: --n_tracks 1M).')
         # Clinica standard arguments (e.g. --n_procs)
         clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
         clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
@@ -54,7 +54,7 @@ class DwiConnectomeCli(ce.CmdParser):
             tsv_file=self.absolute_path(args.subjects_sessions_tsv)
         )
         pipeline.parameters = {
-            'n_tracks'        : args.n_tracks or 100000,
+            'n_tracks'   : args.n_tracks or 1000000,
         }
         if args.working_directory is None:
             args.working_directory = mkdtemp()

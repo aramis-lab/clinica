@@ -280,6 +280,8 @@ class DwiConnectome(cpe.Pipeline):
         from clinica.utils.exceptions import ClinicaCAPSError
         from clinica.utils.stream import cprint
         import clinica.pipelines.dwi_connectome.dwi_connectome_utils as utils
+        from clinica.utils.mri_registration import  convert_flirt_transformation_to_mrtrix_transformation
+        from clinica.utils.mri_registration import  apply_mrtrix_transform_without_resampling
 
         # cprint('Building the pipeline...')
 
@@ -304,21 +306,58 @@ class DwiConnectome(cpe.Pipeline):
         # T1-to-B0 Registration
         # ---------------------
         t12b0_reg_node = npe.Node(name="T12B0Registration",
-                                  interface=fsl.FLIRT())
+                                  interface=fsl.FLIRT(
+                                      dof=6, interp='spline', cost='normmi',
+                                      cost_func='normmi',
+                                  ))
         t12b0_reg_node.inputs.output_type = "NIFTI_GZ"
 
-        # MGZ File Convertion
+        # MGZ File Conversion
         # -------------------
         t1_brain_conv_node = npe.Node(name="T1BrainConvertion",
                                       interface=fs.MRIConvert())
         wm_mask_conv_node = npe.Node(name="WMMaskConvertion",
                                      interface=fs.MRIConvert())
 
-        # WM Transformation
+        # WM Transformation (only if space=b0)
         # -----------------
         wm_transform_node = npe.Node(name="WMTransformation",
                                      interface=fsl.ApplyXFM())
         wm_transform_node.inputs.apply_xfm = True
+
+        # Nodes Generation
+        # ----------------
+        label_convert_node = npe.MapNode(name="LabelsConversion",
+                                         iterfield=['in_file', 'in_config',
+                                                    'in_lut', 'out_file'],
+                                         interface=mrtrix3.LabelConvert())
+        label_convert_node.inputs.in_config = utils.get_conversion_luts()
+        label_convert_node.inputs.in_lut = utils.get_luts()
+
+        # FSL flirt matrix to MRtrix matrix Conversion (only if space=b0)
+        # --------------------------------------------
+        participant_id = ''
+        session_id = ''
+        caps_identifier = participant_id + '_' + session_id
+
+        fsl2mrtrix_conv_node = npe.Node(
+            name='FSL2MrtrixConversion',
+            interface=niu.Function(
+                input_names=['in_source_image', 'in_reference_image',
+                             'in_flirt_matrix', 'name_output_matrix'],
+                output_names=['out_mrtrix_matrix'],
+                function=convert_flirt_transformation_to_mrtrix_transformation)
+            )
+        ### convert_flirt_to_mrtrix.inputs.name_output_matrix =  caps_identifier + '_t1-to-b0_withoutResampling.mat'
+
+        # Parc. Transformation (only if space=b0)
+        # --------------------
+        parc_transform_node = npe.MapNode(name="ParcTransformation",
+                                          iterfield=['in_image', 'name_output_image'],
+                                          interface=niu.Function(
+                                              input_names=['in_image', 'in_mrtrix_matrix', 'name_output_image'],
+                                              output_names=['out_deformed_image'],
+                                              function=apply_mrtrix_transform_without_resampling))
 
         # Response Estimation
         # -------------------
@@ -349,15 +388,6 @@ class DwiConnectome(cpe.Pipeline):
         #     from clinica.utils.exceptions import ClinicaException
         #     raise ClinicaException("Your MRtrix version is not supported.")
 
-        # Nodes Generation
-        # ----------------
-        label_convert_node = npe.MapNode(name="LabelsConversion",
-                                         iterfield=['in_file', 'in_config',
-                                                    'in_lut', 'out_file'],
-                                         interface=mrtrix3.LabelConvert())
-        label_convert_node.inputs.in_config = utils.get_conversion_luts()
-        label_convert_node.inputs.in_lut = utils.get_luts()
-
         # Connectome Generation
         # ---------------------
         # only the parcellation and output filename should be iterable, the tck
@@ -368,7 +398,7 @@ class DwiConnectome(cpe.Pipeline):
 
         # Print begin message
         # -------------------
-        print_begin_message = npe.Node(
+        print_begin_message = npe.MapNode(
             interface=niu.Function(
                 input_names=['in_bids_or_caps_file'],
                 function=utils.print_begin_pipeline),
@@ -377,51 +407,27 @@ class DwiConnectome(cpe.Pipeline):
 
         # Print end message
         # -----------------
-        print_end_message = npe.Node(
+        print_end_message = npe.MapNode(
             interface=niu.Function(
-                input_names=['in_bids_or_caps_file', 'final_file', 'final_file'],
+                input_names=['in_bids_or_caps_file', 'final_file'],
                 function=utils.print_end_pipeline),
-            iterfield=['in_bids_or_caps_file', 'final_file'],
+            iterfield=['in_bids_or_caps_file'],
             name='WriteEndMessage')
 
-        # CAPS FIlenames Generation
-        # -------------------------
+        # CAPS File names Generation
+        # --------------------------
         caps_filenames_node = npe.Node(name='CAPSFilenamesGeneration',
                                        interface=niu.Function(
-                                               input_names='dwi_file',
-                                               output_names=self.get_output_fields(),
-                                               function=utils.get_caps_filenames))
+                                           input_names='dwi_file',
+                                           output_names=self.get_output_fields(),
+                                           function=utils.get_caps_filenames))
 
         # Connections
         # ===========
+        # Computation of the diffusion model and tractography
+        # ---------------------------------------------------
         self.connect([
             (self.input_node, print_begin_message, [('dwi_file', 'in_bids_or_caps_file')]),  # noqa
-        ])
-        # WM in B0-space Transformation
-        # -----------------------------
-        if self.parameters['dwi_space'] == 'b0':
-            self.connect([
-                # MGZ Files Convertion
-                (self.input_node, t1_brain_conv_node, [('t1_brain_file', 'in_file')]), # noqa
-                (self.input_node, wm_mask_conv_node, [('wm_mask_file', 'in_file')]), # noqa
-                # B0 Extraction
-                (self.input_node, split_node, [('dwi_file', 'in_file')]), # noqa
-                (split_node, select_node, [('out_files', 'inlist')]), # noqa
-                # Masking
-                (select_node,     mask_node, [('out', 'in_file')]),  # B0 #noqa
-                (self.input_node, mask_node, [('dwi_brainmask_file', 'mask_file')]), # Brain mask #noqa #noqa
-                # T1-to-B0 Registration
-                (t1_brain_conv_node, t12b0_reg_node, [('out_file', 'in_file')]), # Brain #noqa
-                (mask_node,          t12b0_reg_node, [('out_file', 'reference')]), # B0 brain-masked #noqa
-                # WM Transformation
-                (wm_mask_conv_node, wm_transform_node, [('out_file', 'in_file')]),  # Brain mask #noqa
-                (mask_node,         wm_transform_node, [('out_file', 'reference')]), # BO brain-masked #noqa
-                (t12b0_reg_node,    wm_transform_node, [('out_matrix_file', 'in_matrix_file')]), # T1-to-B0 matrix file #noqa
-            ])
-
-        # Tractography
-        # ------------
-        self.connect([
             (self.input_node, caps_filenames_node, [('dwi_file', 'dwi_file')]),
             # Response Estimation
             (self.input_node, resp_estim_node, [('dwi_file', 'in_file')]), # Preproc. DWI #noqa
@@ -437,22 +443,65 @@ class DwiConnectome(cpe.Pipeline):
             # Tracts Generation
             (fod_estim_node, tck_gen_node, [('wm_odf', 'in_file')]), # ODF file #noqa
             (caps_filenames_node, tck_gen_node, [('tracts', 'out_file')]), # output tck filename #noqa
-            # Label Conversion
-            (self.input_node,     label_convert_node, [('atlas_files', 'in_file')]), # atlas image files #noqa
-            (caps_filenames_node, label_convert_node, [('nodes', 'out_file')]), # converted atlas image filenames #noqa
+            ### # Label Conversion
+            ### (self.input_node,     label_convert_node, [('atlas_files', 'in_file')]), # atlas image files #noqa
+            ### (caps_filenames_node, label_convert_node, [('nodes', 'out_file')]), # converted atlas image filenames #noqa
             # Connectomes Generation
-            (tck_gen_node,        conn_gen_node, [('out_file', 'in_file')]), # output odf filename #noqa
-            (label_convert_node,  conn_gen_node, [('out_file', 'in_parc')]), # output odf filename #noqa
-            (caps_filenames_node, conn_gen_node, [('connectomes', 'out_file')]), # output odf filename #noqa
+            (tck_gen_node,        conn_gen_node, [('out_file', 'in_file')]), # noqa
+            (caps_filenames_node, conn_gen_node, [('connectomes', 'out_file')]),  # noqa
         ])
-
+        # Label Conversion
+        # ----------------
+        self.connect([
+            (self.input_node, label_convert_node, [('atlas_files', 'in_file')]), # atlas image files #noqa
+            (caps_filenames_node, label_convert_node, [('nodes', 'out_file')]), # converted atlas image filenames #noqa
+        ])
+        # Registration T1-DWI (only if space=b0)
+        # -------------------
         if self.parameters['dwi_space'] == 'b0':
             self.connect([
-                (wm_transform_node, tck_gen_node, [('out_file', 'seed_image')]) # ODF file #noqa
+                # MGZ Files Conversion
+                (self.input_node, t1_brain_conv_node, [('t1_brain_file', 'in_file')]), # noqa
+                (self.input_node, wm_mask_conv_node, [('wm_mask_file', 'in_file')]), # noqa
+                # B0 Extraction
+                (self.input_node, split_node, [('dwi_file', 'in_file')]), # noqa
+                (split_node, select_node, [('out_files', 'inlist')]), # noqa
+                # Masking
+                (select_node,     mask_node, [('out', 'in_file')]),  # B0 #noqa
+                (self.input_node, mask_node, [('dwi_brainmask_file', 'mask_file')]), # Brain mask #noqa #noqa
+                # T1-to-B0 Registration
+                (t1_brain_conv_node, t12b0_reg_node, [('out_file', 'in_file')]), # Brain #noqa
+                (mask_node,          t12b0_reg_node, [('out_file', 'reference')]), # B0 brain-masked #noqa
+                # WM Transformation
+                (wm_mask_conv_node, wm_transform_node, [('out_file', 'in_file')]),  # Brain mask #noqa
+                (mask_node,         wm_transform_node, [('out_file', 'reference')]), # BO brain-masked #noqa
+                (t12b0_reg_node,    wm_transform_node, [('out_matrix_file', 'in_matrix_file')]), # T1-to-B0 matrix file #noqa
+                # FSL flirt matrix to MRtrix matrix Conversion
+                (t1_brain_conv_node, fsl2mrtrix_conv_node, [('out_file', 'in_source_image')]), # noqa
+                (mask_node,          fsl2mrtrix_conv_node, [('out_file', 'in_reference_image')]), # noqa
+                (t12b0_reg_node,     fsl2mrtrix_conv_node, [('out_matrix_file', 'in_flirt_matrix')]), # noqa
+                # Apply registration without resampling on parcellations
+                (label_convert_node,   parc_transform_node, [('out_file', 'in_image')]), # noqa
+                #### (self.input_node,      parc_transform_node, [('atlas_files', 'in_image')]),  # noqa
+                (fsl2mrtrix_conv_node, parc_transform_node, [('out_mrtrix_matrix', 'in_mrtrix_matrix')]),  # noqa
+                (caps_filenames_node,  parc_transform_node, [('nodes', 'name_output_image')]),  # noqa
+                # (destrieux_in_native_space, destrieux_in_diffusion_space, [('out_volume', 'in_image')]),  # noqa
+                # (convert_flirt_to_mrtrix,   destrieux_in_diffusion_space, [('out_mrtrix_matrix', 'in_mrtrix_matrix')]),  # noqa
+            ])
+
+        # Special care for Parcellation & WM mask
+        # ---------------------------------------
+        if self.parameters['dwi_space'] == 'b0':
+            self.connect([
+                (wm_transform_node, tck_gen_node, [('out_file', 'seed_image')]), #noqa
+                (parc_transform_node, conn_gen_node, [('out_deformed_image', 'in_parc')]),  # noqa
+                (parc_transform_node, self.output_node, [('out_deformed_image', 'nodes')]),  # noqa
             ])
         elif self.parameters['dwi_space'] == 'T1w':
             self.connect([
-                (self.input_node, tck_gen_node, [('wm_mask_file', 'seed_image')]) # ODF file #noqa
+                (self.input_node, tck_gen_node, [('wm_mask_file', 'seed_image')]), #noqa
+                (label_convert_node, conn_gen_node, [('out_file', 'in_parc')]), # noqa
+                (label_convert_node, self.output_node, [('out_file', 'nodes')]),  # noqa
             ])
         else:
             raise ClinicaCAPSError(
@@ -460,13 +509,12 @@ class DwiConnectome(cpe.Pipeline):
                     'folder.')
 
         # Outputs
-        # ------
+        # -------
         self.connect([
-            (resp_estim_node,    self.output_node, [('wm_file', 'response')]), # T1-to-B0 matrix file #noqa
-            (fod_estim_node,     self.output_node, [('wm_odf', 'fod')]), # T1-to-B0 matrix file #noqa
-            (tck_gen_node,       self.output_node, [('out_file', 'tracts')]), # T1-to-B0 matrix file #noqa
-            (label_convert_node, self.output_node, [('out_file', 'nodes')]), # T1-to-B0 matrix file #noqa
-            (conn_gen_node,      self.output_node, [('out_file', 'connectomes')]), # T1-to-B0 matrix file #noqa
+            (resp_estim_node,    self.output_node, [('wm_file', 'response')]), #noqa
+            (fod_estim_node,     self.output_node, [('wm_odf', 'fod')]), #noqa
+            (tck_gen_node,       self.output_node, [('out_file', 'tracts')]), #noqa
+            (conn_gen_node,      self.output_node, [('out_file', 'connectomes')]), #noqa
             (self.input_node, print_end_message, [('dwi_file', 'in_bids_or_caps_file')]),  # noqa
             (conn_gen_node,   print_end_message, [('out_file', 'final_file')]),  # noqa
         ])

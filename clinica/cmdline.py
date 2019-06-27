@@ -179,7 +179,7 @@ def execute():
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DwiPreprocessingUsingPhaseDiffFieldmapCli  # noqa
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DwiPreprocessingUsingT1Cli  # noqa
     from clinica.pipelines.dwi_dti.dwi_dti_cli import DwiDtiCli  # noqa
-    # from clinica.pipelines.dwi_connectome.dwi_connectome_cli import DwiConnectomeCli  # noqa
+    from clinica.pipelines.dwi_connectome.dwi_connectome_cli import DwiConnectomeCli  # noqa
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI  # noqa
     from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI  # noqa
     from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI  # noqa
@@ -193,7 +193,7 @@ def execute():
         DwiPreprocessingUsingPhaseDiffFieldmapCli(),
         DwiPreprocessingUsingT1Cli(),
         DwiDtiCli(),
-        # DwiConnectomeCli(),
+        DwiConnectomeCli(),
         fMRIPreprocessingCLI(),
         PETVolumeCLI(),
         PetSurfaceCLI(),
