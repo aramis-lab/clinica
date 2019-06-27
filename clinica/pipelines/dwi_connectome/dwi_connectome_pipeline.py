@@ -376,6 +376,13 @@ class DwiConnectome(cpe.Pipeline):
         tck_gen_node = npe.Node(name="TractsGeneration",
                                 interface=utils.Tractography())
         tck_gen_node.inputs.n_tracks = self.parameters['n_tracks']
+        if self.parameters['debug_mode']:
+            # For CI, we use a deterministic algorithm so that
+            # regression tests can be easily performed
+            tck_gen_node.inputs.algorithm = 'SD_STREAM'
+        else:
+            tck_gen_node.inputs.algorithm = 'iFOD2'
+
         # BUG: Info package does not exist
         # from nipype.interfaces.mrtrix3.base import Info
         # from distutils.version import LooseVersion

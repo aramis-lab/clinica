@@ -55,6 +55,7 @@ class DwiConnectomeCli(ce.CmdParser):
         )
         pipeline.parameters = {
             'n_tracks'   : args.n_tracks or 1000000,
+            'debug_mode' : False,
         }
         if args.working_directory is None:
             args.working_directory = mkdtemp()
