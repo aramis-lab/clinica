@@ -7,6 +7,9 @@ from nipype.interfaces.base import traits, TraitedSpec, File, Undefined
 
 import os.path as op
 
+def tuple_seed_grid_voxel(seed_image):
+    seed_grid_voxel = (seed_image, 3)
+    return seed_grid_voxel
 
 def get_luts():
     import os
@@ -69,7 +72,7 @@ def get_caps_filenames(dwi_file):
     source_file_bids = m.group(1)
 
     response = source_file_caps + '_model-CSD_responseFunction.txt'
-    fod = source_file_caps + '_model-CSD_diffmodel.mif'
+    fod = source_file_caps + '_model-CSD_diffmodel.nii.gz'
     tracts = source_file_caps + '_model-CSD_tractography.tck'
     nodes = [source_file_caps + '_atlas-desikan_parcellation.nii.gz',
              source_file_caps + '_atlas-destrieux_parcellation.nii.gz']

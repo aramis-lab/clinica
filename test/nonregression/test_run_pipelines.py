@@ -438,18 +438,15 @@ def test_run_DWIDTI(cmdopt):
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
-"""
 def test_run_DWIConnectome(cmdopt):
     from clinica.pipelines.dwi_connectome.dwi_connectome_pipeline import DwiConnectome
     from os.path import dirname, join, abspath, exists
     import shutil
-    import pandas as pds
-    import numpy as np
 
-    working_dir = cmdopt
+    working_dir = '/tmp/trololo' # cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'DWIConnectome')
-
-    n_tracks = 1000000
+    print(working_dir)
+    n_tracks = 1000
     subject_id = 'sub-HMTC20110506MEMEPPAT27'
     session_id = 'ses-M00'
 
@@ -460,7 +457,7 @@ def test_run_DWIConnectome(cmdopt):
     pipeline = DwiConnectome(caps_directory=join(root, 'out', 'caps'),
                              tsv_file=join(root, 'in', 'subjects.tsv'))
     pipeline.parameters = {
-        'n_tracks' : n_tracks
+        'n_tracks'  : n_tracks,
     }
     pipeline.base_dir = join(working_dir, 'DWIConnectome')
     pipeline.build()
@@ -468,23 +465,25 @@ def test_run_DWIConnectome(cmdopt):
 
     # Check files
     atlases = ['desikan', 'destrieux']
-    out_files = [join(root, 'out', 'caps', 'subjects', subject_id, session_id, 'dwi', 'connectome_based_processing', subject_id + '_' + session_id + '_dwi_space-b0_model-CSD_atlas-' + a + '_connectivity.tsv')
-                 for a in atlases]
-    ref_files = [join(root, 'ref', subject_id + '_' + session_id + '_dwi_space-b0_model-CSD_atlas-' + a + '_connectivity.tsv')
-                 for a in atlases]
 
-    # @TODO: Find the adequate threshold for DWI-Connectome pipeline
+    out_fod_file = join(root, 'out', 'caps', 'subjects', subject_id, session_id, 'dwi', 'connectome_based_processing',
+                        subject_id + '_' + session_id + '_dwi_space-b0_model-CSD_diffmodel.nii.gz')
+    ref_fod_file = join(root, 'ref',
+                        subject_id + '_' + session_id + '_dwi_space-b0_model-CSD_diffmodel.nii.gz')
 
-    for i in range(len(out_files)):
-        out_connectome = pds.read_csv(out_files[i], sep=' ')
-        out_connectome = np.array(out_connectome)
-        ref_connectome = pds.read_csv(ref_files[i], sep=' ')
-        ref_connectome = np.array(ref_connectome)
+    out_parc_files = [join(root, 'out', 'caps', 'subjects', subject_id, session_id, 'dwi', 'connectome_based_processing',
+                           subject_id + '_' + session_id + '_dwi_space-b0_atlas-' + a + '_parcellation.nii.gz')
+                      for a in atlases]
+    ref_parc_files = [join(root, 'ref',
+                           subject_id + '_' + session_id + '_dwi_space-b0_atlas-' + a + '_parcellation.nii.gz')
+                      for a in atlases]
 
-        assert np.allclose(out_connectome, ref_connectome, rtol=0.025, equal_nan=True)
+    assert similarity_measure(out_fod_file, ref_fod_file, 0.97)
+
+    for i in range(len(out_parc_files)):
+        assert similarity_measure(out_parc_files[i], ref_parc_files[i], 0.99)
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-"""
 
 def test_run_fMRIPreprocessing(cmdopt):
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
