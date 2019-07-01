@@ -275,13 +275,13 @@ class DwiConnectome(cpe.Pipeline):
         import nipype.interfaces.fsl as fsl
         import nipype.interfaces.freesurfer as fs
         import nipype.interfaces.mrtrix3 as mrtrix3
+        from clinica.lib.nipype.interfaces.mrtrix.preprocess import MRTransform
         from clinica.lib.nipype.interfaces.mrtrix3.reconst import EstimateFOD
         from clinica.lib.nipype.interfaces.mrtrix3.tracking import Tractography
         from clinica.utils.exceptions import ClinicaCAPSError
         from clinica.utils.stream import cprint
         import clinica.pipelines.dwi_connectome.dwi_connectome_utils as utils
         from clinica.utils.mri_registration import convert_flirt_transformation_to_mrtrix_transformation
-        from clinica.utils.mri_registration import apply_mrtrix_transform_without_resampling
 
         # cprint('Building the pipeline...')
 
@@ -290,22 +290,22 @@ class DwiConnectome(cpe.Pipeline):
 
         # B0 Extraction (only if space=b0)
         # -------------
-        split_node = npe.Node(name="B0Extraction",
+        split_node = npe.Node(name="Reg-0a-B0Extraction",
                               interface=fsl.Split())
         split_node.inputs.output_type = "NIFTI_GZ"
         split_node.inputs.dimension = 't'
-        select_node = npe.Node(name="B0Selection", interface=niu.Select())
+        select_node = npe.Node(name="Reg-0a-B0Selection", interface=niu.Select())
         select_node.inputs.index = 0
 
         # B0 Brain Extraction (only if space=b0)
         # -------------------
-        mask_node = npe.Node(name="BrainMasking",
+        mask_node = npe.Node(name="Reg-0a-BrainMasking",
                              interface=fsl.ApplyMask())
         mask_node.inputs.output_type = "NIFTI_GZ"
 
         # T1-to-B0 Registration (only if space=b0)
         # ---------------------
-        t12b0_reg_node = npe.Node(name="T12B0Registration",
+        t12b0_reg_node = npe.Node(name="Reg-1-T12B0Registration",
                                   interface=fsl.FLIRT(
                                       dof=6, interp='spline', cost='normmi',
                                       cost_func='normmi',
@@ -314,20 +314,20 @@ class DwiConnectome(cpe.Pipeline):
 
         # MGZ File Conversion (only if space=b0)
         # -------------------
-        t1_brain_conv_node = npe.Node(name="T1BrainConvertion",
+        t1_brain_conv_node = npe.Node(name="Reg-0b-T1BrainConvertion",
                                       interface=fs.MRIConvert())
-        wm_mask_conv_node = npe.Node(name="WMMaskConvertion",
+        wm_mask_conv_node = npe.Node(name="Reg-0b-WMMaskConvertion",
                                      interface=fs.MRIConvert())
 
         # WM Transformation (only if space=b0)
         # -----------------
-        wm_transform_node = npe.Node(name="WMTransformation",
+        wm_transform_node = npe.Node(name="Reg-2a-WMTransformation",
                                      interface=fsl.ApplyXFM())
         wm_transform_node.inputs.apply_xfm = True
 
         # Nodes Generation
         # ----------------
-        label_convert_node = npe.MapNode(name="LabelsConversion",
+        label_convert_node = npe.MapNode(name="0-LabelsConversion",
                                          iterfield=['in_file', 'in_config',
                                                     'in_lut', 'out_file'],
                                          interface=mrtrix3.LabelConvert())
@@ -337,7 +337,7 @@ class DwiConnectome(cpe.Pipeline):
         # FSL flirt matrix to MRtrix matrix Conversion (only if space=b0)
         # --------------------------------------------
         fsl2mrtrix_conv_node = npe.Node(
-            name='FSL2MrtrixConversion',
+            name='Reg-2b-FSL2MrtrixConversion',
             interface=niu.Function(
                 input_names=['in_source_image', 'in_reference_image',
                              'in_flirt_matrix', 'name_output_matrix'],
@@ -347,28 +347,25 @@ class DwiConnectome(cpe.Pipeline):
 
         # Parc. Transformation (only if space=b0)
         # --------------------
-        parc_transform_node = npe.MapNode(name="ParcTransformation",
-                                          iterfield=['in_image', 'name_output_image'],
-                                          interface=niu.Function(
-                                              input_names=['in_image', 'in_mrtrix_matrix', 'name_output_image'],
-                                              output_names=['out_deformed_image'],
-                                              function=apply_mrtrix_transform_without_resampling))
+        parc_transform_node = npe.MapNode(name="Reg-2b-ParcTransformation",
+                                       iterfield=["in_files", "out_filename"],
+                                       interface=MRTransform())
 
         # Response Estimation
         # -------------------
-        resp_estim_node = npe.Node(name="ResponseEstimation",
+        resp_estim_node = npe.Node(name="1-ResponseEstimation",
                                    interface=mrtrix3.ResponseSD())
         resp_estim_node.inputs.algorithm = 'tournier'
 
         # FOD Estimation
         # --------------
-        fod_estim_node = npe.Node(name="FODEstimation",
+        fod_estim_node = npe.Node(name="2-FODEstimation",
                                   interface=EstimateFOD())
         fod_estim_node.inputs.algorithm = 'csd'
 
         # Tracts Generation
         # -----------------
-        tck_gen_node = npe.Node(name="TractsGeneration",
+        tck_gen_node = npe.Node(name="3-TractsGeneration",
                                 interface=utils.Tractography())
         tck_gen_node.inputs.n_tracks = self.parameters['n_tracks']
         tck_gen_node.inputs.algorithm = 'iFOD2'
@@ -389,7 +386,7 @@ class DwiConnectome(cpe.Pipeline):
         # ---------------------
         # only the parcellation and output filename should be iterable, the tck
         # file stays the same.
-        conn_gen_node = npe.MapNode(name="ConnectomeGeneration",
+        conn_gen_node = npe.MapNode(name="4-ConnectomeGeneration",
                                     iterfield=['in_parc', 'out_file'],
                                     interface=mrtrix3.BuildConnectome())
 
@@ -459,7 +456,7 @@ class DwiConnectome(cpe.Pipeline):
                 (split_node, select_node, [('out_files', 'inlist')]),  # noqa
                 # Masking
                 (select_node,     mask_node, [('out', 'in_file')]),  # B0 # noqa
-                (self.input_node, mask_node, [('dwi_brainmask_file', 'mask_file')]),  # Brain mask # noqa # noqa
+                (self.input_node, mask_node, [('dwi_brainmask_file', 'mask_file')]),  # Brain mask # noqa
                 # T1-to-B0 Registration
                 (t1_brain_conv_node, t12b0_reg_node, [('out_file', 'in_file')]),  # Brain # noqa
                 (mask_node,          t12b0_reg_node, [('out_file', 'reference')]),  # B0 brain-masked # noqa
@@ -472,9 +469,9 @@ class DwiConnectome(cpe.Pipeline):
                 (mask_node,          fsl2mrtrix_conv_node, [('out_file', 'in_reference_image')]),  # noqa
                 (t12b0_reg_node,     fsl2mrtrix_conv_node, [('out_matrix_file', 'in_flirt_matrix')]),  # noqa
                 # Apply registration without resampling on parcellations
-                (label_convert_node,   parc_transform_node, [('out_file', 'in_image')]),  # noqa
-                (fsl2mrtrix_conv_node, parc_transform_node, [('out_mrtrix_matrix', 'in_mrtrix_matrix')]),  # noqa
-                (caps_filenames_node,  parc_transform_node, [('nodes', 'name_output_image')]),  # noqa
+                (label_convert_node,   parc_transform_node, [('out_file', 'in_files')]),  # noqa
+                (fsl2mrtrix_conv_node, parc_transform_node, [('out_mrtrix_matrix', 'linear_transform')]),  # noqa
+                (caps_filenames_node,  parc_transform_node, [('nodes', 'out_filename')]),  # noqa
             ])
 
         # Special care for Parcellation & WM mask
@@ -483,8 +480,8 @@ class DwiConnectome(cpe.Pipeline):
             self.connect([
                 (
                 wm_transform_node, tck_gen_node, [('out_file', 'seed_image')]),  # noqa
-                (parc_transform_node, conn_gen_node, [('out_deformed_image', 'in_parc')]),  # noqa
-                (parc_transform_node, self.output_node, [('out_deformed_image', 'nodes')]),  # noqa
+                (parc_transform_node, conn_gen_node, [('out_file', 'in_parc')]),  # noqa
+                (parc_transform_node, self.output_node, [('out_file', 'nodes')]),  # noqa
             ])
         elif self.parameters['dwi_space'] == 'T1w':
             self.connect([
