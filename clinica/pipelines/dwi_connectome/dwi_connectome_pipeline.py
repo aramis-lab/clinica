@@ -348,8 +348,8 @@ class DwiConnectome(cpe.Pipeline):
         # Parc. Transformation (only if space=b0)
         # --------------------
         parc_transform_node = npe.MapNode(name="Reg-2b-ParcTransformation",
-                                       iterfield=["in_files", "out_filename"],
-                                       interface=MRTransform())
+                                          iterfield=["in_files", "out_filename"],
+                                          interface=MRTransform())
 
         # Response Estimation
         # -------------------

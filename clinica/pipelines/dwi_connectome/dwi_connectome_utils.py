@@ -7,9 +7,6 @@ from nipype.interfaces.base import traits, TraitedSpec, File, Undefined
 
 import os.path as op
 
-def tuple_seed_grid_voxel(seed_image):
-    seed_grid_voxel = (seed_image, 3)
-    return seed_grid_voxel
 
 def get_luts():
     import os

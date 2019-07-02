@@ -95,6 +95,7 @@ class DWI2Tensor(CommandLine):
     input_spec = DWI2TensorInputSpec
     output_spec = DWI2TensorOutputSpec
 
+
 class MRTransformInputSpec(CommandLineInputSpec):
     in_files = InputMultiPath(
         File(exists=True),
@@ -111,8 +112,7 @@ class MRTransformInputSpec(CommandLineInputSpec):
     replace_transform = traits.Bool(
         argstr='-replace',
         position=1,
-        desc=
-        "replace the current transform by that specified, rather than applying it to the current transform"
+        desc="replace the current transform by that specified, rather than applying it to the current transform"
     )
     transformation_file = File(
         exists=True,
@@ -137,14 +137,12 @@ class MRTransformInputSpec(CommandLineInputSpec):
         exists=True,
         argstr='-reference %s',
         position=1,
-        desc=
-        'in case the transform supplied maps from the input image onto a reference image, use this option to specify the reference. Note that this implicitly sets the -replace option.'
+        desc='in case the transform supplied maps from the input image onto a reference image, use this option to specify the reference. Note that this implicitly sets the -replace option.'
     )
     flip_x = traits.Bool(
         argstr='-flipx',
         position=1,
-        desc=
-        "assume the transform is supplied assuming a coordinate system with the x-axis reversed relative to the MRtrix convention (i.e. x increases from right to left). This is required to handle transform matrices produced by FSL's FLIRT command. This is only used in conjunction with the -reference option."
+        desc="assume the transform is supplied assuming a coordinate system with the x-axis reversed relative to the MRtrix convention (i.e. x increases from right to left). This is required to handle transform matrices produced by FSL's FLIRT command. This is only used in conjunction with the -reference option."
     )
     quiet = traits.Bool(
         argstr='-quiet',
