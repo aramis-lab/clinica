@@ -48,42 +48,6 @@ def convert_flirt_transformation_to_mrtrix_transformation(
     return out_mrtrix_matrix
 
 
-def apply_mrtrix_transform_without_resampling(
-        in_image, in_mrtrix_matrix, name_output_image=None):
-    """
-    Apply a transformation without resampling.
-
-    This function applies a linear transform on the input image without
-    reslicing: it only modifies the transform matrix in the image header.
-
-    Args:
-        in_image (str): File containing the input image to be transformed.
-        in_mrtrix_matrix (str): File containing the transformation matrix
-            obtained by the MRtrix transformconvert command.
-        name_output_image (Optional[str]): Name of the output image
-            (default=deformed_image.nii.gz).
-
-    Returns:
-        out_deformed_image (str): File containing the deformed image according
-            to in_mrtrix_matrix transformation.
-    """
-    import os
-
-    assert(os.path.isfile(in_image))
-    assert(os.path.isfile(in_mrtrix_matrix))
-
-    if name_output_image is None:
-        out_deformed_image = os.path.abspath('deformed_image.nii.gz')
-    else:
-        out_deformed_image = os.path.abspath(name_output_image)
-
-    cmd = 'mrtransform -linear %s %s %s' \
-          % (in_mrtrix_matrix, in_image, out_deformed_image)
-    os.system(cmd)
-
-    return out_deformed_image
-
-
 def apply_ants_registration_syn_quick_transformation(
         in_image,
         in_reference_image,
