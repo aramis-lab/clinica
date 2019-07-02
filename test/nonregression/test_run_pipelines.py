@@ -443,7 +443,7 @@ def test_run_DWIConnectome(cmdopt):
     from os.path import dirname, join, abspath, exists
     import shutil
 
-    working_dir = '/tmp/trololo' # cmdopt
+    working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'DWIConnectome')
     print(working_dir)
     n_tracks = 1000
