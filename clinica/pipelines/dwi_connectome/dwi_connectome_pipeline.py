@@ -290,16 +290,16 @@ class DwiConnectome(cpe.Pipeline):
 
         # B0 Extraction (only if space=b0)
         # -------------
-        split_node = npe.Node(name="Reg-0a-B0Extraction",
+        split_node = npe.Node(name="Reg-0-DWI-B0Extraction",
                               interface=fsl.Split())
         split_node.inputs.output_type = "NIFTI_GZ"
         split_node.inputs.dimension = 't'
-        select_node = npe.Node(name="Reg-0a-B0Selection", interface=niu.Select())
+        select_node = npe.Node(name="Reg-0-DWI-B0Selection", interface=niu.Select())
         select_node.inputs.index = 0
 
         # B0 Brain Extraction (only if space=b0)
         # -------------------
-        mask_node = npe.Node(name="Reg-0a-BrainMasking",
+        mask_node = npe.Node(name="Reg-0-DWI-BrainMasking",
                              interface=fsl.ApplyMask())
         mask_node.inputs.output_type = "NIFTI_GZ"
 
@@ -314,14 +314,14 @@ class DwiConnectome(cpe.Pipeline):
 
         # MGZ File Conversion (only if space=b0)
         # -------------------
-        t1_brain_conv_node = npe.Node(name="Reg-0b-T1BrainConvertion",
+        t1_brain_conv_node = npe.Node(name="Reg-0-T1-T1BrainConvertion",
                                       interface=fs.MRIConvert())
-        wm_mask_conv_node = npe.Node(name="Reg-0b-WMMaskConvertion",
+        wm_mask_conv_node = npe.Node(name="Reg-0-T1-WMMaskConvertion",
                                      interface=fs.MRIConvert())
 
         # WM Transformation (only if space=b0)
         # -----------------
-        wm_transform_node = npe.Node(name="Reg-2a-WMTransformation",
+        wm_transform_node = npe.Node(name="Reg-2-WMTransformation",
                                      interface=fsl.ApplyXFM())
         wm_transform_node.inputs.apply_xfm = True
 
@@ -337,7 +337,7 @@ class DwiConnectome(cpe.Pipeline):
         # FSL flirt matrix to MRtrix matrix Conversion (only if space=b0)
         # --------------------------------------------
         fsl2mrtrix_conv_node = npe.Node(
-            name='Reg-2b-FSL2MrtrixConversion',
+            name='Reg-2-FSL2MrtrixConversion',
             interface=niu.Function(
                 input_names=['in_source_image', 'in_reference_image',
                              'in_flirt_matrix', 'name_output_matrix'],
@@ -347,25 +347,25 @@ class DwiConnectome(cpe.Pipeline):
 
         # Parc. Transformation (only if space=b0)
         # --------------------
-        parc_transform_node = npe.MapNode(name="Reg-2b-ParcTransformation",
+        parc_transform_node = npe.MapNode(name="Reg-2-ParcTransformation",
                                           iterfield=["in_files", "out_filename"],
                                           interface=MRTransform())
 
         # Response Estimation
         # -------------------
-        resp_estim_node = npe.Node(name="1-ResponseEstimation",
+        resp_estim_node = npe.Node(name="1a-ResponseEstimation",
                                    interface=mrtrix3.ResponseSD())
         resp_estim_node.inputs.algorithm = 'tournier'
 
         # FOD Estimation
         # --------------
-        fod_estim_node = npe.Node(name="2-FODEstimation",
+        fod_estim_node = npe.Node(name="1b-FODEstimation",
                                   interface=EstimateFOD())
         fod_estim_node.inputs.algorithm = 'csd'
 
         # Tracts Generation
         # -----------------
-        tck_gen_node = npe.Node(name="3-TractsGeneration",
+        tck_gen_node = npe.Node(name="2-TractsGeneration",
                                 interface=utils.Tractography())
         tck_gen_node.inputs.n_tracks = self.parameters['n_tracks']
         tck_gen_node.inputs.algorithm = 'iFOD2'
@@ -386,7 +386,7 @@ class DwiConnectome(cpe.Pipeline):
         # ---------------------
         # only the parcellation and output filename should be iterable, the tck
         # file stays the same.
-        conn_gen_node = npe.MapNode(name="4-ConnectomeGeneration",
+        conn_gen_node = npe.MapNode(name="3-ConnectomeGeneration",
                                     iterfield=['in_parc', 'out_file'],
                                     interface=mrtrix3.BuildConnectome())
 
