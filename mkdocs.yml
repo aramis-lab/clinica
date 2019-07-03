@@ -93,7 +93,7 @@ nav:
     - DWI:
       - "Pre-processing": "Pipelines/DWI_Preprocessing.md"
       - "DTI": "Pipelines/DWI_DTI.md"
-  #    - "Connectome": "Pipelines/DWI_Connectome"
+      - "Connectome": "Pipelines/DWI_Connectome.md"
     - fMRI:
       - "Pre-processing": "Pipelines/fMRI_Preprocessing.md"
     - PET:

@@ -1,6 +1,6 @@
 # `dwi-connectome` - Computation of structural connectome from corrected DWI datasets
 
-This pipeline computes a weighted graph encoding anatomical connections between a set of brain regions from corrected DWI datasets.
+The `dwi-connectome` pipeline computes a weighted graph encoding anatomical connections between a set of brain regions from corrected DWI datasets.
 
 To aim that, it relies on the **MRtrix3** [[Tournier et al., 2012](https://doi.org/10.1002/ima.22005)] software to compute the constrained spherical deconvolution diffusion model, perform probabilistic tractography and computes a connectome using the Desikan & Destrieux atlases from **FreeSurfer**.
 
