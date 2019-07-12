@@ -118,7 +118,6 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
                 function=utils.receivefrom_template)
             )
 
-
         # check if cross-sectional pipeline run on all subjects
         checkinput_node_name = '1_check_input'
         checkinput_node = npe.Node(name=checkinput_node_name,
@@ -210,7 +209,6 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
         ])
 
 
-
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.
         """
@@ -221,7 +219,6 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from nipype.interfaces.freesurfer.preprocess import ReconAll
         from clinica.utils.stream import cprint
-
 
         # Per-subject creation of the template
 
@@ -301,8 +298,6 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
                 ),
             iterfield=['in_subject',
                        'in_session'])
-
-
 
         # Connection
         # ==========
