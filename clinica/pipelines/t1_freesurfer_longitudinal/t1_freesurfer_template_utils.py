@@ -10,7 +10,6 @@ __email__ = "alexis.guyot@icm-institute.org"
 __status__ = "Development"
 
 
-
 def get_capsxsectional_path(caps_dir, subject, session):
     """Get path to cross-sectional run in CAPS dir
 
@@ -35,7 +34,6 @@ def get_capsxsectional_path(caps_dir, subject, session):
         )
 
     return caps_xsectional_path
-
 
 
 def check_xsectional_reconalled(caps_dir, subject_list, session_list):
@@ -96,7 +94,6 @@ def check_xsectional_reconalled(caps_dir, subject_list, session_list):
                 raise IOError(error_msg)
 
 
-
 def get_unique_subjects(in_subject_list, in_session_list):
     """Get unique participant IDs
 
@@ -148,7 +145,6 @@ def get_unique_subjects(in_subject_list, in_session_list):
     return out_unique_subject_list, out_persubject_session_list2
 
 
-
 def sessionid_to_sessionlabel(sessionid):
     """Extract session label from session ID
 
@@ -164,7 +160,6 @@ def sessionid_to_sessionlabel(sessionid):
     sessionlabel = sessionid[4:]
 
     return sessionlabel
-
 
 
 def get_longsubdir_name(session_list):
@@ -205,7 +200,6 @@ def get_longsubdir_name(session_list):
     return long_subdirname
 
 
-
 def get_capstemplate_path(caps_dir, subject, session_list):
     """Get path to template in CAPS dir
 
@@ -236,7 +230,6 @@ def get_capstemplate_path(caps_dir, subject, session_list):
         subject)
 
     return caps_template_path
-
 
 
 def get_longsubdir_dict(
@@ -278,7 +271,6 @@ def get_longsubdir_dict(
     return longsubdir_dict
 
 
-
 def get_capslongcor_path(caps_dir, subject, session, longsubdir_dict):
     """Get path to longitudinal correction subfolder in CAPS dir
 
@@ -313,7 +305,6 @@ def get_capslongcor_path(caps_dir, subject, session, longsubdir_dict):
     return capslongcor_path
 
 
-
 def boolean_overwrite_caps(str_overwrite_caps):
     """Convert overwrite-caps flag to Boolean
 
@@ -333,7 +324,6 @@ def boolean_overwrite_caps(str_overwrite_caps):
         raise ValueError(error_msg)
 
     return overwrite_caps
-
 
 
 def get_cl_overwritecaps(
@@ -387,7 +377,6 @@ def get_cl_overwritecaps(
     cl_overwrite_caps = '{0} --overwrite_caps True'.format(cl_overwrite_caps)
 
     return cl_overwrite_caps
-
 
 
 def check_caps_processing(
@@ -510,7 +499,6 @@ def check_caps_processing(
         all_capstargetlist]
 
 
-
 def check_caps_template(
         subject_list,
         session_list,
@@ -591,7 +579,6 @@ def check_caps_template(
         all_sublist,
         all_seslist2,
         all_capstargetlist]
-
 
 
 def to_process(
@@ -713,7 +700,6 @@ def to_process(
         error_msg = '{0} {1}'.format(error_msg, cl_overwrite_caps)
         raise ValueError(error_msg)
 
-
     # check what subjects / sessions / CAPS target dirs to process
     # depending on --force-overwrite flag
     if force_overwrite:
@@ -730,7 +716,6 @@ def to_process(
         topcss_seslist2,
         topcss_capstargetlist,
         overwrite_tsv_path]
-
 
 
 def check_single_timepoint(subject_list, session_list2):
@@ -758,7 +743,6 @@ def check_single_timepoint(subject_list, session_list2):
         if len(subses_list) == 1:
             single_timepoint_detected = True
             single_timepoint_subject_list.append(subject)
-
 
     # Warn the user if a subject was found with a single time point
     if single_timepoint_detected:
@@ -793,7 +777,6 @@ def check_single_timepoint(subject_list, session_list2):
         warning_msg = '{0}{1}'.format(warning_msg, colorama.Fore.RESET)
         # Show the warning
         warnings.warn(warning_msg)
-
 
 
 def process_input_node(
@@ -864,7 +847,6 @@ def process_input_node(
         error_msg = '{0} to conduct the longitudinal study'.format(error_msg)
         raise ValueError(error_msg)
 
-
     # check if we have the necessary (cross-sectional) recon-all data
     # prior to running the template creation. Will crash if we do not
     # have this.
@@ -925,7 +907,6 @@ def process_input_node(
         out_overwrite_tsv]
 
 
-
 def store_reconallbase_results(in_subject_list):
     """Create a folder to store all recon-all -base outputs
 
@@ -963,7 +944,6 @@ def store_reconallbase_results(in_subject_list):
     return out_workdirstore_path
 
 
-
 def get_reconallbase_flags(in_subject, in_session_list):
     """Create reconall -base flags
 
@@ -995,7 +975,6 @@ def get_reconallbase_flags(in_subject, in_session_list):
     out_reconallbase_flags = '{0} -all'.format(out_reconallbase_flags)
 
     return out_reconallbase_flags
-
 
 
 def check_reconall_base_single(subjects_dir, in_subject):
@@ -1037,7 +1016,6 @@ def check_reconall_base_single(subjects_dir, in_subject):
     return out_template_created
 
 
-
 def create_fssubdir_path(subject, session_list):
     """Create a subdir to FS recon-all
 
@@ -1073,7 +1051,6 @@ def create_fssubdir_path(subject, session_list):
     Returns:
         fssubdir_path (string): path to the subdir containing the output
             of 'recon-all -base'.
-
     """
     import os
     import errno
@@ -1095,7 +1072,6 @@ def create_fssubdir_path(subject, session_list):
                 raise
 
     return fssubdir_path
-
 
 
 def run_reconallbase(
@@ -1199,7 +1175,6 @@ def run_reconallbase(
     return out_template_created
 
 
-
 def safer_rmtree(caps_target, caps_dir):
     """Only remove CAPS target if it's as subfolder of CAPS dir
 
@@ -1242,7 +1217,6 @@ def safer_rmtree(caps_target, caps_dir):
     else:
         error_msg = 'Error: folder {0} does not exist'.format(caps_target)
         raise IOError(error_msg)
-
 
 
 def copy_to_caps(
@@ -1306,7 +1280,6 @@ def copy_to_caps(
     out_copy2_caps = True
 
     return out_copy2_caps
-
 
 
 def sendto_longcorr(
