@@ -10,7 +10,6 @@ __email__ = "alexis.guyot@icm-institute.org"
 __status__ = "Development"
 
 
-
 def receivefrom_template(
         in_unpcssd_sublist, in_pcssd_capstargetlist, in_overwrite_tsv):
     """Identity function
@@ -39,7 +38,6 @@ def receivefrom_template(
     out_overwrite_tsv = in_overwrite_tsv
 
     return out_unpcssd_sublist, out_pcssd_capstargetlist, out_overwrite_tsv
-
 
 
 def check_template_reconalled(
@@ -87,7 +85,6 @@ def check_template_reconalled(
                 raise IOError(error_msg)
 
 
-
 def check_reconalled(caps_dir, subject_list, session_list):
     """Check cross-sectional and -base recon-all run previously
 
@@ -122,7 +119,6 @@ def check_reconalled(caps_dir, subject_list, session_list):
     # beforehand. Will crash if it has not
     utils.check_template_reconalled(
         caps_dir, unique_subject_list, persubject_session_list2)
-
 
 
 def check_processed(
@@ -217,7 +213,6 @@ def check_processed(
         all_capstargetlist]
 
 
-
 def get_warning_msg(
         pcssd_capstargetlist,
         caps_dir,
@@ -283,7 +278,6 @@ def get_warning_msg(
         warning_msg = None
 
     return warning_msg
-
 
 
 def to_process(
@@ -393,7 +387,6 @@ def to_process(
         topcss_seslist2,
         topcss_capstargetlist,
         overwrite_warning]
-
 
 
 def process_input_node(
@@ -510,7 +503,6 @@ def process_input_node(
     out_caps_dir = in_caps_dir
     out_overwrite_caps = in_overwrite_caps
 
-
     return [
         out_subject_list,
         out_session_list,
@@ -518,7 +510,6 @@ def process_input_node(
         out_caps_dir,
         out_overwrite_warning,
         out_overwrite_caps]
-
 
 
 def create_symlinks(
@@ -603,7 +594,6 @@ def create_symlinks(
     return out_subject_symlink_path
 
 
-
 def get_reconalllong_flags(in_subject, in_session):
     """Get recon-all -long flags for each subject
 
@@ -626,7 +616,6 @@ def get_reconalllong_flags(in_subject, in_session):
         in_subject, in_session, template_id)
 
     return out_reconalllong_flags
-
 
 
 def check_reconall_longitudinal_single(subjects_dir,
@@ -674,7 +663,6 @@ def check_reconall_longitudinal_single(subjects_dir,
     return out_longitudinal_result
 
 
-
 def run_reconalllong(in_subject,
                      in_session,
                      in_reconalllong_flags,
@@ -712,7 +700,6 @@ def run_reconalllong(in_subject,
         in_symlink_path, in_subject, in_session)
 
     return out_longitudinal_result
-
 
 
 def write_stats_files(
@@ -757,7 +744,6 @@ def write_stats_files(
         seg_path, subses_id, output_dir=out_stats_path, longitudinal=True)
 
     return out_stats_path
-
 
 
 def copy_to_caps(
@@ -847,7 +833,6 @@ def copy_to_caps(
     # copy the .tsv stats files from working directory to CAPS directory
     shutil.copytree(in_stats_path, caps_target_stats)
     out_copy2_caps = True
-
 
     # show warning message
     if in_overwrite_warning is not None:
