@@ -66,6 +66,7 @@ class DwiConnectome(cpe.Pipeline):
         from clinica.utils.stream import cprint
         from clinica.utils.io import check_input_caps_file
         from clinica.utils.exceptions import ClinicaCAPSError
+        from colorama import Fore
 
         # Reading BIDS files
         # ==================
@@ -86,17 +87,46 @@ class DwiConnectome(cpe.Pipeline):
             cprint('\t...subject \'' + str(
                     self.subjects[i][4:]) + '\', session \'' + str(
                     self.sessions[i][4:]) + '\'')
+
+            # Inputs from t1-freesurfer pipeline
             wm_mask_file = caps_layout.get(freesurfer_file='wm.seg.mgz', return_type='file',
                                            subject=self.subjects[i][4:], session=self.sessions[i][4:])
             check_input_caps_file(wm_mask_file, "T1_FS_WM", "t1-freesurfer", self.caps_directory, self.subjects[i], self.sessions[i])
             list_wm_mask_files.append(wm_mask_file[0])
 
-            list_dwi_file_spaces.append(
-                    caps_layout.get(type='dwi', suffix='preproc',
-                                    target='space',
+            aparc_aseg_file = caps_layout.get(freesurfer_file='aparc\+aseg.mgz', return_type='file',
+                                              subject=self.subjects[i][4:], session=self.sessions[i][4:])
+            check_input_caps_file(aparc_aseg_file, "T1_FS_DESIKAN", "t1-freesurfer", self.caps_directory, self.subjects[i], self.sessions[i])
+            aparc_aseg_a2009s_file = caps_layout.get(freesurfer_file='aparc.a2009s\+aseg.mgz', return_type='file',
+                                                     subject=self.subjects[i][4:], session=self.sessions[i][4:])
+            check_input_caps_file(aparc_aseg_a2009s_file, "T1_FS_DESTRIEUX", "t1-freesurfer", self.caps_directory, self.subjects[i], self.sessions[i])
+            list_atlas_files.append([aparc_aseg_file[0], aparc_aseg_a2009s_file[0]])
+
+            # Inputs from dwi-preprocessing pipeline
+            dwi_file = caps_layout.get(type='dwi', suffix='preproc',
                                     session=self.sessions[i][4:],
                                     extensions='nii.gz',
                                     subject=self.subjects[i][4:],
+                                    return_type='file')
+            check_input_caps_file(dwi_file, "DWI_PREPROC_NII", "dwi-preprocessing", self.caps_directory, self.subjects[i], self.sessions[i])
+            list_dwi_files.append(dwi_file[0])
+
+            dwi_brainmask_file = caps_layout.get(type='dwi', suffix='brainmask', extensions='nii.gz', return_type='file',
+                                                 subject=self.subjects[i][4:], session=self.sessions[i][4:])
+            list_dwi_brainmask_files.append(dwi_brainmask_file[0])
+
+            bvec_file = caps_layout.get(type='dwi', suffix='preproc', return_type='file', extensions='bvec',
+                                        subject=self.subjects[i][4:], session=self.sessions[i][4:])
+            check_input_caps_file(bvec_file, "DWI_PREPROC_BVEC", "dwi-preprocessing", self.caps_directory, self.subjects[i], self.sessions[i])
+            bval_file = caps_layout.get(type='dwi', suffix='preproc', extensions='bval', return_type='file',
+                                        subject=self.subjects[i][4:], session=self.sessions[i][4:])
+            check_input_caps_file(bval_file, "DWI_PREPROC_BAL", "dwi-preprocessing", self.caps_directory, self.subjects[i], self.sessions[i])
+            list_grad_fsl.append((bvec_file[0], bval_file[0]))
+
+            list_dwi_file_spaces.append(
+                    caps_layout.get(type='dwi', suffix='preproc', extensions='nii.gz',
+                                    target='space',
+                                    subject=self.subjects[i][4:], session=self.sessions[i][4:],
                                     return_type='id')[0])
 
             # Take brainmasked T1w image for T1-B0 registration
@@ -107,37 +137,13 @@ class DwiConnectome(cpe.Pipeline):
                                         return_type='file')
                 list_t1_brain_files.append(t1_brain_file[0])
 
-            aparc_aseg_file = caps_layout.get(freesurfer_file='aparc\+aseg.mgz', return_type='file',
-                                              subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_caps_file(aparc_aseg_file, "T1_FS_DESIKAN", "t1-freesurfer", self.caps_directory, self.subjects[i], self.sessions[i])
-            aparc_aseg_a2009s_file = caps_layout.get(freesurfer_file='aparc.a2009s\+aseg.mgz', return_type='file',
-                                                     subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_caps_file(aparc_aseg_a2009s_file, "T1_FS_DESTRIEUX", "t1-freesurfer", self.caps_directory, self.subjects[i], self.sessions[i])
-            list_atlas_files.append([aparc_aseg_file[0], aparc_aseg_a2009s_file[0]])
-
-            dwi_file = caps_layout.get(type='dwi', suffix='preproc',
-                                    space=list_dwi_file_spaces[i],
-                                    session=self.sessions[i][4:],
-                                    extensions='nii.gz',
-                                    subject=self.subjects[i][4:],
-                                    return_type='file')
-            check_input_caps_file(dwi_file, "DWI_PREPROC_NII", "dwi-preprocessing", self.caps_directory, self.subjects[i], self.sessions[i])
-            list_dwi_files.append(dwi_file[0])
-
-            dwi_brainmask_file = caps_layout.get(type='dwi', suffix='brainmask', extensions='nii.gz', return_type='file',
-                                                 space=list_dwi_file_spaces[i],
-                                                 subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            list_dwi_brainmask_files.append(dwi_brainmask_file[0])
-
-            bvec_file = caps_layout.get(type='dwi', suffix='preproc', return_type='file', extensions='bvec',
-                                        space=list_dwi_file_spaces[i],
-                                        subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_caps_file(bvec_file, "DWI_PREPROC_BVEC", "dwi-preprocessing", self.caps_directory, self.subjects[i], self.sessions[i])
-            bval_file = caps_layout.get(type='dwi', suffix='preproc', extensions='bval', return_type='file',
-                                        space=list_dwi_file_spaces[i],
-                                        subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_caps_file(bval_file, "DWI_PREPROC_BAL", "dwi-preprocessing", self.caps_directory, self.subjects[i], self.sessions[i])
-            list_grad_fsl.append((bvec_file[0], bval_file[0]))
+        if len(list_dwi_files) == 0:
+            import sys
+            cprint('%sNo image was found to run the pipeline. The program will now exit.%s' %
+                   (Fore.BLUE, Fore.RESET))
+            sys.exit(0)
+        else:
+            cprint('Found %s image(s) in CAPS dataset' % len(self.subjects))
 
         # Return an error if all the DWI files are not in the same space
         if any(a != list_dwi_file_spaces[0] for a in list_dwi_file_spaces):

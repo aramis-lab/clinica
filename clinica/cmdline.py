@@ -519,7 +519,7 @@ def execute():
         python_logging.basicConfig(
             format=logging.fmt, datefmt=logging.datefmt, stream=Stream())
 
-    # Finally, run the pipelines
+    # Finally, run the command
     args.func(args)
 
 
