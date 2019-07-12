@@ -165,7 +165,6 @@ class T1FreeSurferTemplate(cpe.Pipeline):
                 output_names=['out_workdirstore_path'],
                 function=utils.store_reconallbase_results))
 
-
         # Step 2: prepare unbiased template flags for all subjects
         #         (i.e. create flags for recon-all -base)
         # ======
@@ -233,7 +232,6 @@ class T1FreeSurferTemplate(cpe.Pipeline):
                               'out_pcssd_capstargetlist',
                               'out_overwrite_tsv'],
                 function=utils.sendto_longcorr))
-
 
         # Connection
         # ==========
