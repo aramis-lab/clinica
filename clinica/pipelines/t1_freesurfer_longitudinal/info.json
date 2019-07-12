@@ -4,7 +4,7 @@
     "version": "0.1",
     "dependencies": [
         {
-            "type": "toolbox",
+            "type": "software",
             "name": "freesurfer",
             "version": ">=5.3"
         }
