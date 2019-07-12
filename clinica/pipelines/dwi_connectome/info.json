@@ -10,6 +10,16 @@
         },
         {
             "type": "software",
+            "name": "freesurfer",
+            "version": ">=5.3"
+        },
+        {
+            "type": "software",
+            "name": "fsl",
+            "version": ">=5.0.9"
+        },
+        {
+            "type": "software",
             "name": "mrtrix",
             "version": ""
         }
