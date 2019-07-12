@@ -667,7 +667,7 @@ def to_process(
         overwrite_tsv_path (string): path to the .tsv to use if the user
             wishes to overwrite the subject that have already been
             processed in the CAPS folder. None if no subjects already
-            processed. 
+            processed.
     """
     import os
     import csv
