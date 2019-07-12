@@ -12,7 +12,6 @@ __email__ = "alexis.guyot@icm-institute.org"
 __status__ = "Development"
 
 
-
 def build_pipeline(pipeline):
     """Executes the Pipeline.
 
@@ -126,7 +125,6 @@ class T1FreeSurferLongitudinalCLI(ce.CmdParser):
             args.working_directory = mkdtemp()
         template_pipeline.base_dir = self.absolute_path(args.working_directory)
         longcorr_pipeline.base_dir = self.absolute_path(args.working_directory)
-
 
         # separately build the two template and longitudinal-correction pipelines
         build_pipeline(template_pipeline)
