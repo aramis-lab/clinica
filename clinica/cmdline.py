@@ -99,13 +99,13 @@ def custom_traceback(exctype, value, exc_traceback):
     print(Fore.YELLOW + 'Exception type:' + Fore.RESET, exctype.__name__)
     print(Fore.YELLOW + 'Exception value:' + Fore.RESET, value)
     print('Errors can come from various reasons : '
-          + '\n\t * third party softwares '
+          + '\n\t * third party software'
           + '\n\t * wrong paths given as inputs'
           + '\n\t * ...'
-          + '\nDocumentation can be found here : ' + Fore.BLUE + 'http://www.clinica.run/doc/' + Fore.RESET
-          + '\nIf you need support, do not hesitate to ask : ' + Fore.BLUE + 'https://groups.google.com/forum/#!forum/clinica-user' + Fore.RESET
+          + '\nDocumentation can be found here: ' + Fore.BLUE + 'http://www.clinica.run/doc/' + Fore.RESET
+          + '\nIf you need support, do not hesitate to ask: ' + Fore.BLUE + 'https://groups.google.com/forum/#!forum/clinica-user' + Fore.RESET
           + '\nBelow are displayed information that were gathered when Clinica crashed. This will help to understand what happened '
-          + 'if you transfert those information to the Clinica development team.\n' + Fore.RESET)
+          + 'if you transfer those information to the Clinica development team.\n' + Fore.RESET)
 
     frames = traceback.extract_tb(exc_traceback)
     framewidth = int(math.ceil(math.log(len(frames)) / math.log(10)))
