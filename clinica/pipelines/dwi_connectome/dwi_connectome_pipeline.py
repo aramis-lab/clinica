@@ -13,10 +13,11 @@ config.update_config(cfg)
 
 
 class DwiConnectome(cpe.Pipeline):
-    """Connectome-based processing of DWI datasets.
+    """Connectome-based processing of corrected DWI datasets.
 
     Todos:
-        [ ] - Add registration of parcellation onto DWI space
+        [X] - Add registration of parcellation onto DWI space
+        [ ] - Handle case where the pipeline already ran on the image
 
     Args:
         input_dir: A BIDS directory.
@@ -65,11 +66,8 @@ class DwiConnectome(cpe.Pipeline):
         from clinica.iotools.grabcaps import CAPSLayout
         from clinica.utils.stream import cprint
         from clinica.utils.io import check_input_caps_file
-        from clinica.utils.exceptions import ClinicaCAPSError
+        from clinica.utils.exceptions import ClinicaException, ClinicaCAPSError
         from colorama import Fore
-
-        # Reading BIDS files
-        # ==================
 
         # cprint('Loading CAPS folder...')
         caps_layout = CAPSLayout(self.caps_directory)
@@ -82,7 +80,7 @@ class DwiConnectome(cpe.Pipeline):
         list_dwi_brainmask_files = []
         list_grad_fsl = []
         list_atlas_files = []
-        cprint('Extracting files...')
+        cprint('Reading input files...')
         for i in range(len(self.subjects)):
             cprint('\t...subject \'' + str(
                     self.subjects[i][4:]) + '\', session \'' + str(
@@ -103,15 +101,12 @@ class DwiConnectome(cpe.Pipeline):
             list_atlas_files.append([aparc_aseg_file[0], aparc_aseg_a2009s_file[0]])
 
             # Inputs from dwi-preprocessing pipeline
-            dwi_file = caps_layout.get(type='dwi', suffix='preproc',
-                                    session=self.sessions[i][4:],
-                                    extensions='nii.gz',
-                                    subject=self.subjects[i][4:],
-                                    return_type='file')
+            dwi_file = caps_layout.get(type='dwi', suffix='preproc', extensions=['.nii|.nii.gz'], return_type='file',
+                                       subject=self.subjects[i][4:], session=self.sessions[i][4:])
             check_input_caps_file(dwi_file, "DWI_PREPROC_NII", "dwi-preprocessing", self.caps_directory, self.subjects[i], self.sessions[i])
             list_dwi_files.append(dwi_file[0])
 
-            dwi_brainmask_file = caps_layout.get(type='dwi', suffix='brainmask', extensions='nii.gz', return_type='file',
+            dwi_brainmask_file = caps_layout.get(type='dwi', suffix='brainmask', extensions=['.nii|.nii.gz'], return_type='file',
                                                  subject=self.subjects[i][4:], session=self.sessions[i][4:])
             list_dwi_brainmask_files.append(dwi_brainmask_file[0])
 
@@ -124,22 +119,42 @@ class DwiConnectome(cpe.Pipeline):
             list_grad_fsl.append((bvec_file[0], bval_file[0]))
 
             list_dwi_file_spaces.append(
-                    caps_layout.get(type='dwi', suffix='preproc', extensions='nii.gz',
-                                    target='space',
-                                    subject=self.subjects[i][4:], session=self.sessions[i][4:],
-                                    return_type='id')[0])
+                    caps_layout.get(type='dwi', suffix='preproc', extensions=['.nii|.nii.gz'],
+                                    target='space', return_type='id',
+                                    subject=self.subjects[i][4:], session=self.sessions[i][4:])[0])
 
             # Take brainmasked T1w image for T1-B0 registration
             if list_dwi_file_spaces[i] == 'b0':
-                t1_brain_file = caps_layout.get(freesurfer_file='brain.mgz',
-                                        session=self.sessions[i][4:],
-                                        subject=self.subjects[i][4:],
-                                        return_type='file')
+                t1_brain_file = caps_layout.get(freesurfer_file='brain.mgz', return_type='file',
+                                                subject=self.subjects[i][4:], session=self.sessions[i][4:])
                 list_t1_brain_files.append(t1_brain_file[0])
+
+            # Check if pipeline already ran on the image
+            output_file = caps_layout.get(type='dwi', suffix='connectivity', extensions='tsv', return_type='file',
+                                          subject=self.subjects[i][4:], session=self.sessions[i][4:])
+            if len(output_file) >= 1:
+                if self.parameters['skip_if_outputs_present']:
+                    cprint('%sThe pipeline already ran on this image. This image will be skipped.%s' %
+                           (Fore.BLUE, Fore.RESET))
+                    del list_wm_mask_files[-1]
+                    del list_dwi_file_spaces[-1]
+                    del list_t1_brain_files[-1]
+                    del list_dwi_files[-1]
+                    del list_dwi_brainmask_files[-1]
+                    del list_grad_fsl[-1]
+                    del list_atlas_files[-1]
+                elif self.parameters['overwrite_outputs']:
+                    cprint('%sThe pipeline already ran on this image. Results will be overwritten.%s' % (
+                        Fore.CYAN, Fore.RESET))
+                else:
+                    raise ClinicaException(
+                        "%sThe pipeline already ran on this image. Relaunch the command with --skip_if_outputs_present or --overwrite_outputs flag according to what you want to do.%s" %
+                        (Fore.RED, Fore.RESET)
+                    )
 
         if len(list_dwi_files) == 0:
             import sys
-            cprint('%sNo image was found to run the pipeline. The program will now exit.%s' %
+            cprint('%sEither all the images were run by the pipeline or no image was found to run the pipeline. The program will now exit.%s' %
                    (Fore.BLUE, Fore.RESET))
             sys.exit(0)
         else:
@@ -264,7 +279,7 @@ class DwiConnectome(cpe.Pipeline):
         from clinica.lib.nipype.interfaces.mrtrix.preprocess import MRTransform
         from clinica.lib.nipype.interfaces.mrtrix3.reconst import EstimateFOD
         from clinica.lib.nipype.interfaces.mrtrix3.tracking import Tractography
-        from clinica.utils.exceptions import ClinicaCAPSError
+        from clinica.utils.exceptions import ClinicaException, ClinicaCAPSError
         from clinica.utils.stream import cprint
         import clinica.pipelines.dwi_connectome.dwi_connectome_utils as utils
         from clinica.utils.mri_registration import convert_flirt_transformation_to_mrtrix_transformation

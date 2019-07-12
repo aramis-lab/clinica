@@ -34,27 +34,41 @@ class DwiConnectomeCli(ce.CmdParser):
         clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
                                  help='TSV file containing a list of subjects with their sessions.')
         clinica_opt.add_argument("-wd", "--working_directory",
-                                 help='Temporary directory to store pipelines intermediate results')
+                                 help='Temporary directory to store pipelines intermediate results.')
         clinica_opt.add_argument("-np", "--n_procs",
                                  type=int,
-                                 help='Number of cores used to run in parallel')
+                                 help='Number of cores used to run in parallel.')
+        clinica_opt.add_argument("-overwrite", "--overwrite_outputs",
+                                 action='store_true', default=False,
+                                 help='Force overwrite of output files (can not be used together with --skip_if_outputs_present flag).')
+        clinica_opt.add_argument("-skip", "--skip_if_outputs_present",
+                                 action='store_true', default=False,
+                                 help='Skip input image if its outputs are present (can not be used together with --overwrite_outputs flag).')
 
     def run_command(self, args):
         """
         """
         import os
         import datetime
+        import sys
         from colorama import Fore
         from tempfile import mkdtemp
         from clinica.utils.stream import cprint
         from .dwi_connectome_pipeline import DwiConnectome
+
+        if args.overwrite_outputs and args.skip_if_outputs_present:
+            cprint("%sYou can not use the --skip_if_outputs_present flag and --overwrite_outputs flag at the same time. The program will now exit.%s" %
+                   (Fore.RED, Fore.RESET))
+            sys.exit(1)
 
         pipeline = DwiConnectome(
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv)
         )
         pipeline.parameters = {
-            'n_tracks'   : args.n_tracks or 1000000,
+            'n_tracks'                  : args.n_tracks or 1000000,
+            'overwrite_outputs'         : args.overwrite_outputs,
+            'skip_if_outputs_present'   : args.skip_if_outputs_present,
         }
         if args.working_directory is None:
             args.working_directory = mkdtemp()
