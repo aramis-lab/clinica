@@ -209,7 +209,7 @@ def get_secondary_stats(stats_filename, info_type):
         for stats_line in stats_line_list:
             startswith_condition = stats_line.startswith('# Measure')
             endswith_condition = stats_line.endswith(endline_dict[info_type])
-            if (startswith_condition)  and (endswith_condition):
+            if (startswith_condition) and (endswith_condition):
                 stats_line_word_list = stats_line.replace(',', '').split()
                 # sanity check: make sure any sensible variation of
                 # 'volume', 'thickness' or 'area' appears inside the line
