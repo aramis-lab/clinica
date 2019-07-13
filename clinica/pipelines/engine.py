@@ -526,17 +526,17 @@ class Pipeline(Workflow):
             # so we need a try / except block
             n_thread_cmdline = plugin_args['n_procs']
             if n_thread_cmdline > n_cpu:
-                cprint(Fore.RED + '[Warning] You are trying to run clinica '
+                cprint(Fore.YELLOW + '[Warning] You are trying to run clinica '
                        + 'with a number of threads (' + str(n_thread_cmdline)
                        + ') superior to your number of CPUs (' + str(n_cpu)
                        + ').' + Fore.RESET)
                 ask_user = True
         except TypeError:
-            cprint(Fore.RED + '[Warning] You did not specify the number of '
+            cprint(Fore.YELLOW + '\n[Warning] You did not specify the number of '
                    + 'threads to run in parallel (--n_procs argument).'
                    + Fore.RESET)
-            cprint(Fore.RED + 'Computation time can be shorten as you have '
-                   + str(n_cpu) + ' CPUs on this computer. We recommand using '
+            cprint(Fore.YELLOW + 'Computation time can be shorten as you have '
+                   + str(n_cpu) + ' CPUs on this computer. We recommend using '
                    + str(n_cpu - 1) + ' threads.\n' + Fore.RESET)
             ask_user = True
 
