@@ -30,7 +30,6 @@ def is_binary_present(binary):
     except OSError as e:
         if e.errno == os.errno.ENOENT:
             return False
-#    cprint("Binary '%s' has been detected." % binary)
     return True
 
 
@@ -41,23 +40,22 @@ def check_ants():
     This function checks if ANTs is present (ANTSPATH, binaries, & scripts).
     """
     import os
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaMissingDependencyError
     from clinica.utils.stream import cprint
 
-    try:
-        antspath = os.environ.get('ANTSPATH', '')
-        if not antspath:
-            raise RuntimeError('ANTSPATH variable is not set')
-    except Exception as e:
-        cprint(str(e))
+    antspath = os.environ.get('ANTSPATH', '')
+    if not antspath:
+        raise ClinicaMissingDependencyError(
+            '%s\n[Error] Clinica could not find ANTs software: the ANTSPATH variable is not set.%s'
+            % (Fore.RED, Fore.RESET))
 
     list_binaries = ['N4BiasFieldCorrection', 'antsRegistrationSyNQuick.sh']
     for binary in list_binaries:
         if not is_binary_present(binary):
-            raise RuntimeError(
-                '%s from ANTs Software is not present '
-                'in your PATH environment.' % binary)
-
-    cprint('ANTs has been detected')
+            raise ClinicaMissingDependencyError(
+                '%s\n[Error] Clinica could not find ANTs software: the %s command is not present '
+                'in your PATH environment.%s' % (Fore.RED, binary, Fore.RESET))
 
 
 def check_freesurfer():
@@ -67,24 +65,25 @@ def check_freesurfer():
     This function checks if FreeSurfer is present (FREESURFER_HOME & binaries).
     """
     import os
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaMissingDependencyError
     from clinica.utils.stream import cprint
 
-    try:
-        freesurfer_home = os.environ.get('FREESURFER_HOME', '')
-        if not freesurfer_home:
-            raise RuntimeError('FREESURFER_HOME variable is not set')
-    except Exception as e:
-        cprint(str(e))
+    freesurfer_home = os.environ.get('FREESURFER_HOME', '')
+    if not freesurfer_home:
+        raise ClinicaMissingDependencyError(
+            '%s\n[Error] Clinica could not find FreeSurfer software: the FREESURFER_HOME variable is not set.%s'
+            % (Fore.RED, Fore.RESET))
 
     list_binaries = ['mri_convert', 'recon-all']
     for binary in list_binaries:
         if not is_binary_present(binary):
-            raise RuntimeError(
-                '%s from FreeSurfer Software is not present in your PATH '
-                'environment: did you source ${FREESURFER_HOME}/'
-                'SetUpFreeSurfer.sh ?' % binary)
+            raise ClinicaMissingDependencyError(
+                '%s\n[Error] Clinica could not find FreeSurfer software: the %s command is not present in your PATH '
+                'environment: did you have the line source ${FREESURFER_HOME}/'
+                'SetUpFreeSurfer.sh in your configuration file?%s' % (Fore.RED, binary, Fore.RESET))
 
-    cprint('FreeSurfer has been detected')
+    # cprint('Found FreeSurfer software')
 
 
 def check_fsl():
@@ -96,30 +95,30 @@ def check_fsl():
     """
     import os
     import nipype.interfaces.fsl as fsl
-
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaMissingDependencyError
     from clinica.utils.stream import cprint
 
-    try:
-        fsl_dir = os.environ.get('FSLDIR', '')
-        if not fsl_dir:
-            raise RuntimeError('FSLDIR variable is not set')
-    except Exception as e:
-        cprint(str(e))
+    fsl_dir = os.environ.get('FSLDIR', '')
+    if not fsl_dir:
+        raise ClinicaMissingDependencyError(
+            '%s\n[Error] Clinica could not find FSL software: the FSLDIR variable is not set.%s'
+            % (Fore.RED, Fore.RESET))
 
     try:
         if fsl.Info.version().split(".") < ['5', '0', '5']:
-            raise RuntimeError('FSL version must be greater than 5.0.5')
+            raise ClinicaMissingDependencyError(
+                '%sFSL version must be greater than 5.0.5%s'
+                % (Fore.RED, Fore.RESET))
     except Exception as e:
         cprint(str(e))
 
     list_binaries = ['bet', 'flirt', 'fast', 'first']
     for binary in list_binaries:
         if not is_binary_present(binary):
-            raise RuntimeError(
-                '%s from FSL Software is not present in your '
-                'PATH environment.' % binary)
-
-    cprint('FSL has been detected')
+            raise ClinicaMissingDependencyError(
+                '%s\n[Error] Clinica could not find FreeSurfer software: the %s command is not present in your '
+                'PATH environment.%s' % (Fore.RED, binary, Fore.RESET))
 
 
 def check_mrtrix():
@@ -129,23 +128,21 @@ def check_mrtrix():
     This function checks if MRtrix is present (MRTRIX_HOME & binaries).
     """
     import os
-    from clinica.utils.stream import cprint
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaMissingDependencyError
 
-    try:
-        mrtrix_home = os.environ.get('MRTRIX_HOME', '')
-        if not mrtrix_home:
-            raise RuntimeError('MRTRIX_HOME variable is not set')
-    except Exception as e:
-        print(str(e))
+    mrtrix_home = os.environ.get('MRTRIX_HOME', '')
+    if not mrtrix_home:
+        raise ClinicaMissingDependencyError(
+            '%s\n[Error] Clinica could not find MRtrix software: the MRTRIX_HOME variable is not set.%s'
+            % (Fore.RED, Fore.RESET))
 
     list_binaries = ['transformconvert', 'mrtransform', 'dwi2response', 'tckgen']
     for binary in list_binaries:
         if not is_binary_present(binary):
-            raise RuntimeError(
-                '%s from MRtrix Software is not present in your '
-                'PATH environment.' % binary)
-
-    cprint('MRtrix has been detected')
+            raise ClinicaMissingDependencyError(
+                '%s\n[Error] Clinica could not find MRtrix software: the %s command is not present in your '
+                'PATH environment.%s' % (Fore.RED, binary, Fore.RESET))
 
 
 def check_spm():
@@ -155,14 +152,14 @@ def check_spm():
     This function checks if SPM is present (SPM_HOME).
     """
     import os
-    from clinica.utils.stream import cprint
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaMissingDependencyError
 
-    try:
-        spm_home = os.environ.get('SPM_HOME', '')
-        if not spm_home:
-            raise RuntimeError('SPM_HOME variable is not set')
-    except Exception as e:
-        print(str(e))
+    spm_home = os.environ.get('SPM_HOME', '')
+    if not spm_home:
+        raise ClinicaMissingDependencyError(
+            '%s\n[Error] Clinica could not find SPM toolbox: the SPM_HOME variable is not set.%s'
+            % (Fore.RED, Fore.RESET))
 
     # list_binaries = ['matlab']
     # for binary in list_binaries:
@@ -170,8 +167,6 @@ def check_spm():
     #         raise RuntimeError(
     #             '%s from SPM Software is not present in your '
     #             'PATH environment.' % binary)
-
-    cprint('SPM has been detected')
 
 
 def check_matlab():
@@ -182,16 +177,19 @@ def check_matlab():
     """
     import os
     import sys
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaMissingDependencyError
     from clinica.utils.stream import cprint
 
     if not is_binary_present("matlab"):
-        raise RuntimeError('Matlab was not found in PATH environment. Did you add it?')
-    cprint('Matlab has been detected')
+        raise ClinicaMissingDependencyError(
+            '%sMatlab was not found in PATH environment. Did you add it?%s'
+            % (Fore.RED, Fore.RESET))
 
 
 def check_cat12():
     """
-    Check installation of cat12 (mostly used to provide atlases)
+    Check installation of CAT12 (mostly used to provide atlases)
 
     """
     import os
@@ -209,21 +207,20 @@ def check_cat12():
         raise RuntimeError('SPM not installed. $SPM_HOME variable not found in environnement')
 
     if not os.path.isdir(SPM_HOME):
-        raise RuntimeError('SPM and cat12 are not installed.' + SPM_HOME + ' does not exist')
+        raise RuntimeError('SPM and CAT12 are not installed.' + SPM_HOME + ' does not exist')
 
     if not os.path.exists(os.path.join(SPM_HOME, 'toolbox', 'cat12')):
-        raise RuntimeError('cat12 is not installed in your SPM folder :'
+        raise RuntimeError('CAT12 is not installed in your SPM folder :'
                            + str(os.path.join(SPM_HOME, 'toolbox', 'cat12')))
-    cprint('cat12 has been detected')
 
 
 def verify_cat12_atlases(atlas_list):
-    """ If the user wants to use any of the atlases of cat12 and has not installed it, we just remove it from the list
+    """ If the user wants to use any of the atlases of CAT12 and has not installed it, we just remove it from the list
         of the computed atlases
 
     :param atlas_list: list of atlases given by the user
-    :return: atlas_list updated with elements removed if cat12 is not found, or return atlas_list if
-             cat12 has been found. If none of the cat12 atlases are in atlas_list, function returns atlas_list
+    :return: atlas_list updated with elements removed if CAT12 is not found, or return atlas_list if
+             CAT12 has been found. If none of the CAT12 atlases are in atlas_list, function returns atlas_list
     """
     import sys
     from colorama import Fore
