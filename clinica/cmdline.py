@@ -90,41 +90,43 @@ class ClinicaClassLoader:
 
 
 # Nice display
-def custom_traceback(exctype, value, exc_traceback):
+def custom_traceback(exc_type, exc_value, exc_traceback):
     import traceback
     import math
     from colorama import Fore
+    from clinica.utils.exceptions import ClinicaException
 
-    print(Fore.RED + '\n' + '*' * 23 + '\n*** Clinica crashed ***\n' + '*' * 23 + '\n' + Fore.RESET)
-    print(Fore.YELLOW + 'Exception type:' + Fore.RESET, exctype.__name__)
-    print(Fore.YELLOW + 'Exception value:' + Fore.RESET, value)
-    print('Errors can come from various reasons : '
-          + '\n\t * third party software'
-          + '\n\t * wrong paths given as inputs'
-          + '\n\t * ...'
-          + '\nDocumentation can be found here: ' + Fore.BLUE + 'http://www.clinica.run/doc/' + Fore.RESET
-          + '\nIf you need support, do not hesitate to ask: ' + Fore.BLUE + 'https://groups.google.com/forum/#!forum/clinica-user' + Fore.RESET
-          + '\nBelow are displayed information that were gathered when Clinica crashed. This will help to understand what happened '
-          + 'if you transfer those information to the Clinica development team.\n' + Fore.RESET)
+    if issubclass(exc_type, ClinicaException):
+        print(exc_value)
+    else:
+        print(Fore.RED + '\n' + '*' * 23 + '\n*** Clinica crashed ***\n' + '*' * 23 + '\n' + Fore.RESET)
+        print(Fore.YELLOW + 'Exception type:' + Fore.RESET, exc_type.__name__)
+        print(Fore.YELLOW + 'Exception value:' + Fore.RESET, exc_value)
+        print('\nBelow are displayed information that were gathered when Clinica crashed. This will help to understand '
+              'what happened if you transfer those information to the Clinica development team.\n')
 
-    frames = traceback.extract_tb(exc_traceback)
-    framewidth = int(math.ceil(math.log(len(frames)) / math.log(10)))
-    filewidth = 0
-    linewidth = 0
-    functionwidth = 0
-    for frame in frames:
-        filewidth = max(filewidth, len(frame[0]))
-        linewidth = max(linewidth, frame[1])
-        functionwidth = max(functionwidth, len(frame[2]))
-    linewidth = int(math.ceil(math.log(linewidth) / math.log(10)))
-    print('=' * (filewidth + linewidth + functionwidth + linewidth))
-    for i in range(len(frames)):
-        t = '{}' + ' ' * (1 + framewidth - len(str(i))) + Fore.RED \
-            + '{}' + ' ' * (1 + filewidth - len(frames[i][0])) + Fore.RESET \
-            + '{}' + ' ' * (1 + linewidth - len(str(frames[i][1]))) + Fore.GREEN \
-            + '{}' + ' ' * (1 + functionwidth - len(frames[i][2])) + Fore.RESET + '{}'
-        print(t.format(i, frames[i][0], frames[i][1], frames[i][2],
-                       frames[i][3]))
+        frames = traceback.extract_tb(exc_traceback)
+        framewidth = int(math.ceil(math.log(len(frames)) / math.log(10)))
+        filewidth = 0
+        linewidth = 0
+        functionwidth = 0
+        for frame in frames:
+            filewidth = max(filewidth, len(frame[0]))
+            linewidth = max(linewidth, frame[1])
+            functionwidth = max(functionwidth, len(frame[2]))
+        linewidth = int(math.ceil(math.log(linewidth) / math.log(10)))
+        print('=' * (filewidth + linewidth + functionwidth + linewidth))
+        for i in range(len(frames)):
+            t = '{}' + ' ' * (1 + framewidth - len(str(i))) + Fore.RED \
+                + '{}' + ' ' * (1 + filewidth - len(frames[i][0])) + Fore.RESET \
+                + '{}' + ' ' * (1 + linewidth - len(str(frames[i][1]))) + Fore.GREEN \
+                + '{}' + ' ' * (1 + functionwidth - len(frames[i][2])) + Fore.RESET + '{}'
+            print(t.format(i, frames[i][0], frames[i][1], frames[i][2],
+                           frames[i][3]))
+
+    print('\nDocumentation can be found here: %shttp://www.clinica.run/doc/%s'
+          '\nIf you need support, do not hesitate to ask: %shttps://groups.google.com/forum/#!forum/clinica-user%s' %
+          (Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET))
 
 
 def execute():
@@ -410,6 +412,8 @@ def execute():
 
     if 'run' in args and hasattr(args, 'func') is False:
         # Case when we type `clinica run` on the terminal
+        print("dsfjsdhfscnl")
+        cprint("dsfjsdhfscnl")
         run_parser.print_help()
         exit(0)
     elif 'convert' in args and hasattr(args, 'func') is False:
