@@ -144,18 +144,22 @@ class DwiConnectome(cpe.Pipeline):
                     del list_grad_fsl[-1]
                     del list_atlas_files[-1]
                 elif self.parameters['overwrite_outputs']:
-                    cprint('%sThe pipeline already ran on this image. Results will be overwritten.%s' % (
-                        Fore.CYAN, Fore.RESET))
+                    cprint('%s[Warning] The pipeline already ran on this image. Results will be overwritten.%s' %
+                           (Fore.YELLOW, Fore.RESET))
                 else:
                     raise ClinicaException(
-                        "%sThe pipeline already ran on this image. Relaunch the command with --skip_if_outputs_present or --overwrite_outputs flag according to what you want to do.%s" %
-                        (Fore.RED, Fore.RESET)
+                        "%s\n[Error] The pipeline already ran on this image. Relaunch the command with "
+                        "--skip_if_outputs_present or --overwrite_outputs flag according to what you want to do.%s\n"
+                        "\n%sExplanations on the flags:%s\n"
+                        "\t%s--skip_if_outputs_present%s flag will skip input image if its outputs are present.\n"
+                        "\t%s--overwrite_outputs%s flag will force overwrite of output files.\n" %
+                        (Fore.RED, Fore.RESET, Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET)
                     )
 
         if len(list_dwi_files) == 0:
             import sys
-            cprint('%sEither all the images were run by the pipeline or no image was found to run the pipeline. The program will now exit.%s' %
-                   (Fore.BLUE, Fore.RESET))
+            cprint('%s\nEither all the images were already run by the pipeline or no image was found to run the pipeline. '
+                   'The program will now exit.%s' % (Fore.BLUE, Fore.RESET))
             sys.exit(0)
         else:
             cprint('Found %s image(s) in CAPS dataset' % len(self.subjects))

@@ -8,7 +8,6 @@ class DwiConnectomeCli(ce.CmdParser):
     def define_name(self):
         """Define the sub-command name to run this pipeline.
         """
-
         self._name = 'dwi-connectome'
 
     def define_description(self):
@@ -57,8 +56,12 @@ class DwiConnectomeCli(ce.CmdParser):
         from .dwi_connectome_pipeline import DwiConnectome
 
         if args.overwrite_outputs and args.skip_if_outputs_present:
-            cprint("%sYou can not use the --skip_if_outputs_present flag and --overwrite_outputs flag at the same time. The program will now exit.%s" %
-                   (Fore.RED, Fore.RESET))
+            cprint("%s\n[Error] You can not use the --skip_if_outputs_present flag and --overwrite_outputs flag at the same time.%s\n"
+                   "\n%sExplanations on the flags:%s\n"
+                   "\t%s--skip_if_outputs_present%s flag will skip input image if its outputs are present.\n"
+                   "\t%s--overwrite_outputs%s flag will force overwrite of output files.\n"
+                   "\nEither remove these two flags or chose a single one. The program will now exit." %
+                   (Fore.RED, Fore.RESET, Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET))
             sys.exit(1)
 
         pipeline = DwiConnectome(

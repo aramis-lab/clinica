@@ -70,25 +70,25 @@ def check_input_bids_file(list_bids_files, bids_type, bids_directory, participan
         # anat/
         "T1W_NII": "T1 weighted image",
         # dwi/
-        "DWI_BVAL": "Bval file",
-        "DWI_BVEC": "Bvec file",
-        "DWI_NII": "Diffusion weighted image",
+        "DWI_BVAL": "bval file",
+        "DWI_BVEC": "bvec file",
+        "DWI_NII": "diffusion weighted image",
         "DWI_JSON": "DWI JSON file",
         # fmap/
-        "FMAP_MAGNITUDE1_NII": "Magnitude (1st) image",
-        "FMAP_MAGNITUDE1_JSON": "Magnitude (1st) JSON file",
-        "FMAP_MAGNITUDE2_NII": "Magnitude (2st) image",
-        "FMAP_MAGNITUDE2_JSON": "Magnitude (2st) JSON file",
-        "FMAP_PHASEDIFF_NII": "Phase difference image",
-        "FMAP_PHASEDIFF_JSON": "Phase difference JSON file",
-        "FMAP_PHASE1_NII": "Phase (1st) image",
-        "FMAP_PHASE1_JSON": "Phase (1st) JSON file",
-        "FMAP_PHASE2_NII": "Phase (2nd) image",
-        "FMAP_PHASE2_JSON": "Phase (2nd) JSON file",
-        "FMAP_MAGNITUDE_NII": "Magnitude image",
-        "FMAP_MAGNITUDE_JSON": "Magnitude JSON file",
-        "FMAP_NII": "Fieldmap image",
-        "FMAP_JSON": "Fieldmap JSON file",
+        "FMAP_MAGNITUDE1_NII": "magnitude (1st) image",
+        "FMAP_MAGNITUDE1_JSON": "magnitude (1st) JSON file",
+        "FMAP_MAGNITUDE2_NII": "magnitude (2st) image",
+        "FMAP_MAGNITUDE2_JSON": "magnitude (2st) JSON file",
+        "FMAP_PHASEDIFF_NII": "phase difference image",
+        "FMAP_PHASEDIFF_JSON": "phase difference JSON file",
+        "FMAP_PHASE1_NII": "phase (1st) image",
+        "FMAP_PHASE1_JSON": "phase (1st) JSON file",
+        "FMAP_PHASE2_NII": "phase (2nd) image",
+        "FMAP_PHASE2_JSON": "phase (2nd) JSON file",
+        "FMAP_MAGNITUDE_NII": "magnitude image",
+        "FMAP_MAGNITUDE_JSON": "magnitude JSON file",
+        "FMAP_NII": "fieldmap image",
+        "FMAP_JSON": "fieldmap JSON file",
     }
 
     bids_type_to_path = {
@@ -118,6 +118,26 @@ def check_input_bids_file(list_bids_files, bids_type, bids_directory, participan
 
     if len(list_bids_files) == 0:
         raise ClinicaBIDSError(
+            "\n%s[Error] Clinica could not find %s file in BIDS directory for participant %s at session %s%s.\n"
+            "\n%sError explanations:%s\n"
+            " - Clinica expected to find the file at the following path: %s%s/%s%s\n"
+            " - Did the subject have the acquisition?" %
+            (Fore.RED, bids_type_to_description[bids_type], participant_id[4:], session_id[4:], Fore.RESET,
+             Fore.YELLOW, Fore.RESET,
+             Fore.BLUE, bids_directory, bids_type_to_path[bids_type], Fore.RESET)
+        )
+    elif len(list_bids_files) > 1:
+        raise ClinicaBIDSError(
+            "\n%s[Error] Clinica found %s %s files in CAPS directory for participant %s at session %s%s.\n"
+            "\n%sError explanations:%s\n"
+            " - Clinica expected to find a single file in BIDS directory. Found files:%s%s%s\n"
+            " - If you have different runs and/or acquisitions on the same folder, Clinica can not handle this situation." %
+            (Fore.RED, len(list_bids_files), bids_type_to_description[bids_type], participant_id[4:], session_id[4:], Fore.RESET,
+             Fore.YELLOW, Fore.RESET,
+             Fore.BLUE, list_bids_files, Fore.RESET)
+        )
+    if len(list_bids_files) == 0:
+        raise ClinicaBIDSError(
             "Missing %s in BIDS dataset for participant %s%s%s at session %s%s%s.\n%sExpected path:\n%s%s/%s" %
             (bids_type_to_description[bids_type],
              Fore.BLUE, participant_id[4:], Fore.RESET,
@@ -136,15 +156,15 @@ def check_input_caps_file(list_caps_files, caps_type, pipeline_name, caps_direct
     from colorama import Fore
     caps_type_to_description = {
         # t1-freesurfer
-        "T1_FS_WM": "White matter segmentation",
+        "T1_FS_WM": "white matter segmentation",
         "T1_FS_DESIKAN": "Desikan parcellation",
         "T1_FS_DESTRIEUX": "Destrieux parcellation",
         "T1_FS_BM": "T1w brainmask",
         # dwi-preprocessing
-        "DWI_PREPROC_BVAL": "Preprocessed bval file",
-        "DWI_PREPROC_BVEC": "Preprocessed bvec file",
-        "DWI_PREPROC_NII": "Preprocessed DWI file",
-        "DWI_PREPROC_BM": "B0 brainmask",
+        "DWI_PREPROC_BVAL": "preprocessed bval",
+        "DWI_PREPROC_BVEC": "preprocessed bvec",
+        "DWI_PREPROC_NII": "preprocessed DWI",
+        "DWI_PREPROC_BM": "b0 brainmask",
     }
     pipeline_to_path = {
         "t1-freesurfer": "subjects/%s/%s/t1/freesurfer_cross_sectional/%s_%s" % (participant_id, session_id, participant_id, session_id),
@@ -165,15 +185,23 @@ def check_input_caps_file(list_caps_files, caps_type, pipeline_name, caps_direct
 
     if len(list_caps_files) == 0:
         raise ClinicaCAPSError(
-            "Missing %s in CAPS dataset for participant %s%s%s at session %s%s%s. Did you run the %s%s%s pipeline on this image?\n%sExpected path:\n%s%s/%s" %
-            (caps_type_to_description[caps_type],
-             Fore.BLUE, participant_id[4:], Fore.RESET,
-             Fore.BLUE, session_id[4:], Fore.RESET,
-             Fore.BLUE, pipeline_name, Fore.RESET,
-             Fore.YELLOW, Fore.RESET, caps_directory, caps_type_to_path[caps_type])
+            "\n%s[Error] Clinica could not find %s file in CAPS directory for participant %s at session %s%s.\n"
+            "\n%sError explanations:%s\n"
+            " - Clinica expected to find the file at the following path: %s%s/%s%s\n"
+            " - Did you run the %s%s%s pipeline on this image?" %
+            (Fore.RED, caps_type_to_description[caps_type], participant_id[4:], session_id[4:], Fore.RESET,
+             Fore.YELLOW, Fore.RESET,
+             Fore.BLUE, caps_directory, caps_type_to_path[caps_type], Fore.RESET,
+             Fore.BLUE, pipeline_name, Fore.RESET)
         )
     elif len(list_caps_files) > 1:
         raise ClinicaCAPSError(
-            "Found %s %ss in CAPS dataset for %s at session %s: you should only have one file." %
-            (len(list_caps_files), caps_type_to_description[caps_type], participant_id, session_id)
+            "\n%s[Error] Clinica found %s %s files in CAPS directory for participant %s at session %s%s.\n"
+            "\n%sError explanations:%s\n"
+            " - Clinica expected to find a single file in CAPS directory. Found files:%s%s%s\n"
+            " - Did you duplicate files in CAPS directory: %s%s/%s%s ?" %
+            (Fore.RED, len(list_caps_files), caps_type_to_description[caps_type], participant_id[4:], session_id[4:], Fore.RESET,
+             Fore.YELLOW, Fore.RESET,
+             Fore.BLUE, list_caps_files, Fore.RESET,
+             Fore.BLUE, caps_directory, pipeline_to_path[pipeline_name], Fore.RESET)
         )
