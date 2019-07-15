@@ -199,7 +199,7 @@ def check_input_caps_file(list_caps_files, caps_type, pipeline_name, caps_direct
             "\n%s[Error] Clinica found %s %s files in CAPS directory for participant %s at session %s%s.\n"
             "\n%sError explanations:%s\n"
             " - Clinica expected to find a single file in CAPS directory. Found files:%s%s%s\n"
-            " - Did you duplicate files in CAPS directory: %s%s/%s%s ?" %
+            " - Did you duplicate files in CAPS directory: %s%s/%s%s?" %
             (Fore.RED, len(list_caps_files), caps_type_to_description[caps_type], participant_id[4:], session_id[4:], Fore.RESET,
              Fore.YELLOW, Fore.RESET,
              Fore.BLUE, list_caps_files, Fore.RESET,

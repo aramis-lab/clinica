@@ -95,9 +95,13 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
     import math
     from colorama import Fore
     from clinica.utils.exceptions import ClinicaException
+    from clinica.utils.stream import cprint
 
     if issubclass(exc_type, ClinicaException):
         print(exc_value)
+    elif issubclass(exc_type, KeyboardInterrupt):
+        print('\n%s[Error] Program interrupted by the user. Clinica will now exit...%s' %
+              (Fore.RED, Fore.RESET))
     else:
         print(Fore.RED + '\n' + '*' * 23 + '\n*** Clinica crashed ***\n' + '*' * 23 + '\n' + Fore.RESET)
         print(Fore.YELLOW + 'Exception type:' + Fore.RESET, exc_type.__name__)
@@ -124,9 +128,10 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
             print(t.format(i, frames[i][0], frames[i][1], frames[i][2],
                            frames[i][3]))
 
-    print('\nDocumentation can be found here: %shttp://www.clinica.run/doc/%s'
-          '\nIf you need support, do not hesitate to ask: %shttps://groups.google.com/forum/#!forum/clinica-user%s' %
-          (Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET))
+    if not issubclass(exc_type, KeyboardInterrupt):
+        print('\nDocumentation can be found here: %shttp://www.clinica.run/doc/%s'
+              '\nIf you need support, do not hesitate to ask: %shttps://groups.google.com/forum/#!forum/clinica-user%s' %
+              (Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET))
 
 
 def execute():
@@ -454,7 +459,7 @@ def execute():
 
         # Resolve bug
         # "Assuming non interactive session since isatty found missing"
-        # at the begining of any pipeline caused by logger in duecredit package
+        # at the beginning of any pipeline caused by logger in duecredit package
         # (utils.py)
         # Deactivate stdout, then reactivate it
         sys.stdout = open(os.devnull, 'w')
