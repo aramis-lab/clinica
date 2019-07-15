@@ -124,6 +124,8 @@ class Pipeline(Workflow):
         """
         import inspect
         import os
+        from clinica.utils.exceptions import ClinicaException, ClinicaBIDSError, ClinicaCAPSError
+        from colorama import Fore
         self._is_built = False
         self._bids_directory = bids_directory
         self._caps_directory = caps_directory
@@ -142,11 +144,19 @@ class Pipeline(Workflow):
 
         if self._bids_directory is None:
             if self._caps_directory is None:
-                raise IOError('%s does not contain BIDS nor CAPS directory' %
-                              self._name)
+                raise ClinicaException(
+                    '%s[Error] The %s pipeline does not contain BIDS nor CAPS directory at the initialization.%s' %
+                    (Fore.RED, self._name, Fore.RESET))
             if not os.path.isdir(self._caps_directory):
-                raise IOError('The CAPS parameter is not a folder (given path:%s)' %
-                              self._caps_directory)
+                raise ClinicaCAPSError(
+                    "\n%s[Error] The CAPS directory you gave is not a folder.%s\n"
+                    "\n%sError explanations:%s\n"
+                    " - Clinica expected the following path to be a folder: %s%s%s\n"
+                    " - If you gave relative path, did you run Clinica on the good folder?" %
+                    (Fore.RED, Fore.RESET,
+                     Fore.YELLOW, Fore.RESET,
+                     Fore.BLUE, self._caps_directory, Fore.RESET)
+                )
 
             self._sessions, self._subjects = get_subject_session_list(
                 input_dir=self._caps_directory,
@@ -155,8 +165,15 @@ class Pipeline(Workflow):
             )
         else:
             if not os.path.isdir(self._bids_directory):
-                raise IOError('The BIDS parameter is not a folder (given path:%s)' %
-                              self._bids_directory)
+                raise ClinicaBIDSError(
+                    "\n%s[Error] The BIDS directory you gave is not a folder.%s\n"
+                    "\n%sError explanations:%s\n"
+                    " - Clinica expected the following path to be a folder: %s%s%s\n"
+                    " - If you gave relative path, did you run Clinica on the good folder?" %
+                    (Fore.RED, Fore.RESET,
+                     Fore.YELLOW, Fore.RESET,
+                     Fore.BLUE, self._bids_directory, Fore.RESET)
+                )
             self._sessions, self._subjects = get_subject_session_list(
                 input_dir=self._bids_directory,
                 ss_file=self._tsv_file,
