@@ -138,9 +138,14 @@ def execute():
     import argparse
     from colorama import Fore
     import warnings
+    import logging
 
     # Suppress potential warnings
     warnings.filterwarnings("ignore")
+
+    # Remove warnings from duecredit package in order to silent
+    # "Assuming non interactive session since isatty found missing" message
+    logging.getLogger("duecredit.utils").setLevel(logging.ERROR)
 
     # Nice traceback when clinica crashes
     sys.excepthook = custom_traceback

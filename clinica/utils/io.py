@@ -128,7 +128,7 @@ def check_input_bids_file(list_bids_files, bids_type, bids_directory, participan
         )
     elif len(list_bids_files) > 1:
         raise ClinicaBIDSError(
-            "\n%s[Error] Clinica found %s %s files in CAPS directory for participant %s at session %s%s.\n"
+            "\n%s[Error] Clinica found %s %s files in CAPS directory for participant %s at session %s.%s\n"
             "\n%sError explanations:%s\n"
             " - Clinica expected to find a single file in BIDS directory. Found files:%s%s%s\n"
             " - If you have different runs and/or acquisitions on the same folder, Clinica can not handle this situation." %
@@ -185,7 +185,7 @@ def check_input_caps_file(list_caps_files, caps_type, pipeline_name, caps_direct
 
     if len(list_caps_files) == 0:
         raise ClinicaCAPSError(
-            "\n%s[Error] Clinica could not find %s file in CAPS directory for participant %s at session %s%s.\n"
+            "\n%s[Error] Clinica could not find %s file in CAPS directory for participant %s at session %s.%s\n"
             "\n%sError explanations:%s\n"
             " - Clinica expected to find the file at the following path: %s%s/%s%s\n"
             " - Did you run the %s%s%s pipeline on this image?" %
