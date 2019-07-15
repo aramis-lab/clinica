@@ -98,16 +98,16 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
     from clinica.utils.stream import cprint
 
     if issubclass(exc_type, ClinicaException):
-        print(exc_value)
+        cprint(exc_value)
     elif issubclass(exc_type, KeyboardInterrupt):
-        print('\n%s[Error] Program interrupted by the user. Clinica will now exit...%s' %
-              (Fore.RED, Fore.RESET))
+        cprint('\n%s[Error] Program interrupted by the user. Clinica will now exit...%s' %
+               (Fore.RED, Fore.RESET))
     else:
-        print(Fore.RED + '\n' + '*' * 23 + '\n*** Clinica crashed ***\n' + '*' * 23 + '\n' + Fore.RESET)
-        print(Fore.YELLOW + 'Exception type:' + Fore.RESET, exc_type.__name__)
-        print(Fore.YELLOW + 'Exception value:' + Fore.RESET, exc_value)
-        print('\nBelow are displayed information that were gathered when Clinica crashed. This will help to understand '
-              'what happened if you transfer those information to the Clinica development team.\n')
+        cprint(Fore.RED + '\n' + '*' * 23 + '\n*** Clinica crashed ***\n' + '*' * 23 + '\n' + Fore.RESET)
+        cprint(Fore.YELLOW + 'Exception type:' + Fore.RESET, exc_type.__name__)
+        cprint(Fore.YELLOW + 'Exception value:' + Fore.RESET, exc_value)
+        cprint('\nBelow are displayed information that were gathered when Clinica crashed. This will help to understand '
+               'what happened if you transfer those information to the Clinica development team.\n')
 
         frames = traceback.extract_tb(exc_traceback)
         framewidth = int(math.ceil(math.log(len(frames)) / math.log(10)))
@@ -119,19 +119,19 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
             linewidth = max(linewidth, frame[1])
             functionwidth = max(functionwidth, len(frame[2]))
         linewidth = int(math.ceil(math.log(linewidth) / math.log(10)))
-        print('=' * (filewidth + linewidth + functionwidth + linewidth))
+        cprint('=' * (filewidth + linewidth + functionwidth + linewidth))
         for i in range(len(frames)):
             t = '{}' + ' ' * (1 + framewidth - len(str(i))) + Fore.RED \
                 + '{}' + ' ' * (1 + filewidth - len(frames[i][0])) + Fore.RESET \
                 + '{}' + ' ' * (1 + linewidth - len(str(frames[i][1]))) + Fore.GREEN \
                 + '{}' + ' ' * (1 + functionwidth - len(frames[i][2])) + Fore.RESET + '{}'
-            print(t.format(i, frames[i][0], frames[i][1], frames[i][2],
-                           frames[i][3]))
+            cprint(t.format(i, frames[i][0], frames[i][1], frames[i][2], frames[i][3]))
 
     if not issubclass(exc_type, KeyboardInterrupt):
-        print('\nDocumentation can be found here: %shttp://www.clinica.run/doc/%s'
-              '\nIf you need support, do not hesitate to ask: %shttps://groups.google.com/forum/#!forum/clinica-user%s' %
-              (Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET))
+        cprint('\nDocumentation can be found here: %shttp://www.clinica.run/doc/%s\n'
+               'If you need support, do not hesitate to ask: %shttps://groups.google.com/forum/#!forum/clinica-user%s\n'
+               'Alternatively, you can also open an issue on GitHub: %shttps://github.com/aramis-lab/clinica/issues%s' %
+               (Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET))
 
 
 def execute():
@@ -456,17 +456,7 @@ def execute():
         import logging as python_logging
         from logging import Filter, ERROR
         import os
-
-        # Resolve bug
-        # "Assuming non interactive session since isatty found missing"
-        # at the beginning of any pipeline caused by logger in duecredit package
-        # (utils.py)
-        # Deactivate stdout, then reactivate it
-        sys.stdout = open(os.devnull, 'w')
-        from nipype import config
-        sys.stdout = sys.__stdout__
-
-        from nipype import logging
+        from nipype import config, logging
 
         # Configure Nipype logger for our needs
         config.update_config({'logging': {'workflow_level': 'INFO',

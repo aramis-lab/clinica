@@ -40,5 +40,5 @@ def cprint(msg):
     if clinica_verbose is True:
         print(msg)
     else:
-        print("@clinica@ %s" % msg)
+        print("@clinica@%s\n" % msg)
     sys.stdout.flush()
