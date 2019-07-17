@@ -226,21 +226,15 @@ def execute():
         formatter_class=argparse.RawTextHelpFormatter,
         help='To run pipelines on BIDS/CAPS datasets.'
     )
-    run_parser.description = (
-            Fore.GREEN
-            + 'Run pipelines on BIDS/CAPS datasets.'
-            + Fore.RESET
-    )
-    run_parser._positionals.title = (
-            Fore.YELLOW
-            + 'clinica run expects one of the following pipelines'
-            + Fore.RESET
-    )
+    run_parser.description = '%sRun pipelines on BIDS/CAPS datasets.%s' % \
+                             (Fore.GREEN, Fore.RESET)
+    run_parser._positionals.title = '%sclinica run expects one of the following pipelines%s' % \
+                                    (Fore.GREEN, Fore.RESET)
 
     init_cmdparser_objects(
-            parser,
-            run_parser.add_subparsers(metavar='', dest='run'),
-            pipelines
+        parser,
+        run_parser.add_subparsers(metavar='', dest='run'),
+        pipelines
     )
 
     """
@@ -265,21 +259,15 @@ def execute():
         add_help=False,
         help='To convert unorganized datasets into a BIDS hierarchy.',
     )
-    convert_parser.description = (
-            Fore.GREEN
-            + 'Tools to convert unorganized datasets into a BIDS hierarchy.'
-            + Fore.RESET
-    )
-    convert_parser._positionals.title = (
-            Fore.YELLOW
-            + 'clinica convert expects one of the following datasets'
-            + Fore.RESET
-    )
+    convert_parser.description = '%sTools to convert unorganized datasets into a BIDS hierarchy.%s' % \
+                                 (Fore.GREEN, Fore.RESET)
+    convert_parser._positionals.title = '%sclinica convert expects one of the following datasets%s' % \
+                                        (Fore.YELLOW, Fore.RESET)
     convert_parser._optionals.title = OPTIONAL_TITLE
     init_cmdparser_objects(
-            parser,
-            convert_parser.add_subparsers(metavar='', dest='convert'),
-            converters
+        parser,
+        convert_parser.add_subparsers(metavar='', dest='convert'),
+        converters
     )
 
     """
@@ -296,22 +284,20 @@ def execute():
     ]
 
     HELP_IO_TOOLS = 'Tools to handle BIDS/CAPS datasets.'
-    io_parser = sub_parser.add_parser('iotools',
-                                      add_help=False,
-                                      help=HELP_IO_TOOLS,
-                                      )
-    io_parser.description = (Fore.GREEN + HELP_IO_TOOLS + Fore.RESET)
-    io_parser._positionals.title = (
-            Fore.YELLOW
-            + 'clinica iotools expects one of the following BIDS/CAPS utilities'
-            + Fore.RESET
+    io_parser = sub_parser.add_parser(
+        'iotools',
+        add_help=False,
+        help=HELP_IO_TOOLS,
     )
+    io_parser.description = '%s%s%s' % (Fore.GREEN, HELP_IO_TOOLS, Fore.RESET)
+    io_parser._positionals.title = '%sclinica iotools expects one of the following BIDS/CAPS utilities%s' % \
+                                   (Fore.YELLOW, Fore.RESET)
     io_parser._optionals.title = OPTIONAL_TITLE
 
     init_cmdparser_objects(
-            parser,
-            io_parser.add_subparsers(metavar='', dest='iotools'),
-            io_tools
+        parser,
+        io_parser.add_subparsers(metavar='', dest='iotools'),
+        io_tools
     )
 
     """
@@ -333,16 +319,10 @@ def execute():
         formatter_class=argparse.RawTextHelpFormatter,
         help='To visualize outputs of Clinica pipelines.'
     )
-    visualize_parser.description = (
-        Fore.GREEN
-        + 'Visualize outputs of Clinica pipelines.'
-        + Fore.RESET
-    )
-    visualize_parser._positionals.title = (
-        Fore.YELLOW
-        + 'clinica visualize expects one of the following pipelines'
-        + Fore.RESET
-    )
+    visualize_parser.description = '%sVisualize outputs of Clinica pipelines.%s' % \
+                                   (Fore.GREEN, Fore.RESET)
+    visualize_parser._positionals.title = '%sclinica visualize expects one of the following pipelines%s' % \
+                                          (Fore.YELLOW, Fore.RESET)
 
     init_cmdparser_objects(
         parser,
@@ -359,24 +339,17 @@ def execute():
         help=('To generate pre-filled files when creating '
               'new pipelines (for developers).'),
     )
-    generate_parser.description = (
-            Fore.GREEN
-            + ('Generate pre-filled files when creating new pipelines '
-               '(for  developers).')
-            + Fore.RESET
-    )
-    generate_parser._positionals.title = (
-            Fore.YELLOW
-            + 'clinica generate expects one of the following tools'
-            + Fore.RESET
-    )
+    generate_parser.description = '%sGenerate pre-filled files when creating new pipelines (for  developers).%s' % \
+                                  (Fore.GREEN, Fore.RESET)
+    generate_parser._positionals.title = '%sclinica generate expects one of the following tools%s' % \
+                                         (Fore.YELLOW, Fore.RESET)
     generate_parser._optionals.title = OPTIONAL_TITLE
 
     from clinica.engine.template import CmdGenerateTemplates
     init_cmdparser_objects(
-            parser,
-            generate_parser.add_subparsers(metavar='', dest='generate'),
-            [CmdGenerateTemplates()]
+        parser,
+        generate_parser.add_subparsers(metavar='', dest='generate'),
+        [CmdGenerateTemplates()]
     )
 
     """
@@ -410,16 +383,21 @@ def execute():
     try:
         argcomplete.autocomplete(parser)
         args, unknown_args = parser.parse_known_args()
+        if unknown_args:
+            if ('--verbose' in unknown_args) or ('-v' in unknown_args):
+                cprint("Verbose detected")
+                args.verbose = True
+            unknown_args = [i for i in unknown_args if i != '-v']
+            unknown_args = [i for i in unknown_args if i != '--verbose']
+            if unknown_args:
+                print('%s[Warning] Unknown flag(s) detected: %s. This will be ignored by Clinica%s' %
+                      (Fore.YELLOW, unknown_args, Fore.RESET))
     except SystemExit:
         exit(0)
     except Exception:
+        print("%s\n[Error] You wrote wrong arguments on the command line. Clinica will now exit.\n%s" % (Fore.RED, Fore.RESET))
         parser.print_help()
         exit(-1)
-
-    # if unknown_args:
-    #    if '--verbose' or '-v' in unknown_args:
-    #        cprint('Verbose flag detected')
-    #    raise ValueError('Unknown flag detected: %s' % unknown_args)
 
     if 'run' in args and hasattr(args, 'func') is False:
         # Case when we type `clinica run` on the terminal
