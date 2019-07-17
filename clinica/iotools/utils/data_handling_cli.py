@@ -20,8 +20,22 @@ class CmdParserSubjectsSessions(ce.CmdParser):
     def run_command(self, args):
         import os
         import errno
+        from colorama import Fore
         from clinica.iotools.utils import data_handling as dt
+        from clinica.utils.exceptions import ClinicaBIDSError
         from clinica.utils.stream import cprint
+
+        if not os.path.isdir(args.bids_directory):
+            raise ClinicaBIDSError(
+                "\n%s[Error] The BIDS directory you gave is not a folder.%s\n"
+                "\n%sError explanations:%s\n"
+                " - Clinica expected the following path to be a folder: %s%s%s\n"
+                " - If you gave relative path, did you run Clinica on the good folder?" %
+                (Fore.RED, Fore.RESET,
+                 Fore.YELLOW, Fore.RESET,
+                 Fore.BLUE, args.bids_directory, Fore.RESET)
+            )
+
         output_directory = os.path.dirname(os.path.abspath(args.out_tsv))
         if not os.path.exists(output_directory):
             try:
@@ -73,7 +87,22 @@ class CmdParserMergeTsv(ce.CmdParser):
                                      help='TSV file containing the subjects with their sessions.')
 
     def run_command(self, args):
+        import os
+        from colorama import Fore
         from clinica.iotools.utils import data_handling as dt
+        from clinica.utils.exceptions import ClinicaBIDSError
+
+        if not os.path.isdir(args.bids_directory):
+            raise ClinicaBIDSError(
+                "\n%s[Error] The BIDS directory you gave is not a folder.%s\n"
+                "\n%sError explanations:%s\n"
+                " - Clinica expected the following path to be a folder: %s%s%s\n"
+                " - If you gave relative path, did you run Clinica on the good folder?" %
+                (Fore.RED, Fore.RESET,
+                 Fore.YELLOW, Fore.RESET,
+                 Fore.BLUE, args.bids_directory, Fore.RESET)
+            )
+
         dt.create_merge_file(args.bids_directory, args.out_tsv,
                              caps_dir=args.caps_directory, pipelines=args.pipelines,
                              atlas_selection=args.atlas_selection, pvc_restriction=args.pvc_restriction,
@@ -95,8 +124,23 @@ class CmdParserMissingModalities(ce.CmdParser):
                                 help='Path to the output directory.')  # noqa
         self._args.add_argument("-op", '--output_prefix',
                                 type=str, default='',
-                                help='Prefix for the name of output files.')  # noqa
+                                help='Prefix for the name of output files (default: --output_prefix missing_mods).')  # noqa
 
     def run_command(self, args):
+        import os
+        from colorama import Fore
         from clinica.iotools.utils import data_handling as dt
+        from clinica.utils.exceptions import ClinicaBIDSError
+
+        if not os.path.isdir(args.bids_directory):
+            raise ClinicaBIDSError(
+                "\n%s[Error] The BIDS directory you gave is not a folder.%s\n"
+                "\n%sError explanations:%s\n"
+                " - Clinica expected the following path to be a folder: %s%s%s\n"
+                " - If you gave relative path, did you run Clinica on the good folder?" %
+                (Fore.RED, Fore.RESET,
+                 Fore.YELLOW, Fore.RESET,
+                 Fore.BLUE, args.bids_directory, Fore.RESET)
+            )
+
         dt.compute_missing_mods(args.bids_directory, args.out_directory, args.output_prefix)

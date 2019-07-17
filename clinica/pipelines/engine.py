@@ -31,6 +31,8 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_sess
     import tempfile
     from time import time, strftime, localtime
     import os
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaException
 
     if not ss_file:
         output_dir = tempfile.mkdtemp()
@@ -45,6 +47,16 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_sess
             is_bids_dir=is_bids_dir,
             use_session_tsv=use_session_tsv)
 
+    if not os.path.isfile(ss_file):
+        raise ClinicaException(
+            "\n%s[Error] The TSV file you gave is not a file.%s\n"
+            "\n%sError explanations:%s\n"
+            " - Clinica expected the following path to be a file: %s%s%s\n"
+            " - If you gave relative path, did you run Clinica on the good folder?" %
+            (Fore.RED, Fore.RESET,
+             Fore.YELLOW, Fore.RESET,
+             Fore.BLUE, ss_file, Fore.RESET)
+        )
     ss_df = pd.io.parsers.read_csv(ss_file, sep='\t')
     if 'participant_id' not in list(ss_df.columns.values):
         raise Exception('No participant_id column in TSV file.')
