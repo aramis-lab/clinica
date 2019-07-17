@@ -160,6 +160,7 @@ def check_input_caps_file(list_caps_files, caps_type, pipeline_name, caps_direct
         "T1_FS_DESIKAN": "Desikan parcellation",
         "T1_FS_DESTRIEUX": "Destrieux parcellation",
         "T1_FS_BM": "T1w brainmask",
+        "T1_FS_BE": "brain extracted T1w",
         # dwi-preprocessing
         "DWI_PREPROC_BVAL": "preprocessed bval",
         "DWI_PREPROC_BVEC": "preprocessed bvec",

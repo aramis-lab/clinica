@@ -17,7 +17,7 @@ class DwiConnectome(cpe.Pipeline):
 
     Todos:
         [X] - Add registration of parcellation onto DWI space
-        [ ] - Handle case where the pipeline already ran on the image
+        [X ] - Handle case where the pipeline already ran on the image
 
     Args:
         input_dir: A BIDS directory.
@@ -127,6 +127,7 @@ class DwiConnectome(cpe.Pipeline):
             if list_dwi_file_spaces[i] == 'b0':
                 t1_brain_file = caps_layout.get(freesurfer_file='brain.mgz', return_type='file',
                                                 subject=self.subjects[i][4:], session=self.sessions[i][4:])
+                check_input_caps_file(t1_brain_file, "T1_FS_BE", "t1-freesurfer", self.caps_directory, self.subjects[i], self.sessions[i])
                 list_t1_brain_files.append(t1_brain_file[0])
 
             # Check if pipeline already ran on the image
@@ -138,11 +139,12 @@ class DwiConnectome(cpe.Pipeline):
                            (Fore.BLUE, Fore.RESET))
                     del list_wm_mask_files[-1]
                     del list_dwi_file_spaces[-1]
-                    del list_t1_brain_files[-1]
                     del list_dwi_files[-1]
                     del list_dwi_brainmask_files[-1]
                     del list_grad_fsl[-1]
                     del list_atlas_files[-1]
+                    if list_dwi_file_spaces[i] == 'b0':
+                        del list_t1_brain_files[-1]
                 elif self.parameters['overwrite_outputs']:
                     cprint('%s[Warning] The pipeline already ran on this image. Results will be overwritten.%s' %
                            (Fore.YELLOW, Fore.RESET))

@@ -104,9 +104,9 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
                (Fore.RED, Fore.RESET))
     else:
         cprint(Fore.RED + '\n' + '*' * 23 + '\n*** Clinica crashed ***\n' + '*' * 23 + '\n' + Fore.RESET)
-        cprint(Fore.YELLOW + 'Exception type:' + Fore.RESET, exc_type.__name__)
-        cprint(Fore.YELLOW + 'Exception value:' + Fore.RESET, exc_value)
-        cprint('\nBelow are displayed information that were gathered when Clinica crashed. This will help to understand '
+        cprint('%sException type:%s %s' % (Fore.YELLOW, Fore.RESET, exc_type.__name__))
+        cprint('%sException value:%s %s' % (Fore.YELLOW, Fore.RESET, exc_value))
+        cprint('Below are displayed information that were gathered when Clinica crashed. This will help to understand '
                'what happened if you transfer those information to the Clinica development team.\n')
 
         frames = traceback.extract_tb(exc_traceback)
@@ -126,6 +126,7 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
                 + '{}' + ' ' * (1 + linewidth - len(str(frames[i][1]))) + Fore.GREEN \
                 + '{}' + ' ' * (1 + functionwidth - len(frames[i][2])) + Fore.RESET + '{}'
             cprint(t.format(i, frames[i][0], frames[i][1], frames[i][2], frames[i][3]))
+        cprint('=' * (filewidth + linewidth + functionwidth + linewidth))
 
     if not issubclass(exc_type, KeyboardInterrupt):
         cprint('\nDocumentation can be found here: %shttp://www.clinica.run/doc/%s\n'
@@ -422,8 +423,6 @@ def execute():
 
     if 'run' in args and hasattr(args, 'func') is False:
         # Case when we type `clinica run` on the terminal
-        print("dsfjsdhfscnl")
-        cprint("dsfjsdhfscnl")
         run_parser.print_help()
         exit(0)
     elif 'convert' in args and hasattr(args, 'func') is False:
