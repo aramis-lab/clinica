@@ -100,6 +100,9 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
     if study_name == 'ADNI' or study_name == 'AIBL':
         # ADNImerge contains one row for each visits so there are duplicates
         participant_df = participant_df.drop_duplicates(subset=['alternative_id_1'], keep='first')
+    elif study_name == 'OASIS':
+        # OASIS provides several MRI for the same session
+        participant_df = participant_df[~participant_df.alternative_id_1.str.endswith("_MR2")]
     participant_df.reset_index(inplace=True, drop=True)
 
     # Adding participant_id column with BIDS ids
