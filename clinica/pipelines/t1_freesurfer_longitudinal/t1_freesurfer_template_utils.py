@@ -1103,8 +1103,12 @@ def run_reconallbase(
             otherwise
     """
     import os
+    import subprocess
     import shutil
     import clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_utils as utils
+
+    # initialise out_template_created
+    out_template_created = False
 
     # check if current subject has been processed already
     # (i.e., if corresponding folder already stored to working dir)
