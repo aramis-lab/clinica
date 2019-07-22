@@ -19,7 +19,7 @@ def dwi_container_from_filename(dwi_filename):
 
 def parameters_from_dwi_metadata(dwi_json):
     """
-    Extract BIDS metadata (EffectiveEchoSpacing, etc.) from a DWI .json file.
+    Extract BIDS metadata (EffectiveEchoSpacing, PhaseEncodingDirection) from a DWI .json file.
 
     Args:
         dwi_json: Path to a BIDS compliant .json file
@@ -30,8 +30,6 @@ def parameters_from_dwi_metadata(dwi_json):
     import json
     import os
 
-    from clinica.utils.stream import cprint
-
     if not os.path.exists(dwi_json):
         raise IOError('DWI .json file (%s) does not exist.' % dwi_json)
 
@@ -40,9 +38,6 @@ def parameters_from_dwi_metadata(dwi_json):
 
     effective_echo_spacing = data['EffectiveEchoSpacing']
     phase_encoding_direction = data['PhaseEncodingDirection']
-
-    cprint(dwi_container_from_filename(dwi_json) + " (DWI JSON): EffectiveEchoSpacing=" + str(effective_echo_spacing) +
-           ", PhaseEncodingDirection=" + str(phase_encoding_direction) + " (fname = " + dwi_json + ")")
 
     return [effective_echo_spacing, phase_encoding_direction]
 
@@ -71,9 +66,6 @@ def delta_echo_time_from_bids_fmap(fmap_json):
     echo_time_1 = data['EchoTime1']
     echo_time_2 = data['EchoTime2']
     delta_echo_time = echo_time_2 - echo_time_1
-
-    cprint(dwi_container_from_filename(fmap_json) + " (FMap JSON): EchoTime1=" + str(echo_time_1) +
-           ", EchoTime2=" + str(echo_time_2) + " (Delta = " + str(delta_echo_time) + ", fname=" + fmap_json + ")")
 
     return delta_echo_time
 

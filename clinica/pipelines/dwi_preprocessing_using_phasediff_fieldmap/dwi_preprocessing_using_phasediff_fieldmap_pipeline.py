@@ -1,4 +1,4 @@
-# coding: utf8
+    # coding: utf8
 
 import clinica.pipelines.engine as cpe
 
@@ -92,160 +92,89 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
+        from colorama import Fore
+        from clinica.utils.stream import cprint
+        from clinica.utils.io import check_input_bids_file
         from clinica.utils.dwi import check_dwi_volume
         import clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_utils as utils
 
-        list_enc_directions = []
-        list_eff_echo_spacings = []
+        list_dwi_files = []
+        list_bvec_files = []
+        list_bval_files = []
+        list_effective_echo_spacings = []
+        list_phase_encoding_directions = []
+        list_fmap_magnitude_files = []
+        list_fmap_phasediff_files = []
         list_delta_echo_times = []
 
-        from clinica.utils.stream import cprint
-
-        cprint('Found %s image(s) in BIDS dataset' % len(self.subjects))
+        cprint('Reading input files...')
         for i in range(len(self.subjects)):
-            cprint('------- SUBJECT %s SESSION %s -------'
-                   % (self.subjects[i], self.sessions[i]))
+            cprint('\t...subject \'' + str(
+                    self.subjects[i][4:]) + '\', session \'' + str(
+                    self.sessions[i][4:]) + '\'')
 
-            # Check b-val file and compute the nb of b0 from file:
-            bval_file = self.bids_layout.get(
-                return_type='file',
-                type='dwi',
-                extensions=['bval'],
-                session=self.sessions[i].replace('ses-', ''),
-                subject=self.subjects[i].replace('sub-', '')
-            )
-            if len(bval_file) != 1:
-                raise IOError('Expected to find 1 bval file file for subject '
-                              + self.subjects[i]
-                              + ' and session '
-                              + self.sessions[i]
-                              + ' but found '
-                              + str(len(bval_file))
-                              + ' bval instead.')
+            # Inputs from dwi/ folder
+            # =======================
+            # Bval file:
+            bval_file = self.bids_layout.get(type='dwi', return_type='file', extensions=['bval'],
+                                             subject=self.subjects[i][4:], session=self.sessions[i][4:])
+            check_input_bids_file(bval_file, "DWI_BVAL", self.bids_directory, self.subjects[i], self.sessions[i])
+            list_bval_files.append(bval_file[0])
 
-            # Check b-vec file:
-            bvec_file = self.bids_layout.get(
-                return_type='file',
-                type='dwi',
-                extensions=['bvec'],
-                session=self.sessions[i].replace('ses-', ''),
-                subject=self.subjects[i].replace('sub-', '')
-            )
-            if len(bvec_file) != 1:
-                raise IOError('Expected to find 1 bvec file file for subject '
-                              + self.subjects[i]
-                              + ' and session '
-                              + self.sessions[i]
-                              + ' but found '
-                              + str(len(bvec_file))
-                              + ' bvec instead.')
+            # Bvec file:
+            bvec_file = self.bids_layout.get(type='dwi', return_type='file', extensions=['bvec'],
+                                             subject=self.subjects[i][4:], session=self.sessions[i][4:])
+            check_input_bids_file(bvec_file, "DWI_BVEC", self.bids_directory, self.subjects[i], self.sessions[i])
+            list_bvec_files.append(bvec_file[0])
 
-            # Check DWI file:
-            dwi_file = self.bids_layout.get(
-                return_type='file',
-                type='dwi',
-                extensions=['.nii|.nii.gz'],
-                session=self.sessions[i].replace('ses-', ''),
-                subject=self.subjects[i].replace('sub-', '')
-            )
-            if len(dwi_file) != 1:
-                raise IOError('Expected to find 1 dwi file file for subject '
-                              + self.subjects[i]
-                              + ' and session '
-                              + self.sessions[i]
-                              + ' but found '
-                              + str(len(dwi_file))
-                              + ' dwi instead.')
+            # DWI file:
+            dwi_file = self.bids_layout.get(type='dwi', return_type='file', extensions=['.nii|.nii.gz'],
+                                            subject=self.subjects[i][4:], session=self.sessions[i][4:])
+            check_input_bids_file(bvec_file, "DWI_NII", self.bids_directory, self.subjects[i], self.sessions[i])
+            list_dwi_files.append(dwi_file[0])
 
-            # Check that the number of DWI, b-vecs & b-val are the same:
-            check_dwi_volume(
-                in_dwi=dwi_file[0], in_bvec=bvec_file[0], in_bval=bval_file[0])
+            # Check that the number of DWI, bvec & bval are the same:
+            check_dwi_volume(in_dwi=dwi_file[0], in_bvec=bvec_file[0], in_bval=bval_file[0])
 
-            # Load JSON parameters from DWI file:
-            dwi_json = self.bids_layout.get(
-                return_type='file',
-                type='dwi',
-                extensions=['.json'],
-                session=self.sessions[i].replace('ses-', ''),
-                subject=self.subjects[i].replace('sub-', '')
-            )
-            if len(dwi_json) != 1:
-                raise IOError('Expected to find 1 dwi json file for subject '
-                              + self.subjects[i]
-                              + ' and session '
-                              + self.sessions[i]
-                              + ' but found '
-                              + str(len(dwi_json))
-                              + ' dwi instead.')
-
+            # DWI JSON file:
+            dwi_json = self.bids_layout.get(type='dwi', return_type='file', extensions=['.json'],
+                                            subject=self.subjects[i][4:], session=self.sessions[i][4:])
+            check_input_bids_file(bvec_file, "DWI_JSON", self.bids_directory, self.subjects[i], self.sessions[i])
             [eff_echo_spacing, enc_direction] = utils.parameters_from_dwi_metadata(dwi_json[0])
-            list_eff_echo_spacings.append(eff_echo_spacing)
-            list_enc_directions.append(enc_direction)
+            list_effective_echo_spacings.append(eff_echo_spacing)
+            list_phase_encoding_directions.append(enc_direction)
 
-            # Check Fmap Magnitude1 file:
-            fmap_magnitude_file = self.bids_layout.get(
-                return_type='file',
-                type='magnitude1',
-                extensions=['.nii|.nii.gz'],
-                session=self.sessions[i].replace('ses-', ''),
-                subject=self.subjects[i].replace('sub-', '')
-            )
-            if len(fmap_magnitude_file) != 1:
-                raise IOError('Expected to find 1 fmap magnitude file file for subject '
-                              + self.subjects[i]
-                              + ' and session '
-                              + self.sessions[i]
-                              + ' but found '
-                              + str(len(dwi_file))
-                              + ' fmap instead.')
+            # Inputs from fmap/ folder
+            # ========================
+            # Magnitude1 file:
+            fmap_mag_file = self.bids_layout.get(type='magnitude1', return_type='file', extensions=['.nii|.nii.gz'],
+                                                 subject=self.subjects[i][4:], session=self.sessions[i][4:])
+            check_input_bids_file(fmap_mag_file, "FMAP_MAGNITUDE1_NII", self.bids_directory, self.subjects[i], self.sessions[i])
+            list_fmap_magnitude_files.append(fmap_mag_file[0])
 
-            # Check Fmap PhaseDiff file:
-            fmap_phasediff_file = self.bids_layout.get(
-                return_type='file',
-                type='phasediff',
-                extensions=['.nii|.nii.gz'],
-                session=self.sessions[i].replace('ses-', ''),
-                subject=self.subjects[i].replace('sub-', '')
-            )
-            if len(fmap_phasediff_file) != 1:
-                raise IOError('Expected to find 1 fmap file file for subject '
-                              + self.subjects[i]
-                              + ' and session '
-                              + self.sessions[i]
-                              + ' but found '
-                              + str(len(dwi_file))
-                              + ' fmap instead.')
+            # PhaseDiff file:
+            fmap_phasediff_file = self.bids_layout.get(type='phasediff', return_type='file', extensions=['.nii|.nii.gz'],
+                                                       subject=self.subjects[i][4:], session=self.sessions[i][4:])
+            check_input_bids_file(fmap_phasediff_file, "FMAP_PHASEDIFF_NII", self.bids_directory, self.subjects[i], self.sessions[i])
+            list_fmap_phasediff_files.append(fmap_phasediff_file[0])
 
-            # Load JSON parameters from Fmap PhaseDiff file:
-            fmap_phasediff_json = self.bids_layout.get(
-                return_type='file',
-                type='phasediff',
-                extensions=['.json'],
-                session=self.sessions[i].replace('ses-', ''),
-                subject=self.subjects[i].replace('sub-', '')
-            )
-            if len(fmap_phasediff_json) != 1:
-                raise IOError('Expected to find 1 fmap phasediff json file for subject '
-                              + self.subjects[i]
-                              + ' and session '
-                              + self.sessions[i]
-                              + ' but found '
-                              + str(len(dwi_json))
-                              + ' fmap instead.')
+            # PhaseDiff JSON file:
+            fmap_phasediff_json = self.bids_layout.get(type='phasediff', return_type='file', extensions=['.json'],
+                                                       subject=self.subjects[i][4:], session=self.sessions[i][4:])
+            check_input_bids_file(fmap_phasediff_json, "FMAP_PHASEDIFF_JSON", self.bids_directory, self.subjects[i], self.sessions[i])
+            delta_echo_time = utils.delta_echo_time_from_bids_fmap(fmap_phasediff_json[0])
+            list_delta_echo_times.append(delta_echo_time)
 
-            list_delta_echo_times.append(utils.delta_echo_time_from_bids_fmap(
-                fmap_phasediff_json[0]
-            ))
+            cprint('From JSON files: EffectiveEchoSpacing = %s, PhaseEncodingDirection = %s, DeltaEchoTime = %s' %
+                   (eff_echo_spacing, enc_direction, delta_echo_time))
 
-        cprint("")
-        cprint("List JSON parameters for DWI Preprocessing:")
-        cprint("- PhaseEncodingDirections")
-        cprint(list_enc_directions)
-        cprint("- EffectiveEchoSpacing")
-        cprint(list_eff_echo_spacings)
-        cprint("- DeltaEchoTime")
-        cprint(list_delta_echo_times)
-        cprint("")
+        if len(list_dwi_files) == 0:
+            import sys
+            cprint('%s\nEither all the images were already run by the pipeline or no image was found to run the pipeline. '
+                   'The program will now exit.%s' % (Fore.BLUE, Fore.RESET))
+            sys.exit(0)
+        else:
+            cprint('Found %s image(s) in CAPS dataset' % len(self.subjects))
 
         # Iterables:
         iterables_node = npe.Node(name="LoadingCLIArguments",
@@ -313,8 +242,8 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         )
         bids_parameters_reader.iterables = [
             ('delta_echo_time', list_delta_echo_times),
-            ('effective_echo_spacing', list_eff_echo_spacings),
-            ('phase_encoding_direction', list_enc_directions)]
+            ('effective_echo_spacing', list_effective_echo_spacings),
+            ('phase_encoding_direction', list_phase_encoding_directions)]
         bids_parameters_reader.synchronize = True
 
         self.connect([
@@ -339,7 +268,7 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
                                                      ('session_id', 'session'),  # noqa
                                                      ('subject_id', 'subject_repeat'),  # noqa
                                                      ('session_id', 'session_repeat')]),  # noqa
-            # Inputnode:
+            # Input node:
             (magnitude_bids_reader,  self.input_node, [('out_files',                'fmap_magnitude')]),  # noqa
             (phasediff_bids_reader,  self.input_node, [('out_files',                'fmap_phasediff')]),  # noqa
             (dwi_bids_reader,        self.input_node, [('out_files',                'dwi')]),  # noqa
