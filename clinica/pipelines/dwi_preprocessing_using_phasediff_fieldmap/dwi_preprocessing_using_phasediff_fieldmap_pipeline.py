@@ -416,11 +416,12 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         # ==============
         # Prepare b0 image for further corrections
         prepare_b0 = npe.Node(name="PrepareB0", interface=nutil.Function(
-            input_names=['in_dwi', 'in_bval', 'in_bvec', 'low_bval'],
+            input_names=['in_dwi', 'in_bval', 'in_bvec', 'low_bval', 'working_directory'],
             output_names=['out_reference_b0', 'out_b0_dwi_merge',
                           'out_updated_bval', 'out_updated_bvec'],
             function=prepare_reference_b0))
         prepare_b0.inputs.low_bval = self._low_bval
+        prepare_b0.inputs.working_directory = self.base_dir
         # Mask b0 for computations purposes
         mask_b0_pre = npe.Node(fsl.BET(frac=0.3, mask=True, robust=True),
                                name='PreMaskB0')

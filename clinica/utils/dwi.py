@@ -201,7 +201,7 @@ def insert_b0_into_dwi(in_b0, in_dwi, in_bval, in_bvec):
     return out_dwi, out_bvals, out_bvecs
 
 
-def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
+def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory=None):
     """
     This function prepare the data for further corrections. It coregisters
     the B0 images and then average it in order to obtain only
@@ -226,6 +226,7 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
                                    count_b0s, b0_average)
     from clinica.workflows.dwi_preprocessing import b0_flirt_pipeline
     from clinica.utils.stream import cprint
+    import hashlib
 
     import os.path as op
 
@@ -250,7 +251,9 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
         b0_flirt.inputs.inputnode.in_file = extracted_b0
         # BUG: Nipype does allow to extract the output after running the
         # workflow: we need to 'guess' where the output will be generated
-        tmp_dir = tempfile.mkdtemp()
+        if working_directory is None:
+            working_directory = tempfile.mkdtemp()
+        tmp_dir = op.join(working_directory, hashlib.md5(in_dwi.encode()).hexdigest())
         b0_flirt.base_dir = tmp_dir
         b0_flirt.run()
         # out_node = b0_flirt.get_node('outputnode')
