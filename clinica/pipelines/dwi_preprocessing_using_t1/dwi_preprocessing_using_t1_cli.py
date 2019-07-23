@@ -28,6 +28,11 @@ class DwiPreprocessingUsingT1Cli(ce.CmdParser):
                                   help='Path to the BIDS directory.')
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
+        clinica_comp.add_argument("phase_encoding_direction", type=str,
+                                  help='The phase encoding direction (e.g. For ADNI data, the phase_encoding_direction is y(j).')  # noqa
+        clinica_comp.add_argument("total_readout_time", type=str,
+                                  help='The total readout time (see https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/eddy/Faq for details)')  # noqa
+
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("--low_bval",
@@ -57,6 +62,13 @@ class DwiPreprocessingUsingT1Cli(ce.CmdParser):
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
             low_bval=args.low_bval
         )
+
+        pipeline.parameters = {
+            'epi_param': dict([
+                ('readout_time', args.total_readout_time),
+                ('enc_dir', args.phase_encoding_direction)
+            ]),
+        }
 
         if args.working_directory is None:
             args.working_directory = mkdtemp()
