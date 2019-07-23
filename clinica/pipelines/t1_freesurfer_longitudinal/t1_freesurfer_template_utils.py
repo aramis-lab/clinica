@@ -1107,9 +1107,6 @@ def run_reconallbase(
     import shutil
     import clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_utils as utils
 
-    # initialise out_template_created
-    out_template_created = False
-
     # check if current subject has been processed already
     # (i.e., if corresponding folder already stored to working dir)
     workdir_subject_path = "{0}/{1}".format(in_workdirstore_path, in_subject)
@@ -1145,7 +1142,10 @@ def run_reconallbase(
         # run recon-all -base in temp FreeSurfer SUBJECT_DIR
         reconallbase_command = 'recon-all {0} -sd {1}'.format(
             in_reconallbase_flags, fssubdir_path)
-        os.system(reconallbase_command)
+        subprocess_run_reconallbase = subprocess.run(reconallbase_command,
+            shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if subprocess_run_reconallbase.returncode != 0:
+            raise ValueError('recon-all -base failed, returned non-zero code')
 
         # check if completed successfully
         out_template_created = utils.check_reconall_base_single(

@@ -659,6 +659,9 @@ def check_reconall_longitudinal_single(subjects_dir,
             raise IOError(ioerror_msg)
         else:
             out_longitudinal_result = True
+    else:
+        raise IOError(
+            'no recon-all.log script for subject {0}'.format(in_subject))
 
     return out_longitudinal_result
 
@@ -687,13 +690,16 @@ def run_reconalllong(in_subject,
         out_longitudinal_result (Boolean): True if success, False
             otherwise
     """
-    import os
+    import subprocess
     import clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_utils as utils
 
     # run recon-all -long
     reconalllong_command = 'recon-all {0} -sd {1}'.format(
         in_reconalllong_flags, in_symlink_path)
-    os.system(reconalllong_command)
+    subprocess_run_reconalllong = subprocess.run(reconalllong_command,
+        shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if subprocess_run_reconalllong.returncode != 0:
+        raise ValueError('recon-all -long failed, returned non-zero code')
 
     # check whether recon-all -long failed or not
     out_longitudinal_result = utils.check_reconall_longitudinal_single(
