@@ -23,13 +23,17 @@ def is_binary_present(binary):
     """
     import subprocess
     import os
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaMissingDependencyError
 
     try:
         devnull = open(os.devnull)
         subprocess.Popen([binary], stdout=devnull, stderr=devnull).communicate()
     except OSError as e:
         if e.errno == os.errno.ENOENT:
-            return False
+            raise ClinicaMissingDependencyError(
+                '%s\n[Error] Clinica could not find the %s binary. Did you add it to your PATH environment?%s'
+                % (Fore.RED, binary, Fore.RESET))
     return True
 
 

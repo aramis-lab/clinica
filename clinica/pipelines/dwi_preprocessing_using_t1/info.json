@@ -9,6 +9,10 @@
             "version": ">=5.0.9"
         },
         {
+            "type": "binary",
+            "name": "c3d_affine_tool"
+        },
+        {
             "type": "software",
             "name": "ants",
             "version": ""
