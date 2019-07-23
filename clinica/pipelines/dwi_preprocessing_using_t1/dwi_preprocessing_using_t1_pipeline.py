@@ -10,6 +10,13 @@ __version__ = "0.1.0"
 __status__ = "Development"
 
 
+# Use hash instead of parameters for iterables folder names
+# Otherwise path will be too long and generate OSError
+from nipype import config
+cfg = dict(execution={'parameterize_dirs': False})
+config.update_config(cfg)
+
+
 class DwiPreprocessingUsingT1(cpe.Pipeline):
     """DWI Preprocessing using T1 image for susceptibility distortion step.
 
@@ -23,11 +30,9 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             format).
 
     Returns:
-        A clinica pipeline object containing the DWIPreprocessingUsingT1 pipeline.
+        A clinica pipeline object containing the DwiPreprocessingUsingT1 pipeline.
 
     Raises:
-
-
     """
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None,
                  name=None, low_bval=5):
@@ -92,157 +97,80 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         """
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        import nipype.interfaces.io as nio
-
+        from colorama import Fore
         from clinica.utils.stream import cprint
+        from clinica.utils.io import check_input_bids_file
         from clinica.utils.dwi import check_dwi_volume
 
-        cprint('Found %s image(s) in BIDS dataset' % len(self.subjects))
+        list_t1w_files = []
+        list_dwi_files = []
+        list_bvec_files = []
+        list_bval_files = []
+
+        cprint('Reading input files...')
         for i in range(len(self.subjects)):
-            # cprint('------- SUBJECT %s SESSION %s -------'
-            #        % (self.subjects[i], self.sessions[i]))
+            cprint('\t...subject \'' + str(
+                    self.subjects[i][4:]) + '\', session \'' + str(
+                    self.sessions[i][4:]) + '\'')
 
-            # Check b-val file and compute the nb of b0 from file:
-            bval_file = self.bids_layout.get(
-                return_type='file',
-                type='dwi',
-                extensions=['bval'],
-                session=self.sessions[i].replace('ses-', ''),
-                subject=self.subjects[i].replace('sub-', '')
-            )
-            if len(bval_file) != 1:
-                raise IOError('Expected to find 1 bval file for subject '
-                              + self.subjects[i]
-                              + ' and session '
-                              + self.sessions[i]
-                              + ' but found '
-                              + str(len(bval_file))
-                              + ' bval instead.')
+            # Inputs from anat/ folder
+            # ========================
+            # T1w file:
+            t1w_file = self.bids_layout.get(type='T1w', return_type='file', extensions=['.nii|.nii.gz'],
+                                            subject=self.subjects[i][4:], session=self.sessions[i][4:])
+            check_input_bids_file(t1w_file, "T1W_NII",
+                                  self.bids_directory, self.subjects[i], self.sessions[i])
+            list_t1w_files.append(t1w_file[0])
 
-            # Check b-vec file:
-            bvec_file = self.bids_layout.get(
-                return_type='file',
-                type='dwi',
-                extensions=['bvec'],
-                session=self.sessions[i].replace('ses-', ''),
-                subject=self.subjects[i].replace('sub-', '')
-            )
-            if len(bvec_file) != 1:
-                raise IOError('Expected to find 1 bvec file for subject '
-                              + self.subjects[i]
-                              + ' and session '
-                              + self.sessions[i]
-                              + ' but found '
-                              + str(len(bvec_file))
-                              + ' bvec instead.')
+            # Inputs from dwi/ folder
+            # =======================
+            # Bval file:
+            bval_file = self.bids_layout.get(type='dwi', return_type='file', extensions=['bval'],
+                                             subject=self.subjects[i][4:], session=self.sessions[i][4:])
+            check_input_bids_file(bval_file, "DWI_BVAL",
+                                  self.bids_directory, self.subjects[i], self.sessions[i])
+            list_bval_files.append(bval_file[0])
 
-            # Check DWI file:
-            dwi_file = self.bids_layout.get(
-                return_type='file',
-                type='dwi',
-                extensions=['.nii|.nii.gz'],
-                session=self.sessions[i].replace('ses-', ''),
-                subject=self.subjects[i].replace('sub-', '')
-            )
-            if len(dwi_file) != 1:
-                raise IOError('Expected to find 1 dwi file for subject '
-                              + self.subjects[i]
-                              + ' and session '
-                              + self.sessions[i]
-                              + ' but found '
-                              + str(len(dwi_file))
-                              + ' dwi instead.')
+            # Bvec file:
+            bvec_file = self.bids_layout.get(type='dwi', return_type='file', extensions=['bvec'],
+                                             subject=self.subjects[i][4:], session=self.sessions[i][4:])
+            check_input_bids_file(bvec_file, "DWI_BVEC",
+                                  self.bids_directory, self.subjects[i], self.sessions[i])
+            list_bvec_files.append(bvec_file[0])
 
-            # Check that the number of DWI, b-vecs & b-val are the same:
-            check_dwi_volume(
-                in_dwi=dwi_file[0], in_bvec=bvec_file[0], in_bval=bval_file[0])
+            # DWI file:
+            dwi_file = self.bids_layout.get(type='dwi', return_type='file', extensions=['.nii|.nii.gz'],
+                                            subject=self.subjects[i][4:], session=self.sessions[i][4:])
+            check_input_bids_file(bvec_file, "DWI_NII",
+                                  self.bids_directory, self.subjects[i], self.sessions[i])
+            list_dwi_files.append(dwi_file[0])
 
-            # Check T1w file:
-            t1_file = self.bids_layout.get(
-                return_type='file',
-                type='T1w',
-                extensions=['.nii|.nii.gz'],
-                session=self.sessions[i].replace('ses-', ''),
-                subject=self.subjects[i].replace('sub-', '')
-            )
-            if len(t1_file) != 1:
-                raise IOError('Expected to find 1 T1w file for subject '
-                              + self.subjects[i]
-                              + ' and session '
-                              + self.sessions[i]
-                              + ' but found '
-                              + str(len(t1_file))
-                              + ' T1w instead.')
+            # Check that the number of DWI, bvec & bval are the same:
+            check_dwi_volume(in_dwi=dwi_file[0], in_bvec=bvec_file[0], in_bval=bval_file[0])
 
-        # Iterables:
-        iterables_node = npe.Node(name="LoadingCLIArguments",
-                                  interface=nutil.IdentityInterface(
-                                      fields=['subject_id', 'session_id'],
-                                      mandatory_inputs=True)
-                                  )
-        iterables_node.iterables = [('subject_id', self.subjects),
-                                    ('session_id', self.sessions)]
-        iterables_node.synchronize = True
+        if len(list_dwi_files) == 0:
+            import sys
+            cprint('%s\nEither all the images were already run by the pipeline or no image was found to run the pipeline. '
+                   'The program will now exit.%s' % (Fore.BLUE, Fore.RESET))
+            sys.exit(0)
+        else:
+            cprint('Found %s image(s) in BIDS dataset' % len(self.subjects))
 
-        # T1 DataGrabber
-        t1_bids_reader = npe.Node(
-            nio.DataGrabber(infields=['subject_id', 'session',
-                                      'subject_repeat', 'session_repeat'],
-                            outfields=['out_files']), name='t1_bids_reader')
-        t1_bids_reader.inputs.base_directory = self.bids_directory
-        t1_bids_reader.inputs.template = '%s/%s/anat/%s_%s_*T1w.nii*'
-        t1_bids_reader.inputs.sort_filelist = False
-
-        # DWI DataGrabber
-        dwi_bids_reader = npe.Node(
-            nio.DataGrabber(infields=['subject_id', 'session',
-                                      'subject_repeat', 'session_repeat'],
-                            outfields=['out_files']), name='dwi_bids_reader')
-        dwi_bids_reader.inputs.base_directory = self.bids_directory
-        dwi_bids_reader.inputs.template = '%s/%s/dwi/%s_%s_*dwi.nii*'
-        dwi_bids_reader.inputs.sort_filelist = False
-
-        # Bval DataGrabber
-        bval_bids_reader = npe.Node(
-            nio.DataGrabber(infields=['subject_id', 'session',
-                                      'subject_repeat', 'session_repeat'],
-                            outfields=['out_files']), name='bval_bids_reader')
-        bval_bids_reader.inputs.base_directory = self.bids_directory
-        bval_bids_reader.inputs.template = '%s/%s/dwi/%s_%s_*dwi.bval'
-        bval_bids_reader.inputs.sort_filelist = False
-
-        # Bvec dataGrabber
-        bvec_bids_reader = npe.Node(
-            nio.DataGrabber(infields=['subject_id', 'session',
-                                      'subject_repeat', 'session_repeat'],
-                            outfields=['out_files']), name='bvec_bids_reader')
-        bvec_bids_reader.inputs.base_directory = self.bids_directory
-        bvec_bids_reader.inputs.template = '%s/%s/dwi/%s_%s_*dwi.bvec'
-        bvec_bids_reader.inputs.sort_filelist = False
-
+        read_node = npe.Node(name="ReadingFiles",
+                             iterables=[
+                                 ('T1w', list_t1w_files),
+                                 ('dwi', list_dwi_files),
+                                 ('bvec', list_bvec_files),
+                                 ('bval', list_bval_files),
+                             ],
+                             synchronize=True,
+                             interface=nutil.IdentityInterface(
+                                 fields=self.get_input_fields()))
         self.connect([
-            # Iterables:
-            (iterables_node,      t1_bids_reader,  [('subject_id',       'subject_id'),  # noqa
-                                                    ('session_id',          'session'),  # noqa
-                                                    ('subject_id',   'subject_repeat'),  # noqa
-                                                    ('session_id', 'session_repeat')]),  # noqa
-            (iterables_node,     dwi_bids_reader,  [('subject_id',       'subject_id'),  # noqa
-                                                    ('session_id',          'session'),  # noqa
-                                                    ('subject_id',   'subject_repeat'),  # noqa
-                                                    ('session_id', 'session_repeat')]),  # noqa
-            (iterables_node,     bval_bids_reader, [('subject_id',       'subject_id'),  # noqa
-                                                    ('session_id',          'session'),  # noqa
-                                                    ('subject_id',   'subject_repeat'),  # noqa
-                                                    ('session_id', 'session_repeat')]),  # noqa
-            (iterables_node,     bvec_bids_reader, [('subject_id',       'subject_id'),  # noqa
-                                                    ('session_id',          'session'),  # noqa
-                                                    ('subject_id',   'subject_repeat'),  # noqa
-                                                    ('session_id', 'session_repeat')]),  # noqa
-            # Inputnode:
-            (t1_bids_reader,     self.input_node,  [('out_files',             'T1w')]),  # noqa
-            (dwi_bids_reader,    self.input_node,  [('out_files',             'dwi')]),  # noqa
-            (bval_bids_reader,   self.input_node,  [('out_files',            'bval')]),  # noqa
-            (bvec_bids_reader,   self.input_node,  [('out_files',            'bvec')])   # noqa
+            (read_node, self.input_node, [('T1w', 'T1w')]),
+            (read_node, self.input_node, [('dwi', 'dwi')]),
+            (read_node, self.input_node, [('bvec', 'bvec')]),
+            (read_node, self.input_node, [('bval', 'bval')]),
         ])
 
     def build_output_node(self):
@@ -327,7 +255,6 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
 
         # Connection
         # ==========
-
         self.connect([
             # Preliminary step (possible computation of a mean b0):
             (self.input_node, prepare_b0, [('dwi',  'in_dwi'),  # noqa
