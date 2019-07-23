@@ -1,13 +1,12 @@
-    # coding: utf8
+# coding: utf8
 
 import clinica.pipelines.engine as cpe
 
-__author__ = ["Alexandre Routier"]
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Nipype", "Junhao Wen"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__status__ = "Development"
+# Use hash instead of parameters for iterables folder names
+# Otherwise path will be too long and generate OSError
+from nipype import config
+cfg = dict(execution={'parameterize_dirs': False})
+config.update_config(cfg)
 
 
 class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
@@ -20,7 +19,7 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             format).
 
     Returns:
-        A clinica pipeline object containing the DWIPreprocessingUsingPhaseDiffFieldmap pipeline.
+        A clinica pipeline object containing the DwiPreprocessingUsingPhaseDiffFieldmap pipeline.
 
     Raises:
 
@@ -69,9 +68,10 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         Returns:
             A list of (string) input fields name.
         """
-        input_list = ['dwi', 'bvec', 'bval', 'delta_echo_time',
+        input_list = ['dwi', 'bvec', 'bval',
                       'effective_echo_spacing', 'phase_encoding_direction',
-                      'fmap_magnitude', 'fmap_phasediff']
+                      'fmap_magnitude', 'fmap_phasediff',
+                      'delta_echo_time']
 
         return input_list
 
@@ -97,6 +97,7 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         from clinica.utils.io import check_input_bids_file
         from clinica.utils.dwi import check_dwi_volume
         import clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_utils as utils
+        from clinica.utils.epi import bids_dir_to_fsl_dir
 
         list_dwi_files = []
         list_bvec_files = []
@@ -118,19 +119,22 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             # Bval file:
             bval_file = self.bids_layout.get(type='dwi', return_type='file', extensions=['bval'],
                                              subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_bids_file(bval_file, "DWI_BVAL", self.bids_directory, self.subjects[i], self.sessions[i])
+            check_input_bids_file(bval_file, "DWI_BVAL",
+                                  self.bids_directory, self.subjects[i], self.sessions[i])
             list_bval_files.append(bval_file[0])
 
             # Bvec file:
             bvec_file = self.bids_layout.get(type='dwi', return_type='file', extensions=['bvec'],
                                              subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_bids_file(bvec_file, "DWI_BVEC", self.bids_directory, self.subjects[i], self.sessions[i])
+            check_input_bids_file(bvec_file, "DWI_BVEC",
+                                  self.bids_directory, self.subjects[i], self.sessions[i])
             list_bvec_files.append(bvec_file[0])
 
             # DWI file:
             dwi_file = self.bids_layout.get(type='dwi', return_type='file', extensions=['.nii|.nii.gz'],
                                             subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_bids_file(bvec_file, "DWI_NII", self.bids_directory, self.subjects[i], self.sessions[i])
+            check_input_bids_file(bvec_file, "DWI_NII",
+                                  self.bids_directory, self.subjects[i], self.sessions[i])
             list_dwi_files.append(dwi_file[0])
 
             # Check that the number of DWI, bvec & bval are the same:
@@ -139,29 +143,33 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             # DWI JSON file:
             dwi_json = self.bids_layout.get(type='dwi', return_type='file', extensions=['.json'],
                                             subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_bids_file(bvec_file, "DWI_JSON", self.bids_directory, self.subjects[i], self.sessions[i])
+            check_input_bids_file(bvec_file, "DWI_JSON",
+                                  self.bids_directory, self.subjects[i], self.sessions[i])
             [eff_echo_spacing, enc_direction] = utils.parameters_from_dwi_metadata(dwi_json[0])
             list_effective_echo_spacings.append(eff_echo_spacing)
-            list_phase_encoding_directions.append(enc_direction)
+            list_phase_encoding_directions.append(bids_dir_to_fsl_dir(enc_direction))
 
             # Inputs from fmap/ folder
             # ========================
             # Magnitude1 file:
             fmap_mag_file = self.bids_layout.get(type='magnitude1', return_type='file', extensions=['.nii|.nii.gz'],
                                                  subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_bids_file(fmap_mag_file, "FMAP_MAGNITUDE1_NII", self.bids_directory, self.subjects[i], self.sessions[i])
+            check_input_bids_file(fmap_mag_file, "FMAP_MAGNITUDE1_NII",
+                                  self.bids_directory, self.subjects[i], self.sessions[i])
             list_fmap_magnitude_files.append(fmap_mag_file[0])
 
             # PhaseDiff file:
             fmap_phasediff_file = self.bids_layout.get(type='phasediff', return_type='file', extensions=['.nii|.nii.gz'],
                                                        subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_bids_file(fmap_phasediff_file, "FMAP_PHASEDIFF_NII", self.bids_directory, self.subjects[i], self.sessions[i])
+            check_input_bids_file(fmap_phasediff_file, "FMAP_PHASEDIFF_NII",
+                                  self.bids_directory, self.subjects[i], self.sessions[i])
             list_fmap_phasediff_files.append(fmap_phasediff_file[0])
 
             # PhaseDiff JSON file:
             fmap_phasediff_json = self.bids_layout.get(type='phasediff', return_type='file', extensions=['.json'],
                                                        subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_bids_file(fmap_phasediff_json, "FMAP_PHASEDIFF_JSON", self.bids_directory, self.subjects[i], self.sessions[i])
+            check_input_bids_file(fmap_phasediff_json, "FMAP_PHASEDIFF_JSON",
+                                  self.bids_directory, self.subjects[i], self.sessions[i])
             delta_echo_time = utils.delta_echo_time_from_bids_fmap(fmap_phasediff_json[0])
             list_delta_echo_times.append(delta_echo_time)
 
@@ -174,110 +182,31 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
                    'The program will now exit.%s' % (Fore.BLUE, Fore.RESET))
             sys.exit(0)
         else:
-            cprint('Found %s image(s) in CAPS dataset' % len(self.subjects))
+            cprint('Found %s image(s) in BIDS dataset' % len(self.subjects))
 
-        # Iterables:
-        iterables_node = npe.Node(name="LoadingCLIArguments",
-                                  interface=nutil.IdentityInterface(
-                                      fields=['subject_id', 'session_id'],
-                                      mandatory_inputs=True)
-                                  )
-        iterables_node.iterables = [('subject_id', self.subjects),
-                                    ('session_id', self.sessions)]
-        iterables_node.synchronize = True
-
-        # Magnitude fmap DataGrabber
-        magnitude_bids_reader = npe.Node(
-            nio.DataGrabber(infields=['subject_id', 'session',
-                                      'subject_repeat', 'session_repeat'],
-                            outfields=['out_files']),
-            name='magnitude_bids_reader')
-        magnitude_bids_reader.inputs.base_directory = self.bids_directory
-        magnitude_bids_reader.inputs.template = '%s/%s/fmap/%s_%s_magnitude1.nii*'
-        magnitude_bids_reader.inputs.sort_filelist = False
-
-        # PhaseDiff fmap DataGrabber
-        phasediff_bids_reader = npe.Node(
-            nio.DataGrabber(infields=['subject_id', 'session',
-                                      'subject_repeat', 'session_repeat'],
-                            outfields=['out_files']),
-            name='phasediff_bids_reader')
-        phasediff_bids_reader.inputs.base_directory = self.bids_directory
-        phasediff_bids_reader.inputs.template = '%s/%s/fmap/%s_%s_phasediff.nii*'
-        phasediff_bids_reader.inputs.sort_filelist = False
-
-        # DWI DataGrabber
-        dwi_bids_reader = npe.Node(
-            nio.DataGrabber(infields=['subject_id', 'session',
-                                      'subject_repeat', 'session_repeat'],
-                            outfields=['out_files']), name='dwi_bids_reader')
-        dwi_bids_reader.inputs.base_directory = self.bids_directory
-        dwi_bids_reader.inputs.template = '%s/%s/dwi/%s_%s_dwi.nii*'
-        dwi_bids_reader.inputs.sort_filelist = False
-
-        # Bval DataGrabber
-        bval_bids_reader = npe.Node(
-            nio.DataGrabber(infields=['subject_id', 'session',
-                                      'subject_repeat', 'session_repeat'],
-                            outfields=['out_files']), name='bval_bids_reader')
-        bval_bids_reader.inputs.base_directory = self.bids_directory
-        bval_bids_reader.inputs.template = '%s/%s/dwi/%s_%s_dwi.bval'
-        bval_bids_reader.inputs.sort_filelist = False
-
-        # Bvec dataGrabber
-        bvec_bids_reader = npe.Node(
-            nio.DataGrabber(infields=['subject_id', 'session',
-                                      'subject_repeat', 'session_repeat'],
-                            outfields=['out_files']), name='bvec_bids_reader')
-        bvec_bids_reader.inputs.base_directory = self.bids_directory
-        bvec_bids_reader.inputs.template = '%s/%s/dwi/%s_%s_dwi.bvec'
-        bvec_bids_reader.inputs.sort_filelist = False
-
-        # BIDS parameters iterables
-        bids_parameters_reader = npe.Node(
-            name="DeltaEchoTimeArguments",
-            interface=nutil.IdentityInterface(
-                fields=['delta_echo_time', 'effective_echo_spacing', 'phase_encoding_direction'],
-                mandatory_inputs=True)
-        )
-        bids_parameters_reader.iterables = [
-            ('delta_echo_time', list_delta_echo_times),
-            ('effective_echo_spacing', list_effective_echo_spacings),
-            ('phase_encoding_direction', list_phase_encoding_directions)]
-        bids_parameters_reader.synchronize = True
-
+        read_node = npe.Node(name="ReadingFiles",
+                             iterables=[
+                                 ('dwi', list_dwi_files),
+                                 ('bvec', list_bvec_files),
+                                 ('bval', list_bval_files),
+                                 ('effective_echo_spacing', list_effective_echo_spacings),
+                                 ('phase_encoding_direction', list_phase_encoding_directions),
+                                 ('fmap_magnitude', list_fmap_magnitude_files),
+                                 ('fmap_phasediff', list_fmap_phasediff_files),
+                                 ('delta_echo_time', list_delta_echo_times),
+                             ],
+                             synchronize=True,
+                             interface=nutil.IdentityInterface(
+                                 fields=self.get_input_fields()))
         self.connect([
-            # Iterables:
-            (iterables_node, dwi_bids_reader, [('subject_id', 'subject_id'),  # noqa
-                                               ('session_id', 'session'),  # noqa
-                                               ('subject_id', 'subject_repeat'),  # noqa
-                                               ('session_id', 'session_repeat')]),  # noqa
-            (iterables_node, bval_bids_reader, [('subject_id', 'subject_id'),  # noqa
-                                                ('session_id', 'session'),  # noqa
-                                                ('subject_id', 'subject_repeat'),  # noqa
-                                                ('session_id', 'session_repeat')]),  # noqa
-            (iterables_node, bvec_bids_reader, [('subject_id', 'subject_id'),  # noqa
-                                                ('session_id', 'session'),  # noqa
-                                                ('subject_id', 'subject_repeat'),  # noqa
-                                                ('session_id', 'session_repeat')]),  # noqa
-            (iterables_node, magnitude_bids_reader, [('subject_id', 'subject_id'),  # noqa
-                                                     ('session_id', 'session'),  # noqa
-                                                     ('subject_id', 'subject_repeat'),  # noqa
-                                                     ('session_id', 'session_repeat')]),  # noqa
-            (iterables_node, phasediff_bids_reader, [('subject_id', 'subject_id'),  # noqa
-                                                     ('session_id', 'session'),  # noqa
-                                                     ('subject_id', 'subject_repeat'),  # noqa
-                                                     ('session_id', 'session_repeat')]),  # noqa
-            # Input node:
-            (magnitude_bids_reader,  self.input_node, [('out_files',                'fmap_magnitude')]),  # noqa
-            (phasediff_bids_reader,  self.input_node, [('out_files',                'fmap_phasediff')]),  # noqa
-            (dwi_bids_reader,        self.input_node, [('out_files',                'dwi')]),  # noqa
-            (bval_bids_reader,       self.input_node, [('out_files',                'bval')]),  # noqa
-            (bvec_bids_reader,       self.input_node, [('out_files',                'bvec')]),  # noqa
-            (bids_parameters_reader, self.input_node, [('delta_echo_time',          'delta_echo_time')]),  # noqa
-            (bids_parameters_reader, self.input_node, [('effective_echo_spacing',   'effective_echo_spacing')]),  # noqa
-            (bids_parameters_reader, self.input_node, [('phase_encoding_direction', 'phase_encoding_direction')])   # noqa
-
+            (read_node, self.input_node, [('dwi', 'dwi')]),
+            (read_node, self.input_node, [('bvec', 'bvec')]),
+            (read_node, self.input_node, [('bval', 'bval')]),
+            (read_node, self.input_node, [('effective_echo_spacing', 'effective_echo_spacing')]),
+            (read_node, self.input_node, [('phase_encoding_direction', 'phase_encoding_direction')]),
+            (read_node, self.input_node, [('fmap_magnitude', 'fmap_magnitude')]),
+            (read_node, self.input_node, [('fmap_phasediff', 'fmap_phasediff')]),
+            (read_node, self.input_node, [('delta_echo_time', 'delta_echo_time')]),
         ])
 
     def build_output_node(self):
@@ -394,7 +323,7 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             (self.input_node, sdc, [('fmap_magnitude',           'inputnode.in_fmap_magnitude')]),  # noqa
             (self.input_node, sdc, [('delta_echo_time',          'inputnode.delta_echo_time')]),  # noqa
             (self.input_node, sdc, [('effective_echo_spacing',   'inputnode.effective_echo_spacing')]),  # noqa
-            (self.input_node, sdc, [('phase_encoding_direction', 'inputnode.phase_encoding_direction')]),  # noqa
+            (self.input_node, sdc, [('phase_encoding_direction', 'inputnode.fsl_phase_encoding_direction')]),  # noqa
             # Apply all corrections
             (prepare_b0, unwarp, [('out_b0_dwi_merge',    'inputnode.in_dwi')]),  # noqa
             (hmc,        unwarp, [('outputnode.out_xfms', 'inputnode.in_hmc')]),  # noqa

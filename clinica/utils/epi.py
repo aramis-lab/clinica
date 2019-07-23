@@ -3,8 +3,8 @@
 
 def bids_dir_to_fsl_dir(bids_dir):
     """
-    Converts BIDS PhaseEncodingDirection parameters (i,j,k,i-,j-,k-) to
-    FSL direction (x,y,z,x-,y-,z-).
+    Converts BIDS PhaseEncodingDirection parameters (i, j, k, i-, j-, k-) to
+    FSL direction (x, y, z, x-, y-, z-).
     """
     fsl_dir = bids_dir.lower()
     if fsl_dir == 'i-':
@@ -20,6 +20,5 @@ def bids_dir_to_fsl_dir(bids_dir):
     if fsl_dir == 'k':
         return 'z'
 
-    raise RuntimeError("PhaseEncodingDirection " + fsl_dir + " is unknown, it should be a value in (x,y,z,x-,y-,z-)")
-
-    return fsl_dir
+    raise RuntimeError("PhaseEncodingDirection (found value: %s) is unknown,"
+                       "it should be a value in (i, j, k, i-, j-, k-)" % fsl_dir)

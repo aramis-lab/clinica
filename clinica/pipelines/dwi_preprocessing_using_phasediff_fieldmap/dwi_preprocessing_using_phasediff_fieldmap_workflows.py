@@ -58,7 +58,6 @@ def susceptibility_distortion_correction_using_phasediff_fmap(
     import nipype.interfaces.fsl as fsl
     import nipype.interfaces.ants as ants
 
-    from clinica.utils.epi import bids_dir_to_fsl_dir
     from clinica.utils.fmap import resample_fmap_to_b0
 
     from nipype.workflows.dmri.fsl.utils import (rads2radsec, siemens2rads,
@@ -69,16 +68,11 @@ def susceptibility_distortion_correction_using_phasediff_fmap(
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['in_dwi', 'in_mask', 'in_fmap_phasediff', 'in_fmap_magnitude',
                 'delta_echo_time', 'effective_echo_spacing',
-                'phase_encoding_direction']),
+                'fsl_phase_encoding_direction']),
         name='inputnode')
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['out_file', 'out_vsm', 'out_warp', 'out_prepared_fmap']),
         name='outputnode')
-
-    fsl_dir = pe.Node(niu.Function(
-        input_names=['bids_dir'],
-        output_names=['fsl_dir'],
-        function=bids_dir_to_fsl_dir), name='ConvertToFslDir')
 
     get_b0 = pe.Node(fsl.ExtractROI(t_min=0, t_size=1), name='GetB0')
 
@@ -172,7 +166,6 @@ def susceptibility_distortion_correction_using_phasediff_fmap(
 
     wf = pe.Workflow(name=name)
     wf.connect([
-        (inputnode, fsl_dir, [('phase_encoding_direction', 'bids_dir')]),  # noqa
         (inputnode, pha2rads, [('in_fmap_phasediff', 'in_file')]),  # noqa
         (inputnode, get_b0,   [('in_dwi', 'in_file')]),  # noqa
         (inputnode, first_mag, [('in_fmap_magnitude', 'in_file')]),  # noqa
@@ -222,12 +215,12 @@ def susceptibility_distortion_correction_using_phasediff_fmap(
         (inputnode, split, [('in_dwi', 'in_file')]),  # noqa
         (split,   unwarp, [('out_files',      'in_file')]),  # noqa
         (vsm,     unwarp, [('shift_out_file', 'shift_in_file')]),  # noqa
-        (fsl_dir, unwarp, [('fsl_dir',        'unwarp_direction')]),  # noqa
+        (inputnode, unwarp, [('fsl_phase_encoding_direction', 'unwarp_direction')]),  # noqa
         (unwarp, thres, [('unwarped_file', 'in_file')]),  # noqa
         (thres, merge, [('out_file', 'in_files')]),  # noqa
         (merge,   vsm2dfm, [('merged_file',    'inputnode.in_ref')]),  # noqa
         (vsm,     vsm2dfm, [('shift_out_file', 'inputnode.in_vsm')]),  # noqa
-        (fsl_dir, vsm2dfm, [('fsl_dir',        'inputnode.enc_dir')]),  # noqa
+        (inputnode, vsm2dfm, [('fsl_phase_encoding_direction',        'inputnode.enc_dir')]),  # noqa
         (rad2rsec, outputnode, [('out_file',            'out_native_fmap')]),  # noqa
         (merge,    outputnode, [('merged_file',         'out_file')]),  # noqa
         (vsm,      outputnode, [('shift_out_file',      'out_vsm')]),  # noqa
