@@ -95,7 +95,6 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
         pass it to the `self.input_node` to further by used as input of
         the core nodes.
         """
-        import os
         import clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
