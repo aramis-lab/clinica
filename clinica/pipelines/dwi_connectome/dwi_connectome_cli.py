@@ -13,7 +13,7 @@ class DwiConnectomeCli(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'Connectome-based processing of DWI datasets:\nhttp://clinica.run/doc/DWI_Connectome'
+        self._description = 'Connectome-based processing of DWI datasets:\nhttp://www.clinica.run/doc/Pipelines/DWI_Connectome/'
 
     def define_options(self):
         """Define the sub-command arguments
