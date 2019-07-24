@@ -35,26 +35,42 @@ def convert_images(path_to_dataset, bids_dir, path_to_clinical):
 
     path_converter = os.path.join(os.path.dirname(os.path.realpath(__file__)))
     path_conflicts = os.path.join(path_converter, 'config_files', 'unique_conflicts')
+    path_to_clinical_file = os.path.join(path_to_clinical, 'NIFD_Clinical_Data_2017_final_updated.xlsx')
 
-    path_to_ida = os.path.join(path_converter, 'preprocessing', 'ida.tsv')
-    path_to_clinical_info = os.path.join(path_converter, 'preprocessing', 'clinical_info.tsv')
+    path_to_ida = os.path.join(path_to_clinical, 'ida.tsv')
+
+    path_to_clinical_info = os.path.join(path_to_clinical, 'clinical_info.tsv')
+
+    path_idaSearch = os.path.join(path_to_clinical, 'idaSearch_1_17_2019_NIFD_all.csv')
+    path_DataDictionary_NIFD_2017 = os.path.join(path_to_clinical, 'DataDictionary_NIFD_2017.10.18.xlsx')
 
     #Pre-processing step, to be executed the first time the converter is used.
     if not os.path.isfile(path_to_ida):
-        cprint("\nida.tsv does not exist, to create it please enter path/to/idaSearch_1_17_2019_NIFD_all.csv :")
-        path_idaSearch = input()
+        if os.path.isfile(path_idaSearch):
+            cprint("ida.tsv was not found in the clinical data directory, ida.tsv will be created from idaSearch_1_17_2019_NIFD_all.csv")
+
+        else:
+            cprint("\nida.tsv does not exist and idaSearch_1_17_2019_NIFD_all.csv was not found in the clinical data directory,"
+                   " to create it please enter path/to/idaSearch_1_17_2019_NIFD_all.csv :")
+            path_idaSearch = input()
+            path_idaSearch = path_idaSearch.strip(' ')
         cprint("Creating ida.tsv ...")
-        process_ida(path_idaSearch, os.path.join(path_converter, 'preprocessing'))
+        process_ida(path_idaSearch, path_to_clinical)
         assert os.path.isfile(path_to_ida), 'Failed to create ida.tsv'
         cprint("ida.tsv successfully created !")
 
     if not os.path.isfile(path_to_clinical_info):
-        cprint("\nclinical_info.tsv does not exist, to create it please enter path/to/DataDictionary_NIFD_2017.10.18.xlsx :")
-        path_DataDictionary_NIFD_2017 = input()
+        if os.path.isfile(path_idaSearch):
+            cprint("clinical_info.tsv was not found in the clinical data directory, clinical_info.tsv will be created from DataDictionary_NIFD_2017.10.18.xlsx")
+
+        else:
+            cprint("\nclinical_info.tsv does not exist and DataDictionary_NIFD_2017.10.18.xlsx was not found in the clinical data directory"
+                   ", to create it please enter path/to/DataDictionary_NIFD_2017.10.18.xlsx :")
+            path_DataDictionary_NIFD_2017 = input()
+            path_DataDictionary_NIFD_2017 = path_DataDictionary_NIFD_2017.strip(' ')
         cprint("Creating clinica_info.tsv ...")
         path_clinicals = os.path.join(path_converter, 'clinicals')
-        path_preprocessing = os.path.join(path_converter, 'preprocessing')
-        update_info_clinical(path_DataDictionary_NIFD_2017, path_clinicals, path_to_clinical, path_preprocessing)
+        update_info_clinical(path_DataDictionary_NIFD_2017, path_clinicals, path_to_clinical_file, path_to_clinical)
         assert os.path.isfile(path_to_clinical_info), 'Failed to create clinical_info.tsv'
         cprint("clinical_info.tsv successfully created !")
 
@@ -90,7 +106,8 @@ def convert_images(path_to_dataset, bids_dir, path_to_clinical):
     assert to_convert!=[], "No Dicom files to convert!"
     cprint("Converting files to Nifti")
 
-    # Converting only images that have not been already converted, the converter does not have to restart from scratch if something fails
+    # Converting only images that have not been already converted,
+    # the converter does not have to restart from scratch if something fails
     final_convert = []
     for tuple in to_convert:
         if not os.path.isfile(tuple[1]+'.nii.gz'):
@@ -106,12 +123,12 @@ def convert_clinical_data(bids_dir, path_to_clinical, to_convert):
     from clinica.iotools.converters.nifd_to_bids.utils.Parse_clinical import Parse_clinical
     from clinica.utils.stream import cprint
 
-    path_converter = os.path.join(os.path.dirname(os.path.realpath(__file__)))
-    path_to_ida = os.path.join(path_converter, 'preprocessing', 'ida.tsv')
+    path_to_ida = os.path.join(path_to_clinical, 'ida.tsv')
+    assert os.path.isfile(path_to_ida), 'Failed to create ida.tsv'
 
     cprint('Creating clinical data files')
 
-    pc = Parse_clinical(path_to_clinical, path_to_ida)
+    pc = Parse_clinical(path_to_clinical)
     pc.make_all(bids_dir)
     pc.make_all_scans(to_convert)
 
@@ -120,7 +137,8 @@ if __name__ == '__main__':
     path_to_ida = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/infos_old/pre_processing/ida.tsv'
     bids_dir = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/dest_dir'
 
-    path_to_clinical = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/infos_old/info_from_NIFD/NIFD_Clinical_Data_2017_final_updated.xlsx'
+    # path_to_clinical = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/infos_old/info_from_NIFD/NIFD_Clinical_Data_2017_final_updated.xlsx'
+    path_to_clinical = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/infos_old/info_from_NIFD'
 
     to_convert = convert_images(path_to_dataset, path_to_ida, bids_dir)
     convert_clinical_data(bids_dir, path_to_ida, path_to_clinical, to_convert)

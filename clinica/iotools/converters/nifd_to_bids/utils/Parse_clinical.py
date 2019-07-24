@@ -11,17 +11,13 @@ __status__ = "Development"
 class Parse_clinical():
     '''Creates the clinical files for the BIDS directory'''
 
-    def __init__(self, path_clinical_data, path_ida):
+    def __init__(self, path_clinical):
         import pandas as pd
         import os.path as path
 
-        path_utils = path.realpath(__file__).split('/')[:-1]
-        path_utils = '/' + path.join(*path_utils)
-        path_preprocessing = path.join(path_utils, '..', 'preprocessing')
-
-        self.df_dict_mod = pd.read_csv(path.join(path_preprocessing, 'clinical_info.tsv'), sep='\t')
-        self.df_clinical = pd.read_excel(path_clinical_data)
-        self.df_ida = pd.read_csv(path_ida, sep='\t')
+        self.df_dict_mod = pd.read_csv(path.join(path_clinical, 'clinical_info.tsv'), sep='\t')
+        self.df_clinical = pd.read_excel(path.join(path_clinical, 'NIFD_Clinical_Data_2017_final_updated.xlsx'))
+        self.df_ida = pd.read_csv(path.join(path_clinical, 'ida.tsv'), sep='\t')
 
         self.merge_clinical = self.merge_clinical()
         self.df_clinical = self.merge_clinical

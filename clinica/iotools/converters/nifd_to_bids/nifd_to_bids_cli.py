@@ -23,8 +23,10 @@ class NifdToBidsCLI(ce.CmdParser):
         """
         self._args.add_argument("dataset_directory",
                                 help='Path to the NIFD images directory.')
-        self._args.add_argument("clinical_data_file",
-                                help='Path to the NIFD clinical file. (NIFD_Clinical_Data_2017_final_updated.xlsx)')
+        self._args.add_argument("clinical_data_directory",
+                                help='Path to the directory containing the NIFD clinical files. '
+                                     '(NIFD_Clinical_Data_2017_final_updated.xlsx, '
+                                     'DataDictionary_NIFD_2017.10.18.xlsx, idaSearch_1_17_2019_NIFD_all.csv)')
         # self._args.add_argument("ida_file",
         #                         help='Path to the NIFD ida.tsv file, path/to/file/ida.tsv')
         self._args.add_argument("bids_directory",
@@ -49,6 +51,6 @@ class NifdToBidsCLI(ce.CmdParser):
 
         # to_convert = convert_images(args.dataset_directory, args.ida_file, args.bids_directory)
         # convert_clinical_data(args.bids_directory, args.ida_file, args.clinical_data_file, to_convert)
-        to_convert = convert_images(args.dataset_directory, args.bids_directory, args.clinical_data_file)
-        convert_clinical_data(args.bids_directory, args.clinical_data_file, to_convert)
+        to_convert = convert_images(args.dataset_directory, args.bids_directory, args.clinical_data_directory)
+        convert_clinical_data(args.bids_directory, args.clinical_data_directory, to_convert)
         cprint(Fore.GREEN + 'Conversion to BIDS succeeded' + Fore.RESET)
