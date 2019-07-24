@@ -355,3 +355,106 @@ def check_dwi_volume(in_dwi, in_bvec, in_bval):
         raise IOError('Number of DWIs, b-vals and b-vecs mismatch '
                       '(# DWI = %s, # B-vec = %s, #B-val = %s) ' %
                       (num_dwis, num_b_vecs, num_b_vals))
+
+
+def find_b0_indices(in_bval, low_bval=5.0):
+    """
+    Returns indices of bval <= low_bval.
+
+    Args:
+        in_bval (str): Bval file.
+        low_bval (Optional[int]): Define the b0 volumes as all volume
+            bval <= low_bval. (Default=5.0)
+
+    Returns:
+        out_indices (int): Indices of bval <= low_bval.
+    """
+    import numpy as np
+    import os.path as op
+
+    assert(op.isfile(in_bval))
+    bvals = np.loadtxt(in_bval)
+
+    idx_low_bvals = np.where(bvals <= low_bval)
+    out_indices = idx_low_bvals[0].tolist()
+
+    return out_indices
+
+
+def generate_index_file(in_bval, low_bval=5.0):
+    """
+    Generate index.txt file for FSL eddy command.
+
+    Args:
+        in_bval (str): Bval file.
+        low_bval (Optional[int]): Define the b0 volumes as all volume
+            bval <= low_bval. (Default=5.0)
+
+    Returns:
+        index.txt file for FSL eddy command.
+    """
+    import os
+    import numpy as np
+    import os.path as op
+
+    assert(op.isfile(in_bval))
+    bvals = np.loadtxt(in_bval)
+    idx_low_bvals = np.where(bvals <= low_bval)
+    b0_index = idx_low_bvals[0].tolist()
+
+    out_file = os.path.abspath('index.txt')
+    vols = len(bvals)
+    index_list = []
+    for i in range(0, len(b0_index)):
+        if i == (len(b0_index) - 1):
+            index_list.extend([i+1] * (vols - b0_index[i]))
+        else:
+            index_list.extend([i+1] * (b0_index[i+1] - b0_index[i]))
+    index_array = np.asarray(index_list)
+    try:
+        len(index_list) == vols
+    except ValueError:
+        raise ValueError("It seems that you do not define the index file for FSL eddy correctly!")
+    np.savetxt(out_file, index_array.T)
+
+    return out_file
+
+
+def generate_acq_file(in_dwi, fsl_phase_encoding_direction, total_readout_time):
+    """
+    Generate acq.txt file for FSL eddy command.
+
+    Args:
+        in_dwi: DWI file.
+        fsl_phase_encoding_direction: PhaseEncodingDirection from BIDS specifications
+            in FSL format (i.e. x/y/z instead of i/j/k).
+        total_readout_time: TotalReadoutTime from BIDS specifications.
+    Returns:
+        acqp.txt file for FSL eddy.
+    """
+    import numpy as np
+    import os
+    import nibabel as nb
+    out_file = os.path.abspath('acq.txt')
+    vols = nb.load(in_dwi).get_data().shape[-1]
+    arr = np.ones([vols, 4])
+    for i in range(vols):
+        if fsl_phase_encoding_direction == 'y-':
+            arr[i, :] = np.array((0, -1, 0, total_readout_time))
+        elif fsl_phase_encoding_direction == 'y':
+            arr[i, :] = np.array((0, 1, 0, total_readout_time))
+        elif fsl_phase_encoding_direction == 'x':
+            arr[i, :] = np.array((0, 1, 0, total_readout_time))
+        elif fsl_phase_encoding_direction == 'x-':
+            arr[i, :] = np.array((0, -1, 0, total_readout_time))
+        elif fsl_phase_encoding_direction == 'z':
+            arr[i, :] = np.array((0, 1, 0, total_readout_time))
+        elif fsl_phase_encoding_direction == 'x-':
+            arr[i, :] = np.array((0, -1, 0, total_readout_time))
+        else:
+            raise RuntimeError("FSL PhaseEncodingDirection (found value: %s) is unknown,"
+                               "it should be a value in (x, y, z, x-, y-, z-)" % fsl_phase_encoding_direction)
+
+    np.savetxt(out_file, arr, fmt="%d "*3 + "%f")
+
+    return out_file
