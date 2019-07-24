@@ -94,9 +94,8 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         import nipype.interfaces.io as nio
         from colorama import Fore
         from clinica.utils.stream import cprint
-        from clinica.utils.io import check_input_bids_file
+        from clinica.utils.io import check_input_bids_file, extract_metadata_from_json
         from clinica.utils.dwi import check_dwi_volume
-        import clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_utils as utils
         from clinica.utils.epi import bids_dir_to_fsl_dir
 
         list_dwi_files = []
@@ -145,7 +144,7 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
                                             subject=self.subjects[i][4:], session=self.sessions[i][4:])
             check_input_bids_file(bvec_file, "DWI_JSON",
                                   self.bids_directory, self.subjects[i], self.sessions[i])
-            [eff_echo_spacing, enc_direction] = utils.parameters_from_dwi_metadata(dwi_json[0])
+            [eff_echo_spacing, enc_direction] = extract_metadata_from_json(dwi_json[0], ['EffectiveEchoSpacing', 'PhaseEncodingDirection'])
             list_effective_echo_spacings.append(eff_echo_spacing)
             list_phase_encoding_directions.append(bids_dir_to_fsl_dir(enc_direction))
 
@@ -170,11 +169,12 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
                                                        subject=self.subjects[i][4:], session=self.sessions[i][4:])
             check_input_bids_file(fmap_phasediff_json, "FMAP_PHASEDIFF_JSON",
                                   self.bids_directory, self.subjects[i], self.sessions[i])
-            delta_echo_time = utils.delta_echo_time_from_bids_fmap(fmap_phasediff_json[0])
-            list_delta_echo_times.append(delta_echo_time)
+            [echo_time_1, echo_time_2] = extract_metadata_from_json(fmap_phasediff_json[0], ['EchoTime1', 'EchoTime2'])
+            list_delta_echo_times.append(abs(echo_time_2 - echo_time_1))
 
-            cprint('From JSON files: EffectiveEchoSpacing = %s, PhaseEncodingDirection = %s, DeltaEchoTime = %s' %
-                   (eff_echo_spacing, enc_direction, delta_echo_time))
+            cprint('From JSON files: EffectiveEchoSpacing = %s, PhaseEncodingDirection = %s, '
+                   'EchoTime1 = %s, EchoTime2 = %s (DeltaEchoTime = %s)' %
+                   (eff_echo_spacing, enc_direction, echo_time_1, echo_time_2, abs(echo_time_2 - echo_time_1)))
 
         if len(list_dwi_files) == 0:
             import sys

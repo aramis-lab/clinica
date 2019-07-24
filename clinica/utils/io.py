@@ -392,3 +392,25 @@ def check_input_caps_files(list_caps_files, caps_type, pipeline_name, caps_direc
         list_caps_files = reorder_bids_or_caps_files(subject_ids, list_caps_files)
 
     return error_message
+
+
+def extract_metadata_from_json(json_file, list_keys):
+    import json
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaException
+
+    list_values = []
+    try:
+        with open(json_file, 'r') as file:
+            data = json.load(file)
+            for key in list_keys:
+                list_values.append(data[key])
+    except EnvironmentError:
+        raise EnvironmentError('[Error] Clinica could not open the following JSON file: %s' % json_file)
+    except KeyError as e:
+        raise ClinicaException('\n%s[Error] Clinica could not find the %s key in the following JSON file: %s%s' %
+                               (Fore.RED, e, json_file, Fore.RESET))
+    finally:
+        file.close()
+
+    return list_values
