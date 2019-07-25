@@ -1143,7 +1143,8 @@ def run_reconallbase(
         # run recon-all -base in temp FreeSurfer SUBJECT_DIR
         reconallbase_command = 'recon-all {0} -sd {1}'.format(
             in_reconallbase_flags, fssubdir_path)
-        subprocess_run_reconallbase = subprocess.run(reconallbase_command,
+        subprocess_run_reconallbase = subprocess.run(
+            reconallbase_command,
             shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if subprocess_run_reconallbase.returncode != 0:
             raise ValueError('recon-all -base failed, returned non-zero code')

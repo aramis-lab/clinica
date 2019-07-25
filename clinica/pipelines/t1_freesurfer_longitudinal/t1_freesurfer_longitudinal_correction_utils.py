@@ -696,7 +696,8 @@ def run_reconalllong(in_subject,
     # run recon-all -long
     reconalllong_command = 'recon-all {0} -sd {1}'.format(
         in_reconalllong_flags, in_symlink_path)
-    subprocess_run_reconalllong = subprocess.run(reconalllong_command,
+    subprocess_run_reconalllong = subprocess.run(
+        reconalllong_command,
         shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     if subprocess_run_reconalllong.returncode != 0:
         raise ValueError('recon-all -long failed, returned non-zero code')
