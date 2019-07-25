@@ -931,15 +931,16 @@ def store_reconallbase_results(in_subject_list):
             when the command is run in a subsequent node
     """
     import os
+    import errno
 
     # create subject-specific path in Clinica's working directory
     # for the FreeSurfer 'recon-all' commands
     out_workdirstore_path = os.path.abspath("./subjects")
     try:
         os.mkdir(out_workdirstore_path)
-    except IOError:
-        error_msg = 'Error: {0} not created.'.format(out_workdirstore_path)
-        raise ValueError(error_msg)
+    except OSError as oserror:
+        if oserror.errno != errno.EEXIST:
+            raise
 
     return out_workdirstore_path
 
@@ -1055,7 +1056,6 @@ def create_fssubdir_path(subject, session_list):
     import os
     import errno
     import tempfile
-    import shutil
 
     if len(session_list) == 1:
         # create FS subdir in temporary folder
@@ -1066,7 +1066,7 @@ def create_fssubdir_path(subject, session_list):
         # create folder if not exists (else recon-all computations will
         # be resumed in the existing folder)
         try:
-            os.makedirs(fssubdir_path)
+            os.mkdir(fssubdir_path)
         except OSError as oserror:
             if oserror.errno != errno.EEXIST:
                 raise
@@ -1103,6 +1103,7 @@ def run_reconallbase(
             otherwise
     """
     import os
+    import errno
     import subprocess
     import shutil
     import clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_utils as utils
@@ -1157,9 +1158,9 @@ def run_reconallbase(
                 in_workdirstore_path, in_subject)
             try:
                 os.mkdir(workdirstore_subject_path)
-            except IOError:
-                error_msg = 'Error: {0} not created.'.format(workdir_subject_path)
-                raise ValueError(error_msg)
+            except OSError as oserror:
+                if oserror.errno != errno.EEXIST:
+                    raise
             # move the recon-all -base output to working directory
             list_filefolder = os.listdir(fssubdir_path)
             for entry in list_filefolder:
