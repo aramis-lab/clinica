@@ -197,37 +197,36 @@ def generate_acq(in_b0, epi_param):
 
 
 def change_itk_transform_type(input_affine_file):
-        """
-        this function takes in the affine.txt produced by the c3d_affine_tool
-        (which converted an FSL FLIRT affine.mat into the affine.txt)
-        it then modifies the 'Transform Type' of this affine.txt so that it is
-        compatible with the antsApplyTransforms tool and produces a new affine
-        file titled 'updated_affine.txt'
-        """
-        import os
+    """
+    This function takes in the affine.txt produced by the c3d_affine_tool
+    (which converted an FSL FLIRT affine.mat into the affine.txt)
+    it then modifies the 'Transform Type' of this affine.txt so that it is
+    compatible with the antsApplyTransforms tool and produces a new affine
+    file titled 'updated_affine.txt'
+    """
+    import os
 
-        new_file_lines = []
+    new_file_lines = []
 
-        with open(input_affine_file) as f:
-            for line in f:
-                if 'Transform:' in line:
-                    if 'MatrixOffsetTransformBase_double_3_3' in line:
-                        transform_line = 'Transform: AffineTransform_double_3_3\n'
-                        new_file_lines.append(transform_line)
-                else:
-                    new_file_lines.append(line)
+    with open(input_affine_file) as f:
+        for line in f:
+            if 'Transform:' in line:
+                if 'MatrixOffsetTransformBase_double_3_3' in line:
+                    transform_line = 'Transform: AffineTransform_double_3_3\n'
+                    new_file_lines.append(transform_line)
+            else:
+                new_file_lines.append(line)
 
-        updated_affine_file = os.path.join(os.getcwd(), 'updated_affine.txt')
+    updated_affine_file = os.path.join(os.getcwd(), 'updated_affine.txt')
 
-        with open(updated_affine_file, 'wt') as f:
-            for line in new_file_lines:
-                f.write(line)
+    with open(updated_affine_file, 'wt') as f:
+        for line in new_file_lines:
+            f.write(line)
 
-        return updated_affine_file
+    return updated_affine_file
 
 
 def expend_matrix_list(in_matrix, in_bvec):
-
     import numpy as np
 
     bvecs = np.loadtxt(in_bvec).T
@@ -239,7 +238,6 @@ def expend_matrix_list(in_matrix, in_bvec):
 
 
 def ants_registration_syn_quick(fix_image, moving_image):
-
     import subprocess
     import os
     import os.path as op
@@ -258,7 +256,6 @@ def ants_registration_syn_quick(fix_image, moving_image):
 
 
 def ants_warp_image_multi_transform(fix_image, moving_image, ants_warp_affine):
-
     import os
     import os.path as op
 
@@ -306,25 +303,24 @@ def rotate_bvecs(in_bvec, in_matrix):
 
 
 def ants_combin_transform(fix_image, moving_image, ants_warp_affine):
-        import os
-        import os.path as op
+    import os
+    import os.path as op
 
-        out_warp_field = op.abspath('out_warp_field.nii.gz')
-        out_warped = op.abspath('out_warped.nii.gz')
+    out_warp_field = op.abspath('out_warp_field.nii.gz')
+    out_warped = op.abspath('out_warped.nii.gz')
 
-        cmd = 'antsApplyTransforms -o [out_warp_field.nii.gz,1] -i ' + moving_image + ' -r ' + fix_image + ' -t ' + \
-              ants_warp_affine[0] + ' ' + ants_warp_affine[1] + ' ' + ants_warp_affine[2]
-        os.system(cmd)
+    cmd = 'antsApplyTransforms -o [out_warp_field.nii.gz,1] -i ' + moving_image + ' -r ' + fix_image + ' -t ' + \
+          ants_warp_affine[0] + ' ' + ants_warp_affine[1] + ' ' + ants_warp_affine[2]
+    os.system(cmd)
 
-        cmd1 = 'antsApplyTransforms -o out_warped.nii.gz -i ' + moving_image + ' -r ' + fix_image + ' -t ' + \
-               ants_warp_affine[0] + ' ' + ants_warp_affine[1] + ' ' + ants_warp_affine[2]
-        os.system(cmd1)
+    cmd1 = 'antsApplyTransforms -o out_warped.nii.gz -i ' + moving_image + ' -r ' + fix_image + ' -t ' + \
+           ants_warp_affine[0] + ' ' + ants_warp_affine[1] + ' ' + ants_warp_affine[2]
+    os.system(cmd1)
 
-        return out_warp_field, out_warped
+    return out_warp_field, out_warped
 
 
 def create_jacobian_determinant_image(imageDimension, deformationField, outputImage):
-
     import os
     import os.path as op
 
@@ -336,7 +332,7 @@ def create_jacobian_determinant_image(imageDimension, deformationField, outputIm
     return outputImage
 
 
-def convvert_eddy_2_hmc_ecc_flirt(eddy_parameters):
+def convert_eddy_2_hmc_ecc_flirt(eddy_parameters):
 
     import os.path as op
     import pandas as pd

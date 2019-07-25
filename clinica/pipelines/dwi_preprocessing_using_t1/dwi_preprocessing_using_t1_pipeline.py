@@ -20,6 +20,23 @@ config.update_config(cfg)
 class DwiPreprocessingUsingT1(cpe.Pipeline):
     """DWI Preprocessing using T1 image for susceptibility distortion step.
 
+    Todo:
+        [X] - Detect c3d_affine_tool dependency
+        [X] - Refactor input_node
+        [ ] - Interfaces
+              [ ] - antsRegistrationSyNQuick.sh!
+              [ ] - antsApplyTransforms?
+              [ ] - eddy?
+              [ ] - c3d_affine_tool?
+              [ ] - antsApplyTransforms?
+        [ ] - Read data from JSON
+              [ ] - PhaseEncodingDirection
+              [ ] - TotalReadoutTime
+        [ ] CI
+              [ ] Set random init FSL eddy
+              [ ] Data CI
+        [ ] - Doc wiki (Pipeline description & paragraph example
+
     Warnings:
         - Do not use this pipeline if you have fieldmap data in your dataset.
 
