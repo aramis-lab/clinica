@@ -640,11 +640,9 @@ def check_reconall_longitudinal_single(subjects_dir,
     # check if longitudinal subfolder exists
     subjectid_longitudinal = "{0}/{1}_{2}.long.{1}".format(
         subjects_dir, in_subject, in_session)
-    try:
-        os.makedirs(subjectid_longitudinal)
-    except OSError as exception:
-        if exception.errno != errno.EEXIST:
-            raise
+    if not os.path.isdir(subjectid_longitudinal):
+        raise OSError(
+            '{0} is not a valid folder.'.format(subjectid_longitudinal))
 
     # check the recon-all.log
     log_file = os.path.join(subjectid_longitudinal, 'scripts', 'recon-all.log')
