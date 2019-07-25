@@ -349,6 +349,7 @@ class Pipeline(Workflow):
         from clinica.utils.stream import cprint
         from colorama import Fore
         import sys
+        import select
 
         SYMBOLS = {
             'customary': ('B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'),
@@ -423,6 +424,8 @@ class Pipeline(Workflow):
                 prefix[s] = 1 << (i + 1) * 10
             return int(num * prefix[letter])
 
+        timeout = 15
+
         # Get the number of sessions
         n_sessions = len(self.subjects)
         try:
@@ -473,8 +476,15 @@ class Pipeline(Workflow):
             if error != '':
                 cprint(Fore.RED + '[SpaceError] ' + error + Fore.RESET)
                 while True:
-                    cprint('Do you still want to run the pipeline ? (yes/no): ')
-                    answer = input('')
+                    cprint('Do you still want to run the pipeline ? (yes/no): '
+                           + ' In ' + str(timeout) + ' sec the pipeline will start if you do not answer.')
+                    stdin_answer, __, ___ = select.select([sys.stdin], [], [], timeout)
+                    if stdin_answer:
+                        answer = str(sys.stdin.readline().strip())
+                    # Else: is taken when no answer is given (timeout)
+                    else:
+                        answer = 'yes'
+
                     if answer.lower() in ['yes', 'no']:
                         break
                     else:
@@ -505,7 +515,7 @@ class Pipeline(Workflow):
         n_cpu = cpu_count()
         # timeout value : max time allowed to decide how many thread
         # to run in parallel (sec)
-        timeout = 10
+        timeout = 15
 
         # Use this var to know in the end if we need to ask the user
         # an other number
