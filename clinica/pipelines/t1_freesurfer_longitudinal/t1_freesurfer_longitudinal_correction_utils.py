@@ -553,6 +553,7 @@ def create_symlinks(
     """
 
     import os
+    import errno
 
     # change the relative path to be absolute path
     caps_path = os.path.expanduser(in_caps_dir)
@@ -563,8 +564,9 @@ def create_symlinks(
     out_subject_symlink_path = os.path.abspath('./subjects')
     try:
         os.mkdir(out_subject_symlink_path)
-    except OSError:
-        pass
+    except OSError as oserror:
+        if oserror.errno != errno.EEXIST:
+            raise
 
     subject_number = len(in_subject_list)
     for subject_index in range(subject_number):
