@@ -199,21 +199,23 @@ def execute():
     from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_cli import T1VolumeNewTemplateCLI
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import T1VolumeExistingTemplateCLI
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
-    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DwiPreprocessingUsingPhaseDiffFieldmapCli
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DwiPreprocessingUsingT1Cli
-    from clinica.pipelines.dwi_dti.dwi_dti_cli import DwiDtiCli
-    from clinica.pipelines.dwi_connectome.dwi_connectome_cli import DwiConnectomeCli
-    from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI
-    from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI
-    from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI
-    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_cli import SpatialSVMCLI
-    from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI
+    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DwiPreprocessingUsingPhaseDiffFieldmapCli 
+    from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_fmap_cli import DwiPreprocessingUsingFieldmapCli 
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DwiPreprocessingUsingT1Cli 
+    from clinica.pipelines.dwi_dti.dwi_dti_cli import DwiDtiCli 
+    from clinica.pipelines.dwi_connectome.dwi_connectome_cli import DwiConnectomeCli 
+    from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI 
+    from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI 
+    from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI 
+    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_cli import SpatialSVMCLI 
+    from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI 
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
                                    extra_dir="pipelines").load()
     pipelines += [
         T1FreeSurferCLI(),
         T1VolumeNewTemplateCLI(),
         T1FreeSurferLongitudinalCLI(),
+        DwiPreprocessingUsingFieldmapCli(),
         DwiPreprocessingUsingPhaseDiffFieldmapCli(),
         DwiPreprocessingUsingT1Cli(),
         DwiDtiCli(),
