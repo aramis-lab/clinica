@@ -65,6 +65,14 @@ Pipeline options
 
 - `--pet_tracer`: type of PET image to process. Possible values are fdg and av45. Default value is fdg. This parameter affects the reference region used for the intensity normalization (FDG: pons, AV45: pons and cerebellum).
 
+- `-np`: This parameter specifies the number of threads to run in parallel. We recommand using `your_number_of_cpu - 1`. Please note that PETPVC is extremely demanding in terms of resources and may cause the pipeline to crash if many subjects happen to be partial volume corrected at the same time (Error : `Failed to allocate memory for image`). To mitigate this issue, you can do the following:
+
+**1)** Use a working directory when you launch clinica 
+
+**2)** If the pipeline crash, just launch again the command (while giving the same working directory) 
+
+**3)** The whole processing will continue where it left ! (you can lower the number of thread to run in parallel the second time)
+
 !!! note
     The arguments common to all Clinica pipelines are described in [Interacting with clinica](../../InteractingWithClinica).
 
