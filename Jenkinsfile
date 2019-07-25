@@ -11,6 +11,9 @@ pipeline {
         parallel {
           stage('Build in Linux') {
             agent { label 'ubuntu' }
+            environment {
+              PATH = "$HOME/miniconda/bin:$PATH"
+              }
             when { changeset "environment.yml" }
             steps {
               echo 'Building Conda environment... ${BRANCH_NAME}'
@@ -20,6 +23,9 @@ pipeline {
           }
           stage('Build in Mac') {
             agent { label 'macos' }
+            environment {
+              PATH = "$HOME/miniconda3/bin:$PATH"
+              }
             when { changeset "environment.yml" }
             steps {
               echo 'Building Conda environment...' + 'env.BRANCH_NAME'
