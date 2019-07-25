@@ -498,9 +498,15 @@ class Pipeline(Workflow):
         from clinica.utils.stream import cprint
         from multiprocessing import cpu_count
         from colorama import Fore
+        import select
+        import sys
 
         # count number of CPUs
         n_cpu = cpu_count()
+        # timeout value : max time allowed to decide how many thread
+        # to run in parallel (sec)
+        timeout = 10
+
         # Use this var to know in the end if we need to ask the user
         # an other number
         ask_user = False
@@ -528,9 +534,16 @@ class Pipeline(Workflow):
             while True:
                 # While True allows to ask indefinitely until
                 # user gives a answer that has the correct format
-                # here, positive integer
-                cprint('How many threads do you want to use ?')
-                answer = input('')
+                # (here, positive integer) or timeout
+                cprint('How many threads do you want to use ? If you do not '
+                       + 'answer within ' + str(timeout)
+                       + ' sec, default value of ' + str(n_cpu - 1)
+                       + ' will be taken.')
+                stdin_answer, __, ___ = select.select([sys.stdin], [], [], timeout)
+                if stdin_answer:
+                    answer = str(sys.stdin.readline().strip())
+                else:
+                    answer = str(max(n_cpu - 1, 1))
                 if answer.isnumeric():
                     if int(answer) > 0:
                         break
