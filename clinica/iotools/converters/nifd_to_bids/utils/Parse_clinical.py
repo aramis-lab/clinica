@@ -396,16 +396,3 @@ class Parse_clinical():
                 df_ses.columns = columns
 
                 self.write(df_ses, os.path.join(root, sub_id, ses_num), sub_id + '_' + ses_num + '_scans')
-
-
-if __name__ == '__main__':
-    path_to_dataset = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/source_dir'
-    path_to_ida = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/infos_old/pre_processing/ida.tsv'
-    bids_dir = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/dest_dir'
-
-    path_to_clinical = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/infos_old/info_from_NIFD/NIFD_Clinical_Data_2017_final_updated.xlsx'
-
-    pc = Parse_clinical(path_to_clinical, path_to_ida)
-    # pc.make_sessions_type('1_S_0001', keep_all=True)
-    # pc.make_all(bids_dir)
-    pc.make_all_scans('')

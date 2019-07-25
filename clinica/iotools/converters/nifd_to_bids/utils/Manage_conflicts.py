@@ -32,8 +32,3 @@ class Manage_conflicts():
             s += str(key) + ' -> ' + str(self.dic[key])
 
         return s
-
-if __name__=='__main__':
-    f = Manage_conflicts('/Users/adam.wild/Desktop/neo_parse_NIFD/unique_conflicts_demo')
-    sol = f.make_decision(['T1_mprage_S3_DIS3D', 'T1_mprage_short_S7_DIS3D'])
-    print(sol)

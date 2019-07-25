@@ -25,7 +25,6 @@ def filter(l_paths, source_dir, descriptors):
     Returns:
         list of paths
     """
-    #from conv_image_folders import get_all_med_name, dict_conversion
     medical_images = get_all_med_name(source_dir)
 
     equivalences = dict_conversion(medical_images, descriptors)

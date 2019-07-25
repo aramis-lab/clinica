@@ -69,7 +69,9 @@ def convert_images(path_to_dataset, bids_dir, path_to_clinical):
             path_DataDictionary_NIFD_2017 = input()
             path_DataDictionary_NIFD_2017 = path_DataDictionary_NIFD_2017.strip(' ')
         cprint("Creating clinica_info.tsv ...")
-        path_clinicals = os.path.join(path_converter, 'clinicals')
+
+        path_clinicals = os.path.join(path_converter, '..', 'clinical_data_bids_correspondence')
+
         update_info_clinical(path_DataDictionary_NIFD_2017, path_clinicals, path_to_clinical_file, path_to_clinical)
         assert os.path.isfile(path_to_clinical_info), 'Failed to create clinical_info.tsv'
         cprint("clinical_info.tsv successfully created !")

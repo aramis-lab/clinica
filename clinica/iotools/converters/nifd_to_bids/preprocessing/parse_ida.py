@@ -159,10 +159,6 @@ def process_ida(path_ida, path_out=None):
     """
     import os
 
-    #TO REMOVE, for testing purposes
-    # path_ida = '/Volumes/dtlake01.aramis/projects/adam.wild/demo_nifd-to-bids/infos/info_from_NIFD/idaSearch_1_17_2019_NIFD_all.csv'
-    # path_out = '/Volumes/dtlake01.aramis/projects/adam.wild/demo_nifd-to-bids/infos/pre_processing'
-
     if path_out is None:
         path_out = path_ida.split('/')[:-1]
         path_out = '/' + os.path.join(*path_out)

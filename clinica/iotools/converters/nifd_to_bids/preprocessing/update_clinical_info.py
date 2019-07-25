@@ -63,16 +63,11 @@ def update_info_clinical(path_data_dict, path_clinicals, path_to_clinical, path_
     import os
     import numpy as np
 
-    # TO REMOVE, for testing purposes
-    # path_data_dict = '/Volumes/dtlake01.aramis/projects/adam.wild/demo_nifd-to-bids/infos/info_from_NIFD/DataDictionary_NIFD_2017.10.18.xlsx'
-    # path_clinicals = '/Volumes/dtlake01.aramis/projects/adam.wild/demo_nifd-to-bids/infos/clinicals'
-
-    dfParticipant = pd.read_csv(os.path.join(path_clinicals, 'Clinical data BIDS correspondence - participant.tsv'),
+    dfParticipant = pd.read_csv(os.path.join(path_clinicals, 'clinical_data_bids_correspondence_participant.tsv'),
                                 sep='\t')
     dfSessions = pd.read_csv(
-        os.path.join(path_clinicals, 'Clinical data BIDS correspondence - sub-<participant_label>_sessions.tsv'),
+        os.path.join(path_clinicals, 'clinical_data_bids_correspondence_sessions.tsv'),
         sep='\t')
-    # dfScans = pd.read_csv(os.path.join(path_clinicals, 'Clinical data BIDS correspondence - sub-<participant_label>_<session_label>_scans.tsv'), sep='\t')
 
     dfClinicalDict = pd.read_excel(path_data_dict)
 
@@ -117,18 +112,4 @@ def update_info_clinical(path_data_dict, path_clinicals, path_to_clinical, path_
         dfClinicalDict.loc[dfClinicalDict['COLUMN_NAME'] == ses, 'FILE'] = 'sessions'
         dfClinicalDict.loc[dfClinicalDict['COLUMN_NAME'] == ses, 'LOCATION'] = 'NIFD_Clinical_Data_2017_final_updated.xlsx'
 
-    # path_preprocessing = os.path.realpath(__file__).split('/')[:-1]
-    # path_preprocessing = '/' + os.path.join(*path_preprocessing)
-
     write(dfClinicalDict, path_preprocessing, 'clinical_info')
-
-
-if __name__ == '__main__':
-    import os
-
-    path_data_dict = '/Volumes/LaCie/demo_nifd-to-bids/infos/info_from_NIFD/DataDictionary_NIFD_2017.10.18.xlsx'
-    path_clinicals = '/Volumes/LaCie/demo_nifd-to-bids/infos/clinicals'
-
-    path_to_clinical = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/infos_old/info_from_NIFD/NIFD_Clinical_Data_2017_final_updated.xlsx'
-
-    update_info_clinical(path_data_dict, path_clinicals, path_to_clinical)
