@@ -168,8 +168,6 @@ def check_processed(
             if the user wishes to re-run the pipeline on subjects that
             had already been processed.
     """
-    import os
-    import csv
     import clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_utils as template_utils
 
     # Check processed/unprocessed subjects for longitudinal-correction
@@ -352,7 +350,6 @@ def to_process(
             template) processing has been found in the CAPS folder for
             any of the input subject/session
     """
-    import os
     import clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_utils as template_utils
     import clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_utils as utils
 
@@ -636,7 +633,6 @@ def check_reconall_longitudinal_single(subjects_dir,
             otherwise
     """
     import os
-    import errno
     import subprocess
 
     # check if longitudinal subfolder exists
