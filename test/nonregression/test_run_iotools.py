@@ -28,6 +28,7 @@ warnings.filterwarnings("ignore")
 def test_run_Nifd2Bids(cmdopt):
     from clinica.iotools.converters.nifd_to_bids.nifd_to_bids import convert_clinical_data, convert_images
     from os.path import dirname, join, abspath
+    import os
 
     root = join(dirname(abspath(__file__)), pardir, 'data', 'Nifd2Bids')
 
@@ -45,6 +46,8 @@ def test_run_Nifd2Bids(cmdopt):
     validate_folder(bids_directory, join(root, 'ref', 'hashes_nifd.p'))
 
     clean_folder(join(root, 'out', 'bids'), recreate=True)
+    os.remove(join(root, 'in', 'clinical_data', 'clinical_info.tsv'))
+    os.remove(join(root, 'in', 'clinical_data', 'ida.tsv'))
 
 def test_run_Oasis2Bids(cmdopt):
     from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import OasisToBids
@@ -198,3 +201,6 @@ def test_run_Aibl2Bids(cmdopt):
     compare_folders(join(root, 'out'), join(root, 'ref'),
                     shared_folder_name='bids')
     clean_folder(join(root, 'out', 'bids'), recreate=True)
+
+if __name__ == "__main__":
+    test_run_Nifd2Bids('yes !')
