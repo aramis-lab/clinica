@@ -34,7 +34,7 @@ def convert_images(path_to_dataset, bids_dir, path_to_clinical):
     from clinica.iotools.converters.nifd_to_bids.preprocessing.update_clinical_info import update_info_clinical
 
     path_converter = os.path.join(os.path.dirname(os.path.realpath(__file__)))
-    path_conflicts = os.path.join(path_converter, 'config_files', 'unique_conflicts')
+    path_conflicts = os.path.join(path_converter, 'config_files', 'unique_conflicts.txt')
     path_to_clinical_file = os.path.join(path_to_clinical, 'NIFD_Clinical_Data_2017_final_updated.xlsx')
 
     path_to_ida = os.path.join(path_to_clinical, 'ida.tsv')
