@@ -34,6 +34,7 @@ class DwiPreprocessingUsingT1Cli(ce.CmdParser):
         optional.add_argument("--low_bval",
                               metavar=('N'), type=int, default=5,
                               help='Define the b0 volumes as all volume bval <= lowbval. (default: --low_bval 5)')  # noqa
+
         # Clinica standard arguments (e.g. --n_procs)
         clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
         clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",

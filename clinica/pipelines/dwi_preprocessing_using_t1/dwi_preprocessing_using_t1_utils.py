@@ -104,38 +104,6 @@ def rename_into_caps(in_bids_dwi,
         out_caps_bvec.outputs.out_file, out_caps_brainmask.outputs.out_file
 
 
-    # def eddy_fsl(in_bvec, in_bval, in_file, in_mask, in_acqp, in_index):
-    #
-    #    import os
-    #    import os.path as op
-    #
-    #    # TODO, using EDDY interface in nipype, but to make sure using the right
-    #    # version of FSL.
-    #
-    #    out_parameter = op.abspath('eddy_corrected.eddy_parameters')
-    #    out_corrected = op.abspath('eddy_corrected.nii.gz')
-    #    out_rotated_bvecs = op.abspath('eddy_corrected.eddy_rotated_bvecs')
-    #
-    #    cmd = 'eddy --imain=' + in_file + ' --bvecs=' + in_bvec + ' --bvals=' + in_bval + ' --out=eddy_corrected' + ' --mask=' + in_mask + ' --acqp=' + in_acqp + ' --index=' + in_index + ' --flm=linear'
-    #    os.system(cmd)
-    #    if not os.path.exists(out_corrected):
-    #        print('Output file not generated. Trying with the binary eddy_opemp...')
-    #        cmd = 'eddy_openmp --imain=' + in_file + ' --bvecs=' + in_bvec + ' --bvals=' + in_bval + ' --out=eddy_corrected' + ' --mask=' + in_mask + ' --acqp=' + in_acqp + ' --index=' + in_index + ' --flm=linear'
-    #        os.system(cmd)
-    #        if not os.path.exists(out_corrected):
-    #            raise ValueError('File ' + out_corrected + ' does not exist even though following command line has been run : ' + cmd)
-    #    return out_parameter, out_corrected, out_rotated_bvecs
-
-
-def b0_indices(in_bval, max_b=10.0):
-    """
-    Extract the indices of slices in a b-values file with a low b value
-    """
-    import numpy as np
-    bval = np.loadtxt(in_bval)
-    return np.argwhere(bval <= max_b).flatten().tolist()
-
-
 def change_itk_transform_type(input_affine_file):
     """
     This function takes in the affine.txt produced by the c3d_affine_tool

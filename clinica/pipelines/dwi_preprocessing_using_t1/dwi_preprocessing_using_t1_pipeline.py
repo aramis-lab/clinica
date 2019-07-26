@@ -23,15 +23,15 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
     Todo:
         [X] - Detect c3d_affine_tool dependency
         [X] - Refactor input_node
+        [x] - Read data from JSON
+              [X] - PhaseEncodingDirection
+              [X] - TotalReadoutTime
         [ ] - Interfaces
-              [ ] - antsRegistrationSyNQuick.sh!
+              [ ] - antsRegistrationSyNQuick.sh
               [ ] - antsApplyTransforms?
               [ ] - eddy?
               [ ] - c3d_affine_tool?
               [ ] - antsApplyTransforms?
-        [x] - Read data from JSON
-              [X] - PhaseEncodingDirection
-              [X] - TotalReadoutTime
         [ ] CI
               [ ] Set random init FSL eddy
               [ ] Data CI
@@ -270,7 +270,6 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
 
         # Nodes creation
         # ==============
-
         # Prepare b0 image for further corrections
         prepare_b0 = npe.Node(name="PrepareB0", interface=nutil.Function(
             input_names=['in_dwi', 'in_bval', 'in_bvec', 'low_bval', 'working_directory'],
@@ -310,7 +309,6 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             (eddy_fsl, sdc, [('outputnode.out_corrected', 'inputnode.DWI')]),
             (self.input_node, sdc, [('T1w', 'inputnode.T1')]),
             (eddy_fsl, sdc, [('outputnode.out_rotated_bvecs', 'inputnode.bvec')]),
-
             # Bias correction
             (sdc, bias, [('outputnode.DWIs_epicorrected', 'inputnode.in_file')]),
             # Outputnode:
