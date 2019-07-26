@@ -10,36 +10,6 @@ __email__ = "alexis.guyot@icm-institute.org"
 __status__ = "Development"
 
 
-def receivefrom_template(
-        in_unpcssd_sublist, in_pcssd_capstargetlist, in_overwrite_tsv):
-    """Identity function
-
-    Used to access the data stored in the template pipeline
-
-    Args:
-        in_unpcssd_sublist (list of string): list of participant_id, where
-            each participant appears only once, wich have not already been
-            (template) processed
-        in_pcssd_capstargetlist (list of string): list of path to the
-            template directory in CAPS folder for each participant, for
-            the participants that have already been processed
-        in_overwrite_tsv (str): path to the .tsv file to use if the user
-            wishes to re-run the pipeline on subjects that had already
-            been processed. None if no subjects already processed.
-
-    Returns:
-        out_unpcssd_sublist (list of string): same as in_unpcssd_sublist
-        out_pcssd_capstargetlist (list of string): same as
-            in_pcssd_capstargetlist
-        out_overwrite_tsv (str): same as in_overwrite_tsv
-    """
-    out_unpcssd_sublist = in_unpcssd_sublist
-    out_pcssd_capstargetlist = in_pcssd_capstargetlist
-    out_overwrite_tsv = in_overwrite_tsv
-
-    return out_unpcssd_sublist, out_pcssd_capstargetlist, out_overwrite_tsv
-
-
 def check_template_reconalled(
         caps_dir, unique_subject_list, persubject_session_list2):
     """Check if the template creation has been run for each subject.
