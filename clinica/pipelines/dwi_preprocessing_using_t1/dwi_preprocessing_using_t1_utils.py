@@ -104,27 +104,27 @@ def rename_into_caps(in_bids_dwi,
         out_caps_bvec.outputs.out_file, out_caps_brainmask.outputs.out_file
 
 
-def eddy_fsl(in_bvec, in_bval, in_file, in_mask, in_acqp, in_index):
-
-    import os
-    import os.path as op
-
-    # TODO, using EDDY interface in nipype, but to make sure using the right
-    # version of FSL.
-
-    out_parameter = op.abspath('eddy_corrected.eddy_parameters')
-    out_corrected = op.abspath('eddy_corrected.nii.gz')
-    out_rotated_bvecs = op.abspath('eddy_corrected.eddy_rotated_bvecs')
-
-    cmd = 'eddy --imain=' + in_file + ' --bvecs=' + in_bvec + ' --bvals=' + in_bval + ' --out=eddy_corrected' + ' --mask=' + in_mask + ' --acqp=' + in_acqp + ' --index=' + in_index + ' --flm=linear'
-    os.system(cmd)
-    if not os.path.exists(out_corrected):
-        print('Output file not generated. Trying with the binary eddy_opemp...')
-        cmd = 'eddy_openmp --imain=' + in_file + ' --bvecs=' + in_bvec + ' --bvals=' + in_bval + ' --out=eddy_corrected' + ' --mask=' + in_mask + ' --acqp=' + in_acqp + ' --index=' + in_index + ' --flm=linear'
-        os.system(cmd)
-        if not os.path.exists(out_corrected):
-            raise ValueError('File ' + out_corrected + ' does not exist even though following command line has been run : ' + cmd)
-    return out_parameter, out_corrected, out_rotated_bvecs
+    # def eddy_fsl(in_bvec, in_bval, in_file, in_mask, in_acqp, in_index):
+    #
+    #    import os
+    #    import os.path as op
+    #
+    #    # TODO, using EDDY interface in nipype, but to make sure using the right
+    #    # version of FSL.
+    #
+    #    out_parameter = op.abspath('eddy_corrected.eddy_parameters')
+    #    out_corrected = op.abspath('eddy_corrected.nii.gz')
+    #    out_rotated_bvecs = op.abspath('eddy_corrected.eddy_rotated_bvecs')
+    #
+    #    cmd = 'eddy --imain=' + in_file + ' --bvecs=' + in_bvec + ' --bvals=' + in_bval + ' --out=eddy_corrected' + ' --mask=' + in_mask + ' --acqp=' + in_acqp + ' --index=' + in_index + ' --flm=linear'
+    #    os.system(cmd)
+    #    if not os.path.exists(out_corrected):
+    #        print('Output file not generated. Trying with the binary eddy_opemp...')
+    #        cmd = 'eddy_openmp --imain=' + in_file + ' --bvecs=' + in_bvec + ' --bvals=' + in_bval + ' --out=eddy_corrected' + ' --mask=' + in_mask + ' --acqp=' + in_acqp + ' --index=' + in_index + ' --flm=linear'
+    #        os.system(cmd)
+    #        if not os.path.exists(out_corrected):
+    #            raise ValueError('File ' + out_corrected + ' does not exist even though following command line has been run : ' + cmd)
+    #    return out_parameter, out_corrected, out_rotated_bvecs
 
 
 def b0_indices(in_bval, max_b=10.0):
@@ -134,66 +134,6 @@ def b0_indices(in_bval, max_b=10.0):
     import numpy as np
     bval = np.loadtxt(in_bval)
     return np.argwhere(bval <= max_b).flatten().tolist()
-
-
-def generate_index(in_bval, b0_index):
-    """
-    This is a function to generate the index file for FSL eddy
-    :param in_bval:
-    :param b0_index:
-    :return:
-    """
-    import numpy as np
-    import os
-    out_file = os.path.abspath('index.txt')
-    bvals = np.loadtxt(in_bval)
-    vols = len(bvals)
-    index_list = []
-    for i in range(0, len(b0_index)):
-        if i == (len(b0_index) - 1):
-            index_list.extend([i + 1] * (vols - b0_index[i]))
-        else:
-            index_list.extend([i + 1] * (b0_index[i + 1] - b0_index[i]))
-    index_array = np.asarray(index_list)
-    try:
-        len(index_list) == vols
-    except ValueError:
-        print("It seems that you do not define the index file for FSL eddy correctly!")
-    np.savetxt(out_file, index_array.T)
-
-    return out_file
-
-
-def generate_acq(in_b0, epi_param):
-    """
-    This is a function to generate the FSL eddy acq.txt file
-    :param in_b0:
-    :param epi_param:
-    :return:
-    """
-    import numpy as np
-    import os
-    import nibabel as nb
-    out_file = os.path.abspath('acq.txt')
-    vols = nb.load(in_b0).get_data().shape[-1]
-    arr = np.ones([vols, 4])
-    for i in range(vols):
-        if epi_param['enc_dir'] == 'y-':
-            arr[i, :] = np.array((0, -1, 0, epi_param['readout_time']))
-        elif epi_param['enc_dir'] == 'y':
-            arr[i, :] = np.array((0, 1, 0, epi_param['readout_time']))
-        elif epi_param['enc_dir'] == 'x':
-            arr[i, :] = np.array((1, 0, 0, epi_param['readout_time']))
-        elif epi_param['enc_dir'] == 'x-':
-            arr[i, :] = np.array((-1, 0, 0, epi_param['readout_time']))
-        elif epi_param['enc_dir'] == 'z':
-            arr[i, :] = np.array((0, 0, 1, epi_param['readout_time']))
-        elif epi_param['enc_dir'] == 'z-':
-            arr[i, :] = np.array((0, 0, -1, epi_param['readout_time']))
-
-    np.savetxt(out_file, arr)
-
-    return out_file
 
 
 def change_itk_transform_type(input_affine_file):

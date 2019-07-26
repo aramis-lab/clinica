@@ -1,14 +1,15 @@
 # coding: utf8
 
 
-def eddy_fsl_pipeline(epi_param, name='eddy_fsl'):
+def eddy_fsl_pipeline(low_bval, name='eddy_fsl'):
     """
     Using eddy from fsl for head motion correction and eddy current distortion correction.
     """
     from nipype.interfaces.fsl import Eddy
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
-    from .dwi_preprocessing_using_t1_utils import eddy_fsl, generate_acq, generate_index, b0_indices
+#    from .dwi_preprocessing_using_t1_utils import eddy_fsl, b0_indices
+    from clinica.utils.dwi import generate_acq_file, generate_index_file
 
     inputnode = pe.Node(
             niu.IdentityInterface(
@@ -16,32 +17,46 @@ def eddy_fsl_pipeline(epi_param, name='eddy_fsl'):
                         'in_bvec',
                         'in_bval',
                         'in_mask',
-                        'ref_b0']),
+                        'ref_b0',
+                        'total_readout_time',
+                        'phase_encoding_direction']),
             name='inputnode')
 
-    generate_acq = pe.Node(niu.Function(function=generate_acq,
-                                        input_names=['in_b0', 'epi_param'],
-                                        output_names=['out_file']),
+    generate_acq = pe.Node(niu.Function(input_names=['in_dwi', 'fsl_phase_encoding_direction', 'total_readout_time'],
+                                        output_names=['out_file'],
+                                        function=generate_acq_file),
                            name='generate_acq')
-    generate_acq.inputs.epi_param = epi_param
 
-    list_b0 = pe.Node(niu.Function(input_names=['in_bval'],
-                                   output_names=['out_idx'],
-                                   function=b0_indices),
-                      name='find_b0_indices')
+#    generate_acq = pe.Node(niu.Function(function=generate_acq,
+#                                        input_names=['in_b0', 'epi_param'],
+#                                        output_names=['out_file']),
+#                           name='generate_acq')
+#    generate_acq.inputs.epi_param = epi_param
 
-    generate_index = pe.Node(niu.Function(function=generate_index,
-                                          input_names=['in_bval', 'b0_index'],
-                                          output_names=['eddy_index']),
+#    list_b0 = pe.Node(niu.Function(input_names=['in_bval'],
+#                                   output_names=['out_idx'],
+#                                   function=b0_indices),
+#                      name='find_b0_indices')
+
+#    generate_index = pe.Node(niu.Function(function=generate_index,
+#                                          input_names=['in_bval', 'b0_index'],
+#                                          output_names=['eddy_index']),
+#                             name='generate_index')
+
+    generate_index = pe.Node(niu.Function(input_names=['in_bval', 'low_bval'],
+                                          output_names=['out_file'],
+                                          function=generate_index_file),
                              name='generate_index')
+    generate_index.inputs.low_bval = low_bval
 
-    eddy = pe.Node(niu.Function(input_names=['in_bvec', 'in_bval', 'in_file', 'in_mask', 'in_acqp', 'in_index'],
-                                output_names=['out_parameter', 'out_corrected', 'out_rotated_bvecs'],
-                                function=eddy_fsl),
-                   name='eddy_fsl')
+#    eddy = pe.Node(niu.Function(input_names=['in_bvec', 'in_bval', 'in_file', 'in_mask', 'in_acqp', 'in_index'],
+#                                output_names=['out_parameter', 'out_corrected', 'out_rotated_bvecs'],
+#                                function=eddy_fsl),
+#                   name='eddy_fsl')
 
     eddy = pe.Node(interface=Eddy(), name='eddy_fsl')
     eddy.inputs.flm = 'linear'
+    eddy.inputs.use_cuda = True
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['out_parameter',
                                                        'out_corrected',
@@ -50,18 +65,22 @@ def eddy_fsl_pipeline(epi_param, name='eddy_fsl'):
 
     wf = pe.Workflow(name=name)
     wf.connect([
-        (inputnode,     generate_acq,   [('ref_b0', 'in_b0')]),
-        (inputnode,  generate_index,      [('in_bval', 'in_bval')]),
-        (list_b0,  generate_index,      [('out_idx', 'b0_index')]),
-        (inputnode,      list_b0,      [('in_bval', 'in_bval')]),
+        #        (inputnode,     generate_acq,   [('ref_b0', 'in_b0')]),
+        (inputnode, generate_acq, [('in_file', 'in_dwi')]),
+        (inputnode, generate_acq, [('total_readout_time', 'total_readout_time')]),
+        (inputnode, generate_acq, [('phase_encoding_direction', 'fsl_phase_encoding_direction')]),
+        #        (inputnode,  generate_index,      [('in_bval', 'in_bval')]),
+        (inputnode, generate_index, [('in_bval', 'in_bval')]),
+        #        (inputnode,      list_b0,      [('in_bval', 'in_bval')]),
 
         (inputnode,      eddy,     [('in_bvec', 'in_bvec')]),
         (inputnode,      eddy,     [('in_bval', 'in_bval')]),
         (inputnode,  eddy,   [('in_file', 'in_file')]),
         (inputnode,     eddy,   [('in_mask', 'in_mask')]),
-        (generate_acq,      eddy, [('out_file', 'in_acqp')]),
-        (generate_index,      eddy, [('eddy_index', 'in_index')]),
-
+        #        (generate_acq,      eddy, [('out_file', 'in_acqp')]),
+        (generate_acq, eddy, [('out_file', 'in_acqp')]),
+        #        (generate_index,      eddy, [('eddy_index', 'in_index')]),
+        (generate_index, eddy, [('out_file', 'in_index')]),
         (eddy,   outputnode, [('out_parameter', 'out_parameter')]),
         (eddy,      outputnode, [('out_corrected', 'out_corrected')]),
         (eddy,      outputnode, [('out_rotated_bvecs', 'out_rotated_bvecs')])

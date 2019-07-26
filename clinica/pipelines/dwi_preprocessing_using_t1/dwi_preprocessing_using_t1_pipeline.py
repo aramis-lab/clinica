@@ -29,9 +29,9 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
               [ ] - eddy?
               [ ] - c3d_affine_tool?
               [ ] - antsApplyTransforms?
-        [ ] - Read data from JSON
-              [ ] - PhaseEncodingDirection
-              [ ] - TotalReadoutTime
+        [x] - Read data from JSON
+              [X] - PhaseEncodingDirection
+              [X] - TotalReadoutTime
         [ ] CI
               [ ] Set random init FSL eddy
               [ ] Data CI
@@ -95,7 +95,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         Returns:
             A list of (string) input fields name.
         """
-        input_list = ['T1w', 'dwi', 'bvec', 'bval', 'epi_param']
+        input_list = ['T1w', 'dwi', 'bvec', 'bval', 'total_readout_time', 'phase_encoding_direction']
         return input_list
 
     def get_output_fields(self):
@@ -116,13 +116,16 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from colorama import Fore
         from clinica.utils.stream import cprint
-        from clinica.utils.io import check_input_bids_file
+        from clinica.utils.epi import bids_dir_to_fsl_dir
+        from clinica.utils.io import check_input_bids_file, extract_metadata_from_json
         from clinica.utils.dwi import check_dwi_volume
 
         list_t1w_files = []
         list_dwi_files = []
         list_bvec_files = []
         list_bval_files = []
+        list_total_readout_times = []
+        list_phase_encoding_directions = []
 
         cprint('Reading input files...')
         for i in range(len(self.subjects)):
@@ -165,6 +168,18 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             # Check that the number of DWI, bvec & bval are the same:
             check_dwi_volume(in_dwi=dwi_file[0], in_bvec=bvec_file[0], in_bval=bval_file[0])
 
+            # DWI JSON file:
+            dwi_json = self.bids_layout.get(type='dwi', return_type='file', extensions=['.json'],
+                                            subject=self.subjects[i][4:], session=self.sessions[i][4:])
+            check_input_bids_file(bvec_file, "DWI_JSON",
+                                  self.bids_directory, self.subjects[i], self.sessions[i])
+            [total_readout_time, enc_direction] = extract_metadata_from_json(dwi_json[0], ['TotalReadoutTime', 'PhaseEncodingDirection'])
+            list_total_readout_times.append(total_readout_time)
+            list_phase_encoding_directions.append(bids_dir_to_fsl_dir(enc_direction))
+
+            cprint('From JSON files: TotalReadoutTime = %s, PhaseEncodingDirection = %s' %
+                   (total_readout_time, enc_direction))
+
         if len(list_dwi_files) == 0:
             import sys
             cprint('%s\nEither all the images were already run by the pipeline or no image was found to run the pipeline. '
@@ -179,6 +194,8 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
                                  ('dwi', list_dwi_files),
                                  ('bvec', list_bvec_files),
                                  ('bval', list_bval_files),
+                                 ('total_readout_time', list_total_readout_times),
+                                 ('phase_encoding_direction', list_phase_encoding_directions),
                              ],
                              synchronize=True,
                              interface=nutil.IdentityInterface(
@@ -188,6 +205,8 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             (read_node, self.input_node, [('dwi', 'dwi')]),
             (read_node, self.input_node, [('bvec', 'bvec')]),
             (read_node, self.input_node, [('bval', 'bval')]),
+            (read_node, self.input_node, [('total_readout_time', 'total_readout_time')]),
+            (read_node, self.input_node, [('phase_encoding_direction', 'phase_encoding_direction')]),
         ])
 
     def build_output_node(self):
@@ -264,7 +283,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         mask_b0_pre = npe.Node(fsl.BET(frac=0.3, mask=True, robust=True),
                                name='PreMaskB0')
         # Head-motion correction + Eddy-currents correction
-        eddy_fsl = eddy_fsl_pipeline(self.parameters['epi_param'], name='HeadMotionAndEddyCurrentCorrection')
+        eddy_fsl = eddy_fsl_pipeline(self._low_bval, name='HeadMotionAndEddyCurrentCorrection')
         # Susceptibility distortion correction using T1w image
         sdc = epi_pipeline(name='SusceptibilityDistortionCorrection')
         # Remove bias correction
@@ -280,6 +299,8 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             # Mask b0 before corrections
             (prepare_b0, mask_b0_pre, [('out_reference_b0', 'in_file')]),  # noqa
             # Head-motion correction + eddy current correction
+            (self.input_node, eddy_fsl, [('total_readout_time', 'inputnode.total_readout_time'),  # noqa
+                                         ('phase_encoding_direction', 'inputnode.phase_encoding_direction')]),  # noqa
             (prepare_b0, eddy_fsl, [('out_b0_dwi_merge', 'inputnode.in_file'),
                                     ('out_updated_bval', 'inputnode.in_bval'),
                                     ('out_updated_bvec', 'inputnode.in_bvec'),
