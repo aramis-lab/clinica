@@ -321,5 +321,4 @@ def validate_folder(path_folder, list_hashes):
             elif hashes_check[key] != hashes_new[key]:
                 error_message2 += "{0} does not match the reference file !\n".format(key)
         raise ValueError(error_message1 + error_message2)
-
     pass
