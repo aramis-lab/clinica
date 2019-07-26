@@ -133,16 +133,6 @@ class T1FreeSurferLongitudinalCLI(ce.CmdParser):
         # create overall workflow
         longitudinal_workflow = npe.Workflow(name='T1FreeSurferLongitudinal')
         longitudinal_workflow.base_dir = self.absolute_path(args.working_directory)
-#        # connect the template pipeline to the longitudinal-correction pipeline
-#        longitudinal_workflow.connect(
-#            template_pipeline, '5_sendto_longcorr.out_unpcssd_sublist',
-#            longcorr_pipeline, '0_receivefrom_template.in_unpcssd_sublist')
-#        longitudinal_workflow.connect(
-#            template_pipeline, '5_sendto_longcorr.out_pcssd_capstargetlist',
-#            longcorr_pipeline, '0_receivefrom_template.in_pcssd_capstargetlist')
-#        longitudinal_workflow.connect(
-#            template_pipeline, '5_sendto_longcorr.out_overwrite_tsv',
-#            longcorr_pipeline, '0_receivefrom_template.in_overwrite_tsv')
         # connect the template pipeline to the longitudinal-correction pipeline
         longitudinal_workflow.connect(
             template_pipeline, '5_sendto_longcorr.out_unpcssd_sublist',
