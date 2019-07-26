@@ -99,6 +99,23 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
+#        # Step 0: receive data from the template pipeline
+#        #         (subjects that have been detected as
+#        #         processed/non-processed and corresponding sessions and
+#        #         CAPS locations)
+#        # ======
+#        receivefrom_template_node_name = '0_receivefrom_template'
+#        receivefrom_template_node = npe.Node(
+#            name=receivefrom_template_node_name,
+#            interface=nutil.Function(
+#                input_names=['in_unpcssd_sublist',
+#                             'in_pcssd_capstargetlist',
+#                             'in_overwrite_tsv'],
+#                output_names=['out_unpcssd_sublist',
+#                              'out_pcssd_capstargetlist',
+#                              'out_overwrite_tsv'],
+#                function=utils.receivefrom_template)
+#            )
         # Step 0: receive data from the template pipeline
         #         (subjects that have been detected as
         #         processed/non-processed and corresponding sessions and
@@ -107,14 +124,10 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
         receivefrom_template_node_name = '0_receivefrom_template'
         receivefrom_template_node = npe.Node(
             name=receivefrom_template_node_name,
-            interface=nutil.Function(
-                input_names=['in_unpcssd_sublist',
-                             'in_pcssd_capstargetlist',
-                             'in_overwrite_tsv'],
-                output_names=['out_unpcssd_sublist',
-                              'out_pcssd_capstargetlist',
-                              'out_overwrite_tsv'],
-                function=utils.receivefrom_template)
+            interface=nutil.IdentityInterface(
+                fields=['unpcssd_sublist',
+                        'pcssd_capstargetlist',
+                        'overwrite_tsv'])
             )
 
         # check if cross-sectional pipeline run on all subjects
@@ -146,12 +159,27 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
             'overwrite_caps']
         checkinput_node.inputs.in_n_procs = self.parameters['n_procs']
 
+#        self.connect([
+#            (
+#                receivefrom_template_node, checkinput_node,
+#                [('out_unpcssd_sublist', 'in_unpcssd_sublist'),
+#                 ('out_pcssd_capstargetlist', 'in_pcssd_capstargetlist'),
+#                 ('out_overwrite_tsv', 'in_overwrite_tsv')]),
+#            (
+#                checkinput_node, self.input_node,
+#                [('out_subject_list', 'subject_list'),
+#                 ('out_session_list', 'session_list'),
+#                 ('out_caps_target_list', 'caps_target_list'),
+#                 ('out_caps_dir', 'caps_dir'),
+#                 ('out_overwrite_warning', 'overwrite_warning'),
+#                 ('out_overwrite_caps', 'overwrite_caps')])
+#        ])
         self.connect([
             (
                 receivefrom_template_node, checkinput_node,
-                [('out_unpcssd_sublist', 'in_unpcssd_sublist'),
-                 ('out_pcssd_capstargetlist', 'in_pcssd_capstargetlist'),
-                 ('out_overwrite_tsv', 'in_overwrite_tsv')]),
+                [('unpcssd_sublist', 'in_unpcssd_sublist'),
+                 ('pcssd_capstargetlist', 'in_pcssd_capstargetlist'),
+                 ('overwrite_tsv', 'in_overwrite_tsv')]),
             (
                 checkinput_node, self.input_node,
                 [('out_subject_list', 'subject_list'),
