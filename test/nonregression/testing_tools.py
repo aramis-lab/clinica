@@ -290,16 +290,15 @@ def create_list_hashes(path_folder, extensions_to_keep=('.nii.gz', '.tsv', '.jso
     for subdir, dirs, files in os.walk(path_folder):
         files.sort()
         for file in files:
-            if file.endswith(extensions_to_keep):
+            if file.lower().endswith(extensions_to_keep):
                 all_files.append(os.path.join(subdir, file))
 
-    all_files = [file for file in all_files if os.path.isfile(file)]
-    all_files = {fname[len(path_folder):]: str(hashlib.md5(file_as_bytes(open(fname, 'rb'))).digest()) for fname in
+    dict_hashes = {fname[len(path_folder):]: str(hashlib.md5(file_as_bytes(open(fname, 'rb'))).digest()) for fname in
                  all_files}
-    return all_files
+    return dict_hashes
 
 
-def validate_folder(path_folder, list_hashes):
+def compare_folders_with_hashes(path_folder, list_hashes):
     """
     Compares the files of a folder against a reference
 
