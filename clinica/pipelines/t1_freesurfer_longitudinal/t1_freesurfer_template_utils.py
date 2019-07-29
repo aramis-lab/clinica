@@ -822,12 +822,6 @@ def process_input_node(
             session_id associated to any single participant
         out_capstarget_list (list of string): list of path to the
             template directory in CAPS folder for each participant
-        out_caps_dir (string): same as in_caps_dir. Used later to make
-            the folder we are overwriting are subolders of the input
-            CAPS dir
-        out_overwrite_caps (string): same as in_overwrite_caps, used to
-            send the value to the input node so it can later be used in
-            copy_2_caps node
         out_unpcssd_sublist (list of string): list of participant_id,
             where each participant appears only once, wich have not
             already been (template) processed
@@ -892,16 +886,10 @@ def process_input_node(
     # has been found, in which case warn users of potential issues
     utils.check_single_timepoint(out_subject_list, out_session_list2)
 
-    # copy in_caps_dir, in_overwrite_caps
-    out_caps_dir = in_caps_dir
-    out_overwrite_caps = in_overwrite_caps
-
     return [
         out_subject_list,
         out_session_list2,
         out_capstarget_list,
-        out_caps_dir,
-        out_overwrite_caps,
         out_unpcssd_sublist,
         out_pcssd_capstargetlist,
         out_overwrite_tsv]

@@ -129,9 +129,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
                                        output_names=['out_subject_list',
                                                      'out_session_list',
                                                      'out_caps_target_list',
-                                                     'out_caps_dir',
-                                                     'out_overwrite_warning',
-                                                     'out_overwrite_caps'],
+                                                     'out_overwrite_warning'],
                                        function=utils.process_input_node))
         checkinput_node.inputs.in_caps_dir = self.caps_directory
         checkinput_node.inputs.in_subject_list = self.subjects
@@ -153,9 +151,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
                 [('out_subject_list', 'subject_list'),
                  ('out_session_list', 'session_list'),
                  ('out_caps_target_list', 'caps_target_list'),
-                 ('out_caps_dir', 'caps_dir'),
-                 ('out_overwrite_warning', 'overwrite_warning'),
-                 ('out_overwrite_caps', 'overwrite_caps')])
+                 ('out_overwrite_warning', 'overwrite_warning')])
         ])
 
     def build_output_node(self):
@@ -189,6 +185,9 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
                        'in_session',
                        'in_caps_target',
                        'in_stats_path'])
+        copy2caps_node.inputs.in_caps_dir = self.caps_directory
+        copy2caps_node.inputs.in_overwrite_caps = self.parameters[
+            'overwrite_caps']
 
         self.connect([
             (
@@ -197,9 +196,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
                  ('session', 'in_session'),
                  ('subject_dir', 'in_subject_dir'),
                  ('caps_target', 'in_caps_target'),
-                 ('caps_dir', 'in_caps_dir'),
                  ('overwrite_warning', 'in_overwrite_warning'),
-                 ('overwrite_caps', 'in_overwrite_caps'),
                  ('stats_path', 'in_stats_path')])
         ])
 
@@ -348,9 +345,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
             (
                 self.input_node, self.output_node,
                 [('caps_target_list', 'caps_target'),
-                 ('caps_dir', 'caps_dir'),
-                 ('overwrite_warning', 'overwrite_warning'),
-                 ('overwrite_caps', 'overwrite_caps')]),
+                 ('overwrite_warning', 'overwrite_warning')]),
             (
                 write_stats_node, self.output_node,
                 [('out_stats_path', 'stats_path')])

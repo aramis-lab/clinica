@@ -405,9 +405,6 @@ def process_input_node(
             to any participant
         out_capstarget_list (list of string): list of path to the
             template directory in CAPS folder for each participant
-        out_caps_dir (string): same as in_caps_dir. Used later to make
-            the folder we are overwriting are subolders of the input
-            CAPS dir
         out_overwrite_warning (string): warning message to display in
             case (template or longitudinal-correction) processing has
             been found in the CAPS folder for any of the input
@@ -420,9 +417,6 @@ def process_input_node(
             which either template or longitudinal processing should be
             re-done if the user re-runs the pipeline using the flag
             '--force_overwrite True'
-        out_overwrite_caps (string): same as in_overwrite_caps, used to
-            send the value to the input node so it can later be used in
-            copy_2_caps node
     """
     import clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_utils as utils
 
@@ -466,17 +460,11 @@ def process_input_node(
             in_n_procs,
             in_overwrite_tsv)
 
-    # copy in_caps_dir, in_overwrite_caps
-    out_caps_dir = in_caps_dir
-    out_overwrite_caps = in_overwrite_caps
-
     return [
         out_subject_list,
         out_session_list,
         out_capstarget_list,
-        out_caps_dir,
-        out_overwrite_warning,
-        out_overwrite_caps]
+        out_overwrite_warning]
 
 
 def create_symlinks(

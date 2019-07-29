@@ -60,8 +60,6 @@ class T1FreeSurferTemplate(cpe.Pipeline):
         return ['subject_list',
                 'session_list2',
                 'caps_target_list',
-                'caps_dir',
-                'overwrite_caps',
                 'unpcssd_sublist',
                 'pcssd_capstargetlist',
                 'overwrite_tsv']
@@ -106,8 +104,6 @@ class T1FreeSurferTemplate(cpe.Pipeline):
                                        output_names=['out_subject_list',
                                                      'out_session_list2',
                                                      'out_caps_target_list',
-                                                     'out_caps_dir',
-                                                     'out_overwrite_caps',
                                                      'out_unpcssd_sublist',
                                                      'out_pcssd_capstargetlist',
                                                      'out_overwrite_tsv'],
@@ -128,8 +124,6 @@ class T1FreeSurferTemplate(cpe.Pipeline):
                 [('out_subject_list', 'subject_list'),
                  ('out_session_list2', 'session_list2'),
                  ('out_caps_target_list', 'caps_target_list'),
-                 ('out_caps_dir', 'caps_dir'),
-                 ('out_overwrite_caps', 'overwrite_caps'),
                  ('out_unpcssd_sublist', 'unpcssd_sublist'),
                  ('out_pcssd_capstargetlist', 'pcssd_capstargetlist'),
                  ('out_overwrite_tsv', 'overwrite_tsv')])
@@ -216,6 +210,9 @@ class T1FreeSurferTemplate(cpe.Pipeline):
                 ),
             iterfield=['in_subject',
                        'in_caps_target'])
+        copy2caps_node.inputs.in_caps_dir = self.caps_directory
+        copy2caps_node.inputs.in_overwrite_caps = self.parameters[
+            'overwrite_caps']
 
         # send data to the longitudinal correction pipeline (subjects
         # that have been detected as processed/non-processed and
@@ -260,8 +257,6 @@ class T1FreeSurferTemplate(cpe.Pipeline):
             (
                 self.input_node, copy2caps_node,
                 [('subject_list', 'in_subject'),
-                 ('overwrite_caps', 'in_overwrite_caps'),
-                 ('caps_dir', 'in_caps_dir'),
                  ('caps_target_list', 'in_caps_target')]),
             (
                 store_reconallbase_node, copy2caps_node,
