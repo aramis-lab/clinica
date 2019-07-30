@@ -27,29 +27,25 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
               [X] - PhaseEncodingDirection
               [X] - TotalReadoutTime
         [ ] - Interfaces
-              [ ] - antsRegistrationSyNQuick.sh
-              [ ] - antsApplyTransforms?
-              [ ] - eddy?
-              [ ] - c3d_affine_tool?
-              [ ] - antsApplyTransforms?
+              [X] - antsRegistrationSyNQuick.sh
+              [ ] - antsApplyTransforms? (optional, no output message when run)
+              [ ] - CreateJacobianDeterminantImage? (optional, no output message when run)
+              [ ] - WarpImageMultiTransform? (optional, no output message when run)
+        [ ] Add CLI flag for eddy_cuda8.0 / eddy_cuda9.1
         [ ] CI
               [ ] Set random init FSL eddy
               [ ] Data CI
-        [ ] - Doc wiki (Pipeline description & paragraph example
+        [ ] - Wiki page
+
+    Ideas for improvement:
+        [ ] Replace prepare_reference_b0 function by a run of FSL eddy
+        [ ] Replace B0-T1w registration by FA-T1w registration
 
     Warnings:
         - Do not use this pipeline if you have fieldmap data in your dataset.
 
-    Args:
-        input_dir(str): Input directory in a BIDS hierarchy.
-        output_dir(str): Output directory in a CAPS hierarchy.
-        subjects_sessions_list(str): The Subjects-Sessions list file (in .tsv
-            format).
-
     Returns:
         A clinica pipeline object containing the DwiPreprocessingUsingT1 pipeline.
-
-    Raises:
     """
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None,
                  name=None, low_bval=5):
@@ -62,7 +58,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
                 (participant_id) with their sessions (session_id).
             name(optional[str]): Name of the pipeline
             low_bval (int): Define the b0 volumes as all volume
-                bval <= lowbval. (Default = 5)
+                bval <= low_bval. (Default = 5)
         """
         import warnings
 

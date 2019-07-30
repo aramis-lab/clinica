@@ -3,7 +3,7 @@
 
 def eddy_fsl_pipeline(low_bval, name='eddy_fsl'):
     """
-    Using eddy from fsl for head motion correction and eddy current distortion correction.
+    Using eddy from FSL for head motion correction and eddy current distortion correction.
     """
     from nipype.interfaces.fsl import Eddy
     import nipype.interfaces.utility as niu
@@ -82,17 +82,15 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
     >>> epi.inputs.inputnode.T1 = 'T1.nii'
     >>> epi.run() # doctest: +SKIP
     """
-
     from .dwi_preprocessing_using_t1_utils import (create_jacobian_determinant_image,
                                                    change_itk_transform_type,
                                                    expend_matrix_list,
                                                    rotate_bvecs,
-                                                   ants_registration_syn_quick,
-                                                   ants_warp_image_multi_transform,
                                                    ants_combin_transform)
     import nipype.pipeline.engine as pe
     import nipype.interfaces.utility as niu
     import nipype.interfaces.fsl as fsl
+    import nipype.interfaces.ants as ants
     import nipype.interfaces.c3 as c3
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['T1', 'DWI', 'bvec']), name='inputnode')
@@ -123,16 +121,10 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
                 function=rotate_bvecs),
             name='Rotate_Bvec')
 
-    antsRegistrationSyNQuick = pe.Node(
-            interface=niu.Function(
-                input_names=['fix_image', 'moving_image'],
-                output_names=['image_warped',
-                              'affine_matrix',
-                              'warp',
-                              'inverse_warped',
-                              'inverse_warp'],
-                function=ants_registration_syn_quick),
-            name='antsRegistrationSyNQuick')
+    ants_registration = pe.Node(interface=ants.registration.RegistrationSynQuick(
+        transform_type='br',
+        dimension=3),
+        name='antsRegistrationSyNQuick')
 
     c3d_flirt2ants = pe.Node(c3.C3dAffineTool(), name='fsl_reg_2_itk')
     c3d_flirt2ants.inputs.itk_transform = True
@@ -190,16 +182,16 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
         (flirt_b0_2_T1, expend_matrix, [('out_matrix_file', 'in_matrix')]),
         (inputnode, expend_matrix, [('bvec', 'in_bvec')]),
         (expend_matrix, rot_bvec, [('out_matrix_list', 'in_matrix')]),
-        (inputnode, antsRegistrationSyNQuick, [('T1', 'fix_image')]),
-        (flirt_b0_2_T1, antsRegistrationSyNQuick, [('out_file', 'moving_image')]),
+        (inputnode, ants_registration, [('T1', 'fixed_image')]),
+        (flirt_b0_2_T1, ants_registration, [('out_file', 'moving_image')]),
 
         (inputnode, c3d_flirt2ants, [('T1', 'reference_file')]),
         (pick_ref, c3d_flirt2ants, [('out', 'source_file')]),
         (flirt_b0_2_T1, c3d_flirt2ants, [('out_matrix_file', 'transform_file')]),
         (c3d_flirt2ants, change_transform, [('itk_transform', 'input_affine_file')]),
 
-        (antsRegistrationSyNQuick, merge_transform, [('warp', 'in1')]),
-        (antsRegistrationSyNQuick, merge_transform, [('affine_matrix', 'in2')]),
+        (ants_registration, merge_transform, [('forward_warp_field', 'in1')]),
+        (ants_registration, merge_transform, [('out_matrix', 'in2')]),
         (change_transform, merge_transform, [('updated_affine_file', 'in3')]),
         (inputnode, apply_transform, [('T1', 'fix_image')]),
         (split, apply_transform, [('out_files', 'moving_image')]),
@@ -213,9 +205,9 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
 
         (merge, outputnode, [('merged_file', 'DWIs_epicorrected')]),
         (flirt_b0_2_T1, outputnode, [('out_matrix_file', 'DWI_2_T1_Coregistration_matrix')]),
-        (antsRegistrationSyNQuick, outputnode, [('warp', 'epi_correction_deformation_field'),
-                                                ('affine_matrix', 'epi_correction_affine_transform'),
-                                                ('image_warped', 'epi_correction_image_warped')]),
+        (ants_registration, outputnode, [('forward_warp_field', 'epi_correction_deformation_field'),
+                                         ('out_matrix', 'epi_correction_affine_transform'),
+                                         ('warped_image', 'epi_correction_image_warped')]),
         (merge_transform, outputnode, [('out', 'warp_epi')]),
         (rot_bvec, outputnode, [('out_file', 'out_bvec')]),
     ])

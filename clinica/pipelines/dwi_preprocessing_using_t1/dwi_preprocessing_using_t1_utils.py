@@ -93,13 +93,6 @@ def rename_into_caps(in_bids_dwi,
         base_dir_brainmask, source_file_dwi + "_space-T1w_brainmask.nii.gz")
     out_caps_brainmask = rename_brainmask.run()
 
-    from clinica.utils.stream import cprint
-
-    cprint(out_caps_dwi.outputs.out_file)
-    cprint(out_caps_bval.outputs.out_file)
-    cprint(out_caps_bvec.outputs.out_file)
-    cprint(out_caps_brainmask.outputs.out_file)
-
     return out_caps_dwi.outputs.out_file, out_caps_bval.outputs.out_file, \
         out_caps_bvec.outputs.out_file, out_caps_brainmask.outputs.out_file
 
@@ -143,24 +136,6 @@ def expend_matrix_list(in_matrix, in_bvec):
     out_matrix_list = out_matrix_list * len(bvecs)
 
     return out_matrix_list
-
-
-def ants_registration_syn_quick(fix_image, moving_image):
-    import subprocess
-    import os
-    import os.path as op
-
-    image_warped = op.abspath('SyN_QuickWarped.nii.gz')
-    affine_matrix = op.abspath('SyN_Quick0GenericAffine.mat')
-    warp = op.abspath('SyN_Quick1Warp.nii.gz')
-    inverse_warped = op.abspath('SyN_QuickInverseWarped.nii.gz')
-    inverse_warp = op.abspath('SyN_Quick1InverseWarp.nii.gz')
-
-    cmd = 'antsRegistrationSyNQuick.sh -t br -d 3 -f ' + fix_image + ' -m ' + moving_image + ' -o SyN_Quick'
-    # subprocess.call([cmd], shell=True)
-    os.system(cmd)
-
-    return image_warped, affine_matrix, warp, inverse_warped, inverse_warp
 
 
 def ants_warp_image_multi_transform(fix_image, moving_image, ants_warp_affine):
