@@ -12,49 +12,6 @@ __email__ = "alexis.guyot@icm-institute.org"
 __status__ = "Development"
 
 
-def build_pipeline(pipeline):
-    """Executes the Pipeline.
-
-    Overwrites the default Workflow method to check if the
-    Pipeline is built before running it. If not, builds it.
-    Note: taken from Clinica core (split build and run part).
-        Todo: re-write solution for this pipeline in Clinica core
-
-    Args:
-        Similar to those of Workflow.run.
-
-    Returns:
-        An execution graph (see Workflow.run).
-    """
-    if not pipeline.is_built:
-        pipeline.build()
-    pipeline.check_not_cross_sectional()
-
-
-def run_pipeline(pipeline, plugin=None, plugin_args=None, update_hash=False, bypass_check=False):
-    """Executes the Pipeline.
-
-    Overwrites the default Workflow method to run the pipeline
-    Also checks whether there is enough space left on the disks, and if
-    the number of threads to run in parallel is consistent with what is
-    possible on the CPU
-    Note: taken from Clinica core (split build and run part).
-        Todo: re-write solution for this pipeline in Clinica core
-
-    Args:
-        Similar to those of Workflow.run.
-
-    Returns:
-        An execution graph (see Workflow.run).
-    """
-    from nipype.pipeline.engine import Workflow
-    if not bypass_check:
-        pipeline.check_size()
-        plugin_args = pipeline.update_parallelize_info(plugin_args)
-        plugin = 'MultiProc'
-    return Workflow.run(pipeline, plugin, plugin_args, update_hash)
-
-
 class T1FreeSurferLongitudinalCLI(ce.CmdParser):
 
     def define_name(self):
@@ -127,8 +84,8 @@ class T1FreeSurferLongitudinalCLI(ce.CmdParser):
         longcorr_pipeline.base_dir = self.absolute_path(args.working_directory)
 
         # separately build the two template and longitudinal-correction pipelines
-        build_pipeline(template_pipeline)
-        build_pipeline(longcorr_pipeline)
+        template_pipeline.build()
+        longcorr_pipeline.build()
 
         # create overall workflow
         longitudinal_workflow = npe.Workflow(name='T1FreeSurferLongitudinal')
