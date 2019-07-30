@@ -980,7 +980,7 @@ def check_reconall_base_single(subjects_dir, in_subject):
     import os
     import subprocess
 
-    # check if cross-sectional subfolder exists
+    # check if longitudinal base subfolder exists
     subjectid_longitudinal = "{0}/{1}".format(subjects_dir, in_subject)
     if not os.path.isdir(subjectid_longitudinal):
         error_msg = 'Error: {0} does not exist'.format(subjectid_longitudinal)
