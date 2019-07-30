@@ -28,7 +28,7 @@ ICM members are encouraged to use the version of Clinica available on the cluste
 ### Clinica environment
 - [Interacting with Clinica](InteractingWithClinica)
 - [BIDS: the input raw data structure](BIDS)
-- [CAPS: the processed data structure](CAPS)
+- [CAPS: the processed data structure](CAPS/Introduction)
 
 ### Pipelines (`clinica run`)
 - Anatomical MRI (T1-weighted)

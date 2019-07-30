@@ -34,7 +34,7 @@ subjects/
 ```
 
 ## At the group level
-This CAPS folder contains the outputs of a group comparison of patients with Alzheimer’s disease (`AD`) and healthy subjects (`Control`) thanks to the [`statistics-surface` pipeline](../../Pipelines/Stats_Surface). Results are stored under the group ID `ADvsHC`:
+This CAPS folder contains the outputs of a group comparison of patients with Alzheimer’s disease (`AD`) and healthy subjects (`HC`) thanks to the [`statistics-surface` pipeline](../../Pipelines/Stats_Surface). Results are stored under the group ID `ADvsHC`:
 
 ```
 groups/
@@ -42,21 +42,21 @@ groups/
     └── statistics/
         ├── participant.tsv
         └── surfstat_group_comparison/
-            ├── group-ADvsHC_Control-lt-AD_measure-ct_fwhm-20_FDR.jpg
-            ├── group-ADvsHC_Control-lt-AD_measure-ct_fwhm-20_FDR.mat
-            ├── group-ADvsHC_Control-lt-AD_measure-ct_fwhm-20_TStatistics.jpg
-            ├── group-ADvsHC_Control-lt-AD_measure-ct_fwhm-20_TStatistics.mat
-            ├── group-ADvsHC_Control-lt-AD_measure-ct_fwhm-20_correctedPValue.jpg
-            ├── group-ADvsHC_Control-lt-AD_measure-ct_fwhm-20_correctedPValue.mat
-            ├── group-ADvsHC_Control-lt-AD_measure-ct_fwhm-20_uncorrectedPValue.jpg
-            ├── group-ADvsHC_Control-lt-AD_measure-ct_fwhm-20_uncorrectedPValue.mat
+            ├── group-ADvsHC_HC-lt-AD_measure-ct_fwhm-20_FDR.jpg
+            ├── group-ADvsHC_HC-lt-AD_measure-ct_fwhm-20_FDR.mat
+            ├── group-ADvsHC_HC-lt-AD_measure-ct_fwhm-20_TStatistics.jpg
+            ├── group-ADvsHC_HC-lt-AD_measure-ct_fwhm-20_TStatistics.mat
+            ├── group-ADvsHC_HC-lt-AD_measure-ct_fwhm-20_correctedPValue.jpg
+            ├── group-ADvsHC_HC-lt-AD_measure-ct_fwhm-20_correctedPValue.mat
+            ├── group-ADvsHC_HC-lt-AD_measure-ct_fwhm-20_uncorrectedPValue.jpg
+            ├── group-ADvsHC_HC-lt-AD_measure-ct_fwhm-20_uncorrectedPValue.mat
             ├── group-ADvsHC_glm.json
-            ├── group-ADvsHC_AD-lt-Control_measure-ct_fwhm-20_FDR.jpg
-            ├── group-ADvsHC_AD-lt-Control_measure-ct_fwhm-20_FDR.mat
-            ├── group-ADvsHC_AD-lt-Control_measure-ct_fwhm-20_TStatistics.jpg
-            ├── group-ADvsHC_AD-lt-Control_measure-ct_fwhm-20_TStatistics.mat
-            ├── group-ADvsHC_AD-lt-Control_measure-ct_fwhm-20_correctedPValue.jpg
-            ├── group-ADvsHC_AD-lt-Control_measure-ct_fwhm-20_correctedPValue.mat
-            ├── group-ADvsHC_AD-lt-Control_measure-ct_fwhm-20_uncorrectedPValue.jpg
-            └── group-ADvsHC_AD-lt-Control_measure-ct_fwhm-20_uncorrectedPValue.mat
+            ├── group-ADvsHC_AD-lt-HC_measure-ct_fwhm-20_FDR.jpg
+            ├── group-ADvsHC_AD-lt-HC_measure-ct_fwhm-20_FDR.mat
+            ├── group-ADvsHC_AD-lt-HC_measure-ct_fwhm-20_TStatistics.jpg
+            ├── group-ADvsHC_AD-lt-HC_measure-ct_fwhm-20_TStatistics.mat
+            ├── group-ADvsHC_AD-lt-HC_measure-ct_fwhm-20_correctedPValue.jpg
+            ├── group-ADvsHC_AD-lt-HC_measure-ct_fwhm-20_correctedPValue.mat
+            ├── group-ADvsHC_AD-lt-HC_measure-ct_fwhm-20_uncorrectedPValue.jpg
+            └── group-ADvsHC_AD-lt-HC_measure-ct_fwhm-20_uncorrectedPValue.mat
 ```

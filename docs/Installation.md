@@ -126,7 +126,7 @@ version, you can either:
 * Download the tarball for a specific version from our
 [repository](https://github.com/aramis-lab/clinica/releases).
 Then decompress it.
-* Clone Clinica's repository from Gitlab:
+* Clone Clinica's repository from GitHub:
 ```bash
 git clone https://github.com/aramis-lab/clinica.git
 ```
