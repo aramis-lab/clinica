@@ -56,7 +56,7 @@ markdown_extensions:
   - pymdownx.arithmatex
   - pymdownx.details
   - pymdownx.emoji
-  - pymdownx.inlinehilite
+  # - pymdownx.inlinehilite
   - pymdownx.superfences
   - pymdownx.tasklist:
       custom_checkbox: True
@@ -83,7 +83,6 @@ nav:
     - "BIDS": "BIDS.md"
     - CAPS:
       - "Introduction": "CAPS/Introduction.md"
-      - "Overview": "CAPS/Overview.md"
       - "Specifications": "CAPS/Specifications.md"
     - "Atlases": "Atlases.md"
   - Pipelines:
