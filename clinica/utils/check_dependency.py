@@ -235,11 +235,11 @@ def verify_cat12_atlases(atlas_list):
             check_cat12()
             atlas_list_updated = atlas_list
         except RuntimeError:
-            print(Fore.RED + '[Warning] cat12 is not installed in your system. Atlas statistics computed at the '
-                  + 'very end of this pipeline will not include any of Hammers, Neuromorphometrics and LPBA40'
+            print(Fore.YELLOW + '[Warning] CAT12 is not installed in your system. Atlas statistics computed at the '
+                  + 'end of this pipeline will not include any of Hammers, Neuromorphometrics and LPBA40'
                   + ' atlases.' + Fore.RESET)
             print('Pipeline will start in 15 sec. You can cancel it right now using Ctrl + C')
-            print('You can download cat12 at this address : ' + Fore.BLUE + 'http://www.neuro.uni-jena.de/cat/'
+            print('You can download CAT12 at this address: ' + Fore.BLUE + 'http://www.neuro.uni-jena.de/cat/'
                   + Fore.RESET)
             atlas_list_updated = [atl for atl in atlas_list if atl not in cat12_atlases]
             try:
