@@ -414,3 +414,21 @@ def extract_metadata_from_json(json_file, list_keys):
         file.close()
 
     return list_values
+
+
+def get_subject_id(bids_or_caps_file):
+    """
+    Extracts "sub-<participant_id>_ses-<session_label>" from BIDS or CAPS file
+    """
+    import re
+
+    m = re.search(r'(sub-[a-zA-Z0-9]+)/(ses-[a-zA-Z0-9]+)', bids_or_caps_file)
+
+    if m is None:
+        raise ValueError(
+            'Input filename is not in a BIDS or CAPS compliant format.'
+            ' It does not contain the subject and session information.')
+
+    subject_id = m.group(1) + '_' + m.group(2)
+
+    return subject_id

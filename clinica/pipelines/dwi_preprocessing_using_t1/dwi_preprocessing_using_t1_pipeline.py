@@ -33,13 +33,16 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
               [ ] - WarpImageMultiTransform? (optional, no output message when run)
         [ ] Add CLI flag for eddy_cuda8.0 / eddy_cuda9.1
         [ ] CI
-              [ ] Set random init FSL eddy
+              [ ] Make FSL eddy reproducible
               [ ] Data CI
         [ ] - Wiki page
 
     Ideas for improvement:
         [ ] Replace prepare_reference_b0 function by a run of FSL eddy
         [ ] Replace B0-T1w registration by FA-T1w registration
+
+    Questions:
+        [ ] Why eddy --flm is set to linear instead of default quadratic?
 
     Warnings:
         - Do not use this pipeline if you have fieldmap data in your dataset.

@@ -381,17 +381,18 @@ def find_b0_indices(in_bval, low_bval=5.0):
     return out_indices
 
 
-def generate_index_file(in_bval, low_bval=5.0):
+def generate_index_file(in_bval, low_bval=5.0, subject_id=None):
     """
-    Generate index.txt file for FSL eddy command.
+    Generate [<subject_id>]_index.txt file for FSL eddy command.
 
     Args:
-        in_bval (str): Bval file.
-        low_bval (Optional[int]): Define the b0 volumes as all volume
+        in_bval: Bval file.
+        low_bval: Define the b0 volumes as all volume
             bval <= low_bval. (Default=5.0)
+        subject_id: Optional prefix.
 
     Returns:
-        index.txt file for FSL eddy command.
+        out_index: [<subject_id>]_index.txt file.
     """
     import os
     import numpy as np
@@ -402,7 +403,11 @@ def generate_index_file(in_bval, low_bval=5.0):
     idx_low_bvals = np.where(bvals <= low_bval)
     b0_index = idx_low_bvals[0].tolist()
 
-    out_file = os.path.abspath('index.txt')
+    if subject_id:
+        out_index = os.path.abspath(subject_id + '_index.txt')
+    else:
+        out_index = os.path.abspath('index.txt')
+
     vols = len(bvals)
     index_list = []
     for i in range(0, len(b0_index)):
@@ -415,27 +420,32 @@ def generate_index_file(in_bval, low_bval=5.0):
         len(index_list) == vols
     except ValueError:
         raise ValueError("It seems that you do not define the index file for FSL eddy correctly!")
-    np.savetxt(out_file, index_array.T)
+    np.savetxt(out_index, index_array.T)
 
-    return out_file
+    return out_index
 
 
-def generate_acq_file(in_dwi, fsl_phase_encoding_direction, total_readout_time):
+def generate_acq_file(in_dwi, fsl_phase_encoding_direction, total_readout_time, subject_id=None):
     """
-    Generate acq.txt file for FSL eddy command.
+    Generate [<subject_id>]_acq.txt file for FSL eddy command.
 
     Args:
         in_dwi: DWI file.
         fsl_phase_encoding_direction: PhaseEncodingDirection from BIDS specifications
             in FSL format (i.e. x/y/z instead of i/j/k).
         total_readout_time: TotalReadoutTime from BIDS specifications.
+        subject_id: Optional prefix.
     Returns:
-        acqp.txt file for FSL eddy.
+        out_acq: [<subject_id>]_acq.txt file.
     """
     import numpy as np
     import os
     import nibabel as nb
-    out_file = os.path.abspath('acq.txt')
+
+    if subject_id:
+        out_acq = out_acq = os.path.abspath(subject_id + '_acq.txt')
+    else:
+        out_acq = os.path.abspath('acq.txt')
     vols = nb.load(in_dwi).get_data().shape[-1]
     arr = np.ones([vols, 4])
     for i in range(vols):
@@ -455,6 +465,6 @@ def generate_acq_file(in_dwi, fsl_phase_encoding_direction, total_readout_time):
             raise RuntimeError("FSL PhaseEncodingDirection (found value: %s) is unknown,"
                                "it should be a value in (x, y, z, x-, y-, z-)" % fsl_phase_encoding_direction)
 
-    np.savetxt(out_file, arr, fmt="%d "*3 + "%f")
+    np.savetxt(out_acq, arr, fmt="%d "*3 + "%f")
 
-    return out_file
+    return out_acq
