@@ -200,23 +200,18 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
                  ('stats_path', 'in_stats_path')])
         ])
 
-
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.
         """
-
         import clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_utils as utils
         import clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_utils as template_utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces.freesurfer.preprocess import ReconAll
-        from clinica.utils.stream import cprint
 
         # Per-subject creation of the template
-
         # Step 0: receivefrom_template_node
         # Step 1: check_input_node
-
         # Step 2: get longitudinal subfolder names
         # ======
         long_subdirname_node_name = '2_long_subdirname'

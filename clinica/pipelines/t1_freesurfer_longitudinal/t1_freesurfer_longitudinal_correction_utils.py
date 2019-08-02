@@ -171,7 +171,6 @@ def check_processed(
     unpcssd_seslist = longcor_unpcssd_seslist
     unpcssd_capstargetlist = longcor_unpcssd_capstargetlist
 
-
     return [
         unpcssd_sublist,
         unpcssd_seslist,
@@ -506,7 +505,6 @@ def create_symlinks(
             containing all session symlinks and all template symlinks
             for all subject_id
     """
-
     import os
     import errno
 
