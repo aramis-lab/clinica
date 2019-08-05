@@ -66,6 +66,7 @@ class PETVolumeCLI(ce.CmdParser):
         from tempfile import mkdtemp
         from clinica.utils.stream import cprint
         from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
+        from clinica.utils.check_dependency import verify_cat12_atlases
 
         pipeline = PETVolume(
             bids_directory=self.absolute_path(args.bids_directory),
@@ -74,6 +75,10 @@ class PETVolumeCLI(ce.CmdParser):
             group_id=args.group_id,
             fwhm_tsv=self.absolute_path(args.psf_tsv)
         )
+
+        # If the user wants to use any of the atlases of cat12 and has not installed it, we just remove it from the list
+        # of the computed atlases
+        args.atlases = verify_cat12_atlases(args.atlases)
 
         pipeline.parameters.update({
             'pet_type': args.pet_tracer,
