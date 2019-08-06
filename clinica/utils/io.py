@@ -62,6 +62,23 @@ def fix_join(path, *paths):
     return os.path.join(path, *paths)
 
 
+def check_bids_folder(bids_directory):
+    import os
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaBIDSError
+
+    if not os.path.isdir(bids_directory):
+        raise ClinicaBIDSError(
+            "\n%s[Error] The BIDS directory you gave is not a folder.%s\n"
+            "\n%sError explanations:%s\n"
+            " - Clinica expected the following path to be a folder: %s%s%s\n"
+            " - If you gave relative path, did you run Clinica on the good folder?" %
+            (Fore.RED, Fore.RESET,
+             Fore.YELLOW, Fore.RESET,
+             Fore.BLUE, bids_directory, Fore.RESET)
+        )
+
+
 def check_input_bids_file(list_bids_files, bids_type, bids_directory, participant_id, session_id):
     from clinica.utils.exceptions import ClinicaBIDSError
     from colorama import Fore
