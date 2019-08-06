@@ -52,6 +52,7 @@ def test_run_Nifd2Bids(cmdopt):
     clean_folder(join(root, 'out', 'bids'), recreate=True)
     clean_folder(join(root, 'out', 'clinical_data'), recreate=False)
 
+
 def test_run_Oasis2Bids(cmdopt):
     from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import OasisToBids
     from os.path import dirname, join, abspath
@@ -204,6 +205,9 @@ def test_run_Aibl2Bids(cmdopt):
     compare_folders(join(root, 'out'), join(root, 'ref'),
                     shared_folder_name='bids')
     clean_folder(join(root, 'out', 'bids'), recreate=True)
+<<<<<<< HEAD
 
 if __name__ == "__main__":
     test_run_Nifd2Bids('yes !')
+=======
+>>>>>>> Clean test/ folder (PEP8, formatting, etc.)
