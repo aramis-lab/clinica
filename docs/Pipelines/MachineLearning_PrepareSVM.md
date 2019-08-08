@@ -15,7 +15,7 @@ clinica run machinelearning-prepare-spatial-svm caps_directory group_id
 ```
 where:
 
-- `caps_directory` is the output folder containing the results in a [CAPS](../../CAPS) hierarchy
+- `caps_directory` is the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy
 - `group_id` is the user-defined identifier for the provided group of subjects
 
 Pipeline options:
@@ -30,7 +30,7 @@ Pipeline options:
 
 ## Outputs
 
-Results are stored in the following folder of the [CAPS hierarchy](../../CAPS): `subjects/sub-<participant_label>/ses-<session_label>machine_learning/input_spatial_svm/group-<group_label>/` and `groups/group-<group_label>machine_learning/input_spatial_svm/`.
+Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#machinelearning-prepare-spatial-svm-prepare-input-data-for-spatially-regularized-svm): `subjects/sub-<participant_label>/ses-<session_label>machine_learning/input_spatial_svm/group-<group_label>/` and `groups/group-<group_label>machine_learning/input_spatial_svm/`.
 
 The main output files in `subjects` subfolder are:
 
@@ -39,7 +39,7 @@ The main output files in `subjects` subfolder are:
 
 
 !!! note
-    The full list of output files can be found in the [The ClinicA Processed Structure (CAPS) Specification](https://docs.google.com/document/d/14mjXbqRceHK0fD0BIONniLK713zY7DbQHJEV7kxqsd8/edit#).
+    The full list of output files can be found in the [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#machinelearning-prepare-spatial-svm-prepare-input-data-for-spatially-regularized-svm).
 
 ## Describing this pipeline in your paper
 

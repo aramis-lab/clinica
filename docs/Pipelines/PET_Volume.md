@@ -32,7 +32,7 @@ clinica run pet-volume bids_directory caps_directory group_id
 where:
 
 - `bids_directory` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
-- `caps_directory` acts both as an input folder (where the results of the `t1-volume-*` pipeline are stored) and as the output folder containing the results in a [CAPS](../../CAPS) hierarchy.
+- `caps_directory` acts both as an input folder (where the results of the `t1-volume-*` pipeline are stored) and as the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
 - `group_id` is the id of the group that is associated to the DARTEL template that you had created when running the `t1-volume-*` pipeline.
 
 Pipeline options:
@@ -61,7 +61,7 @@ Pipeline options:
 
 
 ## Outputs
-Results are stored in the following folder of the [CAPS hierarchy](../../CAPS): `subjects/sub-<participant_label>/ses-<session_label>/pet/preprocessing`.
+Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#pet-volume-volume-based-processing-of-pet-images): `subjects/sub-<participant_label>/ses-<session_label>/pet/preprocessing`.
 
 The main output files are:
 
@@ -74,7 +74,7 @@ The main output files are:
 !!! note
     The [pvc-rbv] label indicates whether the PET image has undergone partial value correction (region-based voxel-wise method) or not.
 
-    The full list of output files from the pet-volume pipeline can be found in the [The ClinicA Processed Structure (CAPS) Specification](https://docs.google.com/document/d/14mjXbqRceHK0fD0BIONniLK713zY7DbQHJEV7kxqsd8/edit#).
+    The full list of output files from the pet-volume pipeline can be found in the [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#pet-volume-volume-based-processing-of-pet-images).
 
 
 ## Describing this pipeline in your paper

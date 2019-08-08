@@ -34,7 +34,7 @@ clinica run dwi-preprocessing-using-phasediff-fieldmap bids_directory caps_direc
 where:
 
   - `bids_directory` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
-  - `caps_directory` is the output folder containing the results in a [CAPS](../../CAPS) hierarchy.
+  - `caps_directory` is the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
 
 If you want to run the pipeline on a subset of your BIDS dataset, you can use the `-tsv` flag to specify in a TSV file the participants belonging to your subset.
 
@@ -46,9 +46,9 @@ If you want to run the pipeline on a subset of your BIDS dataset, you can use th
 
 
 ## Outputs
-Results are stored in the following folder of the [CAPS hierarchy](../../CAPS): `subjects/sub-<participant_label>/ses-<session_label>/dwi/preprocessing`.
+Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#dwi-preprocessing-preprocessing-of-raw-diffusion-weighted-imaging-dwi-datasets): `subjects/sub-<participant_label>/ses-<session_label>/dwi/preprocessing`.
 
-The main output files are:
+The output files are:
 
   - `<source_file>_space-{T1w|b0}_preproc.{bval|bvec|nii.gz}`: corrected DWI dataset where the first volume of the dataset is the reference b0.
 

@@ -25,7 +25,7 @@ clinica run dwi-connectome caps_directory
 ```
 where:
 
- - `caps_directory` is the input/output folder containing the results in a [CAPS](../../CAPS) hierarchy.
+ - `caps_directory` is the input/output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
 
 If you want to run the pipeline on a subset of your CAPS dataset, you can use the `-tsv` flag to specify in a TSV file the participants belonging to your subset.
 
@@ -35,7 +35,7 @@ If you want to run the pipeline on a subset of your CAPS dataset, you can use th
 
 ## Outputs
 
-Results are stored in the following folder of the [CAPS hierarchy](../../CAPS): `subjects/sub-<participant_label>/ses-<session_label>/dwi/connectome_based_processing/`.
+Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications): `subjects/sub-<participant_label>/ses-<session_label>/dwi/connectome_based_processing/`.
 
 The main output files are:
 
@@ -45,8 +45,12 @@ The main output files are:
 
 
 !!! note "Atlases available for the Connectome-based processing pipeline:"
-	- [Desikan](https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation) [[Desikan et al., 2006]](https://doi.org/10.1016/j.neuroimage.2006.01.021): This atlas is a subdivision of the cerebral cortex into gyri and contains 34 regions per hemisphere. It was built using a dataset of 40 MRI scans from which 34 cortical ROIs were manually identified in each of the individual hemispheres.
-	- [Destrieux](https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation) [[Destrieux et al., 2010]](https://dx.doi.org/10.1016%2Fj.neuroimage.2010.06.010): This atlas is a subdivision of the cerebral cortex into gyri and sulci, and contains 74 regions per hemisphere. It was built on anatomical MRI of 24 healthy subjects from which 74 cortical ROIs were manually identified in each of the individual hemispheres.
+	- [Desikan](https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation) [[Desikan et al., 2006](https://doi.org/10.1016/j.neuroimage.2006.01.021)]: This atlas is a subdivision of the cerebral cortex into gyri and contains 34 regions per hemisphere. It was built using a dataset of 40 MRI scans from which 34 cortical ROIs were manually identified in each of the individual hemispheres.
+	- [Destrieux](https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation) [[Destrieux et al., 2010](https://dx.doi.org/10.1016%2Fj.neuroimage.2010.06.010)]: This atlas is a subdivision of the cerebral cortex into gyri and sulci, and contains 74 regions per hemisphere. It was built on anatomical MRI of 24 healthy subjects from which 74 cortical ROIs were manually identified in each of the individual hemispheres.
+
+
+!!! note
+    The full list of output files can be found in the [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications).
 
 <!--## Visualization of the results-->
 
@@ -74,7 +78,7 @@ Do not forget to fill in the missing information (after the `=` signs) and do no
 ## Describing this pipeline in your paper
 
 !!! cite "Example of paragraph for the `dwi-connectome` pipeline"
-    These results have been obtained using the `dwi-connectome` pipeline of Clinica relying on the **MRtrix3** [[Tournier et al., 2012](https://doi.org/10.1002/ima.22005)] software package. Fiber orientation distributions (FOD) at highly anisotropic voxels (FA >0.7) was computed to determine the response function, which was used for constrained spherical deconvolution to accurately estimate the FOD [[Tournier et al., 2007]](https://doi.org/10.1016/j.neuroimage.2007.02.016). Then, `<n_tracks>` fibers with a probabilistic tracking algorithm [[Tournier et al., 2010]](https://cds.ismrm.org/protected/10MProceedings/files/1670_4298.pdf) were generated. Default parameters included minimum length 20 mm, a step size of 0.2 mm, minimum radius of curvature of 1 mm and FOD cutoff of 0.1. All voxels in the 1-mm dilated white-matter mask were used as seeds and the tracking procedure was stopped if a fiber reached a voxel outside the mask or if a stopping criterion was met (high fiber curvature or low FOD). Finally, the connectome is estimated by counting the number of tracks connecting each pair of nodes according to the [Desikan|Destrieux] parcellation.
+    These results have been obtained using the `dwi-connectome` pipeline of Clinica relying on the **MRtrix3** [[Tournier et al., 2012](https://doi.org/10.1002/ima.22005)] software package. Fiber orientation distributions (FOD) at highly anisotropic voxels (FA >0.7) was computed to determine the response function, which was used for constrained spherical deconvolution to accurately estimate the FOD [[Tournier et al., 2007](https://doi.org/10.1016/j.neuroimage.2007.02.016)]. Then, `<n_tracks>` fibers with a probabilistic tracking algorithm [[Tournier et al., 2010](https://cds.ismrm.org/protected/10MProceedings/files/1670_4298.pdf)] were generated. Default parameters included minimum length 20 mm, a step size of 0.2 mm, minimum radius of curvature of 1 mm and FOD cutoff of 0.1. All voxels in the 1-mm dilated white-matter mask were used as seeds and the tracking procedure was stopped if a fiber reached a voxel outside the mask or if a stopping criterion was met (high fiber curvature or low FOD). Finally, the connectome is estimated by counting the number of tracks connecting each pair of nodes according to the [Desikan|Destrieux] parcellation.
 
 !!! tip
     Easily access the papers cited on this page on [Zotero](https://www.zotero.org/groups/2240070/clinica_aramislab/items/collectionKey/UJRXE4AP).

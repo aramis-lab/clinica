@@ -27,7 +27,7 @@ clinica run statistics-surface caps_directory subject_visits_with_covariates_tsv
 ```
 where:
 
-- `caps_directory` is the folder containing the results of the [`t1-freesurfer`](../T1_FreeSurfer) or [`pet-surface` pipeline](../PET_Surface) pipeline and the output of the present command, both in a [CAPS hierarchy](../../CAPS).
+- `caps_directory` is the folder containing the results of the [`t1-freesurfer`](../T1_FreeSurfer) or [`pet-surface` pipeline](../PET_Surface) pipeline and the output of the present command, both in a [CAPS hierarchy](../../CAPS/Introduction).
 - `subject_visits_with_covariates_tsv` is a TSV file containing a list of subjects with their sessions and all the covariates and factors in your model (the content of the file is explained on the [Example](../Stats_Surface/#comparison-analysis) subsection).
 - `design_matrix` is a string defining the model that fits into the GLM, e.g. `1 + group + sex + age` where `group`, `sex` and `age` correspond to the names of columns in the TSV file provided.
 - `contrast` is a string defining the contrast matrix or the variable of interest for the GLM, e.g. `group` or `age`.
@@ -43,7 +43,7 @@ By default, the pipeline will try to run the analysis using the cortical thickne
 ## Outputs
 
 ### Group comparison analysis
-Results are stored in the following folder of the [CAPS hierarchy](../../CAPS): `groups/group-<group_label>/statistics/surfstat_group_comparison/`.
+Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#group-comparison): `groups/group-<group_label>/statistics/surfstat_group_comparison/`.
 
 The main outputs for the group comparison are:
 
@@ -56,8 +56,6 @@ The `<group_1>-lt-<group_2>` means that the tested hypothesis is: "the measureme
 
 The value for FWHM corresponds to the size of the surface-based smoothing in mm and can be 5, 10, 15, 20.
 
-The full list of output files can be found in the [ClinicA Processed Structure (CAPS) Specification](https://docs.google.com/document/d/14mjXbqRceHK0fD0BIONniLK713zY7DbQHJEV7kxqsd8/edit).
-
 Analysis with cortical thickness (respectively FDG-PET data) will be saved under the `_measure-ct` keyword (respectively the `_measure-fdg` keyword).
 
 !!! tip
@@ -65,7 +63,7 @@ Analysis with cortical thickness (respectively FDG-PET data) will be saved under
 
 
 ### Correlations analysis
-Results are stored in the following folder of the [CAPS hierarchy](../../CAPS): `groups/group-<group_label>/statistics/surfstat_correlation/`.
+Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#correlation-analysis): `groups/group-<group_label>/statistics/surfstat_correlation/`.
 
 The main outputs for the correlation are:
 
@@ -80,7 +78,9 @@ The `correlation-<label>` describes the factor of the model, which can be for ex
 
 Analysis with cortical thickness (respectively FDG-PET data) will be saved under the `_measure-ct` keyword (respectively the `_measure-fdg` keyword).
 
-The full list of output files can be found in the [ClinicA Processed Structure (CAPS) Specification](https://docs.google.com/document/d/14mjXbqRceHK0fD0BIONniLK713zY7DbQHJEV7kxqsd8/edit).
+
+!!! note
+    The full list of output files can be found in the [ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#statistics-surface-surface-based-mass-univariate-analysis-with-surfstat).
 
 <!--### GLM-->
 <!--@TODO-->

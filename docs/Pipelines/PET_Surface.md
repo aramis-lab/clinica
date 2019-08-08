@@ -29,7 +29,7 @@ clinica run pet-surface bids_directory caps_directory
 where:
 
   - `bids_directory` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
-  - `caps_directory` is the output folder containing the results in a [CAPS](../../CAPS) hierarchy.
+  - `caps_directory` is the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
 
 If you want to run the pipeline on a subset of your BIDS dataset, you can use the `-tsv` flag to specify in a TSV file the participants belonging to your subset.
 
@@ -67,9 +67,9 @@ Pipeline options
 
 - `-np`: This parameter specifies the number of threads to run in parallel. We recommand using `your_number_of_cpu - 1`. Please note that PETPVC is extremely demanding in terms of resources and may cause the pipeline to crash if many subjects happen to be partial volume corrected at the same time (Error : `Failed to allocate memory for image`). To mitigate this issue, you can do the following:
 
-**1)** Use a working directory when you launch clinica 
+**1)** Use a working directory when you launch clinica
 
-**2)** If the pipeline crash, just launch again the command (while giving the same working directory) 
+**2)** If the pipeline crash, just launch again the command (while giving the same working directory)
 
 **3)** The whole processing will continue where it left ! (you can lower the number of thread to run in parallel the second time)
 
@@ -81,13 +81,17 @@ Pipeline options
 
 ## Outputs
 
-Results are stored in the following folder of the [CAPS hierarchy](../../CAPS): `subjects/sub-<participant_label>/ses-<session_label>/pet/surface`
+Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#pet-surface-surface-based-processing-of-pet-images): `subjects/sub-<participant_label>/ses-<session_label>/pet/surface`
 
 The files are (where `*` stands for `sub-<participant_label>_ses-<session_label>`):
 
 - `atlas_statistics/*_task-<label>_acq-<label>_pet_space-<label>_pvc-iy_suvr-<label>_statistics.tsv`: TSV files summarizing the regional statistics on the labelled atlases (Desikan and Destrieux).
 - `*_hemi-{left|right}_midcorticalsurface`: surface at equal distance between the white matter/gray matter interface and the pial surface (one per hemisphere).
 - `*_task-rest_acq-<label>_pet_space-<label>_suvr-<label>_pvc-iy_hemi-<label>_fwhm-<value>_projection.mgh`: PET data that can be mapped onto meshes. If the `space` is `fsaverage`, it can be mapped either onto the white or pial surface of FsAverage. If the `space` is `native`, it can be mapped onto the white or pial surface of the subject’s surface (i.e. `{l|r}h.white`, `{l|r}h.pial` files from the `t1-freesurfer` pipeline).
+
+!!! note
+    The full list of output files from the pet-volume pipeline can be found in the [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#pet-surface-surface-based-processing-of-pet-images).
+
 
 <center>![PET surface results](../../img/PET_Surface.jpg)</center>
 *<center><small>FDG PET SUVR projected onto the cortical surface (left hemisphere) for (from left to right) a cognitively normal subject (CN), a patient with Alzheimer’s disease (AD), a patient with semantic variant primary progressive aphasia (svPPA) and a patient with logopenic variant primary progressive aphasia (lvPPA). The first row is the projection in the subject’s space. The second row is the same signal for each subject, but warped to FsAverage after smoothing with a 20 mm Gaussian kernel.</small></center>*

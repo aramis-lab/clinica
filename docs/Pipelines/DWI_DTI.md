@@ -22,14 +22,14 @@ clinica run dwi-dti caps_directory
 
 where:
 
-  - `caps_directory` is the input/output folder containing the results in a [CAPS](../../CAPS) hierarchy.
+  - `caps_directory` is the input/output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
 
 If you want to run the pipeline on a subset of your CAPS dataset, you can use the `-tsv` flag to specify in a TSV file the participants belonging to your subset.
 
 
 ## Outputs
 
-Results are stored in the following folder of the [CAPS hierarchy](../../CAPS): `subjects/sub-<participant_label>/ses-<session_label>/dwi/dti_based_processing/`.
+Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#dwi-dti-dti-based-processing-of-corrected-dwi-datasets): `subjects/sub-<participant_label>/ses-<session_label>/dwi/dti_based_processing/`.
 
 The main output files are:
 
@@ -43,7 +43,10 @@ The main output files are:
 
 !!! note "Atlases available for the DTI-based processing pipeline:"
 	- [JHUDTI81](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases) [[Hua et al., 2008](https://doi.org/10.1016/j.neuroimage.2007.07.053); [Wakana et al., 2007](https://doi.org/10.1016/j.neuroimage.2007.02.049)]: This atlas contains 48 white matter tract labels that were created by manually segmenting a standard-space average of diffusion MRI tensor maps from 81 subjects.
-	- [JHUTracts[0|25|50]](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases) [Mori et al., 2005]. This atlas contains 20 white matter tract labels that were identified probabilistically by averaging the results of deterministic tractography run on 28 subjects. Several thresholds of these probabilistic tracts are proposed (0%, 25%, 50%).
+	- [JHUTracts[0|25|50](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Atlases) [[Mori et al., 2005](https://www.elsevier.com/books/mri-atlas-of-human-white-matter/mori/978-0-444-51741-8)]. This atlas contains 20 white matter tract labels that were identified probabilistically by averaging the results of deterministic tractography run on 28 subjects. Several thresholds of these probabilistic tracts are proposed (0%, 25%, 50%).
+
+!!! note
+    The full list of output files can be found in the [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#dwi-dti-dti-based-processing-of-corrected-dwi-datasets).
 
 
 <!--## Visualization of the results-->
