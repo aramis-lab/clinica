@@ -51,7 +51,7 @@ class T1FreeSurferVisualizer(ce.CmdParser):
 
         # Check that
         # 1) subject and session are present in CAPS
-        # 2) a freesurfer folder has been launched
+        # 2) a FreeSurfer folder has been launched
         if not os.path.exists(caps_participant):
             if os.path.exists(os.path.join(args.caps_directory,
                                            'subjects',
@@ -117,5 +117,5 @@ class T1FreeSurferVisualizer(ce.CmdParser):
              files['lh_pial'],
              files['rh_white'],
              files['rh_pial'])
-
+        cprint('Running the following command: %s' % command_line)
         os.system(command_line)
