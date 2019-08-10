@@ -24,23 +24,23 @@ from testing_tools import *
 warnings.filterwarnings("ignore")
 
 
-def test_run_T1FreeSurferCrossSectional(cmdopt):
+def test_run_T1FreeSurfer(cmdopt):
     from clinica.pipelines.t1_freesurfer.t1_freesurfer_pipeline import T1FreeSurfer
     from os.path import dirname, join, abspath, isfile
     import subprocess
 
     working_dir = cmdopt
     root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'T1FreeSurferCrossSectional')
+    root = join(root, 'data', 'T1FreeSurfer')
 
     clean_folder(join(root, 'out', 'caps'))
-    clean_folder(join(working_dir, 'T1FreeSurferCrossSectional'))
+    clean_folder(join(working_dir, 'T1FreeSurfer'))
 
     pipeline = T1FreeSurfer(bids_directory=join(root, 'in', 'bids'),
                             caps_directory=join(root, 'out', 'caps'),
                             tsv_file=join(root, 'in', 'subjects.tsv'))
     pipeline.parameters['recon_all_args'] = '-qcache'
-    pipeline.base_dir = join(working_dir, 'T1FreeSurferCrossSectional')
+    pipeline.base_dir = join(working_dir, 'T1FreeSurfer')
     pipeline.build()
     pipeline.run(bypass_check=True)
 

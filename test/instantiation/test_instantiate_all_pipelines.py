@@ -8,12 +8,12 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def test_instantiate_T1FreeSurferCrossSectional():
+def test_instantiate_T1FreeSurfer():
     from clinica.pipelines.t1_freesurfer.t1_freesurfer_pipeline import T1FreeSurfer
     from os.path import dirname, join, abspath
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'T1FreeSurferCrossSectional')
+    root = join(root, 'data', 'T1FreeSurfer')
     pipeline = T1FreeSurfer(
             bids_directory=join(root, 'in', 'bids'),
             caps_directory=join(root, 'in', 'caps'),
