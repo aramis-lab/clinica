@@ -190,28 +190,28 @@ def execute():
     """
     from clinica.engine import CmdParser
 
-    from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_cli import T1FreeSurferCrossSectionalCLI  # noqa
-    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_cli import T1FreeSurferLongitudinalCLI  # noqa
-    from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import T1VolumeTissueSegmentationCLI  # noqa
-    from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_cli import T1VolumeCreateDartelCLI  # noqa
-    from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_cli import T1VolumeExistingDartelCLI  # noqa
-    from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_cli import T1VolumeDartel2MNICLI  # noqa
-    from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_cli import T1VolumeNewTemplateCLI  # noqa
-    from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import T1VolumeExistingTemplateCLI  # noqa
+    from clinica.pipelines.t1_freesurfer.t1_freesurfer_cli import T1FreeSurferCLI
+    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_cli import T1FreeSurferLongitudinalCLI
+    from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import T1VolumeTissueSegmentationCLI
+    from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_cli import T1VolumeCreateDartelCLI
+    from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_cli import T1VolumeExistingDartelCLI
+    from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_cli import T1VolumeDartel2MNICLI
+    from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_cli import T1VolumeNewTemplateCLI
+    from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import T1VolumeExistingTemplateCLI
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
-    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DwiPreprocessingUsingPhaseDiffFieldmapCli  # noqa
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DwiPreprocessingUsingT1Cli  # noqa
-    from clinica.pipelines.dwi_dti.dwi_dti_cli import DwiDtiCli  # noqa
-    from clinica.pipelines.dwi_connectome.dwi_connectome_cli import DwiConnectomeCli  # noqa
-    from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI  # noqa
-    from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI  # noqa
-    from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI  # noqa
-    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_cli import SpatialSVMCLI  # noqa
-    from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI  # noqa
+    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DwiPreprocessingUsingPhaseDiffFieldmapCli
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DwiPreprocessingUsingT1Cli
+    from clinica.pipelines.dwi_dti.dwi_dti_cli import DwiDtiCli
+    from clinica.pipelines.dwi_connectome.dwi_connectome_cli import DwiConnectomeCli
+    from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI
+    from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI
+    from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI
+    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_cli import SpatialSVMCLI
+    from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
                                    extra_dir="pipelines").load()
     pipelines += [
-        T1FreeSurferCrossSectionalCLI(),
+        T1FreeSurferCLI(),
         T1VolumeNewTemplateCLI(),
         T1FreeSurferLongitudinalCLI(),
         DwiPreprocessingUsingPhaseDiffFieldmapCli(),
@@ -251,9 +251,9 @@ def execute():
     """
     convert category: convert one of the supported datasets into BIDS hierarchy
     """
-    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids_cli import AiblToBidsCLI  # noqa
-    from clinica.iotools.converters.adni_to_bids.adni_to_bids_cli import AdniToBidsCLI  # noqa
-    from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_cli import OasisToBidsCLI  # noqa
+    from clinica.iotools.converters.aibl_to_bids.aibl_to_bids_cli import AiblToBidsCLI
+    from clinica.iotools.converters.adni_to_bids.adni_to_bids_cli import AdniToBidsCLI
+    from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_cli import OasisToBidsCLI
     from clinica.iotools.converters.nifd_to_bids.nifd_to_bids_cli import NifdToBidsCLI  # noga
 
     converters = ClinicaClassLoader(baseclass=CmdParser,
@@ -316,7 +316,7 @@ def execute():
     """
     from clinica.engine import CmdParser
 
-    from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_visualizer import T1FreeSurferVisualizer
+    from clinica.pipelines.t1_freesurfer.t1_freesurfer_visualizer import T1FreeSurferVisualizer
 
     visualizers = ClinicaClassLoader(baseclass=CmdParser,
                                      extra_dir="pipelines").load()

@@ -105,7 +105,7 @@ def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
     import nipype.pipeline.engine as pe
     from nipype.interfaces.utility import Function
     import pandas as pd
-    from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_utils import write_statistics_per_subject
+    from clinica.pipelines.t1_freesurfer.t1_freesurfer_utils import write_statistics_per_subject
 
     # get the list for subject_ids
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
@@ -142,7 +142,7 @@ def write_reconall_log_summary(caps_dir, subjects_visits_tsv):
     import nipype.pipeline.engine as pe
     from nipype.interfaces.utility import Function
     import pandas as pd
-    from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_utils import log_summary
+    from clinica.pipelines.t1_freesurfer.t1_freesurfer_utils import log_summary
 
     # get the list for subject_ids
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
