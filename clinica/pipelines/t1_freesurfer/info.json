@@ -1,6 +1,6 @@
 {
     "id": "aramislab/t1-freesurfer",
-    "author": "Junhao Wen",
+    "author": ["Junhao Wen", "Alexandre Routier"],
     "version": "0.1",
     "dependencies": [
         {
