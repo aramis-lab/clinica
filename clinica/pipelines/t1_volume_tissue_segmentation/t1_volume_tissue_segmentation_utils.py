@@ -56,15 +56,12 @@ __status__ = "Development"
 
 
 def group_nested_images_by_subject(class_images, zip_files=False):
-    """
-
-    """
     from clinica.utils.io import zip_nii
 
     if zip_files:
-        return [zip_nii([s for tissue in subject for s in tissue], True) for subject in class_images]
+        return [zip_nii(tissue, True) for tissue in class_images]
 
-    return [[s for tissue in subject for s in tissue] for subject in class_images]
+    return [tissue for tissue in class_images]
 
 
 def get_tissue_tuples(tissue_map, tissue_classes, dartel_tissues, save_warped_unmodulated, save_warped_modulated):
