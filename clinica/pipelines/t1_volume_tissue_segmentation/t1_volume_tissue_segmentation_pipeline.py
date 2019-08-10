@@ -12,6 +12,13 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
+# Use hash instead of parameters for iterables folder names
+# Otherwise path will be too long and generate OSError
+from nipype import config
+cfg = dict(execution={'parameterize_dirs': False})
+config.update_config(cfg)
+
+
 class T1VolumeTissueSegmentation(cpe.Pipeline):
     """T1VolumeTissueSegmentation - Tissue segmentation, bias correction and
     spatial normalization to MNI space.
@@ -55,8 +62,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         Returns:
             A list of (string) input fields name.
         """
-
-        return ['input_images']
+        return ['t1w']
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipelines.
@@ -79,20 +85,51 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipelines.
         """
-
-        import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
-        import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as utils
+        import nipype.pipeline.engine as npe
+        from colorama import Fore
+        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
+        from clinica.utils.io import check_input_bids_files
+        from clinica.utils.stream import cprint
 
-        # Reading BIDS
-        # ============
-        read_node = npe.Node(name="read_node",
-                             interface=nutil.IdentityInterface(fields=['bids_images'],
-                                                               mandatory_inputs=True))
-        read_node.inputs.bids_images = utils.select_bids_images(self.subjects, self.sessions, 'T1w', self.bids_layout)
+        # Remove 'sub-' prefix from participant IDs
+        participant_labels = '|'.join(sub[4:] for sub in self.subjects)
+        # Remove 'ses-' prefix from session IDs
+        session_labels = '|'.join(ses[4:] for ses in self.sessions)
 
+        error_message = ""
+        # Inputs from anat/ folder
+        # ========================
+        # T1w file:
+        t1w_files = self.bids_layout.get(type='T1w', return_type='file', extensions=['.nii|.nii.gz'],
+                                         subject=participant_labels, session=session_labels)
+        error_message += check_input_bids_files(t1w_files, "T1W_NII", self.bids_directory, self.subjects, self.sessions)
+
+        if error_message:
+            raise ClinicaBIDSError(error_message)
+
+        if len(t1w_files) == 0:
+            import sys
+            cprint(
+                '%s\nEither all the images were already run by the pipeline or no image was found to run the pipeline. '
+                'The program will now exit.%s' % (Fore.BLUE, Fore.RESET))
+            sys.exit(0)
+        else:
+            images_to_process = ', '.join(self.subjects[i][4:] + '|' + self.sessions[i][4:]
+                                          for i in range(len(self.subjects)))
+            cprint('The pipeline will be run on the following subject(s): %s' % images_to_process)
+            cprint('The pipeline will last approximately 10 minutes per image.')
+
+        read_node = npe.Node(name="ReadingFiles",
+                             iterables=[
+                                 ('t1w', t1w_files),
+                             ],
+                             synchronize=True,
+                             interface=nutil.IdentityInterface(
+                                 fields=self.get_input_fields())
+                             )
         self.connect([
-            (read_node, self.input_node, [('bids_images', 'input_images')])
+            (read_node, self.input_node, [('t1w', 't1w')]),
         ])
 
     def build_output_node(self):
@@ -225,17 +262,16 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
             raise RuntimeError('SPM could not be found. Please verify your SPM_HOME environment variable.')
 
         # Unzipping
-        # ===============================
-        unzip_node = npe.MapNode(nutil.Function(input_names=['in_file'],
-                                                output_names=['out_file'],
-                                                function=unzip_nii),
-                                 name='unzip_node', iterfield=['in_file'])
+        # =========
+        unzip_node = npe.Node(nutil.Function(input_names=['in_file'],
+                                             output_names=['out_file'],
+                                             function=unzip_nii),
+                              name='unzip_node')
 
         # Unified Segmentation
-        # ===============================
-        new_segment = npe.MapNode(spm.NewSegment(),
-                                  name='new_segment',
-                                  iterfield=['channel_files'])
+        # ====================
+        new_segment = npe.Node(spm.NewSegment(),
+                               name='new_segment')
 
         if self.parameters['affine_regularization'] is not None:
             new_segment.inputs.affine_regularization = self.parameters['affine_regularization']
@@ -281,7 +317,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         # Connection
         # ==========
         self.connect([
-            (self.input_node, unzip_node, [('input_images', 'in_file')]),
+            (self.input_node, unzip_node, [('t1w', 'in_file')]),
             (unzip_node, new_segment, [('out_file', 'channel_files')]),
             (new_segment, self.output_node, [('bias_corrected_images', 'bias_corrected_images'),
                                              ('bias_field_images', 'bias_field_images'),
