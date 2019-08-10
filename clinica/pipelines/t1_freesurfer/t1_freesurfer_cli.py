@@ -3,7 +3,7 @@
 import clinica.engine as ce
 
 
-class T1FreeSurferCrossSectionalCLI(ce.CmdParser):
+class T1FreeSurferCLI(ce.CmdParser):
 
     def define_name(self):
         """Define the sub-command name to run this pipelines.
@@ -47,10 +47,10 @@ class T1FreeSurferCrossSectionalCLI(ce.CmdParser):
         import datetime
         from colorama import Fore
         from clinica.utils.stream import cprint
-        from .t1_freesurfer_cross_sectional_pipeline import T1FreeSurferCrossSectional
+        from .t1_freesurfer_pipeline import T1FreeSurfer
         from tempfile import mkdtemp
 
-        pipeline = T1FreeSurferCrossSectional(
+        pipeline = T1FreeSurfer(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv)

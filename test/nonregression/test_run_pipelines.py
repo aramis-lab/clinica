@@ -25,7 +25,7 @@ warnings.filterwarnings("ignore")
 
 
 def test_run_T1FreeSurferCrossSectional(cmdopt):
-    from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_pipeline import T1FreeSurferCrossSectional
+    from clinica.pipelines.t1_freesurfer.t1_freesurfer_pipeline import T1FreeSurfer
     from os.path import dirname, join, abspath, isfile
     import subprocess
 
@@ -36,9 +36,9 @@ def test_run_T1FreeSurferCrossSectional(cmdopt):
     clean_folder(join(root, 'out', 'caps'))
     clean_folder(join(working_dir, 'T1FreeSurferCrossSectional'))
 
-    pipeline = T1FreeSurferCrossSectional(bids_directory=join(root, 'in', 'bids'),
-                                          caps_directory=join(root, 'out', 'caps'),
-                                          tsv_file=join(root, 'in', 'subjects.tsv'))
+    pipeline = T1FreeSurfer(bids_directory=join(root, 'in', 'bids'),
+                            caps_directory=join(root, 'out', 'caps'),
+                            tsv_file=join(root, 'in', 'subjects.tsv'))
     pipeline.parameters['recon_all_args'] = '-qcache'
     pipeline.base_dir = join(working_dir, 'T1FreeSurferCrossSectional')
     pipeline.build()

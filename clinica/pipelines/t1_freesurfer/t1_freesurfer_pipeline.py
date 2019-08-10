@@ -1,18 +1,9 @@
 # coding: utf8
 
-__author__ = "Junhao Wen"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Junhao Wen", "Alexandre Routier"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Junhao Wen"
-__email__ = "Junhao.Wen@inria.fr"
-__status__ = "Development"
-
 import clinica.pipelines.engine as cpe
 
 
-class T1FreeSurferCrossSectional(cpe.Pipeline):
+class T1FreeSurfer(cpe.Pipeline):
     """Performs cortical surface extraction, segmentation of subcortical
     structures, cortical thickness estimation, spatial normalization onto the
     FreeSurfer surface template (FsAverage), and parcellation of cortical
@@ -57,7 +48,7 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipelines.
         """
-        import clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_utils as utils
+        import clinica.pipelines.t1_freesurfer.t1_freesurfer_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.stream import cprint
@@ -116,7 +107,7 @@ class T1FreeSurferCrossSectional(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.
         """
-        import clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_utils as utils
+        import clinica.pipelines.t1_freesurfer.t1_freesurfer_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from nipype.interfaces.freesurfer.preprocess import ReconAll
