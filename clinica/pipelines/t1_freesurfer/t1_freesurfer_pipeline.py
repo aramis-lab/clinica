@@ -10,21 +10,7 @@ config.update_config(cfg)
 
 
 class T1FreeSurfer(cpe.Pipeline):
-    """Performs cortical surface extraction, segmentation of subcortical
-    structures, cortical thickness estimation, spatial normalization onto the
-    FreeSurfer surface template (FsAverage), and parcellation of cortical
-    regions based on different atlases using the FreeSurfer recon-all command.
-    It also generate TSV files containing a summary of the regional statistics
-    (e.g. regional volume, mean cortical thickness) to ease subsequent
-    statistical analysis.
-
-    Args:
-        bids_directory: Path to the BIDS directory.
-        caps_directory: Path to the CAPS directory.
-        tsv: TSV file containing the subjects with their sessions
-        ras: additional flags for recon-all command line, default will be -qcache
-        wd: Temporary directory to store pipelines intermediate results
-        np: Number of cores used to run in parallel
+    """FreeSurfer-based processing of T1-weighted MR images.
 
     Returns:
         A clinica pipeline object containing the T1FreeSurfer pipeline.
@@ -106,11 +92,9 @@ class T1FreeSurfer(cpe.Pipeline):
         """
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
-        from .t1_freesurfer_utils import save_to_caps, print_end_pipeline
+        from .t1_freesurfer_utils import save_to_caps
         import os
 
-        # Writing CAPS
-        # ============
         save_to_caps = npe.Node(interface=nutil.Function(
             input_names=['source_dir', 'subject_id', 'caps_dir', 'overwrite_caps'],
             output_names=['subject_id'],
@@ -118,15 +102,7 @@ class T1FreeSurfer(cpe.Pipeline):
             name='99-SaveToCaps')
         save_to_caps.inputs.source_dir = os.path.join(self.base_dir, 'T1FreeSurfer', 'ReconAll')
         save_to_caps.inputs.caps_dir = self.caps_directory
-        # TODO: Handle the situation where CAPS is overwritten
         save_to_caps.inputs.overwrite_caps = False
-
-        # Print end message
-        print_end_message = npe.Node(
-            interface=nutil.Function(
-                input_names=['subject_id'],
-                function=print_end_pipeline),
-            name='99-WriteEndMessage')
 
         self.connect([
             (self.output_node, save_to_caps, [('subject_id', 'subject_id')]),
