@@ -91,43 +91,6 @@ def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv):
             cprint("--------------Finish this subject!-----------------------")
 
 
-def write_volumetric_per_subject(caps_dir, subjects_visits_tsv):
-    """
-        This func is to write the volumetric measurement after recon-all
-        pipelines for each subjects in the subjects_visits_tsv
-
-    Args: caps_dir: CAPS directory subjects_visits_tsv: tsv contains all the
-    participant_id and session_id
-
-    Returns:
-
-    """
-    import nipype.pipeline.engine as pe
-    from nipype.interfaces.utility import Function
-    import pandas as pd
-    from clinica.pipelines.t1_freesurfer.t1_freesurfer_utils import write_statistics_per_subject
-
-    # get the list for subject_ids
-    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
-    if (list(subjects_visits.columns.values)[0] != 'participant_id') and (list(subjects_visits.columns.values)[1] != 'session_id'):
-        raise Exception('Subjects and visits file is not in the correct format.')
-    subject_list = list(subjects_visits.participant_id)
-    session_list = list(subjects_visits.session_id)
-    subject_id = list(subject_list[i] + '_' + session_list[i] for i in range(len(subject_list)))
-
-    fs_tsv_subject = pe.MapNode(name='volumetric_summary_node',
-                                iterfield=['subject_id'],
-                                interface=Function(
-                                    input_names=['subject_id', 'output_dir'],
-                                    output_names=[],
-                                    function=write_statistics_per_subject,
-                                    imports=['import os', 'import errno']))
-    fs_tsv_subject.inputs.subject_id = subject_id
-    fs_tsv_subject.inputs.output_dir = caps_dir
-
-    return fs_tsv_subject
-
-
 def get_secondary_stats(stats_filename, info_type):
     """Read the 'secondary' statistical info from .stats file
 
