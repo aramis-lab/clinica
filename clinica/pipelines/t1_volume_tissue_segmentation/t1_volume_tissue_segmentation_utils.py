@@ -55,6 +55,60 @@ __status__ = "Development"
 #     return selected_images[0]
 
 
+def t1w_container_from_filename(t1w_filename):
+    """
+    Extracts <participant_id> & <sesssion_id> from BIDS <t1w_filename> and
+    returns CAPS path.
+    """
+    import re
+    from os.path import join
+    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', t1w_filename)
+
+    if m is None:
+        raise ValueError('Input filename is not in a BIDS or CAPS compliant format. It doesn\'t contain the subject' +
+                         ' and session information.')
+
+    participant_id = m.group(1)
+    session_id = m.group(2)
+
+    return join('subjects', participant_id, session_id, 't1', 'spm', 'segmentation')
+
+
+def init_input_node(t1w):
+    """
+    Extracts "sub-<participant_id>_ses-<session_label>" from input node
+    and prints begin message.
+    """
+    import datetime
+    from colorama import Fore
+    from clinica.utils.io import get_subject_id
+    from clinica.utils.stream import cprint
+
+    subject_id = get_subject_id(t1w)
+
+    now = datetime.datetime.now().strftime('%H:%M:%S')
+    cprint('%s[%s]%s Running pipeline for %s...' %
+           (Fore.BLUE, now, Fore.RESET, subject_id.replace('_', '|')))
+
+    return subject_id, t1w
+
+
+def print_end_pipeline(final_file):
+    """
+    Display end message for <subject_id> when <final_file> is connected.
+    """
+    import datetime
+    from colorama import Fore
+    from clinica.utils.io import get_subject_id
+    from clinica.utils.stream import cprint
+
+    subject_id = get_subject_id(final_file)
+
+    now = datetime.datetime.now().strftime('%H:%M:%S')
+    cprint('%s[%s]%s ...%s has completed.' % (
+        Fore.GREEN, now, Fore.RESET, subject_id.replace('|', '_')))
+
+
 def group_nested_images_by_subject(class_images, zip_files=False):
     from clinica.utils.io import zip_nii
 
@@ -141,7 +195,7 @@ class ApplySegmentationDeformationOutput(TraitedSpec):
 
 
 class ApplySegmentationDeformation(SPMCommand):
-    """ Uses spm to apply a deformation field obtained from Segmentation routine to a given file
+    """ Uses SPM to apply a deformation field obtained from Segmentation routine to a given file
 
     Examples
     --------
