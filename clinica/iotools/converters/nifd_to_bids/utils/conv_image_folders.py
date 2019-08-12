@@ -7,7 +7,7 @@ __maintainer__ = "Adam Wild"
 __email__ = "adam.wild@icm-institute.org"
 __status__ = "Development"
 
-from clinica.iotools.converters.nifd_to_bids.utils.Descriptor import Descriptor
+from clinica.iotools.converters.nifd_to_bids.utils.descriptor import Descriptor
 
 
 class Old_image_folder(object):
@@ -36,7 +36,7 @@ class Old_image_folder(object):
             max_priority = 0
             res_desc = None
             for desc in pos_desc:
-                if desc.priority>max_priority:
+                if desc.priority > max_priority:
                     max_priority = desc.priority
                     res_desc = desc
             self.old_name = self.name

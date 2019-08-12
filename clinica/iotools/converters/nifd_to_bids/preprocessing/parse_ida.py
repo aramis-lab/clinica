@@ -7,6 +7,10 @@ __maintainer__ = "Adam Wild"
 __email__ = "adam.wild@icm-institute.org"
 __status__ = "Development"
 
+import os
+import contextlib
+
+
 def csv_to_tsv(file, path_out):
     import os
 
@@ -14,12 +18,12 @@ def csv_to_tsv(file, path_out):
     out = open(os.path.join(path_out, 'ida.tsv'), 'w')
     s = ''
     for line in fich.readlines():
-        l = ''
+        line_mod = ''
         line = line.split(',')
         for elt in line:
-            l += elt + '\t'
-        l = l[:-1]
-        s += l
+            line_mod += elt + '\t'
+        line_mod = line_mod[:-1]
+        s += line_mod
 
     out.write(s)
     out.close()
@@ -81,6 +85,7 @@ def first_process(path_out):
     fich.write(final_sol)
     fich.close()
 
+
 def second_process(path_out):
     import pandas as pd
     import os
@@ -139,14 +144,15 @@ def second_process(path_out):
 
     write(dfFinal, path_out, 'ida')
 
-import os, contextlib
 
 def supress_stdout(func):
     def wrapper(*a, **ka):
         with open(os.devnull, 'w') as devnull:
             with contextlib.redirect_stdout(devnull):
                 func(*a, **ka)
+
     return wrapper
+
 
 @supress_stdout
 def process_ida(path_ida, path_out=None):

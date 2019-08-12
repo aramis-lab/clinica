@@ -7,6 +7,7 @@ __maintainer__ = "Adam Wild"
 __email__ = "adam.wild@icm-institute.org"
 __status__ = "Development"
 
+
 class Manage_conflicts():
 
     def __init__(self, path_choices):

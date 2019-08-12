@@ -13,6 +13,7 @@ from clinica.iotools.converters.nifd_to_bids.utils.conv_image_folders import get
 def break_path(path):
     return path.split('/')
 
+
 def filter(l_paths, source_dir, descriptors):
     """
     From a list of paths, removes paths that do not lead to an image described by any of the descriptor in descriptors
@@ -35,6 +36,7 @@ def filter(l_paths, source_dir, descriptors):
                 sol.append(path)
                 break
     return sol
+
 
 def csv_to_path(csv_line, source_dir):
     import os
@@ -62,15 +64,20 @@ def csv_to_path(csv_line, source_dir):
 
     try:
         subfold = [f.path.split('/')[-1] for f in os.scandir(folder) if f.is_dir()]
-    except:
+    except Exception:
         return None
     date = change_format_date(split[5])
 
-    if split[0] == '1_S_0005' and date == '2011-06-13' and split[9] in ('NIFD_DTI_b=1000_2.7mm3', 'dti_b=2000_64dir', 'dti_b=0_scans'):
+    if split[0] == '1_S_0005' and date == '2011-06-13' and split[9] in (
+            'NIFD_DTI_b=1000_2.7mm3', 'dti_b=2000_64dir', 'dti_b=0_scans'):
         date = '2011-06-15'
-    if split[0] == '1_S_0084' and date == '2012-02-13' and split[9] in ('NIFD_DTI_b1000_2.7mm3', 'dti_WIP_b2000_64dir', 'DTI_64_2.2iso_full_ky_fov220', 'DTI_b=0_2.2iso_full_ky_-_10_acqs', 'dti_WIP_b0_scans_aah'):
+    if split[0] == '1_S_0084' and date == '2012-02-13' and split[9] in (
+            'NIFD_DTI_b1000_2.7mm3', 'dti_WIP_b2000_64dir', 'DTI_64_2.2iso_full_ky_fov220',
+            'DTI_b=0_2.2iso_full_ky_-_10_acqs',
+            'dti_WIP_b0_scans_aah'):
         date = '2012-02-15'
-    if split[0] == '1_S_0316' and date == '2013-10-30' and split[9] in ('NIFD_DTI_b1000_2.7mm3_511E', 'ep2d-advdiff-511E_b2000_64dir', 'ep2d-advdiff-511E_b0_scan'):
+    if split[0] == '1_S_0316' and date == '2013-10-30' and split[9] in (
+            'NIFD_DTI_b1000_2.7mm3_511E', 'ep2d-advdiff-511E_b2000_64dir', 'ep2d-advdiff-511E_b0_scan'):
         date = '2013-10-31'
 
     val = [fold for fold in subfold if fold.startswith(date)]
@@ -80,6 +87,7 @@ def csv_to_path(csv_line, source_dir):
     path_date = os.path.join(folder, val[0])
     full_path = os.path.join(path_date, [f.path for f in os.scandir(path_date) if f.is_dir()][0])
     return full_path
+
 
 def get_patients_source_files(source_dir, path_ida):
     '''
@@ -105,6 +113,7 @@ def get_patients_source_files(source_dir, path_ida):
             sol[patient_id].append(path)
     return sol
 
+
 def filter_patients_source_files(patients_files, source_dir, descriptors):
     '''
     Iterates over a dictionary containing all source files for a patient,
@@ -123,14 +132,15 @@ def filter_patients_source_files(patients_files, source_dir, descriptors):
 
     return patients_files
 
+
 def create_folder(path):
     """
     If the provided path does not exist, the required folders are created
     """
     import os
     try:
-        os.makedirs(path, exist_ok = True)
-    except:
+        os.makedirs(path, exist_ok=True)
+    except Exception:
         pass
 
 
@@ -179,7 +189,7 @@ def print_patients_source_files(dict):
     for key in dict:
         cprint(key)
         for elt in dict[key]:
-            cprint('\t'+str(elt))
+            cprint('\t' + str(elt))
 
 
 def print_orderedBIDS(dict):
@@ -193,13 +203,13 @@ def print_orderedBIDS(dict):
     for ses in dict:
         cprint(ses)
         for dType in dict[ses]:
-            cprint('\t'+str(dType))
+            cprint('\t' + str(dType))
             for priority in dict[ses][dType]:
-                cprint('\t\t'+str(priority))
+                cprint('\t\t' + str(priority))
                 for name in dict[ses][dType][priority]:
-                    cprint('\t\t\t'+str(name))
+                    cprint('\t\t\t' + str(name))
                     for path in dict[ses][dType][priority][name]:
-                        cprint('\t\t\t\t'+str(path))
+                        cprint('\t\t\t\t' + str(path))
 
 
 def collect_conversion_tuples(final_bids, dest_dir, patient):
@@ -235,11 +245,14 @@ def supress_stdout(func):
     Args:
         func: function to be silenced
     '''
-    import os, contextlib
+    import os
+    import contextlib
+
     def wrapper(*a, **ka):
         with open(os.devnull, 'w') as devnull:
             with contextlib.redirect_stdout(devnull):
                 func(*a, **ka)
+
     return wrapper
 
 

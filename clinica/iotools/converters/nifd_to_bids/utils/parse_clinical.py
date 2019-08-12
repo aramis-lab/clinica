@@ -329,7 +329,7 @@ class Parse_clinical():
             new_cols = []
 
             for cell in list(self.df_ida['Imaging Protocol']):
-                if type(cell) == type('a'):
+                if isinstance(cell, type('a')):
                     col_to_add = [i.split('=')[0] for i in cell.split(';')]
                     for i in col_to_add:
                         if i not in new_cols:
@@ -374,13 +374,14 @@ class Parse_clinical():
                             (self.df_ida['Visit'] == 'Month ' + str(int(ses_num.split('M')[-1]))) &
                             (self.df_ida['Description'] == s_path0[-3].replace('_', ' '))]
 
-                    #TR_BRAIN_3D_PIB_IR_CTAC -> TR:BRAIN 3D:PIB:IR CTAC
+                    # TR_BRAIN_3D_PIB_IR_CTAC -> TR:BRAIN 3D:PIB:IR CTAC
                     if df_line_ida.empty:
                         des = s_path0[-3].split('_')
                         if len(des) == 6:
-                            des = des[0]+':'+des[1]+' '+des[2]+':'+des[3]+':'+des[4]+' '+des[5]
+                            des = des[0] + ':' + des[1] + ' ' + des[2] + ':' + des[3] + ':' + des[4] + ' ' + des[5]
                         else:
-                            des = des[0]+':'+des[1]+' '+des[2]+':'+des[3]+':'+des[4]+' '+des[5]+' '+des[6]
+                            des = des[0] + ':' + des[1] + ' ' + des[2] + ':' + des[3] + ':' + des[4] + ' ' + des[
+                                5] + ' ' + des[6]
                         df_line_ida = self.df_ida[
                             (self.df_ida['Subject ID'] == s_path1[-1][8] + '_S_' + s_path1[-1][10:14]) &
                             (self.df_ida['Visit'] == 'Month ' + str(int(ses_num.split('M')[-1]))) &

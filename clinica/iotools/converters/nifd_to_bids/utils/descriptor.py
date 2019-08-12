@@ -7,6 +7,7 @@ __maintainer__ = "Adam Wild"
 __email__ = "adam.wild@icm-institute.org"
 __status__ = "Development"
 
+
 class Descriptor(object):
     """
     Class that handles the conversion of a raw image name from the NIFD dataset,
@@ -16,6 +17,7 @@ class Descriptor(object):
     A descriptor object is created from a dictionnary written in the config_dcm2bids.json file
     To add a descriptor to the descriptors list that is used in convert_images, add it to the config_dcm2bids.json file
     """
+
     def __init__(self, dic_des):
         self.dataType = None
         self.modalityLabel = None
@@ -26,7 +28,6 @@ class Descriptor(object):
         self.Modality = None
         self.SeriesDescription = None
 
-
         if "dataType" in dic_des:
             self.dataType = dic_des["dataType"]
         if "modalityLabel" in dic_des:
@@ -36,7 +37,7 @@ class Descriptor(object):
         if "priority" in dic_des:
             self.priority = int(dic_des["priority"])
 
-        #Criteria attributes
+        # Criteria attributes
         if "criteria" in dic_des:
             self.criteria = True
             if "Modality" in dic_des["criteria"]:
@@ -66,11 +67,11 @@ class Descriptor(object):
                 if desc[-1] == '*':
                     return desc[1:-1] in str_image
                 else:
-                    return str_image[-len(desc)+1:] == desc[1:]
+                    return str_image[-len(desc) + 1:] == desc[1:]
 
             else:
                 if desc[-1] == '*':
-                    return str_image[:len(desc)-1] == desc[:-1]
+                    return str_image[:len(desc) - 1] == desc[:-1]
                 else:
                     return str_image == desc
 
@@ -88,9 +89,9 @@ class Descriptor(object):
     def get_bids_info(self):
         s = ""
         if self.customLabels is not None:
-            s += self.customLabels+'_'
+            s += self.customLabels + '_'
         if self.modalityLabel is not None:
-            s += self.modalityLabel+'_'
+            s += self.modalityLabel + '_'
 
         if len(s) == 0:
             return s
@@ -108,7 +109,7 @@ class Descriptor(object):
         if self.priority != 0:
             s += "priority : " + str(self.priority) + ", "
 
-        #Criteria attributes
+        # Criteria attributes
         if self.criteria:
             s += "\n(criteria) "
             if self.Modality is not None:
@@ -116,6 +117,6 @@ class Descriptor(object):
             if self.SeriesDescription is not None:
                 s += "SeriesDescription : " + self.SeriesDescription + ", "
 
-        if len(s)>2:
+        if len(s) > 2:
             return s[:-2]
         return s

@@ -7,8 +7,10 @@ __maintainer__ = "Adam Wild"
 __email__ = "adam.wild@icm-institute.org"
 __status__ = "Development"
 
+
 class Patient(object):
     """Class that handles sessions ordering, image quality hierarchy and final BIDS structure"""
+
     def __init__(self, name, path_patient, path_ida):
         self.name = name
         self.path = path_patient
@@ -56,7 +58,7 @@ class Patient(object):
 
     def get_sesName(self, ses_date):
         number = str(self.get_sesNumber(ses_date))
-        while len(number)<2:
+        while len(number) < 2:
             number = '0' + number
 
         res = 'ses-M' + number
@@ -86,7 +88,6 @@ class Patient(object):
 
         ses_names = [tupl[0] for tupl in same_dates]
         ses_names = list(set(ses_names))
-
 
         same_ses = {}
         for tupl in same_dates:
@@ -123,7 +124,7 @@ class Patient(object):
                 med_name = extract_name_med_img(path, equivalences)
                 dataType = equivalences[med_name][0].dataType
                 priority = equivalences[med_name][0].priority
-                final_name = self.get_name()+'_'+ses_id+'_'+equivalences[med_name][0].get_bids_info()
+                final_name = self.get_name() + '_' + ses_id + '_' + equivalences[med_name][0].get_bids_info()
 
                 if dataType not in sol[ses_id]:
                     sol[ses_id][dataType] = {}
@@ -171,26 +172,28 @@ class Patient(object):
                                 ordered_bids[ses][dType][highest_priority][name] = []
                             else:
                                 encountered.append(enc)
-                                if len(ordered_bids[ses][dType][highest_priority][name])>1:
+                                if len(ordered_bids[ses][dType][highest_priority][name]) > 1:
 
-                                    conflit = [extract_name_med_img(path, equivalences) for path in ordered_bids[ses][dType][highest_priority][name]]
+                                    conflit = [extract_name_med_img(path, equivalences) for path in
+                                               ordered_bids[ses][dType][highest_priority][name]]
                                     try:
                                         select = conflicts_manager.make_decision(conflit)
-                                    except:
-                                        print('Warning : '+str(conflit)+' not in expected conflicts, files will not be converted [Subject ID : '+pat+']')
+                                    except Exception:
+                                        print('Warning : ' + str(
+                                            conflit) + ' not in expected conflicts, files will not be converted [Subject ID : ' + pat + ']')
                                         select = None
                                     if select is None:
                                         ordered_bids[ses][dType][highest_priority][name] = []
                                     else:
-                                        val = [path for path in ordered_bids[ses][dType][highest_priority][name] if str(select) in path]
+                                        val = [path for path in ordered_bids[ses][dType][highest_priority][name] if
+                                               str(select) in path]
                                         ordered_bids[ses][dType][highest_priority][name] = val
                     highest_priority -= 1
 
         return ordered_bids
 
-
-    def get_conflicts(self, equivalences, descriptors, folders, conflicts = {}):
-        #from nifd_utils import extract_name_med_img
+    def get_conflicts(self, equivalences, descriptors, folders, conflicts={}):
+        # from nifd_utils import extract_name_med_img
         '''
         Returns a list of all possible conflicts in dataset according to the json file
         A conflict happens when several images end up in the same directory with the same name after BIDS conversion
@@ -208,12 +211,11 @@ class Patient(object):
                             name = name.split('_')[-1]
                             if name not in name_encountered:
                                 name_encountered.append(name)
-                                if len(ordered_bids[ses][dataType][highest_priority][name2])>1:
+                                if len(ordered_bids[ses][dataType][highest_priority][name2]) > 1:
                                     if name not in conflicts:
                                         conflicts[name] = [ordered_bids[ses][dataType][highest_priority][name2]]
                                     else:
                                         conflicts[name].append(ordered_bids[ses][dataType][highest_priority][name2])
-
 
                     highest_priority -= 1
 

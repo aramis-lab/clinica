@@ -96,8 +96,7 @@ def update_info_clinical(path_data_dict, path_clinicals, path_to_clinical, path_
 
         return dfCD
 
-
-    #This part handles the clinical info not handled by the Clinica (this software) standard.
+    # This part handles the clinical info not handled by the Clinica (this software) standard.
     dfClinicalDict = completeClinicalDict(dfClinicalDict, dfParticipant, 'participants')
     dfClinicalDict = completeClinicalDict(dfClinicalDict, dfSessions, 'sessions')
 
@@ -105,11 +104,13 @@ def update_info_clinical(path_data_dict, path_clinicals, path_to_clinical, path_
     for part in participants:
         dfClinicalDict.loc[dfClinicalDict['COLUMN_NAME'] == part, 'BIDS_CLINICA'] = part.lower()
         dfClinicalDict.loc[dfClinicalDict['COLUMN_NAME'] == part, 'FILE'] = 'participants'
-        dfClinicalDict.loc[dfClinicalDict['COLUMN_NAME'] == part, 'LOCATION'] = 'NIFD_Clinical_Data_2017_final_updated.xlsx'
+        dfClinicalDict.loc[
+            dfClinicalDict['COLUMN_NAME'] == part, 'LOCATION'] = 'NIFD_Clinical_Data_2017_final_updated.xlsx'
 
     for ses in sessions:
         dfClinicalDict.loc[dfClinicalDict['COLUMN_NAME'] == ses, 'BIDS_CLINICA'] = ses.lower()
         dfClinicalDict.loc[dfClinicalDict['COLUMN_NAME'] == ses, 'FILE'] = 'sessions'
-        dfClinicalDict.loc[dfClinicalDict['COLUMN_NAME'] == ses, 'LOCATION'] = 'NIFD_Clinical_Data_2017_final_updated.xlsx'
+        dfClinicalDict.loc[
+            dfClinicalDict['COLUMN_NAME'] == ses, 'LOCATION'] = 'NIFD_Clinical_Data_2017_final_updated.xlsx'
 
     write(dfClinicalDict, path_preprocessing, 'clinical_info')
