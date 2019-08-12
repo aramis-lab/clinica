@@ -60,8 +60,8 @@ Edit the file `~/.bashrc` (or the configuration file associated to your shell. I
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 
-# Miniconda (should be added automatically)
-export PATH="~/miniconda3/bin:${PATH}"
+# Miniconda
+source /path/to/your/Miniconda/etc/profile.d/conda.sh
 
 # ANTs
 export ANTSPATH="/path/to/your/ANTs"
@@ -75,7 +75,7 @@ source ${FREESURFER_HOME}/SetUpFreeSurfer.sh &> /dev/null
 # Uncomment the line below if you are on Mac:
 #export FSLDIR="/usr/local/fsl"
 # Uncomment the line below if you are on Linux:
-#export FSLDIR="/usr/share/fsl/5.0"
+#export FSLDIR="/usr/share/fsl/6.0"
 export PATH="${FSLDIR}/bin":${PATH}
 source ${FSLDIR}/etc/fslconf/fsl.sh
 
@@ -97,13 +97,13 @@ export PATH="/path/to/your/dcm2nii:$PATH"
 <!-- # Autocomplete system
 eval "$(register-python-argcomplete clinica)" -->
 
-<!-- !!! Note
-    `zsh` shell users will have to add this right before the last line:
+!!! Note
+    `zsh` shell users will have to add this right before the last line if they want autocompletion:
     ```bash
     autoload bashcompinit
     bashcompinit
     source ~/.bash_completion.d/python-argcomplete.sh
-    ``` -->
+    ```
 
 You must also add SPM to the MATLAB path variable if you installed it as a toolbox. To do so, add the following line to your `startup.m` file located in your *initial working folder*, by default `~/Documents/MATLAB` (see [here](https://fr.mathworks.com/help/matlab/ref/startup.html) for more details). If the file does not exist, you can create it and type inside:
 
