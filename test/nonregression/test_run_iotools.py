@@ -17,7 +17,7 @@ __status__ = "Development"
 
 import warnings
 import sys
-from testing_tools import create_list_hashes, compare_folders_with_hashes
+from testing_tools import create_list_hashes, compare_folders_with_hashes, compare_folders_structures
 from testing_tools import clean_folder, compare_folders
 from testing_tools import identical_subject_list, same_missing_modality_tsv
 from os import pardir
@@ -47,7 +47,7 @@ def test_run_Nifd2Bids(cmdopt):
     to_convert = convert_images(dataset_directory, bids_directory, clinical_data_directory)
     convert_clinical_data(bids_directory, clinical_data_directory, to_convert)
 
-    compare_folders_with_hashes(bids_directory, join(root, 'ref', 'hashes_nifd.p'))
+    compare_folders_structures(bids_directory, join(root, 'ref', 'hashes_nifd.p'))
 
     clean_folder(join(root, 'out', 'bids'), recreate=True)
     clean_folder(join(root, 'out', 'clinical_data'), recreate=False)

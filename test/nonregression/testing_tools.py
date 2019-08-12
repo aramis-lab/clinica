@@ -321,3 +321,30 @@ def compare_folders_with_hashes(path_folder, list_hashes):
                 error_message2 += "{0} does not match the reference file !\n".format(key)
         raise ValueError(error_message1 + error_message2)
     pass
+
+
+def compare_folders_structures(path_folder, list_hashes):
+    """
+    Compares the structure of a folder against a reference
+
+        Args:
+            (string) path_folder: starting point for the tree listing.
+            (dictionary) list_hashes: a dictionary of the form {/path/to/file.extension: hash(file.extension)}
+    """
+    import pickle
+
+    hashes_check = pickle.load(open(list_hashes, 'rb'))
+    hashes_new = create_list_hashes(path_folder)
+
+    if list(hashes_check).sort() != list(hashes_new).sort():
+        error_message1 = ""
+        error_message2 = ""
+        for key in hashes_check:
+            if key not in hashes_new:
+                error_message1 += "{0} not found !\n".format(key)
+        for key in hashes_new:
+            if key not in hashes_check:
+                error_message2 += "{0}'s creation was not expected !\n".format(key)
+
+        raise ValueError(error_message1 + error_message2)
+    pass
