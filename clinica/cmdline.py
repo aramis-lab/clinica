@@ -468,11 +468,17 @@ def execute():
             """
             def filter(self, record):
                 if record.levelno >= ERROR:
-                    cprint("An ERROR was generated: please check the log file for more information")
+                    import datetime
+                    now = datetime.datetime.now().strftime('%H:%M:%S')
+                    cprint(
+                        '%s[%s]%s An error was found: please check the log file (%s) or crash file '
+                        '(nipypecli crash <pklz_file>) for details. Clinica is still running.' %
+                        (Fore.RED, now, Fore.RESET, args.logname))
                 return True
 
-        logger = logging.getLogger('nipype.workflow')
-        logger.addFilter(LogFilter())
+        if args.verbose:
+            logger = logging.getLogger('nipype.workflow')
+            logger.addFilter(LogFilter())
 
         # Remove all handlers associated with the root logger object
         for handler in python_logging.root.handlers[:]:
