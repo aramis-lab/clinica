@@ -135,71 +135,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
     def build_output_node(self):
         """Build and connect an output node to the pipelines.
         """
-        import nipype.interfaces.utility as nutil
-        import nipype.pipeline.engine as npe
-        import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as utils
-        import nipype.interfaces.io as nio
-        from clinica.utils.io import fix_join
-        from clinica.utils.io import zip_nii
-
-        # Find container path from t1w filename
-        # =====================================
-        container_path = npe.Node(nutil.Function(input_names=['t1w_filename'],
-                                                 output_names=['container'],
-                                                 function=utils.t1w_container_from_filename),
-                                  name='ContainerPath')
-
-        # Writing CAPS
-        # ============
-        write_node = npe.Node(name='WriteCAPS',
-                              interface=nio.DataSink()
-                              )
-        write_node.inputs.base_directory = self.caps_directory
-        write_node.inputs.parameterization = False
-        write_node.inputs.regexp_substitutions = [
-            (r'(.*)c1(sub-.*)(\.nii(\.gz)?)$',                                 r'\1\2_segm-graymatter\3'),  # noqa
-            (r'(.*)c2(sub-.*)(\.nii(\.gz)?)$',                                 r'\1\2_segm-whitematter\3'),  # noqa
-            (r'(.*)c3(sub-.*)(\.nii(\.gz)?)$',                                 r'\1\2_segm-csf\3'),  # noqa
-            (r'(.*)c4(sub-.*)(\.nii(\.gz)?)$',                                 r'\1\2_segm-bone\3'),  # noqa
-            (r'(.*)c5(sub-.*)(\.nii(\.gz)?)$',                                 r'\1\2_segm-softtissue\3'),  # noqa
-            (r'(.*)c6(sub-.*)(\.nii(\.gz)?)$',                                 r'\1\2_segm-background\3'),  # noqa
-            (r'(.*)(/native_space/sub-.*)(\.nii(\.gz)?)$',                     r'\1\2_probability\3'),  # noqa
-            (r'(.*)(/([a-z]+)_deformation_field/)i?y_(sub-.*)(\.nii(\.gz)?)$', r'\1/normalized_space/\4_target-Ixi549Space_transformation-\3_deformation\5'),  # noqa
-            (r'(.*)(/t1_mni/)w(sub-.*)_T1w(\.nii(\.gz)?)$',                    r'\1/normalized_space/\3_space-Ixi549Space_T1w\4'),  # noqa
-            (r'(.*)(/modulated_normalized/)mw(sub-.*)(\.nii(\.gz)?)$',         r'\1/normalized_space/\3_space-Ixi549Space_modulated-on_probability\4'),  # noqa
-            (r'(.*)(/normalized/)w(sub-.*)(\.nii(\.gz)?)$',                    r'\1/normalized_space/\3_space-Ixi549Space_modulated-off_probability\4'),  # noqa
-            (r'(.*/dartel_input/)r(sub-.*)(\.nii(\.gz)?)$',                    r'\1\2_dartelinput\3'),  # noqa
-            # Will remove trait_added empty folder
-            (r'trait_added', r'')
-        ]
-
-        self.connect([
-            (self.input_node, container_path, [('t1w', 't1w_filename')]),  # noqa
-            (container_path, write_node, [(('container', fix_join, 't1'), 'container')]),  # noqa
-            (self.output_node, write_node, [(('native_class_images', utils.group_nested_images_by_subject, True), 'native_space'),  # noqa
-                                            (('dartel_input_images', utils.group_nested_images_by_subject, True), 'dartel_input')]),  # noqa
-        ])
-        if self.parameters['save_warped_unmodulated']:
-            self.connect([
-                (self.output_node, write_node, [(('normalized_class_images', utils.group_nested_images_by_subject, True), 'normalized')]),  # noqa
-            ])
-        if self.parameters['save_warped_modulated']:
-            self.connect([
-                (self.output_node, write_node, [(('modulated_class_images', utils.group_nested_images_by_subject, True), 'modulated_normalized')]),  # noqa
-            ])
-        if self.parameters['write_deformation_fields'] is not None:
-            if self.parameters['write_deformation_fields'][0]:
-                self.connect([
-                    (self.output_node, write_node, [(('inverse_deformation_field', zip_nii, True), 'inverse_deformation_field')]),  # noqa
-                ])
-            if self.parameters['write_deformation_fields'][1]:
-                self.connect([
-                    (self.output_node, write_node, [(('forward_deformation_field', zip_nii, True), 'forward_deformation_field')]),  # noqa
-                ])
-        if self.parameters['save_t1_mni'] is not None and self.parameters['save_t1_mni']:
-            self.connect([
-                (self.output_node, write_node, [(('t1_mni', zip_nii, True), 't1_mni')]),  # noqa
-            ])
+        pass
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.
@@ -212,6 +148,14 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as utils
         from clinica.utils.io import unzip_nii
+        import nipype.interfaces.utility as nutil
+        import nipype.pipeline.engine as npe
+        import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as utils
+        import nipype.interfaces.io as nio
+        from clinica.utils.io import fix_join
+        from clinica.utils.io import zip_nii
+
+
 
         spm_home = os.getenv("SPM_HOME")
         mlab_home = os.getenv("MATLABCMD")
@@ -344,4 +288,66 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         else:
             self.connect([
                 (self.output_node, print_end_message, [('transformation_mat', 'final_file')]),
+            ])
+
+        # Find container path from t1w filename
+        # =====================================
+        container_path = npe.Node(
+            nutil.Function(input_names=['t1w_filename'],
+                           output_names=['container'],
+                           function=utils.t1w_container_from_filename),
+            name='ContainerPath')
+
+        # Writing CAPS
+        # ============
+        write_node = npe.Node(name='WriteCAPS',
+                              interface=nio.DataSink()
+                              )
+        write_node.inputs.base_directory = self.caps_directory
+        write_node.inputs.parameterization = False
+        write_node.inputs.regexp_substitutions = [
+            (r'(.*)c1(sub-.*)(\.nii(\.gz)?)$',                                 r'\1\2_segm-graymatter\3'),  # noqa
+            (r'(.*)c2(sub-.*)(\.nii(\.gz)?)$',                                 r'\1\2_segm-whitematter\3'),  # noqa
+            (r'(.*)c3(sub-.*)(\.nii(\.gz)?)$',                                 r'\1\2_segm-csf\3'),  # noqa
+            (r'(.*)c4(sub-.*)(\.nii(\.gz)?)$',                                 r'\1\2_segm-bone\3'),  # noqa
+            (r'(.*)c5(sub-.*)(\.nii(\.gz)?)$',                                 r'\1\2_segm-softtissue\3'),  # noqa
+            (r'(.*)c6(sub-.*)(\.nii(\.gz)?)$',                                 r'\1\2_segm-background\3'),  # noqa
+            (r'(.*)(/native_space/sub-.*)(\.nii(\.gz)?)$',                     r'\1\2_probability\3'),  # noqa
+            (r'(.*)(/([a-z]+)_deformation_field/)i?y_(sub-.*)(\.nii(\.gz)?)$', r'\1/normalized_space/\4_target-Ixi549Space_transformation-\3_deformation\5'),  # noqa
+            (r'(.*)(/t1_mni/)w(sub-.*)_T1w(\.nii(\.gz)?)$',                    r'\1/normalized_space/\3_space-Ixi549Space_T1w\4'),  # noqa
+            (r'(.*)(/modulated_normalized/)mw(sub-.*)(\.nii(\.gz)?)$',         r'\1/normalized_space/\3_space-Ixi549Space_modulated-on_probability\4'),  # noqa
+            (r'(.*)(/normalized/)w(sub-.*)(\.nii(\.gz)?)$',                    r'\1/normalized_space/\3_space-Ixi549Space_modulated-off_probability\4'),  # noqa
+            (r'(.*/dartel_input/)r(sub-.*)(\.nii(\.gz)?)$',                    r'\1\2_dartelinput\3'),  # noqa
+            # Will remove trait_added empty folder
+            (r'trait_added', r'')
+        ]
+
+        self.connect([
+            (self.input_node, container_path, [('t1w', 't1w_filename')]),
+            # noqa
+            (container_path, write_node,
+             [(('container', fix_join, 't1'), 'container')]),  # noqa
+            (self.output_node, write_node, [(('native_class_images', utils.group_nested_images_by_subject, True), 'native_space'),  # noqa
+                                            (('dartel_input_images', utils.group_nested_images_by_subject, True), 'dartel_input')]),  # noqa
+        ])
+        if self.parameters['save_warped_unmodulated']:
+            self.connect([
+                (self.output_node, write_node, [(('normalized_class_images', utils.group_nested_images_by_subject, True), 'normalized')]),  # noqa
+            ])
+        if self.parameters['save_warped_modulated']:
+            self.connect([
+                (self.output_node, write_node, [(('modulated_class_images', utils.group_nested_images_by_subject, True), 'modulated_normalized')]),  # noqa
+            ])
+        if self.parameters['write_deformation_fields'] is not None:
+            if self.parameters['write_deformation_fields'][0]:
+                self.connect([
+                    (self.output_node, write_node, [(('inverse_deformation_field', zip_nii, True), 'inverse_deformation_field')]),  # noqa
+                ])
+            if self.parameters['write_deformation_fields'][1]:
+                self.connect([
+                    (self.output_node, write_node, [(('forward_deformation_field', zip_nii, True), 'forward_deformation_field')]),  # noqa
+                ])
+        if self.parameters['save_t1_mni'] is not None and self.parameters['save_t1_mni']:
+            self.connect([
+                (self.output_node, write_node, [(('t1_mni', zip_nii, True), 't1_mni')]),  # noqa
             ])
