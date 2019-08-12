@@ -93,20 +93,17 @@ def init_input_node(t1w):
     return subject_id, t1w
 
 
-def print_end_pipeline(final_file):
+def print_end_pipeline(subject_id, final_file):
     """
     Display end message for <subject_id> when <final_file> is connected.
     """
     import datetime
     from colorama import Fore
-    from clinica.utils.io import get_subject_id
     from clinica.utils.stream import cprint
-
-    subject_id = get_subject_id(final_file)
 
     now = datetime.datetime.now().strftime('%H:%M:%S')
     cprint('%s[%s]%s ...%s has completed.' % (
-        Fore.GREEN, now, Fore.RESET, subject_id.replace('|', '_')))
+        Fore.GREEN, now, Fore.RESET, subject_id.replace('_', '|')))
 
 
 def group_nested_images_by_subject(class_images, zip_files=False):

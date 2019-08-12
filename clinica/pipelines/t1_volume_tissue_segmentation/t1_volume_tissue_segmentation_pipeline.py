@@ -70,7 +70,6 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         Returns:
             A list of (string) output fields name.
         """
-
         return ['bias_corrected_images',
                 'bias_field_images',
                 'dartel_input_images',
@@ -103,7 +102,8 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         # T1w file:
         t1w_files = self.bids_layout.get(type='T1w', return_type='file', extensions=['.nii|.nii.gz'],
                                          subject=participant_labels, session=session_labels)
-        error_message += check_input_bids_files(t1w_files, "T1W_NII", self.bids_directory, self.subjects, self.sessions)
+        error_message += check_input_bids_files(t1w_files, "T1W_NII",
+                                                self.bids_directory, self.subjects, self.sessions)
 
         if error_message:
             raise ClinicaBIDSError(error_message)
@@ -147,11 +147,11 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         container_path = npe.Node(nutil.Function(input_names=['t1w_filename'],
                                                  output_names=['container'],
                                                  function=utils.t1w_container_from_filename),
-                                  name='container_path')
+                                  name='ContainerPath')
 
         # Writing CAPS
         # ============
-        write_node = npe.Node(name='WritingCAPS',
+        write_node = npe.Node(name='WriteCAPS',
                               interface=nio.DataSink()
                               )
         write_node.inputs.base_directory = self.caps_directory
@@ -204,7 +204,6 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.
         """
-
         import os
         import platform
         import nipype.interfaces.spm as spm
@@ -228,7 +227,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
                 spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
                 version = spm.SPMCommand().version
             else:
-                raise EnvironmentError('MCR_HOME variable not in environnement. Althought, '
+                raise EnvironmentError('MCR_HOME variable not in environment. Although, '
                                        + 'SPMSTANDALONE_HOME has been found')
         else:
             version = spm.Info.getinfo()
@@ -249,27 +248,32 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
                     if platform.system() == 'Darwin':
                         tissue_map = os.path.join(str(spm_home), 'spm12.app/Contents/MacOS/spm12_mcr/spm12/spm12/tpm/TPM.nii')
                     else:
-                        # Path depends on version of SPM Standalone
-                        if os.path.exists(os.path.join(str(spm_home), 'spm12_mcr/spm/spm12/tpm/')):
-                            tissue_map = os.path.join(str(spm_home), 'spm12_mcr/spm/spm12/tpm/TPM.nii')
-                        else:
-                            tissue_map = os.path.join(str(spm_home), 'spm12_mcr/spm12/spm12/tpm/TPM.nii')
+                        tissue_map = os.path.join(str(spm_home), 'spm12_mcr/spm/spm12/tpm/TPM.nii')
                 else:
                     raise RuntimeError('SPM standalone version not supported. Please upgrade SPM standalone.')
         else:
             raise RuntimeError('SPM could not be found. Please verify your SPM_HOME environment variable.')
+
+        # Get <subject_id> (e.g. sub-CLNC01_ses-M00) from input_node
+        # and print begin message
+        # =======================
+        init_node = npe.Node(interface=nutil.Function(
+            input_names=self.get_input_fields(),
+            output_names=['subject_id'] + self.get_input_fields(),
+            function=utils.init_input_node),
+            name='0-InitNode')
 
         # Unzipping
         # =========
         unzip_node = npe.Node(nutil.Function(input_names=['in_file'],
                                              output_names=['out_file'],
                                              function=unzip_nii),
-                              name='unzip_node')
+                              name='1-UnzipT1w')
 
         # Unified Segmentation
         # ====================
         new_segment = npe.Node(spm.NewSegment(),
-                               name='new_segment')
+                               name='2-SpmSegmentation')
 
         if self.parameters['affine_regularization'] is not None:
             new_segment.inputs.affine_regularization = self.parameters['affine_regularization']
@@ -299,24 +303,21 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
                                                              self.parameters['save_warped_unmodulated'],
                                                              self.parameters['save_warped_modulated'])
 
-        # Apply segmentation deformation to T1 (into MNI space)
-        # ========================================================
-        if self.parameters['save_t1_mni'] is not None and self.parameters['save_t1_mni']:
-
-            t1_to_mni = npe.MapNode(utils.ApplySegmentationDeformation(),
-                                    name='t1_to_mni',
-                                    iterfield=['deformation_field', 'in_files'])
-            self.connect([
-                (unzip_node, t1_to_mni, [('out_file', 'in_files')]),
-                (new_segment, t1_to_mni, [('forward_deformation_field', 'deformation_field')]),
-                (t1_to_mni, self.output_node, [('out_files', 't1_mni')])
-            ])
+        # Print end message
+        # =================
+        print_end_message = npe.Node(
+            interface=nutil.Function(
+                input_names=['subject_id', 'final_file'],
+                function=utils.print_end_pipeline),
+            name='WriteEndMessage')
 
         # Connection
         # ==========
         self.connect([
-            (self.input_node, unzip_node, [('t1w', 'in_file')]),
+            (self.input_node, init_node, [('t1w', 't1w')]),
+            (init_node, unzip_node, [('t1w', 'in_file')]),
             (unzip_node, new_segment, [('out_file', 'channel_files')]),
+            (init_node, print_end_message, [('subject_id', 'subject_id')]),
             (new_segment, self.output_node, [('bias_corrected_images', 'bias_corrected_images'),
                                              ('bias_field_images', 'bias_field_images'),
                                              ('dartel_input_images', 'dartel_input_images'),
@@ -327,3 +328,20 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
                                              ('normalized_class_images', 'normalized_class_images'),
                                              ('transformation_mat', 'transformation_mat')])
         ])
+
+        # Apply segmentation deformation to T1 (into MNI space)
+        # =====================================================
+        if self.parameters['save_t1_mni'] is not None and self.parameters['save_t1_mni']:
+
+            t1_to_mni = npe.Node(utils.ApplySegmentationDeformation(),
+                                 name='3-T1wToMni')
+            self.connect([
+                (unzip_node, t1_to_mni, [('out_file', 'in_files')]),
+                (new_segment, t1_to_mni, [('forward_deformation_field', 'deformation_field')]),
+                (t1_to_mni, self.output_node, [('out_files', 't1_mni')]),
+                (self.output_node, print_end_message, [('t1_mni', 'final_file')]),
+            ])
+        else:
+            self.connect([
+                (self.output_node, print_end_message, [('transformation_mat', 'final_file')]),
+            ])
