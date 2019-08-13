@@ -30,11 +30,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
 
     Returns:
         A clinica pipeline object containing the T1VolumeTissueSegmentation pipeline.
-
-    Raises:
-
     """
-
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None):
         super(T1VolumeTissueSegmentation, self).__init__(bids_directory, caps_directory, tsv_file, name)
         # Default parameters

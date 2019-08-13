@@ -17,18 +17,12 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
 
     Args:
         input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will
-        be written.  subjects_sessions_list: The Subjects-Sessions list file
-        (in .tsv format).
+        output_dir: An empty output directory where CAPS structured data will be written.
+        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
 
     Returns:
         A clinica pipeline object containing the T1VolumeDartel2MNI pipeline.
-
-    Raises:
-
-
     """
-
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
         import os
         super(T1VolumeDartel2MNI, self).__init__(bids_directory, caps_directory, tsv_file, name)
@@ -40,8 +34,8 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         # Check that group already exists
         if not os.path.exists(os.path.join(os.path.abspath(caps_directory), 'groups', 'group-' + group_id)):
             error_message = group_id \
-                            + ' does not exists, please choose an other one (or maybe you need to run t1-spm-dartel).' \
-                            + '\nGroups that already exists in your CAPS directory are : \n'
+                            + ' does not exists, please choose another one (or maybe you need to run t1-volume-create-dartel).' \
+                            + '\nGroups that already exist in your CAPS directory are: \n'
             list_groups = os.listdir(os.path.join(os.path.abspath(caps_directory), 'groups'))
             is_empty = True
             for e in list_groups:

@@ -22,12 +22,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
     Returns:
         A clinica pipeline object containing the T1VolumeCreateDartel pipeline.
-
-    Raises:
-
-
     """
-
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
         import os
 
@@ -39,8 +34,8 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
         # Check that group does not already exists
         if os.path.exists(os.path.join(os.path.abspath(caps_directory), 'groups', 'group-' + group_id)):
-            error_message = 'group_id : ' + group_id + ' already exists, please choose an other one.' \
-                            + ' Groups that exists in your CAPS directory are : \n'
+            error_message = 'group_id : ' + group_id + ' already exists, please choose another one.' \
+                            + ' Groups that exist in your CAPS directory are: \n'
             list_groups = os.listdir(os.path.join(os.path.abspath(caps_directory), 'groups'))
             for e in list_groups:
                 if e.startswith('group-'):
@@ -49,7 +44,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
         # Check that there is at least 2 subjects
         if len(self.subjects) <= 1:
-            raise ValueError('This pipelines needs at least 2 subjects to perform DARTEL, and found '
+            raise ValueError('This pipeline needs at least 2 subjects to perform DARTEL, and found '
                              + str(len(self.subjects)) + ' only in ' + self.tsv_file + '.')
 
         # Default parameters

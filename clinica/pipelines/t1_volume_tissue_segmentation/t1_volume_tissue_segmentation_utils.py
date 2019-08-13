@@ -65,7 +65,7 @@ def t1w_container_from_filename(t1w_filename):
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', t1w_filename)
 
     if m is None:
-        raise ValueError('Input filename is not in a BIDS or CAPS compliant format. It doesn\'t contain the subject' +
+        raise ValueError('Input filename is not in a BIDS or CAPS compliant format. It does not contain the subject' +
                          ' and session information.')
 
     participant_id = m.group(1)
@@ -118,17 +118,20 @@ def group_nested_images_by_subject(class_images, zip_files=False):
 def get_tissue_tuples(tissue_map, tissue_classes, dartel_tissues, save_warped_unmodulated, save_warped_modulated):
     """
     Method to obtain the list of tuples, one for each tissue class, with the following fields:
-         - tissue probability map (4D), 1-based index to frame
-         - number of gaussians
-         - which maps to save [Native, DARTEL] - a tuple of two boolean values
-         - which maps to save [Unmodulated, Modulated] - a tuple of two boolean values
+     - tissue probability map (4D), 1-based index to frame
+     - number of gaussians
+     - which maps to save [Native, DARTEL] - a tuple of two boolean values
+     - which maps to save [Unmodulated, Modulated] - a tuple of two boolean values
 
-    :param tissue_map: Path to tissue maps
-    :param tissue_classes: Classes of images to obtain from segmentation. Ex: [1,2,3] is GM, WM and CSF
-    :param dartel_tissues: Classes of images to save for DARTEL template calculation. Ex: [1] is only GM'
-    :param save_warped_unmodulated: Save warped unmodulated images for tissues specified in --tissue_classes
-    :param save_warped_modulated: Save warped modulated images for tissues specified in --tissue_classes
-    :return: List of tuples according to NewSegment input por tissues
+    Args:
+        tissue_map: Path to tissue maps
+        tissue_classes: Classes of images to obtain from segmentation. Ex: [1,2,3] is GM, WM and CSF
+        dartel_tissues: Classes of images to save for DARTEL template calculation. Ex: [1] is only GM'
+        save_warped_unmodulated: Save warped unmodulated images for tissues specified in --tissue_classes
+        save_warped_modulated: Save warped modulated images for tissues specified in --tissue_classes
+
+    Returns:
+        List of tuples according to NewSegment input por tissues
     """
     tissues = []
 

@@ -15,17 +15,14 @@ __status__ = "Development"
 class T1VolumeParcellation(cpe.Pipeline):
     """T1VolumeParcellation - Computation of mean GM concentration for a set of regions
 
-    Args: input_dir: A BIDS directory.  output_dir: An empty output directory
-    where CAPS structured data will be written.  subjects_sessions_list: The
-    Subjects-Sessions list file (in .tsv format).
+    Args:
+        input_dir: A BIDS directory.
+        output_dir: An empty output directory where CAPS structured data will be written.
+        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
 
     Returns:
         A clinica pipeline object containing the T1VolumeParcellation pipeline.
-
-    Raises:
-
     """
-
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """

@@ -602,13 +602,16 @@ class Pipeline(Workflow):
             This function converts a cross-sectional-bids dataset into a
             longitudinal clinica-compliant dataset
 
-            :param bids_in: cross sectional bids dataset you want to convert
-            :param bids_out: converted longitudinal bids dataset
-            :param cross_subjects: list of subjects in cross sectional form
-            (they need some adjustment)
-            :param long_subjects: list of subjects in longitudinal form (they
-            just need to be copied)
-            :return: nothing
+            Args:
+                bids_in: cross sectional bids dataset you want to convert
+                bids_out: converted longitudinal bids dataset
+                cross_subjects: list of subjects in cross sectional form
+                (they need some adjustment)
+                long_subjects: list of subjects in longitudinal form (they
+                just need to be copied)
+
+            Returns:
+                nothing
             """
             from os.path import exists, isfile
             from os import mkdir
@@ -623,10 +626,11 @@ class Pipeline(Workflow):
                 sub-023a_ses-M12_T1w.nii.gz -> sub-023a_ses-M12_T1w.nii.gz (no
                     modification done if filename already has a session)
 
+                Args:
+                    f: filename
 
-                :param f: filename
-                :return: filename with '_ses-M00_ added just after
-                participant_id
+                Returns:
+                    filename with '_ses-M00_ added just after participant_id
                 """
                 import re
                 # If filename contains ses-..., returns the original filename
@@ -650,9 +654,12 @@ class Pipeline(Workflow):
                 the filename of the copied files if they match the regex
                 template described in add_ses() function
 
-                :param src: path to the file that needs to be copied
-                :param dst: original destination for the copied file
-                :return: copy2 with modified filename
+                Args:
+                    src: path to the file that needs to be copied
+                    dst: original destination for the copied file
+
+                Returns:
+                    copy2 with modified filename
                 """
                 from shutil import copy2
                 from os.path import join, dirname, basename
