@@ -62,6 +62,39 @@ def fix_join(path, *paths):
     return os.path.join(path, *paths)
 
 
+def save_participants_sessions(participant_ids, session_ids, out_folder, out_file=None):
+    """
+    Save <participant_ids> <session_ids> in <out_folder>/<out_file> TSV file.
+    """
+    import os
+    import errno
+    import pandas
+    from clinica.utils.stream import cprint
+
+    assert(len(participant_ids) == len(session_ids))
+
+    try:
+        os.makedirs(out_folder)
+    except OSError as e:
+        if e.errno != errno.EEXIST:  # EEXIST: folder already exists
+            raise e
+
+    if out_file:
+        tsv_file = os.path.join(out_folder, out_file)
+    else:
+        tsv_file = os.path.join(out_folder, 'participants.tsv')
+
+    try:
+        data = pandas.DataFrame({
+            'participant_id': participant_ids,
+            'session_id': session_ids,
+        })
+        data.to_csv(tsv_file, sep='\t', index=False, encoding='utf-8')
+    except Exception as e:
+        cprint("Impossible to save %s with pandas" % out_file)
+        raise e
+
+
 def get_subject_id(bids_or_caps_file):
     """
     Extracts "sub-<participant_id>_ses-<session_label>" from BIDS or CAPS file
