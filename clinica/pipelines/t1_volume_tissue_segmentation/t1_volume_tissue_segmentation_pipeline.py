@@ -149,7 +149,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         from clinica.utils.io import (fix_join, zip_nii)
         from clinica.utils.spm import get_tpm
 
-        # Get TPM from SPM
+        # Get Tissue Probability Map from SPM
         tissue_map = get_tpm()
 
         # Get <subject_id> (e.g. sub-CLNC01_ses-M00) from input_node
