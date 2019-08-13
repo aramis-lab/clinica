@@ -40,6 +40,9 @@ class T1FreeSurfer(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipelines.
         """
+        import os
+        import errno
+        import pandas
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from colorama import Fore
@@ -70,6 +73,10 @@ class T1FreeSurfer(cpe.Pipeline):
                 'The program will now exit.%s' % (Fore.BLUE, Fore.RESET))
             sys.exit(0)
         else:
+            from clinica.utils.io import save_participants_sessions
+            # Save subjects to process in <WD>/T1FreeSurfer/participants.tsv
+            save_participants_sessions(self.subjects, self.sessions, os.path.join(self.base_dir, self.__class__.__name__))
+
             images_to_process = ', '.join(self.subjects[i][4:] + '|' + self.sessions[i][4:]
                                           for i in range(len(self.subjects)))
             cprint('The pipeline will be run on the following subject(s): %s' % images_to_process)
@@ -99,7 +106,7 @@ class T1FreeSurfer(cpe.Pipeline):
             input_names=['source_dir', 'subject_id', 'caps_dir', 'overwrite_caps'],
             output_names=['subject_id'],
             function=save_to_caps),
-            name='99-SaveToCaps')
+            name='SaveToCaps')
         save_to_caps.inputs.source_dir = os.path.join(self.base_dir, 'T1FreeSurfer', 'ReconAll')
         save_to_caps.inputs.caps_dir = self.caps_directory
         save_to_caps.inputs.overwrite_caps = False
@@ -124,8 +131,8 @@ class T1FreeSurfer(cpe.Pipeline):
         # and print begin message
         init_input = npe.Node(
             interface=nutil.Function(
-                input_names=['t1w'],
-                output_names=['subject_id', 't1w'],
+                input_names=self.get_input_fields(),
+                output_names=['subject_id'] + self.get_input_fields(),
                 function=init_input_node),
             name='0-InitPipeline')
 
