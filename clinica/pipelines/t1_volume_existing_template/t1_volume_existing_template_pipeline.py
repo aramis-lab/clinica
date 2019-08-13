@@ -28,13 +28,8 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
 
     Returns:
-        A clinica pipeline object containing the T1VolumeExistingTemplate pipelines.
-
-    Raises:
-
-
+        A clinica pipeline object containing the T1VolumeExistingTemplate pipeline.
     """
-
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
         from os.path import exists, join, abspath
         from os import listdir
@@ -44,8 +39,8 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         # Check that group already exists
         if not exists(join(abspath(caps_directory), 'groups', 'group-' + group_id)):
             error_message = 'group_id : ' + group_id + ' does not exists, ' \
-                            + 'please choose an other one. Groups that exist' \
-                            + 's in your CAPS directory are : \n'
+                            + 'please choose another one. Groups that exist' \
+                            + ' in your CAPS directory are: \n'
             list_groups = listdir(join(abspath(caps_directory), 'groups'))
             has_one_group = False
             for e in list_groups:
@@ -55,7 +50,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
             if not has_one_group:
                 error_message = error_message + 'No group found ! ' \
                                 + 'Use t1-volume pipeline if you do not ' \
-                                + 'have a template yet ! '
+                                + 'have a template yet!'
             raise ValueError(error_message)
 
         self._group_id = group_id

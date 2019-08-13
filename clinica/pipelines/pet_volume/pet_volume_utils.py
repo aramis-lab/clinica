@@ -12,10 +12,10 @@ __status__ = "Development"
 
 def read_psf(json_path):
     """readpsf is able to read the json file associated with the PET volume, and extract information needed to perform
-    partial volume correction : the effective resolution in plane, and the effective resolution axial.
+    partial volume correction: the effective resolution in plane, and the effective resolution axial.
 
         Args:
-            (string) json_path : Path to the json file containing the information
+            (string) json_path: Path to the json file containing the information
 
         Returns:
             (float) The effective resolution in plane
@@ -146,17 +146,15 @@ def normalize_to_reference(pet_image, region_mask):
 
 def atlas_statistics(in_image, in_atlas_list):
     """
+    For each atlas name provided it calculates for the input image the mean
+    for each region in the atlas and saves it to a TSV file.
 
     Args:
-        in_image:
-        in_atlas_list:
+        in_image: A Nifti image
+        in_atlas_list: List of names of atlas to be applied
 
     Returns:
-
-    For each atlas name provided it calculates for the input image the mean for each region in the atlas and saves it to a tsv file.
-    :param in_image: A Nifti image
-    :param in_atlas_list: List of names of atlas to be applied
-    :return: List of paths to tsv files
+        List of paths to tsv files
     """
     from os import getcwd
     from os.path import abspath, join
@@ -179,21 +177,13 @@ def atlas_statistics(in_image, in_atlas_list):
 
 
 def pet_container_from_filename(pet_filename):
-    """
-
-    Args:
-        pet_filename:
-
-    Returns:
-
-    """
     import re
     from os.path import join
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', pet_filename)
 
     if m is None:
-        raise ValueError('Input filename is not in a BIDS or CAPS compliant format. It doesn\'t contain the subject' +
-                         ' and session informations.')
+        raise ValueError('Input filename is not in a BIDS or CAPS compliant format. It does not contain the subject' +
+                         ' and session information.')
 
     subject = m.group(1)
     session = m.group(2)

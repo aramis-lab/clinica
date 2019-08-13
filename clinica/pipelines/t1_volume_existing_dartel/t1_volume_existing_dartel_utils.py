@@ -62,7 +62,7 @@ class DARTELExistingTemplateOutputSpec(TraitedSpec):
 
 
 class DARTELExistingTemplate(SPMCommand):
-    """Use spm DARTEL to create a template and flow fields
+    """Use SPM DARTEL to create a template and flow fields
     http://www.fil.ion.ucl.ac.uk/spm/doc/manual.pdf#page=185
     Examples
     --------
@@ -153,25 +153,26 @@ def create_iteration_parameters(dartel_templates, iteration_parameters):
 
 def get_class_images(class_images, index_list):
     """
-    utility method to extract class images
-    from a multi session class_images set:
-    class nb : tissue type
-    1 : Grey Matter
-    2 : White Matter
-    3 : CerebroSpinal Fluid
-    4 : Skull
-    5 : Out-of-brain soft tissue
-    6 : Head surrounding
+    Utility method to extract class images from a multi session <class_images> set.
 
-    :param class_images: image set from which to extract images.
-    :param index_list: index list of the classes to extract.
-    :return: extracted images in a list of lists (without empty lists).
+    Tissue types are:
+        - 1: Grey Matter
+        - 2: White Matter
+        - 3: CerebroSpinal Fluid
+        - 4: Skull
+        - 5: Out-of-brain soft tissue
+        - 6: Head surrounding
 
-    Example
-    -------
+    Args:
+        class_images: image set from which to extract images.
+        index_list: index list of the classes to extract.
+
+    Returns:
+        Extracted images in a list of lists (without empty lists).
+
+    Example:
     >>> class_n_images = get_class_images(class_images,[1,2])
     """
-
     # Declare class images list
     class_n_images = {}
     for idx in index_list:

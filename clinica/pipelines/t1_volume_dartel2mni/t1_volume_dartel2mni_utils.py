@@ -11,41 +11,31 @@ __status__ = "Development"
 
 
 def prepare_flowfields(flow_fields, tissues):
-    """
-
-    :param flow_fields:
-    :param tissues:
-    :return:
-    """
     return [[f] * len(tissues) for f in flow_fields]
 
 
 def prepare_existing_dartel_flowfields(flow_fields, tissues):
-    """
-
-    :param flow_fields:
-    :param tissues:
-    :return:
-    """
     return [f * len(tissues) for f in flow_fields]
 
 
 def join_smoothed_files(smoothed_normalized_files):
     """
     Joins outputs
-    :param smoothed_normalized_files:
-    :return:
     """
-
     return [[x for smooth in subject for x in smooth] for subject in zip(*smoothed_normalized_files)]
 
 
 def atlas_statistics(in_image, in_atlas_list):
     """
-    For each atlas name provided it calculates for the input image the mean for each region in the atlas and saves it to a tsv file.
-    :param in_image: A Nifti image
-    :param in_atlas_list: List of names of atlas to be applied
-    :return: List of paths to tsv files
+    For each atlas name provided it calculates for the input image the mean
+    for each region in the atlas and saves it to a TSV file.
+
+    Args:
+        in_image: A Nifti image
+        in_atlas_list: List of names of atlas to be applied
+
+    Returns:
+        List of paths to TSV files
     """
     from os import getcwd
     from os.path import abspath, join
@@ -71,7 +61,5 @@ def atlas_statistics(in_image, in_atlas_list):
 def select_gm_images(in_images):
     """
     Selects only
-    :param in_images:
-    :return:
     """
     return [image for subject in in_images for image in subject if ('c1' in image or 'graymatter' in image)]
