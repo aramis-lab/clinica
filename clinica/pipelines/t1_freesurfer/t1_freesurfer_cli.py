@@ -6,18 +6,15 @@ import clinica.engine as ce
 class T1FreeSurferCLI(ce.CmdParser):
 
     def define_name(self):
-        """Define the sub-command name to run this pipelines.
-        """
+        """Define the sub-command name to run this pipeline."""
         self._name = 't1-freesurfer'
 
     def define_description(self):
-        """Define a description of this pipeline.
-        """
+        """Define a description of this pipeline."""
         self._description = 'Cross-sectional pre-processing of T1w images with FreeSurfer:\nhttp://clinica.run/doc/Pipelines/T1_FreeSurfer/'
 
     def define_options(self):
-        """Define the sub-command arguments
-        """
+        """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
@@ -40,9 +37,7 @@ class T1FreeSurferCLI(ce.CmdParser):
                                  help='Number of cores used to run in parallel')
 
     def run_command(self, args):
-        """
-        Run the pipelines with defined args
-        """
+        """Run the pipeline with defined args."""
         import os
         import datetime
         from colorama import Fore
