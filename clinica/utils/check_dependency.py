@@ -33,7 +33,7 @@ def is_binary_present(binary):
     return True
 
 
-def check_ants():
+def check_ants(version_requirements=None):
     """
     Check ANTs software.
 
@@ -58,7 +58,7 @@ def check_ants():
                 'in your PATH environment.%s' % (Fore.RED, binary, Fore.RESET))
 
 
-def check_freesurfer():
+def check_freesurfer(version_requirements=None):
     """
     Check FreeSurfer software.
 
@@ -66,8 +66,8 @@ def check_freesurfer():
     """
     import os
     from colorama import Fore
+    import nipype.interfaces.freesurfer as freesurfer
     from clinica.utils.exceptions import ClinicaMissingDependencyError
-    from clinica.utils.stream import cprint
 
     freesurfer_home = os.environ.get('FREESURFER_HOME', '')
     if not freesurfer_home:
@@ -82,11 +82,21 @@ def check_freesurfer():
                 '%s\n[Error] Clinica could not find FreeSurfer software: the %s command is not present in your PATH '
                 'environment: did you have the line source ${FREESURFER_HOME}/'
                 'SetUpFreeSurfer.sh in your configuration file?%s' % (Fore.RED, binary, Fore.RESET))
+    if version_requirements is not None:
+        from distutils.version import LooseVersion
+        temp = version_requirements.split('.')
+        # Will extract {<|<=|>=|>|=|==}
+        comparison_operator = ''.join([i for i in temp[0] if not i.isdigit()])
+        required_version = version_requirements.replace(comparison_operator, '')
+        current_version = str(freesurfer.Info.looseversion())
+        satisfy_version = eval('LooseVersion(\'%s\') %s LooseVersion(\'%s\')' %
+                               (current_version, comparison_operator, required_version))
+        if not satisfy_version:
+            raise ClinicaMissingDependencyError('Your FreeSurfer version (%s) does not version requirements (%s)' %
+                                                (current_version, version_requirements))
 
-    # cprint('Found FreeSurfer software')
 
-
-def check_fsl():
+def check_fsl(version_requirements=None):
     """
     Check FSL software.
 
@@ -117,11 +127,11 @@ def check_fsl():
     for binary in list_binaries:
         if not is_binary_present(binary):
             raise ClinicaMissingDependencyError(
-                '%s\n[Error] Clinica could not find FreeSurfer software: the %s command is not present in your '
+                '%s\n[Error] Clinica could not find FSL software: the %s command is not present in your '
                 'PATH environment.%s' % (Fore.RED, binary, Fore.RESET))
 
 
-def check_mrtrix():
+def check_mrtrix(version_requirements=None):
     """
     Check MRtrix software.
 
@@ -145,7 +155,7 @@ def check_mrtrix():
                 'PATH environment.%s' % (Fore.RED, binary, Fore.RESET))
 
 
-def check_spm():
+def check_spm(version_requirements=None):
     """
     Check SPM software.
 
