@@ -32,7 +32,7 @@ def get_caps_t1_list(input_directory, subjects_visits_tsv, group_id, fwhm, modul
                            + subjects[i] + '_' + sessions[i] + '_T1w_segm-graymatter' + '_space-Ixi549Space_modulated-' + modulated + '_fwhm-'+fwhm+'mm_probability.nii.gz')
                       for i in range(len(subjects))]
 
-    return image_list
+    return image_list 
 
 
 def get_caps_pet_list(input_directory, subjects_visits_tsv, group_id, pet_type):
