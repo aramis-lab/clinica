@@ -21,12 +21,12 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
     """DWI Preprocessing using T1 image for susceptibility distortion step.
 
     Todo:
-        [X] - Detect c3d_affine_tool dependency
-        [X] - Refactor input_node
-        [x] - Read data from JSON
+        [X] Detect c3d_affine_tool dependency
+        [X] Refactor input_node (cf AM's comments on https://github.com/aramis-lab/clinica/pull/8)
+        [x] Read data from JSON
               [X] - PhaseEncodingDirection
               [X] - TotalReadoutTime
-        [ ] - Interfaces
+        [ ] Interfaces
               [X] - antsRegistrationSyNQuick.sh
               [ ] - antsApplyTransforms? (optional, no output message when run)
               [ ] - CreateJacobianDeterminantImage? (optional, no output message when run)
@@ -35,10 +35,10 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         [ ] CI
               [ ] Make FSL eddy reproducible
               [ ] Data CI
-        [ ] - Wiki page
+        [ ] Wiki page
 
     Ideas for improvement:
-        [ ] Replace prepare_reference_b0 function by a run of FSL eddy
+        [ ] Replace prepare_reference_b0 function by a first run of FSL eddy
         [ ] Replace B0-T1w registration by FA-T1w registration
 
     Questions:
@@ -91,10 +91,19 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipelines.
 
+        Note:
+            The list of inputs of the DwiPreprocessingUsingT1 pipeline is:
+                * t1w (str): Path of the T1 weighted image in BIDS format
+                * dwi (str): Path of the diffusion weighted image in BIDS format
+                * bvec (str): Path of the bvec file in BIDS format
+                * bval (str): Path of the bval file in BIDS format
+                * total_readout_time (float): TotalReadoutTime (see BIDS specifications)
+                * phase_encoding_direction (float): PhaseEncodingDirection (see BIDS specifications)
+
         Returns:
             A list of (string) input fields name.
         """
-        input_list = ['T1w', 'dwi', 'bvec', 'bval', 'total_readout_time', 'phase_encoding_direction']
+        input_list = ['t1w', 'dwi', 'bvec', 'bval', 'total_readout_time', 'phase_encoding_direction']
         return input_list
 
     def get_output_fields(self):
@@ -114,72 +123,70 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from colorama import Fore
+        from clinica.utils.exceptions import ClinicaBIDSError
         from clinica.utils.stream import cprint
-        from clinica.utils.epi import bids_dir_to_fsl_dir
-        from clinica.utils.io import check_input_bids_file, extract_metadata_from_json
+        from clinica.utils.io import check_input_bids_files, extract_metadata_from_json
         from clinica.utils.dwi import check_dwi_volume
+        from clinica.utils.epi import bids_dir_to_fsl_dir
 
-        list_t1w_files = []
-        list_dwi_files = []
-        list_bvec_files = []
-        list_bval_files = []
-        list_total_readout_times = []
-        list_phase_encoding_directions = []
+        # Remove 'sub-' prefix from participant IDs
+        participant_labels = '|'.join(sub[4:] for sub in self.subjects)
+        # Remove 'ses-' prefix from session IDs
+        session_labels = '|'.join(ses[4:] for ses in self.sessions)
 
-        cprint('Reading input files...')
+        error_message = ""
+        # Inputs from anat/ folder
+        # ========================
+        # T1w file:
+        t1w_files = self.bids_layout.get(type='T1w', return_type='file', extensions=['.nii|.nii.gz'],
+                                         subject=participant_labels, session=session_labels)
+        error_message += check_input_bids_files(t1w_files, "T1W_NII",
+                                                self.bids_directory, self.subjects, self.sessions)
+
+        # Inputs from dwi/ folder
+        # =======================
+        # Bval file:
+        bval_files = self.bids_layout.get(type='dwi', return_type='file', extensions='bval',
+                                          subject=participant_labels, session=session_labels)
+        error_message += check_input_bids_files(bval_files, "DWI_BVAL",
+                                                self.bids_directory, self.subjects, self.sessions)
+
+        # Bvec file:
+        bvec_files = self.bids_layout.get(type='dwi', return_type='file', extensions='bvec',
+                                          subject=participant_labels, session=session_labels)
+        error_message += check_input_bids_files(bvec_files, "DWI_BVEC",
+                                                self.bids_directory, self.subjects, self.sessions)
+
+        # DWI file:
+        dwi_files = self.bids_layout.get(type='dwi', return_type='file', extensions=['.nii|.nii.gz'],
+                                         subject=participant_labels, session=session_labels)
+        error_message += check_input_bids_files(dwi_files, "DWI_NII",
+                                                self.bids_directory, self.subjects, self.sessions)
+
+        # DWI JSON file:
+        dwi_json_files = self.bids_layout.get(type='dwi', return_type='file', extensions=['.json'],
+                                              subject=participant_labels, session=session_labels)
+        error_message += check_input_bids_files(dwi_json_files, "DWI_JSON",
+                                                self.bids_directory, self.subjects, self.sessions)
+
+        if error_message:
+            raise ClinicaBIDSError(error_message)
+
+        total_readout_times = []
+        phase_encoding_directions = []
         for i in range(len(self.subjects)):
-            cprint('\t...subject \'' + str(
-                    self.subjects[i][4:]) + '\', session \'' + str(
-                    self.sessions[i][4:]) + '\'')
-
-            # Inputs from anat/ folder
-            # ========================
-            # T1w file:
-            t1w_file = self.bids_layout.get(type='T1w', return_type='file', extensions=['.nii|.nii.gz'],
-                                            subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_bids_file(t1w_file, "T1W_NII",
-                                  self.bids_directory, self.subjects[i], self.sessions[i])
-            list_t1w_files.append(t1w_file[0])
-
-            # Inputs from dwi/ folder
-            # =======================
-            # Bval file:
-            bval_file = self.bids_layout.get(type='dwi', return_type='file', extensions=['bval'],
-                                             subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_bids_file(bval_file, "DWI_BVAL",
-                                  self.bids_directory, self.subjects[i], self.sessions[i])
-            list_bval_files.append(bval_file[0])
-
-            # Bvec file:
-            bvec_file = self.bids_layout.get(type='dwi', return_type='file', extensions=['bvec'],
-                                             subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_bids_file(bvec_file, "DWI_BVEC",
-                                  self.bids_directory, self.subjects[i], self.sessions[i])
-            list_bvec_files.append(bvec_file[0])
-
-            # DWI file:
-            dwi_file = self.bids_layout.get(type='dwi', return_type='file', extensions=['.nii|.nii.gz'],
-                                            subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_bids_file(bvec_file, "DWI_NII",
-                                  self.bids_directory, self.subjects[i], self.sessions[i])
-            list_dwi_files.append(dwi_file[0])
-
             # Check that the number of DWI, bvec & bval are the same:
-            check_dwi_volume(in_dwi=dwi_file[0], in_bvec=bvec_file[0], in_bval=bval_file[0])
+            check_dwi_volume(dwi_files[i], bvec_files[i], bval_files[i])
 
-            # DWI JSON file:
-            dwi_json = self.bids_layout.get(type='dwi', return_type='file', extensions=['.json'],
-                                            subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_bids_file(bvec_file, "DWI_JSON",
-                                  self.bids_directory, self.subjects[i], self.sessions[i])
-            [total_readout_time, enc_direction] = extract_metadata_from_json(dwi_json[0], ['TotalReadoutTime', 'PhaseEncodingDirection'])
-            list_total_readout_times.append(total_readout_time)
-            list_phase_encoding_directions.append(bids_dir_to_fsl_dir(enc_direction))
+            # Read metadata from DWI JSON file:
+            [total_readout_time, enc_direction] = extract_metadata_from_json(dwi_json_files[0], ['TotalReadoutTime', 'PhaseEncodingDirection'])
+            total_readout_times.append(total_readout_time)
+            phase_encoding_directions.append(bids_dir_to_fsl_dir(enc_direction))
 
             cprint('From JSON files: TotalReadoutTime = %s, PhaseEncodingDirection = %s' %
                    (total_readout_time, enc_direction))
 
-        if len(list_dwi_files) == 0:
+        if len(dwi_files) == 0:
             import sys
             cprint('%s\nEither all the images were already run by the pipeline or no image was found to run the pipeline. '
                    'The program will now exit.%s' % (Fore.BLUE, Fore.RESET))
@@ -189,18 +196,18 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
 
         read_node = npe.Node(name="ReadingFiles",
                              iterables=[
-                                 ('T1w', list_t1w_files),
-                                 ('dwi', list_dwi_files),
-                                 ('bvec', list_bvec_files),
-                                 ('bval', list_bval_files),
-                                 ('total_readout_time', list_total_readout_times),
-                                 ('phase_encoding_direction', list_phase_encoding_directions),
+                                 ('t1w', t1w_files),
+                                 ('dwi', dwi_files),
+                                 ('bvec', bvec_files),
+                                 ('bval', bval_files),
+                                 ('total_readout_time', total_readout_times),
+                                 ('phase_encoding_direction', phase_encoding_directions),
                              ],
                              synchronize=True,
                              interface=nutil.IdentityInterface(
                                  fields=self.get_input_fields()))
         self.connect([
-            (read_node, self.input_node, [('T1w', 'T1w')]),
+            (read_node, self.input_node, [('t1w', 't1w')]),
             (read_node, self.input_node, [('dwi', 'dwi')]),
             (read_node, self.input_node, [('bvec', 'bvec')]),
             (read_node, self.input_node, [('bval', 'bval')]),
@@ -241,23 +248,22 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         write_results.inputs.parameterization = False
 
         self.connect([
-            (self.input_node, container_path,    [('dwi',                    'bids_dwi_filename')]),  # noqa
-            (self.input_node,  rename_into_caps, [('dwi',                          'in_bids_dwi')]),  # noqa
-            (self.output_node, rename_into_caps, [('preproc_dwi',                      'fname_dwi'),  # noqa
-                                                  ('preproc_bval',                    'fname_bval'),  # noqa
-                                                  ('preproc_bvec',                    'fname_bvec'),  # noqa
-                                                  ('b0_mask',                  'fname_brainmask')]),  # noqa
-            (container_path, write_results,      [(('container', fix_join, 'dwi'),       'container')]),  # noqa
-            (rename_into_caps, write_results,    [('out_caps_dwi',    'preprocessing.@preproc_dwi'),  # noqa
-                                                  ('out_caps_bval',  'preprocessing.@preproc_bval'),  # noqa
-                                                  ('out_caps_bvec',  'preprocessing.@preproc_bvec'),  # noqa
+            (self.input_node, container_path,    [('dwi',          'bids_dwi_filename')]),  # noqa
+            (self.input_node,  rename_into_caps, [('dwi',          'in_bids_dwi')]),  # noqa
+            (self.output_node, rename_into_caps, [('preproc_dwi',  'fname_dwi'),  # noqa
+                                                  ('preproc_bval', 'fname_bval'),  # noqa
+                                                  ('preproc_bvec', 'fname_bvec'),  # noqa
+                                                  ('b0_mask',      'fname_brainmask')]),  # noqa
+            (container_path, write_results,      [(('container', fix_join, 'dwi'), 'container')]),  # noqa
+            (rename_into_caps, write_results,    [('out_caps_dwi',       'preprocessing.@preproc_dwi'),  # noqa
+                                                  ('out_caps_bval',      'preprocessing.@preproc_bval'),  # noqa
+                                                  ('out_caps_bvec',      'preprocessing.@preproc_bvec'),  # noqa
                                                   ('out_caps_brainmask', 'preprocessing.@b0_mask')])  # noqa
         ])
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.
         """
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.fsl as fsl
@@ -306,11 +312,11 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             (mask_b0_pre, eddy_fsl, [('mask_file', 'inputnode.in_mask')]),
             # Magnetic susceptibility correction
             (eddy_fsl, sdc, [('outputnode.out_corrected', 'inputnode.DWI')]),
-            (self.input_node, sdc, [('T1w', 'inputnode.T1')]),
+            (self.input_node, sdc, [('t1w', 'inputnode.T1')]),
             (eddy_fsl, sdc, [('outputnode.out_rotated_bvecs', 'inputnode.bvec')]),
             # Bias correction
             (sdc, bias, [('outputnode.DWIs_epicorrected', 'inputnode.in_file')]),
-            # Outputnode:
+            # Output node
             (bias,       self.output_node, [('outputnode.out_file', 'preproc_dwi')]),  # noqa
             (sdc,        self.output_node, [('outputnode.out_bvec', 'preproc_bvec')]),  # noqa
             (prepare_b0, self.output_node, [('out_updated_bval',    'preproc_bval')]),  # noqa

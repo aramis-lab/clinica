@@ -68,7 +68,7 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
     (e.g. ADNI Database) by elastically register DWIs to their respective baseline T1-weighted
     structural scans using an inverse consistent registration algorithm with a mutual information cost
     function (SyN algorithm). This workflow allows also a coregistration of DWIs with their respective
-    baseline T1-weighted structural scans in order to latter combine tracks and cortex parcelation.
+    baseline T1-weighted structural scans in order to latter combine tracks and cortex parcellation.
     ..  warning:: This workflow rotates the `b`-vectors'
     .. References
       .. Nir et al. (Neurobiology of Aging 2015)- Connectivity network measures predict volumetric atrophy in mild cognitive impairment

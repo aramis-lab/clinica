@@ -13,7 +13,7 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
     """DWI Preprocessing using phase difference fieldmap.
 
     Todo:
-        [ ] Refactor input_node (cf AM's comments on https://github.com/aramis-lab/clinica/pull/8)
+        [X] Refactor input_node (cf AM's comments on https://github.com/aramis-lab/clinica/pull/8)
         [ ] Detect & check FSL version
         [ ] Add CLI flag for eddy_cuda8.0 / eddy_cuda9.1
         [ ] Decide bias correction (FSL FAST vs N4)
@@ -80,6 +80,17 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
 
+        Note:
+            The list of inputs of the DwiPreprocessingUsingPhaseDiffFieldmap pipeline is:
+                * dwi (str): Path of the diffusion weighted image in BIDS format
+                * bvec (str): Path of the bvec file in BIDS format
+                * bval (str): Path of the bval file in BIDS format
+                * total_readout_time (float): TotalReadoutTime (see BIDS specifications)
+                * phase_encoding_direction (float): PhaseEncodingDirection (see BIDS specifications)
+                * fmap_magnitude (str): Path of the magnitude (1st) image in BIDS format
+                * fmap_phasediff (str): Path of the phase difference image in BIDS format
+                * delta_echo_time (float): DeltaEchoTime (see BIDS specifications)
+
         Returns:
             A list of (string) input fields name.
         """
@@ -107,90 +118,96 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from colorama import Fore
+        from clinica.utils.exceptions import ClinicaBIDSError
         from clinica.utils.stream import cprint
-        from clinica.utils.io import check_input_bids_file, extract_metadata_from_json
+        from clinica.utils.io import check_input_bids_files, extract_metadata_from_json
         from clinica.utils.dwi import check_dwi_volume
         from clinica.utils.epi import bids_dir_to_fsl_dir
 
-        list_dwi_files = []
-        list_bvec_files = []
-        list_bval_files = []
-        list_total_readout_times = []
-        list_phase_encoding_directions = []
-        list_fmap_magnitude_files = []
-        list_fmap_phasediff_files = []
-        list_delta_echo_times = []
+        # Remove 'sub-' prefix from participant IDs
+        participant_labels = '|'.join(sub[4:] for sub in self.subjects)
+        # Remove 'ses-' prefix from session IDs
+        session_labels = '|'.join(ses[4:] for ses in self.sessions)
 
-        cprint('Reading input files...')
+        error_message = ""
+        # Inputs from anat/ folder
+        # ========================
+        # T1w file:
+        t1w_files = self.bids_layout.get(type='T1w', return_type='file', extensions=['.nii|.nii.gz'],
+                                         subject=participant_labels, session=session_labels)
+        error_message += check_input_bids_files(t1w_files, "T1W_NII",
+                                                self.bids_directory, self.subjects, self.sessions)
+
+        # Inputs from dwi/ folder
+        # =======================
+        # Bval file:
+        bval_files = self.bids_layout.get(type='dwi', return_type='file', extensions='bval',
+                                          subject=participant_labels, session=session_labels)
+        error_message += check_input_bids_files(bval_files, "DWI_BVAL",
+                                                self.bids_directory, self.subjects, self.sessions)
+
+        # Bvec file:
+        bvec_files = self.bids_layout.get(type='dwi', return_type='file', extensions='bvec',
+                                          subject=participant_labels, session=session_labels)
+        error_message += check_input_bids_files(bvec_files, "DWI_BVEC",
+                                                self.bids_directory, self.subjects, self.sessions)
+
+        # DWI file:
+        dwi_files = self.bids_layout.get(type='dwi', return_type='file', extensions=['.nii|.nii.gz'],
+                                         subject=participant_labels, session=session_labels)
+        error_message += check_input_bids_files(dwi_files, "DWI_NII",
+                                                self.bids_directory, self.subjects, self.sessions)
+
+        # DWI JSON file:
+        dwi_json_files = self.bids_layout.get(type='dwi', return_type='file', extensions=['.json'],
+                                              subject=participant_labels, session=session_labels)
+        error_message += check_input_bids_files(dwi_json_files, "DWI_JSON",
+                                                self.bids_directory, self.subjects, self.sessions)
+
+        # Inputs from fmap/ folder
+        # ========================
+        # Magnitude1 file:
+        fmap_magnitude_files = self.bids_layout.get(type='magnitude1', return_type='file', extensions=['.nii|.nii.gz'],
+                                                    subject=participant_labels, session=session_labels)
+        error_message += check_input_bids_files(fmap_magnitude_files, "FMAP_MAGNITUDE1_NII",
+                                                self.bids_directory, self.subjects, self.sessions)
+
+        # PhaseDiff file:
+        fmap_phasediff_files = self.bids_layout.get(type='phasediff', return_type='file', extensions=['.nii|.nii.gz'],
+                                                    subject=participant_labels, session=session_labels)
+        error_message += check_input_bids_files(fmap_phasediff_files, "FMAP_PHASEDIFF_NII",
+                                                self.bids_directory, self.subjects, self.sessions)
+
+        # PhaseDiff JSON file:
+        fmap_phasediff_json_files = self.bids_layout.get(type='phasediff', return_type='file', extensions=['.json'],
+                                                              subject=participant_labels, session=session_labels)
+        error_message += check_input_bids_files(fmap_phasediff_json_files, "FMAP_PHASEDIFF_JSON",
+                                                self.bids_directory, self.subjects, self.sessions)
+
+        if error_message:
+            raise ClinicaBIDSError(error_message)
+
+        total_readout_times = []
+        phase_encoding_directions = []
+        delta_echo_times = []
         for i in range(len(self.subjects)):
-            cprint('\t...subject \'' + str(
-                    self.subjects[i][4:]) + '\', session \'' + str(
-                    self.sessions[i][4:]) + '\'')
-
-            # Inputs from dwi/ folder
-            # =======================
-            # Bval file:
-            bval_file = self.bids_layout.get(type='dwi', return_type='file', extensions=['bval'],
-                                             subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_bids_file(bval_file, "DWI_BVAL",
-                                  self.bids_directory, self.subjects[i], self.sessions[i])
-            list_bval_files.append(bval_file[0])
-
-            # Bvec file:
-            bvec_file = self.bids_layout.get(type='dwi', return_type='file', extensions=['bvec'],
-                                             subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_bids_file(bvec_file, "DWI_BVEC",
-                                  self.bids_directory, self.subjects[i], self.sessions[i])
-            list_bvec_files.append(bvec_file[0])
-
-            # DWI file:
-            dwi_file = self.bids_layout.get(type='dwi', return_type='file', extensions=['.nii|.nii.gz'],
-                                            subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_bids_file(bvec_file, "DWI_NII",
-                                  self.bids_directory, self.subjects[i], self.sessions[i])
-            list_dwi_files.append(dwi_file[0])
-
             # Check that the number of DWI, bvec & bval are the same:
-            check_dwi_volume(in_dwi=dwi_file[0], in_bvec=bvec_file[0], in_bval=bval_file[0])
+            check_dwi_volume(dwi_files[i], bvec_files[i], bval_files[i])
 
-            # DWI JSON file:
-            dwi_json = self.bids_layout.get(type='dwi', return_type='file', extensions=['.json'],
-                                            subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_bids_file(bvec_file, "DWI_JSON",
-                                  self.bids_directory, self.subjects[i], self.sessions[i])
-            [total_readout_time, enc_direction] = extract_metadata_from_json(dwi_json[0], ['TotalReadoutTime', 'PhaseEncodingDirection'])
-            list_total_readout_times.append(total_readout_time)
-            list_phase_encoding_directions.append(bids_dir_to_fsl_dir(enc_direction))
+            # Read metadata from DWI JSON file:
+            [total_readout_time, enc_direction] = extract_metadata_from_json(dwi_json_files[i], ['TotalReadoutTime', 'PhaseEncodingDirection'])
+            total_readout_times.append(total_readout_time)
+            phase_encoding_directions.append(bids_dir_to_fsl_dir(enc_direction))
 
-            # Inputs from fmap/ folder
-            # ========================
-            # Magnitude1 file:
-            fmap_mag_file = self.bids_layout.get(type='magnitude1', return_type='file', extensions=['.nii|.nii.gz'],
-                                                 subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_bids_file(fmap_mag_file, "FMAP_MAGNITUDE1_NII",
-                                  self.bids_directory, self.subjects[i], self.sessions[i])
-            list_fmap_magnitude_files.append(fmap_mag_file[0])
-
-            # PhaseDiff file:
-            fmap_phasediff_file = self.bids_layout.get(type='phasediff', return_type='file', extensions=['.nii|.nii.gz'],
-                                                       subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_bids_file(fmap_phasediff_file, "FMAP_PHASEDIFF_NII",
-                                  self.bids_directory, self.subjects[i], self.sessions[i])
-            list_fmap_phasediff_files.append(fmap_phasediff_file[0])
-
-            # PhaseDiff JSON file:
-            fmap_phasediff_json = self.bids_layout.get(type='phasediff', return_type='file', extensions=['.json'],
-                                                       subject=self.subjects[i][4:], session=self.sessions[i][4:])
-            check_input_bids_file(fmap_phasediff_json, "FMAP_PHASEDIFF_JSON",
-                                  self.bids_directory, self.subjects[i], self.sessions[i])
-            [echo_time_1, echo_time_2] = extract_metadata_from_json(fmap_phasediff_json[0], ['EchoTime1', 'EchoTime2'])
-            list_delta_echo_times.append(abs(echo_time_2 - echo_time_1))
+            # Read metadata from PhaseDiff JSON file:
+            [echo_time_1, echo_time_2] = extract_metadata_from_json(fmap_phasediff_json_files[i], ['EchoTime1', 'EchoTime2'])
+            delta_echo_times.append(abs(echo_time_2 - echo_time_1))
 
             cprint('From JSON files: TotalReadoutTime = %s, PhaseEncodingDirection = %s, '
                    'EchoTime1 = %s, EchoTime2 = %s (DeltaEchoTime = %s)' %
                    (total_readout_time, enc_direction, echo_time_1, echo_time_2, abs(echo_time_2 - echo_time_1)))
 
-        if len(list_dwi_files) == 0:
+        if len(dwi_files) == 0:
             import sys
             cprint('%s\nEither all the images were already run by the pipeline or no image was found to run the pipeline. '
                    'The program will now exit.%s' % (Fore.BLUE, Fore.RESET))
@@ -200,14 +217,14 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
 
         read_node = npe.Node(name="ReadingFiles",
                              iterables=[
-                                 ('dwi', list_dwi_files),
-                                 ('bvec', list_bvec_files),
-                                 ('bval', list_bval_files),
-                                 ('total_readout_time', list_total_readout_times),
-                                 ('phase_encoding_direction', list_phase_encoding_directions),
-                                 ('fmap_magnitude', list_fmap_magnitude_files),
-                                 ('fmap_phasediff', list_fmap_phasediff_files),
-                                 ('delta_echo_time', list_delta_echo_times),
+                                 ('dwi', dwi_files),
+                                 ('bvec', bvec_files),
+                                 ('bval', bval_files),
+                                 ('total_readout_time', total_readout_times),
+                                 ('phase_encoding_direction', phase_encoding_directions),
+                                 ('fmap_magnitude', fmap_magnitude_files),
+                                 ('fmap_phasediff', fmap_phasediff_files),
+                                 ('delta_echo_time', delta_echo_times),
                              ],
                              synchronize=True,
                              interface=nutil.IdentityInterface(
@@ -290,11 +307,11 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
 
         # Nodes creation
         # ==============
-        # Get <subject_id> (e.g. sub-CLNC01_ses-M00) from input_node
+        # Get <image_id> (e.g. sub-CLNC01_ses-M00) from input_node
         # and print begin message
         init_node = npe.Node(interface=nutil.Function(
             input_names=self.get_input_fields(),
-            output_names=['subject_id'] + self.get_input_fields(),
+            output_names=['image_id'] + self.get_input_fields(),
             function=utils.init_input_node),
             name='0-InitNode')
 
@@ -303,7 +320,7 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
                                name='0-PreMaskB0')
         pre_mask_b0.inputs.out_file = 'brainmask.nii.gz'  # On default, .mif file is generated
 
-        # Generate <subject_id>_acq.txt for eddy
+        # Generate <image_id>_acq.txt for eddy
         get_grad_fsl = npe.Node(nutil.Function(
             input_names=['bval', 'bvec'],
             output_names=['grad_fsl'],
@@ -351,22 +368,22 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
                              interface=fsl.maths.IsotropicSmooth())
         smoothing.inputs.fwhm = 4.0
 
-        # Generate <subject_id>_acq.txt for eddy
+        # Generate <image_id>_acq.txt for eddy
         gen_acq_txt = npe.Node(nutil.Function(
-            input_names=['in_dwi', 'fsl_phase_encoding_direction', 'total_readout_time', 'subject_id'],
+            input_names=['in_dwi', 'fsl_phase_encoding_direction', 'total_readout_time', 'image_id'],
             output_names=['out_acq'],
             function=generate_acq_file),
             name='0-GenerateAcqFile')
 
-        # Generate <subject_id>_index.txt for eddy
+        # Generate <image_id>_index.txt for eddy
         gen_index_txt = npe.Node(nutil.Function(
-            input_names=['in_bval', 'low_bval', 'subject_id'],
+            input_names=['in_bval', 'low_bval', 'image_id'],
             output_names=['out_index'],
             function=generate_index_file),
             name='0-GenerateIndexFile')
         gen_index_txt.inputs.low_bval = self._low_bval
 
-        # Remove ".nii.gz" from fieldmap filename for eddy
+        # Remove ".nii.gz" from fieldmap filename for eddy --field
         rm_extension = npe.Node(interface=nutil.Function(
             input_names=['in_file'],
             output_names=['file_without_extension'],
@@ -390,7 +407,7 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         # Print end message
         print_end_message = npe.Node(
             interface=nutil.Function(
-                input_names=['subject_id', 'final_file'],
+                input_names=['image_id', 'final_file'],
                 function=utils.print_end_pipeline),
             name='99-WriteEndMessage')
 
@@ -426,21 +443,21 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             (calibrate_fmap, res_fmap, [('output_node.calibrated_fmap', 'in_fmap')]),  # noqa
             (res_fmap, smoothing, [('out_resampled_fmap', 'in_file')]),  # noqa
 
-            # Remove ".nii.gz" from fieldmap filename for eddy
+            # Remove ".nii.gz" from fieldmap filename for eddy --field
             (smoothing, rm_extension, [('out_file', 'in_file')]),  # noqa
-            # Generate <subject_id>_acq.txt for eddy
+            # Generate <image_id>_acq.txt for eddy
             (init_node, gen_acq_txt, [('dwi', 'in_dwi'),  # noqa
                                       ('total_readout_time', 'total_readout_time'),  # noqa
                                       ('phase_encoding_direction', 'fsl_phase_encoding_direction'),  # noqa
-                                      ('subject_id', 'subject_id')]),  # noqa
-            # Generate <subject_id>_index.txt for eddy
+                                      ('image_id', 'image_id')]),  # noqa
+            # Generate <image_id>_index.txt for eddy
             (init_node, gen_index_txt, [('bval', 'in_bval'),  # noqa
-                                        ('subject_id', 'subject_id')]),  # noqa
+                                        ('image_id', 'image_id')]),  # noqa
             # Run FSL eddy
             (init_node,     eddy, [('dwi', 'in_file'),  # noqa
                                    ('bval', 'in_bval'),  # noqa
                                    ('bvec', 'in_bvec'),  # noqa
-                                   ('subject_id', 'out_base')]),  # noqa
+                                   ('image_id', 'out_base')]),  # noqa
             (gen_acq_txt,   eddy, [('out_acq', 'in_acqp')]),  # noqa
             (gen_index_txt, eddy, [('out_index', 'in_index')]),  # noqa
             (rm_extension,  eddy, [('file_without_extension', 'field')]),  # noqa
@@ -451,7 +468,7 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             # Bias correction
             (eddy, bias, [('out_corrected', 'inputnode.in_file')]),
             # Print end message
-            (init_node, print_end_message, [('subject_id', 'subject_id')]),  # noqa
+            (init_node, print_end_message, [('image_id', 'image_id')]),  # noqa
             (bias,      print_end_message, [('outputnode.out_file', 'final_file')]),  # noqa
             # Output node
             (init_node, self.output_node, [('bval', 'preproc_bval')]),  # noqa
