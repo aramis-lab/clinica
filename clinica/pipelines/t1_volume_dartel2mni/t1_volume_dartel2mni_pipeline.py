@@ -51,8 +51,8 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                             'bounding_box': None,
                             'voxel_size': None,
                             'modulation': True,
-                            'fwhm': [8],
-                            'atlas_list': ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
+                            'fwhm': [8]
+                            #'atlas_list': ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
                             }
 
     def check_custom_dependencies(self):
@@ -178,31 +178,12 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
              r'\1/\3_\2_probability\4'),
             (r'trait_added', r'')
         ]
-
-        # Writing atlas statistics into CAPS
-        # ==================================
-        write_atlas_node = npe.MapNode(name='write_atlas_node',
-                                            iterfield=['container', 'atlas_statistics'],
-                                            interface=nio.DataSink(infields=['atlas_statistics']))
-        write_atlas_node.inputs.base_directory = self.caps_directory
-        write_atlas_node.inputs.parameterization = False
-        write_atlas_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
-                                             '/t1/spm/dartel/group-' + self._group_id + '/atlas_statistics'
-                                             for i in range(len(self.subjects))]
-        write_atlas_node.inputs.regexp_substitutions = [
-            (r'(.*atlas_statistics)/atlas_statistics/mwc1(sub-.*)(_space-.*_map-graymatter_statistics\.tsv)$',
-             r'\1/\2\3'),
-            (r'(.*atlas_statistics)/atlas_statistics/(m?w)?(sub-.*_T1w).*(_space-.*_map-graymatter_statistics).*(\.tsv)$',
-             r'\1/\3\4\5'),
-            (r'trait_added', r'')
-        ]
-
         self.connect([
             (self.output_node, write_normalized_node, [(('normalized_files', zip_nii, True), 'normalized_files'),
                                                        (('smoothed_normalized_files', zip_nii, True),
-                                                        'smoothed_normalized_files')]),
-            (self.output_node, write_atlas_node, [('atlas_statistics', 'atlas_statistics')])
+                                                        'smoothed_normalized_files')])
         ])
+
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.
@@ -211,7 +192,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.io import unzip_nii
-        from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_utils import prepare_flowfields, join_smoothed_files, atlas_statistics, select_gm_images
+        from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_utils import prepare_flowfields, join_smoothed_files, select_gm_images
         from clinica.utils.spm import get_tpm
 
         # Get Tissue Probability Map from SPM
@@ -272,15 +253,6 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         else:
             self.output_node.inputs.smoothed_normalized_files = []
 
-        # Atlas Statistics
-        # ================
-        atlas_stats_node = npe.MapNode(nutil.Function(input_names=['in_image',
-                                                                   'in_atlas_list'],
-                                                      output_names=['atlas_statistics'],
-                                                      function=atlas_statistics),
-                                       name='atlas_stats_node',
-                                       iterfield=['in_image'])
-        atlas_stats_node.inputs.in_atlas_list = self.parameters['atlas_list']
 
         # Connection
         # ==========
@@ -292,7 +264,5 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
             (unzip_flowfields_node, dartel2mni_node, [(('out_file', prepare_flowfields, self.parameters['tissues']),
                                                        'flowfield_files')]),
             (unzip_template_node, dartel2mni_node, [('out_file', 'template_file')]),
-            (dartel2mni_node, self.output_node, [('normalized_files', 'normalized_files')]),
-            (dartel2mni_node, atlas_stats_node, [(('normalized_files', select_gm_images), 'in_image')]),
-            (atlas_stats_node, self.output_node, [('atlas_statistics', 'atlas_statistics')])
+            (dartel2mni_node, self.output_node, [('normalized_files', 'normalized_files')])
         ])
