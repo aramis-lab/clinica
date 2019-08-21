@@ -273,10 +273,8 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         ]
 
         self.connect([
-            (self.input_node, container_path, [('t1w', 't1w_filename')]),
-            # noqa
-            (container_path, write_node,
-             [(('container', fix_join, 't1'), 'container')]),  # noqa
+            (self.input_node, container_path, [('t1w', 't1w_filename')]),  # noqa
+            (container_path, write_node, [(('container', fix_join, ''), 'container')]),  # noqa
             (self.output_node, write_node, [(('native_class_images', utils.group_nested_images_by_subject, True), 'native_space'),  # noqa
                                             (('dartel_input_images', utils.group_nested_images_by_subject, True), 'dartel_input')]),  # noqa
         ])
