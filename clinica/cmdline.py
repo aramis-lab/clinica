@@ -199,8 +199,7 @@ def execute():
     from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_cli import T1VolumeNewTemplateCLI
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import T1VolumeExistingTemplateCLI
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
-    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DwiPreprocessingUsingPhaseDiffFieldmapCli 
-    from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_fmap_cli import DwiPreprocessingUsingFieldmapCli 
+    from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_fmap_cli import DwiPreprocessingUsingFieldmapCli
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DwiPreprocessingUsingT1Cli 
     from clinica.pipelines.dwi_dti.dwi_dti_cli import DwiDtiCli 
     from clinica.pipelines.dwi_connectome.dwi_connectome_cli import DwiConnectomeCli 
@@ -216,7 +215,6 @@ def execute():
         T1VolumeNewTemplateCLI(),
         T1FreeSurferLongitudinalCLI(),
         DwiPreprocessingUsingFieldmapCli(),
-        DwiPreprocessingUsingPhaseDiffFieldmapCli(),
         DwiPreprocessingUsingT1Cli(),
         DwiDtiCli(),
         DwiConnectomeCli(),
