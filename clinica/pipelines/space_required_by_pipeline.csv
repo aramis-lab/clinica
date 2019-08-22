@@ -1,6 +1,7 @@
 pipeline_name;space_caps;space_wd
 T1FreeSurferCrossSectional;1G;100K
 T1FreeSurferLongitudinal;400M;400M
+T1VolumeDartel2MNI;30M;150M
 T1VolumeNewTemplate;300M;275M
 T1VolumeTissueSegmentation;35M;147M
 T1VolumeCreateDartel;130M;140M

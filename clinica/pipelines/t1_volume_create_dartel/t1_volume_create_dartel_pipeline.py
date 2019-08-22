@@ -217,7 +217,11 @@ class T1VolumeCreateDartel(cpe.Pipeline):
                     raise RuntimeError('SPM version 8 or 12 could not be found. Please upgrade your SPM toolbox.')
             if isinstance(version, str):
                 if float(version) >= 12.7169:
-                    tissue_map = os.path.join(str(spm_home), 'spm12_mcr/spm/spm12/tpm/TPM.nii')
+                    # Path depends on version of SPM Standalone
+                    if os.path.exists(os.path.join(str(spm_home), 'spm12_mcr/spm/spm12/tpm/')):
+                        tissue_map = os.path.join(str(spm_home), 'spm12_mcr/spm/spm12/tpm/TPM.nii')
+                    else:
+                        tissue_map = os.path.join(str(spm_home), 'spm12_mcr/spm12/spm12/tpm/TPM.nii')
                 else:
                     raise RuntimeError('SPM standalone version not supported. Please upgrade SPM standalone.')
         else:
