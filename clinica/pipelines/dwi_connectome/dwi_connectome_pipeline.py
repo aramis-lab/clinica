@@ -161,10 +161,8 @@ class DwiConnectome(cpe.Pipeline):
         else:
             p_id_images_to_process = [re.search(r'(sub-[a-zA-Z0-9]+)', caps_file).group() for caps_file in dwi_files]
             s_id_images_to_process = [re.search(r'(ses-[a-zA-Z0-9]+)', caps_file).group() for caps_file in dwi_files]
-            images_to_process = ', '.join(
-                p_id_images_to_process[i][4:] + '|' + s_id_images_to_process[i][4:]
-                for i in range(len(p_id_images_to_process))
-            )
+            images_to_process = ', '.join(p_id[4:] + '|' + s_id[4:]
+                                          for p_id, s_id in zip(p_id_images_to_process, s_id_images_to_process))
             cprint('The pipeline will be run on the following subject(s): %s' % images_to_process)
 
         if dwi_file_spaces[0] == 'b0':

@@ -79,6 +79,23 @@ def check_bids_folder(bids_directory):
         )
 
 
+def check_caps_folder(caps_directory):
+    import os
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaCAPSError
+
+    if not os.path.isdir(caps_directory):
+        raise ClinicaCAPSError(
+            "\n%s[Error] The CAPS directory you gave is not a folder.%s\n"
+            "\n%sError explanations:%s\n"
+            " - Clinica expected the following path to be a folder: %s%s%s\n"
+            " - If you gave relative path, did you run Clinica on the good folder?" %
+            (Fore.RED, Fore.RESET,
+             Fore.YELLOW, Fore.RESET,
+             Fore.BLUE, caps_directory, Fore.RESET)
+        )
+
+
 def caps_type_to_path(caps_type, caps_directory, participant_id, session_id):
     pipeline_to_path = {
         "t1-freesurfer": "%s/subjects/%s/%s/t1/freesurfer_cross_sectional/%s_%s" %

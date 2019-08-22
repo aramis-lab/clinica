@@ -136,8 +136,10 @@ class Pipeline(Workflow):
         """
         import inspect
         import os
-        from clinica.utils.exceptions import ClinicaException, ClinicaBIDSError, ClinicaCAPSError
         from colorama import Fore
+        from clinica.utils.io import check_bids_folder, check_caps_folder
+        from clinica.utils.exceptions import ClinicaException, ClinicaBIDSError, ClinicaCAPSError
+
         self._is_built = False
         self._bids_directory = bids_directory
         self._caps_directory = caps_directory
@@ -159,33 +161,14 @@ class Pipeline(Workflow):
                 raise ClinicaException(
                     '%s[Error] The %s pipeline does not contain BIDS nor CAPS directory at the initialization.%s' %
                     (Fore.RED, self._name, Fore.RESET))
-            if not os.path.isdir(self._caps_directory):
-                raise ClinicaCAPSError(
-                    "\n%s[Error] The CAPS directory you gave is not a folder.%s\n"
-                    "\n%sError explanations:%s\n"
-                    " - Clinica expected the following path to be a folder: %s%s%s\n"
-                    " - If you gave relative path, did you run Clinica on the good folder?" %
-                    (Fore.RED, Fore.RESET,
-                     Fore.YELLOW, Fore.RESET,
-                     Fore.BLUE, self._caps_directory, Fore.RESET)
-                )
-
+            check_caps_folder(self._caps_directory)
             self._sessions, self._subjects = get_subject_session_list(
                 input_dir=self._caps_directory,
                 ss_file=self._tsv_file,
                 is_bids_dir=False
             )
         else:
-            if not os.path.isdir(self._bids_directory):
-                raise ClinicaBIDSError(
-                    "\n%s[Error] The BIDS directory you gave is not a folder.%s\n"
-                    "\n%sError explanations:%s\n"
-                    " - Clinica expected the following path to be a folder: %s%s%s\n"
-                    " - If you gave relative path, did you run Clinica on the good folder?" %
-                    (Fore.RED, Fore.RESET,
-                     Fore.YELLOW, Fore.RESET,
-                     Fore.BLUE, self._bids_directory, Fore.RESET)
-                )
+            check_bids_folder(self._bids_directory)
             self._sessions, self._subjects = get_subject_session_list(
                 input_dir=self._bids_directory,
                 ss_file=self._tsv_file,
@@ -195,7 +178,7 @@ class Pipeline(Workflow):
         self.init_nodes()
 
     def init_nodes(self):
-        """Inits the basic workflow and I/O nodes necessary before build.
+        """Init the basic workflow and I/O nodes necessary before build.
 
         """
         import nipype.interfaces.utility as nutil
