@@ -153,26 +153,6 @@ class DwiConnectome(cpe.Pipeline):
             for i in range(len(self.subjects))
         ]
 
-        # # Check if pipeline already ran on the images
-        # for i in range(len(self.subjects)):
-        #     output_file = caps_layout.get(type='dwi', suffix='connectivity', extensions='tsv', return_type='file',
-        #                                   subject=self.subjects[i][4:], session=self.sessions[i][4:])
-        #     if len(output_file) >= 1:
-        #         if self.parameters['overwrite_outputs']:
-        #             cprint('%s[Warning] The pipeline already ran on this image. Results will be overwritten.%s' %
-        #                    (Fore.YELLOW, Fore.RESET))
-        #         else:
-        #             cprint('%sThe pipeline already ran on this image. This image will be skipped.%s' %
-        #                    (Fore.BLUE, Fore.RESET))
-        #             del wm_mask_files[-1]
-        #             del dwi_file_spaces[-1]
-        #             del dwi_files[-1]
-        #             del dwi_brainmask_files[-1]
-        #             del list_grad_fsl[-1]
-        #             del list_atlas_files[-1]
-        #             if dwi_file_spaces[i] == 'b0':
-        #                 del t1_brain_files[-1]
-
         if len(dwi_files) == 0:
             import sys
             cprint('%s\nEither all the images were already run by the pipeline or no image was found to run the pipeline. '
