@@ -39,7 +39,7 @@ def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('Calculating paths of FDG PET images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
     images = compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of FDG PET images found. Exporting images into BIDS ...')
-    t1_pet_paths_to_bids(images, dest_dir, 'fdg')
+    # t1_pet_paths_to_bids(images, dest_dir, 'fdg')
     cprint(Fore.GREEN + 'FDG PET conversion done.' + Fore.RESET)
 
 
@@ -60,7 +60,6 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     import operator
     from os import walk, path
     from numpy import argsort
-    # from clinica.iotools.converters.adni_utils import replace_sequence_chars
     from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
     from clinica.utils.stream import cprint
     from functools import reduce

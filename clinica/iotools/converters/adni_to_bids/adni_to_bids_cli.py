@@ -73,6 +73,6 @@ class AdniToBidsCLI(ce.CmdParser):
                                         self.absolute_path(args.bids_directory),
                                         args.subjects_list,
                                         args.modalities)
-
-        adni_to_bids.convert_clinical_data(self.absolute_path(args.clinical_data_directory),
-                                           self.absolute_path(args.bids_directory))
+        #
+        # adni_to_bids.convert_clinical_data(self.absolute_path(args.clinical_data_directory),
+        #                                    self.absolute_path(args.bids_directory))

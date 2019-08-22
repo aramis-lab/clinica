@@ -39,7 +39,7 @@ def convert_adni_av45_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('Calculating paths of AV45 PET images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
     images = compute_av45_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of AV45 PET images found. Exporting images into BIDS ...')
-    t1_pet_paths_to_bids(images, dest_dir, 'av45')
+    # t1_pet_paths_to_bids(images, dest_dir, 'av45')
     cprint(Fore.GREEN + 'AV45 PET conversion done.' + Fore.RESET)
 
 
