@@ -281,3 +281,85 @@ def remove_bias(name='bias_correct'):
         (mask_b0, outputnode, [('mask_file', 'b0_mask')])
     ])
     return wf
+
+
+def b0_flirt_pipeline(num_b0s, name='b0_coregistration'):
+    """
+    Rigid registration of the B0 dataset onto the first volume. Rigid
+    registration is achieved using FLIRT and the normalized
+    correlation.
+
+    Args:
+        num_b0s (int): Number of the B0 volumes in the dataset.
+        name (str): Name of the workflow.
+
+    Inputnode:
+        in_file(str): B0 dataset.
+
+    Outputnode
+        out_b0_reg(str): The set of B0 volumes registered to the first volume.
+
+    Returns:
+        The workflow
+    """
+    import nipype.pipeline.engine as pe
+    from nipype.interfaces import fsl
+    import nipype.interfaces.utility as niu
+
+    from clinica.utils.dwi import merge_volumes_tdim
+
+    inputnode = pe.Node(niu.IdentityInterface(fields=['in_file']),
+                        name='inputnode')
+    fslroi_ref = pe.Node(fsl.ExtractROI(args='0 1'), name='b0_reference')
+    tsize = num_b0s - 1
+    fslroi_moving = pe.Node(fsl.ExtractROI(args='1 '+str(tsize)),
+                            name='b0_moving')
+    split_moving = pe.Node(fsl.Split(dimension='t'), name='split_b0_moving')
+
+    bet_ref = pe.Node(fsl.BET(frac=0.3, mask=True, robust=True),
+                      name='bet_ref')
+
+    dilate = pe.Node(
+            fsl.maths.MathsCommand(
+                nan2zeros=True,
+                args='-kernel sphere 5 -dilM'),
+            name='mask_dilate')
+
+    flirt = pe.MapNode(fsl.FLIRT(
+        interp='spline', dof=6, bins=50, save_log=True,
+        cost='corratio', cost_func='corratio', padding_size=10,
+        searchr_x=[-4, 4], searchr_y=[-4, 4], searchr_z=[-4, 4],
+        fine_search=1, coarse_search=10),
+        name='b0_co_registration', iterfield=['in_file'])
+
+    merge = pe.Node(fsl.Merge(dimension='t'), name='merge_registered_b0s')
+    thres = pe.MapNode(fsl.Threshold(thresh=0.0), iterfield=['in_file'],
+                       name='remove_negative')
+    insert_ref = pe.Node(niu.Function(input_names=['in_file1', 'in_file2'],
+                                      output_names=['out_file'],
+                                      function=merge_volumes_tdim),
+                         name='concat_ref_moving')
+
+    outputnode = pe.Node(niu.IdentityInterface(
+        fields=['out_file', 'out_xfms']),
+        name='outputnode')
+
+    wf = pe.Workflow(name=name)
+    wf.connect([
+        (inputnode,  fslroi_ref,   [('in_file', 'in_file')]),
+        (inputnode,  fslroi_moving,   [('in_file', 'in_file')]),
+        (fslroi_moving, split_moving,   [('roi_file', 'in_file')]),
+        (fslroi_ref, bet_ref, [('roi_file', 'in_file')]),
+        (bet_ref, dilate, [('mask_file', 'in_file')]),
+        (dilate, flirt, [('out_file', 'ref_weight'),
+                         ('out_file', 'in_weight')]),
+        (fslroi_ref, flirt, [('roi_file', 'reference')]),
+        (split_moving, flirt, [('out_files', 'in_file')]),
+        (flirt, thres, [('out_file', 'in_file')]),
+        (thres, merge, [('out_file', 'in_files')]),
+        (merge, insert_ref, [('merged_file', 'in_file2')]),
+        (fslroi_ref, insert_ref, [('roi_file', 'in_file1')]),
+        (insert_ref, outputnode, [('out_file', 'out_file')]),
+        (flirt, outputnode, [('out_matrix_file', 'out_xfms')])
+    ])
+    return wf

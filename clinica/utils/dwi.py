@@ -224,7 +224,7 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory
     """
     from clinica.utils.dwi import (insert_b0_into_dwi, b0_dwi_split,
                                    count_b0s, b0_average)
-    from clinica.workflows.dwi_preprocessing import b0_flirt_pipeline
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import b0_flirt_pipeline
     from clinica.utils.stream import cprint
     import hashlib
 
