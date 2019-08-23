@@ -93,32 +93,49 @@ def get_grad_fsl(bvec, bval):
     return grad_fsl
 
 
-def init_input_node(dwi, bvec, bval, total_readout_time, phase_encoding_direction,
-                    fmap_magnitude, fmap_phasediff, delta_echo_time):
+def init_input_node(dwi, bvec, bval, dwi_json,
+                    fmap_magnitude, fmap_phasediff, fmap_phasediff_json):
     """Extract "sub-<participant_id>_ses-<session_label>" from input node and print begin message."""
     from clinica.utils.exceptions import ClinicaException
     from clinica.utils.stream import cprint
     import datetime
     from colorama import Fore
-    from clinica.utils.io import get_subject_id
+    from clinica.utils.io import get_subject_id, extract_metadata_from_json
+    from clinica.utils.dwi import check_dwi_volume
+    from clinica.utils.epi import bids_dir_to_fsl_dir
 
-    id_dwi = get_subject_id(dwi)
-    id_bvec = get_subject_id(bvec)
-    id_bval = get_subject_id(bval)
-    id_fmap_magnitude = get_subject_id(fmap_magnitude)
-    id_fmap_phasediff = get_subject_id(fmap_phasediff)
+    # Check the image IDs for each file are the same
+    image_ids = [
+        get_subject_id(dwi),
+        get_subject_id(bvec),
+        get_subject_id(bval),
+        get_subject_id(dwi_json),
+        get_subject_id(fmap_magnitude),
+        get_subject_id(fmap_phasediff),
+        get_subject_id(fmap_phasediff_json)
+    ]
+    if not len(set(image_ids)) == 1:
+        raise ClinicaException('<image_id> from input files mismatch (found: %s)' % image_ids)
 
-    image_id = list(set([id_dwi, id_bvec, id_bval, id_fmap_magnitude, id_fmap_phasediff]))
+    # Check that the number of DWI, bvec & bval are the same
+    check_dwi_volume(dwi, bvec, bval)
 
-    if not len(image_id) == 1:
-        raise ClinicaException('<image_id> from input files mismatch (found: %s)' % image_id)
+    # Read metadata from DWI JSON file:
+    [total_readout_time, phase_encoding_direction] = \
+        extract_metadata_from_json(dwi_json, ['TotalReadoutTime', 'PhaseEncodingDirection'])
+    phase_encoding_direction = bids_dir_to_fsl_dir(phase_encoding_direction)
+
+    # Read metadata from PhaseDiff JSON file:
+    [echo_time_1, echo_time_2] = \
+        extract_metadata_from_json(fmap_phasediff_json, ['EchoTime1', 'EchoTime2'])
+    delta_echo_time = abs(echo_time_2 - echo_time_1)
 
     now = datetime.datetime.now().strftime('%H:%M:%S')
     cprint('%s[%s]%s Running pipeline for %s '
            '(TotalReadoutTime = %s, PhaseEncodingDirection = %s, DeltaEchoTime = %s)' %
-           (Fore.BLUE, now, Fore.RESET, image_id[0].replace('_', '|'),
+           (Fore.BLUE, now, Fore.RESET, image_ids[0].replace('_', '|'),
             total_readout_time, phase_encoding_direction, delta_echo_time))
-    return (image_id[0], dwi, bvec, bval, total_readout_time, phase_encoding_direction,
+    return (image_ids[0], dwi, bvec, bval, total_readout_time, phase_encoding_direction,
             fmap_magnitude, fmap_phasediff, delta_echo_time)
 
 

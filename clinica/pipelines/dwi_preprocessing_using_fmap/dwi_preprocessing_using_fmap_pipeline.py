@@ -75,7 +75,8 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         self._use_cuda_8_0 = use_cuda_8_0
         self._use_cuda_9_1 = use_cuda_9_1
         if self._use_cuda_8_0 and self._use_cuda_9_1:
-            raise ClinicaException('')
+            raise ClinicaException('\n%s[Error] You must choose between CUDA 8.0 or CUDA 9.1, not both.%s' %
+                                   (Fore.RED, Fore.RESET))
 
         self._seed_fsl_eddy = seed_fsl_eddy
 
@@ -92,19 +93,18 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
                 * dwi (str): Path of the diffusion weighted image in BIDS format
                 * bvec (str): Path of the bvec file in BIDS format
                 * bval (str): Path of the bval file in BIDS format
-                * total_readout_time (float): TotalReadoutTime (see BIDS specifications)
-                * phase_encoding_direction (float): PhaseEncodingDirection (see BIDS specifications)
+                * dwi_json (str): Path to the DWI JSON file in BIDS format and containing
+                    TotalReadoutTime and PhaseEncodingDirection metadata (see BIDS specifications)
                 * fmap_magnitude (str): Path of the magnitude (1st) image in BIDS format
                 * fmap_phasediff (str): Path of the phase difference image in BIDS format
-                * delta_echo_time (float): DeltaEchoTime (see BIDS specifications)
+                * fmap_phasediff_json (str): Path of the phase difference JSON file in BIDS format
+                    and containing EchoTime1 & EchoTime2 metadata (see BIDS specifications)
 
         Returns:
             A list of (string) input fields name.
         """
-        input_list = ['dwi', 'bvec', 'bval',
-                      'total_readout_time', 'phase_encoding_direction',
-                      'fmap_magnitude', 'fmap_phasediff',
-                      'delta_echo_time']
+        input_list = ['dwi', 'bvec', 'bval', 'dwi_json',
+                      'fmap_magnitude', 'fmap_phasediff', 'fmap_phasediff_json']
 
         return input_list
 
@@ -120,16 +120,13 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         return output_list
 
     def build_input_node(self):
-        """Build and connect an input node to the pipeline.
-        """
+        """Build and connect an input node to the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from colorama import Fore
         from clinica.utils.exceptions import ClinicaBIDSError
         from clinica.utils.stream import cprint
-        from clinica.utils.io import check_input_bids_files, extract_metadata_from_json
-        from clinica.utils.dwi import check_dwi_volume
-        from clinica.utils.epi import bids_dir_to_fsl_dir
+        from clinica.utils.io import check_input_bids_files
 
         # Remove 'sub-' prefix from participant IDs
         participant_labels = '|'.join(sub[4:] for sub in self.subjects)
@@ -194,22 +191,6 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         if error_message:
             raise ClinicaBIDSError(error_message)
 
-        total_readout_times = []
-        phase_encoding_directions = []
-        delta_echo_times = []
-        for i in range(len(self.subjects)):
-            # Check that the number of DWI, bvec & bval are the same:
-            check_dwi_volume(dwi_files[i], bvec_files[i], bval_files[i])
-
-            # Read metadata from DWI JSON file:
-            [total_readout_time, enc_direction] = extract_metadata_from_json(dwi_json_files[i], ['TotalReadoutTime', 'PhaseEncodingDirection'])
-            total_readout_times.append(total_readout_time)
-            phase_encoding_directions.append(bids_dir_to_fsl_dir(enc_direction))
-
-            # Read metadata from PhaseDiff JSON file:
-            [echo_time_1, echo_time_2] = extract_metadata_from_json(fmap_phasediff_json_files[i], ['EchoTime1', 'EchoTime2'])
-            delta_echo_times.append(abs(echo_time_2 - echo_time_1))
-
         if len(dwi_files) == 0:
             import sys
             cprint('%s\nEither all the images were already run by the pipeline or no image was found to run the pipeline. '
@@ -223,29 +204,26 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
                                  ('dwi', dwi_files),
                                  ('bvec', bvec_files),
                                  ('bval', bval_files),
-                                 ('total_readout_time', total_readout_times),
-                                 ('phase_encoding_direction', phase_encoding_directions),
+                                 ('dwi_json', dwi_json_files),
                                  ('fmap_magnitude', fmap_magnitude_files),
                                  ('fmap_phasediff', fmap_phasediff_files),
-                                 ('delta_echo_time', delta_echo_times),
+                                 ('fmap_phasediff_json', fmap_phasediff_json_files),
                              ],
                              synchronize=True,
                              interface=nutil.IdentityInterface(
                                  fields=self.get_input_fields()))
         self.connect([
-            (read_node, self.input_node, [('dwi', 'dwi')]),
-            (read_node, self.input_node, [('bvec', 'bvec')]),
-            (read_node, self.input_node, [('bval', 'bval')]),
-            (read_node, self.input_node, [('total_readout_time', 'total_readout_time')]),
-            (read_node, self.input_node, [('phase_encoding_direction', 'phase_encoding_direction')]),
-            (read_node, self.input_node, [('fmap_magnitude', 'fmap_magnitude')]),
-            (read_node, self.input_node, [('fmap_phasediff', 'fmap_phasediff')]),
-            (read_node, self.input_node, [('delta_echo_time', 'delta_echo_time')]),
+            (read_node, self.input_node, [('dwi', 'dwi'),
+                                          ('bvec', 'bvec'),
+                                          ('bval', 'bval'),
+                                          ('dwi_json', 'dwi_json'),
+                                          ('fmap_magnitude', 'fmap_magnitude'),
+                                          ('fmap_phasediff', 'fmap_phasediff'),
+                                          ('fmap_phasediff_json', 'fmap_phasediff_json')]),  # noqa
         ])
 
     def build_output_node(self):
-        """Build and connect an output node to the pipeline.
-        """
+        """Build and connect an output node to the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
@@ -293,8 +271,7 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         ])
 
     def build_core_nodes(self):
-        """Build and connect the core nodes of the pipeline.
-        """
+        """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.fsl as fsl
@@ -311,11 +288,12 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
 
         # Nodes creation
         # ==============
-        # Get <image_id> (e.g. sub-CLNC01_ses-M00) from input_node
-        # and print begin message
+        # Initialize input parameters and print begin message
         init_node = npe.Node(interface=nutil.Function(
             input_names=self.get_input_fields(),
-            output_names=['image_id'] + self.get_input_fields(),
+            output_names=['image_id',
+                          'dwi', 'bvec', 'bval', 'total_readout_time', 'phase_encoding_direction',
+                          'fmap_magnitude', 'fmap_phasediff', 'delta_echo_time'],
             function=utils.init_input_node),
             name='0-InitNode')
 
@@ -423,14 +401,14 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         # Connection
         # ==========
         self.connect([
+            # Initialize input parameters and print begin message
             (self.input_node, init_node, [('dwi', 'dwi'),
                                           ('bvec', 'bvec'),
                                           ('bval', 'bval'),
-                                          ('total_readout_time', 'total_readout_time'),
-                                          ('phase_encoding_direction', 'phase_encoding_direction'),
+                                          ('dwi_json', 'dwi_json'),
                                           ('fmap_magnitude', 'fmap_magnitude'),
                                           ('fmap_phasediff', 'fmap_phasediff'),
-                                          ('delta_echo_time', 'delta_echo_time')]),  # noqa
+                                          ('fmap_phasediff_json', 'fmap_phasediff_json')]),  # noqa
 
             (init_node, get_grad_fsl, [('bval', 'bval'),  # noqa
                                        ('bvec', 'bvec')]),  # noqa

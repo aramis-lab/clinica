@@ -87,7 +87,8 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         self._use_cuda_8_0 = use_cuda_8_0
         self._use_cuda_9_1 = use_cuda_9_1
         if self._use_cuda_8_0 and self._use_cuda_9_1:
-            raise ClinicaException('')
+            raise ClinicaException('\n%s[Error] You must choose between CUDA 8.0 or CUDA 9.1, not both.%s' %
+                                   (Fore.RED, Fore.RESET))
 
         self._seed_fsl_eddy = seed_fsl_eddy
 
@@ -104,13 +105,13 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
                 * dwi (str): Path of the diffusion weighted image in BIDS format
                 * bvec (str): Path of the bvec file in BIDS format
                 * bval (str): Path of the bval file in BIDS format
-                * total_readout_time (float): TotalReadoutTime (see BIDS specifications)
-                * phase_encoding_direction (float): PhaseEncodingDirection (see BIDS specifications)
+                * dwi_json (str): Path to the DWI JSON file in BIDS format and containing
+                    TotalReadoutTime and PhaseEncodingDirection metadata (see BIDS specifications)
 
         Returns:
             A list of (string) input fields name.
         """
-        input_list = ['t1w', 'dwi', 'bvec', 'bval', 'total_readout_time', 'phase_encoding_direction']
+        input_list = ['t1w', 'dwi', 'bvec', 'bval', 'dwi_json']
         return input_list
 
     def get_output_fields(self):
@@ -125,15 +126,13 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         return output_list
 
     def build_input_node(self):
-        """Build and connect an input node to the pipelines."""
+        """Build and connect an input node to the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from colorama import Fore
         from clinica.utils.exceptions import ClinicaBIDSError
         from clinica.utils.stream import cprint
-        from clinica.utils.io import check_input_bids_files, extract_metadata_from_json
-        from clinica.utils.dwi import check_dwi_volume
-        from clinica.utils.epi import bids_dir_to_fsl_dir
+        from clinica.utils.io import check_input_bids_files
 
         # Remove 'sub-' prefix from participant IDs
         participant_labels = '|'.join(sub[4:] for sub in self.subjects)
@@ -178,17 +177,6 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         if error_message:
             raise ClinicaBIDSError(error_message)
 
-        total_readout_times = []
-        phase_encoding_directions = []
-        for i in range(len(self.subjects)):
-            # Check that the number of DWI, bvec & bval are the same:
-            check_dwi_volume(dwi_files[i], bvec_files[i], bval_files[i])
-
-            # Read metadata from DWI JSON file:
-            [total_readout_time, enc_direction] = extract_metadata_from_json(dwi_json_files[0], ['TotalReadoutTime', 'PhaseEncodingDirection'])
-            total_readout_times.append(total_readout_time)
-            phase_encoding_directions.append(bids_dir_to_fsl_dir(enc_direction))
-
         if len(dwi_files) == 0:
             import sys
             cprint('%s\nEither all the images were already run by the pipeline or no image was found to run the pipeline. '
@@ -203,19 +191,17 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
                                  ('dwi', dwi_files),
                                  ('bvec', bvec_files),
                                  ('bval', bval_files),
-                                 ('total_readout_time', total_readout_times),
-                                 ('phase_encoding_direction', phase_encoding_directions),
+                                 ('dwi_json', dwi_json_files),
                              ],
                              synchronize=True,
                              interface=nutil.IdentityInterface(
                                  fields=self.get_input_fields()))
         self.connect([
-            (read_node, self.input_node, [('t1w', 't1w')]),
-            (read_node, self.input_node, [('dwi', 'dwi')]),
-            (read_node, self.input_node, [('bvec', 'bvec')]),
-            (read_node, self.input_node, [('bval', 'bval')]),
-            (read_node, self.input_node, [('total_readout_time', 'total_readout_time')]),
-            (read_node, self.input_node, [('phase_encoding_direction', 'phase_encoding_direction')]),
+            (read_node, self.input_node, [('t1w', 't1w'),
+                                          ('dwi', 'dwi'),
+                                          ('bvec', 'bvec'),
+                                          ('bval', 'bval'),
+                                          ('dwi_json', 'dwi_json')]),
         ])
 
     def build_output_node(self):
@@ -275,11 +261,11 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
 
         # Nodes creation
         # ==============
-        # Get <image_id> (e.g. sub-CLNC01_ses-M00) from input_node
-        # and print begin message
+        # Initialize input parameters and print begin message
         init_node = npe.Node(interface=nutil.Function(
             input_names=self.get_input_fields(),
-            output_names=['image_id'] + self.get_input_fields(),
+            output_names=['image_id',
+                          't1w', 'dwi', 'bvec', 'bval', 'total_readout_time', 'phase_encoding_direction'],
             function=init_input_node),
             name='0-InitNode')
 
@@ -314,13 +300,12 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         # Connection
         # ==========
         self.connect([
-            # Get <image_id> from input_node and print begin message
+            # Initialize input parameters and print begin message
             (self.input_node, init_node, [('t1w', 't1w'),
                                           ('dwi', 'dwi'),
                                           ('bvec', 'bvec'),
                                           ('bval', 'bval'),
-                                          ('total_readout_time', 'total_readout_time'),
-                                          ('phase_encoding_direction', 'phase_encoding_direction')]),
+                                          ('dwi_json', 'dwi_json')]),
             # Preliminary step (possible computation of a mean b0):
             (init_node, prepare_b0, [('dwi',  'in_dwi'),
                                      ('bval', 'in_bval'),
@@ -329,7 +314,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             (prepare_b0, mask_b0_pre, [('out_reference_b0', 'in_file')]),
             # Head-motion correction + eddy current correction
             (init_node, eddy_fsl, [('total_readout_time', 'inputnode.total_readout_time'),
-                                         ('phase_encoding_direction', 'inputnode.phase_encoding_direction')]),
+                                   ('phase_encoding_direction', 'inputnode.phase_encoding_direction')]),
             (prepare_b0, eddy_fsl, [('out_b0_dwi_merge', 'inputnode.in_file'),
                                     ('out_updated_bval', 'inputnode.in_bval'),
                                     ('out_updated_bvec', 'inputnode.in_bvec'),
