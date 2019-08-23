@@ -23,7 +23,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
     Todo:
         [X] Detect c3d_affine_tool dependency
         [X] Refactor input_node (cf AM's comments on https://github.com/aramis-lab/clinica/pull/8)
-        [x] Read data from JSON
+        [X] Read data from JSON
               [X] - PhaseEncodingDirection
               [X] - TotalReadoutTime
         [ ] Interfaces
@@ -31,9 +31,10 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
               [ ] - antsApplyTransforms? (optional, no output message when run)
               [ ] - CreateJacobianDeterminantImage? (optional, no output message when run)
               [ ] - WarpImageMultiTransform? (optional, no output message when run)
-        [ ] Add CLI flag for eddy_cuda8.0 / eddy_cuda9.1
+        [X] Add CLI flag for eddy_cuda8.0 / eddy_cuda9.1
+        [ ] Update space_required_by_pipeline.csv info
         [ ] CI
-              [ ] Make FSL eddy reproducible
+              [/] Make FSL eddy reproducible
               [ ] Data CI
         [ ] Wiki page
 
@@ -50,20 +51,27 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
     Returns:
         A clinica pipeline object containing the DwiPreprocessingUsingT1 pipeline.
     """
-    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None,
-                 name=None, low_bval=5):
-        """
+    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None,
+                 low_bval=5, use_cuda_8_0=False, use_cuda_9_1=False, seed_fsl_eddy=None):
+        """Init the pipeline.
 
         Args:
             bids_directory(str): Input directory in a BIDS hierarchy.
             caps_directory(str): Output directory in a CAPS hierarchy.
-            tsv_file(str): TSV file containing the list of participants
-                (participant_id) with their sessions (session_id).
+            tsv_file(str): TSV file containing the list of participants (participant_id)
+                with their sessions (session_id).
             name(optional[str]): Name of the pipeline
-            low_bval (int): Define the b0 volumes as all volume
-                bval <= low_bval. (Default = 5)
-        """
-        import warnings
+            low_bval(optional[int]): Define the b0 volumes as all volume bval <= low_bval (default: 5)
+            use_cuda_8_0(optional[bool]): Use CUDA 8.0 implementation of FSL eddy (default: False).
+            use_cuda_9_1(optional[bool]): Use CUDA 9.1 implementation of FSL eddy (default: False).
+            seed_fsl_eddy(optional[int]): Initialize the random number generator for FSL eddy (default: None).
+
+        Raise:
+            ClinicaBIDSError: If low_bval is not ranging from 0 to 100.
+            ClinicaBIDSError: If CUDA 8.0 and CUDA 9.1 are chosen.
+       """
+        from colorama import Fore
+        from clinica.utils.exceptions import ClinicaException
 
         super(DwiPreprocessingUsingT1, self).__init__(
             bids_directory=bids_directory,
@@ -72,20 +80,19 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             name=name)
 
         self._low_bval = low_bval
+        if self._low_bval < 0 or self._low_bval > 100:
+            raise ClinicaException('\n%s[Error] The low_bval parameter should be zero or close to zero '
+                                   '(found value: %s).%s' % (Fore.RED, self._low_bval, Fore.RESET))
 
-        if self._low_bval < 0:
-            raise ValueError('The low_bval is equals to '
-                             + str(self._low_bval)
-                             + ': it should be zero or close to zero.')
+        self._use_cuda_8_0 = use_cuda_8_0
+        self._use_cuda_9_1 = use_cuda_9_1
+        if self._use_cuda_8_0 and self._use_cuda_9_1:
+            raise ClinicaException('')
 
-        if self._low_bval > 100:
-            warnings.warn('Warning: The low_bval parameter is ('
-                          + str(self._low_bval)
-                          + '), it should be close to zero', UserWarning)
+        self._seed_fsl_eddy = seed_fsl_eddy
 
     def check_custom_dependencies(self):
-        """Check dependencies that can not be listed in the `info.json` file.
-        """
+        """Check dependencies that can not be listed in the `info.json` file."""
         pass
 
     def get_input_fields(self):
@@ -118,8 +125,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         return output_list
 
     def build_input_node(self):
-        """Build and connect an input node to the pipelines.
-        """
+        """Build and connect an input node to the pipelines."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from colorama import Fore
@@ -183,9 +189,6 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             total_readout_times.append(total_readout_time)
             phase_encoding_directions.append(bids_dir_to_fsl_dir(enc_direction))
 
-            cprint('From JSON files: TotalReadoutTime = %s, PhaseEncodingDirection = %s' %
-                   (total_readout_time, enc_direction))
-
         if len(dwi_files) == 0:
             import sys
             cprint('%s\nEither all the images were already run by the pipeline or no image was found to run the pipeline. '
@@ -216,8 +219,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         ])
 
     def build_output_node(self):
-        """Build and connect an output node to the pipelines.
-        """
+        """Build and connect an output node to the pipelines."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
@@ -262,19 +264,25 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         ])
 
     def build_core_nodes(self):
-        """Build and connect the core nodes of the pipelines.
-        """
+        """Build and connect the core nodes of the pipelines."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.fsl as fsl
 
         from clinica.utils.dwi import prepare_reference_b0
-        from .dwi_preprocessing_using_t1_workflows import eddy_fsl_pipeline
-        from .dwi_preprocessing_using_t1_workflows import epi_pipeline
-        from clinica.workflows.dwi_preprocessing import remove_bias
+        from .dwi_preprocessing_using_t1_workflows import (eddy_fsl_pipeline, epi_pipeline, remove_bias)
+        from .dwi_preprocessing_using_t1_utils import init_input_node, print_end_pipeline
 
         # Nodes creation
         # ==============
+        # Get <image_id> (e.g. sub-CLNC01_ses-M00) from input_node
+        # and print begin message
+        init_node = npe.Node(interface=nutil.Function(
+            input_names=self.get_input_fields(),
+            output_names=['image_id'] + self.get_input_fields(),
+            function=init_input_node),
+            name='0-InitNode')
+
         # Prepare b0 image for further corrections
         prepare_b0 = npe.Node(name="PrepareB0", interface=nutil.Function(
             input_names=['in_dwi', 'in_bval', 'in_bvec', 'low_bval', 'working_directory'],
@@ -287,35 +295,55 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         mask_b0_pre = npe.Node(fsl.BET(frac=0.3, mask=True, robust=True),
                                name='PreMaskB0')
         # Head-motion correction + Eddy-currents correction
-        eddy_fsl = eddy_fsl_pipeline(self._low_bval, name='HeadMotionAndEddyCurrentCorrection')
+        eddy_fsl = eddy_fsl_pipeline(low_bval=self._low_bval,
+                                     use_cuda_8_0=self._use_cuda_8_0,
+                                     use_cuda_9_1=self._use_cuda_9_1,
+                                     seed_fsl_eddy=self._seed_fsl_eddy)
         # Susceptibility distortion correction using T1w image
         sdc = epi_pipeline(name='SusceptibilityDistortionCorrection')
         # Remove bias correction
         bias = remove_bias(name='RemoveBias')
 
+        # Print end message
+        print_end_message = npe.Node(
+            interface=nutil.Function(
+                input_names=['image_id', 'final_file'],
+                function=print_end_pipeline),
+            name='WriteEndMessage')
+
         # Connection
         # ==========
         self.connect([
+            # Get <image_id> from input_node and print begin message
+            (self.input_node, init_node, [('t1w', 't1w'),
+                                          ('dwi', 'dwi'),
+                                          ('bvec', 'bvec'),
+                                          ('bval', 'bval'),
+                                          ('total_readout_time', 'total_readout_time'),
+                                          ('phase_encoding_direction', 'phase_encoding_direction')]),
             # Preliminary step (possible computation of a mean b0):
-            (self.input_node, prepare_b0, [('dwi',  'in_dwi'),  # noqa
-                                           ('bval', 'in_bval'),  # noqa
-                                           ('bvec', 'in_bvec')]),  # noqa
+            (init_node, prepare_b0, [('dwi',  'in_dwi'),
+                                     ('bval', 'in_bval'),
+                                     ('bvec', 'in_bvec')]),
             # Mask b0 before corrections
-            (prepare_b0, mask_b0_pre, [('out_reference_b0', 'in_file')]),  # noqa
+            (prepare_b0, mask_b0_pre, [('out_reference_b0', 'in_file')]),
             # Head-motion correction + eddy current correction
-            (self.input_node, eddy_fsl, [('total_readout_time', 'inputnode.total_readout_time'),  # noqa
-                                         ('phase_encoding_direction', 'inputnode.phase_encoding_direction')]),  # noqa
+            (init_node, eddy_fsl, [('total_readout_time', 'inputnode.total_readout_time'),
+                                         ('phase_encoding_direction', 'inputnode.phase_encoding_direction')]),
             (prepare_b0, eddy_fsl, [('out_b0_dwi_merge', 'inputnode.in_file'),
                                     ('out_updated_bval', 'inputnode.in_bval'),
                                     ('out_updated_bvec', 'inputnode.in_bvec'),
                                     ('out_reference_b0', 'inputnode.ref_b0')]),
             (mask_b0_pre, eddy_fsl, [('mask_file', 'inputnode.in_mask')]),
             # Magnetic susceptibility correction
-            (eddy_fsl, sdc, [('outputnode.out_corrected', 'inputnode.DWI')]),
-            (self.input_node, sdc, [('t1w', 'inputnode.T1')]),
-            (eddy_fsl, sdc, [('outputnode.out_rotated_bvecs', 'inputnode.bvec')]),
+            (init_node, sdc, [('t1w', 'inputnode.T1')]),
+            (eddy_fsl,  sdc, [('outputnode.out_corrected', 'inputnode.DWI')]),
+            (eddy_fsl,  sdc, [('outputnode.out_rotated_bvecs', 'inputnode.bvec')]),
             # Bias correction
             (sdc, bias, [('outputnode.DWIs_epicorrected', 'inputnode.in_file')]),
+            # Print end message
+            (init_node, print_end_message, [('image_id', 'image_id')]),  # noqa
+            (bias,      print_end_message, [('outputnode.out_file', 'final_file')]),  # noqa
             # Output node
             (bias,       self.output_node, [('outputnode.out_file', 'preproc_dwi')]),  # noqa
             (sdc,        self.output_node, [('outputnode.out_bvec', 'preproc_bvec')]),  # noqa

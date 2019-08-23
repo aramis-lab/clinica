@@ -15,7 +15,7 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
     Todo:
         [X] Refactor input_node (cf AM's comments on https://github.com/aramis-lab/clinica/pull/8)
         [ ] Detect & check FSL version
-        [ ] Add CLI flag for eddy_cuda8.0 / eddy_cuda9.1
+        [X] Add CLI flag for eddy_cuda8.0 / eddy_cuda9.1
         [ ] Decide bias correction (FSL FAST vs N4)
         [ ] Core nodes
               [X] - Brain masking b0 (dwi2mask)
@@ -28,6 +28,7 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
               [X] - Check than CAPS does not change
               [X] - Add calibrated FMap
               [ ] - Add mean b=0?
+        [ ] Update space_required_by_pipeline.csv info
         [ ] CI
               [ ] - Chose parameters so that FSL eddy is reproducible
                     [ ] - Set random init (--init)
@@ -38,21 +39,27 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
     Returns:
         A clinica pipeline object containing the DwiPreprocessingUsingPhaseDiffFieldmap pipeline.
     """
-    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None,
-                 name=None, low_bval=5):
-        """
-        Init the pipeline
+    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None,
+                 low_bval=5, use_cuda_8_0=False, use_cuda_9_1=False, seed_fsl_eddy=None):
+        """Init the pipeline.
 
         Args:
             bids_directory(str): Input directory in a BIDS hierarchy.
             caps_directory(str): Output directory in a CAPS hierarchy.
-            tsv_file(str): TSV file containing the list of participants
-                (participant_id) with their sessions (session_id).
+            tsv_file(str): TSV file containing the list of participants (participant_id)
+                with their sessions (session_id).
             name(optional[str]): Name of the pipeline
-            low_bval (int): Define the b0 volumes as all volume
-                bval <= low_bval. (Default = 5)
-        """
-        import warnings
+            low_bval(optional[int]): Define the b0 volumes as all volume bval <= low_bval (default: 5)
+            use_cuda_8_0(optional[bool]): Use CUDA 8.0 implementation of FSL eddy (default: False).
+            use_cuda_9_1(optional[bool]): Use CUDA 9.1 implementation of FSL eddy (default: False).
+            seed_fsl_eddy(optional[int]): Initialize the random number generator for FSL eddy (default: None).
+
+        Raise:
+            ClinicaBIDSError: If low_bval is not ranging from 0 to 100.
+            ClinicaBIDSError: If CUDA 8.0 and CUDA 9.1 are chosen.
+       """
+        from colorama import Fore
+        from clinica.utils.exceptions import ClinicaException
 
         super(DwiPreprocessingUsingPhaseDiffFieldmap, self).__init__(
             bids_directory=bids_directory,
@@ -61,16 +68,16 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             name=name)
 
         self._low_bval = low_bval
+        if self._low_bval < 0 or self._low_bval > 100:
+            raise ClinicaException('\n%s[Error] The low_bval parameter should be zero or close to zero '
+                                   '(found value: %s).%s' % (Fore.RED, self._low_bval, Fore.RESET))
 
-        if self._low_bval < 0:
-            raise ValueError('The low_bval is equals to '
-                             + str(self._low_bval)
-                             + ': it should be zero or close to zero.')
+        self._use_cuda_8_0 = use_cuda_8_0
+        self._use_cuda_9_1 = use_cuda_9_1
+        if self._use_cuda_8_0 and self._use_cuda_9_1:
+            raise ClinicaException('')
 
-        if self._low_bval > 100:
-            warnings.warn('Warning: The low_bval parameter is huge ('
-                          + str(self._low_bval)
-                          + '), it should be close to zero', UserWarning)
+        self._seed_fsl_eddy = seed_fsl_eddy
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
@@ -203,10 +210,6 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             [echo_time_1, echo_time_2] = extract_metadata_from_json(fmap_phasediff_json_files[i], ['EchoTime1', 'EchoTime2'])
             delta_echo_times.append(abs(echo_time_2 - echo_time_1))
 
-            cprint('From JSON files: TotalReadoutTime = %s, PhaseEncodingDirection = %s, '
-                   'EchoTime1 = %s, EchoTime2 = %s (DeltaEchoTime = %s)' %
-                   (total_readout_time, enc_direction, echo_time_1, echo_time_2, abs(echo_time_2 - echo_time_1)))
-
         if len(dwi_files) == 0:
             import sys
             cprint('%s\nEither all the images were already run by the pipeline or no image was found to run the pipeline. '
@@ -298,11 +301,12 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         import nipype.interfaces.ants as ants
         import nipype.interfaces.mrtrix3 as mrtrix3
 
+        from clinica.lib.nipype.interfaces.fsl.epi import Eddy
+
         from clinica.utils.dwi import generate_acq_file, generate_index_file
         from clinica.utils.fmap import remove_filename_extension
-        from clinica.workflows.dwi_preprocessing import remove_bias
 
-        from .dwi_preprocessing_using_fmap_workflows import prepare_phasediff_fmap
+        from .dwi_preprocessing_using_fmap_workflows import (prepare_phasediff_fmap, remove_bias)
         import clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_fmap_utils as utils
 
         # Nodes creation
@@ -396,9 +400,14 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
 
         # Run FSL eddy
         eddy = npe.Node(name='2b-Eddy',
-                        interface=fsl.Eddy())
+                        interface=Eddy())
         eddy.inputs.repol = True
-        eddy.inputs.use_cuda = True
+        if self._use_cuda_8_0:
+            eddy.inputs.use_cuda8_0 = self._use_cuda_8_0
+        if self._use_cuda_9_1:
+            eddy.inputs.use_cuda9_1 = self._use_cuda_9_1
+        if self._seed_fsl_eddy:
+            eddy.inputs.initrand = self._seed_fsl_eddy
 
         # Bias correction
         # TODO: Be careful with b0 extraction

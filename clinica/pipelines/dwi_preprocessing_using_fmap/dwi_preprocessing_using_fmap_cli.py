@@ -9,30 +9,30 @@ class DwiPreprocessingUsingFieldmapCli(ce.CmdParser):
         super(DwiPreprocessingUsingFieldmapCli, self).__init__()
 
     def define_name(self):
-        """Define the sub-command name to run this pipeline.
-        """
+        """Define the sub-command name to run this pipeline."""
         self._name = 'dwi-preprocessing-using-fmap'
 
     def define_description(self):
-        """Define a description of this pipeline.
-        """
+        """Define a description of this pipeline."""
         self._description = 'Preprocessing of raw DWI datasets using a phase difference image:\nhttp://clinica.run/doc/Pipelines/DWI_Preprocessing/'
 
     def define_options(self):
-        """Define the sub-command arguments
-        """
+        """Define the sub-command arguments"""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("bids_directory",
                                   help='Path to the BIDS directory.')
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
+
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("--low_bval",
                               metavar=('N'), type=int, default=5,
-                              help='Define the b0 volumes as all volume bval <= lowbval. (default: --low_bval 5)')  # noqa
+                              help='Define the b0 volumes as all volume bval <= lowbval. (default: --low_bval %(default)s)')  # noqa
+
         # Clinica standard arguments (e.g. --n_procs)
         clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
         clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
@@ -43,10 +43,21 @@ class DwiPreprocessingUsingFieldmapCli(ce.CmdParser):
                                  metavar=('N'), type=int,
                                  help='Number of cores used to run in parallel.')
 
+        # Advanced arguments (i.e. tricky parameters)
+        advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
+        cuda_action = advanced.add_mutually_exclusive_group(required=True)
+        cuda_action.add_argument('--use_cuda_8_0', action='store_true', default=False,
+                                 help=('Use CUDA 8.0 implementation of FSL eddy. Please note that '
+                                       '--use_cuda_8_0 and --use_cuda_9_1 flags are mutually exclusive.'))
+        cuda_action.add_argument('--use_cuda_9_1', action='store_true', default=False,
+                                 help=('Use CUDA 9.1 implementation of FSL eddy. Please note that '
+                                       '--use_cuda_8_0 and --use_cuda_9_1 flags are mutually exclusive.'))
+        advanced.add_argument("--initrand",
+                              metavar=('N'), type=int,
+                              help="Initialize the random number generator for FSL eddy.")
+
     def run_command(self, args):
-        """
-        Run the DWIPreprocessingUsingPhaseDiffFieldmap pipeline from command line.
-        """
+        """Run the pipeline from command line."""
         from tempfile import mkdtemp
         from clinica.utils.stream import cprint
         from .dwi_preprocessing_using_fmap_pipeline import DwiPreprocessingUsingPhaseDiffFieldmap
@@ -55,7 +66,10 @@ class DwiPreprocessingUsingFieldmapCli(ce.CmdParser):
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            low_bval=args.low_bval
+            low_bval=args.low_bval,
+            use_cuda_8_0=args.use_cuda_8_0,
+            use_cuda_9_1=args.use_cuda_9_1,
+            seed_fsl_eddy=args.initrand,
         )
 
         if args.working_directory is None:

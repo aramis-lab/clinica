@@ -19,8 +19,7 @@ def ants_combine_transform(in_file, transforms_list, reference):
 
 def dwi_container_from_filename(bids_dwi_filename):
     """ Generate subjects/sub-<participant_id>/ses-<session_id> folder
-    from BIDS filename.
-    """
+    from BIDS filename."""
     import re
     from os.path import join
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', bids_dwi_filename)
@@ -215,56 +214,94 @@ def create_jacobian_determinant_image(imageDimension, deformationField, outputIm
     return outputImage
 
 
-def convert_eddy_2_hmc_ecc_flirt(eddy_parameters):
+def init_input_node(t1w, dwi, bvec, bval, total_readout_time, phase_encoding_direction):
+    """Extract "sub-<participant_id>_ses-<session_label>" from input node and print begin message."""
+    from clinica.utils.exceptions import ClinicaException
+    from clinica.utils.stream import cprint
+    import datetime
+    from colorama import Fore
+    from clinica.utils.io import get_subject_id
 
-    import os.path as op
-    import pandas as pd
-    import numpy as np
+    id_t1w = get_subject_id(t1w)
+    id_dwi = get_subject_id(dwi)
+    id_bvec = get_subject_id(bvec)
+    id_bval = get_subject_id(bval)
 
-    df_eddy = pd.read_csv(eddy_parameters, sep='  ', header=None)
-    df_hmc = df_eddy.iloc[:, 0:6]
-    df_ecc = df_eddy.iloc[:, 6:]
+    image_id = list(set([id_t1w, id_dwi, id_bvec, id_bval]))
 
-    hmc_affine_list = []
-    ecc_affine_list = []
+    if not len(image_id) == 1:
+        raise ClinicaException('<image_id> from input files mismatch (found: %s)' % image_id)
 
-    # convert the df_hmc into 4*4 affine matrix
-    num_vols = df_hmc.shape[0]
-    for i in range(num_vols):
+    now = datetime.datetime.now().strftime('%H:%M:%S')
+    cprint('%s[%s]%s Running pipeline for %s '
+           '(TotalReadoutTime = %s, PhaseEncodingDirection = %s)' %
+           (Fore.BLUE, now, Fore.RESET, image_id[0].replace('_', '|'),
+            total_readout_time, phase_encoding_direction))
+    return (image_id[0], t1w, dwi, bvec, bval,
+            total_readout_time, phase_encoding_direction)
 
-        # HMC
-        hmc_affine = np.ones([4, 4])
-        # for translation
-        hmc_affine[0, 3], hmc_affine[1, 3], hmc_affine[2, 3] = df_hmc.iloc[i, :][0], df_hmc.iloc[i, :][1], df_hmc.iloc[i, :][2]
-        hmc_affine[3, 0], hmc_affine[3, 1], hmc_affine[3, 2] = 0, 0, 0
-        # for rotation
-        Rx = np.array([[1, 0, 0],
-                       [0, np.cos(df_hmc.iloc[i, :][3]), -np.sin(df_hmc.iloc[i, :][3])],
-                       [0, np.sin(df_hmc.iloc[i, :][3]), np.cos(df_hmc.iloc[i, :][3])]])
 
-        Ry = np.array([[np.cos(df_hmc.iloc[i, :][4]), 0, np.sin(df_hmc.iloc[i, :][4])],
-                       [0, 1, 0],
-                       [-np.sin(df_hmc.iloc[i, :][4]), 0, np.cos(df_hmc.iloc[i, :][4])]])
+def print_end_pipeline(image_id, final_file):
+    """Display end message for `image_id` when `final_file` is connected."""
+    from clinica.utils.stream import cprint
+    import datetime
+    from colorama import Fore
 
-        Rz = np.array([[np.cos(df_hmc.iloc[i, :][5]), -np.sin(df_hmc.iloc[i, :][5]), 0],
-                       [np.sin(df_hmc.iloc[i, :][5]), np.cos(df_hmc.iloc[i, :][5]), 0],
-                       [0, 0, 1]])
+    now = datetime.datetime.now().strftime('%H:%M:%S')
+    cprint('%s[%s]%s ...%s has completed.' % (
+        Fore.GREEN, now, Fore.RESET, image_id.replace('_', '|')))
 
-        R = np.multiply(np.multiply(Rz, Ry), Rx)
 
-        hmc_affine[0:3, 0:3] = R
-
-        np.savetxt(op.abspath("hmc_vol" + str(i) + '_affine.mat'), hmc_affine, delimiter='  ')
-        hmc_affine_list.append(op.abspath("hmc_vol" + str(i) + '_affine.mat'))
-
-        # ecc
-        # TODO, just set it into an identity matrix
-        ecc_affine = np.array([[1, 0, 0, 0],
-                               [0, 1, 0, 0],
-                               [0, 0, 1, 0],
-                               [0, 0, 0, 1]])
-
-        np.savetxt(op.abspath("ecc_vol" + str(i) + '_affine.mat'), ecc_affine, delimiter='  ')
-        ecc_affine_list.append(op.abspath("ecc_vol" + str(i) + '_affine.mat'))
-
-    return hmc_affine_list, ecc_affine_list
+# def convert_eddy_2_hmc_ecc_flirt(eddy_parameters):
+#
+#     import os.path as op
+#     import pandas as pd
+#     import numpy as np
+#
+#     df_eddy = pd.read_csv(eddy_parameters, sep='  ', header=None)
+#     df_hmc = df_eddy.iloc[:, 0:6]
+#     df_ecc = df_eddy.iloc[:, 6:]
+#
+#     hmc_affine_list = []
+#     ecc_affine_list = []
+#
+#     # convert the df_hmc into 4*4 affine matrix
+#     num_vols = df_hmc.shape[0]
+#     for i in range(num_vols):
+#
+#         # HMC
+#         hmc_affine = np.ones([4, 4])
+#         # for translation
+#         hmc_affine[0, 3], hmc_affine[1, 3], hmc_affine[2, 3] = df_hmc.iloc[i, :][0], df_hmc.iloc[i, :][1], df_hmc.iloc[i, :][2]
+#         hmc_affine[3, 0], hmc_affine[3, 1], hmc_affine[3, 2] = 0, 0, 0
+#         # for rotation
+#         Rx = np.array([[1, 0, 0],
+#                        [0, np.cos(df_hmc.iloc[i, :][3]), -np.sin(df_hmc.iloc[i, :][3])],
+#                        [0, np.sin(df_hmc.iloc[i, :][3]), np.cos(df_hmc.iloc[i, :][3])]])
+#
+#         Ry = np.array([[np.cos(df_hmc.iloc[i, :][4]), 0, np.sin(df_hmc.iloc[i, :][4])],
+#                        [0, 1, 0],
+#                        [-np.sin(df_hmc.iloc[i, :][4]), 0, np.cos(df_hmc.iloc[i, :][4])]])
+#
+#         Rz = np.array([[np.cos(df_hmc.iloc[i, :][5]), -np.sin(df_hmc.iloc[i, :][5]), 0],
+#                        [np.sin(df_hmc.iloc[i, :][5]), np.cos(df_hmc.iloc[i, :][5]), 0],
+#                        [0, 0, 1]])
+#
+#         R = np.multiply(np.multiply(Rz, Ry), Rx)
+#
+#         hmc_affine[0:3, 0:3] = R
+#
+#         np.savetxt(op.abspath("hmc_vol" + str(i) + '_affine.mat'), hmc_affine, delimiter='  ')
+#         hmc_affine_list.append(op.abspath("hmc_vol" + str(i) + '_affine.mat'))
+#
+#         # ecc
+#         # TODO, just set it into an identity matrix
+#         ecc_affine = np.array([[1, 0, 0, 0],
+#                                [0, 1, 0, 0],
+#                                [0, 0, 1, 0],
+#                                [0, 0, 0, 1]])
+#
+#         np.savetxt(op.abspath("ecc_vol" + str(i) + '_affine.mat'), ecc_affine, delimiter='  ')
+#         ecc_affine_list.append(op.abspath("ecc_vol" + str(i) + '_affine.mat'))
+#
+#     return hmc_affine_list, ecc_affine_list

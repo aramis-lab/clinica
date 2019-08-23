@@ -114,9 +114,10 @@ def init_input_node(dwi, bvec, bval, total_readout_time, phase_encoding_directio
         raise ClinicaException('<image_id> from input files mismatch (found: %s)' % image_id)
 
     now = datetime.datetime.now().strftime('%H:%M:%S')
-    cprint('%s[%s]%s Running pipeline for %s...' % (
-        Fore.BLUE, now, Fore.RESET, image_id[0].replace('|', '_')))
-
+    cprint('%s[%s]%s Running pipeline for %s '
+           '(TotalReadoutTime = %s, PhaseEncodingDirection = %s, DeltaEchoTime = %s)' %
+           (Fore.BLUE, now, Fore.RESET, image_id[0].replace('_', '|'),
+            total_readout_time, phase_encoding_direction, delta_echo_time))
     return (image_id[0], dwi, bvec, bval, total_readout_time, phase_encoding_direction,
             fmap_magnitude, fmap_phasediff, delta_echo_time)
 
@@ -129,4 +130,4 @@ def print_end_pipeline(image_id, final_file):
 
     now = datetime.datetime.now().strftime('%H:%M:%S')
     cprint('%s[%s]%s ...%s has completed.' % (
-        Fore.GREEN, now, Fore.RESET, image_id.replace('|', '_')))
+        Fore.GREEN, now, Fore.RESET, image_id.replace('_', '|')))

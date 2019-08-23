@@ -1,11 +1,12 @@
 # coding: utf8
 
 
-def eddy_fsl_pipeline(low_bval, name='eddy_fsl'):
+def eddy_fsl_pipeline(low_bval, use_cuda_8_0=False, use_cuda_9_1=False, seed_fsl_eddy=None, name='eddy_fsl'):
     """
     Using eddy from FSL for head motion correction and eddy current distortion correction.
     """
-    from nipype.interfaces.fsl import Eddy
+    # from nipype.interfaces.fsl import Eddy
+    from clinica.lib.nipype.interfaces.fsl.epi import Eddy
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
     from clinica.utils.dwi import generate_acq_file, generate_index_file
@@ -34,7 +35,12 @@ def eddy_fsl_pipeline(low_bval, name='eddy_fsl'):
 
     eddy = pe.Node(interface=Eddy(), name='eddy_fsl')
     eddy.inputs.flm = 'linear'
-    eddy.inputs.use_cuda = True
+    if use_cuda_8_0:
+        eddy.inputs.use_cuda8_0 = use_cuda_8_0
+    if use_cuda_9_1:
+        eddy.inputs.use_cuda9_1 = use_cuda_9_1
+    if seed_fsl_eddy:
+        eddy.inputs.initrand = seed_fsl_eddy
 
     outputnode = pe.Node(niu.IdentityInterface(fields=['out_parameter',
                                                        'out_corrected',
@@ -212,4 +218,66 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
         (rot_bvec, outputnode, [('out_file', 'out_bvec')]),
     ])
 
+    return wf
+
+
+def remove_bias(name='bias_correct'):
+    """
+    This workflow estimates a single multiplicative bias field from the
+    averaged *b0* image, as suggested in [Jeurissen2014]_.
+    .. admonition:: References
+      .. [Jeurissen2014] Jeurissen B. et al., `Multi-tissue constrained
+        spherical deconvolution for improved analysis of multi-shell diffusion
+        MRI data <http://dx.doi.org/10.1016/j.neuroimage.2014.07.061>`_.squeue
+
+        NeuroImage (2014). doi: 10.1016/j.neuroimage.2014.07.061
+    Example
+    -------
+    >>> from nipype.workflows.dmri.fsl.artifacts import remove_bias
+    >>> bias = remove_bias()
+    >>> bias.inputs.inputnode.in_file = 'epi.nii'
+    >>> bias.inputs.inputnode.in_bval = 'diffusion.bval'
+    >>> bias.inputs.inputnode.in_mask = 'mask.nii'
+    >>> bias.run() # doctest: +SKIP
+    """
+    import nipype.interfaces.utility as niu
+    import nipype.pipeline.engine as pe
+    import nipype.interfaces.fsl as fsl
+    import nipype.interfaces.ants as ants
+
+    inputnode = pe.Node(niu.IdentityInterface(
+        fields=['in_file']), name='inputnode')
+
+    outputnode = pe.Node(niu.IdentityInterface(fields=['out_file', 'b0_mask']),
+                         name='outputnode')
+
+    get_b0 = pe.Node(fsl.ExtractROI(t_min=0, t_size=1), name='get_b0')
+
+    mask_b0 = pe.Node(fsl.BET(frac=0.3, mask=True, robust=True),
+                      name='mask_b0')
+
+    n4 = pe.Node(ants.N4BiasFieldCorrection(
+        dimension=3, save_bias=True, bspline_fitting_distance=600),
+        name='Bias_b0')
+    split = pe.Node(fsl.Split(dimension='t'), name='SplitDWIs')
+    mult = pe.MapNode(fsl.MultiImageMaths(op_string='-div %s'),
+                      iterfield=['in_file'], name='RemoveBiasOfDWIs')
+    thres = pe.MapNode(fsl.Threshold(thresh=0.0), iterfield=['in_file'],
+                       name='RemoveNegative')
+    merge = pe.Node(fsl.utils.Merge(dimension='t'), name='MergeDWIs')
+
+    wf = pe.Workflow(name=name)
+    wf.connect([
+        (inputnode, get_b0, [('in_file', 'in_file')]),
+        (get_b0,   n4, [('roi_file', 'input_image')]),
+        (get_b0, mask_b0, [('roi_file', 'in_file')]),
+        (mask_b0, n4, [('mask_file', 'mask_image')]),
+        (inputnode, split, [('in_file', 'in_file')]),
+        (n4,    mult, [('bias_image', 'operand_files')]),
+        (split, mult, [('out_files', 'in_file')]),
+        (mult, thres, [('out_file', 'in_file')]),
+        (thres, merge, [('out_file', 'in_files')]),
+        (merge,   outputnode, [('merged_file', 'out_file')]),
+        (mask_b0, outputnode, [('mask_file', 'b0_mask')])
+    ])
     return wf
