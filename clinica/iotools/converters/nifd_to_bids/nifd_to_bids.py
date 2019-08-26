@@ -138,14 +138,3 @@ def convert_clinical_data(bids_dir, path_to_clinical, to_convert):
     pc.make_all(bids_dir)
     pc.make_all_scans(to_convert)
 
-
-if __name__ == '__main__':
-    path_to_dataset = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/source_dir'
-    path_to_ida = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/infos_old/pre_processing/ida.tsv'
-    bids_dir = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/dest_dir'
-
-    # path_to_clinical = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/infos_old/info_from_NIFD/NIFD_Clinical_Data_2017_final_updated.xlsx'
-    path_to_clinical = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/infos_old/info_from_NIFD'
-
-    to_convert = convert_images(path_to_dataset, path_to_ida, bids_dir)
-    convert_clinical_data(bids_dir, path_to_ida, path_to_clinical, to_convert)
