@@ -107,6 +107,7 @@ nav:
   - Dataset converters:
     - "ADNI to BIDS": "DatabasesToBIDS#adni-to-bids"
     - "AIBL to BIDS": "DatabasesToBIDS#aibl-to-bids"
+    - "NIFD to BIDS": "DatabasesToBIDS#nifd-to-bids"
     - "OASIS to BIDS": "DatabasesToBIDS#oasis-to-bids"
   - I/O tools:
     - "create-subjects-visits": "IO#create-subjects-visits-generate-the-list-all-subjects-and-visits-of-a-given-dataset"

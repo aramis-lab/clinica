@@ -51,7 +51,7 @@ ICM members are encouraged to use the version of Clinica available on the cluste
     - [Classification based on machine learning](Pipelines/MachineLearning_Classification)
 
 ### Dataset converters (`clinica convert`)
-- [Online neuroimaging databases (ADNI, AIBL, OASIS) to BIDS converters](DatabasesToBIDS)
+- [Online neuroimaging databases (ADNI, AIBL, NIFD, OASIS) to BIDS converters](DatabasesToBIDS)
 
 ### I/O tools (`clinica iotools`)
 - [Data handling tools for BIDS and CAPS compliant datasets](IO)

@@ -56,8 +56,8 @@ clinica convert adni-to-bids dataset_directory clinical_data_directory bids_dire
 
 where:
 
-  - `dataset_directory` is the path to the original ADNI images's directory.
-  - `clinical_data_directory` is the path to the directory where the csv file with the clinical data is located.
+  - `dataset_directory` is the path to the original ADNI images's directory;
+  - `clinical_data_directory` is the path to the directory where the csv file with the clinical data is located;
   - `bids_directory` is the path to the output directory, where the BIDS-converted version of ADNI will be stored.
 
 #### Optional parameters
@@ -136,7 +136,7 @@ clinica convert adni-to-bids -h
 
 ### The Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing
 
-!!! quote "Description reproduced from the [AIBL's Study Design   webpage](http://adni.loni.usc.edu/study-design/collaborative-studies/aibl/)"
+!!! quote "Description reproduced from the [AIBL's Study Design webpage](http://adni.loni.usc.edu/study-design/collaborative-studies/aibl/)"
     The Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing (AIBL) seeks to discover which biomarkers, cognitive characteristics, and health and lifestyle factors determine the development of AD. Although AIBL and ADNI have many of the same goals, there are differences between the two projects. Read more about the AIBL study from their [website](http://www.aibl.csiro.au/).
 
     **Study Participants** AIBL has enrolled 1100 participants and collected over 4.5 years worth of longitudinal data:
@@ -182,10 +182,47 @@ clinica convert aibl-to-bids dataset_directory clinical_data_directory bids_dire
 
 where:
 
-  - `dataset_directory` is the path to the original AIBL images's directory.
-  - `clinical_data_directory` is the path to the directory where the csv file with the clinical data is located.
+  - `dataset_directory` is the path to the original AIBL images's directory;
+  - `clinical_data_directory` is the path to the directory where the csv file with the clinical data is located;
   - `bids_directory` is the path to the output directory, where the BIDS-converted version of AIBL will be stored.
 
+
+## NIFD to BIDS
+
+### Neuroimaging in Frontotemporal Dementia
+
+!!! quote "Description reproduced from the [NIFD's LONI Image & Data Archive (IDA) webpage](https://ida.loni.usc.edu/home/projectPage.jsp?project=NIFD&page=HOME&subPage=OVERVIEW_PR#)"
+    NIFD is the nickname for the frontotemporal lobar degeneration neuroimaging initiative (FTLDNI, AG032306), which was funded by the NIA and NINDS to characterize longitudinal clinical and imaging changes in FTLD. The imaging and clinical methods are the same for NIFD and for the 4-Repeat Tauopathy Neuroimaging Initiative (4RTNI), which is also available for download from LONI. Controls for NIFD are the same controls as those collected for 4RTNI.
+
+### Downloading NIFD
+To download the NIFD dataset you first need to register to the [LONI Image & Data Archive (IDA)](https://ida.loni.usc.edu/login.jsp), a secure research data repository, and then request access to the NIFD dataset through the submission of an [online application form](https://ida.loni.usc.edu/collaboration/access/appApply.jsp?project=NIFD).
+
+In order to use the converter, you will need to download both the images and the clinical data. To do so, from the [main page](https://ida.loni.usc.edu/login.jsp?returnPage=UserManagement.jsp&project=) click on `PROJECTS` and `NIFD`. To download the imaging data, click on `Download` and choose `Image collections`. In the `Advanced search` tab, pick the images you wish to download, for example tick `MRI` to download all the MR images, and then click on `SEARCH`. In the `Advanced search results` tab, click `Select All` and `Add To Collection`. Finally, in the `Data Collection` tab, select the collection you just created, tick `All` and click on `Advanced download`. We advise you to group files as 10 zip files.
+
+To download the clinical data, click on `Download` and choose `Study Data`. Select all the csv files which are present by ticking `ALL` and click `Download`. You should get two files: `NIFD_Clinical_Data_2017_final_updated.xlsx` and `DataDictionary_NIFD_2017.10.18.xlsx`. One last file is needed, click on `Download` and choose `Image collections`. In the `Advanced search` tab, tick all modalities and all boxes from the `Display in result` column. Click `SEARCH` and `CSV Download`. You should get a file named `idaSearch_<date>.csv`. Please rename this file to `idaSearch_all.csv`.
+
+### Modalities supported
+Currently, the modalities supported by our converter are:
+
+  - T1-weighted MRI
+  - T2-weighted FLAIR MRI
+  - Fluorodeoxyglucose (FDG) PET
+  - Pittsburgh compound B (PiB) PET
+  - Clinical data
+
+### Using the converter
+The converter can be run with the following command line:
+
+```
+clinica convert nifd-to-bids dataset_directory clinical_data_directory bids_directory
+
+```
+
+where:
+
+  - `dataset_directory` is the path to the original NIFD images' directory;
+  - `clinical_data_directory` is the path to the directory where the following clinical data files are located: `NIFD_Clinical_Data_2017_final_updated.xlsx`, `DataDictionary_NIFD_2017.10.18.xlsx` and `idaSearch_all.csv`;
+  - `bids_directory` is the path to the output directory, where the BIDS-converted version of NIFD will be stored.
 
 ## OASIS to BIDS
 
@@ -197,6 +234,7 @@ where:
     The "Cross-sectional MRI Data in Young, Middle Aged, Nondemented and Demented Older Adults" set consists of a cross-sectional collection of 416 subjects aged 18 to 96.  For each subject, 3 or 4 individual T1-weighted MRI scans obtained in single scan sessions are included.  The subjects are all right-handed and include both men and women.  100 of the included subjects over the age of 60 have been clinically diagnosed with very mild to moderate Alzheimer’s disease (AD).  Additionally, a reliability data set is included containing 20 nondemented subjects imaged on a subsequent visit within 90 days of their initial session.
 
   For more information about the images and the dataset you can read the [OASIS Fact Sheet](http://www.oasis-brains.org/pdf/oasis_cross-sectional_facts.pdf).
+
 
 ### Downloading OASIS
 
@@ -223,8 +261,8 @@ clinica convert oasis-to-bids  dataset_directory clinical_data_directory bids_di
 
 where:
 
-  - `dataset_directory` is the path to the original OASIS images's directory.
-  - `clinical_data_directory` is the path to the directory where the xls file with the clinical data is located.
+  - `dataset_directory` is the path to the original OASIS images's directory;
+  - `clinical_data_directory` is the path to the directory where the xls file with the clinical data is located;
   - `bids_directory` is the path to the output directory, where the BIDS-converted version of OASIS will be stored.
 
 !!! note
