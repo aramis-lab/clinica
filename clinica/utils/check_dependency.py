@@ -186,3 +186,67 @@ def check_matlab():
 
     if not is_binary_present("matlab"):
         raise RuntimeError('Matlab was not found in PATH environment. Did you add it?')
+    cprint('Matlab has been detected')
+
+
+def check_cat12():
+    """
+    Check installation of cat12 (mostly used to provide atlases)
+
+    """
+    import os
+    import platform
+    from clinica.utils.stream import cprint
+
+    if "SPMSTANDALONE_HOME" in os.environ:
+        if platform.system() == 'Darwin':
+            SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12.app/Contents/MacOS/spm12_mcr"
+        else:
+            SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12_mcr"
+    elif "SPM_HOME" in os.environ:
+        SPM_HOME = os.environ['SPM_HOME']
+    else:
+        raise RuntimeError('SPM not installed. $SPM_HOME variable not found in environnement')
+
+    if not os.path.isdir(SPM_HOME):
+        raise RuntimeError('SPM and cat12 are not installed.' + SPM_HOME + ' does not exist')
+
+    if not os.path.exists(os.path.join(SPM_HOME, 'toolbox', 'cat12')):
+        raise RuntimeError('cat12 is not installed in your SPM folder :'
+                           + str(os.path.join(SPM_HOME, 'toolbox', 'cat12')))
+    cprint('cat12 has been detected')
+
+
+def verify_cat12_atlases(atlas_list):
+    """ If the user wants to use any of the atlases of cat12 and has not installed it, we just remove it from the list
+        of the computed atlases
+
+    :param atlas_list: list of atlases given by the user
+    :return: atlas_list updated with elements removed if cat12 is not found, or return atlas_list if
+             cat12 has been found. If none of the cat12 atlases are in atlas_list, function returns atlas_list
+    """
+    import sys
+    from colorama import Fore
+    from time import sleep
+
+    cat12_atlases = ['Hammers', 'Neuromorphometrics', 'LPBA40']
+    if any(atlas in cat12_atlases for atlas in atlas_list):
+        try:
+            check_cat12()
+            atlas_list_updated = atlas_list
+        except RuntimeError:
+            print(Fore.YELLOW + '[Warning] CAT12 is not installed in your system. Atlas statistics computed at the '
+                  + 'end of this pipeline will not include any of Hammers, Neuromorphometrics and LPBA40'
+                  + ' atlases.' + Fore.RESET)
+            print('Pipeline will start in 15 sec. You can cancel it right now using Ctrl + C')
+            print('You can download CAT12 at this address: ' + Fore.BLUE + 'http://www.neuro.uni-jena.de/cat/'
+                  + Fore.RESET)
+            atlas_list_updated = [atl for atl in atlas_list if atl not in cat12_atlases]
+            try:
+                sleep(15)
+            except KeyboardInterrupt:
+                print('\nClinica is now exiting.')
+                sys.exit()
+    else:
+        atlas_list_updated = atlas_list
+    return atlas_list_updated

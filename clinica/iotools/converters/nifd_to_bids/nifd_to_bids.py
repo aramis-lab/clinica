@@ -137,4 +137,3 @@ def convert_clinical_data(bids_dir, path_to_clinical, to_convert):
     pc = Parse_clinical(path_to_clinical)
     pc.make_all(bids_dir)
     pc.make_all_scans(to_convert)
-

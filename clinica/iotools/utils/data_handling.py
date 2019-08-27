@@ -450,6 +450,7 @@ def compute_missing_mods(bids_dir, out_dir, output_prefix=''):
                 if 'anat' in mods_avail_bids:
                     for m in mods_avail_dict['anat']:
                         anat_aval_list = glob(path.join(ses_path, 'anat', '*.nii.gz'))
+                        anat_aval_list = [elem for elem in anat_aval_list if m.lower() in elem.lower()]
                         if len(anat_aval_list) > 0:
                             row_to_append_df[m] = pd.Series('1')
                         else:

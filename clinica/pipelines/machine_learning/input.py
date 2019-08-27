@@ -103,7 +103,7 @@ class CAPSInput(base.MLInput):
         if self._y is not None:
             return self._y
 
-        unique = list(set(self._diagnoses))
+        unique = sorted(list(set(self._diagnoses)))
         self._y = np.array([unique.index(x) for x in self._diagnoses])
         return self._y
 

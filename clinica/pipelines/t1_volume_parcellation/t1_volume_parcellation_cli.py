@@ -52,10 +52,16 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         from tempfile import mkdtemp
         from clinica.utils.stream import cprint
         from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import T1VolumeParcellation
+        from clinica.utils.check_dependency import verify_cat12_atlases
 
         pipeline = T1VolumeParcellation(
              caps_directory=self.absolute_path(args.caps_directory),
              tsv_file=self.absolute_path(args.subjects_sessions_tsv))
+
+        # If the user wants to use any of the atlases of cat12 and has not installed it, we just remove it from the list
+        # of the computed atlases
+        args.atlases = verify_cat12_atlases(args.atlases)
+
         assert args.modulation in ['on', 'off']
         pipeline.parameters = {
             'group_id': args.group_id,
