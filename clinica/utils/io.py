@@ -151,6 +151,9 @@ def check_input_caps_files(list_caps_files, caps_type, pipeline_name, caps_direc
     from colorama import Fore
 
     subject_ids = [participant_ids[i] + '_' + session_ids[i] for i in range(len(participant_ids))]
+    # 'Bug': when using PyBIDS or PyCAPS, files extracted are in reversed order
+    # compared to the given subjects and sessions
+    subject_ids = list(reversed(subject_ids))
 
     id_caps_files = [re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)', caps_file).group()
                      for caps_file in list_caps_files]
@@ -189,7 +192,6 @@ def check_input_caps_files(list_caps_files, caps_type, pipeline_name, caps_direc
                 "\n* %s%s%s. Found files:\n%s" % (
                     Fore.BLUE, id_duplicated_file.replace('_', '|'), Fore.RESET,
                     '\n'.join('- ' + s for s in list_caps_files if id_duplicated_file in s)
-                    # (Fore.BLUE + '|' + Fore.RESET).join(s for s in list_caps_files if id_duplicated_file in s)
                     ))
         error_message += (
             "\n%s* Error explanations:\n"
@@ -197,4 +199,18 @@ def check_input_caps_files(list_caps_files, caps_type, pipeline_name, caps_direc
             " - Did you duplicate files in CAPS directory?%s\n" %
             (Fore.YELLOW, Fore.RESET)
         )
+    if not error_message:
+        if not (subject_ids == id_caps_files):
+            from clinica.utils.stream import cprint
+            cprint(subject_ids)
+            cprint(id_caps_files)
+            error_message += (
+                    "\n%s[Error] Order between subjects given for Clinica and %s CAPS files mismatch:%s\n" %
+                    (Fore.RED, caps_type_to_description(caps_type), Fore.RESET)
+            )
+            for idx in range(len(subject_ids)):
+                if not (subject_ids[idx] == id_caps_files[idx]):
+                    error_message += ("* %s%s has wrong ID. Found file:%s\n%s" % (
+                        Fore.BLUE, subject_ids[idx].replace('_', '|'), list_caps_files[idx], Fore.RESET))
+
     return error_message
