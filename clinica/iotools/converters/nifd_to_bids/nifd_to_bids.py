@@ -41,19 +41,19 @@ def convert_images(path_to_dataset, bids_dir, path_to_clinical):
 
     path_to_clinical_info = os.path.join(path_to_clinical, 'clinical_info.tsv')
 
-    path_idaSearch = os.path.join(path_to_clinical, 'idaSearch_1_17_2019_NIFD_all.csv')
+    path_idaSearch = os.path.join(path_to_clinical, 'idaSearch_all.csv')
     path_DataDictionary_NIFD_2017 = os.path.join(path_to_clinical, 'DataDictionary_NIFD_2017.10.18.xlsx')
 
     # Pre-processing step, to be executed the first time the converter is used.
     if not os.path.isfile(path_to_ida):
         if os.path.isfile(path_idaSearch):
             cprint(
-                "ida.tsv was not found in the clinical data directory, ida.tsv will be created from idaSearch_1_17_2019_NIFD_all.csv")
+                "ida.tsv was not found in the clinical data directory, ida.tsv will be created from idaSearch_all.csv")
 
         else:
             cprint(
-                "\nida.tsv does not exist and idaSearch_1_17_2019_NIFD_all.csv was not found in the clinical data directory,"
-                " to create it please enter path/to/idaSearch_1_17_2019_NIFD_all.csv :")
+                "\nida.tsv does not exist and idaSearch_all.csv was not found in the clinical data directory,"
+                " to create it please enter path/to/idaSearch_all.csv :")
             path_idaSearch = input()
             path_idaSearch = path_idaSearch.strip(' ')
         cprint("Creating ida.tsv ...")
@@ -137,15 +137,3 @@ def convert_clinical_data(bids_dir, path_to_clinical, to_convert):
     pc = Parse_clinical(path_to_clinical)
     pc.make_all(bids_dir)
     pc.make_all_scans(to_convert)
-
-
-if __name__ == '__main__':
-    path_to_dataset = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/source_dir'
-    path_to_ida = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/infos_old/pre_processing/ida.tsv'
-    bids_dir = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/dest_dir'
-
-    # path_to_clinical = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/infos_old/info_from_NIFD/NIFD_Clinical_Data_2017_final_updated.xlsx'
-    path_to_clinical = '/Volumes/dtlake01.aramis/users/adam.wild/demo_nifd-to-bids/infos_old/info_from_NIFD'
-
-    to_convert = convert_images(path_to_dataset, path_to_ida, bids_dir)
-    convert_clinical_data(bids_dir, path_to_ida, path_to_clinical, to_convert)

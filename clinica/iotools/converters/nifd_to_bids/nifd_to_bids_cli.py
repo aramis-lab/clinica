@@ -16,7 +16,7 @@ class NifdToBidsCLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'Convert NIFD into BIDS.'
+        self._description = 'Convert NIFD (http://4rtni-ftldni.ini.usc.edu/) into BIDS.'
 
     def define_options(self):
         """Define the sub-command arguments
