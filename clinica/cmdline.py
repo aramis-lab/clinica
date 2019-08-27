@@ -136,6 +136,7 @@ def custom_traceback(exc_type, exc_value, exc_traceback):
 
 
 def execute():
+    import os
     import argparse
     from colorama import Fore
     import warnings
@@ -147,6 +148,14 @@ def execute():
     # Remove warnings from duecredit package in order to silent
     # "Assuming non interactive session since isatty found missing" message
     logging.getLogger("duecredit.utils").setLevel(logging.ERROR)
+
+    # Add warning message if PYTHONPATH is not empty
+    # cf https://groups.google.com/forum/#!topic/clinica-user/bVgifEdkg20
+    python_path = os.environ.get('PYTHONPATH', '')
+    if python_path:
+        print('%s[Warning] The PYTHONPATH environment variable is not empty.'
+              ' Make sure there is no interference with Clinica (content of PYTHONPATH: %s).%s' %
+              (Fore.YELLOW, python_path, Fore.RESET))
 
     # Nice traceback when clinica crashes
     sys.excepthook = custom_traceback
