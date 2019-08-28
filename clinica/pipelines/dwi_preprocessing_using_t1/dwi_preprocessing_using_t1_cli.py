@@ -14,11 +14,13 @@ class DwiPreprocessingUsingT1Cli(ce.CmdParser):
 
     def define_description(self):
         """Define a description of this pipeline."""
-        self._description = 'Preprocessing of raw DWI datasets using a T1w image:\nhttp://clinica.run/doc/Pipelines/DWI_Preprocessing/'
+        self._description = ('Preprocessing of raw DWI datasets using a T1w image:\n'
+                             'http://clinica.run/doc/Pipelines/DWI_Preprocessing/')
 
     def define_options(self):
         """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("bids_directory",
@@ -30,7 +32,8 @@ class DwiPreprocessingUsingT1Cli(ce.CmdParser):
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("--low_bval",
                               metavar=('N'), type=int, default=5,
-                              help='Define the b0 volumes as all volume bval <= lowbval. (default: --low_bval %(default)s)')  # noqa
+                              help='Define the b0 volumes as all volume bval <= low_bval '
+                                   '(default: --low_bval %(default)s).')
 
         # Clinica standard arguments (e.g. --n_procs)
         clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
@@ -57,7 +60,10 @@ class DwiPreprocessingUsingT1Cli(ce.CmdParser):
 
     def run_command(self, args):
         """Run the  Pipeline from command line."""
+        import os
+        import datetime
         from tempfile import mkdtemp
+        from colorama import Fore
         from clinica.utils.stream import cprint
         from .dwi_preprocessing_using_t1_pipeline import DwiPreprocessingUsingT1
 
@@ -81,8 +87,7 @@ class DwiPreprocessingUsingT1Cli(ce.CmdParser):
         else:
             pipeline.run()
 
-        if args.working_directory is None:
-            args.working_directory = mkdtemp()
-        pipeline.base_dir = self.absolute_path(args.working_directory)
-
-        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")
+        now = datetime.datetime.now().strftime('%H:%M:%S')
+        cprint('%s[%s]%s The %s pipeline has completed. You can now delete the working directory (%s).' %
+               (Fore.GREEN, now, Fore.RESET, self._name,
+                os.path.join(os.path.abspath(args.working_directory), pipeline.__class__.__name__)))

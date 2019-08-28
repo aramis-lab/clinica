@@ -33,10 +33,8 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
               [ ] - WarpImageMultiTransform? (optional, no output message when run)
         [X] Add CLI flag for eddy_cuda8.0 / eddy_cuda9.1
         [ ] Update space_required_by_pipeline.csv info
-        [ ] CI
-              [/] Make FSL eddy reproducible
-              [ ] Data CI
-        [ ] Wiki page
+        [X] CI
+        [X] Wiki page
 
     Ideas for improvement:
         [ ] Replace prepare_reference_b0 function by a first run of FSL eddy

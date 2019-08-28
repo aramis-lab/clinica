@@ -17,23 +17,19 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         [ ] Detect & check FSL version
         [X] Add CLI flag for eddy_cuda8.0 / eddy_cuda9.1
         [ ] Decide bias correction (FSL FAST vs N4)
-        [ ] Core nodes
+        [/] Core nodes
               [X] - Brain masking b0 (dwi2mask)
               [/] - Calibration FMap
               [ ] - Registration FMap <-> b0
               [X] - Run eddy
               [/] - Bias correction
               [ ] - Compute mean b=0?
-        [ ] CAPS
+        [/] CAPS
               [X] - Check than CAPS does not change
               [X] - Add calibrated FMap
               [ ] - Add mean b=0?
         [ ] Update space_required_by_pipeline.csv info
         [ ] CI
-              [ ] - Chose parameters so that FSL eddy is reproducible
-                    [ ] - Set random init (--init)
-                    [ ] - Other
-              [ ] - Data CI
         [ ] Wiki page
 
     Returns:
