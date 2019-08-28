@@ -47,7 +47,7 @@ class DwiPreprocessingUsingT1Cli(ce.CmdParser):
 
         # Advanced arguments (i.e. tricky parameters)
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
-        cuda_action = advanced.add_mutually_exclusive_group(required=True)
+        cuda_action = advanced.add_mutually_exclusive_group(required=False)
         cuda_action.add_argument('--use_cuda_8_0', action='store_true', default=False,
                                  help=('Use CUDA 8.0 implementation of FSL eddy. Please note that '
                                        '--use_cuda_8_0 and --use_cuda_9_1 flags are mutually exclusive.'))
