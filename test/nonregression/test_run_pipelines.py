@@ -16,9 +16,11 @@ __status__ = "Development"
 
 
 import warnings
-import sys
 from os import pardir
-from testing_tools import *
+
+from testing_tools import (likeliness_measure,
+                           similarity_measure,
+                           clean_folder)
 
 # Determine location for working_directory
 warnings.filterwarnings("ignore")
@@ -93,7 +95,7 @@ def test_run_T1VolumeTissueSegmentation(cmdopt):
 
 def test_run_T1VolumeCreateDartel(cmdopt):
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
-    from os.path import dirname, join, abspath, exists
+    from os.path import dirname, join, abspath
     import shutil
 
     working_dir = cmdopt
@@ -137,7 +139,7 @@ def test_run_T1VolumeCreateDartel(cmdopt):
 
 def test_run_T1VolumeDartel2MNI(cmdopt):
     from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_pipeline import T1VolumeDartel2MNI
-    from os.path import dirname, join, abspath, exists
+    from os.path import dirname, join, abspath
     import shutil
 
     working_dir = cmdopt
@@ -177,7 +179,7 @@ def test_run_T1VolumeDartel2MNI(cmdopt):
 
 def test_run_T1VolumeNewTemplate(cmdopt):
     from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_pipeline import T1VolumeNewTemplate
-    from os.path import dirname, join, abspath, exists, basename
+    from os.path import dirname, join, abspath
 
     working_dir = cmdopt
     root = dirname(abspath(join(abspath(__file__), pardir)))
@@ -297,7 +299,7 @@ def test_run_T1VolumeExistingTemplate(cmdopt):
 
 def test_run_T1VolumeParcellation(cmdopt):
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import T1VolumeParcellation
-    from os.path import dirname, join, abspath, exists
+    from os.path import dirname, join, abspath
     import shutil
     import pandas as pds
     import numpy as np
@@ -352,15 +354,20 @@ def test_run_DWIPreprocessingUsingT1(cmdopt):
     pipeline = DwiPreprocessingUsingT1(bids_directory=join(root, 'in', 'bids'),
                                        caps_directory=join(root, 'out', 'caps'),
                                        tsv_file=join(root, 'in', 'subjects.tsv'),
-                                       low_bval=5)
-    # pipeline.parameters['epi_param'] = dict([('readout_time', 0.0348756),  ('enc_dir', 'y')])
+                                       low_bval=5,
+                                       use_cuda_8_0=False,
+                                       use_cuda_9_1=False,
+                                       seed_fsl_eddy=1234)
     pipeline.base_dir = join(working_dir, 'DWIPreprocessingUsingT1')
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Assert
-    out_file = join(root, 'out', 'caps', 'subjects', 'sub-CAPP01001TMM', 'ses-M00', 'dwi', 'preprocessing', 'sub-CAPP01001TMM_ses-M00_dwi_space-T1w_preproc.nii.gz')
-    ref_file = join(root, 'ref', 'sub-CAPP01001TMM_ses-M00_dwi_space-T1w_preproc.nii.gz')
+    participant_id = 'sub-CAPP01001TMM1B0'
+    out_file = join(root, 'out', 'caps', 'subjects', participant_id, 'ses-M00', 'dwi', 'preprocessing',
+                    participant_id + '_ses-M00_dwi_space-T1w_preproc.nii.gz')
+    ref_file = join(root, 'ref',
+                    participant_id + '_ses-M00_dwi_space-T1w_preproc.nii.gz')
 
     assert similarity_measure(out_file, ref_file, 0.97)
 
@@ -369,7 +376,8 @@ def test_run_DWIPreprocessingUsingT1(cmdopt):
 
 
 def test_run_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
-    from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_pipeline import DwiPreprocessingUsingPhaseDiffFieldmap
+    from clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_fmap_pipeline \
+        import DwiPreprocessingUsingPhaseDiffFieldmap
     from os.path import dirname, join, abspath
     import warnings
     warnings.filterwarnings("ignore")
@@ -385,14 +393,19 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
     pipeline = DwiPreprocessingUsingPhaseDiffFieldmap(bids_directory=join(root, 'in', 'bids'),
                                                       caps_directory=join(root, 'out', 'caps'),
                                                       tsv_file=join(root, 'in', 'subjects.tsv'),
-                                                      low_bval=5)
+                                                      low_bval=5,
+                                                      use_cuda_8_0=False,
+                                                      use_cuda_9_1=False,
+                                                      seed_fsl_eddy=1234)
     pipeline.base_dir = join(working_dir, 'DWIPreprocessingUsingPhaseDiffFieldmap')
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
-    # Assert
-    out_file = join(root, 'out', 'caps', 'subjects', 'sub-CAPP01001TMM', 'ses-M00', 'dwi', 'preprocessing', 'sub-CAPP01001TMM_ses-M00_dwi_space-b0_preproc.nii.gz')
-    ref_file = join(root, 'ref', 'sub-CAPP01001TMM_ses-M00_dwi_space-b0_preproc.nii.gz')
+    participant_id = 'sub-CAPP01001TMM1B0'
+    out_file = join(root, 'out', 'caps', 'subjects', participant_id, 'ses-M00', 'dwi', 'preprocessing',
+                    participant_id + '_ses-M00_dwi_space-b0_preproc.nii.gz')
+    ref_file = join(root, 'ref',
+                    participant_id + '_ses-M00_dwi_space-b0_preproc.nii.gz')
 
     assert similarity_measure(out_file, ref_file, 0.955)
 
@@ -402,7 +415,7 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
 
 def test_run_DWIDTI(cmdopt):
     from clinica.pipelines.dwi_dti.dwi_dti_pipeline import DwiDti
-    from os.path import dirname, join, abspath, exists
+    from os.path import dirname, join, abspath
     import shutil
     import pandas as pds
     import numpy as np
@@ -422,11 +435,13 @@ def test_run_DWIDTI(cmdopt):
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Check files
-    subject_id = 'sub-CAPP01001TMM'
+    participant_id = 'sub-CAPP01001TMM'
     maps = ['AD', 'FA', 'MD', 'RD']
-    out_files = [join(root, 'out', 'caps', 'subjects', subject_id, 'ses-M00', 'dwi', 'dti_based_processing', 'atlas_statistics', subject_id + '_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-' + m + '_statistics.tsv')
+    out_files = [join(root, 'out', 'caps', 'subjects', participant_id, 'ses-M00', 'dwi', 'dti_based_processing', 'atlas_statistics',
+                      participant_id + '_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-' + m + '_statistics.tsv')
                  for m in maps]
-    ref_files = [join(root, 'ref', subject_id + '_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-' + m + '_statistics.tsv')
+    ref_files = [join(root, 'ref',
+                      participant_id + '_ses-M00_dwi_space-JHUDTI81_res-1x1x1_map-' + m + '_statistics.tsv')
                  for m in maps]
 
     for i in range(len(out_files)):
@@ -442,7 +457,7 @@ def test_run_DWIDTI(cmdopt):
 
 def test_run_DWIConnectome(cmdopt):
     from clinica.pipelines.dwi_connectome.dwi_connectome_pipeline import DwiConnectome
-    from os.path import dirname, join, abspath, exists
+    from os.path import dirname, join, abspath
     import shutil
 
     # Initialization
@@ -453,7 +468,7 @@ def test_run_DWIConnectome(cmdopt):
     out_caps_dir = join(root, 'out', 'caps')
 
     n_tracks = 1000
-    subject_id = 'sub-HMTC20110506MEMEPPAT27'
+    participant_id = 'sub-HMTC20110506MEMEPPAT27'
     session_id = 'ses-M00'
 
     clean_folder(out_caps_dir, recreate=False)
@@ -472,16 +487,16 @@ def test_run_DWIConnectome(cmdopt):
     # Check files
     atlases = ['desikan', 'destrieux']
 
-    out_fod_file = join(root, 'out', 'caps', 'subjects', subject_id, session_id, 'dwi', 'connectome_based_processing',
-                        subject_id + '_' + session_id + '_dwi_space-b0_model-CSD_diffmodel.nii.gz')
+    out_fod_file = join(root, 'out', 'caps', 'subjects', participant_id, session_id, 'dwi', 'connectome_based_processing',
+                        participant_id + '_' + session_id + '_dwi_space-b0_model-CSD_diffmodel.nii.gz')
     ref_fod_file = join(root, 'ref',
-                        subject_id + '_' + session_id + '_dwi_space-b0_model-CSD_diffmodel.nii.gz')
+                        participant_id + '_' + session_id + '_dwi_space-b0_model-CSD_diffmodel.nii.gz')
 
-    out_parc_files = [join(root, 'out', 'caps', 'subjects', subject_id, session_id, 'dwi', 'connectome_based_processing',
-                           subject_id + '_' + session_id + '_dwi_space-b0_atlas-' + a + '_parcellation.nii.gz')
+    out_parc_files = [join(root, 'out', 'caps', 'subjects', participant_id, session_id, 'dwi', 'connectome_based_processing',
+                           participant_id + '_' + session_id + '_dwi_space-b0_atlas-' + a + '_parcellation.nii.gz')
                       for a in atlases]
     ref_parc_files = [join(root, 'ref',
-                           subject_id + '_' + session_id + '_dwi_space-b0_atlas-' + a + '_parcellation.nii.gz')
+                           participant_id + '_' + session_id + '_dwi_space-b0_atlas-' + a + '_parcellation.nii.gz')
                       for a in atlases]
 
     assert similarity_measure(out_fod_file, ref_fod_file, 0.97)
@@ -518,12 +533,14 @@ def test_run_fMRIPreprocessing(cmdopt):
     pipeline.build()
     pipeline.run(bypass_check=True)
 
-    subject_id = 'sub-01001TMM'
-    out_files = [join(root, 'out', 'caps', 'subjects', subject_id, 'ses-M00', 'fmri', 'preprocessing', subject_id + '_ses-M00_task-rest_bold_space-Ixi549Space_preproc.nii.gz'),
-                 join(root, 'out', 'caps', 'subjects', subject_id, 'ses-M00', 'fmri', 'preprocessing', subject_id + '_ses-M00_task-rest_bold_space-meanBOLD_preproc.nii.gz')]
+    participant_id = 'sub-01001TMM'
+    out_files = [join(root, 'out', 'caps', 'subjects', participant_id, 'ses-M00', 'fmri', 'preprocessing',
+                      participant_id + '_ses-M00_task-rest_bold_space-Ixi549Space_preproc.nii.gz'),
+                 join(root, 'out', 'caps', 'subjects', participant_id, 'ses-M00', 'fmri', 'preprocessing',
+                      participant_id + '_ses-M00_task-rest_bold_space-meanBOLD_preproc.nii.gz')]
 
-    ref_files = [join(root, 'ref', subject_id + '_ses-M00_task-rest_bold_space-Ixi549Space_preproc.nii.gz'),
-                 join(root, 'ref', subject_id + '_ses-M00_task-rest_bold_space-meanBOLD_preproc.nii.gz')]
+    ref_files = [join(root, 'ref', participant_id + '_ses-M00_task-rest_bold_space-Ixi549Space_preproc.nii.gz'),
+                 join(root, 'ref', participant_id + '_ses-M00_task-rest_bold_space-meanBOLD_preproc.nii.gz')]
 
     for i in range(len(out_files)):
         assert similarity_measure(out_files[i], ref_files[i], 0.99)
@@ -533,7 +550,7 @@ def test_run_fMRIPreprocessing(cmdopt):
 
 def test_run_PETVolume(cmdopt):
     from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
-    from os.path import dirname, join, abspath, exists
+    from os.path import dirname, join, abspath
     import shutil
 
     working_dir = cmdopt
@@ -554,10 +571,11 @@ def test_run_PETVolume(cmdopt):
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     subjects = ['sub-ADNI011S4105', 'sub-ADNI023S4020', 'sub-ADNI035S4082', 'sub-ADNI128S4832']
-    out_files = [join(root, 'out/caps/subjects/' + sub + '/ses-M00/pet/preprocessing/group-UnitTest',
+    out_files = [join(root, 'out', 'caps', 'subjects', sub, 'ses-M00', 'pet', 'preprocessing', 'group-UnitTest',
                       sub + '_ses-M00_task-rest_acq-fdg_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz')
                  for sub in subjects]
-    ref_files = [join(root, 'ref', sub + '_ses-M00_task-rest_acq-fdg_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz')
+    ref_files = [join(root, 'ref',
+                      sub + '_ses-M00_task-rest_acq-fdg_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz')
                  for sub in subjects]
 
     for i in range(len(out_files)):
@@ -568,7 +586,7 @@ def test_run_PETVolume(cmdopt):
 
 def test_run_StatisticsSurface(cmdopt):
     from clinica.pipelines.statistics_surface.statistics_surface_pipeline import StatisticsSurface
-    from os.path import dirname, join, abspath, exists
+    from os.path import dirname, join, abspath
     import shutil
     import numpy as np
     from scipy.io import loadmat
@@ -601,8 +619,10 @@ def test_run_StatisticsSurface(cmdopt):
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 8}, bypass_check=True)
 
     # Check files
-    out_file = join(root, 'out/caps/groups/group-UnitTest/statistics/surfstat_group_comparison/group-UnitTest_AD-lt-CN_measure-cortical_thickness_fwhm-20_correctedPValue.mat')
-    ref_file = join(root, 'ref/group-UnitTest_AD-lt-CN_measure-cortical_thickness_fwhm-20_correctedPValue.mat')
+    out_file = join(root, 'out', 'caps', 'groups', 'group-UnitTest', 'statistics', 'surfstat_group_comparison',
+                    'group-UnitTest_AD-lt-CN_measure-cortical_thickness_fwhm-20_correctedPValue.mat')
+    ref_file = join(root, 'ref',
+                    'group-UnitTest_AD-lt-CN_measure-cortical_thickness_fwhm-20_correctedPValue.mat')
 
     out_file_mat = loadmat(out_file)['correctedpvaluesstruct']
     ref_file_mat = loadmat(ref_file)['correctedpvaluesstruct']
@@ -637,12 +657,13 @@ def test_run_PETSurface(cmdopt):
     pipeline.run(bypass_check=True)
 
     # Check files
-    out_files = [join(root, 'out/caps/subjects/sub-ADNI011S4105/ses-M00/pet/surface',
+    out_files = [join(root, 'out', 'caps', 'subjects', 'sub-ADNI011S4105', 'ses-M00', 'pet', 'surface',
                       'sub-ADNI011S4105_ses-M00_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
                       + h + '_fwhm-' + str(f) + '_projection.mgh')
                  for h in ['lh', 'rh']
                  for f in [0, 5, 10, 15, 20, 25]]
-    ref_files = [join(root, 'ref/sub-ADNI011S4105_ses-M00_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
+    ref_files = [join(root, 'ref',
+                      'sub-ADNI011S4105_ses-M00_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
                       + h + '_fwhm-' + str(f) + '_projection.mgh')
                  for h in ['lh', 'rh']
                  for f in [0, 5, 10, 15, 20, 25]]
@@ -655,7 +676,9 @@ def test_run_PETSurface(cmdopt):
 
 
 def test_run_WorkflowsML(cmdopt):
-    from clinica.pipelines.machine_learning.ml_workflows import RB_RepHoldOut_LogisticRegression, VertexB_RepHoldOut_dualSVM, RB_RepHoldOut_RandomForest, VB_KFold_DualSVM
+    from clinica.pipelines.machine_learning.ml_workflows import (
+        RB_RepHoldOut_LogisticRegression, VertexB_RepHoldOut_dualSVM,
+        RB_RepHoldOut_RandomForest, VB_KFold_DualSVM)
     from os.path import dirname, join, abspath
     import shutil
     import warnings
@@ -704,7 +727,7 @@ def test_run_WorkflowsML(cmdopt):
 
 def test_run_SpatialSVM(cmdopt):
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
-    from os.path import dirname, join, abspath, exists
+    from os.path import dirname, join, abspath
     import shutil
     import numpy as np
     import nibabel as nib
@@ -740,7 +763,8 @@ def test_run_SpatialSVM(cmdopt):
                                         'machine_learning', 'input_spatial_svm', 'group-ADNIbl',
                                         sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz')).get_data()
                           for sub in subjects]
-    ref_data_REG_NIFTI = [nib.load(join(root, 'ref', sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz')).get_data()
+    ref_data_REG_NIFTI = [nib.load(join(root, 'ref',
+                                        sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz')).get_data()
                           for sub in subjects]
     for i in range(len(out_data_REG_NIFTI)):
         assert np.allclose(out_data_REG_NIFTI[i], ref_data_REG_NIFTI[i],

@@ -16,11 +16,11 @@ __email__ = "arnaud.marcoux@inria.fr"
 __status__ = "Development"
 
 import warnings
-import sys
-from testing_tools import create_list_hashes, compare_folders_with_hashes, compare_folders_structures
-from testing_tools import clean_folder, compare_folders
-from testing_tools import identical_subject_list, same_missing_modality_tsv
 from os import pardir
+
+from testing_tools import clean_folder, compare_folders
+from testing_tools import compare_folders_structures
+from testing_tools import identical_subject_list, same_missing_modality_tsv
 
 # Determine location for working_directory
 warnings.filterwarnings("ignore")
