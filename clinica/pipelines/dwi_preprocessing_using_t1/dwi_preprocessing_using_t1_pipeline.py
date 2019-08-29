@@ -20,28 +20,9 @@ config.update_config(cfg)
 class DwiPreprocessingUsingT1(cpe.Pipeline):
     """DWI Preprocessing using T1 image for susceptibility distortion step.
 
-    Todo:
-        [X] Detect c3d_affine_tool dependency
-        [X] Refactor input_node (cf AM's comments on https://github.com/aramis-lab/clinica/pull/8)
-        [X] Read data from JSON
-              [X] - PhaseEncodingDirection
-              [X] - TotalReadoutTime
-        [ ] Interfaces
-              [X] - antsRegistrationSyNQuick.sh
-              [ ] - antsApplyTransforms? (optional, no output message when run)
-              [ ] - CreateJacobianDeterminantImage? (optional, no output message when run)
-              [ ] - WarpImageMultiTransform? (optional, no output message when run)
-        [X] Add CLI flag for eddy_cuda8.0 / eddy_cuda9.1
-        [ ] Update space_required_by_pipeline.csv info
-        [X] CI
-        [X] Wiki page
-
     Ideas for improvement:
         [ ] Replace prepare_reference_b0 function by a first run of FSL eddy
         [ ] Replace B0-T1w registration by FA-T1w registration
-
-    Questions:
-        [ ] Why eddy --flm is set to linear instead of default quadratic?
 
     Warnings:
         - Do not use this pipeline if you have fieldmap data in your dataset.

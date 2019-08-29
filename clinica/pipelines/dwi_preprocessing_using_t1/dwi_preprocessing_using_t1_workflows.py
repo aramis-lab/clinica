@@ -34,7 +34,7 @@ def eddy_fsl_pipeline(low_bval, use_cuda_8_0=False, use_cuda_9_1=False, seed_fsl
     generate_index.inputs.low_bval = low_bval
 
     eddy = pe.Node(interface=Eddy(), name='eddy_fsl')
-    eddy.inputs.flm = 'linear'
+    eddy.inputs.repol = True
     if use_cuda_8_0:
         eddy.inputs.use_cuda8_0 = use_cuda_8_0
     if use_cuda_9_1:
