@@ -4,14 +4,14 @@
     "version": "0.1.0",
     "dependencies": [
         {
-            "type": "binary",
-            "name": "clinica",
-            "version": ">=0.1.0"
+            "type": "software",
+            "name": "freesurfer",
+            "version": ""
         },
         {
             "type": "software",
             "name": "fsl",
-            "version": ""
+            "version": ">=5.0.9"
         },
         {
             "type": "software",

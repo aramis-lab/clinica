@@ -1,3 +1,4 @@
+# coding: utf8
 
 """
     This file contains a set of functional tests designed to check the correct execution of the pipeline and the
@@ -16,10 +17,11 @@ __status__ = "Development"
 
 import pytest
 
+
 def pytest_addoption(parser):
     parser.addoption(
-            "--working_directory", 
-        action="store", 
+        "--working_directory",
+        action="store",
         help="Working directory for tests"
     )
 
@@ -27,4 +29,3 @@ def pytest_addoption(parser):
 @pytest.fixture
 def cmdopt(request):
     return request.config.getoption("--working_directory")
-

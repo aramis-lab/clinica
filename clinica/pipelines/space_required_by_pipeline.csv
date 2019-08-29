@@ -8,7 +8,8 @@ T1VolumeCreateDartel;130M;140M
 T1VolumeExistingTemplate;55M;320M
 T1VolumeParcellation;760K;520K
 DwiPreprocessingUsingT1;150M;3G
-DWIPreprocessingUsingPhaseDiffFieldmap;250M;6G
+DwiPreprocessingUsingPhaseDiffFieldmap;250M;6G
+DwiConnectome;1G;2G
 DwiDti;400M;700M
 fMRIPreprocessing;300M;7G
 PETVolume;55M;245M

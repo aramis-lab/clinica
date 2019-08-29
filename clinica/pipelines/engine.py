@@ -31,6 +31,8 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_sess
     import tempfile
     from time import time, strftime, localtime
     import os
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaException
 
     if not ss_file:
         output_dir = tempfile.mkdtemp()
@@ -45,6 +47,16 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_sess
             is_bids_dir=is_bids_dir,
             use_session_tsv=use_session_tsv)
 
+    if not os.path.isfile(ss_file):
+        raise ClinicaException(
+            "\n%s[Error] The TSV file you gave is not a file.%s\n"
+            "\n%sError explanations:%s\n"
+            " - Clinica expected the following path to be a file: %s%s%s\n"
+            " - If you gave relative path, did you run Clinica on the good folder?" %
+            (Fore.RED, Fore.RESET,
+             Fore.YELLOW, Fore.RESET,
+             Fore.BLUE, ss_file, Fore.RESET)
+        )
     ss_df = pd.io.parsers.read_csv(ss_file, sep='\t')
     if 'participant_id' not in list(ss_df.columns.values):
         raise Exception('No participant_id column in TSV file.')
@@ -124,6 +136,10 @@ class Pipeline(Workflow):
         """
         import inspect
         import os
+        from colorama import Fore
+        from clinica.utils.io import check_bids_folder, check_caps_folder
+        from clinica.utils.exceptions import ClinicaException, ClinicaBIDSError, ClinicaCAPSError
+
         self._is_built = False
         self._bids_directory = bids_directory
         self._caps_directory = caps_directory
@@ -142,21 +158,17 @@ class Pipeline(Workflow):
 
         if self._bids_directory is None:
             if self._caps_directory is None:
-                raise IOError('%s does not contain BIDS nor CAPS directory' %
-                              self._name)
-            if not os.path.isdir(self._caps_directory):
-                raise IOError('The CAPS parameter is not a folder (given path:%s)' %
-                              self._caps_directory)
-
+                raise ClinicaException(
+                    '%s[Error] The %s pipeline does not contain BIDS nor CAPS directory at the initialization.%s' %
+                    (Fore.RED, self._name, Fore.RESET))
+            check_caps_folder(self._caps_directory)
             self._sessions, self._subjects = get_subject_session_list(
                 input_dir=self._caps_directory,
                 ss_file=self._tsv_file,
                 is_bids_dir=False
             )
         else:
-            if not os.path.isdir(self._bids_directory):
-                raise IOError('The BIDS parameter is not a folder (given path:%s)' %
-                              self._bids_directory)
+            check_bids_folder(self._bids_directory)
             self._sessions, self._subjects = get_subject_session_list(
                 input_dir=self._bids_directory,
                 ss_file=self._tsv_file,
@@ -166,7 +178,7 @@ class Pipeline(Workflow):
         self.init_nodes()
 
     def init_nodes(self):
-        """Inits the basic workflow and I/O nodes necessary before build.
+        """Init the basic workflow and I/O nodes necessary before build.
 
         """
         import nipype.interfaces.utility as nutil
@@ -526,17 +538,17 @@ class Pipeline(Workflow):
             # so we need a try / except block
             n_thread_cmdline = plugin_args['n_procs']
             if n_thread_cmdline > n_cpu:
-                cprint(Fore.RED + '[Warning] You are trying to run clinica '
+                cprint(Fore.YELLOW + '[Warning] You are trying to run clinica '
                        + 'with a number of threads (' + str(n_thread_cmdline)
                        + ') superior to your number of CPUs (' + str(n_cpu)
                        + ').' + Fore.RESET)
                 ask_user = True
         except TypeError:
-            cprint(Fore.RED + '[Warning] You did not specify the number of '
+            cprint(Fore.YELLOW + '\n[Warning] You did not specify the number of '
                    + 'threads to run in parallel (--n_procs argument).'
                    + Fore.RESET)
-            cprint(Fore.RED + 'Computation time can be shorten as you have '
-                   + str(n_cpu) + ' CPUs on this computer. We recommand using '
+            cprint(Fore.YELLOW + 'Computation time can be shorten as you have '
+                   + str(n_cpu) + ' CPUs on this computer. We recommend using '
                    + str(n_cpu - 1) + ' threads.\n' + Fore.RESET)
             ask_user = True
 
