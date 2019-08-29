@@ -3,9 +3,9 @@
 # Small unit tests for all pipelines
 ##
 # test if instantiation and building of workflows is working
+from os import pardir
 import warnings
 warnings.filterwarnings("ignore")
-from os import pardir
 
 
 def test_instantiate_T1FreeSurferCrossSectional():
@@ -49,7 +49,6 @@ def test_instantiate_T1VolumeCreateDartel():
             tsv_file=join(root, 'in', 'subjects.tsv'),
             group_id='UnitTest'
             )
-    
     pipeline.build()
 
 
@@ -98,7 +97,6 @@ def test_instantiate_T1VolumeExistingDartel():
     pipeline.build()
 
 
-
 def test_instantiate_T1VolumeExistingTemplate():
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
     from os.path import dirname, join, abspath
@@ -126,8 +124,8 @@ def test_instantiate_T1VolumeParcellation():
             )
     pipeline.parameters['group_id'] = 'UnitTest'
     pipeline.parameters['atlases'] = [
-            'AAL2', 'LPBA40', 
-            'Neuromorphometrics', 'AICHA', 
+            'AAL2', 'LPBA40',
+            'Neuromorphometrics', 'AICHA',
             'Hammers'
             ]
     pipeline.parameters['modulate'] = 'on'
@@ -150,7 +148,6 @@ def test_instantiate_DWIPreprocessingUsingT1():
             'epi_param': dict([('readout_time', 0.14),  ('enc_dir', 'y')]),
     }
     pipeline.build()
-
 
 
 def test_instantiate_DWIPreprocessingUsingPhaseDiffFieldmap():
@@ -239,7 +236,7 @@ def test_instantiate_StatisticsSurface():
     from os.path import dirname, join, abspath
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'StatisticsSurface') 
+    root = join(root, 'data', 'StatisticsSurface')
     pipeline = StatisticsSurface(
             caps_directory=join(root, 'in', 'caps'),
             tsv_file=join(root, 'in', 'subjects.tsv')

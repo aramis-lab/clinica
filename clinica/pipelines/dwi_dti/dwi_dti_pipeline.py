@@ -65,7 +65,6 @@ class DwiDti(cpe.Pipeline):
 
         caps_layout = CAPSLayout(self.caps_directory)
 
-        cprint('Found %s image(s) in CAPS dataset' % len(self.subjects))
         for i in range(len(self.subjects)):
             # cprint('------- SUBJECT %s SESSION %s -------'
             #        % (self.subjects[i], self.sessions[i]))
@@ -141,6 +140,8 @@ class DwiDti(cpe.Pipeline):
                               + ' but found '
                               + str(len(b0_mask_file))
                               + ' brainmasks instead.')
+
+        cprint('Found %s image(s) in CAPS dataset' % len(self.subjects))
 
         # Iterables:
         iterables_node = npe.Node(name="LoadingCLIArguments",

@@ -31,6 +31,8 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_sess
     import tempfile
     from time import time, strftime, localtime
     import os
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaException
 
     if not ss_file:
         output_dir = tempfile.mkdtemp()
@@ -45,6 +47,16 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_sess
             is_bids_dir=is_bids_dir,
             use_session_tsv=use_session_tsv)
 
+    if not os.path.isfile(ss_file):
+        raise ClinicaException(
+            "\n%s[Error] The TSV file you gave is not a file.%s\n"
+            "\n%sError explanations:%s\n"
+            " - Clinica expected the following path to be a file: %s%s%s\n"
+            " - If you gave relative path, did you run Clinica on the good folder?" %
+            (Fore.RED, Fore.RESET,
+             Fore.YELLOW, Fore.RESET,
+             Fore.BLUE, ss_file, Fore.RESET)
+        )
     ss_df = pd.io.parsers.read_csv(ss_file, sep='\t')
     if 'participant_id' not in list(ss_df.columns.values):
         raise Exception('No participant_id column in TSV file.')
@@ -124,6 +136,10 @@ class Pipeline(Workflow):
         """
         import inspect
         import os
+        from colorama import Fore
+        from clinica.utils.io import check_bids_folder, check_caps_folder
+        from clinica.utils.exceptions import ClinicaException, ClinicaBIDSError, ClinicaCAPSError
+
         self._is_built = False
         self._bids_directory = bids_directory
         self._caps_directory = caps_directory
@@ -142,21 +158,17 @@ class Pipeline(Workflow):
 
         if self._bids_directory is None:
             if self._caps_directory is None:
-                raise IOError('%s does not contain BIDS nor CAPS directory' %
-                              self._name)
-            if not os.path.isdir(self._caps_directory):
-                raise IOError('The CAPS parameter is not a folder (given path:%s)' %
-                              self._caps_directory)
-
+                raise ClinicaException(
+                    '%s[Error] The %s pipeline does not contain BIDS nor CAPS directory at the initialization.%s' %
+                    (Fore.RED, self._name, Fore.RESET))
+            check_caps_folder(self._caps_directory)
             self._sessions, self._subjects = get_subject_session_list(
                 input_dir=self._caps_directory,
                 ss_file=self._tsv_file,
                 is_bids_dir=False
             )
         else:
-            if not os.path.isdir(self._bids_directory):
-                raise IOError('The BIDS parameter is not a folder (given path:%s)' %
-                              self._bids_directory)
+            check_bids_folder(self._bids_directory)
             self._sessions, self._subjects = get_subject_session_list(
                 input_dir=self._bids_directory,
                 ss_file=self._tsv_file,
@@ -166,7 +178,7 @@ class Pipeline(Workflow):
         self.init_nodes()
 
     def init_nodes(self):
-        """Inits the basic workflow and I/O nodes necessary before build.
+        """Init the basic workflow and I/O nodes necessary before build.
 
         """
         import nipype.interfaces.utility as nutil
@@ -349,6 +361,7 @@ class Pipeline(Workflow):
         from clinica.utils.stream import cprint
         from colorama import Fore
         import sys
+        import select
 
         SYMBOLS = {
             'customary': ('B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'),
@@ -423,6 +436,8 @@ class Pipeline(Workflow):
                 prefix[s] = 1 << (i + 1) * 10
             return int(num * prefix[letter])
 
+        timeout = 15
+
         # Get the number of sessions
         n_sessions = len(self.subjects)
         try:
@@ -473,8 +488,15 @@ class Pipeline(Workflow):
             if error != '':
                 cprint(Fore.RED + '[SpaceError] ' + error + Fore.RESET)
                 while True:
-                    cprint('Do you still want to run the pipeline ? (yes/no): ')
-                    answer = input('')
+                    cprint('Do you still want to run the pipeline ? (yes/no): '
+                           + ' In ' + str(timeout) + ' sec the pipeline will start if you do not answer.')
+                    stdin_answer, __, ___ = select.select([sys.stdin], [], [], timeout)
+                    if stdin_answer:
+                        answer = str(sys.stdin.readline().strip())
+                    # Else: is taken when no answer is given (timeout)
+                    else:
+                        answer = 'yes'
+
                     if answer.lower() in ['yes', 'no']:
                         break
                     else:
@@ -498,9 +520,15 @@ class Pipeline(Workflow):
         from clinica.utils.stream import cprint
         from multiprocessing import cpu_count
         from colorama import Fore
+        import select
+        import sys
 
         # count number of CPUs
         n_cpu = cpu_count()
+        # timeout value : max time allowed to decide how many thread
+        # to run in parallel (sec)
+        timeout = 15
+
         # Use this var to know in the end if we need to ask the user
         # an other number
         ask_user = False
@@ -510,17 +538,17 @@ class Pipeline(Workflow):
             # so we need a try / except block
             n_thread_cmdline = plugin_args['n_procs']
             if n_thread_cmdline > n_cpu:
-                cprint(Fore.RED + '[Warning] You are trying to run clinica '
+                cprint(Fore.YELLOW + '[Warning] You are trying to run clinica '
                        + 'with a number of threads (' + str(n_thread_cmdline)
                        + ') superior to your number of CPUs (' + str(n_cpu)
                        + ').' + Fore.RESET)
                 ask_user = True
         except TypeError:
-            cprint(Fore.RED + '[Warning] You did not specify the number of '
+            cprint(Fore.YELLOW + '\n[Warning] You did not specify the number of '
                    + 'threads to run in parallel (--n_procs argument).'
                    + Fore.RESET)
-            cprint(Fore.RED + 'Computation time can be shorten as you have '
-                   + str(n_cpu) + ' CPUs on this computer. We recommand using '
+            cprint(Fore.YELLOW + 'Computation time can be shorten as you have '
+                   + str(n_cpu) + ' CPUs on this computer. We recommend using '
                    + str(n_cpu - 1) + ' threads.\n' + Fore.RESET)
             ask_user = True
 
@@ -528,9 +556,16 @@ class Pipeline(Workflow):
             while True:
                 # While True allows to ask indefinitely until
                 # user gives a answer that has the correct format
-                # here, positive integer
-                cprint('How many threads do you want to use ?')
-                answer = input('')
+                # (here, positive integer) or timeout
+                cprint('How many threads do you want to use ? If you do not '
+                       + 'answer within ' + str(timeout)
+                       + ' sec, default value of ' + str(n_cpu - 1)
+                       + ' will be taken.')
+                stdin_answer, __, ___ = select.select([sys.stdin], [], [], timeout)
+                if stdin_answer:
+                    answer = str(sys.stdin.readline().strip())
+                else:
+                    answer = str(max(n_cpu - 1, 1))
                 if answer.isnumeric():
                     if int(answer) > 0:
                         break

@@ -44,10 +44,11 @@ def test_run_T1FreeSurferCrossSectional(cmdopt):
     pipeline.build()
     pipeline.run(bypass_check=True)
 
+
     log_file = join(root, 'out', 'caps', 'subjects', 'sub-ADNI082S5029',
-                   'ses-M00', 't1', 'freesurfer_cross_sectional',
-                   'sub-ADNI082S5029_ses-M00', 'scripts',
-                   'recon-all-status.log')
+                    'ses-M00', 't1', 'freesurfer_cross_sectional',
+                    'sub-ADNI082S5029_ses-M00', 'scripts',
+                    'recon-all-status.log')
     if isfile(log_file):
         last_line = str(subprocess.check_output(['tail', '-1', log_file]))
         if 'finished without error' not in last_line.lower():
@@ -80,7 +81,7 @@ def test_run_T1VolumeTissueSegmentation(cmdopt):
     out_file = join(root, 'out/caps/subjects/sub-ADNI011S4105/ses-M00/t1/spm/segmentation/dartel_input/'
                     + 'sub-ADNI011S4105_ses-M00_T1w_segm-graymatter_dartelinput.nii.gz')
     if not os.path.exists(out_file):
-        raise IOError('Pipeline did not produce file : ' + out_file +'. Consider rerunning test_run_T1VolumeTissueSegmentation')
+        raise IOError('Pipeline did not produce file: ' + out_file + '. Consider rerunning test_run_T1VolumeTissueSegmentation')
 
     ref_file = join(root, 'ref/caps/subjects/sub-ADNI011S4105/ses-M00/t1/spm/segmentation/dartel_input/'
                     + 'sub-ADNI011S4105_ses-M00_T1w_segm-graymatter_dartelinput.nii.gz')
@@ -131,7 +132,6 @@ def test_run_T1VolumeCreateDartel(cmdopt):
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-
 
 
 def test_run_T1VolumeDartel2MNI(cmdopt):
@@ -357,7 +357,7 @@ def test_run_DWIPreprocessingUsingT1(cmdopt):
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
-    # Assert :
+    # Assert
     out_file = join(root, 'out', 'caps', 'subjects', 'sub-CAPP01001TMM', 'ses-M00', 'dwi', 'preprocessing', 'sub-CAPP01001TMM_ses-M00_dwi_space-T1w_preproc.nii.gz')
     ref_file = join(root, 'ref', 'sub-CAPP01001TMM_ses-M00_dwi_space-T1w_preproc.nii.gz')
 
@@ -389,7 +389,7 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
-    # Assert :
+    # Assert
     out_file = join(root, 'out', 'caps', 'subjects', 'sub-CAPP01001TMM', 'ses-M00', 'dwi', 'preprocessing', 'sub-CAPP01001TMM_ses-M00_dwi_space-b0_preproc.nii.gz')
     ref_file = join(root, 'ref', 'sub-CAPP01001TMM_ses-M00_dwi_space-b0_preproc.nii.gz')
 
@@ -438,18 +438,16 @@ def test_run_DWIDTI(cmdopt):
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
-"""
+
 def test_run_DWIConnectome(cmdopt):
     from clinica.pipelines.dwi_connectome.dwi_connectome_pipeline import DwiConnectome
     from os.path import dirname, join, abspath, exists
     import shutil
-    import pandas as pds
-    import numpy as np
 
     working_dir = cmdopt
     root = join(dirname(abspath(__file__)), 'data', 'DWIConnectome')
 
-    n_tracks = 1000000
+    n_tracks = 1000
     subject_id = 'sub-HMTC20110506MEMEPPAT27'
     session_id = 'ses-M00'
 
@@ -460,7 +458,7 @@ def test_run_DWIConnectome(cmdopt):
     pipeline = DwiConnectome(caps_directory=join(root, 'out', 'caps'),
                              tsv_file=join(root, 'in', 'subjects.tsv'))
     pipeline.parameters = {
-        'n_tracks' : n_tracks
+        'n_tracks': n_tracks,
     }
     pipeline.base_dir = join(working_dir, 'DWIConnectome')
     pipeline.build()
@@ -468,23 +466,26 @@ def test_run_DWIConnectome(cmdopt):
 
     # Check files
     atlases = ['desikan', 'destrieux']
-    out_files = [join(root, 'out', 'caps', 'subjects', subject_id, session_id, 'dwi', 'connectome_based_processing', subject_id + '_' + session_id + '_dwi_space-b0_model-CSD_atlas-' + a + '_connectivity.tsv')
-                 for a in atlases]
-    ref_files = [join(root, 'ref', subject_id + '_' + session_id + '_dwi_space-b0_model-CSD_atlas-' + a + '_connectivity.tsv')
-                 for a in atlases]
 
-    # @TODO: Find the adequate threshold for DWI-Connectome pipeline
+    out_fod_file = join(root, 'out', 'caps', 'subjects', subject_id, session_id, 'dwi', 'connectome_based_processing',
+                        subject_id + '_' + session_id + '_dwi_space-b0_model-CSD_diffmodel.nii.gz')
+    ref_fod_file = join(root, 'ref',
+                        subject_id + '_' + session_id + '_dwi_space-b0_model-CSD_diffmodel.nii.gz')
 
-    for i in range(len(out_files)):
-        out_connectome = pds.read_csv(out_files[i], sep=' ')
-        out_connectome = np.array(out_connectome)
-        ref_connectome = pds.read_csv(ref_files[i], sep=' ')
-        ref_connectome = np.array(ref_connectome)
+    out_parc_files = [join(root, 'out', 'caps', 'subjects', subject_id, session_id, 'dwi', 'connectome_based_processing',
+                           subject_id + '_' + session_id + '_dwi_space-b0_atlas-' + a + '_parcellation.nii.gz')
+                      for a in atlases]
+    ref_parc_files = [join(root, 'ref',
+                           subject_id + '_' + session_id + '_dwi_space-b0_atlas-' + a + '_parcellation.nii.gz')
+                      for a in atlases]
 
-        assert np.allclose(out_connectome, ref_connectome, rtol=0.025, equal_nan=True)
+    assert similarity_measure(out_fod_file, ref_fod_file, 0.97)
+
+    for i in range(len(out_parc_files)):
+        assert similarity_measure(out_parc_files[i], ref_parc_files[i], 0.99)
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-"""
+
 
 def test_run_fMRIPreprocessing(cmdopt):
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
@@ -549,7 +550,7 @@ def test_run_PETVolume(cmdopt):
 
     subjects = ['sub-ADNI011S4105', 'sub-ADNI023S4020', 'sub-ADNI035S4082', 'sub-ADNI128S4832']
     out_files = [join(root, 'out/caps/subjects/' + sub + '/ses-M00/pet/preprocessing/group-UnitTest',
-                      sub +'_ses-M00_task-rest_acq-fdg_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz')
+                      sub + '_ses-M00_task-rest_acq-fdg_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz')
                  for sub in subjects]
     ref_files = [join(root, 'ref', sub + '_ses-M00_task-rest_acq-fdg_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii.gz')
                  for sub in subjects]
@@ -603,7 +604,6 @@ def test_run_StatisticsSurface(cmdopt):
     for i in range(4):
         assert np.allclose(out_file_mat[0][0][i], ref_file_mat[0][0][i], rtol=1e-8, equal_nan=True)
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-
 
 
 def test_run_PETSurface(cmdopt):
@@ -730,13 +730,13 @@ def test_run_SpatialSVM(cmdopt):
 
     # Check output vs ref
     subjects = ['sub-ADNI011S0023', 'sub-ADNI013S0325']
-    out_data_REG_NIFTI = [nib.load(join(root, 
-        'out', 'caps', 'subjects', sub, 'ses-M00', 
-        'machine_learning', 'input_spatial_svm', 'group-ADNIbl', 
-        sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz')).get_data()
+    out_data_REG_NIFTI = [nib.load(join(root,
+                                        'out', 'caps', 'subjects', sub, 'ses-M00',
+                                        'machine_learning', 'input_spatial_svm', 'group-ADNIbl',
+                                        sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz')).get_data()
                           for sub in subjects]
     ref_data_REG_NIFTI = [nib.load(join(root, 'ref', sub + '_ses-M00_T1w_segm-graymatter_space-Ixi549Space_modulated-on_spatialregularization.nii.gz')).get_data()
-        for sub in subjects]
+                          for sub in subjects]
     for i in range(len(out_data_REG_NIFTI)):
         assert np.allclose(out_data_REG_NIFTI[i], ref_data_REG_NIFTI[i],
                            rtol=1e-3, equal_nan=True)

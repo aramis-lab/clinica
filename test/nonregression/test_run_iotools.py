@@ -5,6 +5,7 @@ This file contains a set of functional tests designed to check the correct execu
 different functions available in Clinica
 """
 
+
 __author__ = "Arnaud Marcoux"
 __copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = ["Arnaud Marcoux"]
@@ -14,15 +15,43 @@ __maintainer__ = "Arnaud Marcoux"
 __email__ = "arnaud.marcoux@inria.fr"
 __status__ = "Development"
 
-
 import warnings
 import sys
+from testing_tools import create_list_hashes, compare_folders_with_hashes, compare_folders_structures
 from testing_tools import clean_folder, compare_folders
 from testing_tools import identical_subject_list, same_missing_modality_tsv
 from os import pardir
 
 # Determine location for working_directory
 warnings.filterwarnings("ignore")
+
+
+def test_run_Nifd2Bids(cmdopt):
+    from clinica.iotools.converters.nifd_to_bids.nifd_to_bids import convert_clinical_data, convert_images
+    from os.path import dirname, join, abspath
+    import shutil
+
+    root = join(dirname(abspath(__file__)), pardir, 'data', 'Nifd2Bids')
+
+    clean_folder(join(root, 'out', 'bids'), recreate=True)
+    clean_folder(join(root, 'out', 'clinical_data'), recreate=False)
+
+    shutil.copytree(join(root, 'in', 'clinical_data'), join(root, 'out', 'clinical_data'))
+
+    # Data location
+    dataset_directory = join(root, 'in', 'unorganized')
+    bids_directory = join(root, 'out', 'bids')
+    clinical_data_directory = join(root, 'out', 'clinical_data')
+
+    # Conversion
+    to_convert = convert_images(dataset_directory, bids_directory, clinical_data_directory)
+    convert_clinical_data(bids_directory, clinical_data_directory, to_convert)
+
+    compare_folders_structures(bids_directory, join(root, 'ref', 'hashes_nifd.p'))
+
+    clean_folder(join(root, 'out', 'bids'), recreate=True)
+    clean_folder(join(root, 'out', 'clinical_data'), recreate=False)
+
 
 def test_run_Oasis2Bids(cmdopt):
     from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import OasisToBids
@@ -176,4 +205,3 @@ def test_run_Aibl2Bids(cmdopt):
     compare_folders(join(root, 'out'), join(root, 'ref'),
                     shared_folder_name='bids')
     clean_folder(join(root, 'out', 'bids'), recreate=True)
-
