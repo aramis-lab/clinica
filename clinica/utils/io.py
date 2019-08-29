@@ -62,6 +62,22 @@ def fix_join(path, *paths):
     return os.path.join(path, *paths)
 
 
+def extract_image_ids(bids_or_caps_files):
+    """Extract image IDs (e.g. ['sub-CLNC01_ses-M00', 'sub-CLNC01_ses-M18']  from `bids_or_caps_files`."""
+    import re
+    id_bids_or_caps_files = [re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)', file).group()
+                             for file in bids_or_caps_files]
+    return id_bids_or_caps_files
+
+
+def reorder_bids_or_caps_files(input_ids, bids_or_caps_files):
+    """Reorder `bids_or_caps_files` with respect to `input_ids`."""
+    id_bids_or_caps_files = extract_image_ids(bids_or_caps_files)
+    indices = [id_bids_or_caps_files.index(input_ids[idx]) for idx in range(len(input_ids))]
+    reordered_bids_or_caps_files = [bids_or_caps_files[i] for i in indices]
+    return reordered_bids_or_caps_files
+
+
 def check_bids_folder(bids_directory):
     import os
     from colorama import Fore
@@ -146,17 +162,12 @@ def caps_type_to_description(caps_type):
 
 
 def check_input_caps_files(list_caps_files, caps_type, pipeline_name, caps_directory, participant_ids, session_ids):
-    import re
     import collections
     from colorama import Fore
 
     subject_ids = [participant_ids[i] + '_' + session_ids[i] for i in range(len(participant_ids))]
-    # 'Bug': when using PyBIDS or PyCAPS, files extracted are in reversed order
-    # compared to the given subjects and sessions
-    subject_ids = list(reversed(subject_ids))
 
-    id_caps_files = [re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)', caps_file).group()
-                     for caps_file in list_caps_files]
+    id_caps_files = extract_image_ids(list_caps_files)
 
     id_duplicated_files = [item for item, count in collections.Counter(id_caps_files).items() if count > 1]
 
@@ -184,7 +195,7 @@ def check_input_caps_files(list_caps_files, caps_type, pipeline_name, caps_direc
 
     if id_duplicated_files:
         error_message += (
-            "\n%s[Error] Clinica found multiple %s files in BIDS directory for the following subject(s):%s" %
+            "\n%s[Error] Clinica found multiple %s files in CAPS directory for the following subject(s):%s" %
             (Fore.RED, caps_type_to_description(caps_type), Fore.RESET)
         )
         for id_duplicated_file in id_duplicated_files:
@@ -200,17 +211,6 @@ def check_input_caps_files(list_caps_files, caps_type, pipeline_name, caps_direc
             (Fore.YELLOW, Fore.RESET)
         )
     if not error_message:
-        if not (subject_ids == id_caps_files):
-            from clinica.utils.stream import cprint
-            cprint(subject_ids)
-            cprint(id_caps_files)
-            error_message += (
-                    "\n%s[Error] Order between subjects given for Clinica and %s CAPS files mismatch:%s\n" %
-                    (Fore.RED, caps_type_to_description(caps_type), Fore.RESET)
-            )
-            for idx in range(len(subject_ids)):
-                if not (subject_ids[idx] == id_caps_files[idx]):
-                    error_message += ("* %s%s has wrong ID. Found file:%s\n%s" % (
-                        Fore.BLUE, subject_ids[idx].replace('_', '|'), list_caps_files[idx], Fore.RESET))
+        list_caps_files = reorder_bids_or_caps_files(subject_ids, list_caps_files)
 
     return error_message
