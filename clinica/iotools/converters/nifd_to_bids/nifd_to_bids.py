@@ -55,11 +55,13 @@ def convert_images(path_to_dataset, bids_dir, path_to_clinical):
     if not os.path.isfile(path_to_ida):
         if os.path.isfile(path_idaSearch):
             cprint(
-                "ida.tsv was not found in the clinical data directory, ida.tsv will be created from idaSearch_all.csv")
+                "ida.tsv was not found in the clinical data directory, "
+                "ida.tsv will be created from idaSearch_<date_of_download>_all.csv")
 
         else:
             cprint(
-                "\nida.tsv does not exist and idaSearch_all.csv was not found in the clinical data directory,"
+                "\nida.tsv does not exist and idaSearch_<date_of_download>_all.csv "
+                "was not found in the clinical data directory,"
                 " to create it please enter path/to/idaSearch_all.csv :")
             path_idaSearch = input()
             path_idaSearch = path_idaSearch.strip(' ')
@@ -71,11 +73,13 @@ def convert_images(path_to_dataset, bids_dir, path_to_clinical):
     if not os.path.isfile(path_to_clinical_info):
         if os.path.isfile(path_idaSearch):
             cprint(
-                "clinical_info.tsv was not found in the clinical data directory, clinical_info.tsv will be created from DataDictionary_NIFD_2017.10.18.xlsx")
+                "clinical_info.tsv was not found in the clinical data directory, "
+                "clinical_info.tsv will be created from DataDictionary_NIFD_2017.10.18.xlsx")
 
         else:
             cprint(
-                "\nclinical_info.tsv does not exist and DataDictionary_NIFD_2017.10.18.xlsx was not found in the clinical data directory"
+                "\nclinical_info.tsv does not exist and DataDictionary_NIFD_2017.10.18.xlsx was not found in the "
+                "clinical data directory"
                 ", to create it please enter path/to/DataDictionary_NIFD_2017.10.18.xlsx :")
             path_DataDictionary_NIFD_2017 = input()
             path_DataDictionary_NIFD_2017 = path_DataDictionary_NIFD_2017.strip(' ')
