@@ -745,8 +745,7 @@ def test_run_SpatialSVM(cmdopt):
     clean_folder(join(root, 'out', 'caps'), recreate=True)
 
 
-
-def test_T1FreeSurfer_template_function():
+def test_run_T1FreeSurferTemplate(cmdopt):
     """
     Functional test for T1FreeSurfer_template pipeline
     """
@@ -759,22 +758,28 @@ def test_T1FreeSurfer_template_function():
     import pandas as pd
     import nibabel as nib
 
-    working_dir = cmdopt
-    root = join(dirname(abspath(__file__)), 'data', 'T1FreeSurferTemplate')
-
+    working_dir = abspath(cmdopt)
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'T1FreeSurferTemplate')
 
     # define I/O
     in_tsv = join(root, 'in', 'subjects.tsv')
     out_caps_dir = join(root, 'out', 'caps')
-    clean_folder(out_caps_dir)
+    clean_folder(out_caps_dir, recreate=False)
     clean_folder(join(working_dir, 'T1FreeSurferTemplate'))
+
+    # Copy necessary data from in to out
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     # run pipeline
     pipeline = T1FreeSurferTemplate(caps_directory=out_caps_dir,
                                     tsv_file=in_tsv)
     pipeline.parameters['recon_all_args'] = '-qcache'
+    pipeline.parameters['working_directory'] = working_dir
     pipeline.base_dir = working_dir
-    pipeline.run()
+    pipeline.parameters['overwrite_caps'] = 'True'
+    pipeline.parameters['n_procs'] = 4
+    pipeline.run(bypass_check=True)
 
     # compare output with reference
     ref_caps_dir = join(root, 'ref', 'caps')
@@ -812,8 +817,7 @@ def test_T1FreeSurfer_template_function():
     clean_folder(out_caps_dir, recreate=False)
 
 
-
-def test_T1FreeSurfer_longitudinal_correction_function():
+def test_run_T1FreeSurferLongitudinalCorrection(cmdopt):
     """
     Functional test for T1FreeSurfer_longitudinal_correction pipeline
     """
@@ -827,20 +831,26 @@ def test_T1FreeSurfer_longitudinal_correction_function():
     import nibabel as nib
 
     working_dir = cmdopt
-    root = join(dirname(abspath(__file__)), 'data', 'T1FreeSurferLongitudinalCorrection')
-
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'T1FreeSurferLongitudinalCorrection')
 
     # define I/O
     in_tsv = join(root, 'in', 'subjects.tsv')
     out_caps_dir = join(root, 'out', 'caps')
-    clean_folder(out_caps_dir)
+    clean_folder(out_caps_dir, recreate=False)
     clean_folder(join(working_dir, 'T1FreeSurferLongitudinalCorrection'))
+
+    # Copy necessary data from in to out
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     # run pipeline
     pipeline = T1FreeSurferLongitudinalCorrection(caps_directory=out_caps_dir,
                                                   tsv_file=in_tsv)
     pipeline.parameters['recon_all_args'] = '-qcache'
+    pipeline.parameters['working_directory'] = working_dir
     pipeline.base_dir = working_dir
+    pipeline.parameters['overwrite_caps'] = 'True'
+    pipeline.parameters['n_procs'] = 4
     pipeline.run()
 
     # compare output with reference

@@ -349,7 +349,6 @@ def test_instantiate_T1FreeSurferLongitudinalCorrection():
     from os.path import dirname, join, abspath
     from tempfile import mkdtemp
 
-
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'T1FreeSurferLongitudinalCorrection')
     # build pipeline
