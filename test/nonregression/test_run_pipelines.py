@@ -851,7 +851,7 @@ def test_run_T1FreeSurferLongitudinalCorrection(cmdopt):
     pipeline.base_dir = working_dir
     pipeline.parameters['overwrite_caps'] = 'True'
     pipeline.parameters['n_procs'] = 4
-    pipeline.run()
+    pipeline.run(bypass_check=True)
 
     # compare output with reference
     ref_caps_dir = join(root,  'ref', 'caps')
