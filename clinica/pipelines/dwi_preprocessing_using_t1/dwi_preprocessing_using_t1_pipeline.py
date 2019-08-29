@@ -24,6 +24,10 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         [ ] Replace prepare_reference_b0 function by a first run of FSL eddy
         [ ] Replace B0-T1w registration by FA-T1w registration
 
+    Note:
+        Some reading regarding the reproducibility of FSL eddy command:
+        https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=fsl;1ccf038f.1608
+
     Warnings:
         - Do not use this pipeline if you have fieldmap data in your dataset.
 
@@ -46,8 +50,8 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             seed_fsl_eddy(optional[int]): Initialize the random number generator for FSL eddy (default: None).
 
         Raise:
-            ClinicaBIDSError: If low_bval is not ranging from 0 to 100.
-            ClinicaBIDSError: If CUDA 8.0 and CUDA 9.1 are chosen.
+            ClinicaException: If low_bval is not ranging from 0 to 100.
+            ClinicaException: If CUDA 8.0 and CUDA 9.1 are chosen.
        """
         from colorama import Fore
         from clinica.utils.exceptions import ClinicaException
@@ -215,17 +219,17 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         write_results.inputs.parameterization = False
 
         self.connect([
-            (self.input_node, container_path,    [('dwi',          'bids_dwi_filename')]),  # noqa
-            (self.input_node,  rename_into_caps, [('dwi',          'in_bids_dwi')]),  # noqa
-            (self.output_node, rename_into_caps, [('preproc_dwi',  'fname_dwi'),  # noqa
-                                                  ('preproc_bval', 'fname_bval'),  # noqa
-                                                  ('preproc_bvec', 'fname_bvec'),  # noqa
-                                                  ('b0_mask',      'fname_brainmask')]),  # noqa
-            (container_path, write_results,      [(('container', fix_join, 'dwi'), 'container')]),  # noqa
-            (rename_into_caps, write_results,    [('out_caps_dwi',       'preprocessing.@preproc_dwi'),  # noqa
-                                                  ('out_caps_bval',      'preprocessing.@preproc_bval'),  # noqa
-                                                  ('out_caps_bvec',      'preprocessing.@preproc_bvec'),  # noqa
-                                                  ('out_caps_brainmask', 'preprocessing.@b0_mask')])  # noqa
+            (self.input_node, container_path,    [('dwi',          'bids_dwi_filename')]),
+            (self.input_node,  rename_into_caps, [('dwi',          'in_bids_dwi')]),
+            (self.output_node, rename_into_caps, [('preproc_dwi',  'fname_dwi'),
+                                                  ('preproc_bval', 'fname_bval'),
+                                                  ('preproc_bvec', 'fname_bvec'),
+                                                  ('b0_mask',      'fname_brainmask')]),
+            (container_path, write_results,      [(('container', fix_join, 'dwi'), 'container')]),
+            (rename_into_caps, write_results,    [('out_caps_dwi',       'preprocessing.@preproc_dwi'),
+                                                  ('out_caps_bval',      'preprocessing.@preproc_bval'),
+                                                  ('out_caps_bvec',      'preprocessing.@preproc_bvec'),
+                                                  ('out_caps_brainmask', 'preprocessing.@b0_mask')])
         ])
 
     def build_core_nodes(self):
@@ -306,11 +310,11 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             # Bias correction
             (sdc, bias, [('outputnode.DWIs_epicorrected', 'inputnode.in_file')]),
             # Print end message
-            (init_node, print_end_message, [('image_id', 'image_id')]),  # noqa
-            (bias,      print_end_message, [('outputnode.out_file', 'final_file')]),  # noqa
+            (init_node, print_end_message, [('image_id', 'image_id')]),
+            (bias,      print_end_message, [('outputnode.out_file', 'final_file')]),
             # Output node
-            (bias,       self.output_node, [('outputnode.out_file', 'preproc_dwi')]),  # noqa
-            (sdc,        self.output_node, [('outputnode.out_bvec', 'preproc_bvec')]),  # noqa
-            (prepare_b0, self.output_node, [('out_updated_bval',    'preproc_bval')]),  # noqa
-            (bias,       self.output_node, [('outputnode.b0_mask',  'b0_mask')])   # noqa
+            (bias,       self.output_node, [('outputnode.out_file', 'preproc_dwi')]),
+            (sdc,        self.output_node, [('outputnode.out_bvec', 'preproc_bvec')]),
+            (prepare_b0, self.output_node, [('out_updated_bval',    'preproc_bval')]),
+            (bias,       self.output_node, [('outputnode.b0_mask',  'b0_mask')])
         ])
