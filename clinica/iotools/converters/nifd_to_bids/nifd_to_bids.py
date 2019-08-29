@@ -43,7 +43,7 @@ def convert_images(path_to_dataset, bids_dir, path_to_clinical):
 
     name_ida = None
     for filename in os.listdir(path_to_clinical):
-        if filename.startswith('idaSearch') and filename.endswith('.csv'):
+        if filename.lower().startswith('idasearch') and filename.lower().endswith('.csv'):
             name_ida = filename
     if name_ida is None:
         name_ida = 'idaSearch_all.csv'
