@@ -41,7 +41,7 @@ def convert_adni_pib_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('Calculating paths of PIB PET images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
     images = compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of PIB PET images found. Exporting images into BIDS ...')
-    # t1_pet_paths_to_bids(images, dest_dir, 'pib')
+    t1_pet_paths_to_bids(images, dest_dir, 'pib')
     cprint(Fore.GREEN + 'PIB PET conversion done.' + Fore.RESET)
 
 

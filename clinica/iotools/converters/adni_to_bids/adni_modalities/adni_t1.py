@@ -42,8 +42,8 @@ def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('Calculating paths of T1 images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
     images = compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of T1 images found. Exporting images into BIDS ...')
-    # t1_pet_paths_to_bids(images, dest_dir, 't1')
-    # cprint(Fore.GREEN + 'T1 conversion done.' + Fore.RESET)
+    t1_pet_paths_to_bids(images, dest_dir, 't1')
+    cprint(Fore.GREEN + 'T1 conversion done.' + Fore.RESET)
 
 
 def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):

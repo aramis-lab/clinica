@@ -803,7 +803,7 @@ def t1_pet_paths_to_bids(images, bids_dir, modality, mod_to_update=False):
     from clinica.iotools.converters.adni_to_bids import adni_utils
     from functools import partial
 
-    if modality.lower() not in ['t1', 'av45', 'fdg']:
+    if modality.lower() not in ['t1', 'fdg', 'pib', 'av45_fbb']:
         # This should never be reached
         raise RuntimeError(modality.lower()
                            + ' is not supported for conversion in paths_to_bids')

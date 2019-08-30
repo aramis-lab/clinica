@@ -39,7 +39,7 @@ def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('Calculating paths of FDG PET images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
     images = compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of FDG PET images found. Exporting images into BIDS ...')
-    # t1_pet_paths_to_bids(images, dest_dir, 'fdg')
+    t1_pet_paths_to_bids(images, dest_dir, 'fdg')
     cprint(Fore.GREEN + 'FDG PET conversion done.' + Fore.RESET)
 
 

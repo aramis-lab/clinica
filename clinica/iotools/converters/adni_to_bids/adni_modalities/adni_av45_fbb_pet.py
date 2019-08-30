@@ -39,7 +39,7 @@ def convert_adni_av45_fbb_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('Calculating paths of AV45 and Florbetaben PET images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
     images = compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of AV45 and Florbetaben PET images found. Exporting images into BIDS ...')
-    # t1_pet_paths_to_bids(images, dest_dir, 'av45')
+    t1_pet_paths_to_bids(images, dest_dir, 'av45_fbb')
     cprint(Fore.GREEN + 'AV45 and Florbetaben PET conversion done.' + Fore.RESET)
 
 

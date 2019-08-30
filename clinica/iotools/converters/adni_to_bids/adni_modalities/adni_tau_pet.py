@@ -39,7 +39,7 @@ def convert_adni_tau_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('Calculating paths of TAU PET images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
     images = compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of TAU PET images found. Exporting images into BIDS ...')
-    # t1_pet_paths_to_bids(images, dest_dir, 'tau')
+    t1_pet_paths_to_bids(images, dest_dir, 'tau')
     cprint(Fore.GREEN + 'TAU PET conversion done.' + Fore.RESET)
 
 
