@@ -157,10 +157,10 @@ def supress_stdout(func):
 @supress_stdout
 def process_ida(path_ida, path_out=None):
     """
-    Builds 'ida.tsv' from 'idaSearch_1_17_2019_NIFD_all.csv'
+    Builds 'ida.tsv' from 'idaSearch_all.csv'
 
     Args:
-        path_ida: Path to the original ida file 'idaSearch_1_17_2019_NIFD_all.csv'
+        path_ida: Path to the original ida file 'idaSearch_all.csv'
         path_out: Path to the output directory for 'ida.tsv', path_out is None, the ouput directory will be the same as the orginal ida file
     """
     import os

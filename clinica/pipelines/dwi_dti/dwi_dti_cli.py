@@ -32,10 +32,10 @@ class DwiDtiCli(ce.CmdParser):
         clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
                                  help='TSV file containing a list of subjects with their sessions.')
         clinica_opt.add_argument("-wd", "--working_directory",
-                                 help='Temporary directory to store pipelines intermediate results')
+                                 help='Temporary directory to store pipelines intermediate results.')
         clinica_opt.add_argument("-np", "--n_procs",
                                  type=int,
-                                 help='Number of cores used to run in parallel')
+                                 help='Number of cores used to run in parallel.')
 
     def run_command(self, args):
         """

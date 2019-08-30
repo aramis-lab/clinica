@@ -184,8 +184,8 @@ def same_missing_modality_tsv(file1, file2):
     subjects2_sorted, func_task_rest2 = (list(t) for t in zip(*sorted(zip(subjects2, func_task_rest2))))
 
     # Test is positive when all the sorted list s are equals
-    return (subjects1_sorted == subjects2_sorted) & (pet1 == pet2) \
-           & (t1w1 == t1w2) & (func_task_rest1 == func_task_rest2)
+    return (subjects1_sorted == subjects2_sorted) & (pet1 == pet2) & \
+           (t1w1 == t1w2) & (func_task_rest1 == func_task_rest2)
 
 
 def compare_folders(out, ref, shared_folder_name):

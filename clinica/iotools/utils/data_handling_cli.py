@@ -22,6 +22,9 @@ class CmdParserSubjectsSessions(ce.CmdParser):
         import errno
         from clinica.iotools.utils import data_handling as dt
         from clinica.utils.stream import cprint
+        from clinica.utils.io import check_bids_folder
+
+        check_bids_folder(args.bids_directory)
         output_directory = os.path.dirname(os.path.abspath(args.out_tsv))
         if not os.path.exists(output_directory):
             try:
@@ -74,6 +77,9 @@ class CmdParserMergeTsv(ce.CmdParser):
 
     def run_command(self, args):
         from clinica.iotools.utils import data_handling as dt
+        from clinica.utils.io import check_bids_folder
+
+        check_bids_folder(args.bids_directory)
         dt.create_merge_file(args.bids_directory, args.out_tsv,
                              caps_dir=args.caps_directory, pipelines=args.pipelines,
                              atlas_selection=args.atlas_selection, pvc_restriction=args.pvc_restriction,
@@ -95,8 +101,11 @@ class CmdParserMissingModalities(ce.CmdParser):
                                 help='Path to the output directory.')  # noqa
         self._args.add_argument("-op", '--output_prefix',
                                 type=str, default='',
-                                help='Prefix for the name of output files.')  # noqa
+                                help='Prefix for the name of output files (default: --output_prefix missing_mods).')  # noqa
 
     def run_command(self, args):
         from clinica.iotools.utils import data_handling as dt
+        from clinica.utils.io import check_bids_folder
+
+        check_bids_folder(args.bids_directory)
         dt.compute_missing_mods(args.bids_directory, args.out_directory, args.output_prefix)

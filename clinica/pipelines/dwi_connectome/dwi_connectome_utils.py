@@ -59,20 +59,23 @@ def get_caps_filenames(dwi_file):
     import re
 
     m = re.search(r'\/(sub-[a-zA-Z0-9]+_ses-[a-zA-Z0-9]+.*)_preproc', dwi_file)
-
     if m is None:
         raise ValueError('Input filename is not in a CAPS compliant format.')
+    source_file_caps = m.group(1)
 
-    source_file = m.group(1)
+    m = re.search(r'\/(sub-[a-zA-Z0-9]+_ses-[a-zA-Z0-9]+.*)_space-[a-zA-Z0-9]+_preproc', dwi_file)
+    if m is None:
+        raise ValueError('Input filename is not in a CAPS compliant format.')
+    source_file_bids = m.group(1)
 
-    response = source_file + '_model-CSD_responseFunction.txt'
-    fod = source_file + '_model-CSD_diffmodel.mif'
-    tracts = source_file + '_model-CSD_tractography.tck'
-    nodes = [source_file + '_atlas-desikan_parcellation.nii.gz',
-             source_file + '_atlas-destrieux_parcellation.nii.gz']
+    response = source_file_caps + '_model-CSD_responseFunction.txt'
+    fod = source_file_caps + '_model-CSD_diffmodel.nii.gz'
+    tracts = source_file_caps + '_model-CSD_tractography.tck'
+    nodes = [source_file_caps + '_atlas-desikan_parcellation.nii.gz',
+             source_file_caps + '_atlas-destrieux_parcellation.nii.gz']
     # TODO: Add custom Lausanne2008 node files here.
-    connectomes = [source_file + '_model-CSD_atlas-desikan_connectivity.tsv',
-                   source_file + '_model-CSD_atlas-destrieux_connectivity.tsv']
+    connectomes = [source_file_bids + '_model-CSD_atlas-desikan_connectivity.tsv',
+                   source_file_bids + '_model-CSD_atlas-destrieux_connectivity.tsv']
     # TODO: Add custom Lausanne2008 connectome files here.
 
     return response, fod, tracts, nodes, connectomes
