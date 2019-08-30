@@ -838,13 +838,13 @@ def test_run_T1FreeSurferLongitudinal(cmdopt):
 
     working_dir = abspath(cmdopt)
     root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'T1FreeSurferLongitudinal')
+    root = join(root, 'data', 'T1FreeSurferLongitudinalCorrection')
 
     # define I/O
     in_tsv = join(root, 'in', 'subjects.tsv')
     out_caps_dir = join(root, 'out', 'caps')
     clean_folder(out_caps_dir, recreate=False)
-    clean_folder(join(working_dir, 'T1FreeSurferLongitudinal'))
+    clean_folder(join(working_dir, 'T1FreeSurferLongitudinalCorrection'))
 
     # Copy necessary data from in to out
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
@@ -866,7 +866,7 @@ def test_run_T1FreeSurferLongitudinal(cmdopt):
     longcorr_pipeline.parameters['overwrite_caps'] = 'True'
     longcorr_pipeline.parameters['n_procs'] = 4
     longcorr_pipeline.build()
-    longitudinal_workflow = npe.Workflow(name='T1FreeSurferLongitudinal')
+    longitudinal_workflow = npe.Workflow(name='T1FreeSurferLongitudinalCorrection')
     longitudinal_workflow.base_dir = working_dir
     longitudinal_workflow.connect(
         template_pipeline, '5_sendto_longcorr.out_unpcssd_sublist',
