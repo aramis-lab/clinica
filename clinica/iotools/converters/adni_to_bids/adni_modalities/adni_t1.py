@@ -63,29 +63,23 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
     import pandas as pd
 
     from clinica.utils.stream import cprint
+    from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path
 
     t1_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
                  'Study_ID', 'Field_Strength', 'Series_ID', 'Image_ID', 'Original']
-
     t1_df = pd.DataFrame(columns=t1_col_df)
 
-    # Getting paths for needed .csv files
-    adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
-    mprage_meta_path = path.join(csv_dir, 'MPRAGEMETA.csv')
-    mri_quality_path = path.join(csv_dir, 'MRIQUALITY.csv')
-    mayo_mri_qc_path = path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
-
     # Loading needed .csv files
-    adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',', low_memory=False)
-    mprage_meta = pd.io.parsers.read_csv(mprage_meta_path, sep=',', low_memory=False)
-    mri_quality = pd.io.parsers.read_csv(mri_quality_path, sep=',', low_memory=False)
-    mayo_mri_qc = pd.io.parsers.read_csv(mayo_mri_qc_path, sep=',', low_memory=False)
+    adni_merge = pd.io.parsers.read_csv(path.join(csv_dir, 'ADNIMERGE.csv'), sep=',', low_memory=False)
+    mprage_meta = pd.io.parsers.read_csv(path.join(csv_dir, 'MPRAGEMETA.csv'), sep=',', low_memory=False)
+    mri_quality = pd.io.parsers.read_csv(path.join(csv_dir, 'MRIQUALITY.csv'), sep=',', low_memory=False)
+    mayo_mri_qc = pd.io.parsers.read_csv(path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv'), sep=',',
+                                         low_memory=False)
     # Keep only T1 scans
     mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == 'T1']
 
     # We will convert the images for each subject in the subject list
     for subj in subjs_list:
-        cprint(subj)
 
         # Filter ADNIMERGE, MPRAGE METADATA and QC for only one subject and sort the rows/visits by examination date
         adnimerge_subj = adni_merge[adni_merge.PTID == subj]
@@ -100,10 +94,7 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
         # Obtain corresponding timepoints for the subject visits
         visits = visits_to_timepoints_t1(subj, mprage_meta_subj, adnimerge_subj)
 
-        keys = list(visits.keys())
-        keys.sort()
-
-        for visit_info in keys:
+        for visit_info in visits.keys():
             cohort = visit_info[1]
             timepoint = visit_info[0]
             visit_str = visits[visit_info]
@@ -132,49 +123,11 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
                               'Original': True}
 
             row_to_append = pd.DataFrame(image_dict, index=['i', ])
+            # TODO Replace iteratively appending by pandas.concat
             t1_df = t1_df.append(row_to_append, ignore_index=True)
 
-    images = t1_df
-    is_dicom = []
-    nifti_paths = []
-    count = 0
-
-    # For each image a path will be reconstructed and checked if it exists
-    for row in images.iterrows():
-
-        image = row[1]
-        # Path to folder with the corresponding image sequence inside subject directory
-        seq_path = path.join(source_dir, str(image.Subject_ID), image.Sequence)
-
-        # Find path to image folder with the corresponding image series inside image sequence directory
-        count += 1
-        series_path = ''
-        for (dirpath, dirnames, filenames) in walk(seq_path):
-            found = False
-            for d in dirnames:
-                if d == 'S' + str(image.Series_ID):
-                    series_path = path.join(dirpath, d)
-                    found = True
-                    break
-            if found:
-                break
-
-        # Check if there is a NIFTI image inside the folder. Otherwise assume it is a DICOM image
-        nifti_path = series_path
-        dicom = True
-        for (dirpath, dirnames, filenames) in walk(series_path):
-            for f in filenames:
-                if f.endswith(".nii"):
-                    dicom = False
-                    nifti_path = path.join(dirpath, f)
-                    break
-
-        is_dicom.append(dicom)
-        nifti_paths.append(nifti_path)
-
-    # Columns with if image is DICOM and path information are added to the dataframe
-    images.loc[:, 'Is_Dicom'] = pd.Series(is_dicom, index=images.index)
-    images.loc[:, 'Path'] = pd.Series(nifti_paths, index=images.index)
+    # Checking for images paths in filesystem
+    images = find_image_path(t1_df, source_dir, 'T1', 'S', 'Series_ID')
 
     # Store the paths inside a file called conversion_info inside the input directory
     t1_tsv_path = path.join(dest_dir, 'conversion_info')
@@ -289,8 +242,7 @@ def adni3_image(subject_id, timepoint, visit_str, mprage_meta_subj, mayo_mri_qc_
     filtered_scan = mprage_meta_subj[(mprage_meta_subj['Orig/Proc'] == 'Original')
                                      & (mprage_meta_subj.Visit == visit_str)
                                      & mprage_meta_subj.Sequence.map(
-        lambda x: (x.lower().find('accel') > -1)
-                  & ~(x.lower().endswith('_ND')))]
+        lambda x: (x.lower().find('accel') > -1) & ~(x.lower().endswith('_ND')))]
 
     if filtered_scan.shape[0] < 1:
         # TODO - LOG THIS
@@ -363,13 +315,11 @@ def visits_to_timepoints_t1(subject, mprage_meta_subj_orig, adnimerge_subj):
     mprage_meta_subj_orig = mprage_meta_subj_orig[mprage_meta_subj_orig['Visit'] != 'ADNI Baseline']
 
     visits = dict()
-
     unique_visits = list(mprage_meta_subj_orig.Visit.unique())
-
     pending_timepoints = []
 
     # We try to obtain the corresponding image Visit for a given VISCODE
-    for adni_row in adnimerge_subj.iterrows():  # (adnimerge_subj[adnimerge_subj.FLDSTRENG.map(lambda x: x is not '')]).iterrows():
+    for adni_row in adnimerge_subj.iterrows():
         visit = adni_row[1]
 
         if visit.ORIGPROT == 'ADNI3':
@@ -464,6 +414,7 @@ def visits_to_timepoints_t1(subject, mprage_meta_subj_orig, adnimerge_subj):
             # cprint(key_min_visit)
             # cprint(visits[key_min_visit])
             # cprint(image.Visit)
+
     return visits
 
 

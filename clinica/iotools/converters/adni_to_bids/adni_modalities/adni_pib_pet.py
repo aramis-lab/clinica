@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
- Module for converting FDG PET of ADNI
+ Module for converting PIB PET of ADNI
 """
 
 __author__ = "Jorge Samper-Gonzalez"
@@ -14,8 +14,10 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
+def convert_adni_pib_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     """
+    Convert PIB PET images of ADNI into BIDS format
+
     Args:
         source_dir:
         csv_dir:
@@ -36,14 +38,14 @@ def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
         adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
         subjs_list = list(adni_merge.PTID.unique())
 
-    cprint('Calculating paths of FDG PET images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
-    images = compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
-    cprint('Paths of FDG PET images found. Exporting images into BIDS ...')
-    # t1_pet_paths_to_bids(images, dest_dir, 'fdg')
-    cprint(Fore.GREEN + 'FDG PET conversion done.' + Fore.RESET)
+    cprint('Calculating paths of PIB PET images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
+    images = compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
+    cprint('Paths of PIB PET images found. Exporting images into BIDS ...')
+    # t1_pet_paths_to_bids(images, dest_dir, 'pib')
+    cprint(Fore.GREEN + 'PIB PET conversion done.' + Fore.RESET)
 
 
-def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
+def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     """
 
     Args:
@@ -63,13 +65,12 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars, find_image_path
     from clinica.utils.stream import cprint
 
-    pet_fdg_col = ['Phase', 'Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
+    pet_pib_col = ['Phase', 'Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
                    'Series_ID', 'Image_ID', 'Original']
-    pet_fdg_df = pd.DataFrame(columns=pet_fdg_col)
+    pet_pib_df = pd.DataFrame(columns=pet_pib_col)
 
     # Loading needed .csv files
-    petqc = pd.io.parsers.read_csv(path.join(csv_dir, 'PETQC.csv'), sep=',')
-    petqc3 = pd.io.parsers.read_csv(path.join(csv_dir, 'PETC3.csv'), sep=',')
+    pibqc = pd.io.parsers.read_csv(path.join(csv_dir, 'PIBQC.csv'), sep=',')
     pet_meta_list = pd.io.parsers.read_csv(path.join(csv_dir, 'PET_META_LIST.csv'), sep=',')
 
     for subj in subjs_list:
@@ -78,25 +79,15 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         subject_pet_meta = pet_meta_list[pet_meta_list['Subject'] == subj]
 
         if subject_pet_meta.shape[0] < 1:
-            # TODO Log somewhere subjects without FDG PET images
-            # cprint('No FDG-PET images metadata for subject - ' + subj)
+            # TODO Log somewhere subjects without PIB PET images
+            # cprint('No PIB-PET images metadata for subject - ' + subj)
             continue
 
-        # QC for FDG PET images for ADNI 1, GO and 2
-        pet_qc_1GO2_subj = petqc[(petqc.PASS == 1) & (petqc.RID == int(subj[-4:]))]
+        # QC for PIB PET images
+        pet_qc_subj = pibqc[(pibqc.PASS == 1) & (pibqc.RID == int(subj[-4:]))]
 
-        # QC for FDG PET images for ADNI 3
-        pet_qc3_subj = petqc3[(petqc3.SCANQLTY == 1) & (petqc3.RID == int(subj[-4:]))]
-        pet_qc3_subj.insert(0, 'EXAMDATE', pet_qc3_subj.SCANDATE.to_list())
-
-        # Concatenating visits in both QC files
-        pet_qc_subj = pd.concat([pet_qc_1GO2_subj, pet_qc3_subj], axis=0, ignore_index=True, sort=False)
-
-        for visit in list(pet_qc_subj.VISCODE2.unique()):
-            pet_qc_visit = pet_qc_subj[pet_qc_subj.VISCODE2 == visit]
-
-            # If there are several scans for a timepoint we keep image acquired last (higher LONIUID)
-            pet_qc_visit = pet_qc_visit.sort_values("LONIUID", ascending=False)
+        for visit in list(pet_qc_subj.VISCODE.unique()):
+            pet_qc_visit = pet_qc_subj[pet_qc_subj.VISCODE == visit]
 
             qc_visit = pet_qc_visit.iloc[0]
 
@@ -107,23 +98,23 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                                                  & (subject_pet_meta['Image ID'] == int_image_id)
                                                  & (subject_pet_meta.Sequence.map(lambda s: (s.lower().find('early')
                                                                                              < 0)))]
-            # If no corresponding FDG PET metadata for an original image,
-            # take scan at the same date containing FDG in sequence name
+            # If no corresponding PIB PET metadata for an original image,
+            # take scan at the same date containing PIB in sequence name
             if original_pet_meta.shape[0] < 1:
                 original_pet_meta = subject_pet_meta[(subject_pet_meta['Orig/Proc'] == 'Original')
-                                                     & (subject_pet_meta.Sequence.map(lambda x: (x.lower().find('fdg')
+                                                     & (subject_pet_meta.Sequence.map(lambda x: (x.lower().find('pib')
                                                                                                  > -1)))
                                                      & (subject_pet_meta['Scan Date'] == qc_visit.EXAMDATE)]
 
                 if original_pet_meta.shape[0] < 1:
-                    # TODO Log somewhere QC visits without image metadata
-                    cprint('No FDG-PET images metadata for subject - ' + subj + ' for visit ' + qc_visit.VISCODE2)
+                    # TODO Log somewhere QC visits without
+                    cprint('No PIB-PET images metadata for subject - ' + subj + ' for visit ' + qc_visit.VISCODE)
                     continue
 
             original_image = original_pet_meta.iloc[0]
 
             # Co-registered and Averaged image with the same Series ID of the original image
-            averaged_pet_meta = subject_pet_meta[(subject_pet_meta['Sequence'] == 'Co-registered, Averaged')
+            averaged_pet_meta = subject_pet_meta[(subject_pet_meta['Sequence'] == 'PIB Co-registered, Averaged')
                                                  & (subject_pet_meta['Series ID'] == original_image['Series ID'])]
 
             # If an explicit Co-registered, Averaged image does not exist,
@@ -144,37 +135,33 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
             image_id = sel_image['Image ID']
 
             row_to_append = pd.DataFrame(
-                [[qc_visit.Phase, subj, qc_visit.VISCODE2, str(visit), sequence, date, str(study_id), str(series_id),
+                [['ADNI1', subj, qc_visit.VISCODE, str(visit), sequence, date, str(study_id), str(series_id),
                   str(image_id), original]],
-                columns=pet_fdg_col)
-            pet_fdg_df = pet_fdg_df.append(row_to_append, ignore_index=True)
+                columns=pet_pib_col)
+            pet_pib_df = pet_pib_df.append(row_to_append, ignore_index=True)
 
-    # TODO check for new exceptions in ADNI3
+    # TODO check for exceptions
     # Exceptions
     # ==========
-    conversion_errors = [  # NONAME.nii
-                         ('037_S_1421', 'm36'),
-                         ('037_S_1078', 'm36'),
-                         # Empty folders
-                         ('941_S_1195', 'm48'),
-                         ('005_S_0223', 'm12')]
+    conversion_errors = []
 
     error_indices = []
     for conv_error in conversion_errors:
-        error_indices.append((pet_fdg_df.Subject_ID == conv_error[0])
-                             & (pet_fdg_df.VISCODE == conv_error[1]))
+        error_indices.append((pet_pib_df.Subject_ID == conv_error[0])
+                             & (pet_pib_df.VISCODE == conv_error[1]))
 
-    indices_to_remove = pet_fdg_df.index[reduce(operator.or_, error_indices, False)]
-    pet_fdg_df.drop(indices_to_remove, inplace=True)
+    if error_indices:
+        indices_to_remove = pet_pib_df.index[reduce(operator.or_, error_indices, False)]
+        pet_pib_df.drop(indices_to_remove, inplace=True)
 
     # DONE - Make a function reusing this code for different modalities
     # TODO check if it works properly
 
-    images = find_image_path(pet_fdg_df, source_dir, 'FDG', 'I', 'Image_ID')
+    images = find_image_path(pet_pib_df, source_dir, 'PIB', 'I', 'Image_ID')
 
-    fdg_csv_path = path.join(dest_dir, 'conversion_info')
-    if not os.path.exists(fdg_csv_path):
-        os.mkdir(fdg_csv_path)
-    images.to_csv(path.join(fdg_csv_path, 'fdg_pet_paths.tsv'), sep='\t', index=False)
+    pib_csv_path = path.join(dest_dir, 'conversion_info')
+    if not os.path.exists(pib_csv_path):
+        os.mkdir(pib_csv_path)
+    images.to_csv(path.join(pib_csv_path, 'pib_pet_paths.tsv'), sep='\t', index=False)
 
     return images
