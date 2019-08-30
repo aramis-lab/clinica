@@ -222,7 +222,6 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
                                               interface=nio.DataSink(infields=datasink_infields))
         write_segmentation_node.inputs.base_directory = self.caps_directory
         write_segmentation_node.inputs.parameterization = False
-
         write_segmentation_node.inputs.regexp_substitutions = [
             (r'(.*)c1(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-graymatter\3'),
             (r'(.*)c2(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-whitematter\3'),
