@@ -283,7 +283,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         self.connect([
             (self.output_node, write_flowfields_node, [(('dartel_flow_fields', zip_nii, True), 'flow_fields')]),
             (self.input_node, extract_container_node_write_flowfields, [('input_images', 'filename')]),
-            (extract_container_node_write_flowfields, write_segmentation_node, [('container_path', 'container')])
+            (extract_container_node_write_flowfields, write_flowfields_node, [('container_path', 'container')])
         ])
 
         # Writing normalized images (and smoothed) into CAPS
