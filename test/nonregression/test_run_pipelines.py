@@ -933,5 +933,4 @@ def test_run_T1FreeSurferLongitudinal(cmdopt):
             tolerance = 10**-4
             assert np.allclose(out_aseg.affine, ref_aseg.affine, rtol=tolerance, equal_nan=True)
             assert np.allclose(out_aseg.get_data(), ref_aseg.get_data(), rtol=tolerance, equal_nan=True)
-
     clean_folder(out_caps_dir, recreate=False)
