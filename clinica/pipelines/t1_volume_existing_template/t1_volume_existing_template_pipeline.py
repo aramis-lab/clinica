@@ -12,6 +12,13 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
+# Use hash instead of parameters for iterables folder names
+# Otherwise path will be too long and generate OSError
+from nipype import config
+cfg = dict(execution={'parameterize_dirs': False})
+config.update_config(cfg)
+
+
 class T1VolumeExistingTemplate(cpe.Pipeline):
     """T1VolumeExistingTemplate
 
@@ -145,6 +152,10 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
 
         pattern_final_dartel = join(self.caps_directory, 'groups', 'group-' + g_id, 't1', 'group-' + g_id + '_template.nii*')
         final_template = glob.glob(pattern_final_dartel)
+        if len(final_template) != 1:
+            raise FileNotFoundError('Could find template !')
+        else:
+            final_template = final_template[0]
 
         read_node = npe.Node(name="read_node",
                              interface=nutil.IdentityInterface(fields=['t1w',
