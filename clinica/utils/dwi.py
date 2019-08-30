@@ -454,13 +454,13 @@ def generate_acq_file(in_dwi, fsl_phase_encoding_direction, total_readout_time, 
         elif fsl_phase_encoding_direction == 'y':
             arr[i, :] = np.array((0, 1, 0, total_readout_time))
         elif fsl_phase_encoding_direction == 'x':
-            arr[i, :] = np.array((0, 1, 0, total_readout_time))
+            arr[i, :] = np.array((1, 0, 0, total_readout_time))
         elif fsl_phase_encoding_direction == 'x-':
-            arr[i, :] = np.array((0, -1, 0, total_readout_time))
+            arr[i, :] = np.array((-1, 0, 0, total_readout_time))
         elif fsl_phase_encoding_direction == 'z':
             arr[i, :] = np.array((0, 1, 0, total_readout_time))
-        elif fsl_phase_encoding_direction == 'x-':
-            arr[i, :] = np.array((0, -1, 0, total_readout_time))
+        elif fsl_phase_encoding_direction == 'z-':
+            arr[i, :] = np.array((0, 0, -1, total_readout_time))
         else:
             raise RuntimeError("FSL PhaseEncodingDirection (found value: %s) is unknown,"
                                "it should be a value in (x, y, z, x-, y-, z-)" % fsl_phase_encoding_direction)
