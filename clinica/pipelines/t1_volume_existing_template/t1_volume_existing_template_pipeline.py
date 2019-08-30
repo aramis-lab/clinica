@@ -217,15 +217,11 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
             datasink_connections.append((('t1_mni', zip_nii, True), 't1_mni'))
             datasink_infields.append('t1_mni')
 
-        datasink_iterfields = ['container'] + datasink_infields
         write_segmentation_node = npe.MapNode(name='write_segmentation_node',
-                                              iterfield=datasink_iterfields,
+                                              iterfield=datasink_infields,
                                               interface=nio.DataSink(infields=datasink_infields))
         write_segmentation_node.inputs.base_directory = self.caps_directory
         write_segmentation_node.inputs.parameterization = False
-        write_segmentation_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i]
-                                                    + '/t1/spm/segmentation'
-                                                    for i in range(len(self.subjects))]
 
         write_segmentation_node.inputs.regexp_substitutions = [
             (r'(.*)c1(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-graymatter\3'),
@@ -246,20 +242,25 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
             (r'trait_added', r'')
         ]
 
+        extract_container_node_write_segmentation = npe.Node(nutil.Function(input_names=['filename'],
+                                                                            output_names=['container_path'],
+                                                                            function=existing_dartel_utils.container_name_for_write_segmentation),
+                                                             name='extract_container_node_write_segmentation')
+
         self.connect([
-            (self.output_node, write_segmentation_node, datasink_connections)
+            (self.output_node, write_segmentation_node, datasink_connections),
+            (self.input_node, extract_container_node_write_segmentation, [('input_images', 'filename')]),
+            (extract_container_node_write_segmentation, write_segmentation_node, [('container_path', 'container')])
         ])
 
         # Writing flowfields into CAPS
         # ============================
         write_flowfields_node = npe.MapNode(name='write_flowfields_node',
-                                            iterfield=['container', 'flow_fields'],
+                                            iterfield=['flow_fields'],
                                             interface=nio.DataSink(infields=['flow_fields']))
         write_flowfields_node.inputs.base_directory = self.caps_directory
         write_flowfields_node.inputs.parameterization = False
-        write_flowfields_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
-                                                  '/t1/spm/dartel/group-' + self._group_id
-                                                  for i in range(len(self.subjects))]
+
         write_flowfields_node.inputs.regexp_substitutions = [
             (r'(.*)_Template(\.nii(\.gz)?)$', r'\1\2'),
             (r'(.*)c1(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-graymatter\3'),
@@ -274,9 +275,15 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
              r'\1\2_target-' + re.escape(self._group_id) + r'_transformation-forward_deformation\3'),
             (r'trait_added', r'')
         ]
-
+        extract_container_node_write_flowfields = npe.Node(nutil.Function(input_names=['filename', 'group_id'],
+                                                                          output_names=['container_path'],
+                                                                          function=existing_dartel_utils.container_name_for_write_normalized),
+                                                           name='extract_container_node_write_flowfields')
+        extract_container_node_write_flowfields.inputs.group_id = self._group_id
         self.connect([
-            (self.output_node, write_flowfields_node, [(('dartel_flow_fields', zip_nii, True), 'flow_fields')])
+            (self.output_node, write_flowfields_node, [(('dartel_flow_fields', zip_nii, True), 'flow_fields')]),
+            (self.input_node, extract_container_node_write_flowfields, [('input_images', 'filename')]),
+            (extract_container_node_write_flowfields, write_segmentation_node, [('container_path', 'container')])
         ])
 
         # Writing normalized images (and smoothed) into CAPS
@@ -324,7 +331,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
             (r'trait_added', r'')
         ]
 
-        extract_container_node_atlas = npe.Node(nutil.Function(input_names=['in_t1w', 'group_id'],
+        extract_container_node_atlas = npe.Node(nutil.Function(input_names=['filename', 'group_id'],
                                                                output_names=['container_path'],
                                                                function=existing_dartel_utils.container_name_for_atlas),
                                                 name='extract_container_node_atlas')
@@ -333,10 +340,10 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
             (self.output_node, write_normalized_node, [(('normalized_files', zip_nii, True), 'normalized_files'),
                                                        (('smoothed_normalized_files', zip_nii, True),
                                                         'smoothed_normalized_files')]),
-            (self.input_node, extract_container_node_write_normalized, [('input_images', 'in_t1w')]),
-            (extract_container_node_write_normalized, write_normalized_node, [('container_path', 'container')])),
+            (self.input_node, extract_container_node_write_normalized, [('input_images', 'filename')]),
+            (extract_container_node_write_normalized, write_normalized_node, [('container_path', 'container')]),
             (self.output_node, write_atlas_node, [('atlas_statistics', 'atlas_statistics')]),
-            (self.input_node, extract_container_node_atlas, [('input_images', 'in_t1w')]),
+            (self.input_node, extract_container_node_atlas, [('input_images', 'filename')]),
             (extract_container_node_atlas, write_atlas_node, [('container_path', 'container')])
         ])
 
