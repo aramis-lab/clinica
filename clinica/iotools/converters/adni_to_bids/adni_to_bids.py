@@ -89,7 +89,7 @@ class AdniToBids(Converter):
         adni_utils.create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids)
 
     def convert_images(self, source_dir, clinical_dir, dest_dir, subjs_list_path=None,
-                       modalities=['T1', 'PET_FDG', 'PET_AMYLOID', 'DWI', 'FLAIR']):
+                       modalities=['T1', 'PET_FDG', 'PET_AMYLOID', 'PET_TAU', 'DWI', 'FLAIR']):
         """
         Convert the images of ADNI
 
@@ -111,6 +111,7 @@ class AdniToBids(Converter):
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet as adni_fdg
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_pib_pet as adni_pib
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_av45_fbb_pet as adni_av45_fbb
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_tau_pet as adni_tau
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_dwi as adni_dwi
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_flair as adni_flair
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fmri as adni_fmri
@@ -142,6 +143,9 @@ class AdniToBids(Converter):
         if 'PET_AMYLOID' in modalities:
             adni_pib.convert_adni_pib_pet(source_dir, clinical_dir, dest_dir, subjs_list)
             adni_av45_fbb.convert_adni_av45_fbb_pet(source_dir, clinical_dir, dest_dir, subjs_list)
+
+        if 'PET_TAU' in modalities:
+            adni_tau.convert_adni_tau_pet(source_dir, clinical_dir, dest_dir, subjs_list)
 
         if 'DWI' in modalities:
             adni_dwi.convert_adni_dwi(source_dir, clinical_dir, dest_dir, subjs_list)
