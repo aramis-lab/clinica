@@ -119,44 +119,48 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as seg_utils
+        from os.path import join
+        import glob
 
-        # Reading BIDS
+        # Reading BIDS node
+        # =================
+
+
+        # Reading T1w
         # ============
-        read_node = npe.Node(name="read_node",
-                             interface=nutil.IdentityInterface(fields=['bids_images'],
-                                                               mandatory_inputs=True))
-        read_node.inputs.bids_images = seg_utils.select_bids_images(self.subjects,
-                                                                    self.sessions,
-                                                                    'T1w',
-                                                                    self.bids_layout)
 
-        # Dartel Iterations Templates DataGrabber
+        t1w_images = seg_utils.select_bids_images(self.subjects,
+                                                  self.sessions,
+                                                  'T1w',
+                                                  self.bids_layout)
+
+        # Dartel Iterations Templates
         # ============================
-        templates_reader = npe.MapNode(nio.DataGrabber(infields=['iteration'],
-                                                       outfields=['out_files']),
-                                       name="templates_reader",
-                                       iterfield=['iteration'])
-        templates_reader.inputs.base_directory = self.caps_directory
-        templates_reader.inputs.template = 'groups/group-' + self._group_id + '/t1/group-' + \
-                                           self._group_id + '_iteration-%d_template.nii*'
-        templates_reader.inputs.iteration = range(1, 7)
-        templates_reader.inputs.sort_filelist = False
+        g_id = self._group_id
+        pattern_iter_dartel = join(self.caps_directory, 'groups', 'group-' + g_id, 't1', 'group-' + g_id + '_iteration-*_template.nii*')
+        iter_template = glob.glob(pattern_iter_dartel)
 
-        # Dartel Template DataGrabber
-        # ===========================
-        final_template_reader = npe.Node(nio.DataGrabber(infields=['group_id', 'group_id_repeat'],
-                                                         outfields=['out_files']),
-                                         name="final_template_reader")
-        final_template_reader.inputs.base_directory = self.caps_directory
-        final_template_reader.inputs.template = 'groups/group-%s/t1/group-%s_template.nii*'
-        final_template_reader.inputs.group_id = self._group_id
-        final_template_reader.inputs.group_id_repeat = self._group_id
-        final_template_reader.inputs.sort_filelist = False
+        # Dartel Template
+        # ================
+
+        pattern_final_dartel = join(self.caps_directory, 'groups', 'group-' + g_id, 't1', 'group-' + g_id + '_template.nii*')
+        final_template = glob.glob(pattern_final_dartel)
+
+        read_node = npe.Node(name="read_node",
+                             interface=nutil.IdentityInterface(fields=['t1w',
+                                                                       'templates_iter',
+                                                                       'final_template'],
+                                                               mandatory_inputs=True),
+                             iterables=[('t1w', t1w_images)],
+                             synchronize=True)
+
+        read_node.inputs.templates_iter = iter_template
+        read_node.inputs.final_template = final_template
 
         self.connect([
-            (read_node, self.input_node, [('bids_images', 'input_images')]),
-            (templates_reader, self.input_node, [('out_files', 'dartel_iteration_templates')]),
-            (final_template_reader, self.input_node, [('out_files', 'dartel_final_template')])
+            (read_node, self.input_node, [('t1w', 'input_images')]),
+            (read_node, self.input_node, [('templates_iter', 'dartel_iteration_templates')]),
+            (read_node, self.input_node, [('final_template', 'dartel_final_template')])
         ])
 
     def build_output_node(self):
