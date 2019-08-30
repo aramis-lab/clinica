@@ -180,7 +180,9 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
 
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
+        import nipype.interfaces.utility as nutil
         import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as seg_utils
+        import clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_utils as existing_dartel_utils
         from clinica.utils.io import zip_nii
         import re
 
@@ -280,14 +282,12 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         # Writing normalized images (and smoothed) into CAPS
         # ==================================================
         write_normalized_node = npe.MapNode(name='write_normalized_node',
-                                            iterfield=['container', 'normalized_files', 'smoothed_normalized_files'],
+                                            iterfield=['normalized_files', 'smoothed_normalized_files'],
                                             interface=nio.DataSink(infields=['normalized_files',
                                                                              'smoothed_normalized_files']))
         write_normalized_node.inputs.base_directory = self.caps_directory
         write_normalized_node.inputs.parameterization = False
-        write_normalized_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
-                                                  '/t1/spm/dartel/group-' + self._group_id
-                                                  for i in range(len(self.subjects))]
+
         write_normalized_node.inputs.regexp_substitutions = [
             (r'(.*)c1(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-graymatter_probability\3'),
             (r'(.*)c2(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-whitematter_probability\3'),
@@ -303,16 +303,19 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
             (r'trait_added', r'')
         ]
 
+        extract_container_node_write_normalized = npe.Node(nutil.Function(input_names=['filename', 'group_id'],
+                                                                          output_names=['container_path'],
+                                                                          function=existing_dartel_utils.container_name_for_write_normalized),
+                                                           name='extract_container_node_write_normalized')
+        extract_container_node_write_normalized.inputs.group_id = self._group_id
+
         # Writing atlases statistics into CAPS
         # ==================================================
         write_atlas_node = npe.MapNode(name='write_atlas_node',
-                                            iterfield=['container', 'atlas_statistics'],
+                                            iterfield=['atlas_statistics'],
                                             interface=nio.DataSink(infields=['atlas_statistics']))
         write_atlas_node.inputs.base_directory = self.caps_directory
         write_atlas_node.inputs.parameterization = False
-        write_atlas_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
-                                             '/t1/spm/dartel/group-' + self._group_id + '/atlas_statistics'
-                                             for i in range(len(self.subjects))]
         write_atlas_node.inputs.regexp_substitutions = [
             (r'(.*atlas_statistics)/atlas_statistics/mwc1(sub-.*_T1w).*(_space-.*_map-graymatter_statistics\.tsv)$',
              r'\1/\2\3'),
@@ -321,11 +324,20 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
             (r'trait_added', r'')
         ]
 
+        extract_container_node_atlas = npe.Node(nutil.Function(input_names=['in_t1w', 'group_id'],
+                                                               output_names=['container_path'],
+                                                               function=existing_dartel_utils.container_name_for_atlas),
+                                                name='extract_container_node_atlas')
+        extract_container_node_atlas.inputs.group_id = self._group_id
         self.connect([
             (self.output_node, write_normalized_node, [(('normalized_files', zip_nii, True), 'normalized_files'),
                                                        (('smoothed_normalized_files', zip_nii, True),
                                                         'smoothed_normalized_files')]),
-            (self.output_node, write_atlas_node, [('atlas_statistics', 'atlas_statistics')])
+            (self.input_node, extract_container_node_write_normalized, [('input_images', 'in_t1w')]),
+            (extract_container_node_write_normalized, write_normalized_node, [('container_path', 'container')])),
+            (self.output_node, write_atlas_node, [('atlas_statistics', 'atlas_statistics')]),
+            (self.input_node, extract_container_node_atlas, [('input_images', 'in_t1w')]),
+            (extract_container_node_atlas, write_atlas_node, [('container_path', 'container')])
         ])
 
     def build_core_nodes(self):
