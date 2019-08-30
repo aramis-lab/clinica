@@ -145,3 +145,17 @@ def create_iteration_parameters(dartel_templates, iteration_parameters):
                                              dartel_templates[i])
                                             )
         return new_iteration_parameters
+
+
+def container_name_for_atlas(filename, group_id):
+    import re
+
+    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', filename)
+    subject = m.group(1)
+    session = m.group(2)
+    return 'subjects/' + subject + '/' + session + '/t1/spm/dartel/group-' + group_id + '/atlas_statistics'
+
+
+def container_name_for_write_normalized(filename, group_id):
+    from os.path import dirname
+    return dirname(get_container_name_from_t1w_for_atlas(filename, group_id))
