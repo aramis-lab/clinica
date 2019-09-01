@@ -149,26 +149,29 @@ def create_iteration_parameters(dartel_templates, iteration_parameters):
 
 def container_name_for_atlas(filename, group_id):
     import re
+    import os
 
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', filename)
     subject = m.group(1)
     session = m.group(2)
-    return 'subjects/' + subject + '/' + session + '/t1/spm/dartel/group-' + group_id + '/atlas_statistics'
+    return os.path.join('subjects', subject, session, 't1', 'spm', 'dartel', 'group-' + group_id, 'atlas_statistics')
 
 
 def container_name_for_write_normalized(filename, group_id):
     import re
+    import os
 
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', filename)
     subject = m.group(1)
     session = m.group(2)
-    return 'subjects/' + subject + '/' + session + '/t1/spm/dartel/group-' + group_id
+    return os.path.join('subjects', subject, session, 't1', 'spm', 'dartel', 'group-' + group_id)
 
 
 def container_name_for_write_segmentation(filename):
     import re
+    import os
 
     m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', filename)
     subject = m.group(1)
     session = m.group(2)
-    return 'subjects/' + subject + '/' + session + '/t1/spm/segmentation'
+    return os.path.join('subjects', subject, session, 't1', 'spm', 'segmentation')
