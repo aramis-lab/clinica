@@ -168,13 +168,13 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
     def build_output_node(self):
         """Build and connect an output node to the pipelines.
         """
+        import re
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
-        import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as seg_utils
-        import clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_utils as existing_dartel_utils
         from clinica.utils.io import zip_nii
-        import re
+        from ..t1_volume_tissue_segmentation import t1_volume_tissue_segmentation_utils as seg_utils
+        from ..t1_volume_existing_template import t1_volume_existing_template_utils as existing_template_utils
 
         # Writing Segmentation output into CAPS
         # =====================================
@@ -233,7 +233,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
 
         extract_container_node_write_segmentation = npe.Node(nutil.Function(input_names=['filename'],
                                                                             output_names=['container_path'],
-                                                                            function=existing_dartel_utils.container_name_for_write_segmentation),
+                                                                            function=existing_template_utils.container_name_for_write_segmentation),
                                                              name='extract_container_node_write_segmentation')
 
         self.connect([
@@ -266,7 +266,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         ]
         extract_container_node_write_flowfields = npe.Node(nutil.Function(input_names=['filename', 'group_id'],
                                                                           output_names=['container_path'],
-                                                                          function=existing_dartel_utils.container_name_for_write_normalized),
+                                                                          function=existing_template_utils.container_name_for_write_normalized),
                                                            name='extract_container_node_write_flowfields')
         extract_container_node_write_flowfields.inputs.group_id = self._group_id
         self.connect([
@@ -301,7 +301,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
 
         extract_container_node_write_normalized = npe.Node(nutil.Function(input_names=['filename', 'group_id'],
                                                                           output_names=['container_path'],
-                                                                          function=existing_dartel_utils.container_name_for_write_normalized),
+                                                                          function=existing_template_utils.container_name_for_write_normalized),
                                                            name='extract_container_node_write_normalized')
         extract_container_node_write_normalized.inputs.group_id = self._group_id
 
@@ -322,7 +322,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
 
         extract_container_node_atlas = npe.Node(nutil.Function(input_names=['filename', 'group_id'],
                                                                output_names=['container_path'],
-                                                               function=existing_dartel_utils.container_name_for_atlas),
+                                                               function=existing_template_utils.container_name_for_atlas),
                                                 name='extract_container_node_atlas')
         extract_container_node_atlas.inputs.group_id = self._group_id
         self.connect([
