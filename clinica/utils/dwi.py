@@ -155,8 +155,8 @@ def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
     return out_b0, out_dwi, out_bvals, out_bvecs
 
 
-def compute_b0_average(in_dwi, in_bval, low_bval=5.0):
-    """Compute average the b0 volumes."""
+def compute_average_b0(in_dwi, in_bval, low_bval=5.0):
+    """Compute average b0 volume from DWI dataset."""
     import numpy as np
     import nibabel
     import os.path as op

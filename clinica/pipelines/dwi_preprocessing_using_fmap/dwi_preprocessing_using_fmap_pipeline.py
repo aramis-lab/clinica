@@ -20,10 +20,9 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         [/] Core nodes
               [X] - Brain masking b0 (dwi2mask)
               [/] - Calibration FMap
-              [ ] - Registration FMap <-> b0
+              [/] - Registration FMap <-> b0
               [X] - Run eddy
               [/] - Bias correction
-              [ ] - Compute mean b=0?
         [/] CAPS
               [X] - Check than CAPS does not change
               [X] - Add calibrated FMap
@@ -31,6 +30,10 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         [ ] Update space_required_by_pipeline.csv info
         [ ] CI
         [ ] Wiki page
+
+    Note:
+        Some reading regarding the reproducibility of FSL eddy command:
+        https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=fsl;1ccf038f.1608
 
     Returns:
         A clinica pipeline object containing the DwiPreprocessingUsingPhaseDiffFieldmap pipeline.
@@ -51,8 +54,8 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             seed_fsl_eddy(optional[int]): Initialize the random number generator for FSL eddy (default: None).
 
         Raise:
-            ClinicaBIDSError: If low_bval is not ranging from 0 to 100.
-            ClinicaBIDSError: If CUDA 8.0 and CUDA 9.1 are chosen.
+            ClinicaException: If low_bval is not ranging from 0 to 100.
+            ClinicaException: If CUDA 8.0 and CUDA 9.1 are chosen.
        """
         from colorama import Fore
         from clinica.utils.exceptions import ClinicaException
@@ -215,7 +218,7 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
                                           ('dwi_json', 'dwi_json'),
                                           ('fmap_magnitude', 'fmap_magnitude'),
                                           ('fmap_phasediff', 'fmap_phasediff'),
-                                          ('fmap_phasediff_json', 'fmap_phasediff_json')]),  # noqa
+                                          ('fmap_phasediff_json', 'fmap_phasediff_json')]),
         ])
 
     def build_output_node(self):
@@ -224,7 +227,7 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
         from clinica.utils.io import fix_join
-        import clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_fmap_utils as utils
+        from . import dwi_preprocessing_using_fmap_utils as utils
 
         # Find container path from DWI filename
         # =====================================
@@ -250,19 +253,19 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         write_results.inputs.parameterization = False
 
         self.connect([
-            (self.input_node, container_path,    [('dwi', 'dwi_filename')]),  # noqa
-            (self.input_node,  rename_into_caps, [('dwi',             'in_bids_dwi')]),  # noqa
-            (self.output_node, rename_into_caps, [('preproc_dwi',     'fname_dwi'),  # noqa
-                                                  ('preproc_bval',    'fname_bval'),  # noqa
-                                                  ('preproc_bvec',    'fname_bvec'),  # noqa
-                                                  ('b0_mask',         'fname_brainmask'),  # noqa
-                                                  ('calibrated_fmap', 'fname_calibrated_fmap')]),  # noqa
-            (container_path, write_results,      [(('container', fix_join, 'dwi'), 'container')]),  # noqa
-            (rename_into_caps, write_results,    [('out_caps_dwi',             'preprocessing.@preproc_dwi'),  # noqa
-                                                  ('out_caps_bval',            'preprocessing.@preproc_bval'),  # noqa
-                                                  ('out_caps_bvec',            'preprocessing.@preproc_bvec'),  # noqa
-                                                  ('out_caps_brainmask',       'preprocessing.@b0_mask'),  # noqa
-                                                  ('out_caps_calibrated_fmap', 'preprocessing.@calibrated_fmap')]),  # noqa
+            (self.input_node, container_path,    [('dwi', 'dwi_filename')]),
+            (self.input_node,  rename_into_caps, [('dwi',             'in_bids_dwi')]),
+            (self.output_node, rename_into_caps, [('preproc_dwi',     'fname_dwi'),
+                                                  ('preproc_bval',    'fname_bval'),
+                                                  ('preproc_bvec',    'fname_bvec'),
+                                                  ('b0_mask',         'fname_brainmask'),
+                                                  ('calibrated_fmap', 'fname_calibrated_fmap')]),
+            (container_path, write_results,      [(('container', fix_join, 'dwi'), 'container')]),
+            (rename_into_caps, write_results,    [('out_caps_dwi',             'preprocessing.@preproc_dwi'),
+                                                  ('out_caps_bval',            'preprocessing.@preproc_bval'),
+                                                  ('out_caps_bvec',            'preprocessing.@preproc_bvec'),
+                                                  ('out_caps_brainmask',       'preprocessing.@b0_mask'),
+                                                  ('out_caps_calibrated_fmap', 'preprocessing.@calibrated_fmap')]),
             (self.output_node, write_results, [('dilate_b0_mask', 'preprocessing.@dilate_b0_mask')]),
         ])
 
@@ -270,17 +273,20 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        import nipype.interfaces.utility as niu
         import nipype.interfaces.fsl as fsl
         import nipype.interfaces.ants as ants
         import nipype.interfaces.mrtrix3 as mrtrix3
 
         from clinica.lib.nipype.interfaces.fsl.epi import Eddy
 
-        from clinica.utils.dwi import generate_acq_file, generate_index_file
+        from clinica.utils.dwi import generate_acq_file, generate_index_file, compute_average_b0
         from clinica.utils.fmap import remove_filename_extension
 
-        from .dwi_preprocessing_using_fmap_workflows import (prepare_phasediff_fmap, remove_bias)
-        import clinica.pipelines.dwi_preprocessing_using_fmap.dwi_preprocessing_using_fmap_utils as utils
+        from .dwi_preprocessing_using_fmap_workflows import (prepare_phasediff_fmap, ants_bias_correction)
+        from .dwi_preprocessing_using_fmap_utils import (init_input_node,
+                                                         get_grad_fsl,
+                                                         print_end_pipeline)
 
         # Nodes creation
         # ==============
@@ -290,24 +296,24 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             output_names=['image_id',
                           'dwi', 'bvec', 'bval', 'total_readout_time', 'phase_encoding_direction',
                           'fmap_magnitude', 'fmap_phasediff', 'delta_echo_time'],
-            function=utils.init_input_node),
+            function=init_input_node),
             name='0-InitNode')
+
+        # Generate (bvec, bval) tuple for MRtrix interfaces
+        get_grad_fsl = npe.Node(nutil.Function(
+            input_names=['bval', 'bvec'],
+            output_names=['grad_fsl'],
+            function=get_grad_fsl),
+            name='0-GetFslGrad')
 
         # Compute brain mask from uncorrected dataset
         pre_mask_b0 = npe.Node(mrtrix3.BrainMask(),
                                name='0-PreMaskB0')
         pre_mask_b0.inputs.out_file = 'brainmask.nii.gz'  # On default, .mif file is generated
 
-        # Generate <image_id>_acq.txt for eddy
-        get_grad_fsl = npe.Node(nutil.Function(
-            input_names=['bval', 'bvec'],
-            output_names=['grad_fsl'],
-            function=utils.get_grad_fsl),
-            name='0-GetFslGrad')
-
-        # Step 0 - BET & Bias field correction of the magnitude image
-        n4 = npe.Node(ants.N4BiasFieldCorrection(dimension=3), name='FMap-0-N4MagnitudeFmap')
-
+        # Bias field correction of the magnitude image
+        bias_mag_fmap = npe.Node(ants.N4BiasFieldCorrection(dimension=3), name='FMap-0-N4MagnitudeFmap')
+        # Brain extraction of the magnitude image
         bet_mag_fmap = npe.Node(fsl.BET(frac=0.4, mask=True), name='FMap-0-BetN4MagnitudeFmap')
 
         # Calibrate FMap
@@ -368,9 +374,9 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             function=remove_filename_extension),
             name="0-RemoveFNameExtension")
 
-        dilate = npe.Node(fsl.maths.MathsCommand(nan2zeros=True,
-                                                 args='-kernel sphere 5 -dilM'),
-                          name='dilate')
+        dilate = npe.Node(fsl.maths.MathsCommand(
+            nan2zeros=True, args='-kernel sphere 5 -dilM'),
+            name='dilate')
 
         # Run FSL eddy
         eddy = npe.Node(name='2b-Eddy',
@@ -384,14 +390,24 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             eddy.inputs.initrand = self._seed_fsl_eddy
 
         # Bias correction
-        # TODO: Be careful with b0 extraction
-        bias = remove_bias(name='RemoveBias')
+        bias = ants_bias_correction(name='RemoveBias')
+
+        # Compute average b0 (for brain mask extraction)
+        compute_average_b0 = npe.Node(niu.Function(input_names=['in_dwi', 'in_bval'],
+                                                   output_names=['out_b0_average'],
+                                                   function=compute_average_b0),
+                                      name='ComputeB0Average')
+        compute_average_b0.inputs.low_bval = 5.0
+
+        # Compute b0 mask on corrected DWI
+        mask_b0 = npe.Node(fsl.BET(mask=True, robust=True),
+                           name='mask_b0')
 
         # Print end message
         print_end_message = npe.Node(
             interface=nutil.Function(
                 input_names=['image_id', 'final_file'],
-                function=utils.print_end_pipeline),
+                function=print_end_pipeline),
             name='99-WriteEndMessage')
 
         # Connection
@@ -404,61 +420,67 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
                                           ('dwi_json', 'dwi_json'),
                                           ('fmap_magnitude', 'fmap_magnitude'),
                                           ('fmap_phasediff', 'fmap_phasediff'),
-                                          ('fmap_phasediff_json', 'fmap_phasediff_json')]),  # noqa
-
-            (init_node, get_grad_fsl, [('bval', 'bval'),  # noqa
-                                       ('bvec', 'bvec')]),  # noqa
-#            (self.input_node, pre_mask_b0, [('dwi',  'in_file'),  # noqa
-#                                            ('bval', 'in_bval'),  # noqa
-#                                            ('bvec', 'in_bvec')]),  # noqa
-            (get_grad_fsl,    pre_mask_b0, [('grad_fsl',  'grad_fsl')]),  # noqa
-            (init_node, pre_mask_b0, [('dwi',  'in_file')]),  # noqa
+                                          ('fmap_phasediff_json', 'fmap_phasediff_json')]),
+            # Generate (bvec, bval) tuple for MRtrix interfaces
+            (init_node, get_grad_fsl, [('bval', 'bval'),
+                                       ('bvec', 'bvec')]),
+            (get_grad_fsl, pre_mask_b0, [('grad_fsl',  'grad_fsl')]),
+            (init_node,    pre_mask_b0, [('dwi',  'in_file')]),
+            # Bias field correction of the magnitude image
+            (init_node, bias_mag_fmap, [('fmap_magnitude', 'input_image')]),
+            # Brain extraction of the magnitude image
+            (bias_mag_fmap, bet_mag_fmap, [('output_image', 'in_file')]),
             # Calibration of the FMap
-            (init_node, n4, [('fmap_magnitude', 'input_image')]),  # noqa
-            (n4, bet_mag_fmap, [('output_image', 'in_file')]),  # noqa
-            (bet_mag_fmap,    calibrate_fmap, [('mask_file', 'input_node.fmap_mask')]),  # noqa
-            (init_node, calibrate_fmap, [('fmap_phasediff', 'input_node.fmap_phasediff')]),  # noqa
-            (init_node, calibrate_fmap, [('fmap_magnitude', 'input_node.fmap_magnitude')]),  # noqa
-            (init_node, calibrate_fmap, [('delta_echo_time', 'input_node.delta_echo_time')]),  # noqa
+            (bet_mag_fmap, calibrate_fmap, [('mask_file', 'input_node.fmap_mask')]),
+            (init_node, calibrate_fmap, [('fmap_phasediff', 'input_node.fmap_phasediff'),
+                                         ('fmap_magnitude', 'input_node.fmap_magnitude'),
+                                         ('delta_echo_time', 'input_node.delta_echo_time')]),
+            # FMap <-> B0 registration
 
-            (pre_mask_b0,    res_fmap, [('out_file', 'in_b0')]),  # noqa
-#            (prepare_b0, res_fmap, [('out_reference_b0', 'in_b0')]),  # noqa
-            (calibrate_fmap, res_fmap, [('output_node.calibrated_fmap', 'in_fmap')]),  # noqa
-            (res_fmap, smoothing, [('out_resampled_fmap', 'in_file')]),  # noqa
+            (pre_mask_b0,    res_fmap, [('out_file', 'in_b0')]),
+            (calibrate_fmap, res_fmap, [('output_node.calibrated_fmap', 'in_fmap')]),
+            (res_fmap, smoothing, [('out_resampled_fmap', 'in_file')]),
 
             # Remove ".nii.gz" from fieldmap filename for eddy --field
-            (smoothing, rm_extension, [('out_file', 'in_file')]),  # noqa
+            (smoothing, rm_extension, [('out_file', 'in_file')]),
             # Generate <image_id>_acq.txt for eddy
-            (init_node, gen_acq_txt, [('dwi', 'in_dwi'),  # noqa
-                                      ('total_readout_time', 'total_readout_time'),  # noqa
-                                      ('phase_encoding_direction', 'fsl_phase_encoding_direction'),  # noqa
-                                      ('image_id', 'image_id')]),  # noqa
+            (init_node, gen_acq_txt, [('dwi', 'in_dwi'),
+                                      ('total_readout_time', 'total_readout_time'),
+                                      ('phase_encoding_direction', 'fsl_phase_encoding_direction'),
+                                      ('image_id', 'image_id')]),
             # Generate <image_id>_index.txt for eddy
-            (init_node, gen_index_txt, [('bval', 'in_bval'),  # noqa
-                                        ('image_id', 'image_id')]),  # noqa
+            (init_node, gen_index_txt, [('bval', 'in_bval'),
+                                        ('image_id', 'image_id')]),
             # Run FSL eddy
-            (init_node,     eddy, [('dwi', 'in_file'),  # noqa
-                                   ('bval', 'in_bval'),  # noqa
-                                   ('bvec', 'in_bvec'),  # noqa
-                                   ('image_id', 'out_base')]),  # noqa
-            (gen_acq_txt,   eddy, [('out_acq', 'in_acqp')]),  # noqa
-            (gen_index_txt, eddy, [('out_index', 'in_index')]),  # noqa
-            (rm_extension,  eddy, [('file_without_extension', 'field')]),  # noqa
-            (pre_mask_b0,   eddy, [('out_file', 'in_mask')]),  # noqa
-
-            (pre_mask_b0, dilate, [('out_file', 'in_file')]),  # noqa
-#            (dilate, eddy, [('out_file', 'in_mask')]),  # noqa
+            (init_node,     eddy, [('dwi', 'in_file'),
+                                   ('bval', 'in_bval'),
+                                   ('bvec', 'in_bvec'),
+                                   ('image_id', 'out_base')]),
+            (gen_acq_txt,   eddy, [('out_acq', 'in_acqp')]),
+            (gen_index_txt, eddy, [('out_index', 'in_index')]),
+            (rm_extension,  eddy, [('file_without_extension', 'field')]),
+            (pre_mask_b0, dilate, [('out_file', 'in_file')]),
+            #            (dilate, eddy, [('out_file', 'in_mask')]),
+            (pre_mask_b0,   eddy, [('out_file', 'in_mask')]),
             # Bias correction
-            (eddy, bias, [('out_corrected', 'inputnode.in_file')]),
+            (pre_mask_b0, bias, [('out_file', 'input_node.mask')]),
+            (eddy, bias, [('out_corrected', 'input_node.dwi'),
+                          ('out_rotated_bvecs', 'input_node.bvec')]),
+            (init_node, bias, [('bval', 'input_node.bval')]),
+            # Compute average b0 (for brain mask extraction)
+            (init_node, compute_average_b0, [('bval', 'in_bval')]),
+            (bias, compute_average_b0, [('output_node.bias_corrected_dwi', 'in_dwi')]),
+            # Compute b0 mask on corrected DWI
+            (compute_average_b0, mask_b0, [('out_b0_average', 'in_file')]),
             # Print end message
-            (init_node, print_end_message, [('image_id', 'image_id')]),  # noqa
-            (bias,      print_end_message, [('outputnode.out_file', 'final_file')]),  # noqa
+            (init_node, print_end_message, [('image_id', 'image_id')]),
+            (mask_b0,   print_end_message, [('mask_file', 'final_file')]),
             # Output node
-            (init_node, self.output_node, [('bval', 'preproc_bval')]),  # noqa
-            (eddy,      self.output_node, [('out_rotated_bvecs',   'preproc_bvec')]),  # noqa
-            (bias,      self.output_node, [('outputnode.out_file', 'preproc_dwi')]),  # noqa
-            (bias,      self.output_node, [('outputnode.b0_mask',  'b0_mask')]),  # noqa
-            # (bias,     self.output_node, [('outputnode.out_file', 'preproc_dwi')]),  # noqa
-            (res_fmap,  self.output_node, [('out_resampled_fmap',  'calibrated_fmap')]),  # noqa
-            (dilate,    self.output_node, [('out_file',            'dilate_b0_mask')]),  # noqa
+            (init_node, self.output_node, [('bval', 'preproc_bval')]),
+            (eddy,      self.output_node, [('out_rotated_bvecs',   'preproc_bvec')]),
+            (bias,      self.output_node, [('output_node.bias_corrected_dwi', 'preproc_dwi')]),
+            (mask_b0,   self.output_node, [('mask_file',  'b0_mask')]),
+            (res_fmap,  self.output_node, [('out_resampled_fmap',  'calibrated_fmap')]),
+
+            (dilate,    self.output_node, [('out_file',            'dilate_b0_mask')]),
         ])

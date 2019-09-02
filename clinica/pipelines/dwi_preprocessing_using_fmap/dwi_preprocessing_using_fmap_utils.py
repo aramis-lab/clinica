@@ -96,10 +96,10 @@ def get_grad_fsl(bvec, bval):
 def init_input_node(dwi, bvec, bval, dwi_json,
                     fmap_magnitude, fmap_phasediff, fmap_phasediff_json):
     """Extract "sub-<participant_id>_ses-<session_label>" from input node and print begin message."""
-    from clinica.utils.exceptions import ClinicaException
-    from clinica.utils.stream import cprint
     import datetime
     from colorama import Fore
+    from clinica.utils.exceptions import ClinicaException
+    from clinica.utils.stream import cprint
     from clinica.utils.io import get_subject_id, extract_metadata_from_json
     from clinica.utils.dwi import check_dwi_volume
     from clinica.utils.epi import bids_dir_to_fsl_dir
@@ -148,3 +148,48 @@ def print_end_pipeline(image_id, final_file):
     now = datetime.datetime.now().strftime('%H:%M:%S')
     cprint('%s[%s]%s ...%s has completed.' % (
         Fore.GREEN, now, Fore.RESET, image_id.replace('_', '|')))
+
+
+def estimate_scaling(b0, corrected_b0, mask):
+    """Estimate scaling of bias corrected image.
+
+    (From MRtrix developers)
+    N4 can introduce large differences between subjects via a global scaling of the bias field
+    Estimate this scaling based on the total integral of the pre- and post-correction images within the brain mask
+
+    Args:
+        b0: b=0 image
+        corrected_b0: Bias corrected b=0 image
+        mask: Brain mask
+    Returns:
+        scaling of the bias field
+    """
+    import subprocess
+    # N4 can introduce large differences between subjects via a global scaling of the bias field
+    # Estimate this scaling based on the total integral of the pre- and post-correction images within the brain mask
+    input_integral_cmd = (
+        'mrcalc -quiet %s %s -mult - | '
+        'mrmath -quiet - sum - -axis 0 | '
+        'mrmath -quiet - sum - -axis 1 | '
+        'mrmath -quiet - sum - -axis 2 | '
+        'mrdump -quiet -' % (b0, mask))
+    input_integral = subprocess.Popen(input_integral_cmd,
+                                      shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    float_input_integral = float(input_integral.communicate()[0])
+
+    output_integral_cmd = (
+        'mrcalc -quiet %s %s -mult - | '
+        'mrmath -quiet - sum - -axis 0 | '
+        'mrmath -quiet - sum - -axis 1 | '
+        'mrmath -quiet - sum - -axis 2 | '
+        'mrdump -quiet -' % (corrected_b0, mask))
+    output_integral = subprocess.Popen(output_integral_cmd,
+                                       shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    float_output_integral = float(output_integral.communicate()[0])
+
+    scaling = float_output_integral / float_input_integral
+    from clinica.utils.stream import cprint
+    cprint('- input_integral = %s' % float_input_integral)
+    cprint('- output_integral = %s' % float_output_integral)
+    cprint('- Scaling value = %s' % scaling)
+    return scaling
