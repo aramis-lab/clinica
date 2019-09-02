@@ -149,12 +149,13 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                 columns=pet_fdg_col)
             pet_fdg_df = pet_fdg_df.append(row_to_append, ignore_index=True)
 
-    # TODO check for new exceptions in ADNI3
     # Exceptions
     # ==========
     conversion_errors = [  # NONAME.nii
+                         ('031_S_0294', 'bl'),
                          ('037_S_1421', 'm36'),
                          ('037_S_1078', 'm36'),
+
                          # Empty folders
                          ('941_S_1195', 'm48'),
                          ('005_S_0223', 'm12')]
@@ -178,3 +179,33 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     images.to_csv(path.join(fdg_csv_path, 'fdg_pet_paths.tsv'), sep='\t', index=False)
 
     return images
+
+
+def check_exceptions(bids_dir):
+    from os import path
+    import pandas as pd
+    from glob import glob
+
+    fdg_paths = pd.io.parsers.read_csv(path.join(bids_dir, 'conversion_info', 'fdg_pet_paths.tsv'), sep='\t')
+
+    fdg_paths = fdg_paths[fdg_paths.Path.notnull()]
+
+    fdg_paths['BIDS_SubjID'] = ['sub-ADNI' + s.replace('_', '') for s in fdg_paths.Subject_ID.to_list()]
+    fdg_paths['BIDS_Session'] = ['ses-' + s.replace('bl', 'm00').upper() for s in fdg_paths.VISCODE.to_list()]
+
+    count = 0
+
+    for r in fdg_paths.iterrows():
+        image = r[1]
+        image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'pet')
+        image_pattern = path.join(image_dir, '%s_%s_*' % (image.BIDS_SubjID, image.BIDS_Session))
+        files_list = glob(image_pattern)
+        if not files_list:
+            print("No images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            count += 1
+
+        elif len(files_list) > 1:
+            print("Too many images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            print(files_list)
+
+    print(count)
