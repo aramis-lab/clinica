@@ -7,7 +7,7 @@ T1VolumeTissueSegmentation;35M;147M
 T1VolumeCreateDartel;130M;140M
 T1VolumeExistingTemplate;55M;320M
 T1VolumeParcellation;760K;520K
-DwiPreprocessingUsingT1;150M;3G
+DwiPreprocessingUsingT1;20G;3G
 DwiPreprocessingUsingPhaseDiffFieldmap;250M;6G
 DwiConnectome;1G;2G
 DwiDti;400M;700M
