@@ -484,3 +484,33 @@ def select_scan_qc_adni2(scans_meta, mayo_mri_qc_subj, preferred_field_strength)
 
     # 1.5T or 3.0T without QC
     return select_scan_no_qc(scans_meta)
+
+
+def check_exceptions(bids_dir):
+    from os import path
+    import pandas as pd
+    from glob import glob
+
+    t1_paths = pd.io.parsers.read_csv(path.join(bids_dir, 'conversion_info', 't1_paths.tsv'), sep='\t')
+
+    t1_paths = t1_paths[t1_paths.Path.notnull()]
+
+    t1_paths['BIDS_SubjID'] = ['sub-ADNI' + s.replace('_', '') for s in t1_paths.Subject_ID.to_list()]
+    t1_paths['BIDS_Session'] = ['ses-' + s.replace('bl', 'm00').upper() for s in t1_paths.VISCODE.to_list()]
+
+    count = 0
+
+    for r in t1_paths.iterrows():
+        image = r[1]
+        image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'anat')
+        image_pattern = path.join(image_dir, '%s_%s_*' % (image.BIDS_SubjID, image.BIDS_Session))
+        files_list = glob(image_pattern)
+        if not files_list:
+            print("No images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            count += 1
+
+        elif len(files_list) > 1:
+            print("Too many images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            print(files_list)
+
+    print(count)

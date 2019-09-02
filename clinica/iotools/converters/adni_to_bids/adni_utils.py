@@ -239,6 +239,7 @@ def select_image_qc(id_list, mri_qc_subj):
 
 
 def center_nifti_origin(input_image, output_image):
+
     """
 
     Put the origin of the coordinate system at the center of the image
@@ -263,8 +264,15 @@ def center_nifti_origin(input_image, output_image):
     for i in range(1, 4):
         qform[i - 1, i - 1] = hd['pixdim'][i]
         qform[i - 1, 3] = -1.0 * hd['pixdim'][i] * hd['dim'][i] / 2.0
-    new_img = nib.Nifti1Image(canonical_img.get_data(caching='unchanged'), qform)
+
+    try:
+        new_img = nib.Nifti1Image(canonical_img.get_data(caching='unchanged'), qform)
+    except OSError:
+        return None
+
     nib.save(new_img, output_image)
+
+    return output_image
 
 
 def remove_space_and_symbols(data):
@@ -926,8 +934,12 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
         os.remove(nifti_file)
 
     else:
+
         output_image = path.join(output_path, output_filename + '.nii.gz')
-        adni_utils.center_nifti_origin(image_path, output_image)
+        output_image = adni_utils.center_nifti_origin(image_path, output_image)
+        if output_image is None:
+            cprint("Error: For subject %s in session%s an error occurred recentering Nifti image:%s"
+                   % (subject, session, image_path))
 
     # Check if there is still the folder tmp_dcm_folder and remove it
     adni_utils.remove_tmp_dmc_folder(bids_dir, image_id)
