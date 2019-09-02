@@ -863,10 +863,10 @@ def convert_flair(folder_input, folder_output, name, fixed_file=False):
             flair_path = glob(path.join(flair_lst[0], '*.nii.gz*'))[0]
             copy(flair_path, path.join(folder_output, name + (get_bids_suff('Flair')) + '.nii.gz'))
         elif len(flair_lst) == 0:
-                return -1
+            return -1
         elif len(flair_lst) > 1:
-                logging.warning('Multiple FLAIR found, computation aborted.')
-                raise('Aborted')
+            logging.warning('Multiple FLAIR found, computation aborted.')
+            raise('Aborted')
 
 
 def convert_fmri(folder_input, folder_output, name, fixed_fmri=False, task_name='rest'):

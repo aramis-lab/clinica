@@ -116,7 +116,7 @@ def pet_volume_pipeline(caps_dir, df, **kwargs):
                     warnings.warn('The atlas wanted does not exist for ' + pipeline_name + ': ' + atlas_selected + ' in group ' + group_id, UserWarning)
 
         if len(atlas_paths) == 0:
-                raise InitException(pipeline_name)
+            raise InitException(pipeline_name)
 
         atlas_paths_preserved = list(atlas_paths)
         # Selection depending on the label 'pvc-rbv'
@@ -266,7 +266,7 @@ def t1_volume_pipeline(caps_dir, df, **kwargs):
                     warnings.warn('The atlas wanted does not exist for ' + pipeline_name + ': ' + atlas_selected + ' in group ' + group_id, UserWarning)
 
         if len(atlas_paths) == 0:
-                raise InitException(pipeline_name)
+            raise InitException(pipeline_name)
 
         atlas_paths.sort()
         for atlas_path in atlas_paths:

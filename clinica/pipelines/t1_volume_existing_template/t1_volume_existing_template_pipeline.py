@@ -119,23 +119,15 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
                 'atlas_statistics']
 
     def build_input_node(self):
-        """Build and connect an input node to the pipelines.
-        """
-
-        import nipype.interfaces.io as nio
+        """Build and connect an input node to the pipelines."""
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as seg_utils
         from os.path import join
         import glob
 
-        # Reading BIDS node
-        # =================
-
-
         # Reading T1w
         # ============
-
         t1w_images = seg_utils.select_bids_images(self.subjects,
                                                   self.sessions,
                                                   'T1w',
@@ -149,7 +141,6 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
 
         # Dartel Template
         # ================
-
         pattern_final_dartel = join(self.caps_directory, 'groups', 'group-' + g_id, 't1', 'group-' + g_id + '_template.nii*')
         final_template = glob.glob(pattern_final_dartel)
         if len(final_template) != 1:
@@ -177,7 +168,6 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
     def build_output_node(self):
         """Build and connect an output node to the pipelines.
         """
-
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
