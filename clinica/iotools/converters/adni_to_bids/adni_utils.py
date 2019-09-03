@@ -811,7 +811,7 @@ def t1_pet_paths_to_bids(images, bids_dir, modality, mod_to_update=False):
     from clinica.iotools.converters.adni_to_bids import adni_utils
     from functools import partial
 
-    if modality.lower() not in ['t1', 'fdg', 'pib', 'av45_fbb']:
+    if modality.lower() not in ['t1', 'fdg', 'pib', 'av45_fbb', 'tau']:
         # This should never be reached
         raise RuntimeError(modality.lower()
                            + ' is not supported for conversion in paths_to_bids')
@@ -856,10 +856,16 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
 
     modality_specific = {'t1': {'output_path': 'anat',
                                 'output_filename': '_T1w'},
+                         'fdg': {'output_path': 'pet',
+                                 'output_filename': '_task-rest_acq-fdg_pet'},
+                         'pib': {'output_path': 'pet',
+                                 'output_filename': '_task-rest_acq-pib_pet'},
                          'av45': {'output_path': 'pet',
                                   'output_filename': '_task-rest_acq-av45_pet'},
-                         'fdg': {'output_path': 'pet',
-                                 'output_filename': '_task-rest_acq-fdg_pet'}
+                         'fbb': {'output_path': 'pet',
+                                 'output_filename': '_task-rest_acq-fbb_pet'},
+                         'tau': {'output_path': 'pet',
+                                 'output_filename': '_task-rest_acq-tau_pet'}
                          }
 
     global counter
@@ -868,6 +874,10 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
         counter.value += 1
 
     subject = image.Subject_ID
+
+    if modality == 'av45_fbb':
+        modality = image.Tracer.lower()
+
     if image.Path == '':
         cprint(Fore.RED + '[' + modality.upper() + '] No path specified for '
                + image.Subject_ID + ' in session '
