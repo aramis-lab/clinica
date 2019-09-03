@@ -32,7 +32,7 @@ class DwiPreprocessingUsingT1Cli(ce.CmdParser):
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("--low_bval",
                               metavar=('N'), type=int, default=5,
-                              help='Define the b0 volumes as all volume bval <= low_bval '
+                              help='Define the b0 volumes as all the volumes with bval <= low_bval '
                                    '(default: --low_bval %(default)s).')
 
         # Clinica standard arguments (e.g. --n_procs)
@@ -49,14 +49,15 @@ class DwiPreprocessingUsingT1Cli(ce.CmdParser):
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
         cuda_action = advanced.add_mutually_exclusive_group(required=False)
         cuda_action.add_argument('--use_cuda_8_0', action='store_true', default=False,
-                                 help=('Use CUDA 8.0 implementation of FSL eddy. Please note that '
-                                       '--use_cuda_8_0 and --use_cuda_9_1 flags are mutually exclusive.'))
+                                 help=('Use the CUDA 8.0 implementation of FSL eddy. Please note that '
+                                       'the --use_cuda_8_0 and --use_cuda_9_1 flags are mutually exclusive.'))
         cuda_action.add_argument('--use_cuda_9_1', action='store_true', default=False,
-                                 help=('Use CUDA 9.1 implementation of FSL eddy. Please note that '
-                                       '--use_cuda_8_0 and --use_cuda_9_1 flags are mutually exclusive.'))
+                                 help=('Use the CUDA 9.1 implementation of FSL eddy. Please note that '
+                                       'the --use_cuda_8_0 and --use_cuda_9_1 flags are mutually exclusive.'))
         advanced.add_argument("--initrand",
                               metavar=('N'), type=int,
-                              help="Initialize the random number generator for FSL eddy.")
+                              help="Set the seed of the random number generator used "
+                                   "when estimating hyperparameters in FSL eddy.")
 
     def run_command(self, args):
         """Run the  Pipeline from command line."""

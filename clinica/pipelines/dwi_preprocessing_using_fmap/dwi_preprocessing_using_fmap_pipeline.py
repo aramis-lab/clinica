@@ -48,10 +48,11 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             tsv_file(str): TSV file containing the list of participants (participant_id)
                 with their sessions (session_id).
             name(optional[str]): Name of the pipeline
-            low_bval(optional[int]): Define the b0 volumes as all volume bval <= low_bval (default: 5)
-            use_cuda_8_0(optional[bool]): Use CUDA 8.0 implementation of FSL eddy (default: False).
-            use_cuda_9_1(optional[bool]): Use CUDA 9.1 implementation of FSL eddy (default: False).
-            seed_fsl_eddy(optional[int]): Initialize the random number generator for FSL eddy (default: None).
+            low_bval(optional[int]): Define the b0 volumes as all the volumes with bval <= low_bval (default: 5)
+            use_cuda_8_0(optional[bool]): Use the CUDA 8.0 implementation of FSL eddy (default: False).
+            use_cuda_9_1(optional[bool]): Use the CUDA 9.1 implementation of FSL eddy (default: False).
+            seed_fsl_eddy(optional[int]): Set the seed of the random number generator used
+                when estimating hyperparameters in FSL eddy (default: None).
 
         Raise:
             ClinicaException: If low_bval is not ranging from 0 to 100.
