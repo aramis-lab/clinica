@@ -893,7 +893,7 @@ def test_run_T1FreeSurferLongitudinal(cmdopt):
             inverse_positions == subject_index
             ].tolist() for subject_index in range(unique_subject_number)]
     # template check
-    for subject_index in range(unique_subject_list):
+    for subject_index in range(unique_subject_number):
         # retrieve longitudinal identifier corresponding to the list of
         # sessions used to build the template
         subject = unique_subject_list[subject_index]
