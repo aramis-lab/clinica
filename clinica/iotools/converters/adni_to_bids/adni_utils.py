@@ -320,10 +320,11 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
     temp_folder_name = 'tmp_dcm_folder_' + str(image_uid).strip(' ')
     dest_path = path.join(bids_folder, temp_folder_name)
 
-    # Check if there is more than one xml file inside the folder
-    xml_list = glob(path.join(dicom_path, '*.xml*'))
+    # Check if there are dicom files inside the folder not belonging to the desired image
+    dicom_list = glob(path.join(dicom_path, '*.dcm'))
+    image_list = glob(path.join(dicom_path, '*%s.dcm' % image_uid))
+    if len(dicom_list) != len(image_list):
 
-    if len(xml_list) > 1:
         # Remove the precedent tmp_dcm_folder if is existing
         if os.path.exists(dest_path):
             shutil.rmtree(dest_path)
