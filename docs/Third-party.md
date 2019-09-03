@@ -19,18 +19,18 @@ Do not forget to check the installations following each tool’s guidelines.
 
 Not all the following dependencies are necessary to install and run Clinica. You may want to only install the software packages used by certain pipelines of Clinica. Pipelines' specific dependencies are listed below:
 
-|                          | ANTs | CAT12 | FreeSurfer | FSL | ITK | Matlab | MRtrix3 | PETPVC | SPM |
-|:-------------------------|:----:|:-----:|:----------:|:---:|:---:|:------:|:-------:|:------:|:---:|
-| `t1-volume-*`            |      |   x   |            |     |     |    x   |         |        |  x  |
-| `t1-freesurfer`          |      |       |     x      |     |     |        |         |        |     |
-| `dwi-preprocessing-*`    |   x  |       |            |  x  |     |        |         |        |     |
-| `dwi-dti`                |   x  |       |            |  x  |     |        |    x    |        |     |
-| `dwi-connectome`         |   x  |       |            |  x  |     |        |    x    |        |     |
-| `fmri-preprocessing`     |      |       |     x      |  x  |     |    x   |         |        |     |
-| `pet-surface`            |      |       |            |  x  |  x* |        |         |   x*   |  x  |
-| `pet-volume`             |      |   x   |            |     |  x* |    x   |         |   x*   |  x  |
-| `statistics-surface`     |      |       |            |     |     |    x   |         |        |     |
-| `machine-learning-*`     |      |       |            |     |     |        |         |        |     |
+|                          | ANTs | CAT12 | Convert3D | FreeSurfer | FSL | ITK | Matlab | MRtrix3 | PETPVC | SPM |
+|:-------------------------|:----:|:-----:|:---------:|:----------:|:---:|:---:|:------:|:-------:|:------:|:---:|
+| `t1-volume-*`            |      |   x   |           |            |     |     |    x   |         |        |  x  |
+| `t1-freesurfer`          |      |       |           |     x      |     |     |        |         |        |     |
+| `dwi-preprocessing-*`    |   x  |       |     x     |            |  x  |     |        |    x    |        |     |
+| `dwi-dti`                |   x  |       |           |            |  x  |     |        |    x    |        |     |
+| `dwi-connectome`         |   x  |       |           |            |  x  |     |        |    x    |        |     |
+| `fmri-preprocessing`     |      |       |           |     x      |  x  |     |    x   |         |        |     |
+| `pet-surface`            |      |       |           |            |  x  |  x* |        |         |   x*   |  x  |
+| `pet-volume`             |      |   x   |           |            |     |  x* |    x   |         |   x*   |  x  |
+| `statistics-surface`     |      |       |           |            |     |     |    x   |         |        |     |
+| `machine-learning-*`     |      |       |           |            |     |     |        |         |        |     |
 
 _*You only need to install ITK if you plan to perform partial volume correction using PETPVC._
 
@@ -38,6 +38,7 @@ Depending on the architecture and OS of your system, setup of third party librar
 
 * [**ANTs v2.3.1**](http://picsl.upenn.edu/software/ants/) Download [here](https://github.com/stnava/ANTs/releases) and follow the instructions on the ANTs [wiki](https://github.com/stnava/ANTs/wiki/Compiling-ANTs-on-Linux-and-Mac-OS).
 * [**CAT12**](http://dbm.neuro.uni-jena.de/cat/) Download the latest version [here](http://dbm.neuro.uni-jena.de/cat/index.html#DOWNLOAD) and follow the instructions to ensure that your cat12 folder is located in spm/toolbox.
+* [**Convert3D**](http://www.itksnap.org/pmwiki/pmwiki.php?n=Convert3D.Convert3D) Download [here](http://www.itksnap.org/pmwiki/pmwiki.php?n=Downloads.C3D).
 * [**FreeSurfer**](http://surfer.nmr.mgh.harvard.edu/)
     - For Linux users, download and install FreeSurfer following the instructions on the [wiki](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall). Please note that on Ubuntu you will need to install the packages `tcsh` and `libjpeg62` ( a `sudo apt-get install tcsh libjpeg62` should do the job).
     - For Mac users, download [here](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall) and follow the instructions on the FreeSurfer [wiki](https://surfer.nmr.mgh.harvard.edu/fswiki/MacOsInstall).
