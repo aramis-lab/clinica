@@ -17,3 +17,4 @@ Laterality of the subject	laterality	Free format	string						X				Hand	oasis_cro
 Date of inclusion	inclusion_date	YYYY-MM-DD HH:MM:SS	string	HH:MM:SS optional													Date of inclusion	Fichier PrevDemAls suivi-14_04_2017.xlsx/Fichier PrevDemAls suivi-10_03_		
 Digit roster ID (unique ID of the participant which is composed with site ID to form the participant ID)	adni_rid	Number 4 digits	int						RID	ADNIMERGE.csv										
 Protocol from which the subject originated	adni_original_study	"Free format: ADNI1; ADNI2; ADNI3; ADNIGO"	string						ORIGPROT	ADNIMERGE.csv										
+Diagnosis not necessarily at bl	diagnosis	Free format	string	Used when only one diagnosis exists for a given patient															DX	NIFD_Clinical_Data_2017_final_updated.xlsx
