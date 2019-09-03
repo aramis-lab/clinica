@@ -109,7 +109,18 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
     # TODO check for new exceptions in ADNI3
     # Exceptions
     # ==========
-    conversion_errors = []
+    conversion_errors = [  # Eq_1 images
+                         ('141_S_0767', 'm84'),
+                         ('067_S_5205', 'bl'),
+                         ('127_S_4928', 'm24'),
+                         ('024_S_4674', 'm06'),
+                         ('123_S_2363', 'm24'),
+                         ('053_S_4578', 'm48'),
+                         ('128_S_4586', 'm48'),
+                         ('053_S_4813', 'm48'),
+                         ('053_S_5272', 'm24'),
+
+    ]
 
     error_indices = []
     for conv_error in conversion_errors:
@@ -226,13 +237,17 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
         bids_ses_id = 'ses-' + ses_bids
         bids_file_name = bids_id + '_ses-' + ses_bids
         ses_path = path.join(dest_dir, bids_id, bids_ses_id)
+
         if mod_to_update:
             if os.path.exists(path.join(ses_path, 'FLAIR')):
                 shutil.rmtree(path.join(ses_path, 'FLAIR'))
+
         if not os.path.exists(ses_path):
             os.mkdir(ses_path)
+
         flair_info = images[
             (images['Subject_ID'] == subj) & (images['VISCODE'] == ses)]
+
         # For the same subject, same session there could be multiple flair with different acq label
         for j in range(len(flair_info)):
             flair_subj = flair_info.iloc[j]
@@ -240,11 +255,16 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
                 if not os.path.exists(path.join(ses_path, 'FLAIR')):
                     os.mkdir(path.join(ses_path, 'FLAIR'))
                 flair_path = flair_subj['Path']
-
                 bids_name = bids_file_name + '_FLAIR'
-                # bids.dcm_to_nii(dwi_path, path.join(ses_path, 'dwi'), bids_name)
-
                 bids_dest_dir = path.join(ses_path, 'FLAIR')
+                image_id = flair_subj.Image_ID
+
+                # If the original image is a DICOM, check if contains two DICOM
+                # inside the same folder
+                if flair_subj.Is_Dicom:
+                    flair_path = adni_utils.check_two_dcm_folder(flair_path,
+                                                                 bids_dest_dir,
+                                                                 image_id)
 
                 if not os.path.exists(bids_dest_dir):
                     os.mkdir(dest_dir)
@@ -255,9 +275,7 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
                                stdout=subprocess.DEVNULL)
 
                 # If dcm2niix didn't work use dcm2nii
-                # print path.join(dest_dir, bids_name + '.nii.gz')
-                if not os.path.exists(
-                        path.join(bids_dest_dir, bids_name + '.nii.gz')):
+                if not os.path.exists(path.join(bids_dest_dir, bids_name + '.nii.gz')):
                     cprint('\tConversion with dcm2niix failed, trying with dcm2nii')
 
                     # Find all the files eventually created by dcm2niix and remove them
@@ -278,3 +296,46 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
                                                       bids_name + '.nii.gz'))
                     else:
                         cprint('WARNING: CONVERSION FAILED...')
+
+
+def check_exceptions(bids_dir):
+    from os import path
+    import pandas as pd
+    from glob import glob
+
+    flair_paths = pd.io.parsers.read_csv(path.join(bids_dir, 'conversion_info', 'flair_paths.tsv'), sep='\t')
+
+    flair_paths = flair_paths[flair_paths.Path.notnull()]
+
+    flair_paths['BIDS_SubjID'] = ['sub-ADNI' + s.replace('_', '') for s in flair_paths.Subject_ID.to_list()]
+    flair_paths['BIDS_Session'] = ['ses-' + s.replace('bl', 'm00').upper() for s in flair_paths.VISCODE.to_list()]
+
+    count = 0
+    count_wrong = 0
+    count_eq = 0
+
+    for r in flair_paths.iterrows():
+        image = r[1]
+        image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'FLAIR')
+        image_pattern = path.join(image_dir, '%s_%s_*' % (image.BIDS_SubjID, image.BIDS_Session))
+        files_list = glob(image_pattern)
+
+        if sum(['Eq' in f for f in files_list]):
+            # print("Eq images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            # print("('%s', '%s')," % (image.BIDS_SubjID[-8:].replace('S', '_S_'),
+            #                          image.BIDS_Session[4:].replace('M00', 'bl').lower()))
+            count_eq += 1
+            continue
+
+        if not files_list:
+            # print("No images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            count += 1
+
+        elif len(files_list) > 2:
+            print("Wrong files count for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            print(files_list)
+            count_wrong += 1
+
+    print(count)
+    print(count_wrong)
+    print(count_eq)
