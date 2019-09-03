@@ -291,7 +291,7 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
 
                 # Removing ADC images
                 adc_image = path.join(bids_dest_dir, bids_name + '_ADC.nii.gz')
-                if not os.path.exists(adc_image):
+                if os.path.exists(adc_image):
                     os.remove(adc_image)
 
                 # If dcm2niix didn't work use dcm2nii
