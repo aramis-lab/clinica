@@ -165,3 +165,34 @@ def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     images.to_csv(path.join(pib_csv_path, 'pib_pet_paths.tsv'), sep='\t', index=False)
 
     return images
+
+
+def check_exceptions(bids_dir):
+    from os import path
+    import pandas as pd
+    from glob import glob
+
+    pib_paths = pd.io.parsers.read_csv(path.join(bids_dir, 'conversion_info', 'pib_pet_paths.tsv'), sep='\t')
+
+    pib_paths = pib_paths[pib_paths.Path.notnull()]
+
+    pib_paths['BIDS_SubjID'] = ['sub-ADNI' + s.replace('_', '') for s in pib_paths.Subject_ID.to_list()]
+    pib_paths['BIDS_Session'] = ['ses-' + s.replace('bl', 'm00').upper() for s in pib_paths.VISCODE.to_list()]
+
+    count = 0
+
+    for r in pib_paths.iterrows():
+        image = r[1]
+        image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'pet')
+        image_pattern = path.join(image_dir, '%s_%s_*pib*' % (image.BIDS_SubjID, image.BIDS_Session))
+        files_list = glob(image_pattern)
+        if not files_list:
+            print("No images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            count += 1
+
+        elif len(files_list) > 1:
+            print("Too many images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            print(files_list)
+
+    print(count)
+

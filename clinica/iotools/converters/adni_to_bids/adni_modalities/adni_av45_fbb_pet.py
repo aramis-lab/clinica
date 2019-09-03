@@ -115,7 +115,9 @@ def compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
             # take scan at the same date
             if original_pet_meta.shape[0] < 1:
                 original_pet_meta = subject_pet_meta[(subject_pet_meta['Orig/Proc'] == 'Original')
-                                                     & (subject_pet_meta['Scan Date'] == qc_visit.EXAMDATE)]
+                                                     & (subject_pet_meta['Scan Date'] == qc_visit.EXAMDATE)
+                                                     & (subject_pet_meta.Sequence.map(
+                                                            lambda s: (s.lower().find('early') < 0)))]
 
                 if original_pet_meta.shape[0] < 1:
                     # TODO Log somewhere QC visits without image metadata
@@ -206,3 +208,60 @@ def compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     images.to_csv(path.join(amyloid_csv_path, 'amyloid_pet_paths.tsv'), sep='\t', index=False)
 
     return images
+
+
+def check_exceptions(bids_dir):
+    from os import path
+    import pandas as pd
+    from glob import glob
+
+    amyloid_paths = pd.io.parsers.read_csv(path.join(bids_dir, 'conversion_info', 'amyloid_pet_paths.tsv'), sep='\t')
+
+    av45_paths = amyloid_paths[amyloid_paths.Tracer == 'AV45']
+
+    av45_paths = av45_paths[av45_paths.Path.notnull()]
+
+    av45_paths['BIDS_SubjID'] = ['sub-ADNI' + s.replace('_', '') for s in av45_paths.Subject_ID.to_list()]
+    av45_paths['BIDS_Session'] = ['ses-' + s.replace('bl', 'm00').upper() for s in av45_paths.VISCODE.to_list()]
+
+    count = 0
+
+    for r in av45_paths.iterrows():
+        image = r[1]
+        image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'pet')
+        image_pattern = path.join(image_dir, '%s_%s_*av45*' % (image.BIDS_SubjID, image.BIDS_Session))
+        files_list = glob(image_pattern)
+        if not files_list:
+            print("No images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            count += 1
+
+        elif len(files_list) > 1:
+            print("Too many images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            print(files_list)
+
+    print(count)
+
+    fbb_paths = amyloid_paths[amyloid_paths.Tracer == 'FBB']
+
+    fbb_paths = fbb_paths[fbb_paths.Path.notnull()]
+
+    fbb_paths['BIDS_SubjID'] = ['sub-ADNI' + s.replace('_', '') for s in fbb_paths.Subject_ID.to_list()]
+    fbb_paths['BIDS_Session'] = ['ses-' + s.replace('bl', 'm00').upper() for s in fbb_paths.VISCODE.to_list()]
+
+    count = 0
+
+    for r in fbb_paths.iterrows():
+        image = r[1]
+        image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'pet')
+        image_pattern = path.join(image_dir, '%s_%s_*fbb*' % (image.BIDS_SubjID, image.BIDS_Session))
+        files_list = glob(image_pattern)
+        if not files_list:
+            print("No images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            count += 1
+
+        elif len(files_list) > 1:
+            print("Too many images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            print(files_list)
+
+    print(count)
+

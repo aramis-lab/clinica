@@ -153,10 +153,10 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                 columns=pet_tau_col)
             pet_tau_df = pet_tau_df.append(row_to_append, ignore_index=True)
 
-    # TODO check for new exceptions in ADNI3
     # Exceptions
     # ==========
-    conversion_errors = []
+    conversion_errors = [  # Multiple output images
+                         ('098_S_4275', 'm84')]
 
     error_indices = []
     for conv_error in conversion_errors:
@@ -167,9 +167,6 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         indices_to_remove = pet_tau_df.index[reduce(operator.or_, error_indices, False)]
         pet_tau_df.drop(indices_to_remove, inplace=True)
 
-    # DONE - Make a function reusing this code for different modalities
-    # TODO check if it works properly
-
     # Checking for images paths in filesystem
     images = find_image_path(pet_tau_df, source_dir, 'TAU', 'I', 'Image_ID')
 
@@ -179,3 +176,35 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     images.to_csv(path.join(tau_csv_path, 'tau_pet_paths.tsv'), sep='\t', index=False)
 
     return images
+
+
+def check_exceptions(bids_dir):
+    from os import path
+    import pandas as pd
+    from glob import glob
+
+    tau_paths = pd.io.parsers.read_csv(path.join(bids_dir, 'conversion_info', 'tau_pet_paths.tsv'), sep='\t')
+
+    tau_paths = tau_paths[tau_paths.Path.notnull()]
+
+    tau_paths['BIDS_SubjID'] = ['sub-ADNI' + s.replace('_', '') for s in tau_paths.Subject_ID.to_list()]
+    tau_paths['BIDS_Session'] = ['ses-' + s.replace('bl', 'm00').upper() for s in tau_paths.VISCODE.to_list()]
+
+    count = 0
+
+    for r in tau_paths.iterrows():
+        image = r[1]
+        image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'pet')
+        image_pattern = path.join(image_dir, '%s_%s_*tau*' % (image.BIDS_SubjID, image.BIDS_Session))
+        files_list = glob(image_pattern)
+        if not files_list:
+            print("No images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            count += 1
+
+        elif len(files_list) > 1:
+            print("Too many images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            print(files_list)
+
+    print(count)
+
+
