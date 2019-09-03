@@ -132,7 +132,15 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
                          ('129_S_2347', 'm06'),
                          ('129_S_4220', 'bl'),
                          ('007_S_2058', 'm12'),
-                         ('016_S_2007', 'm06')]
+                         ('016_S_2007', 'm06'),
+                         ('020_S_6358', 'bl'),
+                         ('114_S_6039', 'm12'),
+                         ('114_S_6057', 'bl'),
+                         ('153_S_6274', 'bl'),
+                         ('006_S_4485', 'm84'),
+                         ('153_S_6237', 'bl'),
+                         ('153_S_6336', 'bl'),
+                         ('153_S_6450', 'bl')]
 
     error_indices = []
     for conv_error in conversion_errors:
@@ -281,6 +289,11 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
                                stdout=subprocess.DEVNULL,
                                stderr=subprocess.DEVNULL)
 
+                # Removing ADC images
+                adc_image = path.join(bids_dest_dir, bids_name + '_ADC.nii.gz')
+                if not os.path.exists(adc_image):
+                    os.remove(adc_image)
+
                 # If dcm2niix didn't work use dcm2nii
                 # print path.join(dest_dir, bids_name + '.nii.gz')
                 if not os.path.exists(path.join(bids_dest_dir,
@@ -327,3 +340,39 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
                     else:
                         cprint('WARNING: CONVERSION FAILED...'
                                + ' for subject ' + subj + ' and session ' + ses)
+
+
+def check_exceptions(bids_dir):
+    from os import path
+    import pandas as pd
+    from glob import glob
+
+    dwi_paths = pd.io.parsers.read_csv(path.join(bids_dir, 'conversion_info', 'dwi_paths.tsv'), sep='\t')
+
+    dwi_paths = dwi_paths[dwi_paths.Path.notnull()]
+
+    dwi_paths['BIDS_SubjID'] = ['sub-ADNI' + s.replace('_', '') for s in dwi_paths.Subject_ID.to_list()]
+    dwi_paths['BIDS_Session'] = ['ses-' + s.replace('bl', 'm00').upper() for s in dwi_paths.VISCODE.to_list()]
+
+    count = 0
+    count_ADC = 0
+
+    for r in dwi_paths.iterrows():
+        image = r[1]
+        image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'dwi')
+        image_pattern = path.join(image_dir, '%s_%s_*' % (image.BIDS_SubjID, image.BIDS_Session))
+        files_list = glob(image_pattern)
+        if not files_list:
+            print("No images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            # count += 1
+
+        elif len(files_list) != 3:
+            if sum(["ADC" in f for f in files_list]):
+                count_ADC += 1
+            else:
+                print("Wrong files count for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+                print(files_list)
+                count += 1
+
+    print(count)
+    print(count_ADC)
