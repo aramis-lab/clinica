@@ -255,18 +255,17 @@ def center_nifti_origin(input_image, output_image):
     import nibabel as nib
     import numpy as np
 
-    img = nib.load(input_image)
-    canonical_img = nib.as_closest_canonical(img)
-    hd = canonical_img.header
-    # if hd['quatern_b'] != 0 or hd['quatern_c'] != 0 or hd['quatern_d'] != 0:
-    #    print('Warning: Not all values in quatern are equal to zero')
-    qform = np.zeros((4, 4))
-    for i in range(1, 4):
-        qform[i - 1, i - 1] = hd['pixdim'][i]
-        qform[i - 1, 3] = -1.0 * hd['pixdim'][i] * hd['dim'][i] / 2.0
-
     try:
+        img = nib.load(input_image)
+        canonical_img = nib.as_closest_canonical(img)
+        hd = canonical_img.header
+
+        qform = np.zeros((4, 4))
+        for i in range(1, 4):
+            qform[i - 1, i - 1] = hd['pixdim'][i]
+            qform[i - 1, 3] = -1.0 * hd['pixdim'][i] * hd['dim'][i] / 2.0
         new_img = nib.Nifti1Image(canonical_img.get_data(caching='unchanged'), qform)
+
     except OSError:
         return None
 

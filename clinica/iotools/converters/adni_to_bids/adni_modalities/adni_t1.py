@@ -58,7 +58,9 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
     :return: a pandas dataframe
     """
 
-    from os import path, walk, makedirs
+    import operator
+    from functools import reduce
+    from os import path, makedirs
 
     import pandas as pd
 
@@ -125,6 +127,46 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
             row_to_append = pd.DataFrame(image_dict, index=['i', ])
             # TODO Replace iteratively appending by pandas.concat
             t1_df = t1_df.append(row_to_append, ignore_index=True)
+
+    # Exceptions
+    # ==========
+    conversion_errors = [  # Eq_1
+                         ('031_S_0830', 'm48'),
+                         ('100_S_0995', 'm18'),
+                         ('031_S_0867', 'm48'),
+                         ('100_S_0892', 'm18'),
+                         # Empty folders
+                         ('029_S_0845', 'm24'),
+                         ('094_S_1267', 'm24'),
+                         ('029_S_0843', 'm24'),
+                         ('027_S_0307', 'm48'),
+                         ('057_S_1269', 'm24'),
+                         ('036_S_4899', 'm03'),
+                         ('033_S_1016', 'm120'),
+                         ('130_S_4984', 'm12'),
+                         ('027_S_4802', 'm06'),
+                         ('131_S_0409', 'bl'),
+                         ('082_S_4224', 'm24'),
+                         ('006_S_4960', 'bl'),
+                         ('006_S_4960', 'm03'),
+                         ('006_S_4960', 'm06'),
+                         ('006_S_4960', 'm12'),
+                         ('006_S_4960', 'm24'),
+                         ('006_S_4960', 'm36'),
+                         ('006_S_4960', 'm72'),
+                         ('022_S_5004', 'bl'),
+                         ('022_S_5004', 'm03'),
+                         # T1wa
+                         ('006_S_4485', 'm84')]
+
+    error_indices = []
+    for conv_error in conversion_errors:
+        error_indices.append((t1_df.Subject_ID == conv_error[0])
+                             & (t1_df.VISCODE == conv_error[1]))
+
+    if error_indices:
+        indices_to_remove = t1_df.index[reduce(operator.or_, error_indices, False)]
+        t1_df.drop(indices_to_remove, inplace=True)
 
     # Checking for images paths in filesystem
     images = find_image_path(t1_df, source_dir, 'T1', 'S', 'Series_ID')
