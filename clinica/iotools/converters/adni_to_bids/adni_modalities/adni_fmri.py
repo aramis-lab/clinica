@@ -36,153 +36,114 @@ def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
         subjs_list = list(adni_merge.PTID.unique())
 
     cprint('Calculating paths of fMRI images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
-    if path.isfile(path.join(dest_dir, 'conversion_info', 'fmri_paths.tsv')):
-        images = pd.io.parsers.read_csv(path.join(dest_dir, 'conversion_info', 'fmri_paths.tsv'), sep='\t')
-    else:
-
-        images = compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list)
-
+    images = compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of fMRI images found. Exporting images into BIDS ...')
-
     fmri_paths_to_bids(dest_dir, images)
     cprint(Fore.GREEN + 'fMRI conversion done.' + Fore.RESET)
 
 
-def compute_fmri_path(source_dir, clinical_dir, dest_dir, subjs_list):
+def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list):
     """
     Compute the paths to fmri images.
 
-    The fmri images to convert into BIDS are chosen in the following way:
-        - Extract the list of subjects from MAYOADIRL_MRI_FMRI_09_15_16.csv
-        - Select the only the scans that came from PHILIPS machine (field Scanner from IDA_MR_Metadata_Listing.csv)
-        - Discard all the subjects with column  series_quality = 4  (4 means that the scan is not usable) in MAYOADIRL_MRI_IMAGEQC_12_08_15.csv
-
-    In case of multiple scans for the same session, same date the one to convert is chosen with the following criteria:
-        - Check if in the file MAYOADIRL_MRI_IMAGEQC_12_08_15.csv there is a single scan with the field series_selected == 1
-        - If yes choose the one with series_selected == 1
-        - If no choose the scan with the best quality
-
     Args:
         source_dir: path to the ADNI image folder
-        clinical_dir: path to the directory with all the clinical data od ADNI
+        csv_dir: path to the directory with all the clinical data od ADNI
         dest_dir:  path to the output_folder
         subjs_list: subjects list
 
     Returns: pandas Dataframe containing the path for each fmri
 
     """
-    import os
-    from os import path
-    from os import walk
+    import operator
+    from functools import reduce
+    from os import path, mkdir
+
     import pandas as pd
-    import logging
-    from clinica.iotools.converters.adni_to_bids import adni_utils
+
     from clinica.utils.stream import cprint
+    from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path, visits_to_timepoints_mrilist
 
-    fmri_col = ['Subject_ID', 'VISCODE', 'Visit', 'IMAGEUID', 'Sequence', 'Scan Date', 'LONIUID', 'Scanner',
-                'MagStregth', 'Path']
+    # import os
+    # import logging
+    # from clinica.iotools.converters.adni_to_bids import adni_utils
 
+    fmri_col = ['Subject_ID', 'VISCODE', 'Visit', 'IMAGEUID', 'Sequence', 'Scan Date', 'LONIUID', 'Path', 'Field_Strength']
+
+    fmri_col = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
+                'Study_ID', 'Field_Strength', 'Series_ID', 'Image_ID']
     fmri_df = pd.DataFrame(columns=fmri_col)
 
-    # Load the requested clinical data
-    mayo_mri_fmri_path = path.join(clinical_dir, 'MAYOADIRL_MRI_FMRI_09_15_16.csv')
-    mayo_mri_imageqc_path = path.join(clinical_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
-    ida_mr_metadata_path = path.join(clinical_dir, 'IDA_MR_Metadata_Listing.csv')
 
-    mayo_mri_fmri = pd.io.parsers.read_csv(mayo_mri_fmri_path, sep=',')
-    ida_mr_metadata = pd.io.parsers.read_csv(ida_mr_metadata_path, sep=',')
-    mayo_mri_imageqc = pd.io.parsers.read_csv(mayo_mri_imageqc_path, sep=',')
+    # Loading needed .csv files
+    adni_merge = pd.io.parsers.read_csv(path.join(csv_dir, 'ADNIMERGE.csv'), sep=',', low_memory=False)
 
+    mayo_mri_qc = pd.io.parsers.read_csv(path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv'), sep=',', low_memory=False)
+    mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == 'fMRI']
+    mayo_mri_qc.columns = [x.upper() for x in mayo_mri_qc.columns]
+
+    mayo_mri_qc3 = pd.io.parsers.read_csv(path.join(csv_dir, 'MAYOADIRL_MRI_QUALITY_ADNI3.csv'), sep=',', low_memory=False)
+    mayo_mri_qc3 = mayo_mri_qc3[mayo_mri_qc3.SERIES_TYPE == 'EPB']
+
+    # Concatenating visits in both QC files
+    mayo_mri_qc = pd.concat([mayo_mri_qc, mayo_mri_qc3], axis=0, ignore_index=True, sort=False)
+
+    mri_list = pd.io.parsers.read_csv(path.join(csv_dir, 'MRILIST.csv'), sep=',')
+
+    # Selecting only fMRI images that are not Multiband
+    mri_list = mri_list[mri_list.SEQUENCE.str.contains('MRI')]  # 'MRI' includes all fMRI and fMRI scans, but not others
+    unwanted_sequences = ['MB']
+    mri_list = mri_list[mri_list.SEQUENCE.map(lambda x: not any(subs in x for subs in unwanted_sequences))]
+
+    # We will convert the images for each subject in the subject list
     for subj in subjs_list:
-        # print subj
-        fmri_subjs_info = mayo_mri_fmri[(mayo_mri_fmri.RID == int(subj[-4:]))]
-        # Extract visits available
-        visits_list = fmri_subjs_info['VISCODE2'].tolist()
-        # Removing duplicates
-        visits_list = list(set(visits_list))
 
-        if len(visits_list) != 0:
-            for viscode in visits_list:
-                visit = ''
-                image_path = ''
+        # Filter ADNIMERGE, MRI_LIST and QC for only one subject and sort the rows/visits by examination date
+        adnimerge_subj = adni_merge[adni_merge.PTID == subj]
+        adnimerge_subj = adnimerge_subj.sort_values('EXAMDATE')
 
-                fmri_subj = fmri_subjs_info[fmri_subjs_info['VISCODE2'] == viscode]
+        mri_list_subj = mri_list[mri_list.SUBJECT == subj]
+        mri_list_subj = mri_list_subj.sort_values('SCANDATE')
 
-                if not fmri_subj.empty:
+        mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(subj[-4:])]
 
-                    # If there are multiple scans for the same session same subject, check what is the one selected for the usage (field 'series_selected') or
-                    # choose the one with the best quality
-                    if len(fmri_subj) > 1:
-                        fmri_imageuid = fmri_subj['IMAGEUID'].tolist()
-                        loni_uid_list = ['I' + str(imageuid) for imageuid in fmri_imageuid]
-                        images_qc = mayo_mri_imageqc[mayo_mri_imageqc.loni_image.isin(loni_uid_list)]
-                        series_selected_values = images_qc['series_selected'].tolist()
-                        sum_series_selected = sum(series_selected_values)
-                        if sum_series_selected == 1:
-                            imageuid_to_select = images_qc[images_qc['series_selected'] > 0]['loni_image'].iloc[
-                                0].replace('I', '')
-                        else:
-                            imageuid_to_select = select_image_qc(fmri_imageuid, images_qc)
+        # Obtain corresponding timepoints for the subject visits
+        visits = visits_to_timepoints_mrilist(subj, mri_list_subj, adnimerge_subj, "fMRI")
 
-                        fmri_subj = fmri_subj[fmri_subj['IMAGEUID'] == int(imageuid_to_select)].iloc[0]
-                    else:
-                        fmri_subj = fmri_subj.iloc[0]
+        for visit_info in visits.keys():
+            timepoint = visit_info[0]
+            visit_str = visits[visit_info]
 
-                    fmri_imageuid = fmri_subj['IMAGEUID']
+            visit_mri_list = mri_list_subj[mri_list_subj.VISIT == visit_str]
+            image = fmri_image(subj, timepoint, visits[visit_info], visit_mri_list, mayo_mri_qc_subj)
 
-                    # Discard scans made with non Philips scanner and with a bad quality
-                    fmri_metadata = ida_mr_metadata[ida_mr_metadata['IMAGEUID'] == fmri_imageuid]
+            if image is not None:
+                row_to_append = pd.DataFrame(image, index=['i', ])
+                # TODO Replace iteratively appending by pandas.concat
+                fmri_df = fmri_df.append(row_to_append, ignore_index=True, sort=False)
 
-                    if not fmri_metadata.empty:
-                        fmri_metadata = fmri_metadata.iloc[0]
+    # Exceptions
+    # ==========
+    conversion_errors = []
 
-                        if 'Philips' not in fmri_metadata['Scanner']:
-                            cprint('No Philips scanner for ' + subj + ' visit ' + viscode + '. Skipped.')
-                            continue
+    error_indices = []
+    for conv_error in conversion_errors:
+        error_indices.append((fmri_df.Subject_ID == conv_error[0])
+                             & (fmri_df.VISCODE == conv_error[1]))
 
-                        elif 4 in mayo_mri_imageqc[mayo_mri_imageqc['loni_image'] == 'I' + str(fmri_imageuid)]['series_quality'].values:
-                            cprint('Bad scan quality for ' + subj + ' visit ' + viscode + '. Skipped.')
-                            continue
+    if error_indices:
+        indices_to_remove = fmri_df.index[reduce(operator.or_, error_indices, False)]
+        fmri_df.drop(indices_to_remove, inplace=True)
 
-                        scan_date = fmri_subj.SCANDATE
-                        sequence = adni_utils.replace_sequence_chars(fmri_subj.SERDESC)
-                        scanner = fmri_metadata['Scanner']
-                        loni_uid = fmri_metadata['LONIUID']
-                        visit = fmri_metadata['Visit']
-                        mag_strenght = fmri_metadata['MagStrength']
+    # Checking for images paths in filesystem
+    images = find_image_path(fmri_df, source_dir, 'fMRI', 'S', 'Series_ID')
 
-                        # Calculate the path
-                        seq_path = path.join(source_dir, str(subj), sequence)
-                        for (dirpath, dirnames, filenames) in walk(seq_path):
-                            found = False
-                            for d in dirnames:
-                                if d == 'S' + str(loni_uid):
-                                    image_path = path.join(dirpath, d)
-                                    # Check if the path exists
-                                    if not os.path.isdir(image_path):
-                                        cprint('Path not existing for subject ' + subj + ' visit ' + visit)
-                                    found = True
-                                    break
-                            if found:
-                                break
+    fmri_tsv_path = path.join(dest_dir, 'conversion_info')
+    if not path.exists(fmri_tsv_path):
+        mkdir(fmri_tsv_path)
+    images.to_csv(path.join(fmri_tsv_path, 'fmri_paths.tsv'), sep='\t', index=False)
 
-                        # The session scmri correspond to the baseline
-                        if viscode == 'scmri':
-                            viscode = 'bl'
-                    else:
-                        cprint('Missing visit, sequence, scan date and loniuid for subject ' + subj + ' visit ' + visit)
-                        continue
-
-                    row_to_append = pd.DataFrame(
-                        [[subj, str(viscode), visit, str(fmri_imageuid), sequence, scan_date, str(loni_uid),
-                          scanner, mag_strenght, image_path]], columns=fmri_col)
-
-                    fmri_df = fmri_df.append(row_to_append, ignore_index=True)
-                else:
-                    logging.info('Missing fMRI for ', subj, 'visit', visit)
-
-    fmri_df.to_csv(path.join(dest_dir, 'conversion_info', 'fmri_paths.tsv'), sep='\t', index=False)
-    return fmri_df
+    return images
 
 
 def fmri_paths_to_bids(dest_dir, fmri_paths, mod_to_update=False):
@@ -278,189 +239,37 @@ def generate_subject_files(subj, fmri_paths, dest_dir, mod_to_update):
                 adni_utils.remove_tmp_dmc_folder(dest_dir, fmri_info['IMAGEUID'].values[0])
 
 
-def select_image_qc(id_list, mri_qc_subj):
+def fmri_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
     """
 
     Args:
-        id_list:
+        subject_id:
+        timepoint:
+        visit_str:
+        visit_mri_list:
         mri_qc_subj:
 
     Returns:
 
     """
-    import numpy as np
+    from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars, select_image_qc
 
-    if len(id_list) == 0:
+    mri_qc_subj.columns = [x.lower() for x in mri_qc_subj.columns]
+    sel_image = select_image_qc(list(visit_mri_list.IMAGEUID), mri_qc_subj)
+    if sel_image is None:
         return None
 
-    selected_image = None
-    image_ids = ['I' + str(imageuid) for imageuid in id_list]
-    int_ids = [int(imageuid) for imageuid in id_list]
-    images_qc = mri_qc_subj[mri_qc_subj.loni_image.isin(image_ids)]
+    sel_scan = visit_mri_list[visit_mri_list.IMAGEUID == sel_image].iloc[0]
 
-    if images_qc.shape[0] < 1:
-        return min(int_ids)
+    image_dict = {'Subject_ID': subject_id,
+                  'VISCODE': timepoint,
+                  'Visit': visit_str,
+                  'Sequence': replace_sequence_chars(sel_scan.SEQUENCE),
+                  'Scan_Date': sel_scan['SCANDATE'],
+                  'Study_ID': str(int(sel_scan.STUDYID)),
+                  'Series_ID': str(int(sel_scan.SERIESID)),
+                  'Image_ID': str(int(sel_scan.IMAGEUID)),
+                  'Field_Strength': sel_scan.MAGSTRENGTH}
 
-    if np.sum(images_qc.series_selected) == 1:
-        selected_image = images_qc[images_qc.series_selected == 1].iloc[0].loni_image[1:]
-    else:
-        images_not_rejected = images_qc[images_qc.series_quality < 4]
+    return image_dict
 
-        if images_not_rejected.shape[0] < 1:
-
-            # There are no images that passed the qc
-            # so we'll try to see if there are other images without qc,
-            # otherwise return None
-            qc_ids = set([int(qc_id[1:]) for qc_id in images_qc.loni_image.unique()])
-            no_qc_ids = list(set(int_ids) - qc_ids)
-
-            if len(no_qc_ids) == 0:
-                return None
-            else:
-                return min(no_qc_ids)
-
-        series_quality = [q if q > 0 else 4 for q in list(images_not_rejected.series_quality)]
-        best_q = np.amin(series_quality)
-
-        images_best_qc = images_not_rejected[images_not_rejected.series_quality == best_q]
-        if images_best_qc.shape[0] == 1:
-            selected_image = images_best_qc.iloc[0].loni_image[1:]
-        else:
-            selected_image = min(int_ids)
-
-    return int(selected_image)
-
-
-def compute_fmri_path_refactoring(source_dir, clinical_dir, dest_dir, subjs_list):
-    """
-    Compute the paths to fmri images.
-
-    The fmri images to convert into BIDS are chosen in the following way:
-        - Extract the list of subjects from MAYOADIRL_MRI_FMRI_09_15_16.csv
-        - Select the only the scans that came from PHILIPS machine (field Scanner from IDA_MR_Metadata_Listing.csv)
-        - Discard all the subjects with column  series_quality = 4  (4 means that the scan is not usable) in MAYOADIRL_MRI_IMAGEQC_12_08_15.csv
-
-    In case of multiple scans for the same session, same date the one to convert is chosen with the following criteria:
-        - Check if in the file MAYOADIRL_MRI_IMAGEQC_12_08_15.csv there is a single scan with the field series_selected == 1
-        - If yes choose the one with series_selected == 1
-        - If no choose the scan with the best quality
-
-    Args:
-        source_dir: path to the ADNI image folder
-        clinical_dir: path to the directory with all the clinical data od ADNI
-        dest_dir:  path to the output_folder
-        subjs_list: subjects list
-
-    Returns: pandas Dataframe containing the path for each fmri
-
-    """
-    import os
-    from os import path
-    from os import walk
-    import pandas as pd
-    import logging
-    from clinica.iotools.converters.adni_to_bids import adni_utils
-    from clinica.utils.stream import cprint
-
-    fmri_col = ['Subject_ID', 'VISCODE', 'Visit', 'IMAGEUID', 'Sequence', 'Scan Date', 'LONIUID', 'Scanner',
-                'MagStregth', 'Path']
-
-    fmri_df = pd.DataFrame(columns=fmri_col)
-
-    # Load the requested clinical data
-    mayo_mri_fmri_path = path.join(clinical_dir, 'MAYOADIRL_MRI_FMRI_09_15_16.csv')
-    mayo_mri_imageqc_path = path.join(clinical_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
-
-    mayo_mri_fmri = pd.io.parsers.read_csv(mayo_mri_fmri_path, sep=',')
-    mayo_mri_imageqc = pd.io.parsers.read_csv(mayo_mri_imageqc_path, sep=',')
-
-    for subj in subjs_list:
-        # print subj
-        fmri_subjs_info = mayo_mri_fmri[(mayo_mri_fmri.RID == int(subj[-4:]))]
-        # Extract visits available
-        visits_list = fmri_subjs_info['VISCODE2'].tolist()
-        # Removing duplicates
-        visits_list = list(set(visits_list))
-
-        if len(visits_list) != 0:
-            for viscode in visits_list:
-                visit = ''
-                image_path = ''
-
-                fmri_subj = fmri_subjs_info[fmri_subjs_info['VISCODE2'] == viscode]
-
-                if not fmri_subj.empty:
-
-                    # If there are multiple scans for the same session same subject, check what is the one selected for the usage (field 'series_selected') or
-                    # choose the one with the best quality
-                    if len(fmri_subj) > 1:
-                        fmri_imageuid = fmri_subj['IMAGEUID'].tolist()
-                        loni_uid_list = ['I' + str(imageuid) for imageuid in fmri_imageuid]
-                        images_qc = mayo_mri_imageqc[mayo_mri_imageqc.loni_image.isin(loni_uid_list)]
-                        series_selected_values = images_qc['series_selected'].tolist()
-                        sum_series_selected = sum(series_selected_values)
-                        if sum_series_selected == 1:
-                            imageuid_to_select = images_qc[images_qc['series_selected'] > 0]['loni_image'].iloc[
-                                0].replace('I', '')
-                        else:
-                            imageuid_to_select = select_image_qc(fmri_imageuid, images_qc)
-
-                        fmri_subj = fmri_subj[fmri_subj['IMAGEUID'] == int(imageuid_to_select)].iloc[0]
-                    else:
-                        fmri_subj = fmri_subj.iloc[0]
-
-                    fmri_imageuid = fmri_subj['IMAGEUID']
-
-                    # Discard scans made with non Philips scanner and with a bad quality
-                    fmri_metadata = ida_mr_metadata[ida_mr_metadata['IMAGEUID'] == fmri_imageuid]
-
-                    if not fmri_metadata.empty:
-                        fmri_metadata = fmri_metadata.iloc[0]
-
-                        if 'Philips' not in fmri_metadata['Scanner']:
-                            cprint('No Philips scanner for ' + subj + ' visit ' + viscode + '. Skipped.')
-                            continue
-
-                        elif 4 in mayo_mri_imageqc[mayo_mri_imageqc['loni_image'] == 'I' + str(fmri_imageuid)]['series_quality'].values:
-                            cprint('Bad scan quality for ' + subj + ' visit ' + viscode + '. Skipped.')
-                            continue
-
-                        scan_date = fmri_subj.SCANDATE
-                        sequence = adni_utils.replace_sequence_chars(fmri_subj.SERDESC)
-                        scanner = fmri_metadata['Scanner']
-                        loni_uid = fmri_metadata['LONIUID']
-                        visit = fmri_metadata['Visit']
-                        mag_strenght = fmri_metadata['MagStrength']
-
-                        # Calculate the path
-                        seq_path = path.join(source_dir, str(subj), sequence)
-                        for (dirpath, dirnames, filenames) in walk(seq_path):
-                            found = False
-                            for d in dirnames:
-                                if d == 'S' + str(loni_uid):
-                                    image_path = path.join(dirpath, d)
-                                    # Check if the path exists
-                                    if not os.path.isdir(image_path):
-                                        cprint('Path not existing for subject ' + subj + ' visit ' + visit)
-                                    found = True
-                                    break
-                            if found:
-                                break
-
-                        # The session scmri correspond to the baseline
-                        if viscode == 'scmri':
-                            viscode = 'bl'
-                    else:
-                        cprint('Missing visit, sequence, scan date and loniuid for subject ' + subj + ' visit ' + visit)
-                        continue
-
-                    row_to_append = pd.DataFrame(
-                        [[subj, str(viscode), visit, str(fmri_imageuid), sequence, scan_date, str(loni_uid),
-                          scanner, mag_strenght, image_path]], columns=fmri_col)
-
-                    fmri_df = fmri_df.append(row_to_append, ignore_index=True)
-                else:
-                    logging.info('Missing fMRI for ', subj, 'visit', visit)
-
-    fmri_df.to_csv(path.join(dest_dir, 'conversion_info', 'fmri_paths.tsv'), sep='\t', index=False)
-    return fmri_df

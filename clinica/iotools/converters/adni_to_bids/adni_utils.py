@@ -64,7 +64,7 @@ def viscode_to_session(viscode):
         return viscode.capitalize()
 
 
-def visits_to_timepoints_dwi_flair(subject, mri_list_subj, adnimerge_subj, modality):
+def visits_to_timepoints_mrilist(subject, mri_list_subj, adnimerge_subj, modality):
     """
 
     Args:
@@ -266,7 +266,7 @@ def center_nifti_origin(input_image, output_image):
             qform[i - 1, 3] = -1.0 * hd['pixdim'][i] * hd['dim'][i] / 2.0
         new_img = nib.Nifti1Image(canonical_img.get_data(caching='unchanged'), qform)
 
-    except OSError:
+    except (OSError, nib.orientations.OrientationError) as e:
         return None
 
     nib.save(new_img, output_image)

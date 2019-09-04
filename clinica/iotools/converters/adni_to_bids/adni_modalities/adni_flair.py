@@ -61,7 +61,7 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
     from functools import reduce
     import pandas as pd
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path, visits_to_timepoints_dwi_flair
+    from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path, visits_to_timepoints_mrilist
 
     flair_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
                     'Study_ID', 'Series_ID', 'Image_ID', 'Field_Strength', 'Scanner']
@@ -92,7 +92,7 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
         mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(subj[-4:])]
 
         # Obtain corresponding timepoints for the subject visits
-        visits = visits_to_timepoints_dwi_flair(subj, mri_list_subj, adnimerge_subj, 'FLAIR')
+        visits = visits_to_timepoints_mrilist(subj, mri_list_subj, adnimerge_subj, 'FLAIR')
 
         for visit_info in visits.keys():
             timepoint = visit_info[0]

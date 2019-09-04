@@ -545,7 +545,7 @@ def check_exceptions(bids_dir):
     for r in t1_paths.iterrows():
         image = r[1]
         image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'anat')
-        image_pattern = path.join(image_dir, '%s_%s_*' % (image.BIDS_SubjID, image.BIDS_Session))
+        image_pattern = path.join(image_dir, '*')# % (image.BIDS_SubjID, image.BIDS_Session))
         files_list = glob(image_pattern)
         if not files_list:
             print("No images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
