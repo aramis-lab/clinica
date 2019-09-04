@@ -31,16 +31,16 @@ def test_run_T1FreeSurfer(cmdopt):
 
     working_dir = cmdopt
     root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'T1FreeSurfer')
+    root = join(root, 'data', 'T1FreeSurferCrossSectional')
 
     clean_folder(join(root, 'out', 'caps'))
-    clean_folder(join(working_dir, 'T1FreeSurfer'))
+    clean_folder(join(working_dir, 'T1FreeSurferCrossSectional'))
 
     pipeline = T1FreeSurfer(bids_directory=join(root, 'in', 'bids'),
                             caps_directory=join(root, 'out', 'caps'),
                             tsv_file=join(root, 'in', 'subjects.tsv'))
     pipeline.parameters['recon_all_args'] = '-qcache'
-    pipeline.base_dir = join(working_dir, 'T1FreeSurfer')
+    pipeline.base_dir = join(working_dir, 'T1FreeSurferCrossSectional')
     pipeline.build()
     pipeline.run(bypass_check=True)
 
