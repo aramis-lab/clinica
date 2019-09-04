@@ -52,7 +52,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                             'voxel_size': None,
                             'modulation': True,
                             'fwhm': [8]
-                            #'atlas_list': ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
+                            # 'atlas_list': ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
                             }
 
     def check_custom_dependencies(self):
@@ -184,7 +184,6 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                                                         'smoothed_normalized_files')])
         ])
 
-
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.
         """
@@ -252,7 +251,6 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
             ])
         else:
             self.output_node.inputs.smoothed_normalized_files = []
-
 
         # Connection
         # ==========

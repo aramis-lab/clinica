@@ -48,7 +48,7 @@ def select_image(participant_id, session_id, image_type, bids_layout):
                                           return_type='file', extensions='nii')
     if len(selected_images) == 0:
         raise RuntimeError('No ' + image_type + ' images were found for participant ' + participant_id
-                            + ' and session ' + session_id)
+                           + ' and session ' + session_id)
     if len(selected_images) > 1:
         warnings.warn('Several ' + image_type + ' images were found for participant ' + participant_id
                       + ' and session ' + session_id, RuntimeWarning)
