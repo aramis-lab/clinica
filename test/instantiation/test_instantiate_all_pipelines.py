@@ -13,7 +13,7 @@ def test_instantiate_T1FreeSurfer():
     from os.path import dirname, join, abspath
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'T1FreeSurfer')
+    root = join(root, 'data', 'T1FreeSurferCrossSectional')
     pipeline = T1FreeSurfer(
             bids_directory=join(root, 'in', 'bids'),
             caps_directory=join(root, 'in', 'caps'),
