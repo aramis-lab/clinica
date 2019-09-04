@@ -88,10 +88,11 @@ def check_freesurfer(version_requirements=None):
                 'SetUpFreeSurfer.sh in your configuration file?%s' % (Fore.RED, binary, Fore.RESET))
 
     if version_requirements is not None:
+        from string import punctuation
         from distutils.version import LooseVersion
         temp = version_requirements.split('.')
         # Will extract {<|<=|>=|>|=|==}
-        comparison_operator = ''.join([i for i in temp[0] if not i.isdigit()])
+        comparison_operator = ''.join([c for c in temp[0] if c in punctuation])
         required_version = version_requirements.replace(comparison_operator, '')
         current_version = str(freesurfer.Info.looseversion())
         satisfy_version = eval('LooseVersion(\'%s\') %s LooseVersion(\'%s\')' %
