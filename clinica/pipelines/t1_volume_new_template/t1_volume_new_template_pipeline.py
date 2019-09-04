@@ -307,9 +307,10 @@ class T1VolumeNewTemplate(cpe.Pipeline):
         import nipype.interfaces.spm as spm
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
-        import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as seg_utils
-        import clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_utils as dartel_utils
-        import clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_utils as dartel2mni_utils
+        from ..t1_volume_tissue_segmentation import t1_volume_tissue_segmentation_utils as seg_utils
+        from ..t1_volume_create_dartel import t1_volume_create_dartel_utils as dartel_utils
+        from ..t1_volume_dartel2mni import t1_volume_dartel2mni_utils as dartel2mni_utils
+        from ..t1_volume_parcellation import t1_volume_parcellation_utils as parcellation_utils
         from clinica.utils.io import unzip_nii
         from clinica.utils.spm import get_tpm
 
@@ -425,7 +426,7 @@ class T1VolumeNewTemplate(cpe.Pipeline):
         atlas_stats_node = npe.MapNode(nutil.Function(input_names=['in_image',
                                                                    'in_atlas_list'],
                                                       output_names=['atlas_statistics'],
-                                                      function=dartel2mni_utils.atlas_statistics),
+                                                      function=parcellation_utils.atlas_statistics),
                                        name='atlas_stats_node',
                                        iterfield=['in_image'])
         atlas_stats_node.inputs.in_atlas_list = self.parameters['atlas_list']
