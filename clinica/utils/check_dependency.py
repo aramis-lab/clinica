@@ -90,9 +90,7 @@ def check_freesurfer(version_requirements=None):
     if version_requirements is not None:
         from string import punctuation
         from distutils.version import LooseVersion
-        temp = version_requirements.split('.')
-        # Will extract {<|<=|>=|>|=|==}
-        comparison_operator = ''.join([c for c in temp[0] if c in punctuation])
+        comparison_operator = ''.join([c for c in version_requirements if c in punctuation.replace('.', '')])
         required_version = version_requirements.replace(comparison_operator, '')
         current_version = str(freesurfer.Info.looseversion())
         satisfy_version = eval('LooseVersion(\'%s\') %s LooseVersion(\'%s\')' %
