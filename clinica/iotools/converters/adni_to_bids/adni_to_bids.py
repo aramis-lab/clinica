@@ -153,5 +153,5 @@ class AdniToBids(Converter):
         if 'FLAIR' in modalities:
             adni_flair.convert_adni_flair(source_dir, clinical_dir, dest_dir, subjs_list)
 
-        # if 'fMRI' in modalities:
-        #     adni_fmri.convert_adni_fmri(source_dir, clinical_dir, dest_dir, subjs_list)
+        if 'fMRI' in modalities:
+            adni_fmri.convert_adni_fmri(source_dir, clinical_dir, dest_dir, subjs_list)
