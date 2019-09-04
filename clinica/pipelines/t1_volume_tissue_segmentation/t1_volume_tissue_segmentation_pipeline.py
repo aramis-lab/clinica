@@ -275,16 +275,16 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         self.connect([
             (self.input_node, container_path, [('t1w', 't1w_filename')]),  # noqa
             (container_path, write_node, [(('container', fix_join, ''), 'container')]),  # noqa
-            (self.output_node, write_node, [(('native_class_images', utils.group_nested_images_by_subject, True), 'native_space'),  # noqa
-                                            (('dartel_input_images', utils.group_nested_images_by_subject, True), 'dartel_input')]),  # noqa
+            (self.output_node, write_node, [(('native_class_images', utils.zip_list_files, True), 'native_space'),  # noqa
+                                            (('dartel_input_images', utils.zip_list_files, True), 'dartel_input')]),  # noqa
         ])
         if self.parameters['save_warped_unmodulated']:
             self.connect([
-                (self.output_node, write_node, [(('normalized_class_images', utils.group_nested_images_by_subject, True), 'normalized')]),  # noqa
+                (self.output_node, write_node, [(('normalized_class_images', utils.zip_list_files, True), 'normalized')]),  # noqa
             ])
         if self.parameters['save_warped_modulated']:
             self.connect([
-                (self.output_node, write_node, [(('modulated_class_images', utils.group_nested_images_by_subject, True), 'modulated_normalized')]),  # noqa
+                (self.output_node, write_node, [(('modulated_class_images', utils.zip_list_files, True), 'modulated_normalized')]),  # noqa
             ])
         if self.parameters['write_deformation_fields'] is not None:
             if self.parameters['write_deformation_fields'][0]:
