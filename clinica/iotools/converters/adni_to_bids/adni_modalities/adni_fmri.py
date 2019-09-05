@@ -58,22 +58,12 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list):
     import operator
     from functools import reduce
     from os import path, mkdir
-
     import pandas as pd
-
-    from clinica.utils.stream import cprint
     from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path, visits_to_timepoints_mrilist
-
-    # import os
-    # import logging
-    # from clinica.iotools.converters.adni_to_bids import adni_utils
-
-    fmri_col = ['Subject_ID', 'VISCODE', 'Visit', 'IMAGEUID', 'Sequence', 'Scan Date', 'LONIUID', 'Path', 'Field_Strength']
 
     fmri_col = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
                 'Study_ID', 'Field_Strength', 'Series_ID', 'Image_ID']
     fmri_df = pd.DataFrame(columns=fmri_col)
-
 
     # Loading needed .csv files
     adni_merge = pd.io.parsers.read_csv(path.join(csv_dir, 'ADNIMERGE.csv'), sep=',', low_memory=False)
@@ -197,7 +187,7 @@ def generate_subject_files(subj, fmri_paths, dest_dir, mod_to_update):
     for ses in sess_list:
         with counter.get_lock():
             counter.value += 1
-        cprint('[FLAIR] Processing subject ' + str(subj)
+        cprint('[fMRI] Processing subject ' + str(subj)
                + ' - session ' + ses + ', ' + str(counter.value)
                + ' / ' + str(len(fmri_paths)))
         ses_bids = adni_utils.viscode_to_session(ses)
@@ -229,14 +219,14 @@ def generate_subject_files(subj, fmri_paths, dest_dir, mod_to_update):
                 fmri_path = fmri_info['Path'].values[0]
                 dcm_to_convert = adni_utils.check_two_dcm_folder(fmri_path,
                                                                  dest_dir,
-                                                                 fmri_info['IMAGEUID'].values[0])
+                                                                 fmri_info['Image_ID'].values[0])
                 if not os.path.isfile(os.path.join(ses_path, 'func', bids_file_name + '_task-rest_bold.nii.gz')):
                     bids_utils.convert_fmri(dcm_to_convert, path.join(ses_path, 'func'), bids_file_name)
                 else:
                     cprint("Images already converted")
 
                 # Delete the temporary folder used for copying fmri with 2 subjects inside the DICOM folder
-                adni_utils.remove_tmp_dmc_folder(dest_dir, fmri_info['IMAGEUID'].values[0])
+                adni_utils.remove_tmp_dmc_folder(dest_dir, fmri_info['Image_ID'].values[0])
 
 
 def fmri_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
