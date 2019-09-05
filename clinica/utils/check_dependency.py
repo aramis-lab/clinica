@@ -87,17 +87,17 @@ def check_freesurfer(version_requirements=None):
                 'environment: did you have the line source ${FREESURFER_HOME}/'
                 'SetUpFreeSurfer.sh in your configuration file?%s' % (Fore.RED, binary, Fore.RESET))
 
-    if version_requirements is not None:
-        from string import punctuation
-        from distutils.version import LooseVersion
-        comparison_operator = ''.join([c for c in version_requirements if c in punctuation.replace('.', '')])
-        required_version = version_requirements.replace(comparison_operator, '')
-        current_version = str(freesurfer.Info.looseversion())
-        satisfy_version = eval('LooseVersion(\'%s\') %s LooseVersion(\'%s\')' %
-                               (current_version, comparison_operator, required_version))
-        if not satisfy_version:
-            raise ClinicaMissingDependencyError('Your FreeSurfer version (%s) does not version requirements (%s)' %
-                                                (current_version, version_requirements))
+    # if version_requirements is not None:
+    #     from string import punctuation
+    #     from distutils.version import LooseVersion
+    #     comparison_operator = ''.join([c for c in version_requirements if c in punctuation.replace('.', '')])
+    #     required_version = version_requirements.replace(comparison_operator, '')
+    #     current_version = str(freesurfer.Info.looseversion())
+    #     satisfy_version = eval('LooseVersion(\'%s\') %s LooseVersion(\'%s\')' %
+    #                            (current_version, comparison_operator, required_version))
+    #     if not satisfy_version:
+    #         raise ClinicaMissingDependencyError('Your FreeSurfer version (%s) does not version requirements (%s)' %
+    #                                             (current_version, version_requirements))
 
 
 def check_fsl(version_requirements=None):
