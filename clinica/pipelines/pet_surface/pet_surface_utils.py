@@ -735,26 +735,26 @@ def produce_tsv(pet, atlas_files):
         average_region = []
         region_names = []
         for r in range(len(annot_atlas_left[2])):
-                cprint(annot_atlas_left[2][r])
-                region_names.append(annot_atlas_left[2][r].astype(str) + '_lh')
-                region_names.append(annot_atlas_left[2][r].astype(str) + '_rh')
+            cprint(annot_atlas_left[2][r])
+            region_names.append(annot_atlas_left[2][r].astype(str) + '_lh')
+            region_names.append(annot_atlas_left[2][r].astype(str) + '_rh')
 
-                mask_left = annot_atlas_left[0] == r
-                mask_left = np.uint(mask_left)
+            mask_left = annot_atlas_left[0] == r
+            mask_left = np.uint(mask_left)
 
-                masked_data_left = mask_left * lh_pet_mgh
-                if np.sum(mask_left) == 0:
-                    average_region.append(np.nan)
-                else:
-                    average_region.append(np.sum(masked_data_left) / np.sum(mask_left))
+            masked_data_left = mask_left * lh_pet_mgh
+            if np.sum(mask_left) == 0:
+                average_region.append(np.nan)
+            else:
+                average_region.append(np.sum(masked_data_left) / np.sum(mask_left))
 
-                mask_right = annot_atlas_right[0] == r
-                mask_right = np.uint(mask_right)
-                masked_data_right = mask_right * rh_pet_mgh
-                if np.sum(mask_right) == 0:
-                    average_region.append(np.nan)
-                else:
-                    average_region.append(np.sum(masked_data_right) / np.sum(mask_right))
+            mask_right = annot_atlas_right[0] == r
+            mask_right = np.uint(mask_right)
+            masked_data_right = mask_right * rh_pet_mgh
+            if np.sum(mask_right) == 0:
+                average_region.append(np.nan)
+            else:
+                average_region.append(np.sum(masked_data_right) / np.sum(mask_right))
 
         final_tsv = pds.DataFrame({'index': range(len(region_names)),
                                    'label_name': region_names,

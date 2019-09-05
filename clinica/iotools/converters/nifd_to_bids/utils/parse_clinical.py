@@ -232,6 +232,10 @@ class Parse_clinical():
         if pat_list is not None:
             bloc = bloc[bloc['participant_id'].isin(pat_list)]
 
+        # Enforce the clinica_BIDS convention
+        if 'sex' in list(bloc):
+            bloc['sex'] = bloc['sex'].apply(lambda x: 'M' if x == 1 else 'F')
+
         return bloc
 
     def make_scans(self, path_scans):
