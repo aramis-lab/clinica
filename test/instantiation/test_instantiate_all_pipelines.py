@@ -9,8 +9,9 @@ warnings.filterwarnings("ignore")
 
 
 def test_instantiate_T1FreeSurfer():
-    from clinica.pipelines.t1_freesurfer.t1_freesurfer_pipeline import T1FreeSurfer
     from os.path import dirname, join, abspath
+    from tempfile import mkdtemp
+    from clinica.pipelines.t1_freesurfer.t1_freesurfer_pipeline import T1FreeSurfer
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'T1FreeSurferCrossSectional')
@@ -20,6 +21,7 @@ def test_instantiate_T1FreeSurfer():
             tsv_file=join(root, 'in', 'subjects.tsv')
             )
     pipeline.parameters['recon_all_args'] = '-qcache'
+    pipeline.base_dir = mkdtemp()
     pipeline.build()
 
 
