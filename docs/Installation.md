@@ -67,7 +67,7 @@ pip install clinica
 
 ### Installation of the third-party software packages
 Depending on the pipeline that you want to use, you need to install
-**Pipeline-specific interfaces**. Not all the dependencies are necessary to run
+**pipeline-specific interfaces**. Not all the dependencies are necessary to run
 Clinica.
 Please refer to [this section](../Third-party) to determine which third-party
 libraries you need to install.
@@ -96,6 +96,7 @@ eval "$(register-python-argcomplete clinica)"
         run                 To run pipelines on BIDS/CAPS datasets.
         convert             To convert unorganized datasets into a BIDS hierarchy.
         iotools             Tools to handle BIDS/CAPS datasets.
+        visualize           To visualize outputs of Clinica pipelines.
         generate            To generate pre-filled files when creating new
                             pipelines (for developers).
 
@@ -105,12 +106,10 @@ eval "$(register-python-argcomplete clinica)"
                             Define the log file name (default: clinica.log)
     ```
 
-    If you have successfully installed the third-party software, you are ready
+    If you have successfully installed the third-party software packages, you are ready
     to run any of the pipelines proposed by Clinica.
 
-    It should display a help describing the different categories of command line
-    (see [Interacting with Clinica](../InteractingWithClinica) for further
-    explanations).
+    You can now learn how to [interact with Clinica](../InteractingWithClinica).
 
 #### Deactivation of the Clinica environment
 At the end of your session, remember to deactivate your Conda environment:
@@ -161,5 +160,5 @@ conda deactivate
 ```
 
 Remember that Clinica will be only available inside your Conda environment.
-Further information for Clinica's contributors can be found
-[here](./CodingForClinica).
+<!-- Further information for Clinica's contributors can be found
+[here](../CodingForClinica). -->

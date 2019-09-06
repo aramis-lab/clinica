@@ -37,14 +37,14 @@ _*You only need to install ITK if you plan to perform partial volume correction 
 Depending on the architecture and OS of your system, setup of third party libraries can change. Please refer to each tool’s website for installation instructions:
 
 * [**ANTs v2.3.1**](http://picsl.upenn.edu/software/ants/) Download [here](https://github.com/stnava/ANTs/releases) and follow the instructions on the ANTs [wiki](https://github.com/stnava/ANTs/wiki/Compiling-ANTs-on-Linux-and-Mac-OS).
-* [**CAT12**](http://dbm.neuro.uni-jena.de/cat/) Download the latest version [here](http://dbm.neuro.uni-jena.de/cat/index.html#DOWNLOAD) and follow the instructions to ensure that your cat12 folder is located in spm/toolbox.
+* [**CAT12**](http://dbm.neuro.uni-jena.de/cat/) Download the latest version [here](http://dbm.neuro.uni-jena.de/cat/index.html#DOWNLOAD) and follow the instructions to ensure that your cat12 folder is located in your spm/toolbox folder.
 * [**Convert3D**](http://www.itksnap.org/pmwiki/pmwiki.php?n=Convert3D.Convert3D) Download [here](http://www.itksnap.org/pmwiki/pmwiki.php?n=Downloads.C3D).
 * [**FreeSurfer**](http://surfer.nmr.mgh.harvard.edu/)
     - For Linux users, download and install FreeSurfer following the instructions on the [wiki](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall). Please note that on Ubuntu you will need to install the packages `tcsh` and `libjpeg62` ( a `sudo apt-get install tcsh libjpeg62` should do the job).
     - For Mac users, download [here](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall) and follow the instructions on the FreeSurfer [wiki](https://surfer.nmr.mgh.harvard.edu/fswiki/MacOsInstall).
 * [**FSL 6.0**](https://fsl.fmrib.ox.ac.uk/) Download [here](https://fsl.fmrib.ox.ac.uk/fsldownloads) and follow the instructions on the FSL wiki (this [page](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation/Linux) for Linux users and this [page](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation/MacOsX) for Mac users).
 * [**ITK**](https://itk.org/) Follow the instructions on the ITK blog (this [page](https://blog.kitware.com/itk-packages-in-linux-distributions/) for Linux users and this [page](https://blog.kitware.com/kitware-packages-on-os-x-with-homebrew/) for Mac users).
-* [**MRtrix3**](http://www.mrtrix.org) Follow the instructions on the MRtrix website (this [page](https://mrtrix.readthedocs.io/en/latest/installation/linux_install.html) for Linux users and this [page](https://mrtrix.readthedocs.io/en/latest/installation/mac_install.html) for Mac users). Note for Mac users: the fastest solution is to use Homebrew; a `brew tap MRtrix3/mrtrix3` followed by a `brew install mrtrix3 ` will install MRtrix3.
+* [**MRtrix3**](http://www.mrtrix.org) Follow the instructions on the MRtrix website (this [page](https://mrtrix.readthedocs.io/en/latest/installation/linux_install.html) for Linux users and this [page](https://mrtrix.readthedocs.io/en/latest/installation/mac_install.html) for Mac users). Note for Mac users: the fastest solution is to use Homebrew: a `brew tap MRtrix3/mrtrix3` command followed by `brew install mrtrix3 ` will install MRtrix3.
 * [**Matlab**](https://fr.mathworks.com/products/matlab/)
 * [**PETPVC 1.2.4**](https://github.com/UCL/PETPVC) Follow the instructions [here](https://github.com/UCL/PETPVC). Do not forget to compile in RELEASE mode, otherwise, partial volume correction will be very slow.
 * [**SPM12**](http://www.fil.ion.ucl.ac.uk/spm/) Download the latest version  [here](http://www.fil.ion.ucl.ac.uk/spm/download/restricted/eldorado/spm12.zip) and follow the instructions on the SPM wiki (this [page](https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Linux) for Linux users and this [page](https://en.wikibooks.org/wiki/SPM/Installation_on_64bit_Mac_OS_(Intel)) for Mac users).
@@ -53,7 +53,7 @@ Do not forget to check the installations following each tool’s guidelines.
 
 ## Environment variables setup
 
-Edit the file `~/.bashrc` (or the configuration file associated to your shell. If you are using `bash`, it can also be `~/.bash_profile`. If you are using `zsh`, it must be `~/.zshrc`). Your file must look like as below. Please be careful if you copy/paste this, some adjustments are needed. You must specify on the corresponding lines the path to your different installations.
+Edit the configuration file associated to your shell. If you are using `bash`, it can be `~/.bashrc` or `~/.bash_profile`, if you are using `zsh`, it must be `~/.zshrc`. Your file must look like as below. Please be careful if you copy/paste this, some adjustments are needed. You must specify on the corresponding lines the path to your different installations.
 
 ```bash
 
@@ -99,7 +99,7 @@ export PATH="/path/to/your/dcm2nii:$PATH"
 eval "$(register-python-argcomplete clinica)" -->
 
 !!! Note
-    `zsh` shell users will have to add this right before the last line if they want autocompletion:
+    `zsh` shell users will have to add this right before the last line of their configuration file to enable autocompletion in Clinica:
     ```bash
     autoload bashcompinit
     bashcompinit
