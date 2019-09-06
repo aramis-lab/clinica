@@ -191,11 +191,12 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         if self.parameters['tpm'] is not None:
             tissue_map = self.parameters['tpm']
 
-        new_segment.inputs.tissues = seg_utils.get_tissue_tuples(tissue_map,
-                                                             self.parameters['tissue_classes'],
-                                                             self.parameters['dartel_tissues'],
-                                                             self.parameters['save_warped_unmodulated'],
-                                                             self.parameters['save_warped_modulated'])
+        new_segment.inputs.tissues = seg_utils.get_tissue_tuples(
+            tissue_map,
+            self.parameters['tissue_classes'],
+            self.parameters['dartel_tissues'],
+            self.parameters['save_warped_unmodulated'],
+            self.parameters['save_warped_modulated'])
 
         # Print end message
         # =================
