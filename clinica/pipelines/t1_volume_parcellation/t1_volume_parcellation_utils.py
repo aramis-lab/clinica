@@ -10,12 +10,12 @@ __email__ = "simona.bottani@icm-institute.org"
 __status__ = "Development"
 
 
-def atlas_statistics(file_list, atlas_list):
+def atlas_statistics(in_image, atlas_list):
     """
     For each atlas name provided it calculates for the input image the mean for each region in the atlas and saves it to a TSV file.
 
     Args:
-        file_list: A Nifti image
+        in_image: A Nifti image
         atlas_list: List of names of atlas to be applied
 
     Returns:
@@ -27,7 +27,7 @@ def atlas_statistics(file_list, atlas_list):
     from clinica.utils.statistics import statistics_on_atlas
     from clinica.utils.stream import cprint
 
-    orig_dir, base, ext = split_filename(file_list)
+    orig_dir, base, ext = split_filename(in_image)
     atlas_classes = AtlasAbstract.__subclasses__()
     atlas_statistics_list = []
     for atlas in atlas_list:
@@ -36,6 +36,6 @@ def atlas_statistics(file_list, atlas_list):
                 out_atlas_statistics = abspath(
                     join('./' + base + '_space-' + atlas + '_map-graymatter_statistics.tsv'))
                 cprint(out_atlas_statistics)
-                statistics_on_atlas(file_list, atlas_class(), out_atlas_statistics)
+                statistics_on_atlas(in_image, atlas_class(), out_atlas_statistics)
                 atlas_statistics_list.append(out_atlas_statistics)
     return atlas_statistics_list

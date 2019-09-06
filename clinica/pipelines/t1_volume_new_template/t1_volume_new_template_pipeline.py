@@ -115,7 +115,7 @@ class T1VolumeNewTemplate(cpe.Pipeline):
 
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
-        import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as seg_utils
+        from ..t1_volume_tissue_segmentation import t1_volume_tissue_segmentation_utils as seg_utils
 
         # Reading BIDS
         # ============
@@ -137,7 +137,7 @@ class T1VolumeNewTemplate(cpe.Pipeline):
 
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as seg_utils
+        from ..t1_volume_tissue_segmentation import t1_volume_tissue_segmentation_utils as seg_utils
         from clinica.utils.io import zip_nii
         import os.path as op
         import re
@@ -424,12 +424,12 @@ class T1VolumeNewTemplate(cpe.Pipeline):
         # Atlas Statistics
         # ================
         atlas_stats_node = npe.MapNode(nutil.Function(input_names=['in_image',
-                                                                   'in_atlas_list'],
+                                                                   'atlas_list'],
                                                       output_names=['atlas_statistics'],
                                                       function=parcellation_utils.atlas_statistics),
                                        name='atlas_stats_node',
                                        iterfield=['in_image'])
-        atlas_stats_node.inputs.in_atlas_list = self.parameters['atlas_list']
+        atlas_stats_node.inputs.atlas_list = self.parameters['atlas_list']
 
         # Connection
         # ==========

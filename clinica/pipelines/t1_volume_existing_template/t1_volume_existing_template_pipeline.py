@@ -466,12 +466,12 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         # Atlas Statistics
         # ================
         atlas_stats_node = npe.MapNode(nutil.Function(input_names=['in_image',
-                                                                   'in_atlas_list'],
+                                                                   'atlas_list'],
                                                       output_names=['atlas_statistics'],
                                                       function=parcellation_utils.atlas_statistics),
                                        name='atlas_stats_node',
                                        iterfield=['in_image'])
-        atlas_stats_node.inputs.in_atlas_list = self.parameters['atlas_list']
+        atlas_stats_node.inputs.atlas_list = self.parameters['atlas_list']
 
         # Connection
         # ==========
@@ -504,7 +504,6 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
                                                            self.parameters['tissue_classes']), 'flowfield_files')]),
             (unzip_template_node, dartel2mni_node, [('out_file', 'template_file')]),
             (dartel2mni_node, self.output_node, [('normalized_files', 'normalized_files')]),
-            (dartel2mni_node, atlas_stats_node, [(('normalized_files', dartel2mni_utils.select_gm_images),
-                                                  'in_image')]),
+            (dartel2mni_node, atlas_stats_node, [(('normalized_files', dartel2mni_utils.select_gm_images), 'in_image')]),
             (atlas_stats_node, self.output_node, [('atlas_statistics', 'atlas_statistics')])
         ])
