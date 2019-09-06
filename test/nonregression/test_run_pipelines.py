@@ -745,78 +745,6 @@ def test_run_SpatialSVM(cmdopt):
     clean_folder(join(root, 'out', 'caps'), recreate=True)
 
 
-def test_run_T1FreeSurferTemplate(cmdopt):
-    """
-    Functional test for T1FreeSurfer_template pipeline
-    """
-    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_pipeline import T1FreeSurferTemplate
-
-    from os.path import dirname, join, abspath, isfile
-    import shutil
-    import numpy as np
-    import numpy.linalg
-    import pandas as pd
-    import nibabel as nib
-
-    working_dir = abspath(cmdopt)
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'T1FreeSurferTemplate')
-
-    # define I/O
-    in_tsv = join(root, 'in', 'subjects.tsv')
-    out_caps_dir = join(root, 'out', 'caps')
-    clean_folder(out_caps_dir, recreate=False)
-    clean_folder(join(working_dir, 'T1FreeSurferTemplate'))
-
-    # Copy necessary data from in to out
-    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
-
-    # run pipeline
-    pipeline = T1FreeSurferTemplate(caps_directory=out_caps_dir,
-                                    tsv_file=in_tsv)
-    pipeline.parameters['recon_all_args'] = '-qcache'
-    pipeline.parameters['working_directory'] = working_dir
-    pipeline.base_dir = working_dir
-    pipeline.parameters['overwrite_caps'] = 'True'
-    pipeline.parameters['n_procs'] = 4
-    pipeline.run(bypass_check=True)
-
-    # compare output with reference
-    ref_caps_dir = join(root, 'ref', 'caps')
-    subject_array = np.array(pd.read_csv(in_tsv, sep='\t')['participant_id'])
-    session_array = np.array(pd.read_csv(in_tsv, sep='\t')['session_id'])
-    unique_subject_array, inverse_positions = np.unique(
-        subject_array, return_inverse=True)
-    unique_subject_list = unique_subject_array.tolist()
-    unique_subject_number = len(unique_subject_list)
-    # for each unique subject we find the corresponding list of sessions
-    persubject_session_list2 = [
-        session_array[
-            inverse_positions == subject_index
-            ].tolist() for subject_index in range(unique_subject_number)]
-    for subject in unique_subject_list:
-        # retrieve longitudinal identifier corresponding to the list of
-        # sessions used to build the template
-        subject_session_list = persubject_session_list2[subject_index]
-        long_subdirname = ''.join(subject_session_list)
-        long_subdirname = 'long-{0}'.format(long_subdirname)
-        # define path to segmentation ('aseg.mgz')
-        out_aseg_path = join(out_caps_dir, 'subjects', subject, long_subdirname, 'freesurfer_unbiased_template', subject, 'mri', 'aseg.mgz')
-        ref_aseg_path = join(ref_caps_dir, 'subjects', subject, long_subdirname, 'freesurfer_unbiased_template', subject, 'mri', 'aseg.mgz')
-        # check if file exists
-        if not isfile(out_aseg_path) or not isfile(ref_aseg_path):
-            raise OSError('aseg not created')
-
-        # compare ref and output segmentations
-        out_aseg = nib.load(out_aseg_path)
-        ref_aseg = nib.load(ref_aseg_path)
-        tolerance = 10**-4
-        assert np.allclose(out_aseg.affine, ref_aseg.affine, rtol=tolerance, equal_nan=True)
-        assert np.allclose(out_aseg.get_data(), ref_aseg.get_data(), rtol=tolerance, equal_nan=True)
-
-    clean_folder(out_caps_dir, recreate=False)
-
-
 def test_run_T1FreeSurferLongitudinal(cmdopt):
     """
     Functional test for T1FreeSurfer_longitudinal workflow.
@@ -858,6 +786,7 @@ def test_run_T1FreeSurferLongitudinal(cmdopt):
     template_pipeline.parameters['overwrite_caps'] = 'True'
     template_pipeline.parameters['n_procs'] = 4
     template_pipeline.build()
+
     longcorr_pipeline = T1FreeSurferLongitudinalCorrection(caps_directory=out_caps_dir,
                                                            tsv_file=in_tsv)
     longcorr_pipeline.parameters['recon_all_args'] = '-qcache'
@@ -866,6 +795,7 @@ def test_run_T1FreeSurferLongitudinal(cmdopt):
     longcorr_pipeline.parameters['overwrite_caps'] = 'True'
     longcorr_pipeline.parameters['n_procs'] = 4
     longcorr_pipeline.build()
+    
     longitudinal_workflow = npe.Workflow(name='T1FreeSurferLongitudinalCorrection')
     longitudinal_workflow.base_dir = working_dir
     longitudinal_workflow.connect(
