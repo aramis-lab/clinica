@@ -97,15 +97,15 @@ class T1VolumeParcellation(cpe.Pipeline):
         """
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        import clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_utils as spu
         import nipype.interfaces.io as nio
+        from ..t1_volume_parcellation import t1_volume_parcellation_utils as parcellation_utils
 
-        atlas_stats_node = npe.MapNode(nutil.Function(input_names=['file_list',
+        atlas_stats_node = npe.MapNode(nutil.Function(input_names=['in_image',
                                                                    'atlas_list'],
                                                       output_names=['atlas_statistics'],
-                                                      function=spu.atlas_statistics),
+                                                      function=parcellation_utils.atlas_statistics),
                                        name='atlas_stats_node',
-                                       iterfield=['file_list'])
+                                       iterfield=['in_image'])
         outputnode = npe.Node(nutil.IdentityInterface(fields=['atlas_statistics']),
                               name='outputnode',
                               mandatory_inputs=True)
@@ -122,7 +122,7 @@ class T1VolumeParcellation(cpe.Pipeline):
         # Connection
         # ==========
         self.connect([
-            (self.input_node,      atlas_stats_node,    [('file_list',    'file_list')]),
+            (self.input_node,      atlas_stats_node,    [('file_list',    'in_image')]),
             (self.input_node,      atlas_stats_node,    [('atlas_list',    'atlas_list')]),
             (atlas_stats_node,     outputnode,          [('atlas_statistics',  'atlas_statistics')]),
             (outputnode,           datasink,            [('atlas_statistics', 'atlas_statistics')])

@@ -191,7 +191,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.io import unzip_nii
-        from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_utils import prepare_flowfields, join_smoothed_files, select_gm_images
+        from ..t1_volume_dartel2mni import t1_volume_dartel2mni_utils as dartel2mni_utils
         from clinica.utils.spm import get_tpm
 
         # Get Tissue Probability Map from SPM
@@ -240,7 +240,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
 
             join_smoothing_node = npe.JoinNode(interface=nutil.Function(input_names=['smoothed_normalized_files'],
                                                                         output_names=['smoothed_normalized_files'],
-                                                                        function=join_smoothed_files),
+                                                                        function=dartel2mni_utils.join_smoothed_files),
                                                joinsource='smoothing_node',
                                                joinfield='smoothed_normalized_files',
                                                name='join_smoothing_node')
@@ -259,7 +259,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
             (self.input_node, unzip_flowfields_node, [('flowfield_files', 'in_file')]),
             (self.input_node, unzip_template_node, [('template_file', 'in_file')]),
             (unzip_tissues_node, dartel2mni_node, [('out_file', 'apply_to_files')]),
-            (unzip_flowfields_node, dartel2mni_node, [(('out_file', prepare_flowfields, self.parameters['tissues']),
+            (unzip_flowfields_node, dartel2mni_node, [(('out_file', dartel2mni_utils.prepare_flowfields, self.parameters['tissues']),
                                                        'flowfield_files')]),
             (unzip_template_node, dartel2mni_node, [('out_file', 'template_file')]),
             (dartel2mni_node, self.output_node, [('normalized_files', 'normalized_files')])
