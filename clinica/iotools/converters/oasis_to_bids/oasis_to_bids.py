@@ -109,5 +109,5 @@ class OasisToBids(Converter):
 
         subjs_folders = glob(path.join(source_dir, 'OAS1_*'))
         subjs_folders = [subj_folder for subj_folder in subjs_folders if subj_folder.endswith('_MR1')]
-        poolrunner = Pool(cpu_count() - 1)
+        poolrunner = Pool(max(os.cpu_count()-1, 1))
         poolrunner.map(convert_single_subject, subjs_folders)
