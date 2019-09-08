@@ -444,23 +444,27 @@ def test_run_DWIConnectome(cmdopt):
     from os.path import dirname, join, abspath, exists
     import shutil
 
-    working_dir = cmdopt
-    root = join(dirname(abspath(__file__)), 'data', 'DWIConnectome')
+    # Initialization
+    working_dir = join(abspath(cmdopt), 'DWIConnectome')
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'DWIConnectome')
+    in_tsv = join(root, 'in', 'subjects.tsv')
+    out_caps_dir = join(root, 'out', 'caps')
 
     n_tracks = 1000
     subject_id = 'sub-HMTC20110506MEMEPPAT27'
     session_id = 'ses-M00'
 
-    clean_folder(join(root, 'out', 'caps'), recreate=False)
-    clean_folder(join(working_dir, 'DWIConnectome'))
-    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+    clean_folder(out_caps_dir, recreate=False)
+    clean_folder(working_dir)
+    shutil.copytree(join(root, 'in', 'caps'), out_caps_dir)
 
-    pipeline = DwiConnectome(caps_directory=join(root, 'out', 'caps'),
-                             tsv_file=join(root, 'in', 'subjects.tsv'))
+    pipeline = DwiConnectome(caps_directory=out_caps_dir,
+                             tsv_file=in_tsv)
     pipeline.parameters = {
         'n_tracks': n_tracks,
     }
-    pipeline.base_dir = join(working_dir, 'DWIConnectome')
+    pipeline.base_dir = working_dir
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
@@ -482,7 +486,7 @@ def test_run_DWIConnectome(cmdopt):
     assert similarity_measure(out_fod_file, ref_fod_file, 0.97)
 
     for i in range(len(out_parc_files)):
-        assert similarity_measure(out_parc_files[i], ref_parc_files[i], 0.99)
+        assert similarity_measure(out_parc_files[i], ref_parc_files[i], 0.955)
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
