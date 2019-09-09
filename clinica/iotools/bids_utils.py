@@ -412,7 +412,9 @@ def dcm_to_nii(input_path, output_path, bids_name):
     """
     import os
     from os import path
+    import re
     import subprocess
+    from glob import glob
     from clinica.utils.stream import cprint
     from colorama import Fore
 
@@ -429,6 +431,14 @@ def dcm_to_nii(input_path, output_path, bids_name):
                    shell=True,
                    stderr=subprocess.DEVNULL,
                    stdout=subprocess.DEVNULL)
+
+    # If "_t" - the trigger delay time - exists in dcm2niix output filename, we remove it
+    exception_t = glob(path.join(output_path, bids_name + '_t[0-9]*'))
+    for t in exception_t:
+        res = re.search('_t\d+\.', t)
+        no_t = t.replace(t[res.start(): res.end()], '.')
+        print(no_t)
+        os.rename(t, no_t)
 
     # If dcm2niix didn't work use dcm2nii
     if not os.path.exists(path.join(output_path, bids_name + '.nii.gz')):

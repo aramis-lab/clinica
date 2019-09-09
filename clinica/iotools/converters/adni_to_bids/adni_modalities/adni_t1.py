@@ -36,7 +36,7 @@ def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None):
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
-        adni_merge = parsers.read_csv(adni_merge_path, sep=',')
+        adni_merge = parsers.read_csv(adni_merge_path, sep=',', low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
 
     cprint('Calculating paths of T1 images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
@@ -72,11 +72,10 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
     t1_df = pd.DataFrame(columns=t1_col_df)
 
     # Loading needed .csv files
-    adni_merge = pd.io.parsers.read_csv(path.join(csv_dir, 'ADNIMERGE.csv'), sep=',', low_memory=False)
-    mprage_meta = pd.io.parsers.read_csv(path.join(csv_dir, 'MPRAGEMETA.csv'), sep=',', low_memory=False)
-    mri_quality = pd.io.parsers.read_csv(path.join(csv_dir, 'MRIQUALITY.csv'), sep=',', low_memory=False)
-    mayo_mri_qc = pd.io.parsers.read_csv(path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv'), sep=',',
-                                         low_memory=False)
+    adni_merge = pd.read_csv(path.join(csv_dir, 'ADNIMERGE.csv'), sep=',', low_memory=False)
+    mprage_meta = pd.read_csv(path.join(csv_dir, 'MPRAGEMETA.csv'), sep=',', low_memory=False)
+    mri_quality = pd.read_csv(path.join(csv_dir, 'MRIQUALITY.csv'), sep=',', low_memory=False)
+    mayo_mri_qc = pd.read_csv(path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv'), sep=',', low_memory=False)
     # Keep only T1 scans
     mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == 'T1']
 
@@ -533,7 +532,7 @@ def check_exceptions(bids_dir):
     import pandas as pd
     from glob import glob
 
-    t1_paths = pd.io.parsers.read_csv(path.join(bids_dir, 'conversion_info', 't1_paths.tsv'), sep='\t')
+    t1_paths = pd.read_csv(path.join(bids_dir, 'conversion_info', 't1_paths.tsv'), sep='\t')
 
     t1_paths = t1_paths[t1_paths.Path.notnull()]
 

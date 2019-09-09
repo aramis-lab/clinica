@@ -33,7 +33,7 @@ def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
-        adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
+        adni_merge = pd.read_csv(adni_merge_path, sep=',', low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
 
     cprint('Calculating paths of FDG PET images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
@@ -68,9 +68,9 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     pet_fdg_df = pd.DataFrame(columns=pet_fdg_col)
 
     # Loading needed .csv files
-    petqc = pd.io.parsers.read_csv(path.join(csv_dir, 'PETQC.csv'), sep=',')
-    petqc3 = pd.io.parsers.read_csv(path.join(csv_dir, 'PETC3.csv'), sep=',')
-    pet_meta_list = pd.io.parsers.read_csv(path.join(csv_dir, 'PET_META_LIST.csv'), sep=',')
+    petqc = pd.read_csv(path.join(csv_dir, 'PETQC.csv'), sep=',', low_memory=False)
+    petqc3 = pd.read_csv(path.join(csv_dir, 'PETC3.csv'), sep=',', low_memory=False)
+    pet_meta_list = pd.read_csv(path.join(csv_dir, 'PET_META_LIST.csv'), sep=',', low_memory=False)
 
     for subj in subjs_list:
 
@@ -186,7 +186,7 @@ def check_exceptions(bids_dir):
     import pandas as pd
     from glob import glob
 
-    fdg_paths = pd.io.parsers.read_csv(path.join(bids_dir, 'conversion_info', 'fdg_pet_paths.tsv'), sep='\t')
+    fdg_paths = pd.read_csv(path.join(bids_dir, 'conversion_info', 'fdg_pet_paths.tsv'), sep='\t')
 
     fdg_paths = fdg_paths[fdg_paths.Path.notnull()]
 

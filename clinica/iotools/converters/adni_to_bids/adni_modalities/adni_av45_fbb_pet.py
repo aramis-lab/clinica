@@ -33,7 +33,7 @@ def convert_adni_av45_fbb_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
-        adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
+        adni_merge = pd.read_csv(adni_merge_path, sep=',', low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
 
     cprint('Calculating paths of AV45 and Florbetaben PET images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
@@ -70,9 +70,9 @@ def compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     pet_amyloid_df = pd.DataFrame(columns=pet_amyloid_col)
 
     # Loading needed .csv files
-    av45qc = pd.io.parsers.read_csv(path.join(csv_dir, 'AV45QC.csv'), sep=',')
-    amyqc = pd.io.parsers.read_csv(path.join(csv_dir, 'AMYQC.csv'), sep=',')
-    pet_meta_list = pd.io.parsers.read_csv(path.join(csv_dir, 'PET_META_LIST.csv'), sep=',')
+    av45qc = pd.read_csv(path.join(csv_dir, 'AV45QC.csv'), sep=',', low_memory=False)
+    amyqc = pd.read_csv(path.join(csv_dir, 'AMYQC.csv'), sep=',', low_memory=False)
+    pet_meta_list = pd.read_csv(path.join(csv_dir, 'PET_META_LIST.csv'), sep=',', low_memory=False)
 
     for subj in subjs_list:
 
@@ -215,7 +215,7 @@ def check_exceptions(bids_dir):
     import pandas as pd
     from glob import glob
 
-    amyloid_paths = pd.io.parsers.read_csv(path.join(bids_dir, 'conversion_info', 'amyloid_pet_paths.tsv'), sep='\t')
+    amyloid_paths = pd.read_csv(path.join(bids_dir, 'conversion_info', 'amyloid_pet_paths.tsv'), sep='\t')
 
     av45_paths = amyloid_paths[amyloid_paths.Tracer == 'AV45']
 

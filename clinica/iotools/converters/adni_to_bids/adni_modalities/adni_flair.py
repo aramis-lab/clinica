@@ -32,7 +32,7 @@ def convert_adni_flair(source_dir, csv_dir, dest_dir, subjs_list=None):
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
-        adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
+        adni_merge = pd.read_csv(adni_merge_path, sep=',', low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
 
     cprint('Calculating paths of FLAIR images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
@@ -68,12 +68,12 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
     flair_df = pd.DataFrame(columns=flair_col_df)
 
     # Loading needed .csv files
-    adni_merge = pd.io.parsers.read_csv(path.join(csv_dir, 'ADNIMERGE.csv'), sep=',')
+    adni_merge = pd.read_csv(path.join(csv_dir, 'ADNIMERGE.csv'), sep=',', low_memory=False)
 
-    mayo_mri_qc = pd.io.parsers.read_csv(path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv'), sep=',')
+    mayo_mri_qc = pd.read_csv(path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv'), sep=',', low_memory=False)
     mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == 'AFL']
 
-    mri_list = pd.io.parsers.read_csv(path.join(csv_dir, 'MRILIST.csv'), sep=',')
+    mri_list = pd.read_csv(path.join(csv_dir, 'MRILIST.csv'), sep=',', low_memory=False)
 
     # Selecting FLAIR DTI images that are not TODO images
     mri_list = mri_list[mri_list.SEQUENCE.map(lambda x: x.lower().find('flair') > -1)]
@@ -303,7 +303,7 @@ def check_exceptions(bids_dir):
     import pandas as pd
     from glob import glob
 
-    flair_paths = pd.io.parsers.read_csv(path.join(bids_dir, 'conversion_info', 'flair_paths.tsv'), sep='\t')
+    flair_paths = pd.read_csv(path.join(bids_dir, 'conversion_info', 'flair_paths.tsv'), sep='\t')
 
     flair_paths = flair_paths[flair_paths.Path.notnull()]
 

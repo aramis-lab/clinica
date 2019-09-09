@@ -35,7 +35,7 @@ def convert_adni_pib_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
-        adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
+        adni_merge = pd.read_csv(adni_merge_path, sep=',', low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
 
     cprint('Calculating paths of PIB PET images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
@@ -70,8 +70,8 @@ def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     pet_pib_df = pd.DataFrame(columns=pet_pib_col)
 
     # Loading needed .csv files
-    pibqc = pd.io.parsers.read_csv(path.join(csv_dir, 'PIBQC.csv'), sep=',')
-    pet_meta_list = pd.io.parsers.read_csv(path.join(csv_dir, 'PET_META_LIST.csv'), sep=',')
+    pibqc = pd.read_csv(path.join(csv_dir, 'PIBQC.csv'), sep=',', low_memory=False)
+    pet_meta_list = pd.read_csv(path.join(csv_dir, 'PET_META_LIST.csv'), sep=',', low_memory=False)
 
     for subj in subjs_list:
 
@@ -172,7 +172,7 @@ def check_exceptions(bids_dir):
     import pandas as pd
     from glob import glob
 
-    pib_paths = pd.io.parsers.read_csv(path.join(bids_dir, 'conversion_info', 'pib_pet_paths.tsv'), sep='\t')
+    pib_paths = pd.read_csv(path.join(bids_dir, 'conversion_info', 'pib_pet_paths.tsv'), sep='\t')
 
     pib_paths = pib_paths[pib_paths.Path.notnull()]
 

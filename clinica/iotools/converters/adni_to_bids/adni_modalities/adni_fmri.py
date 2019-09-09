@@ -32,7 +32,7 @@ def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
-        adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
+        adni_merge = pd.read_csv(adni_merge_path, sep=',', low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
 
     cprint('Calculating paths of fMRI images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
@@ -66,19 +66,19 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list):
     fmri_df = pd.DataFrame(columns=fmri_col)
 
     # Loading needed .csv files
-    adni_merge = pd.io.parsers.read_csv(path.join(csv_dir, 'ADNIMERGE.csv'), sep=',', low_memory=False)
+    adni_merge = pd.read_csv(path.join(csv_dir, 'ADNIMERGE.csv'), sep=',', low_memory=False)
 
-    mayo_mri_qc = pd.io.parsers.read_csv(path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv'), sep=',', low_memory=False)
+    mayo_mri_qc = pd.read_csv(path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv'), sep=',', low_memory=False)
     mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == 'fMRI']
     mayo_mri_qc.columns = [x.upper() for x in mayo_mri_qc.columns]
 
-    mayo_mri_qc3 = pd.io.parsers.read_csv(path.join(csv_dir, 'MAYOADIRL_MRI_QUALITY_ADNI3.csv'), sep=',', low_memory=False)
+    mayo_mri_qc3 = pd.read_csv(path.join(csv_dir, 'MAYOADIRL_MRI_QUALITY_ADNI3.csv'), sep=',', low_memory=False)
     mayo_mri_qc3 = mayo_mri_qc3[mayo_mri_qc3.SERIES_TYPE == 'EPB']
 
     # Concatenating visits in both QC files
     mayo_mri_qc = pd.concat([mayo_mri_qc, mayo_mri_qc3], axis=0, ignore_index=True, sort=False)
 
-    mri_list = pd.io.parsers.read_csv(path.join(csv_dir, 'MRILIST.csv'), sep=',')
+    mri_list = pd.read_csv(path.join(csv_dir, 'MRILIST.csv'), sep=',', low_memory=False)
 
     # Selecting only fMRI images that are not Multiband
     mri_list = mri_list[mri_list.SEQUENCE.str.contains('MRI')]  # 'MRI' includes all fMRI and fMRI scans, but not others
@@ -263,3 +263,41 @@ def fmri_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
 
     return image_dict
 
+
+def check_exceptions(bids_dir):
+    from os import path
+    import pandas as pd
+    from glob import glob
+
+    fmri_paths = pd.read_csv(path.join(bids_dir, 'conversion_info', 'fmri_paths.tsv'), sep='\t')
+
+    fmri_paths = fmri_paths[fmri_paths.Path.notnull()]
+
+    fmri_paths['BIDS_SubjID'] = ['sub-ADNI' + s.replace('_', '') for s in fmri_paths.Subject_ID.to_list()]
+    fmri_paths['BIDS_Session'] = ['ses-' + s.replace('bl', 'm00').upper() for s in fmri_paths.VISCODE.to_list()]
+
+    count = 0
+    count_wrong = 0
+    name_wrong = 0
+
+    for r in fmri_paths.iterrows():
+        image = r[1]
+        image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'func')
+        image_pattern = path.join(image_dir, '%s_%s_*bold*' % (image.BIDS_SubjID, image.BIDS_Session))
+        files_list = glob(image_pattern)
+
+        if not files_list:
+            # print("No images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            count += 1
+
+        elif len(files_list) != 2:
+            # print("Wrong files count for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            # print(files_list)
+            count_wrong += 1
+        elif sum([not f.endswith(('_task-rest_bold.json', '_task-rest_bold.nii.gz')) for f in files_list]) > 0:
+            name_wrong += 1
+            print(files_list)
+
+    print(count)
+    print(count_wrong)
+    print(name_wrong)

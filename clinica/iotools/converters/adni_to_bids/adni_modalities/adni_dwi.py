@@ -32,7 +32,7 @@ def convert_adni_dwi(source_dir, csv_dir, dest_dir, subjs_list=None):
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
-        adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
+        adni_merge = pd.read_csv(adni_merge_path, sep=',', low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
 
     cprint('Calculating paths of DWI images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
@@ -68,12 +68,12 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     dwi_df = pd.DataFrame(columns=dwi_col_df)
 
     # Loading needed .csv files
-    adni_merge = pd.io.parsers.read_csv(path.join(csv_dir, 'ADNIMERGE.csv'), sep=',')
+    adni_merge = pd.read_csv(path.join(csv_dir, 'ADNIMERGE.csv'), sep=',', low_memory=False)
 
-    mayo_mri_qc = pd.io.parsers.read_csv(path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv'), sep=',')
+    mayo_mri_qc = pd.read_csv(path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv'), sep=',', low_memory=False)
     mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == 'DTI']
 
-    mri_list = pd.io.parsers.read_csv(path.join(csv_dir, 'MRILIST.csv'), sep=',')
+    mri_list = pd.read_csv(path.join(csv_dir, 'MRILIST.csv'), sep=',', low_memory=False)
 
     # Selecting only DTI images that are not Multiband, processed or enchanced images
     mri_list = mri_list[mri_list.SEQUENCE.map(lambda x: x.lower().find('dti') > -1)]
@@ -347,7 +347,7 @@ def check_exceptions(bids_dir):
     import pandas as pd
     from glob import glob
 
-    dwi_paths = pd.io.parsers.read_csv(path.join(bids_dir, 'conversion_info', 'dwi_paths.tsv'), sep='\t')
+    dwi_paths = pd.read_csv(path.join(bids_dir, 'conversion_info', 'dwi_paths.tsv'), sep='\t')
 
     dwi_paths = dwi_paths[dwi_paths.Path.notnull()]
 

@@ -33,7 +33,7 @@ def convert_adni_tau_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
-        adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
+        adni_merge = pd.read_csv(adni_merge_path, sep=',', low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
 
     cprint('Calculating paths of TAU PET images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
@@ -68,9 +68,9 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     pet_tau_df = pd.DataFrame(columns=pet_tau_col)
 
     # Loading needed .csv files
-    tauqc = pd.io.parsers.read_csv(path.join(csv_dir, 'TAUQC.csv'), sep=',')
-    tauqc3 = pd.io.parsers.read_csv(path.join(csv_dir, 'TAUQC3.csv'), sep=',')
-    pet_meta_list = pd.io.parsers.read_csv(path.join(csv_dir, 'PET_META_LIST.csv'), sep=',')
+    tauqc = pd.read_csv(path.join(csv_dir, 'TAUQC.csv'), sep=',', low_memory=False)
+    tauqc3 = pd.read_csv(path.join(csv_dir, 'TAUQC3.csv'), sep=',', low_memory=False)
+    pet_meta_list = pd.read_csv(path.join(csv_dir, 'PET_META_LIST.csv'), sep=',', low_memory=False)
 
     for subj in subjs_list:
 
@@ -183,7 +183,7 @@ def check_exceptions(bids_dir):
     import pandas as pd
     from glob import glob
 
-    tau_paths = pd.io.parsers.read_csv(path.join(bids_dir, 'conversion_info', 'tau_pet_paths.tsv'), sep='\t')
+    tau_paths = pd.read_csv(path.join(bids_dir, 'conversion_info', 'tau_pet_paths.tsv'), sep='\t')
 
     tau_paths = tau_paths[tau_paths.Path.notnull()]
 
