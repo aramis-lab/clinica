@@ -41,8 +41,8 @@ class PETVolume(cpe.Pipeline):
         # Check that group already exists
         if not os.path.exists(os.path.join(os.path.abspath(caps_directory), 'groups', 'group-' + group_id)):
             error_message = group_id \
-                            + ' does not exists, please choose an other one (or maybe you need to run t1-spm-dartel).' \
-                            + '\nGroups that already exists in your CAPS directory are : \n'
+                            + ' does not exists, please choose an other one (or maybe you need to run t1-volume-create-dartel).' \
+                            + '\nGroups that already exist in your CAPS directory are: \n'
             list_groups = os.listdir(os.path.join(os.path.abspath(caps_directory), 'groups'))
             is_empty = True
             for e in list_groups:
@@ -72,7 +72,7 @@ class PETVolume(cpe.Pipeline):
 
             if any(elem not in ['participant_id', 'session_id', 'fwhm_x', 'fwhm_y', 'fwhm_z'] for elem in list(fwhm_df.columns)):
                 raise IOError('The file ' + str(fwhm_tsv)
-                              + ' must contains the following columns (separated by tabulation : participant_id, session_id, fwhm_x, fwhm_y, fwhm_z), but we found '
+                              + ' must contains the following columns (separated by tabulation: participant_id, session_id, fwhm_x, fwhm_y, fwhm_z), but we found '
                               + str(list(fwhm_df.columns)) + '. Pay attention to the spaces (there should be none !)')
 
             subjects_fwhm = list(fwhm_df.participant_id)

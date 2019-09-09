@@ -117,7 +117,7 @@ def runmatlab(input_directory,
         group_label: current group name for this analysis
         freesurfer_home: the environmental variable $FREESURFER_HOME
         surface_file: Specify where to find the data surfaces file in the "CAPS/subject" directory, using specific keywords.
-                     For instance, to catch for each subject the cortical thickness, the string used will be :
+                     For instance, to catch for each subject the cortical thickness, the string used will be:
                      '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
                      More information is available on the documentation page of the surfstat pipelines. The keywords @subject @ session @hemi @fwhm
                      represents the variable parts.
@@ -251,5 +251,5 @@ def check_inputs(caps,
     if len(missing_files) > 0:
         cprint(' ** Missing files **')
         for l in missing_files:
-            cprint('Not found : ' + l)
+            cprint('Not found: ' + l)
         raise Exception(str(len(missing_files)) + ' files not found !')

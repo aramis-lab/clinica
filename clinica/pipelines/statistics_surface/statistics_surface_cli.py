@@ -80,7 +80,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
 
         if args.feature_type is not None:
             if args.custom_file is not None:
-                raise Exception('--feature_type and --custom_file are mutually exclusive : you must choose between one or the other. See documentation for more informations.')
+                raise Exception('--feature_type and --custom_file are mutually exclusive: you must choose between one or the other. See documentation for more information.')
             if args.feature_label is not None:
                 raise Exception('--feature_label should not be used with --feature_type')
             # FreeSurfer cortical thickness
@@ -118,7 +118,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                 raise Exception('Feature type ' + args.feature_type + ' not recognized. Use --custom_file to specify your own files (without --feature_type).')
         elif args.feature_type is None:
             if args.custom_file is None:
-                cprint('No feature type selected : using cortical thickness as default value')
+                cprint('No feature type selected: using cortical thickness as default value')
                 args.custom_file = '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
                 args.feature_label = 'ct'
             else:
@@ -128,7 +128,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
 
         # Check if the group label has been existed, if yes, give an error to the users
         if os.path.exists(os.path.join(os.path.abspath(self.absolute_path(args.caps_directory)), 'groups', 'group-' + args.group_id)):
-            error_message = 'group_id : ' + args.group_id + ' already exists, please choose another one or delete the existing folder and also the working directory and rerun the pipelines'
+            error_message = 'group_id: ' + args.group_id + ' already exists, please choose another one or delete the existing folder and also the working directory and rerun the pipeline'
             raise Exception(error_message)
 
         pipeline = StatisticsSurface(

@@ -22,12 +22,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
     Returns:
         A clinica pipeline object containing the T1VolumeCreateDartel pipeline.
-
-    Raises:
-
-
     """
-
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
         import os
 
@@ -39,8 +34,8 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
         # Check that group does not already exists
         if os.path.exists(os.path.join(os.path.abspath(caps_directory), 'groups', 'group-' + group_id)):
-            error_message = 'group_id : ' + group_id + ' already exists, please choose an other one.' \
-                            + ' Groups that exists in your CAPS directory are : \n'
+            error_message = 'group_id : ' + group_id + ' already exists, please choose another one.' \
+                            + ' Groups that exist in your CAPS directory are: \n'
             list_groups = os.listdir(os.path.join(os.path.abspath(caps_directory), 'groups'))
             for e in list_groups:
                 if e.startswith('group-'):
@@ -49,7 +44,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
         # Check that there is at least 2 subjects
         if len(self.subjects) <= 1:
-            raise ValueError('This pipelines needs at least 2 subjects to perform DARTEL, and found '
+            raise ValueError('This pipeline needs at least 2 subjects to perform DARTEL, and found '
                              + str(len(self.subjects)) + ' only in ' + self.tsv_file + '.')
 
         # Default parameters
@@ -176,56 +171,14 @@ class T1VolumeCreateDartel(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.
         """
-
-        import os
         import nipype.interfaces.spm as spm
-        import nipype.interfaces.matlab as mlab
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.io import unzip_nii
+        from clinica.utils.spm import get_tpm
 
-        spm_home = os.getenv("SPM_HOME")
-        mlab_home = os.getenv("MATLABCMD")
-        mlab.MatlabCommand.set_default_matlab_cmd(mlab_home)
-        mlab.MatlabCommand.set_default_paths(spm_home)
-
-        if 'SPMSTANDALONE_HOME' in os.environ:
-            if 'MCR_HOME' in os.environ:
-                matlab_cmd = (
-                        os.path.join(
-                            os.environ['SPMSTANDALONE_HOME'], 'run_spm12.sh')
-                        + ' ' + os.environ['MCR_HOME']
-                        + ' script')
-                spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
-                version = spm.SPMCommand().version
-            else:
-                raise EnvironmentError('MCR_HOME variable not in environnement. Althought, '
-                                       + 'SPMSTANDALONE_HOME has been found')
-        else:
-            version = spm.Info.getinfo()
-
-        if version:
-            if isinstance(version, dict):
-                spm_path = version['path']
-                if version['name'] == 'SPM8':
-                    print('You are using SPM version 8. The recommended version to use with Clinica is SPM 12. '
-                          + 'Please upgrade your SPM toolbox.')
-                    tissue_map = os.path.join(spm_path, 'toolbox/Seg/TPM.nii')
-                elif version['name'] == 'SPM12':
-                    tissue_map = os.path.join(spm_path, 'tpm/TPM.nii')
-                else:
-                    raise RuntimeError('SPM version 8 or 12 could not be found. Please upgrade your SPM toolbox.')
-            if isinstance(version, str):
-                if float(version) >= 12.7169:
-                    # Path depends on version of SPM Standalone
-                    if os.path.exists(os.path.join(str(spm_home), 'spm12_mcr/spm/spm12/tpm/')):
-                        tissue_map = os.path.join(str(spm_home), 'spm12_mcr/spm/spm12/tpm/TPM.nii')
-                    else:
-                        tissue_map = os.path.join(str(spm_home), 'spm12_mcr/spm12/spm12/tpm/TPM.nii')
-                else:
-                    raise RuntimeError('SPM standalone version not supported. Please upgrade SPM standalone.')
-        else:
-            raise RuntimeError('SPM could not be found. Please verify your SPM_HOME environment variable.')
+        # Get Tissue Probability Map from SPM
+        tissue_map = get_tpm()
 
         # Unzipping
         # =========

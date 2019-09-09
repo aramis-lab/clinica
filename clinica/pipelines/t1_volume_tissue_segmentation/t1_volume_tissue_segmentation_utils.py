@@ -67,20 +67,83 @@ def group_nested_images_by_subject(class_images, zip_files=False):
     return [[s for tissue in subject for s in tissue] for subject in class_images]
 
 
+def t1w_container_from_filename(t1w_filename):
+    """
+    Extracts <participant_id> & <sesssion_id> from BIDS <t1w_filename> and
+    returns CAPS path.
+    """
+    import re
+    from os.path import join
+    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', t1w_filename)
+
+    if m is None:
+        raise ValueError('Input filename is not in a BIDS or CAPS compliant format. It does not contain the subject' +
+                         ' and session information.')
+
+    participant_id = m.group(1)
+    session_id = m.group(2)
+
+    return join('subjects', participant_id, session_id, 't1', 'spm', 'segmentation')
+
+
+def init_input_node(t1w):
+    """
+    Extracts "sub-<participant_id>_ses-<session_label>" from input node
+    and prints begin message.
+    """
+    import datetime
+    from colorama import Fore
+    from clinica.utils.io import get_subject_id
+    from clinica.utils.stream import cprint
+
+    subject_id = get_subject_id(t1w)
+
+    now = datetime.datetime.now().strftime('%H:%M:%S')
+    cprint('%s[%s]%s Running pipeline for %s...' %
+           (Fore.BLUE, now, Fore.RESET, subject_id.replace('_', '|')))
+
+    return subject_id, t1w
+
+
+def print_end_pipeline(subject_id, final_file):
+    """
+    Display end message for <subject_id> when <final_file> is connected.
+    """
+    import datetime
+    from colorama import Fore
+    from clinica.utils.stream import cprint
+
+    now = datetime.datetime.now().strftime('%H:%M:%S')
+    cprint('%s[%s]%s ...%s has completed.' % (
+        Fore.GREEN, now, Fore.RESET, subject_id.replace('_', '|')))
+
+
+def zip_list_files(class_images, zip_files=False):
+    from clinica.utils.io import zip_nii
+
+    if zip_files:
+        return [zip_nii(tissue, True) for tissue in class_images]
+
+    return [tissue for tissue in class_images]
+
+
 def get_tissue_tuples(tissue_map, tissue_classes, dartel_tissues, save_warped_unmodulated, save_warped_modulated):
     """
     Method to obtain the list of tuples, one for each tissue class, with the following fields:
-         - tissue probability map (4D), 1-based index to frame
-         - number of gaussians
-         - which maps to save [Native, DARTEL] - a tuple of two boolean values
-         - which maps to save [Unmodulated, Modulated] - a tuple of two boolean values
+     - tissue probability map (4D), 1-based index to frame
+     - number of gaussians
+     - which maps to save [Native, DARTEL] - a tuple of two boolean values
+     - which maps to save [Unmodulated, Modulated] - a tuple of two boolean values
 
-    :param tissue_map: Path to tissue maps
-    :param tissue_classes: Classes of images to obtain from segmentation. Ex: [1,2,3] is GM, WM and CSF
-    :param dartel_tissues: Classes of images to save for DARTEL template calculation. Ex: [1] is only GM'
-    :param save_warped_unmodulated: Save warped unmodulated images for tissues specified in --tissue_classes
-    :param save_warped_modulated: Save warped modulated images for tissues specified in --tissue_classes
-    :return: List of tuples according to NewSegment input por tissues
+    Args:
+        tissue_map: Path to tissue maps
+        tissue_classes: Classes of images to obtain from segmentation. Ex: [1,2,3] is GM, WM and CSF
+        dartel_tissues: Classes of images to save for DARTEL template calculation. Ex: [1] is only GM'
+        save_warped_unmodulated: Save warped unmodulated images for tissues specified in --tissue_classes
+        save_warped_modulated: Save warped modulated images for tissues specified in --tissue_classes
+
+    Returns:
+        List of tuples according to NewSegment input por tissues
     """
     tissues = []
 
@@ -144,7 +207,7 @@ class ApplySegmentationDeformationOutput(TraitedSpec):
 
 
 class ApplySegmentationDeformation(SPMCommand):
-    """ Uses spm to apply a deformation field obtained from Segmentation routine to a given file
+    """ Uses SPM to apply a deformation field obtained from Segmentation routine to a given file
 
     Examples
     --------

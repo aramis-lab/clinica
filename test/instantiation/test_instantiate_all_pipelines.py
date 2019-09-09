@@ -8,18 +8,20 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def test_instantiate_T1FreeSurferCrossSectional():
-    from clinica.pipelines.t1_freesurfer_cross_sectional.t1_freesurfer_cross_sectional_pipeline import T1FreeSurferCrossSectional
+def test_instantiate_T1FreeSurfer():
     from os.path import dirname, join, abspath
+    from tempfile import mkdtemp
+    from clinica.pipelines.t1_freesurfer.t1_freesurfer_pipeline import T1FreeSurfer
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'T1FreeSurferCrossSectional')
-    pipeline = T1FreeSurferCrossSectional(
+    pipeline = T1FreeSurfer(
             bids_directory=join(root, 'in', 'bids'),
             caps_directory=join(root, 'in', 'caps'),
             tsv_file=join(root, 'in', 'subjects.tsv')
             )
     pipeline.parameters['recon_all_args'] = '-qcache'
+    pipeline.base_dir = mkdtemp()
     pipeline.build()
 
 
@@ -331,7 +333,7 @@ def test_instantiate_T1FreeSurferTemplate():
     from tempfile import mkdtemp
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'T1FreeSurferTemplate')
+    root = join(root, 'data', 'T1FreeSurferLongitudinal')
     # build pipeline
     pipeline = T1FreeSurferTemplate(caps_directory=join(root, 'in', 'caps'),
                                     tsv_file=join(root, 'in', 'subjects.tsv'))
@@ -343,14 +345,14 @@ def test_instantiate_T1FreeSurferTemplate():
 
 
 def test_instantiate_T1FreeSurferLongitudinalCorrection():
-    """Instantiation test for t1freesurfer_longitudinal_correction pipeline
+    """Instantiation test for t1_freesurfer_longitudinal_correction pipeline
     """
     from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_pipeline import T1FreeSurferLongitudinalCorrection
     from os.path import dirname, join, abspath
     from tempfile import mkdtemp
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'T1FreeSurferLongitudinalCorrection')
+    root = join(root, 'data', 'T1FreeSurferLongitudinal')
     # build pipeline
     pipeline = T1FreeSurferLongitudinalCorrection(caps_directory=join(root, 'in', 'caps'),
                                                   tsv_file=join(root, 'in', 'subjects.tsv'))

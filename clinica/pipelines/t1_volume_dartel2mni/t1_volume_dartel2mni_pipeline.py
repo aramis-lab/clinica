@@ -17,18 +17,12 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
 
     Args:
         input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will
-        be written.  subjects_sessions_list: The Subjects-Sessions list file
-        (in .tsv format).
+        output_dir: An empty output directory where CAPS structured data will be written.
+        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
 
     Returns:
         A clinica pipeline object containing the T1VolumeDartel2MNI pipeline.
-
-    Raises:
-
-
     """
-
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
         import os
         super(T1VolumeDartel2MNI, self).__init__(bids_directory, caps_directory, tsv_file, name)
@@ -40,8 +34,8 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         # Check that group already exists
         if not os.path.exists(os.path.join(os.path.abspath(caps_directory), 'groups', 'group-' + group_id)):
             error_message = group_id \
-                            + ' does not exists, please choose an other one (or maybe you need to run t1-spm-dartel).' \
-                            + '\nGroups that already exists in your CAPS directory are : \n'
+                            + ' does not exists, please choose another one (or maybe you need to run t1-volume-create-dartel).' \
+                            + '\nGroups that already exist in your CAPS directory are: \n'
             list_groups = os.listdir(os.path.join(os.path.abspath(caps_directory), 'groups'))
             is_empty = True
             for e in list_groups:
@@ -57,8 +51,8 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                             'bounding_box': None,
                             'voxel_size': None,
                             'modulation': True,
-                            'fwhm': [8],
-                            'atlas_list': ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
+                            'fwhm': [8]
+                            # 'atlas_list': ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
                             }
 
     def check_custom_dependencies(self):
@@ -184,85 +178,24 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
              r'\1/\3_\2_probability\4'),
             (r'trait_added', r'')
         ]
-
-        # Writing atlas statistics into CAPS
-        # ==================================
-        write_atlas_node = npe.MapNode(name='write_atlas_node',
-                                            iterfield=['container', 'atlas_statistics'],
-                                            interface=nio.DataSink(infields=['atlas_statistics']))
-        write_atlas_node.inputs.base_directory = self.caps_directory
-        write_atlas_node.inputs.parameterization = False
-        write_atlas_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
-                                             '/t1/spm/dartel/group-' + self._group_id + '/atlas_statistics'
-                                             for i in range(len(self.subjects))]
-        write_atlas_node.inputs.regexp_substitutions = [
-            (r'(.*atlas_statistics)/atlas_statistics/mwc1(sub-.*)(_space-.*_map-graymatter_statistics\.tsv)$',
-             r'\1/\2\3'),
-            (r'(.*atlas_statistics)/atlas_statistics/(m?w)?(sub-.*_T1w).*(_space-.*_map-graymatter_statistics).*(\.tsv)$',
-             r'\1/\3\4\5'),
-            (r'trait_added', r'')
-        ]
-
         self.connect([
             (self.output_node, write_normalized_node, [(('normalized_files', zip_nii, True), 'normalized_files'),
                                                        (('smoothed_normalized_files', zip_nii, True),
-                                                        'smoothed_normalized_files')]),
-            (self.output_node, write_atlas_node, [('atlas_statistics', 'atlas_statistics')])
+                                                        'smoothed_normalized_files')])
         ])
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.
         """
-
-        import os
         import nipype.interfaces.spm as spm
-        import nipype.interfaces.matlab as mlab
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.io import unzip_nii
-        from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_utils import prepare_flowfields, join_smoothed_files, atlas_statistics, select_gm_images
+        from ..t1_volume_dartel2mni import t1_volume_dartel2mni_utils as dartel2mni_utils
+        from clinica.utils.spm import get_tpm
 
-        spm_home = os.getenv("SPM_HOME")
-        mlab_home = os.getenv("MATLABCMD")
-        mlab.MatlabCommand.set_default_matlab_cmd(mlab_home)
-        mlab.MatlabCommand.set_default_paths(spm_home)
-
-        if 'SPMSTANDALONE_HOME' in os.environ:
-            if 'MCR_HOME' in os.environ:
-                matlab_cmd = os.path.join(os.environ['SPMSTANDALONE_HOME'],
-                                          'run_spm12.sh') \
-                             + ' ' + os.environ['MCR_HOME'] \
-                             + ' script'
-                spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
-                version = spm.SPMCommand().version
-            else:
-                raise EnvironmentError('MCR_HOME variable not in environnement. Althought, '
-                                       + 'SPMSTANDALONE_HOME has been found')
-        else:
-            version = spm.Info.getinfo()
-
-        if version:
-            if isinstance(version, dict):
-                spm_path = version['path']
-                if version['name'] == 'SPM8':
-                    print('You are using SPM version 8. The recommended version to use with Clinica is SPM 12. '
-                          + 'Please upgrade your SPM toolbox.')
-                    tissue_map = os.path.join(spm_path, 'toolbox/Seg/TPM.nii')
-                elif version['name'] == 'SPM12':
-                    tissue_map = os.path.join(spm_path, 'tpm/TPM.nii')
-                else:
-                    raise RuntimeError('SPM version 8 or 12 could not be found. Please upgrade your SPM toolbox.')
-            if isinstance(version, str):
-                if float(version) >= 12.7169:
-                    # Path depends on version of SPM Standalone
-                    if os.path.exists(os.path.join(str(spm_home), 'spm12_mcr/spm/spm12/tpm/')):
-                        tissue_map = os.path.join(str(spm_home), 'spm12_mcr/spm/spm12/tpm/TPM.nii')
-                    else:
-                        tissue_map = os.path.join(str(spm_home), 'spm12_mcr/spm12/spm12/tpm/TPM.nii')
-                else:
-                    raise RuntimeError('SPM standalone version not supported. Please upgrade SPM standalone.')
-        else:
-            raise RuntimeError('SPM could not be found. Please verify your SPM_HOME environment variable.')
+        # Get Tissue Probability Map from SPM
+        tissue_map = get_tpm()
 
         # Unzipping
         # =========
@@ -307,7 +240,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
 
             join_smoothing_node = npe.JoinNode(interface=nutil.Function(input_names=['smoothed_normalized_files'],
                                                                         output_names=['smoothed_normalized_files'],
-                                                                        function=join_smoothed_files),
+                                                                        function=dartel2mni_utils.join_smoothed_files),
                                                joinsource='smoothing_node',
                                                joinfield='smoothed_normalized_files',
                                                name='join_smoothing_node')
@@ -319,16 +252,6 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         else:
             self.output_node.inputs.smoothed_normalized_files = []
 
-        # Atlas Statistics
-        # ================
-        atlas_stats_node = npe.MapNode(nutil.Function(input_names=['in_image',
-                                                                   'in_atlas_list'],
-                                                      output_names=['atlas_statistics'],
-                                                      function=atlas_statistics),
-                                       name='atlas_stats_node',
-                                       iterfield=['in_image'])
-        atlas_stats_node.inputs.in_atlas_list = self.parameters['atlas_list']
-
         # Connection
         # ==========
         self.connect([
@@ -336,10 +259,8 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
             (self.input_node, unzip_flowfields_node, [('flowfield_files', 'in_file')]),
             (self.input_node, unzip_template_node, [('template_file', 'in_file')]),
             (unzip_tissues_node, dartel2mni_node, [('out_file', 'apply_to_files')]),
-            (unzip_flowfields_node, dartel2mni_node, [(('out_file', prepare_flowfields, self.parameters['tissues']),
+            (unzip_flowfields_node, dartel2mni_node, [(('out_file', dartel2mni_utils.prepare_flowfields, self.parameters['tissues']),
                                                        'flowfield_files')]),
             (unzip_template_node, dartel2mni_node, [('out_file', 'template_file')]),
-            (dartel2mni_node, self.output_node, [('normalized_files', 'normalized_files')]),
-            (dartel2mni_node, atlas_stats_node, [(('normalized_files', select_gm_images), 'in_image')]),
-            (atlas_stats_node, self.output_node, [('atlas_statistics', 'atlas_statistics')])
+            (dartel2mni_node, self.output_node, [('normalized_files', 'normalized_files')])
         ])

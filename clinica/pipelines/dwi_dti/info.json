@@ -10,11 +10,13 @@
         },
         {
             "type": "software",
-            "name": "ants"
+            "name": "ants",
+            "version": ""
         },
         {
             "type": "software",
-            "name": "mrtrix"
+            "name": "mrtrix",
+            "version": ""
         }
     ]
 }

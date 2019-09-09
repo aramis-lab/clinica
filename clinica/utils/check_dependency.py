@@ -33,22 +33,31 @@ def is_binary_present(binary):
     return True
 
 
-def check_ants():
-    """
-    Check ANTs software.
+def check_environment_variable(environment_variable, software_name):
+    import os
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaMissingDependencyError
 
-    This function checks if ANTs is present (ANTSPATH, binaries, & scripts).
-    """
+    content_var = os.environ.get(environment_variable, '')
+    if not content_var:
+        raise ClinicaMissingDependencyError(
+            '%s\n[Error] Clinica could not find %s software: the %s variable is not set.%s'
+            % (Fore.RED, software_name, environment_variable, Fore.RESET))
+    if not os.path.isdir(content_var):
+        raise ClinicaMissingDependencyError(
+            '%s\n[Error] The %s environment variable you gave is not a folder (content: %s).%s'
+            % (Fore.RED, environment_variable, content_var, Fore.RESET))
+    return content_var
+
+
+def check_ants(version_requirements=None):
+    """Check ANTs software."""
     import os
     from colorama import Fore
     from clinica.utils.exceptions import ClinicaMissingDependencyError
     from clinica.utils.stream import cprint
 
-    antspath = os.environ.get('ANTSPATH', '')
-    if not antspath:
-        raise ClinicaMissingDependencyError(
-            '%s\n[Error] Clinica could not find ANTs software: the ANTSPATH variable is not set.%s'
-            % (Fore.RED, Fore.RESET))
+    check_environment_variable('ANTSPATH', 'ANTs')
 
     list_binaries = ['N4BiasFieldCorrection', 'antsRegistrationSyNQuick.sh']
     for binary in list_binaries:
@@ -58,22 +67,17 @@ def check_ants():
                 'in your PATH environment.%s' % (Fore.RED, binary, Fore.RESET))
 
 
-def check_freesurfer():
+def check_freesurfer(version_requirements=None):
     """
     Check FreeSurfer software.
 
     This function checks if FreeSurfer is present (FREESURFER_HOME & binaries).
     """
-    import os
     from colorama import Fore
+    import nipype.interfaces.freesurfer as freesurfer
     from clinica.utils.exceptions import ClinicaMissingDependencyError
-    from clinica.utils.stream import cprint
 
-    freesurfer_home = os.environ.get('FREESURFER_HOME', '')
-    if not freesurfer_home:
-        raise ClinicaMissingDependencyError(
-            '%s\n[Error] Clinica could not find FreeSurfer software: the FREESURFER_HOME variable is not set.%s'
-            % (Fore.RED, Fore.RESET))
+    check_environment_variable('FREESURFER_HOME', 'FreeSurfer')
 
     list_binaries = ['mri_convert', 'recon-all']
     for binary in list_binaries:
@@ -83,27 +87,27 @@ def check_freesurfer():
                 'environment: did you have the line source ${FREESURFER_HOME}/'
                 'SetUpFreeSurfer.sh in your configuration file?%s' % (Fore.RED, binary, Fore.RESET))
 
-    # cprint('Found FreeSurfer software')
+    # if version_requirements is not None:
+    #     from string import punctuation
+    #     from distutils.version import LooseVersion
+    #     comparison_operator = ''.join([c for c in version_requirements if c in punctuation.replace('.', '')])
+    #     required_version = version_requirements.replace(comparison_operator, '')
+    #     current_version = str(freesurfer.Info.looseversion())
+    #     satisfy_version = eval('LooseVersion(\'%s\') %s LooseVersion(\'%s\')' %
+    #                            (current_version, comparison_operator, required_version))
+    #     if not satisfy_version:
+    #         raise ClinicaMissingDependencyError('Your FreeSurfer version (%s) does not version requirements (%s)' %
+    #                                             (current_version, version_requirements))
 
 
-def check_fsl():
-    """
-    Check FSL software.
-
-    This function checks if FSL is present (FSLDIR & binaries) and if the
-    version of FSL is recent.
-    """
-    import os
+def check_fsl(version_requirements=None):
+    """Check FSL software."""
     import nipype.interfaces.fsl as fsl
     from colorama import Fore
     from clinica.utils.exceptions import ClinicaMissingDependencyError
     from clinica.utils.stream import cprint
 
-    fsl_dir = os.environ.get('FSLDIR', '')
-    if not fsl_dir:
-        raise ClinicaMissingDependencyError(
-            '%s\n[Error] Clinica could not find FSL software: the FSLDIR variable is not set.%s'
-            % (Fore.RED, Fore.RESET))
+    check_environment_variable('FSLDIR', 'FSL')
 
     try:
         if fsl.Info.version().split(".") < ['5', '0', '5']:
@@ -117,25 +121,16 @@ def check_fsl():
     for binary in list_binaries:
         if not is_binary_present(binary):
             raise ClinicaMissingDependencyError(
-                '%s\n[Error] Clinica could not find FreeSurfer software: the %s command is not present in your '
+                '%s\n[Error] Clinica could not find FSL software: the %s command is not present in your '
                 'PATH environment.%s' % (Fore.RED, binary, Fore.RESET))
 
 
-def check_mrtrix():
-    """
-    Check MRtrix software.
-
-    This function checks if MRtrix is present (MRTRIX_HOME & binaries).
-    """
-    import os
+def check_mrtrix(version_requirements=None):
+    """Check MRtrix software."""
     from colorama import Fore
     from clinica.utils.exceptions import ClinicaMissingDependencyError
 
-    mrtrix_home = os.environ.get('MRTRIX_HOME', '')
-    if not mrtrix_home:
-        raise ClinicaMissingDependencyError(
-            '%s\n[Error] Clinica could not find MRtrix software: the MRTRIX_HOME variable is not set.%s'
-            % (Fore.RED, Fore.RESET))
+    check_environment_variable('MRTRIX_HOME', 'MRtrix')
 
     list_binaries = ['transformconvert', 'mrtransform', 'dwi2response', 'tckgen']
     for binary in list_binaries:
@@ -145,21 +140,9 @@ def check_mrtrix():
                 'PATH environment.%s' % (Fore.RED, binary, Fore.RESET))
 
 
-def check_spm():
-    """
-    Check SPM software.
-
-    This function checks if SPM is present (SPM_HOME).
-    """
-    import os
-    from colorama import Fore
-    from clinica.utils.exceptions import ClinicaMissingDependencyError
-
-    spm_home = os.environ.get('SPM_HOME', '')
-    if not spm_home:
-        raise ClinicaMissingDependencyError(
-            '%s\n[Error] Clinica could not find SPM toolbox: the SPM_HOME variable is not set.%s'
-            % (Fore.RED, Fore.RESET))
+def check_spm(version_requirements=None):
+    """Check SPM software."""
+    check_environment_variable('SPM_HOME', 'SPM')
 
     # list_binaries = ['matlab']
     # for binary in list_binaries:
@@ -170,16 +153,9 @@ def check_spm():
 
 
 def check_matlab():
-    """
-    Check matlab toolbox.
-
-    This function checks if matlab is present (matlab for linux and MATLABCMD for mac).
-    """
-    import os
-    import sys
+    """Check Matlab toolbox."""
     from colorama import Fore
     from clinica.utils.exceptions import ClinicaMissingDependencyError
-    from clinica.utils.stream import cprint
 
     if not is_binary_present("matlab"):
         raise ClinicaMissingDependencyError(
@@ -190,7 +166,6 @@ def check_matlab():
 def check_cat12():
     """
     Check installation of CAT12 (mostly used to provide atlases)
-
     """
     import os
     import platform

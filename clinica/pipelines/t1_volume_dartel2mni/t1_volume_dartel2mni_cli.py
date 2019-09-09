@@ -54,11 +54,6 @@ class T1VolumeDartel2MNICLI(ce.CmdParser):
                               metavar=('float'),
                               nargs=3, type=float,
                               help="A list of 3 floats specifying the voxel size of the output image (default: --voxel_size 1.5 1.5 1.5).")
-        list_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
-        advanced.add_argument("-atlases", "--atlases",
-                              nargs='+', type=str, metavar='',
-                              default=list_atlases, choices=list_atlases,
-                              help='A list of atlases used to calculate the regional mean GM concentrations (default: all atlases i.e. --atlases AAL2 AICHA Hammers LPBA40 Neuromorphometrics).')
 
     def run_command(self, args):
         """
@@ -79,8 +74,7 @@ class T1VolumeDartel2MNICLI(ce.CmdParser):
             # 'bounding_box': None,
             'voxel_size': tuple(args.voxel_size) if args.voxel_size is not None else None,
             'modulation': args.modulate,
-            'fwhm': args.smooth,
-            'atlas_list': args.atlases
+            'fwhm': args.smooth
         })
 
         if args.working_directory is None:

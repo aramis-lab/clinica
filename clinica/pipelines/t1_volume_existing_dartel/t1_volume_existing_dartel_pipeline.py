@@ -17,18 +17,12 @@ class T1VolumeExistingDartel(cpe.Pipeline):
 
     Args:
         input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will
-        be written.  subjects_sessions_list: The Subjects-Sessions list file
-        (in .tsv format).
+        output_dir: An empty output directory where CAPS structured data will be written.
+        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
 
     Returns:
         A clinica pipeline object containing the T1VolumeExistingDartel pipeline.
-
-    Raises:
-
-
     """
-
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
         super(T1VolumeExistingDartel, self).__init__(bids_directory, caps_directory, tsv_file, name)
 
