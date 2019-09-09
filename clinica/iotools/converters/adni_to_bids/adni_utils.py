@@ -698,7 +698,7 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                                             delta = examdate - examdate_bl
 
                                             # Adding time passed since bl to patient's age in current visit
-                                            field_value += round(delta.days / 365.0, 1)
+                                            field_value = float(field_value) + round(delta.days / 365.0, 1)
 
                                         sessions_dict = update_sessions_dict(sessions_dict, subj_bids, visit_id,
                                                                              field_value, bids_field_name)
