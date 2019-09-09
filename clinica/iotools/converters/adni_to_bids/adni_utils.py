@@ -71,6 +71,7 @@ def visits_to_timepoints_mrilist(subject, mri_list_subj, adnimerge_subj, modalit
         subject:
         mri_list_subj:
         adnimerge_subj:
+        modality:
 
     Returns:
 
@@ -343,6 +344,7 @@ def remove_tmp_dmc_folder(bids_dir, image_id):
 
     Args:
         bids_dir: path to the BIDS directory
+        image_id:
 
     Returns:
 
@@ -381,7 +383,8 @@ def check_bids_t1(bids_path, container='anat', extension='_T1w.nii.gz', subjects
     return errors
 
 
-def check_bids_dwi(bids_path, container='dwi', extension=('_acq-axial_dwi.bvec', '_acq-axial_dwi.bval', '_acq-axial_dwi.nii.gz'), subjects=None):
+def check_bids_dwi(bids_path, container='dwi', extension=('_acq-axial_dwi.bvec', '_acq-axial_dwi.bval',
+                                                          '_acq-axial_dwi.nii.gz'), subjects=None):
 
     import os
 
@@ -409,7 +412,8 @@ def check_bids_dwi(bids_path, container='dwi', extension=('_acq-axial_dwi.bvec',
                     errors.append('Subject ' + subject + ' for session ' + session + ' folder is empty')
 
                 if image_names != files:
-                    errors.append('Subject ' + subject + ' for session ' + session + ' folder contains: \n' + str(files))
+                    errors.append('Subject ' + subject + ' for session ' + session + ' folder contains: \n' +
+                                  str(files))
     return errors
 
 
@@ -529,7 +533,8 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
             diagnosis_change = {1: 'CN', 2: 'MCI', 3: 'AD'}
 
             for j in list_diagnosis_nan[0]:
-                if not is_nan(sessions_df['adni_diagnosis_change'].iloc[j]) and int(sessions_df['adni_diagnosis_change'].iloc[j]) < 4:
+                if not is_nan(sessions_df['adni_diagnosis_change'].iloc[j]) \
+                        and int(sessions_df['adni_diagnosis_change'].iloc[j]) < 4:
                     sessions_df['diagnosis'].iloc[j] = diagnosis_change[int(sessions_df['adni_diagnosis_change'].iloc[j])]
 
             sessions_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf-8')
@@ -541,12 +546,11 @@ def update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_f
     created by the method create_adni_sessions_dict
 
     Args:
-        sessions_dict: the session_dict created by the method
-        create_adni_sessions_dict subj_bids: bids is of the subject for which
-        the information need to be updated visit_id: session name (ex m54)
-        field_value: value of the field extracted from the original clinical
-        data bids_field_name: BIDS name of the field to update (Ex: diagnosis
-        or examination date)
+        sessions_dict: the session_dict created by the method create_adni_sessions_dict
+        subj_bids: bids is of the subject for which the information need to be updated
+        visit_id: session name (ex m54)
+        field_value: value of the field extracted from the original clinical data
+        bids_field_name: BIDS name of the field to update (Ex: diagnosis or examination date)
 
     Returns:
         session_dict: the dictonary updated
@@ -600,6 +604,7 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
     """
     import pandas as pd
     from os import path
+    from datetime import datetime
     import clinica.iotools.bids_utils as bids
     from colorama import Fore
     from clinica.utils.stream import cprint
@@ -623,7 +628,8 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
 
     for i in range(0, len(field_location)):
         # If the i-th field is available
-        if (not pd.isnull(field_location[i])) and path.exists(path.join(clinical_data_dir, field_location[i].split('/')[0])):
+        if (not pd.isnull(field_location[i])) and path.exists(path.join(clinical_data_dir,
+                                                                        field_location[i].split('/')[0])):
             # Load the file
             tmp = field_location[i].split('/')
             location = tmp[0]
@@ -666,12 +672,13 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                         raise('Error: multiple subjects found for the same RID')
                     else:
                         subj_bids = subj_bids[0]
-                        for i in range(0, len(sessions_fields)):
+                        for j in range(0, len(sessions_fields)):
                             # If the i-th field is available
-                            if not pd.isnull(sessions_fields[i]):
+                            if not pd.isnull(sessions_fields[j]):
                                 # Extract only the fields related to the current file opened
                                 if location in field_location[i]:
-                                    if location == 'ADAS_ADNIGO2.csv' or location == 'DXSUM_PDXCONV_ADNIALL.csv' or location == 'CDR.csv' or location == 'NEUROBAT.csv':
+                                    if location == 'ADAS_ADNIGO2.csv' or location == 'DXSUM_PDXCONV_ADNIALL.csv' \
+                                            or location == 'CDR.csv' or location == 'NEUROBAT.csv':
                                         if type(row['VISCODE2']) == float:
                                             continue
                                         visit_id = row['VISCODE2']
@@ -681,12 +688,24 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                                     else:
                                         visit_id = row['VISCODE']
                                     try:
-                                        field_value = row[sessions_fields[i]]
-                                        bids_field_name = sessions_fields_bids[i]
-                                        sessions_dict = update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_field_name)
+                                        field_value = row[sessions_fields[j]]
+                                        bids_field_name = sessions_fields_bids[j]
+
+                                        # Calculating age from ADNIMERGE
+                                        if (sessions_fields[j] == "AGE") and (visit_id != "bl"):
+                                            examdate = datetime.strptime(row["EXAMDATE"], "%Y-%m-%d")
+                                            examdate_bl = datetime.strptime(row["EXAMDATE_bl"], "%Y-%m-%d")
+                                            delta = examdate - examdate_bl
+
+                                            # Adding time passed since bl to patient's age in current visit
+                                            field_value += round(delta.days / 365.0, 1)
+
+                                        sessions_dict = update_sessions_dict(sessions_dict, subj_bids, visit_id,
+                                                                             field_value, bids_field_name)
                                     except KeyError:
                                         pass
-                                        # cprint('Field value ' + Fore.RED + sessions_fields[i] + Fore.RESET + ' could not be added to sessions.tsv')
+                                        # cprint('Field value ' + Fore.RED + sessions_fields[j] + Fore.RESET +
+                                        # ' could not be added to sessions.tsv')
             else:
                 continue
 
