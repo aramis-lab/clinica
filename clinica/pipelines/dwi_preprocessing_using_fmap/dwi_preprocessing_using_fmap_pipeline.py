@@ -26,7 +26,6 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         [/] CAPS
               [X] - Check than CAPS does not change
               [X] - Add calibrated FMap
-              [ ] - Add mean b=0?
         [ ] Update space_required_by_pipeline.csv info
         [ ] CI
         [ ] Wiki page
@@ -289,8 +288,8 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
                                                          get_grad_fsl,
                                                          print_end_pipeline)
 
-        # Nodes creation
-        # ==============
+        # Step 0: Initialization
+        # ======================
         # Initialize input parameters and print begin message
         init_node = npe.Node(interface=nutil.Function(
             input_names=self.get_input_fields(),
@@ -307,52 +306,6 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             function=get_grad_fsl),
             name='0-GetFslGrad')
 
-        # Compute brain mask from uncorrected dataset
-        pre_mask_b0 = npe.Node(mrtrix3.BrainMask(),
-                               name='0-PreMaskB0')
-        pre_mask_b0.inputs.out_file = 'brainmask.nii.gz'  # On default, .mif file is generated
-
-        # Bias field correction of the magnitude image
-        bias_mag_fmap = npe.Node(ants.N4BiasFieldCorrection(dimension=3), name='FMap-0-N4MagnitudeFmap')
-        # Brain extraction of the magnitude image
-        bet_mag_fmap = npe.Node(fsl.BET(frac=0.4, mask=True), name='FMap-0-BetN4MagnitudeFmap')
-
-        # Calibrate FMap
-        calibrate_fmap = prepare_phasediff_fmap(name='FMap-1-CalibrateFMap')
-
-        # Node when we register the fmap onto the b0
-        fmm2b0 = npe.Node(ants.Registration(
-            output_warped_image=True), name="FmapMagnitudeToB0")
-        fmm2b0.inputs.transforms = ['Rigid'] * 2
-        fmm2b0.inputs.transform_parameters = [(1.0,)] * 2
-        fmm2b0.inputs.number_of_iterations = [[50], [20]]
-        fmm2b0.inputs.dimension = 3
-        fmm2b0.inputs.metric = ['Mattes', 'Mattes']
-        fmm2b0.inputs.metric_weight = [1.0] * 2
-        fmm2b0.inputs.radius_or_number_of_bins = [64, 64]
-        fmm2b0.inputs.sampling_strategy = ['Regular', 'Random']
-        fmm2b0.inputs.sampling_percentage = [None, 0.2]
-        fmm2b0.inputs.convergence_threshold = [1.e-5, 1.e-8]
-        fmm2b0.inputs.convergence_window_size = [20, 10]
-        fmm2b0.inputs.smoothing_sigmas = [[6.0], [2.0]]
-        fmm2b0.inputs.sigma_units = ['vox'] * 2
-        fmm2b0.inputs.shrink_factors = [[6], [1]]  # ,[1] ]
-        fmm2b0.inputs.use_estimate_learning_rate_once = [True] * 2
-        fmm2b0.inputs.use_histogram_matching = [True] * 2
-        fmm2b0.inputs.initial_moving_transform_com = 0
-        fmm2b0.inputs.collapse_output_transforms = True
-        fmm2b0.inputs.winsorize_upper_quantile = 0.995
-
-        from clinica.utils.fmap import resample_fmap_to_b0
-        res_fmap = npe.Node(nutil.Function(
-            input_names=['in_fmap', 'in_b0', 'out_file'],
-            output_names=['out_resampled_fmap'],
-            function=resample_fmap_to_b0), name='ResampleFmap')
-
-        smoothing = npe.Node(name='Smoothing',
-                             interface=fsl.maths.IsotropicSmooth())
-        smoothing.inputs.fwhm = 4.0
-
         # Generate <image_id>_acq.txt for eddy
         gen_acq_txt = npe.Node(nutil.Function(
             input_names=['in_dwi', 'fsl_phase_encoding_direction', 'total_readout_time', 'image_id'],
@@ -368,41 +321,92 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             name='0-GenerateIndexFile')
         gen_index_txt.inputs.low_bval = self._low_bval
 
+        # Step 1: Computation of the reference b0 (i.e. average b0 but with EPI distortions)
+        # =======================================
+        # Compute whole brain mask
+        pre_mask_b0 = npe.Node(mrtrix3.BrainMask(),
+                               name='1a-PreMaskB0')
+        pre_mask_b0.inputs.out_file = 'brainmask.nii.gz'  # On default, .mif file is generated
+
+        #
+        pre_eddy = npe.Node(name='1b-PreEddy',
+                            interface=Eddy())
+        pre_eddy.inputs.repol = True
+        if self._use_cuda_8_0:
+            pre_eddy.inputs.use_cuda8_0 = self._use_cuda_8_0
+        if self._use_cuda_9_1:
+            pre_eddy.inputs.use_cuda9_1 = self._use_cuda_9_1
+        if self._seed_fsl_eddy:
+            pre_eddy.inputs.initrand = self._seed_fsl_eddy
+
+        #
+        compute_ref_b0 = npe.Node(niu.Function(input_names=['in_dwi', 'in_bval'],
+                                               output_names=['out_b0_average'],
+                                               function=compute_average_b0),
+                                  name='1c-ComputeReferenceB0')
+        compute_ref_b0.inputs.low_bval = 5.0
+
+        #
+        mask_ref_b0 = npe.Node(fsl.BET(mask=True, robust=True),
+                               name='1d-MaskReferenceB0')
+
+        # Step 2: Calibrate and register FMap
+        # ===================================
+        # Bias field correction of the magnitude image
+        bias_mag_fmap = npe.Node(ants.N4BiasFieldCorrection(dimension=3), name='2a-N4MagnitudeFmap')
+        # Brain extraction of the magnitude image
+        bet_mag_fmap = npe.Node(fsl.BET(frac=0.4, mask=True), name='2b-BetN4MagnitudeFmap')
+
+        # Calibrate FMap
+        calibrate_fmap = prepare_phasediff_fmap(name='2c-CalibrateFMap')
+
+        from clinica.utils.fmap import resample_fmap_to_b0
+        res_fmap = npe.Node(nutil.Function(
+            input_names=['in_fmap', 'in_b0', 'out_file'],
+            output_names=['out_resampled_fmap'],
+            function=resample_fmap_to_b0), name='ResampleFmap')
+
+        # Register the magnitude fmap onto the b0
+        mag_fmap2b0 = npe.Node(interface=fsl.FLIRT(),
+                               name="2d-RegistrationMagnitudeToB0")
+        mag_fmap2b0.inputs.output_type = "NIFTI_GZ"
+
+        # Apply the transformation of the calibrated fmap
+        fmap2b0 = npe.Node(interface=fsl.ApplyXFM(),
+                           name="2d-RegistrationMagnitudeToB0")
+        fmap2b0.inputs.output_type = "NIFTI_GZ"
+
+        # Smooth the registered calibrated fmap
+        smoothing = npe.Node(interface=fsl.maths.IsotropicSmooth(),
+                             name='2e-Smoothing')
+        smoothing.inputs.fwhm = 4.0
+
         # Remove ".nii.gz" from fieldmap filename for eddy --field
         rm_extension = npe.Node(interface=nutil.Function(
             input_names=['in_file'],
             output_names=['file_without_extension'],
             function=remove_filename_extension),
-            name="0-RemoveFNameExtension")
+            name="2f-RemoveFNameExtension")
 
         dilate = npe.Node(fsl.maths.MathsCommand(
             nan2zeros=True, args='-kernel sphere 5 -dilM'),
             name='dilate')
 
-        # Run FSL eddy
-        eddy = npe.Node(name='2b-Eddy',
-                        interface=Eddy())
-        eddy.inputs.repol = True
-        if self._use_cuda_8_0:
-            eddy.inputs.use_cuda8_0 = self._use_cuda_8_0
-        if self._use_cuda_9_1:
-            eddy.inputs.use_cuda9_1 = self._use_cuda_9_1
-        if self._seed_fsl_eddy:
-            eddy.inputs.initrand = self._seed_fsl_eddy
+        # Step 3: Run FSL eddy
+        # ====================
+        eddy = pre_eddy.clone('3-Eddy')
 
-        # Bias correction
-        bias = ants_bias_correction(name='RemoveBias')
+        # Step 4: Bias correction
+        # =======================
+        bias = ants_bias_correction(name='4-RemoveBias')
 
-        # Compute average b0 (for brain mask extraction)
-        compute_average_b0 = npe.Node(niu.Function(input_names=['in_dwi', 'in_bval'],
-                                                   output_names=['out_b0_average'],
-                                                   function=compute_average_b0),
-                                      name='ComputeB0Average')
-        compute_average_b0.inputs.low_bval = 5.0
+        # Step 5: Final brainmask
+        # =======================
+        # Compute average b0 on corrected dataset (for brain mask extraction)
+        compute_avg_b0 = compute_ref_b0.clone('5a-ComputeB0Average')
 
-        # Compute b0 mask on corrected DWI
-        mask_b0 = npe.Node(fsl.BET(mask=True, robust=True),
-                           name='mask_b0')
+        # Compute b0 mask on corrected avg b0
+        mask_avg_b0 = mask_ref_b0.clone('5b-MaskB0')
 
         # Print end message
         print_end_message = npe.Node(
@@ -414,6 +418,8 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         # Connection
         # ==========
         self.connect([
+            # Step 0: Initialization
+            # ======================
             # Initialize input parameters and print begin message
             (self.input_node, init_node, [('dwi', 'dwi'),
                                           ('bvec', 'bvec'),
@@ -425,25 +431,6 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             # Generate (bvec, bval) tuple for MRtrix interfaces
             (init_node, get_grad_fsl, [('bval', 'bval'),
                                        ('bvec', 'bvec')]),
-            (get_grad_fsl, pre_mask_b0, [('grad_fsl',  'grad_fsl')]),
-            (init_node,    pre_mask_b0, [('dwi',  'in_file')]),
-            # Bias field correction of the magnitude image
-            (init_node, bias_mag_fmap, [('fmap_magnitude', 'input_image')]),
-            # Brain extraction of the magnitude image
-            (bias_mag_fmap, bet_mag_fmap, [('output_image', 'in_file')]),
-            # Calibration of the FMap
-            (bet_mag_fmap, calibrate_fmap, [('mask_file', 'input_node.fmap_mask')]),
-            (init_node, calibrate_fmap, [('fmap_phasediff', 'input_node.fmap_phasediff'),
-                                         ('fmap_magnitude', 'input_node.fmap_magnitude'),
-                                         ('delta_echo_time', 'input_node.delta_echo_time')]),
-            # FMap <-> B0 registration
-
-            (pre_mask_b0,    res_fmap, [('out_file', 'in_b0')]),
-            (calibrate_fmap, res_fmap, [('output_node.calibrated_fmap', 'in_fmap')]),
-            (res_fmap, smoothing, [('out_resampled_fmap', 'in_file')]),
-
-            # Remove ".nii.gz" from fieldmap filename for eddy --field
-            (smoothing, rm_extension, [('out_file', 'in_file')]),
             # Generate <image_id>_acq.txt for eddy
             (init_node, gen_acq_txt, [('dwi', 'in_dwi'),
                                       ('total_readout_time', 'total_readout_time'),
@@ -452,7 +439,50 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             # Generate <image_id>_index.txt for eddy
             (init_node, gen_index_txt, [('bval', 'in_bval'),
                                         ('image_id', 'image_id')]),
-            # Run FSL eddy
+
+            # Step 1: Computation of the reference b0 (i.e. average b0 but with EPI distortions)
+            # =======================================
+            # Compute whole brain mask
+            (get_grad_fsl, pre_mask_b0, [('grad_fsl', 'grad_fsl')]),
+            (init_node,    pre_mask_b0, [('dwi', 'in_file')]),
+            #
+            (init_node,     pre_eddy, [('dwi', 'in_file'),
+                                       ('bval', 'in_bval'),
+                                       ('bvec', 'in_bvec'),
+                                       ('image_id', 'out_base')]),
+            (gen_acq_txt,   pre_eddy, [('out_acq', 'in_acqp')]),
+            (gen_index_txt, pre_eddy, [('out_index', 'in_index')]),
+            (pre_mask_b0,   pre_eddy, [('out_file', 'in_mask')]),
+            #
+            (init_node, compute_ref_b0, [('bval', 'in_bval')]),
+            (pre_eddy,  compute_ref_b0, [('out_corrected', 'in_dwi')]),
+            #
+            (compute_ref_b0, mask_ref_b0, [('out_b0_average', 'in_file')]),
+
+            # Step 2: Calibrate and register FMap
+            # ===================================
+            # Bias field correction of the magnitude image
+            (init_node, bias_mag_fmap, [('fmap_magnitude', 'input_image')]),
+            # Brain extraction of the magnitude image
+            (bias_mag_fmap, bet_mag_fmap, [('output_image', 'in_file')]),
+            # Calibration of the FMap
+            (bet_mag_fmap, calibrate_fmap, [('mask_file', 'input_node.fmap_mask'),
+                                            ('out_file', 'input_node.fmap_magnitude')]),
+            (init_node, calibrate_fmap, [('fmap_phasediff', 'input_node.fmap_phasediff'),
+                                         ('delta_echo_time', 'input_node.delta_echo_time')]),
+            # (init_node, calibrate_fmap, [('fmap_phasediff', 'input_node.fmap_phasediff'),
+            #                              ('fmap_magnitude', 'input_node.fmap_magnitude'),
+            #                              ('delta_echo_time', 'input_node.delta_echo_time')]),
+            # FMap <-> B0 registration
+            (pre_mask_b0,    res_fmap, [('out_file', 'in_b0')]),
+            (calibrate_fmap, res_fmap, [('output_node.calibrated_fmap', 'in_fmap')]),
+            #
+            (res_fmap, smoothing, [('out_resampled_fmap', 'in_file')]),
+            # Remove ".nii.gz" from fieldmap filename for eddy --field
+            (smoothing, rm_extension, [('out_file', 'in_file')]),
+
+            # Step 3: Run FSL eddy
+            # ====================
             (init_node,     eddy, [('dwi', 'in_file'),
                                    ('bval', 'in_bval'),
                                    ('bvec', 'in_bvec'),
@@ -460,28 +490,36 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
             (gen_acq_txt,   eddy, [('out_acq', 'in_acqp')]),
             (gen_index_txt, eddy, [('out_index', 'in_index')]),
             (rm_extension,  eddy, [('file_without_extension', 'field')]),
-            (pre_mask_b0, dilate, [('out_file', 'in_file')]),
-            #            (dilate, eddy, [('out_file', 'in_mask')]),
-            (pre_mask_b0,   eddy, [('out_file', 'in_mask')]),
-            # Bias correction
-            (pre_mask_b0, bias, [('out_file', 'input_node.mask')]),
-            (eddy, bias, [('out_corrected', 'input_node.dwi'),
-                          ('out_rotated_bvecs', 'input_node.bvec')]),
-            (init_node, bias, [('bval', 'input_node.bval')]),
-            # Compute average b0 (for brain mask extraction)
-            (init_node, compute_average_b0, [('bval', 'in_bval')]),
-            (bias, compute_average_b0, [('output_node.bias_corrected_dwi', 'in_dwi')]),
-            # Compute b0 mask on corrected DWI
-            (compute_average_b0, mask_b0, [('out_b0_average', 'in_file')]),
-            # Print end message
-            (init_node, print_end_message, [('image_id', 'image_id')]),
-            (mask_b0,   print_end_message, [('mask_file', 'final_file')]),
-            # Output node
-            (init_node, self.output_node, [('bval', 'preproc_bval')]),
-            (eddy,      self.output_node, [('out_rotated_bvecs',   'preproc_bvec')]),
-            (bias,      self.output_node, [('output_node.bias_corrected_dwi', 'preproc_dwi')]),
-            (mask_b0,   self.output_node, [('mask_file',  'b0_mask')]),
-            (res_fmap,  self.output_node, [('out_resampled_fmap',  'calibrated_fmap')]),
+            # (mask_ref_b0, dilate, [('mask_file', 'in_file')]),
+            # (dilate, eddy, [('out_file', 'in_mask')]),
+            # (mask_ref_b0,   eddy, [('mask_file', 'in_mask')]),
+            (pre_mask_b0, eddy, [('out_file', 'in_mask')]),
 
-            (dilate,    self.output_node, [('out_file',            'dilate_b0_mask')]),
+            # Step 4: Bias correction
+            # =======================
+            (pre_mask_b0, bias, [('out_file',          'input_node.mask')]),
+            (eddy,        bias, [('out_corrected',     'input_node.dwi'),
+                                 ('out_rotated_bvecs', 'input_node.bvec')]),
+            (init_node,   bias, [('bval',              'input_node.bval')]),
+
+            # Step 5: Final brainmask
+            # =======================
+            # Compute average b0 on corrected dataset (for brain mask extraction)
+            (init_node, compute_avg_b0, [('bval', 'in_bval')]),
+            (bias,      compute_avg_b0, [('output_node.bias_corrected_dwi', 'in_dwi')]),
+            # Compute b0 mask on corrected avg b0
+            (compute_avg_b0, mask_avg_b0, [('out_b0_average', 'in_file')]),
+
+            # Print end message
+            (init_node,   print_end_message, [('image_id', 'image_id')]),
+            (mask_avg_b0, print_end_message, [('mask_file', 'final_file')]),
+
+            # Output node
+            (init_node,   self.output_node, [('bval', 'preproc_bval')]),
+            (eddy,        self.output_node, [('out_rotated_bvecs', 'preproc_bvec')]),
+            (bias,        self.output_node, [('output_node.bias_corrected_dwi', 'preproc_dwi')]),
+            (mask_avg_b0, self.output_node, [('mask_file', 'b0_mask')]),
+            (smoothing,    self.output_node, [('out_file', 'calibrated_fmap')]),
+
+            (pre_mask_b0, self.output_node, [('out_file', 'dilate_b0_mask')]),
         ])

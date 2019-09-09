@@ -11,7 +11,8 @@ def prepare_phasediff_fmap(name='prepare_phasediff_fmap'):
     Input node:
         fmap_mask (str): Binary mask of the fieldmap.
         fmap_phasediff (str): Phase difference fieldmap.
-        fmap_magnitude (str): Magnitude fieldmap. Chose the fieldmap with the best contrast.
+        fmap_magnitude (str): Brain extracted magnitude fieldmap.
+            Chose the fieldmap with the best contrast.
         delta_echo_time (float): DeltaEchoTime from BIDS specifications.
 
     Output node:
@@ -41,11 +42,12 @@ def prepare_phasediff_fmap(name='prepare_phasediff_fmap'):
                                        function=siemens2rads),
                         name='1-ConvertFMapToRads')
 
-    # Step 2a - Dilate brain mask for PRELUDE
-    dilate = npe.Node(fsl.maths.MathsCommand(nan2zeros=True,
-                                             # args='-kernel sphere 5 -dilM'),
-                                             args='-ero'),
-                      name='2a-DilateBrainMask')
+    # Step 2a - Erode brain mask for PRELUDE
+    first_erode = npe.Node(fsl.maths.MathsCommand(
+        nan2zeros=True,
+        args='-ero'),
+        name='2aa-ErodeBrainMask')
+    erode = first_erode.clone('2ab-ErodeBrainMask')
 
     # Step 2b - Unwrap the fmap with PRELUDE
     prelude = npe.Node(fsl.PRELUDE(process3d=True),
@@ -75,27 +77,29 @@ def prepare_phasediff_fmap(name='prepare_phasediff_fmap'):
     wf.connect([
         # Step 1 - Convert the fmap into radians
         (input_node, pha2rads, [('fmap_phasediff', 'in_file')]),  # noqa
-        # Step 2a - Dilate brain mask for prelude
-        (input_node, dilate, [('fmap_mask', 'in_file')]),  # noqa
+        # Step 2a - Erode brain mask for PRELUDE
+        (input_node, first_erode, [('fmap_mask', 'in_file')]),  # noqa
+        (first_erode, erode, [('out_file', 'in_file')]),  # noqa
         # Step 2b - Unwrap the fmap with PRELUDE
         (pha2rads,   prelude, [('out_file', 'phase_file')]),  # noqa
         (input_node, prelude, [('fmap_magnitude', 'magnitude_file')]),  # noqa
-        (dilate,     prelude, [('out_file', 'mask_file')]),  # noqa
+        (erode,     prelude, [('out_file', 'mask_file')]),  # noqa
+#        (input_node,     prelude, [('fmap_mask', 'mask_file')]),  # noqa
         # Step 3 - Convert the fmap to Hz
         (prelude,    rads2hz, [('unwrapped_phase_file', 'in_file')]),  # noqa
         (input_node, rads2hz, [('delta_echo_time',      'delta_te')]),  # noqa
         # Step 4 - Call FUGUE to extrapolate from mask (fill holes, etc)
         (rads2hz,   pre_fugue, [('out_file', 'fmap_in_file')]),  # noqa
-        (dilate,     pre_fugue, [('out_file', 'mask_file')]),  # noqa
+        (erode,     pre_fugue, [('out_file', 'mask_file')]),  # noqa
 #        (input_node, pre_fugue, [('fmap_mask',  'mask_file')]),  # noqa
         # Step 5 - Demean fmap to avoid gross shifting
         (pre_fugue, demean, [('fmap_out_file', 'in_file')]),  # noqa
-        (dilate, demean, [('out_file', 'in_mask')]),  # noqa
-#        (input_node, demean, [('fmap_mask', 'in_mask')]),  # noqa
+        (erode, demean, [('out_file', 'in_mask')]),  # noqa
+        #  (input_node, demean, [('fmap_mask', 'in_mask')]),  # noqa
         # Step 6 - Clean up edge voxels
-        (demean,     cleanup, [('out_file', 'inputnode.in_file')]),  # noqa
-        (dilate, cleanup, [('out_file', 'inputnode.in_mask')]),  # noqa
-#        (input_node, cleanup, [('fmap_mask',  'inputnode.in_mask')]),  # noqa
+        (demean, cleanup, [('out_file', 'inputnode.in_file')]),  # noqa
+        (erode,  cleanup, [('out_file', 'inputnode.in_mask')]),  # noqa
+        # (input_node, cleanup, [('fmap_mask',  'inputnode.in_mask')]),  # noqa
         # Output node
         (cleanup, output_node, [('outputnode.out_file', 'calibrated_fmap')]),  # noqa
     ])
@@ -129,10 +133,6 @@ def ants_bias_correction(low_bval=5.0, name='ants_bias_correction'):
                                                function=compute_average_b0),
                                   name='ComputeB0Average')
     compute_average_b0.inputs.low_bval = 5.0
-
-#    # Compute b0 mask
-#    mask_b0 = npe.Node(fsl.BET(mask=True, robust=True),
-#                       name='mask_b0')
 
     # Estimate bias field
     n4 = npe.Node(ants.N4BiasFieldCorrection(
@@ -175,7 +175,7 @@ def ants_bias_correction(low_bval=5.0, name='ants_bias_correction'):
         #   will have a smoothly-varying bias field correction applied, rather than multiplying by 1.0 outside the mask
         (input_node, n4, [('mask', 'weight_image')]),
         (compute_average_b0, n4, [('out_b0_average', 'input_image')]),
-        # Scalliiiiiing
+        # Scaling
         (compute_average_b0, bias_field_scaling, [('out_b0_average', 'b0')]),
         (n4, bias_field_scaling, [('output_image', 'corrected_b0')]),
         (input_node, bias_field_scaling, [('mask', 'mask')]),

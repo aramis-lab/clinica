@@ -132,7 +132,7 @@ def init_input_node(dwi, bvec, bval, dwi_json,
 
     now = datetime.datetime.now().strftime('%H:%M:%S')
     cprint('%s[%s]%s Running pipeline for %s '
-           '(TotalReadoutTime = %s, PhaseEncodingDirection = %s, DeltaEchoTime = %s)' %
+           '(TotalReadoutTime (in s) = %s, PhaseEncodingDirection = %s, DeltaEchoTime (in ms) = %s)' %
            (Fore.BLUE, now, Fore.RESET, image_ids[0].replace('_', '|'),
             total_readout_time, phase_encoding_direction, delta_echo_time))
     return (image_ids[0], dwi, bvec, bval, total_readout_time, phase_encoding_direction,
