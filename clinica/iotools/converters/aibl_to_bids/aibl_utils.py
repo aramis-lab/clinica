@@ -708,8 +708,7 @@ def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_di
 
 def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path):
     """
-        Extract the information regarding the sessions and store them in a
-        dictionary (session M0 only)
+        Extract the information regarding the sessions and store them in a dictionary
 
         :param input_path: path to the input folder
         :param clinical_spec_path: path to the clinical file
@@ -718,7 +717,6 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
     """
     import pandas as pd
     from os import path
-    from datetime import datetime
     import numpy as np
 
     # Load data
@@ -854,9 +852,9 @@ def get_ages(pt_dob, examdates):
     """
     Calculates age as time passed by since DOB to EXAMDATE
 
-    :param pt_dob: string Date of birth of patient ("/%Y" format)
-    :param examdates: list Exam dates ("%m/%d/%Y" format)
-    :return: list Age at each exam date
+    :param pt_dob: string - Date of birth of patient ("/%Y" format)
+    :param examdates: list - Exam dates ("%m/%d/%Y" format)
+    :return: list - Age at each exam date
     """
 
     from datetime import datetime

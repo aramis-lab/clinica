@@ -114,7 +114,7 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list):
 
     # Exceptions
     # ==========
-    conversion_errors = []
+    conversion_errors = [('006_S_4485', 'm84')]
 
     error_indices = []
     for conv_error in conversion_errors:
@@ -297,8 +297,8 @@ def check_exceptions(bids_dir):
             count += 1
 
         elif len(files_list) != 2:
-            # print("Wrong files count for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
-            # print(files_list)
+            print("Wrong files count for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            print(files_list)
             count_wrong += 1
         elif sum([not f.endswith(('_task-rest_bold.json', '_task-rest_bold.nii.gz')) for f in files_list]) > 0:
             name_wrong += 1
