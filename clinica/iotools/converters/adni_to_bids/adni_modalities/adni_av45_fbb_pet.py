@@ -264,4 +264,3 @@ def check_exceptions(bids_dir):
             print(files_list)
 
     print(count)
-
