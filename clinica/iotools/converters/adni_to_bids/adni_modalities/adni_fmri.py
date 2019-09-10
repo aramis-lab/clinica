@@ -279,10 +279,16 @@ def check_exceptions(bids_dir):
     count = 0
     count_wrong = 0
     name_wrong = 0
+    no_dir = 0
 
     for r in fmri_paths.iterrows():
         image = r[1]
         image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'func')
+
+        if not path.isdir(image_dir):
+            no_dir +=1
+            # continue
+
         image_pattern = path.join(image_dir, '%s_%s_*bold*' % (image.BIDS_SubjID, image.BIDS_Session))
         files_list = glob(image_pattern)
 
@@ -301,3 +307,4 @@ def check_exceptions(bids_dir):
     print(count)
     print(count_wrong)
     print(name_wrong)
+    print(no_dir)
