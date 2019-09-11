@@ -10,7 +10,8 @@
         },
         {
             "type": "binary",
-            "name": "c3d_affine_tool"
+            "name": "c3d_affine_tool",
+            "version": ""
         },
         {
             "type": "software",
