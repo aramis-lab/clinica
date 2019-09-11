@@ -191,7 +191,7 @@ def execute():
     from clinica.engine import CmdParser
 
     from clinica.pipelines.t1_freesurfer.t1_freesurfer_cli import T1FreeSurferCLI
-    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_cli import T1FreeSurferLongitudinalCLI
+    # from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_cli import T1FreeSurferLongitudinalCLI
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import T1VolumeTissueSegmentationCLI
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_cli import T1VolumeCreateDartelCLI
     from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_cli import T1VolumeExistingDartelCLI
@@ -213,7 +213,7 @@ def execute():
     pipelines += [
         T1FreeSurferCLI(),
         T1VolumeNewTemplateCLI(),
-        T1FreeSurferLongitudinalCLI(),
+        # T1FreeSurferLongitudinalCLI(),
         DwiPreprocessingUsingPhaseDiffFieldmapCli(),
         DwiPreprocessingUsingT1Cli(),
         DwiDtiCli(),
