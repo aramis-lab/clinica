@@ -296,8 +296,8 @@ def create_list_hashes(path_folder, extensions_to_keep=('.nii.gz', '.tsv', '.jso
             if file.lower().endswith(extensions_to_keep):
                 all_files.append(os.path.join(subdir, file))
 
-    dict_hashes = {fname[len(path_folder):]: str(hashlib.md5(file_as_bytes(open(fname, 'rb'))).digest()) for fname in
-                 all_files}
+    dict_hashes = {fname[len(path_folder):]: str(hashlib.md5(file_as_bytes(open(fname, 'rb'))).digest())
+                   for fname in all_files}
     return dict_hashes
 
 
