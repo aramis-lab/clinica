@@ -433,6 +433,10 @@ def generate_index_file(in_bval, low_bval=5.0, image_id=None):
     idx_low_bvals = np.where(bvals <= low_bval)
     b0_index = idx_low_bvals[0].tolist()
 
+    if not b0_index:
+        raise ValueError("Could not find b-value <= %s in bval file (%s). Found values: %s"
+                         % (low_bval, in_bval, bvals))
+
     if image_id:
         out_index = os.path.abspath(image_id + '_index.txt')
     else:
