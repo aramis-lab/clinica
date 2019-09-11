@@ -42,14 +42,7 @@ def prepare_phasediff_fmap(name='prepare_phasediff_fmap'):
                                        function=siemens2rads),
                         name='1-ConvertFMapToRads')
 
-    # Step 2a - Erode brain mask for PRELUDE
-    first_erode = npe.Node(fsl.maths.MathsCommand(
-        nan2zeros=True,
-        args='-ero'),
-        name='2aa-ErodeBrainMask')
-    erode = first_erode.clone('2ab-ErodeBrainMask')
-
-    # Step 2b - Unwrap the fmap with PRELUDE
+    # Step 2 - Unwrap the fmap with PRELUDE
     prelude = npe.Node(fsl.PRELUDE(process3d=True),
                        name='2-PhaseUnwrap')
 
@@ -76,32 +69,25 @@ def prepare_phasediff_fmap(name='prepare_phasediff_fmap'):
     wf = npe.Workflow(name=name)
     wf.connect([
         # Step 1 - Convert the fmap into radians
-        (input_node, pha2rads, [('fmap_phasediff', 'in_file')]),  # noqa
-        # Step 2a - Erode brain mask for PRELUDE
-        (input_node, first_erode, [('fmap_mask', 'in_file')]),  # noqa
-        (first_erode, erode, [('out_file', 'in_file')]),  # noqa
-        # Step 2b - Unwrap the fmap with PRELUDE
-        (pha2rads,   prelude, [('out_file', 'phase_file')]),  # noqa
-        (input_node, prelude, [('fmap_magnitude', 'magnitude_file')]),  # noqa
-        (erode,     prelude, [('out_file', 'mask_file')]),  # noqa
-#        (input_node,     prelude, [('fmap_mask', 'mask_file')]),  # noqa
+        (input_node, pha2rads, [('fmap_phasediff', 'in_file')]),
+        # Step 2 - Unwrap the fmap with PRELUDE
+        (pha2rads,   prelude, [('out_file', 'phase_file')]),
+        (input_node, prelude, [('fmap_magnitude', 'magnitude_file')]),
+        (input_node, prelude, [('fmap_mask', 'mask_file')]),
         # Step 3 - Convert the fmap to Hz
-        (prelude,    rads2hz, [('unwrapped_phase_file', 'in_file')]),  # noqa
-        (input_node, rads2hz, [('delta_echo_time',      'delta_te')]),  # noqa
+        (prelude,    rads2hz, [('unwrapped_phase_file', 'in_file')]),
+        (input_node, rads2hz, [('delta_echo_time',      'delta_te')]),
         # Step 4 - Call FUGUE to extrapolate from mask (fill holes, etc)
-        (rads2hz,   pre_fugue, [('out_file', 'fmap_in_file')]),  # noqa
-        (erode,     pre_fugue, [('out_file', 'mask_file')]),  # noqa
-#        (input_node, pre_fugue, [('fmap_mask',  'mask_file')]),  # noqa
+        (rads2hz,   pre_fugue, [('out_file', 'fmap_in_file')]),
+        (input_node,     pre_fugue, [('fmap_mask', 'mask_file')]),
         # Step 5 - Demean fmap to avoid gross shifting
-        (pre_fugue, demean, [('fmap_out_file', 'in_file')]),  # noqa
-        (erode, demean, [('out_file', 'in_mask')]),  # noqa
-        #  (input_node, demean, [('fmap_mask', 'in_mask')]),  # noqa
+        (pre_fugue, demean, [('fmap_out_file', 'in_file')]),
+        (input_node, demean, [('fmap_mask', 'in_mask')]),
         # Step 6 - Clean up edge voxels
-        (demean, cleanup, [('out_file', 'inputnode.in_file')]),  # noqa
-        (erode,  cleanup, [('out_file', 'inputnode.in_mask')]),  # noqa
-        # (input_node, cleanup, [('fmap_mask',  'inputnode.in_mask')]),  # noqa
+        (demean, cleanup, [('out_file', 'inputnode.in_file')]),
+        (input_node,  cleanup, [('fmap_mask', 'inputnode.in_mask')]),
         # Output node
-        (cleanup, output_node, [('outputnode.out_file', 'calibrated_fmap')]),  # noqa
+        (cleanup, output_node, [('outputnode.out_file', 'calibrated_fmap')]),
     ])
 
     return wf
@@ -117,7 +103,6 @@ def ants_bias_correction(low_bval=5.0, name='ants_bias_correction'):
     import nipype.interfaces.fsl as fsl
     import nipype.interfaces.ants as ants
     from clinica.utils.dwi import compute_average_b0
-    from .dwi_preprocessing_using_fmap_utils import estimate_scaling
 
     input_node = npe.Node(niu.IdentityInterface(
         fields=['dwi', 'bval', 'bvec', 'mask']),
@@ -132,7 +117,7 @@ def ants_bias_correction(low_bval=5.0, name='ants_bias_correction'):
                                                output_names=['out_b0_average'],
                                                function=compute_average_b0),
                                   name='ComputeB0Average')
-    compute_average_b0.inputs.low_bval = 5.0
+    compute_average_b0.inputs.low_bval = low_bval
 
     # Estimate bias field
     n4 = npe.Node(ants.N4BiasFieldCorrection(
@@ -141,12 +126,6 @@ def ants_bias_correction(low_bval=5.0, name='ants_bias_correction'):
         bspline_fitting_distance=100, bspline_order=3,
         n_iterations=[1000], convergence_threshold=0.0
     ), name='BiasB0')
-
-    # Estimate scaling
-    bias_field_scaling = npe.Node(niu.Function(input_names=['b0', 'corrected_b0', 'mask'],
-                                               output_names=['scaling'],
-                                               function=estimate_scaling),
-                                  name='BiasFieldScaling')
 
     # Split DWI dataset
     split = npe.Node(fsl.Split(dimension='t'), name='SplitDWIs')
@@ -175,10 +154,6 @@ def ants_bias_correction(low_bval=5.0, name='ants_bias_correction'):
         #   will have a smoothly-varying bias field correction applied, rather than multiplying by 1.0 outside the mask
         (input_node, n4, [('mask', 'weight_image')]),
         (compute_average_b0, n4, [('out_b0_average', 'input_image')]),
-        # Scaling
-        (compute_average_b0, bias_field_scaling, [('out_b0_average', 'b0')]),
-        (n4, bias_field_scaling, [('output_image', 'corrected_b0')]),
-        (input_node, bias_field_scaling, [('mask', 'mask')]),
         # Split DWI dataset
         (input_node, split, [('dwi', 'in_file')]),
         # Remove bias to each DWI volume

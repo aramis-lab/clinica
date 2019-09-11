@@ -18,10 +18,14 @@ def dwi_container_from_filename(dwi_filename):
 
 
 def rename_into_caps(in_bids_dwi,
-                     fname_dwi, fname_bval, fname_bvec, fname_brainmask, fname_calibrated_fmap):
+                     fname_dwi, fname_bval, fname_bvec, fname_brainmask,
+                     fname_magnitude, fname_fmap, fname_smoothed_fmap):
     """
     Rename the outputs of the pipelines into CAPS format namely:
-    <source_file>_space-T1w_preproc[.nii.gz|bval|bvec]
+    <source_file>_space-b0_preproc{.nii.gz|bval|bvec}
+    <source_file>_space-b0_brainmask.nii.gz
+    <source_file>_space-b0_magnitude1.nii.gz
+    <source_file>_space-b0[_fwhm-<fwhmm>]_fmap.nii.gz
 
     Args:
         in_bids_dwi (str): Input BIDS DWI to extract the <source_file>
@@ -29,7 +33,9 @@ def rename_into_caps(in_bids_dwi,
         fname_bval (str): Preprocessed DWI.
         fname_bvec (str): Preprocessed DWI.
         fname_brainmask (str): B0 mask.
-        fname_calibrated_fmap
+        fname_smoothed_fmap (str): Smoothed (calibrated) fmap on b0 space.
+        fname_fmap (str): Calibrated fmap on b0 space.
+        fname_magnitude (str): Magnitude image on b0 space.
 
     Returns:
         The different outputs in CAPS format
@@ -46,46 +52,66 @@ def rename_into_caps(in_bids_dwi,
     base_dir_bval, _, _ = split_filename(fname_bval)
     base_dir_bvec, _, _ = split_filename(fname_bvec)
     base_dir_brainmask, _, _ = split_filename(fname_brainmask)
-    base_dir_calibrated_fmap, _, _ = split_filename(fname_calibrated_fmap)
+    base_dir_smoothed_fmap, _, _ = split_filename(fname_smoothed_fmap)
+    base_dir_calibrated_fmap, _, _ = split_filename(fname_fmap)
+    base_dir_magnitude, _, _ = split_filename(fname_magnitude)
 
-    # Rename into CAPS DWI :
+    # Rename into CAPS DWI:
     rename_dwi = Rename()
     rename_dwi.inputs.in_file = fname_dwi
     rename_dwi.inputs.format_string = os.path.join(
         base_dir_dwi, source_file_dwi + "_space-b0_preproc.nii.gz")
     out_caps_dwi = rename_dwi.run()
 
-    # Rename into CAPS bval :
+    # Rename into CAPS bval:
     rename_bval = Rename()
     rename_bval.inputs.in_file = fname_bval
     rename_bval.inputs.format_string = os.path.join(
         base_dir_bval, source_file_dwi + "_space-b0_preproc.bval")
     out_caps_bval = rename_bval.run()
 
-    # Rename into CAPS bvec :
+    # Rename into CAPS bvec:
     rename_bvec = Rename()
     rename_bvec.inputs.in_file = fname_bvec
     rename_bvec.inputs.format_string = os.path.join(
         base_dir_bvec, source_file_dwi + "_space-b0_preproc.bvec")
     out_caps_bvec = rename_bvec.run()
 
-    # Rename into CAPS brainmask :
+    # Rename into CAPS brainmask:
     rename_brainmask = Rename()
     rename_brainmask.inputs.in_file = fname_brainmask
     rename_brainmask.inputs.format_string = os.path.join(
         base_dir_brainmask, source_file_dwi + "_space-b0_brainmask.nii.gz")
     out_caps_brainmask = rename_brainmask.run()
 
-    # Rename into CAPS fmap :
+    # Rename into CAPS magnitude:
+    rename_magnitude = Rename()
+    rename_magnitude.inputs.in_file = fname_magnitude
+    rename_magnitude.inputs.format_string = os.path.join(
+        base_dir_magnitude, source_file_dwi + "_space-b0_magnitude1.nii.gz")
+    out_caps_magnitude = rename_magnitude.run()
+
+    # Rename into CAPS fmap:
     rename_calibrated_fmap = Rename()
-    rename_calibrated_fmap.inputs.in_file = fname_calibrated_fmap
+    rename_calibrated_fmap.inputs.in_file = fname_fmap
     rename_calibrated_fmap.inputs.format_string = os.path.join(
         base_dir_calibrated_fmap, source_file_dwi + "_space-b0_fmap.nii.gz")
-    out_caps_calibrated_fmap = rename_calibrated_fmap.run()
+    out_caps_fmap = rename_calibrated_fmap.run()
 
-    return out_caps_dwi.outputs.out_file, out_caps_bval.outputs.out_file, \
-        out_caps_bvec.outputs.out_file, out_caps_brainmask.outputs.out_file, \
-        out_caps_calibrated_fmap.outputs.out_file
+    # Rename into CAPS smoothed fmap:
+    rename_smoothed_fmap = Rename()
+    rename_smoothed_fmap.inputs.in_file = fname_smoothed_fmap
+    rename_smoothed_fmap.inputs.format_string = os.path.join(
+        base_dir_smoothed_fmap, source_file_dwi + "_space-b0_fwhm-4_fmap.nii.gz")
+    out_caps_smoothed_fmap = rename_smoothed_fmap.run()
+
+    return (out_caps_dwi.outputs.out_file,
+            out_caps_bval.outputs.out_file,
+            out_caps_bvec.outputs.out_file,
+            out_caps_brainmask.outputs.out_file,
+            out_caps_magnitude.outputs.out_file,
+            out_caps_fmap.outputs.out_file,
+            out_caps_smoothed_fmap.outputs.out_file,)
 
 
 def get_grad_fsl(bvec, bval):
@@ -132,7 +158,7 @@ def init_input_node(dwi, bvec, bval, dwi_json,
 
     now = datetime.datetime.now().strftime('%H:%M:%S')
     cprint('%s[%s]%s Running pipeline for %s '
-           '(TotalReadoutTime (in s) = %s, PhaseEncodingDirection = %s, DeltaEchoTime (in ms) = %s)' %
+           '(TotalReadoutTime = %s, PhaseEncodingDirection = %s, DeltaEchoTime = %s)' %
            (Fore.BLUE, now, Fore.RESET, image_ids[0].replace('_', '|'),
             total_readout_time, phase_encoding_direction, delta_echo_time))
     return (image_ids[0], dwi, bvec, bval, total_readout_time, phase_encoding_direction,
@@ -148,48 +174,3 @@ def print_end_pipeline(image_id, final_file):
     now = datetime.datetime.now().strftime('%H:%M:%S')
     cprint('%s[%s]%s ...%s has completed.' % (
         Fore.GREEN, now, Fore.RESET, image_id.replace('_', '|')))
-
-
-def estimate_scaling(b0, corrected_b0, mask):
-    """Estimate scaling of bias corrected image.
-
-    (From MRtrix developers)
-    N4 can introduce large differences between subjects via a global scaling of the bias field
-    Estimate this scaling based on the total integral of the pre- and post-correction images within the brain mask
-
-    Args:
-        b0: b=0 image
-        corrected_b0: Bias corrected b=0 image
-        mask: Brain mask
-    Returns:
-        scaling of the bias field
-    """
-    import subprocess
-    # N4 can introduce large differences between subjects via a global scaling of the bias field
-    # Estimate this scaling based on the total integral of the pre- and post-correction images within the brain mask
-    input_integral_cmd = (
-        'mrcalc -quiet %s %s -mult - | '
-        'mrmath -quiet - sum - -axis 0 | '
-        'mrmath -quiet - sum - -axis 1 | '
-        'mrmath -quiet - sum - -axis 2 | '
-        'mrdump -quiet -' % (b0, mask))
-    input_integral = subprocess.Popen(input_integral_cmd,
-                                      shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    float_input_integral = float(input_integral.communicate()[0])
-
-    output_integral_cmd = (
-        'mrcalc -quiet %s %s -mult - | '
-        'mrmath -quiet - sum - -axis 0 | '
-        'mrmath -quiet - sum - -axis 1 | '
-        'mrmath -quiet - sum - -axis 2 | '
-        'mrdump -quiet -' % (corrected_b0, mask))
-    output_integral = subprocess.Popen(output_integral_cmd,
-                                       shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    float_output_integral = float(output_integral.communicate()[0])
-
-    scaling = float_output_integral / float_input_integral
-    from clinica.utils.stream import cprint
-    cprint('- input_integral = %s' % float_input_integral)
-    cprint('- output_integral = %s' % float_output_integral)
-    cprint('- Scaling value = %s' % scaling)
-    return scaling
