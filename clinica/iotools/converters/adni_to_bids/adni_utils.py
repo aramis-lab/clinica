@@ -124,9 +124,7 @@ def visits_to_timepoints_mrilist(subject, mri_list_subj, adnimerge_subj, modalit
                 visits[key_preferred_visit] = preferred_visit_name
             elif visits[key_preferred_visit] != preferred_visit_name:
                 cprint('[%s] Subject %s has multiple visits for one timepoint.' % (modality, subject))
-                # cprint(key_preferred_visit)
-                # cprint(visits[key_preferred_visit])
-                # cprint(visit)
+
             unique_visits.remove(preferred_visit_name)
             continue
 
@@ -177,23 +175,12 @@ def visits_to_timepoints_mrilist(subject, mri_list_subj, adnimerge_subj, modalit
             visits[key_min_visit] = image.VISIT
         elif visits[key_min_visit] != image.VISIT:
             cprint('[%s] Subject %s has multiple visits for one timepoint.' % (modality, subject))
-            # cprint(key_min_visit)
-            # cprint(visits[key_min_visit])
-            # cprint(image.Visit)
 
     return visits
 
 
 def select_image_qc(id_list, mri_qc_subj):
-    """
 
-    Args:
-        id_list:
-        mri_qc_subj:
-
-    Returns:
-
-    """
     import numpy as np
 
     if len(id_list) == 0:
@@ -535,7 +522,8 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
             for j in list_diagnosis_nan[0]:
                 if not is_nan(sessions_df['adni_diagnosis_change'].iloc[j]) \
                         and int(sessions_df['adni_diagnosis_change'].iloc[j]) < 4:
-                    sessions_df['diagnosis'].iloc[j] = diagnosis_change[int(sessions_df['adni_diagnosis_change'].iloc[j])]
+                    sessions_df['diagnosis'].iloc[j] = diagnosis_change[
+                        int(sessions_df['adni_diagnosis_change'].iloc[j])]
 
             sessions_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf-8')
 
@@ -606,7 +594,6 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
     from os import path
     from datetime import datetime
     import clinica.iotools.bids_utils as bids
-    from colorama import Fore
     from clinica.utils.stream import cprint
 
     # Load data

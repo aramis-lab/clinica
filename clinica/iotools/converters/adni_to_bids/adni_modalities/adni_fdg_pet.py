@@ -16,15 +16,16 @@ __status__ = "Development"
 
 def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     """
-    Args:
-        source_dir:
-        csv_dir:
-        dest_dir:
-        subjs_list:
+    Convert FDG PET images of ADNI into BIDS format
 
-    Returns:
+    Args:
+        source_dir: path to the ADNI directory
+        csv_dir: path to the clinical data directory
+        dest_dir: path to the destination BIDS directory
+        subjs_list: subjects list
 
     """
+
     import pandas as pd
     from os import path
     from clinica.utils.stream import cprint
@@ -45,16 +46,19 @@ def convert_adni_fdg_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
 
 def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     """
+    Compute the paths to the FDG PET images and store them in a tsv file
 
     Args:
-        source_dir:
-        csv_dir:
-        dest_dir:
-        subjs_list:
+        source_dir: path to the ADNI directory
+        csv_dir: path to the clinical data directory
+        dest_dir: path to the destination BIDS directory
+        subjs_list: subjects list
 
     Returns:
+        images: a dataframe with all the paths to the PET images that will be converted into BIDS
 
     """
+
     import pandas as pd
     import os
     import operator
@@ -78,19 +82,18 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         subject_pet_meta = pet_meta_list[pet_meta_list['Subject'] == subj]
 
         if subject_pet_meta.shape[0] < 1:
-            # TODO Log somewhere subjects without FDG PET images
-            # cprint('No FDG-PET images metadata for subject - ' + subj)
+            # TODO Log somewhere subjects without FDG-PET images metadata
             continue
 
         # QC for FDG PET images for ADNI 1, GO and 2
-        pet_qc_1GO2_subj = petqc[(petqc.PASS == 1) & (petqc.RID == int(subj[-4:]))]
+        pet_qc_1go2_subj = petqc[(petqc.PASS == 1) & (petqc.RID == int(subj[-4:]))]
 
         # QC for FDG PET images for ADNI 3
         pet_qc3_subj = petqc3[(petqc3.SCANQLTY == 1) & (petqc3.RID == int(subj[-4:]))]
         pet_qc3_subj.insert(0, 'EXAMDATE', pet_qc3_subj.SCANDATE.to_list())
 
         # Concatenating visits in both QC files
-        pet_qc_subj = pd.concat([pet_qc_1GO2_subj, pet_qc3_subj], axis=0, ignore_index=True, sort=False)
+        pet_qc_subj = pd.concat([pet_qc_1go2_subj, pet_qc3_subj], axis=0, ignore_index=True, sort=False)
 
         for visit in list(pet_qc_subj.VISCODE2.unique()):
             pet_qc_visit = pet_qc_subj[pet_qc_subj.VISCODE2 == visit]
@@ -168,9 +171,6 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     indices_to_remove = pet_fdg_df.index[reduce(operator.or_, error_indices, False)]
     pet_fdg_df.drop(indices_to_remove, inplace=True)
 
-    # DONE - Make a function reusing this code for different modalities
-    # TODO check if it works properly
-
     images = find_image_path(pet_fdg_df, source_dir, 'FDG', 'I', 'Image_ID')
 
     fdg_csv_path = path.join(dest_dir, 'conversion_info')
@@ -182,19 +182,20 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
 
 def check_exceptions(bids_dir):
+    """
+    Function for verifying that proper images are in bids folder
+    """
+
     from os import path
     import pandas as pd
     from glob import glob
 
     fdg_paths = pd.read_csv(path.join(bids_dir, 'conversion_info', 'fdg_pet_paths.tsv'), sep='\t')
-
     fdg_paths = fdg_paths[fdg_paths.Path.notnull()]
-
     fdg_paths['BIDS_SubjID'] = ['sub-ADNI' + s.replace('_', '') for s in fdg_paths.Subject_ID.to_list()]
     fdg_paths['BIDS_Session'] = ['ses-' + s.replace('bl', 'm00').upper() for s in fdg_paths.VISCODE.to_list()]
 
     count = 0
-
     for r in fdg_paths.iterrows():
         image = r[1]
         image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'pet')

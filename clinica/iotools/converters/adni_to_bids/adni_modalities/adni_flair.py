@@ -15,16 +15,16 @@ __status__ = "Development"
 
 def convert_adni_flair(source_dir, csv_dir, dest_dir, subjs_list=None):
     """
+    Convert FLAIR images of ADNI into BIDS format
 
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
-        dest_dir: path to the destination directory
+        dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
 
-    Returns:
-
     """
+
     import pandas as pd
     from os import path
     from clinica.utils.stream import cprint
@@ -44,18 +44,19 @@ def convert_adni_flair(source_dir, csv_dir, dest_dir, subjs_list=None):
 
 def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
     """
-    Compute paths to FLAIR images to convert to BIDS
+    Compute the paths to the FLAIR images and store them in a tsv file
 
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
-        dest_dir: path to the destination directory
+        dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
 
     Returns:
-        images: pandas dataframe that contains the path to all the FLAIR images to convert
+        images: a dataframe with all the paths to the FLAIR images that will be converted into BIDS
 
     """
+
     import operator
     from os import path, mkdir
     from functools import reduce
@@ -106,7 +107,6 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
                 # TODO Replace iteratively appending by pandas.concat
                 flair_df = flair_df.append(row_to_append, ignore_index=True, sort=False)
 
-    # TODO check for new exceptions in ADNI3
     # Exceptions
     # ==========
     conversion_errors = [  # Eq_1 images

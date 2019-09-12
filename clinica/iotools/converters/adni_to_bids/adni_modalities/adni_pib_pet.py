@@ -19,14 +19,13 @@ def convert_adni_pib_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     Convert PIB PET images of ADNI into BIDS format
 
     Args:
-        source_dir:
-        csv_dir:
-        dest_dir:
-        subjs_list:
-
-    Returns:
+        source_dir: path to the ADNI directory
+        csv_dir: path to the clinical data directory
+        dest_dir: path to the destination BIDS directory
+        subjs_list: subjects list
 
     """
+
     import pandas as pd
     from os import path
     from clinica.utils.stream import cprint
@@ -47,16 +46,19 @@ def convert_adni_pib_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
 
 def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     """
+    Compute the paths to the PIB PET images and store them in a tsv file
 
     Args:
-        source_dir:
-        csv_dir:
-        dest_dir:
-        subjs_list:
+        source_dir: path to the ADNI directory
+        csv_dir: path to the clinical data directory
+        dest_dir: path to the destination BIDS directory
+        subjs_list: subjects list
 
     Returns:
+        images: a dataframe with all the paths to the PET images that will be converted into BIDS
 
     """
+
     import pandas as pd
     import os
     import operator
@@ -79,8 +81,7 @@ def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         subject_pet_meta = pet_meta_list[pet_meta_list['Subject'] == subj]
 
         if subject_pet_meta.shape[0] < 1:
-            # TODO Log somewhere subjects without PIB PET images
-            # cprint('No PIB-PET images metadata for subject - ' + subj)
+            # TODO Log somewhere subjects without PIB PET metadata
             continue
 
         # QC for PIB PET images

@@ -16,16 +16,16 @@ __status__ = "Development"
 
 def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None):
     """
+    Convert T1 MR images of ADNI into BIDS format
 
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
-        dest_dir: path to the destination directory
+        dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
 
-    Returns:
-
     """
+
     from os import path
 
     from pandas.io import parsers
@@ -48,14 +48,17 @@ def convert_adni_t1(source_dir, csv_dir, dest_dir, subjs_list=None):
 
 def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
     """
+    Compute the paths to T1 MR images and store them in a tsv file
 
-    Compute paths to t1 images of ADNI.
+    Args:
+        source_dir: path to the ADNI directory
+        csv_dir: path to the clinical data directory
+        dest_dir: path to the destination BIDS directory
+        subjs_list: subjects list
 
-    :param source_dir:
-    :param csv_dir:
-    :param dest_dir:
-    :param subjs_list:
-    :return: a pandas dataframe
+    Returns:
+        images: a dataframe with all the paths to the T1 MR images that will be converted into BIDS
+
     """
 
     import operator

@@ -15,16 +15,16 @@ __status__ = "Development"
 
 def convert_adni_dwi(source_dir, csv_dir, dest_dir, subjs_list=None):
     """
+    Convert DW images of ADNI into BIDS format
 
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
-        dest_dir: path to the destination directory
+        dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
 
-    Returns:
-
     """
+
     import pandas as pd
     from os import path
     from clinica.utils.stream import cprint
@@ -44,18 +44,19 @@ def convert_adni_dwi(source_dir, csv_dir, dest_dir, subjs_list=None):
 
 def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     """
-    Compute paths to DWI images to convert to BIDS
+    Compute paths to DW images to convert to BIDS
 
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
-        dest_dir: path to the destination directory
+        dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
 
     Returns:
-        images: pandas dataframe that contains the path to all the dwi images to convert
+        images: pandas dataframe that contains the path to all the DW images to convert
 
     """
+
     import operator
     from os import path, mkdir
     from functools import reduce

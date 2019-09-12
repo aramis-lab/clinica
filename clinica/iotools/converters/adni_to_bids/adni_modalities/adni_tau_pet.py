@@ -16,15 +16,16 @@ __status__ = "Development"
 
 def convert_adni_tau_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     """
-    Args:
-        source_dir:
-        csv_dir:
-        dest_dir:
-        subjs_list:
+    Convert Tau PET images of ADNI into BIDS format
 
-    Returns:
+    Args:
+        source_dir: path to the ADNI directory
+        csv_dir: path to the clinical data directory
+        dest_dir: path to the destination BIDS directory
+        subjs_list: subjects list
 
     """
+
     import pandas as pd
     from os import path
     from clinica.utils.stream import cprint
@@ -45,16 +46,18 @@ def convert_adni_tau_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
 
 def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     """
+    Compute the paths to Tau PET images
 
     Args:
-        source_dir:
-        csv_dir:
-        dest_dir:
-        subjs_list:
+        source_dir: path to the ADNI directory
+        csv_dir: path to the clinical data directory
+        dest_dir: path to the destination BIDS directory
+        subjs_list: subjects list
 
-    Returns:
+    Returns: pandas Dataframe containing the path for each Tau PET image
 
     """
+
     import pandas as pd
     import os
     import operator
@@ -78,8 +81,7 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         subject_pet_meta = pet_meta_list[pet_meta_list['Subject'] == subj]
 
         if subject_pet_meta.shape[0] < 1:
-            # TODO Log somewhere subjects without TAU PET images
-            # cprint('No TAU-PET images metadata for subject - ' + subj)
+            # TODO Log somewhere subjects without TAU PET images metadata
             continue
 
         # QC for TAU PET images for ADNI 2

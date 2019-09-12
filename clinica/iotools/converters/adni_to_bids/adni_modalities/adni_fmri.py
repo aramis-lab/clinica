@@ -15,16 +15,16 @@ __status__ = "Development"
 
 def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
     """
+    Convert fMR images of ADNI into BIDS format
 
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
-        dest_dir: path to the destination directory
+        dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
 
-    Returns:
-
     """
+
     import pandas as pd
     from os import path
     from clinica.utils.stream import cprint
@@ -44,17 +44,18 @@ def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
 
 def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list):
     """
-    Compute the paths to fmri images.
+    Compute the paths to fMR images
 
     Args:
-        source_dir: path to the ADNI image folder
-        csv_dir: path to the directory with all the clinical data od ADNI
-        dest_dir:  path to the output_folder
+        source_dir: path to the ADNI directory
+        csv_dir: path to the clinical data directory
+        dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
 
     Returns: pandas Dataframe containing the path for each fmri
 
     """
+
     import operator
     from functools import reduce
     from os import path, mkdir
@@ -143,7 +144,6 @@ def fmri_paths_to_bids(dest_dir, fmri_paths, mod_to_update=False):
     Args:
         dest_dir: path to the input directory
         fmri_paths: path to the BIDS directory
-        mod_to_add: if True add the fmri only where is missing
         mod_to_update:  if True overwrite (or create if is missing) all the existing fmri
 
     """
@@ -153,7 +153,7 @@ def fmri_paths_to_bids(dest_dir, fmri_paths, mod_to_update=False):
     counter = None
 
     def init(args):
-        ''' store the counter for later use '''
+        # store the counter for later use
         global counter
         counter = args
 
@@ -173,9 +173,7 @@ def generate_subject_files(subj, fmri_paths, dest_dir, mod_to_update):
     import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
     import clinica.iotools.bids_utils as bids_utils
     from clinica.utils.stream import cprint
-    import subprocess
     import os
-    import shutil
     from os import path
     from glob import glob
 
@@ -265,6 +263,7 @@ def fmri_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
 
 
 def check_exceptions(bids_dir):
+
     from os import path
     import pandas as pd
     from glob import glob
@@ -286,7 +285,7 @@ def check_exceptions(bids_dir):
         image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'func')
 
         if not path.isdir(image_dir):
-            no_dir +=1
+            no_dir += 1
             # continue
 
         image_pattern = path.join(image_dir, '%s_%s_*bold*' % (image.BIDS_SubjID, image.BIDS_Session))

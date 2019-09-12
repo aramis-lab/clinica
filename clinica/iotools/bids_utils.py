@@ -434,11 +434,10 @@ def dcm_to_nii(input_path, output_path, bids_name):
 
     # If "_t" - the trigger delay time - exists in dcm2niix output filename, we remove it
     exception_t = glob(path.join(output_path, bids_name + '_t[0-9]*'))
-    for t in exception_t:
-        res = re.search('_t\d+\.', t)
-        no_t = t.replace(t[res.start(): res.end()], '.')
-        print(no_t)
-        os.rename(t, no_t)
+    for trigger_time in exception_t:
+        res = re.search('_t\d+\.', trigger_time)
+        no_trigger_time = trigger_time.replace(trigger_time[res.start(): res.end()], '.')
+        os.rename(trigger_time, no_trigger_time)
 
     # If dcm2niix didn't work use dcm2nii
     if not os.path.exists(path.join(output_path, bids_name + '.nii.gz')):

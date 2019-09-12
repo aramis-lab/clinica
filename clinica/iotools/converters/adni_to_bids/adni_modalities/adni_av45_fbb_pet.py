@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
- Module for converting PET_AV45 of ADNI
+ Module for converting AV45 and Florbetaben PET of ADNI
 """
 
 __author__ = "Jorge Samper-Gonzalez"
@@ -21,10 +21,11 @@ def convert_adni_av45_fbb_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
-        dest_dir: path to the BIDS directory
-        subjs_list: subject list
+        dest_dir: path to the destination BIDS directory
+        subjs_list: subjects list
 
     """
+
     import pandas as pd
     from os import path
     from clinica.utils.stream import cprint
@@ -48,15 +49,16 @@ def compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     Compute the paths to the AV45 and Florbetaben PET images and store them in a tsv file
 
     Args:
-        source_dir: path to the original ADNI folder
-        csv_dir: path to clinical data folder
-        dest_dir: path to the BIDS folder
+        source_dir: path to the ADNI directory
+        csv_dir: path to the clinical data directory
+        dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
 
     Returns:
         images: a dataframe with all the paths to the PET images that will be converted into BIDS
 
     """
+
     import pandas as pd
     import os
     import operator
