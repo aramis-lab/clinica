@@ -90,7 +90,7 @@ def test_run_Adni2Bids(cmdopt):
     clinical_data_directory = join(root, 'in', 'clinical_data_25-04-19')
     bids_directory = join(root, 'out', 'bids')
     subjects_list = join(root, 'in', 'subjects.txt')
-    modalities = ['T1', 'PET_FDG', 'PET_AV45', 'DWI', 'FLAIR', 'fMRI']
+    modalities = ['T1', 'PET_FDG', 'PET_AMYLOID', 'PET_TAU', 'DWI', 'FLAIR', 'fMRI']
     adni_to_bids.convert_images(dataset_directory,
                                 clinical_data_directory,
                                 bids_directory,
