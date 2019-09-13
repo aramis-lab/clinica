@@ -15,16 +15,16 @@ __status__ = "Development"
 
 def convert_adni_dwi(source_dir, csv_dir, dest_dir, subjs_list=None):
     """
+    Convert DW images of ADNI into BIDS format
 
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
-        dest_dir: path to the destination directory
+        dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
 
-    Returns:
-
     """
+
     import pandas as pd
     from os import path
     from clinica.utils.stream import cprint
@@ -32,7 +32,7 @@ def convert_adni_dwi(source_dir, csv_dir, dest_dir, subjs_list=None):
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
-        adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
+        adni_merge = pd.read_csv(adni_merge_path, sep=',', low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
 
     cprint('Calculating paths of DWI images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
@@ -44,103 +44,68 @@ def convert_adni_dwi(source_dir, csv_dir, dest_dir, subjs_list=None):
 
 def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     """
-    Compute paths to DWI images to convert to BIDS
+    Compute paths to DW images to convert to BIDS
 
     Args:
         source_dir: path to the ADNI directory
         csv_dir: path to the clinical data directory
-        dest_dir: path to the destination directory
+        dest_dir: path to the destination BIDS directory
         subjs_list: subjects list
 
     Returns:
-        images: pandas dataframe that contains the path to all the dwi images to convert
+        images: pandas dataframe that contains the path to all the DW images to convert
 
     """
-    import pandas as pd
+
     import operator
-    from os import path, walk, mkdir
+    from os import path, mkdir
     from functools import reduce
+    import pandas as pd
+
+    from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path, visits_to_timepoints_mrilist
 
     dwi_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
-                  'Study_ID', 'Series_ID', 'Image_ID', 'Field_Strength', 'Scanner', 'Enhanced']
-
+                  'Study_ID', 'Series_ID', 'Image_ID', 'Field_Strength']
     dwi_df = pd.DataFrame(columns=dwi_col_df)
 
-    adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
+    # Loading needed .csv files
+    adni_merge = pd.read_csv(path.join(csv_dir, 'ADNIMERGE.csv'), sep=',', low_memory=False)
 
-    if path.exists(path.join(csv_dir, 'IDA_MR_Metadata_Listing.csv')):
-        new_download = False
-    else:
-        new_download = True
+    mayo_mri_qc = pd.read_csv(path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv'), sep=',', low_memory=False)
+    mayo_mri_qc = mayo_mri_qc[mayo_mri_qc.series_type == 'DTI']
 
-    # If IDA_MR_Metadata_Listing.csv has been added manually, that will cause a
-    # bug
-    new_download = True
+    mri_list = pd.read_csv(path.join(csv_dir, 'MRILIST.csv'), sep=',', low_memory=False)
 
-    if new_download:
-        ida_meta_path = path.join(csv_dir, 'MRILIST.csv')
-    else:
-        ida_meta_path = path.join(csv_dir, 'IDA_MR_Metadata_Listing.csv')
-    mri_qc_path = path.join(csv_dir, 'MAYOADIRL_MRI_IMAGEQC_12_08_15.csv')
-
-    adni_merge = pd.io.parsers.read_csv(adni_merge_path, sep=',')
-    ida_meta = pd.io.parsers.read_csv(ida_meta_path, sep=',')
-
-    if new_download:
-        ida_meta = ida_meta[ida_meta.SEQUENCE.map(lambda x: x.lower().find('dti') > -1)]
-    else:
-        ida_meta = ida_meta[ida_meta.Sequence.map(lambda x: x.lower().find('dti') > -1)]
-
-    mri_qc = pd.io.parsers.read_csv(mri_qc_path, sep=',')
-    mri_qc = mri_qc[mri_qc.series_type == 'DTI']
+    # Selecting only DTI images that are not Multiband, processed or enchanced images
+    mri_list = mri_list[mri_list.SEQUENCE.map(lambda x: x.lower().find('dti') > -1)]
+    unwanted_sequences = ['MB', 'ADC', 'FA', 'TRACEW', 'Enhanced', 'Reg']
+    mri_list = mri_list[mri_list.SEQUENCE.map(lambda x: not any(subs in x for subs in unwanted_sequences))]
 
     for subj in subjs_list:
-        # print 'Computing path for subj', subj
 
+        # Filter ADNIMERGE, MRI_LIST and QC for only one subject and sort the rows/visits by examination date
         adnimerge_subj = adni_merge[adni_merge.PTID == subj]
-
-        # Sort the values by examination date
         adnimerge_subj = adnimerge_subj.sort_values('EXAMDATE')
-        if new_download:
-            ida_meta_subj = ida_meta[ida_meta.SUBJECT == subj]
-            ida_meta_subj = ida_meta_subj.sort_values('SCANDATE')
-        else:
-            ida_meta_subj = ida_meta[ida_meta.Subject == subj]
-            ida_meta_subj = ida_meta_subj.sort_values('Scan Date')
-        mri_qc_subj = mri_qc[mri_qc.RID == int(subj[-4:])]
 
-        if new_download:
-            visits = visits_to_timepoints_dwi_refactoring(subj, ida_meta_subj, adnimerge_subj)
-        else:
-            visits = visits_to_timepoints_dwi(subj, ida_meta_subj, adnimerge_subj)
+        mri_list_subj = mri_list[mri_list.SUBJECT == subj]
+        mri_list_subj = mri_list_subj.sort_values('SCANDATE')
 
-        keys = visits.keys()
-        # What is the purpose of the following line ?
-        # keys.sort()
+        mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(subj[-4:])]
+
+        # Obtain corresponding timepoints for the subject visits
+        visits = visits_to_timepoints_mrilist(subj, mri_list_subj, adnimerge_subj, "DWI")
 
         for visit_info in visits.keys():
+            timepoint = visit_info[0]
             visit_str = visits[visit_info]
 
-            if new_download:
-                visit_ida_meta = ida_meta_subj[ida_meta_subj.VISIT == visit_str]
-                axial_ida_meta = visit_ida_meta[visit_ida_meta.SEQUENCE.map(lambda x: x.lower().find('enhanced') < 0)]
-                enhanced_ida_meta = visit_ida_meta[visit_ida_meta.SEQUENCE.map(lambda x: x.lower().find('enhanced') > -1)]
-                axial = dwi_image_refactoring(subj, visit_info[0], visits[visit_info], axial_ida_meta, mri_qc_subj, False)
-                enhanced = dwi_image_refactoring(subj, visit_info[0], visits[visit_info], enhanced_ida_meta, mri_qc_subj, True)
-            else:
-                visit_ida_meta = ida_meta_subj[ida_meta_subj.Visit == visit_str]
-                axial_ida_meta = visit_ida_meta[visit_ida_meta.Sequence.map(lambda x: x.lower().find('enhanced') < 0)]
-                enhanced_ida_meta = visit_ida_meta[visit_ida_meta.Sequence.map(lambda x: x.lower().find('enhanced') > -1)]
-                axial = dwi_image(subj, visit_info[0], visits[visit_info], axial_ida_meta, mri_qc_subj, False)
-                enhanced = dwi_image(subj, visit_info[0], visits[visit_info], enhanced_ida_meta, mri_qc_subj, True)
+            visit_mri_list = mri_list_subj[mri_list_subj.VISIT == visit_str]
+            axial = dwi_image(subj, timepoint, visits[visit_info], visit_mri_list, mayo_mri_qc_subj)
 
             if axial is not None:
                 row_to_append = pd.DataFrame(axial, index=['i', ])
-                dwi_df = dwi_df.append(row_to_append, ignore_index=True)
-
-            if enhanced is not None:
-                row_to_append = pd.DataFrame(enhanced, index=['i', ])
-                dwi_df = dwi_df.append(row_to_append, ignore_index=True)
+                # TODO Replace iteratively appending by pandas.concat
+                dwi_df = dwi_df.append(row_to_append, ignore_index=True, sort=False)
 
     # Exceptions
     # ==========
@@ -168,47 +133,27 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
                          ('129_S_2347', 'm06'),
                          ('129_S_4220', 'bl'),
                          ('007_S_2058', 'm12'),
-                         ('016_S_2007', 'm06')]
+                         ('016_S_2007', 'm06'),
+                         ('020_S_6358', 'bl'),
+                         ('114_S_6039', 'm12'),
+                         ('114_S_6057', 'bl'),
+                         ('153_S_6274', 'bl'),
+                         ('006_S_4485', 'm84'),
+                         ('153_S_6237', 'bl'),
+                         ('153_S_6336', 'bl'),
+                         ('153_S_6450', 'bl')]
 
     error_indices = []
     for conv_error in conversion_errors:
-        error_indices.append((dwi_df.Enhanced is False)
-                             & (dwi_df.Subject_ID == conv_error[0])
+        error_indices.append((dwi_df.Subject_ID == conv_error[0])
                              & (dwi_df.VISCODE == conv_error[1]))
 
-    indices_to_remove = dwi_df.index[reduce(operator.or_, error_indices, False)]
-    dwi_df.drop(indices_to_remove, inplace=True)
+    if error_indices:
+        indices_to_remove = dwi_df.index[reduce(operator.or_, error_indices, False)]
+        dwi_df.drop(indices_to_remove, inplace=True)
 
-    images = dwi_df
-    is_dicom = []
-    nifti_paths = []
-    count = 0
-
-    for row in images.iterrows():
-        image = row[1]
-        seq_path = path.join(source_dir, str(image.Subject_ID), image.Sequence)
-        count += 1
-        series_path = ''
-        s = 'S' + str(image.Series_ID)
-
-        for (dirpath, dirnames, filenames) in walk(seq_path):
-            found = False
-            for d in dirnames:
-                if d == s:
-                    series_path = path.join(dirpath, d)
-                    found = True
-                    break
-            if found:
-                break
-
-        nifti_path = series_path
-        dicom = True
-
-        is_dicom.append(dicom)
-        nifti_paths.append(nifti_path)
-
-    images.loc[:, 'Is_Dicom'] = pd.Series(is_dicom, index=images.index)
-    images.loc[:, 'Path'] = pd.Series(nifti_paths, index=images.index)
+    # Checking for images paths in filesystem
+    images = find_image_path(dwi_df, source_dir, 'DWI', 'S', 'Series_ID')
 
     dwi_tsv_path = path.join(dest_dir, 'conversion_info')
     if not path.exists(dwi_tsv_path):
@@ -248,6 +193,40 @@ def dwi_paths_to_bids(images, dest_dir, mod_to_update=False):
     poolrunner = Pool(cpu_count(), initializer=init, initargs=(counter,))
     poolrunner.map(partial_generate_subject_files, subjs_list)
     del counter
+
+
+def dwi_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
+    """
+
+    Args:
+        subject_id:
+        timepoint:
+        visit_str:
+        visit_mri_list:
+        mri_qc_subj:
+
+    Returns:
+
+    """
+    from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars, select_image_qc
+
+    sel_image = select_image_qc(list(visit_mri_list.IMAGEUID), mri_qc_subj)
+    if sel_image is None:
+        return None
+
+    sel_scan = visit_mri_list[visit_mri_list.IMAGEUID == sel_image].iloc[0]
+
+    image_dict = {'Subject_ID': subject_id,
+                  'VISCODE': timepoint,
+                  'Visit': visit_str,
+                  'Sequence': replace_sequence_chars(sel_scan.SEQUENCE),
+                  'Scan_Date': sel_scan['SCANDATE'],
+                  'Study_ID': str(int(sel_scan.STUDYID)),
+                  'Series_ID': str(int(sel_scan.SERIESID)),
+                  'Image_ID': str(int(sel_scan.IMAGEUID)),
+                  'Field_Strength': sel_scan.MAGSTRENGTH}
+
+    return image_dict
 
 
 def generate_subject_files(subj, images, dest_dir, mod_to_update):
@@ -294,16 +273,12 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
         # For the same subject, same session there could be multiple dwi with different acq label
         for j in range(len(dwi_info)):
             dwi_subj = dwi_info.iloc[j]
-            # TODO For now in CLINICA we ignore Enhanced DWI.
-            if dwi_subj['Enhanced']:
-                continue
             if type(dwi_subj['Path']) != float and dwi_subj['Path'] != '':
                 if not os.path.exists(path.join(ses_path, 'dwi')):
                     os.mkdir(path.join(ses_path, 'dwi'))
                 dwi_path = dwi_subj['Path']
 
-                bids_name = bids_file_name + '_acq-' + ('axialEnhanced'
-                                                        if dwi_subj['Enhanced'] else 'axial') + '_dwi'
+                bids_name = bids_file_name + '_acq-axial_dwi'
 
                 bids_dest_dir = path.join(ses_path, 'dwi')
 
@@ -314,6 +289,11 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
                                shell=True,
                                stdout=subprocess.DEVNULL,
                                stderr=subprocess.DEVNULL)
+
+                # Removing ADC images
+                adc_image = path.join(bids_dest_dir, bids_name + '_ADC.nii.gz')
+                if os.path.exists(adc_image):
+                    os.remove(adc_image)
 
                 # If dcm2niix didn't work use dcm2nii
                 # print path.join(dest_dir, bids_name + '.nii.gz')
@@ -332,7 +312,8 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
                         # print 'Removing the old', d
                         os.remove(d)
 
-                    command = 'dcm2nii -a n -d n -e n -i y -g y -p n -m n -r n -x n -o ' + bids_dest_dir + ' ' + dwi_path
+                    command = 'dcm2nii -a n -d n -e n -i y -g y -p n -m n -r n -x n -o %s %s' \
+                              % (bids_dest_dir, dwi_path)
                     subprocess.run(command,
                                    shell=True,
                                    stdout=subprocess.DEVNULL,
@@ -362,363 +343,37 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
                                + ' for subject ' + subj + ' and session ' + ses)
 
 
-def dwi_image(subject_id, timepoint, visit_str, ida_meta_scans, mri_qc_subj, enhanced):
-    """
+def check_exceptions(bids_dir):
+    from os import path
+    import pandas as pd
+    from glob import glob
 
-    Args:
-        subject_id:
-        timepoint:
-        visit_str:
-        ida_meta_scans:
-        mri_qc_subj:
-        enhanced:
+    dwi_paths = pd.read_csv(path.join(bids_dir, 'conversion_info', 'dwi_paths.tsv'), sep='\t')
 
-    Returns:
+    dwi_paths = dwi_paths[dwi_paths.Path.notnull()]
 
-    """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
+    dwi_paths['BIDS_SubjID'] = ['sub-ADNI' + s.replace('_', '') for s in dwi_paths.Subject_ID.to_list()]
+    dwi_paths['BIDS_Session'] = ['ses-' + s.replace('bl', 'm00').upper() for s in dwi_paths.VISCODE.to_list()]
 
-    sel_image = select_image_qc(list(ida_meta_scans.IMAGEUID), mri_qc_subj)
-    if sel_image is None:
-        return None
+    count = 0
+    count_ADC = 0
 
-    sel_scan = ida_meta_scans[ida_meta_scans.IMAGEUID == sel_image].iloc[0]
+    for r in dwi_paths.iterrows():
+        image = r[1]
+        image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'dwi')
+        image_pattern = path.join(image_dir, '%s_%s_*' % (image.BIDS_SubjID, image.BIDS_Session))
+        files_list = glob(image_pattern)
+        if not files_list:
+            print("No images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+            # count += 1
 
-    sequence = sel_scan.Sequence
-    sequence = replace_sequence_chars(sequence)
-
-    image_dict = {'Subject_ID': subject_id,
-                  'VISCODE': timepoint,
-                  'Visit': visit_str,
-                  'Sequence': sequence,
-                  'Scan_Date': sel_scan['Scan Date'],
-                  'Study_ID': str(int(sel_scan.LONISID)),
-                  'Series_ID': str(int(sel_scan.LONIUID)),
-                  'Image_ID': str(int(sel_scan.IMAGEUID)),
-                  'Field_Strength': sel_scan.MagStrength,
-                  'Scanner': sel_scan.Scanner,
-                  'Enhanced': enhanced}
-
-    return image_dict
-
-
-def select_image_qc(id_list, mri_qc_subj):
-    """
-
-    Args:
-        id_list:
-        mri_qc_subj:
-
-    Returns:
-
-    """
-    import numpy as np
-
-    if len(id_list) == 0:
-        return None
-
-    selected_image = None
-    image_ids = ['I' + str(imageuid) for imageuid in id_list]
-    int_ids = [int(imageuid) for imageuid in id_list]
-    images_qc = mri_qc_subj[mri_qc_subj.loni_image.isin(image_ids)]
-
-    if images_qc.shape[0] < 1:
-        return min(int_ids)
-
-    if np.sum(images_qc.series_selected) == 1:
-        selected_image = images_qc[images_qc.series_selected == 1].iloc[0].loni_image[1:]
-    else:
-        images_not_rejected = images_qc[images_qc.series_quality < 4]
-
-        if images_not_rejected.shape[0] < 1:
-
-            # There are no images that passed the qc
-            # so we'll try to see if there are other images without qc,
-            # otherwise return None
-            qc_ids = set([int(qc_id[1:]) for qc_id in images_qc.loni_image.unique()])
-            no_qc_ids = list(set(int_ids) - qc_ids)
-
-            if len(no_qc_ids) == 0:
-                return None
+        elif len(files_list) != 3:
+            if sum(["ADC" in f for f in files_list]):
+                count_ADC += 1
             else:
-                return min(no_qc_ids)
+                print("Wrong files count for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
+                print(files_list)
+                count += 1
 
-        series_quality = [q if q > 0 else 4 for q in list(images_not_rejected.series_quality)]
-        best_q = np.amin(series_quality)
-        if best_q == 4:
-            best_q = -1
-        images_best_qc = images_not_rejected[images_not_rejected.series_quality == best_q]
-        if images_best_qc.shape[0] == 1:
-            selected_image = images_best_qc.iloc[0].loni_image[1:]
-        else:
-            best_ids = [int(x[1:]) for x in images_best_qc.loni_image.unique()]
-            selected_image = min(best_ids)
-
-    return int(selected_image)
-
-
-def visits_to_timepoints_dwi(subject, ida_meta_subj, adnimerge_subj):
-    """
-
-    Args:
-        subject:
-        ida_meta_subj:
-        adnimerge_subj:
-
-    Returns:
-
-    """
-    from datetime import datetime
-    from clinica.iotools.converters.adni_to_bids.adni_utils import days_between
-    from clinica.utils.stream import cprint
-
-    visits = dict()
-    unique_visits = list(ida_meta_subj.Visit.unique())
-    pending_timepoints = []
-
-    # We try to obtain the corresponding image Visit for a given VISCODE
-    for adni_row in adnimerge_subj.iterrows():
-        visit = adni_row[1]
-        if visit.ORIGPROT == 'ADNI2':
-            if visit.VISCODE == 'bl':
-                preferred_visit_name = 'ADNI2 Screening MRI-New Pt'
-            elif visit.VISCODE == 'm03':
-                preferred_visit_name = 'ADNI2 Month 3 MRI-New Pt'
-            elif visit.VISCODE == 'm06':
-                preferred_visit_name = 'ADNI2 Month 6-New Pt'
-            else:
-                year = str(int(visit.VISCODE[1:]) / 12)
-                preferred_visit_name = 'ADNI2 Year ' + year + ' Visit'
-        else:
-            if visit.VISCODE == 'bl':
-                if visit.ORIGPROT == 'ADNI1':
-                    preferred_visit_name = 'ADNI Screening'
-                else:  # ADNIGO
-                    preferred_visit_name = 'ADNIGO Screening MRI'
-            elif visit.VISCODE == 'm03':  # Only for ADNIGO Month 3
-                preferred_visit_name = 'ADNIGO Month 3 MRI'
-            else:
-                month = int(visit.VISCODE[1:])
-                if month < 54:
-                    preferred_visit_name = 'ADNI1/GO Month ' + str(month)
-                else:
-                    preferred_visit_name = 'ADNIGO Month ' + str(month)
-
-        if preferred_visit_name in unique_visits:
-            key_preferred_visit = (visit.VISCODE, visit.COLPROT, visit.ORIGPROT)
-            if key_preferred_visit not in visits.keys():
-                visits[key_preferred_visit] = preferred_visit_name
-            elif visits[key_preferred_visit] != preferred_visit_name:
-                cprint('Multiple visits for one timepoint!')
-                cprint(subject)
-                cprint(key_preferred_visit)
-                cprint(visits[key_preferred_visit])
-                cprint(visit)
-            unique_visits.remove(preferred_visit_name)
-            continue
-
-        pending_timepoints.append(visit)
-
-    # Then for images.Visit non matching the expected labels we find the closest date in visits list
-    for visit in unique_visits:
-        image = (ida_meta_subj[ida_meta_subj.Visit == visit]).iloc[0]
-        min_db = 100000
-        min_db2 = 0
-        min_visit = None
-        min_visit2 = None
-
-        for timepoint in pending_timepoints:
-            db = days_between(image['Scan Date'], timepoint.EXAMDATE)
-            if db < min_db:
-                min_db2 = min_db
-                min_visit2 = min_visit
-
-                min_db = db
-                min_visit = timepoint
-
-        if min_visit is None:
-            cprint('No corresponding timepoint in ADNIMERGE for subject ' + subject + ' in visit ' + image.Visit)
-            cprint(image)
-            continue
-
-        if min_visit2 is not None and min_db > 90:
-            cprint('More than 60 days for corresponding timepoint in ADNIMERGE for subject ' + subject + ' in visit ' + image.Visit + ' on ' + image.ScanDate)
-            cprint('Timepoint 1: ' + min_visit.VISCODE + ' - ' + min_visit.ORIGPROT + ' on ' + min_visit.EXAMDATE + ' (Distance: ' + str(
-                min_db) + ' days)')
-            cprint('Timepoint 2: ' + min_visit2.VISCODE + ' - ' + min_visit2.ORIGPROT + ' on ' + min_visit2.EXAMDATE + ' (Distance: ' + str(
-                min_db2) + ' days)')
-
-            # If image is too close to the date between two visits we prefer the earlier visit
-            if (datetime.strptime(min_visit.EXAMDATE, "%Y-%m-%d")
-                    > datetime.strptime(image.ScanDate, "%Y-%m-%d")
-                    > datetime.strptime(min_visit2.EXAMDATE, "%Y-%m-%d")):
-                dif = days_between(min_visit.EXAMDATE, min_visit2.EXAMDATE)
-                if abs((dif / 2.0) - min_db) < 30:
-                    min_visit = min_visit2
-
-            cprint('We prefer ' + min_visit.VISCODE)
-
-        key_min_visit = (min_visit.VISCODE, min_visit.COLPROT, min_visit.ORIGPROT)
-        if key_min_visit not in visits.keys():
-            visits[key_min_visit] = image.Visit
-        elif visits[key_min_visit] != image.Visit:
-            cprint('Multiple visits for one timepoint!')
-            cprint(subject)
-            cprint(key_min_visit)
-            cprint(visits[key_min_visit])
-            cprint(image.Visit)
-
-    return visits
-
-
-def visits_to_timepoints_dwi_refactoring(subject, ida_meta_subj, adnimerge_subj):
-    """
-
-    Args:
-        subject:
-        ida_meta_subj:
-        adnimerge_subj:
-
-    Returns:
-
-    """
-    from datetime import datetime
-    from clinica.iotools.converters.adni_to_bids.adni_utils import days_between
-    from clinica.utils.stream import cprint
-
-    visits = dict()
-    unique_visits = list(ida_meta_subj.VISIT.unique())
-    pending_timepoints = []
-
-    # We try to obtain the corresponding image Visit for a given VISCODE
-    for adni_row in adnimerge_subj.iterrows():
-        visit = adni_row[1]
-        if visit.ORIGPROT == 'ADNI2':
-            if visit.VISCODE == 'bl':
-                preferred_visit_name = 'ADNI2 Screening MRI-New Pt'
-            elif visit.VISCODE == 'm03':
-                preferred_visit_name = 'ADNI2 Month 3 MRI-New Pt'
-            elif visit.VISCODE == 'm06':
-                preferred_visit_name = 'ADNI2 Month 6-New Pt'
-            else:
-                year = str(int(visit.VISCODE[1:]) / 12)
-                preferred_visit_name = 'ADNI2 Year ' + year + ' Visit'
-        else:
-            if visit.VISCODE == 'bl':
-                if visit.ORIGPROT == 'ADNI1':
-                    preferred_visit_name = 'ADNI Screening'
-                else:  # ADNIGO
-                    preferred_visit_name = 'ADNIGO Screening MRI'
-            elif visit.VISCODE == 'm03':  # Only for ADNIGO Month 3
-                preferred_visit_name = 'ADNIGO Month 3 MRI'
-            else:
-                month = int(visit.VISCODE[1:])
-                if month < 54:
-                    preferred_visit_name = 'ADNI1/GO Month ' + str(month)
-                else:
-                    preferred_visit_name = 'ADNIGO Month ' + str(month)
-
-        if preferred_visit_name in unique_visits:
-            key_preferred_visit = (visit.VISCODE, visit.COLPROT, visit.ORIGPROT)
-            if key_preferred_visit not in visits.keys():
-                visits[key_preferred_visit] = preferred_visit_name
-            elif visits[key_preferred_visit] != preferred_visit_name:
-                cprint('Multiple visits for one timepoint!')
-                cprint(subject)
-                cprint(key_preferred_visit)
-                cprint(visits[key_preferred_visit])
-                cprint(visit)
-            unique_visits.remove(preferred_visit_name)
-            continue
-
-        pending_timepoints.append(visit)
-
-    # Then for images.Visit non matching the expected labels we find the closest date in visits list
-    for visit in unique_visits:
-        image = (ida_meta_subj[ida_meta_subj.VISIT == visit]).iloc[0]
-        min_db = 100000
-        min_db2 = 0
-        min_visit = None
-        min_visit2 = None
-
-        for timepoint in pending_timepoints:
-            db = days_between(image['SCANDATE'], timepoint.EXAMDATE)
-            if db < min_db:
-                min_db2 = min_db
-                min_visit2 = min_visit
-
-                min_db = db
-                min_visit = timepoint
-
-        if min_visit is None:
-            cprint('No corresponding timepoint in ADNIMERGE for subject ' + subject + ' in visit ' + image.VISIT)
-            cprint(image)
-            continue
-
-        if min_visit2 is not None and min_db > 90:
-            cprint('More than 60 days for corresponding timepoint in ADNIMERGE for subject ' + subject + ' in visit ' + image.VISIT + ' on ' + image.SCANDATE)
-            cprint('Timepoint 1: ' + min_visit.VISCODE + ' - ' + min_visit.ORIGPROT + ' on ' + min_visit.EXAMDATE + ' (Distance: ' + str(
-                min_db) + ' days)')
-            cprint('Timepoint 2: ' + min_visit2.VISCODE + ' - ' + min_visit2.ORIGPROT + ' on ' + min_visit2.EXAMDATE + ' (Distance: ' + str(
-                min_db2) + ' days)')
-
-            # If image is too close to the date between two visits we prefer the earlier visit
-            if (datetime.strptime(min_visit.EXAMDATE, "%Y-%m-%d")
-                    > datetime.strptime(image.SCANDATE, "%Y-%m-%d")
-                    > datetime.strptime(min_visit2.EXAMDATE, "%Y-%m-%d")):
-                dif = days_between(min_visit.EXAMDATE, min_visit2.EXAMDATE)
-                if abs((dif / 2.0) - min_db) < 30:
-                    min_visit = min_visit2
-
-            cprint('We prefer ' + min_visit.VISCODE)
-
-        key_min_visit = (min_visit.VISCODE, min_visit.COLPROT, min_visit.ORIGPROT)
-        if key_min_visit not in visits.keys():
-            visits[key_min_visit] = image.VISIT
-        elif visits[key_min_visit] != image.VISIT:
-            cprint('Multiple visits for one timepoint!')
-            # cprint(subject)
-            # cprint(key_min_visit)
-            # cprint(visits[key_min_visit])
-            # cprint(image.Visit)
-
-    return visits
-
-
-def dwi_image_refactoring(subject_id, timepoint, visit_str, ida_meta_scans, mri_qc_subj, enhanced):
-    """
-
-    Args:
-        subject_id:
-        timepoint:
-        visit_str:
-        ida_meta_scans:
-        mri_qc_subj:
-        enhanced:
-
-    Returns:
-
-    """
-    from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars
-
-    sel_image = select_image_qc(list(ida_meta_scans.IMAGEUID), mri_qc_subj)
-    if sel_image is None:
-        return None
-
-    sel_scan = ida_meta_scans[ida_meta_scans.IMAGEUID == sel_image].iloc[0]
-
-    sequence = sel_scan.SEQUENCE
-    sequence = replace_sequence_chars(sequence)
-
-    image_dict = {'Subject_ID': subject_id,
-                  'VISCODE': timepoint,
-                  'Visit': visit_str,
-                  'Sequence': sequence,
-                  'Scan_Date': sel_scan['SCANDATE'],
-                  'Study_ID': str(int(sel_scan.STUDYID)),
-                  'Series_ID': str(int(sel_scan.SERIESID)),
-                  'Image_ID': str(int(sel_scan.IMAGEUID)),
-                  'Field_Strength': sel_scan.MAGSTRENGTH,
-                  'Enhanced': enhanced}
-
-    return image_dict
+    print(count)
+    print(count_ADC)

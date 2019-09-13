@@ -708,13 +708,12 @@ def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_di
 
 def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path):
     """
-        Extract the information regarding the sessions and store them in a
-        dictionary (session M0 only)
+        Extract the information regarding the sessions and store them in a dictionary
 
-        :param input_path: path to the input folder :param clinical_spec_path:
-        path to the clinical file :param clinical_data_dir: directory to the
-        clinical data files :return: A dataframe saved in a tsv file which
-        contains information for each session
+        :param input_path: path to the input folder
+        :param clinical_spec_path: path to the clinical file
+        :param clinical_data_dir: directory to the clinical data files
+        :return: A dataframe saved in a tsv file which contains information for each session
     """
     import pandas as pd
     from os import path
@@ -722,7 +721,7 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
 
     # Load data
     location = 'AIBL location'
-    sessions = pd.read_excel(clinical_spec_path, sheetname='sessions.tsv')
+    sessions = pd.read_excel(clinical_spec_path, sheet_name='sessions.tsv')
     sessions_fields = sessions['AIBL']
     field_location = sessions[location]
     sessions_fields_bids = sessions['BIDS CLINICA']
@@ -749,40 +748,47 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
             files_to_read.append(file_to_read_path)
             sessions_fields_to_read.append(sessions_fields[i])
 
-    rid = pd.read_csv(files_to_read[0], dtype={'text': str}).RID
+    rid = pd.read_csv(files_to_read[0], dtype={'text': str}, low_memory=False).RID
     rid = list(set(rid))
     for r in rid:
         dict = []
         for i in files_to_read:
             file_to_read = pd.read_csv(i, dtype={'text': str})
             if len(file_to_read.columns) == 1:
-                file_to_read = pd.read_csv(i, sep=';')
+                file_to_read = pd.read_csv(i, sep=';', low_memory=False)
+
             # information are written following the BIDS specifications
             viscode = file_to_read.loc[(file_to_read["RID"] == r), "VISCODE"]
-            viscode[viscode == 'bl'] = 'M00'
-            viscode[viscode == 'm18'] = 'M18'
-            viscode[viscode == 'm36'] = 'M36'
-            viscode[viscode == 'm54'] = 'M54'
-            for i in sessions_fields_to_read:
-                if i in list(file_to_read.columns.values) and i == 'MMSCORE':
-                    MMSCORE = file_to_read.loc[(file_to_read["RID"] == r), i]
+            for j in sessions_fields_to_read:
+                if j in list(file_to_read.columns.values) and j == 'MMSCORE':
+                    MMSCORE = file_to_read.loc[(file_to_read["RID"] == r), j]
                     MMSCORE[MMSCORE == -4] = np.nan
-                elif i in list(file_to_read.columns.values) and i == 'CDGLOBAL':
-                    CDGLOBAL = file_to_read.loc[(file_to_read["RID"] == r), i]
+                elif j in list(file_to_read.columns.values) and j == 'CDGLOBAL':
+                    CDGLOBAL = file_to_read.loc[(file_to_read["RID"] == r), j]
                     CDGLOBAL[CDGLOBAL == -4] = np.nan
-                elif i in list(file_to_read.columns.values) and i == 'DXCURREN':
-                    DXCURREN = file_to_read.loc[(file_to_read["RID"] == r), i]
+                elif j in list(file_to_read.columns.values) and j == 'DXCURREN':
+                    DXCURREN = file_to_read.loc[(file_to_read["RID"] == r), j]
                     DXCURREN[DXCURREN == -4] = np.nan
                     DXCURREN[DXCURREN == 1] = 'CN'
                     DXCURREN[DXCURREN == 2] = 'MCI'
                     DXCURREN[DXCURREN == 3] = 'AD'
-                elif i in list(file_to_read.columns.values) and i == 'EXAMDATE':
-                    EXAMDATE = file_to_read.loc[(file_to_read["RID"] == r), i]
+                elif j in list(file_to_read.columns.values) and j == 'EXAMDATE':
+                    EXAMDATE = file_to_read.loc[(file_to_read["RID"] == r), j]
+                elif j in list(file_to_read.columns.values) and j == 'PTDOB':
+                    PTDOB = file_to_read.loc[(file_to_read["RID"] == r), j]
+
+        examdates = get_examdates(r, EXAMDATE.to_list(), viscode.to_list(), clinical_data_dir)
+        age = get_ages(PTDOB.values[0], examdates)
+
+        viscode[viscode == 'bl'] = 'M00'
+        viscode = viscode.str.upper()
+
         dict = pd.DataFrame({'session_id': 'ses-' + viscode,
+                             'age': age,
                              'MMS': MMSCORE,
                              'cdr_global': CDGLOBAL,
                              'diagnosis': DXCURREN,
-                             'examination_date': EXAMDATE
+                             'examination_date': examdates
                              })
 
         cols = dict.columns.tolist()
@@ -792,3 +798,73 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
         if path.exists(bids_paths):
             dict.to_csv(path.join(input_path, 'sub-AIBL' + str(r), 'sub-AIBL' + str(r) + '_sessions.tsv'), sep='\t',
                         index=False, encoding='utf8')
+
+
+def get_examdates(rid, examdates, viscodes, clinical_data_dir):
+
+    from os import path
+    from datetime import datetime
+    from dateutil.relativedelta import relativedelta
+    import pandas as pd
+    res_examdates = []
+    csv_list = ('aibl_mri3meta_28-Apr-2015.csv',
+                'aibl_mrimeta_28-Apr-2015.csv',
+                'aibl_cdr_28-Apr-2015.csv',
+                'aibl_flutemeta_28-Apr-2015.csv',
+                'aibl_mmse_28-Apr-2015.csv',
+                'aibl_pibmeta_28-Apr-2015.csv')
+
+    for e in range(len(examdates)):
+        exam = examdates[e]
+
+        if exam != '-4':
+            res_examdates.append(exam)
+            continue
+
+        # If EXAMDATE does not exist (-4) we try to obtain it from another .csv file
+        for csv_file in csv_list:
+            csv_data = pd.read_csv(path.join(clinical_data_dir, csv_file), low_memory=False)
+            exam_date = csv_data[(csv_data.RID == rid) & (csv_data.VISCODE == viscodes[e])]
+            if exam_date.shape[0] > 0 and exam_date.iloc[0].EXAMDATE != '-4':
+                exam = exam_date.iloc[0].EXAMDATE
+                break
+
+        # If EXAMDATE still does not exist (-4) we add the session months to baseline date
+        if exam == '-4':
+            bl_index = viscodes.index('bl')
+            if bl_index > -1:
+                bl_date = examdates[bl_index]
+                bl_examdate = datetime.strptime(bl_date, "%m/%d/%Y")
+                if viscodes[e] != 'bl':
+                    months = int(viscodes[e][1:])
+                    examdate = bl_examdate + relativedelta(months=+months)
+                    exam = examdate.strftime('%m/%d/%Y')
+
+        if exam == '-4':
+            print("No EXAMDATE for subject %s, at session %s" % (rid, viscodes[e]))
+
+        res_examdates.append(exam)
+
+    return res_examdates
+
+
+def get_ages(pt_dob, examdates):
+    """
+    Calculates age as time passed by since DOB to EXAMDATE
+
+    :param pt_dob: string - Date of birth of patient ("/%Y" format)
+    :param examdates: list - Exam dates ("%m/%d/%Y" format)
+    :return: list - Age at each exam date
+    """
+
+    from datetime import datetime
+
+    age = []
+    dob = datetime.strptime(pt_dob, "/%Y")
+
+    for exam in examdates:
+        examdate = datetime.strptime(exam, "%m/%d/%Y")
+        delta = examdate - dob
+        age.append(round(delta.days / 365.25, 1))
+
+    return age

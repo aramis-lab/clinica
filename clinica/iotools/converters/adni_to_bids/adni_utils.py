@@ -64,7 +64,170 @@ def viscode_to_session(viscode):
         return viscode.capitalize()
 
 
+def visits_to_timepoints_mrilist(subject, mri_list_subj, adnimerge_subj, modality):
+    """
+
+    Args:
+        subject:
+        mri_list_subj:
+        adnimerge_subj:
+        modality:
+
+    Returns:
+
+    """
+    from datetime import datetime
+    from clinica.utils.stream import cprint
+
+    visits = dict()
+    unique_visits = list(mri_list_subj.VISIT.unique())
+    pending_timepoints = []
+
+    # We try to obtain the corresponding image Visit for a given VISCODE
+    for adni_row in adnimerge_subj.iterrows():
+        visit = adni_row[1]
+
+        if visit.ORIGPROT == 'ADNI3':
+            if visit.VISCODE == 'bl':
+                preferred_visit_name = 'ADNI Screening'
+            else:
+                year = str(int(visit.VISCODE[1:]) / 12)
+                preferred_visit_name = 'ADNI3 Year ' + year + ' Visit'
+        elif visit.ORIGPROT == 'ADNI2':
+            if visit.VISCODE == 'bl':
+                preferred_visit_name = 'ADNI2 Screening MRI-New Pt'
+            elif visit.VISCODE == 'm03':
+                preferred_visit_name = 'ADNI2 Month 3 MRI-New Pt'
+            elif visit.VISCODE == 'm06':
+                preferred_visit_name = 'ADNI2 Month 6-New Pt'
+            else:
+                year = str(int(visit.VISCODE[1:]) / 12)
+                preferred_visit_name = 'ADNI2 Year ' + year + ' Visit'
+        else:
+            if visit.VISCODE == 'bl':
+                if visit.ORIGPROT == 'ADNI1':
+                    preferred_visit_name = 'ADNI Screening'
+                else:  # ADNIGO
+                    preferred_visit_name = 'ADNIGO Screening MRI'
+            elif visit.VISCODE == 'm03':  # Only for ADNIGO Month 3
+                preferred_visit_name = 'ADNIGO Month 3 MRI'
+            else:
+                month = int(visit.VISCODE[1:])
+                if month < 54:
+                    preferred_visit_name = 'ADNI1/GO Month ' + str(month)
+                else:
+                    preferred_visit_name = 'ADNIGO Month ' + str(month)
+
+        if preferred_visit_name in unique_visits:
+            key_preferred_visit = (visit.VISCODE, visit.COLPROT, visit.ORIGPROT)
+            if key_preferred_visit not in visits.keys():
+                visits[key_preferred_visit] = preferred_visit_name
+            elif visits[key_preferred_visit] != preferred_visit_name:
+                cprint('[%s] Subject %s has multiple visits for one timepoint.' % (modality, subject))
+
+            unique_visits.remove(preferred_visit_name)
+            continue
+
+        pending_timepoints.append(visit)
+
+    # Then for images.Visit non matching the expected labels we find the closest date in visits list
+    for visit in unique_visits:
+        image = (mri_list_subj[mri_list_subj.VISIT == visit]).iloc[0]
+        min_db = 100000
+        min_db2 = 0
+        min_visit = None
+        min_visit2 = None
+
+        for timepoint in pending_timepoints:
+            db = days_between(image.SCANDATE, timepoint.EXAMDATE)
+            if db < min_db:
+                min_db2 = min_db
+                min_visit2 = min_visit
+
+                min_db = db
+                min_visit = timepoint
+
+        if min_visit is None:
+            cprint('No corresponding timepoint in ADNIMERGE for subject ' + subject + ' in visit ' + image.VISIT)
+            cprint(image)
+            continue
+
+        if min_visit2 is not None and min_db > 90:
+            cprint('More than 60 days for corresponding timepoint in ADNIMERGE for subject %s in visit %s on %s'
+                   % (subject, image.VISIT, image.SCANDATE))
+            cprint('Timepoint 1: %s - %s on %s (Distance: %s days)'
+                   % (min_visit.VISCODE, min_visit.ORIGPROT, min_visit.EXAMDATE, min_db))
+            cprint('Timepoint 2: %s - %s on %s (Distance: %s days)'
+                   % (min_visit2.VISCODE, min_visit2.ORIGPROT, min_visit2.EXAMDATE, min_db2))
+
+            # If image is too close to the date between two visits we prefer the earlier visit
+            if (datetime.strptime(min_visit.EXAMDATE, "%Y-%m-%d")
+                    > datetime.strptime(image.SCANDATE, "%Y-%m-%d")
+                    > datetime.strptime(min_visit2.EXAMDATE, "%Y-%m-%d")):
+                dif = days_between(min_visit.EXAMDATE, min_visit2.EXAMDATE)
+                if abs((dif / 2.0) - min_db) < 30:
+                    min_visit = min_visit2
+
+            cprint('We prefer ' + min_visit.VISCODE)
+
+        key_min_visit = (min_visit.VISCODE, min_visit.COLPROT, min_visit.ORIGPROT)
+        if key_min_visit not in visits.keys():
+            visits[key_min_visit] = image.VISIT
+        elif visits[key_min_visit] != image.VISIT:
+            cprint('[%s] Subject %s has multiple visits for one timepoint.' % (modality, subject))
+
+    return visits
+
+
+def select_image_qc(id_list, mri_qc_subj):
+
+    import numpy as np
+
+    if len(id_list) == 0:
+        return None
+
+    selected_image = None
+    image_ids = ['I' + str(imageuid) for imageuid in id_list]
+    int_ids = [int(imageuid) for imageuid in id_list]
+    images_qc = mri_qc_subj[mri_qc_subj.loni_image.isin(image_ids)]
+
+    if images_qc.shape[0] < 1:
+        return max(int_ids)
+
+    if np.sum(images_qc.series_selected) == 1:
+        selected_image = images_qc[images_qc.series_selected == 1].iloc[0].loni_image[1:]
+    else:
+        images_not_rejected = images_qc[images_qc.series_quality < 4]
+
+        if images_not_rejected.shape[0] < 1:
+
+            # There are no images that passed the qc
+            # so we'll try to see if there are other images without qc,
+            # otherwise return None
+            qc_ids = set([int(qc_id[1:]) for qc_id in images_qc.loni_image.unique()])
+            no_qc_ids = list(set(int_ids) - qc_ids)
+
+            if len(no_qc_ids) == 0:
+                return None
+            else:
+                return max(no_qc_ids)
+
+        series_quality = [q if q > 0 else 4 for q in list(images_not_rejected.series_quality)]
+        best_q = np.amin(series_quality)
+        if best_q == 4:
+            best_q = -1
+        images_best_qc = images_not_rejected[images_not_rejected.series_quality == best_q]
+        if images_best_qc.shape[0] == 1:
+            selected_image = images_best_qc.iloc[0].loni_image[1:]
+        else:
+            best_ids = [int(x[1:]) for x in images_best_qc.loni_image.unique()]
+            selected_image = max(best_ids)
+
+    return int(selected_image)
+
+
 def center_nifti_origin(input_image, output_image):
+
     """
 
     Put the origin of the coordinate system at the center of the image
@@ -80,17 +243,23 @@ def center_nifti_origin(input_image, output_image):
     import nibabel as nib
     import numpy as np
 
-    img = nib.load(input_image)
-    canonical_img = nib.as_closest_canonical(img)
-    hd = canonical_img.header
-    # if hd['quatern_b'] != 0 or hd['quatern_c'] != 0 or hd['quatern_d'] != 0:
-    #    print('Warning: Not all values in quatern are equal to zero')
-    qform = np.zeros((4, 4))
-    for i in range(1, 4):
-        qform[i - 1, i - 1] = hd['pixdim'][i]
-        qform[i - 1, 3] = -1.0 * hd['pixdim'][i] * hd['dim'][i] / 2.0
-    new_img = nib.Nifti1Image(canonical_img.get_data(caching='unchanged'), qform)
+    try:
+        img = nib.load(input_image)
+        canonical_img = nib.as_closest_canonical(img)
+        hd = canonical_img.header
+
+        qform = np.zeros((4, 4))
+        for i in range(1, 4):
+            qform[i - 1, i - 1] = hd['pixdim'][i]
+            qform[i - 1, 3] = -1.0 * hd['pixdim'][i] * hd['dim'][i] / 2.0
+        new_img = nib.Nifti1Image(canonical_img.get_data(caching='unchanged'), qform)
+
+    except (OSError, nib.orientations.OrientationError) as e:
+        return None
+
     nib.save(new_img, output_image)
+
+    return output_image
 
 
 def remove_space_and_symbols(data):
@@ -139,10 +308,11 @@ def check_two_dcm_folder(dicom_path, bids_folder, image_uid):
     temp_folder_name = 'tmp_dcm_folder_' + str(image_uid).strip(' ')
     dest_path = path.join(bids_folder, temp_folder_name)
 
-    # Check if there is more than one xml file inside the folder
-    xml_list = glob(path.join(dicom_path, '*.xml*'))
+    # Check if there are dicom files inside the folder not belonging to the desired image
+    dicom_list = glob(path.join(dicom_path, '*.dcm'))
+    image_list = glob(path.join(dicom_path, '*%s.dcm' % image_uid))
+    if len(dicom_list) != len(image_list):
 
-    if len(xml_list) > 1:
         # Remove the precedent tmp_dcm_folder if is existing
         if os.path.exists(dest_path):
             shutil.rmtree(dest_path)
@@ -161,6 +331,7 @@ def remove_tmp_dmc_folder(bids_dir, image_id):
 
     Args:
         bids_dir: path to the BIDS directory
+        image_id:
 
     Returns:
 
@@ -199,7 +370,8 @@ def check_bids_t1(bids_path, container='anat', extension='_T1w.nii.gz', subjects
     return errors
 
 
-def check_bids_dwi(bids_path, container='dwi', extension=('_acq-axial_dwi.bvec', '_acq-axial_dwi.bval', '_acq-axial_dwi.nii.gz'), subjects=None):
+def check_bids_dwi(bids_path, container='dwi', extension=('_acq-axial_dwi.bvec', '_acq-axial_dwi.bval',
+                                                          '_acq-axial_dwi.nii.gz'), subjects=None):
 
     import os
 
@@ -227,7 +399,8 @@ def check_bids_dwi(bids_path, container='dwi', extension=('_acq-axial_dwi.bvec',
                     errors.append('Subject ' + subject + ' for session ' + session + ' folder is empty')
 
                 if image_names != files:
-                    errors.append('Subject ' + subject + ' for session ' + session + ' folder contains: \n' + str(files))
+                    errors.append('Subject ' + subject + ' for session ' + session + ' folder contains: \n' +
+                                  str(files))
     return errors
 
 
@@ -347,8 +520,10 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
             diagnosis_change = {1: 'CN', 2: 'MCI', 3: 'AD'}
 
             for j in list_diagnosis_nan[0]:
-                if not is_nan(sessions_df['adni_diagnosis_change'].iloc[j]) and int(sessions_df['adni_diagnosis_change'].iloc[j]) < 4:
-                    sessions_df['diagnosis'].iloc[j] = diagnosis_change[int(sessions_df['adni_diagnosis_change'].iloc[j])]
+                if not is_nan(sessions_df['adni_diagnosis_change'].iloc[j]) \
+                        and int(sessions_df['adni_diagnosis_change'].iloc[j]) < 4:
+                    sessions_df['diagnosis'].iloc[j] = diagnosis_change[
+                        int(sessions_df['adni_diagnosis_change'].iloc[j])]
 
             sessions_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf-8')
 
@@ -359,12 +534,11 @@ def update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_f
     created by the method create_adni_sessions_dict
 
     Args:
-        sessions_dict: the session_dict created by the method
-        create_adni_sessions_dict subj_bids: bids is of the subject for which
-        the information need to be updated visit_id: session name (ex m54)
-        field_value: value of the field extracted from the original clinical
-        data bids_field_name: BIDS name of the field to update (Ex: diagnosis
-        or examination date)
+        sessions_dict: the session_dict created by the method create_adni_sessions_dict
+        subj_bids: bids is of the subject for which the information need to be updated
+        visit_id: session name (ex m54)
+        field_value: value of the field extracted from the original clinical data
+        bids_field_name: BIDS name of the field to update (Ex: diagnosis or examination date)
 
     Returns:
         session_dict: the dictonary updated
@@ -418,8 +592,8 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
     """
     import pandas as pd
     from os import path
+    from datetime import datetime
     import clinica.iotools.bids_utils as bids
-    from colorama import Fore
     from clinica.utils.stream import cprint
 
     # Load data
@@ -441,7 +615,8 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
 
     for i in range(0, len(field_location)):
         # If the i-th field is available
-        if (not pd.isnull(field_location[i])) and path.exists(path.join(clinical_data_dir, field_location[i].split('/')[0])):
+        if (not pd.isnull(field_location[i])) and path.exists(path.join(clinical_data_dir,
+                                                                        field_location[i].split('/')[0])):
             # Load the file
             tmp = field_location[i].split('/')
             location = tmp[0]
@@ -484,12 +659,13 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                         raise('Error: multiple subjects found for the same RID')
                     else:
                         subj_bids = subj_bids[0]
-                        for i in range(0, len(sessions_fields)):
+                        for j in range(0, len(sessions_fields)):
                             # If the i-th field is available
-                            if not pd.isnull(sessions_fields[i]):
+                            if not pd.isnull(sessions_fields[j]):
                                 # Extract only the fields related to the current file opened
                                 if location in field_location[i]:
-                                    if location == 'ADAS_ADNIGO2.csv' or location == 'DXSUM_PDXCONV_ADNIALL.csv' or location == 'CDR.csv' or location == 'NEUROBAT.csv':
+                                    if location == 'ADAS_ADNIGO2.csv' or location == 'DXSUM_PDXCONV_ADNIALL.csv' \
+                                            or location == 'CDR.csv' or location == 'NEUROBAT.csv':
                                         if type(row['VISCODE2']) == float:
                                             continue
                                         visit_id = row['VISCODE2']
@@ -499,12 +675,24 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                                     else:
                                         visit_id = row['VISCODE']
                                     try:
-                                        field_value = row[sessions_fields[i]]
-                                        bids_field_name = sessions_fields_bids[i]
-                                        sessions_dict = update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_field_name)
+                                        field_value = row[sessions_fields[j]]
+                                        bids_field_name = sessions_fields_bids[j]
+
+                                        # Calculating age from ADNIMERGE
+                                        if (sessions_fields[j] == "AGE") and (visit_id != "bl"):
+                                            examdate = datetime.strptime(row["EXAMDATE"], "%Y-%m-%d")
+                                            examdate_bl = datetime.strptime(row["EXAMDATE_bl"], "%Y-%m-%d")
+                                            delta = examdate - examdate_bl
+
+                                            # Adding time passed since bl to patient's age in current visit
+                                            field_value = round(float(field_value) + (delta.days / 365.25), 1)
+
+                                        sessions_dict = update_sessions_dict(sessions_dict, subj_bids, visit_id,
+                                                                             field_value, bids_field_name)
                                     except KeyError:
                                         pass
-                                        # cprint('Field value ' + Fore.RED + sessions_fields[i] + Fore.RESET + ' could not be added to sessions.tsv')
+                                        # cprint('Field value ' + Fore.RED + sessions_fields[j] + Fore.RESET +
+                                        # ' could not be added to sessions.tsv')
             else:
                 continue
 
@@ -582,12 +770,54 @@ def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
             scans_df = pd.DataFrame(columns=(fields_bids))
 
 
+def find_image_path(images, source_dir, modality, prefix, id_field):
+
+    from os import path, walk
+    import pandas as pd
+    from clinica.utils.stream import cprint
+
+    is_dicom = []
+    image_folders = []
+
+    for row in images.iterrows():
+        image = row[1]
+        seq_path = path.join(source_dir, str(image.Subject_ID), image.Sequence)
+        image_path = ''
+        for (dirpath, dirnames, filenames) in walk(seq_path):
+            found = False
+            for d in dirnames:
+                if d == prefix + str(image[id_field]):
+                    image_path = path.join(dirpath, d)
+                    found = True
+                    break
+            if found:
+                break
+
+        dicom = True
+        for (dirpath, dirnames, filenames) in walk(image_path):
+            for f in filenames:
+                if f.endswith(".nii"):
+                    dicom = False
+                    image_path = path.join(dirpath, f)
+                    break
+
+        is_dicom.append(dicom)
+        image_folders.append(image_path)
+        if image_path == '':
+            cprint('No %s image path found for subject %s in visit %s with image id %s' % (modality, str(image.Subject_ID), str(image.VISCODE), str(image.Image_ID)))
+
+    images.loc[:, 'Is_Dicom'] = pd.Series(is_dicom, index=images.index)
+    images.loc[:, 'Path'] = pd.Series(image_folders, index=images.index)
+
+    return images
+
+
 def t1_pet_paths_to_bids(images, bids_dir, modality, mod_to_update=False):
     from multiprocessing import Pool, cpu_count, Value
     from clinica.iotools.converters.adni_to_bids import adni_utils
     from functools import partial
 
-    if modality.lower() not in ['t1', 'av45', 'fdg']:
+    if modality.lower() not in ['t1', 'fdg', 'pib', 'av45_fbb', 'tau']:
         # This should never be reached
         raise RuntimeError(modality.lower()
                            + ' is not supported for conversion in paths_to_bids')
@@ -632,10 +862,16 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
 
     modality_specific = {'t1': {'output_path': 'anat',
                                 'output_filename': '_T1w'},
+                         'fdg': {'output_path': 'pet',
+                                 'output_filename': '_task-rest_acq-fdg_pet'},
+                         'pib': {'output_path': 'pet',
+                                 'output_filename': '_task-rest_acq-pib_pet'},
                          'av45': {'output_path': 'pet',
                                   'output_filename': '_task-rest_acq-av45_pet'},
-                         'fdg': {'output_path': 'pet',
-                                 'output_filename': '_task-rest_acq-fdg_pet'}
+                         'fbb': {'output_path': 'pet',
+                                 'output_filename': '_task-rest_acq-fbb_pet'},
+                         'tau': {'output_path': 'pet',
+                                 'output_filename': '_task-rest_acq-tau_pet'}
                          }
 
     global counter
@@ -644,6 +880,10 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
         counter.value += 1
 
     subject = image.Subject_ID
+
+    if modality == 'av45_fbb':
+        modality = image.Tracer.lower()
+
     if image.Path == '':
         cprint(Fore.RED + '[' + modality.upper() + '] No path specified for '
                + image.Subject_ID + ' in session '
@@ -710,8 +950,12 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
         os.remove(nifti_file)
 
     else:
+
         output_image = path.join(output_path, output_filename + '.nii.gz')
-        adni_utils.center_nifti_origin(image_path, output_image)
+        output_image = adni_utils.center_nifti_origin(image_path, output_image)
+        if output_image is None:
+            cprint("Error: For subject %s in session%s an error occurred recentering Nifti image:%s"
+                   % (subject, session, image_path))
 
     # Check if there is still the folder tmp_dcm_folder and remove it
     adni_utils.remove_tmp_dmc_folder(bids_dir, image_id)

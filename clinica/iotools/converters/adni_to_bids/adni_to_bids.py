@@ -88,7 +88,8 @@ class AdniToBids(Converter):
         cprint('Creating scans files...')
         adni_utils.create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids)
 
-    def convert_images(self, source_dir, clinical_dir, dest_dir, subjs_list_path='', modalities=['T1', 'PET_FDG', 'PET_AV45', 'DWI']):
+    def convert_images(self, source_dir, clinical_dir, dest_dir, subjs_list_path=None,
+                       modalities=['T1', 'PET_FDG', 'PET_AMYLOID', 'PET_TAU', 'DWI', 'FLAIR']):
         """
         Convert the images of ADNI
 
@@ -104,19 +105,22 @@ class AdniToBids(Converter):
         import os
         from os import path
         import pandas as pd
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_t1 as adni_t1
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_av45_pet as adni_av45
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet as adni_fdg
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_dwi as adni_dwi
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fmri as adni_fmri
-        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_flair as adni_flair
+
         from clinica.utils.stream import cprint
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_t1 as adni_t1
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fdg_pet as adni_fdg
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_pib_pet as adni_pib
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_av45_fbb_pet as adni_av45_fbb
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_tau_pet as adni_tau
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_dwi as adni_dwi
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_flair as adni_flair
+        import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_fmri as adni_fmri
 
         adni_merge_path = path.join(clinical_dir, 'ADNIMERGE.csv')
         adni_merge = pd.read_csv(adni_merge_path)
 
         # Load a file with subjects list or compute all the subjects
-        if subjs_list_path is not None and subjs_list_path != '':
+        if subjs_list_path is not None:
             cprint('Loading a subjects lists provided by the user...')
             subjs_list = [line.rstrip('\n') for line in open(subjs_list_path)]
         else:
@@ -126,7 +130,9 @@ class AdniToBids(Converter):
         # Create the output folder if is not already existing
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
+        if not os.path.exists(path.join(dest_dir, 'conversion_info')):
             os.makedirs(path.join(dest_dir, 'conversion_info'))
+        cprint(dest_dir)
 
         if 'T1' in modalities:
             adni_t1.convert_adni_t1(source_dir, clinical_dir, dest_dir, subjs_list)
@@ -134,14 +140,18 @@ class AdniToBids(Converter):
         if 'PET_FDG' in modalities:
             adni_fdg.convert_adni_fdg_pet(source_dir, clinical_dir, dest_dir, subjs_list)
 
-        if 'PET_AV45' in modalities:
-            adni_av45.convert_adni_av45_pet(source_dir, clinical_dir, dest_dir, subjs_list)
+        if 'PET_AMYLOID' in modalities:
+            adni_pib.convert_adni_pib_pet(source_dir, clinical_dir, dest_dir, subjs_list)
+            adni_av45_fbb.convert_adni_av45_fbb_pet(source_dir, clinical_dir, dest_dir, subjs_list)
+
+        if 'PET_TAU' in modalities:
+            adni_tau.convert_adni_tau_pet(source_dir, clinical_dir, dest_dir, subjs_list)
 
         if 'DWI' in modalities:
             adni_dwi.convert_adni_dwi(source_dir, clinical_dir, dest_dir, subjs_list)
 
-        if 'fMRI' in modalities:
-            adni_fmri.convert_adni_fmri(source_dir, clinical_dir, dest_dir, subjs_list)
-
         if 'FLAIR' in modalities:
             adni_flair.convert_adni_flair(source_dir, clinical_dir, dest_dir, subjs_list)
+
+        if 'fMRI' in modalities:
+            adni_fmri.convert_adni_fmri(source_dir, clinical_dir, dest_dir, subjs_list)
