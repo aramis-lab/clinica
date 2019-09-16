@@ -50,12 +50,28 @@ def check_environment_variable(environment_variable, software_name):
     return content_var
 
 
-def check_ants(version_requirements=None):
-    """Check ANTs software."""
-    import os
+def check_software_requirements(current_version, version_requirements, software_name):
+    from distutils.version import LooseVersion
+    from string import punctuation
     from colorama import Fore
     from clinica.utils.exceptions import ClinicaMissingDependencyError
-    from clinica.utils.stream import cprint
+
+    comparison_operator = ''.join([c for c in version_requirements if c in punctuation.replace('.', '')])
+    required_version = version_requirements.replace(comparison_operator, '')
+
+    satisfy_version = eval('LooseVersion(\'%s\') %s LooseVersion(\'%s\')' %
+                           (current_version, comparison_operator, required_version))
+
+    if not satisfy_version:
+        raise ClinicaMissingDependencyError(
+            '%s\n[Error] Your %s version (%s) does not version requirements (%s).%s' %
+            (Fore.RED, software_name, current_version, version_requirements, Fore.RESET))
+
+
+def check_ants(version_requirements=None):
+    """Check ANTs software."""
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaMissingDependencyError
 
     check_environment_variable('ANTSPATH', 'ANTs')
 
@@ -68,11 +84,7 @@ def check_ants(version_requirements=None):
 
 
 def check_freesurfer(version_requirements=None):
-    """
-    Check FreeSurfer software.
-
-    This function checks if FreeSurfer is present (FREESURFER_HOME & binaries).
-    """
+    """Check FreeSurfer software."""
     from colorama import Fore
     import nipype.interfaces.freesurfer as freesurfer
     from clinica.utils.exceptions import ClinicaMissingDependencyError
@@ -86,18 +98,6 @@ def check_freesurfer(version_requirements=None):
                 '%s\n[Error] Clinica could not find FreeSurfer software: the %s command is not present in your PATH '
                 'environment: did you have the line source ${FREESURFER_HOME}/'
                 'SetUpFreeSurfer.sh in your configuration file?%s' % (Fore.RED, binary, Fore.RESET))
-
-    # if version_requirements is not None:
-    #     from string import punctuation
-    #     from distutils.version import LooseVersion
-    #     comparison_operator = ''.join([c for c in version_requirements if c in punctuation.replace('.', '')])
-    #     required_version = version_requirements.replace(comparison_operator, '')
-    #     current_version = str(freesurfer.Info.looseversion())
-    #     satisfy_version = eval('LooseVersion(\'%s\') %s LooseVersion(\'%s\')' %
-    #                            (current_version, comparison_operator, required_version))
-    #     if not satisfy_version:
-    #         raise ClinicaMissingDependencyError('Your FreeSurfer version (%s) does not version requirements (%s)' %
-    #                                             (current_version, version_requirements))
 
 
 def check_fsl(version_requirements=None):
@@ -169,7 +169,6 @@ def check_cat12():
     """
     import os
     import platform
-    from clinica.utils.stream import cprint
 
     if "SPMSTANDALONE_HOME" in os.environ:
         if platform.system() == 'Darwin':
