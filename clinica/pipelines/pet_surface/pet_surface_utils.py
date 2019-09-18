@@ -200,10 +200,52 @@ def make_label_conversion(gtmsegfile, csv):
     return list_of_regions
 
 
+def runApplyInverseDeformationField_SPM_standalone(target,
+                                                   deformation_field,
+                                                   img,
+                                                   matscript_folder):
+    """
+    This function does the exact same job as runApplyInverseDeformationField but with SPM standalone. We directly create
+    a batch file that SPM standalone can run. This function does not check wether SPM standalone must be used. Previous
+    check when building the pipeline ensures that all the env vars exists ($SPMSTANDALONE_HOME and $MCR_HOME)
+    """
+    from os.path import abspath, join, basename, exists
+    import os
+
+    prefix = 'subject_space_'
+
+    # Write SPM batch command directly in a script that is readable by SPM standalone
+    script_location = abspath('./m_script.m')
+    script_file = open(script_location, 'w+')
+    script_file.write('jobs{1}.spm.util.defs.comp{1}.inv.comp{1}.def = {\'' + deformation_field + '\'};\n')
+    script_file.write('jobs{1}.spm.util.defs.comp{1}.inv.space = {\'' + target + '\'};\n')
+    script_file.write('jobs{1}.spm.util.defs.out{1}.pull.fnames = {\'' + img + '\'};\n')
+    script_file.write('jobs{1}.spm.util.defs.out{1}.pull.savedir.saveusr = {\'' + abspath(os.getcwd()) + '\'};\n')
+    script_file.write('jobs{1}.spm.util.defs.out{1}.pull.interp = 4;\n')
+    script_file.write('jobs{1}.spm.util.defs.out{1}.pull.mask = 1;\n')
+    script_file.write('jobs{1}.spm.util.defs.out{1}.pull.fwhm = [0 0 0];\n')
+    script_file.write('jobs{1}.spm.util.defs.out{1}.pull.prefix = \'' + prefix + '\';\n')
+    script_file.close()
+
+    # Generate command line to run
+    # SPM standalone must be run directly from its root folder
+    cmdline = 'cd $SPMSTANDALONE_HOME && ./run_spm12.sh $MCR_HOME batch ' + script_location
+    os.system(cmdline)
+
+    output_file = join(abspath('./'), prefix + basename(img))
+    if not exists(output_file):
+        raise IOError('Something went wrong while trying to run runApplyInverseDeformationField_SPM_standalone'
+                      + '. Output file not generated. Command launched :\n\t '
+                      + cmdline + '\n. We strongly recommand that you use the supported version of Matlab MCR '
+                      + ' recommanded by the creators of SPM.')
+    return output_file
+
+
 def runApplyInverseDeformationField(target,
                                     deformation_field,
                                     img,
                                     matscript_folder):
+
     import sys
     import os
     from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
@@ -783,7 +825,8 @@ def get_wf(subject_id,
            destrieux_left,
            destrieux_right,
            desikan_left,
-           desikan_right):
+           desikan_right,
+           use_SPM_standalone):
     """get_wf create a full workflow for only one subject, and then executes it
 
             Args:
@@ -804,7 +847,6 @@ def get_wf(subject_id,
                 Void
     """
     import os
-    import inspect
     from clinica.utils.stream import cprint
     import nipype.pipeline.engine as pe
     import nipype.interfaces.utility as niu
@@ -886,12 +928,16 @@ def get_wf(subject_id,
                                       warping_regularization=[0, 0.001, 0.5, 0.05, 0.2]),
                           name='normalize_to_MNI')
 
+    if use_SPM_standalone is True:
+        fun_apply_inverse_deformation = utils.runApplyInverseDeformationField_SPM_standalone
+    else:
+        fun_apply_inverse_deformation = utils.runApplyInverseDeformationField
     apply_inverse_deformation = pe.Node(niu.Function(input_names=['target',
                                                                   'deformation_field',
                                                                   'img',
                                                                   'matscript_folder'],
                                                      output_names=['freesurfer_space_eroded_mask'],
-                                                     function=utils.runApplyInverseDeformationField),
+                                                     function=fun_apply_inverse_deformation),
                                         name='applyInverseDeformation')
     apply_inverse_deformation.inputs.matscript_folder = matscript_folder_inverse_deformation
 
