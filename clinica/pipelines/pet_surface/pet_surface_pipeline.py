@@ -319,8 +319,8 @@ class PetSurface(cpe.Pipeline):
         full_pipe.inputs.matscript_folder_inverse_deformation = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 
         full_pipe.inputs.use_SPM_standalone = False
-        if 'SPMSTANDALONE_HOME' and 'MCR_HOME' in os.environ.keys():
-            if os.path.exists(os.path.expandvars('SPMSTANDALONE_HOME')) and os.path.exists(os.path.expandvars('MCR_HOME')):
+        if all(elem in os.environ.keys() for elem in ['SPMSTANDALONE_HOME', 'MCR_HOME']):
+            if os.path.exists(os.path.expandvars('$SPMSTANDALONE_HOME')) and os.path.exists(os.path.expandvars('$MCR_HOME')):
                 print(Fore.GREEN + 'SPM standalone has been found and will be used in this pipeline' + Fore.RESET)
                 matlab_cmd = (os.path.join(os.environ['SPMSTANDALONE_HOME'], 'run_spm12.sh')
                               + ' ' + os.environ['MCR_HOME']
