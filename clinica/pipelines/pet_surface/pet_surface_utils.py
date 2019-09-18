@@ -914,7 +914,7 @@ def get_wf(subject_id,
                            name='vol2vol_mask')
 
     if 'SPMSTANDALONE_HOME' in os.environ:
-        tpmnii = os.path.join(str(os.getenv("SPM_HOME")), 'spm12_mcr/spm12/spm12/tpm/TPM.nii')
+        tpmnii = os.path.join(str(os.getenv("SPMSTANDALONE_HOME")), 'spm12_mcr/spm12/tpm/TPM.nii')
     else:
         tpmnii = os.path.join(os.path.expandvars('$SPM_HOME'), 'tpm', 'TPM.nii')
     if not os.path.exists(tpmnii):
