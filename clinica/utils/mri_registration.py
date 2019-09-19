@@ -30,6 +30,8 @@ def convert_flirt_transformation_to_mrtrix_transformation(
         out_mrtrix_matrix (str): Transformation matrix in MRtrix format.
     """
     import os
+    from .check_dependency import check_mrtrix
+    check_mrtrix()
 
     assert(os.path.isfile(in_source_image))
     assert(os.path.isfile(in_reference_image))
@@ -79,6 +81,8 @@ def apply_ants_registration_syn_quick_transformation(
             transformations.
     """
     import os
+    from .check_dependency import check_ants
+    check_ants()
 
     assert(os.path.isfile(in_image))
     assert(os.path.isfile(in_affine_transformation))
@@ -116,6 +120,8 @@ def ants_registration_syn_quick(fix_image, moving_image, prefix_output=None):
         The deformed image with the deformation parameters.
     """
     import os
+    from .check_dependency import check_ants
+    check_ants()
 
     if prefix_output is None:
         prefix_output = 'SyN_Quick'
@@ -153,6 +159,8 @@ def ants_combine_transform(in_file, transforms_list, reference):
             in_bspline_transformation transformations.
     """
     import os
+    from .check_dependency import check_ants
+    check_ants()
 
     out_warp = os.path.abspath('out_warp.nii.gz')
 
