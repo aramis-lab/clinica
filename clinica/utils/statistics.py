@@ -149,46 +149,6 @@ def fdr_correction_matrix(p_value_matrix, template=None):
     return reject_test, p_value_corrected
 
 
-def create_new_feature_tsv(subjects_visits_tsv, bids_dir, dest_tsv, added_features):
-    """
-        This func is to add new features(columns) from the subjects_visits_list
-        TSV file, and use the generated file in the statistical analysis
-        added_features : list of str, the added features that you want to write
-        into the tsv file, e.g. ['age_bl', 'sex']
-
-    Args:
-        subjects_visits_tsv: tsv files containing just participant_id and session_id columns
-        bids_dir: BIDS directory
-        dest_tsv: the destination tsv file
-        added_features: a list containing all the new columns from the participant.tsv in BIDS directory.
-
-    Returns:
-
-    """
-    import pandas as pd
-    from os.path import join, isfile
-    import logging
-    from pandas import concat
-    logging.basicConfig(level=logging.DEBUG)
-
-    if not isfile(join(bids_dir, 'participants.tsv')):
-        raise Exception('participants.tsv not found')
-    sub_set = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
-    all_set = pd.io.parsers.read_csv(join(bids_dir, 'participants.tsv'), sep='\t')
-    all_set.set_index("participant_id", inplace=True)
-    selected_subj = all_set.loc[list(sub_set.participant_id)]
-    if sub_set.shape[0] != selected_subj.shape[0]:
-        missing_subj = set(list(sub_set.participant_id)) - set(list(selected_subj.participant_id))
-        msg = "The missing subjects are %s" % list(missing_subj)
-        logging.info(msg)
-        raise Exception('There are subjects which are not included in full dataset, please check it out')
-
-    new_features = selected_subj[added_features]
-    new_features.reset_index(inplace=True, drop=True)
-    all_features = concat([sub_set, new_features], axis=1)
-    all_features.to_csv(dest_tsv, sep='\t', index=False, encoding='utf-8')
-
-
 def statistics_on_atlas(in_normalized_map, in_atlas, out_file=None):
     """
     Compute statistics of a map on an atlas.
