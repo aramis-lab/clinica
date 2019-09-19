@@ -1,6 +1,25 @@
 # coding: utf8
 
 
+def check_spm_home():
+    """Check and get SPM_HOME environment variable if present."""
+    import os
+    import platform
+    from .check_dependency import check_environment_variable
+
+    spm_home = check_environment_variable('SPM_HOME', 'SPM')
+
+    spm_standalone_home = os.environ.get('SPMSTANDALONE_HOME', '')
+    if spm_standalone_home:
+        assert(os.path.isdir(spm_standalone_home))
+        if platform.system() == 'Darwin':
+            spm_home = os.path.join(spm_standalone_home, 'spm12.app', 'Contents', 'MacOS', 'spm12_mcr')
+        else:
+            spm_home = os.path.join(spm_standalone_home, 'spm12_mcr')
+
+    return spm_home
+
+
 def get_tpm():
     """
     Get Tissue Probability Map (TPM) from SPM
