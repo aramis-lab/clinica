@@ -130,21 +130,22 @@ def reorder_bids_or_caps_files(input_ids, bids_or_caps_files):
 
 
 def check_bids_folder(bids_directory):
-    from os.path import isdir, join
-    from os import listdir
-    from colorama import Fore
-    from clinica.utils.exceptions import ClinicaBIDSError
     """
     check_bids_folder function checks the following items :
         - bids_directory is a string
-        - the provided path exists and is a directory 
-        - provided path is not a CAPS folder (BIDS and CAPS could be swapped by user). We simply check that there is 
+        - the provided path exists and is a directory
+        - provided path is not a CAPS folder (BIDS and CAPS could be swapped by user). We simply check that there is
           not a folder called 'subjects' in the provided path (that exists in CAPS hierarchy)
         - provided folder is not empty
         - provided folder must contains at least one directory whose name starts with 'sub-'
     """
+    from os.path import isdir, join
+    from os import listdir
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaBIDSError
+
     assert isinstance(bids_directory, str), 'Argument you provided to check_bids_folder() is not a string.'
-    
+
     if not isdir(bids_directory):
         raise ClinicaBIDSError(
             "\n%s[Error] The BIDS directory you gave is not a folder.%s\n"
@@ -170,9 +171,20 @@ def check_bids_folder(bids_directory):
 
 
 def check_caps_folder(caps_directory):
+    """
+    check_caps_folder function checks the following items :
+        - caps_directory is a string
+        - the provided path exists and is a directory
+        - provided path is not a BIDS folder (BIDS and CAPS could be swapped by user). We simply check that there is
+          not a folder whose name starts with 'sub-' in the provided path (that exists in BIDS hierarchy)
+    Keep in mind that CAPS folder can be empty
+    """
+    from os import listdir
     import os
     from colorama import Fore
     from clinica.utils.exceptions import ClinicaCAPSError
+
+    assert isinstance(caps_directory, str), 'Argument you provided to check_caps_folder() is not a string.'
 
     if not os.path.isdir(caps_directory):
         raise ClinicaCAPSError(
@@ -184,6 +196,10 @@ def check_caps_folder(caps_directory):
              Fore.YELLOW, Fore.RESET,
              Fore.BLUE, caps_directory, Fore.RESET)
         )
+
+    if len([item for item in listdir(caps_directory) if item.startswith('sub-')]) > 0:
+        raise ClinicaCAPSError(Fore.RED + '\n[Error] Your CAPS directory contains at least one folder whose name '
+                               + 'starts with \'sub-\'. Check that you did not swap BIDS and CAPS folders' + Fore.RESET)
 
 
 def bids_type_to_path(bids_type, bids_directory, participant_id, session_id):
