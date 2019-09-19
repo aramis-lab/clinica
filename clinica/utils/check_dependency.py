@@ -168,24 +168,17 @@ def check_cat12():
     Check installation of CAT12 (mostly used to provide atlases)
     """
     import os
-    import platform
+    from colorama import Fore
+    from .exceptions import ClinicaMissingDependencyError
+    from .spm import check_spm_home
 
-    if "SPMSTANDALONE_HOME" in os.environ:
-        if platform.system() == 'Darwin':
-            SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12.app/Contents/MacOS/spm12_mcr"
-        else:
-            SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12_mcr"
-    elif "SPM_HOME" in os.environ:
-        SPM_HOME = os.environ['SPM_HOME']
-    else:
-        raise RuntimeError('SPM not installed. $SPM_HOME variable not found in environnement')
+    spm_home = check_spm_home()
 
-    if not os.path.isdir(SPM_HOME):
-        raise RuntimeError('SPM and CAT12 are not installed.' + SPM_HOME + ' does not exist')
-
-    if not os.path.exists(os.path.join(SPM_HOME, 'toolbox', 'cat12')):
-        raise RuntimeError('CAT12 is not installed in your SPM folder :'
-                           + str(os.path.join(SPM_HOME, 'toolbox', 'cat12')))
+    cat12_path = os.path.join(spm_home, 'toolbox', 'cat12')
+    if not os.path.exists(cat12_path):
+        raise ClinicaMissingDependencyError(
+            '%s\n[Error] CAT12 is not installed in your SPM folder. It should be in %s.%s'
+            % (Fore.RED, cat12_path, Fore.RESET))
 
 
 def verify_cat12_atlases(atlas_list):
