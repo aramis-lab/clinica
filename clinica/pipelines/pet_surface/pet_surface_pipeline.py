@@ -257,6 +257,7 @@ class PetSurface(cpe.Pipeline):
         import clinica.pipelines.pet_surface.pet_surface_utils as utils
         from colorama import Fore
         from nipype.interfaces import spm
+        import platform
 
         full_pipe = npe.MapNode(niu.Function(input_names=['subject_id',
                                                           'session_id',
@@ -322,9 +323,14 @@ class PetSurface(cpe.Pipeline):
         if all(elem in os.environ.keys() for elem in ['SPMSTANDALONE_HOME', 'MCR_HOME']):
             if os.path.exists(os.path.expandvars('$SPMSTANDALONE_HOME')) and os.path.exists(os.path.expandvars('$MCR_HOME')):
                 print(Fore.GREEN + 'SPM standalone has been found and will be used in this pipeline' + Fore.RESET)
-                matlab_cmd = ('cd ' + os.path.expandvars('$SPMSTANDALONE_HOME') + ' && ' + './run_spm12.sh'
-                              + ' ' + os.environ['MCR_HOME']
-                              + ' script')
+                if platform.system() == 'Darwin':
+                    matlab_cmd = ('cd ' + os.path.expandvars('$SPMSTANDALONE_HOME') + ' && ' + './run_spm12.sh'
+                                  + ' ' + os.environ['MCR_HOME']
+                                  + ' script')
+                elif platform.system() == 'Linux':
+                    matlab_cmd = ('./run_spm12.sh'
+                                  + ' ' + os.environ['MCR_HOME']
+                                  + ' script')
                 spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
                 full_pipe.inputs.use_SPM_standalone = True
             else:
