@@ -130,11 +130,22 @@ def reorder_bids_or_caps_files(input_ids, bids_or_caps_files):
 
 
 def check_bids_folder(bids_directory):
-    import os
+    from os.path import isdir, join
+    from os import listdir
     from colorama import Fore
     from clinica.utils.exceptions import ClinicaBIDSError
-
-    if not os.path.isdir(bids_directory):
+    """
+    check_bids_folder function checks the following items :
+        - bids_directory is a string
+        - the provided path exists and is a directory 
+        - provided path is not a CAPS folder (BIDS and CAPS could be swapped by user). We simply check that there is 
+          not a folder called 'subjects' in the provided path (that exists in CAPS hierarchy)
+        - provided folder is not empty
+        - provided folder must contains at least one directory whose name starts with 'sub-'
+    """
+    assert isinstance(bids_directory, str), 'Argument you provided to check_bids_folder() is not a string.'
+    
+    if not isdir(bids_directory):
         raise ClinicaBIDSError(
             "\n%s[Error] The BIDS directory you gave is not a folder.%s\n"
             "\n%sError explanations:%s\n"
@@ -144,6 +155,18 @@ def check_bids_folder(bids_directory):
              Fore.YELLOW, Fore.RESET,
              Fore.BLUE, bids_directory, Fore.RESET)
         )
+
+    if isdir(join(bids_directory, 'subjects')):
+        raise ClinicaBIDSError(Fore.RED + '\n[Error] The BIDS directory (' + bids_directory + ') you provided seems to '
+                               + 'be a CAPS directory due to the presence of a \'subjects\' folder.' + Fore.RESET)
+
+    if len(listdir(bids_directory)) == 0:
+        raise ClinicaBIDSError(Fore.RED + '\n[Error] The BIDS directory you provided  is empty. (' + bids_directory
+                               + ').' + Fore.RESET)
+
+    if len([item for item in listdir(bids_directory) if item.startswith('sub-')]) == 0:
+        raise ClinicaBIDSError(Fore.RED + '\n[Error] Your BIDS directory does not contains a single folder whose name '
+                               + 'starts with \'sub-\'. Check that your folder follow BIDS standard' + Fore.RESET)
 
 
 def check_caps_folder(caps_directory):
