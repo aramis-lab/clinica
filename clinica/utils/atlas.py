@@ -99,18 +99,16 @@ class JHUDTI812mm(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        FSLDIR = os.environ.get('FSLDIR', '')
-        if not FSLDIR:
-            raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-labels-2mm.nii.gz')
+        from .check_dependency import check_environment_variable
+        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
+        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-labels-2mm.nii.gz')
 
     @staticmethod
     def get_atlas_map():
         import os
-        FSLDIR = os.environ.get('FSLDIR', '')
-        if not FSLDIR:
-            raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
+        from .check_dependency import check_environment_variable
+        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
+        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
 
     @staticmethod
     def get_tsv_roi():
@@ -128,22 +126,19 @@ class JHUDTI811mm(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        FSLDIR = os.environ.get('FSLDIR', '')
-        if not FSLDIR:
-            raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-labels-1mm.nii.gz')
+        from .check_dependency import check_environment_variable
+        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
+        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-labels-1mm.nii.gz')
 
     @staticmethod
     def get_atlas_map():
         import os
-        FSLDIR = os.environ.get('FSLDIR', '')
-        if not FSLDIR:
-            raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
+        from .check_dependency import check_environment_variable
+        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
+        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
 
     @staticmethod
     def get_tsv_roi():
-        import os
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUDTI81_FS_LUT_newformat.txt')
 
@@ -158,18 +153,16 @@ class JHUTracts01mm(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        FSLDIR = os.environ.get('FSLDIR', '')
-        if not FSLDIR:
-            raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr0-1mm.nii.gz')
+        from .check_dependency import check_environment_variable
+        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
+        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr0-1mm.nii.gz')
 
     @staticmethod
     def get_atlas_map():
         import os
-        FSLDIR = os.environ.get('FSLDIR', '')
-        if not FSLDIR:
-            raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
+        from .check_dependency import check_environment_variable
+        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
+        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
 
     @staticmethod
     def get_tsv_roi():
@@ -187,18 +180,16 @@ class JHUTracts02mm(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        FSLDIR = os.environ.get('FSLDIR', '')
-        if not FSLDIR:
-            raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr0-2mm.nii.gz')
+        from .check_dependency import check_environment_variable
+        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
+        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr0-2mm.nii.gz')
 
     @staticmethod
     def get_atlas_map():
         import os
-        FSLDIR = os.environ.get('FSLDIR', '')
-        if not FSLDIR:
-            raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
+        from .check_dependency import check_environment_variable
+        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
+        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
 
     @staticmethod
     def get_tsv_roi():
@@ -216,18 +207,16 @@ class JHUTracts251mm(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        FSLDIR = os.environ.get('FSLDIR', '')
-        if not FSLDIR:
-            raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr25-1mm.nii.gz')
+        from .check_dependency import check_environment_variable
+        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
+        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr25-1mm.nii.gz')
 
     @staticmethod
     def get_atlas_map():
         import os
-        FSLDIR = os.environ.get('FSLDIR', '')
-        if not FSLDIR:
-            raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
+        from .check_dependency import check_environment_variable
+        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
+        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
 
     @staticmethod
     def get_tsv_roi():
@@ -245,18 +234,16 @@ class JHUTracts252mm(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        FSLDIR = os.environ.get('FSLDIR', '')
-        if not FSLDIR:
-            raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr25-2mm.nii.gz')
+        from .check_dependency import check_environment_variable
+        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
+        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr25-2mm.nii.gz')
 
     @staticmethod
     def get_atlas_map():
         import os
-        FSLDIR = os.environ.get('FSLDIR', '')
-        if not FSLDIR:
-            raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
+        from .check_dependency import check_environment_variable
+        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
+        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
 
     @staticmethod
     def get_tsv_roi():
@@ -274,18 +261,16 @@ class JHUTracts501mm(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        FSLDIR = os.environ.get('FSLDIR', '')
-        if not FSLDIR:
-            raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr50-1mm.nii.gz')
+        from .check_dependency import check_environment_variable
+        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
+        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr50-1mm.nii.gz')
 
     @staticmethod
     def get_atlas_map():
         import os
-        FSLDIR = os.environ.get('FSLDIR', '')
-        if not FSLDIR:
-            raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
+        from .check_dependency import check_environment_variable
+        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
+        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
 
     @staticmethod
     def get_tsv_roi():
@@ -303,18 +288,16 @@ class JHUTracts502mm(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        FSLDIR = os.environ.get('FSLDIR', '')
-        if not FSLDIR:
-            raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr50-2mm.nii.gz')
+        from .check_dependency import check_environment_variable
+        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
+        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr50-2mm.nii.gz')
 
     @staticmethod
     def get_atlas_map():
         import os
-        FSLDIR = os.environ.get('FSLDIR', '')
-        if not FSLDIR:
-            raise Exception('FSLDIR variable from FSL software is not set')
-        return os.path.join(FSLDIR, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
+        from .check_dependency import check_environment_variable
+        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
+        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
 
     @staticmethod
     def get_tsv_roi():
@@ -355,20 +338,11 @@ class Hammers(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        import platform
-        if "SPM_HOME" not in os.environ:
-            raise Exception('SPM_HOME variable from SPM software is not set')
-        else:
-            if "SPMSTANDALONE_HOME" in os.environ:
-                if platform.system() == 'Darwin':
-                    SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12.app/Contents/MacOS/spm12_mcr"
-                else:
-                    SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12_mcr"
-            else:
-                SPM_HOME = os.environ['SPM_HOME']
-        if not os.path.exists(os.path.join(SPM_HOME, 'toolbox', 'cat12')):
+        from .spm import check_spm_home
+        spm_home = check_spm_home()
+        if not os.path.exists(os.path.join(spm_home, 'toolbox', 'cat12')):
             raise Exception('CAT12 not included in SPM_HOME/toolbox')
-        return os.path.join(SPM_HOME, 'toolbox', 'cat12', 'templates_1.50mm', 'hammers.nii')
+        return os.path.join(spm_home, 'toolbox', 'cat12', 'templates_1.50mm', 'hammers.nii')
 
     @staticmethod
     def get_atlas_map():
@@ -391,21 +365,11 @@ class LPBA40(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        import platform
-        if "SPM_HOME" not in os.environ:
-            raise Exception('SPM_HOME variable from SPM software is not set')
-        else:
-            if "SPMSTANDALONE_HOME" in os.environ:
-                if platform.system() == 'Darwin':
-                    SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12.app/Contents/MacOS/spm12_mcr"
-                else:
-                    SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12_mcr"
-            else:
-                SPM_HOME = os.environ['SPM_HOME']
-        if not os.path.exists(os.path.join(SPM_HOME, 'toolbox', 'cat12')):
-            print(SPM_HOME)
+        from .spm import check_spm_home
+        spm_home = check_spm_home()
+        if not os.path.exists(os.path.join(spm_home, 'toolbox', 'cat12')):
             raise Exception('CAT12 not included in SPM_HOME/toolbox')
-        return os.path.join(SPM_HOME, 'toolbox', 'cat12', 'templates_1.50mm', 'lpba40.nii')
+        return os.path.join(spm_home, 'toolbox', 'cat12', 'templates_1.50mm', 'lpba40.nii')
 
     @staticmethod
     def get_atlas_map():
@@ -451,20 +415,11 @@ class Neuromorphometrics(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        import platform
-        if "SPM_HOME" not in os.environ:
-            raise Exception('SPM_HOME variable from SPM software is not set')
-        else:
-            if "SPMSTANDALONE_HOME" in os.environ:
-                if platform.system() == 'Darwin':
-                    SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12.app/Contents/MacOS/spm12_mcr"
-                else:
-                    SPM_HOME = os.environ['SPMSTANDALONE_HOME'] + "/spm12_mcr"
-            else:
-                SPM_HOME = os.environ['SPM_HOME']
-        if not os.path.exists(os.path.join(SPM_HOME, 'toolbox', 'cat12')):
+        from .spm import check_spm_home
+        spm_home = check_spm_home()
+        if not os.path.exists(os.path.join(spm_home, 'toolbox', 'cat12')):
             raise Exception('CAT12 not included in SPM_HOME/toolbox')
-        return os.path.join(SPM_HOME, 'toolbox', 'cat12', 'templates_1.50mm', 'neuromorphometrics.nii')
+        return os.path.join(spm_home, 'toolbox', 'cat12', 'templates_1.50mm', 'neuromorphometrics.nii')
 
     @staticmethod
     def get_atlas_map():
