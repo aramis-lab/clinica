@@ -865,6 +865,7 @@ def get_wf(subject_id,
     from nipype.interfaces.petpvc import PETPVC
     from nipype.interfaces.spm import Coregister, Normalize12
     import clinica.pipelines.pet_surface.pet_surface_utils as utils
+    import platform
 
     cprint('***** Beginning processing of ' + subject_id + ' on ' + session_id + ' *****')
 
@@ -923,8 +924,9 @@ def get_wf(subject_id,
 
     if 'SPMSTANDALONE_HOME' in os.environ:
         # Path is different between SPM standalone MAC and Linux. First is MAC location
-        tpmnii = os.path.join(str(os.getenv("SPMSTANDALONE_HOME")), 'spm12_mcr/spm12/tpm/TPM.nii')
-        if not os.path.exists(tpmnii):
+        if platform.system() == 'Darwin':
+            tpmnii = os.path.join(str(os.getenv("SPMSTANDALONE_HOME")), 'spm12_mcr/spm12/tpm/TPM.nii')
+        elif platform.system() == 'Linux':
             # Try Linux location
             tpmnii = os.path.join(str(os.getenv("SPMSTANDALONE_HOME")), 'spm12_mcr/spm12/spm12/tpm/TPM.nii')
     else:
