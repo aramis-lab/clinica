@@ -319,6 +319,7 @@ class PetSurface(cpe.Pipeline):
 
         full_pipe.inputs.matscript_folder_inverse_deformation = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 
+        # This section of code determine wether to use SPM standalone or not
         full_pipe.inputs.use_SPM_standalone = False
         if all(elem in os.environ.keys() for elem in ['SPMSTANDALONE_HOME', 'MCR_HOME']):
             if os.path.exists(os.path.expandvars('$SPMSTANDALONE_HOME')) and os.path.exists(os.path.expandvars('$MCR_HOME')):

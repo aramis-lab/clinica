@@ -233,9 +233,11 @@ def runApplyInverseDeformationField_SPM_standalone(target,
     if platform.system() == 'Darwin':
         # Mac OS
         cmdline = 'cd $SPMSTANDALONE_HOME && ./run_spm12.sh $MCR_HOME batch ' + script_location
-    else:
+    elif platform.system() == 'Linux':
         # Linux OS
         cmdline = '$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch ' + script_location
+    else:
+        raise SystemError('Only support Mac OS and Linux')
     os.system(cmdline)
 
     output_file = join(abspath('./'), prefix + basename(img))
