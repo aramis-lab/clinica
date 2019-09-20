@@ -210,6 +210,7 @@ def runApplyInverseDeformationField_SPM_standalone(target,
     check when building the pipeline ensures that all the env vars exists ($SPMSTANDALONE_HOME and $MCR_HOME)
     """
     from os.path import abspath, join, basename, exists
+    import platform
     import os
 
     prefix = 'subject_space_'
@@ -229,7 +230,12 @@ def runApplyInverseDeformationField_SPM_standalone(target,
 
     # Generate command line to run
     # SPM standalone must be run directly from its root folder
-    cmdline = 'cd $SPMSTANDALONE_HOME && ./run_spm12.sh $MCR_HOME batch ' + script_location
+    if platform.system() == 'Darwin':
+        # Mac OS
+        cmdline = 'cd $SPMSTANDALONE_HOME && ./run_spm12.sh $MCR_HOME batch ' + script_location
+    else:
+        # Linux OS
+        cmdline = '$SPMSTANDALONE_HOME/run_spm12.sh $MCR_HOME batch ' + script_location
     os.system(cmdline)
 
     output_file = join(abspath('./'), prefix + basename(img))

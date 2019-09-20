@@ -328,7 +328,7 @@ class PetSurface(cpe.Pipeline):
                                   + ' ' + os.environ['MCR_HOME']
                                   + ' script')
                 elif platform.system() == 'Linux':
-                    matlab_cmd = ('./run_spm12.sh'
+                    matlab_cmd = (os.path.join(os.path.expandvars('$SPMSTANDALONE_HOME'), 'run_spm12.sh')
                                   + ' ' + os.environ['MCR_HOME']
                                   + ' script')
                 spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
