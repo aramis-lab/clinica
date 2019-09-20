@@ -338,11 +338,9 @@ class Hammers(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        from .spm import check_spm_home
-        spm_home = check_spm_home()
-        if not os.path.exists(os.path.join(spm_home, 'toolbox', 'cat12')):
-            raise Exception('CAT12 not included in SPM_HOME/toolbox')
-        return os.path.join(spm_home, 'toolbox', 'cat12', 'templates_1.50mm', 'hammers.nii')
+        from .check_dependency import check_cat12
+        cat12 = check_cat12()
+        return os.path.join(cat12, 'templates_1.50mm', 'hammers.nii')
 
     @staticmethod
     def get_atlas_map():
@@ -365,11 +363,9 @@ class LPBA40(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        from .spm import check_spm_home
-        spm_home = check_spm_home()
-        if not os.path.exists(os.path.join(spm_home, 'toolbox', 'cat12')):
-            raise Exception('CAT12 not included in SPM_HOME/toolbox')
-        return os.path.join(spm_home, 'toolbox', 'cat12', 'templates_1.50mm', 'lpba40.nii')
+        from .check_dependency import check_cat12
+        cat12 = check_cat12()
+        return os.path.join(cat12, 'templates_1.50mm', 'lpba40.nii')
 
     @staticmethod
     def get_atlas_map():
@@ -415,11 +411,9 @@ class Neuromorphometrics(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         import os
-        from .spm import check_spm_home
-        spm_home = check_spm_home()
-        if not os.path.exists(os.path.join(spm_home, 'toolbox', 'cat12')):
-            raise Exception('CAT12 not included in SPM_HOME/toolbox')
-        return os.path.join(spm_home, 'toolbox', 'cat12', 'templates_1.50mm', 'neuromorphometrics.nii')
+        from .check_dependency import check_cat12
+        cat12 = check_cat12()
+        return os.path.join(cat12, 'templates_1.50mm', 'neuromorphometrics.nii')
 
     @staticmethod
     def get_atlas_map():
