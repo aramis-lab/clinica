@@ -392,3 +392,20 @@ def check_input_caps_files(list_caps_files, caps_type, pipeline_name, caps_direc
         list_caps_files = reorder_bids_or_caps_files(subject_ids, list_caps_files)
 
     return error_message
+
+
+def extract_crash_files_from_log_file(filename):
+    """Extract crash files (*.pklz) from `filename`.
+    """
+    import os
+    import re
+
+    assert(os.path.isfile(filename))
+
+    log_file = open(filename, "r")
+    crash_files = []
+    for line in log_file:
+        if re.match("(.*)crashfile:(.*)", line):
+            crash_files.append(line.replace('\t crashfile:', '').replace('\n', ''))
+
+    return crash_files
