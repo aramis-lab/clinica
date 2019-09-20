@@ -447,3 +447,63 @@ def extract_crash_files_from_log_file(filename):
             crash_files.append(line.replace('\t crashfile:', '').replace('\n', ''))
 
     return crash_files
+
+
+def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_session_tsv=False):
+    """Parses a BIDS or CAPS directory to get the subjects and sessions.
+
+    This function lists all the subjects and sessions based on the content of
+    the BIDS or CAPS directory or (if specified) on the provided
+    subject-sessions TSV file.
+
+    Args:
+        input_dir: A BIDS or CAPS directory path.
+        ss_file: A subjects-sessions file (.tsv format).
+        is_bids_dir: Indicates if input_dir is a BIDS or CAPS directory
+        use_session_tsv (boolean): Specify if the list uses the sessions listed in the sessions.tsv files
+
+    Returns:
+        subjects: A subjects list.
+        sessions: A sessions list.
+    """
+    import clinica.iotools.utils.data_handling as cdh
+    import pandas as pd
+    import tempfile
+    from time import time, strftime, localtime
+    import os
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaException
+
+    if not ss_file:
+        output_dir = tempfile.mkdtemp()
+        timestamp = strftime('%Y%m%d_%H%M%S', localtime(time()))
+        tsv_file = '%s_subjects_sessions_list.tsv' % timestamp
+        ss_file = os.path.join(output_dir, tsv_file)
+
+        cdh.create_subs_sess_list(
+            input_dir=input_dir,
+            output_dir=output_dir,
+            file_name=tsv_file,
+            is_bids_dir=is_bids_dir,
+            use_session_tsv=use_session_tsv)
+
+    if not os.path.isfile(ss_file):
+        raise ClinicaException(
+            "\n%s[Error] The TSV file you gave is not a file.%s\n"
+            "\n%sError explanations:%s\n"
+            " - Clinica expected the following path to be a file: %s%s%s\n"
+            " - If you gave relative path, did you run Clinica on the good folder?" %
+            (Fore.RED, Fore.RESET,
+             Fore.YELLOW, Fore.RESET,
+             Fore.BLUE, ss_file, Fore.RESET)
+        )
+    ss_df = pd.io.parsers.read_csv(ss_file, sep='\t')
+    if 'participant_id' not in list(ss_df.columns.values):
+        raise Exception('No participant_id column in TSV file.')
+    if 'session_id' not in list(ss_df.columns.values):
+        raise Exception('No session_id column in TSV file.')
+    subjects = list(ss_df.participant_id)
+    sessions = list(ss_df.session_id)
+
+    # Remove potential whitespace in participant_id or session_id
+    return [ses.strip(' ') for ses in sessions], [sub.strip(' ') for sub in subjects]
