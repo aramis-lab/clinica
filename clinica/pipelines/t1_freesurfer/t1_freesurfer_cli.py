@@ -11,7 +11,8 @@ class T1FreeSurferCLI(ce.CmdParser):
 
     def define_description(self):
         """Define a description of this pipeline."""
-        self._description = 'Cross-sectional pre-processing of T1w images with FreeSurfer:\nhttp://clinica.run/doc/Pipelines/T1_FreeSurfer/'
+        self._description = ('Cross-sectional pre-processing of T1w images with FreeSurfer:\n'
+                             'http://clinica.run/doc/Pipelines/T1_FreeSurfer/')
 
     def define_options(self):
         """Define the sub-command arguments."""
@@ -22,10 +23,14 @@ class T1FreeSurferCLI(ce.CmdParser):
                                   help='Path to the BIDS directory.')
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
+
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("-raa", "--recon_all_args",
-                              help='Additional flags for recon-all command line (default: --recon_all_args "-qcache")')
+                              metavar='flag(s)', type=str, default="-qcache",
+                              help='Additional flags for recon-all command line '
+                                   '(default: --recon_all_args="%(default)s")')
+
         # Clinica standard arguments (e.g. --n_procs)
         clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
         clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
@@ -33,7 +38,7 @@ class T1FreeSurferCLI(ce.CmdParser):
         clinica_opt.add_argument("-wd", "--working_directory",
                                  help='Temporary directory to store pipelines intermediate results')
         clinica_opt.add_argument("-np", "--n_procs",
-                                 metavar=('N'), type=int,
+                                 metavar='N', type=int,
                                  help='Number of cores used to run in parallel')
 
     def run_command(self, args):
@@ -41,16 +46,21 @@ class T1FreeSurferCLI(ce.CmdParser):
         import os
         import datetime
         from colorama import Fore
+        from tempfile import mkdtemp
+        from .t1_freesurfer_pipeline import T1FreeSurfer
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.stream import cprint
-        from .t1_freesurfer_pipeline import T1FreeSurfer
-        from tempfile import mkdtemp
 
         pipeline = T1FreeSurfer(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv)
         )
+
+        if "-dontrun" in args.recon_all_args.split(' '):
+            cprint('%s[Warning] Found -dontrun flag for FreeSurfer recon-all. '
+                   'Please note that this will not run the segmentation.%s' %
+                   (Fore.YELLOW, Fore.RESET))
 
         pipeline.parameters = {
             'recon_all_args': args.recon_all_args or '-qcache'
