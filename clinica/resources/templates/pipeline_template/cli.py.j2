@@ -26,24 +26,37 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments
         """
+        from clinica.engine.cmdparser import PIPELINE_CATEGORIES
 
-        # self._args.add_argument("bids_directory",
-        #                         help='Path to the BIDS directory.')
-        # self._args.add_argument("caps_directory",
-        #                         help='Path to the CAPS directory.')
-        # self._args.add_argument("group_id",
-        #                         help='User-defined identifier for the provided group of subjects.')
-        # self._args.add_argument("-tsv", "--subjects_sessions_tsv",
-        #                         help='TSV file containing a list of subjects with their sessions.')
+        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
+        clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
+        clinica_comp.add_argument("bids_directory",
+                                  help='Path to the BIDS directory.')
+        clinica_comp.add_argument("caps_directory",
+                                  help='Path to the CAPS directory.')
+        clinica_comp.add_argument("group_id",
+                                  help='User-defined identifier for the provided group of subjects.')
+
+        # Clinica standard arguments
+        clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
+        clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
+                                 help='TSV file containing a list of subjects with their sessions.')
+        clinica_opt.add_argument("-wd", "--working_directory",
+                                 help='Temporary directory to store pipelines intermediate results')
+        clinica_opt.add_argument("-np", "--n_procs",
+                                 metavar=('N'), type=int,
+                                 help='Number of cores used to run in parallel')
+
         # Add your own pipeline command line arguments here to be used in the
         # method below. Example below:
-        self._args.add_argument("-hw", "--hello_word_arg",
-                                help='Word to say hello')
-        self._args.add_argument("-wd", "--working_directory",
-                                help='Temporary directory to store pipeline intermediate results')
-        self._args.add_argument("-np", "--n_procs", type=int,
-                                help='Number of cores used to run in parallel')
-        # END OF EXAMPLE
+        optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
+        optional.add_argument("-hw", "--hello_word_arg",
+                              help='Word to say hello')
+
+        # Add advanced arguments
+        advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
+        advanced.add_argument("-hw", "--hello_word_arg",
+                              help='Word to say hello')
 
     def run_command(self, args):
         """
