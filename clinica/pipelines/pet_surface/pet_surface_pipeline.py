@@ -58,7 +58,7 @@ class PetSurface(cpe.Pipeline):
         from clinica.utils.stream import cprint
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from clinica.lib.pycaps.caps_layout import CAPSLayout
+        from clinica.utils.inputs import clinica_file_reader
 
         def handle_files(subject, session, files, description, list_missing_files):
             from clinica.utils.stream import cprint
@@ -78,145 +78,69 @@ class PetSurface(cpe.Pipeline):
                                             fields=self.get_input_fields(),
                                             mandatory_inputs=True),
                                         synchronize=True)
+        all_errors = []
 
-        read_parameters_node.inputs.pet = []
-        read_parameters_node.inputs.orig_nu = []
-        read_parameters_node.inputs.psf = []
-        read_parameters_node.inputs.white_surface_right = []
-        read_parameters_node.inputs.white_surface_left = []
-        read_parameters_node.inputs.destrieux_left = []
-        read_parameters_node.inputs.destrieux_right = []
-        read_parameters_node.inputs.desikan_left = []
-        read_parameters_node.inputs.desikan_right = []
-        caps_layout = CAPSLayout(self.caps_directory)
+        read_parameters_node.inputs.pet, error_str = clinica_file_reader(self.subjects,
+                                                                         self.sessions,
+                                                                         self.bids_directory,
+                                                                         '*' + self.parameters['pet_type'] + '_pet.nii*')
+        if error_str:
+            all_errors.append(error_str)
 
-        cprint('------- INPUT FILES FOR EACH SUBJECTS -------')
-        subjects_regex = '|'.join(sub[4:] for sub in self.subjects)
-        unique_session = set(list(self.sessions))
-        sessions_regex = '|'.join(sub[4:] for sub in unique_session)
+        read_parameters_node.inputs.orig_nu, error_str = clinica_file_reader(self.subjects,
+                                                                             self.sessions,
+                                                                             self.caps_directory,
+                                                                             'orig_nu.mgz')
+        if error_str:
+            all_errors.append(error_str)
+        read_parameters_node.inputs.psf, error_str = clinica_file_reader(self.subjects,
+                                                                         self.sessions,
+                                                                         self.bids_directory,
+                                                                         '*' + self.parameters['pet_type'] + '_pet.json')
+        if error_str:
+            all_errors.append(error_str)
+        read_parameters_node.inputs.white_surface_right, error_str = clinica_file_reader(self.subjects,
+                                                                                         self.sessions,
+                                                                                         self.caps_directory,
+                                                                                         'sub-*_ses-*/surf/rh.white')
+        if error_str:
+            all_errors.append(error_str)
+        read_parameters_node.inputs.white_surface_left, error_str = clinica_file_reader(self.subjects,
+                                                                                        self.sessions,
+                                                                                        self.caps_directory,
+                                                                                        'sub-*_ses-*/surf/lh.white')
+        if error_str:
+            all_errors.append(error_str)
+        read_parameters_node.inputs.destrieux_left, error_str = clinica_file_reader(self.subjects,
+                                                                                    self.sessions,
+                                                                                    self.caps_directory,
+                                                                                    'sub-*_ses-*/*/lh.aparc.a2009s.annot')
+        if error_str:
+            all_errors.append(error_str)
+        read_parameters_node.inputs.destrieux_right, error_str = clinica_file_reader(self.subjects,
+                                                                                     self.sessions,
+                                                                                     self.caps_directory,
+                                                                                     'sub-*_ses-*/*/rh.aparc.a2009s.annot')
+        if error_str:
+            all_errors.append(error_str)
+        read_parameters_node.inputs.desikan_left, error_str = clinica_file_reader(self.subjects,
+                                                                                  self.sessions,
+                                                                                  self.caps_directory,
+                                                                                  'sub-*_ses-*/*/lh.aparc.annot')
+        if error_str:
+            all_errors.append(error_str)
+        read_parameters_node.inputs.desikan_right, error_str = clinica_file_reader(self.subjects,
+                                                                                   self.sessions,
+                                                                                   self.caps_directory,
+                                                                                   'sub-*_ses-*/*/rh.aparc.annot')
+        if error_str:
+            all_errors.append(error_str)
 
-        cprint('  * grabbing all pet files from BIDS folder')
-        pet_file = self.bids_layout.get(return_type='file',
-                                        type='pet',
-                                        extensions=[self.parameters['pet_type'] + '_pet.nii',
-                                                    self.parameters['pet_type'].upper() + '_pet.nii',
-                                                    self.parameters['pet_type'] + '_pet.nii.gz',
-                                                    self.parameters['pet_type'].upper() + '_pet.nii.gz'],
-                                        subject=subjects_regex,
-                                        session=sessions_regex)
-        cprint('  * grabbing all orig_nu files from CAPS folder')
-        orig_nu_file = caps_layout.get(return_type='file',
-                                       freesurfer_file='orig_nu',
-                                       extensions='mgz|MGZ',
-                                       regex_search=True,
-                                       subject=subjects_regex,
-                                       session=sessions_regex)
-
-        cprint('  * grabbing all point spread function files from BIDS folder')
-        psf_file = self.bids_layout.get(return_type='file',
-                                        type='pet',
-                                        extensions=[self.parameters['pet_type'] + '_pet.json',
-                                                    self.parameters['pet_type'].upper() + '_pet.json'],
-                                        subject=subjects_regex,
-                                        session=sessions_regex)
-
-        cprint('  * grabbing all right hemisphere white surface files from CAPS folder')
-        white_surface_left_file = caps_layout.get(return_type='file',
-                                                  freesurfer_file='lh',
-                                                  extensions='\\.white',
-                                                  regex_search=True,
-                                                  subject=subjects_regex,
-                                                  session=sessions_regex)
-
-        cprint('  * grabbing all left hemisphere white surface files from CAPS folder')
-        white_surface_right_file = caps_layout.get(return_type='file',
-                                                   freesurfer_file='rh',
-                                                   extensions='\\.white',
-                                                   regex_search=True,
-                                                   subject=subjects_regex,
-                                                   session=sessions_regex)
-
-        cprint('  * grabbing all left hemisphere Destrieux atlases in subject\'s space from CAPS folder')
-        destrieux_left_files = caps_layout.get(return_type='file',
-                                               freesurfer_file='lh.aparc.a2009s.annot',
-                                               regex_search=True,
-                                               subject=subjects_regex,
-                                               session=sessions_regex)
-
-        cprint('  * grabbing all right hemisphere Destrieux atlases in subject\'s space from CAPS folder')
-        destrieux_right_files = caps_layout.get(return_type='file',
-                                                freesurfer_file='rh.aparc.a2009s.annot',
-                                                regex_search=True,
-                                                subject=subjects_regex,
-                                                session=sessions_regex)
-
-        cprint('  * grabbing all left hemisphere Desikan-Killiany atlases in subject\'s space from CAPS folder')
-        desikan_left_files = caps_layout.get(return_type='file',
-                                             freesurfer_file='lh.aparc.annot',
-                                             regex_search=True,
-                                             subject=subjects_regex,
-                                             session=sessions_regex)
-
-        cprint('  * grabbing all right hemisphere Desikan-Killiany atlases in subject\'s space from CAPS folder')
-        desikan_right_files = caps_layout.get(return_type='file',
-                                              freesurfer_file='rh.aparc.annot',
-                                              regex_search=True,
-                                              subject=subjects_regex,
-                                              session=sessions_regex)
-
-        missing_files = []
-        for i in range(len(self.subjects)):
-            read_parameters_node.inputs.pet.append(handle_files(self.subjects[i],
-                                                                self.sessions[i],
-                                                                pet_file,
-                                                                'PET file',
-                                                                missing_files))
-            read_parameters_node.inputs.orig_nu.append(handle_files(self.subjects[i],
-                                                                    self.sessions[i],
-                                                                    orig_nu_file,
-                                                                    'orig_nu',
-                                                                    missing_files))
-            read_parameters_node.inputs.psf.append(handle_files(self.subjects[i],
-                                                                self.sessions[i],
-                                                                psf_file,
-                                                                'pet json',
-                                                                missing_files))
-            read_parameters_node.inputs.white_surface_left.append(handle_files(self.subjects[i],
-                                                                               self.sessions[i],
-                                                                               white_surface_left_file,
-                                                                               'lh.white',
-                                                                               missing_files))
-            read_parameters_node.inputs.white_surface_right.append(handle_files(self.subjects[i],
-                                                                                self.sessions[i],
-                                                                                white_surface_right_file,
-                                                                                'rh.white',
-                                                                                missing_files))
-            read_parameters_node.inputs.destrieux_left.append(handle_files(self.subjects[i],
-                                                                           self.sessions[i],
-                                                                           destrieux_left_files,
-                                                                           'destrieux lh',
-                                                                           missing_files))
-            read_parameters_node.inputs.destrieux_right.append(handle_files(self.subjects[i],
-                                                                            self.sessions[i],
-                                                                            destrieux_right_files,
-                                                                            'destrieux rh',
-                                                                            missing_files))
-            read_parameters_node.inputs.desikan_left.append(handle_files(self.subjects[i],
-                                                                         self.sessions[i],
-                                                                         desikan_left_files,
-                                                                         'desikan lh',
-                                                                         missing_files))
-            read_parameters_node.inputs.desikan_right.append(handle_files(self.subjects[i],
-                                                                          self.sessions[i],
-                                                                          desikan_right_files,
-                                                                          'desikan rh',
-                                                                          missing_files))
-
-        if len(missing_files) > 0:
-            error_string = 'The following elements are missing : \n'
-            for missing_f in missing_files:
-                error_string += missing_f + ' \n'
-            raise Exception(error_string)
+        if len(all_errors) > 0:
+            error_message = 'Clinica encountered errors while trying to read files in your BIDS or CAPS directories.\n'
+            for msg in all_errors:
+                error_message += msg
+            raise RuntimeError(error_message)
 
         self.connect([
             (read_parameters_node,      self.input_node,    [('pet',                    'pet')]),
