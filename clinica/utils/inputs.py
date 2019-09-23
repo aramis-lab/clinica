@@ -6,6 +6,8 @@ def clinica_file_reader(subjects,
                         pattern,
                         recursive_search_max=10):
     """
+    This function grabs files relative to a subject and session list according to a glob pattern (using *)
+
     :param subjects: list of subjects
     :param sessions: list of sessions (must be same size as subjects, and must correspond )
     :param input_directory: location of the bids (or caps ?) directory
@@ -15,7 +17,8 @@ def clinica_file_reader(subjects,
             following values : None (no error found) or a string describing the problem.
 
         raise:
-            - RuntimeError if for some couple subject/session, file is not found or multiple files are found
+            - Nothing, we prefer returning a string with the problem written in it, so that the rest of Clinica can
+            handle the problem properly
 
         Examples: (path are shortened for readability)
             - You have the full name of a file:
@@ -55,12 +58,18 @@ def clinica_file_reader(subjects,
     from clinica.utils.io import check_bids_folder, check_caps_folder
 
     def insensitive_glob(pattern_glob):
+        """
+        This function is the glob.glob() function that is insensitive to the case
+        :param pattern_glob: sensitive-to-the-case pattern
+        :return: insensitive-to-the-case pattern
+        """
         def either(c):
             return '[%s%s]' % (c.lower(), c.upper()) if c.isalpha() else c
         return glob(''.join(map(either, pattern_glob)))
 
     def determine_caps_or_bids(input_dir):
         """
+        Determines if the input is a CAPS or a BIDS folder
         :param input_dir: input folder
         :return: True if input_dir is a bids, False if input_dir is a CAPS
 
@@ -85,12 +94,16 @@ def clinica_file_reader(subjects,
     else:
         check_caps_folder(input_directory)
 
+    # Some check on the formatting on the data
     assert pattern[0] != '/', 'pattern argument cannot start with char : / (does not work in os.path.join function). ' \
                               + 'If you want to indicate the exact name of the file, use the format' \
-                              + ' directory_name/filename.extension in the pattern argument'
+                              + ' directory_name/filename.extension or filename.extensionin the pattern argument'
     assert recursive_search_max >= 1, 'recursive_search_max argument must be >= 1'
     assert len(subjects) == len(sessions), 'Subjects and sessions must have the same length'
+
+    # rez is the list containing the results
     rez = []
+    # error is the list of the errors that happen during the whole process
     error_encountered = []
     for sub, ses in zip(subjects, sessions):
         if is_bids:
@@ -98,26 +111,29 @@ def clinica_file_reader(subjects,
         else:
             origin_pattern = join(input_directory, 'subjects', sub, ses)
 
+        # This search at each level if the file is found. We stop when a result is found or when the
+        # maximum level of depth is reached
         for level in range(recursive_search_max):
             current_pattern = join(origin_pattern, '*/' * level, pattern)
             current_glob_found = insensitive_glob(current_pattern)
-            print('Trying ' + str(current_pattern))
+            # print('Trying ' + str(current_pattern))
             if len(current_glob_found) > 0:
-                print('Found level ' + str(level))
+                # print('Found level ' + str(level))
                 break
 
+        # Error handling if more than 1 file are found, or when no file is found
         if len(current_glob_found) > 1:
-            error_str = '* More than 1 file found for pattern \'' + pattern \
-                        + '\' for subject ' + sub + ' and session ' + ses + ' :\n'
+            error_str = '\t* (' + sub + ' | ' + ses + '): More than 1 file found:\n'
             for found_file in current_glob_found:
-                error_str += '\t' + found_file + '\n'
+                error_str += '\t\t' + found_file + '\n'
             error_encountered.append(error_str)
         elif len(current_glob_found) == 0:
-            error_encountered.append('* No file found for pattern \'' + join(origin_pattern, '*/' + pattern)
-                                     + '\' for subject ' + sub + ' and session ' + ses + ' until level ' + str(recursive_search_max))
+            error_encountered.append('\t* (' + sub + ' | ' + ses + '): No file found')
+        # Otherwise the file found is added to the result
         else:
             rez.append(current_glob_found[0])
 
+    # We do not raise an error, so that the developper can gather all the problems before Clinica crashes
     if len(error_encountered) > 0:
         error_message = 'Clinica encountered ' + str(len(error_encountered)) \
                         + ' problem(s) while getting file(s) with pattern ' + pattern + ' :\n'
