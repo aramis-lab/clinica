@@ -336,6 +336,10 @@ def check_input_bids_files(list_bids_files, bids_type, bids_directory, participa
             " - If you have different runs and/or acquisitions on the same folder, Clinica can not handle this situation.%s\n" %
             (Fore.YELLOW, Fore.RESET)
         )
+
+    if not error_message:
+        list_bids_files = reorder_bids_or_caps_files(subject_ids, list_bids_files)
+
     return error_message
 
 
