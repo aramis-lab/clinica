@@ -60,25 +60,13 @@ class PetSurface(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import clinica_file_reader
 
-        def handle_files(subject, session, files, description, list_missing_files):
-            from clinica.utils.stream import cprint
-            missing_f = True
-            for i in range(len(files)):
-                if subject + '_' + session in files[i] and missing_f is True:
-                    result = files[i]
-                    missing_f = False
-            if missing_f:
-                list_missing_files.append('(' + subject + ' - ' + session + ')' + 'file for the following category was not found : ' + description)
-                result = ' * missing *'
-            cprint(description + ' = ' + result)
-            return result
-
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(
                                             fields=self.get_input_fields(),
                                             mandatory_inputs=True),
                                         synchronize=True)
         all_errors = []
+        warning_freesurfer = False
 
         read_parameters_node.inputs.pet, error_str = clinica_file_reader(self.subjects,
                                                                          self.sessions,
@@ -92,42 +80,49 @@ class PetSurface(cpe.Pipeline):
                                                                              self.caps_directory,
                                                                              'orig_nu.mgz')
         if error_str:
+            warning_freesurfer = True
             all_errors.append(error_str)
         read_parameters_node.inputs.psf, error_str = clinica_file_reader(self.subjects,
                                                                          self.sessions,
                                                                          self.bids_directory,
                                                                          '*' + self.parameters['pet_type'] + '_pet.json')
         if error_str:
+            warning_freesurfer = True
             all_errors.append(error_str)
         read_parameters_node.inputs.white_surface_right, error_str = clinica_file_reader(self.subjects,
                                                                                          self.sessions,
                                                                                          self.caps_directory,
                                                                                          'sub-*_ses-*/surf/rh.white')
         if error_str:
+            warning_freesurfer = True
             all_errors.append(error_str)
         read_parameters_node.inputs.white_surface_left, error_str = clinica_file_reader(self.subjects,
                                                                                         self.sessions,
                                                                                         self.caps_directory,
                                                                                         'sub-*_ses-*/surf/lh.white')
         if error_str:
+            warning_freesurfer = True
             all_errors.append(error_str)
         read_parameters_node.inputs.destrieux_left, error_str = clinica_file_reader(self.subjects,
                                                                                     self.sessions,
                                                                                     self.caps_directory,
                                                                                     'sub-*_ses-*/*/lh.aparc.a2009s.annot')
         if error_str:
+            warning_freesurfer = True
             all_errors.append(error_str)
         read_parameters_node.inputs.destrieux_right, error_str = clinica_file_reader(self.subjects,
                                                                                      self.sessions,
                                                                                      self.caps_directory,
                                                                                      'sub-*_ses-*/*/rh.aparc.a2009s.annot')
         if error_str:
+            warning_freesurfer = True
             all_errors.append(error_str)
         read_parameters_node.inputs.desikan_left, error_str = clinica_file_reader(self.subjects,
                                                                                   self.sessions,
                                                                                   self.caps_directory,
                                                                                   'sub-*_ses-*/*/lh.aparc.annot')
         if error_str:
+            warning_freesurfer = True
             all_errors.append(error_str)
         read_parameters_node.inputs.desikan_right, error_str = clinica_file_reader(self.subjects,
                                                                                    self.sessions,
@@ -137,7 +132,9 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(error_str)
 
         if len(all_errors) > 0:
-            error_message = 'Clinica encountered errors while trying to read files in your BIDS or CAPS directories.\n'
+            error_message = 'Clinica faced errors while trying to read files in your BIDS or CAPS directories.\n'
+            if warning_freesurfer:
+                error_message += 'Please note that the t1-freesurfer pipeline needs to have run on all the subjects.\n'
             for msg in all_errors:
                 error_message += msg
             raise RuntimeError(error_message)
