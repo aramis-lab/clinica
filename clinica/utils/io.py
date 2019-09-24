@@ -131,7 +131,7 @@ def reorder_bids_or_caps_files(input_ids, bids_or_caps_files):
 
 def check_bids_folder(bids_directory):
     """
-    check_bids_folder function checks the following items :
+    check_bids_folder function checks the following items:
         - bids_directory is a string
         - the provided path exists and is a directory
         - provided path is not a CAPS folder (BIDS and CAPS could be swapped by user). We simply check that there is
@@ -147,15 +147,11 @@ def check_bids_folder(bids_directory):
     assert isinstance(bids_directory, str), 'Argument you provided to check_bids_folder() is not a string.'
 
     if not isdir(bids_directory):
-        raise ClinicaBIDSError(
-            "\n%s[Error] The BIDS directory you gave is not a folder.%s\n"
-            "\n%sError explanations:%s\n"
-            " - Clinica expected the following path to be a folder: %s%s%s\n"
-            " - If you gave relative path, did you run Clinica on the good folder?" %
-            (Fore.RED, Fore.RESET,
-             Fore.YELLOW, Fore.RESET,
-             Fore.BLUE, bids_directory, Fore.RESET)
-        )
+        raise ClinicaBIDSError(Fore.RED + '\n[Error] The BIDS directory you gave is not a folder.\n' + Fore.RESET
+                               + Fore.YELLOW + '\nError explanations:\n' + Fore.RESET
+                               + ' - Clinica expected the following path to be a folder:' + Fore.BLUE + bids_directory
+                               + Fore.RESET + '\n'
+                               + ' - If you gave relative path, did you run Clinica on the good folder?')
 
     if isdir(join(bids_directory, 'subjects')):
         raise ClinicaBIDSError(Fore.RED + '\n[Error] The BIDS directory (' + bids_directory + ') you provided seems to '
@@ -172,7 +168,7 @@ def check_bids_folder(bids_directory):
 
 def check_caps_folder(caps_directory):
     """
-    check_caps_folder function checks the following items :
+    check_caps_folder function checks the following items:
         - caps_directory is a string
         - the provided path exists and is a directory
         - provided path is not a BIDS folder (BIDS and CAPS could be swapped by user). We simply check that there is
@@ -187,19 +183,22 @@ def check_caps_folder(caps_directory):
     assert isinstance(caps_directory, str), 'Argument you provided to check_caps_folder() is not a string.'
 
     if not os.path.isdir(caps_directory):
-        raise ClinicaCAPSError(
-            "\n%s[Error] The CAPS directory you gave is not a folder.%s\n"
-            "\n%sError explanations:%s\n"
-            " - Clinica expected the following path to be a folder: %s%s%s\n"
-            " - If you gave relative path, did you run Clinica on the good folder?" %
-            (Fore.RED, Fore.RESET,
-             Fore.YELLOW, Fore.RESET,
-             Fore.BLUE, caps_directory, Fore.RESET)
-        )
+        raise ClinicaCAPSError(Fore.RED + '\n[Error] The CAPS directory you gave is not a folder.\n' + Fore.RESET
+                               + Fore.YELLOW + '\nError explanations:\n' + Fore.RESET
+                               + ' - Clinica expected the following path to be a folder:' + Fore.BLUE + caps_directory
+                               + Fore.RESET + '\n'
+                               + ' - If you gave relative path, did you run Clinica on the good folder?')
 
-    if len([item for item in listdir(caps_directory) if item.startswith('sub-')]) > 0:
-        raise ClinicaCAPSError(Fore.RED + '\n[Error] Your CAPS directory contains at least one folder whose name '
-                               + 'starts with \'sub-\'. Check that you did not swap BIDS and CAPS folders' + Fore.RESET)
+    sub_folders = [item for item in listdir(caps_directory) if item.startswith('sub-')]
+    if len(sub_folders) > 0:
+        error_string = '\n[Error] Your CAPS directory contains at least one folder whose name ' \
+                       + 'starts with \'sub-\'. Check that you did not swap BIDS and CAPS folders.\n' \
+                       + ' Folder(s) found that match(es) BIDS architecture:\n'
+        for dir in sub_folders:
+            error_string += '\t' + dir + '\n'
+        error_string += 'A CAPS directory has a folder \'subjects\' at its root, in which are stored the output ' \
+                        + 'of the pipeline for each subject.'
+        raise ClinicaCAPSError(error_string)
 
 
 def bids_type_to_path(bids_type, bids_directory, participant_id, session_id):
