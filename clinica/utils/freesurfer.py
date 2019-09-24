@@ -4,93 +4,6 @@
 """This module contains FreeSurfer utilities."""
 
 
-def freesurfer_volume_to_native_volume(
-        freesurfer_volume,
-        native_volume,
-        name_output_volume=None):
-    """
-    Convert FreeSurfer volume in native space.
-
-    This function converts any volume in FreeSurfer's conformed space
-    (1x1x1mm voxel size, 256x256x256 dimension) into a volume in native space.
-
-    For further details:
-    https://surfer.nmr.mgh.harvard.edu/fswiki/FsAnat-to-NativeAnat
-
-    Args:
-        freesurfer_volume (str): Volume in FreeSurfer's conformed space
-            (e.g. aparc+aseg.mgz containing the Desikan parcellation)
-        native_volume (str): Volume in native space (You should choose
-            ${SUBJECTS_DIR}/subject_id/mri/rawavg.mgz).
-        name_output_volume (Optional[str]): Name of the output matrix
-            (default=volume_in_native_space.nii.gz).
-
-    Returns:
-        out_volume (str): volume in native space (the file is saved here:
-            ${SUBJECTS_DIR}/subject_id/native_space/label.nii)
-
-    Example:
-        >>> from clinica.utils.freesurfer import freesurfer_volume_to_native_volume
-        >>> freesurfer_volume_to_native_volume(bert/mri/rawavg.mgz, bert/mri/aparc+aseg.mgz, 'aparc-in-native-space.nii')
-    """
-    import os
-    import os.path as op
-
-    assert(op.isfile(freesurfer_volume))
-    assert(op.isfile(native_volume))
-
-    if name_output_volume is None:
-        out_volume = op.abspath('volume_in_native_space.nii.gz')
-    else:
-        out_volume = op.abspath(name_output_volume)
-
-    cmd = 'mri_vol2vol --regheader --no-save-reg --mov %s --targ %s --o %s' \
-          % (freesurfer_volume, native_volume, out_volume)
-    os.system(cmd)
-
-    return out_volume
-
-
-def fs_caps2reconall(caps_dir, dest_dir, subjects_visits_tsv):
-    """
-    This function transfers CAPS recon-all output structure to
-    standard FreeSurfer recon-all output structure.
-
-    Args:
-        caps_dir: CAPS directory containing the outputs in CAPS hierarchy
-        dest_dir: the destination folder containing the FreeSurfer output structure
-        subjects_visits_tsv: tsv files containing the subjects that you want
-            to convert
-    """
-    import os
-    import csv
-    from shutil import copytree
-    from clinica.utils.stream import cprint
-
-    subject_list = []
-    session_list = []
-    with open(subjects_visits_tsv, 'rb') as tsvin:
-        tsv_reader = csv.reader(tsvin, delimiter='\t')
-
-        for row in tsv_reader:
-            if row[0] == 'participant_id':
-                continue
-            else:
-                subject_list.append(row[0])
-                session_list.append(row[1])
-
-    output_path = os.path.expanduser(caps_dir)  # change the relative path to be absolute path
-    caps_dir = os.path.join(output_path, 'subjects')
-
-    for i in range(len(subject_list)):
-        if os.path.isdir(os.path.join(dest_dir, subject_list[i] + '_' + session_list[i])):
-            cprint("This subject: %s for FreeSurfer exits already!" % subject_list[i])
-        else:
-            cprint("Convert subject: %s from CAPS to FreeSurfer output structure" % subject_list[i])
-            copytree(os.path.join(caps_dir, subject_list[i], session_list[i], 't1/freesurfer_cross_sectional', subject_list[i] + '_' + session_list[i]), os.path.join(dest_dir, subject_list[i] + '_' + session_list[i]))
-            cprint("--------------Finish this subject!-----------------------")
-
-
 def get_secondary_stats(stats_filename, info_type):
     """Read the 'secondary' statistical info from .stats file
 
@@ -174,7 +87,6 @@ def generate_regional_measures(
     import os
     import errno
     import pandas
-    from clinica.utils.stream import cprint
     from clinica.utils.freesurfer import write_tsv_file
 
     participant_id = subject_id.split('_')[0]
