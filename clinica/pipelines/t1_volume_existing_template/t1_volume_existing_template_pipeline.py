@@ -117,32 +117,35 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         """Build and connect an input node to the pipelines."""
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
-        import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as seg_utils
         from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
-        from os.path import join
-        import glob
+        from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
 
+        all_errors = []
         # Reading T1w
         # ============
-        t1w_images = seg_utils.select_bids_images(self.subjects,
-                                                  self.sessions,
-                                                  'T1w',
-                                                  self.bids_layout)
+        t1w_images, err = clinica_file_reader(self.subjects, self.sessions, self.bids_directory, '*_t1w.nii*')
+        if err:
+            all_errors.append(err)
 
         # Dartel Iterations Templates
         # ============================
         g_id = self._group_id
-        pattern_iter_dartel = join(self.caps_directory, 'groups', 'group-' + g_id, 't1', 'group-' + g_id + '_iteration-*_template.nii*')
-        iter_template = glob.glob(pattern_iter_dartel)
+        iter_template, err = clinica_group_reader(self.caps_directory, 'group-' + g_id + '*_iteration-*_template.nii*')
+        if err:
+            all_errors.append(err)
 
         # Dartel Template
         # ================
-        pattern_final_dartel = join(self.caps_directory, 'groups', 'group-' + g_id, 't1', 'group-' + g_id + '_template.nii*')
-        final_template = glob.glob(pattern_final_dartel)
-        if len(final_template) != 1:
-            raise FileNotFoundError('Could find template !')
-        else:
-            final_template = final_template[0]
+        final_template, err = clinica_group_reader(self.caps_directory, 'group-' + g_id + '_template.nii*')
+        if err:
+            all_errors.append(err)
+
+        if len(all_errors) > 0:
+            error_message = 'Clinica faced errors while trying to read files in your BIDS or CAPS directories.\n'
+            error_message += 'Please note that you need to provide a template to use this pipeline.\n'
+            for msg in all_errors:
+                error_message += msg
+            raise RuntimeError(error_message)
 
         read_node = npe.Node(name="read_node",
                              interface=nutil.IdentityInterface(fields=['t1w',
