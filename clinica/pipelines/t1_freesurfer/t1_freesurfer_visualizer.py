@@ -13,7 +13,8 @@ class T1FreeSurferVisualizer(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'Cross-sectional pre-processing of T1w images with FreeSurfer:\nhttp://clinica.run/doc/Pipelines/T1_FreeSurfer/'
+        self._description = ('Cross-sectional pre-processing of T1w images with FreeSurfer:\n'
+                             'http://clinica.run/doc/Pipelines/T1_FreeSurfer/')
 
     def define_options(self):
         """Define the sub-command arguments
@@ -26,7 +27,7 @@ class T1FreeSurferVisualizer(ce.CmdParser):
         clinica_comp.add_argument("participant_id",
                                   help='Participant ID (e.g. sub-CLNC01).')
         clinica_comp.add_argument("session_id",
-                                  help='Session ID (e.g. sub-M00).')
+                                  help='Session ID (e.g. ses-M00).')
 
     def run_command(self, args):
         """
