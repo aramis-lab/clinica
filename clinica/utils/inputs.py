@@ -19,14 +19,16 @@ def clinica_file_reader(subjects,
                         recursive_search_max=10):
     """
     This function grabs files relative to a subject and session list according to a glob pattern (using *)
+    Args:
+        subjects: list of subjects
+        sessions: list of sessions (must be same size as subjects, and must correspond )
+        input_directory: location of the bids (or caps ?) directory
+        pattern: define the pattern of the final file
+        recursive_search_max: number of folder deep the function can search for the file matching the pattern
 
-    :param subjects: list of subjects
-    :param sessions: list of sessions (must be same size as subjects, and must correspond )
-    :param input_directory: location of the bids (or caps ?) directory
-    :param pattern: define the pattern of the final file
-    :param recursive_search_max: number of folder deep the function can search for the file matching the pattern
-    :return: list of files respecting the subject/session order provided in input, and an error string that can have the
-            following values : None (no error found) or a string describing the problem.
+    Returns:
+         list of files respecting the subject/session order provided in input, and an error string that can have the
+         following values : None (no error found) or a string describing the problem.
 
         raise:
             - Nothing, we prefer returning a string with the problem written in it, so that the rest of Clinica can
@@ -152,6 +154,17 @@ def clinica_file_reader(subjects,
 
 
 def clinica_group_reader(caps_directory, pattern, recursive_search_max=10):
+    """
+    This function grabs files relative to a group, according to a glob pattern (using *)
+    Args:
+        caps_directory: input caps directory
+        pattern: pattern that the file must match
+        recursive_search_max: number of folder deep the function can search for the file matching the pattern
+
+    Returns:
+          list of files and an error string that can have the following values : None (no error found) or
+          a string describing the problem.
+    """
     from clinica.utils.io import check_caps_folder
     from os.path import join
 
