@@ -174,11 +174,12 @@ def check_cat12():
 
     spm_home = check_spm_home()
 
-    cat12_path = os.path.join(spm_home, 'toolbox', 'cat12')
-    if not os.path.exists(cat12_path):
+    cat12 = os.path.join(spm_home, 'toolbox', 'cat12')
+    if not os.path.exists(cat12):
         raise ClinicaMissingDependencyError(
             '%s\n[Error] CAT12 is not installed in your SPM folder. It should be in %s.%s'
-            % (Fore.RED, cat12_path, Fore.RESET))
+            % (Fore.RED, cat12, Fore.RESET))
+    return cat12
 
 
 def verify_cat12_atlases(atlas_list):
@@ -192,13 +193,14 @@ def verify_cat12_atlases(atlas_list):
     import sys
     from colorama import Fore
     from time import sleep
+    from .exceptions import ClinicaMissingDependencyError
 
     cat12_atlases = ['Hammers', 'Neuromorphometrics', 'LPBA40']
     if any(atlas in cat12_atlases for atlas in atlas_list):
         try:
             check_cat12()
             atlas_list_updated = atlas_list
-        except RuntimeError:
+        except ClinicaMissingDependencyError:
             print(Fore.YELLOW + '[Warning] CAT12 is not installed in your system. Atlas statistics computed at the '
                   + 'end of this pipeline will not include any of Hammers, Neuromorphometrics and LPBA40'
                   + ' atlases.' + Fore.RESET)
