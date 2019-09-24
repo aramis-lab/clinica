@@ -276,7 +276,7 @@ class PetSurface(cpe.Pipeline):
                                                           'desikan_right',
                                                           'destrieux_left',
                                                           'destrieux_right',
-                                                          'use_SPM_standalone'],
+                                                          'use_spm_standalone'],
                                              output_names=[],
                                              function=utils.get_wf),
                                 name='full_pipeline_mapnode',
@@ -319,8 +319,8 @@ class PetSurface(cpe.Pipeline):
 
         full_pipe.inputs.matscript_folder_inverse_deformation = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 
-        # This section of code determine wether to use SPM standalone or not
-        full_pipe.inputs.use_SPM_standalone = False
+        # This section of code determines wether to use SPM standalone or not
+        full_pipe.inputs.use_spm_standalone = False
         if all(elem in os.environ.keys() for elem in ['SPMSTANDALONE_HOME', 'MCR_HOME']):
             if os.path.exists(os.path.expandvars('$SPMSTANDALONE_HOME')) and os.path.exists(os.path.expandvars('$MCR_HOME')):
                 print(Fore.GREEN + 'SPM standalone has been found and will be used in this pipeline' + Fore.RESET)
@@ -333,7 +333,7 @@ class PetSurface(cpe.Pipeline):
                                   + ' ' + os.environ['MCR_HOME']
                                   + ' script')
                 spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
-                full_pipe.inputs.use_SPM_standalone = True
+                full_pipe.inputs.use_spm_standalone = True
             else:
                 raise FileNotFoundError('$SPMSTANDALONE_HOME and $MCR_HOME are defined, but linked to non existent folder ')
 
