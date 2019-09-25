@@ -82,40 +82,22 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         """
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from colorama import Fore
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
-        from clinica.utils.io import check_input_bids_files
+        from clinica.utils.exceptions import ClinicaBIDSError
         from clinica.utils.stream import cprint
         from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
+        from clinica.utils.inputs import clinica_file_reader
 
-        # Remove 'sub-' prefix from participant IDs
-        participant_labels = '|'.join(sub[4:] for sub in self.subjects)
-        # Remove 'ses-' prefix from session IDs
-        session_labels = '|'.join(ses[4:] for ses in self.sessions)
-
-        error_message = ""
         # Inputs from anat/ folder
         # ========================
         # T1w file:
-        t1w_files = self.bids_layout.get(type='T1w', return_type='file', extensions=['.nii|.nii.gz'],
-                                         subject=participant_labels, session=session_labels)
-        error_message += check_input_bids_files(t1w_files, "T1W_NII",
-                                                self.bids_directory, self.subjects, self.sessions)
+        t1w_files, err = clinica_file_reader(self.subjects, self.sessions, self.bids_directory, '*t1w.nii*')
+        if err:
+            err = 'Write your warning' + err
+            raise ClinicaBIDSError(err)
 
-        if error_message:
-            raise ClinicaBIDSError(error_message)
-
-        if len(t1w_files) == 0:
-            import sys
-            cprint(
-                '%s\nEither all the images were already run by the pipeline or no image was found to run the pipeline. '
-                'The program will now exit.%s' % (Fore.BLUE, Fore.RESET))
-            sys.exit(0)
-        else:
-            images_to_process = ', '.join(self.subjects[i][4:] + '|' + self.sessions[i][4:]
-                                          for i in range(len(self.subjects)))
-            cprint('The pipeline will be run on the following subject(s): %s' % images_to_process)
-            cprint('The pipeline will last approximately 10 minutes per image.')
+        images_to_process = ', '.join(sub + '|' + ses for sub, ses in zip(self.subjects, self.sessions))
+        cprint('The pipeline will be run on the following subject(s): %s' % images_to_process)
+        cprint('The pipeline will last approximately 10 minutes per image.')
 
         check_volume_location_in_world_coordinate_system(t1w_files, self.bids_directory)
 
