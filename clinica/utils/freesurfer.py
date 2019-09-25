@@ -235,3 +235,27 @@ def write_tsv_file(out_filename, name_list, scalar_name, scalar_list):
         raise exception
 
     return out_filename
+
+
+def check_flags(in_t1w, recon_all_args):
+    """Check `recon_all_args` flags for `in_t1w` image.
+
+    Currently, this function only adds '-cw256' if the FOV of `in_t1w` is greater than 256.
+    """
+    import nibabel as nib
+    # from clinica.utils.stream import cprint
+
+    f = nib.load(in_t1w)
+    voxel_size = f.header.get_zooms()
+    t1_size = f.header.get_data_shape()
+    if (voxel_size[0] * t1_size[0] > 256) or \
+            (voxel_size[1] * t1_size[1] > 256) or \
+            (voxel_size[2] * t1_size[2] > 256):
+        # cprint("Setting MRI Convert to crop images to 256 FOV for %s file." % in_t1w)
+        optional_flag = ' -cw256'
+    else:
+        # cprint("No need to add -cw256 flag for %s file." % in_t1w)
+        optional_flag = ''
+    flags = "{0}".format(recon_all_args) + optional_flag
+
+    return flags
