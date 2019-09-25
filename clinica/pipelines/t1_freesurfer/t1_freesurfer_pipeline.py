@@ -1,10 +1,11 @@
 # coding: utf8
 
-import clinica.pipelines.engine as cpe
-
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
 from nipype import config
+
+import clinica.pipelines.engine as cpe
+
 cfg = dict(execution={'parameterize_dirs': False})
 config.update_config(cfg)
 
@@ -60,10 +61,10 @@ class T1FreeSurfer(cpe.Pipeline):
         import os
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from colorama import Fore
         from clinica.utils.exceptions import ClinicaBIDSError
         from clinica.utils.io import check_input_bids_files
         from clinica.utils.stream import cprint
+        from clinica.utils.ux import (print_images_to_process, print_no_image_to_process)
 
         # Remove 'sub-' prefix from participant IDs
         participant_labels = '|'.join(sub[4:] for sub in self.subjects)
@@ -81,21 +82,16 @@ class T1FreeSurfer(cpe.Pipeline):
         if error_message:
             raise ClinicaBIDSError(error_message)
 
-        if len(t1w_files) == 0:
-            import sys
-            cprint(
-                '%s\nEither all the images were already run by the pipeline or no image was found to run the pipeline. '
-                'The program will now exit.%s' % (Fore.BLUE, Fore.RESET))
-            sys.exit(0)
-        else:
+        if len(t1w_files):
             from clinica.utils.io import save_participants_sessions
             # Save subjects to process in <WD>/T1FreeSurfer/participants.tsv
             save_participants_sessions(self.subjects, self.sessions, os.path.join(self.base_dir, self.__class__.__name__))
-
-            images_to_process = ', '.join(self.subjects[i][4:] + '|' + self.sessions[i][4:]
-                                          for i in range(len(self.subjects)))
-            cprint('The pipeline will be run on the following image(s): %s' % images_to_process)
+            print_images_to_process(self.subjects, self.sessions)
             cprint('The pipeline will last approximately 10 hours per image.')
+        else:
+            import sys
+            print_no_image_to_process()
+            sys.exit(0)
 
         read_node = npe.Node(name="ReadingFiles",
                              iterables=[
@@ -131,76 +127,55 @@ class T1FreeSurfer(cpe.Pipeline):
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
-        from .t1_freesurfer_utils import (init_input_node, check_flags,
-                                          create_subjects_dir, write_tsv_files)
+        import os
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        import os
         from nipype.interfaces.freesurfer.preprocess import ReconAll
+        from .t1_freesurfer_utils import (init_input_node, write_tsv_files)
 
         # Nodes declaration
         # =================
-        # Get <image_id> (e.g. sub-CLNC01_ses-M00) from input_node
-        # and print begin message
+        # Initialize the pipeline
+        #   - Extract <image_id> (e.g. sub-CLNC01_ses-M00) T1w filename;
+        #   - Check FOV of T1w;
+        #   - Create <subjects_dir> folder in <WD>/T1FreeSurfer/ReconAll/<image_id>/;
+        #   - Print begin execution message.
         init_input = npe.Node(
             interface=nutil.Function(
-                input_names=self.get_input_fields(),
-                output_names=['image_id'] + self.get_input_fields(),
+                input_names=['t1w', 'recon_all_args', 'output_dir'],
+                output_names=['image_id', 't1w', 'flags', 'subjects_dir'],
                 function=init_input_node),
             name='0-InitPipeline')
-
-        # Check recon-all flags given by the user
-        # and add -cw256 if needed (i.e. if the FOV of the image is greater than 256)
-        check_flags = npe.Node(interface=nutil.Function(
-            input_names=['in_t1w', 'recon_all_args'],
-            output_names=['flags'],
-            function=check_flags),
-            name='1-CheckFlag')
-        check_flags.inputs.recon_all_args = self.parameters['recon_all_args']
-
-        # Create <subjects_dir> folder for recon-all
-        # in <WD>/T1FreeSurfer/ReconAll/<image_id>/
-        # Otherwise, recon-all will not run
-        create_subjects_dir = npe.Node(interface=nutil.Function(
-            input_names=['output_dir', 'image_id'],
-            output_names=['subjects_dir'],
-            function=create_subjects_dir),
-            name='1-CreateSubjectsDir')
-        create_subjects_dir.inputs.output_dir = os.path.join(self.base_dir, 'T1FreeSurfer', 'ReconAll')
+        init_input.inputs.recon_all_args = self.parameters['recon_all_args']
+        init_input.inputs.output_dir = os.path.join(self.base_dir, 'T1FreeSurfer', 'ReconAll')
 
         # Run recon-all command
         # FreeSurfer segmentation will be in <subjects_dir>/<image_id>/
-        # where <subjects_dir> = <WD>/T1FreeSurfer/ReconAll/<image_id>/
         recon_all = npe.Node(interface=ReconAll(),
-                             name='2-SegmentationReconAll')
+                             name='1-SegmentationReconAll')
         recon_all.inputs.directive = 'all'
 
         # Generate TSV files containing a summary of the regional statistics
         # in <subjects_dir>/regional_measures
-        # where <subjects_dir> = <WD>/T1FreeSurfer/ReconAll/<image_id>/
         create_tsv = npe.Node(interface=nutil.Function(
             input_names=['subjects_dir', 'image_id'],
             output_names=['image_id'],
             function=write_tsv_files),
-            name='3-CreateTsvFiles')
+            name='2-CreateTsvFiles')
 
         # Connections
         # ===========
         self.connect([
             # Get <image_id> from input_node and print begin message
             (self.input_node, init_input, [('t1w', 't1w')]),
-            # Check recon-all flags given by the user and add -cw256 if needed
-            (init_input, check_flags, [('t1w', 'in_t1w')]),
-            # Create <subjects_dir> folder for recon-all
-            (init_input, create_subjects_dir, [('image_id', 'image_id')]),
             # Run recon-all command
-            (check_flags,         recon_all, [('flags',  'flags')]),
-            (create_subjects_dir, recon_all, [('subjects_dir', 'subjects_dir')]),
-            (init_input,          recon_all, [('image_id', 'subject_id')]),
-            (init_input,          recon_all, [('t1w', 'T1_files')]),
+            (init_input, recon_all, [('subjects_dir', 'subjects_dir'),
+                                     ('t1w', 'T1_files'),
+                                     ('image_id', 'subject_id'),
+                                     ('flags',  'flags')]),
             # Generate TSV files
-            (create_subjects_dir, create_tsv, [('subjects_dir', 'subjects_dir')]),
-            (recon_all,           create_tsv, [('subject_id', 'image_id')]),
+            (init_input, create_tsv, [('subjects_dir', 'subjects_dir')]),
+            (recon_all,  create_tsv, [('subject_id', 'image_id')]),
             # Output node
             (recon_all, self.output_node, [('subject_id', 'image_id')]),
         ])
