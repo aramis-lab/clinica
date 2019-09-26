@@ -15,7 +15,7 @@ def insensitive_glob(pattern_glob):
 def clinica_file_reader(subjects,
                         sessions,
                         input_directory,
-                        pattern,
+                        information,
                         recursive_search_max=10):
     """
     This function grabs files relative to a subject and session list according to a glob pattern (using *)
@@ -23,7 +23,11 @@ def clinica_file_reader(subjects,
         subjects: list of subjects
         sessions: list of sessions (must be same size as subjects, and must correspond )
         input_directory: location of the bids (or caps ?) directory
-        pattern: define the pattern of the final file
+        information: dictionnary containg all the relevant information to look for the files. Dict must contains the
+                     following keys : pattern, description, needed_pipeline
+                             pattern: define the pattern of the final file
+                             description: string to describe what the file is
+                             needed_pipeline (optional): string describing the pipeline needed to obtain the file beforehand
         recursive_search_max: number of folder deep the function can search for the file matching the pattern
 
     Returns:
@@ -38,27 +42,40 @@ def clinica_file_reader(subjects,
             - You have the full name of a file:
                 File orig_nu.mgz from FreeSurfer of subject sub-ADNI011S4105 session ses-M00 located in mri folder of
                 FreeSurfer output :
-                    clinica_file_reader(['sub-ADNI011S4105'], ['ses-M00'], caps_directory, 'orig_nu.mgz')
+                    clinica_file_reader(['sub-ADNI011S4105'],
+                                        ['ses-M00'],
+                                        caps_directory,
+                                        {'pattern': 'orig_nu.mgz',
+                                         'description': 'freesurfer file orig_nu.mgz',
+                                         'needed_pipeline': 't1-freesurfer'})
                     gives: ['/caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M00/mri/orig_nu.mgz']
 
             - You have a partial name of the file:
                 File sub-ADNI011S4105_ses-M00_task-rest_acq-FDG_pet.nii.gz in BIDS directory. Here, filename depends on
                 subject and session name :
-                     clinica_file_reader(['sub-ADNI011S4105'], ['ses-M00'], bids_directory, '*fdg_pet.nii*')
+                     clinica_file_reader(['sub-ADNI011S4105'],
+                                         ['ses-M00'],
+                                         bids_directory,
+                                         {'pattern': '*fdg_pet.nii*',
+                                          'description': 'FDG PET data'})
                      gives: ['/bids/sub-ADNI011S4105/ses-M00/pet/sub-ADNI011S4105_ses-M00_task-rest_acq-FDG_pet.nii.gz']
 
             - Tricky example:
                 Get the file rh.white from FreeSurfer:
                 If you try:
-                    clinica_file_reader(['sub-ADNI011S4105'], ['ses-M00'], caps, 'rh.white')
+                    clinica_file_reader(['sub-ADNI011S4105'],
+                                        ['ses-M00'],
+                                        caps,
+                                        {'pattern': 'rh.white',
+                                         'description': 'right hemisphere of outter cortical surface.',
+                                         'needed_pipeline': 't1-freesurfer'})
                         the following error will arise:
-                        * More than 1 file found for pattern 'rh.white' for subject sub-Adni011S4105 and session ses-M00:
+                        * More than 1 file found::
                             /caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/fsaverage/surf/rh.white
                             /caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/rh.EC_average/surf/rh.white
                             /caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M00/surf/rh.white
-                Correct usage (wanted for pet-surface):
-                    clinica_file_reader(['sub-ADNI011S4105'], ['ses-M00'], caps, 'sub-*_ses-*/surf/rh.white')
-                    gives: ['/caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M00/surf/rh.white']
+                Correct usage (wanted for pet-surface): pattern string must be 'sub-*_ses-*/surf/rh.white')
+                    It then gives: ['/caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M00/surf/rh.white']
 
         Note:
             This function is case insensitive, meaning that the pattern argument can, for example, contain maj letter
@@ -69,6 +86,7 @@ def clinica_file_reader(subjects,
     from os.path import join, isdir
     from os import listdir
     from clinica.utils.io import check_bids_folder, check_caps_folder
+    from colorama import Fore
 
     def determine_caps_or_bids(input_dir):
         """
@@ -94,6 +112,11 @@ def clinica_file_reader(subjects,
                 else:
                     raise RuntimeError('Could not determine if ' + input_dir + ' is a CAPS or BIDS directory')
 
+    assert isinstance(information, dict), 'A dict must be provided for the argmuent \'dict\''
+    assert all(elem in information.keys() for elem in ['pattern', 'description']), '\'information\' must contain the keys \'pattern\' and \'description'
+    assert all(elem in ['pattern', 'description', 'needed_pipeline'] for elem in information.keys()), '\'information\' can only contain the keys \'pattern\', \'description\' and \'needed_pipeline\''
+
+    pattern = information['pattern']
     is_bids = determine_caps_or_bids(input_directory)
 
     if is_bids:
@@ -132,20 +155,24 @@ def clinica_file_reader(subjects,
 
         # Error handling if more than 1 file are found, or when no file is found
         if len(current_glob_found) > 1:
-            error_str = '\t* (' + sub + ' | ' + ses + '): More than 1 file found:\n'
+            error_str = '\t*' + Fore.BLUE + ' (' + sub + ' | ' + ses + ') ' + Fore.RESET + ': More than 1 file found:\n'
             for found_file in current_glob_found:
                 error_str += '\t\t' + found_file + '\n'
             error_encountered.append(error_str)
         elif len(current_glob_found) == 0:
-            error_encountered.append('\t* (' + sub + ' | ' + ses + '): No file found')
+            error_encountered.append('\t*' + Fore.BLUE + ' (' + sub + ' | ' + ses + ') ' + Fore.RESET + ': No file found')
         # Otherwise the file found is added to the result
         else:
             rez.append(current_glob_found[0])
 
     # We do not raise an error, so that the developper can gather all the problems before Clinica crashes
     if len(error_encountered) > 0:
-        error_message = 'Clinica encountered ' + str(len(error_encountered)) \
-                        + ' problem(s) while getting file(s) with pattern ' + pattern + ' :\n'
+        error_message = Fore.RED + '\n[Error] Clinica encountered ' + str(len(error_encountered)) \
+                        + ' problem(s) while getting ' + information['description'] + ' :\n' + Fore.RESET
+        if 'needed_pipeline' in information.keys():
+            if information['needed_pipeline']:
+                error_message += Fore.YELLOW + 'Please note that the following clinica pipeline(s) must have run ' \
+                                 'to obtain these files: ' + information['needed_pipeline'] + Fore.RESET + '\n'
         for msg in error_encountered:
                 error_message += msg
     else:
@@ -191,12 +218,36 @@ def clinica_group_reader(caps_directory, pattern, recursive_search_max=10):
 
 
 if __name__ == '__main__':
-    g_id = 'UnitTest'
-    a, st = clinica_group_reader('/Users/arnaud.marcoux/CI/new_data/T1VolumeExistingTemplate/in/caps',
-                                 'group-' + g_id + '*_iteration-*_template.nii*',
-                                 recursive_search_max=10)
-    a, st = clinica_group_reader('/Users/arnaud.marcoux/CI/new_data/T1VolumeExistingTemplate/in/caps',
-                                 'group-' + g_id + '_template.nii*',
-                                 recursive_search_max=10)
-    for e in a:
-        print(e)
+    subjs = ['sub-Adni011S4105']
+    sesss = ['ses-M00']
+    bids = '/Users/arnaud.marcoux/CI/new_data/PETSurface/in/bids'
+    file, err = clinica_file_reader(subjs,
+                                    sesss,
+                                    bids,
+                                    {'pattern': '*fdg_pet.nii*',
+                                     'description': 'FDG PET file'})
+    caps = '/Users/arnaud.marcoux/CI/new_data/PETSurface/in/caps'
+    file, err = clinica_file_reader(subjs,
+                                    sesss,
+                                    caps,
+                                    {'pattern': 'surf/rh.white',
+                                     'description': 'right hemisphere of outter cortical surface.',
+                                     'needed_pipeline': 't1-freesurfer'})
+    print(err)
+    """
+    print(file)
+    caps = '/Users/arnaud.marcoux/CI/new_data/PETSurface/in/caps'
+    print(clinica_file_reader(subjs, sesss, caps, 'orig_nu.mgz'))
+    print(clinica_file_reader(subjs, sesss, bids, '*_pet.json'))
+    print(clinica_file_reader(subjs, sesss, caps, 'sub-*_ses-*/surf/rh.white'))
+    """
+    # g_id = 'UnitTest'
+    # a, st = clinica_group_reader('/Users/arnaud.marcoux/CI/new_data/T1VolumeExistingTemplate/in/caps',
+    #                              'group-' + g_id + '*_iteration-*_template.nii*',
+    #                              recursive_search_max=10)
+    # a, st = clinica_group_reader('/Users/arnaud.marcoux/CI/new_data/T1VolumeExistingTemplate/in/caps',
+    #                              'group-' + g_id + '_template.nii*',
+    #                              recursive_search_max=10)
+    # for e in a:
+    #     print(e)
+    # 
