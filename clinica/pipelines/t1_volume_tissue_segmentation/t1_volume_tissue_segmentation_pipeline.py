@@ -90,7 +90,11 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         # Inputs from anat/ folder
         # ========================
         # T1w file:
-        t1w_files, err = clinica_file_reader(self.subjects, self.sessions, self.bids_directory, '*t1w.nii*')
+        t1w_files, err = clinica_file_reader(self.subjects,
+                                             self.sessions,
+                                             self.bids_directory,
+                                             {'pattern': '*_t1w.nii*',
+                                              'description': 'T1w MRI acquisition'})
         if err:
             err = 'Write your warning' + err
             raise ClinicaBIDSError(err)

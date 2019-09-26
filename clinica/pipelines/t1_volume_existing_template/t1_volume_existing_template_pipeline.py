@@ -123,20 +123,30 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         all_errors = []
         # Reading T1w
         # ============
-        t1w_images, err = clinica_file_reader(self.subjects, self.sessions, self.bids_directory, '*_t1w.nii*')
+        t1w_images, err = clinica_file_reader(self.subjects,
+                                              self.sessions,
+                                              self.bids_directory,
+                                              {'pattern': '*_t1w.nii*',
+                                               'description': 'T1w MRI acquisition'})
         if err:
             all_errors.append(err)
 
         # Dartel Iterations Templates
         # ============================
         g_id = self._group_id
-        iter_template, err = clinica_group_reader(self.caps_directory, 'group-' + g_id + '*_iteration-*_template.nii*')
+        iter_template, err = clinica_group_reader(self.caps_directory,
+                                                  {'pattern': 'group-' + g_id + '*_iteration-*_template.nii*',
+                                                   'description': 'template iteration files of group ' + g_id,
+                                                   'needed_pipeline': 't1-volume-create-dartel'})
         if err:
             all_errors.append(err)
 
         # Dartel Template
         # ================
-        final_template, err = clinica_group_reader(self.caps_directory, 'group-' + g_id + '_template.nii*')
+        final_template, err = clinica_group_reader(self.caps_directory,
+                                                   {'pattern': 'group-' + g_id + '_template.nii*',
+                                                    'description': 'template file of group ' + g_id,
+                                                    'needed_pipeline': 't1-volume-create-dartel'})
         if err:
             all_errors.append(err)
 
