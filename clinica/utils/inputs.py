@@ -168,7 +168,7 @@ def clinica_file_reader(subjects,
     # We do not raise an error, so that the developper can gather all the problems before Clinica crashes
     if len(error_encountered) > 0:
         error_message = Fore.RED + '\n[Error] Clinica encountered ' + str(len(error_encountered)) \
-                        + ' problem(s) while getting ' + information['description'] + ' :\n' + Fore.RESET
+                        + ' problem(s) while getting ' + information['description'] + ':\n' + Fore.RESET
         if 'needed_pipeline' in information.keys():
             if information['needed_pipeline']:
                 error_message += Fore.YELLOW + 'Please note that the following clinica pipeline(s) must have run ' \
@@ -180,12 +180,16 @@ def clinica_file_reader(subjects,
     return rez, error_message
 
 
-def clinica_group_reader(caps_directory, pattern, recursive_search_max=10):
+def clinica_group_reader(caps_directory, information, recursive_search_max=10):
     """
     This function grabs files relative to a group, according to a glob pattern (using *)
     Args:
         caps_directory: input caps directory
-        pattern: pattern that the file must match
+        information: dictionnary containg all the relevant information to look for the files. Dict must contains the
+                     following keys : pattern, description, needed_pipeline
+                             pattern: define the pattern of the final file
+                             description: string to describe what the file is
+                             needed_pipeline (optional): string describing the pipeline needed to obtain the file beforehand
         recursive_search_max: number of folder deep the function can search for the file matching the pattern
 
     Returns:
@@ -194,7 +198,13 @@ def clinica_group_reader(caps_directory, pattern, recursive_search_max=10):
     """
     from clinica.utils.io import check_caps_folder
     from os.path import join
+    from colorama import Fore
 
+    assert isinstance(information, dict), 'A dict must be provided for the argmuent \'dict\''
+    assert all(elem in information.keys()
+               for elem in ['pattern', 'description', 'needed_pipeline']), '\'information\' must contain the keys \'pattern\', \'description\', \'needed_pipeline\''
+
+    pattern = information['pattern']
     # Some check on the formatting on the data
     assert pattern[0] != '/', 'pattern argument cannot start with char : / (does not work in os.path.join function). ' \
                               + 'If you want to indicate the exact name of the file, use the format' \
@@ -213,27 +223,30 @@ def clinica_group_reader(caps_directory, pattern, recursive_search_max=10):
         if len(current_glob_found) > 0:
             break
     if len(current_glob_found) == 0:
-        error_string = 'No file found that matches the pattern ' + pattern + ' in ' + caps_directory
+        error_string = Fore.RED + '\n[Error] Clinica encountered a problem while getting ' + information['description'] \
+                       + '.' + Fore.RESET + '\n\tCAPS directory: ' + caps_directory + '\n' + Fore.YELLOW \
+                       + 'Please note that the following clinica pipeline(s) must have run to obtain these files: ' \
+                       + information['needed_pipeline'] + Fore.RESET + '\n'
     return current_glob_found, error_string
 
 
 if __name__ == '__main__':
-    subjs = ['sub-Adni011S4105']
-    sesss = ['ses-M00']
-    bids = '/Users/arnaud.marcoux/CI/new_data/PETSurface/in/bids'
-    file, err = clinica_file_reader(subjs,
-                                    sesss,
-                                    bids,
-                                    {'pattern': '*fdg_pet.nii*',
-                                     'description': 'FDG PET file'})
-    caps = '/Users/arnaud.marcoux/CI/new_data/PETSurface/in/caps'
-    file, err = clinica_file_reader(subjs,
-                                    sesss,
-                                    caps,
-                                    {'pattern': 'surf/rh.white',
-                                     'description': 'right hemisphere of outter cortical surface.',
-                                     'needed_pipeline': 't1-freesurfer'})
-    print(err)
+    # subjs = ['sub-Adni011S4105']
+    # sesss = ['ses-M00']
+    # bids = '/Users/arnaud.marcoux/CI/new_data/PETSurface/in/bids'
+    # file, err = clinica_file_reader(subjs,
+    #                                 sesss,
+    #                                 bids,
+    #                                 {'pattern': '*fdg_pet.nii*',
+    #                                  'description': 'FDG PET file'})
+    # caps = '/Users/arnaud.marcoux/CI/new_data/PETSurface/in/caps'
+    # file, err = clinica_file_reader(subjs,
+    #                                 sesss,
+    #                                 caps,
+    #                                 {'pattern': 'surf/rh.white',
+    #                                  'description': 'right hemisphere of outter cortical surface.',
+    #                                  'needed_pipeline': 't1-freesurfer'})
+    # print(err)
     """
     print(file)
     caps = '/Users/arnaud.marcoux/CI/new_data/PETSurface/in/caps'
@@ -241,13 +254,12 @@ if __name__ == '__main__':
     print(clinica_file_reader(subjs, sesss, bids, '*_pet.json'))
     print(clinica_file_reader(subjs, sesss, caps, 'sub-*_ses-*/surf/rh.white'))
     """
-    # g_id = 'UnitTest'
+    g_id = 'UnitTest'
+    a, st = clinica_group_reader('/Users/arnaud.marcoux/CI/new_data/T1VolumeExistingTemplate/in/caps',
+                                 {'pattern': 'group-' + g_id + '*_iteration-*_templaAte.nii*',
+                                  'description': 'template file for ' + g_id,
+                                  'needed_pipeline': 't1-volume-create_dartel or t1-volume'})
     # a, st = clinica_group_reader('/Users/arnaud.marcoux/CI/new_data/T1VolumeExistingTemplate/in/caps',
-    #                              'group-' + g_id + '*_iteration-*_template.nii*',
-    #                              recursive_search_max=10)
-    # a, st = clinica_group_reader('/Users/arnaud.marcoux/CI/new_data/T1VolumeExistingTemplate/in/caps',
-    #                              'group-' + g_id + '_template.nii*',
-    #                              recursive_search_max=10)
-    # for e in a:
-    #     print(e)
-    # 
+    #                             'group-' + g_id + '_template.nii*',
+    #                             recursive_search_max=10)
+    print(st)
