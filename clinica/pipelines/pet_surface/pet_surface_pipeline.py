@@ -71,63 +71,80 @@ class PetSurface(cpe.Pipeline):
         read_parameters_node.inputs.pet, error_str = clinica_file_reader(self.subjects,
                                                                          self.sessions,
                                                                          self.bids_directory,
-                                                                         '*' + self.parameters['pet_type'] + '_pet.nii*')
+                                                                         {'pattern': '*' + self.parameters['pet_type']
+                                                                                     + '_pet.nii*',
+                                                                          'description': self.parameters['pet_type']
+                                                                                         + ' PET data'})
         if error_str:
             all_errors.append(error_str)
 
         read_parameters_node.inputs.orig_nu, error_str = clinica_file_reader(self.subjects,
                                                                              self.sessions,
                                                                              self.caps_directory,
-                                                                             'orig_nu.mgz')
+                                                                             {'pattern': 'orig_nu.mgz',
+                                                                              'description': 'intensity normalized volume generated after correction for'
+                                                                                             ' non-uniformity in FreeSurfer (file .../mri/orig_nu.mgz) ',
+                                                                              'needed_pipeline': 't1-freesurfer'})
         if error_str:
-            warning_freesurfer = True
             all_errors.append(error_str)
         read_parameters_node.inputs.psf, error_str = clinica_file_reader(self.subjects,
                                                                          self.sessions,
                                                                          self.bids_directory,
-                                                                         '*' + self.parameters['pet_type'] + '_pet.json')
+                                                                         {'pattern': '*' + self.parameters['pet_type']
+                                                                                     + '_pet.json',
+                                                                          'description': 'json file describing the point'
+                                                                                         ' spread function (PSF) in '
+                                                                                         + self.parameters['pet_type']
+                                                                                         + ' PET.'})
         if error_str:
-            warning_freesurfer = True
             all_errors.append(error_str)
         read_parameters_node.inputs.white_surface_right, error_str = clinica_file_reader(self.subjects,
                                                                                          self.sessions,
                                                                                          self.caps_directory,
-                                                                                         'sub-*_ses-*/surf/rh.white')
+                                                                                         {'pattern': 'sub-*_ses-*/surf/rh.white',
+                                                                                          'description': 'right hemisphere of outter cortical surface.',
+                                                                                          'needed_pipeline': 't1-freesurfer'})
         if error_str:
-            warning_freesurfer = True
             all_errors.append(error_str)
         read_parameters_node.inputs.white_surface_left, error_str = clinica_file_reader(self.subjects,
                                                                                         self.sessions,
                                                                                         self.caps_directory,
-                                                                                        'sub-*_ses-*/surf/lh.white')
+                                                                                        {'pattern': 'sub-*_ses-*/surf/lh.white',
+                                                                                         'description': 'left hemisphere of outter cortical surface.',
+                                                                                         'needed_pipeline': 't1-freesurfer'})
         if error_str:
-            warning_freesurfer = True
             all_errors.append(error_str)
         read_parameters_node.inputs.destrieux_left, error_str = clinica_file_reader(self.subjects,
                                                                                     self.sessions,
                                                                                     self.caps_directory,
-                                                                                    'sub-*_ses-*/*/lh.aparc.a2009s.annot')
+                                                                                    {'pattern': 'sub-*_ses-*/*/lh.aparc.a2009s.annot',
+                                                                                     'description': 'left hemisphere surface-based Destrieux parcellation (rh.aparc.a2009s.annot)',
+                                                                                     'needed_pipeline': 't1-freesurfer'})
         if error_str:
             warning_freesurfer = True
             all_errors.append(error_str)
         read_parameters_node.inputs.destrieux_right, error_str = clinica_file_reader(self.subjects,
                                                                                      self.sessions,
                                                                                      self.caps_directory,
-                                                                                     'sub-*_ses-*/*/rh.aparc.a2009s.annot')
+                                                                                     {'pattern': 'sub-*_ses-*/*/rh.aparc.a2009s.annot',
+                                                                                      'description': 'right hemisphere surface-based Destrieux parcellation (rh.aparc.a2009s.annot)',
+                                                                                      'needed_pipeline': 't1-freesurfer'})
         if error_str:
-            warning_freesurfer = True
             all_errors.append(error_str)
         read_parameters_node.inputs.desikan_left, error_str = clinica_file_reader(self.subjects,
                                                                                   self.sessions,
                                                                                   self.caps_directory,
-                                                                                  'sub-*_ses-*/*/lh.aparc.annot')
+                                                                                  {'pattern': 'sub-*_ses-*/*/lh.aparc.annot',
+                                                                                   'description': 'left hemisphere surface-based Desikan parcellation (rh.aparc.annot)',
+                                                                                   'needed_pipeline': 't1-freesurfer'})
         if error_str:
-            warning_freesurfer = True
             all_errors.append(error_str)
         read_parameters_node.inputs.desikan_right, error_str = clinica_file_reader(self.subjects,
                                                                                    self.sessions,
                                                                                    self.caps_directory,
-                                                                                   'sub-*_ses-*/*/rh.aparc.annot')
+                                                                                   {'pattern': 'sub-*_ses-*/*/rh.aparc.annot',
+                                                                                    'description': 'right hemisphere surface-based Desikan parcellation (rh.aparc.annot)',
+                                                                                    'needed_pipeline': 't1-freesurfer'})
         if error_str:
             all_errors.append(error_str)
 
