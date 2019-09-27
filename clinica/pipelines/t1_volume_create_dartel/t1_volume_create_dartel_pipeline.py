@@ -67,7 +67,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
             A list of (string) input fields name.
         """
 
-        return ['dartel_input_images']
+        return ['dartel_inputs']
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipelines.
@@ -83,7 +83,8 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         """
 
         import nipype.pipeline.engine as npe
-        import nipype.interfaces.io as nio
+        from clinica.utils.inputs import clinica_file_reader
+        import nipype.interfaces.utility as nutil
 
         tissue_names = {1: 'graymatter',
                         2: 'whitematter',
@@ -93,26 +94,38 @@ class T1VolumeCreateDartel(cpe.Pipeline):
                         6: 'background'
                         }
 
-        # Dartel Input Tissues DataGrabber
-        # =================================
-        dartel_input_reader = npe.MapNode(nio.DataGrabber(infields=['subject_id', 'session',
-                                                                    'subject_repeat', 'session_repeat',
-                                                                    'tissue'],
-                                                          outfields=['out_files']),
-                                          name="dartel_input_reader",
-                                          iterfield=['tissue'])
+        read_parameters_node = npe.Node(name="LoadingCLIArguments",
+                                        interface=nutil.IdentityInterface(fields=self.get_input_fields(),
+                                                                          mandatory_inputs=True))
+        all_errors = []
+        d_input = []
+        for tissue_number in self.parameters['dartel_tissues']:
+            current_file, err = clinica_file_reader(self.subjects,
+                                                    self.sessions,
+                                                    self.caps_directory,
+                                                    {'pattern': 't1/spm/segmentation/dartel_input/*_*_T1w_segm-'
+                                                                + tissue_names[tissue_number] + '_dartelinput.nii*',
+                                                     'description': 'Dartel input for tissue ' + tissue_names[tissue_number]
+                                                                    + ' from T1w MRI',
+                                                     'needed_pipeline': 't1-volume-tissue-segmentation'})
 
-        dartel_input_reader.inputs.base_directory = self.caps_directory
-        dartel_input_reader.inputs.template = 'subjects/%s/%s/t1/spm/segmentation/dartel_input/%s_%s_T1w_segm-%s_dartelinput.nii*'
-        dartel_input_reader.inputs.subject_id = self.subjects
-        dartel_input_reader.inputs.session = self.sessions
-        dartel_input_reader.inputs.tissue = [tissue_names[t] for t in self.parameters['dartel_tissues']]
-        dartel_input_reader.inputs.subject_repeat = self.subjects
-        dartel_input_reader.inputs.session_repeat = self.sessions
-        dartel_input_reader.inputs.sort_filelist = False
+            if err:
+                all_errors.append(err)
+            d_input.append(current_file)
+
+        # Raise all errors if some happened
+        if len(all_errors) > 0:
+            error_message = 'Clinica faced errors while trying to read files in your BIDS or CAPS directories.\n'
+            for msg in all_errors:
+                error_message += msg
+            raise RuntimeError(error_message)
+
+        # d_input is a list of size len(self.parameters['dartel_tissues'])
+        #     Each element of this list is a list of size len(self.subjects)
+        read_parameters_node.inputs.dartel_inputs = d_input
 
         self.connect([
-            (dartel_input_reader, self.input_node, [('out_files', 'dartel_input_images')])
+            (read_parameters_node, self.input_node, [('dartel_inputs', 'dartel_input_images')])
         ])
 
     def build_output_node(self):
