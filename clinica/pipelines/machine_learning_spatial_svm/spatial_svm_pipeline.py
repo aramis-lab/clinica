@@ -91,9 +91,6 @@ class SpatialSVM(cpe.Pipeline):
         pet_type = self.parameters['pet_type']
         no_pvc = self.parameters['no_pvc']
 
-        participant_id_pycaps = [sub[4:] for sub in self.subjects]
-        session_id_pycaps = [ses[4:] for ses in self.sessions]
-
         all_errors = []
         if image_type == 't1':
             input_image, err_message = clinica_file_reader(self.subjects,
@@ -148,7 +145,7 @@ class SpatialSVM(cpe.Pipeline):
             for msg in all_errors:
                 error_message += msg
             raise RuntimeError(error_message)
-        
+
         read_parameters_node.inputs.dartel_input = dartel_input
         read_parameters_node.inputs.input_image = input_image
 
