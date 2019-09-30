@@ -1,22 +1,24 @@
-def insensitive_glob(pattern_glob):
+def insensitive_glob(pattern_glob, recursive=False):
     """
     This function is the glob.glob() function that is insensitive to the case
-    :param pattern_glob: sensitive-to-the-case pattern
-    :return: insensitive-to-the-case pattern
+    Args:
+        pattern_glob: sensitive-to-the-case pattern
+        recursive: recursive parameter for glob.glob()
+    Returns:
+         insensitive-to-the-case pattern
     """
     from glob import glob
 
     def either(c):
         return '[%s%s]' % (c.lower(), c.upper()) if c.isalpha() else c
 
-    return glob(''.join(map(either, pattern_glob)))
+    return glob(''.join(map(either, pattern_glob)), recursive=recursive)
 
 
 def clinica_file_reader(subjects,
                         sessions,
                         input_directory,
-                        information,
-                        recursive_search_max=10):
+                        information):
     """
     This function grabs files relative to a subject and session list according to a glob pattern (using *)
     Args:
@@ -28,7 +30,6 @@ def clinica_file_reader(subjects,
                              pattern: define the pattern of the final file
                              description: string to describe what the file is
                              needed_pipeline (optional): string describing the pipeline needed to obtain the file beforehand
-        recursive_search_max: number of folder deep the function can search for the file matching the pattern
 
     Returns:
          list of files respecting the subject/session order provided in input, and an error string that can have the
@@ -128,7 +129,6 @@ def clinica_file_reader(subjects,
     assert pattern[0] != '/', 'pattern argument cannot start with char : / (does not work in os.path.join function). ' \
                               + 'If you want to indicate the exact name of the file, use the format' \
                               + ' directory_name/filename.extension or filename.extensionin the pattern argument'
-    assert recursive_search_max >= 1, 'recursive_search_max argument must be >= 1'
     assert len(subjects) == len(sessions), 'Subjects and sessions must have the same length'
     if len(subjects) == 0:
         raise RuntimeError('No subjects and sessions provided.')
@@ -143,15 +143,8 @@ def clinica_file_reader(subjects,
         else:
             origin_pattern = join(input_directory, 'subjects', sub, ses)
 
-        # This search at each level if the file is found. We stop when a result is found or when the
-        # maximum level of depth is reached
-        for level in range(recursive_search_max):
-            current_pattern = join(origin_pattern, '*/' * level, pattern)
-            current_glob_found = insensitive_glob(current_pattern)
-            # print('Trying ' + str(current_pattern))
-            if len(current_glob_found) > 0:
-                # print('Found level ' + str(level))
-                break
+        current_pattern = join(origin_pattern, '**/', pattern)
+        current_glob_found = insensitive_glob(current_pattern, recursive=True)
 
         # Error handling if more than 1 file are found, or when no file is found
         if len(current_glob_found) > 1:
@@ -190,7 +183,6 @@ def clinica_group_reader(caps_directory, information, recursive_search_max=10):
                              pattern: define the pattern of the final file
                              description: string to describe what the file is
                              needed_pipeline (optional): string describing the pipeline needed to obtain the file beforehand
-        recursive_search_max: number of folder deep the function can search for the file matching the pattern
 
     Returns:
           list of files and an error string that can have the following values : None (no error found) or
@@ -214,14 +206,10 @@ def clinica_group_reader(caps_directory, information, recursive_search_max=10):
     check_caps_folder(caps_directory)
 
     error_string = None
-    # This search at each level if the file is found. We stop when a result is found or when the
-    # maximum level of depth is reached
-    for level in range(recursive_search_max):
-        current_pattern = join(caps_directory, '*/' * level, pattern)
-        current_glob_found = insensitive_glob(current_pattern)
-        # print('Trying ' + str(current_pattern))
-        if len(current_glob_found) > 0:
-            break
+
+    current_pattern = join(caps_directory, '**/', pattern)
+    current_glob_found = insensitive_glob(current_pattern, recursive=True)
+
     if len(current_glob_found) == 0:
         error_string = Fore.RED + '\n[Error] Clinica encountered a problem while getting ' + information['description'] \
                        + '.' + Fore.RESET + '\n\tCAPS directory: ' + caps_directory + '\n' + Fore.YELLOW \
