@@ -84,7 +84,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from colorama import Fore
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
-        from clinica.utils.io import check_input_bids_files
+        from clinica.utils.bids import check_input_bids_files
         from clinica.utils.stream import cprint
 
         # Remove 'sub-' prefix from participant IDs
@@ -141,8 +141,9 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         import nipype.interfaces.io as nio
         import nipype.interfaces.spm as spm
         from ..t1_volume_tissue_segmentation import t1_volume_tissue_segmentation_utils as seg_utils
-        from clinica.utils.io import unzip_nii
-        from clinica.utils.io import (fix_join, zip_nii)
+        from clinica.utils.filemanip import unzip_nii
+        from clinica.utils.filemanip import zip_nii
+        from clinica.utils.nipype import fix_join
         from clinica.utils.spm import get_tpm
 
         # Get Tissue Probability Map from SPM

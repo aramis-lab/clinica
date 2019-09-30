@@ -12,7 +12,7 @@ def init_input_node(t1w, recon_all_args, output_dir):
     """
     import os
     import errno
-    from clinica.utils.io import get_subject_id
+    from clinica.utils.filemanip import get_subject_id
     from clinica.utils.freesurfer import check_flags
     from clinica.utils.ux import print_begin_image
 

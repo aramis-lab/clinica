@@ -22,7 +22,7 @@ class CmdParserSubjectsSessions(ce.CmdParser):
         import errno
         from clinica.iotools.utils import data_handling as dt
         from clinica.utils.stream import cprint
-        from clinica.utils.io import check_bids_folder
+        from clinica.utils.bids import check_bids_folder
 
         check_bids_folder(args.bids_directory)
         output_directory = os.path.dirname(os.path.abspath(args.out_tsv))
@@ -77,7 +77,7 @@ class CmdParserMergeTsv(ce.CmdParser):
 
     def run_command(self, args):
         from clinica.iotools.utils import data_handling as dt
-        from clinica.utils.io import check_bids_folder
+        from clinica.utils.bids import check_bids_folder
 
         check_bids_folder(args.bids_directory)
         dt.create_merge_file(args.bids_directory, args.out_tsv,
@@ -105,7 +105,7 @@ class CmdParserMissingModalities(ce.CmdParser):
 
     def run_command(self, args):
         from clinica.iotools.utils import data_handling as dt
-        from clinica.utils.io import check_bids_folder
+        from clinica.utils.bids import check_bids_folder
 
         check_bids_folder(args.bids_directory)
         dt.compute_missing_mods(args.bids_directory, args.out_directory, args.output_prefix)

@@ -167,7 +167,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
-        from clinica.utils.io import zip_nii
+        from clinica.utils.filemanip import zip_nii
         from ..t1_volume_tissue_segmentation import t1_volume_tissue_segmentation_utils as seg_utils
         from ..t1_volume_existing_template import t1_volume_existing_template_utils as existing_template_utils
 
@@ -341,7 +341,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         from ..t1_volume_existing_dartel import t1_volume_existing_dartel_utils as existing_dartel_utils
         from ..t1_volume_dartel2mni import t1_volume_dartel2mni_utils as dartel2mni_utils
         from ..t1_volume_parcellation import t1_volume_parcellation_utils as parcellation_utils
-        from clinica.utils.io import unzip_nii
+        from clinica.utils.filemanip import unzip_nii
         from clinica.utils.spm import get_tpm
 
         # Get Tissue Probability Map from SPM

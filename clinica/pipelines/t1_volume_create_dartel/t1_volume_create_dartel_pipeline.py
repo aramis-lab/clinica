@@ -122,7 +122,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
         import re
-        from clinica.utils.io import zip_nii
+        from clinica.utils.filemanip import zip_nii
 
         # Writing flowfields into CAPS
         # ============================
@@ -174,7 +174,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         import nipype.interfaces.spm as spm
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
-        from clinica.utils.io import unzip_nii
+        from clinica.utils.filemanip import unzip_nii
         from clinica.utils.spm import get_tpm
 
         # Get Tissue Probability Map from SPM

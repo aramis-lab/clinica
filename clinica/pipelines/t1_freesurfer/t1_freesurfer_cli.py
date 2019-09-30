@@ -79,7 +79,8 @@ class T1FreeSurferCLI(ce.CmdParser):
             # Check that it is a Nipype error
             if 'Workflow did not execute cleanly. Check log for details' in str(e):
                 from clinica.iotools.grabcaps import CAPSLayout
-                from clinica.utils.io import read_participant_tsv, extract_image_ids
+                from clinica.utils.filemanip import extract_image_ids
+                from clinica.utils.filemanip import read_participant_tsv
                 from clinica.utils.ux import print_end_pipeline, print_failed_images
 
                 # Extract subject IDs used by the pipeline

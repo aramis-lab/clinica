@@ -59,7 +59,7 @@ def group_nested_images_by_subject(class_images, zip_files=False):
     """
 
     """
-    from clinica.utils.io import zip_nii
+    from clinica.utils.filemanip import zip_nii
 
     if zip_files:
         return [zip_nii([s for tissue in subject for s in tissue], True) for subject in class_images]
@@ -93,7 +93,7 @@ def init_input_node(t1w):
     """
     import datetime
     from colorama import Fore
-    from clinica.utils.io import get_subject_id
+    from clinica.utils.filemanip import get_subject_id
     from clinica.utils.stream import cprint
 
     subject_id = get_subject_id(t1w)
@@ -119,7 +119,7 @@ def print_end_pipeline(subject_id, final_file):
 
 
 def zip_list_files(class_images, zip_files=False):
-    from clinica.utils.io import zip_nii
+    from clinica.utils.filemanip import zip_nii
 
     if zip_files:
         return [zip_nii(tissue, True) for tissue in class_images]

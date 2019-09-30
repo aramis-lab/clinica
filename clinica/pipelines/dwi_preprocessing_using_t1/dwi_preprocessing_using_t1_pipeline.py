@@ -252,7 +252,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
         from os.path import join
-        from clinica.utils.io import fix_join
+        from clinica.utils.nipype import fix_join
         import clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils as utils
 
         # Find container path from DWI filename

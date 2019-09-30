@@ -62,7 +62,7 @@ class T1FreeSurfer(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.exceptions import ClinicaBIDSError
-        from clinica.utils.io import check_input_bids_files
+        from clinica.utils.bids import check_input_bids_files
         from clinica.utils.stream import cprint
         from clinica.utils.ux import (print_images_to_process, print_no_image_to_process)
 
@@ -83,7 +83,7 @@ class T1FreeSurfer(cpe.Pipeline):
             raise ClinicaBIDSError(error_message)
 
         if len(t1w_files):
-            from clinica.utils.io import save_participants_sessions
+            from clinica.utils.filemanip import save_participants_sessions
             # Save subjects to process in <WD>/T1FreeSurfer/participants.tsv
             save_participants_sessions(self.subjects, self.sessions, os.path.join(self.base_dir, self.__class__.__name__))
             print_images_to_process(self.subjects, self.sessions)

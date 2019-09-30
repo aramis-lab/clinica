@@ -64,7 +64,7 @@ def print_failed_images(cli_name, image_ids, log_file):
     import datetime
     from colorama import Fore
     from .stream import cprint
-    from .io import extract_crash_files_from_log_file
+    from .filemanip import extract_crash_files_from_log_file
 
     missing_caps = ', '.join(
         image_ids[i].split('_')[0][4:] + '|' + image_ids[i].split('_')[1][4:]

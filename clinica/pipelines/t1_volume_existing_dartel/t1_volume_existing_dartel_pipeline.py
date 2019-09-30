@@ -118,7 +118,7 @@ class T1VolumeExistingDartel(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
         import re
-        from clinica.utils.io import zip_nii
+        from clinica.utils.filemanip import zip_nii
 
         # Writing flowfields into CAPS
         # ============================
@@ -155,7 +155,7 @@ class T1VolumeExistingDartel(cpe.Pipeline):
 
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
-        from clinica.utils.io import unzip_nii
+        from clinica.utils.filemanip import unzip_nii
         import clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_utils as utils
 
         # Unzipping

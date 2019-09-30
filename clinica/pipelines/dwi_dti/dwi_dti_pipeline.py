@@ -225,7 +225,7 @@ class DwiDti(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        from clinica.utils.io import fix_join
+        from clinica.utils.nipype import fix_join
 
         import clinica.pipelines.dwi_dti.dwi_dti_utils as utils
 

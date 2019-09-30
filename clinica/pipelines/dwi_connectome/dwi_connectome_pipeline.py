@@ -58,7 +58,7 @@ class DwiConnectome(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from clinica.iotools.grabcaps import CAPSLayout
         from clinica.utils.stream import cprint
-        from clinica.utils.io import check_input_caps_files
+        from clinica.utils.caps import check_input_caps_files
         from clinica.utils.exceptions import ClinicaException, ClinicaCAPSError
         from colorama import Fore
         import re
