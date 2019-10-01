@@ -23,7 +23,7 @@ If you want to run the pipeline on a subset of your BIDS dataset, you can use th
     The computational time for one subject is around 10–15 hours depending on your CPU and the quality of your input T1. Please be aware that even though the pipeline runs in parallel, processing many subjects (e.g. ADNI dataset) is time consuming.
 
 !!! note
-    For people familiar with FreeSurfer, we compute the normalized data on the FreeSurfer atlas (FsAverage) with the `qcache` option from `recon-all`. If you want to add some custom flags, you can do it in Clinica with the `--recon_all_args` flag (e.g. `--recon_all_args "-bigventricles -qcache"`).
+    For people familiar with FreeSurfer, we compute the normalized data on the FreeSurfer atlas (FsAverage) with the `-qcache` option from `recon-all`. If you want to add some custom flags, you can do it in Clinica with the `--recon_all_args` flag (e.g. `--recon_all_args="-bigventricles -qcache"`). Please note that `=` is compulsory (this is not the case for other flags).
 
 
 ## Outputs
