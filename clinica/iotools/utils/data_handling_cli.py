@@ -109,3 +109,53 @@ class CmdParserMissingModalities(ce.CmdParser):
 
         check_bids_folder(args.bids_directory)
         dt.compute_missing_mods(args.bids_directory, args.out_directory, args.output_prefix)
+
+
+class CmdParserCenterNifti(ce.CmdParser):
+
+    def define_name(self):
+        self._name = 'center-nifti'
+
+    def define_description(self):
+        self._description = 'Center nifti of a BIDS directory'
+
+    def define_options(self):
+        self._args.add_argument("bids_directory",
+                                help='Path to the BIDS dataset directory in which you want to center the NIfTI files/images.')
+        self._args.add_argument("output_bids_directory",
+                                help='Path to the output directory. This is where your BIDS folder with centered nifti will appear.')
+
+    def run_command(self, args):
+        from colorama import Fore
+        from os.path import isdir, abspath
+        from os import listdir
+        from os import makedirs
+        from clinica.iotools.utils.data_handling import center_all_nifti
+        from clinica.utils.stream import cprint
+        import sys
+
+        # check that output_folder does not exist, or is an empty folder
+        if isdir(args.output_bids_directory):
+            file_list = listdir(args.output_bids_directory)
+            if len(file_list) > 0:
+                error_str = Fore.YELLOW + '[Warning] Some files or directory have been found in ' + args.output_bids_directory + ': \n'
+                for f in file_list:
+                    error_str += '\t' + f + '\n'
+                error_str += 'Do you wish to continue ?(If yes, this may overwrite the files mentioned above).: ' + Fore.RESET
+                cprint(error_str)
+                while True:
+                    cprint('Your answer [yes/no]:')
+                    answer = input()
+                    if answer.lower() in ['yes', 'no']:
+                        break
+                    else:
+                        cprint(Fore.RED + 'You must answer yes or no' + Fore.RESET)
+                if answer.lower() == 'no':
+                    cprint(Fore.RED + 'Clinica will now exit...' + Fore.RESET)
+                    sys.exit(0)
+        else:
+            makedirs(args.output_bids_directory)
+
+        center_all_nifti(args.bids_directory, args.output_bids_directory)
+        cprint(Fore.GREEN + 'All NIfTI files/images of BIDS folder ' + abspath(args.bids_directory)
+               + ' have been centered in output folder ' + abspath(args.output_bids_directory) + Fore.RESET)

@@ -287,11 +287,12 @@ def execute():
     from clinica.iotools.utils.data_handling_cli import CmdParserSubjectsSessions
     from clinica.iotools.utils.data_handling_cli import CmdParserMergeTsv
     from clinica.iotools.utils.data_handling_cli import CmdParserMissingModalities
-
+    from clinica.iotools.utils.data_handling_cli import CmdParserCenterNifti
     io_tools = [
         CmdParserSubjectsSessions(),
         CmdParserMergeTsv(),
         CmdParserMissingModalities(),
+        CmdParserCenterNifti()
     ]
 
     HELP_IO_TOOLS = 'Tools to handle BIDS/CAPS datasets.'

@@ -542,3 +542,100 @@ def create_subs_sess_list(input_dir, output_dir,
                 subjs_sess_tsv.write(subj_id + '\t' + session_name + '\n')
 
     subjs_sess_tsv.close()
+
+
+def center_nifti_origin(input_image, output_image):
+
+    """
+
+    Put the origin of the coordinate system at the center of the image
+
+    Args:
+        input_image: path to the input image
+        output_image: path to the output image (where the result will be stored)
+
+    Returns:
+        path of the output image created
+    """
+
+    import nibabel as nib
+    import numpy as np
+    from colorama import Fore
+    from nibabel.spatialimages import ImageFileError
+    from os.path import isfile
+
+    error_str = None
+    try:
+        img = nib.load(input_image)
+    except FileNotFoundError:
+        error_str = Fore.RED + '[Error] No such file ' + input_image + Fore.RESET
+    except ImageFileError:
+        error_str = Fore.RED + '[Error] File ' + input_image + ' could not be read.' + Fore.RESET
+
+    if not error_str:
+        canonical_img = nib.as_closest_canonical(img)
+        hd = canonical_img.header
+
+        qform = np.zeros((4, 4))
+        for i in range(1, 4):
+            qform[i - 1, i - 1] = hd['pixdim'][i]
+            qform[i - 1, 3] = -1.0 * hd['pixdim'][i] * hd['dim'][i] / 2.0
+        new_img = nib.Nifti1Image(canonical_img.get_data(caching='unchanged'), qform)
+
+        nib.save(new_img, output_image)
+        if not isfile(output_image):
+            error_str = Fore.RED + '[Error] NIfTI file created but Clinica could not save it to ' \
+                        + output_image + '. Please check that the output folder has the correct permissions.' \
+                        + Fore.RESET
+    return output_image, error_str
+
+
+def center_all_nifti(bids_dir, output_dir):
+    """
+    Center all the NIfTI images of the input BIDS folder into the empty output_dir specified in argument.
+    All the files from bids_dir are copied into output_dir, then all the NIfTI images we can found are replaced by their
+    centered version.
+
+    Args:
+        bids_dir: (str) path to bids directory
+        output_dir: (str) path to EMPTY output directory
+
+    Returns:
+
+    """
+    from colorama import Fore
+    from clinica.utils.io import check_bids_folder
+    from clinica.utils.exceptions import ClinicaBIDSError
+    from os.path import join
+    from glob import glob
+    from os import listdir
+    from os.path import isdir, isfile
+    from shutil import copy2, copytree
+
+    # output and input must be different, so that we do not mess with user's data
+    if bids_dir == output_dir:
+        raise ClinicaBIDSError(Fore.RED + '[Error] Input BIDS and output directories must be different' + Fore.RESET)
+
+    # check that input is a BIDS dir
+    check_bids_folder(bids_dir)
+
+    for f in listdir(bids_dir):
+        if isdir(join(bids_dir, f)) and not isdir(join(output_dir, f)):
+            copytree(join(bids_dir, f), join(output_dir, f))
+        elif isfile(join(bids_dir, f)) and not isfile(join(output_dir, f)):
+            copy2(join(bids_dir, f), output_dir)
+
+    pattern = join(output_dir, '**/*.nii*')
+    nifti_files = glob(pattern, recursive=True)
+    all_errors = []
+    for f in nifti_files:
+        print('Handling ' + f)
+        _, current_error = center_nifti_origin(f, f)
+        if current_error:
+            all_errors.append(current_error)
+    if len(all_errors) > 0:
+        final_error_msg = Fore.RED + '[Error] Clinica encoutered ' + str(len(all_errors)) \
+                          + ' error(s) while trying to center all NIfTI images.\n'
+        for error in all_errors:
+            final_error_msg += '\n' + error
+        raise RuntimeError(final_error_msg)
