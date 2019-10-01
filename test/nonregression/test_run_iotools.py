@@ -205,3 +205,24 @@ def test_run_Aibl2Bids(cmdopt):
     compare_folders(join(root, 'out'), join(root, 'ref'),
                     shared_folder_name='bids')
     clean_folder(join(root, 'out', 'bids'), recreate=True)
+
+
+def test_run_CenterNifti(cmdopt):
+    from clinica.iotools.utils.data_handling import center_all_nifti
+    from os.path import dirname, join, abspath
+
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'CenterNifti')
+
+    clean_folder(join(root, 'out', 'bids_centered'), recreate=True)
+
+    bids_dir = join(root, 'in', 'bids')
+    output_dir = join(root, 'out', 'bids_centered')
+
+    center_all_nifti(bids_dir, output_dir)
+    hashes_out = create_list_hashes(output_dir, extensions_to_keep=('.nii.gz', '.nii'))
+    hashes_ref = create_list_hashes(join(root, 'ref', 'bids_centered'), extensions_to_keep=('.nii.gz', '.nii'))
+
+    if hashes_out != hashes_ref:
+        raise RuntimeError('Hashes of nii* files are different between out and ref')
+    clean_folder(join(root, 'out', 'bids_centered'), recreate=False)
