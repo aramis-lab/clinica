@@ -5,13 +5,18 @@ def check_spm_home():
     """Check and get SPM_HOME environment variable if present."""
     import os
     import platform
+    from colorama import Fore
     from .check_dependency import check_environment_variable
+    from .exceptions import ClinicaMissingDependencyError
 
     spm_home = check_environment_variable('SPM_HOME', 'SPM')
 
     spm_standalone_home = os.environ.get('SPMSTANDALONE_HOME', '')
     if spm_standalone_home:
-        assert(os.path.isdir(spm_standalone_home))
+        if not os.path.isdir(spm_standalone_home):
+            raise ClinicaMissingDependencyError(
+                '%s\n[Error] The SPMSTANDALONE_HOME environment variable you gave is not a folder (content: %s).%s'
+                % (Fore.RED, spm_standalone_home, Fore.RESET))
         if platform.system() == 'Darwin':
             spm_home = os.path.join(spm_standalone_home, 'spm12.app', 'Contents', 'MacOS', 'spm12_mcr')
         else:
