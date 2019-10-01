@@ -29,7 +29,9 @@ class T1FreeSurferCLI(ce.CmdParser):
         optional.add_argument("-raa", "--recon_all_args",
                               metavar='flag(s)', type=str, default="-qcache",
                               help='Additional flags for recon-all command line '
-                                   '(default: --recon_all_args="%(default)s")')
+                                   '(default: --recon_all_args="%(default)s"). '
+                                   'Please note that = is compulsory after --recon_all_args/-raa flag '
+                                   '(this is not the case for other flags).')
 
         # Clinica standard arguments (e.g. --n_procs)
         clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
