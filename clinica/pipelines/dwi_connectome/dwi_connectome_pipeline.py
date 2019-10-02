@@ -56,75 +56,98 @@ class DwiConnectome(cpe.Pipeline):
         """
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from clinica.iotools.grabcaps import CAPSLayout
         from clinica.utils.stream import cprint
         from clinica.utils.io import check_input_caps_files
-        from clinica.utils.exceptions import ClinicaException, ClinicaCAPSError
+        from clinica.utils.exceptions import ClinicaCAPSError
+        from clinica.utils.inputs import clinica_file_reader
         from colorama import Fore
         import re
 
-        # Remove 'sub-' prefix from participant IDs
-        participants_regex = '|'.join(sub[4:] for sub in self.subjects)
-        # Remove 'ses-' prefix from session IDs
-        sessions_regex = '|'.join(ses[4:] for ses in self.sessions)
+        all_errors = []
 
-        # cprint('Loading CAPS folder...')
-        caps_layout = CAPSLayout(self.caps_directory)
-        # cprint('CAPS folder loaded')
-
-        error_message = ""
         # Inputs from t1-freesurfer pipeline
         # ==================================
+
         # White matter segmentation
-        wm_mask_files = caps_layout.get(freesurfer_file='wm.seg.mgz', return_type='file',
-                                        subject=participants_regex, session=sessions_regex)
-        error_message += check_input_caps_files(wm_mask_files, "T1_FS_WM", "t1-freesurfer",
-                                                self.caps_directory, self.subjects, self.sessions)
+        wm_mask_files, err_msg = clinica_file_reader(self.subjects,
+                                                     self.sessions,
+                                                     self.caps_directory,
+                                                     {'pattern': 'mri/wm.seg.mgz',
+                                                      'description': 'segmentation of white matter (mri/wm.seg.mgz)',
+                                                      'needed_pipeline': 't1-freesurfer'})
+        if err_msg:
+            all_errors.append(err_msg)
+
         # Desikan parcellation
-        aparc_aseg_files = caps_layout.get(freesurfer_file='aparc\+aseg.mgz', return_type='file',
-                                           subject=participants_regex, session=sessions_regex)
-        error_message += check_input_caps_files(aparc_aseg_files, "T1_FS_DESIKAN", "t1-freesurfer",
-                                                self.caps_directory, self.subjects, self.sessions)
+        aparc_aseg_files, err_msg = clinica_file_reader(self.subjects,
+                                                        self.sessions,
+                                                        self.caps_directory,
+                                                        {'pattern': 'sub-*_ses-*/mri/aparc+aseg.mgz',
+                                                         'description': 'Desikan-based segmentation (mri/aparc.a2009s+aseg.mgz)',
+                                                         'needed_pipeline': 't1-freesurfer'})
+        if err_msg:
+            all_errors.append(err_msg)
 
         # Destrieux parcellation
-        aparc_aseg_a2009s_files = caps_layout.get(freesurfer_file='aparc.a2009s\+aseg.mgz', return_type='file',
-                                                  subject=participants_regex, session=sessions_regex)
-        error_message += check_input_caps_files(aparc_aseg_a2009s_files, "T1_FS_DESTRIEUX", "t1-freesurfer",
-                                                self.caps_directory, self.subjects, self.sessions)
+        aparc_aseg_a2009s_files, err_msg = clinica_file_reader(self.subjects,
+                                                               self.sessions,
+                                                               self.caps_directory,
+                                                               {'pattern': 'sub-*_ses-*/mri/aparc.a2009s+aseg.mgz',
+                                                                'description': 'Destrieux-based segmentation (mri/aparc.a2009s+aseg.mgz)',
+                                                                'needed_pipeline': 't1-freesurfer'})
+        if err_msg:
+            all_errors.append(err_msg)
 
         # Inputs from dwi-preprocessing pipeline
         # ======================================
         # Preprocessed DWI
-        dwi_files = caps_layout.get(type='dwi', suffix='preproc', extensions=['.nii|.nii.gz'], return_type='file',
-                                    subject=participants_regex, session=sessions_regex)
-        error_message += check_input_caps_files(dwi_files, "DWI_PREPROC_NII", "dwi-preprocessing",
-                                                self.caps_directory, self.subjects, self.sessions)
+        dwi_files, err_msg = clinica_file_reader(self.subjects,
+                                                 self.sessions,
+                                                 self.caps_directory,
+                                                 {'pattern': '*_dwi_space-*_preproc.nii*',
+                                                  'description': 'preprocessed DWI',
+                                                  'needed_pipeline': 'dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap'})
+        if err_msg:
+            all_errors.append(err_msg)
 
         # B0 brainmask
-        dwi_brainmask_files = caps_layout.get(type='dwi', suffix='brainmask', extensions=['.nii|.nii.gz'], return_type='file',
-                                              subject=participants_regex, session=sessions_regex)
-        error_message += check_input_caps_files(dwi_brainmask_files, "DWI_PREPROC_BM", "dwi-preprocessing",
-                                                self.caps_directory, self.subjects, self.sessions)
+        dwi_brainmask_files, err_msg = clinica_file_reader(self.subjects,
+                                                           self.sessions,
+                                                           self.caps_directory,
+                                                           {'pattern': '*_dwi_space-*_brainmask.nii*',
+                                                            'description': 'b0 brainmask',
+                                                            'needed_pipeline': 'dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap'})
+        if err_msg:
+            all_errors.append(err_msg)
 
         # Preprocessed bvec
-        bvec_files = caps_layout.get(type='dwi', suffix='preproc', return_type='file', extensions='bvec',
-                                     subject=participants_regex, session=sessions_regex)
-        error_message += check_input_caps_files(bvec_files, "DWI_PREPROC_BVEC", "dwi-preprocessing",
-                                                self.caps_directory, self.subjects, self.sessions)
+        bvec_files, err_msg = clinica_file_reader(self.subjects,
+                                                  self.sessions,
+                                                  self.caps_directory,
+                                                  {'pattern': '*_dwi_space-*_preproc.bvec',
+                                                   'description': 'preprocessed bvec',
+                                                   'needed_pipeline': 'dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap'})
+        if err_msg:
+            all_errors.append(err_msg)
 
         # Preprocessed bval
-        bval_files = caps_layout.get(type='dwi', suffix='preproc', extensions='bval', return_type='file',
-                                     subject=participants_regex, session=sessions_regex)
-        error_message += check_input_caps_files(bval_files, "DWI_PREPROC_BVAL", "dwi-preprocessing",
-                                                self.caps_directory, self.subjects, self.sessions)
+        bval_files, err_msg = clinica_file_reader(self.subjects,
+                                                  self.sessions,
+                                                  self.caps_directory,
+                                                  {'pattern': '*_dwi_space-*_preproc.bval',
+                                                   'description': 'preprocessed bval',
+                                                   'needed_pipeline': 'dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap'})
+        if err_msg:
+            all_errors.append(err_msg)
 
-        if error_message:
+        if len(all_errors) > 0:
+            error_message = 'Clinica faced errors while trying to read files in your BIDS or CAPS directories.\n'
+            for msg in all_errors:
+                error_message += msg
             raise ClinicaCAPSError(error_message)
 
         # Check space of DWI dataset
-        dwi_file_spaces = caps_layout.get(type='dwi', suffix='preproc', extensions=['.nii|.nii.gz'],
-                                          target='space', return_type='id',
-                                          subject=participants_regex, session=sessions_regex)
+        dwi_file_spaces = [re.search('.*_space-(.*)_preproc.nii.*', file, re.IGNORECASE).group(1) for file in dwi_files]
 
         # Return an error if all the DWI files are not in the same space
         if any(a != dwi_file_spaces[0] for a in dwi_file_spaces):
@@ -136,34 +159,27 @@ class DwiConnectome(cpe.Pipeline):
         # Used only for for T1-B0 registration
         if dwi_file_spaces[0] == 'b0':
             # Brain extracted T1w
-            t1_brain_files = caps_layout.get(freesurfer_file='brain.mgz', return_type='file',
-                                             subject=participants_regex, session=sessions_regex)
-            error_message += check_input_caps_files(t1_brain_files, "T1_FS_BE", "t1-freesurfer",
-                                                    self.caps_directory, self.subjects, self.sessions)
-            if error_message:
-                raise ClinicaCAPSError(error_message)
+            t1_brain_files, err_msg = clinica_file_reader(self.subjects,
+                                                          self.sessions,
+                                                          self.caps_directory,
+                                                          {'pattern': 'sub-*_ses-*/mri/brain.mgz',
+                                                           'description': ' extracted brain from T1w MRI',
+                                                           'needed_pipeline': 't1-freesurfer'})
+            if err_msg:
+                raise ClinicaCAPSError(err_msg)
 
         list_atlas_files = [
-            [aparc_aseg_files[i], aparc_aseg_a2009s_files[i]]
-            for i in range(len(self.subjects))
+            [aparc_aseg, aparc_aseg_a2009]
+            for aparc_aseg, aparc_aseg_a2009 in zip(aparc_aseg_files, aparc_aseg_a2009s_files)
         ]
 
-        list_grad_fsl = [
-            (bvec_files[i], bval_files[i])
-            for i in range(len(self.subjects))
-        ]
+        list_grad_fsl = [(bvec, bval) for bvec, bval in zip(bvec_files, bval_files)]
 
-        if len(dwi_files) == 0:
-            import sys
-            cprint('%s\nEither all the images were already run by the pipeline or no image was found to run the pipeline. '
-                   'The program will now exit.%s' % (Fore.BLUE, Fore.RESET))
-            sys.exit(0)
-        else:
-            p_id_images_to_process = [re.search(r'(sub-[a-zA-Z0-9]+)', caps_file).group() for caps_file in dwi_files]
-            s_id_images_to_process = [re.search(r'(ses-[a-zA-Z0-9]+)', caps_file).group() for caps_file in dwi_files]
-            images_to_process = ', '.join(p_id[4:] + '|' + s_id[4:]
-                                          for p_id, s_id in zip(p_id_images_to_process, s_id_images_to_process))
-            cprint('The pipeline will be run on the following subject(s): %s' % images_to_process)
+        p_id_images_to_process = [re.search(r'(sub-[a-zA-Z0-9]+)', caps_file).group() for caps_file in dwi_files]
+        s_id_images_to_process = [re.search(r'(ses-[a-zA-Z0-9]+)', caps_file).group() for caps_file in dwi_files]
+        images_to_process = ', '.join(p_id[4:] + '|' + s_id[4:]
+                                      for p_id, s_id in zip(p_id_images_to_process, s_id_images_to_process))
+        cprint('The pipeline will be run on the following subject(s): %s' % images_to_process)
 
         if dwi_file_spaces[0] == 'b0':
             self.parameters['dwi_space'] = 'b0'
