@@ -36,7 +36,7 @@ def is_binary_present(binary):
 def check_environment_variable(environment_variable, software_name):
     import os
     from colorama import Fore
-    from clinica.utils.exceptions import ClinicaMissingDependencyError
+    from .exceptions import ClinicaMissingDependencyError
 
     content_var = os.environ.get(environment_variable, '')
     if not content_var:

@@ -49,9 +49,11 @@ class T1FreeSurferCLI(ce.CmdParser):
         from colorama import Fore
         from tempfile import mkdtemp
         from .t1_freesurfer_pipeline import T1FreeSurfer
+        from clinica.iotools.grabcaps import CAPSLayout
+        from clinica.utils.io import read_participant_tsv, extract_image_ids
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.stream import cprint
-        from clinica.utils.ux import print_end_pipeline
+        from clinica.utils.ux import print_end_pipeline, print_failed_images
 
         pipeline = T1FreeSurfer(
             bids_directory=self.absolute_path(args.bids_directory),
@@ -80,9 +82,6 @@ class T1FreeSurferCLI(ce.CmdParser):
         except RuntimeError as e:
             # Check that it is a Nipype error
             if 'Workflow did not execute cleanly. Check log for details' in str(e):
-                from clinica.iotools.grabcaps import CAPSLayout
-                from clinica.utils.io import read_participant_tsv, extract_image_ids
-                from clinica.utils.ux import print_end_pipeline, print_failed_images
 
                 # Extract subject IDs used by the pipeline
                 tsv_file = os.path.join(pipeline.base_dir, pipeline.__class__.__name__, 'participants.tsv')
@@ -96,8 +95,8 @@ class T1FreeSurferCLI(ce.CmdParser):
                                              subject=participant_labels, session=session_labels)
 
                 # Extract missing subject IDs
-                input_ids = [participant_ids[i] + '_' + session_ids[i] for i
-                             in range(len(participant_ids))]
+                input_ids = [participant_id + '_' + session_id
+                             for participant_id, session_id in zip(participant_ids, session_ids)]
                 output_ids = extract_image_ids(caps_files)
                 missing_ids = list(set(input_ids) - set(output_ids))
 

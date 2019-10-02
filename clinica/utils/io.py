@@ -442,7 +442,8 @@ def extract_crash_files_from_log_file(filename):
     import os
     import re
 
-    assert(os.path.isfile(filename))
+    assert(os.path.isfile(filename)),\
+        'extract_crash_files_from_log_file: filename parameter is not a file (%s)' % filename
 
     log_file = open(filename, "r")
     crash_files = []
