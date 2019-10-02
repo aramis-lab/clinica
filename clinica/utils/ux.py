@@ -4,11 +4,15 @@
 def print_images_to_process(list_participant_id, list_session_id):
     """Print which images will be processed by the pipeline."""
     from .stream import cprint
-    images_to_process = ', '.join(list_participant_id[i][4:] + '|' + list_session_id[i][4:]
-                                  for i in range(len(list_participant_id))
+    images_to_process = ', '.join(participant_id + '|' + session_id
+                                  for participant_id, session_id in zip(list_participant_id, list_session_id)
                                   )
-    cprint('The pipeline will be run on the following %s image(s): %s' %
-           (len(list_participant_id), images_to_process))
+    if len(list_participant_id) < 25:
+        cprint('The pipeline will be run on the following %s image(s): %s' %
+               (len(list_participant_id), images_to_process))
+    else:
+        cprint('The pipeline will be run on %s images (too many IDs to display)' %
+               (len(list_participant_id)))
 
 
 def print_begin_image(image_id, list_keys=None, list_values=None):
