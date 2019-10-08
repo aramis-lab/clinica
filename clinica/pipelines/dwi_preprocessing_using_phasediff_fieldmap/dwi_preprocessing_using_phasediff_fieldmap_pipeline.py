@@ -16,6 +16,7 @@ __status__ = "Development"
 cfg = dict(execution={'parameterize_dirs': False})
 config.update_config(cfg)
 
+
 class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
     """DWI Preprocessing using phase difference fieldmap.
 
