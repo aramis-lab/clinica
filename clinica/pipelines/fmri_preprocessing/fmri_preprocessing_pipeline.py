@@ -108,6 +108,8 @@ class fMRIPreprocessing(cpe.Pipeline):
         import json
         import numpy as np
         from clinica.utils.stream import cprint
+        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.exceptions import ClinicaBIDSError
 
         # Reading BIDS files
         # ==================
@@ -115,29 +117,45 @@ class fMRIPreprocessing(cpe.Pipeline):
                              interface=nutil.IdentityInterface(
                                      fields=self.get_input_fields(),
                                      mandatory_inputs=True))
-        # I remove the 'sub-' prefix that is not considered by the pybids'
-        # layout object.
-        subject_regex = '|'.join(s[4:] for s in self.subjects)
 
+        # Store all the potentials errors
+        all_errors = []
         if ('unwarping' in self.parameters) and self.parameters['unwarping']:
-            read_node.inputs.magnitude1 = self.bids_layout.get(
-                    return_type='file',
-                    type='magnitude1',
-                    extensions='nii.gz',
-                    subject=subject_regex)
-            read_node.inputs.phasediff = self.bids_layout.get(
-                    return_type='file',
-                    type='phasediff',
-                    extensions='nii.gz',
-                    subject=subject_regex)
-        read_node.inputs.bold = self.bids_layout.get(return_type='file',
-                                                     type='bold',
-                                                     extensions='nii.gz',
-                                                     subject=subject_regex)
-        read_node.inputs.T1w = self.bids_layout.get(return_type='file',
-                                                    type='T1w',
-                                                    extensions='nii.gz',
-                                                    subject=subject_regex)
+            # Magnitude 1 file
+            read_node.inputs.magnitude1, err_msg = clinica_file_reader(self.subjects,
+                                                                       self.sessions,
+                                                                       self.bids_directory,
+                                                                       {'pattern': 'fmap/*_magnitude1.nii*',
+                                                                        'description': 'magnitude file'})
+            if err_msg:
+                all_errors.append(err_msg)
+
+            # Phasediff file
+            read_node.inputs.phasediff, err_msg = clinica_file_reader(self.subjects,
+                                                                      self.sessions,
+                                                                      self.bids_directory,
+                                                                      {'pattern': 'fmap/*_phasediff.nii*',
+                                                                       'description': 'phasediff phasediff NIfTI file'})
+            if err_msg:
+                all_errors.append(err_msg)
+
+        # Bold files
+        read_node.inputs.bold, err_msg = clinica_file_reader(self.subjects,
+                                                             self.sessions,
+                                                             self.bids_directory,
+                                                             {'pattern': 'func/*_bold.nii*',
+                                                              'description': 'BOLD NIfTI file'})
+        if err_msg:
+            all_errors.append(err_msg)
+
+        # T1w-MRI files
+        read_node.inputs.T1w, err_msg = clinica_file_reader(self.subjects,
+                                                            self.sessions,
+                                                            self.bids_directory,
+                                                            {'pattern': '*_t1w.nii*',
+                                                             'description': 'T1w MRI acquisition'})
+        if err_msg:
+            all_errors.append(err_msg)
 
         # Reading BIDS json
         # =================
@@ -151,54 +169,64 @@ class fMRIPreprocessing(cpe.Pipeline):
         read_node.inputs.ref_slice = []
         read_node.inputs.time_acquisition = []
 
-        for i in range(len(self.subjects)):
-            cprint('Loading subject "{sub}"...'.format(sub=self.subjects[i]))
+        if self.parameters['unwarping']:
+            # From phasediff json file
+            phasediff_json, err_msg = clinica_file_reader(self.subjects,
+                                                          self.sessions,
+                                                          self.bids_directory,
+                                                          {'pattern': 'fmap/*_phasediff.json',
+                                                           'description': 'phasediff json file'})
+            if err_msg:
+                all_errors.append(err_msg)
+            else:
+                for json_f in phasediff_json:
+                    with open(json_f) as json_file:
+                        data = json.load(json_file)
+                        # SPM echo times
+                        read_node.inputs.et.append([data['EchoTime1'],
+                                                    data['EchoTime2']])
+                        # SPM blip direction
+                        # TODO: Verifiy that it is the correct way to get the
+                        # blipdir
+                        blipdir_raw = data['PhaseEncodingDirection']
+                        if len(blipdir_raw) > 1 and blipdir_raw[1] == '-':
+                            read_node.inputs.blipdir.append(-1)
+                        else:
+                            read_node.inputs.blipdir.append(1)
 
-            if self.parameters['unwarping']:
-                # From phasediff json file
-                phasediff_json = self.bids_layout.get(return_type='file',
-                                                      type='phasediff',
-                                                      extensions='json',
-                                                      subject=self.subjects[i][
-                                                              4:])
-                with open(phasediff_json[0]) as json_file:
+        # From func json file
+        func_json, err_msg = clinica_file_reader(self.subjects,
+                                                 self.sessions,
+                                                 self.bids_directory,
+                                                 {'pattern': 'func/*_bold.json',
+                                                  'description': 'bold json file'})
+        if err_msg:
+            all_errors.append(err_msg)
+        else:
+            for json_f in func_json:
+                with open(json_f) as json_file:
                     data = json.load(json_file)
-                    # SPM echo times
-                    read_node.inputs.et.append([data['EchoTime1'],
-                                                data['EchoTime2']])
-                    # SPM blip direction
-                    # TODO: Verifiy that it is the correct way to get the
-                    # blipdir
-                    blipdir_raw = data['PhaseEncodingDirection']
-                    if len(blipdir_raw) > 1 and blipdir_raw[1] == '-':
-                        read_node.inputs.blipdir.append(-1)
-                    else:
-                        read_node.inputs.blipdir.append(1)
-
-            # From func json file
-            func_json = self.bids_layout.get(return_type='file',
-                                             type='bold',
-                                             extensions='json',
-                                             subject=self.subjects[i][4:])
-            with open(func_json[0]) as json_file:
-                data = json.load(json_file)
-                # SPM Total readout time
-                read_node.inputs.tert.append(
+                    # SPM Total readout time
+                    read_node.inputs.tert.append(
                         1 / data['BandwidthPerPixelPhaseEncode'])
-                # SPM Repetition time
-                read_node.inputs.time_repetition.append(data['RepetitionTime'])
-                # Number of slices
-                slice_timing = data['SliceTiming']
-                read_node.inputs.num_slices.append(len(slice_timing))
-                # Slice order
-                slice_order = np.argsort(slice_timing) + 1
-                read_node.inputs.slice_order.append(slice_order.tolist())
-                read_node.inputs.ref_slice.append(np.argmin(slice_timing) + 1)
-                read_node.inputs.time_acquisition.append(
+                    # SPM Repetition time
+                    read_node.inputs.time_repetition.append(data['RepetitionTime'])
+                    # Number of slices
+                    slice_timing = data['SliceTiming']
+                    read_node.inputs.num_slices.append(len(slice_timing))
+                    # Slice order
+                    slice_order = np.argsort(slice_timing) + 1
+                    read_node.inputs.slice_order.append(slice_order.tolist())
+                    read_node.inputs.ref_slice.append(np.argmin(slice_timing) + 1)
+                    read_node.inputs.time_acquisition.append(
                         data['RepetitionTime'] - data['RepetitionTime']
                         / float(len(slice_timing)))
 
-            cprint(read_node.inputs)
+        if len(all_errors) > 0:
+            error_message = 'Clinica faced error(s) while trying to read files in your BIDS directory.\n'
+            for msg in all_errors:
+                error_message += msg
+            raise ClinicaBIDSError(error_message)
 
         if ('unwarping' in self.parameters) and self.parameters['unwarping']:
             self.connect([
