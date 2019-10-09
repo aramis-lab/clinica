@@ -330,6 +330,7 @@ def hmc_split(in_file, in_bval, ref_num=0, lowbval=5.0):
 
 
 def check_dwi_volume(in_dwi, in_bvec, in_bval):
+    # TODO return str instead of raising an error, so that user can be informed of which file is causing problem
     """
     Check that # DWI = # B-val = # B-vec.
 

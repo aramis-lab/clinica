@@ -346,7 +346,7 @@ def test_run_DWIPreprocessingUsingT1(cmdopt):
     root = join(root, 'data', 'DWIPreprocessingUsingT1')
 
     # Remove old instance of UT
-    clean_folder(join(root, 'out', 'caps'))
+    clean_folder(join(root, 'out', 'caps'), recreate=True)
     clean_folder(join(working_dir, 'DWIPreprocessingUsingT1'))
 
     pipeline = DwiPreprocessingUsingT1(bids_directory=join(root, 'in', 'bids'),
