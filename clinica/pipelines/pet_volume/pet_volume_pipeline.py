@@ -233,8 +233,6 @@ class PETVolume(cpe.Pipeline):
             tissues_input_final.append(subject_tissue_list)
         tissues_input = tissues_input_final
 
-
-
         # Flowfields
         flowfields_caps, err_msg = clinica_file_reader(self.subjects,
                                                        self.sessions,

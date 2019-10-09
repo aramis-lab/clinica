@@ -50,33 +50,32 @@ class T1VolumeParcellation(cpe.Pipeline):
         """Build and connect an input node to the pipeline.
         """
 
-        from clinica.utils.stream import cprint
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from clinica.lib.pycaps.caps_layout import CAPSLayout
+        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.exceptions import ClinicaCAPSError
+
+        # Get gray matter map from t1w preprocessing (from t1-volume)
+        gm_mni, err_msg = clinica_file_reader(self.subjects,
+                                              self.sessions,
+                                              self.caps_directory,
+                                              {'pattern': 't1/spm/dartel/group-' + self.parameters['group_id']
+                                                          + '/*_T1w_segm-graymatter_space-Ixi549Space_modulated-'
+                                                          + 'on_probability.nii*',
+                                               'description': ' grey matter map in MNI space (Ixi549) with modulation',
+                                               'needed_pipeline': 't1-volume'})
+        if err_msg:
+            final_error_str = 'Clinica faced error(s) while trying to read files in your CAPS directory.\n'
+            final_error_str += err_msg
+            raise ClinicaCAPSError(final_error_str)
 
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(
                                             fields=self.get_input_fields(),
                                             mandatory_inputs=True))
+
+        read_parameters_node.inputs.file_list = gm_mni
         read_parameters_node.inputs.atlas_list = self.parameters['atlases']
-
-        caps_layout = CAPSLayout(self.caps_directory)
-
-        cprint('------- INPUT FILES FOR EACH SUBJECTS -------')
-
-        subjects_regex = '|'.join(sub[4:] for sub in self.subjects)
-        unique_session = set(list(self.sessions))
-        sessions_regex = '|'.join(sub[4:] for sub in unique_session)
-        cprint('  * grabbing all files from CAPS folder')
-        caps_file = caps_layout.get(return_type='file',
-                                    subject=subjects_regex,
-                                    session=sessions_regex,
-                                    group_id=self.parameters['group_id'],
-                                    modulation=self.parameters['modulate'])
-        if len(caps_file) != len(self.subjects):
-            raise IOError(str(len(caps_file)) + ' file(s) grabbed, but there is ' + str(len(self.subjects)) + ' sessions')
-        read_parameters_node.inputs.file_list = caps_file
 
         self.connect([(read_parameters_node, self.input_node, [('file_list', 'file_list')]),
                       (read_parameters_node, self.input_node, [('atlas_list', 'atlas_list')])
