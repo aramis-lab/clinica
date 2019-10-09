@@ -62,36 +62,29 @@ class T1FreeSurfer(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.exceptions import ClinicaBIDSError
-        from clinica.utils.io import check_input_bids_files
         from clinica.utils.stream import cprint
         from clinica.utils.ux import (print_images_to_process, print_no_image_to_process)
+        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.io import save_participants_sessions
 
-        # Remove 'sub-' prefix from participant IDs
-        participant_labels = '|'.join(sub[4:] for sub in self.subjects)
-        # Remove 'ses-' prefix from session IDs
-        session_labels = '|'.join(ses[4:] for ses in self.sessions)
-
-        error_message = ""
         # Inputs from anat/ folder
         # ========================
         # T1w file:
-        t1w_files = self.bids_layout.get(type='T1w', return_type='file', extensions=['.nii|.nii.gz'],
-                                         subject=participant_labels, session=session_labels)
-        error_message += check_input_bids_files(t1w_files, "T1W_NII", self.bids_directory, self.subjects, self.sessions)
+        t1w_files, err_msg = clinica_file_reader(self.subjects,
+                                                 self.sessions,
+                                                 self.bids_directory,
+                                                 {'pattern': '*_t1w.nii*',
+                                                  'description': 'T1 weighted image'})
 
-        if error_message:
-            raise ClinicaBIDSError(error_message)
+        if err_msg:
+            err_msg = 'Clinica faced error(s) while trying to read files in your BIDS directory.\n' + err_msg
+            raise ClinicaBIDSError(err_msg)
 
-        if len(t1w_files):
-            from clinica.utils.io import save_participants_sessions
-            # Save subjects to process in <WD>/T1FreeSurfer/participants.tsv
-            save_participants_sessions(self.subjects, self.sessions, os.path.join(self.base_dir, self.__class__.__name__))
-            print_images_to_process(self.subjects, self.sessions)
-            cprint('The pipeline will last approximately 10 hours per image.')
-        else:
-            import sys
-            print_no_image_to_process()
-            sys.exit(0)
+        # Save subjects to process in <WD>/T1FreeSurfer/participants.tsv
+        save_participants_sessions(self.subjects, self.sessions, os.path.join(self.base_dir, self.__class__.__name__))
+
+        print_images_to_process(self.subjects, self.sessions)
+        cprint('The pipeline will last approximately 10 hours per image.')
 
         read_node = npe.Node(name="ReadingFiles",
                              iterables=[
