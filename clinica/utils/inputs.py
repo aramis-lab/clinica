@@ -216,38 +216,3 @@ def clinica_group_reader(caps_directory, information, recursive_search_max=10):
                        + 'Please note that the following clinica pipeline(s) must have run to obtain these files: ' \
                        + information['needed_pipeline'] + Fore.RESET + '\n'
     return current_glob_found, error_string
-
-
-if __name__ == '__main__':
-    # subjs = ['sub-Adni011S4105']
-    # sesss = ['ses-M00']
-    # bids = '/Users/arnaud.marcoux/CI/new_data/PETSurface/in/bids'
-    # file, err = clinica_file_reader(subjs,
-    #                                 sesss,
-    #                                 bids,
-    #                                 {'pattern': '*fdg_pet.nii*',
-    #                                  'description': 'FDG PET file'})
-    # caps = '/Users/arnaud.marcoux/CI/new_data/PETSurface/in/caps'
-    # file, err = clinica_file_reader(subjs,
-    #                                 sesss,
-    #                                 caps,
-    #                                 {'pattern': 'surf/rh.white',
-    #                                  'description': 'right hemisphere of outter cortical surface.',
-    #                                  'needed_pipeline': 't1-freesurfer'})
-    # print(err)
-    """
-    print(file)
-    caps = '/Users/arnaud.marcoux/CI/new_data/PETSurface/in/caps'
-    print(clinica_file_reader(subjs, sesss, caps, 'orig_nu.mgz'))
-    print(clinica_file_reader(subjs, sesss, bids, '*_pet.json'))
-    print(clinica_file_reader(subjs, sesss, caps, 'sub-*_ses-*/surf/rh.white'))
-    """
-    g_id = 'UnitTest'
-    a, st = clinica_group_reader('/Users/arnaud.marcoux/CI/new_data/T1VolumeExistingTemplate/in/caps',
-                                 {'pattern': 'group-' + g_id + '*_iteration-*_templaAte.nii*',
-                                  'description': 'template file for ' + g_id,
-                                  'needed_pipeline': 't1-volume-create_dartel or t1-volume'})
-    # a, st = clinica_group_reader('/Users/arnaud.marcoux/CI/new_data/T1VolumeExistingTemplate/in/caps',
-    #                             'group-' + g_id + '_template.nii*',
-    #                             recursive_search_max=10)
-    print(st)
