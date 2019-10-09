@@ -96,7 +96,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
                                              {'pattern': '*_t1w.nii*',
                                               'description': 'T1w MRI acquisition'})
         if err:
-            err = 'Write your warning' + err
+            err = 'Clinica faced error(s) while trying to read files in your CAPS directory.\n' + err
             raise ClinicaBIDSError(err)
 
         images_to_process = ', '.join(sub + '|' + ses for sub, ses in zip(self.subjects, self.sessions))
