@@ -133,7 +133,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             all_errors.append(err_msg)
 
         if len(all_errors) > 0:
-            error_message = 'Clinica faced error(s) while trying to read files in your CAPS directory.\n'
+            error_message = 'Clinica faced error(s) while trying to read files in your BIDS directory.\n'
             for msg in all_errors:
                 error_message += msg
             raise ClinicaBIDSError(error_message)
