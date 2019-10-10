@@ -580,7 +580,7 @@ def center_nifti_origin(input_image, output_image):
         for i in range(1, 4):
             qform[i - 1, i - 1] = hd['pixdim'][i]
             qform[i - 1, 3] = -1.0 * hd['pixdim'][i] * hd['dim'][i] / 2.0
-        new_img = nib.Nifti1Image(canonical_img.get_data(caching='unchanged'), qform)
+        new_img = nib.Nifti1Image(canonical_img.get_data(caching='unchanged'), affine=qform, header=hd)
 
         nib.save(new_img, output_image)
         if not isfile(output_image):
