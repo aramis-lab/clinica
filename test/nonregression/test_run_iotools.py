@@ -219,7 +219,9 @@ def test_run_CenterNifti(cmdopt):
     bids_dir = join(root, 'in', 'bids')
     output_dir = join(root, 'out', 'bids_centered')
 
-    center_all_nifti(bids_dir, output_dir)
+    all_modalities = ['t1w', 'pet', 'dwi', 'magnitude', 'bold', 'flair', 't2', 'phasediff']
+
+    center_all_nifti(bids_dir, output_dir, all_modalities)
     hashes_out = create_list_hashes(output_dir, extensions_to_keep=('.nii.gz', '.nii'))
     hashes_ref = create_list_hashes(join(root, 'ref', 'bids_centered'), extensions_to_keep=('.nii.gz', '.nii'))
 

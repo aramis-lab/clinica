@@ -124,10 +124,13 @@ class CmdParserCenterNifti(ce.CmdParser):
                                 help='Path to the BIDS dataset directory in which you want to center the NIfTI files/images.')
         self._args.add_argument("output_bids_directory",
                                 help='Path to the output directory. This is where your BIDS folder with centered nifti will appear.')
+        self._args.add_argument("--modality", '-m',
+                                help='List of modalities you want to center the NIfTI images (ex: "t1w fdg_pet dwi"). Default="t1w"',
+                                default='t1w')
 
     def run_command(self, args):
         from colorama import Fore
-        from os.path import isdir, abspath
+        from os.path import isdir, abspath, split
         from os import listdir
         from os import makedirs
         from clinica.iotools.utils.data_handling import center_all_nifti
@@ -138,7 +141,7 @@ class CmdParserCenterNifti(ce.CmdParser):
         if isdir(args.output_bids_directory):
             file_list = listdir(args.output_bids_directory)
             if len(file_list) > 0:
-                error_str = Fore.YELLOW + '[Warning] Some files or directory have been found in ' + args.output_bids_directory + ': \n'
+                error_str = Fore.YELLOW + '[Warning] Some files or directory have been found in ' + abspath(args.output_bids_directory) + ': \n'
                 for f in file_list:
                     error_str += '\t' + f + '\n'
                 error_str += 'Do you wish to continue ?(If yes, this may overwrite the files mentioned above).: ' + Fore.RESET
@@ -156,6 +159,15 @@ class CmdParserCenterNifti(ce.CmdParser):
         else:
             makedirs(args.output_bids_directory)
 
-        center_all_nifti(args.bids_directory, args.output_bids_directory)
+        split_modality = args.modality.split(' ')
+        # Remove empty str in list
+        split_modality = [element for element in split_modality if element]
+
+        center_all_nifti(abspath(args.bids_directory),
+                         abspath(args.output_bids_directory),
+                         split_modality)
+
         cprint(Fore.GREEN + 'All NIfTI files/images of BIDS folder ' + abspath(args.bids_directory)
-               + ' have been centered in output folder ' + abspath(args.output_bids_directory) + Fore.RESET)
+               + ' for the modalities ' + args.modality + ' have been centered in output folder '
+               + abspath(args.output_bids_directory) + Fore.RESET)
+        cprint('Please note that the rest of the folder has also been copied.')
