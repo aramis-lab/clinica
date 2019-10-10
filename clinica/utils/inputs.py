@@ -24,20 +24,26 @@ def clinica_file_reader(subjects,
     Args:
         subjects: list of subjects
         sessions: list of sessions (must be same size as subjects, and must correspond )
-        input_directory: location of the bids (or caps ?) directory
+        input_directory: location of the bids or caps directory
         information: dictionnary containg all the relevant information to look for the files. Dict must contains the
-                     following keys : pattern, description, needed_pipeline
+                     following keys : pattern, description. The optional key is: needed_pipeline
                              pattern: define the pattern of the final file
                              description: string to describe what the file is
-                             needed_pipeline (optional): string describing the pipeline needed to obtain the file beforehand
+                             needed_pipeline (optional): string describing the pipeline(s) needed to obtain the related file
 
     Returns:
          list of files respecting the subject/session order provided in input, and an error string that can have the
          following values : None (no error found) or a string describing the problem.
+         Note that theses outputs are ALWAYS given. The list of files will always contains the file that were correctly
+         grabbed. You should always use clinica_file_reader in the following manner:
+
+         file_list, error_message = clinica_file_reader(...)
+         if error_message:
+            # Deal with the error (print it, raise an Exception, store it in an array...)
 
         raise:
-            - Nothing, we prefer returning a string with the problem written in it, so that the rest of Clinica can
-            handle the problem properly
+            Nothing, we prefer returning a string with the problem written in it, so that the rest of Clinica pipelines
+            can handle the problem properly
 
         Examples: (path are shortened for readability)
             - You have the full name of a file:
@@ -173,7 +179,7 @@ def clinica_file_reader(subjects,
     return rez, error_message
 
 
-def clinica_group_reader(caps_directory, information, recursive_search_max=10):
+def clinica_group_reader(caps_directory, information):
     """
     This function grabs files relative to a group, according to a glob pattern (using *)
     Args:
@@ -201,7 +207,6 @@ def clinica_group_reader(caps_directory, information, recursive_search_max=10):
     assert pattern[0] != '/', 'pattern argument cannot start with char : / (does not work in os.path.join function). ' \
                               + 'If you want to indicate the exact name of the file, use the format' \
                               + ' directory_name/filename.extension or filename.extensionin the pattern argument'
-    assert recursive_search_max >= 1, 'recursive_search_max argument must be >= 1'
 
     check_caps_folder(caps_directory)
 
