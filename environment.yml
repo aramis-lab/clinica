@@ -23,7 +23,6 @@ dependencies:
       - scikit-image==0.14.1
       - sharedmem==0.3.5
       - xlrd==1.2.0
-      - grabbit==0.1.1
       - colorama==0.4.1
       - prov==1.5.0
       - pytest==4.3.1
