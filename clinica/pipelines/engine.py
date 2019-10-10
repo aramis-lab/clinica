@@ -50,7 +50,6 @@ class Pipeline(Workflow):
         is_built (bool): Informs if the pipelines has been built or not.
         parameters (dict): Parameters of the pipelines.
         info (dict): Information presented in the associated `info.json` file.
-        bids_layout (:obj:`BIDSLayout`): Object representing the BIDS directory.
         input_node (:obj:`npe.Node`): Identity interface connecting inputs.
         output_node (:obj:`npe.Node`): Identity interface connecting outputs.
         bids_directory (str): Directory used to read the data from, in BIDS.
@@ -744,11 +743,6 @@ class Pipeline(Workflow):
 
     @info.setter
     def info(self, value): self._info = value
-
-    @property
-    def bids_layout(self):
-        from bids.grabbids import BIDSLayout
-        return BIDSLayout(self.bids_directory)
 
     @property
     def input_node(self): return self._input_node
