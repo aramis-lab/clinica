@@ -590,7 +590,7 @@ def center_nifti_origin(input_image, output_image):
     return output_image, error_str
 
 
-def center_all_nifti(bids_dir, output_dir):
+def center_all_nifti(bids_dir, output_dir, modality):
     """
     Center all the NIfTI images of the input BIDS folder into the empty output_dir specified in argument.
     All the files from bids_dir are copied into output_dir, then all the NIfTI images we can found are replaced by their
@@ -606,7 +606,7 @@ def center_all_nifti(bids_dir, output_dir):
     from colorama import Fore
     from clinica.utils.io import check_bids_folder
     from clinica.utils.exceptions import ClinicaBIDSError
-    from os.path import join
+    from os.path import join, basename
     from glob import glob
     from os import listdir
     from os.path import isdir, isfile
@@ -615,6 +615,8 @@ def center_all_nifti(bids_dir, output_dir):
     # output and input must be different, so that we do not mess with user's data
     if bids_dir == output_dir:
         raise ClinicaBIDSError(Fore.RED + '[Error] Input BIDS and output directories must be different' + Fore.RESET)
+
+    assert isinstance(modality, list), 'modality arg must be a list of str'
 
     # check that input is a BIDS dir
     check_bids_folder(bids_dir)
@@ -627,8 +629,16 @@ def center_all_nifti(bids_dir, output_dir):
 
     pattern = join(output_dir, '**/*.nii*')
     nifti_files = glob(pattern, recursive=True)
+
+    # Now filter this list by elements in modality list
+    #   For each file:
+    #       if any modality name (lowercase) is found in the basename of the file:
+    #           keep the file
+    nifti_files_filtered = [f for f in nifti_files
+                            if any(elem.lower() in basename(f).lower() for elem in modality)]
+
     all_errors = []
-    for f in nifti_files:
+    for f in nifti_files_filtered:
         print('Handling ' + f)
         _, current_error = center_nifti_origin(f, f)
         if current_error:
