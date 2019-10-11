@@ -649,3 +649,20 @@ def center_all_nifti(bids_dir, output_dir, modality):
         for error in all_errors:
             final_error_msg += '\n' + error
         raise RuntimeError(final_error_msg)
+    return nifti_files_filtered
+
+
+def write_list_of_files(file_list, output_file):
+    from os.path import isfile
+
+    assert isinstance(file_list, list), 'First argument must be a list'
+    assert isinstance(output_file, str), 'Second argument must be a str'
+    if isfile(output_file):
+        return None
+
+    text_file = open(output_file, 'w+')
+    for created_file in file_list:
+        text_file.write(created_file + '\n')
+    text_file.close()
+    return output_file
+
