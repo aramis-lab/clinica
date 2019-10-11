@@ -178,6 +178,7 @@ class CmdParserCenterNifti(ce.CmdParser):
         # Write list of created files
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         log_file = abspath(join(args.output_bids_directory, 'centered_nifti_list_' + timestamp + '.txt'))
+        # If an error happen while creating the file, the function returns Nan
         if not write_list_of_files(centered_files, log_file):
             cprint(Fore.YELLOW + '[Warning] Could not create log file' + Fore.RESET)
 

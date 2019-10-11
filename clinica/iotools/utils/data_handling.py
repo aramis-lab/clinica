@@ -665,4 +665,3 @@ def write_list_of_files(file_list, output_file):
         text_file.write(created_file + '\n')
     text_file.close()
     return output_file
-
