@@ -105,3 +105,39 @@ sub-01           ses-M18      25/04/41        ...   8.865353    0.012349
 sub-02           ses-M00      09/01/91        ...   9.586342    0.027254
 ...
 ```
+
+##`center-nifti` - Center the NIfTI files of a BIDS directory
+Your [BIDS](http://bids.neuroimaging.io) dataset may contain NIfTI files whose origin is not centered in the middle of the data. SPM is specially sensitive to this case, and segmentations may end up being blank images. To mitigate this issue, we propose a simple tool that convert your BIDS dataset into a dataset with the centered NIfTI files for the selected modalities.
+By default, this tool will convert only T1w images into their centered version but you can easily convert whatever modalities you want.
+  
+
+```
+clinica iotools center-nifti bids_directory new_bids_directory --modality modality
+```
+where:
+
+- `bids_directory` is the input folder containing the dataset in a [BIDS](http://bids.neuroimaging.io) hierarchy.
+- `new_bids_directory` is the path of the output tsv. If a directory is specified instead of a file name, the default name for the file created will be `merge-tsv.tsv`.
+- `modality_list` is an **optional** parameter that defines which modalities are converted. (Only T1w images are centered by dafault, i.e parameter is not specified.)
+
+Please note that the rest of the input `bids` folder has also been copied to the output folder `new_bids`.
+
+If you want to convert FDG PET images, use:
+
+`clinica iotools center-nifti bids new_bids_directory --modality "fdg_pet"`
+
+If you want to convert AV45 PET images and T1w:
+
+`clinica iotools center-nifti bids new_bids_directory --modality "fdg_pet t1w"`
+
+So how does this all work ? To know if a NIfTI must be centered, the algorithm look at the filenames of the NIfTI images. 
+For example, regarding the file : `bids/sub-01/ses-M0/anat/sub-01_ses-M0_T1w.nii
+The filename is `sub-01_ses-M0_T1w.nii`.
+The algorithm tests (in a case insensitive way) if the string "fdg_pet" is in the filename : False
+The algorithm tests (in a case insensitive way) if the string "t1w" is in the filename : True !
+This file will be centered by the algorithm.
+
+Understanding this, you can now center any modality you want ! If yours files are named following this pattern : `sub-X_ses-Y_magnitude1.nii.gz`, specify the modality `--modality "magnitude1".
+
+
+
