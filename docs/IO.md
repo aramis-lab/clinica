@@ -108,6 +108,8 @@ sub-02           ses-M00      09/01/91        ...   9.586342    0.027254
 
 ##`center-nifti` - Center the NIfTI files of a BIDS directory
 Your [BIDS](http://bids.neuroimaging.io) dataset may contain NIfTI files whose origin is not centered in the middle of the data. SPM is specially sensitive to this case, and segmentations may end up being blank images. To mitigate this issue, we propose a simple tool that convert your BIDS dataset into a dataset with the centered NIfTI files for the selected modalities.
+
+
 By default, this tool will convert only T1w images into their centered version but you can easily convert whatever modalities you want.
   
 
@@ -120,7 +122,8 @@ where:
 - `new_bids_directory` is the path of the output tsv. If a directory is specified instead of a file name, the default name for the file created will be `merge-tsv.tsv`.
 - `modality_list` is an **optional** parameter that defines which modalities are converted. (Only T1w images are centered by dafault, i.e parameter is not specified.)
 
-Please note that the rest of the input `bids` folder has also been copied to the output folder `new_bids`.
+!!! note
+The rest of the input `bids` folder will also be copied to the output folder `new_bids`.
 
 If you want to convert FDG PET images, use:
 
