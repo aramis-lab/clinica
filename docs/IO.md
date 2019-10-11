@@ -136,10 +136,10 @@ If you want to convert AV45 PET images and T1w:
 So how does this all work ? To know if a NIfTI must be centered, the algorithm look at the filenames of the NIfTI images. 
 
 For example, regarding the file : `bids/sub-01/ses-M0/anat/sub-01_ses-M0_T1w.nii`
-- The filename is `sub-01_ses-M0_T1w.nii`.
-- The algorithm tests (in a case insensitive way) if the string "fdg_pet" is in the filename : False
-- The algorithm tests (in a case insensitive way) if the string "t1w" is in the filename : True !
-- This file will be centered by the algorithm.
+* The filename is `sub-01_ses-M0_T1w.nii`.
+* The algorithm tests (in a case insensitive way) if the string "fdg_pet" is in the filename : False
+* The algorithm tests (in a case insensitive way) if the string "t1w" is in the filename : True !
+* This file will be centered by the algorithm.
 
 Understanding this, you can now center any modality you want ! If yours files are named following this pattern : `sub-X_ses-Y_magnitude1.nii.gz`, specify the modality `--modality "magnitude1".
 
