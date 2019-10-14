@@ -143,7 +143,7 @@ For example, regarding the file : `bids/sub-01/ses-M0/anat/sub-01_ses-M0_T1w.nii
 
 Understanding this, you can now center any modality you want ! If yours files are named following this pattern : `sub-X_ses-Y_magnitude1.nii.gz`, specify the modality `--modality "magnitude1".
 
-The list of the converted files will appear in a text file in `new_bids_directory/centered_nifti_list__TIMESTAMP.txt`
+The list of the converted files will appear in a text file in `new_bids_directory/centered_nifti_list_TIMESTAMP.txt`
 
 
 
