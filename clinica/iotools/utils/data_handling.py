@@ -590,7 +590,7 @@ def center_nifti_origin(input_image, output_image):
     return output_image, error_str
 
 
-def center_all_nifti(bids_dir, output_dir, modality):
+def center_all_nifti(bids_dir, output_dir, modality, only_problematic_files=True):
     """
     Center all the NIfTI images of the input BIDS folder into the empty output_dir specified in argument.
     All the files from bids_dir are copied into output_dir, then all the NIfTI images we can found are replaced by their
@@ -600,6 +600,7 @@ def center_all_nifti(bids_dir, output_dir, modality):
         bids_dir: (str) path to bids directory
         output_dir: (str) path to EMPTY output directory
         modality: (list of str) modalities to convert
+        only_problematic_files: (bool) center only files that may cause problem for SPM
 
     Returns:
 
@@ -637,6 +638,10 @@ def center_all_nifti(bids_dir, output_dir, modality):
     #           keep the file
     nifti_files_filtered = [f for f in nifti_files
                             if any(elem.lower() in basename(f).lower() for elem in modality)]
+
+    # Remove those who are centered
+    if only_problematic_files:
+        nifti_files_filtered = [file for file in nifti_files_filtered if not is_centered(file)]
 
     all_errors = []
     for f in nifti_files_filtered:
@@ -683,9 +688,9 @@ def check_volume_location_in_world_coordinate_system(nifti_list, bids_dir):
             warning_message += '\n\t' + file
         warning_message += '\nClinica provides a tool to counter this problem by replacing the center of the volume' \
                            + ' at the origin of the world coordinates. Use the following command line to correct the '\
-                           + 'header of the faulty NIFTI volumes:\n' + Fore.RESET \
+                           + 'header of the faulty NIFTI volumes in a new folder:\n' + Fore.RESET \
                            + Fore.BLUE + '\nclinica iotools center-nifti ' + abspath(bids_dir) + ' ' \
-                           + abspath(bids_dir) + '_centered\n' + Fore.YELLOW \
+                           + abspath(bids_dir) + '_centered\n\n' + Fore.YELLOW \
                            + 'You will find more information on the command by typing ' + Fore.BLUE \
                            + 'clinica iotools center-nifti' + Fore.YELLOW + ' in the console.\nDo you still want to '\
                            + 'launch the pipeline now ?' + Fore.RESET
@@ -702,7 +707,6 @@ def check_volume_location_in_world_coordinate_system(nifti_list, bids_dir):
             sys.exit(0)
 
 
-
 def is_centered(nii_volume, threshold_l2=80):
     """
     Tells if a NIfTI volume is centered on the origin of the world coordinate system.
@@ -714,7 +718,7 @@ def is_centered(nii_volume, threshold_l2=80):
 
     It has been determined that volumes were still segmented with SPM when the L2 distance between origin and center of
     the volume did not exceed 100 mm. Above this distance, either the volume is either not segmented (SPM error), or the
-    produced segmentation is wrong (not the shape of brain anymore)
+    produced segmentation is wrong (not the shape of a brain anymore)
 
     Args:
         nii_volume: path to NIfTI volume
