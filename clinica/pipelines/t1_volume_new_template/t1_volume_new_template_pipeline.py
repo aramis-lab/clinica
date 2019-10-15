@@ -126,6 +126,8 @@ class T1VolumeNewTemplate(cpe.Pipeline):
                                                                     self.sessions,
                                                                     'T1w',
                                                                     self.bids_layout)
+        
+        check_volume_location_in_world_coordinate_system(read_node.inputs.bids_images, self.bids_directory)
 
         self.connect([
             (read_node, self.input_node, [('bids_images', 'input_images')])
