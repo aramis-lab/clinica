@@ -118,6 +118,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         import clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils as seg_utils
+        from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
         from os.path import join
         import glob
 
@@ -153,6 +154,8 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
 
         read_node.inputs.templates_iter = iter_template
         read_node.inputs.final_template = final_template
+
+        check_volume_location_in_world_coordinate_system(t1w_images, self.bids_directory)
 
         self.connect([
             (read_node, self.input_node, [('t1w', 'input_images')]),
