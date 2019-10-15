@@ -117,7 +117,10 @@ class CmdParserCenterNifti(ce.CmdParser):
         self._name = 'center-nifti'
 
     def define_description(self):
-        self._description = 'Center nifti of a BIDS directory'
+        self._description = 'Center NIFTI of a BIDS directory. Tool mainly used when SPM is not able \nto segment some'\
+                            + ' T1w images because the centers of these volumes are not\naligned with the origin of the'\
+                            + 'world coordinate system. By default, only\nproblematic images are converted. The rest' \
+                            + ' of the images are also copied\nto the new BIDS directory, but left untouched.'
 
     def define_options(self):
         self._args.add_argument("bids_directory",
@@ -129,7 +132,7 @@ class CmdParserCenterNifti(ce.CmdParser):
         self._args.add_argument("--modality", '-m',
                                 help='List of modalities you want to center the NIfTI images (ex: "t1w fdg_pet dwi")'
                                      + '. Default="t1w". All the files whose names contains one the keywords specified'
-                                     + ' in this list will be kept',
+                                     + ' in this list will be kept.',
                                 default='t1w')
 
     def run_command(self, args):
