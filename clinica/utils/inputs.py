@@ -15,6 +15,36 @@ def insensitive_glob(pattern_glob, recursive=False):
     return glob(''.join(map(either, pattern_glob)), recursive=recursive)
 
 
+def determine_caps_or_bids(input_dir):
+    """
+    Determines if the input is a CAPS or a BIDS folder
+    Args
+        input_dir: input folder
+    Returns:
+        True if input_dir is a bids, False if input_dir is a CAPS
+
+    raise :
+        RuntimeError if function could not determine if BIDS or CAPS or whatever else
+    """
+    from os.path import isdir, join
+    from os import listdir
+
+    if isdir(join(input_dir, 'subjects')):
+        if len([sub for sub in listdir(join(input_dir, 'subjects')) if (sub.startswith('sub-') and isdir(join(input_dir, 'subjects', sub)))]) > 0 or isdir(join(input_dir, 'groups')):
+            return False
+        else:
+            raise RuntimeError('Could not determine if ' + input_dir + ' is a CAPS or BIDS directory')
+
+    else:
+        if len([sub for sub in listdir(input_dir) if (sub.startswith('sub-') and isdir(join(input_dir, sub)))]) > 0:
+            return True
+        else:
+            if isdir(join(input_dir, 'groups')):
+                return False
+            else:
+                raise RuntimeError('Could not determine if ' + input_dir + ' is a CAPS or BIDS directory')
+
+
 def clinica_file_reader(subjects,
                         sessions,
                         input_directory,
@@ -91,33 +121,8 @@ def clinica_file_reader(subjects,
     """
 
     from os.path import join, isdir
-    from os import listdir
     from clinica.utils.io import check_bids_folder, check_caps_folder
     from colorama import Fore
-
-    def determine_caps_or_bids(input_dir):
-        """
-        Determines if the input is a CAPS or a BIDS folder
-        :param input_dir: input folder
-        :return: True if input_dir is a bids, False if input_dir is a CAPS
-
-            raise :
-                RuntimeError if function could not determine if BIDS or CAPS or whatever else
-        """
-        if isdir(join(input_directory, 'subjects')):
-            if len([sub for sub in listdir(join(input_dir, 'subjects')) if (sub.startswith('sub-') and isdir(join(input_dir, 'subjects', sub)))]) > 0 or isdir(join(input_dir, 'groups')):
-                return False
-            else:
-                raise RuntimeError('Could not determine if ' + input_dir + ' is a CAPS or BIDS directory')
-
-        else:
-            if len([sub for sub in listdir(input_dir) if (sub.startswith('sub-') and isdir(join(input_dir, sub)))]) > 0:
-                return True
-            else:
-                if isdir(join(input_dir, 'groups')):
-                    return False
-                else:
-                    raise RuntimeError('Could not determine if ' + input_dir + ' is a CAPS or BIDS directory')
 
     assert isinstance(information, dict), 'A dict must be provided for the argmuent \'dict\''
     assert all(elem in information.keys() for elem in ['pattern', 'description']), '\'information\' must contain the keys \'pattern\' and \'description'
@@ -140,7 +145,7 @@ def clinica_file_reader(subjects,
         raise RuntimeError('No subjects and sessions provided.')
 
     # rez is the list containing the results
-    rez = []
+    results = []
     # error is the list of the errors that happen during the whole process
     error_encountered = []
     for sub, ses in zip(subjects, sessions):
@@ -162,7 +167,7 @@ def clinica_file_reader(subjects,
             error_encountered.append('\t*' + Fore.BLUE + ' (' + sub + ' | ' + ses + ') ' + Fore.RESET + ': No file found')
         # Otherwise the file found is added to the result
         else:
-            rez.append(current_glob_found[0])
+            results.append(current_glob_found[0])
 
     # We do not raise an error, so that the developper can gather all the problems before Clinica crashes
     if len(error_encountered) > 0:
@@ -176,7 +181,7 @@ def clinica_file_reader(subjects,
                 error_message += msg
     else:
         error_message = None
-    return rez, error_message
+    return results, error_message
 
 
 def clinica_group_reader(caps_directory, information):
