@@ -16,8 +16,8 @@ If your dataset does not follow this standard, you will need to convert it:
         ├── anat
         │    └── sub-CLNC0001_T1w.nii.gz
         └── pet
-            ├── sub-CLNC0001_task-rest_acq-FDG_pet.json
-            └── sub-CLNC0001_task-rest_acq-FDG_pet.nii.gz
+            ├── sub-CLNC0001_task-rest_acq-fdg_pet.json
+            └── sub-CLNC0001_task-rest_acq-fdg_pet.nii.gz
 ```
 
 A correct one is:
@@ -29,8 +29,8 @@ A correct one is:
             ├── anat
             │    └── sub-CLNC0001_ses-M00_T1w.nii.gz
             └── pet
-                ├── sub-CLNC0001_ses-M00_task-rest_acq-FDG_pet.json
-                └── sub-CLNC0001_ses-M00_task-rest_acq-FDG_pet.nii.gz
+                ├── sub-CLNC0001_ses-M00_task-rest_acq-fdg_pet.json
+                └── sub-CLNC0001_ses-M00_task-rest_acq-fdg_pet.nii.gz
 ```
 
 !!! tip
