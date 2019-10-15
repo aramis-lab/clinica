@@ -730,12 +730,16 @@ def is_centered(nii_volume, threshold_l2=80):
 
     """
     import numpy as np
+    from os.path import basename
 
     center = get_world_coordinate_of_center(nii_volume)
 
     # Compare to the threshold and retun boolean
     # if center is a np.nan, comparison will be False, and False will be returned
-    if np.linalg.norm(center, ord=2) < threshold_l2:
+    distance_from_origin = np.linalg.norm(center, ord=2)
+    if not np.isnan(distance_from_origin):
+        print('\t' + basename(nii_volume) + ' has its center at {0:.2f} mm of the origin.'.format(distance_from_origin))
+    if distance_from_origin < threshold_l2:
         return True
     else:
         # If center is a np.nan,

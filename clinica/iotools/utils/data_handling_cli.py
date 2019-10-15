@@ -178,8 +178,8 @@ class CmdParserCenterNifti(ce.CmdParser):
         split_modality = args.modality.split(' ')
         # Remove empty str in list
         split_modality = [element for element in split_modality if element]
-        print(args.center_all_files)
-        cprint('Clinica is now centering all the requested images.')
+
+        cprint('Clinica is now centering the requested images.')
         centered_files = center_all_nifti(abspath(args.bids_directory),
                                           abspath(args.output_bids_directory),
                                           split_modality,
