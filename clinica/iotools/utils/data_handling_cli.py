@@ -134,6 +134,12 @@ class CmdParserCenterNifti(ce.CmdParser):
                                      + '. Default="t1w". All the files whose names contains one the keywords specified'
                                      + ' in this list will be kept.',
                                 default='t1w')
+        self._args.add_argument('--center_all_files',
+                                help='Use this flag without argument to force to convert all NIFTI of the specified '
+                                     + 'modality(ies)',
+                                action='store_true',
+                                dest='center_all_files')
+        self._args.set_defaults(center_all_files=False)
 
     def run_command(self, args):
         from colorama import Fore
@@ -172,11 +178,12 @@ class CmdParserCenterNifti(ce.CmdParser):
         split_modality = args.modality.split(' ')
         # Remove empty str in list
         split_modality = [element for element in split_modality if element]
-
+        print(args.center_all_files)
         cprint('Clinica is now centering all the requested images.')
         centered_files = center_all_nifti(abspath(args.bids_directory),
                                           abspath(args.output_bids_directory),
-                                          split_modality)
+                                          split_modality,
+                                          center_all_files=args.center_all_files)
 
         # Write list of created files
         timestamp = time.strftime("%Y%m%d-%H%M%S")
