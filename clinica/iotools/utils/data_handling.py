@@ -590,7 +590,7 @@ def center_nifti_origin(input_image, output_image):
     return output_image, error_str
 
 
-def center_all_nifti(bids_dir, output_dir, modality, only_problematic_files=True):
+def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
     """
     Center all the NIfTI images of the input BIDS folder into the empty output_dir specified in argument.
     All the files from bids_dir are copied into output_dir, then all the NIfTI images we can found are replaced by their
@@ -600,7 +600,7 @@ def center_all_nifti(bids_dir, output_dir, modality, only_problematic_files=True
         bids_dir: (str) path to bids directory
         output_dir: (str) path to EMPTY output directory
         modality: (list of str) modalities to convert
-        only_problematic_files: (bool) center only files that may cause problem for SPM
+        center_all_files: (bool) center only files that may cause problem for SPM
 
     Returns:
 
@@ -640,7 +640,7 @@ def center_all_nifti(bids_dir, output_dir, modality, only_problematic_files=True
                             if any(elem.lower() in basename(f).lower() for elem in modality)]
 
     # Remove those who are centered
-    if only_problematic_files:
+    if not center_all_files:
         nifti_files_filtered = [file for file in nifti_files_filtered if not is_centered(file)]
 
     all_errors = []
