@@ -86,6 +86,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.io import check_input_bids_files
         from clinica.utils.stream import cprint
+        from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
 
         # Remove 'sub-' prefix from participant IDs
         participant_labels = '|'.join(sub[4:] for sub in self.subjects)
@@ -115,6 +116,8 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
                                           for i in range(len(self.subjects)))
             cprint('The pipeline will be run on the following subject(s): %s' % images_to_process)
             cprint('The pipeline will last approximately 10 minutes per image.')
+
+        check_volume_location_in_world_coordinate_system(t1w_files, self.bids_directory)
 
         read_node = npe.Node(name="ReadingFiles",
                              iterables=[

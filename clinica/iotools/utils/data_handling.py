@@ -599,6 +599,7 @@ def center_all_nifti(bids_dir, output_dir, modality):
     Args:
         bids_dir: (str) path to bids directory
         output_dir: (str) path to EMPTY output directory
+        modality: (list of str) modalities to convert
 
     Returns:
 
@@ -665,3 +666,255 @@ def write_list_of_files(file_list, output_file):
         text_file.write(created_file + '\n')
     text_file.close()
     return output_file
+
+
+def check_volume_location_in_world_coordinate_system(nifti_list, bids_dir):
+    from colorama import Fore
+    from clinica.utils.stream import cprint
+    from os.path import abspath
+    import sys
+
+    list_non_centered_files = [file for file in nifti_list if not is_centered(file)]
+    if len(list_non_centered_files) > 0:
+        warning_message = Fore.YELLOW + '[Warning] It appears that ' + str(len(list_non_centered_files)) + ' files '\
+                          + 'have a center way out of the origin of the world coordinate system. SPM will certainly '\
+                          + 'fail on these files:'
+        for file in list_non_centered_files:
+            warning_message += '\n\t' + file
+        warning_message += '\nClinica provides a tool to counter this problem by replacing the center of the volume' \
+                           + ' at the origin of the world coordinates. Use the following command line to correct the '\
+                           + 'header of the faulty NIFTI volumes:\n' + Fore.RESET \
+                           + Fore.BLUE + '\nclinica iotools center-nifti ' + abspath(bids_dir) + ' ' \
+                           + abspath(bids_dir) + '_centered\n' + Fore.YELLOW \
+                           + 'You will find more information on the command by typing ' + Fore.BLUE \
+                           + 'clinica iotools center-nifti' + Fore.YELLOW + ' in the console.\nDo you still want to '\
+                           + 'launch the pipeline now ?' + Fore.RESET
+        cprint(warning_message)
+        while True:
+            cprint('Your answer [yes/no]:')
+            answer = input()
+            if answer.lower() in ['yes', 'no']:
+                break
+            else:
+                cprint(Fore.RED + 'You must answer yes or no' + Fore.RESET)
+        if answer.lower() == 'no':
+            cprint(Fore.RED + 'Clinica will now exit...' + Fore.RESET)
+            sys.exit(0)
+
+
+
+def is_centered(nii_volume, threshold_l2=80):
+    """
+    Tells if a NIfTI volume is centered on the origin of the world coordinate system.
+
+    SPM has troubles to segment files if the center of the volume is not close from the origin of the world coordinate
+    system. A series of experiment have been conducted: we take a volume whose center is on the origin of the world
+    coordinate system. We add an offset using coordinates of affine matrix [0, 3], [1, 3], [2, 3] (or by modifying the
+    header['srow_x'][3], header['srow_y'][3], header['srow_z'][3], this is strictly equivalent).
+
+    It has been determined that volumes were still segmented with SPM when the L2 distance between origin and center of
+    the volume did not exceed 100 mm. Above this distance, either the volume is either not segmented (SPM error), or the
+    produced segmentation is wrong (not the shape of brain anymore)
+
+    Args:
+        nii_volume: path to NIfTI volume
+        threshold_l2: maximum distance between origin of the world coordinate system and the center of the volume to
+                    be considered centered
+
+    Returns:
+        True or False
+
+    """
+    import numpy as np
+
+    center = get_world_coordinate_of_center(nii_volume)
+
+    # Compare to the threshold and retun boolean
+    # if center is a np.nan, comparison will be False, and False will be returned
+    if np.linalg.norm(center, ord=2) < threshold_l2:
+        return True
+    else:
+        # If center is a np.nan,
+        return False
+
+
+def get_world_coordinate_of_center(nii_volume):
+    """
+    Extract the world coordinates of the center of the image
+    Args:
+        nii_volume: path to nii volume
+
+    Returns:
+
+    """
+    from os.path import isfile
+    import nibabel as nib
+    from colorama import Fore
+    import numpy as np
+
+    assert isinstance(nii_volume, str), 'input argument nii_volume must be a str'
+    assert isfile(nii_volume), 'input argument must be a path to a file'
+
+    try:
+        orig_nifti = nib.load(nii_volume)
+    except nib.filebasedimages.ImageFileError:
+        print(Fore.RED + '[Error] ' + nii_volume
+              + ' could not be read by nibabel. Is it a valid NIfTI file ?' + Fore.RESET)
+        return np.nan
+
+    head = orig_nifti.header
+    center_coordinates = get_center_volume(head)
+    if head['qform_code'] > 0:
+        center_coordinates_world = vox_to_world_space_method_2(center_coordinates, head)
+    elif head['sform_code'] > 0:
+        center_coordinates_world = vox_to_world_space_method_3(center_coordinates, head)
+    elif head['sform_code'] == 0:
+        center_coordinates_world = vox_to_world_space_method_1(center_coordinates, head)
+    else:
+        center_coordinates_world = np.nan
+    return center_coordinates_world
+
+
+def get_center_volume(header):
+    """
+    Get the voxel coordinates of the center of the data, using header information
+    Args:
+        header: a nifti header (nib.freesurfer.mghformat.MGHHeader)
+
+    Returns:
+        Voxel coordinates of the center of the volume
+    """
+    import numpy as np
+
+    center_x = header['dim'][1] / 2
+    center_y = header['dim'][2] / 2
+    center_z = header['dim'][3] / 2
+    return np.array([center_x,
+                     center_y,
+                     center_z])
+
+
+def vox_to_world_space_method_1(coordinates_vol, header):
+    """
+    The Method 1 is for compatibility with analyze and is not supposed to be used as the main orientation method. But it
+    is used if sform_code = 0. The world coordinates are determined simply by scaling by the voxel size by their
+    dimension stored in pixdim. More information here: https://brainder.org/2012/09/23/the-nifti-file-format/
+    Args:
+        coordinates_vol: coordinate in the volume (raw data)
+        header: header object
+
+    Returns:
+        Coordinates in the world space
+    """
+    import numpy as np
+
+    return np.array(coordinates_vol) * np.array(header['pixdim'][1],
+                                                header['pixdim'][2],
+                                                header['pixdim'][3])
+
+
+def vox_to_world_space_method_2(coordinates_vol, header):
+    """
+    The Method 2 is used when short qform_code is larger than zero. To get the coordinates, we multiply a rotation
+    matrix (r_mat) by coordinates_vol, then perform hadamart with pixel dimension pixdim (like in method 1). Then we add
+    an offset (qoffset_x, qoffset_y, qoffset_z)
+
+    Args:
+        coordinates_vol: coordinate in the volume (raw data)
+        header: header object
+
+    Returns:
+        Coordinates in the world space
+    """
+    import numpy as np
+
+    def get_r_matrix(h):
+        """
+        Get rotation matrix, more information here: https://brainder.org/2012/09/23/the-nifti-file-format/
+        Args:
+            h:
+
+        Returns:
+
+        """
+        b = h['quatern_b']
+        c = h['quatern_c']
+        d = h['quatern_d']
+        a = np.sqrt(1 - (b ** 2) - (c ** 2) - (d ** 2))
+        r = np.zeros((3, 3))
+        r[0, 0] = (a ** 2) + (b ** 2) - (c ** 2) - (d ** 2)
+        r[0, 1] = 2 * ((b * c) - (a * d))
+        r[0, 2] = 2 * ((b * d) + (a * c))
+        r[1, 0] = 2 * ((b * c) + (a * d))
+        r[1, 1] = (a ** 2) + (c ** 2) - (b ** 2) - (d ** 2)
+        r[1, 2] = 2 * ((c * d) - (a * b))
+        r[2, 0] = 2 * ((b * d) - (a * c))
+        r[2, 1] = 2 * ((b * d) - (a * c))
+        r[2, 2] = (a ** 2) + (d ** 2) - (b ** 2) - (c ** 2)
+        return r
+    i = coordinates_vol[0]
+    j = coordinates_vol[1]
+    k = coordinates_vol[2]
+    if header['qform_code'] > 0:
+        r_mat = get_r_matrix(header)
+    else:
+        # Should never be reached
+        raise ValueError('qform_code must be greater than 0 to use this method')
+    q = header['pixdim'][0]
+    if q not in [-1, 1]:
+        print('q was ' + str(q), ', now is 1')
+        q = 1
+    return np.dot(r_mat, np.array([i, j, q * k])) * np.array(header['pixdim'][1:4]) + np.array([header['qoffset_x'],
+                                                                                                header['qoffset_y'],
+                                                                                                header['qoffset_z']])
+
+
+def vox_to_world_space_method_3(coordinates_vol, header):
+    """
+    This method is used when sform_code is larger than zero. It relies on a full affine matrix, stored in the header in
+     the fields srow_[x,y,y], to map voxel to world coordinates.
+     When a nifti file is created with raw data and affine=..., this is this method that is used to decypher the
+     voxel-to-world correspondance.
+    Args:
+        coordinates_vol: coordinate in the volume (raw data)
+        header: header object
+
+    Returns:
+        Coordinates in the world space
+
+    """
+    import numpy as np
+
+    def get_aff_matrix(h):
+        """
+        Get affine transformation matrix, described here : https://brainder.org/2012/09/23/the-nifti-file-format/
+        Args:
+            h: header
+
+        Returns:
+            affine transformation matrix
+        """
+        mat = np.zeros((4, 4))
+        mat[0, 0] = h['srow_x'][0]
+        mat[0, 1] = h['srow_x'][1]
+        mat[0, 2] = h['srow_x'][2]
+        mat[0, 3] = h['srow_x'][3]
+        mat[1, 0] = h['srow_y'][0]
+        mat[1, 1] = h['srow_y'][1]
+        mat[1, 2] = h['srow_y'][2]
+        mat[1, 3] = h['srow_y'][3]
+        mat[2, 0] = h['srow_z'][0]
+        mat[2, 1] = h['srow_z'][1]
+        mat[2, 2] = h['srow_z'][2]
+        mat[2, 3] = h['srow_z'][3]
+        mat[3, 3] = 1
+        return mat
+
+    if header['sform_code'] > 0:
+        aff = get_aff_matrix(header)
+    else:
+        # Should never be reached
+        raise ValueError('sform_code has a value > 0, so method 3 cannot be used')
+
+    homogeneous_coord = np.concatenate((np.array(coordinates_vol), np.array([1])), axis=0)
+    return np.dot(aff, homogeneous_coord)[0:3]
