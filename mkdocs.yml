@@ -113,6 +113,7 @@ nav:
     - "create-subjects-visits": "IO#create-subjects-visits-generate-the-list-all-subjects-and-visits-of-a-given-dataset"
     - "check-missing-modalities": "IO#check-missing-modalities-check-missing-modalities-for-each-subject"
     - "merge-tsv": "IO#merge-tsv-gather-bids-and-caps-data-into-a-single-tsv-file"
+    - "center-nifti": "IO#center-nifti-center-the-nifti-files-of-a-bids-directory"
   - Presentations & demos:
     - "NOW 2019": "ClinicaConferences#neuro-openscience-workshop-2019"
     - "OHBM 2018": "ClinicaConferences#educational-course-on-pattern-recognition-for-clinical-neuroimaging-ohbm-2018"
