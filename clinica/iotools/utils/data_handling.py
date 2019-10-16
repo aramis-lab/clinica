@@ -682,13 +682,34 @@ def check_volume_location_in_world_coordinate_system(nifti_list, bids_dir):
 
     list_non_centered_files = [file for file in nifti_list if not is_centered(file)]
     if len(list_non_centered_files) > 0:
-        warning_message = Fore.YELLOW + '[Warning] It appears that ' + str(len(list_non_centered_files)) + ' files '\
-                          + 'have a center way out of the origin of the world coordinate system. SPM will certainly '\
-                          + 'fail on these files:'
-        for file in list_non_centered_files:
-            center = get_world_coordinate_of_center(file)
-            warning_message += '\n\t' + basename(file) + ' - coordinate of center : ' \
-                               + str(center) + ' - distance to origin: {0:.2f}'.format(np.linalg.norm(center, ord=2))
+        centers = [get_world_coordinate_of_center(file) for file in list_non_centered_files]
+        l2_norm = [np.linalg.norm(center, ord=2) for center in centers]
+
+        # File column width : 3 spaces more than the longest string to display
+        file_width = 3 + max(len(basename(file)) for file in list_non_centered_files)
+        # Center column width (with a fixed minimum size) : 3 spaces more than the longest string to display
+        center_width = max(len('Coordinate of center') + 3,
+                           3 + max(len(str(center)) for center in centers))
+
+        warning_message = Fore.YELLOW + '[Warning] It appears that ' + str(len(list_non_centered_files)) + ' files ' \
+                          + 'have a center way out of the origin of the world coordinate system. SPM has a high prob' \
+                          + 'ability to fail on these files:\n\n'
+        warning_message += ('%-' + str(file_width) + 's%-' + str(center_width) + 's%-s') % ('File',
+                                                                                            'Coordinate of center',
+                                                                                            'Distance to origin')
+        # 18 is the length of the string 'Distance to origin'
+        warning_message += '\n' + '-' * (file_width + center_width + 18) + '\n'
+        for file, center, l2 in zip(list_non_centered_files, centers, l2_norm):
+            # Nice formatting as array
+            # % escape character
+            # - aligned to the left, with the size of the column
+            # s = string, f = float
+            # . for precision with float
+            # https://docs.python.org/2/library/stdtypes.html#string-formatting for more information
+            warning_message += ('%-' + str(file_width) + 's%-' + str(center_width) + 's%-25.2f\n') % (basename(file),
+                                                                                                      str(center),
+                                                                                                      l2)
+
         warning_message += '\nClinica provides a tool to counter this problem by replacing the center of the volume' \
                            + ' at the origin of the world coordinates.\nUse the following command line to correct the '\
                            + 'header of the faulty NIFTI volumes in a new folder:\n' + Fore.RESET \
