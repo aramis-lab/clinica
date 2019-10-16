@@ -676,7 +676,8 @@ def write_list_of_files(file_list, output_file):
 def check_volume_location_in_world_coordinate_system(nifti_list, bids_dir):
     from colorama import Fore
     from clinica.utils.stream import cprint
-    from os.path import abspath
+    from os.path import abspath, basename
+    import numpy as np
     import sys
 
     list_non_centered_files = [file for file in nifti_list if not is_centered(file)]
@@ -685,9 +686,11 @@ def check_volume_location_in_world_coordinate_system(nifti_list, bids_dir):
                           + 'have a center way out of the origin of the world coordinate system. SPM will certainly '\
                           + 'fail on these files:'
         for file in list_non_centered_files:
-            warning_message += '\n\t' + file
+            center = get_world_coordinate_of_center(file)
+            warning_message += '\n\t' + basename(file) + ' - coordinate of center : ' \
+                               + str(center) + ' - distance to origin: {0:.2f}'.format(np.linalg.norm(center, ord=2))
         warning_message += '\nClinica provides a tool to counter this problem by replacing the center of the volume' \
-                           + ' at the origin of the world coordinates. Use the following command line to correct the '\
+                           + ' at the origin of the world coordinates.\nUse the following command line to correct the '\
                            + 'header of the faulty NIFTI volumes in a new folder:\n' + Fore.RESET \
                            + Fore.BLUE + '\nclinica iotools center-nifti ' + abspath(bids_dir) + ' ' \
                            + abspath(bids_dir) + '_centered\n\n' + Fore.YELLOW \
@@ -737,8 +740,8 @@ def is_centered(nii_volume, threshold_l2=80):
     # Compare to the threshold and retun boolean
     # if center is a np.nan, comparison will be False, and False will be returned
     distance_from_origin = np.linalg.norm(center, ord=2)
-    if not np.isnan(distance_from_origin):
-        print('\t' + basename(nii_volume) + ' has its center at {0:.2f} mm of the origin.'.format(distance_from_origin))
+    # if not np.isnan(distance_from_origin):
+    #     print('\t' + basename(nii_volume) + ' has its center at {0:.2f} mm of the origin.'.format(distance_from_origin))
     if distance_from_origin < threshold_l2:
         return True
     else:
