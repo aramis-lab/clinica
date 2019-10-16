@@ -1,3 +1,6 @@
+# coding: utf8
+
+
 def insensitive_glob(pattern_glob, recursive=False):
     """
     This function is the glob.glob() function that is insensitive to the case
@@ -48,7 +51,8 @@ def determine_caps_or_bids(input_dir):
 def clinica_file_reader(subjects,
                         sessions,
                         input_directory,
-                        information):
+                        information,
+                        raise_exception=True):
     """
     This function grabs files relative to a subject and session list according to a glob pattern (using *)
     Args:
@@ -59,7 +63,10 @@ def clinica_file_reader(subjects,
                      following keys : pattern, description. The optional key is: needed_pipeline
                              pattern: define the pattern of the final file
                              description: string to describe what the file is
-                             needed_pipeline (optional): string describing the pipeline(s) needed to obtain the related file
+                             needed_pipeline (optional): string describing the pipeline(s) needed to obtain the related
+                                                        file
+        raise_exception: if True (normal behavior), an exception is raised if errors happen. If not, we return the file
+                        list as it is
 
     Returns:
          list of files respecting the subject/session order provided in input, and an error string that can have the
@@ -123,6 +130,7 @@ def clinica_file_reader(subjects,
     from os.path import join, isdir
     from clinica.utils.io import check_bids_folder, check_caps_folder
     from colorama import Fore
+    from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
 
     assert isinstance(information, dict), 'A dict must be provided for the argmuent \'dict\''
     assert all(elem in information.keys() for elem in ['pattern', 'description']), '\'information\' must contain the keys \'pattern\' and \'description'
@@ -170,7 +178,7 @@ def clinica_file_reader(subjects,
             results.append(current_glob_found[0])
 
     # We do not raise an error, so that the developper can gather all the problems before Clinica crashes
-    if len(error_encountered) > 0:
+    if len(error_encountered) > 0 and raise_exception is True:
         error_message = Fore.RED + '\n[Error] Clinica encountered ' + str(len(error_encountered)) \
                         + ' problem(s) while getting ' + information['description'] + ':\n' + Fore.RESET
         if 'needed_pipeline' in information.keys():
@@ -179,12 +187,14 @@ def clinica_file_reader(subjects,
                                  'to obtain these files: ' + information['needed_pipeline'] + Fore.RESET + '\n'
         for msg in error_encountered:
                 error_message += msg
-    else:
-        error_message = None
-    return results, error_message
+        if is_bids:
+            raise ClinicaBIDSError(error_message)
+        else:
+            raise ClinicaCAPSError(error_message)
+    return results
 
 
-def clinica_group_reader(caps_directory, information):
+def clinica_group_reader(caps_directory, information, raise_exception=True):
     """
     This function grabs files relative to a group, according to a glob pattern (using *)
     Args:
@@ -202,6 +212,7 @@ def clinica_group_reader(caps_directory, information):
     from clinica.utils.io import check_caps_folder
     from os.path import join
     from colorama import Fore
+    from clinica.utils.exceptions import ClinicaCAPSError
 
     assert isinstance(information, dict), 'A dict must be provided for the argmuent \'dict\''
     assert all(elem in information.keys()
@@ -215,14 +226,13 @@ def clinica_group_reader(caps_directory, information):
 
     check_caps_folder(caps_directory)
 
-    error_string = None
-
     current_pattern = join(caps_directory, '**/', pattern)
     current_glob_found = insensitive_glob(current_pattern, recursive=True)
 
-    if len(current_glob_found) == 0:
+    if len(current_glob_found) == 0 and raise_exception is True:
         error_string = Fore.RED + '\n[Error] Clinica encountered a problem while getting ' + information['description'] \
                        + '.' + Fore.RESET + '\n\tCAPS directory: ' + caps_directory + '\n' + Fore.YELLOW \
                        + 'Please note that the following clinica pipeline(s) must have run to obtain these files: ' \
                        + information['needed_pipeline'] + Fore.RESET + '\n'
-    return current_glob_found, error_string
+        raise ClinicaCAPSError(error_string)
+    return current_glob_found
