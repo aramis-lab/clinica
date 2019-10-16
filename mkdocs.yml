@@ -72,50 +72,50 @@ extra_css:
 nav:
   - Home: "index.md"
   - Installation:
-    - "Installation": "Installation.md"
-    - "Third-party": "Third-party.md"
-    # - "Before your install": "BeforeYouInstall"
-    # - "ICM cluster installation": "ICMClusterInstallation"
+    - Installation: "Installation.md"
+    - Third-party: "Third-party.md"
+    # - Before your install: "BeforeYouInstall"
+    # - ICM cluster installation: "ICMClusterInstallation"
   # - Quick start:
   - Clinica environment:
-    - "What is Clinica?": "WhatIsClinica.md"
-    - "Interacting with Clinica": "InteractingWithClinica.md"
-    - "BIDS": "BIDS.md"
+    - What is Clinica?: "WhatIsClinica.md"
+    - Interacting with Clinica: "InteractingWithClinica.md"
+    - BIDS: "BIDS.md"
     - CAPS:
-      - "Introduction": "CAPS/Introduction.md"
-      - "Specifications": "CAPS/Specifications.md"
-    - "Atlases": "Atlases.md"
+      - Introduction: "CAPS/Introduction.md"
+      - Specifications: "CAPS/Specifications.md"
+    - Atlases: "Atlases.md"
   - Pipelines:
     - Anatomical MRI:
-      - "Volume processing": "Pipelines/T1_Volume.md"
-      - "FreeSurfer processing": "Pipelines/T1_FreeSurfer.md"
-      - "FreeSurfer longitudinal processing": "Pipelines/T1_FreeSurfer_Longitudinal.md"
+      - Volume processing: "Pipelines/T1_Volume.md"
+      - FreeSurfer processing: "Pipelines/T1_FreeSurfer.md"
+      - FreeSurfer longitudinal processing: "Pipelines/T1_FreeSurfer_Longitudinal.md"
     - DWI:
-      - "Pre-processing": "Pipelines/DWI_Preprocessing.md"
-      - "DTI": "Pipelines/DWI_DTI.md"
-      - "Connectome": "Pipelines/DWI_Connectome.md"
+      - Pre-processing: "Pipelines/DWI_Preprocessing.md"
+      - DTI: "Pipelines/DWI_DTI.md"
+      - Connectome: "Pipelines/DWI_Connectome.md"
     - fMRI:
-      - "Pre-processing": "Pipelines/fMRI_Preprocessing.md"
+      - Pre-processing: "Pipelines/fMRI_Preprocessing.md"
     - PET:
-      - "Volume processing": "Pipelines/PET_Volume.md"
-      - "Surface processing": "Pipelines/PET_Surface.md"
+      - Volume processing: "Pipelines/PET_Volume.md"
+      - Surface processing: "Pipelines/PET_Surface.md"
     - Statistics:
-      - "Surface-based mass-univariate analysis with SurfStat": "Pipelines/Stats_Surface.md"
+      - Surface-based mass-univariate analysis with SurfStat: "Pipelines/Stats_Surface.md"
     - Machine Learning:
-      - "Prepare input data for spatially regularized SVM": "Pipelines/MachineLearning_PrepareSVM.md"
-      - "Classification based on machine learning": "Pipelines/MachineLearning_Classification.md"
+      - Prepare input data for spatially regularized SVM: "Pipelines/MachineLearning_PrepareSVM.md"
+      - Classification based on machine learning: "Pipelines/MachineLearning_Classification.md"
   - Dataset converters:
-    - "ADNI to BIDS": "DatabasesToBIDS#adni-to-bids"
-    - "AIBL to BIDS": "DatabasesToBIDS#aibl-to-bids"
-    - "NIFD to BIDS": "DatabasesToBIDS#nifd-to-bids"
-    - "OASIS to BIDS": "DatabasesToBIDS#oasis-to-bids"
+    - ADNI to BIDS: "DatabasesToBIDS#adni-to-bids"
+    - AIBL to BIDS: "DatabasesToBIDS#aibl-to-bids"
+    - NIFD to BIDS: "DatabasesToBIDS#nifd-to-bids"
+    - OASIS to BIDS: "DatabasesToBIDS#oasis-to-bids"
   - I/O tools:
-    - "create-subjects-visits": "IO#create-subjects-visits-generate-the-list-all-subjects-and-visits-of-a-given-dataset"
-    - "check-missing-modalities": "IO#check-missing-modalities-check-missing-modalities-for-each-subject"
-    - "merge-tsv": "IO#merge-tsv-gather-bids-and-caps-data-into-a-single-tsv-file"
-    - "center-nifti": "IO#center-nifti-center-the-nifti-files-of-a-bids-directory"
+    - create-subjects-visits: "IO#create-subjects-visits-generate-the-list-all-subjects-and-visits-of-a-given-dataset"
+    - check-missing-modalities: "IO#check-missing-modalities-check-missing-modalities-for-each-subject"
+    - merge-tsv: "IO#merge-tsv-gather-bids-and-caps-data-into-a-single-tsv-file"
+    - center-nifti: "IO#center-nifti-center-the-nifti-files-of-a-bids-directory"
   - Presentations & demos:
-    - "NOW 2019": "ClinicaConferences#neuro-openscience-workshop-2019"
-    - "OHBM 2018": "ClinicaConferences#educational-course-on-pattern-recognition-for-clinical-neuroimaging-ohbm-2018"
+    - NOW 2019: "ClinicaConferences#neuro-openscience-workshop-2019"
+    - OHBM 2018: "ClinicaConferences#educational-course-on-pattern-recognition-for-clinical-neuroimaging-ohbm-2018"
   # - Collaborate:
-    # - "Coding for Clinica": "CodingForClinica"
+    # - Coding for Clinica: "CodingForClinica"
