@@ -111,7 +111,7 @@ Your [BIDS](http://bids.neuroimaging.io) dataset may contain NIFTI files whose c
 
 
 By default, this tool will convert only T1w images into their centered version but you can easily convert whatever modalities you want.
-  
+
 
 ```
 clinica iotools center-nifti bids_directory new_bids_directory --modality modality [--center_all_files]
@@ -124,28 +124,26 @@ where:
 - `--center_all_files` is an optional flag that forces Clinica to center all the files of the selected modality.
 
 !!! note
-The rest of the input `bids` folder will also be copied to the output folder `new_bids`.
+    The rest of the input `bids` folder will also be copied to the output folder `new_bids`.
 
-If you want to convert FDG PET images, use:
+    If you want to convert FDG PET images, use:
 
-`clinica iotools center-nifti bids new_bids_directory --modality "fdg_pet"`
+    `clinica iotools center-nifti bids new_bids_directory --modality "fdg_pet"`
 
-If you want to convert AV45 PET images and T1w:
+    If you want to convert AV45 PET images and T1w:
 
-`clinica iotools center-nifti bids new_bids_directory --modality "fdg_pet t1w"`
+    `clinica iotools center-nifti bids new_bids_directory --modality "fdg_pet t1w"`
 
-So how does this all work ? To know if a NIfTI must be centered, the algorithm look at the filenames of the NIfTI images. 
+    So how does this all work ? To know if a NIfTI must be centered, the algorithm look at the filenames of the NIfTI images.
 
-For example, regarding the file : `bids/sub-01/ses-M0/anat/sub-01_ses-M0_T1w.nii`
-* The filename is `sub-01_ses-M0_T1w.nii`.
-* The algorithm tests (in a case insensitive way) if the string "fdg_pet" is in the filename : False
-* The algorithm tests (in a case insensitive way) if the string "t1w" is in the filename : True !
-* The algorithm tests if the volume has its center at more than 80 mm (Euclidian distance) from the origin: True
-* This file will be centered by the algorithm.
+    For example, regarding the file : `bids/sub-01/ses-M0/anat/sub-01_ses-M0_T1w.nii`
 
-Understanding this, you can now center any modality you want ! If yours files are named following this pattern : `sub-X_ses-Y_magnitude1.nii.gz`, specify the modality `--modality "magnitude1".
+     - The filename is `sub-01_ses-M0_T1w.nii`.
+     - The algorithm tests (in a case insensitive way) if the string "fdg_pet" is in the filename : False
+     - The algorithm tests (in a case insensitive way) if the string "t1w" is in the filename : True !
+     - The algorithm tests if the volume has its center at more than 80 mm (Euclidian distance) from the origin: True
+     - This file will be centered by the algorithm.
 
-The list of the converted files will appear in a text file in `new_bids_directory/centered_nifti_list_TIMESTAMP.txt`
+    Understanding this, you can now center any modality you want ! If yours files are named following this pattern : `sub-X_ses-Y_magnitude1.nii.gz`, specify the modality `--modality "magnitude1".
 
-
-
+    The list of the converted files will appear in a text file in `new_bids_directory/centered_nifti_list_TIMESTAMP.txt`
