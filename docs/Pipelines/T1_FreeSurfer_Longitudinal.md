@@ -1,6 +1,10 @@
 # `t1-freesurfer-longitudinal` – FreeSurfer-based longitudinal processing of T1-weighted MR images
 
-This pipeline processes a series of images acquired at different time points for the same subject with the longitudinal FreeSurfer stream [[Reuter et al., 2012](http://dx.doi.org/10.1016/j.neuroimage.2012.02.084)] to increase the accuracy of volume and thickness estimates. It does so in a single command consisting of two consecutive steps: 1) template creation, 2) longitudinal correction. Specifically, 1) the [Freesurfer `recon-all -base`](https://surfer.nmr.mgh.harvard.edu/fswiki/LongitudinalProcessing) command is executed on the subject to produce an unbiased template image using robust and inverse consistent registration [[Reuter et al., 2010](http://dx.doi.org/10.1016/j.neuroimage.2010.07.020)]. 2) This template is then used as an initialization to a sequence of processing steps triggered by the command [Freesurfer `recon-all -long`](https://surfer.nmr.mgh.harvard.edu/fswiki/LongitudinalProcessing) to perform segmentation, extract surfaces and derive measurements at each time point.
+This pipeline processes a series of images acquired at different time points for the same subject with the longitudinal FreeSurfer stream [[Reuter et al., 2012](http://dx.doi.org/10.1016/j.neuroimage.2012.02.084)] to increase the accuracy of volume and thickness estimates. It does so in a single command consisting of two consecutive steps:
+
+- **Template creation** This corresponds to the [FreeSurfer `recon-all -base`](https://surfer.nmr.mgh.harvard.edu/fswiki/LongitudinalProcessing) command. It is executed on the subject to produce an unbiased template image using robust and inverse consistent registration [[Reuter et al., 2010](http://dx.doi.org/10.1016/j.neuroimage.2010.07.020)].
+
+- **Longitudinal correction** This template is then used as an initialization to a sequence of processing steps triggered by the command [FreeSurfer `recon-all -long`](https://surfer.nmr.mgh.harvard.edu/fswiki/LongitudinalProcessing) to perform segmentation, extract surfaces and derive measurements at each time point.
 
 ## Prerequisites
 The pipeline requires a prior run of the cross-sectional [`t1-freesurfer`](../T1_FreeSurfer) pipeline.
