@@ -64,55 +64,52 @@ class DwiDti(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.exceptions import ClinicaCAPSError
+        from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+        import clinica.utils.input_files as input_files
         from clinica.utils.stream import cprint
 
         all_errors = []
 
         # b0 Mask
-        b0_mask, err_msg = clinica_file_reader(self.subjects,
-                                               self.sessions,
-                                               self.caps_directory,
-                                               {'pattern': 'dwi/preprocessing/*dwi_space-*_brainmask.nii*',
-                                                'description': 'b0 masks',
-                                                'needed_pipeline': 'dwi-preprocessing-using-fieldmap or dwi-preprocessing-using-t1'})
-        if err_msg:
-            all_errors.append(err_msg)
+        try:
+            b0_mask = clinica_file_reader(self.subjects,
+                                          self.sessions,
+                                          self.caps_directory,
+                                          input_files.DWI_PREPROC_BRAINMASK)
+        except ClinicaException as e:
+            all_errors.append(e)
 
         # DWI preprocessing NIfTI
-        dwi_caps, err_msg = clinica_file_reader(self.subjects,
-                                                self.sessions,
-                                                self.caps_directory,
-                                                {'pattern': 'dwi/preprocessing/*dwi_space-*_preproc.nii*',
-                                                 'description': 'dwi preprocessing',
-                                                 'needed_pipeline': 'dwi-preprocessing-using-fieldmap or dwi-preprocessing-using-t1'})
-        if err_msg:
-            all_errors.append(err_msg)
+        try:
+            dwi_caps = clinica_file_reader(self.subjects,
+                                           self.sessions,
+                                           self.caps_directory,
+                                           input_files.DWI_PREPROC_NII)
+        except ClinicaException as e:
+            all_errors.append(e)
 
         # bval files
-        bval_files, err_msg = clinica_file_reader(self.subjects,
-                                                  self.sessions,
-                                                  self.caps_directory,
-                                                  {'pattern': 'dwi/preprocessing/*_dwi_space-*_preproc.bval',
-                                                   'description': 'preprocessed bval',
-                                                   'needed_pipeline': 'dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap'})
-        if err_msg:
-            all_errors.append(err_msg)
+        try:
+            bval_files = clinica_file_reader(self.subjects,
+                                             self.sessions,
+                                             self.caps_directory,
+                                             input_files.DWI_PREPROC_BVAL)
+        except ClinicaException as e:
+            all_errors.append(e)
 
         # bvec files
-        bvec_files, err_msg = clinica_file_reader(self.subjects,
-                                                  self.sessions,
-                                                  self.caps_directory,
-                                                  {'pattern': 'dwi/preprocessing/*_dwi_space-*_preproc.bvec',
-                                                   'description': 'preprocessed bvec',
-                                                   'needed_pipeline': 'dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap'})
-        if err_msg:
-            all_errors.append(err_msg)
+        try:
+            bvec_files = clinica_file_reader(self.subjects,
+                                             self.sessions,
+                                             self.caps_directory,
+                                             input_files.DWI_PREPROC_BVEC)
+        except ClinicaException as e:
+            all_errors.append(e)
 
         if len(all_errors) > 0:
             error_message = 'Clinica faced error(s) while trying to read files in your CAPS directory.\n'
             for msg in all_errors:
-                error_message += msg
+                error_message += str(msg)
             raise ClinicaCAPSError(error_message)
 
         read_input_node = npe.Node(name="LoadingCLIArguments",

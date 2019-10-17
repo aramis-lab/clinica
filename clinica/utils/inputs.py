@@ -69,18 +69,15 @@ def clinica_file_reader(subjects,
                         list as it is
 
     Returns:
-         list of files respecting the subject/session order provided in input, and an error string that can have the
-         following values : None (no error found) or a string describing the problem.
-         Note that theses outputs are ALWAYS given. The list of files will always contains the file that were correctly
-         grabbed. You should always use clinica_file_reader in the following manner:
-
-         file_list, error_message = clinica_file_reader(...)
-         if error_message:
-            # Deal with the error (print it, raise an Exception, store it in an array...)
+         list of files respecting the subject/session order provided in input,
+         You should always use clinica_file_reader in the following manner:
+         try:
+            file_list = clinica_file_reader(...)
+         except ClinicaException as e:
+            # Deal with the error
 
         raise:
-            Nothing, we prefer returning a string with the problem written in it, so that the rest of Clinica pipelines
-            can handle the problem properly
+            ClinicaCAPSError or ClinicaBIDSError if multiples files are found for 1 subject/session, or no file is found
 
         Examples: (path are shortened for readability)
             - You have the full name of a file:
@@ -172,7 +169,7 @@ def clinica_file_reader(subjects,
                 error_str += '\t\t' + found_file + '\n'
             error_encountered.append(error_str)
         elif len(current_glob_found) == 0:
-            error_encountered.append('\t*' + Fore.BLUE + ' (' + sub + ' | ' + ses + ') ' + Fore.RESET + ': No file found')
+            error_encountered.append('\t*' + Fore.BLUE + ' (' + sub + ' | ' + ses + ') ' + Fore.RESET + ': No file found\n')
         # Otherwise the file found is added to the result
         else:
             results.append(current_glob_found[0])
@@ -196,7 +193,8 @@ def clinica_file_reader(subjects,
 
 def clinica_group_reader(caps_directory, information, raise_exception=True):
     """
-    This function grabs files relative to a group, according to a glob pattern (using *)
+    This function grabs files relative to a group, according to a glob pattern (using *). Only one file can be returned,
+    as order is arbitrary in glob.glob().
     Args:
         caps_directory: input caps directory
         information: dictionnary containg all the relevant information to look for the files. Dict must contains the
@@ -204,10 +202,14 @@ def clinica_group_reader(caps_directory, information, raise_exception=True):
                              pattern: define the pattern of the final file
                              description: string to describe what the file is
                              needed_pipeline (optional): string describing the pipeline needed to obtain the file beforehand
+        raise_exception: if True (normal behavior), an exception is raised if errors happen. If not, we return the file
+                        list as it is
 
     Returns:
-          list of files and an error string that can have the following values : None (no error found) or
-          a string describing the problem.
+          string of the found file
+
+    Raises:
+        ClinicaCAPSError if no file is found, or more than 1 files are found
     """
     from clinica.utils.io import check_caps_folder
     from os.path import join
@@ -229,10 +231,16 @@ def clinica_group_reader(caps_directory, information, raise_exception=True):
     current_pattern = join(caps_directory, '**/', pattern)
     current_glob_found = insensitive_glob(current_pattern, recursive=True)
 
-    if len(current_glob_found) == 0 and raise_exception is True:
-        error_string = Fore.RED + '\n[Error] Clinica encountered a problem while getting ' + information['description'] \
-                       + '.' + Fore.RESET + '\n\tCAPS directory: ' + caps_directory + '\n' + Fore.YELLOW \
-                       + 'Please note that the following clinica pipeline(s) must have run to obtain these files: ' \
-                       + information['needed_pipeline'] + Fore.RESET + '\n'
+    if len(current_glob_found) != 1 and raise_exception is True:
+        error_string = Fore.RED + '\n[Error] Clinica encountered a problem while getting ' + information['description'] + '. '
+        if len(current_glob_found) == 0:
+            error_string += 'No file was found'
+        else:
+            error_string += str(len(current_glob_found)) + ' files were found:'
+            for found_files in current_glob_found:
+                error_string += '\n\t' + found_files
+            error_string += (Fore.RESET + '\n\tCAPS directory: ' + caps_directory + '\n' + Fore.YELLOW
+                             + 'Please note that the following clinica pipeline(s) must have run to obtain these files: '
+                             + information['needed_pipeline'] + Fore.RESET + '\n')
         raise ClinicaCAPSError(error_string)
-    return current_glob_found
+    return current_glob_found[0]

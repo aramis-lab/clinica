@@ -53,20 +53,21 @@ class T1VolumeParcellation(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.exceptions import ClinicaCAPSError
+        from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
 
         # Get gray matter map from t1w preprocessing (from t1-volume)
-        gm_mni, err_msg = clinica_file_reader(self.subjects,
-                                              self.sessions,
-                                              self.caps_directory,
-                                              {'pattern': 't1/spm/dartel/group-' + self.parameters['group_id']
-                                                          + '/*_T1w_segm-graymatter_space-Ixi549Space_modulated-'
-                                                          + 'on_probability.nii*',
-                                               'description': ' grey matter map in MNI space (Ixi549) with modulation',
-                                               'needed_pipeline': 't1-volume'})
-        if err_msg:
+        try:
+            gm_mni = clinica_file_reader(self.subjects,
+                                         self.sessions,
+                                         self.caps_directory,
+                                         {'pattern': 't1/spm/dartel/group-' + self.parameters['group_id']
+                                                     + '/*_T1w_segm-graymatter_space-Ixi549Space_modulated-'
+                                                     + 'on_probability.nii*',
+                                          'description': ' grey matter map in MNI space (Ixi549) with modulation',
+                                          'needed_pipeline': 't1-volume'})
+        except ClinicaException as e:
             final_error_str = 'Clinica faced error(s) while trying to read files in your CAPS directory.\n'
-            final_error_str += err_msg
+            final_error_str += str(e)
             raise ClinicaCAPSError(final_error_str)
 
         read_parameters_node = npe.Node(name="LoadingCLIArguments",

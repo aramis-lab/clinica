@@ -117,22 +117,22 @@ class T1VolumeNewTemplate(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
         from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.exceptions import ClinicaBIDSError
+        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
+        from clinica.utils.input_files import T1W_NII
 
         # Reading BIDS
         # ============
         read_node = npe.Node(name="read_node",
                              interface=nutil.IdentityInterface(fields=['bids_images'],
                                                                mandatory_inputs=True))
-
-        read_node.inputs.bids_images, err_msg = clinica_file_reader(self.subjects,
-                                                                    self.sessions,
-                                                                    self.bids_directory,
-                                                                    {'pattern': '*_t1w.nii*',
-                                                                     'description': 'T1w MRI acquisition'})
-        if err_msg:
+        try:
+            read_node.inputs.bids_images = clinica_file_reader(self.subjects,
+                                                               self.sessions,
+                                                               self.bids_directory,
+                                                               T1W_NII)
+        except ClinicaException as e:
             error_str_final = 'Clinica faced error(s) while trying to read files in your CAPS directory.\n'
-            error_str_final += err_msg
+            error_str_final += str(e)
             raise ClinicaBIDSError(error_str_final)
 
         check_volume_location_in_world_coordinate_system(read_node.inputs.bids_images, self.bids_directory)

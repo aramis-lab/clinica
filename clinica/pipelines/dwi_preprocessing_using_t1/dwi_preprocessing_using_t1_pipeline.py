@@ -95,47 +95,47 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.stream import cprint
         from clinica.utils.dwi import check_dwi_volume
-        from clinica.utils.exceptions import ClinicaBIDSError
+        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
+        import clinica.utils.input_files as input_files
 
         all_errors = []
-        t1w_files, err_msg = clinica_file_reader(self.subjects,
-                                                 self.sessions,
-                                                 self.bids_directory,
-                                                 {'pattern': '*_t1w.nii*',
-                                                  'description': 'T1w MRI acquisition'})
-        if err_msg:
-            all_errors.append(err_msg)
-
-        dwi_files, err_msg = clinica_file_reader(self.subjects,
-                                                 self.sessions,
-                                                 self.bids_directory,
-                                                 {'pattern': 'dwi/*_*_*dwi.nii*',
-                                                  'description': 'DWI NIfTI files'})
-        if err_msg:
-            all_errors.append(err_msg)
+        try:
+            t1w_files = clinica_file_reader(self.subjects,
+                                            self.sessions,
+                                            self.bids_directory,
+                                            input_files.T1W_NII)
+        except ClinicaException as e:
+            all_errors.append(e)
+        try:
+            dwi_files = clinica_file_reader(self.subjects,
+                                            self.sessions,
+                                            self.bids_directory,
+                                            input_files.DWI_NII)
+        except ClinicaException as e:
+            all_errors.append(e)
 
         # bval files
-        bval_files, err_msg = clinica_file_reader(self.subjects,
-                                                  self.sessions,
-                                                  self.bids_directory,
-                                                  {'pattern': 'dwi/*_dwi.bval',
-                                                   'description': 'bval files'})
-        if err_msg:
-            all_errors.append(err_msg)
+        try:
+            bval_files = clinica_file_reader(self.subjects,
+                                             self.sessions,
+                                             self.bids_directory,
+                                             input_files.DWI_BVAL)
+        except ClinicaException as e:
+            all_errors.append(e)
 
         # bvec files
-        bvec_files, err_msg = clinica_file_reader(self.subjects,
-                                                  self.sessions,
-                                                  self.bids_directory,
-                                                  {'pattern': 'dwi/*_dwi.bvec',
-                                                   'description': 'bvec files'})
-        if err_msg:
-            all_errors.append(err_msg)
+        try:
+            bvec_files = clinica_file_reader(self.subjects,
+                                             self.sessions,
+                                             self.bids_directory,
+                                             input_files.DWI_BVEC)
+        except ClinicaException as e:
+            all_errors.append(e)
 
         if len(all_errors) > 0:
             error_message = 'Clinica faced error(s) while trying to read files in your BIDS directory.\n'
             for msg in all_errors:
-                error_message += msg
+                error_message += str(msg)
             raise ClinicaBIDSError(error_message)
 
         # Perform the check after potential issue while reading inputs

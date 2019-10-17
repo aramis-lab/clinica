@@ -161,6 +161,7 @@ class PETVolume(cpe.Pipeline):
         from os.path import join, split, realpath
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader, insensitive_glob
         from clinica.utils.exceptions import ClinicaException
+        import clinica.utils.input_files as input_files
 
         # Tissues DataGrabber
         # ====================
@@ -178,9 +179,11 @@ class PETVolume(cpe.Pipeline):
         if self.parameters['pet_type'] == 'fdg':
             reference_mask_template = 'region-pons_eroded-6mm_mask.nii*'
             self._suvr_region = 'pons'
+            pet_file_to_grab = input_files.PET_FDG_NII
         elif self.parameters['pet_type'] == 'av45':
             reference_mask_template = 'region-cerebellumPons_eroded-6mm_mask.nii*'
             self._suvr_region = 'cerebellumPons'
+            pet_file_to_grab = input_files.PET_AV45_NII
         else:
             raise NotImplementedError('Unknown type of PET image. We currently accept as input only "fdg" or "av45"' +
                                       ' as values.')
@@ -192,39 +195,39 @@ class PETVolume(cpe.Pipeline):
             reference_mask_file = reference_mask_file[0]
 
         # PET from BIDS directory
-        pet_bids, err_msg = clinica_file_reader(self.subjects,
-                                                self.sessions,
-                                                self.bids_directory,
-                                                {'pattern': 'pet/*_task-rest_acq-' + self.parameters['pet_type'] + '_pet.nii*',
-                                                 'description': 'PET file'})
-        if err_msg:
-            all_errors.append(err_msg)
+        try:
+            pet_bids = clinica_file_reader(self.subjects,
+                                           self.sessions,
+                                           self.bids_directory,
+                                           pet_file_to_grab)
+        except ClinicaException as e:
+            all_errors.append(e)
 
         # Native T1w-MRI
-        t1w_bids, err_msg = clinica_file_reader(self.subjects,
-                                                self.sessions,
-                                                self.bids_directory,
-                                                {'pattern': 'anat/*t1w.nii*',
-                                                 'description': 'T1w-MRI file'})
-        if err_msg:
-            all_errors.append(err_msg)
+        try:
+            t1w_bids = clinica_file_reader(self.subjects,
+                                           self.sessions,
+                                           self.bids_directory,
+                                           input_files.T1W_NII)
+        except ClinicaException as e:
+            all_errors.append(e)
 
         # mask_tissues
         tissues_input = []
         for tissue_number in self.parameters['mask_tissues']:
-            current_file, err = clinica_file_reader(self.subjects,
-                                                    self.sessions,
-                                                    self.caps_directory,
-                                                    {'pattern': 't1/spm/segmentation/normalized_space/*_*_T1w_segm-'
-                                                                + tissue_names[tissue_number]
-                                                                + '_space-Ixi549Space_modulated-off_probability.nii*',
-                                                     'description': 'SPM based probability of ' + tissue_names[tissue_number]
-                                                                    + ' based on T1w-MRI in Ixi549 space',
-                                                     'needed_pipeline': 't1-volume'})
-
-            if err:
-                all_errors.append(err)
-            tissues_input.append(current_file)
+            try:
+                current_file = clinica_file_reader(self.subjects,
+                                                   self.sessions,
+                                                   self.caps_directory,
+                                                   {'pattern': 't1/spm/segmentation/normalized_space/*_*_T1w_segm-'
+                                                               + tissue_names[tissue_number]
+                                                               + '_space-Ixi549Space_modulated-off_probability.nii*',
+                                                    'description': 'SPM based probability of ' + tissue_names[tissue_number]
+                                                                   + ' based on T1w-MRI in Ixi549 space',
+                                                    'needed_pipeline': 't1-volume'})
+                tissues_input.append(current_file)
+            except ClinicaException as e:
+                all_errors.append(e)
         # Tissues_input has a length of len(self.parameters['mask_tissues']). Each of these elements has a size of
         # len(self.subjects). We want the opposite : a list of size len(self.subjects) whose elements have a size of
         # len(self.parameters['mask_tissues']. The trick is to iter on elements with zip(*mylist)
@@ -234,25 +237,27 @@ class PETVolume(cpe.Pipeline):
         tissues_input = tissues_input_final
 
         # Flowfields
-        flowfields_caps, err_msg = clinica_file_reader(self.subjects,
-                                                       self.sessions,
-                                                       self.caps_directory,
-                                                       {'pattern': 't1/spm/dartel/group-' + self._group_id
-                                                                   + '/*_*_T1w_target-' + self._group_id
-                                                                   + '_transformation-forward_deformation.nii*',
-                                                        'description': 'forward deformation of T1w to group space',
-                                                        'needed_pipeline': 't1-volume'})
-        if err_msg:
-            all_errors.append(err_msg)
+        try:
+            flowfields_caps = clinica_file_reader(self.subjects,
+                                                  self.sessions,
+                                                  self.caps_directory,
+                                                  {'pattern': 't1/spm/dartel/group-' + self._group_id
+                                                              + '/*_*_T1w_target-' + self._group_id
+                                                              + '_transformation-forward_deformation.nii*',
+                                                   'description': 'forward deformation of T1w to group space',
+                                                   'needed_pipeline': 't1-volume'})
+        except ClinicaException as e:
+            all_errors.append(e)
 
         # Dartel Template
-        final_template, err_msg = clinica_group_reader(self.caps_directory,
-                                                       {'pattern': 'group-' + self._group_id + '/t1/group-'
-                                                                   + self._group_id + '_template.nii*',
-                                                        'description': 'T1w template file of group ' + self._group_id,
-                                                        'needed_pipeline': 't1-volume or t1-volume-create-dartel'})
-        if err_msg:
-            all_errors.append(err_msg)
+        try:
+            final_template = clinica_group_reader(self.caps_directory,
+                                                  {'pattern': 'group-' + self._group_id + '/t1/group-'
+                                                              + self._group_id + '_template.nii*',
+                                                   'description': 'T1w template file of group ' + self._group_id,
+                                                   'needed_pipeline': 't1-volume or t1-volume-create-dartel'})
+        except ClinicaException as e:
+            all_errors.append(e)
 
         iterables_fwhm = self._fwhm
         if not self._apply_pvc:
@@ -262,19 +267,20 @@ class PETVolume(cpe.Pipeline):
             # pvc tissues input
             pvc_tissues_input = []
             for tissue_number in self.parameters['pvc_mask_tissues']:
-                current_file, err_msg = clinica_file_reader(self.subjects,
-                                                            self.sessions,
-                                                            self.caps_directory,
-                                                            {'pattern': 't1/spm/segmentation/native_space/*_*_T1w_segm-'
-                                                                        + tissue_names[tissue_number]
-                                                                        + '_probability.nii*',
-                                                             'description': 'SPM based probability of ' + tissue_names[tissue_number]
-                                                                            + ' based on T1w-MRI in native space',
-                                                             'needed_pipeline': 't1-volume'})
-
-                if err_msg:
-                    all_errors.append(err_msg)
+                try:
+                    current_file = clinica_file_reader(self.subjects,
+                                                       self.sessions,
+                                                       self.caps_directory,
+                                                       {'pattern': 't1/spm/segmentation/native_space/*_*_T1w_segm-'
+                                                                   + tissue_names[tissue_number]
+                                                                   + '_probability.nii*',
+                                                        'description': 'SPM based probability of ' + tissue_names[tissue_number]
+                                                                       + ' based on T1w-MRI in native space',
+                                                        'needed_pipeline': 't1-volume'})
                     pvc_tissues_input.append(current_file)
+                except ClinicaException as e:
+                    all_errors.append(e)
+
             if len(all_errors) == 0:
                 pvc_tissues_input_final = []
                 for subject_tissue_list in zip(*pvc_tissues_input):
@@ -286,7 +292,7 @@ class PETVolume(cpe.Pipeline):
         if len(all_errors) > 0:
             error_message = 'Clinica faced error(s) while trying to read files in your CAPS/BIDS directories.\n'
             for msg in all_errors:
-                error_message += msg
+                error_message += str(msg)
             raise ClinicaException(error_message)
 
         read_input_node = npe.Node(name="LoadingCLIArguments",

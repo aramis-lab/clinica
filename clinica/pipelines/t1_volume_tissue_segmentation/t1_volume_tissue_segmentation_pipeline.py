@@ -82,21 +82,22 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         """
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from clinica.utils.exceptions import ClinicaBIDSError
+        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.stream import cprint
         from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
         from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.input_files import T1W_NII
 
         # Inputs from anat/ folder
         # ========================
         # T1w file:
-        t1w_files, err = clinica_file_reader(self.subjects,
-                                             self.sessions,
-                                             self.bids_directory,
-                                             {'pattern': '*_t1w.nii*',
-                                              'description': 'T1w MRI acquisition'})
-        if err:
-            err = 'Clinica faced error(s) while trying to read files in your CAPS directory.\n' + err
+        try:
+            t1w_files = clinica_file_reader(self.subjects,
+                                            self.sessions,
+                                            self.bids_directory,
+                                            T1W_NII)
+        except ClinicaException as e:
+            err = 'Clinica faced error(s) while trying to read files in your CAPS directory.\n' + str(e)
             raise ClinicaBIDSError(err)
 
         images_to_process = ', '.join(sub + '|' + ses for sub, ses in zip(self.subjects, self.sessions))
