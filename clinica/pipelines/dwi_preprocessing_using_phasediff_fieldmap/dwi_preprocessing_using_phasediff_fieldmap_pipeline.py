@@ -101,90 +101,95 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         from clinica.utils.dwi import check_dwi_volume
         from clinica.utils.inputs import clinica_file_reader
         import clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_utils as utils
-        from clinica.utils.exceptions import ClinicaBIDSError
+        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
+        import clinica.utils.input_files as input_files
         from clinica.utils.stream import cprint
 
         all_errors = []
 
-        # DWI preprocessing NIfTI
-        dwi_bids, err_msg = clinica_file_reader(self.subjects,
-                                                self.sessions,
-                                                self.bids_directory,
-                                                {'pattern': 'dwi/*dwi.nii*',
-                                                 'description': 'DWI NifTI'})
-        if err_msg:
-            all_errors.append(err_msg)
+        # DWI
+        try:
+            dwi_bids = clinica_file_reader(self.subjects,
+                                           self.sessions,
+                                           self.bids_directory,
+                                           input_files.DWI_NII)
+        except ClinicaException as e:
+            all_errors.append(e)
 
         # DWI json
-        dwi_json, err_msg = clinica_file_reader(self.subjects,
-                                                self.sessions,
-                                                self.bids_directory,
-                                                {'pattern': 'dwi/*_dwi.json',
-                                                 'description': 'DWI json file'})
+        try:
+            dwi_json = clinica_file_reader(self.subjects,
+                                           self.sessions,
+                                           self.bids_directory,
+                                           input_files.DWI_JSON)
 
-        # Create list_eff_echo_spacings and list_enc_directions
-        list_eff_echo_spacings = []
-        list_enc_directions = []
-        for json in dwi_json:
-            [eff_echo_spacing, enc_direction] = utils.parameters_from_dwi_metadata(json)
-            list_eff_echo_spacings.append(eff_echo_spacing)
-            list_enc_directions.append(enc_direction)
+            # Create list_eff_echo_spacings and list_enc_directions
+            list_eff_echo_spacings = []
+            list_enc_directions = []
+            for json in dwi_json:
+                [eff_echo_spacing, enc_direction] = utils.parameters_from_dwi_metadata(json)
+                list_eff_echo_spacings.append(eff_echo_spacing)
+                list_enc_directions.append(enc_direction)
+
+        except ClinicaException as e:
+            all_errors.append(e)
 
         # bval files
-        bval_files, err_msg = clinica_file_reader(self.subjects,
-                                                  self.sessions,
-                                                  self.bids_directory,
-                                                  {'pattern': 'dwi/*_dwi.bval',
-                                                   'description': 'bval files'})
-        if err_msg:
-            all_errors.append(err_msg)
+        try:
+            bval_files = clinica_file_reader(self.subjects,
+                                             self.sessions,
+                                             self.bids_directory,
+                                             input_files.DWI_BVAL)
+        except ClinicaException as e:
+            all_errors.append(e)
 
         # bvec files
-        bvec_files, err_msg = clinica_file_reader(self.subjects,
-                                                  self.sessions,
-                                                  self.bids_directory,
-                                                  {'pattern': 'dwi/*_dwi.bvec',
-                                                   'description': 'bvec files'})
-        if err_msg:
-            all_errors.append(err_msg)
+        try:
+            bvec_files = clinica_file_reader(self.subjects,
+                                             self.sessions,
+                                             self.bids_directory,
+                                             input_files.DWI_BVEC)
+        except ClinicaException as e:
+            all_errors.append(e)
 
         for (dwi, bvec, bval) in zip(dwi_bids, bvec_files, bval_files):
             check_dwi_volume(in_dwi=dwi, in_bvec=bvec, in_bval=bval)
 
         # Phasediff json
-        fmap_phasediff_json, err_msg = clinica_file_reader(self.subjects,
-                                                           self.sessions,
-                                                           self.bids_directory,
-                                                           {'pattern': 'fmap/*_phasediff.json',
-                                                            'description': 'phasediff json file'})
-        # Then deduce delta echo times
-        list_delta_echo_times = [utils.delta_echo_time_from_bids_fmap(json_phasediff)
-                                 for json_phasediff in fmap_phasediff_json]
+        try:
+            fmap_phasediff_json = clinica_file_reader(self.subjects,
+                                                      self.sessions,
+                                                      self.bids_directory,
+                                                      input_files.FMAP_PHASEDIFF_JSON)
+            # Then deduce delta echo times
+            list_delta_echo_times = [utils.delta_echo_time_from_bids_fmap(json_phasediff)
+                                     for json_phasediff in fmap_phasediff_json]
 
-        if err_msg:
-            all_errors.append(err_msg)
+        except ClinicaException as e:
+            all_errors.append(e)
 
         # Phasediff nifti
-        phasediff_nifti, err_msg = clinica_file_reader(self.subjects,
-                                                       self.sessions,
-                                                       self.bids_directory,
-                                                       {'pattern': 'fmap/*_phasediff.nii*',
-                                                        'description': 'phasediff json file'})
-
-        if err_msg:
-            all_errors.append(err_msg)
-
-        # Magnitude1
-        magnitude1, err_msg = clinica_file_reader(self.subjects,
+        try:
+            phasediff_nifti = clinica_file_reader(self.subjects,
                                                   self.sessions,
                                                   self.bids_directory,
-                                                  {'pattern': 'fmap/*_magnitude1.nii*',
-                                                   'description': 'magnitude file'})
+                                                  input_files.FMAP_PHASEDIFF_NII)
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        # Magnitude1
+        try:
+            magnitude1 = clinica_file_reader(self.subjects,
+                                             self.sessions,
+                                             self.bids_directory,
+                                             input_files.FMAP_MAGNITUDE1_NII)
+        except ClinicaException as e:
+            all_errors.append(e)
 
         if len(all_errors) > 0:
             error_message = 'Clinica faced error(s) while trying to read files in your CAPS directory.\n'
             for msg in all_errors:
-                error_message += msg
+                error_message += str(msg)
             raise ClinicaBIDSError(error_message)
 
         cprint("List JSON parameters for DWI Preprocessing:")

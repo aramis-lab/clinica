@@ -119,42 +119,52 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
+        from clinica.utils.exceptions import ClinicaException
+        import clinica.utils.input_files as input_files
+        from colorama import Fore
 
         all_errors = []
         # Reading T1w
         # ============
-        t1w_images, err = clinica_file_reader(self.subjects,
-                                              self.sessions,
-                                              self.bids_directory,
-                                              {'pattern': '*_t1w.nii*',
-                                               'description': 'T1w MRI acquisition'})
-        if err:
-            all_errors.append(err)
+        try:
+            t1w_images = clinica_file_reader(self.subjects,
+                                             self.sessions,
+                                             self.bids_directory,
+                                             input_files.T1W_NII)
+        except ClinicaException as e:
+            all_errors.append(e)
 
         # Dartel Iterations Templates
         # ============================
         g_id = self._group_id
-        iter_template, err = clinica_group_reader(self.caps_directory,
-                                                  {'pattern': 'group-' + g_id + '*_iteration-*_template.nii*',
-                                                   'description': 'template iteration files of group ' + g_id,
-                                                   'needed_pipeline': 't1-volume-create-dartel'})
-        if err:
-            all_errors.append(err)
+        dartel_iter_templates = []
+        for i in range(1, 7):
+            try:
+                current_iter = clinica_group_reader(self.caps_directory,
+                                                    {'pattern': 'group-' + g_id + '/t1/group-' + g_id + '_iteration-'
+                                                                + str(i) + '_template.nii*',
+                                                     'description': 'iteration #' + str(i) + ' of template for group '
+                                                                    + g_id,
+                                                     'needed_pipeline': 't1-volume-create-dartel'})
+                dartel_iter_templates.append(current_iter[0])
+            except ClinicaException as e:
+                all_errors.append(e)
 
         # Dartel Template
         # ================
-        final_template, err = clinica_group_reader(self.caps_directory,
-                                                   {'pattern': 'group-' + g_id + '_template.nii*',
-                                                    'description': 'template file of group ' + g_id,
-                                                    'needed_pipeline': 't1-volume-create-dartel'})
-        if err:
-            all_errors.append(err)
+        try:
+            final_template = clinica_group_reader(self.caps_directory,
+                                                  {'pattern': 'group-' + g_id + '_template.nii*',
+                                                   'description': 'template file of group ' + g_id,
+                                                   'needed_pipeline': 't1-volume-create-dartel'})
+        except ClinicaException as e:
+            all_errors.append(e)
 
         if len(all_errors) > 0:
             error_message = 'Clinica faced errors while trying to read files in your BIDS or CAPS directories.\n'
             error_message += 'Please note that you need to provide a template to use this pipeline.\n'
             for msg in all_errors:
-                error_message += msg
+                error_message += str(msg)
             raise RuntimeError(error_message)
 
         read_node = npe.Node(name="read_node",
@@ -165,7 +175,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
                              iterables=[('t1w', t1w_images)],
                              synchronize=True)
 
-        read_node.inputs.templates_iter = iter_template
+        read_node.inputs.templates_iter = dartel_iter_templates
         read_node.inputs.final_template = final_template
 
         check_volume_location_in_world_coordinate_system(t1w_images, self.bids_directory)

@@ -61,23 +61,23 @@ class T1FreeSurfer(cpe.Pipeline):
         import os
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from clinica.utils.exceptions import ClinicaBIDSError
+        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.stream import cprint
         from clinica.utils.ux import (print_images_to_process, print_no_image_to_process)
         from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.input_files import T1W_NII
         from clinica.utils.io import save_participants_sessions
 
         # Inputs from anat/ folder
         # ========================
         # T1w file:
-        t1w_files, err_msg = clinica_file_reader(self.subjects,
-                                                 self.sessions,
-                                                 self.bids_directory,
-                                                 {'pattern': '*_t1w.nii*',
-                                                  'description': 'T1 weighted image'})
-
-        if err_msg:
-            err_msg = 'Clinica faced error(s) while trying to read files in your BIDS directory.\n' + err_msg
+        try:
+            t1w_files = clinica_file_reader(self.subjects,
+                                            self.sessions,
+                                            self.bids_directory,
+                                            T1W_NII)
+        except ClinicaException as e:
+            err_msg = 'Clinica faced error(s) while trying to read files in your BIDS directory.\n' + str(e)
             raise ClinicaBIDSError(err_msg)
 
         # Save subjects to process in <WD>/T1FreeSurfer/participants.tsv

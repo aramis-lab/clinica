@@ -66,7 +66,10 @@ class T1VolumeExistingDartel(cpe.Pipeline):
         """
 
         import nipype.pipeline.engine as npe
-        import nipype.interfaces.io as nio
+        import nipype.interfaces.utility as nutil
+        from clinica.utils.exceptions import ClinicaException, ClinicaCAPSError
+        from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
+        from colorama import Fore
 
         tissue_names = {1: 'graymatter',
                         2: 'whitematter',
@@ -76,6 +79,7 @@ class T1VolumeExistingDartel(cpe.Pipeline):
                         6: 'background'
                         }
 
+        """
         # Dartel Input Tissues DataGrabber
         # =================================
         dartel_input_reader = npe.MapNode(nio.DataGrabber(infields=['subject_id', 'session',
@@ -109,6 +113,62 @@ class T1VolumeExistingDartel(cpe.Pipeline):
         self.connect([
             (dartel_input_reader, self.input_node, [('out_files', 'dartel_input_images')]),
             (templates_reader, self.input_node, [('out_files', 'dartel_iteration_templates')])
+        ])
+        """
+
+        read_input_node = npe.Node(name="LoadingCLIArguments",
+                                   interface=nutil.IdentityInterface(
+                                       fields=self.get_input_fields(),
+                                       mandatory_inputs=True))
+
+        all_errors = []
+
+        # Dartel Input Tissues
+        # ====================
+        d_input = []
+        for tissue_number in self.parameters['tissues']:
+            try:
+                current_file = clinica_file_reader(self.subjects,
+                                                   self.sessions,
+                                                   self.caps_directory,
+                                                   {'pattern': 't1/spm/segmentation/dartel_input/*_*_T1w_segm-'
+                                                               + tissue_names[tissue_number] + '_dartelinput.nii*',
+                                                    'description': 'Dartel input for tissue '
+                                                                   + tissue_names[tissue_number]
+                                                                   + ' from T1w MRI',
+                                                    'needed_pipeline': 't1-volume-tissue-segmentation'})
+                d_input.append(current_file)
+            except ClinicaException as e:
+                all_errors.append(e)
+
+        # Dartel Templates
+        # ================
+        dartel_iter_templates = []
+        for i in range(1, 7):
+            try:
+                current_iter = clinica_group_reader(self.caps_directory,
+                                                    {'pattern': 'group-' + self._group_id + '/t1/group-'
+                                                                + self._group_id + '_iteration-' + str(i)
+                                                                + '_template.nii*',
+                                                     'description': 'iteration #' + str(i) + ' of template for group ' + self._group_id,
+                                                     'needed_pipeline': 't1-volume-create-dartel'})
+
+                dartel_iter_templates.append(current_iter)
+            except ClinicaException as e:
+                all_errors.append(e)
+
+        if len(all_errors) > 0:
+            error_message = 'Clinica faced error(s) while trying to read files in your CAPS/BIDS directories.\n'
+            for msg in all_errors:
+                error_message += str(msg)
+            raise ClinicaCAPSError(error_message)
+
+        read_input_node.inputs.dartel_input_images = d_input
+        read_input_node.inputs.dartel_iteration_templates = dartel_iter_templates
+
+        self.connect([
+            (read_input_node, self.input_node, [('dartel_input_images', 'dartel_input_images')]),
+            (read_input_node, self.input_node, [('dartel_iteration_templates', 'dartel_iteration_templates')])
         ])
 
     def build_output_node(self):

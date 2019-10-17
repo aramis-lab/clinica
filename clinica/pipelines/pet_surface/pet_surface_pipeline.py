@@ -59,102 +59,103 @@ class PetSurface(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
+        import clinica.utils.input_files as input_files
 
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(
                                             fields=self.get_input_fields(),
                                             mandatory_inputs=True),
                                         synchronize=True)
+
+        if self.parameters['pet_type'].lower() == 'fdg':
+            pet_file_to_grab = input_files.PET_FDG_NII
+            pet_json_file_to_grab = input_files.PET_FDG_JSON
+        elif self.parameters['pet_type'].lower() == 'av45':
+            pet_file_to_grab = input_files.PET_AV45_NII
+            pet_json_file_to_grab = input_files.PET_AV45_JSON
+        else:
+            raise ClinicaException('[Error] PET type ' + str(self.parameters['pet_type'] + ' not supported'))
+
         all_errors = []
-        warning_freesurfer = False
+        try:
 
-        read_parameters_node.inputs.pet, error_str = clinica_file_reader(self.subjects,
-                                                                         self.sessions,
-                                                                         self.bids_directory,
-                                                                         {'pattern': '*' + self.parameters['pet_type']
-                                                                                     + '_pet.nii*',
-                                                                          'description': self.parameters['pet_type']
-                                                                                         + ' PET data'})
-        if error_str:
-            all_errors.append(error_str)
+            read_parameters_node.inputs.pet = clinica_file_reader(self.subjects,
+                                                                  self.sessions,
+                                                                  self.bids_directory,
+                                                                  pet_file_to_grab)
+        except ClinicaException as e:
+            all_errors.append(e)
 
-        read_parameters_node.inputs.orig_nu, error_str = clinica_file_reader(self.subjects,
-                                                                             self.sessions,
-                                                                             self.caps_directory,
-                                                                             {'pattern': 'orig_nu.mgz',
-                                                                              'description': 'intensity normalized volume generated after correction for'
-                                                                                             ' non-uniformity in FreeSurfer (file .../mri/orig_nu.mgz) ',
-                                                                              'needed_pipeline': 't1-freesurfer'})
-        if error_str:
-            all_errors.append(error_str)
-        read_parameters_node.inputs.psf, error_str = clinica_file_reader(self.subjects,
-                                                                         self.sessions,
-                                                                         self.bids_directory,
-                                                                         {'pattern': '*' + self.parameters['pet_type']
-                                                                                     + '_pet.json',
-                                                                          'description': 'json file describing the point'
-                                                                                         ' spread function (PSF) in '
-                                                                                         + self.parameters['pet_type']
-                                                                                         + ' PET.'})
-        if error_str:
-            all_errors.append(error_str)
-        read_parameters_node.inputs.white_surface_right, error_str = clinica_file_reader(self.subjects,
-                                                                                         self.sessions,
-                                                                                         self.caps_directory,
-                                                                                         {'pattern': 'sub-*_ses-*/surf/rh.white',
-                                                                                          'description': 'right hemisphere of outter cortical surface.',
-                                                                                          'needed_pipeline': 't1-freesurfer'})
-        if error_str:
-            all_errors.append(error_str)
-        read_parameters_node.inputs.white_surface_left, error_str = clinica_file_reader(self.subjects,
-                                                                                        self.sessions,
-                                                                                        self.caps_directory,
-                                                                                        {'pattern': 'sub-*_ses-*/surf/lh.white',
-                                                                                         'description': 'left hemisphere of outter cortical surface.',
-                                                                                         'needed_pipeline': 't1-freesurfer'})
-        if error_str:
-            all_errors.append(error_str)
-        read_parameters_node.inputs.destrieux_left, error_str = clinica_file_reader(self.subjects,
-                                                                                    self.sessions,
-                                                                                    self.caps_directory,
-                                                                                    {'pattern': 'sub-*_ses-*/*/lh.aparc.a2009s.annot',
-                                                                                     'description': 'left hemisphere surface-based Destrieux parcellation (rh.aparc.a2009s.annot)',
-                                                                                     'needed_pipeline': 't1-freesurfer'})
-        if error_str:
-            warning_freesurfer = True
-            all_errors.append(error_str)
-        read_parameters_node.inputs.destrieux_right, error_str = clinica_file_reader(self.subjects,
-                                                                                     self.sessions,
-                                                                                     self.caps_directory,
-                                                                                     {'pattern': 'sub-*_ses-*/*/rh.aparc.a2009s.annot',
-                                                                                      'description': 'right hemisphere surface-based Destrieux parcellation (rh.aparc.a2009s.annot)',
-                                                                                      'needed_pipeline': 't1-freesurfer'})
-        if error_str:
-            all_errors.append(error_str)
-        read_parameters_node.inputs.desikan_left, error_str = clinica_file_reader(self.subjects,
+        try:
+            read_parameters_node.inputs.orig_nu = clinica_file_reader(self.subjects,
+                                                                      self.sessions,
+                                                                      self.caps_directory,
+                                                                      input_files.T1_FS_ORIG_NU)
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        try:
+            read_parameters_node.inputs.psf = clinica_file_reader(self.subjects,
+                                                                  self.sessions,
+                                                                  self.bids_directory,
+                                                                  pet_json_file_to_grab)
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        try:
+            read_parameters_node.inputs.white_surface_right = clinica_file_reader(self.subjects,
                                                                                   self.sessions,
                                                                                   self.caps_directory,
-                                                                                  {'pattern': 'sub-*_ses-*/*/lh.aparc.annot',
-                                                                                   'description': 'left hemisphere surface-based Desikan parcellation (rh.aparc.annot)',
-                                                                                   'needed_pipeline': 't1-freesurfer'})
-        if error_str:
-            all_errors.append(error_str)
-        read_parameters_node.inputs.desikan_right, error_str = clinica_file_reader(self.subjects,
-                                                                                   self.sessions,
-                                                                                   self.caps_directory,
-                                                                                   {'pattern': 'sub-*_ses-*/*/rh.aparc.annot',
-                                                                                    'description': 'right hemisphere surface-based Desikan parcellation (rh.aparc.annot)',
-                                                                                    'needed_pipeline': 't1-freesurfer'})
-        if error_str:
-            all_errors.append(error_str)
+                                                                                  input_files.T1_FS_WS_R)
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        try:
+            read_parameters_node.inputs.white_surface_left = clinica_file_reader(self.subjects,
+                                                                                 self.sessions,
+                                                                                 self.caps_directory,
+                                                                                 input_files.T1_FS_WS_L)
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        try:
+            read_parameters_node.inputs.destrieux_left = clinica_file_reader(self.subjects,
+                                                                             self.sessions,
+                                                                             self.caps_directory,
+                                                                             input_files.T1_FS_DESTRIEUX_SURF_L)
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        try:
+            read_parameters_node.inputs.destrieux_right = clinica_file_reader(self.subjects,
+                                                                              self.sessions,
+                                                                              self.caps_directory,
+                                                                              input_files.T1_FS_DESTRIEUX_SURF_R)
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        try:
+            read_parameters_node.inputs.desikan_left = clinica_file_reader(self.subjects,
+                                                                           self.sessions,
+                                                                           self.caps_directory,
+                                                                           input_files.T1_FS_DESIKAN_SURF_L)
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        try:
+            read_parameters_node.inputs.desikan_right = clinica_file_reader(self.subjects,
+                                                                            self.sessions,
+                                                                            self.caps_directory,
+                                                                            input_files.T1_FS_DESIKAN_SURF_R)
+        except ClinicaException as e:
+            all_errors.append(e)
 
         if len(all_errors) > 0:
             error_message = 'Clinica faced errors while trying to read files in your BIDS or CAPS directories.\n'
-            if warning_freesurfer:
-                error_message += 'Please note that the t1-freesurfer pipeline needs to have run on all the subjects.\n'
             for msg in all_errors:
-                error_message += msg
-            raise RuntimeError(error_message)
+                error_message += str(msg)
+            raise ClinicaException(error_message)
 
         self.connect([
             (read_parameters_node,      self.input_node,    [('pet',                    'pet')]),

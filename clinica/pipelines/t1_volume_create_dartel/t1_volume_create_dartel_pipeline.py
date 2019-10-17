@@ -84,6 +84,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         import nipype.interfaces.utility as nutil
 
         tissue_names = {1: 'graymatter',
@@ -100,24 +101,24 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         all_errors = []
         d_input = []
         for tissue_number in self.parameters['dartel_tissues']:
-            current_file, err = clinica_file_reader(self.subjects,
-                                                    self.sessions,
-                                                    self.caps_directory,
-                                                    {'pattern': 't1/spm/segmentation/dartel_input/*_*_T1w_segm-'
-                                                                + tissue_names[tissue_number] + '_dartelinput.nii*',
-                                                     'description': 'Dartel input for tissue ' + tissue_names[tissue_number]
-                                                                    + ' from T1w MRI',
-                                                     'needed_pipeline': 't1-volume-tissue-segmentation'})
-
-            if err:
-                all_errors.append(err)
-            d_input.append(current_file)
+            try:
+                current_file = clinica_file_reader(self.subjects,
+                                                   self.sessions,
+                                                   self.caps_directory,
+                                                   {'pattern': 't1/spm/segmentation/dartel_input/*_*_T1w_segm-'
+                                                               + tissue_names[tissue_number] + '_dartelinput.nii*',
+                                                    'description': 'Dartel input for tissue ' + tissue_names[tissue_number]
+                                                                   + ' from T1w MRI',
+                                                    'needed_pipeline': 't1-volume-tissue-segmentation'})
+                d_input.append(current_file)
+            except ClinicaException as e:
+                all_errors.append(e)
 
         # Raise all errors if some happened
         if len(all_errors) > 0:
             error_message = 'Clinica faced errors while trying to read files in your BIDS or CAPS directories.\n'
             for msg in all_errors:
-                error_message += msg
+                error_message += str(msg)
             raise RuntimeError(error_message)
 
         # d_input is a list of size len(self.parameters['dartel_tissues'])
