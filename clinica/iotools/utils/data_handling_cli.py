@@ -128,18 +128,18 @@ class CmdParserCenterNifti(ce.CmdParser):
                                      + 'files/images.')
         self._args.add_argument("output_bids_directory",
                                 help='Path to the output directory. This is where your BIDS folder with centered '
-                                     + 'nifti will appear.')
+                                     + 'NIfTI files/images will appear.')
         self._args.add_argument("--modality", '-m',
-                                help='List of modalities you want to center the NIfTI images (ex: "t1w fdg_pet dwi")'
-                                     + '. Default="t1w". All the files whose names contains one the keywords specified'
-                                     + ' in this list will be kept.',
+                                help='List of modalities you want to center the NIfTI images (e.g.  --modality "t1w fdg_pet dwi"). '
+                                     'All the files whose names contains one the keywords specified '
+                                     ' in this list will be kept (default: --modality "t1w")',
                                 default='t1w')
         self._args.add_argument('--center_all_files',
-                                help='Use this flag without argument to force to convert all NIFTI of the specified '
-                                     + 'modality(ies)',
+                                help='Use this flag without argument to force the conversion of all NIfTI specified by'
+                                     + ' the --modality flag.',
                                 action='store_true',
-                                dest='center_all_files')
-        self._args.set_defaults(center_all_files=False)
+                                dest='center_all_files',
+                                default=False)
 
     def run_command(self, args):
         from colorama import Fore
@@ -186,7 +186,7 @@ class CmdParserCenterNifti(ce.CmdParser):
                                           center_all_files=args.center_all_files)
 
         # Write list of created files
-        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        timestamp = time.strftime("%Y%m%d-%H%M%S", time.localtime(time.time()))
         log_file = abspath(join(args.output_bids_directory, 'centered_nifti_list_' + timestamp + '.txt'))
         # If an error happen while creating the file, the function returns Nan
         if not write_list_of_files(centered_files, log_file):

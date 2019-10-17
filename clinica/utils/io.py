@@ -519,7 +519,7 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_sess
     if not ss_file:
         output_dir = tempfile.mkdtemp()
         timestamp = strftime('%Y%m%d_%H%M%S', localtime(time()))
-        tsv_file = '%s_subjects_sessions_list.tsv' % timestamp
+        tsv_file = 'subjects_sessions_list_%s.tsv' % timestamp
         ss_file = os.path.join(output_dir, tsv_file)
 
         cdh.create_subs_sess_list(

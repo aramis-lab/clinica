@@ -659,6 +659,15 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
 
 
 def write_list_of_files(file_list, output_file):
+    """
+    Save `file_list` list of files into `output_file` text file.
+    Args:
+        file_list: (list of str) of path to files
+        output_file: (str) path to the output txt file
+
+    Returns:
+        output_file
+    """
     from os.path import isfile
 
     assert isinstance(file_list, list), 'First argument must be a list'
@@ -674,6 +683,22 @@ def write_list_of_files(file_list, output_file):
 
 
 def check_volume_location_in_world_coordinate_system(nifti_list, bids_dir):
+    """
+    Check if the NIfTI file list nifti_list provided in argument are aproximately centered around the origin of the
+    world coordinates. (Problem may arise with SPM segmentation
+
+    If yes, we warn the user of this problem, and propose him to exit clinica in order for him to run:
+        clinica iotools center-nifti ...
+    or to continue with the execution of the pipeline
+
+    Args:
+        nifti_list: (list of str) list of path to nifti files
+        bids_dir: (str) path to bids directory associated with this check (in order to propose directly the good
+        command line for center-nifti tool)
+
+    Returns:
+        Nothing
+    """
     from colorama import Fore
     from clinica.utils.stream import cprint
     from os.path import abspath, basename
@@ -691,9 +716,9 @@ def check_volume_location_in_world_coordinate_system(nifti_list, bids_dir):
         center_width = max(len('Coordinate of center') + 3,
                            3 + max(len(str(center)) for center in centers))
 
-        warning_message = Fore.YELLOW + '[Warning] It appears that ' + str(len(list_non_centered_files)) + ' files ' \
-                          + 'have a center way out of the origin of the world coordinate system. SPM has a high prob' \
-                          + 'ability to fail on these files:\n\n'
+        warning_message = (Fore.YELLOW + '[Warning] It appears that ' + str(len(list_non_centered_files)) + ' files '
+                           + 'have a center way out of the origin of the world coordinate system. SPM has a high prob'
+                           + 'ability to fail on these files:\n\n')
         warning_message += ('%-' + str(file_width) + 's%-' + str(center_width) + 's%-s') % ('File',
                                                                                             'Coordinate of center',
                                                                                             'Distance to origin')
@@ -717,7 +742,7 @@ def check_volume_location_in_world_coordinate_system(nifti_list, bids_dir):
                            + abspath(bids_dir) + '_centered\n\n' + Fore.YELLOW \
                            + 'You will find more information on the command by typing ' + Fore.BLUE \
                            + 'clinica iotools center-nifti' + Fore.YELLOW + ' in the console.\nDo you still want to '\
-                           + 'launch the pipeline now ?' + Fore.RESET
+                           + 'launch the pipeline now?' + Fore.RESET
         cprint(warning_message)
         while True:
             cprint('Your answer [yes/no]:')
@@ -747,7 +772,9 @@ def is_centered(nii_volume, threshold_l2=80):
     Args:
         nii_volume: path to NIfTI volume
         threshold_l2: maximum distance between origin of the world coordinate system and the center of the volume to
-                    be considered centered
+                    be considered centered. The threshold were SPM segmentation stops working is around 100 mm
+                    (it was determined empirically after several trials on a genrated dataset), so default value is 80
+                    mm in order to have a security margin)
 
     Returns:
         True or False
@@ -772,7 +799,9 @@ def is_centered(nii_volume, threshold_l2=80):
 
 def get_world_coordinate_of_center(nii_volume):
     """
-    Extract the world coordinates of the center of the image
+    Extract the world coordinates of the center of the image. Based on methods described
+    here : https://brainder.org/2012/09/23/the-nifti-file-format/
+
     Args:
         nii_volume: path to nii volume
 
@@ -811,7 +840,7 @@ def get_center_volume(header):
     """
     Get the voxel coordinates of the center of the data, using header information
     Args:
-        header: a nifti header (nib.freesurfer.mghformat.MGHHeader)
+        header: a nifti header
 
     Returns:
         Voxel coordinates of the center of the volume
