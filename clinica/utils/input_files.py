@@ -115,11 +115,14 @@ FMRI_BOLD_JSON = {'pattern': 'func/sub-*_ses-*_bold.json',
 
 # BIDS
 
-PET_FDG_NII = {'pattern': 'pet/sub-*_ses-*acq-fdg_pet.nii*',
+PET_FDG_NII = {'pattern': 'pet/sub-*_ses-*_acq-fdg_pet.nii*',
                'description': 'FDG-PET data'}
-PET_FDG_JSON = {'pattern': 'pet/sub-*_ses-*_fdg_pet.json',
+
+PET_FDG_JSON = {'pattern': 'pet/sub-*_ses-*_acq-fdg_pet.json',
                 'description': 'json file describing the point spread function (PSF) in FDG PET.'}
-PET_AV45_NII = {'pattern': 'pet/sub-*_ses-*acq-av45_pet.nii*',
+
+PET_AV45_NII = {'pattern': 'pet/sub-*_ses-*_acq-av45_pet.nii*',
                 'description': 'AV45-PET data'}
-PET_AV45_JSON = {'pattern': 'pet/sub-*_ses-*_av45_pet.json',
+
+PET_AV45_JSON = {'pattern': 'pet/sub-*_ses-*_acq-av45_pet.json',
                  'description': 'json file describing the point spread function (PSF) in AV45 PET.'}
