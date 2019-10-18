@@ -65,7 +65,7 @@ class Pipeline(Workflow):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None):
-        """Inits a Pipeline object.
+        """Init a Pipeline object.
 
         Args:
             bids_directory (optional): Path to a BIDS directory.
@@ -76,7 +76,7 @@ class Pipeline(Workflow):
         import inspect
         import os
         from colorama import Fore
-        from clinica.utils.io import check_bids_folder, check_caps_folder, get_subject_session_list
+        from clinica.utils.io import check_bids_folder, check_caps_folder
         from clinica.utils.exceptions import ClinicaException
 
         self._is_built = False
@@ -100,26 +100,52 @@ class Pipeline(Workflow):
                 raise ClinicaException(
                     '%s[Error] The %s pipeline does not contain BIDS nor CAPS directory at the initialization.%s' %
                     (Fore.RED, self._name, Fore.RESET))
+
             check_caps_folder(self._caps_directory)
-            self._sessions, self._subjects = get_subject_session_list(
-                input_dir=self._caps_directory,
-                ss_file=self._tsv_file,
-                is_bids_dir=False
-            )
+            input_dir = self._caps_directory
+            is_bids_dir = True
         else:
             check_bids_folder(self._bids_directory)
-            self._sessions, self._subjects = get_subject_session_list(
-                input_dir=self._bids_directory,
-                ss_file=self._tsv_file,
-                is_bids_dir=True
-            )
+            input_dir = self._bids_directory
+            is_bids_dir = True
+        self.get_subject_session_list(input_dir, self._tsv_file, is_bids_dir)
 
         self.init_nodes()
 
-    def init_nodes(self):
-        """Init the basic workflow and I/O nodes necessary before build.
+    def get_subject_session_list(self, input_dir, tsv_file, is_bids_dir):
+        """Parse a BIDS or CAPS directory to get the subjects and sessions.
 
+        This function lists all the subjects and sessions based on the content of
+        the BIDS or CAPS directory or (if specified) on the provided
+        subject-sessions TSV file.
+
+        Notes:
+            This is a generic method based on folder names. If your <BIDS> dataset contains e.g.:
+            - sub-CLNC01/ses-M00/anat/sub-CLNC01_ses-M00_T1w.nii
+            - sub-CLNC02/ses-M00/dwi/sub-CLNC02_ses-M00_dwi.{bval|bvec|json|nii}
+            - sub-CLNC02/ses-M00/anat/sub-CLNC02_ses-M00_T1w.nii
+            get_subject_session_list(<BIDS>, None, True) will return
+            ['ses-M00', 'ses-M00'], ['sub-CLNC01', 'sub-CLNC02'].
+
+            However, if your pipeline needs both T1w and DWI files, you will need to overload this method.
+
+        Todo:
+            [ ] Overload get_subject_session_list(self, input_dir, tsv_file, is_bids_dir) on each sub-classes
+            [ ] Set Pipeline::get_subject_session_list as abstract method
+            [ ] Update Jinja file for clinica generate template
+            [ ] Make it static?
         """
+        from clinica.utils.io import get_subject_session_list
+        from clinica.utils.stream import cprint
+        cprint('Pipeline::get_subject_session_list()')
+        self._sessions, self._subjects = get_subject_session_list(
+            input_dir,
+            tsv_file,
+            is_bids_dir,
+        )
+
+    def init_nodes(self):
+        """Init the basic workflow and I/O nodes necessary before build."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         if self.get_input_fields():

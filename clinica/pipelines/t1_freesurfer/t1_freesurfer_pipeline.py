@@ -24,6 +24,45 @@ class T1FreeSurfer(cpe.Pipeline):
         A clinica pipeline object containing the T1FreeSurfer pipeline.
     """
 
+    def get_subject_session_list(self, input_dir, tsv_file, is_bids_dir):
+        """Parse a BIDS or CAPS directory to get the subjects and sessions.
+
+        This function lists all the subjects and sessions based on the content of
+        the BIDS or CAPS directory or (if specified) on the provided
+        subject-sessions TSV file.
+
+        Notes:
+            This is a generic method based on folder names. If your <BIDS> dataset contains e.g.:
+            - sub-CLNC01/ses-M00/anat/sub-CLNC01_ses-M00_T1w.nii
+            - sub-CLNC02/ses-M00/dwi/sub-CLNC02_ses-M00_dwi.{bval|bvec|json|nii}
+            - sub-CLNC02/ses-M00/anat/sub-CLNC02_ses-M00_T1w.nii
+            get_subject_session_list(<BIDS>, None, True) will return
+            ['ses-M00', 'ses-M00'], ['sub-CLNC01', 'sub-CLNC02'].
+
+            However, if your pipeline needs both T1w and DWI files, you will need to overload this method.
+
+        Todo:
+            [ ] Overload get_subject_session_list(self, input_dir, tsv_file, is_bids_dir) on each sub-classes
+            [ ] Set Pipeline::get_subject_session_list as abstract method?
+            [ ] Update Jinja file for clinica generate template
+        """
+        from clinica.utils.io import extract_subjects_sessions_from_filename
+        from clinica.utils.stream import cprint
+
+        super(T1FreeSurfer, self).get_subject_session_list(input_dir, tsv_file, is_bids_dir)
+
+        if not tsv_file:
+            cprint('T1FreeSurfer::get_subject_session_list() - Grabbing only T1w images when TSV not specified')
+            # TODO: Replace the following lines:
+            participant_labels = '|'.join(sub[4:] for sub in self.subjects)
+            session_labels = '|'.join(ses[4:] for ses in self.sessions)
+            t1w_files = self.bids_layout.get(type='T1w', return_type='file', extensions=['.nii|.nii.gz'],
+                                             subject=participant_labels, session=session_labels)
+            # by: t1w_files = clinica_file_reader(self.subjects, self.sessions, self.bids_directory, T1W_NII)
+            cprint('Before: %s \t %s' % (self._subjects, self._sessions))
+            self._subjects, self._sessions = extract_subjects_sessions_from_filename(t1w_files)
+            cprint('After: %s \t %s' % (self._subjects, self._sessions))
+
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file."""
         pass
