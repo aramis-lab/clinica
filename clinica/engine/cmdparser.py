@@ -45,23 +45,13 @@ class CmdParser:
 
     def set_content(self):
         from colorama import Fore
-        self._args._positionals.title = (
-                Fore.BLUE
-                + 'Mandatory arguments'
-                + Fore.RESET
-                )
-        self._args._optionals.title = (
-                Fore.BLUE
-                + 'Optional arguments'
-                + Fore.RESET
-                )
+        self._args._positionals.title = '%sMandatory arguments%s' % (Fore.BLUE, Fore.RESET)
+        self._args._optionals.title = '%sOptional arguments%s' % (Fore.BLUE, Fore.RESET)
         if self._description is None:
             self._description = self._name
-            self._args.description = (
-                    '%sIf you are not familiar with Clinica, see:\n'
-                    'http://clinica.run/doc/InteractingWithClinica/%s'
-                    % (Fore.GREEN, Fore.RESET)
-            )
+            self._args.description = ('%sIf you are not familiar with Clinica, see:\n'
+                                      'http://clinica.run/doc/InteractingWithClinica/%s'
+                                      % (Fore.GREEN, Fore.RESET))
         else:
             self._args.description = (
                 '%s%s\n\nIf you are not familiar with Clinica, see:\n'
