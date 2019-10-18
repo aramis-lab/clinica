@@ -76,8 +76,9 @@ def clinica_file_reader(subjects,
          except ClinicaException as e:
             # Deal with the error
 
-        raise:
-            ClinicaCAPSError or ClinicaBIDSError if multiples files are found for 1 subject/session, or no file is found
+    Raises:
+        ClinicaCAPSError or ClinicaBIDSError if multiples files are found for 1 subject/session, or no file is found
+        If raise_exception is False, no exception is raised
 
         Examples: (path are shortened for readability)
             - You have the full name of a file:
