@@ -64,7 +64,7 @@ class Pipeline(Workflow):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None):
+    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, base_dir=None):
         """Init a Pipeline object.
 
         Args:
@@ -88,6 +88,12 @@ class Pipeline(Workflow):
             os.path.dirname(os.path.abspath(inspect.getfile(self.__class__))),
             'info.json')
         self._info = {}
+
+        if base_dir is None:
+            from tempfile import mktemp
+            self.base_dir = mktemp()
+        else:
+            self.base_dir = base_dir
 
         if name:
             self._name = name
@@ -136,8 +142,6 @@ class Pipeline(Workflow):
             [ ] Make it static?
         """
         from clinica.utils.io import get_subject_session_list
-        from clinica.utils.stream import cprint
-        cprint('Pipeline::get_subject_session_list()')
         self._sessions, self._subjects = get_subject_session_list(
             input_dir,
             tsv_file,
@@ -164,7 +168,7 @@ class Pipeline(Workflow):
         else:
             self._output_node = None
 
-        Workflow.__init__(self, self._name)
+        Workflow.__init__(self, self._name, self.base_dir)
         if self.input_node:
             self.add_nodes([self.input_node])
         if self.output_node:
@@ -238,6 +242,8 @@ class Pipeline(Workflow):
             self.check_size()
             plugin_args = self.update_parallelize_info(plugin_args)
             plugin = 'MultiProc'
+        from clinica.utils.stream import cprint
+        cprint('Running pipeline on %s ' % self.base_dir)
         return Workflow.run(self, plugin, plugin_args, update_hash)
 
     def load_info(self):

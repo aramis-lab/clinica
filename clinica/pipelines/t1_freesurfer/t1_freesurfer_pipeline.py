@@ -47,21 +47,16 @@ class T1FreeSurfer(cpe.Pipeline):
             [ ] Update Jinja file for clinica generate template
         """
         from clinica.utils.io import extract_subjects_sessions_from_filename
-        from clinica.utils.stream import cprint
-
         super(T1FreeSurfer, self).get_subject_session_list(input_dir, tsv_file, is_bids_dir)
 
         if not tsv_file:
-            cprint('T1FreeSurfer::get_subject_session_list() - Grabbing only T1w images when TSV not specified')
             # TODO: Replace the following lines:
             participant_labels = '|'.join(sub[4:] for sub in self.subjects)
             session_labels = '|'.join(ses[4:] for ses in self.sessions)
             t1w_files = self.bids_layout.get(type='T1w', return_type='file', extensions=['.nii|.nii.gz'],
                                              subject=participant_labels, session=session_labels)
             # by: t1w_files = clinica_file_reader(self.subjects, self.sessions, self.bids_directory, T1W_NII)
-            cprint('Before: %s \t %s' % (self._subjects, self._sessions))
             self._subjects, self._sessions = extract_subjects_sessions_from_filename(t1w_files)
-            cprint('After: %s \t %s' % (self._subjects, self._sessions))
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file."""

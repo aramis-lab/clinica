@@ -40,7 +40,6 @@ class T1FreeSurferCLI(ce.CmdParser):
         """Run the pipeline with defined args."""
         import os
         from colorama import Fore
-        from tempfile import mkdtemp
         from .t1_freesurfer_pipeline import T1FreeSurfer
         from clinica.iotools.grabcaps import CAPSLayout
         from clinica.utils.io import read_participant_tsv, extract_image_ids
@@ -52,7 +51,8 @@ class T1FreeSurferCLI(ce.CmdParser):
         pipeline = T1FreeSurfer(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv)
+            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+            base_dir=self.absolute_path(args.working_directory)
         )
 
         if "-dontrun" in args.recon_all_args.split(' '):
@@ -63,10 +63,6 @@ class T1FreeSurferCLI(ce.CmdParser):
         pipeline.parameters = {
             'recon_all_args': args.recon_all_args or '-qcache'
         }
-
-        if args.working_directory is None:
-            args.working_directory = mkdtemp()
-        pipeline.base_dir = self.absolute_path(args.working_directory)
 
         try:
             if args.n_procs:
