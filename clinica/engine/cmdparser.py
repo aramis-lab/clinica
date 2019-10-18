@@ -12,21 +12,11 @@ from os.path import expanduser
 from colorama import Fore
 
 PIPELINE_CATEGORIES = {
-    'CLINICA_COMPULSORY': (Fore.BLUE
-                           + 'Clinica mandatory arguments'
-                           + Fore.RESET),
-    'OPTIONAL': (Fore.BLUE
-                 + 'Pipeline options'
-                 + Fore.RESET),
-    'CLINICA_OPTIONAL': (Fore.BLUE
-                         + 'Clinica standard options'
-                         + Fore.RESET),
-    'ADVANCED': (Fore.BLUE
-                 + 'Pipelines advanced options'
-                 + Fore.RESET),
-    'IOTOOLS_OPTIONS': (Fore.BLUE
-                        + 'Optional arguments'
-                        + Fore.RESET)
+    'CLINICA_COMPULSORY': '%sClinica mandatory arguments%s' % (Fore.BLUE, Fore.RESET),
+    'OPTIONAL': '%sPipeline options%s' % (Fore.BLUE, Fore.RESET),
+    'CLINICA_OPTIONAL': '%sClinica standard options%s' % (Fore.BLUE, Fore.RESET),
+    'ADVANCED': '%sPipelines advanced options%s' % (Fore.BLUE, Fore.RESET),
+    'IOTOOLS_OPTIONS': '%sOptional arguments%s' % (Fore.BLUE, Fore.RESET)
     }
 
 
@@ -109,6 +99,35 @@ class CmdParser:
 
     @abc.abstractmethod
     def define_options(self): pass
+
+    def add_clinica_standard_arguments(self,
+                                       add_tsv_flag=True,
+                                       add_wd_flag=True,
+                                       add_nprocs_flag=True,
+                                       add_overwrite_flag=False,
+                                       ):
+        clinica_standard_options = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
+        if add_tsv_flag:
+            clinica_standard_options.add_argument(
+                "-tsv", "--subjects_sessions_tsv",
+                help='TSV file containing a list of subjects with their sessions.')
+        if add_wd_flag:
+            clinica_standard_options.add_argument(
+                "-wd", "--working_directory",
+                help='Temporary directory to store pipelines intermediate results')
+        if add_nprocs_flag:
+            clinica_standard_options.add_argument(
+                "-np", "--n_procs",
+                metavar='N', type=int,
+                help='Number of cores used to run in parallel')
+        if add_overwrite_flag:
+            clinica_standard_options.add_argument(
+                "-overwrite", "--overwrite_outputs",
+                action='store_true', default=False,
+                help='Force overwrite of output files in CAPS folder.')
+
+        return clinica_standard_options
+
 
     @abc.abstractmethod
     def run_command(self, args): pass

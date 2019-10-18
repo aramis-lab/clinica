@@ -34,14 +34,7 @@ class T1FreeSurferCLI(ce.CmdParser):
                                    '(this is not the case for other flags).')
 
         # Clinica standard arguments (e.g. --n_procs)
-        clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
-        clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
-                                 help='TSV file containing a list of subjects with their sessions.')
-        clinica_opt.add_argument("-wd", "--working_directory",
-                                 help='Temporary directory to store pipelines intermediate results.')
-        clinica_opt.add_argument("-np", "--n_procs",
-                                 metavar='N', type=int,
-                                 help='Number of cores used to run in parallel.')
+        self.add_clinica_standard_arguments()
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
