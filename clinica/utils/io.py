@@ -121,6 +121,16 @@ def extract_image_ids(bids_or_caps_files):
     return id_bids_or_caps_files
 
 
+def extract_subjects_sessions_from_filename(bids_or_caps_files):
+    """Extract subjects/sessions (e.g. ['sub-CLNC01', 'sub-CLNC01']/['ses-M00', 'ses-M18'] from `bids_or_caps_files`."""
+    id_bids_or_caps_files = extract_image_ids(bids_or_caps_files)
+    split = [image_id.split('_')
+             for image_id in id_bids_or_caps_files]
+    subject_ids = [p_id[0] for p_id in split]
+    session_ids = [s_id[1] for s_id in split]
+    return subject_ids, session_ids
+
+
 def check_bids_folder(bids_directory):
     """
     check_bids_folder function checks the following items:
