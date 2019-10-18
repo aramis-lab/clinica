@@ -58,20 +58,16 @@ class CmdParser:
         if self._description is None:
             self._description = self._name
             self._args.description = (
-                    Fore.GREEN
-                    + ('If you are not familiar with Clinica, see:'
-                       'http://clinica.run/doc/InteractingWithClinica/')
-                    + Fore.RESET
-                    )
+                    '%sIf you are not familiar with Clinica, see:\n'
+                    'http://clinica.run/doc/InteractingWithClinica/%s'
+                    % (Fore.GREEN, Fore.RESET)
+            )
         else:
             self._args.description = (
-                    (
-                        Fore.GREEN
-                        + ('%s\n\nIf you are not familiar with Clinica, see:'
-                           'http://clinica.run/doc/InteractingWithClinica')
-                        + Fore.RESET
-                    ) % (self._description)
-                )
+                '%s%s\n\nIf you are not familiar with Clinica, see:\n'
+                'http://clinica.run/doc/InteractingWithClinica%s'
+                % (Fore.GREEN, self._description, Fore.RESET)
+            )
 
     @property
     def options(self): return self._args
@@ -114,12 +110,12 @@ class CmdParser:
         if add_wd_flag:
             clinica_standard_options.add_argument(
                 "-wd", "--working_directory",
-                help='Temporary directory to store pipelines intermediate results')
+                help='Temporary directory to store pipelines intermediate results.')
         if add_nprocs_flag:
             clinica_standard_options.add_argument(
                 "-np", "--n_procs",
                 metavar='N', type=int,
-                help='Number of cores used to run in parallel')
+                help='Number of cores used to run in parallel.')
         if add_overwrite_flag:
             clinica_standard_options.add_argument(
                 "-overwrite", "--overwrite_outputs",
@@ -127,7 +123,6 @@ class CmdParser:
                 help='Force overwrite of output files in CAPS folder.')
 
         return clinica_standard_options
-
 
     @abc.abstractmethod
     def run_command(self, args): pass
