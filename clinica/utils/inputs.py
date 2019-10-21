@@ -87,7 +87,7 @@ def clinica_file_reader(subjects,
                     clinica_file_reader(['sub-ADNI011S4105'],
                                         ['ses-M00'],
                                         caps_directory,
-                                        {'pattern': 'orig_nu.mgz',
+                                        {'pattern': 'freesurfer_cross_sectional/sub-*_ses-*/mri/orig_nu.mgz',
                                          'description': 'freesurfer file orig_nu.mgz',
                                          'needed_pipeline': 't1-freesurfer'})
                     gives: ['/caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M00/mri/orig_nu.mgz']
@@ -116,7 +116,8 @@ def clinica_file_reader(subjects,
                             /caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/fsaverage/surf/rh.white
                             /caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/rh.EC_average/surf/rh.white
                             /caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M00/surf/rh.white
-                Correct usage (wanted for pet-surface): pattern string must be 'sub-*_ses-*/surf/rh.white')
+                Correct usage (e.g. in pet-surface): pattern string must be 'sub-*_ses-*/surf/rh.white' or even more precise:
+                        't1/freesurfer_cross_sectional/sub-*_ses-*/surf/rh.white'
                     It then gives: ['/caps/subjects/sub-ADNI011S4105/ses-M00/t1/freesurfer_cross_sectional/sub-ADNI011S4105_ses-M00/surf/rh.white']
 
         Note:
@@ -125,7 +126,7 @@ def clinica_file_reader(subjects,
 
     """
 
-    from os.path import join, isdir
+    from os.path import join
     from clinica.utils.io import check_bids_folder, check_caps_folder
     from colorama import Fore
     from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
@@ -143,9 +144,9 @@ def clinica_file_reader(subjects,
         check_caps_folder(input_directory)
 
     # Some check on the formatting on the data
-    assert pattern[0] != '/', 'pattern argument cannot start with char : / (does not work in os.path.join function). ' \
+    assert pattern[0] != '/', 'pattern argument cannot start with char: / (does not work in os.path.join function). ' \
                               + 'If you want to indicate the exact name of the file, use the format' \
-                              + ' directory_name/filename.extension or filename.extensionin the pattern argument'
+                              + ' directory_name/filename.extension or filename.extension in the pattern argument'
     assert len(subjects) == len(sessions), 'Subjects and sessions must have the same length'
     if len(subjects) == 0:
         raise RuntimeError('No subjects and sessions provided.')
@@ -223,9 +224,9 @@ def clinica_group_reader(caps_directory, information, raise_exception=True):
 
     pattern = information['pattern']
     # Some check on the formatting on the data
-    assert pattern[0] != '/', 'pattern argument cannot start with char : / (does not work in os.path.join function). ' \
+    assert pattern[0] != '/', 'pattern argument cannot start with char: / (does not work in os.path.join function). ' \
                               + 'If you want to indicate the exact name of the file, use the format' \
-                              + ' directory_name/filename.extension or filename.extensionin the pattern argument'
+                              + ' directory_name/filename.extension or filename.extension in the pattern argument'
 
     check_caps_folder(caps_directory)
 

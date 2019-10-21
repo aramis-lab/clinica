@@ -152,8 +152,10 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         except ClinicaException as e:
             all_errors.append(e)
 
-        for (dwi, bvec, bval) in zip(dwi_bids, bvec_files, bval_files):
-            check_dwi_volume(in_dwi=dwi, in_bvec=bvec, in_bval=bval)
+        # dwi_bids, bvec_files, bval_files may not exist
+        if len(all_errors) == 0:
+            for (dwi, bvec, bval) in zip(dwi_bids, bvec_files, bval_files):
+                check_dwi_volume(in_dwi=dwi, in_bvec=bvec, in_bval=bval)
 
         # Phasediff json
         try:
