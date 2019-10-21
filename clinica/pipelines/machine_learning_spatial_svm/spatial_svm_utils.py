@@ -777,7 +777,6 @@ def heat_solver_tensor_2D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     b_h = utils.tensor_scalar_product((h * h), f[1:-1, 1:-1])
     b_h[:, 0] = b_h[:, 0] + utils.tensor_scalar_product(h, CL_value[1:-1, 0])
     b_h[0, :] = b_h[0, :] + utils.tensor_scalar_product(h, CL_value[0, 1:-1])
-    b_h = b_h  # what is the sense of doing this?
 
     # inversion of the linear system
     U_h = utils.heat_finite_elt_2D_tensor2(b_h, t_final, t_step, h, g)
