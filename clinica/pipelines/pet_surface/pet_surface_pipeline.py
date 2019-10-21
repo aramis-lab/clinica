@@ -107,7 +107,7 @@ class PetSurface(cpe.Pipeline):
             read_parameters_node.inputs.white_surface_right = clinica_file_reader(self.subjects,
                                                                                   self.sessions,
                                                                                   self.caps_directory,
-                                                                                  input_files.T1_FS_WS_R)
+                                                                                  input_files.T1_FS_WM_SURF_R)
         except ClinicaException as e:
             all_errors.append(e)
 
@@ -115,7 +115,7 @@ class PetSurface(cpe.Pipeline):
             read_parameters_node.inputs.white_surface_left = clinica_file_reader(self.subjects,
                                                                                  self.sessions,
                                                                                  self.caps_directory,
-                                                                                 input_files.T1_FS_WS_L)
+                                                                                 input_files.T1_FS_WM_SURF_L)
         except ClinicaException as e:
             all_errors.append(e)
 
