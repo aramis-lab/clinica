@@ -24,7 +24,7 @@ class T1FreeSurfer(cpe.Pipeline):
         A clinica pipeline object containing the T1FreeSurfer pipeline.
     """
 
-    def get_subject_session_list(self, input_dir, tsv_file, is_bids_dir):
+    def get_subject_session_list(self, input_dir, tsv_file, is_bids_dir, base_dir):
         """Parse a BIDS or CAPS directory to get the subjects and sessions.
 
         This function lists all the subjects and sessions based on the content of
@@ -47,7 +47,7 @@ class T1FreeSurfer(cpe.Pipeline):
             [ ] Update Jinja file for clinica generate template
         """
         from clinica.utils.io import extract_subjects_sessions_from_filename
-        super(T1FreeSurfer, self).get_subject_session_list(input_dir, tsv_file, is_bids_dir)
+        super(T1FreeSurfer, self).get_subject_session_list(input_dir, tsv_file, is_bids_dir, base_dir)
 
         if not tsv_file:
             # TODO: Replace the following lines:

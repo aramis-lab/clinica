@@ -114,11 +114,14 @@ class Pipeline(Workflow):
             check_bids_folder(self._bids_directory)
             input_dir = self._bids_directory
             is_bids_dir = True
-        self.get_subject_session_list(input_dir, self._tsv_file, is_bids_dir)
+        self.get_subject_session_list(input_dir,
+                                      self._tsv_file,
+                                      is_bids_dir,
+                                      self.base_dir)
 
         self.init_nodes()
 
-    def get_subject_session_list(self, input_dir, tsv_file, is_bids_dir):
+    def get_subject_session_list(self, input_dir, tsv_file, is_bids_dir, base_dir):
         """Parse a BIDS or CAPS directory to get the subjects and sessions.
 
         This function lists all the subjects and sessions based on the content of
@@ -136,7 +139,7 @@ class Pipeline(Workflow):
             However, if your pipeline needs both T1w and DWI files, you will need to overload this method.
 
         Todo:
-            [ ] Overload get_subject_session_list(self, input_dir, tsv_file, is_bids_dir) on each sub-classes
+            [ ] Overload get_subject_session_list on each sub-classes
             [ ] Set Pipeline::get_subject_session_list as abstract method
             [ ] Update Jinja file for clinica generate template
             [ ] Make it static?
@@ -146,6 +149,8 @@ class Pipeline(Workflow):
             input_dir,
             tsv_file,
             is_bids_dir,
+            False,
+            base_dir
         )
 
     def init_nodes(self):
