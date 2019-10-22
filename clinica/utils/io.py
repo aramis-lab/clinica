@@ -261,7 +261,7 @@ def read_participant_tsv(tsv_file):
     return [sub.strip(' ') for sub in participants], [ses.strip(' ') for ses in sessions]
 
 
-def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_session_tsv=False):
+def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_session_tsv=False, tsv_dir=None):
     """Parses a BIDS or CAPS directory to get the subjects and sessions.
 
     This function lists all the subjects and sessions based on the content of
@@ -273,6 +273,8 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_sess
         ss_file: A subjects-sessions file (.tsv format).
         is_bids_dir: Indicates if input_dir is a BIDS or CAPS directory
         use_session_tsv (boolean): Specify if the list uses the sessions listed in the sessions.tsv files
+        tsv_dir (str): if TSV file does not exist, it will be created in output_dir. If
+            not specified, output_dir will be in <tmp> folder
 
     Returns:
         subjects: A subjects list.
@@ -284,7 +286,10 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_sess
     import clinica.iotools.utils.data_handling as cdh
 
     if not ss_file:
-        output_dir = tempfile.mkdtemp()
+        if tsv_dir:
+            output_dir = tsv_dir
+        else:
+            output_dir = tempfile.mkdtemp()
         timestamp = strftime('%Y%m%d_%H%M%S', localtime(time()))
         tsv_file = 'subjects_sessions_list_%s.tsv' % timestamp
         ss_file = os.path.join(output_dir, tsv_file)

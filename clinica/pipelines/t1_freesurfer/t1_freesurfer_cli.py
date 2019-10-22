@@ -34,7 +34,7 @@ class T1FreeSurferCLI(ce.CmdParser):
                                    '(this is not the case for other flags).')
 
         # Clinica standard arguments (e.g. --n_procs)
-        self.add_clinica_standard_arguments()
+        self.add_clinica_standard_arguments(add_overwrite_flag=True)
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
