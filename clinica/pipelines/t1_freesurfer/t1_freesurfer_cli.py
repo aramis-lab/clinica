@@ -61,7 +61,7 @@ class T1FreeSurferCLI(ce.CmdParser):
                    (Fore.YELLOW, Fore.RESET))
 
         pipeline.parameters = {
-            'recon_all_args': args.recon_all_args or '-qcache'
+            'recon_all_args': args.recon_all_args
         }
 
         try:
