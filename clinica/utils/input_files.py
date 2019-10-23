@@ -39,11 +39,11 @@ T1_FS_DESTRIEUX = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/mri/apa
                    'description': 'Destrieux-based segmentation (mri/aparc.a2009s+aseg.mgz)',
                    'needed_pipeline': 't1-freesurfer'}
 
-T1_FS_DESTRIEUX_SURF_L = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/label/lh.aparc.a2009s.annot',
+T1_FS_DESTRIEUX_PARC_L = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/label/lh.aparc.a2009s.annot',
                           'description': 'left hemisphere surface-based Destrieux parcellation (label/lh.aparc.a2009s.annot)',
                           'needed_pipeline': 't1-freesurfer'}
 
-T1_FS_DESTRIEUX_SURF_R = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/label/rh.aparc.a2009s.annot',
+T1_FS_DESTRIEUX_PARC_R = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/label/rh.aparc.a2009s.annot',
                           'description': 'right hemisphere surface-based Destrieux parcellation (label/rh.aparc.a2009s.annot)',
                           'needed_pipeline': 't1-freesurfer'}
 
@@ -51,11 +51,11 @@ T1_FS_DESIKAN = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/mri/aparc
                  'description': 'Desikan-based segmentation (mri/aparc.a2009s+aseg.mgz)',
                  'needed_pipeline': 't1-freesurfer'}
 
-T1_FS_DESIKAN_SURF_L = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/label/lh.aparc.annot',
+T1_FS_DESIKAN_PARC_L = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/label/lh.aparc.annot',
                         'description': 'left hemisphere surface-based Desikan parcellation (label/lh.aparc.annot)',
                         'needed_pipeline': 't1-freesurfer'}
 
-T1_FS_DESIKAN_SURF_R = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/label/rh.aparc.annot',
+T1_FS_DESIKAN_PARC_R = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/label/rh.aparc.annot',
                         'description': 'right hemisphere surface-based Desikan parcellation (label/rh.aparc.annot)',
                         'needed_pipeline': 't1-freesurfer'}
 

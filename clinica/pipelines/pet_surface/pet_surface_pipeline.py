@@ -123,7 +123,7 @@ class PetSurface(cpe.Pipeline):
             read_parameters_node.inputs.destrieux_left = clinica_file_reader(self.subjects,
                                                                              self.sessions,
                                                                              self.caps_directory,
-                                                                             input_files.T1_FS_DESTRIEUX_SURF_L)
+                                                                             input_files.T1_FS_DESTRIEUX_PARC_L)
         except ClinicaException as e:
             all_errors.append(e)
 
@@ -131,7 +131,7 @@ class PetSurface(cpe.Pipeline):
             read_parameters_node.inputs.destrieux_right = clinica_file_reader(self.subjects,
                                                                               self.sessions,
                                                                               self.caps_directory,
-                                                                              input_files.T1_FS_DESTRIEUX_SURF_R)
+                                                                              input_files.T1_FS_DESTRIEUX_PARC_R)
         except ClinicaException as e:
             all_errors.append(e)
 
@@ -139,7 +139,7 @@ class PetSurface(cpe.Pipeline):
             read_parameters_node.inputs.desikan_left = clinica_file_reader(self.subjects,
                                                                            self.sessions,
                                                                            self.caps_directory,
-                                                                           input_files.T1_FS_DESIKAN_SURF_L)
+                                                                           input_files.T1_FS_DESIKAN_PARC_L)
         except ClinicaException as e:
             all_errors.append(e)
 
@@ -147,7 +147,7 @@ class PetSurface(cpe.Pipeline):
             read_parameters_node.inputs.desikan_right = clinica_file_reader(self.subjects,
                                                                             self.sessions,
                                                                             self.caps_directory,
-                                                                            input_files.T1_FS_DESIKAN_SURF_R)
+                                                                            input_files.T1_FS_DESIKAN_PARC_R)
         except ClinicaException as e:
             all_errors.append(e)
 
