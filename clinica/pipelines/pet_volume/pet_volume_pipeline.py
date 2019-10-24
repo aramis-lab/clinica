@@ -39,26 +39,31 @@ class PETVolume(cpe.Pipeline):
                  fwhm_tsv=None):
         from pandas.io.parsers import read_csv
         import os
+        from clinica.utils.exceptions import ClinicaCAPSError
+        from colorama import Fore
 
         super(PETVolume, self).__init__(bids_directory, caps_directory, tsv_file, name)
 
         if not group_id.isalnum():
-            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
+            raise ClinicaCAPSError(Fore.RED + '[Error] Not valid group_id value. It must be composed only by letters and/or numbers' + Fore.RESET)
+
+        if not os.path.isdir(os.path.join(os.path.abspath(caps_directory), 'groups')):
+            raise ClinicaCAPSError(Fore.RED + '[Error] There is no \'groups\' folder in your CAPS directory. (Have you run t1-volume pipeline ?)' + Fore.RESET)
 
         # Check that group already exists
         if not os.path.exists(os.path.join(os.path.abspath(caps_directory), 'groups', 'group-' + group_id)):
             error_message = group_id \
-                            + ' does not exists, please choose an other one (or maybe you need to run t1-volume-create-dartel).' \
+                            + ' group does not exists, please choose an other one (or maybe you need to run t1-volume-create-dartel).' \
                             + '\nGroups that already exist in your CAPS directory are: \n'
             list_groups = os.listdir(os.path.join(os.path.abspath(caps_directory), 'groups'))
             is_empty = True
             for e in list_groups:
                 if e.startswith('group-'):
-                    error_message += e + ' \n'
+                    error_message += '\t' + e + ' \n'
                     is_empty = False
             if is_empty is True:
                 error_message += 'NO GROUP FOUND'
-            raise ValueError(error_message)
+            raise ClinicaCAPSError(Fore.RED + '[Error] ' + error_message + Fore.RESET)
 
         self._group_id = group_id
         self._suvr_region = ''
@@ -161,6 +166,7 @@ class PETVolume(cpe.Pipeline):
         from os.path import join, split, realpath
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader, insensitive_glob
         from clinica.utils.exceptions import ClinicaException
+        from clinica.iotools.utils.data_handling import check_relative_volume_location_in_world_coordinate_system
         import clinica.utils.input_files as input_files
 
         # Tissues DataGrabber
@@ -294,6 +300,11 @@ class PETVolume(cpe.Pipeline):
             for msg in all_errors:
                 error_message += str(msg)
             raise ClinicaException(error_message)
+
+        check_relative_volume_location_in_world_coordinate_system('T1w-MRI', t1w_bids,
+                                                                  self.parameters['pet_type'] + ' PET', pet_bids,
+                                                                  self.bids_directory,
+                                                                  't1w ' + self.parameters['pet_type'])
 
         read_input_node = npe.Node(name="LoadingCLIArguments",
                                    interface=nutil.IdentityInterface(
