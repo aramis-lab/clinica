@@ -2,7 +2,7 @@ name: clinica_env
 channels:
   - defaults
 dependencies:
-  - python==3.6
+  - python=3.6
   - pip
   - pip:
       - nibabel==2.3.3
