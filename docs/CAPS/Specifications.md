@@ -251,6 +251,22 @@ Statistics files (with `_statistics.tsv` suffix) are detailed in [appendix](#app
     The naming convention for suffixes follows the BIDS derivative specifications except for the statistics files (specific files for our needs) and the `_deformation.nii.gz` file (it is equivalent to the `_warp.nii.gz` file in the [BEP014 specifications](https://docs.google.com/document/d/11gCzXOPUbYyuQx8fErtMO9tnOKC3kTWiL9axWkkILNE)).
 
 
+### `dwi-connectome` - Computation of structural connectome from corrected DWI datasets
+```
+subjects/
+└── sub-<participant_label>/
+    └── ses­-<session_label>/
+        └── dwi/
+            └── connectome_based_processing/
+                ├── <source_file>_space-{b0|T1w}_model-CSD_diffmodel.nii.gz
+                │── <source_file>_space-{b0|T1w}_model-CSD_tractography.tck
+                └── <source_file>_space-{b0|T1w}_model-CSD_parcellation-{desikan|destrieux}_connectivity.tsv
+```
+
+The constrained spherical deconvolution (CSD) diffusion model is saved under the `*_model-CSD_diffmodel.nii.gz` filename. The whole-brain tractography is saved under the `*_tractography.tck` filename. The connectivity matrices are saved under `*_connectivity.tsv` filenames.
+
+Current parcellations used for the computation of connectivity matrices are `desikan` and `desikan` (see [Atlases page](../../Atlases) for further details).
+
 ## Functional MRI data
 ### `fmri-preprocessing` - Preprocessing of raw functional MRI
 ```
