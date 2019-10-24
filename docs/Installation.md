@@ -162,3 +162,14 @@ conda deactivate
 Remember that Clinica will be only available inside your Conda environment.
 <!-- Further information for Clinica's contributors can be found
 [here](../CodingForClinica). -->
+
+!!! warning  "In case your face `ResolvePackageNotFound: python==3.6` error"
+    When installing Clinica with `conda`, you may see the following error:
+    ```
+    Collecting package metadata (repodata.json): done
+    Solving environment: failed
+
+    ResolvePackageNotFound:
+    - python==3.6
+    ```
+    This is caused by newer version of conda. This has been corrected recently in the `dev` branch on Clinica.
