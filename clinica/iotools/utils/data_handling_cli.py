@@ -141,12 +141,18 @@ class CmdParserCenterNifti(ce.CmdParser):
                                 dest='center_all_files',
                                 default=False)
 
+        self._args.add_argument('--coreg_two_modalities',
+                                help='Use this flag if you want to be sure that SPM will succeed to coregister 2 modalities (that you must specify in --modality argument)',
+                                action='store_true',
+                                dest='coreg_two_modalities',
+                                default=False)
+
     def run_command(self, args):
         from colorama import Fore
         from os.path import isdir, abspath, join, isfile
         from os import listdir
         from os import makedirs
-        from clinica.iotools.utils.data_handling import center_all_nifti, write_list_of_files
+        from clinica.iotools.utils.data_handling import center_all_nifti, write_list_of_files, center_nifti_for_coreg
         from clinica.utils.stream import cprint
         import sys
         import time
@@ -180,10 +186,16 @@ class CmdParserCenterNifti(ce.CmdParser):
         split_modality = [element for element in split_modality if element]
 
         cprint('Clinica is now centering the requested images.')
-        centered_files = center_all_nifti(abspath(args.bids_directory),
-                                          abspath(args.output_bids_directory),
-                                          split_modality,
-                                          center_all_files=args.center_all_files)
+
+        if args.coreg_two_modalities:
+            centered_files = center_nifti_for_coreg(abspath(args.bids_directory),
+                                                    abspath(args.output_bids_directory),
+                                                    split_modality)
+        else:
+            centered_files = center_all_nifti(abspath(args.bids_directory),
+                                              abspath(args.output_bids_directory),
+                                              split_modality,
+                                              center_all_files=args.center_all_files)
 
         # Write list of created files
         timestamp = time.strftime("%Y%m%d-%H%M%S", time.localtime(time.time()))

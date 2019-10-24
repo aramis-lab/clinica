@@ -594,16 +594,16 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
     """
     Center all the NIfTI images of the input BIDS folder into the empty output_dir specified in argument.
     All the files from bids_dir are copied into output_dir, then all the NIfTI images we can found are replaced by their
-    centered version.
+    centered version if their center if off the origin by more than 80 mm.
 
     Args:
         bids_dir: (str) path to bids directory
         output_dir: (str) path to EMPTY output directory
         modality: (list of str) modalities to convert
-        center_all_files: (bool) center only files that may cause problem for SPM
+        center_all_files: (bool) center only files that may cause problem for SPM if false. If true, center all NIfTI
 
     Returns:
-
+        List of the centered files
     """
     from colorama import Fore
     from clinica.utils.io import check_bids_folder
@@ -658,6 +658,111 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
     return nifti_files_filtered
 
 
+def center_nifti_for_coreg(bids_dir, output_dir, modality):
+    """
+    Center NIfTI images of the input BIDS folder into the empty output_dir specified in argument.
+    All the files from bids_dir are copied into output_dir, then all the NIfTI images we can found are replaced by their
+    centered version if they are far appart from their corresponding file in an other modality
+    Args:
+        bids_dir: (str) path to bids directory
+        output_dir: (str) path to EMPTY output directory
+        modality: (list of str) modalities to analayse. len(modality) must be 2. Pairwise comparison is carried out
+
+    Returns:
+        List of the centered files
+    """
+    from clinica.utils.io import check_bids_folder
+    from clinica.utils.exceptions import ClinicaBIDSError
+    from os.path import join, isdir, isfile, abspath, basename
+    from glob import glob
+    from os import listdir
+    from shutil import copy2, copytree
+    from colorama import Fore
+    from shutil import rmtree
+
+    # output and input must be different, so that we do not mess with user's data
+    if bids_dir == output_dir:
+        raise ClinicaBIDSError(Fore.RED + '[Error] Input BIDS and output directories must be different' + Fore.RESET)
+
+    assert isinstance(modality, list), 'modality arg must be a list of str'
+    assert len(modality) == 2, 'Only 2 modalities are possible '
+
+    # check that input is a BIDS dir
+    check_bids_folder(bids_dir)
+
+    for f in listdir(bids_dir):
+        if isdir(join(bids_dir, f)) and not isdir(join(output_dir, f)):
+            copytree(join(bids_dir, f), join(output_dir, f))
+        elif isfile(join(bids_dir, f)) and not isfile(join(output_dir, f)):
+            copy2(join(bids_dir, f), output_dir)
+
+    pattern = join(output_dir, '**/*.nii*')
+    nifti_files = glob(pattern, recursive=True)
+
+    # Sorting ensures to have the correspondance between the 2 lists nifti_files_modality_1 and nifti_files_modality_2
+    nifti_files_modality_1 = sorted([f for f in nifti_files if modality[0].lower() in basename(f).lower()])
+    nifti_files_modality_2 = sorted([f for f in nifti_files if modality[1].lower() in basename(f).lower()])
+
+    if len(nifti_files_modality_1) != len(nifti_files_modality_2):
+        error_str = (Fore.RED + 'Lists of files by modality do not have the same length: '
+                     + str(len(nifti_files_modality_1)) + ' for modality ' + modality[0]
+                     + ' and ' + str(len(nifti_files_modality_2)) + ' for modality ' + modality[1] + Fore.RESET)
+        error_str += '\nFor modality ' + str(modality[0]) + ':'
+        for f in nifti_files_modality_1:
+            error_str += '\n\t' + basename(f)
+
+        error_str += '\nFor modality ' + str(modality[1]) + ':'
+        for f in nifti_files_modality_2:
+            error_str += '\n\t' + basename(f)
+        error_str += '\nIt must exist the same number of Nifti for each of the 2 modalities,'
+        error_str += ' so that Clinica can determine if they are two by two centered.'
+        rmtree(output_dir)
+        raise ClinicaBIDSError(error_str)
+
+    pairs_with_offset = [i for i, (file1, file2) in enumerate(zip(nifti_files_modality_1, nifti_files_modality_2))
+                         if are_far_appart(file1, file2)]
+
+    nifti_to_center = [abspath(f) for f in [nifti_files_modality_1[k] for k in pairs_with_offset]] \
+                      + [abspath(f) for f in [nifti_files_modality_2[k] for k in pairs_with_offset]]
+
+    all_errors = []
+    for f in nifti_to_center:
+        print('Handling ' + f)
+        _, current_error = center_nifti_origin(f, f)
+        if current_error:
+            all_errors.append(current_error)
+    if len(all_errors) > 0:
+        final_error_msg = Fore.RED + '[Error] Clinica encoutered ' + str(len(all_errors)) \
+                          + ' error(s) while trying to center NIfTI images.\n'
+        for error in all_errors:
+            final_error_msg += '\n' + error
+        raise RuntimeError(final_error_msg)
+    return nifti_to_center
+
+
+def are_far_appart(file1, file2, threshold=80):
+    """
+    Tells if 2 files have a center located at more than a threshold distance
+    Args:
+        file1: (str) path to the first nifti file
+        file2: (str) path to the second nifti file
+        threshold: threshold to consider wether 2 files are too far appart
+
+    Returns:
+
+    """
+    from os.path import isfile
+    import numpy as np
+
+    assert isfile(file1)
+    assert isfile(file2)
+
+    center1 = get_world_coordinate_of_center(file1)
+    center2 = get_world_coordinate_of_center(file2)
+
+    return np.linalg.norm(center2 - center1, ord=2) > threshold
+
+
 def write_list_of_files(file_list, output_file):
     """
     Save `file_list` list of files into `output_file` text file.
@@ -680,6 +785,77 @@ def write_list_of_files(file_list, output_file):
         text_file.write(created_file + '\n')
     text_file.close()
     return output_file
+
+
+def check_relative_volume_location_in_world_coordinate_system(label_1, nifti_list1,
+                                                              label_2, nifti_list2,
+                                                              bids_dir,
+                                                              modality):
+    import numpy as np
+    from colorama import Fore
+    from os.path import abspath, basename
+    from clinica.utils.stream import cprint
+    import sys
+
+    center_coordinate_1 = [get_world_coordinate_of_center(file) for file in nifti_list1]
+    center_coordinate_2 = [get_world_coordinate_of_center(file) for file in nifti_list2]
+
+    l2_norm = [np.linalg.norm(center_1 - center_2) for center_1, center_2 in zip(center_coordinate_1, center_coordinate_2)]
+    pairs_with_problems = [i for i, norm in enumerate(l2_norm) if norm > 80]
+
+    if len(pairs_with_problems) > 0:
+        warning_message = (Fore.YELLOW + '[Warning] It appears that ' + str(len(pairs_with_problems)) + ' pairs of files'
+                           + ' have an important relative offset. SPM coregistration has a high probability to fail '
+                           + 'on these files:\n\n')
+
+        # File column width : 3 spaces more than the longest string to display
+        file1_width = max(3 + len(label_1),
+                          3 + max(len(basename(file)) for file in [nifti_list1[k] for k in pairs_with_problems]))
+        file2_width = max(3 + len(label_2),
+                          3 + max(len(basename(file)) for file in [nifti_list2[k] for k in pairs_with_problems]))
+
+        norm_width = len('Relative distance')
+
+        warning_message += ('%-' + str(file1_width)
+                            + 's%-' + str(file2_width)
+                            + 's%-' + str(norm_width) + 's') % (label_1,
+                                                                label_2,
+                                                                'Relative distance')
+
+        warning_message += '\n' + '-' * (file1_width + file2_width + norm_width) + '\n'
+        for file1, file2, norm in zip([nifti_list1[k] for k in pairs_with_problems],
+                                      [nifti_list2[k] for k in pairs_with_problems],
+                                      [l2_norm[k] for k in pairs_with_problems]):
+            # Nice formatting as array
+            # % escape character
+            # - aligned to the left, with the size of the column
+            # s = string, f = float
+            # . for precision with float
+            # https://docs.python.org/2/library/stdtypes.html#string-formatting for more information
+            warning_message += ('%-' + str(file1_width)
+                                + 's%-' + str(file2_width)
+                                + 's%-' + str(norm_width) + '.2f\n') % (str(basename(file1)),
+                                                                        str(basename(file2)),
+                                                                        norm)
+        warning_message += '\nClinica provides a tool to counter this problem by replacing the center of the volume' \
+                           + ' at the origin of the world coordinates.\nUse the following command line to correct the '\
+                           + 'header of the faulty NIFTI volumes in a new folder:\n' + Fore.RESET \
+                           + Fore.BLUE + '\nclinica iotools center-nifti ' + abspath(bids_dir) + ' ' \
+                           + abspath(bids_dir) + '_centered --modality "' + modality + '" --coreg_two_modalities\n\n'  \
+                           + Fore.YELLOW + 'You will find more information on the command by typing ' + Fore.BLUE \
+                           + 'clinica iotools center-nifti' + Fore.YELLOW + ' in the console.\nDo you still want to ' \
+                           + 'launch the pipeline now?' + Fore.RESET
+        cprint(warning_message)
+        while True:
+            cprint('Your answer [yes/no]:')
+            answer = input()
+            if answer.lower() in ['yes', 'no']:
+                break
+            else:
+                cprint(Fore.RED + 'You must answer yes or no' + Fore.RESET)
+        if answer.lower() == 'no':
+            cprint(Fore.RED + 'Clinica will now exit...' + Fore.RESET)
+            sys.exit(0)
 
 
 def check_volume_location_in_world_coordinate_system(nifti_list, bids_dir):
