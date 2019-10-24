@@ -722,8 +722,8 @@ def center_nifti_for_coreg(bids_dir, output_dir, modality):
     pairs_with_offset = [i for i, (file1, file2) in enumerate(zip(nifti_files_modality_1, nifti_files_modality_2))
                          if are_far_appart(file1, file2)]
 
-    nifti_to_center = [abspath(f) for f in [nifti_files_modality_1[k] for k in pairs_with_offset]] \
-                      + [abspath(f) for f in [nifti_files_modality_2[k] for k in pairs_with_offset]]
+    nifti_to_center = ([abspath(f) for f in [nifti_files_modality_1[k] for k in pairs_with_offset]]
+                       + [abspath(f) for f in [nifti_files_modality_2[k] for k in pairs_with_offset]])
 
     all_errors = []
     for f in nifti_to_center:
