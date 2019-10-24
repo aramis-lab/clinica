@@ -738,7 +738,6 @@ def heat_solver_tensor_3D_P1_grad_conj(f, g, t_final, h, t_step, CL_value, epsil
     b_h[:, 0, :] = b_h[:, 0, :] + (CL_value[1:-1, 0, 1:-1] * h)
     b_h[0, :, :] = b_h[0, :, :] + (CL_value[0, 1:-1, 1:-1] * h)
 
-
     print('##########computation b_H#############@ ')
 
     # inversion of the linear system
