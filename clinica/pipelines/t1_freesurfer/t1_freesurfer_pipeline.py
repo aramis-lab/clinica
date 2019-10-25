@@ -13,50 +13,54 @@ config.update_config(cfg)
 class T1FreeSurfer(cpe.Pipeline):
     """FreeSurfer-based processing of T1-weighted MR images.
 
-    Attributes:
-        subjects: List of participant IDs (e.g. ['sub-CLNC01', 'sub-CLNC01', 'sub-CLNC02', 'sub-CLNC02'])
-        sessions: List of session IDs (e.g. ['ses-M00', 'ses-M18', 'ses-M00', 'ses-M18'])
-        bids_directory:
-        caps_directory:
-        recon_all_args: Arguments for recon-all command (e.g. '-qcache')
-
     Returns:
         A clinica pipeline object containing the T1FreeSurfer pipeline.
     """
 
     def get_subject_session_list(self, input_dir, tsv_file, is_bids_dir, base_dir):
-        """Parse a BIDS or CAPS directory to get the subjects and sessions.
-
-        This function lists all the subjects and sessions based on the content of
-        the BIDS or CAPS directory or (if specified) on the provided
-        subject-sessions TSV file.
-
-        Notes:
-            This is a generic method based on folder names. If your <BIDS> dataset contains e.g.:
-            - sub-CLNC01/ses-M00/anat/sub-CLNC01_ses-M00_T1w.nii
-            - sub-CLNC02/ses-M00/dwi/sub-CLNC02_ses-M00_dwi.{bval|bvec|json|nii}
-            - sub-CLNC02/ses-M00/anat/sub-CLNC02_ses-M00_T1w.nii
-            get_subject_session_list(<BIDS>, None, True) will return
-            ['ses-M00', 'ses-M00'], ['sub-CLNC01', 'sub-CLNC02'].
-
-            However, if your pipeline needs both T1w and DWI files, you will need to overload this method.
-
-        Todo:
-            [ ] Overload get_subject_session_list(self, input_dir, tsv_file, is_bids_dir) on each sub-classes
-            [ ] Set Pipeline::get_subject_session_list as abstract method?
-            [ ] Update Jinja file for clinica generate template
-        """
-        from clinica.utils.io import extract_subjects_sessions_from_filename
+        """Parse a BIDS or CAPS directory to get the subjects and sessions."""
+        from colorama import Fore
+        from clinica.utils.stream import cprint
+        from clinica.utils.io import check_input_caps_files, extract_subjects_sessions_from_filename
+        from clinica.iotools.grabcaps import CAPSLayout
         super(T1FreeSurfer, self).get_subject_session_list(input_dir, tsv_file, is_bids_dir, base_dir)
 
         if not tsv_file:
+            # We only extract <participant_id>_<session_id> having T1w files
             # TODO: Replace the following lines:
             participant_labels = '|'.join(sub[4:] for sub in self.subjects)
             session_labels = '|'.join(ses[4:] for ses in self.sessions)
             t1w_files = self.bids_layout.get(type='T1w', return_type='file', extensions=['.nii|.nii.gz'],
                                              subject=participant_labels, session=session_labels)
-            # by: t1w_files = clinica_file_reader(self.subjects, self.sessions, self.bids_directory, T1W_NII)
+            # by: t1w_files = clinica_file_reader(self.subjects, self.sessions, self.bids_directory, T1W_NII, raise_exception=False)
             self._subjects, self._sessions = extract_subjects_sessions_from_filename(t1w_files)
+
+        # Display
+        # TODO: Replace the following lines:
+        participants_regex = '|'.join(sub[4:] for sub in self.subjects)
+        sessions_regex = '|'.join(ses[4:] for ses in self.sessions)
+        caps_layout = CAPSLayout(self.caps_directory)
+        t1_freesurfer_files = caps_layout.get(freesurfer_file='aparc.a2009s\+aseg.mgz', return_type='file',
+                                              subject=participants_regex, session=sessions_regex)
+        check_input_caps_files(t1_freesurfer_files, "T1_FS_DESTRIEUX", "t1-freesurfer",
+                               self.caps_directory, self.subjects, self.sessions)
+        # by: t1_freesurfer_files = clinica_file_reader(self.subjects, self.sessions, self.caps_directory, T1W_NII, raise_exception=False)
+
+        processed_participants, processed_sessions = extract_subjects_sessions_from_filename(t1_freesurfer_files)
+        if len(processed_participants) > 0:
+            cprint("%sClinica found %s image(s) already processed in CAPS directory:%s" %
+                   (Fore.YELLOW, len(processed_participants), Fore.RESET))
+            for p_id, s_id in zip(processed_participants, processed_sessions):
+                cprint("%s\t%s | %s%s" % (Fore.YELLOW, p_id, s_id, Fore.RESET))
+            if self.overwrite_caps:
+                output_folder = "<CAPS>/subjects/sub-<participant_id>/ses-<session_id>/t1/freesurfer_cross_sectional"
+                cprint("%s\nOutput folders in %s will be recreated.\n%s" % (Fore.YELLOW, output_folder, Fore.RESET))
+            else:
+                cprint("%s\nImage(s) will be ignored by Clinica.\n%s" % (Fore.YELLOW, Fore.RESET))
+                input_ids = [p_id + '_' + s_id for p_id, s_id in zip(self.subjects, self.sessions)]
+                processed_ids = [p_id + '_' + s_id for p_id, s_id in zip(processed_participants, processed_sessions)]
+                to_process_ids = list(set(input_ids) - set(processed_ids))
+                self.subjects, self.sessions = extract_subjects_sessions_from_filename(to_process_ids)
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file."""
@@ -148,7 +152,7 @@ class T1FreeSurfer(cpe.Pipeline):
             name='SaveToCaps')
         save_to_caps.inputs.source_dir = os.path.join(self.base_dir, 'T1FreeSurfer', 'ReconAll')
         save_to_caps.inputs.caps_dir = self.caps_directory
-        save_to_caps.inputs.overwrite_caps = False
+        save_to_caps.inputs.overwrite_caps = self.overwrite_caps
 
         self.connect([
             (self.output_node, save_to_caps, [('image_id', 'image_id')]),

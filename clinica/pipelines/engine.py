@@ -64,14 +64,21 @@ class Pipeline(Workflow):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, base_dir=None):
+    def __init__(self,
+                 bids_directory=None,
+                 caps_directory=None,
+                 tsv_file=None,
+                 overwrite_caps=False,
+                 base_dir=None,
+                 name=None):
         """Init a Pipeline object.
 
         Args:
             bids_directory (optional): Path to a BIDS directory.
             caps_directory (optional): Path to a CAPS directory.
             tsv_file (optional): Path to a subjects-sessions `.tsv` file.
-            name (optional): A pipelines name.
+            name (optional): Pipeline name.
+            base_dir (optional): Working directory (attribute of Nipype::Workflow class).
         """
         import inspect
         import os
@@ -80,6 +87,7 @@ class Pipeline(Workflow):
         from clinica.utils.exceptions import ClinicaException
 
         self._is_built = False
+        self._overwrite_caps = overwrite_caps
         self._bids_directory = bids_directory
         self._caps_directory = caps_directory
         self._verbosity = 'debug'
@@ -247,8 +255,6 @@ class Pipeline(Workflow):
             self.check_size()
             plugin_args = self.update_parallelize_info(plugin_args)
             plugin = 'MultiProc'
-        from clinica.utils.stream import cprint
-        cprint('Running pipeline on %s ' % self.base_dir)
         return Workflow.run(self, plugin, plugin_args, update_hash)
 
     def load_info(self):
@@ -766,6 +772,9 @@ class Pipeline(Workflow):
     def is_built(self, value): self._is_built = value
 
     @property
+    def overwrite_caps(self): return self._overwrite_caps
+
+    @property
     def parameters(self): return self._parameters
 
     @parameters.setter
@@ -796,8 +805,18 @@ class Pipeline(Workflow):
     @property
     def subjects(self): return self._subjects
 
+    @subjects.setter
+    def subjects(self, value):
+        self._subjects = value
+        self.is_built = False
+
     @property
     def sessions(self): return self._sessions
+
+    @sessions.setter
+    def sessions(self, value):
+        self._sessions = value
+        self.is_built = False
 
     @property
     def tsv_file(self): return self._tsv_file
