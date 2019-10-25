@@ -60,6 +60,7 @@ class PetSurface(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
+        from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
         import clinica.utils.input_files as input_files
 
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
@@ -156,6 +157,10 @@ class PetSurface(cpe.Pipeline):
             for msg in all_errors:
                 error_message += str(msg)
             raise ClinicaException(error_message)
+
+        check_volume_location_in_world_coordinate_system(read_parameters_node.inputs.pet,
+                                                         self.bids_directory,
+                                                         self.parameters['pet_type'].lower() + '_pet')
 
         self.connect([
             (read_parameters_node,      self.input_node,    [('pet',                    'pet')]),
