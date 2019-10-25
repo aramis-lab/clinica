@@ -116,13 +116,7 @@ def save_to_caps(source_dir, image_id, caps_dir, overwrite_caps=False):
 
         if os.path.isfile(representative_destination_file):
             if overwrite_caps:
-                raise NotImplementedError('Overwritten of CAPS folder in t1-freesurfer pipeline not implemented')
-            else:
-                now = datetime.datetime.now().strftime('%H:%M:%S')
-                cprint('%s[%s] Previous run of FreeSurfer was found in CAPS folder for %s. '
-                       'Copy will be skipped.%s' %
-                       (Fore.YELLOW, now, image_id.replace('_', '|'), Fore.RESET))
-        else:
+                shutil.rmtree(destination_dir)
             shutil.copytree(os.path.join(source_dir, image_id), destination_dir, symlinks=True)
             print_end_image(image_id)
     else:
