@@ -52,7 +52,8 @@ class T1FreeSurferCLI(ce.CmdParser):
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            base_dir=self.absolute_path(args.working_directory)
+            base_dir=self.absolute_path(args.working_directory),
+            overwrite_caps=args.overwrite_outputs
         )
 
         if "-dontrun" in args.recon_all_args.split(' '):
