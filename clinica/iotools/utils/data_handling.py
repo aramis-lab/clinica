@@ -858,7 +858,7 @@ def check_relative_volume_location_in_world_coordinate_system(label_1, nifti_lis
             sys.exit(0)
 
 
-def check_volume_location_in_world_coordinate_system(nifti_list, bids_dir):
+def check_volume_location_in_world_coordinate_system(nifti_list, bids_dir, modality='t1w'):
     """
     Check if the NIfTI file list nifti_list provided in argument are aproximately centered around the origin of the
     world coordinates. (Problem may arise with SPM segmentation
@@ -870,7 +870,8 @@ def check_volume_location_in_world_coordinate_system(nifti_list, bids_dir):
     Args:
         nifti_list: (list of str) list of path to nifti files
         bids_dir: (str) path to bids directory associated with this check (in order to propose directly the good
-        command line for center-nifti tool)
+            command line for center-nifti tool)
+        modality: (str) to propose directly the good command line option
 
     Returns:
         Nothing
@@ -894,7 +895,7 @@ def check_volume_location_in_world_coordinate_system(nifti_list, bids_dir):
 
         warning_message = (Fore.YELLOW + '[Warning] It appears that ' + str(len(list_non_centered_files)) + ' files '
                            + 'have a center way out of the origin of the world coordinate system. SPM has a high prob'
-                           + 'ability to fail on these files:\n\n')
+                           + 'ability to fail on these files (for coregistration or segmentation):\n\n')
         warning_message += ('%-' + str(file_width) + 's%-' + str(center_width) + 's%-s') % ('File',
                                                                                             'Coordinate of center',
                                                                                             'Distance to origin')
@@ -911,11 +912,20 @@ def check_volume_location_in_world_coordinate_system(nifti_list, bids_dir):
                                                                                                       str(center),
                                                                                                       l2)
 
+        cmd_line = (Fore.BLUE
+                    + '\nclinica iotools center-nifti '
+                    + abspath(bids_dir) + ' '
+                    + abspath(bids_dir) + '_centered'
+                    + '--modality "' + modality + '"'
+                    + '\n\n' + Fore.YELLOW)
+
+        warning_message += ('\nIf you are trying to launch the t1-freesurfer pipeline, you can ignore this message '
+                            + 'if you do not want to run the pet-surface pipeline afterward.')
+
         warning_message += '\nClinica provides a tool to counter this problem by replacing the center of the volume' \
                            + ' at the origin of the world coordinates.\nUse the following command line to correct the '\
-                           + 'header of the faulty NIFTI volumes in a new folder:\n' + Fore.RESET \
-                           + Fore.BLUE + '\nclinica iotools center-nifti ' + abspath(bids_dir) + ' ' \
-                           + abspath(bids_dir) + '_centered\n\n' + Fore.YELLOW \
+                           + 'header of the faulty NIFTI volumes in a new folder:\n'\
+                           + cmd_line \
                            + 'You will find more information on the command by typing ' + Fore.BLUE \
                            + 'clinica iotools center-nifti' + Fore.YELLOW + ' in the console.\nDo you still want to '\
                            + 'launch the pipeline now?' + Fore.RESET

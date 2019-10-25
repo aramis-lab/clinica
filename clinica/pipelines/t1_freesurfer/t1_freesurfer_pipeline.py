@@ -66,6 +66,7 @@ class T1FreeSurfer(cpe.Pipeline):
         from clinica.utils.ux import (print_images_to_process, print_no_image_to_process)
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1W_NII
+        from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
         from clinica.utils.io import save_participants_sessions
 
         # Inputs from anat/ folder
@@ -94,6 +95,7 @@ class T1FreeSurfer(cpe.Pipeline):
                              interface=nutil.IdentityInterface(
                                  fields=self.get_input_fields())
                              )
+        check_volume_location_in_world_coordinate_system(t1w_files, self.bids_directory)
         self.connect([
             (read_node, self.input_node, [('t1w', 't1w')]),
         ])
