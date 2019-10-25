@@ -1000,15 +1000,22 @@ def get_world_coordinate_of_center(nii_volume):
         return np.nan
 
     head = orig_nifti.header
-    center_coordinates = get_center_volume(head)
-    if head['qform_code'] > 0:
-        center_coordinates_world = vox_to_world_space_method_2(center_coordinates, head)
-    elif head['sform_code'] > 0:
-        center_coordinates_world = vox_to_world_space_method_3(center_coordinates, head)
-    elif head['sform_code'] == 0:
-        center_coordinates_world = vox_to_world_space_method_1(center_coordinates, head)
+
+    if isinstance(head, nib.freesurfer.mghformat.MGHHeader):
+        # If MGH volume
+        center_coordinates_world = vox_to_world_space_method_3_bis(head['dims'][0:3] / 2, head)
     else:
-        center_coordinates_world = np.nan
+        # Standard NIfTI volume
+        center_coordinates = get_center_volume(head)
+
+        if head['qform_code'] > 0:
+            center_coordinates_world = vox_to_world_space_method_2(center_coordinates, head)
+        elif head['sform_code'] > 0:
+            center_coordinates_world = vox_to_world_space_method_3(center_coordinates, head)
+        elif head['sform_code'] == 0:
+            center_coordinates_world = vox_to_world_space_method_1(center_coordinates, head)
+        else:
+            center_coordinates_world = np.nan
     return center_coordinates_world
 
 
@@ -1069,10 +1076,10 @@ def vox_to_world_space_method_2(coordinates_vol, header):
         """
         Get rotation matrix, more information here: https://brainder.org/2012/09/23/the-nifti-file-format/
         Args:
-            h:
+            h: header
 
         Returns:
-
+            Rotation matrix
         """
         b = h['quatern_b']
         c = h['quatern_c']
@@ -1155,3 +1162,20 @@ def vox_to_world_space_method_3(coordinates_vol, header):
 
     homogeneous_coord = np.concatenate((np.array(coordinates_vol), np.array([1])), axis=0)
     return np.dot(aff, homogeneous_coord)[0:3]
+
+
+def vox_to_world_space_method_3_bis(coordinates_vol, header):
+    """
+    This method relies on the same technique as method 3, but for images created by FreeSurfer (MGHImage, MGHHeader)
+    Args:
+        coordinates_vol: coordinate in the volume (raw data)
+        header: nib.freesurfer.mghformat.MGHHeader object
+
+    Returns:
+        Coordinates in the world space
+    """
+    import numpy as np
+
+    affine_trensformation_matrix = header.get_affine()
+    homogeneous_coord = np.concatenate((np.array(coordinates_vol), np.array([1])), axis=0)
+    return np.dot(affine_trensformation_matrix, homogeneous_coord)[0:3]
