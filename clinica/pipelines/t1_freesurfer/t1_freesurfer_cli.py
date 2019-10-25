@@ -41,12 +41,11 @@ class T1FreeSurferCLI(ce.CmdParser):
         import os
         from colorama import Fore
         from .t1_freesurfer_pipeline import T1FreeSurfer
-        from clinica.iotools.grabcaps import CAPSLayout
-        from clinica.utils.io import read_participant_tsv, extract_image_ids
         from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.io import read_participant_tsv, extract_image_ids
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_end_pipeline, print_failed_images
-        from clinica.utils.inputs import clinica_file_reader
 
         pipeline = T1FreeSurfer(
             bids_directory=self.absolute_path(args.bids_directory),

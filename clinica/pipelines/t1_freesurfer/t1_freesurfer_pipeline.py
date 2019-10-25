@@ -21,30 +21,21 @@ class T1FreeSurfer(cpe.Pipeline):
         """Parse a BIDS or CAPS directory to get the subjects and sessions."""
         from colorama import Fore
         from clinica.utils.stream import cprint
-        from clinica.utils.io import check_input_caps_files, extract_subjects_sessions_from_filename
-        from clinica.iotools.grabcaps import CAPSLayout
+        from clinica.utils.io import extract_subjects_sessions_from_filename
+        from clinica.utils.inputs import clinica_file_reader
+        import clinica.utils.input_files as input_files
+
         super(T1FreeSurfer, self).get_subject_session_list(input_dir, tsv_file, is_bids_dir, base_dir)
 
         if not tsv_file:
             # We only extract <participant_id>_<session_id> having T1w files
-            # TODO: Replace the following lines:
-            participant_labels = '|'.join(sub[4:] for sub in self.subjects)
-            session_labels = '|'.join(ses[4:] for ses in self.sessions)
-            t1w_files = self.bids_layout.get(type='T1w', return_type='file', extensions=['.nii|.nii.gz'],
-                                             subject=participant_labels, session=session_labels)
-            # by: t1w_files = clinica_file_reader(self.subjects, self.sessions, self.bids_directory, T1W_NII, raise_exception=False)
+            t1w_files = clinica_file_reader(self.subjects, self.sessions,
+                                            self.bids_directory, input_files.T1W_NII, False)
             self._subjects, self._sessions = extract_subjects_sessions_from_filename(t1w_files)
 
-        # Display
-        # TODO: Replace the following lines:
-        participants_regex = '|'.join(sub[4:] for sub in self.subjects)
-        sessions_regex = '|'.join(ses[4:] for ses in self.sessions)
-        caps_layout = CAPSLayout(self.caps_directory)
-        t1_freesurfer_files = caps_layout.get(freesurfer_file='aparc.a2009s\+aseg.mgz', return_type='file',
-                                              subject=participants_regex, session=sessions_regex)
-        check_input_caps_files(t1_freesurfer_files, "T1_FS_DESTRIEUX", "t1-freesurfer",
-                               self.caps_directory, self.subjects, self.sessions)
-        # by: t1_freesurfer_files = clinica_file_reader(self.subjects, self.sessions, self.caps_directory, T1W_NII, raise_exception=False)
+        # Display image(s) already present in CAPS folder
+        t1_freesurfer_files = clinica_file_reader(self.subjects, self.sessions,
+                                                  self.caps_directory, input_files.T1_FS_DESTRIEUX, False)
 
         processed_participants, processed_sessions = extract_subjects_sessions_from_filename(t1_freesurfer_files)
         if len(processed_participants) > 0:
