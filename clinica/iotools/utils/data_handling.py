@@ -746,10 +746,10 @@ def are_far_appart(file1, file2, threshold=80):
     Args:
         file1: (str) path to the first nifti file
         file2: (str) path to the second nifti file
-        threshold: threshold to consider wether 2 files are too far appart
+        threshold: threshold to consider whether 2 files are too far appart
 
     Returns:
-
+        True if distance between `file1` and `file2` is greter than `threshold`, False otherwise.
     """
     from os.path import isfile
     import numpy as np
