@@ -336,7 +336,7 @@ class Pipeline(Workflow):
         """ Checks if the pipeline has enough space on the disk for both
         working directory and caps directory
 
-        Author : Arnaud Marcoux"""
+        Author: Arnaud Marcoux"""
         from os import statvfs
         from os.path import dirname, abspath, join
         from pandas import read_csv
@@ -363,7 +363,7 @@ class Pipeline(Workflow):
             symbols can be either "customary", "customary_ext", "iec" or "iec_ext",
             see: http://goo.gl/kTQMs
 
-            License :
+            License:
             Bytes-to-human / human-to-bytes converter.
             Based on: http://goo.gl/kTQMs
             Working with Python 2.x and 3.x.
@@ -389,7 +389,7 @@ class Pipeline(Workflow):
             set and return the corresponding bytes as an integer.
             When unable to recognize the format ValueError is raised.
 
-            License :
+            License:
             Bytes-to-human / human-to-bytes converter.
             Based on: http://goo.gl/kTQMs
             Working with Python 2.x and 3.x.
@@ -431,7 +431,10 @@ class Pipeline(Workflow):
             wd_stat = statvfs(dirname(self.parameters['wd']))
         except (KeyError, FileNotFoundError):
             # Not all pipelines has a 'wd' parameter
-            # todo : maybe more relevant to always take base_dir ?
+            # todo: maybe more relevant to always take base_dir?
+            # Note(AR): when dealing with the working directory,
+            # any pipeline should use Nipype::Workflow::base_dir
+            # todo: remove self.parameters['wd'] from pet-surface
             wd_stat = statvfs(dirname(self.base_dir))
 
         # Estimate space left on partition/disk/whatever caps and wd is located
@@ -470,7 +473,7 @@ class Pipeline(Workflow):
             if error != '':
                 cprint(Fore.RED + '[SpaceError] ' + error + Fore.RESET)
                 while True:
-                    cprint('Do you still want to run the pipeline ? (yes/no): '
+                    cprint('Do you still want to run the pipeline? (yes/no): '
                            + ' In ' + str(timeout) + ' sec the pipeline will start if you do not answer.')
                     stdin_answer, __, ___ = select.select([sys.stdin], [], [], timeout)
                     if stdin_answer:
@@ -498,7 +501,7 @@ class Pipeline(Workflow):
         given the number of CPUs of the machine in which clinica is running.
         We force the use of plugin MultiProc
 
-        Author : Arnaud Marcoux"""
+        Author: Arnaud Marcoux"""
         from clinica.utils.stream import cprint
         from multiprocessing import cpu_count
         from colorama import Fore
@@ -507,7 +510,7 @@ class Pipeline(Workflow):
 
         # count number of CPUs
         n_cpu = cpu_count()
-        # timeout value : max time allowed to decide how many thread
+        # timeout value: max time allowed to decide how many thread
         # to run in parallel (sec)
         timeout = 15
 
@@ -539,7 +542,7 @@ class Pipeline(Workflow):
                 # While True allows to ask indefinitely until
                 # user gives a answer that has the correct format
                 # (here, positive integer) or timeout
-                cprint('How many threads do you want to use ? If you do not '
+                cprint('How many threads do you want to use? If you do not '
                        + 'answer within ' + str(timeout)
                        + ' sec, default value of ' + str(n_cpu - 1)
                        + ' will be taken.')
@@ -603,7 +606,7 @@ class Pipeline(Workflow):
                 """
                 Use this function to transform a cross sectional filename into
                 a longitudinal one.
-                Examples :
+                Examples:
                 sub-ADNI001_scans.tsv -> sub-ADNI001_ses-M00_scans.tsv
                 sub-023a_ses-M12_T1w.nii.gz -> sub-023a_ses-M12_T1w.nii.gz (no
                     modification done if filename already has a session)
@@ -616,7 +619,7 @@ class Pipeline(Workflow):
                 """
                 import re
                 # If filename contains ses-..., returns the original filename
-                # Regex explication :
+                # Regex explication:
                 # ^ start of string
                 # ([a-zA-Z0-9]*) matches any number of characters from a to z,
                 #       A to Z, 0 to 9, and store it in group(1)
@@ -653,7 +656,7 @@ class Pipeline(Workflow):
                 # Create the output folder if it does not exists yet
                 mkdir(bids_out)
 
-            # First part of the algorithm : deal with subjects that does not
+            # First part of the algorithm: deal with subjects that does not
             # have longitudinal (session) information
             for subj in cross_subjects:
                 # Get list of of files/folders to copy. Remove hidden element
@@ -686,7 +689,7 @@ class Pipeline(Workflow):
                             copy2(path_el,
                                   join(bids_out, subj, 'ses-M00',
                                        new_filename_wo_ses))
-            # Second part of the algorithm : deal with subjects that do not
+            # Second part of the algorithm: deal with subjects that do not
             # have the problem. We only xopy the content of the folder, and no
             # filename needs to be changed
             for su in long_subjects:
@@ -698,7 +701,7 @@ class Pipeline(Workflow):
                 for el in to_copy:
                     path_el = join(bids_in, su, el)
                     if not exists(join(bids_out, su, el)):
-                        # 2 possible cases : element to pcopy is a folder or a
+                        # 2 possible cases: element to pcopy is a folder or a
                         # file
                         if isdir(path_el):
                             copytree(path_el,
@@ -708,7 +711,7 @@ class Pipeline(Workflow):
                                   join(bids_out, su))
         if self.bids_directory is not None:
             bids_dir = abspath(self.bids_directory)
-            # Extract all subjects in BIDS directory : element must be a folder and
+            # Extract all subjects in BIDS directory: element must be a folder and
             # a name starting with 'sub-'
             all_subs = [f for f in listdir(bids_dir)
                         if isdir(join(bids_dir, f)) and f.startswith('sub-')]
@@ -742,7 +745,7 @@ class Pipeline(Workflow):
 
                 while True:
                     cprint('Do you want to proceed to the conversion in an other '
-                           + 'folder ? (your original BIDS folder will not be'
+                           + 'folder? (your original BIDS folder will not be'
                            + ' modified, the folder ' + proposed_bids
                            + ' will be created) (yes/no): ')
                     answer = input('')
@@ -762,7 +765,7 @@ class Pipeline(Workflow):
                                             long_subj)
                     cprint(
                         Fore.GREEN + 'Conversion succeeded. Your clinica-compliant'
-                        + ' dataset is located here : ' + proposed_bids
+                        + ' dataset is located here: ' + proposed_bids
                         + Fore.RESET)
 
     @property
