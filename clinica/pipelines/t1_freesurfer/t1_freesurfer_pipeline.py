@@ -29,7 +29,7 @@ class T1FreeSurfer(cpe.Pipeline):
         super(T1FreeSurfer, self).get_subject_session_list(input_dir, tsv_file, is_bids_dir, base_dir)
 
         if not tsv_file:
-            # We only extract <participant_id>_<session_id> having T1w files
+            cprint("Selecting T1w files in BIDS directory")
             t1w_files = clinica_file_reader(self.subjects, self.sessions,
                                             self.bids_directory, input_files.T1W_NII, False)
             self._subjects, self._sessions = extract_subjects_sessions_from_filename(t1w_files)
