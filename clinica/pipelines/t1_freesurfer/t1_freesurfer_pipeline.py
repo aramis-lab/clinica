@@ -19,6 +19,7 @@ class T1FreeSurfer(cpe.Pipeline):
 
     def get_subject_session_list(self, input_dir, tsv_file, is_bids_dir, base_dir):
         """Parse a BIDS or CAPS directory to get the subjects and sessions."""
+        import os
         from colorama import Fore
         from clinica.utils.stream import cprint
         from clinica.utils.io import extract_subjects_sessions_from_filename
@@ -34,8 +35,11 @@ class T1FreeSurfer(cpe.Pipeline):
             self._subjects, self._sessions = extract_subjects_sessions_from_filename(t1w_files)
 
         # Display image(s) already present in CAPS folder
-        t1_freesurfer_files = clinica_file_reader(self.subjects, self.sessions,
-                                                  self.caps_directory, input_files.T1_FS_DESTRIEUX, False)
+        if os.path.isdir(self.caps_directory):
+            t1_freesurfer_files = clinica_file_reader(self.subjects, self.sessions,
+                                                      self.caps_directory, input_files.T1_FS_DESTRIEUX, False)
+        else:
+            t1_freesurfer_files = []
 
         processed_participants, processed_sessions = extract_subjects_sessions_from_filename(t1_freesurfer_files)
         if len(processed_participants) > 0:
