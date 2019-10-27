@@ -1,18 +1,23 @@
 # coding: utf8
 
 
+LINES_TO_DISPLAY = 25
+
 def print_images_to_process(list_participant_id, list_session_id):
     """Print which images will be processed by the pipeline."""
     from .stream import cprint
-    images_to_process = ', '.join(participant_id + '|' + session_id
-                                  for participant_id, session_id in zip(list_participant_id, list_session_id)
-                                  )
-    if len(list_participant_id) < 25:
-        cprint('The pipeline will be run on the following %s image(s): %s' %
-               (len(list_participant_id), images_to_process))
-    else:
-        cprint('The pipeline will be run on %s images (too many IDs to display)' %
-               (len(list_participant_id)))
+    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_utils import get_unique_subjects
+    unique_participants, sessions_per_participant = get_unique_subjects(list_participant_id, list_session_id)
+
+    cprint('The pipeline will be run on the following %s image(s):' % len(list_participant_id))
+    for i in range(0, min(len(unique_participants), LINES_TO_DISPLAY)):
+        sessions_i_th_participant = ', '.join(s_id for s_id in sessions_per_participant[i])
+        cprint("\t%s | %s" % (unique_participants[i], sessions_i_th_participant))
+
+    if len(unique_participants) > LINES_TO_DISPLAY:
+        cprint("\t...")
+        sessions_last_participant = ', '.join(s_id for s_id in sessions_per_participant[-1])
+        cprint("\t%s | %s" % (unique_participants[-1], sessions_last_participant))
 
 
 def print_begin_image(image_id, list_keys=None, list_values=None):
