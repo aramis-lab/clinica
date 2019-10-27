@@ -9,29 +9,28 @@ If your dataset does not follow this standard, you will need to convert it:
 - If your data are in DICOM format, you can use one of the converters from the [BIDS website](http://bids.neuroimaging.io/).
 - Otherwise, Clinica includes converters for public datasets such as [ADNI](http://adni.loni.usc.edu/), [AIBL](https://aibl.csiro.au), [NIFD](http://4rtni-ftldni.ini.usc.edu/) and [OASIS](http://www.oasis-brains.org). See [here](../DatabasesToBIDS) for more details.
 
-
-```shell
-─── BIDS
+!!! note "Regarding cross-sectional BIDS datasets"
+    If you run Clinica with a dataset containing no timepoints e.g.:
+    ```shell
+    BIDS
     └── sub-CLNC0001
         ├── anat
-        │    └── sub-CLNC0001_T1w.nii.gz
+        │   └── sub-CLNC0001_T1w.nii.gz
         └── pet
             ├── sub-CLNC0001_task-rest_acq-fdg_pet.json
             └── sub-CLNC0001_task-rest_acq-fdg_pet.nii.gz
-```
-
-A correct one is:
-
-```shell
-─── BIDS
+    ```
+    Clinica will propose you to create a new BIDS dataset with a fake timepoint. This will result to a new dataset ressembling to:
+    ```shell
+    BIDS
     └── sub-CLNC0001
         └── ses-M00
             ├── anat
-            │    └── sub-CLNC0001_ses-M00_T1w.nii.gz
+            │   └── sub-CLNC0001_ses-M00_T1w.nii.gz
             └── pet
                 ├── sub-CLNC0001_ses-M00_task-rest_acq-fdg_pet.json
                 └── sub-CLNC0001_ses-M00_task-rest_acq-fdg_pet.nii.gz
-```
+    ```
 
 !!! tip
      If you need to create BIDS compliant datasets or need tutorials on BIDS, you can look at this [BIDS Starter Kit](https://github.com/INCF/bids-starter-kit/).
@@ -117,7 +116,7 @@ sub-CLNC0003    ses-M00
 <!-- Note that to make the display clearer, the rows contain successive tabs, which should not happen in an actual TSV file. -->
 
 ### `-wd` / `--working_directory`
-In every pipeline, a working directory can be specified. This directory gathers all the inputs and outputs of the different steps of the pipeline. It is then very useful for the debugging process. It is specially useful in the case where your pipeline execution crashes and you relaunch it with the exact same parameters, allowing you to continue from the last successfully executed node. If you do not specify any working directory, a temporary one will be created, then deleted at the end if everything went well. For the pipelines that generate many files, such as `t1-freesurfer` (especially if you run it on multiple subjects), a specific drive/partition with enough space can be used to store the working directory.
+In every pipeline, a working directory can be specified. This directory gathers all the inputs and outputs of the different steps of the pipeline. It is then very useful for the debugging process. It is specially useful in the case where your pipeline execution crashes and you relaunch it with the exact same parameters, allowing you to continue from the last successfully executed node. If you do not specify any working directory, a temporary one will be created, then deleted at the end if everything went well. For the pipelines that generate many files, such as `dwi-preprocessing` (especially if you run it on multiple subjects), a specific drive/partition with enough space can be used to store the working directory.
 
 ### `-np` / `--n_procs`
 The `--n_procs` flag allows you to exploit several cores of your machine to run pipelines in parallel, which is very useful when dealing with numerous subjects and multiple sessions. Thanks to Nipype, even for a single subject, a pipeline can be run in parallel by exploiting the cores available to process simultaneously independent sub-parts.
