@@ -115,9 +115,11 @@ class T1FreeSurfer(cpe.Pipeline):
             raise ClinicaBIDSError(err_msg)
 
         # Save subjects to process in <WD>/T1FreeSurfer/participants.tsv
-        save_participants_sessions(self.subjects, self.sessions, os.path.join(self.base_dir, self.__class__.__name__))
+        folder_participants_tsv = os.path.join(self.base_dir, self.__class__.__name__)
+        save_participants_sessions(self.subjects, self.sessions, folder_participants_tsv)
 
         print_images_to_process(self.subjects, self.sessions)
+        cprint('List available in %s' % os.path.join(folder_participants_tsv, 'participants.tsv'))
         cprint('The pipeline will last approximately 10 hours per image.')
 
         read_node = npe.Node(name="ReadingFiles",
