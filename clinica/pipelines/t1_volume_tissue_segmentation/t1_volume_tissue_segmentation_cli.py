@@ -33,14 +33,7 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
                               help="A list of integers specifying the different isomorphic FWHM in millimeters "
                                    "to smooth the image (default: --smooth 8).")
         # Clinica standard arguments (e.g. --n_procs)
-        clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
-        clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
-                                 help='TSV file containing a list of subjects with their sessions.')
-        clinica_opt.add_argument("-wd", "--working_directory",
-                                 help='Temporary directory to store pipelines intermediate results')
-        clinica_opt.add_argument("-np", "--n_procs",
-                                 metavar=('N'), type=int,
-                                 help='Number of cores used to run in parallel')
+        self.add_clinica_standard_arguments()
         # Advanced arguments (i.e. tricky parameters)
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
         advanced.add_argument("-t", "--tissue_classes",

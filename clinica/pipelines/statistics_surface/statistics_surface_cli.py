@@ -57,12 +57,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                                    'dti_projection_fa, dti_projection_md, dti_projection_rd or dti_projection_ad '
                                    'exists but are not yet officially released.')
         # Clinica standard arguments (e.g. --n_procs)
-        clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
-        clinica_opt.add_argument("-wd", "--working_directory",
-                                 help='Temporary directory to store pipelines intermediate results')
-        clinica_opt.add_argument("-np", "--n_procs",
-                                 metavar=('N'), type=int,
-                                 help='Number of cores used to run in parallel')
+        self.add_clinica_standard_arguments(add_tsv_flag=False)
         # Advanced arguments (i.e. tricky parameters)
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
         advanced.add_argument("-cf", "--custom_file",

@@ -34,18 +34,12 @@ class T1FreeSurferLongitudinalCLI(ce.CmdParser):
         clinica_comp.add_argument("caps_directory",
                                   help='path to the caps directory.')
         # clinica standard arguments (e.g. --n_procs)
-        clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
-        clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
-                                 help='tsv file containing a list of subjects with their sessions.')
-        clinica_opt.add_argument("-wd", "--working_directory",
-                                 help='temporary directory to store pipelines intermediate results')
-        clinica_opt.add_argument("-np", "--n_procs",
-                                 metavar=('n'), type=int,
-                                 help='number of cores used to run in parallel')
+        clinica_opt = self.add_clinica_standard_arguments()
         # clinica pipeline-specific arguments
         clinica_opt.add_argument("-oc", "--overwrite_caps",
                                  type=str, default='false',
-                                 help='Overwrite existing data in CAPS dir (Possible values: true, True, TRUE, false, False, FALSE. Default: -oc false)')
+                                 help='Overwrite existing data in CAPS directory '
+                                      '(Possible values: true, True, TRUE, false, False, FALSE. Default: -oc false)')
 
     def run_command(self, args):
         """Run the pipelines with defined args
