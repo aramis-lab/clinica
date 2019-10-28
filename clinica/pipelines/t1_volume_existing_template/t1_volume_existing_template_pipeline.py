@@ -30,11 +30,22 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
     Returns:
         A clinica pipeline object containing the T1VolumeExistingTemplate pipeline.
     """
-    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
+    def __init__(self,
+                 bids_directory=None,
+                 caps_directory=None,
+                 tsv_file=None,
+                 base_dir=None,
+                 name=None,
+                 group_id='default'):
         from os.path import exists, join, abspath
         from os import listdir
 
-        super(T1VolumeExistingTemplate, self).__init__(bids_directory, caps_directory, tsv_file, name)
+        super(T1VolumeExistingTemplate, self).__init__(
+            bids_directory=bids_directory,
+            caps_directory=caps_directory,
+            tsv_file=tsv_file,
+            base_dir=base_dir,
+            name=name)
 
         # Check that group already exists
         if not exists(join(abspath(caps_directory), 'groups', 'group-' + group_id)):

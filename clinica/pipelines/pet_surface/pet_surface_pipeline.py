@@ -240,7 +240,7 @@ class PetSurface(cpe.Pipeline):
         full_pipe.inputs.subject_id = self.subjects
         full_pipe.inputs.caps_dir = self.caps_directory
         full_pipe.inputs.session_id = self.sessions
-        full_pipe.inputs.working_directory_subjects = self.parameters['wd']
+        full_pipe.inputs.working_directory_subjects = self.base_dir
         full_pipe.inputs.pet_type = self.parameters['pet_type']
         full_pipe.inputs.csv_segmentation = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                                                          '..',

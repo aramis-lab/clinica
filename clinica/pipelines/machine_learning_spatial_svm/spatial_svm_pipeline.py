@@ -163,12 +163,6 @@ class SpatialSVM(cpe.Pipeline):
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
         """
-
-        # In the same idea as the input node, this output node is supposedly
-        # used to write the output fields in a CAPS. It should be executed only
-        # if this pipeline output is not already connected to a next Clinica
-        # pipeline.
-
         pass
 
     def build_core_nodes(self):

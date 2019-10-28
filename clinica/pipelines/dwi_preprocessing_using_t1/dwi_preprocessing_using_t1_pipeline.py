@@ -36,16 +36,16 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
 
 
     """
-    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None,
-                 name=None, low_bval=5):
+    def __init__(self,
+                 bids_directory=None,
+                 caps_directory=None,
+                 tsv_file=None,
+                 base_dir=None,
+                 name=None,
+                 low_bval=5):
         """
 
         Args:
-            bids_directory(str): Input directory in a BIDS hierarchy.
-            caps_directory(str): Output directory in a CAPS hierarchy.
-            tsv_file(str): TSV file containing the list of participants
-                (participant_id) with their sessions (session_id).
-            name(optional[str]): Name of the pipeline
             low_bval (int): Define the b0 volumes as all volume
                 bval <= lowbval. (Default = 5)
         """
@@ -55,6 +55,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             bids_directory=bids_directory,
             caps_directory=caps_directory,
             tsv_file=tsv_file,
+            base_dir=base_dir,
             name=name)
 
         self._low_bval = low_bval

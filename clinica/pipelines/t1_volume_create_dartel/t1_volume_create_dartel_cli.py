@@ -41,25 +41,23 @@ class T1VolumeCreateDartelCLI(ce.CmdParser):
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
         advanced.add_argument("-dt", "--dartel_tissues",
                               metavar='', nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
-                              help='Tissues to use for DARTEL template calculation (default: GM, WM and CSF i.e. --dartel_tissues 1 2 3).')
+                              help='Tissues to use for DARTEL template calculation '
+                                   '(default: GM, WM and CSF i.e. --dartel_tissues 1 2 3).')
 
     def run_command(self, args):
         """
         """
-        from tempfile import mkdtemp
         from clinica.utils.stream import cprint
-        from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
+        from .t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
 
-        pipeline = T1VolumeCreateDartel(bids_directory=self.absolute_path(args.bids_directory),
-                                        caps_directory=self.absolute_path(args.caps_directory),
-                                        tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-                                        group_id=args.group_id)
+        pipeline = T1VolumeCreateDartel(
+            bids_directory=self.absolute_path(args.bids_directory),
+            caps_directory=self.absolute_path(args.caps_directory),
+            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+            base_dir=self.absolute_path(args.working_directory),
+            group_id=args.group_id)
 
         pipeline.parameters.update({'dartel_tissues': args.dartel_tissues})
-
-        if args.working_directory is None:
-            args.working_directory = mkdtemp()
-        pipeline.base_dir = self.absolute_path(args.working_directory)
 
         if args.n_procs:
             pipeline.run(plugin='MultiProc',

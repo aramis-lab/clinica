@@ -35,14 +35,25 @@ class PETVolume(cpe.Pipeline):
 
     """
 
-    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default',
+    def __init__(self,
+                 bids_directory=None,
+                 caps_directory=None,
+                 tsv_file=None,
+                 base_dir=None,
+                 name=None,
+                 group_id='default',
                  fwhm_tsv=None):
         from pandas.io.parsers import read_csv
         import os
         from clinica.utils.exceptions import ClinicaCAPSError
         from colorama import Fore
 
-        super(PETVolume, self).__init__(bids_directory, caps_directory, tsv_file, name)
+        super(PETVolume, self).__init__(
+            bids_directory=bids_directory,
+            caps_directory=caps_directory,
+            tsv_file=tsv_file,
+            base_dir=base_dir,
+            name=name)
 
         if not group_id.isalnum():
             raise ClinicaCAPSError(Fore.RED + '[Error] Not valid group_id value. It must be composed only by letters and/or numbers' + Fore.RESET)

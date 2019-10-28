@@ -13,8 +13,8 @@ class T1VolumeParcellationCLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'Computation of mean GM concentration for a set of regions:\n' \
-                            + 'http://clinica.run/doc/Pipelines/T1_Volume/'
+        self._description = ('Computation of mean GM concentration for a set of regions:\n'
+                             'http://clinica.run/doc/Pipelines/T1_Volume/')
 
     def define_options(self):
         """Define the sub-command arguments
@@ -44,19 +44,21 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         advanced.add_argument("-atlases", "--atlases",
                               nargs='+', type=str, metavar='',
                               default=list_atlases, choices=list_atlases,
-                              help='A list of atlases used to calculate the regional mean GM concentrations (default: all atlases i.e. --atlases AAL2 AICHA Hammers LPBA40 Neuromorphometrics).')
+                              help='A list of atlases used to calculate the regional mean GM concentrations (default: '
+                                   'all atlases i.e. --atlases AAL2 AICHA Hammers LPBA40 Neuromorphometrics).')
 
     def run_command(self, args):
         """
         """
-        from tempfile import mkdtemp
+        from .t1_volume_parcellation_pipeline import T1VolumeParcellation
         from clinica.utils.stream import cprint
-        from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import T1VolumeParcellation
         from clinica.utils.check_dependency import verify_cat12_atlases
 
         pipeline = T1VolumeParcellation(
-             caps_directory=self.absolute_path(args.caps_directory),
-             tsv_file=self.absolute_path(args.subjects_sessions_tsv))
+            caps_directory=self.absolute_path(args.caps_directory),
+            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+            base_dir=self.absolute_path(args.working_directory)
+        )
 
         # If the user wants to use any of the atlases of cat12 and has not installed it, we just remove it from the list
         # of the computed atlases
@@ -66,14 +68,9 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         pipeline.parameters = {
             'group_id': args.group_id,
             'atlases': args.atlases,
-            'wd': self.absolute_path(args.working_directory),
             'n_procs': args.n_procs,
             'modulate': args.modulation
         }
-
-        if args.working_directory is None:
-            args.working_directory = mkdtemp()
-        pipeline.base_dir = self.absolute_path(args.working_directory)
 
         if args.n_procs:
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})

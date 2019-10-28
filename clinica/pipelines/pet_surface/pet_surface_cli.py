@@ -23,7 +23,8 @@ class PetSurfaceCLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'Surface-based processing of PET images:\nhttp://clinica.run/doc/Pipelines/PET_Surface/'
+        self._description = ('Surface-based processing of PET images:\n'
+                             'http://clinica.run/doc/Pipelines/PET_Surface/')
 
     def define_options(self):
         """Define the sub-command arguments
@@ -44,29 +45,26 @@ class PetSurfaceCLI(ce.CmdParser):
         clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
                                  help='TSV file containing a list of subjects with their sessions.')
         clinica_opt.add_argument("-wd", "--working_directory",
-                                 help='Temporary directory to store pipelines intermediate results')
+                                 help='Temporary directory to store pipelines intermediate results.')
         clinica_opt.add_argument("-np", "--n_procs",
                                  metavar=('N'), type=int,
-                                 help='Number of cores to use when running the pipeline in parallel (default: --n_procs 1).')
+                                 help='Number of cores to use when running the pipeline in parallel.')
 
     def run_command(self, args):
-        from tempfile import mkdtemp
         from clinica.utils.stream import cprint
         from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
-
-        if args.working_directory is None:
-            args.working_directory = mkdtemp()
 
         pipeline = PetSurface(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv))
+            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+            base_dir=self.absolute_path(args.working_directory)
+        )
         pipeline.parameters = {
             'pet_type': args.pet_tracer,
-            'wd': self.absolute_path(args.working_directory),
+            # Note(AR): Why n_procs is a parameter of pipeline dict?
             'n_procs': args.n_procs
         }
-        pipeline.base_dir = self.absolute_path(args.working_directory)
         if args.n_procs:
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         else:

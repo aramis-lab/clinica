@@ -30,7 +30,8 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("-s", "--smooth",
                               nargs='+', type=int, default=[8],
-                              help="A list of integers specifying the different isomorphic FWHM in millimeters to smooth the image (default: --smooth 8).")
+                              help="A list of integers specifying the different isomorphic FWHM in millimeters "
+                                   "to smooth the image (default: --smooth 8).")
         # Clinica standard arguments (e.g. --n_procs)
         clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
         clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
@@ -44,10 +45,13 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
         advanced.add_argument("-t", "--tissue_classes",
                               metavar='', nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
-                              help="Tissue classes (1: gray matter (GM), 2: white matter (WM), 3: cerebrospinal fluid (CSF), 4: bone, 5: soft-tissue, 6: background) to save (default: GM, WM and CSF i.e. --tissue_classes 1 2 3).")
+                              help="Tissue classes (1: gray matter (GM), 2: white matter (WM), "
+                                   "3: cerebrospinal fluid (CSF), 4: bone, 5: soft-tissue, 6: background) to save "
+                                   "(default: GM, WM and CSF i.e. --tissue_classes 1 2 3).")
         advanced.add_argument("-dt", "--dartel_tissues",
                               metavar='', nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
-                              help='Tissues to use for DARTEL template calculation (default: GM, WM and CSF i.e. --dartel_tissues 1 2 3).')
+                              help='Tissues to use for DARTEL template calculation '
+                                   '(default: GM, WM and CSF i.e. --dartel_tissues 1 2 3).')
         advanced.add_argument("-tpm", "--tissue_probability_maps",
                               metavar=('TissueProbabilityMap.nii'),
                               help='Tissue probability maps to use for segmentation (default: TPM from SPM software).')
@@ -58,19 +62,20 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
                               action='store_true',
                               help="Save warped modulated images for tissues specified in --tissue_classes flag.")
         # advanced.add_argument("-wdf", "--write_deformation_fields", nargs=2, type=bool,
-        #                         help="Option to save the deformation fields from Unified Segmentation. Both inverse and forward fields can be saved. Format: a list of 2 booleans. [Inverse, Forward]")
+        #                         help="Option to save the deformation fields from Unified Segmentation. Both inverse "
+        #                              "and forward fields can be saved. Format: a list of 2 booleans. [Inverse, Forward]")
 
     def run_command(self, args):
         """
         """
-        from tempfile import mkdtemp
         from clinica.utils.stream import cprint
-        from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
+        from .t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
 
         pipeline = T1VolumeTissueSegmentation(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv)
+            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+            base_dir=self.absolute_path(args.working_directory),
         )
 
         pipeline.parameters.update({
@@ -82,10 +87,6 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
             'write_deformation_fields': [True, True],  # args.write_deformation_fields
             'save_t1_mni': True
             })
-
-        if args.working_directory is None:
-            args.working_directory = mkdtemp()
-        pipeline.base_dir = self.absolute_path(args.working_directory)
 
         if args.n_procs:
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})

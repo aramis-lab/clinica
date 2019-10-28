@@ -22,7 +22,8 @@ class T1FreeSurferLongitudinalCLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'Longitudinal pre-processing of T1w images with FreeSurfer:\nhttp://clinica.run/doc/Pipelines/T1_FreeSurfer_Longitudinal/'
+        self._description = ('Longitudinal pre-processing of T1w images with FreeSurfer:\n'
+                             'http://clinica.run/doc/Pipelines/T1_FreeSurfer_Longitudinal/')
 
     def define_options(self):
         """Define the sub-command arguments
@@ -53,35 +54,31 @@ class T1FreeSurferLongitudinalCLI(ce.CmdParser):
         from nipype.pipeline.engine import Workflow
         from .t1_freesurfer_template_pipeline import T1FreeSurferTemplate
         from .t1_freesurfer_longitudinal_correction_pipeline import T1FreeSurferLongitudinalCorrection
-        from tempfile import mkdtemp
 
         template_pipeline = T1FreeSurferTemplate(
             caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv))
+            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+            base_dir=self.absolute_path(args.working_directory)
+        )
         longcorr_pipeline = T1FreeSurferLongitudinalCorrection(
             caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv))
+            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+            base_dir=self.absolute_path(args.working_directory)
+        )
 
-        # add working directory and n_procs to pipeline parameters so we
+        # add n_procs to pipeline parameters so we
         # know, while running the pipeline, which arguments the user
         # passed to the CLI
         template_pipeline.parameters = {
-            'working_directory': args.working_directory,
+            # Todo: Remove parameters['n_procs']
             'n_procs': args.n_procs,
             'overwrite_caps': args.overwrite_caps
             }
         longcorr_pipeline.parameters = {
-            'working_directory': args.working_directory,
+            # Todo: Remove parameters['n_procs']
             'n_procs': args.n_procs,
             'overwrite_caps': args.overwrite_caps
             }
-
-        # make sure if working_directory is not defined, using a temp
-        # folder to the working directory.
-        if args.working_directory is None:
-            args.working_directory = mkdtemp()
-        template_pipeline.base_dir = self.absolute_path(args.working_directory)
-        longcorr_pipeline.base_dir = self.absolute_path(args.working_directory)
 
         # separately build the two template and longitudinal-correction pipelines
         template_pipeline.build()

@@ -16,7 +16,8 @@ class DwiPreprocessingUsingPhaseDiffFieldmapCli(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'Preprocessing of raw DWI datasets using a phase difference image:\nhttp://clinica.run/doc/Pipelines/DWI_Preprocessing/'
+        self._description = ('Preprocessing of raw DWI datasets using a phase difference image:\n'
+                             'http://clinica.run/doc/Pipelines/DWI_Preprocessing/')
 
     def define_options(self):
         """Define the sub-command arguments
@@ -47,7 +48,6 @@ class DwiPreprocessingUsingPhaseDiffFieldmapCli(ce.CmdParser):
         """
         Run the DWIPreprocessingUsingPhaseDiffFieldmap pipeline from command line.
         """
-        from tempfile import mkdtemp
         from clinica.utils.stream import cprint
         from .dwi_preprocessing_using_phasediff_fieldmap_pipeline import DwiPreprocessingUsingPhaseDiffFieldmap
 
@@ -55,12 +55,9 @@ class DwiPreprocessingUsingPhaseDiffFieldmapCli(ce.CmdParser):
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            low_bval=args.low_bval
+            base_dir=self.absolute_path(args.working_directory),
+            low_bval=args.low_bval,
         )
-
-        if args.working_directory is None:
-            args.working_directory = mkdtemp()
-        pipeline.base_dir = self.absolute_path(args.working_directory)
 
         if args.n_procs:
             pipeline.run(plugin='MultiProc',

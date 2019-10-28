@@ -149,7 +149,7 @@ def clinica_file_reader(subjects,
                               + ' directory_name/filename.extension or filename.extension in the pattern argument'
     assert len(subjects) == len(sessions), 'Subjects and sessions must have the same length'
     if len(subjects) == 0:
-        raise RuntimeError('No subjects and sessions provided.')
+        return []
 
     # rez is the list containing the results
     results = []

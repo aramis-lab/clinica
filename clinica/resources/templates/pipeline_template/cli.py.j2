@@ -65,8 +65,6 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
     def run_command(self, args):
         """
         """
-
-        from tempfile import mkdtemp
         from .{{ pipeline.module_name }}_pipeline import {{ pipeline.class_name }}
 
         # Most of the time, you will want to instantiate your pipeline with a
@@ -74,7 +72,9 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
         # pipeline = {{ pipeline.class_name }}(
         #     bids_directory=self.absolute_path(args.bids_directory),
         #     caps_directory=self.absolute_path(args.caps_directory),
-        #     tsv_file=self.absolute_path(args.subjects_sessions_tsv))
+        #     tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+        #     base_dir=self.absolute_path(args.working_directory)
+        #)
         pipeline = {{ pipeline.class_name }}()
         pipeline.parameters = {
             # Add your own pipeline parameters here to use them inside your
@@ -83,9 +83,6 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
             'hello_word'        : args.hello_word_arg or 'Hello'
             'advanced_argument' : args.advanced_arg
         }
-        if args.working_directory is None:
-            args.working_directory = mkdtemp()
-        pipeline.base_dir = self.absolute_path(args.working_directory)
         if args.n_procs:
             pipeline.run(plugin='MultiProc',
                          plugin_args={'n_procs': args.n_procs})

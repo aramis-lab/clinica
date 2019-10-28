@@ -18,34 +18,18 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
     Creates a pipeline that runs the Freesurfer longitudinal
     (correction) processing module for each subjects in a .tsv-defined
     list of subjects/sessions. This requires a prior run of
-    t1-freesurfer-cross-sectional on the .tsv, followed by a run of
-    t1-freesurfer-template on the same .tsv. For each subject, all the
+    t1-freesurfer on the TSV file, followed by a run of
+    t1-freesurfer-template on the same TSV file. For each subject, all the
     timepoints (sessions) are re-processed based on a template computed
     with t1-freesurfer-template for that specific subject.
 
-    Warnings:
-        - A WARNING.
-
     Todos: N/A
 
-    Args:
-        caps_directory: Path to the CAPS directory
-        tsv: TSV file containing the subjects with their sessions
-        wd: Temporary directory to store pipelines intermediate results
-        np: Number of cores used to run in parallel
-
     Returns:
-        A clinica pipeline object containing the T1 FreeSurfer
-            pipeline
+        A clinica pipeline object containing the T1FreeSurferLongitudinalCorrection pipeline
 
     Raises:
 
-
-    Example:
-        >>> from t1_freesurfer_longitudinal_correction import T1FreeSurferLongitudinalCorrection
-        >>> pipelines = T1FreeSurferLongitudinalCorrection('~/MYDATASET_BIDS', '~/MYDATASET_CAPS', 'TSV')
-        >>> pipelines.base_dir = '/tmp/'
-        >>> pipelines.run()
     """
 
     def check_custom_dependencies(self):
@@ -134,8 +118,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
         checkinput_node.inputs.in_caps_dir = self.caps_directory
         checkinput_node.inputs.in_subject_list = self.subjects
         checkinput_node.inputs.in_session_list = self.sessions
-        checkinput_node.inputs.in_working_directory = self.parameters[
-            'working_directory']
+        checkinput_node.inputs.in_working_directory = self.base_dir
         checkinput_node.inputs.in_overwrite_caps = self.parameters[
             'overwrite_caps']
         checkinput_node.inputs.in_n_procs = self.parameters['n_procs']

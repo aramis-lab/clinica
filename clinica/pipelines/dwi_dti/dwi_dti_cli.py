@@ -16,7 +16,8 @@ class DwiDtiCli(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'DTI-based processing of DWI datasets:\nhttp://clinica.run/doc/DWI_DTI'
+        self._description = ('DTI-based processing of DWI datasets:\n'
+                             'http://clinica.run/doc/DWI_DTI')
 
     def define_options(self):
         """Define the sub-command arguments
@@ -43,18 +44,14 @@ class DwiDtiCli(ce.CmdParser):
         import os
         import datetime
         from colorama import Fore
-        from tempfile import mkdtemp
         from .dwi_dti_pipeline import DwiDti
         from clinica.utils.stream import cprint
 
         pipeline = DwiDti(
             caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv)
+            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+            base_dir=self.absolute_path(args.working_directory)
         )
-
-        if args.working_directory is None:
-            args.working_directory = mkdtemp()
-        pipeline.base_dir = self.absolute_path(args.working_directory)
 
         if args.n_procs:
             pipeline.run(plugin='MultiProc',
