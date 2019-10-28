@@ -47,6 +47,11 @@ class T1FreeSurferCLI(ce.CmdParser):
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_end_pipeline, print_failed_images
 
+        if "-dontrun" in args.recon_all_args.split(' '):
+            cprint('%s[Warning] Found -dontrun flag for FreeSurfer recon-all. '
+                   'Please note that this will not run the segmentation.%s' %
+                   (Fore.YELLOW, Fore.RESET))
+
         pipeline = T1FreeSurfer(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
@@ -54,11 +59,6 @@ class T1FreeSurferCLI(ce.CmdParser):
             base_dir=self.absolute_path(args.working_directory),
             overwrite_caps=args.overwrite_outputs
         )
-
-        if "-dontrun" in args.recon_all_args.split(' '):
-            cprint('%s[Warning] Found -dontrun flag for FreeSurfer recon-all. '
-                   'Please note that this will not run the segmentation.%s' %
-                   (Fore.YELLOW, Fore.RESET))
 
         pipeline.parameters = {
             'recon_all_args': args.recon_all_args
