@@ -304,7 +304,7 @@ class PETVolume(cpe.Pipeline):
         check_relative_volume_location_in_world_coordinate_system('T1w-MRI', t1w_bids,
                                                                   self.parameters['pet_type'] + ' PET', pet_bids,
                                                                   self.bids_directory,
-                                                                  't1w ' + self.parameters['pet_type'])
+                                                                  self.parameters['pet_type'])
 
         read_input_node = npe.Node(name="LoadingCLIArguments",
                                    interface=nutil.IdentityInterface(

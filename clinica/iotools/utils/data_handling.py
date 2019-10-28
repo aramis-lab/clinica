@@ -740,7 +740,7 @@ def center_nifti_for_coreg(bids_dir, output_dir, modality):
     return nifti_to_center
 
 
-def are_far_appart(file1, file2, threshold=80):
+def are_far_appart(file1, file2, threshold=50):
     """
     Tells if 2 files have a center located at more than a threshold distance
     Args:
@@ -841,7 +841,7 @@ def check_relative_volume_location_in_world_coordinate_system(label_1, nifti_lis
                            + ' at the origin of the world coordinates.\nUse the following command line to correct the '\
                            + 'header of the faulty NIFTI volumes in a new folder:\n' + Fore.RESET \
                            + Fore.BLUE + '\nclinica iotools center-nifti ' + abspath(bids_dir) + ' ' \
-                           + abspath(bids_dir) + '_centered --modality "' + modality + '" --coreg_two_modalities\n\n'  \
+                           + abspath(bids_dir) + '_centered --modality "' + modality + '"\n\n'  \
                            + Fore.YELLOW + 'You will find more information on the command by typing ' + Fore.BLUE \
                            + 'clinica iotools center-nifti' + Fore.YELLOW + ' in the console.\nDo you still want to ' \
                            + 'launch the pipeline now?' + Fore.RESET
@@ -942,7 +942,7 @@ def check_volume_location_in_world_coordinate_system(nifti_list, bids_dir, modal
             sys.exit(0)
 
 
-def is_centered(nii_volume, threshold_l2=80):
+def is_centered(nii_volume, threshold_l2=50):
     """
     Tells if a NIfTI volume is centered on the origin of the world coordinate system.
 
