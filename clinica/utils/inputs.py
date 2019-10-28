@@ -185,7 +185,7 @@ def clinica_file_reader(subjects,
                 error_message += Fore.YELLOW + 'Please note that the following clinica pipeline(s) must have run ' \
                                  'to obtain these files: ' + information['needed_pipeline'] + Fore.RESET + '\n'
         for msg in error_encountered:
-                error_message += msg
+            error_message += msg
         if is_bids:
             raise ClinicaBIDSError(error_message)
         else:
