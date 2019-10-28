@@ -740,7 +740,7 @@ def center_nifti_for_coreg(bids_dir, output_dir, modality):
     return nifti_to_center
 
 
-def are_far_appart(file1, file2, threshold=50):
+def are_far_appart(file1, file2, threshold=80):
     """
     Tells if 2 files have a center located at more than a threshold distance
     Args:
