@@ -23,11 +23,22 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
     Returns:
         A clinica pipeline object containing the T1VolumeDartel2MNI pipeline.
     """
-    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
+    def __init__(self,
+                 bids_directory=None,
+                 caps_directory=None,
+                 tsv_file=None,
+                 base_dir=None,
+                 name=None,
+                 group_id='default'):
         import os
         from clinica.utils.exceptions import ClinicaException
 
-        super(T1VolumeDartel2MNI, self).__init__(bids_directory, caps_directory, tsv_file, name)
+        super(T1VolumeDartel2MNI, self).__init__(
+            bids_directory=bids_directory,
+            caps_directory=caps_directory,
+            base_dir=base_dir,
+            tsv_file=tsv_file,
+            name=name)
 
         if not group_id.isalnum():
             raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')

@@ -11,7 +11,8 @@ class SpatialSVMCLI(ce.CmdParser):
         self._name = 'machinelearning-prepare-spatial-svm'
 
     def define_description(self):
-        self._description = 'Prepare input data for SVM with spatial and anatomical regularization:\nhttp://clinica.run/doc/MachineLeaning_PrepareSpatialSVM'
+        self._description = ('Prepare input data for SVM with spatial and anatomical regularization:\n'
+                             'http://clinica.run/doc/MachineLeaning_PrepareSpatialSVM')
 
     def define_options(self):
         """Define the sub-command arguments
@@ -40,7 +41,9 @@ class SpatialSVMCLI(ce.CmdParser):
         # Advanced arguments (i.e. tricky parameters)
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
         advanced.add_argument("-fwhm", "--full_width_half_maximum", type=float, default=4,
-                              help='Amount of regularization (in mm). In practice, we found the default value (--full_width_half_maximum 4) to be optimal. We therefore do not recommend to change it unless you have a specific reason to do so.')
+                              help='Amount of regularization (in mm). In practice, we found the default value '
+                                   '(--full_width_half_maximum 4) to be optimal. We therefore do not recommend '
+                                   'to change it unless you have a specific reason to do so.')
         advanced.add_argument("-no_pvc", "--no_pvc",
                               action='store_true', default='False',
                               help="Force the use of non PVC PET data (by default, PVC PET data are used)")
@@ -48,13 +51,14 @@ class SpatialSVMCLI(ce.CmdParser):
     def run_command(self, args):
         """
         """
-        from tempfile import mkdtemp
         from clinica.utils.stream import cprint
         from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
 
         pipeline = SpatialSVM(
             caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv))
+            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+            base_dir=self.absolute_path(args.working_directory)
+        )
 
         pipeline.parameters = {
             'group_id': args.group_id,
@@ -63,9 +67,7 @@ class SpatialSVMCLI(ce.CmdParser):
             'pet_type': args.pet_tracer,
             'no_pvc': args.no_pvc
         }
-        if args.working_directory is None:
-            args.working_directory = mkdtemp()
-        pipeline.base_dir = self.absolute_path(args.working_directory)
+
         if args.n_procs:
             pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
         else:

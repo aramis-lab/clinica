@@ -13,7 +13,8 @@ class DwiConnectomeCli(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = 'Connectome-based processing of DWI datasets:\nhttp://clinica.run/doc/DWI_Connectome'
+        self._description = ('Connectome-based processing of DWI datasets:\n'
+                             'http://clinica.run/doc/DWI_Connectome')
 
     def define_options(self):
         """Define the sub-command arguments
@@ -44,22 +45,18 @@ class DwiConnectomeCli(ce.CmdParser):
         """
         import os
         import datetime
-        import sys
         from colorama import Fore
-        from tempfile import mkdtemp
         from clinica.utils.stream import cprint
         from .dwi_connectome_pipeline import DwiConnectome
 
         pipeline = DwiConnectome(
             caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv)
+            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+            base_dir=self.absolute_path(args.working_directory)
         )
         pipeline.parameters = {
             'n_tracks': args.n_tracks or 1000000,
         }
-        if args.working_directory is None:
-            args.working_directory = mkdtemp()
-        pipeline.base_dir = self.absolute_path(args.working_directory)
         if args.n_procs:
             pipeline.run(plugin='MultiProc',
                          plugin_args={'n_procs': args.n_procs})

@@ -23,8 +23,19 @@ class T1VolumeExistingDartel(cpe.Pipeline):
     Returns:
         A clinica pipeline object containing the T1VolumeExistingDartel pipeline.
     """
-    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
-        super(T1VolumeExistingDartel, self).__init__(bids_directory, caps_directory, tsv_file, name)
+    def __init__(self,
+                 bids_directory=None,
+                 caps_directory=None,
+                 tsv_file=None,
+                 base_dir=None,
+                 name=None,
+                 group_id='default'):
+        super(T1VolumeExistingDartel, self).__init__(
+            bids_directory=bids_directory,
+            caps_directory=caps_directory,
+            tsv_file=tsv_file,
+            base_dir=base_dir,
+            name=name)
 
         if not group_id.isalnum():
             raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')

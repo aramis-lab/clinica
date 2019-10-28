@@ -72,10 +72,12 @@ def test_run_T1VolumeTissueSegmentation(cmdopt):
     clean_folder(join(working_dir, 'T1VolumeTissueSegmentation'))
     clean_folder(join(root, 'out', 'caps'))
 
-    pipeline = T1VolumeTissueSegmentation(bids_directory=join(root, 'in', 'bids'),
-                                          caps_directory=join(root, 'out', 'caps'),
-                                          tsv_file=join(root, 'in', 'subjects.tsv'))
-    pipeline.base_dir = join(working_dir, 'T1VolumeTissueSegmentation')
+    pipeline = T1VolumeTissueSegmentation(
+        bids_directory=join(root, 'in', 'bids'),
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'T1VolumeTissueSegmentation')
+    )
     pipeline.build()
     pipeline.run(bypass_check=True)
 
@@ -106,11 +108,13 @@ def test_run_T1VolumeCreateDartel(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     # Instantiate pipeline
-    pipeline = T1VolumeCreateDartel(bids_directory=join(root, 'in', 'bids'),
-                                    caps_directory=join(root, 'out', 'caps'),
-                                    tsv_file=join(root, 'in', 'subjects.tsv'),
-                                    group_id='UnitTest')
-    pipeline.base_dir = join(working_dir, 'T1VolumeCreateDartel')
+    pipeline = T1VolumeCreateDartel(
+        bids_directory=join(root, 'in', 'bids'),
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'T1VolumeCreateDartel'),
+        group_id='UnitTest'
+    )
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
@@ -152,11 +156,13 @@ def test_run_T1VolumeDartel2MNI(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     # Instantiate pipeline and run()
-    pipeline = T1VolumeDartel2MNI(bids_directory=join(root, 'in', 'bids'),
-                                  caps_directory=join(root, 'out', 'caps'),
-                                  tsv_file=join(root, 'in', 'subjects.tsv'),
-                                  group_id='UnitTest')
-    pipeline.base_dir = join(working_dir, 'T1VolumeDartel2MNI')
+    pipeline = T1VolumeDartel2MNI(
+        bids_directory=join(root, 'in', 'bids'),
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'T1VolumeDartel2MNI'),
+        group_id='UnitTest'
+    )
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
@@ -187,11 +193,13 @@ def test_run_T1VolumeNewTemplate(cmdopt):
     clean_folder(join(root, 'out', 'caps'), recreate=True)
     clean_folder(join(working_dir, 'T1VolumeNewTemplate'))
 
-    pipeline = T1VolumeNewTemplate(bids_directory=join(root, 'in', 'bids'),
-                                   caps_directory=join(root, 'out', 'caps'),
-                                   tsv_file=join(root, 'in', 'subjects.tsv'),
-                                   group_id='UnitTest')
-    pipeline.base_dir = join(working_dir, 'T1VolumeNewTemplate')
+    pipeline = T1VolumeNewTemplate(
+        bids_directory=join(root, 'in', 'bids'),
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'T1VolumeNewTemplate'),
+        group_id='UnitTest',
+    )
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
@@ -231,11 +239,13 @@ def test_run_T1VolumeExistingDartel(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     # Instantiate and run pipeline
-    pipeline = T1VolumeExistingDartel(bids_directory=join(root, 'in', 'bids'),
-                                      caps_directory=join(root, 'out', 'caps'),
-                                      tsv_file=join(root, 'in', 'subjects.tsv'),
-                                      group_id='UnitTest')
-    pipeline.base_dir = join(working_dir, 'T1VolumeExistingDartel')
+    pipeline = T1VolumeExistingDartel(
+        bids_directory=join(root, 'in', 'bids'),
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'T1VolumeExistingDartel'),
+        group_id='UnitTest'
+    )
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
@@ -270,11 +280,13 @@ def test_run_T1VolumeExistingTemplate(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
     clean_folder(join(working_dir, 'T1VolumeExistingTemplate'))
 
-    pipeline = T1VolumeExistingTemplate(bids_directory=join(root, 'in', 'bids'),
-                                        caps_directory=join(root, 'out', 'caps'),
-                                        tsv_file=join(root, 'in', 'subjects.tsv'),
-                                        group_id='UnitTest')
-    pipeline.base_dir = join(working_dir, 'T1VolumeExistingTemplate')
+    pipeline = T1VolumeExistingTemplate(
+        bids_directory=join(root, 'in', 'bids'),
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'T1VolumeExistingTemplate'),
+        group_id='UnitTest'
+    )
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
@@ -312,12 +324,14 @@ def test_run_T1VolumeParcellation(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     # Instantiate pipeline
-    pipeline = T1VolumeParcellation(caps_directory=join(root, 'out', 'caps'),
-                                    tsv_file=join(root, 'in', 'subjects.tsv'))
+    pipeline = T1VolumeParcellation(
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'T1VolumeParcellation')
+    )
     pipeline.parameters['group_id'] = 'UnitTest'
     pipeline.parameters['atlases'] = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
     pipeline.parameters['modulate'] = 'on'
-    pipeline.base_dir = join(working_dir, 'T1VolumeParcellation')
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
@@ -349,12 +363,13 @@ def test_run_DWIPreprocessingUsingT1(cmdopt):
     clean_folder(join(root, 'out', 'caps'), recreate=True)
     clean_folder(join(working_dir, 'DWIPreprocessingUsingT1'))
 
-    pipeline = DwiPreprocessingUsingT1(bids_directory=join(root, 'in', 'bids'),
-                                       caps_directory=join(root, 'out', 'caps'),
-                                       tsv_file=join(root, 'in', 'subjects.tsv'),
-                                       low_bval=5)
-    # pipeline.parameters['epi_param'] = dict([('readout_time', 0.0348756),  ('enc_dir', 'y')])
-    pipeline.base_dir = join(working_dir, 'DWIPreprocessingUsingT1')
+    pipeline = DwiPreprocessingUsingT1(
+        bids_directory=join(root, 'in', 'bids'),
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'DWIPreprocessingUsingT1'),
+        low_bval=5,
+    )
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
@@ -382,11 +397,12 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
     clean_folder(join(root, 'out', 'caps'))
     clean_folder(join(working_dir, 'DWIPreprocessingUsingPhaseDiffFieldmap'))
 
-    pipeline = DwiPreprocessingUsingPhaseDiffFieldmap(bids_directory=join(root, 'in', 'bids'),
-                                                      caps_directory=join(root, 'out', 'caps'),
-                                                      tsv_file=join(root, 'in', 'subjects.tsv'),
-                                                      low_bval=5)
-    pipeline.base_dir = join(working_dir, 'DWIPreprocessingUsingPhaseDiffFieldmap')
+    pipeline = DwiPreprocessingUsingPhaseDiffFieldmap(
+        bids_directory=join(root, 'in', 'bids'),
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'DWIPreprocessingUsingPhaseDiffFieldmap'),
+        low_bval=5)
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
@@ -415,9 +431,11 @@ def test_run_DWIDTI(cmdopt):
     clean_folder(join(working_dir, 'DWIDTI'))
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
-    pipeline = DwiDti(caps_directory=join(root, 'out', 'caps'),
-                      tsv_file=join(root, 'in', 'subjects.tsv'))
-    pipeline.base_dir = join(working_dir, 'DWIDTI')
+    pipeline = DwiDti(
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'DWIDTI')
+    )
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
@@ -460,12 +478,14 @@ def test_run_DWIConnectome(cmdopt):
     clean_folder(working_dir)
     shutil.copytree(join(root, 'in', 'caps'), out_caps_dir)
 
-    pipeline = DwiConnectome(caps_directory=out_caps_dir,
-                             tsv_file=in_tsv)
+    pipeline = DwiConnectome(
+        caps_directory=out_caps_dir,
+        tsv_file=in_tsv,
+        base_dir=working_dir
+    )
     pipeline.parameters = {
         'n_tracks': n_tracks,
     }
-    pipeline.base_dir = working_dir
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
@@ -505,16 +525,18 @@ def test_run_fMRIPreprocessing(cmdopt):
     clean_folder(join(working_dir, 'fMRIPreprocessing'))
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
-    pipeline = fMRIPreprocessing(bids_directory=join(root, 'in', 'bids'),
-                                 caps_directory=join(root, 'out', 'caps'),
-                                 tsv_file=join(root, 'in', 'subjects.tsv'))
+    pipeline = fMRIPreprocessing(
+        bids_directory=join(root, 'in', 'bids'),
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'fMRIPreprocessing')
+    )
     pipeline.parameters = {
         'full_width_at_half_maximum': [8, 8, 8],
         't1_native_space': False,
         'freesurfer_brain_mask': False,
         'unwarping': False
     }
-    pipeline.base_dir = join(working_dir, 'fMRIPreprocessing')
     pipeline.build()
     pipeline.run(bypass_check=True)
 
@@ -544,12 +566,14 @@ def test_run_PETVolume(cmdopt):
     clean_folder(join(working_dir, 'PETVolume'))
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
-    pipeline = PETVolume(bids_directory=join(root, 'in', 'bids'),
-                         caps_directory=join(root, 'out', 'caps'),
-                         tsv_file=join(root, 'in', 'subjects.tsv'),
-                         group_id='UnitTest',
-                         fwhm_tsv=None)
-    pipeline.base_dir = join(working_dir, 'PETVolume')
+    pipeline = PETVolume(
+        bids_directory=join(root, 'in', 'bids'),
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'PETVolume'),
+        group_id='UnitTest',
+        fwhm_tsv=None
+    )
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
@@ -581,8 +605,11 @@ def test_run_StatisticsSurface(cmdopt):
     clean_folder(join(working_dir, 'StatisticsSurface'))
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
-    pipeline = StatisticsSurface(caps_directory=join(root, 'out', 'caps'),
-                                 tsv_file=join(root, 'in', 'subjects.tsv'))
+    pipeline = StatisticsSurface(
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'StatisticsSurface')
+    )
     pipeline.parameters = {
             'design_matrix': '1 + group + age + sex',
             'contrast': 'group',
@@ -596,7 +623,6 @@ def test_run_StatisticsSurface(cmdopt):
             'threshold_corrected_pvalue': 0.05,
             'cluster_threshold': 0.001
     }
-    pipeline.base_dir = join(working_dir, 'StatisticsSurface')
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 8}, bypass_check=True)
 
@@ -626,13 +652,13 @@ def test_run_PETSurface(cmdopt):
     clean_folder(join(working_dir, 'PETSurface'))
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
-    pipeline = PetSurface(bids_directory=join(root, 'in', 'bids'),
-                          caps_directory=join(root, 'out', 'caps'),
-                          tsv_file=join(root, 'in', 'subjects.tsv'))
+    pipeline = PetSurface(
+        bids_directory=join(root, 'in', 'bids'),
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'PETSurface')
+    )
     pipeline.parameters['pet_type'] = 'fdg'
-    wd = join(working_dir, 'PETSurface')
-    pipeline.base_dir = wd
-    pipeline.parameters['wd'] = wd
     pipeline.build()
     pipeline.run(bypass_check=True)
 
@@ -655,7 +681,10 @@ def test_run_PETSurface(cmdopt):
 
 
 def test_run_WorkflowsML(cmdopt):
-    from clinica.pipelines.machine_learning.ml_workflows import RB_RepHoldOut_LogisticRegression, VertexB_RepHoldOut_dualSVM, RB_RepHoldOut_RandomForest, VB_KFold_DualSVM
+    from clinica.pipelines.machine_learning.ml_workflows import (RB_RepHoldOut_LogisticRegression,
+                                                                 VertexB_RepHoldOut_dualSVM,
+                                                                 RB_RepHoldOut_RandomForest,
+                                                                 VB_KFold_DualSVM)
     from os.path import dirname, join, abspath
     import shutil
     import warnings
@@ -721,15 +750,17 @@ def test_run_SpatialSVM(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     # Instantiate pipeline and run()
-    pipeline = SpatialSVM(caps_directory=join(root, 'out', 'caps'),
-                          tsv_file=join(root, 'in', 'subjects.tsv'))
+    pipeline = SpatialSVM(
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'SpatialSVM')
+    )
 
     pipeline.parameters['group_id'] = 'ADNIbl'
     pipeline.parameters['fwhm'] = 4
     pipeline.parameters['image_type'] = 't1'
     pipeline.parameters['pet_type'] = 'fdg'
     pipeline.parameters['no_pvc'] = 'True'
-    pipeline.base_dir = join(working_dir, 'SpatialSVM')
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
@@ -788,20 +819,19 @@ def test_run_SpatialSVM(cmdopt):
 #     # Run pipeline
 #     template_pipeline = T1FreeSurferTemplate(
 #         caps_directory=out_caps_dir,
-#         tsv_file=in_tsv)
+#         tsv_file=in_tsv,
+#         base_dir=join(abspath(cmdopt), 'T1FreeSurferLongitudinal')
+#         )
 #     template_pipeline.parameters['recon_all_args'] = '-qcache'
-#     template_pipeline.parameters['working_directory'] = working_dir
-#     # template_pipeline.base_dir = working_dir
 #     template_pipeline.parameters['overwrite_caps'] = 'True'
 #     template_pipeline.parameters['n_procs'] = 4
 #     template_pipeline.build()
 #
 #     longcorr_pipeline = T1FreeSurferLongitudinalCorrection(
 #         caps_directory=out_caps_dir,
-#         tsv_file=in_tsv)
+#         tsv_file=in_tsv,
+#         base_dir=join(abspath(cmdopt), 'T1FreeSurferLongitudinal'))
 #     longcorr_pipeline.parameters['recon_all_args'] = '-qcache'
-#     longcorr_pipeline.parameters['working_directory'] = working_dir
-#     # longcorr_pipeline.base_dir = working_dir
 #     longcorr_pipeline.parameters['overwrite_caps'] = 'True'
 #     longcorr_pipeline.parameters['n_procs'] = 4
 #     longcorr_pipeline.build()

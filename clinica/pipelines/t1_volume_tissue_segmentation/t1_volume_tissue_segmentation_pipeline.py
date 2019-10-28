@@ -31,21 +31,32 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
     Returns:
         A clinica pipeline object containing the T1VolumeTissueSegmentation pipeline.
     """
-    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None):
-        super(T1VolumeTissueSegmentation, self).__init__(bids_directory, caps_directory, tsv_file, name)
+    def __init__(self,
+                 bids_directory=None,
+                 caps_directory=None,
+                 tsv_file=None,
+                 base_dir=None,
+                 name=None):
+        super(T1VolumeTissueSegmentation, self).__init__(
+            bids_directory=bids_directory,
+            caps_directory=caps_directory,
+            tsv_file=tsv_file,
+            base_dir=base_dir,
+            name=name)
         # Default parameters
-        self._parameters = {'tissue_classes': [1, 2, 3],
-                            'dartel_tissues': [1, 2, 3],
-                            'tpm': None,
-                            'save_warped_unmodulated': True,
-                            'save_warped_modulated': False,
-                            'affine_regularization': None,
-                            'channel_info': None,
-                            'sampling_distance': None,
-                            'warping_regularization': None,
-                            'write_deformation_fields': None,
-                            'save_t1_mni': True
-                            }
+        self._parameters = {
+            'tissue_classes': [1, 2, 3],
+            'dartel_tissues': [1, 2, 3],
+            'tpm': None,
+            'save_warped_unmodulated': True,
+            'save_warped_modulated': False,
+            'affine_regularization': None,
+            'channel_info': None,
+            'sampling_distance': None,
+            'warping_regularization': None,
+            'write_deformation_fields': None,
+            'save_t1_mni': True
+        }
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.

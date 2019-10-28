@@ -15,34 +15,18 @@ import clinica.pipelines.engine as cpe
 class T1FreeSurferTemplate(cpe.Pipeline):
     """FreeSurfer Longitudinal template class
 
-    Creates a pipelines that runs the Freesurfer longitudinal template
+    Creates a pipelines that runs the FreeSurfer longitudinal template
     initialisation module for each subjects in a .tsv-defined list of
     subjects/sessions. This requires a prior-run of
-    t1-freesurfer-cross-sectional on the .tsv.
-
-
-    Warnings:
-        - A WARNING.
+    t1-freesurfer on the .tsv.
 
     Todos: N/A
 
-    Args:
-        caps_directory: Path to the CAPS directory.
-        tsv: TSV file containing the subjects with their sessions
-        wd: Temporary directory to store pipelines intermediate results
-        np: Number of cores used to run in parallel
-
     Returns:
-        A clinica pipeline object containing the T1 FreeSurfer pipeline.
+        A clinica pipeline object containing the T1FreeSurferTemplate pipeline.
 
     Raises:
 
-
-    Example:
-        >>> from t1_freesurfer_template import T1FreeSurferTemplate
-        >>> pipelines = T1FreeSurferTemplate('~/MYDATASET_BIDS', '~/MYDATASET_CAPS', 'TSV')
-        >>> pipelines.base_dir = '/tmp/'
-        >>> pipelines.run()
     """
 
     def check_custom_dependencies(self):
@@ -111,8 +95,7 @@ class T1FreeSurferTemplate(cpe.Pipeline):
         checkinput_node.inputs.in_caps_dir = self.caps_directory
         checkinput_node.inputs.in_subject_list = self.subjects
         checkinput_node.inputs.in_session_list = self.sessions
-        checkinput_node.inputs.in_working_directory = self.parameters[
-            'working_directory']
+        checkinput_node.inputs.in_working_directory = self.base_dir
         checkinput_node.inputs.in_overwrite_caps = self.parameters[
             'overwrite_caps']
         checkinput_node.inputs.in_n_procs = self.parameters['n_procs']
