@@ -3,6 +3,7 @@
 
 LINES_TO_DISPLAY = 25
 
+
 def print_images_to_process(list_participant_id, list_session_id):
     """Print which images will be processed by the pipeline."""
     from .stream import cprint
