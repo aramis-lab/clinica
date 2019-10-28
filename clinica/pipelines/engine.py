@@ -427,15 +427,7 @@ class Pipeline(Workflow):
         except FileNotFoundError:
             # CAPS folder may not exist yet
             caps_stat = statvfs(dirname(self.caps_directory))
-        try:
-            wd_stat = statvfs(dirname(self.parameters['wd']))
-        except (KeyError, FileNotFoundError):
-            # Not all pipelines has a 'wd' parameter
-            # todo: maybe more relevant to always take base_dir?
-            # Note(AR): when dealing with the working directory,
-            # any pipeline should use Nipype::Workflow::base_dir
-            # todo: remove self.parameters['wd'] from pet-surface
-            wd_stat = statvfs(dirname(self.base_dir))
+        wd_stat = statvfs(dirname(self.base_dir))
 
         # Estimate space left on partition/disk/whatever caps and wd is located
         free_space_caps = caps_stat.f_bavail * caps_stat.f_frsize
