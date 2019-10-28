@@ -21,27 +21,15 @@ class fMRIPreprocessingCLI(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments
         """
-
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
-
+        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("bids_directory",
                                   help='Path to the BIDS directory.')
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
 
-        clinica_opt = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_OPTIONAL'])
-        clinica_opt.add_argument("-tsv", "--subjects_sessions_tsv",
-                                 help='TSV file containing a list of subjects with their sessions.')
-        clinica_opt.add_argument("-wd", "--working_directory",
-                                 help='Temporary directory to store pipelines intermediate results.')
-        clinica_opt.add_argument("-np", "--n_procs", type=int,
-                                 help='Number of processors to run in parallel.')
-#        clinica_opt.add_argument("-sl", "--slurm", action='store_true',
-#                                 help='Run the pipelines using SLURM.')
-#        clinica_opt.add_argument("-sa", "--sbatch_args",
-#                                 help='SLURM\'s sbatch tool arguments.')
-
+        # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("-fwhm", "--full_width_at_half_maximum",
                               metavar="FWHM",
@@ -64,6 +52,13 @@ class fMRIPreprocessingCLI(ce.CmdParser):
                               help="When specified, the unwarping correction step is executed. This will add "
                                    "SPM's Unwarping to the Realign step (magnitude and phasediff files are necessary "
                                    "in the BIDS directory).")
+
+        # Clinica standard arguments (e.g. --n_procs)
+        clinica_opt = self.add_clinica_standard_arguments()
+        # clinica_opt.add_argument("-sl", "--slurm", action='store_true',
+        #                          help='Run the pipelines using SLURM.')
+        # clinica_opt.add_argument("-sa", "--sbatch_args",
+        #                          help='SLURM\'s sbatch tool arguments.')
 
     def run_command(self, args):
         """
