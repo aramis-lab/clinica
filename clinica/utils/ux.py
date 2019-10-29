@@ -29,7 +29,7 @@ def print_begin_image(image_id, list_keys=None, list_values=None):
 
     assert(len(list_keys) == len(list_values))
 
-    begin_message = 'Running pipeline for %s' % (image_id.replace('_', '|'))
+    begin_message = 'Running pipeline for %s' % (image_id.replace('_', ' | '))
     if list_keys and list_values:
         begin_message += ' ('
         begin_message += ', '.join(key + ' = ' + value for key, value in zip(list_keys, list_values))
@@ -44,18 +44,9 @@ def print_end_image(image_id):
     from colorama import Fore
     from .stream import cprint
 
-    end_message = '%s has completed' % image_id.replace('_', '|')
+    end_message = '%s has completed' % image_id.replace('_', ' | ')
     now = datetime.datetime.now().strftime('%H:%M:%S')
     cprint('%s[%s]%s %s' % (Fore.GREEN, now, Fore.RESET, end_message))
-
-
-def print_no_image_to_process():
-    """Print end pipeline message when no image was found."""
-    from colorama import Fore
-    from .stream import cprint
-
-    cprint('%sEither all the images were already run by the pipeline or no image was found to run the pipeline. '
-           'The program will now exit.%s' % (Fore.BLUE, Fore.RESET))
 
 
 def print_end_pipeline(cli_name, working_directory):

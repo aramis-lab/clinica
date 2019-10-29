@@ -56,7 +56,7 @@ def write_tsv_files(subjects_dir, image_id):
         now = datetime.datetime.now().strftime('%H:%M:%S')
         cprint('%s[%s] %s does not contain mri/aseg+aparc.mgz file. '
                'Creation of regional_measures/ folder will be skipped.%s' %
-               (Fore.YELLOW, now, image_id.replace('_', '|'), Fore.RESET))
+               (Fore.YELLOW, now, image_id.replace('_', ' | '), Fore.RESET))
     return image_id
 
 
@@ -123,5 +123,5 @@ def save_to_caps(source_dir, image_id, caps_dir, overwrite_caps=False):
         now = datetime.datetime.now().strftime('%H:%M:%S')
         cprint('%s[%s] %s does not contain mri/aseg+aparc.mgz file. '
                'Copy will be skipped.%s' %
-               (Fore.YELLOW, now, image_id.replace('_', '|'), Fore.RESET))
+               (Fore.YELLOW, now, image_id.replace('_', ' | '), Fore.RESET))
     return image_id
