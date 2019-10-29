@@ -98,8 +98,8 @@ class Pipeline(Workflow):
         self._info = {}
 
         if base_dir is None:
-            from tempfile import mktemp
-            self.base_dir = mktemp()
+            from tempfile import mkdtemp
+            self.base_dir = mkdtemp()
         else:
             self.base_dir = base_dir
 
@@ -248,6 +248,9 @@ class Pipeline(Workflow):
         Returns:
             An execution graph (see Workflow.run).
         """
+        from networkx import NetworkXError
+        from colorama import Fore
+        from clinica.utils.stream import cprint
         if not self.is_built:
             self.build()
         self.check_not_cross_sectional()
@@ -255,7 +258,13 @@ class Pipeline(Workflow):
             self.check_size()
             plugin_args = self.update_parallelize_info(plugin_args)
             plugin = 'MultiProc'
-        return Workflow.run(self, plugin, plugin_args, update_hash)
+        execgraph = []
+        try:
+            execgraph = Workflow.run(self, plugin, plugin_args, update_hash)
+        except NetworkXError:
+            cprint('%sEither all the images were already run by the pipeline or no image was found '
+                   'to run the pipeline. The program will now exit.\n%s' % (Fore.BLUE, Fore.RESET))
+        return execgraph
 
     def load_info(self):
         """Loads the associated info.json file.
