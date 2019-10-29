@@ -114,8 +114,8 @@ class T1FreeSurfer(cpe.Pipeline):
             err_msg = 'Clinica faced error(s) while trying to read files in your BIDS directory.\n' + str(e)
             raise ClinicaBIDSError(err_msg)
 
-        # Save subjects to process in <WD>/T1FreeSurfer/participants.tsv
-        folder_participants_tsv = os.path.join(self.base_dir, self.__class__.__name__)
+        # Save subjects to process in <WD>/<Pipeline::name>/participants.tsv
+        folder_participants_tsv = os.path.join(self.base_dir, self.name)
         save_participants_sessions(self.subjects, self.sessions, folder_participants_tsv)
 
         if len(self.subjects):
@@ -148,7 +148,7 @@ class T1FreeSurfer(cpe.Pipeline):
             output_names=['image_id'],
             function=save_to_caps),
             name='SaveToCaps')
-        save_to_caps.inputs.source_dir = os.path.join(self.base_dir, 'T1FreeSurfer', 'ReconAll')
+        save_to_caps.inputs.source_dir = os.path.join(self.base_dir, self.name, 'ReconAll')
         save_to_caps.inputs.caps_dir = self.caps_directory
         save_to_caps.inputs.overwrite_caps = self.overwrite_caps
 
@@ -169,7 +169,7 @@ class T1FreeSurfer(cpe.Pipeline):
         # Initialize the pipeline
         #   - Extract <image_id> (e.g. sub-CLNC01_ses-M00) T1w filename;
         #   - Check FOV of T1w;
-        #   - Create <subjects_dir> folder in <WD>/T1FreeSurfer/ReconAll/<image_id>/;
+        #   - Create <subjects_dir> folder in <WD>/<Pipeline::name>/ReconAll/<image_id>/;
         #   - Print begin execution message.
         init_input = npe.Node(
             interface=nutil.Function(
@@ -178,7 +178,7 @@ class T1FreeSurfer(cpe.Pipeline):
                 function=init_input_node),
             name='0-InitPipeline')
         init_input.inputs.recon_all_args = self.parameters['recon_all_args']
-        init_input.inputs.output_dir = os.path.join(self.base_dir, 'T1FreeSurfer', 'ReconAll')
+        init_input.inputs.output_dir = os.path.join(self.base_dir, self.name, 'ReconAll')
 
         # Run recon-all command
         # FreeSurfer segmentation will be in <subjects_dir>/<image_id>/
