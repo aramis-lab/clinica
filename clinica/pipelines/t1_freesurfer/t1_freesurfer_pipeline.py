@@ -96,7 +96,7 @@ class T1FreeSurfer(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.stream import cprint
-        from clinica.utils.ux import (print_images_to_process, print_no_image_to_process)
+        from clinica.utils.ux import print_images_to_process
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1W_NII
         from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
@@ -118,9 +118,10 @@ class T1FreeSurfer(cpe.Pipeline):
         folder_participants_tsv = os.path.join(self.base_dir, self.__class__.__name__)
         save_participants_sessions(self.subjects, self.sessions, folder_participants_tsv)
 
-        print_images_to_process(self.subjects, self.sessions)
-        cprint('List available in %s' % os.path.join(folder_participants_tsv, 'participants.tsv'))
-        cprint('The pipeline will last approximately 10 hours per image.')
+        if len(self.subjects):
+            print_images_to_process(self.subjects, self.sessions)
+            cprint('List available in %s' % os.path.join(folder_participants_tsv, 'participants.tsv'))
+            cprint('The pipeline will last approximately 10 hours per image.')
 
         read_node = npe.Node(name="ReadingFiles",
                              iterables=[

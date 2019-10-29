@@ -32,7 +32,7 @@ class T1FreeSurferLongitudinalCLI(ce.CmdParser):
         # clinica compulsory arguments (e.g. bids, caps, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("caps_directory",
-                                  help='path to the caps directory.')
+                                  help='Path to the CAPS directory.')
         # clinica standard arguments (e.g. --n_procs)
         clinica_opt = self.add_clinica_standard_arguments()
         # clinica pipeline-specific arguments
