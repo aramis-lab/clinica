@@ -140,7 +140,6 @@ class CmdParserCenterNifti(ce.CmdParser):
                                 action='store_true',
                                 dest='center_all_files',
                                 default=False)
-
         self._args.add_argument('--coreg_two_modalities',
                                 help='Use this flag if you want to be sure that SPM will succeed to coregister 2 modalities (that you must specify in --modality argument)',
                                 action='store_true',
@@ -187,15 +186,10 @@ class CmdParserCenterNifti(ce.CmdParser):
 
         cprint('Clinica is now centering the requested images.')
 
-        if args.coreg_two_modalities:
-            centered_files = center_nifti_for_coreg(abspath(args.bids_directory),
-                                                    abspath(args.output_bids_directory),
-                                                    split_modality)
-        else:
-            centered_files = center_all_nifti(abspath(args.bids_directory),
-                                              abspath(args.output_bids_directory),
-                                              split_modality,
-                                              center_all_files=args.center_all_files)
+        centered_files = center_all_nifti(abspath(args.bids_directory),
+                                          abspath(args.output_bids_directory),
+                                          split_modality,
+                                          center_all_files=args.center_all_files)
 
         # Write list of created files
         timestamp = time.strftime("%Y%m%d-%H%M%S", time.localtime(time.time()))
