@@ -160,6 +160,7 @@ class PetSurface(cpe.Pipeline):
 
         check_relative_volume_location_in_world_coordinate_system('T1w-MRI (orig_nu.mgz)', read_parameters_node.inputs.orig_nu,
                                                                   self.parameters['pet_type'].upper() + ' PET', read_parameters_node.inputs.pet,
+                                                                  self.bids_directory,
                                                                   self.parameters['pet_type'].lower())
 
         self.connect([
