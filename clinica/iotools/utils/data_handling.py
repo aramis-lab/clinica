@@ -709,6 +709,21 @@ def check_relative_volume_location_in_world_coordinate_system(label_1, nifti_lis
                                                               label_2, nifti_list2,
                                                               bids_dir,
                                                               modality):
+    """
+    Check if the NIfTI file list nifti_list1 and nifti_list2 provided in argument are not too far apart (otherwise coreg
+    in SPM may fail. Norm between center of volumes of 2 files must be less than 80 mm.
+
+    Args:
+        label_1: label of the first nifti_list1 files (used in potential warning message)
+        nifti_list1: first set of files
+        label_2: label of the second nifti_list
+        nifti_list2: second set of files, must be same length as nifti_list1
+        bids_dir: bids directory (used in potential warning message)
+        modality: string that must be used in argument of: clinica iotools bids --modality MODALITY (used in potential
+                warning message)
+    Returns:
+        Nothing
+    """
     import numpy as np
     from colorama import Fore
     from os.path import abspath, basename
