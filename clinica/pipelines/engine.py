@@ -77,11 +77,13 @@ class Pipeline(Workflow):
             bids_directory (optional): Path to a BIDS directory.
             caps_directory (optional): Path to a CAPS directory.
             tsv_file (optional): Path to a subjects-sessions `.tsv` file.
-            name (optional): Pipeline name.
+            overwrite_caps (optional): Boolean which specifies overwritten of output directory.
             base_dir (optional): Working directory (attribute of Nipype::Workflow class).
+            name (optional): Pipeline name.
         """
         import inspect
         import os
+        from tempfile import mkdtemp
         from colorama import Fore
         from clinica.utils.inputs import check_caps_folder
         from clinica.utils.inputs import check_bids_folder
@@ -99,10 +101,11 @@ class Pipeline(Workflow):
         self._info = {}
 
         if base_dir is None:
-            from tempfile import mkdtemp
             self.base_dir = mkdtemp()
+            self._base_dir_was_specified = False
         else:
             self.base_dir = base_dir
+            self._base_dir_was_specified = True
 
         if name:
             self._name = name
@@ -232,7 +235,7 @@ class Pipeline(Workflow):
 
         This method first checks it has already been run. It then checks
         the pipelines dependencies and, in this order, builds the core nodes,
-        the input node and, finally, the ouput node of the Pipeline.
+        the input node and, finally, the output node of the Pipeline.
 
         Since this method returns the concerned object, it can be chained to
         any other method of the Pipeline class.
@@ -257,7 +260,7 @@ class Pipeline(Workflow):
         run it.
         It also checks whether there is enough space left on the disks, and if
         the number of threads to run in parallel is consistent with what is
-        possible on the CPU
+        possible on the CPU.
 
         Args:
             Similar to those of Workflow.run.
@@ -265,6 +268,7 @@ class Pipeline(Workflow):
         Returns:
             An execution graph (see Workflow.run).
         """
+        import shutil
         from networkx import Graph, NetworkXError
         from colorama import Fore
         from clinica.utils.ux import print_failed_images
@@ -280,6 +284,9 @@ class Pipeline(Workflow):
         exec_graph = []
         try:
             exec_graph = Workflow.run(self, plugin, plugin_args, update_hash)
+            if not self.base_dir_was_specified:
+                shutil.rmtree(self.base_dir)
+
         except RuntimeError as e:
             # Check that it is a Nipype error
             if 'Workflow did not execute cleanly. Check log for details' in str(e):
@@ -369,7 +376,7 @@ class Pipeline(Workflow):
             elif d['type'] == 'pipeline':
                 pass
             else:
-                raise Exception("Unknown dependency type: '%s'." % d['type'])
+                raise Exception("Pipeline::check_dependencies() Unknown dependency type: '%s'." % d['type'])
 
         self.check_custom_dependencies()
 
@@ -802,6 +809,9 @@ class Pipeline(Workflow):
                         Fore.GREEN + 'Conversion succeeded. Your clinica-compliant'
                         + ' dataset is located here: ' + proposed_bids
                         + Fore.RESET)
+
+    @property
+    def base_dir_was_specified(self): return self._base_dir_was_specified
 
     @property
     def is_built(self): return self._is_built

@@ -51,7 +51,6 @@ class T1VolumeDartel2MNICLI(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
-        import os
         from networkx import Graph
         from .t1_volume_dartel2mni_pipeline import T1VolumeDartel2MNI
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
@@ -79,6 +78,6 @@ class T1VolumeDartel2MNICLI(ce.CmdParser):
             exec_pipeline = pipeline.run()
 
         if isinstance(exec_pipeline, Graph):
-            print_end_pipeline(self.name, os.path.join(pipeline.base_dir, self.name))
+            print_end_pipeline(self.name, pipeline.base_dir, pipeline.base_dir_was_specified)
         else:
             print_crash_files_and_exit(args.logname, pipeline.base_dir)

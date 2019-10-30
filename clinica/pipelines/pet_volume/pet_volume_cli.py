@@ -59,7 +59,6 @@ class PETVolumeCLI(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
-        import os
         from networkx import Graph
         from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
         from clinica.utils.check_dependency import verify_cat12_atlases
@@ -94,6 +93,6 @@ class PETVolumeCLI(ce.CmdParser):
             exec_pipeline = pipeline.run()
 
         if isinstance(exec_pipeline, Graph):
-            print_end_pipeline(self.name, os.path.join(pipeline.base_dir, self.name))
+            print_end_pipeline(self.name, pipeline.base_dir, pipeline.base_dir_was_specified)
         else:
             print_crash_files_and_exit(args.logname, pipeline.base_dir)

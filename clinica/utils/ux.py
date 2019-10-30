@@ -49,15 +49,19 @@ def print_end_image(image_id):
     cprint('%s[%s]%s %s' % (Fore.GREEN, now, Fore.RESET, end_message))
 
 
-def print_end_pipeline(cli_name, working_directory):
+def print_end_pipeline(cli_name, working_directory, working_directory_was_specified):
     """Print end pipeline message after its execution."""
     import datetime
     from colorama import Fore
     from .stream import cprint
 
     now = datetime.datetime.now().strftime('%H:%M:%S')
-    cprint('%s[%s]%s The %s pipeline has completed. You can now delete the working directory (%s).' %
-           (Fore.GREEN, now, Fore.RESET, cli_name, working_directory))
+    if working_directory_was_specified:
+        cprint('%s[%s]%s The %s pipeline has completed. You can now delete the working directory (%s).' %
+               (Fore.GREEN, now, Fore.RESET, cli_name, working_directory))
+    else:
+        cprint('%s[%s]%s The %s pipeline has completed. Working directory was automatically deleted.' %
+               (Fore.GREEN, now, Fore.RESET, cli_name))
 
 
 def print_failed_images(cli_name, image_ids):
