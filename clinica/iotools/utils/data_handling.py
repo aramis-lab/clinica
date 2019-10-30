@@ -877,8 +877,8 @@ def is_centered(nii_volume, threshold_l2=50):
         nii_volume: path to NIfTI volume
         threshold_l2: maximum distance between origin of the world coordinate system and the center of the volume to
                     be considered centered. The threshold were SPM segmentation stops working is around 100 mm
-                    (it was determined empirically after several trials on a genrated dataset), so default value is 80
-                    mm in order to have a security margin)
+                    (it was determined empirically after several trials on a genrated dataset), so default value is 50
+                    mm in order to have a security margin, even when dealing with coregistred files afterward)
 
     Returns:
         True or False
