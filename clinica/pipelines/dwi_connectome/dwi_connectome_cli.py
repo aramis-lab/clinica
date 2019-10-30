@@ -6,19 +6,16 @@ import clinica.engine as ce
 class DwiConnectomeCli(ce.CmdParser):
 
     def define_name(self):
-        """Define the sub-command name to run this pipeline.
-        """
+        """Define the sub-command name to run this pipeline."""
         self._name = 'dwi-connectome'
 
     def define_description(self):
-        """Define a description of this pipeline.
-        """
+        """Define a description of this pipeline."""
         self._description = ('Connectome-based processing of DWI datasets:\n'
                              'http://clinica.run/doc/DWI_Connectome')
 
     def define_options(self):
-        """Define the sub-command arguments
-        """
+        """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
@@ -34,13 +31,11 @@ class DwiConnectomeCli(ce.CmdParser):
         self.add_clinica_standard_arguments()
 
     def run_command(self, args):
-        """
-        """
+        """Run the pipeline with defined args."""
         import os
-        import datetime
-        from colorama import Fore
-        from clinica.utils.stream import cprint
+        from networkx import Graph
         from .dwi_connectome_pipeline import DwiConnectome
+        from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         pipeline = DwiConnectome(
             caps_directory=self.absolute_path(args.caps_directory),
@@ -50,13 +45,14 @@ class DwiConnectomeCli(ce.CmdParser):
         pipeline.parameters = {
             'n_tracks': args.n_tracks or 1000000,
         }
-        if args.n_procs:
-            pipeline.run(plugin='MultiProc',
-                         plugin_args={'n_procs': args.n_procs})
-        else:
-            pipeline.run()
 
-        now = datetime.datetime.now().strftime('%H:%M:%S')
-        cprint('%s[%s]%s The %s pipeline has completed. You can now delete the working directory (%s).' %
-               (Fore.GREEN, now, Fore.RESET, self._name,
-                os.path.join(os.path.abspath(args.working_directory), pipeline.__class__.__name__)))
+        if args.n_procs:
+            exec_pipeline = pipeline.run(plugin='MultiProc',
+                                         plugin_args={'n_procs': args.n_procs})
+        else:
+            exec_pipeline = pipeline.run()
+
+        if isinstance(exec_pipeline, Graph):
+            print_end_pipeline(self.name, os.path.join(pipeline.base_dir, self.name))
+        else:
+            print_crash_files_and_exit(args.logname, pipeline.base_dir)

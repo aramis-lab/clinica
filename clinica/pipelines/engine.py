@@ -138,9 +138,13 @@ class Pipeline(Workflow):
             [ ] Make it abstract to force overload in future pipelines
         """
         from clinica.utils.exceptions import ClinicaException
+        import datetime
         from colorama import Fore
-        raise ClinicaException('%sImplementation on which image(s) are on CAPS folder failed will appear soon.%s'
-                               % (Fore.RED, Fore.RESET))
+        from clinica.utils.stream import cprint
+        now = datetime.datetime.now().strftime('%H:%M:%S')
+        cprint('\n%s[%s] Pipeline finished with errors.%s\n' % (Fore.RED, now, Fore.RESET))
+        cprint('%sCAPS outputs were not found for some image(s):%s' % (Fore.RED, Fore.RESET))
+        raise ClinicaException('Implementation on which image(s) failed will appear soon.')
 
     def get_subject_session_list(self, input_dir, tsv_file, is_bids_dir, base_dir):
         """Parse a BIDS or CAPS directory to get the subjects and sessions.

@@ -6,19 +6,16 @@ import clinica.engine as ce
 class T1VolumeDartel2MNICLI(ce.CmdParser):
 
     def define_name(self):
-        """Define the sub-command name to run this pipelines.
-        """
+        """Define the sub-command name to run this pipeline."""
         self._name = 't1-volume-dartel2mni'
 
     def define_description(self):
-        """Define a description of this pipeline.
-        """
+        """Define a description of this pipeline."""
         self._description = ('Register DARTEL template to MNI space:\n'
                              'http://clinica.run/doc/Pipelines/T1_Volume/')
 
     def define_options(self):
-        """Define the sub-command arguments
-        """
+        """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
@@ -53,10 +50,11 @@ class T1VolumeDartel2MNICLI(ce.CmdParser):
                                    "(default: --voxel_size 1.5 1.5 1.5).")
 
     def run_command(self, args):
-        """
-        """
-        from clinica.utils.stream import cprint
+        """Run the pipeline with defined args."""
+        import os
+        from networkx import Graph
         from .t1_volume_dartel2mni_pipeline import T1VolumeDartel2MNI
+        from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         pipeline = T1VolumeDartel2MNI(
                 bids_directory=self.absolute_path(args.bids_directory),
@@ -75,8 +73,12 @@ class T1VolumeDartel2MNICLI(ce.CmdParser):
         })
 
         if args.n_procs:
-            pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
+            exec_pipeline = pipeline.run(plugin='MultiProc',
+                                         plugin_args={'n_procs': args.n_procs})
         else:
-            pipeline.run()
+            exec_pipeline = pipeline.run()
 
-        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")
+        if isinstance(exec_pipeline, Graph):
+            print_end_pipeline(self.name, os.path.join(pipeline.base_dir, self.name))
+        else:
+            print_crash_files_and_exit(args.logname, pipeline.base_dir)
