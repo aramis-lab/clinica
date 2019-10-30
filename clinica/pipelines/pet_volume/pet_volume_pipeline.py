@@ -349,7 +349,7 @@ class PETVolume(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
         from clinica.utils.io import zip_nii
-        from clinica.utils.io import fix_join
+        from clinica.utils.nipype import fix_join
         import re
         import clinica.pipelines.pet_volume.pet_volume_utils as utils
 

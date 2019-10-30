@@ -234,7 +234,7 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        from clinica.utils.io import fix_join
+        from clinica.utils.nipype import fix_join
         import clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_utils as utils
 
         # Find container path from DWI filename

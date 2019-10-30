@@ -142,8 +142,8 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         import nipype.interfaces.io as nio
         import nipype.interfaces.spm as spm
         from ..t1_volume_tissue_segmentation import t1_volume_tissue_segmentation_utils as seg_utils
-        from clinica.utils.io import unzip_nii
-        from clinica.utils.io import (fix_join, zip_nii)
+        from clinica.utils.io import unzip_nii, zip_nii
+        from clinica.utils.nipype import fix_join
         from clinica.utils.spm import get_tpm
 
         # Get Tissue Probability Map from SPM
