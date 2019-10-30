@@ -83,7 +83,8 @@ class Pipeline(Workflow):
         import inspect
         import os
         from colorama import Fore
-        from clinica.utils.io import check_bids_folder, check_caps_folder
+        from clinica.utils.inputs import check_caps_folder
+        from clinica.utils.inputs import check_bids_folder
         from clinica.utils.exceptions import ClinicaException
 
         self._is_built = False

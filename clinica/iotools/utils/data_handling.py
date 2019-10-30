@@ -611,7 +611,7 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
         List of the centered files
     """
     from colorama import Fore
-    from clinica.utils.io import check_bids_folder
+    from clinica.utils.inputs import check_bids_folder
     from clinica.utils.exceptions import ClinicaBIDSError
     from os.path import join, basename
     from glob import glob

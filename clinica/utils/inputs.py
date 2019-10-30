@@ -48,6 +48,78 @@ def determine_caps_or_bids(input_dir):
                 raise RuntimeError('Could not determine if ' + input_dir + ' is a CAPS or BIDS directory')
 
 
+def check_bids_folder(bids_directory):
+    """
+    check_bids_folder function checks the following items:
+        - bids_directory is a string
+        - the provided path exists and is a directory
+        - provided path is not a CAPS folder (BIDS and CAPS could be swapped by user). We simply check that there is
+          not a folder called 'subjects' in the provided path (that exists in CAPS hierarchy)
+        - provided folder is not empty
+        - provided folder must contains at least one directory whose name starts with 'sub-'
+    """
+    from os.path import isdir, join
+    from os import listdir
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaBIDSError
+
+    assert isinstance(bids_directory, str), 'Argument you provided to check_bids_folder() is not a string.'
+
+    if not isdir(bids_directory):
+        raise ClinicaBIDSError(Fore.RED + '\n[Error] The BIDS directory you gave is not a folder.\n' + Fore.RESET
+                               + Fore.YELLOW + '\nError explanations:\n' + Fore.RESET
+                               + ' - Clinica expected the following path to be a folder:' + Fore.BLUE + bids_directory
+                               + Fore.RESET + '\n'
+                               + ' - If you gave relative path, did you run Clinica on the good folder?')
+
+    if isdir(join(bids_directory, 'subjects')):
+        raise ClinicaBIDSError(Fore.RED + '\n[Error] The BIDS directory (' + bids_directory + ') you provided seems to '
+                               + 'be a CAPS directory due to the presence of a \'subjects\' folder.' + Fore.RESET)
+
+    if len(listdir(bids_directory)) == 0:
+        raise ClinicaBIDSError(Fore.RED + '\n[Error] The BIDS directory you provided  is empty. (' + bids_directory
+                               + ').' + Fore.RESET)
+
+    if len([item for item in listdir(bids_directory) if item.startswith('sub-')]) == 0:
+        raise ClinicaBIDSError(Fore.RED + '\n[Error] Your BIDS directory does not contains a single folder whose name '
+                               + 'starts with \'sub-\'. Check that your folder follow BIDS standard' + Fore.RESET)
+
+
+def check_caps_folder(caps_directory):
+    """
+    check_caps_folder function checks the following items:
+        - caps_directory is a string
+        - the provided path exists and is a directory
+        - provided path is not a BIDS folder (BIDS and CAPS could be swapped by user). We simply check that there is
+          not a folder whose name starts with 'sub-' in the provided path (that exists in BIDS hierarchy)
+    Keep in mind that CAPS folder can be empty
+    """
+    from os import listdir
+    import os
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaCAPSError
+
+    assert isinstance(caps_directory, str), 'Argument you provided to check_caps_folder() is not a string.'
+
+    if not os.path.isdir(caps_directory):
+        raise ClinicaCAPSError(Fore.RED + '\n[Error] The CAPS directory you gave is not a folder.\n' + Fore.RESET
+                               + Fore.YELLOW + '\nError explanations:\n' + Fore.RESET
+                               + ' - Clinica expected the following path to be a folder:' + Fore.BLUE + caps_directory
+                               + Fore.RESET + '\n'
+                               + ' - If you gave relative path, did you run Clinica on the good folder?')
+
+    sub_folders = [item for item in listdir(caps_directory) if item.startswith('sub-')]
+    if len(sub_folders) > 0:
+        error_string = '\n[Error] Your CAPS directory contains at least one folder whose name ' \
+                       + 'starts with \'sub-\'. Check that you did not swap BIDS and CAPS folders.\n' \
+                       + ' Folder(s) found that match(es) BIDS architecture:\n'
+        for dir in sub_folders:
+            error_string += '\t' + dir + '\n'
+        error_string += 'A CAPS directory has a folder \'subjects\' at its root, in which are stored the output ' \
+                        + 'of the pipeline for each subject.'
+        raise ClinicaCAPSError(error_string)
+
+
 def clinica_file_reader(subjects,
                         sessions,
                         input_directory,
@@ -127,7 +199,6 @@ def clinica_file_reader(subjects,
     """
 
     from os.path import join
-    from clinica.utils.io import check_bids_folder, check_caps_folder
     from colorama import Fore
     from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
 
@@ -213,7 +284,6 @@ def clinica_group_reader(caps_directory, information, raise_exception=True):
     Raises:
         ClinicaCAPSError if no file is found, or more than 1 files are found
     """
-    from clinica.utils.io import check_caps_folder
     from os.path import join
     from colorama import Fore
     from clinica.utils.exceptions import ClinicaCAPSError
