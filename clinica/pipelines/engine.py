@@ -129,6 +129,19 @@ class Pipeline(Workflow):
 
         self.init_nodes()
 
+    @staticmethod
+    def get_processed_images(caps_directory, subjects, sessions):
+        """Extract processed image IDs in `caps_directory` based on `subjects`_`sessions`.
+
+        Todo:
+            [ ] Implement this static method in all pipelines
+            [ ] Make it abstract to force overload in future pipelines
+        """
+        from clinica.utils.exceptions import ClinicaException
+        from colorama import Fore
+        raise ClinicaException('%sImplementation on which image(s) are on CAPS folder failed will appear soon.%s'
+                               % (Fore.RED, Fore.RESET))
+
     def get_subject_session_list(self, input_dir, tsv_file, is_bids_dir, base_dir):
         """Parse a BIDS or CAPS directory to get the subjects and sessions.
 
@@ -148,9 +161,8 @@ class Pipeline(Workflow):
 
         Todo:
             [ ] Overload get_subject_session_list on each sub-classes
-            [ ] Set Pipeline::get_subject_session_list as abstract method
+            [ ] Set Pipeline::get_subject_session_list as abstract method?
             [ ] Update Jinja file for clinica generate template
-            [ ] Make it static?
         """
         from clinica.utils.io import get_subject_session_list
         self._sessions, self._subjects = get_subject_session_list(
@@ -248,9 +260,11 @@ class Pipeline(Workflow):
         Returns:
             An execution graph (see Workflow.run).
         """
-        from networkx import NetworkXError
+        from networkx import Graph, NetworkXError
         from colorama import Fore
+        from clinica.utils.ux import print_failed_images
         from clinica.utils.stream import cprint
+
         if not self.is_built:
             self.build()
         self.check_not_cross_sectional()
@@ -258,18 +272,19 @@ class Pipeline(Workflow):
             self.check_size()
             plugin_args = self.update_parallelize_info(plugin_args)
             plugin = 'MultiProc'
-        execgraph = []
+        exec_graph = []
         try:
-            execgraph = Workflow.run(self, plugin, plugin_args, update_hash)
+            exec_graph = Workflow.run(self, plugin, plugin_args, update_hash)
         except NetworkXError:
             cprint('%sEither all the images were already run by the pipeline or no image was found '
-                   'to run the pipeline. The program will now exit.\n%s' % (Fore.BLUE, Fore.RESET))
-        return execgraph
+                   'to run the pipeline.\n%s' % (Fore.BLUE, Fore.RESET))
+            exec_graph = Graph()
+        return exec_graph
 
     def load_info(self):
         """Loads the associated info.json file.
 
-        Todos:
+        Todo:
             - [ ] Raise an appropriate exception when the info file can't open
 
         Raises:
@@ -291,7 +306,7 @@ class Pipeline(Workflow):
         exception if a program in the list does not exist or if environment
         variables are not properly defined.
 
-        Todos:
+        Todo:
             - [ ] MATLAB toolbox dependency checking
             - [x] check MATLAB
             - [ ] Clinica pipelines dependency checkings
