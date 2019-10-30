@@ -6,19 +6,16 @@ import clinica.engine as ce
 class StatisticsSurfaceCLI(ce.CmdParser):
 
     def define_name(self):
-        """Define the sub-command name to run this pipelines.
-        """
+        """Define the sub-command name to run this pipeline."""
         self._name = 'statistics-surface'
 
     def define_description(self):
-        """Define a description of this pipeline.
-        """
+        """Define a description of this pipeline."""
         self._description = ('Surface-based mass-univariate analysis with SurfStat:\n'
                              'http://clinica.run/doc/Pipelines/Stats_Surface/')
 
     def define_options(self):
-        """Define the sub-command arguments
-        """
+        """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         from colorama import Fore
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
@@ -84,19 +81,21 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                                    '(default: --cluster_threshold 0.001).')
 
     def run_command(self, args):
-        """
-        Run the pipelines with defined args
-        """
-        from clinica.pipelines.statistics_surface.statistics_surface_pipeline import StatisticsSurface
-        from clinica.pipelines.statistics_surface.statistics_surface_utils import check_inputs
-        from clinica.utils.stream import cprint
+        """Run the pipeline with defined args."""
         import os
+        from networkx import Graph
+        from .statistics_surface_pipeline import StatisticsSurface
+        from .statistics_surface_utils import check_inputs
+        from clinica.utils.stream import cprint
+        from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
+        from clinica.utils.exceptions import ClinicaException
 
         if args.feature_type is not None:
             if args.custom_file is not None:
-                raise Exception('--feature_type and --custom_file are mutually exclusive: you must choose between one or the other. See documentation for more information.')
+                raise ClinicaException('--feature_type and --custom_file are mutually exclusive: you must choose '
+                                       'between one or the other. See documentation for more information.')
             if args.feature_label is not None:
-                raise Exception('--feature_label should not be used with --feature_type')
+                raise ClinicaException('--feature_label should not be used with --feature_type.')
             # FreeSurfer cortical thickness
             if args.feature_type == 'cortical_thickness':
                 args.custom_file = '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
@@ -129,7 +128,8 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                 args.custom_file = '@subject/@session/noddi/postprocessing/dti-register-vertex-fsaverage/cortex-projection/@subject_@session_OnFsaverage_fwhm-@fwhm_measure-ad_hemi-@hemi.mgh'
                 args.feature_label = 'AD'
             else:
-                raise Exception('Feature type ' + args.feature_type + ' not recognized. Use --custom_file to specify your own files (without --feature_type).')
+                raise ClinicaException('Feature type ' + args.feature_type + ' not recognized. Use --custom_file '
+                                       'to specify your own files (without --feature_type).')
         elif args.feature_type is None:
             if args.custom_file is None:
                 cprint('No feature type selected: using cortical thickness as default value')
@@ -138,12 +138,16 @@ class StatisticsSurfaceCLI(ce.CmdParser):
             else:
                 cprint('Using custom features.')
                 if args.feature_label is None:
-                    raise Exception('You must specify a --feature_label when using the --custom_files flag')
+                    raise ClinicaException('You must specify a --feature_label when using the --custom_files flag.')
 
         # Check if the group label has been existed, if yes, give an error to the users
+        # Note(AR): if the user wants to compare Cortical Thickness measure with PET measure
+        # using the group_id, Clinica won't allow it.
+        # TODO: Modify this behaviour
         if os.path.exists(os.path.join(os.path.abspath(self.absolute_path(args.caps_directory)), 'groups', 'group-' + args.group_id)):
-            error_message = 'group_id: ' + args.group_id + ' already exists, please choose another one or delete the existing folder and also the working directory and rerun the pipeline'
-            raise Exception(error_message)
+            error_message = 'group_id: ' + args.group_id + ' already exists, please choose another one or delete ' \
+                            'the existing folder and also the working directory and rerun the pipeline'
+            raise ClinicaException(error_message)
 
         pipeline = StatisticsSurface(
             caps_directory=self.absolute_path(args.caps_directory),
@@ -170,11 +174,16 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                      pipeline.parameters['full_width_at_half_maximum'],
                      pipeline.tsv_file)
 
-        if args.n_procs:
-            pipeline.run(plugin='MultiProc',
-                         plugin_args={'n_procs': args.n_procs})
-        else:
-            print(pipeline.parameters)
-            pipeline.run()
+        cprint("Parameters used for this pipeline:")
+        cprint(pipeline.parameters)
 
-        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")
+        if args.n_procs:
+            exec_pipeline = pipeline.run(plugin='MultiProc',
+                                         plugin_args={'n_procs': args.n_procs})
+        else:
+            exec_pipeline = pipeline.run()
+
+        if isinstance(exec_pipeline, Graph):
+            print_end_pipeline(self.name, os.path.join(pipeline.base_dir, self.name))
+        else:
+            print_crash_files_and_exit(args.logname, pipeline.base_dir)

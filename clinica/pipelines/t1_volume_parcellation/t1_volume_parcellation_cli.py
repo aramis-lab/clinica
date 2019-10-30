@@ -6,19 +6,16 @@ import clinica.engine as ce
 class T1VolumeParcellationCLI(ce.CmdParser):
 
     def define_name(self):
-        """Define the sub-command name to run this pipeline.
-        """
+        """Define the sub-command name to run this pipeline."""
         self._name = 't1-volume-parcellation'
 
     def define_description(self):
-        """Define a description of this pipeline.
-        """
+        """Define a description of this pipeline."""
         self._description = ('Computation of mean GM concentration for a set of regions:\n'
                              'http://clinica.run/doc/Pipelines/T1_Volume/')
 
     def define_options(self):
-        """Define the sub-command arguments
-        """
+        """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
@@ -41,11 +38,12 @@ class T1VolumeParcellationCLI(ce.CmdParser):
                                    'all atlases i.e. --atlases AAL2 AICHA Hammers LPBA40 Neuromorphometrics).')
 
     def run_command(self, args):
-        """
-        """
+        """Run the pipeline with defined args."""
+        import os
+        from networkx import Graph
         from .t1_volume_parcellation_pipeline import T1VolumeParcellation
-        from clinica.utils.stream import cprint
         from clinica.utils.check_dependency import verify_cat12_atlases
+        from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         pipeline = T1VolumeParcellation(
             caps_directory=self.absolute_path(args.caps_directory),
@@ -66,8 +64,12 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         }
 
         if args.n_procs:
-            pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
+            exec_pipeline = pipeline.run(plugin='MultiProc',
+                                         plugin_args={'n_procs': args.n_procs})
         else:
-            pipeline.run()
+            exec_pipeline = pipeline.run()
 
-        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")
+        if isinstance(exec_pipeline, Graph):
+            print_end_pipeline(self.name, os.path.join(pipeline.base_dir, self.name))
+        else:
+            print_crash_files_and_exit(args.logname, pipeline.base_dir)

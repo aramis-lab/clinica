@@ -4,23 +4,18 @@ import clinica.engine as ce
 
 
 class fMRIPreprocessingCLI(ce.CmdParser):
-    """
-    """
 
     def define_name(self):
-        """Define the sub-command name to run this pipelines.
-        """
+        """Define the sub-command name to run this pipeline."""
         self._name = 'fmri-preprocessing'
 
     def define_description(self):
-        """Define a description of this pipeline.
-        """
+        """Define a description of this pipeline."""
         self._description = ('Preprocessing of raw fMRI datasets:\n'
                              'http://clinica.run/doc/Pipelines/fMRI_Preprocessing/')
 
     def define_options(self):
-        """Define the sub-command arguments
-        """
+        """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
@@ -61,10 +56,11 @@ class fMRIPreprocessingCLI(ce.CmdParser):
         #                          help='SLURM\'s sbatch tool arguments.')
 
     def run_command(self, args):
-        """
-        """
-        from clinica.utils.stream import cprint
+        """Run the pipeline with defined args."""
+        import os
+        from networkx import Graph
         from .fmri_preprocessing_pipeline import fMRIPreprocessing
+        from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         pipeline = fMRIPreprocessing(
             bids_directory=self.absolute_path(args.bids_directory),
@@ -80,12 +76,16 @@ class fMRIPreprocessingCLI(ce.CmdParser):
         }
 
         if args.n_procs:
-            pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
-#        elif args.slurm:
-#            pipeline.run(plugin='SLURMGraph', plugin_args={
-#                'dont_resubmit_completed_jobs': True, 'sbatch_args':
-#                    args.sbatch_args})
+            exec_pipeline = pipeline.run(plugin='MultiProc',
+                                         plugin_args={'n_procs': args.n_procs})
+        # elif args.slurm:
+        #     exec_pipeline = pipeline.run(plugin='SLURMGraph',
+        #                                  plugin_args={'dont_resubmit_completed_jobs': True,
+        #                                               'sbatch_args': args.sbatch_args})
         else:
-            pipeline.run()
+            exec_pipeline = pipeline.run()
 
-        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")
+        if isinstance(exec_pipeline, Graph):
+            print_end_pipeline(self.name, os.path.join(pipeline.base_dir, self.name))
+        else:
+            print_crash_files_and_exit(args.logname, pipeline.base_dir)

@@ -6,17 +6,16 @@ import clinica.engine as ce
 class SpatialSVMCLI(ce.CmdParser):
 
     def define_name(self):
-        """Define the sub-command name to run this pipeline.
-        """
+        """Define the sub-command name to run this pipeline."""
         self._name = 'machinelearning-prepare-spatial-svm'
 
     def define_description(self):
+        """Define a description of this pipeline."""
         self._description = ('Prepare input data for SVM with spatial and anatomical regularization:\n'
                              'http://clinica.run/doc/MachineLeaning_PrepareSpatialSVM')
 
     def define_options(self):
-        """Define the sub-command arguments
-        """
+        """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
@@ -43,10 +42,11 @@ class SpatialSVMCLI(ce.CmdParser):
                               help="Force the use of non PVC PET data (by default, PVC PET data are used)")
 
     def run_command(self, args):
-        """
-        """
-        from clinica.utils.stream import cprint
-        from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
+        """Run the pipeline with defined args."""
+        import os
+        from networkx import Graph
+        from .spatial_svm_pipeline import SpatialSVM
+        from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         pipeline = SpatialSVM(
             caps_directory=self.absolute_path(args.caps_directory),
@@ -63,8 +63,12 @@ class SpatialSVMCLI(ce.CmdParser):
         }
 
         if args.n_procs:
-            pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
+            exec_pipeline = pipeline.run(plugin='MultiProc',
+                                         plugin_args={'n_procs': args.n_procs})
         else:
-            pipeline.run()
+            exec_pipeline = pipeline.run()
 
-        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")
+        if isinstance(exec_pipeline, Graph):
+            print_end_pipeline(self.name, os.path.join(pipeline.base_dir, self.name))
+        else:
+            print_crash_files_and_exit(args.logname, pipeline.base_dir)

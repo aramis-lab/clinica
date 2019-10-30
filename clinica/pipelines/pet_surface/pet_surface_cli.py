@@ -16,19 +16,16 @@ __status__ = "Development"
 class PetSurfaceCLI(ce.CmdParser):
 
     def define_name(self):
-        """Define the sub-command name to run this pipeline.
-        """
+        """Define the sub-command name to run this pipeline."""
         self._name = 'pet-surface'
 
     def define_description(self):
-        """Define a description of this pipeline.
-        """
+        """Define a description of this pipeline."""
         self._description = ('Surface-based processing of PET images:\n'
                              'http://clinica.run/doc/Pipelines/PET_Surface/')
 
     def define_options(self):
-        """Define the sub-command arguments
-        """
+        """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
@@ -44,8 +41,11 @@ class PetSurfaceCLI(ce.CmdParser):
         self.add_clinica_standard_arguments()
 
     def run_command(self, args):
-        from clinica.utils.stream import cprint
+        """Run the pipeline with defined args."""
+        import os
+        from networkx import Graph
         from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
+        from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         pipeline = PetSurface(
             bids_directory=self.absolute_path(args.bids_directory),
@@ -58,9 +58,14 @@ class PetSurfaceCLI(ce.CmdParser):
             # Note(AR): Why n_procs is a parameter of pipeline dict?
             'n_procs': args.n_procs
         }
-        if args.n_procs:
-            pipeline.run(plugin='MultiProc', plugin_args={'n_procs': args.n_procs})
-        else:
-            pipeline.run()
 
-        cprint("The " + self._name + " pipeline has completed. You can now delete the working directory (" + args.working_directory + ").")
+        if args.n_procs:
+            exec_pipeline = pipeline.run(plugin='MultiProc',
+                                         plugin_args={'n_procs': args.n_procs})
+        else:
+            exec_pipeline = pipeline.run()
+
+        if isinstance(exec_pipeline, Graph):
+            print_end_pipeline(self.name, os.path.join(pipeline.base_dir, self.name))
+        else:
+            print_crash_files_and_exit(args.logname, pipeline.base_dir)
