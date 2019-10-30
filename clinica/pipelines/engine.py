@@ -169,7 +169,7 @@ class Pipeline(Workflow):
             [ ] Set Pipeline::get_subject_session_list as abstract method?
             [ ] Update Jinja file for clinica generate template
         """
-        from clinica.utils.io import get_subject_session_list
+        from clinica.utils.filemanip import get_subject_session_list
         self._sessions, self._subjects = get_subject_session_list(
             input_dir,
             tsv_file,
