@@ -594,7 +594,7 @@ def center_all_nifti(bids_dir, output_dir, modality, center_all_files=False):
     """
     Center all the NIfTI images of the input BIDS folder into the empty output_dir specified in argument.
     All the files from bids_dir are copied into output_dir, then all the NIfTI images we can found are replaced by their
-    centered version if their center if off the origin by more than 80 mm.
+    centered version if their center if off the origin by more than 50 mm.
 
     Args:
         bids_dir: (str) path to bids directory
