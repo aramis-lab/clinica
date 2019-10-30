@@ -64,7 +64,7 @@ def print_failed_images(cli_name, image_ids):
     """Print missing images in CAPS folder after a RuntimeError from Nipype."""
     import datetime
     from colorama import Fore
-    from .io import extract_subjects_sessions_from_filename
+    from .filemanip import extract_subjects_sessions_from_filename
     from .stream import cprint
     from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_utils import get_unique_subjects
     list_participant_id, list_session_id = extract_subjects_sessions_from_filename(image_ids)
@@ -88,7 +88,7 @@ def print_failed_images(cli_name, image_ids):
 def print_crash_files_and_exit(log_file, working_directory):
     """Print command(s) to type in order to extract details after a Nipype RuntimeError and exit with an exception."""
     from colorama import Fore
-    from .io import extract_crash_files_from_log_file
+    from .filemanip import extract_crash_files_from_log_file
     from .exceptions import ClinicaException
     from .stream import cprint
 

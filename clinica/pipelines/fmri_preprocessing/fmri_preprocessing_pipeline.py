@@ -345,7 +345,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.interfaces.spm as spm
         import nipype.pipeline.engine as npe
-        from clinica.utils.io import zip_nii, unzip_nii
+        from clinica.utils.filemanip import zip_nii, unzip_nii
 
         # Zipping
         # =======

@@ -188,7 +188,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
         import re
-        from clinica.utils.io import zip_nii
+        from clinica.utils.filemanip import zip_nii
 
         # Writing normalized images (and smoothed) into CAPS
         # ==================================================
@@ -227,7 +227,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         import nipype.interfaces.spm as spm
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
-        from clinica.utils.io import unzip_nii
+        from clinica.utils.filemanip import unzip_nii
         from ..t1_volume_dartel2mni import t1_volume_dartel2mni_utils as dartel2mni_utils
         from clinica.utils.spm import get_tpm
 

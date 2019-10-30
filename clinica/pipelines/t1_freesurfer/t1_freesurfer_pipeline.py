@@ -22,7 +22,7 @@ class T1FreeSurfer(cpe.Pipeline):
         import os
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1_FS_DESTRIEUX
-        from clinica.utils.io import extract_image_ids
+        from clinica.utils.filemanip import extract_image_ids
         image_ids = []
         if os.path.isdir(caps_directory):
             t1_freesurfer_files = clinica_file_reader(
@@ -36,7 +36,7 @@ class T1FreeSurfer(cpe.Pipeline):
         """Parse a BIDS or CAPS directory to get the subjects and sessions."""
         from colorama import Fore
         from clinica.utils.stream import cprint
-        from clinica.utils.io import extract_subjects_sessions_from_filename
+        from clinica.utils.filemanip import extract_subjects_sessions_from_filename
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1W_NII
 
@@ -109,7 +109,7 @@ class T1FreeSurfer(cpe.Pipeline):
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1W_NII
         from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
-        from clinica.utils.io import save_participants_sessions
+        from clinica.utils.filemanip import save_participants_sessions
 
         # Inputs from anat/ folder
         # ========================
