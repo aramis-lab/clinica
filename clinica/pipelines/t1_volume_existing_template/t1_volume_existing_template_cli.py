@@ -105,6 +105,6 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
             exec_pipeline = pipeline.run()
 
         if isinstance(exec_pipeline, Graph):
-            print_end_pipeline(self.name, os.path.join(pipeline.base_dir, self.name))
+            print_end_pipeline(self.name, pipeline.base_dir, pipeline.base_dir_was_specified)
         else:
             print_crash_files_and_exit(args.logname, pipeline.base_dir)
