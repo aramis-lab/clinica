@@ -17,31 +17,40 @@ class T1FreeSurfer(cpe.Pipeline):
         A clinica pipeline object containing the T1FreeSurfer pipeline.
     """
 
+    @staticmethod
+    def get_processed_images(caps_directory, subjects, sessions):
+        import os
+        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.input_files import T1_FS_DESTRIEUX
+        from clinica.utils.io import extract_image_ids
+        image_ids = []
+        if os.path.isdir(caps_directory):
+            t1_freesurfer_files = clinica_file_reader(
+                subjects, sessions,
+                caps_directory, T1_FS_DESTRIEUX, False
+            )
+            image_ids = extract_image_ids(t1_freesurfer_files)
+        return image_ids
+
     def get_subject_session_list(self, input_dir, tsv_file, is_bids_dir, base_dir):
         """Parse a BIDS or CAPS directory to get the subjects and sessions."""
-        import os
         from colorama import Fore
         from clinica.utils.stream import cprint
         from clinica.utils.io import extract_subjects_sessions_from_filename
         from clinica.utils.inputs import clinica_file_reader
-        import clinica.utils.input_files as input_files
+        from clinica.utils.input_files import T1W_NII
 
         super(T1FreeSurfer, self).get_subject_session_list(input_dir, tsv_file, is_bids_dir, base_dir)
 
         if not tsv_file:
             cprint("Selecting T1w files in BIDS directory")
             t1w_files = clinica_file_reader(self.subjects, self.sessions,
-                                            self.bids_directory, input_files.T1W_NII, False)
-            self._subjects, self._sessions = extract_subjects_sessions_from_filename(t1w_files)
+                                            self.bids_directory, T1W_NII, False)
+            self.subjects, self.sessions = extract_subjects_sessions_from_filename(t1w_files)
 
         # Display image(s) already present in CAPS folder
-        if os.path.isdir(self.caps_directory):
-            t1_freesurfer_files = clinica_file_reader(self.subjects, self.sessions,
-                                                      self.caps_directory, input_files.T1_FS_DESTRIEUX, False)
-        else:
-            t1_freesurfer_files = []
-
-        processed_participants, processed_sessions = extract_subjects_sessions_from_filename(t1_freesurfer_files)
+        output_ids = self.get_processed_images(self.caps_directory, self.subjects, self.sessions)
+        processed_participants, processed_sessions = extract_subjects_sessions_from_filename(output_ids)
         if len(processed_participants) > 0:
             cprint("%sClinica found %s image(s) already processed in CAPS directory:%s" %
                    (Fore.YELLOW, len(processed_participants), Fore.RESET))
