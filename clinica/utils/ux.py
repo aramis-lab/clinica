@@ -29,7 +29,7 @@ def print_begin_image(image_id, list_keys=None, list_values=None):
 
     assert(len(list_keys) == len(list_values))
 
-    begin_message = 'Running pipeline for %s' % (image_id.replace('_', ' | '))
+    begin_message = 'Running pipeline for %s' % (image_id.replace('_', '|'))
     if list_keys and list_values:
         begin_message += ' ('
         begin_message += ', '.join(key + ' = ' + value for key, value in zip(list_keys, list_values))
@@ -44,7 +44,7 @@ def print_end_image(image_id):
     from colorama import Fore
     from .stream import cprint
 
-    end_message = '%s has completed' % image_id.replace('_', ' | ')
+    end_message = '%s has completed' % image_id.replace('_', '|')
     now = datetime.datetime.now().strftime('%H:%M:%S')
     cprint('%s[%s]%s %s' % (Fore.GREEN, now, Fore.RESET, end_message))
 
@@ -60,28 +60,51 @@ def print_end_pipeline(cli_name, working_directory):
            (Fore.GREEN, now, Fore.RESET, cli_name, working_directory))
 
 
-def print_failed_images(cli_name, image_ids, log_file):
+def print_failed_images(cli_name, image_ids):
     """Print missing images in CAPS folder after a RuntimeError from Nipype."""
     import datetime
     from colorama import Fore
+    from .io import extract_subjects_sessions_from_filename
     from .stream import cprint
-    from .io import extract_crash_files_from_log_file
+    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_utils import get_unique_subjects
+    list_participant_id, list_session_id = extract_subjects_sessions_from_filename(image_ids)
+    unique_participants, sessions_per_participant = get_unique_subjects(list_participant_id, list_session_id)
 
-    missing_caps = ', '.join(
-        image_ids[i].split('_')[0][4:] + '|' + image_ids[i].split('_')[1][4:]
-        for i in range(len(image_ids)))
-
-    # Display summary of the pipeline
     now = datetime.datetime.now().strftime('%H:%M:%S')
     cprint('\n%s[%s] The %s pipeline finished with errors.%s\n' %
            (Fore.RED, now, cli_name, Fore.RESET))
-    cprint('%sCAPS outputs were not found for %s subject(s): %s%s\n' %
-           (Fore.RED, len(image_ids), missing_caps, Fore.RESET))
-    cprint('%sError details can be found either by opening the log file (%s) or '
-           'by opening the crash file(s) with the following command(s):%s' %
-           (Fore.YELLOW, log_file, Fore.RESET))
+    cprint('%sCAPS outputs were not found for %s image(s):%s' %
+           (Fore.RED, len(image_ids), Fore.RESET))
+    for i in range(0, min(len(unique_participants), LINES_TO_DISPLAY)):
+        sessions_i_th_participant = ', '.join(s_id for s_id in sessions_per_participant[i])
+        cprint("\t%s%s | %s%s" % (Fore.RED, unique_participants[i], sessions_i_th_participant, Fore.RESET))
+
+    if len(unique_participants) > LINES_TO_DISPLAY:
+        cprint("\t...")
+        sessions_last_participant = ', '.join(s_id for s_id in sessions_per_participant[-1])
+        cprint("\t%s%s | %s%s" % (Fore.RED, unique_participants[-1], sessions_last_participant, Fore.RESET))
+
+
+def print_crash_files_and_exit(log_file, working_directory):
+    """Print command(s) to type in order to extract details after a Nipype RuntimeError and exit with an exception."""
+    from colorama import Fore
+    from .io import extract_crash_files_from_log_file
+    from .exceptions import ClinicaException
+    from .stream import cprint
+
+    cprint('%s\nError details can be found by opening the crash file(s) with the following command(s):%s' %
+           (Fore.YELLOW, Fore.RESET))
 
     crash_files = extract_crash_files_from_log_file(log_file)
     for file in crash_files:
         cprint('%s- nipypecli crash %s%s' %
                (Fore.YELLOW, file,  Fore.RESET))
+
+    cprint('%s\n'
+           'If your pipeline crashed due to lack of space of network issues, '
+           're-run the pipeline with the working directory (-wd %s).\n'
+           'Known issues are displayed here: http://www.clinica.run/doc/InteractingWithClinica/#known-issues\n'
+           'Otherwise, you can delete it.%s' %
+           (Fore.YELLOW, working_directory, Fore.RESET))
+    # Force the display of "Documentation can be found..."
+    raise ClinicaException('')

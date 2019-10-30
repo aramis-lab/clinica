@@ -275,6 +275,20 @@ class Pipeline(Workflow):
         exec_graph = []
         try:
             exec_graph = Workflow.run(self, plugin, plugin_args, update_hash)
+        except RuntimeError as e:
+            # Check that it is a Nipype error
+            if 'Workflow did not execute cleanly. Check log for details' in str(e):
+                input_ids = [p_id + '_' + s_id
+                             for p_id, s_id in zip(self.subjects, self.sessions)]
+                output_ids = self.get_processed_images(
+                    caps_directory=self.caps_directory,
+                    subjects=self.subjects,
+                    sessions=self.sessions
+                )
+                missing_ids = list(set(input_ids) - set(output_ids))
+                print_failed_images(self.name, missing_ids)
+            else:
+                raise e
         except NetworkXError:
             cprint('%sEither all the images were already run by the pipeline or no image was found '
                    'to run the pipeline.\n%s' % (Fore.BLUE, Fore.RESET))
