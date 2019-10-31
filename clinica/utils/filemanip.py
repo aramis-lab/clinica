@@ -224,3 +224,54 @@ def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_sess
 
     participant_ids, session_ids = read_participant_tsv(ss_file)
     return session_ids, participant_ids
+
+
+def get_unique_subjects(in_subject_list, in_session_list):
+    """Get unique participant IDs
+
+    The function to read the .tsv file returns the following
+    participant_id and session_id lists:
+    participant1, participant1, ..., participant2, participant2, ...
+    session1    , session2    , ..., session1    , session2    , ...
+    This function returns a list where all participants are only selected
+    once:
+    participant1, participant2, ..., participant_n
+    and for each participant, the list of corresponding session id
+    eg.:
+    participant1 -> [session1, session2]
+    participant2 -> [session1]
+    ...
+    participant_n -> [session1, session2, session3]
+
+    Args:
+        in_subject_list (list of strings): list of participant_id
+        in_session_list (list of strings): list of session_id
+
+    Returns:
+        out_unique_subject_list (list of strings): list of
+            participant_id, where each participant appears only once
+        out_persubject_session_list2 (list of list): list of list
+            (list2) of session_id associated to any single participant
+    """
+
+    import numpy as np
+
+    subject_array = np.array(in_subject_list)
+    session_array = np.array(in_session_list)
+
+    # The second returned element indicates for each participant_id the
+    # element they correspond to in the 'unique' list. We will use this
+    # to link each session_id in the repeated list of session_id to
+    # their corresponding unique participant_id
+
+    unique_subject_array, out_inverse_positions = np.unique(
+        subject_array, return_inverse=True)
+    out_unique_subject_list = unique_subject_array.tolist()
+
+    subject_number = len(out_unique_subject_list)
+    out_persubject_session_list2 = [
+        session_array[
+            out_inverse_positions == subject_index
+            ].tolist() for subject_index in range(subject_number)]
+
+    return out_unique_subject_list, out_persubject_session_list2
