@@ -1,0 +1,22 @@
+{
+    "id": "aramislab/deformetrica_preprocessing",
+    "author": "Alexis Guyot",
+    "version": "0.1.0",
+    "dependencies": [
+        {
+            "type": "binary",
+            "name": "clinica",
+            "version": ">=0.1.0"
+        },
+        {
+            "type": "software",
+            "name": "fsl",
+            "version": ">=5.0.9"
+        },
+        {
+            "type": "software",
+            "name": "freesurfer",
+            "version": ">=6"
+        }
+    ]
+}
