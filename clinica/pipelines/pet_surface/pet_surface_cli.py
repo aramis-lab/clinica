@@ -54,8 +54,6 @@ class PetSurfaceCLI(ce.CmdParser):
         )
         pipeline.parameters = {
             'pet_type': args.pet_tracer,
-            # Note(AR): Why n_procs is a parameter of pipeline dict?
-            'n_procs': args.n_procs
         }
 
         if args.n_procs:
