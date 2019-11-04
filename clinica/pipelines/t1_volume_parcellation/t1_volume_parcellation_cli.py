@@ -27,9 +27,6 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         self.add_clinica_standard_arguments()
         # Advanced arguments (i.e. tricky parameters)
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
-        advanced.add_argument("-m", "--modulation",
-                              metavar="[on|off]", default='on',
-                              help='Specify if modulation must be enabled (default: --modulation on')
         list_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
         advanced.add_argument("-atlases", "--atlases",
                               nargs='+', type=str, metavar='',
@@ -54,11 +51,9 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         # of the computed atlases
         args.atlases = verify_cat12_atlases(args.atlases)
 
-        assert args.modulation in ['on', 'off']
         pipeline.parameters = {
             'group_id': args.group_id,
             'atlases': args.atlases,
-            'modulate': args.modulation
         }
 
         if args.n_procs:
