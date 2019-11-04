@@ -39,7 +39,6 @@ class T1VolumeParcellationCLI(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
-        import os
         from networkx import Graph
         from .t1_volume_parcellation_pipeline import T1VolumeParcellation
         from clinica.utils.check_dependency import verify_cat12_atlases
@@ -59,7 +58,6 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         pipeline.parameters = {
             'group_id': args.group_id,
             'atlases': args.atlases,
-            'n_procs': args.n_procs,
             'modulate': args.modulation
         }
 
