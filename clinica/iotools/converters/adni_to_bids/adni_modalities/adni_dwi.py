@@ -77,7 +77,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     mri_list = pd.read_csv(path.join(csv_dir, 'MRILIST.csv'), sep=',', low_memory=False)
 
     # Selecting only DTI images that are not Multiband, processed or enchanced images
-    mri_list = mri_list[mri_list.SEQUENCE.map(lambda x: x.lower().find('dti') > -1)]
+    mri_list = mri_list[mri_list.SEQUENCE.str.contains('dti', case=False, na=False)]
     unwanted_sequences = ['MB', 'ADC', 'FA', 'TRACEW', 'Enhanced', 'Reg']
     mri_list = mri_list[mri_list.SEQUENCE.map(lambda x: not any(subs in x for subs in unwanted_sequences))]
 
@@ -143,14 +143,9 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
                          ('153_S_6336', 'bl'),
                          ('153_S_6450', 'bl')]
 
-    error_indices = []
-    for conv_error in conversion_errors:
-        error_indices.append((dwi_df.Subject_ID == conv_error[0])
-                             & (dwi_df.VISCODE == conv_error[1]))
-
-    if error_indices:
-        indices_to_remove = dwi_df.index[reduce(operator.or_, error_indices, False)]
-        dwi_df.drop(indices_to_remove, inplace=True)
+    # Removing known exceptions from images to convert
+    error_ind = dwi_df.index[dwi_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
+    dwi_df.drop(error_ind, inplace=True)
 
     # Checking for images paths in filesystem
     images = find_image_path(dwi_df, source_dir, 'DWI', 'S', 'Series_ID')
@@ -230,6 +225,17 @@ def dwi_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
 
 
 def generate_subject_files(subj, images, dest_dir, mod_to_update):
+    """
+
+    Args:
+        subj:
+        images:
+        dest_dir:
+        mod_to_update:
+
+    Returns:
+
+    """
     import clinica.iotools.bids_utils as bids
     import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
     from clinica.utils.stream import cprint
@@ -341,39 +347,3 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
                     else:
                         cprint('WARNING: CONVERSION FAILED...'
                                + ' for subject ' + subj + ' and session ' + ses)
-
-
-def check_exceptions(bids_dir):
-    from os import path
-    import pandas as pd
-    from glob import glob
-
-    dwi_paths = pd.read_csv(path.join(bids_dir, 'conversion_info', 'dwi_paths.tsv'), sep='\t')
-
-    dwi_paths = dwi_paths[dwi_paths.Path.notnull()]
-
-    dwi_paths['BIDS_SubjID'] = ['sub-ADNI' + s.replace('_', '') for s in dwi_paths.Subject_ID.to_list()]
-    dwi_paths['BIDS_Session'] = ['ses-' + s.replace('bl', 'm00').upper() for s in dwi_paths.VISCODE.to_list()]
-
-    count = 0
-    count_ADC = 0
-
-    for r in dwi_paths.iterrows():
-        image = r[1]
-        image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'dwi')
-        image_pattern = path.join(image_dir, '%s_%s_*' % (image.BIDS_SubjID, image.BIDS_Session))
-        files_list = glob(image_pattern)
-        if not files_list:
-            print("No images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
-            # count += 1
-
-        elif len(files_list) != 3:
-            if sum(["ADC" in f for f in files_list]):
-                count_ADC += 1
-            else:
-                print("Wrong files count for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
-                print(files_list)
-                count += 1
-
-    print(count)
-    print(count_ADC)

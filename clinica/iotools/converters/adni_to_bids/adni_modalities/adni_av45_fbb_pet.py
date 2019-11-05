@@ -61,15 +61,13 @@ def compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     import pandas as pd
     import os
-    import operator
     from os import path
     from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars, find_image_path
     from clinica.utils.stream import cprint
-    from functools import reduce
 
     pet_amyloid_col = ['Phase', 'Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID', 'Series_ID',
                        'Image_ID', 'Original', 'Tracer']
-    pet_amyloid_df = pd.DataFrame(columns=pet_amyloid_col)
+    pet_amyloid_dfs_list = []
 
     # Loading needed .csv files
     av45qc = pd.read_csv(path.join(csv_dir, 'AV45QC.csv'), sep=',', low_memory=False)
@@ -82,7 +80,7 @@ def compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         subject_pet_meta = pet_meta_list[pet_meta_list['Subject'] == subj]
 
         if subject_pet_meta.shape[0] < 1:
-            # TODO Log somewhere subjects without Amyloid PET images
+            # TODO Log subjects without Amyloid PET images
             # cprint('No Amyloid PET images metadata for subject - ' + subj)
             continue
 
@@ -99,7 +97,6 @@ def compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         for visit in list(amyloid_qc_subj.VISCODE2.unique()):
             amyloid_qc_visit = amyloid_qc_subj[amyloid_qc_subj.VISCODE2 == visit]
 
-            # TODO Check
             # If there are several scans for a timepoint we keep image acquired last (higher LONIUID)
             amyloid_qc_visit = amyloid_qc_visit.sort_values("LONIUID", ascending=False)
 
@@ -110,19 +107,17 @@ def compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
             original_pet_meta = subject_pet_meta[(subject_pet_meta['Orig/Proc'] == 'Original')
                                                  & (subject_pet_meta['Image ID'] == int_image_id)
-                                                 & (subject_pet_meta.Sequence.map(
-                                                        lambda s: (s.lower().find('early') < 0)))]
-
+                                                 & ~subject_pet_meta.Sequence.str.contains("early",
+                                                                                           case=False, na=False)]
             # If no corresponding Amyloid PET metadata for an original image,
             # take scan at the same date
             if original_pet_meta.shape[0] < 1:
                 original_pet_meta = subject_pet_meta[(subject_pet_meta['Orig/Proc'] == 'Original')
                                                      & (subject_pet_meta['Scan Date'] == qc_visit.EXAMDATE)
-                                                     & (subject_pet_meta.Sequence.map(
-                                                            lambda s: (s.lower().find('early') < 0)))]
-
+                                                     & ~subject_pet_meta.Sequence.str.contains("early",
+                                                                                               case=False, na=False)]
                 if original_pet_meta.shape[0] < 1:
-                    # TODO Log somewhere QC visits without image metadata
+                    # TODO Log QC visits without image metadata
                     cprint('No Amyloid PET images metadata for subject - ' + subj + ' for visit ' + qc_visit.VISCODE2)
                     continue
 
@@ -131,18 +126,19 @@ def compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
             # To determine type of amyloid PET tracer we find the
             # Coreg, Avg, Std Img and Vox Siz, Uniform Resolution image
             # with the same Series ID of the original image
-            final_pet_meta = subject_pet_meta[(subject_pet_meta.Sequence.map(
-                lambda x: (x.find('Coreg, Avg, Std Img and Vox Siz, Uniform Resolution') > 0)))
+            final_pet_meta = subject_pet_meta[subject_pet_meta.Sequence.str.contains('Coreg, Avg, Std Img and Vox Siz, '
+                                                                                      'Uniform Resolution', na=False)
                                               & (subject_pet_meta['Series ID'] == original_image['Series ID'])]
 
             if final_pet_meta.shape[0] < 1:
-                final_pet_meta = subject_pet_meta[(subject_pet_meta.Sequence.map(
-                    lambda x: (x.find('Coreg, Avg, Std Img and Vox Siz, Uniform Resolution') > 0)))
-                                                     & (subject_pet_meta['Scan Date'] == original_image['Scan Date'])]
+                final_pet_meta = subject_pet_meta[subject_pet_meta.Sequence.str.contains('Coreg, Avg, Std Img and Vox '
+                                                                                          'Siz, Uniform Resolution',
+                                                                                         na=False)
+                                                  & (subject_pet_meta['Scan Date'] == original_image['Scan Date'])]
                 if final_pet_meta.shape[0] < 1:
                     # TODO Log
-                    cprint('No "Coreg, Avg, Std Img and Vox Siz, Uniform Resolution" Amyloid PET image metadata for subject'
-                           ' ' + subj + ' for visit ' + qc_visit.VISCODE2)
+                    cprint('No "Coreg, Avg, Std Img and Vox Siz, Uniform Resolution" '
+                           'Amyloid PET image metadata for subject ' + subj + ' for visit ' + qc_visit.VISCODE2)
                     continue
 
             processed_sequence = final_pet_meta.iloc[0].Sequence
@@ -182,7 +178,9 @@ def compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                 [[qc_visit.Phase, subj, qc_visit.VISCODE2, str(visit), sequence, date, str(study_id), str(series_id),
                   str(image_id), original, tracer]],
                 columns=pet_amyloid_col)
-            pet_amyloid_df = pet_amyloid_df.append(row_to_append, ignore_index=True)
+            pet_amyloid_dfs_list.append(row_to_append)
+
+    pet_amyloid_df = pd.concat(pet_amyloid_dfs_list, ignore_index=True)
 
     # TODO check for new exceptions in ADNI3
     # Exceptions
@@ -190,17 +188,11 @@ def compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     conversion_errors = [  # Eq_1
                          ('128_S_2220', 'm48')]
 
-    error_indices = []
-    for conv_error in conversion_errors:
-        error_indices.append((pet_amyloid_df.Subject_ID == conv_error[0])
-                             & (pet_amyloid_df.VISCODE == conv_error[1]))
-
-    if error_indices:
-        indices_to_remove = pet_amyloid_df.index[reduce(operator.or_, error_indices, False)]
-        pet_amyloid_df.drop(indices_to_remove, inplace=True)
-
-    # DONE - Make a function reusing this code for different modalities
-    # TODO check if it works properly
+    # TODO Add TRACER to conversion errors
+    # Removing known exceptions from images to convert
+    error_ind = pet_amyloid_df.index[pet_amyloid_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors),
+                                                          axis=1)]
+    pet_amyloid_df.drop(error_ind, inplace=True)
 
     images = find_image_path(pet_amyloid_df, source_dir, 'Amyloid', 'I', 'Image_ID')
 
@@ -210,59 +202,3 @@ def compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     images.to_csv(path.join(amyloid_csv_path, 'amyloid_pet_paths.tsv'), sep='\t', index=False)
 
     return images
-
-
-def check_exceptions(bids_dir):
-    from os import path
-    import pandas as pd
-    from glob import glob
-
-    amyloid_paths = pd.read_csv(path.join(bids_dir, 'conversion_info', 'amyloid_pet_paths.tsv'), sep='\t')
-
-    av45_paths = amyloid_paths[amyloid_paths.Tracer == 'AV45']
-
-    av45_paths = av45_paths[av45_paths.Path.notnull()]
-
-    av45_paths['BIDS_SubjID'] = ['sub-ADNI' + s.replace('_', '') for s in av45_paths.Subject_ID.to_list()]
-    av45_paths['BIDS_Session'] = ['ses-' + s.replace('bl', 'm00').upper() for s in av45_paths.VISCODE.to_list()]
-
-    count = 0
-
-    for r in av45_paths.iterrows():
-        image = r[1]
-        image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'pet')
-        image_pattern = path.join(image_dir, '%s_%s_*av45*' % (image.BIDS_SubjID, image.BIDS_Session))
-        files_list = glob(image_pattern)
-        if not files_list:
-            print("No images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
-            count += 1
-
-        elif len(files_list) > 1:
-            print("Too many images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
-            print(files_list)
-
-    print(count)
-
-    fbb_paths = amyloid_paths[amyloid_paths.Tracer == 'FBB']
-
-    fbb_paths = fbb_paths[fbb_paths.Path.notnull()]
-
-    fbb_paths['BIDS_SubjID'] = ['sub-ADNI' + s.replace('_', '') for s in fbb_paths.Subject_ID.to_list()]
-    fbb_paths['BIDS_Session'] = ['ses-' + s.replace('bl', 'm00').upper() for s in fbb_paths.VISCODE.to_list()]
-
-    count = 0
-
-    for r in fbb_paths.iterrows():
-        image = r[1]
-        image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'pet')
-        image_pattern = path.join(image_dir, '%s_%s_*fbb*' % (image.BIDS_SubjID, image.BIDS_Session))
-        files_list = glob(image_pattern)
-        if not files_list:
-            print("No images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
-            count += 1
-
-        elif len(files_list) > 1:
-            print("Too many images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
-            print(files_list)
-
-    print(count)

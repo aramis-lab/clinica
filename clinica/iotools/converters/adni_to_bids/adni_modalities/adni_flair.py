@@ -77,7 +77,7 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
     mri_list = pd.read_csv(path.join(csv_dir, 'MRILIST.csv'), sep=',', low_memory=False)
 
     # Selecting FLAIR DTI images that are not TODO images
-    mri_list = mri_list[mri_list.SEQUENCE.map(lambda x: x.lower().find('flair') > -1)]
+    mri_list = mri_list[mri_list.SEQUENCE.str.contains('flair', case=False, na=False)]
     unwanted_sequences = ['_MPR_']
     mri_list = mri_list[mri_list.SEQUENCE.map(lambda x: not any(subs in x for subs in unwanted_sequences))]
 
@@ -122,13 +122,9 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     ]
 
-    error_indices = []
-    for conv_error in conversion_errors:
-        error_indices.append((flair_df.Subject_ID == conv_error[0])
-                             & (flair_df.VISCODE == conv_error[1]))
-    if error_indices:
-        indices_to_remove = flair_df.index[reduce(operator.or_, error_indices, False)]
-        flair_df.drop(indices_to_remove, inplace=True)
+    # Removing known exceptions from images to convert
+    error_ind = flair_df.index[flair_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
+    flair_df.drop(error_ind, inplace=True)
 
     # Checking for images paths in filesystem
     images = find_image_path(flair_df, source_dir, 'FLAIR', 'S', 'Series_ID')
@@ -296,46 +292,3 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
                                                       bids_name + '.nii.gz'))
                     else:
                         cprint('WARNING: CONVERSION FAILED...')
-
-
-def check_exceptions(bids_dir):
-    from os import path
-    import pandas as pd
-    from glob import glob
-
-    flair_paths = pd.read_csv(path.join(bids_dir, 'conversion_info', 'flair_paths.tsv'), sep='\t')
-
-    flair_paths = flair_paths[flair_paths.Path.notnull()]
-
-    flair_paths['BIDS_SubjID'] = ['sub-ADNI' + s.replace('_', '') for s in flair_paths.Subject_ID.to_list()]
-    flair_paths['BIDS_Session'] = ['ses-' + s.replace('bl', 'm00').upper() for s in flair_paths.VISCODE.to_list()]
-
-    count = 0
-    count_wrong = 0
-    count_eq = 0
-
-    for r in flair_paths.iterrows():
-        image = r[1]
-        image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'FLAIR')
-        image_pattern = path.join(image_dir, '%s_%s_*' % (image.BIDS_SubjID, image.BIDS_Session))
-        files_list = glob(image_pattern)
-
-        if sum(['Eq' in f for f in files_list]):
-            # print("Eq images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
-            # print("('%s', '%s')," % (image.BIDS_SubjID[-8:].replace('S', '_S_'),
-            #                          image.BIDS_Session[4:].replace('M00', 'bl').lower()))
-            count_eq += 1
-            continue
-
-        if not files_list:
-            # print("No images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
-            count += 1
-
-        elif len(files_list) > 2:
-            print("Wrong files count for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
-            print(files_list)
-            count_wrong += 1
-
-    print(count)
-    print(count_wrong)
-    print(count_eq)

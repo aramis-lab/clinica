@@ -25,6 +25,15 @@ def replace_sequence_chars(sequence_name):
 
 
 def fill_zeros(s, length):
+    """
+
+    Args:
+        s:
+        length:
+
+    Returns:
+
+    """
     return ('0' * (length - len(str(s)))) + str(s)
 
 
@@ -180,6 +189,15 @@ def visits_to_timepoints_mrilist(subject, mri_list_subj, adnimerge_subj, modalit
 
 
 def select_image_qc(id_list, mri_qc_subj):
+    """
+
+    Args:
+        id_list:
+        mri_qc_subj:
+
+    Returns:
+
+    """
 
     import numpy as np
 
@@ -309,6 +327,17 @@ def remove_tmp_dmc_folder(bids_dir, image_id):
 
 
 def check_bids_t1(bids_path, container='anat', extension='_T1w.nii.gz', subjects=None):
+    """
+
+    Args:
+        bids_path:
+        container:
+        extension:
+        subjects:
+
+    Returns:
+
+    """
 
     import os
 
@@ -336,6 +365,17 @@ def check_bids_t1(bids_path, container='anat', extension='_T1w.nii.gz', subjects
 
 def check_bids_dwi(bids_path, container='dwi', extension=('_acq-axial_dwi.bvec', '_acq-axial_dwi.bval',
                                                           '_acq-axial_dwi.nii.gz'), subjects=None):
+    """
+
+    Args:
+        bids_path:
+        container:
+        extension:
+        subjects:
+
+    Returns:
+
+    """
 
     import os
 
@@ -392,6 +432,14 @@ def is_nan(value):
 
 
 def remove_fields_duplicated(bids_fields):
+    """
+
+    Args:
+        bids_fields:
+
+    Returns:
+
+    """
     seen = set()
     seen_add = seen.add
     return [x for x in bids_fields if not (x in seen or seen_add(x))]
@@ -405,7 +453,8 @@ def convert_diagnosis_code(diagnosis_code):
     Args:
         diagnosis_code: a string that represents a number between 1 and 9
 
-    Returns:a code that identify a diagnosis
+    Returns:
+        A code that identify a diagnosis
 
     """
 
@@ -735,6 +784,18 @@ def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
 
 
 def find_image_path(images, source_dir, modality, prefix, id_field):
+    """
+
+    Args:
+        images:
+        source_dir:
+        modality:
+        prefix:
+        id_field:
+
+    Returns:
+
+    """
 
     from os import path, walk
     import pandas as pd
@@ -777,6 +838,17 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
 
 
 def t1_pet_paths_to_bids(images, bids_dir, modality, mod_to_update=False):
+    """
+
+    Args:
+        images:
+        bids_dir:
+        modality:
+        mod_to_update:
+
+    Returns:
+
+    """
     from multiprocessing import Pool, cpu_count, Value
     from clinica.iotools.converters.adni_to_bids import adni_utils
     from functools import partial
@@ -815,6 +887,18 @@ def t1_pet_paths_to_bids(images, bids_dir, modality, mod_to_update=False):
 
 
 def create_file(image, modality, total, bids_dir, mod_to_update):
+    """
+
+    Args:
+        image:
+        modality:
+        total:
+        bids_dir:
+        mod_to_update:
+
+    Returns:
+
+    """
     import subprocess
     from colorama import Fore
     from clinica.utils.stream import cprint
