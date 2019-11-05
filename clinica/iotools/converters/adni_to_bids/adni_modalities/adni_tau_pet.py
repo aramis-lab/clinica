@@ -115,11 +115,9 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
             # take scan at the same date containing TAU or AV 45 in sequence name
             if original_pet_meta.shape[0] < 1:
                 original_pet_meta = subject_pet_meta[(subject_pet_meta['Orig/Proc'] == 'Original')
-                                                     & subject_pet_meta.Sequence.map(
-                    lambda x: ((x.lower().find('tau') > -1) |
-                               (x.lower().find('av-1451') > -1) |
-                               (x.lower().find('av1451') > -1)))
-                                                        & (subject_pet_meta['Scan Date'] == qc_visit.SCANDATE)]
+                                                     & subject_pet_meta.Sequence.str.contains("tau|av-1451|av1451",
+                                                                                              case=False, na=False)
+                                                     & (subject_pet_meta['Scan Date'] == qc_visit.SCANDATE)]
 
                 if original_pet_meta.shape[0] < 1:
                     # TODO Log somewhere QC visits without image metadata
@@ -160,14 +158,9 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     conversion_errors = [  # Multiple output images
                          ('098_S_4275', 'm84')]
 
-    error_indices = []
-    for conv_error in conversion_errors:
-        error_indices.append((pet_tau_df.Subject_ID == conv_error[0])
-                             & (pet_tau_df.VISCODE == conv_error[1]))
-
-    if error_indices:
-        indices_to_remove = pet_tau_df.index[reduce(operator.or_, error_indices, False)]
-        pet_tau_df.drop(indices_to_remove, inplace=True)
+    # Removing known exceptions from images to convert
+    error_ind = pet_tau_df.index[pet_tau_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
+    pet_tau_df.drop(error_ind, inplace=True)
 
     # Checking for images paths in filesystem
     images = find_image_path(pet_tau_df, source_dir, 'TAU', 'I', 'Image_ID')
@@ -178,33 +171,3 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     images.to_csv(path.join(tau_csv_path, 'tau_pet_paths.tsv'), sep='\t', index=False)
 
     return images
-
-
-def check_exceptions(bids_dir):
-    from os import path
-    import pandas as pd
-    from glob import glob
-
-    tau_paths = pd.read_csv(path.join(bids_dir, 'conversion_info', 'tau_pet_paths.tsv'), sep='\t')
-
-    tau_paths = tau_paths[tau_paths.Path.notnull()]
-
-    tau_paths['BIDS_SubjID'] = ['sub-ADNI' + s.replace('_', '') for s in tau_paths.Subject_ID.to_list()]
-    tau_paths['BIDS_Session'] = ['ses-' + s.replace('bl', 'm00').upper() for s in tau_paths.VISCODE.to_list()]
-
-    count = 0
-
-    for r in tau_paths.iterrows():
-        image = r[1]
-        image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'pet')
-        image_pattern = path.join(image_dir, '%s_%s_*tau*' % (image.BIDS_SubjID, image.BIDS_Session))
-        files_list = glob(image_pattern)
-        if not files_list:
-            print("No images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
-            count += 1
-
-        elif len(files_list) > 1:
-            print("Too many images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
-            print(files_list)
-
-    print(count)

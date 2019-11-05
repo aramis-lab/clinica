@@ -15,8 +15,7 @@ __status__ = "Development"
 
 
 def convert_adni_pib_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
-    """
-    Convert PIB PET images of ADNI into BIDS format
+    """Convert PIB PET images of ADNI into BIDS format
 
     Args:
         source_dir: path to the ADNI directory
@@ -45,8 +44,7 @@ def convert_adni_pib_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
 
 
 def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
-    """
-    Compute the paths to the PIB PET images and store them in a tsv file
+    """Compute the paths to the PIB PET images and store them in a tsv file
 
     Args:
         source_dir: path to the ADNI directory
@@ -69,7 +67,7 @@ def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     pet_pib_col = ['Phase', 'Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
                    'Series_ID', 'Image_ID', 'Original']
-    pet_pib_df = pd.DataFrame(columns=pet_pib_col)
+    pet_pib_dfs_list = []
 
     # Loading needed .csv files
     pibqc = pd.read_csv(path.join(csv_dir, 'PIBQC.csv'), sep=',', low_memory=False)
@@ -97,14 +95,14 @@ def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
             original_pet_meta = subject_pet_meta[(subject_pet_meta['Orig/Proc'] == 'Original')
                                                  & (subject_pet_meta['Image ID'] == int_image_id)
-                                                 & (subject_pet_meta.Sequence.map(lambda s: (s.lower().find('early')
-                                                                                             < 0)))]
+                                                 & ~subject_pet_meta.Sequence.str.contains("early",
+                                                                                           case=False, na=False)]
             # If no corresponding PIB PET metadata for an original image,
             # take scan at the same date containing PIB in sequence name
             if original_pet_meta.shape[0] < 1:
                 original_pet_meta = subject_pet_meta[(subject_pet_meta['Orig/Proc'] == 'Original')
-                                                     & (subject_pet_meta.Sequence.map(lambda x: (x.lower().find('pib')
-                                                                                                 > -1)))
+                                                     & subject_pet_meta.Sequence.str.contains("pib",
+                                                                                              case=False, na=False)
                                                      & (subject_pet_meta['Scan Date'] == qc_visit.EXAMDATE)]
 
                 if original_pet_meta.shape[0] < 1:
@@ -139,24 +137,18 @@ def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                 [['ADNI1', subj, qc_visit.VISCODE, str(visit), sequence, date, str(study_id), str(series_id),
                   str(image_id), original]],
                 columns=pet_pib_col)
-            pet_pib_df = pet_pib_df.append(row_to_append, ignore_index=True)
+            pet_pib_dfs_list.append(row_to_append)
+
+    pet_pib_df = pd.concat(pet_pib_dfs_list, ignore_index=True)
 
     # TODO check for exceptions
     # Exceptions
     # ==========
     conversion_errors = []
 
-    error_indices = []
-    for conv_error in conversion_errors:
-        error_indices.append((pet_pib_df.Subject_ID == conv_error[0])
-                             & (pet_pib_df.VISCODE == conv_error[1]))
-
-    if error_indices:
-        indices_to_remove = pet_pib_df.index[reduce(operator.or_, error_indices, False)]
-        pet_pib_df.drop(indices_to_remove, inplace=True)
-
-    # DONE - Make a function reusing this code for different modalities
-    # TODO check if it works properly
+    # Removing known exceptions from images to convert
+    error_ind = pet_pib_df.index[pet_pib_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
+    pet_pib_df.drop(error_ind, inplace=True)
 
     images = find_image_path(pet_pib_df, source_dir, 'PIB', 'I', 'Image_ID')
 
@@ -166,33 +158,3 @@ def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     images.to_csv(path.join(pib_csv_path, 'pib_pet_paths.tsv'), sep='\t', index=False)
 
     return images
-
-
-def check_exceptions(bids_dir):
-    from os import path
-    import pandas as pd
-    from glob import glob
-
-    pib_paths = pd.read_csv(path.join(bids_dir, 'conversion_info', 'pib_pet_paths.tsv'), sep='\t')
-
-    pib_paths = pib_paths[pib_paths.Path.notnull()]
-
-    pib_paths['BIDS_SubjID'] = ['sub-ADNI' + s.replace('_', '') for s in pib_paths.Subject_ID.to_list()]
-    pib_paths['BIDS_Session'] = ['ses-' + s.replace('bl', 'm00').upper() for s in pib_paths.VISCODE.to_list()]
-
-    count = 0
-
-    for r in pib_paths.iterrows():
-        image = r[1]
-        image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'pet')
-        image_pattern = path.join(image_dir, '%s_%s_*pib*' % (image.BIDS_SubjID, image.BIDS_Session))
-        files_list = glob(image_pattern)
-        if not files_list:
-            print("No images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
-            count += 1
-
-        elif len(files_list) > 1:
-            print("Too many images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
-            print(files_list)
-
-    print(count)

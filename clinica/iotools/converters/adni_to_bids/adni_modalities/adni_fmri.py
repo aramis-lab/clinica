@@ -56,8 +56,6 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list):
 
     """
 
-    import operator
-    from functools import reduce
     from os import path, mkdir
     import pandas as pd
     from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path, visits_to_timepoints_mrilist
@@ -117,14 +115,9 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list):
     # ==========
     conversion_errors = [('006_S_4485', 'm84')]
 
-    error_indices = []
-    for conv_error in conversion_errors:
-        error_indices.append((fmri_df.Subject_ID == conv_error[0])
-                             & (fmri_df.VISCODE == conv_error[1]))
-
-    if error_indices:
-        indices_to_remove = fmri_df.index[reduce(operator.or_, error_indices, False)]
-        fmri_df.drop(indices_to_remove, inplace=True)
+    # Removing known exceptions from images to convert
+    error_ind = fmri_df.index[fmri_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
+    fmri_df.drop(error_ind, inplace=True)
 
     # Checking for images paths in filesystem
     images = find_image_path(fmri_df, source_dir, 'fMRI', 'S', 'Series_ID')
@@ -260,50 +253,3 @@ def fmri_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
                   'Field_Strength': sel_scan.MAGSTRENGTH}
 
     return image_dict
-
-
-def check_exceptions(bids_dir):
-
-    from os import path
-    import pandas as pd
-    from glob import glob
-
-    fmri_paths = pd.read_csv(path.join(bids_dir, 'conversion_info', 'fmri_paths.tsv'), sep='\t')
-
-    fmri_paths = fmri_paths[fmri_paths.Path.notnull()]
-
-    fmri_paths['BIDS_SubjID'] = ['sub-ADNI' + s.replace('_', '') for s in fmri_paths.Subject_ID.to_list()]
-    fmri_paths['BIDS_Session'] = ['ses-' + s.replace('bl', 'm00').upper() for s in fmri_paths.VISCODE.to_list()]
-
-    count = 0
-    count_wrong = 0
-    name_wrong = 0
-    no_dir = 0
-
-    for r in fmri_paths.iterrows():
-        image = r[1]
-        image_dir = path.join(bids_dir, image.BIDS_SubjID, image.BIDS_Session, 'func')
-
-        if not path.isdir(image_dir):
-            no_dir += 1
-            # continue
-
-        image_pattern = path.join(image_dir, '%s_%s_*bold*' % (image.BIDS_SubjID, image.BIDS_Session))
-        files_list = glob(image_pattern)
-
-        if not files_list:
-            # print("No images for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
-            count += 1
-
-        elif len(files_list) != 2:
-            print("Wrong files count for subject %s in session %s" % (image.BIDS_SubjID, image.BIDS_Session))
-            print(files_list)
-            count_wrong += 1
-        elif sum([not f.endswith(('_task-rest_bold.json', '_task-rest_bold.nii.gz')) for f in files_list]) > 0:
-            name_wrong += 1
-            print(files_list)
-
-    print(count)
-    print(count_wrong)
-    print(name_wrong)
-    print(no_dir)

@@ -18,10 +18,11 @@ class AdniToBids(Converter):
         """
         Return a list of modalities supported
 
-        Returns: a list containing the modalities supported by the converter (T1, PET_FDG, PET_AV45)
+        Returns: a list containing the modalities supported by the converter
+        (T1, PET_FDG, PET_AMYLOID, PET_TAU, DWI, FLAIR, fMRI)
 
         """
-        return ['T1', 'PET_FDG', 'PET_AV45', 'DWI', 'fMRI', 'FLAIR']
+        return ['T1', 'PET_FDG', 'PET_AMYLOID', 'PET_TAU', 'DWI', 'FLAIR', 'fMRI']
 
     def check_adni_dependencies(self):
         """
@@ -89,7 +90,7 @@ class AdniToBids(Converter):
         adni_utils.create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids)
 
     def convert_images(self, source_dir, clinical_dir, dest_dir, subjs_list_path=None,
-                       modalities=['T1', 'PET_FDG', 'PET_AMYLOID', 'PET_TAU', 'DWI', 'FLAIR']):
+                       modalities=['T1', 'PET_FDG', 'PET_AMYLOID', 'PET_TAU', 'DWI', 'FLAIR', 'fMRI']):
         """
         Convert the images of ADNI
 
@@ -98,7 +99,7 @@ class AdniToBids(Converter):
             clinical_dir: path to the clinical data directory
             dest_dir: path to the BIDS directory
             subjs_list_path: list of subjects to process
-            modalities: modalities to convert (T1, PET_FDG, PET_AV45, DWI, FLAIR)
+            modalities: modalities to convert (T1, PET_FDG, PET_AMYLOID, PET_TAU, DWI, FLAIR, fMRI)
 
         """
 
@@ -134,24 +135,18 @@ class AdniToBids(Converter):
             os.makedirs(path.join(dest_dir, 'conversion_info'))
         cprint(dest_dir)
 
-        if 'T1' in modalities:
-            adni_t1.convert_adni_t1(source_dir, clinical_dir, dest_dir, subjs_list)
+        converters = {'T1': [adni_t1.convert_adni_t1],
+                      'PET_FDG': [adni_fdg.convert_adni_fdg_pet],
+                      'PET_AMYLOID': [adni_pib.convert_adni_pib_pet,
+                                      adni_av45_fbb.convert_adni_av45_fbb_pet],
+                      'PET_TAU': [adni_tau.convert_adni_tau_pet],
+                      'DWI': [adni_dwi.convert_adni_dwi],
+                      'FLAIR': [adni_flair.convert_adni_flair],
+                      'fMRI': [adni_fmri.convert_adni_fmri]
+                      }
 
-        if 'PET_FDG' in modalities:
-            adni_fdg.convert_adni_fdg_pet(source_dir, clinical_dir, dest_dir, subjs_list)
-
-        if 'PET_AMYLOID' in modalities:
-            adni_pib.convert_adni_pib_pet(source_dir, clinical_dir, dest_dir, subjs_list)
-            adni_av45_fbb.convert_adni_av45_fbb_pet(source_dir, clinical_dir, dest_dir, subjs_list)
-
-        if 'PET_TAU' in modalities:
-            adni_tau.convert_adni_tau_pet(source_dir, clinical_dir, dest_dir, subjs_list)
-
-        if 'DWI' in modalities:
-            adni_dwi.convert_adni_dwi(source_dir, clinical_dir, dest_dir, subjs_list)
-
-        if 'FLAIR' in modalities:
-            adni_flair.convert_adni_flair(source_dir, clinical_dir, dest_dir, subjs_list)
-
-        if 'fMRI' in modalities:
-            adni_fmri.convert_adni_fmri(source_dir, clinical_dir, dest_dir, subjs_list)
+        for modality in modalities:
+            if modality not in converters:
+                raise Exception('%s is not a valid input modality' % modality)
+            for converter in converters[modality]:
+                converter(source_dir, clinical_dir, dest_dir, subjs_list)
