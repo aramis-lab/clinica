@@ -72,17 +72,17 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
-        import os
         from networkx import Graph
         from .t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         pipeline = T1VolumeExistingTemplate(
+            group_id=args.group_id,
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            base_dir=self.absolute_path(args.working_directory),
-            group_id=args.group_id)
+            base_dir=self.absolute_path(args.working_directory)
+        )
 
         pipeline.parameters.update({
             'tissue_classes': args.tissue_classes,

@@ -36,12 +36,12 @@ class PETVolume(cpe.Pipeline):
     """
 
     def __init__(self,
+                 group_id,
                  bids_directory=None,
                  caps_directory=None,
                  tsv_file=None,
                  base_dir=None,
                  name=None,
-                 group_id='default',
                  fwhm_tsv=None):
         from pandas.io.parsers import read_csv
         import os

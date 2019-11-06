@@ -31,12 +31,12 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
         A clinica pipeline object containing the T1VolumeExistingTemplate pipeline.
     """
     def __init__(self,
+                 group_id,
                  bids_directory=None,
                  caps_directory=None,
                  tsv_file=None,
                  base_dir=None,
-                 name=None,
-                 group_id='default'):
+                 name=None):
         from os.path import exists, join, abspath
         from os import listdir
 

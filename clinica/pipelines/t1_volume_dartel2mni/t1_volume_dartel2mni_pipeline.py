@@ -24,12 +24,12 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         A clinica pipeline object containing the T1VolumeDartel2MNI pipeline.
     """
     def __init__(self,
+                 group_id,
                  bids_directory=None,
                  caps_directory=None,
                  tsv_file=None,
                  base_dir=None,
-                 name=None,
-                 group_id='default'):
+                 name=None):
         import os
         from clinica.utils.exceptions import ClinicaException
 
@@ -45,6 +45,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
 
         self._group_id = group_id
         # Check that group already exists
+        # TODO: Move this check to build_input_node method
         if not os.path.exists(os.path.join(os.path.abspath(caps_directory), 'groups', 'group-' + group_id)):
             error_message = group_id \
                             + ' does not exists, please choose another one (or maybe you need to run t1-volume-create-dartel).' \
@@ -60,13 +61,14 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
             raise ClinicaException(error_message)
 
         # Default parameters
-        self._parameters = {'tissues': [1, 2, 3],
-                            'bounding_box': None,
-                            'voxel_size': None,
-                            'modulation': True,
-                            'fwhm': [8]
-                            # 'atlas_list': ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
-                            }
+        self._parameters = {
+            'tissues': [1, 2, 3],
+            'bounding_box': None,
+            'voxel_size': None,
+            'modulation': True,
+            'fwhm': [8]
+            # 'atlas_list': ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
+        }
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
@@ -102,13 +104,14 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from colorama import Fore
 
-        tissue_names = {1: 'graymatter',
-                        2: 'whitematter',
-                        3: 'csf',
-                        4: 'bone',
-                        5: 'softtissue',
-                        6: 'background'
-                        }
+        tissue_names = {
+            1: 'graymatter',
+            2: 'whitematter',
+            3: 'csf',
+            4: 'bone',
+            5: 'softtissue',
+            6: 'background'
+        }
 
         all_errors = []
         read_input_node = npe.Node(name="LoadingCLIArguments",

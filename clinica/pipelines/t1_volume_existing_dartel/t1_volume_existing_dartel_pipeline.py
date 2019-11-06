@@ -24,12 +24,12 @@ class T1VolumeExistingDartel(cpe.Pipeline):
         A clinica pipeline object containing the T1VolumeExistingDartel pipeline.
     """
     def __init__(self,
+                 group_id,
                  bids_directory=None,
                  caps_directory=None,
                  tsv_file=None,
                  base_dir=None,
-                 name=None,
-                 group_id='default'):
+                 name=None):
         super(T1VolumeExistingDartel, self).__init__(
             bids_directory=bids_directory,
             caps_directory=caps_directory,
@@ -43,11 +43,12 @@ class T1VolumeExistingDartel(cpe.Pipeline):
         self._group_id = group_id
 
         # Default parameters
-        self._parameters = {'tissues': [1, 2, 3],
-                            'iteration_parameters': None,
-                            'optimization_parameters': None,
-                            'regularization_form': None
-                            }
+        self._parameters = {
+            'tissues': [1, 2, 3],
+            'iteration_parameters': None,
+            'optimization_parameters': None,
+            'regularization_form': None
+        }
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
@@ -82,13 +83,14 @@ class T1VolumeExistingDartel(cpe.Pipeline):
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
         from colorama import Fore
 
-        tissue_names = {1: 'graymatter',
-                        2: 'whitematter',
-                        3: 'csf',
-                        4: 'bone',
-                        5: 'softtissue',
-                        6: 'background'
-                        }
+        tissue_names = {
+            1: 'graymatter',
+            2: 'whitematter',
+            3: 'csf',
+            4: 'bone',
+            5: 'softtissue',
+            6: 'background'
+        }
 
         """
         # Dartel Input Tissues DataGrabber
