@@ -24,12 +24,12 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         A clinica pipeline object containing the T1VolumeCreateDartel pipeline.
     """
     def __init__(self,
+                 group_id,
                  bids_directory=None,
                  caps_directory=None,
                  tsv_file=None,
                  base_dir=None,
-                 name=None,
-                 group_id='default'):
+                 name=None):
         import os
 
         super(T1VolumeCreateDartel, self).__init__(
@@ -44,6 +44,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         self._group_id = group_id
 
         # Check that group does not already exists
+        # TODO: Improve this check. group_id can exist for statistics-surface
         if os.path.exists(os.path.join(os.path.abspath(caps_directory), 'groups', 'group-' + group_id)):
             error_message = 'group_id : ' + group_id + ' already exists, please choose another one.' \
                             + ' Groups that exist in your CAPS directory are: \n'
@@ -59,12 +60,13 @@ class T1VolumeCreateDartel(cpe.Pipeline):
                              + str(len(self.subjects)) + ' only in ' + self.tsv_file + '.')
 
         # Default parameters
-        self._parameters = {'dartel_tissues': [1, 2, 3],
-                            'iteration_parameters': None,
-                            'optimization_parameters': None,
-                            'regularization_form': None,
-                            'template_prefix': None
-                            }
+        self._parameters = {
+            'dartel_tissues': [1, 2, 3],
+            'iteration_parameters': None,
+            'optimization_parameters': None,
+            'regularization_form': None,
+            'template_prefix': None
+        }
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
@@ -98,13 +100,14 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         import nipype.interfaces.utility as nutil
 
-        tissue_names = {1: 'graymatter',
-                        2: 'whitematter',
-                        3: 'csf',
-                        4: 'bone',
-                        5: 'softtissue',
-                        6: 'background'
-                        }
+        tissue_names = {
+            1: 'graymatter',
+            2: 'whitematter',
+            3: 'csf',
+            4: 'bone',
+            5: 'softtissue',
+            6: 'background'
+        }
 
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(fields=self.get_input_fields(),

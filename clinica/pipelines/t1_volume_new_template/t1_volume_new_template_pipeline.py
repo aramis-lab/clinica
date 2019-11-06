@@ -24,12 +24,12 @@ class T1VolumeNewTemplate(cpe.Pipeline):
         A clinica pipeline object containing the T1VolumeNewTemplate pipeline.
     """
     def __init__(self,
+                 group_id,
                  bids_directory=None,
                  caps_directory=None,
                  tsv_file=None,
                  base_dir=None,
-                 name=None,
-                 group_id='default'):
+                 name=None):
         import os
 
         super(T1VolumeNewTemplate, self).__init__(
@@ -43,6 +43,7 @@ class T1VolumeNewTemplate(cpe.Pipeline):
             raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
 
         # Check that group does not already exists
+        # TODO: Improve this check. group_id can exist for statistics-surface
         if os.path.exists(os.path.join(os.path.abspath(caps_directory), 'groups', 'group-' + group_id)):
             error_message = 'group_id: ' + group_id + ' already exists, please choose another one. ' \
                                                        'Groups that exist in your CAPS directory are: \n'

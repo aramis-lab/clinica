@@ -78,14 +78,14 @@ class T1VolumeNewTemplateCLI(ce.CmdParser):
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         pipeline = T1VolumeNewTemplate(
+            group_id=args.group_id,
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
             base_dir=self.absolute_path(args.working_directory),
-            group_id=args.group_id
         )
 
-        # If the user wants to use any of the atlases of cat12 and has not installed it, we just remove it from the list
+        # If the user wants to use any of the atlases of CAT12 and has not installed it, we just remove it from the list
         # of the computed atlases
         args.atlases = verify_cat12_atlases(args.atlases)
 
