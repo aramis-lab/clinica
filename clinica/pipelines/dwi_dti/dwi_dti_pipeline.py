@@ -19,12 +19,6 @@ config.update_config(cfg)
 class DwiDti(cpe.Pipeline):
     """DTI-based processing of DWI datasets.
 
-    Args:
-        input_dir(str): Input directory in a CAPS hierarchy.
-        output_dir(str): Output directory in a CAPS hierarchy.
-        subjects_sessions_list(str): The Subjects-Sessions list file (in .tsv
-            format).
-
     Returns:
         A clinica pipeline object containing the DwiDti pipeline.
 

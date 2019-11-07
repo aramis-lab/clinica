@@ -1,6 +1,23 @@
 # coding: utf8
 
 
+def get_pipeline_parameters(low_bval=None):
+    import warnings
+
+    parameters = {
+        'low_bval': low_bval or 5,
+    }
+
+    if parameters['low_bval'] < 0:
+        raise ValueError('The low_bval is equals to %s: it should be zero or close to zero.' % parameters['low_bval'])
+
+    if parameters['low_bval'] > 100:
+        warnings.warn('Warning: The low_bval parameter is %s: it should be close to zero' % parameters['low_bval'],
+                      UserWarning)
+
+    return parameters
+
+
 def ants_registration_syn_quick(fix_image, moving_image):
     import os
     import os.path as op
