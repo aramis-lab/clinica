@@ -70,6 +70,7 @@ class Pipeline(Workflow):
                  tsv_file=None,
                  overwrite_caps=False,
                  base_dir=None,
+                 parameters={},
                  name=None):
         """Init a Pipeline object.
 
@@ -112,7 +113,7 @@ class Pipeline(Workflow):
             self._name = name
         else:
             self._name = self.__class__.__name__
-        self._parameters = {}
+        self._parameters = parameters
 
         if self._bids_directory is None:
             if self._caps_directory is None:
