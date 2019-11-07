@@ -21,55 +21,14 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
     """DWI Preprocessing using T1 image for susceptibility distortion step.
 
     Warnings:
-        - Do not use this pipelines if you have fieldmap data in your dataset.
-
-    Args:
-        input_dir(str): Input directory in a BIDS hierarchy.
-        output_dir(str): Output directory in a CAPS hierarchy.
-        subjects_sessions_list(str): The Subjects-Sessions list file (in .tsv
-            format).
+        - Do not use this pipeline if you have fieldmap data in your dataset.
 
     Returns:
         A clinica pipeline object containing the DWIPreprocessingUsingT1 pipeline.
 
     Raises:
 
-
     """
-    def __init__(self,
-                 bids_directory=None,
-                 caps_directory=None,
-                 tsv_file=None,
-                 base_dir=None,
-                 name=None,
-                 low_bval=5):
-        """
-
-        Args:
-            low_bval (int): Define the b0 volumes as all volume
-                bval <= lowbval. (Default = 5)
-        """
-        import warnings
-
-        super(DwiPreprocessingUsingT1, self).__init__(
-            bids_directory=bids_directory,
-            caps_directory=caps_directory,
-            tsv_file=tsv_file,
-            base_dir=base_dir,
-            name=name)
-
-        self._low_bval = low_bval
-
-        if self._low_bval < 0:
-            raise ValueError('The low_bval is equals to '
-                             + str(self._low_bval)
-                             + ': it should be zero or close to zero.')
-
-        if self._low_bval > 100:
-            warnings.warn('Warning: The low_bval parameter is ('
-                          + str(self._low_bval)
-                          + '), it should be close to zero', UserWarning)
-
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
@@ -101,7 +60,6 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.stream import cprint
         from clinica.utils.dwi import check_dwi_volume
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         import clinica.utils.input_files as input_files
@@ -173,7 +131,6 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        from os.path import join
         from clinica.utils.nipype import fix_join
         import clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils as utils
 

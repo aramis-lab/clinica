@@ -17,6 +17,8 @@ class DwiConnectomeCli(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+        from .dwi_connectome_utils import get_pipeline_parameters
+        parameters = get_pipeline_parameters()
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("caps_directory",
@@ -24,9 +26,9 @@ class DwiConnectomeCli(ce.CmdParser):
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("-nt", "--n_tracks",
-                              metavar=('N'), type=int,
+                              metavar='N', type=int, default=parameters['n_tracks'],
                               help=('Set the desired number of streamlines to generate the tractography and connectome '
-                                    '(default: --n_tracks 1000000).'))
+                                    '(default: --n_tracks %(default)s).'))
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
 
@@ -35,15 +37,18 @@ class DwiConnectomeCli(ce.CmdParser):
         from networkx import Graph
         from .dwi_connectome_pipeline import DwiConnectome
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
+        from .dwi_connectome_utils import get_pipeline_parameters
+        parameters = get_pipeline_parameters(
+            n_tracks=args.n_tracks
+        )
 
         pipeline = DwiConnectome(
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            base_dir=self.absolute_path(args.working_directory)
+            base_dir=self.absolute_path(args.working_directory),
+            parameters=parameters,
+            name=self.name
         )
-        pipeline.parameters = {
-            'n_tracks': args.n_tracks or 1000000,
-        }
 
         if args.n_procs:
             exec_pipeline = pipeline.run(plugin='MultiProc',

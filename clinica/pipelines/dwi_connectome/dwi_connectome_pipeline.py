@@ -15,13 +15,6 @@ config.update_config(cfg)
 class DwiConnectome(cpe.Pipeline):
     """Connectome-based processing of corrected DWI datasets.
 
-    Args:
-        input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will
-        be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv
-        format).
-
     Returns:
         A clinica pipeline object containing the DwiConnectome pipeline.
     """
