@@ -146,7 +146,7 @@ class T1VolumeExistingTemplate(cpe.Pipeline):
                                                      'description': 'iteration #' + str(i) + ' of template for group '
                                                                     + g_id,
                                                      'needed_pipeline': 't1-volume-create-dartel'})
-                dartel_iter_templates.append(current_iter[0])
+                dartel_iter_templates.append(current_iter)
             except ClinicaException as e:
                 all_errors.append(e)
 
