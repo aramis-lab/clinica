@@ -820,7 +820,7 @@ def obtain_g_fisher_tensor(dartel_input, FWHM):
     # SCALE MAPS
     xxx = []
 
-    atlas = utils.atlas_decomposition(dartel_input[0])
+    atlas = utils.atlas_decomposition(dartel_input)
 
     for i in atlas:
 
@@ -877,7 +877,7 @@ def obtain_time_step_estimation(dartel_input, FWHM, g):
     import nibabel as nib
 
     # obtain voxel size with dartel_input
-    head = nib.load(dartel_input[0])
+    head = nib.load(dartel_input)
     head_ = head.header
     for i in range(len(head_['pixdim'])):
         if head_['pixdim'][i] > 0:
@@ -926,7 +926,7 @@ def heat_solver_equation(input_image, g, FWHM, t_step, dartel_input):
     import os
 
     # obtain voxel size with dartel_input
-    head = nib.load(dartel_input[0])
+    head = nib.load(dartel_input)
     head_ = head.header
     for i in range(len(head_['pixdim'])):
         if head_['pixdim'][i] > 0:
