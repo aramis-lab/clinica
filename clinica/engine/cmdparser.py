@@ -117,6 +117,11 @@ class CmdParser:
     @abc.abstractmethod
     def run_command(self, args): pass
 
+    def list_to_string(self, list):
+        """Convert list (e.g. [8, 8, 8]) to string (e.g. '8 8 8')"""
+        string_without_commas_and_brackets = ' '.join(str(item) for item in list)
+        return string_without_commas_and_brackets
+
     def absolute_path(self, arg):
         if arg is None:
             return None

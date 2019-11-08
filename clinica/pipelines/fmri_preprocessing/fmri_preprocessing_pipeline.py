@@ -43,26 +43,8 @@ class fMRIPreprocessing(cpe.Pipeline):
 
     Returns:
         A nipype workflow object containing the full fMRI preprocessing
-        pipelines.
+        pipeline.
 
-    Raises:
-        IOError:
-
-    Example:
-        >>> from clinica.pipelines.fmri_preprocessing
-        .fmri_preprocessing_pipeline import fMRIPreprocessing
-        >>> pipelines = fMRIPreprocessing('~/MYDATASET_BIDS',
-        '~/MYDATASET_CAPS')
-        >>> pipelines.parameters = {
-        >>>     'num_slices' : 45,
-        >>>     'time_repetition' : 2.4,
-        >>>     'echo_times' : [5.19, 7.65],
-        >>>     'blip_direction' : 1,
-        >>>     'total_readout_time' : 15.6799,
-        >>>     'full_width_at_half_maximum' : [8, 8, 8],
-        >>>     't1_native_space' : False
-        >>> }
-        >>> pipelines.run()
     """
 
     def get_input_fields(self):
@@ -341,7 +323,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         """Build and connect the core nodes of the pipelines.
         """
 
-        import clinica.pipelines.fmri_preprocessing.fmri_preprocessing_utils as utils
+        import clinica.pipelines.fmri_preprocessing.fmri_preprocessing_workflows as utils
         import nipype.interfaces.utility as nutil
         import nipype.interfaces.spm as spm
         import nipype.pipeline.engine as npe
