@@ -39,28 +39,23 @@ class T1FreeSurferCLI(ce.CmdParser):
     def run_command(self, args):
         """Run the pipeline with defined args."""
         from networkx import Graph
-        from colorama import Fore
         from .t1_freesurfer_pipeline import T1FreeSurfer
-        from clinica.utils.stream import cprint
+        from .t1_freesurfer_utils import get_pipeline_parameters
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
-        if "-dontrun" in args.recon_all_args.split(' '):
-            cprint('%s[Warning] Found -dontrun flag for FreeSurfer recon-all. '
-                   'Please note that this will not run the segmentation.%s' %
-                   (Fore.YELLOW, Fore.RESET))
+        parameters = get_pipeline_parameters(
+            recon_all_args=args.recon_all_args,
+        )
 
         pipeline = T1FreeSurfer(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
             base_dir=self.absolute_path(args.working_directory),
+            parameters=parameters,
             name=self.name,
             overwrite_caps=args.overwrite_outputs
         )
-
-        pipeline.parameters = {
-            'recon_all_args': args.recon_all_args
-        }
 
         if args.n_procs:
             exec_pipeline = pipeline.run(plugin='MultiProc',
