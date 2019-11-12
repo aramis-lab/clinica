@@ -584,7 +584,8 @@ def center_nifti_origin(input_image, output_image):
         new_img = nib.Nifti1Image(canonical_img.get_data(caching='unchanged'), affine=qform, header=hd)
 
         # Without deleting already-existing file, nib.save causes a severe bug on Linux system
-        os.remove(output_image)
+        if isfile(output_image):
+            os.remove(output_image)
 
         nib.save(new_img, output_image)
         if not isfile(output_image):
