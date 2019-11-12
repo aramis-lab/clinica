@@ -49,10 +49,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         optional.add_argument("-ft", "--feature_type",
                               type=str, default=None,
                               help='Type of surface-based feature: cortical_thickness or pet_fdg_projection '
-                                   '(default: --feature_type cortical_thickness). '
-                                   'Note: noddi_projection_ndi, noddi_projection_odi, noddi_projection_fiso, '
-                                   'dti_projection_fa, dti_projection_md, dti_projection_rd or dti_projection_ad '
-                                   'exists but are not yet officially released.')
+                                   '(default: --feature_type cortical_thickness).')
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments(add_tsv_flag=False)
         # Advanced arguments (i.e. tricky parameters)
@@ -104,29 +101,6 @@ class StatisticsSurfaceCLI(ce.CmdParser):
             elif args.feature_type == 'pet_fdg_projection':
                 args.custom_file = '@subject/@session/pet/surface/@subject_@session_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-@hemi_fwhm-@fwhm_projection.mgh'
                 args.feature_label = 'fdg'
-            # NODDI, NDI, ODI and FISO
-            elif args.feature_type == 'noddi_projection_ndi':
-                args.custom_file = '@subject/@session/noddi/postprocessing/noddi-register-vertex-fsaverage/cortex-projection/@subject_@session_OnFsaverage_fwhm-@fwhm_measure-ficvf_hemi-@hemi.mgh'
-                args.feature_label = 'NDI'
-            elif args.feature_type == 'noddi_projection_fiso':
-                args.custom_file = '@subject/@session/noddi/postprocessing/noddi-register-vertex-fsaverage/cortex-projection/@subject_@session_OnFsaverage_fwhm-@fwhm_measure-fiso_hemi-@hemi.mgh'
-                args.feature_label = 'FISO'
-            elif args.feature_type == 'noddi_projection_odi':
-                args.custom_file = '@subject/@session/noddi/postprocessing/noddi-register-vertex-fsaverage/cortex-projection/@subject_@session_OnFsaverage_fwhm-@fwhm_measure-odi_hemi-@hemi.mgh'
-                args.feature_label = 'ODI'
-            # DTI fa, md, rd and ad
-            elif args.feature_type == 'dti_projection_fa':
-                args.custom_file = '@subject/@session/noddi/postprocessing/dti-register-vertex-fsaverage/cortex-projection/@subject_@session_OnFsaverage_fwhm-@fwhm_measure-fa_hemi-@hemi.mgh'
-                args.feature_label = 'FA'
-            elif args.feature_type == 'dti_projection_md':
-                args.custom_file = '@subject/@session/noddi/postprocessing/dti-register-vertex-fsaverage/cortex-projection/@subject_@session_OnFsaverage_fwhm-@fwhm_measure-md_hemi-@hemi.mgh'
-                args.feature_label = 'MD'
-            elif args.feature_type == 'dti_projection_rd':
-                args.custom_file = '@subject/@session/noddi/postprocessing/dti-register-vertex-fsaverage/cortex-projection/@subject_@session_OnFsaverage_fwhm-@fwhm_measure-rd_hemi-@hemi.mgh'
-                args.feature_label = 'RD'
-            elif args.feature_type == 'dti_projection_ad':
-                args.custom_file = '@subject/@session/noddi/postprocessing/dti-register-vertex-fsaverage/cortex-projection/@subject_@session_OnFsaverage_fwhm-@fwhm_measure-ad_hemi-@hemi.mgh'
-                args.feature_label = 'AD'
             else:
                 raise ClinicaException('Feature type ' + args.feature_type + ' not recognized. Use --custom_file '
                                        'to specify your own files (without --feature_type).')
