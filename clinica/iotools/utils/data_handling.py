@@ -563,6 +563,7 @@ def center_nifti_origin(input_image, output_image):
     from colorama import Fore
     from nibabel.spatialimages import ImageFileError
     from os.path import isfile
+    import os
 
     error_str = None
     try:
@@ -581,6 +582,9 @@ def center_nifti_origin(input_image, output_image):
             qform[i - 1, i - 1] = hd['pixdim'][i]
             qform[i - 1, 3] = -1.0 * hd['pixdim'][i] * hd['dim'][i] / 2.0
         new_img = nib.Nifti1Image(canonical_img.get_data(caching='unchanged'), affine=qform, header=hd)
+
+        # Without deleting already-existing file, nib.save causes a severe bug on Linux system
+        os.remove(output_image)
 
         nib.save(new_img, output_image)
         if not isfile(output_image):
