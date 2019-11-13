@@ -72,8 +72,8 @@ class deformetrica_prepare_dataCLI(ce.CmdParser):
             group_id=args.group_id)
         pipeline.parameters = {
             # pass these args by using self.parameters in a dictionary
-            'structure': args.structure or '-qcache',
-            'structure_file': args.structure_file or '-qcache',
+            'structure': args.structure,
+            'structure_file': args.structure_file
         }
         # make sure if working_directory is not defined
         # using a temp folder as the working directory.
