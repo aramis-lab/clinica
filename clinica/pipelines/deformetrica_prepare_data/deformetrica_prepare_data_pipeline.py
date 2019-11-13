@@ -116,31 +116,45 @@ class DeformetricaPrepareData(cpe.Pipeline):
         import deformetrica_prepare_data_utils as utils
         from clinica.utils.exceptions import ClinicaBIDSError
         from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.input_files import T1_FS_BRAIN
 
         # An IdentityInterface to get the T1 CAPS segmentations and
         # brain masks
-        caps_layout = CAPSLayout(self.caps_directory)
-        read_caps_node = npe.Node(
-            name="read_segmentations_node",
-            interface=nutil.IdentityInterface(
-                fields=['caps_brains', 'caps_segmentations'],
-                mandatory_inputs=True))
-        read_caps_node.inputs.caps_brains = utils.select_caps_brains(
-            self.subjects, self.sessions, caps_layout)
-        read_caps_node.inputs.caps_segmentations = utils.select_caps_segmentations(
-            self.subjects, self.sessions, caps_layout)
-#
-#
-#        try:
-#            read_caps_node.inputs.caps_brains = utils.select_caps_brains(
+        try:
+            caps_brains = clinica_file_reader(self.subjects,
+                                              self.sessions,
+                                              self.caps_directory,
+                                              T1_FS_BRAIN)
+            T1_FS_ASEG = {
+                'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/mri/aseg.mgz',
+                'description': ' extracted segmentations from T1w MRI',
+                'needed_pipeline': 't1-freesurfer'}
+            caps_segmentations = clinica_file_reader(self.subjects,
+                                                     self.sessions,
+                                                     self.caps_directory,
+                                                     T1_FS_ASEG)
+        except ClinicaException as e:
+            err_msg = 'Clinica faced error(s) while trying to read files in your BIDS directory.\n' + str(e)
+            raise ClinicaBIDSError(err_msg)
+
+        read_caps_node = npe.Node(name="read_segmentations_node",
+                             iterables=[
+                                 ('input_brains', caps_brains),
+                                 ('input_segmentations', caps_segmentations),
+                             ],
+                             synchronize=True,
+                             interface=nutil.IdentityInterface(
+                                 fields=self.get_input_fields())
+                             )
+
 
         self.connect([
             (
                 read_caps_node, self.input_node,
-                [('caps_brains', 'input_brains')]),
+                [('input_brains', 'input_brains')]),
             (
                 read_caps_node, self.input_node,
-                [('caps_segmentations', 'input_segmentations')])])
+                [('input_segmentations', 'input_segmentations')])])
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
