@@ -63,7 +63,7 @@ class DeformetricaPrepareDataCLI(ce.CmdParser):
         """Run the pipelines with defined args."""
 
         from tempfile import mkdtemp
-        from ./deformetrica_prepare_data_pipeline import DeformetricaPrepareData
+        from .deformetrica_prepare_data_pipeline import DeformetricaPrepareData
 
         pipeline = DeformetricaPrepareData(
             # pass these args by the class attribute itself
