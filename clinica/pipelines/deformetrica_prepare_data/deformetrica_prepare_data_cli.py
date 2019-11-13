@@ -19,12 +19,14 @@ class deformetrica_prepare_dataCLI(ce.CmdParser):
     def define_name(self):
         """Define the sub-command name to run this pipeline.
         """
-        self._name = 'deformetrica-preprocessing'
+        self._name = 'deformetrica-prepare-data'
 
     def define_description(self):
         """Provide a description of this pipeline.
         """
-        self._description = 'Generation of subcortical meshes to use as input for Deformetrica: https://gitlab.icm-institute.org/aramislab/clinica-aramis/wikis/docs/Pipelines/Deformetrica_Preprocessing'
+        self._description = (
+            'Generation of subcortical meshes input for Deformetrica:\n'
+            'http://clinica.run/doc/Pipelines/Deformetrica_prepare_data/')
 
     def define_options(self):
         """Define the sub-command arguments
