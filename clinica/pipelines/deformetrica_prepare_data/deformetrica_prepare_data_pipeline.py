@@ -131,27 +131,13 @@ class DeformetricaPrepareData(cpe.Pipeline):
         read_caps_node.inputs.caps_segmentations = utils.select_caps_segmentations(
             self.subjects, self.sessions, caps_layout)
 
-        # Read structure to be worked on, data kernel width, deformation
-        # kernel width and mesh decimation
-        read_parameters_node = npe.Node(name="LoadingCLIArguments",
-                                        interface=nutil.IdentityInterface(
-                                            fields=self.get_input_fields(),
-                                            mandatory_inputs=True))
-        read_parameters_node.inputs.structure = self.parameters['structure']
-        read_parameters_node.inputs.structure_file = self.parameters['structure_file']
-
         self.connect([
             (
                 read_caps_node, self.input_node,
                 [('caps_brains', 'input_brains')]),
             (
                 read_caps_node, self.input_node,
-                [('caps_segmentations', 'input_segmentations')]),
-            (
-                read_parameters_node, self.input_node,
-                [
-                    ('structure', 'structure'),
-                    ('structure_file', 'structure_file')])])
+                [('caps_segmentations', 'input_segmentations')])])
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
@@ -227,6 +213,8 @@ class DeformetricaPrepareData(cpe.Pipeline):
                 'resources',
                 'mni',
                 'colin27'))
+        process_structure_node.inputs.in_structure = self.parameters['structure']
+        process_structure_node.inputs.in_structure_file = self.parameters['structure_file']
         process_structure_node.inputs.in_colin27_resources_folder = colin27_resources_path
 
         # Step 4: Get Colin 27 structure templates
@@ -552,13 +540,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
             (
                 brain_nii_node, get_affine_node,
                 [('out_file', 'in_file')]),
-            # process provided structure / structure file flags
-            (
-                self.input_node, process_structure_node,
-                [('structure', 'in_structure')]),
-            (
-                self.input_node, process_structure_node,
-                [('structure_file', 'in_structure_file')]),
             # get path to Colin 27 structures
             (
                 process_structure_node, get_colin27_structure_template_node,
