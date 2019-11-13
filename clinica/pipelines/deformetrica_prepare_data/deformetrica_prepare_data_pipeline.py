@@ -3,11 +3,6 @@
 """deformetrica_preprocessing - Clinica Pipeline.
 """
 
-# WARNING: Don't put any import statements here unless they are
-# absolutely necessary. Put those *inside* the different methods.
-# Otherwise the dynamic loading of the pipelines list by the command
-# line tool will be slowed down.
-
 import clinica.pipelines.engine as cpe
 
 __author__ = "Alexis Guyot"
