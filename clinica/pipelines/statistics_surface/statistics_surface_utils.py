@@ -10,6 +10,49 @@ __email__ = "Junhao.Wen@inria.fr"
 __status__ = "Development"
 
 
+def get_pipeline_parameters(group_label,
+                            design_matrix,
+                            contrast,
+                            str_format,
+                            glm_type,
+                            custom_file=None,
+                            feature_label=None,
+                            full_width_at_half_maximum=None,
+                            threshold_uncorrected_pvalue=None,
+                            threshold_corrected_pvalue=None,
+                            cluster_threshold=None):
+    from clinica.utils.exceptions import ClinicaException
+    parameters = {
+        'group_label': group_label,
+        'design_matrix': design_matrix,
+        'contrast': contrast,
+        'str_format': str_format,
+        'glm_type': glm_type,
+        'custom_file': custom_file or None,
+        'feature_label': feature_label or None,
+        'full_width_at_half_maximum': full_width_at_half_maximum or 20,
+        'threshold_uncorrected_pvalue': threshold_uncorrected_pvalue or 0.001,
+        'threshold_corrected_pvalue': threshold_corrected_pvalue or 0.05,
+        'cluster_threshold': cluster_threshold or 0.001,
+    }
+    if parameters['glm_type'] not in ['group_comparison', 'correlation']:
+        raise ClinicaException("The glm_type you specified is wrong: it should be group_comparison or "
+                               "correlation (given value: %s)." % parameters['glm_type'])
+    if parameters['full_width_at_half_maximum'] not in [0, 5, 10, 15, 20]:
+        raise ClinicaException("FWHM for the surface smoothing you specified is wrong: it should be 0, 5, 10, 15 or 20 "
+                               "(given value: %s)." % parameters['full_width_at_half_maximum'])
+    if parameters['threshold_uncorrected_pvalue'] < 0 or parameters['threshold_uncorrected_pvalue'] > 1:
+        raise ClinicaException("Uncorrected p-value threshold should be a lower than 1 "
+                               "(given value: %s)." % parameters['threshold_uncorrected_pvalue'])
+    if parameters['threshold_corrected_pvalue'] < 0 or parameters['threshold_corrected_pvalue'] > 1:
+        raise ClinicaException("Corrected p-value threshold should be a lower than 1 "
+                               "(given value: %s)." % parameters['threshold_corrected_pvalue'])
+    if parameters['cluster_threshold'] < 0 or parameters['cluster_threshold'] > 1:
+        raise ClinicaException("Cluster threshold should be a lower than 1 "
+                               "(given value: %s)." % parameters['cluster_threshold'])
+    return parameters
+
+
 def prepare_data(input_directory, subjects_visits_tsv, group_label, glm_type):
     """Fetch all the intermediate variables for this workflow.
 

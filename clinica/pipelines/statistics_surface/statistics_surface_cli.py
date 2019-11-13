@@ -18,8 +18,10 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         from colorama import Fore
+        from .statistics_surface_utils import get_pipeline_parameters
+        parameters = get_pipeline_parameters("GroupLabel", "DesignMatrix", "Contrast", "Str", "correlation")
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
-        clinica_comp = self._args.add_argument_group('%sMandatory arguments%s' % (Fore.BLUE , Fore.RESET))
+        clinica_comp = self._args.add_argument_group('%sMandatory arguments%s' % (Fore.BLUE, Fore.RESET))
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
         clinica_comp.add_argument("subject_visits_with_covariates_tsv",
@@ -44,12 +46,14 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("-fwhm", "--full_width_at_half_maximum",
-                              type=int, default=20,
-                              help='FWHM for the surface smoothing (default: --full_width_at_half_maximum 20).')
+                              type=int, default=parameters['full_width_at_half_maximum'],
+                              help='FWHM for the surface smoothing '
+                                   '(default: --full_width_at_half_maximum %(default)s).')
         optional.add_argument("-ft", "--feature_type",
-                              type=str, default=None,
-                              help='Type of surface-based feature: cortical_thickness or pet_fdg_projection '
-                                   '(default: --feature_type cortical_thickness).')
+                              type=str, default='cortical_thickness',
+                              help='Type of surface-based feature: cortical_thickness (from t1-freesurfer pipeline)'
+                                   'or pet_fdg_projection (from pet-surface pipeline)'
+                                   '(default: --feature_type %(default)s).')
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments(add_tsv_flag=False)
         # Advanced arguments (i.e. tricky parameters)
@@ -65,24 +69,24 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                               help='Name of the feature type, it will be saved on the CAPS _measure-FEATURE_LABEL '
                                    'key-value association.')
         advanced.add_argument("-tup", "--threshold_uncorrected_pvalue",
-                              type=float, default=0.001,
+                              type=float, default=parameters['threshold_uncorrected_pvalue'],
                               help='Threshold to display the uncorrected p-value '
-                                   '(--threshold_uncorrected_pvalue 0.001).')
+                                   '(--threshold_uncorrected_pvalue %(default)s).')
         advanced.add_argument("-tcp", "--threshold_corrected_pvalue",
-                              type=float, default=0.05,
+                              type=float, default=parameters['threshold_corrected_pvalue'],
                               help='Threshold to display the corrected p-value '
-                                   '(default: --threshold_corrected_pvalue 0.05)')
+                                   '(default: --threshold_corrected_pvalue %(default)s)')
         advanced.add_argument("-ct", "--cluster_threshold",
-                              type=float, default=0.001,
+                              type=float, default=parameters['cluster_threshold'],
                               help='Threshold to define a cluster in the process of cluster-wise correction '
-                                   '(default: --cluster_threshold 0.001).')
+                                   '(default: --cluster_threshold %(default)s).')
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
         import os
         from networkx import Graph
         from .statistics_surface_pipeline import StatisticsSurface
-        from .statistics_surface_utils import check_inputs
+        from .statistics_surface_utils import check_inputs, get_pipeline_parameters
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
         from clinica.utils.exceptions import ClinicaException
@@ -122,26 +126,25 @@ class StatisticsSurfaceCLI(ce.CmdParser):
             error_message = 'group_id: ' + args.group_id + ' already exists, please choose another one or delete ' \
                             'the existing folder and also the working directory and rerun the pipeline'
             raise ClinicaException(error_message)
-
+        parameters = get_pipeline_parameters(
+            group_label=args.group_id,
+            design_matrix=args.design_matrix,
+            contrast=args.contrast,
+            str_format=args.string_format,
+            glm_type=args.glm_type,
+            custom_file=args.custom_file,
+            feature_label=args.feature_label,
+            full_width_at_half_maximum=args.full_width_at_half_maximum,
+            threshold_uncorrected_pvalue=args.threshold_uncorrected_pvalue,
+            threshold_corrected_pvalue=args.threshold_corrected_pvalue,
+            cluster_threshold=args.cluster_threshold,
+        )
         pipeline = StatisticsSurface(
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subject_visits_with_covariates_tsv),
             base_dir=self.absolute_path(args.working_directory),
+            parameters=parameters
         )
-        pipeline.parameters = {
-            # pass these args by using self.parameters in a dictionary
-            'design_matrix': args.design_matrix,
-            'contrast': args.contrast,
-            'str_format': args.string_format,
-            'group_label': args.group_id,
-            'glm_type': args.glm_type,
-            'custom_file': args.custom_file,
-            'feature_label': args.feature_label,
-            'full_width_at_half_maximum': args.full_width_at_half_maximum,
-            'threshold_uncorrected_pvalue': args.threshold_uncorrected_pvalue,
-            'threshold_corrected_pvalue': args.threshold_corrected_pvalue,
-            'cluster_threshold': args.cluster_threshold
-        }
 
         check_inputs(pipeline.caps_directory,
                      pipeline.parameters['custom_file'],
