@@ -37,13 +37,6 @@ def select_object(
     import warnings
     import os
 
-    # make participant_id compliant with caps_layout: crop 'sub' and
-    # 'ses'
-    if participant_id.startswith('sub-'):
-        participant_id = participant_id[4:]
-    if session_id.startswith('ses-'):
-        session_id = session_id[4:]
-
     # search for object with the caps_layout
     selected_objects_unfiltered = caps_layout.get(
         return_type='file',
