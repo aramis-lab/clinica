@@ -16,10 +16,28 @@ class StatisticsSurface(cpe.Pipeline):
     """
     Based on the Matlab toolbox [SurfStat](http://www.math.mcgill.ca/keith/surfstat/), which performs statistical
     analyses of univariate and multivariate surface and volumetric data using the generalized linear model (GLM),
-    this pipelines performs analyses including group comparison and correlation with the surface-based features.
-    Currently, this pipelines fits the normalised cortical thickness on FsAverage from `t1-freesurfer` pipelines.
-    New features will be added in the future.
+    this pipeline performs analyses including group comparison and correlation with surface-based features e.g.
+    cortical thickness from t1-freesurfer or map of activity from PET data from pet-surface pipeline.
 
+    TODO: Refactor StatisticsSurface
+        [ ] build_input_node
+            [ ] Remove current read_parameters_node
+            [ ] With the help of statistics_surface_utils.py::check_inputs, use new clinica_file_reader function
+                to check and extract surface-based features
+            [ ] Delete statistics_surface_utils.py::check_inputs function
+            [ ] Move statistics_surface_cli.py checks of input data in this method
+            [ ] Handle overwrite case
+            [ ] Display participants, covariates and info regarding the GLM.
+        [ ] build_core_nodes
+            [ ] Use surfstat.inputs.full_width_at_half_maximum = self.parameter['full_width_at_half_maximum']
+                instead of connecting read_parameters_node.inputs.full_width_at_half_maximum
+                to surfstat.inputs.full_width_at_half_maximum
+            [ ] Repeat for other keys
+            [ ] Use working directory
+        [ ] build_output_node
+            [ ] Remove path_to_matscript and freesurfer_home: it should be set in runmatlab function
+            [ ] Copy results from <WD> to <CAPS>
+        [ ] Clean/adapt statistics_surface_utils.py
 
     Args:
         caps_directory: str, the output folder of recon-all which will contain the result files: ?h.thickness.fwhm**.mgh.
