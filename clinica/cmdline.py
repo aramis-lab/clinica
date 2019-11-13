@@ -212,6 +212,7 @@ def execute():
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
                                    extra_dir="pipelines").load()
     pipelines += [
+        DeformetricaPrepareDataCLI(),
         T1FreeSurferCLI(),
         T1VolumeNewTemplateCLI(),
         # T1FreeSurferLongitudinalCLI(),
