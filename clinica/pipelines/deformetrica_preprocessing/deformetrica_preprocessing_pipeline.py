@@ -20,7 +20,7 @@ __email__ = "alexis.guyot@icm-institute.org"
 __status__ = "Development"
 
 
-class deformetrica_preprocessing(cpe.Pipeline):
+class DeformetricaPrepareData(cpe.Pipeline):
     """Preprocessing for Deformetrica software
 
     Creates a pipeline that extract any brain structure from a set of
@@ -35,21 +35,12 @@ class deformetrica_preprocessing(cpe.Pipeline):
             format).
 
     Returns:
-        A clinica pipeline object containing the deformetrica_preprocessing pipeline.
-
-    Example:
-        >>> from deformetrica_preprocessing import deformetrica_preprocessing
-        >>> pipeline = deformetrica_preprocessing('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
-        >>> pipeline.parameters = {
-        >>>     # ...
-        >>> }
-        >>> pipeline.base_dir = '/tmp/'
-        >>> pipeline.run()
+        A clinica pipeline object containing the DeformetricaPrepareData pipeline.
     """
     def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
         import os
 
-        super(deformetrica_preprocessing, self).__init__(
+        super(DeformetricaPrepareData, self).__init__(
             bids_directory,
             caps_directory,
             tsv_file,
@@ -129,7 +120,7 @@ class deformetrica_preprocessing(cpe.Pipeline):
         import os
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        import deformetrica_preprocessing_utils as utils
+        import deformetrica_prepare_data_utils as utils
         from clinica_aramis.iotools.layouts.caps_layout import CAPSLayout
 
 
@@ -211,7 +202,7 @@ class deformetrica_preprocessing(cpe.Pipeline):
         """
         import os
 
-        import deformetrica_preprocessing_utils as utils
+        import deformetrica_prepare_data_utils as utils
         import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe

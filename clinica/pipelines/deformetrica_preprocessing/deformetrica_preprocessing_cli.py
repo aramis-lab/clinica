@@ -12,7 +12,7 @@ __email__ = "alexis.guyot@icm-institute.org"
 __status__ = "Development"
 
 
-class deformetrica_preprocessingCLI(ce.CmdParser):
+class deformetrica_prepare_dataCLI(ce.CmdParser):
     """CLI class
     """
 
@@ -67,9 +67,9 @@ class deformetrica_preprocessingCLI(ce.CmdParser):
         """
 
         from tempfile import mkdtemp
-        from deformetrica_preprocessing_pipeline import deformetrica_preprocessing
+        from ./deformetrica_prepare_data_pipeline import DeformetricaPrepareData
 
-        pipeline = deformetrica_preprocessing(
+        pipeline = DeformetricaPrepareData(
             # pass these args by the class attribute itself
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),

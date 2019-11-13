@@ -1,5 +1,5 @@
 {
-    "id": "aramislab/deformetrica_preprocessing",
+    "id": "aramislab/deformetrica-prepare-data",
     "author": "Alexis Guyot",
     "version": "0.1.0",
     "dependencies": [

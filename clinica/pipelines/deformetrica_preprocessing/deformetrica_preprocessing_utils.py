@@ -420,7 +420,7 @@ def get_valid_structure_list(in_colin27_resources_folder):
         valid_structure_list (list of string): list of all valid
             structures
     """
-    import deformetrica_preprocessing_utils as utils
+    import deformetrica_prepare_data_utils as utils
 
     # get structures for which a freesurfer ID has been defined
     freesurferid_structure_dictionary = utils.get_structure_id_dictionary()
@@ -454,7 +454,7 @@ def get_structure_id(in_structure):
     Returns:
         out_structure_id (integer): corresponding freesurfer ID (>=0)
     """
-    import deformetrica_preprocessing_utils as utils
+    import deformetrica_prepare_data_utils as utils
 
     # get dictionaries linking structures to Freesurfer ID
     structure_id_dictionary = utils.get_structure_id_dictionary()
@@ -488,7 +488,7 @@ def get_colin27_structure_template(in_structure, in_colin27_resources_folder):
             Colin27 template (for now: path to corresponding Colin27
             structure in resource folder)
     """
-    import deformetrica_preprocessing_utils as utils
+    import deformetrica_prepare_data_utils as utils
 
     # define dictionaries linking structures to Colin 27 counterpart
     # We may want to move this out of code and into file in the future
@@ -532,7 +532,7 @@ def process_structure(
             structures. Structures are listed line by line.
     """
     import os
-    import deformetrica_preprocessing_utils as utils
+    import deformetrica_prepare_data_utils as utils
 
     # retrieve list of structures from the arguments
     out_structure_list = []
@@ -669,7 +669,7 @@ def link_objects_structures(
             subject to corresponding output subjects
     """
     import numpy as np
-    import deformetrica_preprocessing_utils as utils
+    import deformetrica_prepare_data_utils as utils
 
     # link [brain image] to [structure]
     [out_brain_list, out_structure_list, out_map] = utils.link_objects1_objects2(
@@ -718,7 +718,7 @@ def apply_affine(
     import os
     import vtk
     import numpy as np
-    import deformetrica_preprocessing_utils as utils
+    import deformetrica_prepare_data_utils as utils
 
     # Read input segmentation
     reader = vtk.vtkPolyDataReader()
@@ -1115,7 +1115,7 @@ def rigid_register_colin27(
             per-subject .vtk rigidly registered meshs
     """
     import numpy as np
-    import deformetrica_preprocessing_utils as utils
+    import deformetrica_prepare_data_utils as utils
 
     out_persubject_regmesh_list = []
     subject_overall_points = np.zeros((0, 3), np.float)
@@ -1182,7 +1182,7 @@ def link_basedirs_structures(in_basedir_list, in_structure_list):
         out_basedir_list (list of String): reordered list of datasink
             base directory paths
     """
-    import deformetrica_preprocessing_utils as utils
+    import deformetrica_prepare_data_utils as utils
     [out_basedir_list, dummy, dummy] = utils.link_objects1_objects2(
         in_basedir_list,
         in_structure_list)
