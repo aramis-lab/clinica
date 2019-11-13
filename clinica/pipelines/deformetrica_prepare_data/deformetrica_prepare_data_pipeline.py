@@ -97,9 +97,7 @@ class DeformetricaPrepareData(cpe.Pipeline):
         """
         return [
             'input_brains',
-            'input_segmentations',
-            'structure',
-            'structure_file']
+            'input_segmentations']
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
@@ -116,7 +114,8 @@ class DeformetricaPrepareData(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import deformetrica_prepare_data_utils as utils
-        from clinica_aramis.iotools.layouts.caps_layout import CAPSLayout
+        from clinica.utils.exceptions import ClinicaBIDSError
+        from clinica.utils.inputs import clinica_file_reader
 
         # An IdentityInterface to get the T1 CAPS segmentations and
         # brain masks
@@ -130,6 +129,10 @@ class DeformetricaPrepareData(cpe.Pipeline):
             self.subjects, self.sessions, caps_layout)
         read_caps_node.inputs.caps_segmentations = utils.select_caps_segmentations(
             self.subjects, self.sessions, caps_layout)
+#
+#
+#        try:
+#            read_caps_node.inputs.caps_brains = utils.select_caps_brains(
 
         self.connect([
             (
