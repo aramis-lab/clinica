@@ -12,7 +12,7 @@ __email__ = "alexis.guyot@icm-institute.org"
 __status__ = "Development"
 
 
-class deformetrica_prepare_dataCLI(ce.CmdParser):
+class DeformetricaPrepareDataCLI(ce.CmdParser):
     """CLI class"""
 
     def define_name(self):
