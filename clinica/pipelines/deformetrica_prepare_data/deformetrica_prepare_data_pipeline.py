@@ -205,6 +205,8 @@ class DeformetricaPrepareData(cpe.Pipeline):
                     'out_structure_list',
                     'out_structure_file'],
                 function=utils.process_structure))
+        process_structure_node.inputs.in_structure = self.parameters['structure']
+        process_structure_node.inputs.in_structure_file = self.parameters['structure_file']
         colin27_resources_path = os.path.abspath(
             os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
@@ -213,8 +215,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
                 'resources',
                 'mni',
                 'colin27'))
-        process_structure_node.inputs.in_structure = self.parameters['structure']
-        process_structure_node.inputs.in_structure_file = self.parameters['structure_file']
         process_structure_node.inputs.in_colin27_resources_folder = colin27_resources_path
 
         # Step 4: Get Colin 27 structure templates
