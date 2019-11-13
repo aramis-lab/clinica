@@ -30,9 +30,16 @@ class DeformetricaPrepareData(cpe.Pipeline):
             format).
 
     Returns:
-        A clinica pipeline object containing the DeformetricaPrepareData pipeline.
+        A clinica pipeline object containing the DeformetricaPrepareData
+            pipeline.
     """
-    def __init__(self, bids_directory=None, caps_directory=None, tsv_file=None, name=None, group_id='default'):
+    def __init__(
+            self,
+            bids_directory=None,
+            caps_directory=None,
+            tsv_file=None,
+            name=None,
+            group_id='default'):
         import os
 
         super(DeformetricaPrepareData, self).__init__(
@@ -65,12 +72,12 @@ class DeformetricaPrepareData(cpe.Pipeline):
         # Check that there are at least 2 subjects
         if len(self.subjects) <= 1:
             raise ValueError(
-                'This pipeline needs at least 2 subjects to produce input to [Deformetrica - generate template], and found {0} only in {1}.'.format(
+                str.format(
+                    'This pipeline needs at least 2 subjects to produce input to [Deformetrica - generate template], and found {0} only in {1}.',
                     len(self.subjects),
                     self.tsv_file))
 
         self._group_id = group_id
-
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in `info.json`.
@@ -82,14 +89,12 @@ class DeformetricaPrepareData(cpe.Pipeline):
         if not vtk_version:
             raise RuntimeError('No version of VTK found on the system.')
 
-
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
 
         Returns:
             A list of (string) input fields name.
         """
-
         return [
             'input_brains',
             'input_segmentations',
@@ -97,17 +102,13 @@ class DeformetricaPrepareData(cpe.Pipeline):
             'structure',
             'structure_file']
 
-
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
 
         Returns:
             A list of (string) output fields name.
         """
-
         return []
-
-
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -118,9 +119,8 @@ class DeformetricaPrepareData(cpe.Pipeline):
         import deformetrica_prepare_data_utils as utils
         from clinica_aramis.iotools.layouts.caps_layout import CAPSLayout
 
-
-
-        # An IdentityInterface to get the T1 CAPS segmentations and brain masks
+        # An IdentityInterface to get the T1 CAPS segmentations and
+        # brain masks
         caps_layout = CAPSLayout(self.caps_directory)
         read_caps_node = npe.Node(
             name="read_segmentations_node",
@@ -131,7 +131,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
             self.subjects, self.sessions, caps_layout)
         read_caps_node.inputs.caps_segmentations = utils.select_caps_segmentations(
             self.subjects, self.sessions, caps_layout)
-
 
         read_colin27_node = npe.Node(
             name="read_colin27_node",
@@ -150,16 +149,14 @@ class DeformetricaPrepareData(cpe.Pipeline):
         read_colin27_node.inputs.colin27_image = utils.select_colin27_image(
             colin27_image_path)
 
-
-        # Read structure to be worked on, data kernel width, deformation kernel
-        # width and mesh decimation
+        # Read structure to be worked on, data kernel width, deformation
+        # kernel width and mesh decimation
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(
                                             fields=self.get_input_fields(),
                                             mandatory_inputs=True))
         read_parameters_node.inputs.structure = self.parameters['structure']
         read_parameters_node.inputs.structure_file = self.parameters['structure_file']
-
 
         self.connect([
             (
@@ -177,7 +174,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
                     ('structure', 'structure'),
                     ('structure_file', 'structure_file')])])
 
-
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
 
@@ -186,11 +182,7 @@ class DeformetricaPrepareData(cpe.Pipeline):
         only if this pipeline output is not already connected to a next
         Clinica pipeline.
         """
-
-
         pass
-
-
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
@@ -204,7 +196,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
         import nipype.interfaces.freesurfer as freesurfer
         import nipype.interfaces.fsl as fsl
 
-
         # Step 1: Convert brain masks to .nii format (for FSL flirt)
         # ======
         brain_nii_node_name = 'step1_brain_nii_node'
@@ -216,7 +207,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
         # force to same orientation as Colin 27 volume
         brain_nii_node.inputs.out_orientation = 'RAS'
 
-
         # Step 2: get affine matrix T1 (brain mask) list <-> Colin 27
         # ======
         get_affine_node_name = 'step2_get_affine_node'
@@ -224,7 +214,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
             name=get_affine_node_name,
             interface=fsl.FLIRT(),
             iterfield=['in_file'])
-
 
         # Step 3: process [structure]/[structure file] input
         # ======
@@ -249,7 +238,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
                 'colin27'))
         process_structure_node.inputs.in_colin27_resources_folder = colin27_resources_path
 
-
         # Step 4: Get Colin 27 structure templates
         # =======
         get_colin27_structure_template_node_name = 'step4_get_colin27_structure_path_node'
@@ -273,7 +261,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
                 'colin27'))
         get_colin27_structure_template_node.inputs.in_colin27_resources_folder = colin27_resources_path
 
-
         # Step 5: Link several objects to structures so we can loop over
         #         ([object], structure)
         # ======
@@ -296,9 +283,7 @@ class DeformetricaPrepareData(cpe.Pipeline):
                     'out_affine_list',
                     'out_structure_list',
                     'out_map'],
-                function=utils.link_objects_structures
-                ))
-
+                function=utils.link_objects_structures))
 
         # Step 6: Get list of structure IDs from list of structures
         # ======
@@ -314,7 +299,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
                 ),
             iterfield=['in_structure'])
 
-
         # Step 7: Tesselate structure from T1 recon-all output
         # ======
         # Note: we're iterating over each {subject, structure}
@@ -323,9 +307,9 @@ class DeformetricaPrepareData(cpe.Pipeline):
             name=tesselate_node_name,
             interface=freesurfer.MRITessellate(),
             iterfield=['in_file', 'label_value'])
-        # /!\ FORCE to RAS coordinates so both subject surface and Colin27 surface in RAS
+        # Force to RAS coordinates so both subject surface and Colin27
+        # surface are in RAS
         tesselate_node.inputs.use_real_RAS_coordinates = True
-
 
         # Step 8: Smooth structure
         # ======
@@ -335,7 +319,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
             interface=freesurfer.SmoothTessellation(),
             iterfield=['in_file'])
 
-
         # Step 9: Return .vtk structure surfaces
         # ======
         get_vtk_surface_node_name = 'step9_get_vtk_surface_node'
@@ -344,7 +327,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
             interface=freesurfer.MRIsConvert(),
             iterfield=['in_file'])
         get_vtk_surface_node.inputs.out_datatype = 'vtk'
-
 
         # Step 10: Apply affine transformation to meshes
         # =======
@@ -366,7 +348,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
                 'in_affine',
                 'in_brain',
                 'in_structure'])
-
 
         # Step 11: get per-subject list of meshes
         # =======
@@ -403,7 +384,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
                 ),
             iterfield=['in_persubject_mesh_list'])
 
-
         # Step 13: create per-{subject-structure} datasink basedir
         # =======
         # This links the persubject datasink base directory to the list
@@ -427,7 +407,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
                 't1') for subj_sess in zip(self.subjects, self.sessions)]
         link_basedir_structures_node.inputs.in_basedir_list = subject_data_basedir_list
 
-
         # Step 14: save per-{subject-structure} data to CAPS_DIR
         # =======
         # - initial .vtk meshes
@@ -448,7 +427,8 @@ class DeformetricaPrepareData(cpe.Pipeline):
             subject_structure_datasink_name)
         # Rename affine registered surfaces
         affine_surface_substitution = (
-            r'sub-(.*)/ses-(.*)/t1/{0}/_{1}.*/affine_registered_(.*)\.vtk'.format(
+            str.format(
+                r'sub-(.*)/ses-(.*)/t1/{0}/_{1}.*/affine_registered_(.*)\.vtk',
                 data_subfolder,
                 apply_affine_node_name),
             r'sub-\1/ses-\2/t1/target-MNIColin27_AffineRegistration/sub-\1_ses-\2_target-MNIColin27_affine_\3.vtk')
@@ -461,16 +441,17 @@ class DeformetricaPrepareData(cpe.Pipeline):
             # rename initial surface given the structure name / corresponding
             # Freesurfer ID
             initial_substitution = (
-                r'sub-(.*)/ses-(.*)/t1/{0}/_{1}.*/aseg_smoothed\.mgz_{2}_converted\.vtk'.format(
+                str.format(
+                    r'sub-(.*)/ses-(.*)/t1/{0}/_{1}.*/aseg_smoothed\.mgz_{2}_converted\.vtk',
                     data_subfolder,
                     get_vtk_surface_node,
                     valid_structure_id),
-                r'sub-\1/ses-\2/t1/freesurfer_cross_sectional/sub-\1_ses-\2/bem/sub-\1_ses-\2_orientation-RAS_{0}.vtk'.format(
+                str.format(
+                    r'sub-\1/ses-\2/t1/freesurfer_cross_sectional/sub-\1_ses-\2/bem/sub-\1_ses-\2_orientation-RAS_{0}.vtk',
                     valid_structure))
             subject_structure_data_regexp_substitution_list.append(
                 initial_substitution)
         subject_structure_datasink.inputs.regexp_substitutions = subject_structure_data_regexp_substitution_list
-
 
         # Step 15: save per-{subject} data to CAPS_DIR
         # =======
@@ -493,19 +474,22 @@ class DeformetricaPrepareData(cpe.Pipeline):
             subject_datasink_name)
         # rename rigidly registered surfaces
         rigid_surface_substitution = (
-            r'sub-(.*)/ses-(.*)/t1/{0}/_{1}.*/out_reoriented_(.*).vtk'.format(
+            str.format(
+                r'sub-(.*)/ses-(.*)/t1/{0}/_{1}.*/out_reoriented_(.*).vtk',
                 data_subfolder,
                 rigid_reg_node_name),
             r'sub-\1/ses-\2/t1/target-MNIColin27_RigidRegistration/sub-\1_ses-\2_target-MNIColin27_rigid_\3.vtk') 
         # rename affine registration matrices
         affine_matrix_substitution = (
-            r'sub-(.*)/ses-(.*)/t1/{0}/_{1}.*/brainmask_out_flirt.mat'.format(
+            str.format(
+                r'sub-(.*)/ses-(.*)/t1/{0}/_{1}.*/brainmask_out_flirt.mat',
                 data_subfolder,
                 get_affine_node_name),
             r'sub-\1/ses-\2/t1/target-MNIColin27_AffineRegistration/sub-\1_ses-\2_target-MNIColin27_affine-fsl.mat') 
         # rename affine registration matrices
         affine_volume_substitution = (
-            r'sub-(.*)/ses-(.*)/t1/{0}/_{1}.*/brainmask_out_flirt.nii.gz'.format(
+            str.format(
+                r'sub-(.*)/ses-(.*)/t1/{0}/_{1}.*/brainmask_out_flirt.nii.gz',
                 data_subfolder,
                 get_affine_node_name),
             r'sub-\1/ses-\2/t1/target-MNIColin27_AffineRegistration/sub-\1_ses-\2_target-MNIColin27_T1w.nii.gz') 
@@ -516,7 +500,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
         subject_data_regexp_substitution_list.append(
             affine_volume_substitution)
         subject_datasink.inputs.regexp_substitutions = subject_data_regexp_substitution_list
-
 
         # Step 16: save per-{structure} data to CAPS_DIR
         # =======
@@ -534,12 +517,13 @@ class DeformetricaPrepareData(cpe.Pipeline):
             structure_datasink_name)
         # add 'template' to structure name
         structure_data_regexp_substitution_list.append((
-            r'groups/group-{0}/templates/colin27_(.*).vtk'.format(
+            str.format(
+                r'groups/group-{0}/templates/colin27_(.*).vtk',
                 self._group_id),
-            r'groups/group-{0}/templates/colin27_template_\1.vtk'.format(
+            str.format(
+                r'groups/group-{0}/templates/colin27_template_\1.vtk',
                 self._group_id)))
         structure_datasink.inputs.regexp_substitutions = structure_data_regexp_substitution_list
-
 
         # Step 17: save common group data to CAPS_DIR
         # =======
@@ -555,13 +539,13 @@ class DeformetricaPrepareData(cpe.Pipeline):
             'groups',
             'group-{0}'.format(self._group_id))
         group_data_regexp_substitution_list = [(
-            r'groups/group-{0}/structures/out_structure_file.txt'.format(
+            str.format(
+                r'groups/group-{0}/structures/out_structure_file.txt',
                 self._group_id),
-            r'groups/group-{0}/structures/structure_list.txt'.format(
+            str.format(
+                r'groups/group-{0}/structures/structure_list.txt',
                 self._group_id))]
         group_datasink.inputs.regexp_substitutions = group_data_regexp_substitution_list
-
-
 
         # Connection
         # ==========

@@ -10,7 +10,6 @@ __email__ = "alexis.guyot@icm-institute.org"
 __status__ = "Development"
 
 
-
 def select_object(
         participant_id,
         session_id,
@@ -19,7 +18,8 @@ def select_object(
         object_description):
     """Select subject-specific object
 
-    Returns user-specified object corresponding to participant ID + session ID
+    Returns user-specified object corresponding to 
+    participant ID + session ID
 
     Args:
        participant_id (String):
@@ -65,16 +65,21 @@ def select_object(
     # check for errors/abnormalities
     if len(selected_objects) == 0:
         raise RuntimeError(
-            'No {0}s were found for participant {1} and session {2}'.format(
-                object_description, participant_id, session_id))
+            str.format(
+                'No {0}s were found for participant {1} and session {2}',
+                object_description,
+                participant_id,
+                session_id))
     if len(selected_objects) > 1:
         warnings.warn(
-            'Several {0}s were found for participant {1} and session {2}'.format(
-                object_description, participant_id, session_id),
+            str.format(
+                'Several {0}s were found for participant {1} and session {2}',
+                object_description,
+                participant_id,
+                session_id),
             RuntimeWarning)
 
     return selected_objects[0]
-
 
 
 def select_caps_brains(subjects, sessions, caps_layout):
@@ -123,7 +128,6 @@ def select_brain(participant_id, session_id, caps_layout):
     return brain
 
 
-
 def select_caps_segmentations(subjects, sessions, caps_layout):
     """Select segmentation for list of subjects
 
@@ -150,9 +154,8 @@ def select_caps_segmentations(subjects, sessions, caps_layout):
     return segmentation_list
 
 
-
 def select_segmentation(participant_id, session_id, caps_layout):
-    """ Select subject-specific aseg.mgz
+    """Select subject-specific aseg.mgz
 
     Returns aseg.mgz segmentation corresponding to a
     participant ID + session ID
@@ -175,7 +178,6 @@ def select_segmentation(participant_id, session_id, caps_layout):
     return segmentation
 
 
-
 def get_file(filename):
     """This only checks whether the file exists
 
@@ -193,7 +195,6 @@ def get_file(filename):
     return filename
 
 
-
 def select_colin27_image(colin27_image):
     """Loads Colin 27 volume
 
@@ -207,9 +208,8 @@ def select_colin27_image(colin27_image):
     return get_file(colin27_image)
 
 
-
 def check_cuda_flag(in_cuda_flag):
-    """ Check the CUDA flag provided by the user
+    """Check the CUDA flag provided by the user
 
     Args:
         in_cuda_flag (String): CUDA flag provided by the user
@@ -226,10 +226,8 @@ def check_cuda_flag(in_cuda_flag):
     return out_cuda_flag
 
 
-
 def read_surface_points(in_surface):
-    """
-    Reads points from a vtk surface
+    """Reads points from a vtk surface
 
     Args:
         in_surface (vtk surface)
@@ -250,14 +248,14 @@ def read_surface_points(in_surface):
     return out_points
 
 
-
 def get_target_coordinates(
         in_points,
         in_source_filename,
         in_target_filename,
         in_affine_filename,
         in_mm=True):
-    """
+    """Gets affine transformed points coordinates
+
     Function to get the coordinates of a set of points displaced with
     an affine transformation found using FSL flirt. This calls
     img2imgcoord, an FSL utility.
@@ -300,7 +298,6 @@ def get_target_coordinates(
     return out_points
 
 
-
 def check_structure_in_dictionary(structure, dictionary):
     """Check if a given structure is part of a dictionary.
 
@@ -319,9 +316,10 @@ def check_structure_in_dictionary(structure, dictionary):
     structure_list_string = ", ".join(structure_list)
     if structure not in structure_list:
         raise RuntimeError(
-            '\'{0}\' is not a supported structure.\n Valid structures are: {1}'.format(
-                structure, structure_list_string))
-
+            str.format(
+                '\'{0}\' is not a supported structure.\n Valid structures are: {1}',
+                structure,
+                structure_list_string))
 
 
 def get_structure_id_dictionary():
@@ -364,7 +362,6 @@ def get_structure_id_dictionary():
     return structure_id_dictionary
 
 
-
 def get_colin27_structure_path_dictionary(in_colin27_resources_folder):
     """Get map Colin 27 hippocampal structure -> path
 
@@ -396,12 +393,12 @@ def get_colin27_structure_path_dictionary(in_colin27_resources_folder):
     for structure in structure_list:
         for side in side_list:
             side_structure = '{0}-{1}'.format(side, structure)
-            colin27_structure_path_dictionary[side_structure] = "{0}/colin27_{1}.vtk".format(
+            colin27_structure_path_dictionary[side_structure] = str.format(
+                "{0}/colin27_{1}.vtk",
                 in_colin27_resources_folder,
                 side_structure)
 
     return colin27_structure_path_dictionary
-
 
 
 def get_valid_structure_list(in_colin27_resources_folder):
@@ -442,7 +439,6 @@ def get_valid_structure_list(in_colin27_resources_folder):
     return valid_structure_list
 
 
-
 def get_structure_id(in_structure):
     """Returns a freesurfer-intelligible ID for a given structure.
 
@@ -464,7 +460,6 @@ def get_structure_id(in_structure):
     out_structure_id = structure_id_dictionary[in_structure]
 
     return out_structure_id
-
 
 
 def get_colin27_structure_template(in_structure, in_colin27_resources_folder):
@@ -505,7 +500,6 @@ def get_colin27_structure_template(in_structure, in_colin27_resources_folder):
     out_colin27_structure_template = out_colin27_structure_path
 
     return out_colin27_structure_template
-
 
 
 def process_structure(
@@ -570,9 +564,8 @@ def process_structure(
     return [out_structure_list, out_structure_file]
 
 
-
 def link_objects1_objects2(in_object1_list, in_object2_list, output_map=False):
-    """ Links two lists of objects together.
+    """Links two lists of objects together.
 
     Links a list of objects (type 1) to another list of objects
     (type 2). Returns all possible combinations (Cartesian product)
@@ -627,11 +620,11 @@ def link_objects1_objects2(in_object1_list, in_object2_list, output_map=False):
     if output_map:
         out_object1_np = np.array(out_object1_list)
         out_map = [
-            np.where(out_object1_np == in_object1)[0].tolist() for in_object1 in in_object1_list]
+            np.where(
+                out_object1_np == in_object1
+            )[0].tolist() for in_object1 in in_object1_list]
 
     return out_object1_list, out_object2_list, out_map
-
-
 
 
 def link_objects_structures(
@@ -639,7 +632,7 @@ def link_objects_structures(
         in_segmentation_list,
         in_affine_list,
         in_structure_list):
-    """ Links object list to structure ID list
+    """Links object list to structure ID list
 
     Links a list of objects to a list of structures IDs. The list of
     object can be:
@@ -688,7 +681,6 @@ def link_objects_structures(
     return [out_brain_list, out_segmentation_list, out_affine_list, out_structure_list, out_map]
 
 
-
 def apply_affine(
         in_segmentation,
         in_affine,
@@ -697,8 +689,8 @@ def apply_affine(
         in_structure):
     """Affine reorient segmentation
 
-    Apply an affine matrix (usually found with an affine registration) to
-    reorient a segmentation.
+    Apply an affine matrix (usually found with an affine registration)
+    to reorient a segmentation.
 
     Args:
         in_segmentation (String): path to .vtk segmentation
@@ -713,7 +705,8 @@ def apply_affine(
             expression.
 
     Returns:
-        out_affine_reoriented (String): path to .vtk re-oriented segmentation
+        out_affine_reoriented (String): path to .vtk re-oriented
+            segmentation
     """
     import os
     import vtk
@@ -741,7 +734,8 @@ def apply_affine(
 
     # update .vtk surface with new points
     current_path = os.path.abspath('./')
-    out_affine_reoriented = "{0}/affine_registered_{1}.vtk".format(
+    out_affine_reoriented = str.format(
+        "{0}/affine_registered_{1}.vtk",
         current_path,
         in_structure)
     vtk_points = vtk.vtkPoints()
@@ -759,7 +753,6 @@ def apply_affine(
     writer.Update()
 
     return out_affine_reoriented
-
 
 
 def decimate_mesh(in_mesh, in_decimation):
@@ -798,7 +791,6 @@ def decimate_mesh(in_mesh, in_decimation):
     return out_decimated_mesh
 
 
-
 def get_persubject_meshes(in_mesh_list, in_map):
     """ Returns per-subject list of decimated meshes.
 
@@ -822,7 +814,6 @@ def get_persubject_meshes(in_mesh_list, in_map):
             subject_index] for subject_index in subject_indices] for subject_indices in in_map]
 
     return out_persubject_meshlist
-
 
 
 def get_mesh_points(in_mesh):
@@ -852,7 +843,6 @@ def get_mesh_points(in_mesh):
         out_mesh_points[point_index, 2] = point_z
 
     return out_mesh_points
-
 
 
 def generate_mesh_reoriented(
@@ -909,7 +899,6 @@ def generate_mesh_reoriented(
     writer.Update()
 
     return out_mesh_reoriented
-
 
 
 class rigid_registration(object):
@@ -1046,7 +1035,6 @@ class rigid_registration(object):
         self.Np  = np.sum(self.P1)
 
 
-
 def rigid_register(source_points, target_points):
     """Rigid registration between a source and a target point set
 
@@ -1085,7 +1073,6 @@ def rigid_register(source_points, target_points):
     registered_source_points = reg.TY
 
     return registered_source_points
-
 
 
 def rigid_register_colin27(
@@ -1127,11 +1114,14 @@ def rigid_register_colin27(
         # read meshes
         # subject structure
         subject_structure_mesh = in_persubject_mesh_list[structure_index]
-        subject_structure_points = utils.get_mesh_points(subject_structure_mesh)
+        subject_structure_points = utils.get_mesh_points(
+            subject_structure_mesh)
         # Colin 27 structure
         colin27_structure_mesh = in_colin27_mesh[structure_index]
-        colin27_structure_points = utils.get_mesh_points(colin27_structure_mesh)
-        # store boundaries of the current structure block within the overall set
+        colin27_structure_points = utils.get_mesh_points(
+            colin27_structure_mesh)
+        # store boundaries of the current structure block within the
+        # overall set
         block_start = subject_overall_points.shape[0]
         block_length = subject_structure_points.shape[0]
         block_end = block_start + block_length
@@ -1147,8 +1137,8 @@ def rigid_register_colin27(
     rigid_subject_overall_points = utils.rigid_register(
         subject_overall_points,
         colin27_overall_points)
-    # generate reoriented surfaces for each of the structures associated to the
-    # subject
+    # generate reoriented surfaces for each of the structures associated
+    # to the subject
     for structure_index in range(structure_number):
         # read subject current structure mesh
         subject_structure_mesh = in_persubject_mesh_list[structure_index]
@@ -1169,7 +1159,6 @@ def rigid_register_colin27(
     return out_persubject_regmesh_list
 
 
-
 def link_basedirs_structures(in_basedir_list, in_structure_list):
     """Links list of datasink base directories to list of structures IDs
 
@@ -1188,7 +1177,6 @@ def link_basedirs_structures(in_basedir_list, in_structure_list):
         in_structure_list)
 
     return out_basedir_list
-
 
 
 def initialise_mapnode_datasink_regexp(datasink_name):

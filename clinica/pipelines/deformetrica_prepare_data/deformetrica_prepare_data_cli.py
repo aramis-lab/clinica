@@ -41,7 +41,8 @@ class deformetrica_prepare_dataCLI(ce.CmdParser):
             "group_id",
             help='User-defined identifier for the provided group of subjects.')
         # Optional arguments
-        optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
+        optional = self._args.add_argument_group(
+            PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("-st", "--structure",
                               default=None,
                               help='Structure name.')
@@ -62,7 +63,6 @@ class deformetrica_prepare_dataCLI(ce.CmdParser):
             metavar=('N'), type=int,
             help='Number of cores used to run in parallel')
 
-
     def run_command(self, args):
         """
         Run the pipelines with defined args
@@ -75,8 +75,7 @@ class deformetrica_prepare_dataCLI(ce.CmdParser):
             # pass these args by the class attribute itself
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            group_id=args.group_id
-            )
+            group_id=args.group_id)
         pipeline.parameters = {
             # pass these args by using self.parameters in a dictionary
             'structure': args.structure or '-qcache',
