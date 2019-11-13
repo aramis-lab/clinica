@@ -98,7 +98,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
         return [
             'input_brains',
             'input_segmentations',
-            'colin27_image',
             'structure',
             'structure_file']
 
@@ -132,23 +131,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
         read_caps_node.inputs.caps_segmentations = utils.select_caps_segmentations(
             self.subjects, self.sessions, caps_layout)
 
-        read_colin27_node = npe.Node(
-            name="read_colin27_node",
-            interface=nutil.IdentityInterface(
-                fields=['colin27_image'],
-                mandatory_inputs=True))
-        # extract colin27 from resources folder
-        colin27_image_path = os.path.abspath(
-            os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                '..',
-                '..',
-                'resources',
-                'colin27',
-                'colin27_t1_tal_lin_brain.nii'))
-        read_colin27_node.inputs.colin27_image = utils.select_colin27_image(
-            colin27_image_path)
-
         # Read structure to be worked on, data kernel width, deformation
         # kernel width and mesh decimation
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
@@ -165,9 +147,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
             (
                 read_caps_node, self.input_node,
                 [('caps_segmentations', 'input_segmentations')]),
-            (
-                read_colin27_node, self.input_node,
-                [('colin27_image', 'colin27_image')]),
             (
                 read_parameters_node, self.input_node,
                 [
@@ -214,6 +193,17 @@ class DeformetricaPrepareData(cpe.Pipeline):
             name=get_affine_node_name,
             interface=fsl.FLIRT(),
             iterfield=['in_file'])
+        colin27_image_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                '..',
+                '..',
+                'resources',
+                'mni',
+                'colin27',
+                'colin27_t1_tal_lin_brain.nii'))
+        get_affine_node.inputs.reference = utils.select_colin27_image(
+            colin27_image_path)
 
         # Step 3: process [structure]/[structure file] input
         # ======
@@ -235,6 +225,7 @@ class DeformetricaPrepareData(cpe.Pipeline):
                 '..',
                 '..',
                 'resources',
+                'mni',
                 'colin27'))
         process_structure_node.inputs.in_colin27_resources_folder = colin27_resources_path
 
@@ -258,6 +249,7 @@ class DeformetricaPrepareData(cpe.Pipeline):
                 '..',
                 '..',
                 'resources',
+                'mni',
                 'colin27'))
         get_colin27_structure_template_node.inputs.in_colin27_resources_folder = colin27_resources_path
 
@@ -348,6 +340,8 @@ class DeformetricaPrepareData(cpe.Pipeline):
                 'in_affine',
                 'in_brain',
                 'in_structure'])
+        get_affine_node.inputs.in_colin27 = utils.select_colin27_image(
+            colin27_image_path)
 
         # Step 11: get per-subject list of meshes
         # =======
@@ -558,9 +552,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
             (
                 brain_nii_node, get_affine_node,
                 [('out_file', 'in_file')]),
-            (
-                self.input_node, get_affine_node,
-                [('colin27_image', 'reference')]),
             # process provided structure / structure file flags
             (
                 self.input_node, process_structure_node,
@@ -615,9 +606,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
             (
                 link_objects_structures_node, apply_affine_node,
                 [('out_brain_list', 'in_brain')]),
-            (
-                self.input_node, apply_affine_node,
-                [('colin27_image', 'in_colin27')]),
             (
                 link_objects_structures_node, apply_affine_node,
                 [('out_structure_list', 'in_structure')]),
