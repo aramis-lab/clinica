@@ -13,24 +13,20 @@ __status__ = "Development"
 
 
 class deformetrica_prepare_dataCLI(ce.CmdParser):
-    """CLI class
-    """
+    """CLI class"""
 
     def define_name(self):
-        """Define the sub-command name to run this pipeline.
-        """
+        """Define the sub-command name to run this pipeline."""
         self._name = 'deformetrica-prepare-data'
 
     def define_description(self):
-        """Provide a description of this pipeline.
-        """
+        """Provide a description of this pipeline."""
         self._description = (
             'Generation of subcortical meshes input for Deformetrica:\n'
             'http://clinica.run/doc/Pipelines/Deformetrica_prepare_data/')
 
     def define_options(self):
-        """Define the sub-command arguments
-        """
+        """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(
@@ -64,9 +60,7 @@ class deformetrica_prepare_dataCLI(ce.CmdParser):
             help='Number of cores used to run in parallel')
 
     def run_command(self, args):
-        """
-        Run the pipelines with defined args
-        """
+        """Run the pipelines with defined args."""
 
         from tempfile import mkdtemp
         from ./deformetrica_prepare_data_pipeline import DeformetricaPrepareData
