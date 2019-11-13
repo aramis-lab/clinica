@@ -86,6 +86,14 @@ PUBMED ID: 14741682
 The above manuscripts provide a complete description of how the atlas volumes
 were generated and validated.
 
+The following file is copyright of Holmes CJ, Hoge R, Collins L, Woods R, Toga
+AW, Evans AC
+Enhancement of MR images using registration for signal averaging.,
+J Comput Assist Tomogr. 1998 Mar-Apr;22(2):324–33.
+DOI: 10.1097/00004728-199803000-00032
+clinica/resources/mni/colin27/colin27_t1_tal_lin_brain.nii.gz The details of
+license are included below.
+
 ----------------------------------------------------------------------
 AAL2 is the implementation of a new parcellation of the orbitofrontal cortex in
 the automated anatomical labeling atlas.
@@ -237,4 +245,19 @@ $Id: neuromorphometrics.txt 817 2015-12-17 14:27:24Z dahnke $
 %              software for any purpose.  It is provided "as is" without
 %              express or implied warranty.
 %############################################################################
+
+----------------------------------------------------------------------
+
+Colin 27 Average Brain, Stereotaxic Registration Model, original 1998 version
+
+Copyright (C) 1993–2009 Louis Collins, McConnell Brain Imaging Centre, Montreal
+Neurological Institute, McGill University. Permission to use, copy, modify, and
+distribute this software and its documentation for any purpose and without fee
+is hereby granted, provided that the above copyright notice appear in all
+copies. The authors and McGill University make no representations about the
+suitability of this software for any purpose. It is provided "as is" without
+express or implied warranty. The authors are not responsible for any data loss,
+equipment damage, property loss, or injury to subjects or patients resulting
+from the use or misuse of this software package. 
+
 ----------------------------------------------------------------------
