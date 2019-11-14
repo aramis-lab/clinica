@@ -113,7 +113,7 @@ class DeformetricaPrepareData(cpe.Pipeline):
         import os
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        import deformetrica_prepare_data_utils as utils
+        import clinica.pipelines.deformetrica_prepare_data.deformetrica_prepare_data_utils as utils
         from clinica.utils.exceptions import ClinicaBIDSError
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1_FS_BRAIN
@@ -171,7 +171,7 @@ class DeformetricaPrepareData(cpe.Pipeline):
         """
         import os
 
-        import deformetrica_prepare_data_utils as utils
+        import clinica.pipelines.deformetrica_prepare_data.deformetrica_prepare_data_utils as utils
         import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
