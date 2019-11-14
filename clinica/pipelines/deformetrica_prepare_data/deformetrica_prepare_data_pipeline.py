@@ -204,7 +204,7 @@ class DeformetricaPrepareData(cpe.Pipeline):
                 'resources',
                 'mni',
                 'colin27',
-                'colin27_t1_tal_lin_brain.nii'))
+                'colin27_t1_tal_lin_brain.nii.gz'))
         get_affine_node.inputs.reference = utils.select_colin27_image(
             colin27_image_path)
 
