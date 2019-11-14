@@ -248,14 +248,6 @@ class DeformetricaPrepareData(cpe.Pipeline):
                 function=utils.get_colin27_structure_template
                 ),
             iterfield=['in_structure'])
-        colin27_resources_path = os.path.abspath(
-            os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                '..',
-                '..',
-                'resources',
-                'mni',
-                'colin27'))
         get_colin27_structure_template_node.inputs.in_colin27_resources_folder = colin27_resources_path
 
         # Step 5: Link several objects to structures so we can loop over
