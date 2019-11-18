@@ -555,6 +555,7 @@ def test_run_fMRIPreprocessing(cmdopt):
 
 def test_run_PETVolume(cmdopt):
     from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
+    from clinica.pipelines.pet_volume.pet_volume_utils import get_pipeline_parameters
     from os.path import dirname, join, abspath, exists
     import shutil
 
@@ -565,14 +566,13 @@ def test_run_PETVolume(cmdopt):
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     clean_folder(join(working_dir, 'PETVolume'))
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
-
+    parameters = get_pipeline_parameters(group_id='UnitTest')
     pipeline = PETVolume(
         bids_directory=join(root, 'in', 'bids'),
         caps_directory=join(root, 'out', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv'),
         base_dir=join(working_dir, 'PETVolume'),
-        group_id='UnitTest',
-        fwhm_tsv=None
+        parameters=parameters
     )
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)

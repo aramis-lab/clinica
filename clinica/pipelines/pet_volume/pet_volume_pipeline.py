@@ -1,7 +1,8 @@
 # coding: utf8
 
-import clinica.pipelines.engine as cpe
 from nipype import config
+
+import clinica.pipelines.engine as cpe
 
 __author__ = "Jorge Samper-Gonzalez"
 __copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
@@ -20,111 +21,11 @@ config.update_config(cfg)
 
 
 class PETVolume(cpe.Pipeline):
-    """PETVolume - Pre-processing of PET images using SPM.
-
-    Args:
-        input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
+    """PETVolume - Volume-based processing of PET images using SPM.
 
     Returns:
         A clinica pipeline object containing the PETVolume pipeline.
-
-    Raises:
-
-
     """
-
-    def __init__(self,
-                 group_id,
-                 bids_directory=None,
-                 caps_directory=None,
-                 tsv_file=None,
-                 base_dir=None,
-                 name=None,
-                 fwhm_tsv=None):
-        from pandas.io.parsers import read_csv
-        import os
-        from clinica.utils.exceptions import ClinicaCAPSError
-        from colorama import Fore
-
-        super(PETVolume, self).__init__(
-            bids_directory=bids_directory,
-            caps_directory=caps_directory,
-            tsv_file=tsv_file,
-            base_dir=base_dir,
-            name=name)
-
-        if not group_id.isalnum():
-            raise ClinicaCAPSError(Fore.RED + '[Error] Not valid group_id value. It must be composed only by letters and/or numbers' + Fore.RESET)
-
-        if not os.path.isdir(os.path.join(os.path.abspath(caps_directory), 'groups')):
-            raise ClinicaCAPSError(Fore.RED + '[Error] There is no \'groups\' folder in your CAPS directory. (Have you run t1-volume pipeline ?)' + Fore.RESET)
-
-        # Check that group already exists
-        if not os.path.exists(os.path.join(os.path.abspath(caps_directory), 'groups', 'group-' + group_id)):
-            error_message = group_id \
-                            + ' group does not exists, please choose an other one (or maybe you need to run t1-volume-create-dartel).' \
-                            + '\nGroups that already exist in your CAPS directory are: \n'
-            list_groups = os.listdir(os.path.join(os.path.abspath(caps_directory), 'groups'))
-            is_empty = True
-            for e in list_groups:
-                if e.startswith('group-'):
-                    error_message += '\t' + e + ' \n'
-                    is_empty = False
-            if is_empty is True:
-                error_message += 'NO GROUP FOUND'
-            raise ClinicaCAPSError(Fore.RED + '[Error] ' + error_message + Fore.RESET)
-
-        self._group_id = group_id
-        self._suvr_region = ''
-        self._fwhm = None
-        self._apply_pvc = False
-
-        if fwhm_tsv is not None:
-            if not os.path.isfile(fwhm_tsv):
-                raise FileNotFoundError('Could not find the fwhm_tsv file ' + str(fwhm_tsv))
-            try:
-                fwhm_df = read_csv(fwhm_tsv, sep='\t')
-            except (IOError, UnicodeDecodeError):
-                raise RuntimeError('An error while reading '
-                                   + str(fwhm_tsv) + ' happened')
-
-            if fwhm_df.shape[0] != len(self.subjects):
-                raise ValueError('The number of rows in fwhm_tsv file must match the number of subject-session pairs.')
-
-            if any(elem not in ['participant_id', 'session_id', 'fwhm_x', 'fwhm_y', 'fwhm_z'] for elem in list(fwhm_df.columns)):
-                raise IOError('The file ' + str(fwhm_tsv)
-                              + ' must contains the following columns (separated by tabulation: participant_id, session_id, fwhm_x, fwhm_y, fwhm_z), but we found '
-                              + str(list(fwhm_df.columns)) + '. Pay attention to the spaces (there should be none !)')
-
-            subjects_fwhm = list(fwhm_df.participant_id)
-            sessions_fwhm = list(fwhm_df.session_id)
-            idx_reordered = []
-            for i, sub in enumerate(self.subjects):
-                current_ses = self.sessions[i]
-                idx_sub = [j for j in range(len(subjects_fwhm)) if sub == subjects_fwhm[j] and current_ses == sessions_fwhm[j]]
-                if len(idx_sub) == 0:
-                    raise RuntimeError('Subject ' + sub + ' with session ' + current_ses + ' that you want to proceed was not found in the PSF specifications ' + str(fwhm_tsv))
-                if len(idx_sub) > 1:
-                    raise RuntimeError('Subject ' + sub + ' with session ' + current_ses + ' were found multiple times in ' + str(fwhm_tsv))
-                idx_reordered.append(idx_sub[0])
-
-            fwhm_x = list(fwhm_df.fwhm_x)
-            fwhm_y = list(fwhm_df.fwhm_y)
-            fwhm_z = list(fwhm_df.fwhm_z)
-            self._fwhm = [[fwhm_x[i], fwhm_y[i], fwhm_z[i]] for i in idx_reordered]
-            self._apply_pvc = True
-
-        # Default parameters
-        self._parameters = {'pet_type': 'fdg',
-                            'mask_tissues': [1, 2, 3],
-                            'mask_threshold': 0.3,
-                            'pvc_mask_tissues': [1, 2, 3],
-                            'smooth': [8],
-                            'atlas_list': ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
-                            }
-
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
@@ -171,14 +72,30 @@ class PETVolume(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipelines.
         """
-
+        import os
+        from os.path import join, split, realpath, exists
+        from pandas.io.parsers import read_csv
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from os.path import join, split, realpath
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader, insensitive_glob
         from clinica.utils.exceptions import ClinicaException
         from clinica.iotools.utils.data_handling import check_relative_volume_location_in_world_coordinate_system
         import clinica.utils.input_files as input_files
+
+        # Check that group already exists
+        if not exists(join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])):
+            error_message = self.parameters['group_id'] \
+                            + ' does not exists, please choose an other one (or maybe you need to run t1-volume-create-dartel).' \
+                            + '\nGroups that already exist in your CAPS directory are: \n'
+            list_groups = os.listdir(join(self.caps_directory, 'groups'))
+            is_empty = True
+            for e in list_groups:
+                if e.startswith('group-'):
+                    error_message += e + ' \n'
+                    is_empty = False
+            if is_empty is True:
+                error_message += 'NO GROUP FOUND'
+            raise ValueError(error_message)
 
         # Tissues DataGrabber
         # ====================
@@ -193,13 +110,13 @@ class PETVolume(cpe.Pipeline):
         all_errors = []
 
         # Grab reference mask
-        if self.parameters['pet_type'] == 'fdg':
+        if self.parameters['pet_tracer'] == 'fdg':
             reference_mask_template = 'region-pons_eroded-6mm_mask.nii*'
-            self._suvr_region = 'pons'
+            self.parameters['suvr_region'] = 'pons'
             pet_file_to_grab = input_files.PET_FDG_NII
-        elif self.parameters['pet_type'] == 'av45':
+        elif self.parameters['pet_tracer'] == 'av45':
             reference_mask_template = 'region-cerebellumPons_eroded-6mm_mask.nii*'
-            self._suvr_region = 'cerebellumPons'
+            self.parameters['suvr_region'] = 'cerebellumPons'
             pet_file_to_grab = input_files.PET_AV45_NII
         else:
             raise NotImplementedError('Unknown type of PET image. We currently accept as input only "fdg" or "av45"' +
@@ -246,7 +163,7 @@ class PETVolume(cpe.Pipeline):
             except ClinicaException as e:
                 all_errors.append(e)
         # Tissues_input has a length of len(self.parameters['mask_tissues']). Each of these elements has a size of
-        # len(self.subjects). We want the opposite : a list of size len(self.subjects) whose elements have a size of
+        # len(self.subjects). We want the opposite: a list of size len(self.subjects) whose elements have a size of
         # len(self.parameters['mask_tissues']. The trick is to iter on elements with zip(*mylist)
         tissues_input_final = []
         for subject_tissue_list in zip(*tissues_input):
@@ -258,8 +175,8 @@ class PETVolume(cpe.Pipeline):
             flowfields_caps = clinica_file_reader(self.subjects,
                                                   self.sessions,
                                                   self.caps_directory,
-                                                  {'pattern': 't1/spm/dartel/group-' + self._group_id
-                                                              + '/*_*_T1w_target-' + self._group_id
+                                                  {'pattern': 't1/spm/dartel/group-' + self.parameters['group_id']
+                                                              + '/*_*_T1w_target-' + self.parameters['group_id']
                                                               + '_transformation-forward_deformation.nii*',
                                                    'description': 'forward deformation of T1w to group space',
                                                    'needed_pipeline': 't1-volume'})
@@ -269,18 +186,58 @@ class PETVolume(cpe.Pipeline):
         # Dartel Template
         try:
             final_template = clinica_group_reader(self.caps_directory,
-                                                  {'pattern': 'group-' + self._group_id + '/t1/group-'
-                                                              + self._group_id + '_template.nii*',
-                                                   'description': 'T1w template file of group ' + self._group_id,
+                                                  {'pattern': 'group-' + self.parameters['group_id'] + '/t1/group-'
+                                                              + self.parameters['group_id'] + '_template.nii*',
+                                                   'description': 'T1w template file of group ' + self.parameters['group_id'],
                                                    'needed_pipeline': 't1-volume or t1-volume-create-dartel'})
         except ClinicaException as e:
             all_errors.append(e)
 
-        iterables_fwhm = self._fwhm
-        if not self._apply_pvc:
-            iterables_fwhm = [[]] * len(self.subjects)
+        if self.parameters['psf_tsv'] is not None:
+            if not os.path.isfile(self.parameters['psf_tsv']):
+                raise FileNotFoundError('Could not find the psf_tsv file %s' % self.parameters['psf_tsv'])
+            try:
+                psf_df = read_csv(self.parameters['psf_tsv'], sep='\t')
+            except (IOError, UnicodeDecodeError):
+                raise RuntimeError('An error while reading %s happened' % self.parameters['psf_tsv'])
 
-        if self._apply_pvc:
+            if psf_df.shape[0] != len(self.subjects):
+                raise ValueError('The number of rows in fwhm_tsv file must match the number of subject-session pairs.')
+
+            if any(elem not in ['participant_id', 'session_id', 'fwhm_x', 'fwhm_y', 'fwhm_z'] for elem in list(psf_df.columns)):
+                raise IOError('The file %s must contain the following columns (separated by tabulations):\n'
+                              'participant_id, session_id, fwhm_x, fwhm_y, fwhm_z\n'
+                              'But we found:\n'
+                              '%s\n'
+                              'Pay attention to the spaces (there should be none).' %
+                              (self.parameters['psf_tsv'], str(list(psf_df.columns))))
+
+            subjects_fwhm = list(psf_df.participant_id)
+            sessions_fwhm = list(psf_df.session_id)
+            idx_reordered = []
+            for i, sub in enumerate(self.subjects):
+                current_ses = self.sessions[i]
+                idx_sub = [j for j in range(len(subjects_fwhm)) if sub == subjects_fwhm[j] and current_ses == sessions_fwhm[j]]
+                if len(idx_sub) == 0:
+                    raise RuntimeError('Subject %s with session %s that you want to proceed was not found '
+                                       'in the TSV file containing PSF specifications (%s).' %
+                                       (sub, current_ses, self.parameters['psf_tsv']))
+                if len(idx_sub) > 1:
+                    raise RuntimeError('Subject %s with session %s that you want to proceed was found multiple times '
+                                       'in the TSV file containing PSF specifications (%s).' %
+                                       (sub, current_ses, self.parameters['psf_tsv']))
+                idx_reordered.append(idx_sub[0])
+
+            fwhm_x = list(psf_df.fwhm_x)
+            fwhm_y = list(psf_df.fwhm_y)
+            fwhm_z = list(psf_df.fwhm_z)
+            iterables_fwhm = [[fwhm_x[i], fwhm_y[i], fwhm_z[i]] for i in idx_reordered]
+            self.parameters['apply_pvc'] = True
+        else:
+            iterables_fwhm = [[]] * len(self.subjects)
+            self.parameters['apply_pvc'] = False
+
+        if self.parameters['apply_pvc']:
             # pvc tissues input
             pvc_tissues_input = []
             for tissue_number in self.parameters['pvc_mask_tissues']:
@@ -373,17 +330,17 @@ class PETVolume(cpe.Pipeline):
             (r'(.*/)pet_mni/wr(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-Ixi549Space_pet\3'),
             (r'(.*/)pet_pvc_mni/wpvc-rbv_r(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-Ixi549Space_pvc-rbv_pet\3'),
             (r'(.*/)pet_suvr/suvr_wr(sub-.*)(\.nii(\.gz)?)$',
-             r'\1\2_space-Ixi549Space_suvr-' + re.escape(self._suvr_region) + r'_pet\3'),
+             r'\1\2_space-Ixi549Space_suvr-' + re.escape(self.parameters['suvr_region']) + r'_pet\3'),
             (r'(.*/)pet_pvc_suvr/suvr_wpvc-rbv_r(sub-.*)(\.nii(\.gz)?)$',
-             r'\1\2_space-Ixi549Space_pvc-rbv_suvr-' + re.escape(self._suvr_region) + r'_pet\3'),
+             r'\1\2_space-Ixi549Space_pvc-rbv_suvr-' + re.escape(self.parameters['suvr_region']) + r'_pet\3'),
             (r'(.*/)pet_suvr_masked/masked_suvr_wr(sub-.*)(\.nii(\.gz)?)$',
-             r'\1\2_space-Ixi549Space_suvr-' + re.escape(self._suvr_region) + r'_mask-brain_pet\3'),
+             r'\1\2_space-Ixi549Space_suvr-' + re.escape(self.parameters['suvr_region']) + r'_mask-brain_pet\3'),
             (r'(.*/)pet_pvc_suvr_masked/masked_suvr_wpvc-rbv_r(sub-.*)(\.nii(\.gz)?)$',
-             r'\1\2_space-Ixi549Space_pvc-rbv_suvr-' + re.escape(self._suvr_region) + r'_mask-brain_pet\3'),
+             r'\1\2_space-Ixi549Space_pvc-rbv_suvr-' + re.escape(self.parameters['suvr_region']) + r'_mask-brain_pet\3'),
             (r'(.*/)pet_suvr_masked_smoothed/(fwhm-[0-9]+mm)_masked_suvr_wr(sub-.*)(\.nii(\.gz)?)$',
-             r'\1\3_space-Ixi549Space_suvr-' + re.escape(self._suvr_region) + r'_mask-brain_\2_pet\4'),
+             r'\1\3_space-Ixi549Space_suvr-' + re.escape(self.parameters['suvr_region']) + r'_mask-brain_\2_pet\4'),
             (r'(.*/)pet_pvc_suvr_masked_smoothed/(fwhm-[0-9]+mm)_masked_suvr_wpvc-rbv_r(sub-.*)(\.nii(\.gz)?)$',
-             r'\1\3_space-Ixi549Space_pvc-rbv_suvr-' + re.escape(self._suvr_region) + r'_mask-brain_\2_pet\4'),
+             r'\1\3_space-Ixi549Space_pvc-rbv_suvr-' + re.escape(self.parameters['suvr_region']) + r'_mask-brain_\2_pet\4'),
             (r'(.*/)binary_mask/(sub-.*_T1w_).*(space-[a-zA-Z0-9]+).*(_brainmask\.nii(\.gz)?)$', r'\1\2\3\4')
         ]
 
@@ -395,13 +352,13 @@ class PETVolume(cpe.Pipeline):
         write_atlas_node.inputs.parameterization = False
         write_atlas_node.inputs.regexp_substitutions = [
             (r'(.*/atlas_statistics/)suvr_wr(sub-.*)(_statistics\.tsv)$', r'\1\2' + r'_suvr-' +
-             re.escape(self._suvr_region) + r'\3'),
+             re.escape(self.parameters['suvr_region']) + r'\3'),
             (r'(.*/)pvc_(atlas_statistics/)suvr_wpvc-rbv_r(sub-.*)(_statistics\.tsv)$', r'\1\2\3' + r'_pvc-rbv_suvr-' +
-             re.escape(self._suvr_region) + r'\4')
+             re.escape(self.parameters['suvr_region']) + r'\4')
         ]
 
         self.connect([(self.input_node, container_path, [('pet_image', 'pet_filename')]),
-                      (container_path, write_images_node, [(('container', fix_join, 'group-' + self._group_id),
+                      (container_path, write_images_node, [(('container', fix_join, 'group-' + self.parameters['group_id']),
                                                             'container')]),
                       (self.output_node, write_images_node, [(('pet_t1_native', zip_nii, True), 'pet_t1_native'),
                                                              (('pet_mni', zip_nii, True), 'pet_mni'),
@@ -417,7 +374,7 @@ class PETVolume(cpe.Pipeline):
                                                               'pet_pvc_suvr_masked'),
                                                              (('pet_pvc_suvr_masked_smoothed', zip_nii, True),
                                                               'pet_pvc_suvr_masked_smoothed')]),
-                      (container_path, write_atlas_node, [(('container', fix_join, 'group-' + self._group_id),
+                      (container_path, write_atlas_node, [(('container', fix_join, 'group-' + self.parameters['group_id']),
                                                            'container')]),
                       (self.output_node, write_atlas_node, [('atlas_statistics', 'atlas_statistics'),
                                                             ('pvc_atlas_statistics', 'pvc_atlas_statistics')])
@@ -538,7 +495,7 @@ class PETVolume(cpe.Pipeline):
                                                       function=utils.atlas_statistics),
                                        name='atlas_stats_node',
                                        iterfield=['in_image'])
-        atlas_stats_node.inputs.in_atlas_list = self.parameters['atlas_list']
+        atlas_stats_node.inputs.in_atlas_list = self.parameters['atlases']
 
         # Connection
         # ==========
@@ -574,7 +531,7 @@ class PETVolume(cpe.Pipeline):
 
         # PVC
         # ==========
-        if self._apply_pvc:
+        if self.parameters['apply_pvc']:
             # Unzipping
             # =========
             unzip_pvc_mask_tissues = npe.MapNode(nutil.Function(input_names=['in_file'],
@@ -640,7 +597,7 @@ class PETVolume(cpe.Pipeline):
                                                          function=utils.atlas_statistics),
                                           name='atlas_stats_pvc',
                                           iterfield=['in_image'])
-            atlas_stats_pvc.inputs.in_atlas_list = self.parameters['atlas_list']
+            atlas_stats_pvc.inputs.in_atlas_list = self.parameters['atlases']
 
             # Connection
             # ==========

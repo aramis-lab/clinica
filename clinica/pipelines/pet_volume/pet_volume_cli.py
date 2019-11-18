@@ -61,30 +61,32 @@ class PETVolumeCLI(ce.CmdParser):
         """Run the pipeline with defined args."""
         from networkx import Graph
         from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
+        from clinica.pipelines.pet_volume.pet_volume_utils import get_pipeline_parameters
         from clinica.utils.check_dependency import verify_cat12_atlases
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
-        pipeline = PETVolume(
+        parameters = get_pipeline_parameters(
             group_id=args.group_id,
-            bids_directory=self.absolute_path(args.bids_directory),
-            caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            base_dir=self.absolute_path(args.working_directory),
-            fwhm_tsv=self.absolute_path(args.psf_tsv)
+            psf_tsv=self.absolute_path(args.psf_tsv),
+            pet_tracer=args.pet_tracer,
+            mask_tissues=args.mask_tissues,
+            mask_threshold=args.mask_threshold,
+            pvc_mask_tissues=args.pvc_mask_tissues,
+            smooth=args.smooth,
+            atlases=args.atlases
         )
 
         # If the user wants to use any of the atlases of CAT12 and has not installed it, we just remove it from the list
         # of the computed atlases
-        args.atlases = verify_cat12_atlases(args.atlases)
+        parameters['atlases'] = verify_cat12_atlases(args.atlases)
 
-        pipeline.parameters.update({
-            'pet_type': args.pet_tracer,
-            'mask_tissues': args.mask_tissues,
-            'mask_threshold': args.mask_threshold,
-            'pvc_mask_tissues': args.pvc_mask_tissues,
-            'smooth': args.smooth,
-            'atlas_list': args.atlases
-        })
+        pipeline = PETVolume(
+            bids_directory=self.absolute_path(args.bids_directory),
+            caps_directory=self.absolute_path(args.caps_directory),
+            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+            base_dir=self.absolute_path(args.working_directory),
+            parameters=parameters,
+        )
 
         if args.n_procs:
             exec_pipeline = pipeline.run(plugin='MultiProc',
