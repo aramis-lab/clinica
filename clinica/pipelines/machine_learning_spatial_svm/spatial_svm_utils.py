@@ -3,12 +3,27 @@
 from __future__ import division
 
 
+def get_pipeline_parameters(group_id,
+                            fwhm=None,
+                            image_type=None,
+                            pet_type=None,
+                            no_pvc=None):
+    parameters = {
+        'group_id': group_id,
+        'fwhm': fwhm or 4,
+        'image_type': image_type or 't1',
+        'pet_type': pet_type or 'fdg',
+        'no_pvc': no_pvc or False
+    }
+    return parameters
+
+
 def atlas_decomposition(dartel_input):
-    '''
+    """
 
     :param dartel_input: path to the dartel input
     :return: 3 atlases (gm, wm, csf)
-    '''
+    """
 
     import nibabel as nib
 

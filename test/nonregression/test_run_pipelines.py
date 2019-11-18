@@ -733,6 +733,7 @@ def test_run_WorkflowsML(cmdopt):
 
 def test_run_SpatialSVM(cmdopt):
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
+    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils import get_pipeline_parameters
     from os.path import dirname, join, abspath, exists
     import shutil
     import numpy as np
@@ -749,18 +750,14 @@ def test_run_SpatialSVM(cmdopt):
     # Copy necessary data from in to out
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
+    parameters = get_pipeline_parameters(group_id='ADNIbl')
     # Instantiate pipeline and run()
     pipeline = SpatialSVM(
         caps_directory=join(root, 'out', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv'),
-        base_dir=join(working_dir, 'SpatialSVM')
+        base_dir=join(working_dir, 'SpatialSVM'),
+        parameters=parameters
     )
-
-    pipeline.parameters['group_id'] = 'ADNIbl'
-    pipeline.parameters['fwhm'] = 4
-    pipeline.parameters['image_type'] = 't1'
-    pipeline.parameters['pet_type'] = 'fdg'
-    pipeline.parameters['no_pvc'] = 'True'
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 

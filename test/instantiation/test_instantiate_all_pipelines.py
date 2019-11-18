@@ -218,16 +218,17 @@ def test_instantiate_fMRIPreprocessing():
 
 def test_instantiate_PETVolume():
     from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
+    from clinica.pipelines.pet_volume.pet_volume_utils import get_pipeline_parameters
     from os.path import dirname, join, abspath
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'PETVolume')
+    parameters = get_pipeline_parameters(group_id='UnitTest')
     pipeline = PETVolume(
         bids_directory=join(root, 'in', 'bids'),
         caps_directory=join(root, 'in', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv'),
-        group_id='UnitTest',
-        fwhm_tsv=None
+        parameters=parameters
     )
     pipeline.build()
 
@@ -310,17 +311,15 @@ def test_instantiate_InputsML():
 
 def test_instantiate_SpatialSVM():
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
+    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils import get_pipeline_parameters
     from os.path import dirname, join, abspath
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'SpatialSVM')
+    parameters = get_pipeline_parameters(group_id='ADNIbl')
     pipeline = SpatialSVM(caps_directory=join(root, 'in', 'caps'),
-                          tsv_file=join(root, 'in', 'subjects.tsv'))
-    pipeline.parameters['group_id'] = 'ADNIbl'
-    pipeline.parameters['fwhm'] = 4
-    pipeline.parameters['image_type'] = 't1'
-    pipeline.parameters['pet_type'] = 'fdg'
-    pipeline.parameters['no_pvc'] = 'True'
+                          tsv_file=join(root, 'in', 'subjects.tsv'),
+                          parameters=parameters)
     pipeline.build()
 
 
