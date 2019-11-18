@@ -62,10 +62,6 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         # Default parameters
         self._parameters = {
             'dartel_tissues': [1, 2, 3],
-            'iteration_parameters': None,
-            'optimization_parameters': None,
-            'regularization_form': None,
-            'template_prefix': None
         }
 
     def check_custom_dependencies(self):
@@ -97,7 +93,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
+        from clinica.utils.exceptions import ClinicaException
         import nipype.interfaces.utility as nutil
 
         tissue_names = {
@@ -203,10 +199,6 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.filemanip import unzip_nii
-        from clinica.utils.spm import get_tpm
-
-        # Get Tissue Probability Map from SPM
-        tissue_map = get_tpm()
 
         # Unzipping
         # =========
@@ -219,15 +211,6 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         # ===============
         dartel_template = npe.Node(spm.DARTEL(),
                                    name='dartel_template')
-
-        if self.parameters['iteration_parameters'] is not None:
-            dartel_template.inputs.iteration_parameters = self.parameters['iteration_parameters']
-        if self.parameters['optimization_parameters'] is not None:
-            dartel_template.inputs.optimization_parameters = self.parameters['optimization_parameters']
-        if self.parameters['regularization_form'] is not None:
-            dartel_template.inputs.regularization_form = self.parameters['regularization_form']
-        if self.parameters['template_prefix'] is not None:
-            dartel_template.inputs.template_prefix = self.parameters['template_prefix']
 
         # Connection
         # ==========
