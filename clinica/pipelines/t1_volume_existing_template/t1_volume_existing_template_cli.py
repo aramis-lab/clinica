@@ -87,11 +87,9 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
         pipeline.parameters.update({
             'tissue_classes': args.tissue_classes,
             'dartel_tissues': args.dartel_tissues,
-            'tpm': args.tissue_probability_maps,
+            'tissue_probability_maps': args.tissue_probability_maps,
             'save_warped_unmodulated': args.save_warped_unmodulated,
             'save_warped_modulated': args.save_warped_modulated,
-            'write_deformation_fields': [True, True],  # args.write_deformation_fields
-            'save_t1_mni': True,
             'voxel_size': tuple(args.voxel_size) if args.voxel_size is not None else None,
             'modulation': args.modulate,
             'fwhm': args.smooth,

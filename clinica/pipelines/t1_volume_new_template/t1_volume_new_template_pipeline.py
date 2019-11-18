@@ -63,19 +63,9 @@ class T1VolumeNewTemplate(cpe.Pipeline):
         # Default parameters
         self._parameters = {'tissue_classes': [1, 2, 3],
                             'dartel_tissues': [1, 2, 3],
-                            'tpm': None,
+                            'tissue_probability_maps': None,
                             'save_warped_unmodulated': True,
                             'save_warped_modulated': False,
-                            'affine_regularization': None,
-                            'channel_info': None,
-                            'sampling_distance': None,
-                            'warping_regularization': None,
-                            'write_deformation_fields': None,
-                            'save_t1_mni': False,
-                            'iteration_parameters': None,
-                            'optimization_parameters': None,
-                            'regularization_form': None,
-                            'bounding_box': None,
                             'voxel_size': None,
                             'modulation': True,
                             'fwhm': [8],
@@ -131,6 +121,11 @@ class T1VolumeNewTemplate(cpe.Pipeline):
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.input_files import T1W_NII
+        from clinica.utils.spm import get_tpm
+
+        # Get Tissue Probability Map from SPM
+        if self.parameters['tissue_probability_maps'] is None:
+            self.parameters['tissue_probability_maps'] = get_tpm()
 
         # Reading BIDS
         # ============
@@ -183,17 +178,14 @@ class T1VolumeNewTemplate(cpe.Pipeline):
                 (('modulated_class_images', seg_utils.group_nested_images_by_subject, True), 'modulated_normalized'))
             datasink_infields.append('modulated_normalized')
 
-        if self.parameters['write_deformation_fields'] is not None:
-            if self.parameters['write_deformation_fields'][0]:
-                datasink_connections.append((('inverse_deformation_field', zip_nii, True), 'inverse_deformation_field'))
-                datasink_infields.append('inverse_deformation_field')
-            if self.parameters['write_deformation_fields'][1]:
-                datasink_connections.append((('forward_deformation_field', zip_nii, True), 'forward_deformation_field'))
-                datasink_infields.append('forward_deformation_field')
+        datasink_connections.append((('inverse_deformation_field', zip_nii, True), 'inverse_deformation_field'))
+        datasink_infields.append('inverse_deformation_field')
 
-        if self.parameters['save_t1_mni'] is not None and self.parameters['save_t1_mni']:
-            datasink_connections.append((('t1_mni', zip_nii, True), 't1_mni'))
-            datasink_infields.append('t1_mni')
+        datasink_connections.append((('forward_deformation_field', zip_nii, True), 'forward_deformation_field'))
+        datasink_infields.append('forward_deformation_field')
+
+        datasink_connections.append((('t1_mni', zip_nii, True), 't1_mni'))
+        datasink_infields.append('t1_mni')
 
         datasink_iterfields = ['container'] + datasink_infields
         write_segmentation_node = npe.MapNode(name='write_segmentation_node',
@@ -334,10 +326,6 @@ class T1VolumeNewTemplate(cpe.Pipeline):
         from ..t1_volume_dartel2mni import t1_volume_dartel2mni_utils as dartel2mni_utils
         from ..t1_volume_parcellation import t1_volume_parcellation_utils as parcellation_utils
         from clinica.utils.filemanip import unzip_nii
-        from clinica.utils.spm import get_tpm
-
-        # Get Tissue Probability Map from SPM
-        tissue_map = get_tpm()
 
         # Unzipping
         # ===============================
@@ -351,30 +339,8 @@ class T1VolumeNewTemplate(cpe.Pipeline):
         new_segment = npe.MapNode(spm.NewSegment(),
                                   name='new_segment',
                                   iterfield=['channel_files'])
-
-        if self.parameters['affine_regularization'] is not None:
-            new_segment.inputs.affine_regularization = self.parameters['affine_regularization']
-        if self.parameters['channel_info'] is not None:
-            new_segment.inputs.channel_info = self.parameters['channel_info']
-        if self.parameters['sampling_distance'] is not None:
-            new_segment.inputs.sampling_distance = self.parameters['sampling_distance']
-        if self.parameters['warping_regularization'] is not None:
-            new_segment.inputs.warping_regularization = self.parameters['warping_regularization']
-
-        # Check if we need to save the forward transformation for registering the T1 to the MNI space
-        if self.parameters['save_t1_mni'] is not None and self.parameters['save_t1_mni']:
-            if self.parameters['write_deformation_fields'] is not None:
-                self.parameters['write_deformation_fields'][1] = True
-            else:
-                self.parameters['write_deformation_fields'] = [False, True]
-
-        if self.parameters['write_deformation_fields'] is not None:
-            new_segment.inputs.write_deformation_fields = self.parameters['write_deformation_fields']
-
-        if self.parameters['tpm'] is not None:
-            tissue_map = self.parameters['tpm']
-
-        new_segment.inputs.tissues = seg_utils.get_tissue_tuples(tissue_map,
+        new_segment.inputs.write_deformation_fields = [True, True]
+        new_segment.inputs.tissues = seg_utils.get_tissue_tuples(self.parameters['tissue_probability_maps'],
                                                                  self.parameters['tissue_classes'],
                                                                  self.parameters['dartel_tissues'],
                                                                  self.parameters['save_warped_unmodulated'],
@@ -382,37 +348,25 @@ class T1VolumeNewTemplate(cpe.Pipeline):
 
         # Apply segmentation deformation to T1 (into MNI space)
         # ========================================================
-        if self.parameters['save_t1_mni'] is not None and self.parameters['save_t1_mni']:
-
-            t1_to_mni = npe.MapNode(seg_utils.ApplySegmentationDeformation(),
-                                    name='t1_to_mni',
-                                    iterfield=['deformation_field', 'in_files'])
-            self.connect([
-                (unzip_node, t1_to_mni, [('out_file', 'in_files')]),
-                (new_segment, t1_to_mni, [('forward_deformation_field', 'deformation_field')]),
-                (t1_to_mni, self.output_node, [('out_files', 't1_mni')])
-            ])
+        t1_to_mni = npe.MapNode(seg_utils.ApplySegmentationDeformation(),
+                                name='t1_to_mni',
+                                iterfield=['deformation_field', 'in_files'])
+        self.connect([
+            (unzip_node, t1_to_mni, [('out_file', 'in_files')]),
+            (new_segment, t1_to_mni, [('forward_deformation_field', 'deformation_field')]),
+            (t1_to_mni, self.output_node, [('out_files', 't1_mni')])
+        ])
 
         # DARTEL template
         # ===============================
         dartel_template = npe.Node(spm.DARTEL(),
                                    name='dartel_template')
 
-        if self.parameters['iteration_parameters'] is not None:
-            dartel_template.inputs.iteration_parameters = self.parameters['iteration_parameters']
-        if self.parameters['optimization_parameters'] is not None:
-            dartel_template.inputs.optimization_parameters = self.parameters['optimization_parameters']
-        if self.parameters['regularization_form'] is not None:
-            dartel_template.inputs.regularization_form = self.parameters['regularization_form']
-
         # DARTEL2MNI Registration
         # =======================
         dartel2mni_node = npe.MapNode(spm.DARTELNorm2MNI(),
                                       name='dartel2MNI',
                                       iterfield=['apply_to_files', 'flowfield_files'])
-
-        if self.parameters['bounding_box'] is not None:
-            dartel2mni_node.inputs.bounding_box = self.parameters['bounding_box']
         if self.parameters['voxel_size'] is not None:
             dartel2mni_node.inputs.voxel_size = self.parameters['voxel_size']
         dartel2mni_node.inputs.modulate = self.parameters['modulation']

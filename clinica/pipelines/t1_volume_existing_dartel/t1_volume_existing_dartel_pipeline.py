@@ -45,9 +45,6 @@ class T1VolumeExistingDartel(cpe.Pipeline):
         # Default parameters
         self._parameters = {
             'tissues': [1, 2, 3],
-            'iteration_parameters': None,
-            'optimization_parameters': None,
-            'regularization_form': None
         }
 
     def check_custom_dependencies(self):
@@ -247,10 +244,10 @@ class T1VolumeExistingDartel(cpe.Pipeline):
         dartel_existing_template = npe.MapNode(utils.DARTELExistingTemplate(),
                                                name='dartel_existing_template',
                                                iterfield=['image_files'])
-        if self.parameters['optimization_parameters'] is not None:
-            dartel_existing_template.inputs.optimization_parameters = self.parameters['optimization_parameters']
-        if self.parameters['regularization_form'] is not None:
-            dartel_existing_template.inputs.regularization_form = self.parameters['regularization_form']
+        # if self.parameters['optimization_parameters'] is not None:
+        #     dartel_existing_template.inputs.optimization_parameters = self.parameters['optimization_parameters']
+        # if self.parameters['regularization_form'] is not None:
+        #     dartel_existing_template.inputs.regularization_form = self.parameters['regularization_form']
 
         # Connection
         # ==========
@@ -259,8 +256,7 @@ class T1VolumeExistingDartel(cpe.Pipeline):
             (self.input_node, unzip_templates_node, [('dartel_iteration_templates', 'in_file')]),
             (unzip_dartel_input_node, dartel_existing_template, [(('out_file', utils.prepare_dartel_input_images),
                                                                   'image_files')]),
-            (unzip_templates_node, dartel_existing_template, [(('out_file', utils.create_iteration_parameters,
-                                                                self.parameters['iteration_parameters']),
+            (unzip_templates_node, dartel_existing_template, [(('out_file', utils.create_iteration_parameters, None),
                                                                'iteration_parameters')]),
             (dartel_existing_template, self.output_node, [('dartel_flow_fields', 'dartel_flow_fields')])
         ])

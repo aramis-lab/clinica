@@ -63,7 +63,6 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         # Default parameters
         self._parameters = {
             'tissues': [1, 2, 3],
-            'bounding_box': None,
             'voxel_size': None,
             'modulation': True,
             'fwhm': [8]
@@ -98,11 +97,9 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         """
 
         import nipype.pipeline.engine as npe
-        import nipype.interfaces.io as nio
         import nipype.interfaces.utility as nutil
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
-        from colorama import Fore
 
         tissue_names = {
             1: 'graymatter',
@@ -187,10 +184,8 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
     def build_output_node(self):
         """Build and connect an output node to the pipelines.
         """
-        import os.path as op
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        import re
         from clinica.utils.filemanip import zip_nii
 
         # Writing normalized images (and smoothed) into CAPS
@@ -232,10 +227,6 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         from clinica.utils.filemanip import unzip_nii
         from ..t1_volume_dartel2mni import t1_volume_dartel2mni_utils as dartel2mni_utils
-        from clinica.utils.spm import get_tpm
-
-        # Get Tissue Probability Map from SPM
-        tissue_map = get_tpm()
 
         # Unzipping
         # =========
@@ -259,9 +250,6 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         dartel2mni_node = npe.MapNode(spm.DARTELNorm2MNI(),
                                       name='dartel2MNI',
                                       iterfield=['apply_to_files', 'flowfield_files'])
-
-        if self.parameters['bounding_box'] is not None:
-            dartel2mni_node.inputs.bounding_box = self.parameters['bounding_box']
         if self.parameters['voxel_size'] is not None:
             dartel2mni_node.inputs.voxel_size = self.parameters['voxel_size']
         dartel2mni_node.inputs.modulate = self.parameters['modulation']

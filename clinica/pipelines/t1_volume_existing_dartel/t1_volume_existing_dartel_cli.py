@@ -35,7 +35,8 @@ class T1VolumeExistingDartelCLI(ce.CmdParser):
         self.add_clinica_standard_arguments()
         # Advanced arguments (i.e. tricky parameters)
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
-        advanced.add_argument("-t", "--tissues", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
+        advanced.add_argument("-t", "--tissues",
+                              metavar='', nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
                               help='Tissues to create flow fields to DARTEL template '
                                    '(default: GM, WM and CSF i.e. --tissues 1 2 3).')
 

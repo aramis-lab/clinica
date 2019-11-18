@@ -43,17 +43,14 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
                               help='Tissues to use for DARTEL template calculation '
                                    '(default: GM, WM and CSF i.e. --dartel_tissues 1 2 3).')
         advanced.add_argument("-tpm", "--tissue_probability_maps",
-                              metavar=('TissueProbabilityMap.nii'),
+                              metavar='TissueProbabilityMap.nii', default=None,
                               help='Tissue probability maps to use for segmentation (default: TPM from SPM software).')
-        advanced.add_argument("-swu", "--save_warped_unmodulated",
-                              action='store_true', default=True,
+        advanced.add_argument("-dswu", "--dont_save_warped_unmodulated",
+                              action='store_true', default=False,
                               help="Save warped unmodulated images for tissues specified in --tissue_classes flag.")
         advanced.add_argument("-swm", "--save_warped_modulated",
-                              action='store_true',
+                              action='store_true', default=False,
                               help="Save warped modulated images for tissues specified in --tissue_classes flag.")
-        # advanced.add_argument("-wdf", "--write_deformation_fields", nargs=2, type=bool,
-        #                         help="Option to save the deformation fields from Unified Segmentation. Both inverse "
-        #                              "and forward fields can be saved. Format: a list of 2 booleans. [Inverse, Forward]")
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
@@ -71,11 +68,9 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
         pipeline.parameters.update({
             'tissue_classes': args.tissue_classes,
             'dartel_tissues': args.dartel_tissues,
-            'tpm': args.tissue_probability_maps,
-            'save_warped_unmodulated': args.save_warped_unmodulated,
+            'tissue_probability_maps': args.tissue_probability_maps,
+            'save_warped_unmodulated': not args.dont_save_warped_unmodulated,
             'save_warped_modulated': args.save_warped_modulated,
-            'write_deformation_fields': [True, True],  # args.write_deformation_fields
-            'save_t1_mni': True
             })
 
         if args.n_procs:
