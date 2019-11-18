@@ -86,7 +86,7 @@ class SpatialSVM(cpe.Pipeline):
                                         interface=nutil.IdentityInterface(fields=self.get_input_fields(),
                                                                           mandatory_inputs=True))
         image_type = self.parameters['image_type']
-        pet_type = self.parameters['pet_type']
+        pet_tracer = self.parameters['pet_tracer']
 
         all_errors = []
         if image_type == 't1':
@@ -109,7 +109,7 @@ class SpatialSVM(cpe.Pipeline):
                                                       self.caps_directory,
                                                       {'pattern': 'pet/preprocessing/group-' + self.parameters['group_id']
                                                                   + '/*_pet_space-Ixi549Space_suvr-pons_pet.nii.gz',
-                                                       'description': pet_type + ' PET in Ixi549 space',
+                                                       'description': pet_tracer + ' PET in Ixi549 space',
                                                        'needed_pipeline': 'pet-volume'})
                 except ClinicaException as e:
                     all_errors.append(e)
@@ -121,7 +121,7 @@ class SpatialSVM(cpe.Pipeline):
                                                       self.caps_directory,
                                                       {'pattern': 'pet/preprocessing/group-' + self.parameters['group_id']
                                                                   + '_pet_space-Ixi549Space_pvc-rbv_suvr-pons_pet.nii.gz',
-                                                       'description': pet_type + ' PET partial volume corrected (RBV) in Ixi549 space',
+                                                       'description': pet_tracer + ' PET partial volume corrected (RBV) in Ixi549 space',
                                                        'needed_pipeline': 'pet-volume with PVC'})
                 except ClinicaException as e:
                     all_errors.append(e)

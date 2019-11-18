@@ -57,7 +57,7 @@ class SpatialSVMCLI(ce.CmdParser):
             group_id=args.group_id,
             fwhm=args.full_width_half_maximum,
             image_type=args.image_type,
-            pet_type=args.pet_tracer,
+            pet_tracer=args.pet_tracer,
             no_pvc=args.no_pvc
         )
 
