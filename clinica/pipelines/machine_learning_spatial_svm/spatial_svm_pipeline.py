@@ -18,10 +18,6 @@ __status__ = "Development"
 class SpatialSVM(cpe.Pipeline):
     """SpatialSVM - Prepare input data for SVM with spatial and anatomical regularization.
 
-    Todos:
-        - [ ] Final version of CAPS.
-        - [ ] Remove --voxel_size flag and detect automatically this parameter.
-
     Args:
         input_dir: A BIDS directory.
         output_dir: An empty output directory where CAPS structured data will be written.
@@ -91,7 +87,6 @@ class SpatialSVM(cpe.Pipeline):
                                                                           mandatory_inputs=True))
         image_type = self.parameters['image_type']
         pet_type = self.parameters['pet_type']
-        no_pvc = self.parameters['no_pvc']
 
         all_errors = []
         if image_type == 't1':
@@ -107,7 +102,7 @@ class SpatialSVM(cpe.Pipeline):
                 all_errors.append(e)
 
         elif image_type is 'pet':
-            if no_pvc.lower() == 'true':
+            if self.parameters['no_pvc']:
                 try:
                     input_image = clinica_file_reader(self.subjects,
                                                       self.sessions,
@@ -119,7 +114,7 @@ class SpatialSVM(cpe.Pipeline):
                 except ClinicaException as e:
                     all_errors.append(e)
 
-            elif no_pvc.lower() == 'false':
+            else:
                 try:
                     input_image = clinica_file_reader(self.subjects,
                                                       self.sessions,
@@ -131,9 +126,6 @@ class SpatialSVM(cpe.Pipeline):
                 except ClinicaException as e:
                     all_errors.append(e)
 
-            else:
-                raise ValueError(no_pvc + ' is not a valid keyword for -no_pvc'
-                                 + ':only True or False are accepted (string)')
         else:
             raise ValueError('Image type ' + image_type + ' unknown')
         try:
