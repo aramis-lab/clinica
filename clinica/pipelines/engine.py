@@ -349,7 +349,7 @@ class Pipeline(Workflow):
             elif d['type'] == 'pipeline':
                 pass
             else:
-                raise Exception("Pipeline::check_dependencies() Unknown dependency type: '%s'." % d['type'])
+                raise Exception("Pipeline.check_dependencies() Unknown dependency type: '%s'." % d['type'])
 
         self.check_custom_dependencies()
 
