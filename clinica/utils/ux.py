@@ -7,7 +7,7 @@ LINES_TO_DISPLAY = 25
 def print_images_to_process(list_participant_id, list_session_id):
     """Print which images will be processed by the pipeline."""
     from .stream import cprint
-    from .filemanip import get_unique_subjects
+    from clinica.utils.participant import get_unique_subjects
     unique_participants, sessions_per_participant = get_unique_subjects(list_participant_id, list_session_id)
 
     cprint('The pipeline will be run on the following %s image(s):' % len(list_participant_id))
@@ -70,7 +70,7 @@ def print_failed_images(cli_name, image_ids):
     from colorama import Fore
     from .filemanip import extract_subjects_sessions_from_filename
     from .stream import cprint
-    from .filemanip import get_unique_subjects
+    from clinica.utils.participant import get_unique_subjects
     list_participant_id, list_session_id = extract_subjects_sessions_from_filename(image_ids)
     unique_participants, sessions_per_participant = get_unique_subjects(list_participant_id, list_session_id)
 
