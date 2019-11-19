@@ -1,5 +1,6 @@
 # coding: utf8
 import clinica.utils.filemanip
+import clinica.utils.participant
 
 __author__ = "Alexis Guyot"
 __copyright__ = "Copyright 2016-2019, The Aramis Lab Team"
@@ -83,7 +84,7 @@ def check_reconalled(caps_dir, subject_list, session_list):
 
     # get unique list of subjects and corresponding per-subject sessions
     [unique_subject_list,
-     persubject_session_list2] = clinica.utils.filemanip.get_unique_subjects(
+     persubject_session_list2] = clinica.utils.participant.get_unique_subjects(
          subject_list, session_list)
 
     # Check if t1-freesurfer-template has been correctly run

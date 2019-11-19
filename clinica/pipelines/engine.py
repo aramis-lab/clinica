@@ -88,6 +88,7 @@ class Pipeline(Workflow):
         from clinica.utils.inputs import check_caps_folder
         from clinica.utils.inputs import check_bids_folder
         from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.participant import get_subject_session_list
 
         self._is_built = False
         self._overwrite_caps = overwrite_caps
@@ -126,10 +127,13 @@ class Pipeline(Workflow):
             check_bids_folder(self._bids_directory)
             input_dir = self._bids_directory
             is_bids_dir = True
-        self.get_subject_session_list(input_dir,
-                                      self._tsv_file,
-                                      is_bids_dir,
-                                      self.base_dir)
+        self._sessions, self._subjects = get_subject_session_list(
+            input_dir,
+            tsv_file,
+            is_bids_dir,
+            False,
+            base_dir
+        )
 
         self.init_nodes()
 
@@ -149,37 +153,6 @@ class Pipeline(Workflow):
         cprint('\n%s[%s] Pipeline finished with errors.%s\n' % (Fore.RED, now, Fore.RESET))
         cprint('%sCAPS outputs were not found for some image(s):%s' % (Fore.RED, Fore.RESET))
         raise ClinicaException('Implementation on which image(s) failed will appear soon.')
-
-    def get_subject_session_list(self, input_dir, tsv_file, is_bids_dir, base_dir):
-        """Parse a BIDS or CAPS directory to get the subjects and sessions.
-
-        This function lists all the subjects and sessions based on the content of
-        the BIDS or CAPS directory or (if specified) on the provided
-        subject-sessions TSV file.
-
-        Notes:
-            This is a generic method based on folder names. If your <BIDS> dataset contains e.g.:
-            - sub-CLNC01/ses-M00/anat/sub-CLNC01_ses-M00_T1w.nii
-            - sub-CLNC02/ses-M00/dwi/sub-CLNC02_ses-M00_dwi.{bval|bvec|json|nii}
-            - sub-CLNC02/ses-M00/anat/sub-CLNC02_ses-M00_T1w.nii
-            get_subject_session_list(<BIDS>, None, True) will return
-            ['ses-M00', 'ses-M00'], ['sub-CLNC01', 'sub-CLNC02'].
-
-            However, if your pipeline needs both T1w and DWI files, you will need to overload this method.
-
-        Todo:
-            [ ] Overload get_subject_session_list on each sub-classes
-            [ ] Set Pipeline::get_subject_session_list as abstract method?
-            [ ] Update Jinja file for clinica generate template
-        """
-        from clinica.utils.filemanip import get_subject_session_list
-        self._sessions, self._subjects = get_subject_session_list(
-            input_dir,
-            tsv_file,
-            is_bids_dir,
-            False,
-            base_dir
-        )
 
     def init_nodes(self):
         """Init the basic workflow and I/O nodes necessary before build."""

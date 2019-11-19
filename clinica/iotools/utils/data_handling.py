@@ -33,7 +33,7 @@ def create_merge_file(bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines
     import numpy as np
     import warnings
     from .pipeline_handling import InitException, DatasetError
-    from clinica.utils.filemanip import get_subject_session_list
+    from clinica.utils.participant import get_subject_session_list
 
     if caps_dir is not None:
         if not path.isdir(caps_dir):

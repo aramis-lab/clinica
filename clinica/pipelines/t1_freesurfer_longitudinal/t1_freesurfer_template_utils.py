@@ -1,5 +1,6 @@
 # coding: utf8
 import clinica.utils.filemanip
+import clinica.utils.participant
 
 __author__ = "Alexis Guyot"
 __copyright__ = "Copyright 2016-2019, The Aramis Lab Team"
@@ -205,7 +206,7 @@ def get_longsubdir_dict(
     # list of associated sessions
     [
         unique_subject_list,
-        persubject_session_list2] = clinica.utils.filemanip.get_unique_subjects(
+        persubject_session_list2] = clinica.utils.participant.get_unique_subjects(
             in_subject_list, in_session_list)
 
     # get longitudinal identifier for ech subject and store into
@@ -500,7 +501,7 @@ def check_caps_template(
 
     # get a unique list of subjects and associated per-subject list of
     # sessions
-    unique_subject_list, persubject_session_list2 = clinica.utils.filemanip.get_unique_subjects(
+    unique_subject_list, persubject_session_list2 = clinica.utils.participant.get_unique_subjects(
         subject_list, session_list)
 
     # Check processed/unprocessed subjects
