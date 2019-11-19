@@ -111,7 +111,7 @@ class T1FreeSurfer(cpe.Pipeline):
             err_msg = 'Clinica faced error(s) while trying to read files in your BIDS directory.\n' + str(e)
             raise ClinicaBIDSError(err_msg)
 
-        # Save subjects to process in <WD>/<Pipeline::name>/participants.tsv
+        # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
         folder_participants_tsv = os.path.join(self.base_dir, self.name)
         save_participants_sessions(self.subjects, self.sessions, folder_participants_tsv)
 
@@ -166,7 +166,7 @@ class T1FreeSurfer(cpe.Pipeline):
         # Initialize the pipeline
         #   - Extract <image_id> (e.g. sub-CLNC01_ses-M00) T1w filename;
         #   - Check FOV of T1w;
-        #   - Create <subjects_dir> folder in <WD>/<Pipeline::name>/ReconAll/<image_id>/;
+        #   - Create <subjects_dir> folder in <WD>/<Pipeline.name>/ReconAll/<image_id>/;
         #   - Print begin execution message.
         init_input = npe.Node(
             interface=nutil.Function(
