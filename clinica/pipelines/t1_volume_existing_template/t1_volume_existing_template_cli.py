@@ -83,7 +83,7 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
         """Run the pipeline with defined args."""
         from colorama import Fore
         from ..t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import T1VolumeTissueSegmentationCLI
-        from ..t1_volume_existing_dartel.t1_volume_existing_dartel_cli import T1VolumeExistingDartelCLI
+        from ..t1_volume_register_dartel.t1_volume_register_dartel_cli import T1VolumeRegisterDartelCLI
         from ..t1_volume_dartel2mni.t1_volume_dartel2mni_cli import T1VolumeDartel2MNICLI
         from ..t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
         from clinica.utils.check_dependency import verify_cat12_atlases
@@ -107,7 +107,7 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
         tissue_segmentation_cli.run_command(args)
 
         cprint('%sPart 2/4: Running t1-volume-register-dartel pipeline%s' % (Fore.BLUE, Fore.RESET))
-        register_dartel_cli = T1VolumeExistingDartelCLI()
+        register_dartel_cli = T1VolumeRegisterDartelCLI()
         register_dartel_cli.run_command(args)
 
         cprint('%sPart 3/4: Running t1-volume-dartel2mni pipeline%s' % (Fore.BLUE, Fore.RESET))
