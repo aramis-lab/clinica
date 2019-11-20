@@ -23,52 +23,6 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
     Returns:
         A clinica pipeline object containing the T1VolumeDartel2MNI pipeline.
     """
-    def __init__(self,
-                 group_id,
-                 bids_directory=None,
-                 caps_directory=None,
-                 tsv_file=None,
-                 base_dir=None,
-                 name=None):
-        import os
-        from clinica.utils.exceptions import ClinicaException
-
-        super(T1VolumeDartel2MNI, self).__init__(
-            bids_directory=bids_directory,
-            caps_directory=caps_directory,
-            base_dir=base_dir,
-            tsv_file=tsv_file,
-            name=name)
-
-        if not group_id.isalnum():
-            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
-
-        self._group_id = group_id
-        # Check that group already exists
-        # TODO: Move this check to build_input_node method
-        if not os.path.exists(os.path.join(os.path.abspath(caps_directory), 'groups', 'group-' + group_id)):
-            error_message = group_id \
-                            + ' does not exists, please choose another one (or maybe you need to run t1-volume-create-dartel).' \
-                            + '\nGroups that already exist in your CAPS directory are: \n'
-            list_groups = os.listdir(os.path.join(os.path.abspath(caps_directory), 'groups'))
-            is_empty = True
-            for e in list_groups:
-                if e.startswith('group-'):
-                    error_message += e + ' \n'
-                    is_empty = False
-            if is_empty is True:
-                error_message += 'NO GROUP FOUND'
-            raise ClinicaException(error_message)
-
-        # Default parameters
-        self._parameters = {
-            'tissues': [1, 2, 3],
-            'voxel_size': None,
-            'modulation': True,
-            'fwhm': [8]
-            # 'atlas_list': ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
-        }
-
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
@@ -95,11 +49,29 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipelines.
         """
-
+        import os
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+
+        if not self.parameters['group_id'].isalnum():
+            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
+
+        # Check that group already exists
+        if not os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])):
+            error_message = self.parameters['group_id'] \
+                            + ' does not exists, please choose another one (or maybe you need to run t1-volume-create-dartel).' \
+                            + '\nGroups that already exist in your CAPS directory are: \n'
+            list_groups = os.listdir(os.path.join(self.caps_directory, 'groups'))
+            is_empty = True
+            for e in list_groups:
+                if e.startswith('group-'):
+                    error_message += e + ' \n'
+                    is_empty = False
+            if is_empty is True:
+                error_message += 'NO GROUP FOUND'
+            raise ClinicaException(error_message)
 
         tissue_names = {
             1: 'graymatter',
@@ -147,8 +119,8 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
             read_input_node.inputs.flowfield_files = clinica_file_reader(self.subjects,
                                                                          self.sessions,
                                                                          self.caps_directory,
-                                                                         {'pattern': 't1/spm/dartel/group-' + self._group_id
-                                                                                     + '/sub-*_ses-*_T1w_target-' + self._group_id
+                                                                         {'pattern': 't1/spm/dartel/group-' + self.parameters['group_id']
+                                                                                     + '/sub-*_ses-*_T1w_target-' + self.parameters['group_id']
                                                                                      + '_transformation-forward_deformation.nii*',
                                                                           'description': 'flowfield files (forward transformation) from native space to '
                                                                                          + self._group_id + ' space',
@@ -160,11 +132,11 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         # ================
         try:
             read_input_node.inputs.template_file = clinica_group_reader(self.caps_directory,
-                                                                        {'pattern': 'group-' + self._group_id
-                                                                                    + '/t1/group-' + self._group_id
+                                                                        {'pattern': 'group-' + self.parameters['group_id']
+                                                                                    + '/t1/group-' + self.parameters['group_id']
                                                                                     + '_template.nii*',
                                                                          'description': 'T1w template file of group '
-                                                                                        + self._group_id,
+                                                                                        + self.parameters['group_id'],
                                                                          'needed_pipeline': 't1-volume or t1-volume-create-dartel'})
         except ClinicaException as e:
             all_errors.append(e)
@@ -197,7 +169,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         write_normalized_node.inputs.base_directory = self.caps_directory
         write_normalized_node.inputs.parameterization = False
         write_normalized_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
-                                                  '/t1/spm/dartel/group-' + self._group_id
+                                                  '/t1/spm/dartel/group-' + self.parameters['group_id']
                                                   for i in range(len(self.subjects))]
         write_normalized_node.inputs.regexp_substitutions = [
             (r'(.*)c1(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-graymatter_probability\3'),
@@ -251,7 +223,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                                       name='dartel2MNI',
                                       iterfield=['apply_to_files', 'flowfield_files'])
         if self.parameters['voxel_size'] is not None:
-            dartel2mni_node.inputs.voxel_size = self.parameters['voxel_size']
+            dartel2mni_node.inputs.voxel_size = tuple(self.parameters['voxel_size'])
         dartel2mni_node.inputs.modulate = self.parameters['modulation']
         dartel2mni_node.inputs.fwhm = 0
 

@@ -20,6 +20,21 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
+def get_pipeline_parameters(tissue_classes=None,
+                            dartel_tissues=None,
+                            tissue_probability_maps=None,
+                            save_warped_unmodulated=None,
+                            save_warped_modulated=None):
+    parameters = {
+        'tissue_classes': tissue_classes or [1, 2, 3],
+        'dartel_tissues': dartel_tissues or [1, 2, 3],
+        'tissue_probability_maps': tissue_probability_maps or None,
+        'save_warped_unmodulated': save_warped_unmodulated or True,
+        'save_warped_modulated': save_warped_modulated or False,
+    }
+    return parameters
+
+
 def group_nested_images_by_subject(class_images, zip_files=False):
     """
 
