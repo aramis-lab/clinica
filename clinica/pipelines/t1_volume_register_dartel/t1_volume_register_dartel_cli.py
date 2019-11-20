@@ -3,7 +3,7 @@
 import clinica.engine as ce
 
 
-class T1VolumeExistingDartelCLI(ce.CmdParser):
+class T1VolumeRegisterDartelCLI(ce.CmdParser):
 
     def define_name(self):
         """Define the sub-command name to run this pipeline."""
@@ -43,8 +43,8 @@ class T1VolumeExistingDartelCLI(ce.CmdParser):
     def run_command(self, args):
         """Run the pipeline with defined args."""
         from networkx import Graph
-        from .t1_volume_existing_dartel_pipeline import T1VolumeExistingDartel
-        from .t1_volume_existing_dartel_utils import get_pipeline_parameters
+        from .t1_volume_register_dartel_pipeline import T1VolumeRegisterDartel
+        from .t1_volume_register_dartel_utils import get_pipeline_parameters
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         parameters = get_pipeline_parameters(
@@ -52,7 +52,7 @@ class T1VolumeExistingDartelCLI(ce.CmdParser):
             tissues=args.tissues
         )
 
-        pipeline = T1VolumeExistingDartel(
+        pipeline = T1VolumeRegisterDartel(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),

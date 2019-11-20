@@ -194,7 +194,7 @@ def execute():
     # from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_cli import T1FreeSurferLongitudinalCLI
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import T1VolumeTissueSegmentationCLI
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_cli import T1VolumeCreateDartelCLI
-    from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_cli import T1VolumeExistingDartelCLI
+    from clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_cli import T1VolumeRegisterDartelCLI
     from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_cli import T1VolumeDartel2MNICLI
     from clinica.pipelines.t1_volume.t1_volume_cli import T1VolumeCLI
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import T1VolumeExistingTemplateCLI
@@ -226,7 +226,7 @@ def execute():
         T1VolumeExistingTemplateCLI(),
         T1VolumeTissueSegmentationCLI(),
         T1VolumeCreateDartelCLI(),
-        T1VolumeExistingDartelCLI(),
+        T1VolumeRegisterDartelCLI(),
         T1VolumeDartel2MNICLI(),
         T1VolumeParcellationCLI()
     ]

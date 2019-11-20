@@ -12,7 +12,7 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-class T1VolumeExistingDartel(cpe.Pipeline):
+class T1VolumeRegisterDartel(cpe.Pipeline):
     """T1VolumeExistingDartel - Reuse existing Dartel template.
 
     Args:
@@ -202,7 +202,7 @@ class T1VolumeExistingDartel(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.filemanip import unzip_nii
-        import clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_utils as utils
+        import clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_utils as utils
 
         # Unzipping
         # =========
