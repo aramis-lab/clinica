@@ -36,7 +36,7 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
         # Advanced arguments (i.e. tricky parameters)
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
         # t1-volume-tissue-segmentation
-        advanced.add_argument("-t", "--tissue_classes",
+        advanced.add_argument("-tc", "--tissue_classes",
                               metavar='', nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
                               help="Tissue classes (1: gray matter (GM), 2: white matter (WM), "
                                    "3: cerebrospinal fluid (CSF), 4: bone, 5: soft-tissue, 6: background) to save "
