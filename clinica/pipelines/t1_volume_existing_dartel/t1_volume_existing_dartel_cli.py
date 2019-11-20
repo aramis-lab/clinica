@@ -44,19 +44,21 @@ class T1VolumeExistingDartelCLI(ce.CmdParser):
         """Run the pipeline with defined args."""
         from networkx import Graph
         from .t1_volume_existing_dartel_pipeline import T1VolumeExistingDartel
+        from .t1_volume_existing_dartel_utils import get_pipeline_parameters
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
-        pipeline = T1VolumeExistingDartel(
+        parameters = get_pipeline_parameters(
             group_id=args.group_id,
+            tissues=args.tissues
+        )
+
+        pipeline = T1VolumeExistingDartel(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
             base_dir=self.absolute_path(args.working_directory),
+            parameters=parameters
         )
-
-        pipeline.parameters.update({
-            'tissues': args.tissues
-        })
 
         if args.n_procs:
             exec_pipeline = pipeline.run(plugin='MultiProc',

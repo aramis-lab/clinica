@@ -23,47 +23,6 @@ class T1VolumeCreateDartel(cpe.Pipeline):
     Returns:
         A clinica pipeline object containing the T1VolumeCreateDartel pipeline.
     """
-    def __init__(self,
-                 group_id,
-                 bids_directory=None,
-                 caps_directory=None,
-                 tsv_file=None,
-                 base_dir=None,
-                 name=None):
-        import os
-
-        super(T1VolumeCreateDartel, self).__init__(
-            bids_directory=bids_directory,
-            caps_directory=caps_directory,
-            tsv_file=tsv_file,
-            base_dir=base_dir,
-            name=name)
-
-        if not group_id.isalnum():
-            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
-        self._group_id = group_id
-
-        # Check that group does not already exists
-        # TODO: Improve this check. group_id can exist for statistics-surface
-        if os.path.exists(os.path.join(os.path.abspath(caps_directory), 'groups', 'group-' + group_id)):
-            error_message = 'group_id : ' + group_id + ' already exists, please choose another one.' \
-                            + ' Groups that exist in your CAPS directory are: \n'
-            list_groups = os.listdir(os.path.join(os.path.abspath(caps_directory), 'groups'))
-            for e in list_groups:
-                if e.startswith('group-'):
-                    error_message += e + ' \n'
-            raise ValueError(error_message)
-
-        # Check that there is at least 2 subjects
-        if len(self.subjects) <= 1:
-            raise ValueError('This pipeline needs at least 2 subjects to perform DARTEL, and found '
-                             + str(len(self.subjects)) + ' only in ' + self.tsv_file + '.')
-
-        # Default parameters
-        self._parameters = {
-            'dartel_tissues': [1, 2, 3],
-        }
-
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
@@ -90,11 +49,30 @@ class T1VolumeCreateDartel(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipelines.
         """
-
+        import os
         import nipype.pipeline.engine as npe
+        import nipype.interfaces.utility as nutil
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.exceptions import ClinicaException
-        import nipype.interfaces.utility as nutil
+
+        if not self.parameters['group_id'].isalnum():
+            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
+
+        # Check that group does not already exists
+        # TODO: Improve this check. group_id can exist for statistics-surface
+        if os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])):
+            error_message = 'group_id : ' + self.parameters['group_id'] + ' already exists, please choose another one.' \
+                            + ' Groups that exist in your CAPS directory are: \n'
+            list_groups = os.listdir(os.path.join(self.caps_directory, 'groups'))
+            for e in list_groups:
+                if e.startswith('group-'):
+                    error_message += e + ' \n'
+            raise ValueError(error_message)
+
+        # Check that there is at least 2 subjects
+        if len(self.subjects) <= 1:
+            raise ValueError('This pipeline needs at least 2 subjects to perform DARTEL, and found '
+                             + str(len(self.subjects)) + ' only in ' + self.tsv_file + '.')
 
         tissue_names = {
             1: 'graymatter',
@@ -156,7 +134,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         write_flowfields_node.inputs.base_directory = self.caps_directory
         write_flowfields_node.inputs.parameterization = False
         write_flowfields_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
-                                                  '/t1/spm/dartel/group-' + self._group_id
+                                                  '/t1/spm/dartel/group-' + self.parameters['group_id']
                                                   for i in range(len(self.subjects))]
         write_flowfields_node.inputs.regexp_substitutions = [
             (r'(.*)_Template(\.nii(\.gz)?)$', r'\1\2'),
@@ -169,7 +147,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
             (r'(.*)r(sub-.*)(\.nii(\.gz)?)$', r'\1\2\3'),
             (r'(.*)_dartelinput(\.nii(\.gz)?)$', r'\1\2'),
             (r'(.*)flow_fields/u_(sub-.*)_segm-.*(\.nii(\.gz)?)$',
-             r'\1\2_target-' + re.escape(self._group_id) + r'_transformation-forward_deformation\3'),
+             r'\1\2_target-' + re.escape(self.parameters['group_id']) + r'_transformation-forward_deformation\3'),
             (r'trait_added', r'')
         ]
 
@@ -178,12 +156,12 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         write_template_node = npe.Node(nio.DataSink(), name='write_template_node')
         write_template_node.inputs.parameterization = False
         write_template_node.inputs.base_directory = self.caps_directory
-        write_template_node.inputs.container = op.join('groups/group-' + self._group_id, 't1')
+        write_template_node.inputs.container = op.join('groups/group-' + self.parameters['group_id'], 't1')
         write_template_node.inputs.regexp_substitutions = [
             (r'(.*)final_template_file/.*(\.nii(\.gz)?)$',
-             r'\1group-' + re.escape(self._group_id) + r'_template\2'),
+             r'\1group-' + re.escape(self.parameters['group_id']) + r'_template\2'),
             (r'(.*)template_files/.*([0-9])(\.nii(\.gz)?)$',
-             r'\1group-' + re.escape(self._group_id) + r'_iteration-\2_template\3')
+             r'\1group-' + re.escape(self.parameters['group_id']) + r'_iteration-\2_template\3')
         ]
 
         self.connect([

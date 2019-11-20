@@ -23,30 +23,6 @@ class T1VolumeExistingDartel(cpe.Pipeline):
     Returns:
         A clinica pipeline object containing the T1VolumeExistingDartel pipeline.
     """
-    def __init__(self,
-                 group_id,
-                 bids_directory=None,
-                 caps_directory=None,
-                 tsv_file=None,
-                 base_dir=None,
-                 name=None):
-        super(T1VolumeExistingDartel, self).__init__(
-            bids_directory=bids_directory,
-            caps_directory=caps_directory,
-            tsv_file=tsv_file,
-            base_dir=base_dir,
-            name=name)
-
-        if not group_id.isalnum():
-            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
-
-        self._group_id = group_id
-
-        # Default parameters
-        self._parameters = {
-            'tissues': [1, 2, 3],
-        }
-
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
@@ -73,12 +49,13 @@ class T1VolumeExistingDartel(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipelines.
         """
-
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.exceptions import ClinicaException, ClinicaCAPSError
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
-        from colorama import Fore
+
+        if not self.parameters['group_id'].isalnum():
+            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
 
         tissue_names = {
             1: 'graymatter',
@@ -115,8 +92,8 @@ class T1VolumeExistingDartel(cpe.Pipeline):
                                        name="templates_reader",
                                        iterfield=['iteration'])
         templates_reader.inputs.base_directory = self.caps_directory
-        templates_reader.inputs.template = 'groups/group-' + self._group_id + '/t1/group-' + \
-                                           self._group_id + '_iteration-%d_template.nii*'
+        templates_reader.inputs.template = 'groups/group-' + self.parameters['group_id'] + '/t1/group-' + \
+                                           self.parameters['group_id'] + '_iteration-%d_template.nii*'
         templates_reader.inputs.iteration = range(1, 7)
         templates_reader.inputs.sort_filelist = False
 
@@ -157,10 +134,10 @@ class T1VolumeExistingDartel(cpe.Pipeline):
         for i in range(1, 7):
             try:
                 current_iter = clinica_group_reader(self.caps_directory,
-                                                    {'pattern': 'group-' + self._group_id + '/t1/group-'
-                                                                + self._group_id + '_iteration-' + str(i)
+                                                    {'pattern': 'group-' + self.parameters['group_id'] + '/t1/group-'
+                                                                + self.parameters['group_id'] + '_iteration-' + str(i)
                                                                 + '_template.nii*',
-                                                     'description': 'iteration #' + str(i) + ' of template for group ' + self._group_id,
+                                                     'description': 'iteration #' + str(i) + ' of template for group ' + self.parameters['group_id'],
                                                      'needed_pipeline': 't1-volume-create-dartel'})
 
                 dartel_iter_templates.append(current_iter)
@@ -184,7 +161,6 @@ class T1VolumeExistingDartel(cpe.Pipeline):
     def build_output_node(self):
         """Build and connect an output node to the pipelines.
         """
-        import os.path as op
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
         import re
@@ -198,7 +174,7 @@ class T1VolumeExistingDartel(cpe.Pipeline):
         write_flowfields_node.inputs.base_directory = self.caps_directory
         write_flowfields_node.inputs.parameterization = False
         write_flowfields_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
-                                                  '/t1/spm/dartel/group-' + self._group_id
+                                                  '/t1/spm/dartel/group-' + self.parameters['group_id']
                                                   for i in range(len(self.subjects))]
         write_flowfields_node.inputs.regexp_substitutions = [
             (r'(.*)_Template(\.nii(\.gz)?)$', r'\1\2'),
@@ -211,7 +187,7 @@ class T1VolumeExistingDartel(cpe.Pipeline):
             (r'(.*)r(sub-.*)(\.nii(\.gz)?)$', r'\1\2\3'),
             (r'(.*)_dartelinput(\.nii(\.gz)?)$', r'\1\2'),
             (r'(.*)flow_fields/u_(sub-.*)_segm-.*(\.nii(\.gz)?)$',
-             r'\1\2_target-' + re.escape(self._group_id) + r'_transformation-forward_deformation\3'),
+             r'\1\2_target-' + re.escape(self.parameters['group_id']) + r'_transformation-forward_deformation\3'),
             (r'trait_added', r'')
         ]
 
