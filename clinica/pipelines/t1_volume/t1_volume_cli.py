@@ -3,7 +3,7 @@
 import clinica.engine as ce
 
 
-class T1VolumeNewTemplateCLI(ce.CmdParser):
+class T1VolumeCLI(ce.CmdParser):
 
     def define_name(self):
         """Define the sub-command name to run this pipeline."""
@@ -35,24 +35,32 @@ class T1VolumeNewTemplateCLI(ce.CmdParser):
         self.add_clinica_standard_arguments()
         # Advanced arguments (i.e. tricky parameters)
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
-        advanced.add_argument("-tc", "--tissue_classes",
+        # t1-volume-tissue-segmentation
+        advanced.add_argument("-t", "--tissue_classes",
                               metavar='', nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
                               help="Tissue classes (1: gray matter (GM), 2: white matter (WM), "
                                    "3: cerebrospinal fluid (CSF), 4: bone, 5: soft-tissue, 6: background) to save "
                                    "(default: GM, WM and CSF i.e. --tissue_classes 1 2 3).")
+        advanced.add_argument("-tpm", "--tissue_probability_maps",
+                              metavar='TissueProbabilityMap.nii', default=None,
+                              help='Tissue probability maps to use for segmentation (default: TPM from SPM software).')
+        advanced.add_argument("-dswu", "--dont_save_warped_unmodulated",
+                              action='store_true', default=False,
+                              help="Do not save warped unmodulated images for tissues specified "
+                                   "in --tissue_classes flag.")
+        advanced.add_argument("-swm", "--save_warped_modulated",
+                              action='store_true', default=False,
+                              help="Save warped modulated images for tissues specified in --tissue_classes flag.")
+        # t1-volume-tissue-segmentation / t1-volume-create-dartel
         advanced.add_argument("-dt", "--dartel_tissues",
                               metavar='', nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
                               help='Tissues to use for DARTEL template calculation '
                                    '(default: GM, WM and CSF i.e. --dartel_tissues 1 2 3).')
-        advanced.add_argument("-tpm", "--tissue_probability_maps",
-                              metavar='TissueProbabilityMap.nii',
-                              help='Tissue probability maps to use for segmentation (default: TPM from SPM software).')
-        advanced.add_argument("-swu", "--save_warped_unmodulated",
-                              action='store_true', default=True,
-                              help="Save warped unmodulated images for tissues specified in --tissue_classes flag.")
-        advanced.add_argument("-swm", "--save_warped_modulated",
-                              action='store_true',
-                              help="Save warped modulated images for tissues specified in --tissue_classes flag.")
+        # t1-volume-dartel2mni
+        advanced.add_argument("-t", "--tissues",
+                              metavar='', nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
+                              help='Tissues to create flow fields to DARTEL template '
+                                   '(default: GM, WM and CSF i.e. --tissues 1 2 3).')
         advanced.add_argument("-m", "--modulate",
                               type=bool, default=True,
                               metavar=('True/False'),
@@ -63,6 +71,7 @@ class T1VolumeNewTemplateCLI(ce.CmdParser):
                               nargs=3, type=float,
                               help="A list of 3 floats specifying the voxel sizeof the output image "
                                    "(default: --voxel_size 1.5 1.5 1.5).")
+        # t1-volume-parcellation
         list_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
         advanced.add_argument("-atlases", "--atlases",
                               nargs='+', type=str, metavar='',

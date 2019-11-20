@@ -195,8 +195,8 @@ def t1_volume_pipeline(caps_dir, df, **kwargs):
     Returns:
         final_df: a DataFrame containing the information of the bids and the pipeline
     """
-    from ...pipelines.t1_volume.t1_volume_cli import T1VolumeNewTemplateCLI
-    instance = T1VolumeNewTemplateCLI()
+    from ...pipelines.t1_volume.t1_volume_cli import T1VolumeCLI
+    instance = T1VolumeCLI()
     pipeline_name = instance.name
     del instance
 
