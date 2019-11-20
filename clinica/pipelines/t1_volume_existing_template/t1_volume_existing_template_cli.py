@@ -35,34 +35,43 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
         self.add_clinica_standard_arguments()
         # Advanced arguments (i.e. tricky parameters)
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
-        advanced.add_argument("-tc", "--tissue_classes",
+        # t1-volume-tissue-segmentation
+        advanced.add_argument("-t", "--tissue_classes",
                               metavar='', nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
                               help="Tissue classes (1: gray matter (GM), 2: white matter (WM), "
                                    "3: cerebrospinal fluid (CSF), 4: bone, 5: soft-tissue, 6: background) to save "
                                    "(default: GM, WM and CSF i.e. --tissue_classes 1 2 3).")
+        advanced.add_argument("-tpm", "--tissue_probability_maps",
+                              metavar='TissueProbabilityMap.nii', default=None,
+                              help='Tissue probability maps to use for segmentation (default: TPM from SPM software).')
+        advanced.add_argument("-dswu", "--dont_save_warped_unmodulated",
+                              action='store_true', default=False,
+                              help="Do not save warped unmodulated images for tissues specified "
+                                   "in --tissue_classes flag.")
+        advanced.add_argument("-swm", "--save_warped_modulated",
+                              action='store_true', default=False,
+                              help="Save warped modulated images for tissues specified in --tissue_classes flag.")
+        # t1-volume-tissue-segmentation / t1-volume-create-dartel
         advanced.add_argument("-dt", "--dartel_tissues",
-                              metavar='', nargs='+', type=int, default=[1, 2, 3],
-                              choices=range(1, 7),
+                              metavar='', nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
                               help='Tissues to use for DARTEL template calculation '
                                    '(default: GM, WM and CSF i.e. --dartel_tissues 1 2 3).')
-        advanced.add_argument("-tpm", "--tissue_probability_maps",
-                              metavar=('TissueProbabilityMap.nii'),
-                              help='Tissue probability maps to use for segmentation (default: TPM from SPM software).')
-        advanced.add_argument("-swu", "--save_warped_unmodulated",
-                              action='store_true', default=True,
-                              help="Save warped unmodulated images for tissues specified in --tissue_classes flag.")
-        advanced.add_argument("-swm", "--save_warped_modulated",
-                              action='store_true',
-                              help="Save warped modulated images for tissues specified in --tissue_classes flag.")
+        # t1-volume-dartel2mni
+        advanced.add_argument("-t", "--tissues",
+                              metavar='', nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
+                              help='Tissues to create flow fields to DARTEL template '
+                                   '(default: GM, WM and CSF i.e. --tissues 1 2 3).')
         advanced.add_argument("-m", "--modulate",
                               type=bool, default=True,
                               metavar=('True/False'),
-                              help='A boolean. Modulate output images - no modulation preserves concentrations.')
+                              help='A boolean. Modulate output images - no modulation preserves concentrations '
+                                   '(default: --modulate True).')
         advanced.add_argument("-vs", "--voxel_size",
                               metavar=('float'),
                               nargs=3, type=float,
                               help="A list of 3 floats specifying the voxel sizeof the output image "
                                    "(default: --voxel_size 1.5 1.5 1.5).")
+        # t1-volume-parcellation
         list_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
         advanced.add_argument("-atlases", "--atlases",
                               nargs='+', type=str, metavar='',
@@ -72,37 +81,39 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
-        from networkx import Graph
-        from .t1_volume_existing_template_pipeline import T1VolumeExistingTemplate
-        from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
+        from colorama import Fore
+        from ..t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import T1VolumeTissueSegmentationCLI
+        from ..t1_volume_existing_dartel.t1_volume_existing_dartel_cli import T1VolumeExistingDartelCLI
+        from ..t1_volume_dartel2mni.t1_volume_dartel2mni_cli import T1VolumeDartel2MNICLI
+        from ..t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
+        from clinica.utils.check_dependency import verify_cat12_atlases
+        from clinica.utils.stream import cprint
 
-        pipeline = T1VolumeExistingTemplate(
-            group_id=args.group_id,
-            bids_directory=self.absolute_path(args.bids_directory),
-            caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            base_dir=self.absolute_path(args.working_directory)
+        # If the user wants to use any of the atlases of CAT12 and has not installed it, we just remove it from the list
+        # of the computed atlases
+        args.atlases = verify_cat12_atlases(args.atlases)
+
+        cprint(
+            'The t1-volume-existing-template pipeline is divided into 4 parts:\n'
+            '\t%st1-volume-tissue-segmentation pipeline%s: Tissue segmentation, bias correction and spatial normalization to MNI space\n'
+            '\t%st1-volume-register-dartel pipeline%s: Inter-subject registration using an existing DARTEL template\n'
+            '\t%st1-volume-dartel2mni pipeline%s: DARTEL template to MNI\n'
+            '\t%st1-volume-parcellation pipeline%s: Atlas statistics\n'
+            % (Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET)
         )
 
-        pipeline.parameters.update({
-            'tissue_classes': args.tissue_classes,
-            'dartel_tissues': args.dartel_tissues,
-            'tissue_probability_maps': args.tissue_probability_maps,
-            'save_warped_unmodulated': args.save_warped_unmodulated,
-            'save_warped_modulated': args.save_warped_modulated,
-            'voxel_size': tuple(args.voxel_size) if args.voxel_size is not None else None,
-            'modulation': args.modulate,
-            'fwhm': args.smooth,
-            'atlas_list': args.atlases
-        })
+        cprint('%sPart 1/4: Running t1-volume-segmentation pipeline%s' % (Fore.BLUE, Fore.RESET))
+        tissue_segmentation_cli = T1VolumeTissueSegmentationCLI()
+        tissue_segmentation_cli.run_command(args)
 
-        if args.n_procs:
-            exec_pipeline = pipeline.run(plugin='MultiProc',
-                                         plugin_args={'n_procs': args.n_procs})
-        else:
-            exec_pipeline = pipeline.run()
+        cprint('%sPart 2/4: Running t1-volume-register-dartel pipeline%s' % (Fore.BLUE, Fore.RESET))
+        register_dartel_cli = T1VolumeExistingDartelCLI()
+        register_dartel_cli.run_command(args)
 
-        if isinstance(exec_pipeline, Graph):
-            print_end_pipeline(self.name, pipeline.base_dir, pipeline.base_dir_was_specified)
-        else:
-            print_crash_files_and_exit(args.logname, pipeline.base_dir)
+        cprint('%sPart 3/4: Running t1-volume-dartel2mni pipeline%s' % (Fore.BLUE, Fore.RESET))
+        dartel2mni_cli = T1VolumeDartel2MNICLI()
+        dartel2mni_cli.run_command(args)
+
+        cprint('%sPart 4/4: Running t1-volume-parcellation pipeline%s' % (Fore.BLUE, Fore.RESET))
+        parcellation_cli = T1VolumeParcellationCLI()
+        parcellation_cli.run_command(args)
