@@ -82,142 +82,38 @@ class T1VolumeCLI(ce.CmdParser):
     def run_command(self, args):
         """Run the pipeline with defined args."""
         from colorama import Fore
-        from networkx import Graph
-        from ..t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
-        from ..t1_volume_create_dartel.t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
-        from ..t1_volume_dartel2mni.t1_volume_dartel2mni_pipeline import T1VolumeDartel2MNI
-        from ..t1_volume_parcellation.t1_volume_parcellation_pipeline import T1VolumeParcellation
+        from ..t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import T1VolumeTissueSegmentationCLI
+        from ..t1_volume_create_dartel.t1_volume_create_dartel_cli import T1VolumeCreateDartelCLI
+        from ..t1_volume_dartel2mni.t1_volume_dartel2mni_cli import T1VolumeDartel2MNICLI
+        from ..t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
         from clinica.utils.check_dependency import verify_cat12_atlases
         from clinica.utils.stream import cprint
-        from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
-        # Initialization
-        # ==============
         # If the user wants to use any of the atlases of CAT12 and has not installed it, we just remove it from the list
         # of the computed atlases
         args.atlases = verify_cat12_atlases(args.atlases)
 
-        parameters = {
-            'tissue_classes': args.tissue_classes,
-            'dartel_tissues': args.dartel_tissues,
-            'tissue_probability_maps': args.tissue_probability_maps,
-            'save_warped_unmodulated': args.save_warped_unmodulated,
-            'save_warped_modulated': args.save_warped_modulated,
-            'voxel_size': tuple(args.voxel_size) if args.voxel_size is not None else None,
-            'modulation': args.modulate,
-            'fwhm': args.smooth,
-            'atlas_list': args.atlases
-        }
-
         cprint(
-            'The t1-volume pipeline is divided into 4 parts:'
-            '\t%st1-volume-tissue-segmentation pipeline%s: Tissue segmentation, bias correction and spatial normalization to MNI space'
-            '\t%st1-volume-create-dartel pipeline%s: Inter-subject registration with the creation of a new DARTEL template'
-            '\t%st1-volume-dartel2mni pipeline%s: DARTEL template to MNI'
-            '\t%st1-volume-parcellation pipeline%s: Atlas statistics'
+            'The t1-volume pipeline is divided into 4 parts:\n'
+            '\t%st1-volume-tissue-segmentation pipeline%s: Tissue segmentation, bias correction and spatial normalization to MNI space\n'
+            '\t%st1-volume-create-dartel pipeline%s: Inter-subject registration with the creation of a new DARTEL template\n'
+            '\t%st1-volume-dartel2mni pipeline%s: DARTEL template to MNI\n'
+            '\t%st1-volume-parcellation pipeline%s: Atlas statistics\n'
             % (Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET)
         )
 
-        # t1-volume-segmentation
-        # ======================
         cprint('%sPart 1/4: Running t1-volume-segmentation pipeline%s' % (Fore.BLUE, Fore.RESET))
-        tissue_segmentation_pipeline = T1VolumeTissueSegmentation(
-            bids_directory=self.absolute_path(args.bids_directory),
-            caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            base_dir=self.absolute_path(args.working_directory),
-            parameters=parameters,
-            name="t1-volume-tissue-segmentation"
-        )
+        tissue_segmentation_cli = T1VolumeTissueSegmentationCLI()
+        tissue_segmentation_cli.run_command(args)
 
-        if args.n_procs:
-            exec_pipeline = tissue_segmentation_pipeline.run(plugin='MultiProc',
-                                                             plugin_args={'n_procs': args.n_procs})
-        else:
-            exec_pipeline = tissue_segmentation_pipeline.run()
-
-        if isinstance(exec_pipeline, Graph):
-            print_end_pipeline(self.name,
-                               tissue_segmentation_pipeline.base_dir,
-                               tissue_segmentation_pipeline.base_dir_was_specified)
-        else:
-            print_crash_files_and_exit(args.logname,
-                                       tissue_segmentation_pipeline.base_dir)
-
-        # t1-volume-create-dartel
-        # =======================
         cprint('%sPart 2/4: Running t1-volume-create-dartel pipeline%s' % (Fore.BLUE, Fore.RESET))
-        create_dartel_pipeline = T1VolumeCreateDartel(
-            bids_directory=self.absolute_path(args.bids_directory),
-            caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            base_dir=self.absolute_path(args.working_directory),
-            parameters=parameters,
-            name="t1-volume-create-dartel"
-        )
+        create_dartel_cli = T1VolumeCreateDartelCLI()
+        create_dartel_cli.run_command(args)
 
-        if args.n_procs:
-            exec_pipeline = create_dartel_pipeline.run(plugin='MultiProc',
-                                                       plugin_args={'n_procs': args.n_procs})
-        else:
-            exec_pipeline = create_dartel_pipeline.run()
-
-        if isinstance(exec_pipeline, Graph):
-            print_end_pipeline(self.name,
-                               create_dartel_pipeline.base_dir,
-                               create_dartel_pipeline.base_dir_was_specified)
-        else:
-            print_crash_files_and_exit(args.logname,
-                                       create_dartel_pipeline.base_dir)
-
-        # t1-volume-dartel2mni
-        # ====================
         cprint('%sPart 3/4: Running t1-volume-dartel2mni pipeline%s' % (Fore.BLUE, Fore.RESET))
-        dartel2mni_pipeline = T1VolumeDartel2MNI(
-            bids_directory=self.absolute_path(args.bids_directory),
-            caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            base_dir=self.absolute_path(args.working_directory),
-            parameters=parameters,
-            name="t1-volume-dartel2mni"
-        )
+        dartel2mni_cli = T1VolumeDartel2MNICLI()
+        dartel2mni_cli.run_command(args)
 
-        if args.n_procs:
-            exec_pipeline = dartel2mni_pipeline.run(plugin='MultiProc',
-                                                    plugin_args={'n_procs': args.n_procs})
-        else:
-            exec_pipeline = dartel2mni_pipeline.run()
-
-        if isinstance(exec_pipeline, Graph):
-            print_end_pipeline(self.name,
-                               dartel2mni_pipeline.base_dir,
-                               dartel2mni_pipeline.base_dir_was_specified)
-        else:
-            print_crash_files_and_exit(args.logname,
-                                       dartel2mni_pipeline.base_dir)
-
-        # t1-volume-parcellation
-        # ======================
         cprint('%sPart 4/4: Running t1-volume-parcellation pipeline%s' % (Fore.BLUE, Fore.RESET))
-        parcellation_pipeline = T1VolumeParcellation(
-            bids_directory=self.absolute_path(args.bids_directory),
-            caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            base_dir=self.absolute_path(args.working_directory),
-            parameters=parameters,
-            name="t1-volume-parcellation"
-        )
-
-        if args.n_procs:
-            exec_pipeline = parcellation_pipeline.run(plugin='MultiProc',
-                                                      plugin_args={'n_procs': args.n_procs})
-        else:
-            exec_pipeline = parcellation_pipeline.run()
-
-        if isinstance(exec_pipeline, Graph):
-            print_end_pipeline(self.name,
-                               parcellation_pipeline.base_dir,
-                               parcellation_pipeline.base_dir_was_specified)
-        else:
-            print_crash_files_and_exit(args.logname,
-                                       parcellation_pipeline.base_dir)
+        parcellation_cli = T1VolumeParcellationCLI()
+        parcellation_cli.run_command(args)
