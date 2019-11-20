@@ -196,7 +196,7 @@ def execute():
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_cli import T1VolumeCreateDartelCLI
     from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_cli import T1VolumeExistingDartelCLI
     from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_cli import T1VolumeDartel2MNICLI
-    from clinica.pipelines.t1_volume.t1_volume_cli import T1VolumeNewTemplateCLI
+    from clinica.pipelines.t1_volume.t1_volume_cli import T1VolumeCLI
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import T1VolumeExistingTemplateCLI
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DwiPreprocessingUsingPhaseDiffFieldmapCli
@@ -212,7 +212,7 @@ def execute():
                                    extra_dir="pipelines").load()
     pipelines += [
         T1FreeSurferCLI(),
-        T1VolumeNewTemplateCLI(),
+        T1VolumeCLI(),
         # T1FreeSurferLongitudinalCLI(),
         DwiPreprocessingUsingPhaseDiffFieldmapCli(),
         DwiPreprocessingUsingT1Cli(),

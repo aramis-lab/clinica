@@ -123,7 +123,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                                                                                      + '/sub-*_ses-*_T1w_target-' + self.parameters['group_id']
                                                                                      + '_transformation-forward_deformation.nii*',
                                                                           'description': 'flowfield files (forward transformation) from native space to '
-                                                                                         + self._group_id + ' space',
+                                                                                         + self.parameters['group_id'] + ' space',
                                                                           'needed_pipeline': 't1-volume-create-dartel'})
         except ClinicaException as e:
             all_errors.append(e)
