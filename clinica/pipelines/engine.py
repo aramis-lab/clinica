@@ -116,7 +116,7 @@ class Pipeline(Workflow):
 
         if self._bids_directory is None:
             if self._caps_directory is None:
-                raise ClinicaException(
+                raise RuntimeError(
                     '%s[Error] The %s pipeline does not contain BIDS nor CAPS directory at the initialization.%s' %
                     (Fore.RED, self._name, Fore.RESET))
 
