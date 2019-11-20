@@ -50,6 +50,8 @@ def get_unique_subjects(in_subject_list, in_session_list):
             out_inverse_positions == subject_index
             ].tolist() for subject_index in range(subject_number)]
 
+    assert len(out_unique_subject_list) == len(out_persubject_session_list2), 'Problem while getting unique subjects and sessions lists'
+
     return out_unique_subject_list, out_persubject_session_list2
 
 
