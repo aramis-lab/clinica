@@ -102,18 +102,18 @@ class T1VolumeCLI(ce.CmdParser):
             % (Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET)
         )
 
-        cprint('%sPart 1/4: Running t1-volume-segmentation pipeline%s' % (Fore.BLUE, Fore.RESET))
+        cprint('%s\nPart 1/4: Running t1-volume-segmentation pipeline%s' % (Fore.BLUE, Fore.RESET))
         tissue_segmentation_cli = T1VolumeTissueSegmentationCLI()
         tissue_segmentation_cli.run_command(args)
 
-        cprint('%sPart 2/4: Running t1-volume-create-dartel pipeline%s' % (Fore.BLUE, Fore.RESET))
+        cprint('%s\nPart 2/4: Running t1-volume-create-dartel pipeline%s' % (Fore.BLUE, Fore.RESET))
         create_dartel_cli = T1VolumeCreateDartelCLI()
         create_dartel_cli.run_command(args)
 
-        cprint('%sPart 3/4: Running t1-volume-dartel2mni pipeline%s' % (Fore.BLUE, Fore.RESET))
+        cprint('%s\nPart 3/4: Running t1-volume-dartel2mni pipeline%s' % (Fore.BLUE, Fore.RESET))
         dartel2mni_cli = T1VolumeDartel2MNICLI()
         dartel2mni_cli.run_command(args)
 
-        cprint('%sPart 4/4: Running t1-volume-parcellation pipeline%s' % (Fore.BLUE, Fore.RESET))
+        cprint('%s\nPart 4/4: Running t1-volume-parcellation pipeline%s' % (Fore.BLUE, Fore.RESET))
         parcellation_cli = T1VolumeParcellationCLI()
         parcellation_cli.run_command(args)
