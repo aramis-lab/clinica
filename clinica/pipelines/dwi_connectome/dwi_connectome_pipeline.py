@@ -367,7 +367,7 @@ class DwiConnectome(cpe.Pipeline):
         # Tracts Generation
         # -----------------
         tck_gen_node = npe.Node(name="2-TractsGeneration",
-                                interface=utils.Tractography())
+                                interface=Tractography())
         tck_gen_node.inputs.n_tracks = self.parameters['n_tracks']
         tck_gen_node.inputs.algorithm = 'iFOD2'
 
