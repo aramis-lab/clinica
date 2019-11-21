@@ -79,6 +79,11 @@ class FitTensor(MRTrix3Base):
         return outputs
 
 
+# From this line, everything that is defined was to avoid waiting for nipype's
+# team to merge @jguillon's requests in the `master` branch and also to avoid
+# having to update clinica with the last version of nipype.
+
+
 class EstimateFODInputSpec(MRTrix3BaseInputSpec):
     algorithm = traits.Enum(
         'csd',
