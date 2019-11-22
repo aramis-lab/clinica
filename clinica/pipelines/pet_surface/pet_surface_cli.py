@@ -3,16 +3,6 @@
 import clinica.engine as ce
 
 
-__author__ = "Arnaud Marcoux"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Arnaud Marcoux", "Michael Bacci"]
-__license__ = "See LICENSE.txt file"
-__version__ = "1.0.0"
-__maintainer__ = "Arnaud Marcoux"
-__email__ = "arnaud.marcoux@inria.fr"
-__status__ = "Development"
-
-
 class PetSurfaceCLI(ce.CmdParser):
 
     def define_name(self):
@@ -27,6 +17,8 @@ class PetSurfaceCLI(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+        from .pet_surface_utils import get_pipeline_parameters
+        parameters = get_pipeline_parameters()
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("bids_directory",
@@ -35,26 +27,28 @@ class PetSurfaceCLI(ce.CmdParser):
                                   help='Path to the CAPS directory. (Filled with results from t1-freesurfer pipeline')
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("-pt", "--pet_tracer", type=str, default='fdg',
-                              help='PET tracer type. Can be fdg or av45 (default: --pet_tracer fdg)')
+        optional.add_argument("-pt", "--pet_tracer", type=str, default=parameters['pet_tracer'],
+                              help='PET tracer type. Can be fdg or av45 (default: --pet_tracer %(default)s)')
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
         from networkx import Graph
-        from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
+        from .pet_surface_pipeline import PetSurface
+        from .pet_surface_utils import get_pipeline_parameters
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
+        parameters = get_pipeline_parameters(
+            pet_tracer=args.pet_tracer,
+        )
         pipeline = PetSurface(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            base_dir=self.absolute_path(args.working_directory)
+            base_dir=self.absolute_path(args.working_directory),
+            parameters=parameters
         )
-        pipeline.parameters = {
-            'pet_type': args.pet_tracer,
-        }
 
         if args.n_procs:
             exec_pipeline = pipeline.run(plugin='MultiProc',
