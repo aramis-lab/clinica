@@ -10,9 +10,12 @@ __email__ = "simona.bottani@icm-institute.org"
 __status__ = "Development"
 
 
-def get_pipeline_parameters():
+def get_pipeline_parameters(group_id,
+                            atlases=None):
+    list_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
     parameters = {
-
+        'group_id': group_id,
+        'atlases': atlases or list_atlases,
     }
     return parameters
 
