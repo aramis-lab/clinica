@@ -10,13 +10,20 @@ __email__ = "arnaud.marcoux@inria.fr"
 __status__ = "Development"
 
 
+def get_pipeline_parameters(pet_tracer=None):
+    parameters = {
+        'pet_tracer': pet_tracer or 'fdg'
+    }
+    return parameters
+
+
 def perform_gtmseg(caps_dir, subject_id, session_id):
     """gtmseg is a freesurfer command used to perform a segmentation used in some partial volume correction methods.
 
     Warnings:
-        - This method changes the environnement variable $SUBJECTS_DIR (but put
+        - This method changes the environment variable $SUBJECTS_DIR (but put
           the original one back after execution).  This has not been intensely
-          tested wether it can lead to some problems : (for instance if 2
+          tested whether it can lead to some problems : (for instance if 2
           subjects are running in parallel)
 
     Args:
@@ -66,7 +73,7 @@ def perform_gtmseg(caps_dir, subject_id, session_id):
     if os.path.exists(gtmseglta):
         os.remove(gtmseglta)
 
-    # Set back the SUBJECT_DIR environnement variable of the user
+    # Set back the SUBJECT_DIR environment variable of the user
     os.environ["SUBJECTS_DIR"] = subjects_dir_backup
     return out_file
 
@@ -932,7 +939,7 @@ def get_wf(subject_id,
     else:
         tpmnii = os.path.join(os.path.expandvars('$SPM_HOME'), 'tpm', 'TPM.nii')
     if not os.path.exists(tpmnii):
-        raise IOError('Could not find TPM.nii in your SPM installation. Is your $SPM_HOME environnement variable correctly set ?')
+        raise IOError('Could not find TPM.nii in your SPM installation. Is your $SPM_HOME environment variable correctly set ?')
 
     normalize12 = pe.Node(Normalize12(tpm=tpmnii,
                                       affine_regularization_type='mni',

@@ -69,14 +69,14 @@ class PetSurface(cpe.Pipeline):
                                             mandatory_inputs=True),
                                         synchronize=True)
 
-        if self.parameters['pet_type'].lower() == 'fdg':
+        if self.parameters['pet_tracer'].lower() == 'fdg':
             pet_file_to_grab = input_files.PET_FDG_NII
             pet_json_file_to_grab = input_files.PET_FDG_JSON
-        elif self.parameters['pet_type'].lower() == 'av45':
+        elif self.parameters['pet_tracer'].lower() == 'av45':
             pet_file_to_grab = input_files.PET_AV45_NII
             pet_json_file_to_grab = input_files.PET_AV45_JSON
         else:
-            raise ClinicaException('[Error] PET type ' + str(self.parameters['pet_type'] + ' not supported'))
+            raise ClinicaException('[Error] PET type ' + str(self.parameters['pet_tracer'] + ' not supported'))
 
         all_errors = []
         try:
@@ -213,7 +213,7 @@ class PetSurface(cpe.Pipeline):
                                                           'white_surface_left',
                                                           'white_surface_right',
                                                           'working_directory_subjects',
-                                                          'pet_type',
+                                                          'pet_tracer',
                                                           'csv_segmentation',
                                                           'subcortical_eroded_mask',
                                                           'matscript_folder_inverse_deformation',
@@ -241,20 +241,20 @@ class PetSurface(cpe.Pipeline):
         full_pipe.inputs.caps_dir = self.caps_directory
         full_pipe.inputs.session_id = self.sessions
         full_pipe.inputs.working_directory_subjects = self.base_dir
-        full_pipe.inputs.pet_type = self.parameters['pet_type']
+        full_pipe.inputs.pet_type = self.parameters['pet_tracer']
         full_pipe.inputs.csv_segmentation = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                                                          '..',
                                                                          '..',
                                                                          'resources',
                                                                          'label_conversion_gtmsegmentation.csv'))
-        if self.parameters['pet_type'].lower() == 'fdg':
+        if self.parameters['pet_tracer'].lower() == 'fdg':
             full_pipe.inputs.subcortical_eroded_mask = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                                                                     '..',
                                                                                     '..',
                                                                                     'resources',
                                                                                     'masks',
                                                                                     'region-pons_eroded-6mm_mask.nii.gz'))
-        elif self.parameters['pet_type'].lower() == 'av45':
+        elif self.parameters['pet_tracer'].lower() == 'av45':
             full_pipe.inputs.subcortical_eroded_mask = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                                                                     '..',
                                                                                     '..',
