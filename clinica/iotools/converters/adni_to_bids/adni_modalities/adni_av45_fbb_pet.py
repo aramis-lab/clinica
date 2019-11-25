@@ -95,11 +95,16 @@ def compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         amyloid_qc_subj = pd.concat([av45_qc_subj, amy_qc_subj], axis=0, ignore_index=True, sort=False)
 
         for visit in list(amyloid_qc_subj.VISCODE2.unique()):
+            if pd.isna(visit):
+                continue
+
             amyloid_qc_visit = amyloid_qc_subj[amyloid_qc_subj.VISCODE2 == visit]
 
             # If there are several scans for a timepoint we keep image acquired last (higher LONIUID)
             amyloid_qc_visit = amyloid_qc_visit.sort_values("LONIUID", ascending=False)
 
+            if amyloid_qc_visit.shape[0] == 0:
+                continue
             qc_visit = amyloid_qc_visit.iloc[0]
 
             # Corresponding LONI image ID for original scan in PET Meta List

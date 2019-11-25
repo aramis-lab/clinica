@@ -610,7 +610,7 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
     from clinica.utils.stream import cprint
 
     # Load data
-    sessions = pd.read_excel(clinic_specs_path, sheetname='sessions.tsv')
+    sessions = pd.read_excel(clinic_specs_path, sheet_name='sessions.tsv')
     sessions_fields = sessions['ADNI']
     field_location = sessions['ADNI location']
     sessions_fields_bids = sessions['BIDS CLINICA']
@@ -737,7 +737,7 @@ def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
     for bids_id in bids_ids:
         scans_dict.update({bids_id: {'T1/DWI/fMRI': {}, 'FDG': {}}})
 
-    scans_specs = pd.read_excel(clinic_specs_path, sheetname='scans.tsv')
+    scans_specs = pd.read_excel(clinic_specs_path, sheet_name='scans.tsv')
     scans_fields_db = scans_specs['ADNI']
     scans_fields_bids = scans_specs['BIDS CLINICA']
     scans_fields_mod = scans_specs['Modalities related']

@@ -42,7 +42,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
     location_name = study_name + ' location'
 
     # Load the data from the clincal specification file
-    participants_specs = pd.read_excel(clinical_spec_path, sheetname='participant.tsv')
+    participants_specs = pd.read_excel(clinical_spec_path, sheet_name='participant.tsv')
     participant_fields_db = participants_specs[study_name]
     field_location = participants_specs[location_name]
     participant_fields_bids = participants_specs['BIDS CLINICA']
@@ -74,7 +74,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
                 file_to_read_path = path.join(clinical_data_dir, location)
 
                 if file_ext == '.xlsx':
-                    file_to_read = pd.read_excel(file_to_read_path, sheetname=sheet)
+                    file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
                 elif file_ext == '.csv':
                     file_to_read = pd.read_csv(file_to_read_path)
                 prev_location = location
@@ -151,7 +151,7 @@ def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids
 
     # Load data
     location = study_name + ' location'
-    sessions = pd.read_excel(clinical_spec_path, sheetname='sessions.tsv')
+    sessions = pd.read_excel(clinical_spec_path, sheet_name='sessions.tsv')
     sessions_fields = sessions[study_name]
     field_location = sessions[location]
     sessions_fields_bids = sessions['BIDS CLINICA']
@@ -181,7 +181,7 @@ def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids
             file_ext = os.path.splitext(location)[1]
 
             if file_ext == '.xlsx':
-                file_to_read = pd.read_excel(file_to_read_path, sheetname=sheet)
+                file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
             elif file_ext == '.csv':
                 file_to_read = pd.read_csv(file_to_read_path)
 
@@ -241,7 +241,7 @@ def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids
     for bids_id in bids_ids:
         scans_dict.update({bids_id: {'T1/DWI/fMRI/FMAP': {}, 'FDG': {}}})
 
-    scans_specs = pd.read_excel(clinic_specs_path, sheetname='scans.tsv')
+    scans_specs = pd.read_excel(clinic_specs_path, sheet_name='scans.tsv')
     fields_dataset = []
     fields_location = []
     fields_bids = []
@@ -271,7 +271,7 @@ def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids
         else:
             file_to_read_path = path.join(clinical_data_dir, file_name)
             if sheet != '':
-                file_to_read = pd.read_excel(file_to_read_path, sheetname=sheet)
+                file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
             else:
                 file_to_read = pd.read_excel(file_to_read_path)
             prev_file = file_name
