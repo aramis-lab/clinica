@@ -572,26 +572,34 @@ def center_nifti_origin(input_image, output_image):
         error_str = Fore.RED + '[Error] No such file ' + input_image + Fore.RESET
     except ImageFileError:
         error_str = Fore.RED + '[Error] File ' + input_image + ' could not be read.' + Fore.RESET
+    except Exception as e:
+        error_str = Fore.RED + '[Error] File ' + input_image + ' could not be loaded with nibabel: ' + \
+                    str(e) + Fore.RESET
 
     if not error_str:
-        canonical_img = nib.as_closest_canonical(img)
-        hd = canonical_img.header
+        try:
+            canonical_img = nib.as_closest_canonical(img)
+            hd = canonical_img.header
 
-        qform = np.zeros((4, 4))
-        for i in range(1, 4):
-            qform[i - 1, i - 1] = hd['pixdim'][i]
-            qform[i - 1, 3] = -1.0 * hd['pixdim'][i] * hd['dim'][i] / 2.0
-        new_img = nib.Nifti1Image(canonical_img.get_data(caching='unchanged'), affine=qform, header=hd)
+            qform = np.zeros((4, 4))
+            for i in range(1, 4):
+                qform[i - 1, i - 1] = hd['pixdim'][i]
+                qform[i - 1, 3] = -1.0 * hd['pixdim'][i] * hd['dim'][i] / 2.0
+            new_img = nib.Nifti1Image(canonical_img.get_data(caching='unchanged'), affine=qform, header=hd)
 
-        # Without deleting already-existing file, nib.save causes a severe bug on Linux system
-        if isfile(output_image):
-            os.remove(output_image)
+            # Without deleting already-existing file, nib.save causes a severe bug on Linux system
+            if isfile(output_image):
+                os.remove(output_image)
 
-        nib.save(new_img, output_image)
-        if not isfile(output_image):
-            error_str = Fore.RED + '[Error] NIfTI file created but Clinica could not save it to ' \
-                        + output_image + '. Please check that the output folder has the correct permissions.' \
-                        + Fore.RESET
+            nib.save(new_img, output_image)
+            if not isfile(output_image):
+                error_str = Fore.RED + '[Error] NIfTI file created but Clinica could not save it to ' \
+                            + output_image + '. Please check that the output folder has the correct permissions.' \
+                            + Fore.RESET
+        except Exception as e:
+            error_str = Fore.RED + '[Error] File ' + input_image + ' could not be processed with nibabel: ' + \
+                        str(e) + Fore.RESET
+
     return output_image, error_str
 
 
