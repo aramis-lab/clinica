@@ -234,36 +234,35 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
         bids_file_name = bids_id + '_ses-' + ses_bids
         ses_path = path.join(dest_dir, bids_id, bids_ses_id)
 
-        if mod_to_update:
-            if os.path.exists(path.join(ses_path, 'FLAIR')):
-                shutil.rmtree(path.join(ses_path, 'FLAIR'))
-
         if not os.path.exists(ses_path):
             os.mkdir(ses_path)
 
-        flair_info = images[
-            (images['Subject_ID'] == subj) & (images['VISCODE'] == ses)]
+        flair_info = images[(images['Subject_ID'] == subj) & (images['VISCODE'] == ses)]
 
         # For the same subject, same session there could be multiple flair with different acq label
         for j in range(len(flair_info)):
             flair_subj = flair_info.iloc[j]
             if type(flair_subj['Path']) != float and flair_subj['Path'] != '':
-                if not os.path.exists(path.join(ses_path, 'FLAIR')):
-                    os.mkdir(path.join(ses_path, 'FLAIR'))
+                if not os.path.exists(path.join(ses_path, 'anat')):
+                    os.mkdir(path.join(ses_path, 'anat'))
                 flair_path = flair_subj['Path']
                 bids_name = bids_file_name + '_FLAIR'
-                bids_dest_dir = path.join(ses_path, 'FLAIR')
+                bids_dest_dir = path.join(ses_path, 'anat')
                 image_id = flair_subj.Image_ID
+
+                # Remove existing image if updating
+                if mod_to_update:
+                    if os.path.isfile(path.join(bids_dest_dir, bids_name)):
+                        os.remove(path.join(bids_dest_dir, bids_name))
 
                 # If the original image is a DICOM, check if contains two DICOM
                 # inside the same folder
                 if flair_subj.Is_Dicom:
-                    flair_path = adni_utils.check_two_dcm_folder(flair_path,
-                                                                 bids_dest_dir,
-                                                                 image_id)
+                    flair_path = adni_utils.check_two_dcm_folder(flair_path, bids_dest_dir, image_id)
 
                 if not os.path.exists(bids_dest_dir):
                     os.mkdir(dest_dir)
+
                 command = 'dcm2niix -b y -z y -o ' + bids_dest_dir + ' -f ' + bids_name + ' ' + flair_path
                 subprocess.run(command,
                                shell=True,
@@ -280,7 +279,8 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
                     for d in flair_dcm2niix:
                         os.remove(d)
 
-                    command = 'dcm2nii -a n -d n -e n -i y -g y -p n -m n -r n -x n -o ' + bids_dest_dir + ' ' + flair_path
+                    command = 'dcm2nii -a n -d n -e n -i y -g y -p n -m n -r n -x n -o ' + bids_dest_dir + ' ' + \
+                              flair_path
                     subprocess.run(command,
                                    shell=True,
                                    stdout=subprocess.DEVNULL,
