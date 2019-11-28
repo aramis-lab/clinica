@@ -59,14 +59,13 @@ def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     import pandas as pd
     import os
-    import operator
     from os import path
-    from functools import reduce
     from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars, find_image_path
     from clinica.utils.stream import cprint
 
     pet_pib_col = ['Phase', 'Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
                    'Series_ID', 'Image_ID', 'Original']
+    pet_pib_df = pd.DataFrame(columns=pet_pib_col)
     pet_pib_dfs_list = []
 
     # Loading needed .csv files
@@ -86,7 +85,13 @@ def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         pet_qc_subj = pibqc[(pibqc.PASS == 1) & (pibqc.RID == int(subj[-4:]))]
 
         for visit in list(pet_qc_subj.VISCODE.unique()):
+            if pd.isna(visit):
+                continue
+
             pet_qc_visit = pet_qc_subj[pet_qc_subj.VISCODE == visit]
+
+            if pet_qc_visit.shape[0] == 0:
+                continue
 
             qc_visit = pet_qc_visit.iloc[0]
 
@@ -139,7 +144,8 @@ def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                 columns=pet_pib_col)
             pet_pib_dfs_list.append(row_to_append)
 
-    pet_pib_df = pd.concat(pet_pib_dfs_list, ignore_index=True)
+    if pet_pib_dfs_list:
+        pet_pib_df = pd.concat(pet_pib_dfs_list, ignore_index=True)
 
     # TODO check for exceptions
     # Exceptions
@@ -147,8 +153,9 @@ def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     conversion_errors = []
 
     # Removing known exceptions from images to convert
-    error_ind = pet_pib_df.index[pet_pib_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
-    pet_pib_df.drop(error_ind, inplace=True)
+    if pet_pib_df.shape[0] > 0:
+        error_ind = pet_pib_df.index[pet_pib_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
+        pet_pib_df.drop(error_ind, inplace=True)
 
     images = find_image_path(pet_pib_df, source_dir, 'PIB', 'I', 'Image_ID')
 

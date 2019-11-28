@@ -126,7 +126,8 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
             row_to_append = pd.DataFrame(image_dict, index=['i', ])
             t1_dfs_list.append(row_to_append)
 
-    t1_df = pd.concat(t1_dfs_list, ignore_index=True)
+    if t1_dfs_list:
+        t1_df = pd.concat(t1_dfs_list, ignore_index=True)
 
     # Exceptions
     # ==========
@@ -160,8 +161,9 @@ def compute_t1_paths(source_dir, csv_dir, dest_dir, subjs_list):
                          ('006_S_4485', 'm84')]
 
     # Removing known exceptions from images to convert
-    error_indices = t1_df.index[t1_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
-    t1_df.drop(error_indices, inplace=True)
+    if t1_df.shape[0] > 0:
+        error_indices = t1_df.index[t1_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
+        t1_df.drop(error_indices, inplace=True)
 
     # Checking for images paths in filesystem
     images = find_image_path(t1_df, source_dir, 'T1', 'S', 'Series_ID')

@@ -60,15 +60,14 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     import pandas as pd
     import os
-    import operator
     from os import path
-    from functools import reduce
     from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars, find_image_path
     from clinica.utils.stream import cprint
 
     pet_tau_col = ['Phase', 'Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
                    'Series_ID', 'Image_ID', 'Original']
     pet_tau_df = pd.DataFrame(columns=pet_tau_col)
+    pet_tau_dfs_list = []
 
     # Loading needed .csv files
     tauqc = pd.read_csv(path.join(csv_dir, 'TAUQC.csv'), sep=',', low_memory=False)
@@ -95,13 +94,16 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
         for visit in list(tau_qc_subj.VISCODE2.unique()):
             # TODO Infer visit from ADNIMERGE visits
-            if str(visit) == 'nan':
+            if pd.isna(visit):
                 continue
 
             pet_qc_visit = tau_qc_subj[tau_qc_subj.VISCODE2 == visit]
 
             # If there are several scans for a timepoint we keep image acquired last (higher LONIUID)
             pet_qc_visit = pet_qc_visit.sort_values("LONIUID", ascending=False)
+
+            if pet_qc_visit.shape[0] == 0:
+                continue
 
             qc_visit = pet_qc_visit.iloc[0]
 
@@ -151,7 +153,10 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                 [[qc_visit.Phase, subj, qc_visit.VISCODE2, str(visit), sequence, date, str(study_id), str(series_id),
                   str(image_id), original]],
                 columns=pet_tau_col)
-            pet_tau_df = pet_tau_df.append(row_to_append, ignore_index=True)
+            pet_tau_dfs_list.append(row_to_append)
+
+    if pet_tau_dfs_list:
+        pet_tau_df = pd.concat(pet_tau_dfs_list, ignore_index=True)
 
     # Exceptions
     # ==========
@@ -159,8 +164,9 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                          ('098_S_4275', 'm84')]
 
     # Removing known exceptions from images to convert
-    error_ind = pet_tau_df.index[pet_tau_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
-    pet_tau_df.drop(error_ind, inplace=True)
+    if pet_tau_df.shape[0] > 0:
+        error_ind = pet_tau_df.index[pet_tau_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
+        pet_tau_df.drop(error_ind, inplace=True)
 
     # Checking for images paths in filesystem
     images = find_image_path(pet_tau_df, source_dir, 'TAU', 'I', 'Image_ID')
