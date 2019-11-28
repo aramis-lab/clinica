@@ -441,7 +441,7 @@ def dcm_to_nii(input_path, output_path, bids_name):
 
     # If dcm2niix didn't work use dcm2nii
     if not os.path.exists(path.join(output_path, bids_name + '.nii.gz')):
-        cprint('\tConversion with dcm2niix failed, trying with dcm2nii')
+        cprint('WARNING: Conversion with dcm2niix failed, trying with dcm2nii')
         cmd = 'dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + input_path
         subprocess.run(cmd,
                        shell=True,

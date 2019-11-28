@@ -67,6 +67,7 @@ def compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     pet_amyloid_col = ['Phase', 'Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID', 'Series_ID',
                        'Image_ID', 'Original', 'Tracer']
+    pet_amyloid_df = pd.DataFrame(columns=pet_amyloid_col)
     pet_amyloid_dfs_list = []
 
     # Loading needed .csv files
@@ -185,7 +186,8 @@ def compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                 columns=pet_amyloid_col)
             pet_amyloid_dfs_list.append(row_to_append)
 
-    pet_amyloid_df = pd.concat(pet_amyloid_dfs_list, ignore_index=True)
+    if pet_amyloid_dfs_list:
+        pet_amyloid_df = pd.concat(pet_amyloid_dfs_list, ignore_index=True)
 
     # TODO check for new exceptions in ADNI3
     # Exceptions
@@ -195,9 +197,10 @@ def compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     # TODO Add TRACER to conversion errors
     # Removing known exceptions from images to convert
-    error_ind = pet_amyloid_df.index[pet_amyloid_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors),
-                                                          axis=1)]
-    pet_amyloid_df.drop(error_ind, inplace=True)
+    if pet_amyloid_df.shape[0] > 0:
+        error_ind = pet_amyloid_df.index[pet_amyloid_df.apply(
+            lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
+        pet_amyloid_df.drop(error_ind, inplace=True)
 
     images = find_image_path(pet_amyloid_df, source_dir, 'Amyloid', 'I', 'Image_ID')
 

@@ -65,6 +65,7 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     pet_fdg_col = ['Phase', 'Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
                    'Series_ID', 'Image_ID', 'Original']
+    pet_fdg_df = pd.DataFrame(columns=pet_fdg_col)
     pet_fdg_dfs_list = []
 
     # Loading needed .csv files
@@ -92,10 +93,16 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         pet_qc_subj = pd.concat([pet_qc_1go2_subj, pet_qc3_subj], axis=0, ignore_index=True, sort=False)
 
         for visit in list(pet_qc_subj.VISCODE2.unique()):
+            if pd.isna(visit):
+                continue
+
             pet_qc_visit = pet_qc_subj[pet_qc_subj.VISCODE2 == visit]
 
             # If there are several scans for a timepoint we keep image acquired last (higher LONIUID)
             pet_qc_visit = pet_qc_visit.sort_values("LONIUID", ascending=False)
+
+            if pet_qc_visit.shape[0] == 0:
+                continue
 
             qc_visit = pet_qc_visit.iloc[0]
 
@@ -148,7 +155,8 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                 columns=pet_fdg_col)
             pet_fdg_dfs_list.append(row_to_append)
 
-    pet_fdg_df = pd.concat(pet_fdg_dfs_list, ignore_index=True)
+    if pet_fdg_dfs_list:
+        pet_fdg_df = pd.concat(pet_fdg_dfs_list, ignore_index=True)
 
     # Exceptions
     # ==========
@@ -162,8 +170,9 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                          ('005_S_0223', 'm12')]
 
     # Removing known exceptions from images to convert
-    error_ind = pet_fdg_df.index[pet_fdg_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
-    pet_fdg_df.drop(error_ind, inplace=True)
+    if pet_fdg_df.shape[0] > 0:
+        error_ind = pet_fdg_df.index[pet_fdg_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
+        pet_fdg_df.drop(error_ind, inplace=True)
 
     images = find_image_path(pet_fdg_df, source_dir, 'FDG', 'I', 'Image_ID')
 

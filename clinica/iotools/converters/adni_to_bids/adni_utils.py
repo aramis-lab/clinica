@@ -980,7 +980,7 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
 
         # Check if conversion worked (output file exists?)
         if not path.isfile(nifti_file):
-            cprint('\tConversion with dcm2niix failed, trying with dcm2nii')
+            cprint('WARNING: Conversion with dcm2niix failed, trying with dcm2nii')
             command = 'dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
             subprocess.run(command,
                            shell=True,

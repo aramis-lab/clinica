@@ -57,9 +57,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     """
 
-    import operator
     from os import path, mkdir
-    from functools import reduce
     import pandas as pd
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path, visits_to_timepoints_mrilist
@@ -67,6 +65,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     dwi_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
                   'Study_ID', 'Series_ID', 'Image_ID', 'Field_Strength']
     dwi_df = pd.DataFrame(columns=dwi_col_df)
+    dwi_dfs_list = []
 
     # Loading needed .csv files
     adni_merge = pd.read_csv(path.join(csv_dir, 'ADNIMERGE.csv'), sep=',', low_memory=False)
@@ -104,8 +103,10 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
             if axial is not None:
                 row_to_append = pd.DataFrame(axial, index=['i', ])
-                # TODO Replace iteratively appending by pandas.concat
-                dwi_df = dwi_df.append(row_to_append, ignore_index=True, sort=False)
+                dwi_dfs_list.append(row_to_append)
+
+    if dwi_dfs_list:
+        dwi_df = pd.concat(dwi_dfs_list, ignore_index=True)
 
     # Exceptions
     # ==========
@@ -144,8 +145,9 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
                          ('153_S_6450', 'bl')]
 
     # Removing known exceptions from images to convert
-    error_ind = dwi_df.index[dwi_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
-    dwi_df.drop(error_ind, inplace=True)
+    if dwi_df.shape[0] > 0:
+        error_ind = dwi_df.index[dwi_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
+        dwi_df.drop(error_ind, inplace=True)
 
     # Checking for images paths in filesystem
     images = find_image_path(dwi_df, source_dir, 'DWI', 'S', 'Series_ID')
@@ -244,6 +246,7 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
     import shutil
     from os import path
     from glob import glob
+    import pandas as pd
 
     global counter
     alpha_id = bids.remove_space_and_symbols(subj)
@@ -270,18 +273,17 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
             if os.path.exists(path.join(ses_path, 'dwi')):
                 shutil.rmtree(path.join(ses_path, 'dwi'))
 
-        if not os.path.exists(ses_path):
-            os.mkdir(ses_path)
-
-        dwi_info = images[
-            (images['Subject_ID'] == subj) & (images['VISCODE'] == ses)]
+        dwi_info = images[(images['Subject_ID'] == subj) & (images['VISCODE'] == ses)]
 
         # For the same subject, same session there could be multiple dwi with different acq label
         for j in range(len(dwi_info)):
+
             dwi_subj = dwi_info.iloc[j]
-            if type(dwi_subj['Path']) != float and dwi_subj['Path'] != '':
+
+            if not pd.isnull(dwi_subj['Path']) and dwi_subj['Path']:
+
                 if not os.path.exists(path.join(ses_path, 'dwi')):
-                    os.mkdir(path.join(ses_path, 'dwi'))
+                    os.makedirs(path.join(ses_path, 'dwi'))
                 dwi_path = dwi_subj['Path']
 
                 bids_name = bids_file_name + '_acq-axial_dwi'
@@ -289,8 +291,8 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
                 bids_dest_dir = path.join(ses_path, 'dwi')
 
                 if not os.path.exists(bids_dest_dir):
-                    os.mkdir(dest_dir)
-                command = 'dcm2niix -b n -z y -o ' + bids_dest_dir + ' -f ' + bids_name + ' ' + dwi_path
+                    os.makedirs(bids_dest_dir)
+                command = 'dcm2niix -b y -z y -o ' + bids_dest_dir + ' -f ' + bids_name + ' ' + dwi_path
                 subprocess.run(command,
                                shell=True,
                                stdout=subprocess.DEVNULL,
@@ -302,20 +304,18 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
                     os.remove(adc_image)
 
                 # If dcm2niix didn't work use dcm2nii
-                # print path.join(dest_dir, bids_name + '.nii.gz')
-                if not os.path.exists(path.join(bids_dest_dir,
-                                                bids_name + '.nii.gz')) or not os.path.exists(
-                        path.join(bids_dest_dir,
-                                  bids_name + '.bvec') or not os.path.exists(
-                            path.join(bids_dest_dir,
-                                      bids_name + '.bval'))):
-                    cprint('\tConversion with dcm2niix failed, trying with dcm2nii')
+                # We do not chek if .json exists given that dcm2nii does not generate .json file anyways
+                if (not os.path.exists(path.join(bids_dest_dir, bids_name + '.nii.gz')))\
+                        or (not os.path.exists(path.join(bids_dest_dir, bids_name + '.bvec')))\
+                        or (not os.path.exists(path.join(bids_dest_dir, bids_name + '.bval'))):
+
+                    cprint('WARNING: Conversion with dcm2niix failed, trying with dcm2nii '
+                           'for subject ' + subj + ' and session ' + ses)
 
                     # Find all the files eventually created by dcm2niix and remove them
                     dwi_dcm2niix = glob(path.join(bids_dest_dir, bids_name + '*'))
 
                     for d in dwi_dcm2niix:
-                        # print 'Removing the old', d
                         os.remove(d)
 
                     command = 'dcm2nii -a n -d n -e n -i y -g y -p n -m n -r n -x n -o %s %s' \
@@ -324,26 +324,29 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
                                    shell=True,
                                    stdout=subprocess.DEVNULL,
                                    stderr=subprocess.DEVNULL)
-                    nii_file = path.join(bids_dest_dir,
-                                         subj.replace('_', '') + '.nii.gz')
-                    bvec_file = path.join(bids_dest_dir,
-                                          subj.replace('_', '') + '.bvec')
-                    bval_file = path.join(bids_dest_dir,
-                                          subj.replace('_', '') + '.bval')
 
-                    if os.path.exists(bvec_file) and os.path.exists(
-                            bval_file):
+                    nii_file = path.join(bids_dest_dir, subj.replace('_', '') + '.nii.gz')
+                    bvec_file = path.join(bids_dest_dir, subj.replace('_', '') + '.bvec')
+                    bval_file = path.join(bids_dest_dir, subj.replace('_', '') + '.bval')
+
+                    if os.path.exists(bvec_file) and os.path.exists(bval_file):
                         os.rename(bvec_file, path.join(bids_dest_dir,
                                                        bids_name + '.bvec'))
                         os.rename(bval_file, path.join(bids_dest_dir,
                                                        bids_name + '.bval'))
                     else:
-                        cprint('WARNING: bvec and bval not generated by dcm2nii'
-                               + ' for subject ' + subj + ' and session ' + ses)
+                        cprint('WARNING: bvec and bval not generated by dcm2nii '
+                               'for subject ' + subj + ' and session ' + ses)
 
                     if os.path.exists(nii_file):
                         os.rename(nii_file, path.join(bids_dest_dir,
                                                       bids_name + '.nii.gz'))
                     else:
-                        cprint('WARNING: CONVERSION FAILED...'
-                               + ' for subject ' + subj + ' and session ' + ses)
+                        cprint('WARNING: CONVERSION FAILED... '
+                               'for subject ' + subj + ' and session ' + ses)
+
+                # Case when JSON file was not generated by dcm2niix
+                elif not os.path.exists(path.join(bids_dest_dir, bids_name + '.json')):
+                    cprint('WARNING: JSON file not generated by dcm2nii '
+                           'for subject ' + subj + ' and session ' + ses)
+

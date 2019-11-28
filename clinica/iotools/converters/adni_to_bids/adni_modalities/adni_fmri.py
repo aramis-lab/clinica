@@ -63,6 +63,7 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list):
     fmri_col = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
                 'Study_ID', 'Field_Strength', 'Series_ID', 'Image_ID']
     fmri_df = pd.DataFrame(columns=fmri_col)
+    fmri_dfs_list = []
 
     # Loading needed .csv files
     adni_merge = pd.read_csv(path.join(csv_dir, 'ADNIMERGE.csv'), sep=',', low_memory=False)
@@ -108,16 +109,19 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list):
 
             if image is not None:
                 row_to_append = pd.DataFrame(image, index=['i', ])
-                # TODO Replace iteratively appending by pandas.concat
-                fmri_df = fmri_df.append(row_to_append, ignore_index=True, sort=False)
+                fmri_dfs_list.append(row_to_append)
+
+    if fmri_dfs_list:
+        fmri_df = pd.concat(fmri_dfs_list, ignore_index=True)
 
     # Exceptions
     # ==========
     conversion_errors = [('006_S_4485', 'm84')]
 
     # Removing known exceptions from images to convert
-    error_ind = fmri_df.index[fmri_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
-    fmri_df.drop(error_ind, inplace=True)
+    if fmri_df.shape[0] > 0:
+        error_ind = fmri_df.index[fmri_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
+        fmri_df.drop(error_ind, inplace=True)
 
     # Checking for images paths in filesystem
     images = find_image_path(fmri_df, source_dir, 'fMRI', 'S', 'Series_ID')

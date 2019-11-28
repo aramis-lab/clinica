@@ -57,9 +57,7 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     """
 
-    import operator
     from os import path, mkdir
-    from functools import reduce
     import pandas as pd
 
     from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path, visits_to_timepoints_mrilist
@@ -67,6 +65,7 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
     flair_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
                     'Study_ID', 'Series_ID', 'Image_ID', 'Field_Strength', 'Scanner']
     flair_df = pd.DataFrame(columns=flair_col_df)
+    flair_dfs_list = []
 
     # Loading needed .csv files
     adni_merge = pd.read_csv(path.join(csv_dir, 'ADNIMERGE.csv'), sep=',', low_memory=False)
@@ -76,7 +75,7 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     mri_list = pd.read_csv(path.join(csv_dir, 'MRILIST.csv'), sep=',', low_memory=False)
 
-    # Selecting FLAIR DTI images that are not TODO images
+    # Selecting FLAIR DTI images that are not MPR
     mri_list = mri_list[mri_list.SEQUENCE.str.contains('flair', case=False, na=False)]
     unwanted_sequences = ['_MPR_']
     mri_list = mri_list[mri_list.SEQUENCE.map(lambda x: not any(subs in x for subs in unwanted_sequences))]
@@ -104,8 +103,10 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
             if flair is not None:
                 row_to_append = pd.DataFrame(flair, index=['i', ])
-                # TODO Replace iteratively appending by pandas.concat
-                flair_df = flair_df.append(row_to_append, ignore_index=True, sort=False)
+                flair_dfs_list.append(row_to_append)
+
+    if flair_dfs_list:
+        flair_df = pd.concat(flair_dfs_list, ignore_index=True)
 
     # Exceptions
     # ==========
@@ -118,13 +119,12 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
                          ('053_S_4578', 'm48'),
                          ('128_S_4586', 'm48'),
                          ('053_S_4813', 'm48'),
-                         ('053_S_5272', 'm24'),
-
-    ]
+                         ('053_S_5272', 'm24')]
 
     # Removing known exceptions from images to convert
-    error_ind = flair_df.index[flair_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
-    flair_df.drop(error_ind, inplace=True)
+    if flair_df.shape[0] > 0:
+        error_ind = flair_df.index[flair_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
+        flair_df.drop(error_ind, inplace=True)
 
     # Checking for images paths in filesystem
     images = find_image_path(flair_df, source_dir, 'FLAIR', 'S', 'Series_ID')
@@ -208,9 +208,9 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
     import clinica.iotools.bids_utils as bids
     import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
     from clinica.utils.stream import cprint
+    import pandas as pd
     import subprocess
     import os
-    import shutil
     from os import path
     from glob import glob
 
@@ -234,17 +234,14 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
         bids_file_name = bids_id + '_ses-' + ses_bids
         ses_path = path.join(dest_dir, bids_id, bids_ses_id)
 
-        if not os.path.exists(ses_path):
-            os.mkdir(ses_path)
-
         flair_info = images[(images['Subject_ID'] == subj) & (images['VISCODE'] == ses)]
 
         # For the same subject, same session there could be multiple flair with different acq label
         for j in range(len(flair_info)):
             flair_subj = flair_info.iloc[j]
-            if type(flair_subj['Path']) != float and flair_subj['Path'] != '':
+            if not pd.isnull(flair_subj['Path']) and flair_subj['Path'] != '':
                 if not os.path.exists(path.join(ses_path, 'anat')):
-                    os.mkdir(path.join(ses_path, 'anat'))
+                    os.makedirs(path.join(ses_path, 'anat'))
                 flair_path = flair_subj['Path']
                 bids_name = bids_file_name + '_FLAIR'
                 bids_dest_dir = path.join(ses_path, 'anat')
@@ -261,7 +258,7 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
                     flair_path = adni_utils.check_two_dcm_folder(flair_path, bids_dest_dir, image_id)
 
                 if not os.path.exists(bids_dest_dir):
-                    os.mkdir(dest_dir)
+                    os.makedirs(dest_dir)
 
                 command = 'dcm2niix -b y -z y -o ' + bids_dest_dir + ' -f ' + bids_name + ' ' + flair_path
                 subprocess.run(command,
@@ -271,7 +268,7 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
 
                 # If dcm2niix didn't work use dcm2nii
                 if not os.path.exists(path.join(bids_dest_dir, bids_name + '.nii.gz')):
-                    cprint('\tConversion with dcm2niix failed, trying with dcm2nii')
+                    cprint('WARNING: Conversion with dcm2niix failed, trying with dcm2nii')
 
                     # Find all the files eventually created by dcm2niix and remove them
                     flair_dcm2niix = glob(
