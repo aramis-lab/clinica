@@ -1,8 +1,5 @@
 # coding: utf8
 
-from __future__ import division
-
-
 def get_pipeline_parameters(group_id,
                             fwhm=None,
                             image_type=None,
