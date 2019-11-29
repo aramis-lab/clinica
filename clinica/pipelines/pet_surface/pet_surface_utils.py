@@ -872,7 +872,7 @@ def get_wf(subject_id,
     from nipype.interfaces.petpvc import PETPVC
     from nipype.interfaces.spm import Coregister, Normalize12
     import clinica.pipelines.pet_surface.pet_surface_utils as utils
-    import platform
+    from clinica.utils.spm import get_tpm
 
     cprint('***** Beginning processing of ' + subject_id + ' on ' + session_id + ' *****')
 
@@ -929,19 +929,9 @@ def get_wf(subject_id,
     vol2vol_mask = pe.Node(ApplyVolTransform(reg_header=True, interp='nearest'),
                            name='vol2vol_mask')
 
-    if 'SPMSTANDALONE_HOME' in os.environ:
-        # Path is different between SPM standalone MAC and Linux. First is MAC location
-        if platform.system() == 'Darwin':
-            tpmnii = os.path.join(str(os.getenv("SPMSTANDALONE_HOME")), 'spm12_mcr/spm12/tpm/TPM.nii')
-        elif platform.system() == 'Linux':
-            # Try Linux location
-            tpmnii = os.path.join(str(os.getenv("SPMSTANDALONE_HOME")), 'spm12_mcr/spm12/spm12/tpm/TPM.nii')
-    else:
-        tpmnii = os.path.join(os.path.expandvars('$SPM_HOME'), 'tpm', 'TPM.nii')
-    if not os.path.exists(tpmnii):
-        raise IOError('Could not find TPM.nii in your SPM installation. Is your $SPM_HOME environment variable correctly set ?')
+    tpm_nii = get_tpm()
 
-    normalize12 = pe.Node(Normalize12(tpm=tpmnii,
+    normalize12 = pe.Node(Normalize12(tpm=tpm_nii,
                                       affine_regularization_type='mni',
                                       jobtype='est',
                                       bias_fwhm=60,
