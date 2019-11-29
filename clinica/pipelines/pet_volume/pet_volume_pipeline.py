@@ -270,9 +270,9 @@ class PETVolume(cpe.Pipeline):
             raise ClinicaException(error_message)
 
         check_relative_volume_location_in_world_coordinate_system('T1w-MRI', t1w_bids,
-                                                                  self.parameters['pet_type'] + ' PET', pet_bids,
+                                                                  self.parameters['pet_tracer'] + ' PET', pet_bids,
                                                                   self.bids_directory,
-                                                                  self.parameters['pet_type'])
+                                                                  self.parameters['pet_tracer'])
 
         read_input_node = npe.Node(name="LoadingCLIArguments",
                                    interface=nutil.IdentityInterface(
