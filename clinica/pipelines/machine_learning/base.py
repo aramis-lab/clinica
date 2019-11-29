@@ -42,8 +42,6 @@ class MLWorkflow:
         metric is expected to be ndarray of size [num_repetitions, num_datasets]
 
         """
-        # from __future__ import print_function, division
-
         import numpy as np
         import matplotlib.pyplot as plt
         from matplotlib import cm

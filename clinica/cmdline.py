@@ -8,8 +8,6 @@ The aim of this module is to execute pipelines from the command line,
 and gives to the user some other utils to work with the pipelines.
 """
 
-from __future__ import print_function
-
 import os
 import sys
 
