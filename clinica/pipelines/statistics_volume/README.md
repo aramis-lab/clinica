@@ -1,30 +1,22 @@
-# `statistics_volume`` - <VERY_SHORT_DESCRIPTION>
+# `statistics-volume` - Statistics for volume
 
-<SHORT_DESCRIPTION>
-
+Perform 2-sample t-test on your images
 
 ## Dependencies
-<!-- If you installed the docker image of Clinica, nothing is required. -->
-If you only installed the core of Clinica, this pipeline needs the installation of **<software_package>** on your computer. You can find how to install this software on the [installation](../#installing-clinica-from-source) page.
+If you installed the docker image of Clinica, nothing is required. If you only installed the core of Clinica, this pipeline needs the installation of **SPM** on its standalone form or with **Matlab** on your computer. You can find how to install this software on the [installation](../#installing-clinica-from-source) page.
 
 
 ## Running the pipeline
 The pipeline can be run with the following command line:
 
 ```
-clinica run statistics_volume bids_directory caps_directory
+clinica run statistics-volume caps_directory tsv_file contrast
 ```
 where:
 
-  - `bids_directory` is the input folder containing the dataset in a [BIDS](../BIDS) hierarchy.
   - `caps_directory` is the output folder containing the results in a [CAPS](../CAPS) hierarchy.
-  - `<ARG_1>` <ARG_1_DESCRIPTION>
-  - `<ARG_2>` <ARG_2_DESCRIPTION>
-
-If you want to run the pipeline on a subset of your BIDS dataset, you can use the `-tsv` flag to specify in a TSV file the participants belonging to your subset.
-
-!!! note
-    If you have
+  - `tsv_file` is the path to the TSV file with covariables (mandatory, unlike other Clinica pipelines)
+  - `contrast` is the name of the contrast used to differntiate the 2 groups
 
 
 ## Outputs
