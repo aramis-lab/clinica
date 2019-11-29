@@ -55,8 +55,6 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
                               help='Your advanced argument.')
 
     def run_command(self, args):
-        ""
-        """
         import os
         from networkx import Graph
         from colorama import Fore
@@ -68,7 +66,7 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
         # BIDS and/or CAPS directory as inputs. If the BIDS directory is not needed
         # for your pipeline, simply remove:
         # bids_directory=self.absolute_path(args.bids_directory),
-        pipeline = T1FreeSurfer(
+        pipeline = {{ pipeline.class_name }}(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),

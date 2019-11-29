@@ -700,6 +700,36 @@ def test_run_SpatialSVM(cmdopt):
     clean_folder(join(root, 'out', 'caps'), recreate=True)
 
 
+def test_run_StatisticsVolume(cmdopt):
+    from clinica.pipelines.statistics_volume.statistics_volume_pipeline import StatisticsVolume
+    from os.path import dirname, join, abspath, exists
+    import shutil
+    import numpy as np
+    import nibabel as nib
+
+    working_dir = cmdopt
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'StatisticsVolume')
+
+    # Remove potential residual of previous UT
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'StatisticsVolume'), recreate=False)
+
+    # Copy necessary data from in to out
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+
+    # Instantiate pipeline and run()
+    pipeline = StatisticsVolume(
+        caps_directory=join(root, 'in', 'caps'),
+        tsv_file=join(root, 'in', 'covariates_subsetADNI.txt'),
+        base_dir=join(working_dir, 'StatisticsVolume')
+    )
+    pipeline.parameters = {'contrast': 'group',
+                           'file_id': 't1'}
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 8}, bypass_check=True)
+    assert 0
+
+
 # def test_run_T1FreeSurferLongitudinal(cmdopt):
 #     """
 #     Functional test for T1FreeSurfer_longitudinal workflow.
