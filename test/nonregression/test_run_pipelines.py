@@ -702,7 +702,7 @@ def test_run_SpatialSVM(cmdopt):
 
 def test_run_StatisticsVolume(cmdopt):
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import StatisticsVolume
-    from os.path import dirname, join, abspath, exists
+    from os.path import dirname, join, abspath, exists, isfile
     import shutil
     import numpy as np
     import nibabel as nib
@@ -712,11 +712,11 @@ def test_run_StatisticsVolume(cmdopt):
     root = join(root, 'data', 'StatisticsVolume')
 
     # Remove potential residual of previous UT
-    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    #clean_folder(join(root, 'out', 'caps'), recreate=False)
     clean_folder(join(working_dir, 'StatisticsVolume'), recreate=False)
 
     # Copy necessary data from in to out
-    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+    #shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     # Instantiate pipeline and run()
     pipeline = StatisticsVolume(
@@ -727,6 +727,7 @@ def test_run_StatisticsVolume(cmdopt):
     pipeline.parameters = {'contrast': 'group',
                            'file_id': 't1'}
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 8}, bypass_check=True)
+
     assert 0
 
 

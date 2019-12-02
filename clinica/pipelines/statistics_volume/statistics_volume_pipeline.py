@@ -1,24 +1,10 @@
-"""Statistics_Volume - Clinica Pipeline.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
-"""
 
-# WARNING: Don't put any import statement here except if it's absolutly
-# necessary. Put it *inside* the different methods.
-# Otherwise it will slow down the dynamic loading of the pipelines list by the
-# command line tool.
 import clinica.pipelines.engine as cpe
 
 
 class StatisticsVolume(cpe.Pipeline):
     """Statistics_Volume SHORT DESCRIPTION.
 
-    Warnings:
-        - A WARNING.
-
-    Todos:
-        - [x] A FILLED TODO ITEM.
-        - [ ] AN ON-GOING TODO ITEM.
 
     Args:
         input_dir: A BIDS directory.
@@ -33,12 +19,10 @@ class StatisticsVolume(cpe.Pipeline):
 
     """
 
-
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
         pass
-
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
@@ -49,7 +33,6 @@ class StatisticsVolume(cpe.Pipeline):
 
         return ['input_files']
 
-
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
 
@@ -58,7 +41,6 @@ class StatisticsVolume(cpe.Pipeline):
         """
 
         return []
-
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -129,14 +111,18 @@ class StatisticsVolume(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.filemanip import unzip_nii
+        from os.path import join, dirname
 
-        unzip_node = npe.MapNode(nutil.Function(input_names=['in_file'],
-                                                output_names=['out_file'],
-                                                function=unzip_nii),
-                                 name='unzip_node', iterfield=['in_file'])
+        unzip_node = npe.Node(nutil.Function(input_names=['in_file'],
+                                             output_names=['output_files'],
+                                             function=unzip_nii),
+                              name='unzip_node')
 
-        get_groups = npe.Node(nutil.Function(input_names=['file_list', 'csv', 'contrast'],
-                                             output_names=['idx_group1', 'idx_group2']))
+        get_groups = npe.Node(nutil.Function(input_names=['csv', 'contrast'],
+                                             output_names=['idx_group1', 'idx_group2'],
+                                             function=utils.get_group_1_and_2),
+                              name='get_groups')
+
         get_groups.inputs.contrast = self.parameters['contrast']
         get_groups.inputs.csv = self.tsv_file
 
@@ -146,8 +132,24 @@ class StatisticsVolume(cpe.Pipeline):
         # - covariables with their name, and values (first group and second group concatenated)
         # - output directory
 
+        model_creation = npe.Node(nutil.Function(input_names=['csv',
+                                                              'contrast',
+                                                              'idx_group1',
+                                                              'idx_group2',
+                                                              'file_list',
+                                                              'template_file'],
+                                                 output_names=['spm_mat'],
+                                                 function=utils.model_creation),
+                                  name='model_creation')
+        model_creation.inputs.csv = self.tsv_file
+        model_creation.inputs.contrast = self.parameters['contrast']
+        model_creation.inputs.template_file = join(dirname(__file__), 'template_model_creation.m')
+
         # Connection
         # ==========
         self.connect([
-            (self.input_node, unzip_node, [('input_files', 'in_file')])
+            (self.input_node, unzip_node, [('input_files', 'in_file')]),
+            (unzip_node, model_creation, [('output_files', 'file_list')]),
+            (get_groups, model_creation, [('idx_group1', 'idx_group1')]),
+            (get_groups, model_creation, [('idx_group2', 'idx_group2')]),
         ])
