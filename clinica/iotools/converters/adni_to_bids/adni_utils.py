@@ -21,7 +21,7 @@ def replace_sequence_chars(sequence_name):
 
     """
     import re
-    return re.sub('[ /;*():]', '_', sequence_name)
+    return re.sub('[ /;*()<>:]', '_', sequence_name)
 
 
 def fill_zeros(s, length):
@@ -677,14 +677,18 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
                             if not pd.isnull(sessions_fields[j]):
                                 # Extract only the fields related to the current file opened
                                 if location in field_location[i]:
-                                    if location == 'ADAS_ADNIGO2.csv' or location == 'DXSUM_PDXCONV_ADNIALL.csv' \
-                                            or location == 'CDR.csv' or location == 'NEUROBAT.csv':
-                                        if type(row['VISCODE2']) == float:
+                                    if location in ['ADAS_ADNIGO2.csv', 'DXSUM_PDXCONV_ADNIALL.csv', 'CDR.csv',
+                                                    'NEUROBAT.csv', 'GDSCALE.csv', 'MODHACH.csv, MOCA.csv', 'NPIQ.csv',
+                                                    'MEDHIST.csv', 'VITALS.csv', 'UWNPSYCHSUM_03_07_19.csv']:
+                                        if pd.isnull(row['VISCODE2']) or row['VISCODE2'] == 'f':
                                             continue
                                         visit_id = row['VISCODE2']
                                         # Convert sc to bl
                                         if visit_id == 'sc':
                                             visit_id = 'bl'
+                                    elif location in ['BHR_EVERYDAY_COGNITION.csv', 'BHR_BASELINE_QUESTIONNAIRE.csv',
+                                                      'BHR_LONGITUDINAL_QUESTIONNAIRE.csv']:
+                                        visit_id = row['Timepoint']
                                     else:
                                         visit_id = row['VISCODE']
                                     try:
