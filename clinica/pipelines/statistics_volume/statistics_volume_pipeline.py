@@ -50,6 +50,7 @@ class StatisticsVolume(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.exceptions import ClinicaException
+        from colorama import Fore
 
         all_errors = []
         if self.parameters['file_id'] == 'fdg-pet':
@@ -72,6 +73,9 @@ class StatisticsVolume(cpe.Pipeline):
                                                    'needed_pipeline': 't1-volume or t1-volume-existing-template'})
             except ClinicaException as e:
                 all_errors.append(e)
+        else:
+            raise ClinicaException(Fore.RED + '[Error] ' + Fore.YELLOW + self.parameters['file_id']
+                                   + Fore.RED + ' modality is not currently supported for this analysis' + Fore.RESET)
 
         if len(all_errors) > 0:
             error_message = 'Clinica faced errors while trying to read files in your BIDS or CAPS directories.\n'
@@ -90,7 +94,6 @@ class StatisticsVolume(cpe.Pipeline):
             (read_parameters_node,      self.input_node,    [('input_files',    'input_files')])
         ])
 
-
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
         """
@@ -101,7 +104,6 @@ class StatisticsVolume(cpe.Pipeline):
         # pipeline.
 
         pass
-
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
@@ -138,12 +140,27 @@ class StatisticsVolume(cpe.Pipeline):
                                                               'idx_group2',
                                                               'file_list',
                                                               'template_file'],
-                                                 output_names=['spm_mat'],
+                                                 output_names=['script_file'],
                                                  function=utils.model_creation),
                                   name='model_creation')
         model_creation.inputs.csv = self.tsv_file
         model_creation.inputs.contrast = self.parameters['contrast']
         model_creation.inputs.template_file = join(dirname(__file__), 'template_model_creation.m')
+
+        run_spm_script_node = npe.Node(nutil.Function(input_names=['m_file'],
+                                                      output_names=['spm_mat'],
+                                                      function=utils.run_m_script),
+                                       name='run_spm_script_node')
+
+        run_spm_model_creation = run_spm_script_node.clone(name='run_spm_model_creation')
+
+        model_estimation = npe.Node(nutil.Function(input_names=['mat_file',
+                                                                'template_file'],
+                                                   output_names=['script_file'],
+                                                   function=utils.estimate),
+                                    name='model_estimation')
+        model_estimation.inputs.template_file = join(dirname(__file__), 'template_model_estimation.m')
+        run_spm_model_estimation = run_spm_script_node.clone(name='run_spm_model_estimation')
 
         # Connection
         # ==========
@@ -152,4 +169,8 @@ class StatisticsVolume(cpe.Pipeline):
             (unzip_node, model_creation, [('output_files', 'file_list')]),
             (get_groups, model_creation, [('idx_group1', 'idx_group1')]),
             (get_groups, model_creation, [('idx_group2', 'idx_group2')]),
+
+            (model_creation, run_spm_model_creation, [('script_file', 'm_file')]),
+            (run_spm_model_creation, model_estimation, [('spm_mat', 'mat_file')]),
+            (model_estimation, run_spm_model_estimation, [('script_file', 'm_file')])
         ])
