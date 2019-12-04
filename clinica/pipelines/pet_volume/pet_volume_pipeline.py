@@ -28,6 +28,7 @@ class PETVolume(cpe.Pipeline):
     """
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
+        from clinica.utils.group import check_group_label
         default_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
 
         if 'group_id' not in self.parameters.keys():
@@ -47,8 +48,7 @@ class PETVolume(cpe.Pipeline):
         if 'atlases' not in self.parameters.keys():
             self.parameters['atlases'] = default_atlases
 
-        if not self.parameters['group_id'].isalnum():
-            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
+        check_group_label(self.parameters['group_id'])
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
@@ -97,29 +97,24 @@ class PETVolume(cpe.Pipeline):
         """Build and connect an input node to the pipelines.
         """
         import os
+        from colorama import Fore
         from os.path import join, split, realpath, exists
         from pandas.io.parsers import read_csv
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader, insensitive_glob
         from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.ux import print_groups_in_caps_directory
         from clinica.iotools.utils.data_handling import check_relative_volume_location_in_world_coordinate_system
         import clinica.utils.input_files as input_files
 
         # Check that group already exists
         if not exists(join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])):
-            error_message = self.parameters['group_id'] \
-                            + ' does not exists, please choose an other one (or maybe you need to run t1-volume-create-dartel).' \
-                            + '\nGroups that already exist in your CAPS directory are: \n'
-            list_groups = os.listdir(join(self.caps_directory, 'groups'))
-            is_empty = True
-            for e in list_groups:
-                if e.startswith('group-'):
-                    error_message += e + ' \n'
-                    is_empty = False
-            if is_empty is True:
-                error_message += 'NO GROUP FOUND'
-            raise ValueError(error_message)
+            print_groups_in_caps_directory(self.caps_directory)
+            raise ClinicaException(
+                '%sGroup %s does not exist. Did you run t1-volume or t1-volume-create-dartel pipeline?%s' %
+                (Fore.RED, self.parameters['group_id'], Fore.RESET)
+            )
 
         # Tissues DataGrabber
         # ====================

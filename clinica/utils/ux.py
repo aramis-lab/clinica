@@ -112,3 +112,16 @@ def print_crash_files_and_exit(log_file, working_directory):
            (Fore.YELLOW, working_directory, Fore.RESET))
     # Force the display of "Documentation can be found..."
     raise ClinicaException('')
+
+
+def print_groups_in_caps_directory(caps_directory):
+    """Print group IDs based on `caps_directory`/groups folder."""
+    from .group import extract_group_ids
+    from .stream import cprint
+
+    group_ids = extract_group_ids(caps_directory)
+    if group_ids == ['']:
+        cprint('No group was found in CAPS directory')
+    else:
+        cprint("Groups that exist in your CAPS directory are %s." %
+               ', '.join(g_id.replace('group-', '') for g_id in group_ids))

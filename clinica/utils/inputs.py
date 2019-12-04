@@ -290,7 +290,8 @@ def clinica_group_reader(caps_directory, information, raise_exception=True):
 
     assert isinstance(information, dict), 'A dict must be provided for the argmuent \'dict\''
     assert all(elem in information.keys()
-               for elem in ['pattern', 'description', 'needed_pipeline']), '\'information\' must contain the keys \'pattern\', \'description\', \'needed_pipeline\''
+               for elem in ['pattern', 'description', 'needed_pipeline']
+               ), '\'information\' must contain the keys \'pattern\', \'description\', \'needed_pipeline\''
 
     pattern = information['pattern']
     # Some check on the formatting on the data
