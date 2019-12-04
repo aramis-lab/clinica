@@ -270,3 +270,27 @@ def estimate(mat_file, template_file):
         file.write(filedata)
 
     return current_model_estimation
+
+
+def results(mat_file, template_file):
+    """
+
+    Args:
+        mat_file:
+        template_file:
+
+    Returns:
+
+    """
+    from os.path import abspath
+
+    # Read template
+    with open(template_file, 'r') as file:
+        filedata = file.read()
+    # Replace by the real path to spm.mat
+    filedata = filedata.replace('@SPMMAT', '\'' + mat_file + '\'')
+    current_model_result = abspath('./current_model_result.m')
+    with open(current_model_result, 'w+') as file:
+        file.write(filedata)
+
+    return current_model_result

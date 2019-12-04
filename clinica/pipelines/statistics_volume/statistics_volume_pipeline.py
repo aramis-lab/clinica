@@ -154,13 +154,19 @@ class StatisticsVolume(cpe.Pipeline):
 
         run_spm_model_creation = run_spm_script_node.clone(name='run_spm_model_creation')
 
-        model_estimation = npe.Node(nutil.Function(input_names=['mat_file',
-                                                                'template_file'],
+        model_estimation = npe.Node(nutil.Function(input_names=['mat_file', 'template_file'],
                                                    output_names=['script_file'],
                                                    function=utils.estimate),
                                     name='model_estimation')
         model_estimation.inputs.template_file = join(dirname(__file__), 'template_model_estimation.m')
         run_spm_model_estimation = run_spm_script_node.clone(name='run_spm_model_estimation')
+
+        model_result = npe.Node(nutil.Function(input_names=['mat_file', 'template_file'],
+                                               output_names=['script_file'],
+                                               function=utils.results),
+                                name='model_result')
+        model_result.inputs.template_file = join(dirname(__file__), 'template_model_results.m')
+        run_spm_model_result = run_spm_script_node.clone(name='run_spm_model_result')
 
         # Connection
         # ==========
@@ -172,5 +178,7 @@ class StatisticsVolume(cpe.Pipeline):
 
             (model_creation, run_spm_model_creation, [('script_file', 'm_file')]),
             (run_spm_model_creation, model_estimation, [('spm_mat', 'mat_file')]),
-            (model_estimation, run_spm_model_estimation, [('script_file', 'm_file')])
+            (model_estimation, run_spm_model_estimation, [('script_file', 'm_file')]),
+            (run_spm_model_estimation, model_result, [('spm_mat', 'mat_file')]),
+            (model_result, run_spm_model_result, [('script_file', 'm_file')])
         ])
