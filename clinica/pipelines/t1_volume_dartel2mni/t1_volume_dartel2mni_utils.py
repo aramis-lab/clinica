@@ -10,21 +10,6 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-def get_pipeline_parameters(group_id,
-                            tissues=None,
-                            voxel_size=None,
-                            modulation=None,
-                            fwhm=None):
-    parameters = {
-        'group_id': group_id,
-        'tissues': tissues or [1, 2, 3],
-        'voxel_size': voxel_size or None,
-        'modulation': modulation or True,
-        'fwhm': fwhm or [8]
-    }
-    return parameters
-
-
 def prepare_flowfields(flow_fields, tissues):
     return [[f] * len(tissues) for f in flow_fields]
 

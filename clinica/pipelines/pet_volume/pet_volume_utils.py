@@ -10,29 +10,6 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-def get_pipeline_parameters(group_id,
-                            psf_tsv=None,
-                            pet_tracer=None,
-                            mask_tissues=None,
-                            mask_threshold=None,
-                            pvc_mask_tissues=None,
-                            smooth=None,
-                            atlases=None):
-
-    list_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
-    parameters = {
-        'group_id': group_id,
-        'psf_tsv': psf_tsv or None,
-        'pet_tracer': pet_tracer or 'fdg',
-        'mask_tissues': mask_tissues or [1, 2, 3],
-        'mask_threshold': mask_threshold or 0.3,
-        'pvc_mask_tissues': pvc_mask_tissues or [1, 2, 3],
-        'smooth': smooth or [8],
-        'atlases': atlases or list_atlases,
-    }
-    return parameters
-
-
 def read_psf(json_path):
     """readpsf is able to read the json file associated with the PET volume, and extract information needed to perform
     partial volume correction: the effective resolution in plane, and the effective resolution axial.

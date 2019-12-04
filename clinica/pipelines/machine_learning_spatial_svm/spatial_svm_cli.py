@@ -16,9 +16,7 @@ class SpatialSVMCLI(ce.CmdParser):
 
     def define_options(self):
         """Define the sub-command arguments."""
-        from .spatial_svm_utils import get_pipeline_parameters
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
-        parameters = get_pipeline_parameters(group_id="GroupID")
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("caps_directory",
@@ -28,39 +26,37 @@ class SpatialSVMCLI(ce.CmdParser):
         # Optional arguments
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("-it", "--image_type",
-                              default=parameters['image_type'],
-                              help='Imaging modality. Can be t1 or pet (default: --image_type t1)')
+                              default='t1',
+                              help='Imaging modality. Can be t1 or pet (default: --image_type %(default)s)')
         optional.add_argument("-pt", "--pet_tracer",
-                              default=parameters['pet_tracer'],
-                              help='PET tracer. Can be fdg or av45 (default: --pet_tracer fdg)')
+                              default='fdg',
+                              help='PET tracer. Can be fdg or av45 (default: --pet_tracer %(default)s)')
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
         # Advanced arguments (i.e. tricky parameters)
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
         advanced.add_argument("-fwhm", "--full_width_half_maximum",
-                              type=float, metavar='N', default=parameters['fwhm'],
+                              type=float, metavar='N', default=4,
                               help='Amount of regularization (in mm). In practice, we found the default value '
-                                   '(--full_width_half_maximum 4) to be optimal. We therefore do not recommend '
-                                   'to change it unless you have a specific reason to do so.')
+                                   '(--full_width_half_maximum %(default)s) to be optimal. We therefore '
+                                   'do not recommend to change it unless you have a specific reason to do so.')
         advanced.add_argument("-no_pvc", "--no_pvc",
-                              action='store_true', default=parameters['no_pvc'],
+                              action='store_true', default=False,
                               help="Force the use of non PVC PET data (by default, PVC PET data are used)")
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
         from networkx import Graph
         from .spatial_svm_pipeline import SpatialSVM
-        from .spatial_svm_utils import get_pipeline_parameters
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
-        parameters = get_pipeline_parameters(
-            group_id=args.group_id,
-            fwhm=args.full_width_half_maximum,
-            image_type=args.image_type,
-            pet_tracer=args.pet_tracer,
-            no_pvc=args.no_pvc
-        )
-
+        parameters = {
+            'group_id': args.group_id,
+            'fwhm': args.fwhm,
+            'image_type': args.image_type,
+            'pet_tracer': args.pet_tracer,
+            'no_pvc': args.no_pvc
+        }
         pipeline = SpatialSVM(
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),

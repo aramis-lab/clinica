@@ -44,14 +44,12 @@ class T1VolumeRegisterDartelCLI(ce.CmdParser):
         """Run the pipeline with defined args."""
         from networkx import Graph
         from .t1_volume_register_dartel_pipeline import T1VolumeRegisterDartel
-        from .t1_volume_register_dartel_utils import get_pipeline_parameters
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
-        parameters = get_pipeline_parameters(
-            group_id=args.group_id,
-            tissues=args.tissues
-        )
-
+        parameters = {
+            'group_id': args.group_id,
+            'tissues': args.tissues,
+        }
         pipeline = T1VolumeRegisterDartel(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),

@@ -18,8 +18,6 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         from colorama import Fore
-        from .statistics_surface_utils import get_pipeline_parameters
-        parameters = get_pipeline_parameters("GroupLabel", "DesignMatrix", "Contrast", "Str", "correlation")
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group('%sMandatory arguments%s' % (Fore.BLUE, Fore.RESET))
         clinica_comp.add_argument("caps_directory",
@@ -46,7 +44,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("-fwhm", "--full_width_at_half_maximum",
-                              type=int, default=parameters['full_width_at_half_maximum'],
+                              type=int, default=20,
                               help='FWHM for the surface smoothing '
                                    '(default: --full_width_at_half_maximum %(default)s).')
         optional.add_argument("-ft", "--feature_type",
@@ -69,15 +67,15 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                               help='Name of the feature type, it will be saved on the CAPS _measure-FEATURE_LABEL '
                                    'key-value association.')
         advanced.add_argument("-tup", "--threshold_uncorrected_pvalue",
-                              type=float, default=parameters['threshold_uncorrected_pvalue'],
+                              type=float, default=0.001,
                               help='Threshold to display the uncorrected p-value '
                                    '(--threshold_uncorrected_pvalue %(default)s).')
         advanced.add_argument("-tcp", "--threshold_corrected_pvalue",
-                              type=float, default=parameters['threshold_corrected_pvalue'],
+                              type=float, default=0.005,
                               help='Threshold to display the corrected p-value '
                                    '(default: --threshold_corrected_pvalue %(default)s)')
         advanced.add_argument("-ct", "--cluster_threshold",
-                              type=float, default=parameters['cluster_threshold'],
+                              type=float, default=0.001,
                               help='Threshold to define a cluster in the process of cluster-wise correction '
                                    '(default: --cluster_threshold %(default)s).')
 
@@ -86,7 +84,9 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         import os
         from networkx import Graph
         from .statistics_surface_pipeline import StatisticsSurface
-        from .statistics_surface_utils import check_inputs, get_pipeline_parameters
+        from .statistics_surface_utils import (check_inputs,
+                                               get_t1_freesurfer_custom_file,
+                                               get_fdg_pet_surface_custom_file)
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
         from clinica.utils.exceptions import ClinicaException
@@ -99,11 +99,11 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                 raise ClinicaException('--feature_label should not be used with --feature_type.')
             # FreeSurfer cortical thickness
             if args.feature_type == 'cortical_thickness':
-                args.custom_file = '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
+                args.custom_file = get_t1_freesurfer_custom_file()
                 args.feature_label = 'ct'
             # PET cortical projection
             elif args.feature_type == 'pet_fdg_projection':
-                args.custom_file = '@subject/@session/pet/surface/@subject_@session_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-@hemi_fwhm-@fwhm_projection.mgh'
+                args.custom_file = get_fdg_pet_surface_custom_file()
                 args.feature_label = 'fdg'
             else:
                 raise ClinicaException('Feature type ' + args.feature_type + ' not recognized. Use --custom_file '
@@ -111,7 +111,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         elif args.feature_type is None:
             if args.custom_file is None:
                 cprint('No feature type selected: using cortical thickness as default value')
-                args.custom_file = '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
+                args.custom_file = get_t1_freesurfer_custom_file()
                 args.feature_label = 'ct'
             else:
                 cprint('Using custom features.')
@@ -126,19 +126,19 @@ class StatisticsSurfaceCLI(ce.CmdParser):
             error_message = 'group_id: ' + args.group_id + ' already exists, please choose another one or delete ' \
                             'the existing folder and also the working directory and rerun the pipeline'
             raise ClinicaException(error_message)
-        parameters = get_pipeline_parameters(
-            group_label=args.group_id,
-            design_matrix=args.design_matrix,
-            contrast=args.contrast,
-            str_format=args.string_format,
-            glm_type=args.glm_type,
-            custom_file=args.custom_file,
-            feature_label=args.feature_label,
-            full_width_at_half_maximum=args.full_width_at_half_maximum,
-            threshold_uncorrected_pvalue=args.threshold_uncorrected_pvalue,
-            threshold_corrected_pvalue=args.threshold_corrected_pvalue,
-            cluster_threshold=args.cluster_threshold,
-        )
+        parameters = {
+            'group_label': args.group_id,
+            'design_matrix': args.design_matrix,
+            'contrast': args.contrast,
+            'str_format': args.string_format,
+            'glm_type': args.glm_type,
+            'custom_file': args.custom_file,
+            'feature_label': args.feature_label,
+            'full_width_at_half_maximum': args.full_width_at_half_maximum,
+            'threshold_uncorrected_pvalue': args.threshold_uncorrected_pvalue,
+            'threshold_corrected_pvalue': args.threshold_corrected_pvalue,
+            'cluster_threshold': args.cluster_threshold,
+        }
         pipeline = StatisticsSurface(
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subject_visits_with_covariates_tsv),

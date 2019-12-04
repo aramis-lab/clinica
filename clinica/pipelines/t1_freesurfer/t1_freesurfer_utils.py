@@ -1,22 +1,6 @@
 # coding: utf8
 
 
-def get_pipeline_parameters(recon_all_args=None):
-    from colorama import Fore
-    from clinica.utils.stream import cprint
-
-    parameters = {
-        'recon_all_args': recon_all_args or "-qcache",
-    }
-
-    if "-dontrun" in parameters['recon_all_args'].split(' '):
-        cprint('%s[Warning] Found -dontrun flag for FreeSurfer recon-all. '
-               'Please note that this will not run the segmentation.%s' %
-               (Fore.YELLOW, Fore.RESET))
-
-    return parameters
-
-
 def init_input_node(t1w, recon_all_args, output_dir):
     """Initialize the pipeline.
 

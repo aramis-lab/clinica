@@ -17,8 +17,6 @@ class T1VolumeParcellationCLI(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
-        from .t1_volume_parcellation_utils import get_pipeline_parameters
-        parameters = get_pipeline_parameters('GroupID')
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("caps_directory",
@@ -29,17 +27,16 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         self.add_clinica_standard_arguments()
         # Advanced arguments (i.e. tricky parameters)
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
+        default_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
         advanced.add_argument("-atlases", "--atlases",
-                              nargs='+', type=str, metavar='',
-                              default=parameters['atlases'], choices=parameters['atlases'],
+                              nargs='+', type=str, metavar='', default=default_atlases, choices=default_atlases,
                               help='A list of atlases used to calculate the regional mean GM concentrations (default: '
-                                   'all atlases i.e. --atlases AAL2 AICHA Hammers LPBA40 Neuromorphometrics).')
+                                   'all atlases i.e. --atlases %s).' % self.list_to_string(default_atlases))
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
         from networkx import Graph
         from .t1_volume_parcellation_pipeline import T1VolumeParcellation
-        from .t1_volume_parcellation_utils import get_pipeline_parameters
         from clinica.utils.check_dependency import verify_cat12_atlases
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
@@ -47,10 +44,10 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         # of the computed atlases
         args.atlases = verify_cat12_atlases(args.atlases)
 
-        parameters = get_pipeline_parameters(
-            group_id=args.group_id,
-            atlases=args.atlases,
-        )
+        parameters = {
+            'group_id': args.group_id,
+            'atlases': args.atlases,
+        }
         pipeline = T1VolumeParcellation(
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),

@@ -1,19 +1,5 @@
 # coding: utf8
 
-def get_pipeline_parameters(group_id,
-                            fwhm=None,
-                            image_type=None,
-                            pet_tracer=None,
-                            no_pvc=None):
-    parameters = {
-        'group_id': group_id,
-        'fwhm': fwhm or 4,
-        'image_type': image_type or 't1',
-        'pet_tracer': pet_tracer or 'fdg',
-        'no_pvc': no_pvc or False
-    }
-    return parameters
-
 
 def atlas_decomposition(dartel_input):
     """

@@ -40,13 +40,11 @@ class T1FreeSurferCLI(ce.CmdParser):
         """Run the pipeline with defined args."""
         from networkx import Graph
         from .t1_freesurfer_pipeline import T1FreeSurfer
-        from .t1_freesurfer_utils import get_pipeline_parameters
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
-        parameters = get_pipeline_parameters(
-            recon_all_args=args.recon_all_args,
-        )
-
+        parameters = {
+            'recon_all_args': args.recon_all_args,
+        }
         pipeline = T1FreeSurfer(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),

@@ -23,6 +23,16 @@ class T1VolumeCreateDartel(cpe.Pipeline):
     Returns:
         A clinica pipeline object containing the T1VolumeCreateDartel pipeline.
     """
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        if 'group_id' not in self.parameters.keys():
+            raise KeyError('Missing compulsory group_id key in pipeline parameter.')
+        if 'dartel_tissues' not in self.parameters.keys():
+            self.parameters['dartel_tissues'] = [1, 2, 3]
+
+        if not self.parameters['group_id'].isalnum():
+            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
+
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
@@ -54,9 +64,6 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.exceptions import ClinicaException
-
-        if not self.parameters['group_id'].isalnum():
-            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
 
         # Check that group does not already exists
         # TODO: Improve this check. group_id can exist for statistics-surface

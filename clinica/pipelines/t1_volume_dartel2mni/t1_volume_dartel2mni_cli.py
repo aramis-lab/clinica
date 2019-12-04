@@ -54,17 +54,15 @@ class T1VolumeDartel2MNICLI(ce.CmdParser):
         """Run the pipeline with defined args."""
         from networkx import Graph
         from .t1_volume_dartel2mni_pipeline import T1VolumeDartel2MNI
-        from .t1_volume_dartel2mni_utils import get_pipeline_parameters
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
-        parameters = get_pipeline_parameters(
-            group_id=args.group_id,
-            tissues=args.tissues,
-            voxel_size=args.voxel_size,
-            modulation=args.modulate,
-            fwhm=args.smooth
-        )
-
+        parameters = {
+            'group_id': args.group_id,
+            'tissues': args.tissues,
+            'voxel_size': args.voxel_size,
+            'modulation': args.modulation,
+            'fwhm': args.fwhm
+        }
         pipeline = T1VolumeDartel2MNI(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),

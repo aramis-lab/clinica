@@ -26,6 +26,30 @@ class PETVolume(cpe.Pipeline):
     Returns:
         A clinica pipeline object containing the PETVolume pipeline.
     """
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        default_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
+
+        if 'group_id' not in self.parameters.keys():
+            raise KeyError('Missing compulsory group_id key in pipeline parameter.')
+        if 'psf_tsv' not in self.parameters.keys():
+            self.parameters['psf_tsv'] = None
+        if 'pet_tracer' not in self.parameters.keys():
+            self.parameters['pet_tracer'] = 'fdg'
+        if 'mask_tissues' not in self.parameters.keys():
+            self.parameters['mask_tissues'] = [1, 2, 3]
+        if 'mask_threshold' not in self.parameters.keys():
+            self.parameters['mask_threshold'] = 0.3
+        if 'pvc_mask_tissues' not in self.parameters.keys():
+            self.parameters['pvc_mask_tissues'] = [1, 2, 3]
+        if 'smooth' not in self.parameters.keys():
+            self.parameters['smooth'] = [8]
+        if 'atlases' not in self.parameters.keys():
+            self.parameters['atlases'] = default_atlases
+
+        if not self.parameters['group_id'].isalnum():
+            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
+
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
@@ -119,8 +143,8 @@ class PETVolume(cpe.Pipeline):
             self.parameters['suvr_region'] = 'cerebellumPons'
             pet_file_to_grab = input_files.PET_AV45_NII
         else:
-            raise NotImplementedError('Unknown type of PET image. We currently accept as input only "fdg" or "av45"' +
-                                      ' as values.')
+            raise NotImplementedError('Only "fdg" or "av45" tracers are currently accepted (given tracer "%s").' %
+                                      self.parameters['pet_tracer'])
         reference_mask_path = join(split(realpath(__file__))[0], '../../resources/masks', reference_mask_template)
         reference_mask_file = insensitive_glob(reference_mask_path)
         if len(reference_mask_file) != 1:

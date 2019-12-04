@@ -32,6 +32,10 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
 
     """
 
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        pass
+
     def check_custom_dependencies(self):
         """Check dependencies that cannot be listed in `info.json`.
         """

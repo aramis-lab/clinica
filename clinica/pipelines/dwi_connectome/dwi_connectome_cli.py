@@ -17,8 +17,6 @@ class DwiConnectomeCli(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
-        from .dwi_connectome_utils import get_pipeline_parameters
-        parameters = get_pipeline_parameters()
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("caps_directory",
@@ -26,7 +24,7 @@ class DwiConnectomeCli(ce.CmdParser):
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("-nt", "--n_tracks",
-                              metavar='N', type=int, default=parameters['n_tracks'],
+                              metavar='N', type=int, default=1000000,
                               help=('Set the desired number of streamlines to generate the tractography and connectome '
                                     '(default: --n_tracks %(default)s).'))
         # Clinica standard arguments (e.g. --n_procs)
@@ -37,11 +35,10 @@ class DwiConnectomeCli(ce.CmdParser):
         from networkx import Graph
         from .dwi_connectome_pipeline import DwiConnectome
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
-        from .dwi_connectome_utils import get_pipeline_parameters
-        parameters = get_pipeline_parameters(
-            n_tracks=args.n_tracks
-        )
 
+        parameters = {
+            'n_tracks': args.n_tracks
+        }
         pipeline = DwiConnectome(
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),

@@ -1,9 +1,5 @@
 # coding: utf8
 
-# WARNING: Don't put any import statement here except if it's absolutely
-# necessary. Put it *inside* the different methods.
-# Otherwise it will slow down the dynamic loading of the pipelines list by the
-# command line tool.
 import clinica.pipelines.engine as cpe
 
 # Use hash instead of parameters for iterables folder names
@@ -18,6 +14,11 @@ class DwiConnectome(cpe.Pipeline):
     Returns:
         A clinica pipeline object containing the DwiConnectome pipeline.
     """
+
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        if self.parameters['n_tracks'] < 0:
+            raise ValueError('The n_tracks is equals to %s: it should be positive.' % self.parameters['n_tracks'])
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.

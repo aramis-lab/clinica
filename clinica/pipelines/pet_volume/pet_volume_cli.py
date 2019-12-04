@@ -61,20 +61,19 @@ class PETVolumeCLI(ce.CmdParser):
         """Run the pipeline with defined args."""
         from networkx import Graph
         from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
-        from clinica.pipelines.pet_volume.pet_volume_utils import get_pipeline_parameters
         from clinica.utils.check_dependency import verify_cat12_atlases
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
-        parameters = get_pipeline_parameters(
-            group_id=args.group_id,
-            psf_tsv=self.absolute_path(args.psf_tsv),
-            pet_tracer=args.pet_tracer,
-            mask_tissues=args.mask_tissues,
-            mask_threshold=args.mask_threshold,
-            pvc_mask_tissues=args.pvc_mask_tissues,
-            smooth=args.smooth,
-            atlases=args.atlases
-        )
+        parameters = {
+            'group_id': args.group_id,
+            'psf_tsv': self.absolute_path(args.psf_tsv),
+            'pet_tracer': args.pet_tracer,
+            'mask_tissues': args.mask_tissues,
+            'mask_threshold': args.mask_threshold,
+            'pvc_mask_tissues': args.pvc_mask_tissues,
+            'smooth': args.smooth,
+            'atlases': args.atlases,
+        }
 
         # If the user wants to use any of the atlases of CAT12 and has not installed it, we just remove it from the list
         # of the computed atlases

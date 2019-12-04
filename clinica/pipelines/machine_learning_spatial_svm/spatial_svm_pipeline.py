@@ -1,9 +1,5 @@
 # coding: utf8
 
-# WARNING: Don't put any import statement here except if it's absolutely
-# necessary. Put it *inside* the different methods.
-# Otherwise it will slow down the dynamic loading of the pipelines list by the
-# command line tool.
 import clinica.pipelines.engine as cpe
 
 __author__ = "Simona Bottani"
@@ -28,6 +24,22 @@ class SpatialSVM(cpe.Pipeline):
 
     Raises:
     """
+
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        if 'group_id' not in self.parameters.keys():
+            raise KeyError('Missing compulsory group_id key in pipeline parameter.')
+        if 'fwhm' not in self.parameters.keys():
+            self.parameters['fwhm'] = 4
+        if 'image_type' not in self.parameters.keys():
+            self.parameters['image_type'] = 't1'
+        if 'pet_tracer' not in self.parameters.keys():
+            self.parameters['pet_tracer'] = 'fdg'
+        if 'no_pvc' not in self.parameters.keys():
+            self.parameters['no_pvc'] = False
+
+        if not self.parameters['group_id'].isalnum():
+            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
@@ -58,12 +70,10 @@ class SpatialSVM(cpe.Pipeline):
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from clinica.utils.stream import cprint
         from os.path import exists, join, abspath
         from os import listdir
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
-        import clinica.utils.input_files as input_files
 
         # Check that group-id already exists
         if not exists(join(abspath(self.caps_directory), 'groups', 'group-' + self.parameters['group_id'])):

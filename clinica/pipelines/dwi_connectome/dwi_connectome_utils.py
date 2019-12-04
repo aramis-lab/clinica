@@ -8,17 +8,6 @@ from nipype.interfaces.base import traits, TraitedSpec, File, Undefined
 import os.path as op
 
 
-def get_pipeline_parameters(n_tracks=None):
-    parameters = {
-        'n_tracks': n_tracks or 1000000,
-    }
-
-    if parameters['n_tracks'] < 0:
-        raise ValueError('The n_tracks is equals to %s: it should be positive.' % parameters['n_tracks'])
-
-    return parameters
-
-
 def get_luts():
     import os
     from clinica.utils.exceptions import ClinicaException

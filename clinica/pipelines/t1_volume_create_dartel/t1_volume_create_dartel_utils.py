@@ -10,15 +10,6 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-def get_pipeline_parameters(group_id,
-                            dartel_tissues=None):
-    parameters = {
-        'group_id': group_id,
-        'dartel_tissues': dartel_tissues or [1, 2, 3]
-    }
-    return parameters
-
-
 def get_class_images(class_images, index_list):
     """
     Utility method to extract class images from a multi session <class_images> set.
