@@ -1,5 +1,14 @@
 # coding: utf8
 
+INDEX_TISSUE_MAP = {
+    1: 'graymatter',
+    2: 'whitematter',
+    3: 'csf',
+    4: 'bone',
+    5: 'softtissue',
+    6: 'background'
+}
+
 
 def check_spm_home():
     """Check and get SPM_HOME environment variable if present."""

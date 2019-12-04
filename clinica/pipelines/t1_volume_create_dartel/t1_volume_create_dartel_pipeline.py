@@ -67,6 +67,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.spm import INDEX_TISSUE_MAP
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_groups_in_caps_directory
 
@@ -87,15 +88,6 @@ class T1VolumeCreateDartel(cpe.Pipeline):
             raise ValueError('This pipeline needs at least 2 subjects to perform DARTEL, and found '
                              + str(len(self.subjects)) + ' only in ' + self.tsv_file + '.')
 
-        tissue_names = {
-            1: 'graymatter',
-            2: 'whitematter',
-            3: 'csf',
-            4: 'bone',
-            5: 'softtissue',
-            6: 'background'
-        }
-
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(fields=self.get_input_fields(),
                                                                           mandatory_inputs=True))
@@ -107,8 +99,8 @@ class T1VolumeCreateDartel(cpe.Pipeline):
                                                    self.sessions,
                                                    self.caps_directory,
                                                    {'pattern': 't1/spm/segmentation/dartel_input/*_*_T1w_segm-'
-                                                               + tissue_names[tissue_number] + '_dartelinput.nii*',
-                                                    'description': 'Dartel input for tissue ' + tissue_names[tissue_number]
+                                                               + INDEX_TISSUE_MAP[tissue_number] + '_dartelinput.nii*',
+                                                    'description': 'Dartel input for tissue ' + INDEX_TISSUE_MAP[tissue_number]
                                                                    + ' from T1w MRI',
                                                     'needed_pipeline': 't1-volume-tissue-segmentation'})
                 d_input.append(current_file)

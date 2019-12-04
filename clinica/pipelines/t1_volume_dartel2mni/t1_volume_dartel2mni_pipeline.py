@@ -74,6 +74,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
         from clinica.utils.input_files import t1_volume_final_group_template
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+        from clinica.utils.spm import INDEX_TISSUE_MAP
         from clinica.utils.ux import print_groups_in_caps_directory
 
         # Check that group already exists
@@ -83,15 +84,6 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                 '%sGroup %s does not exist. Did you run t1-volume or t1-volume-create-dartel pipeline?%s' %
                 (Fore.RED, self.parameters['group_id'], Fore.RESET)
             )
-
-        tissue_names = {
-            1: 'graymatter',
-            2: 'whitematter',
-            3: 'csf',
-            4: 'bone',
-            5: 'softtissue',
-            6: 'background'
-        }
 
         all_errors = []
         read_input_node = npe.Node(name="LoadingCLIArguments",
@@ -108,8 +100,8 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                                                    self.sessions,
                                                    self.caps_directory,
                                                    {'pattern': 't1/spm/segmentation/native_space/*_*_T1w_segm-'
-                                                               + tissue_names[tissue_number] + '_probability.nii*',
-                                                    'description': 'SPM based probability of ' + tissue_names[tissue_number]
+                                                               + INDEX_TISSUE_MAP[tissue_number] + '_probability.nii*',
+                                                    'description': 'SPM based probability of ' + INDEX_TISSUE_MAP[tissue_number]
                                                                    + ' based on T1w-MRI in native space',
                                                     'needed_pipeline': 't1-volume-tissue-segmentation'})
                 tissues_input.append(current_file)
