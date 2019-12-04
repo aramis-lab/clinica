@@ -65,6 +65,7 @@ class StatisticsSurface(cpe.Pipeline):
         """Check pipeline parameters."""
         from .statistics_surface_utils import get_t1_freesurfer_custom_file
         from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.group import check_group_label
 
         if 'custom_file' not in self.parameters.keys():
             self.parameters['custom_file'] = get_t1_freesurfer_custom_file()
@@ -79,8 +80,7 @@ class StatisticsSurface(cpe.Pipeline):
         if 'cluster_threshold' not in self.parameters.keys():
             self.parameters['cluster_threshold'] = 0.001,
 
-        if not self.parameters['group_label'].isalnum():
-            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
+        check_group_label(self.parameters['group_label'])
         if self.parameters['glm_type'] not in ['group_comparison', 'correlation']:
             raise ClinicaException("The glm_type you specified is wrong: it should be group_comparison or "
                                    "correlation (given value: %s)." % self.parameters['glm_type'])

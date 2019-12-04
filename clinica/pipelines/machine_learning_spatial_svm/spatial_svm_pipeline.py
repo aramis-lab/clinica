@@ -27,6 +27,8 @@ class SpatialSVM(cpe.Pipeline):
 
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
+        from clinica.utils.group import check_group_label
+
         if 'group_id' not in self.parameters.keys():
             raise KeyError('Missing compulsory group_id key in pipeline parameter.')
         if 'fwhm' not in self.parameters.keys():
@@ -38,8 +40,7 @@ class SpatialSVM(cpe.Pipeline):
         if 'no_pvc' not in self.parameters.keys():
             self.parameters['no_pvc'] = False
 
-        if not self.parameters['group_id'].isalnum():
-            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
+        check_group_label(self.parameters['group_id'].isalnum())
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
@@ -67,30 +68,21 @@ class SpatialSVM(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
         """
-
-        import nipype.interfaces.utility as nutil
+        import os
+        from colorama import Fore
         import nipype.pipeline.engine as npe
-        from os.path import exists, join, abspath
-        from os import listdir
-        from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+        import nipype.interfaces.utility as nutil
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
+        from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+        from clinica.utils.ux import print_groups_in_caps_directory
 
-        # Check that group-id already exists
-        if not exists(join(abspath(self.caps_directory), 'groups', 'group-' + self.parameters['group_id'])):
-            error_message = 'group_id : ' + self.parameters['group_id'] + ' does not exists, ' \
-                            + 'please choose an other one. Groups that exist' \
-                            + 's in your CAPS directory are : \n'
-            list_groups = listdir(join(abspath(self.caps_directory), 'groups'))
-            has_one_group = False
-            for e in list_groups:
-                if e.startswith('group-'):
-                    error_message += e + ' \n'
-                    has_one_group = True
-            if not has_one_group:
-                error_message = error_message + 'No group found ! ' \
-                                + 'Use t1-volume pipeline if you do not ' \
-                                + 'have a template yet ! '
-            raise ValueError(error_message)
+        # Check that group already exists
+        if not os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])):
+            print_groups_in_caps_directory(self.caps_directory)
+            raise ClinicaException(
+                '%sGroup %s does not exist. Did you run t1-volume or t1-volume-create-dartel pipeline?%s' %
+                (Fore.RED, self.parameters['group_id'], Fore.RESET)
+            )
 
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(fields=self.get_input_fields(),

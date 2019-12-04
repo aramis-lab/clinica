@@ -30,6 +30,8 @@ class T1VolumeParcellation(cpe.Pipeline):
 
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
+        from clinica.utils.group import check_group_label
+
         default_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
 
         if 'group_id' not in self.parameters.keys():
@@ -37,8 +39,7 @@ class T1VolumeParcellation(cpe.Pipeline):
         if 'atlases' not in self.parameters.keys():
             self.parameters['atlases'] = default_atlases
 
-        if not self.parameters['group_id'].isalnum():
-            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
+        check_group_label(self.parameters['group_id'])
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
@@ -61,11 +62,21 @@ class T1VolumeParcellation(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
         """
-
-        import nipype.interfaces.utility as nutil
+        import os
+        from colorama import Fore
         import nipype.pipeline.engine as npe
+        import nipype.interfaces.utility as nutil
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+        from clinica.utils.ux import print_groups_in_caps_directory
+
+        # Check that group already exists
+        if not os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])):
+            print_groups_in_caps_directory(self.caps_directory)
+            raise ClinicaException(
+                '%sGroup %s does not exist. Did you run t1-volume or t1-volume-create-dartel pipeline?%s' %
+                (Fore.RED, self.parameters['group_id'], Fore.RESET)
+            )
 
         # Get gray matter map from t1w preprocessing (from t1-volume)
         try:

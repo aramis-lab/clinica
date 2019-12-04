@@ -30,13 +30,14 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
 
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
+        from clinica.utils.group import check_group_label
+
         if 'group_id' not in self.parameters.keys():
             raise KeyError('Missing compulsory group_id key in pipeline parameter.')
         if 'tissues' not in self.parameters.keys():
             self.parameters['tissues'] = [1, 2, 3]
 
-        if not self.parameters['group_id'].isalnum():
-            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
+        check_group_label(self.parameters['group_id'])
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipelines.

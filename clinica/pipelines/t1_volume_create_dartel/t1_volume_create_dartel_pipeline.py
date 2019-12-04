@@ -25,13 +25,14 @@ class T1VolumeCreateDartel(cpe.Pipeline):
     """
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
+        from clinica.utils.group import check_group_label
+
         if 'group_id' not in self.parameters.keys():
             raise KeyError('Missing compulsory group_id key in pipeline parameter.')
         if 'dartel_tissues' not in self.parameters.keys():
             self.parameters['dartel_tissues'] = [1, 2, 3]
 
-        if not self.parameters['group_id'].isalnum():
-            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
+        check_group_label(self.parameters['group_id'])
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
@@ -60,21 +61,26 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         """Build and connect an input node to the pipelines.
         """
         import os
+        import sys
+        from colorama import Fore
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.stream import cprint
+        from clinica.utils.ux import print_groups_in_caps_directory
 
-        # Check that group does not already exists
-        # TODO: Improve this check. group_id can exist for statistics-surface
-        if os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])):
-            error_message = 'group_id : ' + self.parameters['group_id'] + ' already exists, please choose another one.' \
-                            + ' Groups that exist in your CAPS directory are: \n'
-            list_groups = os.listdir(os.path.join(self.caps_directory, 'groups'))
-            for e in list_groups:
-                if e.startswith('group-'):
-                    error_message += e + ' \n'
-            raise ValueError(error_message)
+        representative_output = os.path.join(self.caps_directory,
+                                             'groups',
+                                             'group-' + self.parameters['group_id'],
+                                             't1',
+                                             'group-' + self.parameters['group_id'] + '_template.nii.gz'
+                                             )
+        if os.path.exists(representative_output):
+            cprint("%sDARTEL template for %s already exists. Currently, Clinica does not propose to overwrite outputs "
+                   "for this pipeline.%s" % (Fore.YELLOW, self.parameters['group_id'], Fore.RESET))
+            print_groups_in_caps_directory(self.caps_directory)
+            sys.exit(0)
 
         # Check that there is at least 2 subjects
         if len(self.subjects) <= 1:
