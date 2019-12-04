@@ -88,49 +88,41 @@ class SpatialSVM(cpe.Pipeline):
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(fields=self.get_input_fields(),
                                                                           mandatory_inputs=True))
-        image_type = self.parameters['image_type']
-        pet_tracer = self.parameters['pet_tracer']
-
         all_errors = []
-        if image_type == 't1':
-            try:
-                input_image = clinica_file_reader(self.subjects,
-                                                  self.sessions,
-                                                  self.caps_directory,
-                                                  {'pattern': 't1/spm/dartel/group-' + self.parameters['group_id']
-                                                              + '/*_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability.nii.gz',
-                                                   'description': 'graymatter tissue segmented in T1w MRI in Ixi549 space',
-                                                   'needed_pipeline': 't1-volume-tissue-segmentation'})
-            except ClinicaException as e:
-                all_errors.append(e)
 
-        elif image_type is 'pet':
+        if self.parameters['image_type'] == 't1':
+            caps_files_information = {
+                'pattern': os.path.join('t1', 'spm', 'dartel', 'group-' + self.parameters['group_id'],
+                                        '*_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability.nii.gz'),
+                'description': 'graymatter tissue segmented in T1w MRI in Ixi549 space',
+                'needed_pipeline': 't1-volume-tissue-segmentation'
+            }
+        elif self.parameters['image_type'] is 'pet':
             if self.parameters['no_pvc']:
-                try:
-                    input_image = clinica_file_reader(self.subjects,
-                                                      self.sessions,
-                                                      self.caps_directory,
-                                                      {'pattern': 'pet/preprocessing/group-' + self.parameters['group_id']
-                                                                  + '/*_pet_space-Ixi549Space_suvr-pons_pet.nii.gz',
-                                                       'description': pet_tracer + ' PET in Ixi549 space',
-                                                       'needed_pipeline': 'pet-volume'})
-                except ClinicaException as e:
-                    all_errors.append(e)
-
+                caps_files_information = {
+                    'pattern': os.path.join('pet', 'preprocessing', 'group-' + self.parameters['group_id'],
+                                            '*_pet_space-Ixi549Space_suvr-pons_pet.nii.gz'),
+                    'description': self.parameters['pet_tracer'] + ' PET in Ixi549 space',
+                    'needed_pipeline': 'pet-volume'
+                }
             else:
-                try:
-                    input_image = clinica_file_reader(self.subjects,
-                                                      self.sessions,
-                                                      self.caps_directory,
-                                                      {'pattern': 'pet/preprocessing/group-' + self.parameters['group_id']
-                                                                  + '_pet_space-Ixi549Space_pvc-rbv_suvr-pons_pet.nii.gz',
-                                                       'description': pet_tracer + ' PET partial volume corrected (RBV) in Ixi549 space',
-                                                       'needed_pipeline': 'pet-volume with PVC'})
-                except ClinicaException as e:
-                    all_errors.append(e)
-
+                caps_files_information = {
+                    'pattern': os.path.join('pet', 'preprocessing', 'group-' + self.parameters['group_id'],
+                                            '*_pet_space-Ixi549Space_pvc-rbv_suvr-pons_pet.nii.gz'),
+                    'description': self.parameters['pet_tracer'] + ' PET partial volume corrected (RBV) in Ixi549 space',
+                    'needed_pipeline': 'pet-volume with PVC'
+                }
         else:
-            raise ValueError('Image type ' + image_type + ' unknown')
+            raise ValueError('Image type ' + self.parameters['image_type'] + ' unknown.')
+
+        try:
+            input_image = clinica_file_reader(self.subjects,
+                                              self.sessions,
+                                              self.caps_directory,
+                                              caps_files_information)
+        except ClinicaException as e:
+            all_errors.append(e)
+
         try:
             dartel_input = clinica_group_reader(self.caps_directory,
                                                 t1_volume_final_group_template(self.parameters['group_id']))
