@@ -10,13 +10,6 @@ __email__ = "arnaud.marcoux@inria.fr"
 __status__ = "Development"
 
 
-def get_pipeline_parameters(pet_tracer=None):
-    parameters = {
-        'pet_tracer': pet_tracer or 'fdg'
-    }
-    return parameters
-
-
 def perform_gtmseg(caps_dir, subject_id, session_id):
     """gtmseg is a freesurfer command used to perform a segmentation used in some partial volume correction methods.
 
@@ -329,7 +322,7 @@ def suvr_normalization(pet_path, mask):
     return suvr_filename
 
 
-def suvr_normalization2(pet_path, gtmseg_path, pet_type):
+def suvr_normalization2(pet_path, gtmseg_path, pet_tracer):
     """OLD VERSION OF SUVR_NORMALIZATION - NOT USED ANYMORE
     suvr_normalization is a way of getting suvr from your pet image, based on the segmentation performed by
     gtmsegmentation. The Standard Uptake Value ratio is computed by dividing the whole PET volume by the mean value
@@ -341,7 +334,7 @@ def suvr_normalization2(pet_path, gtmseg_path, pet_type):
             segmentation is given in the last argument
         (string) gtmseg_path  : path to gtmsegmentation Nifti volume. At this point, the 2 inputs arguments must have
             the same voxel number and be realigned between each other
-        (string) pet_type     : type of PET (fdg or av45). Normalization area varies across different markers.
+        (string) pet_tracer     : type of PET (fdg or av45). Normalization area varies across different markers.
 
     Returns:
         (string) Path to the suvr normalized volume in the current directory
@@ -359,14 +352,14 @@ def suvr_normalization2(pet_path, gtmseg_path, pet_type):
     pet = nib.load(pet_path)
     pet_data = pet.get_data()
 
-    if pet_type == 'fdg':
+    if pet_tracer == 'fdg':
         # Extract Pons (label 174)
         normalization_mask = (label_data == 174)
-    elif pet_type == 'av45':
+    elif pet_tracer == 'av45':
         # Extract Pons + Cerebellum
         normalization_mask = (label_data == 174) | (label_data == 7) | (label_data == 8) | (label_data == 46) | (label_data == 47)
     else:
-        raise Exception(pet_type + ' PET type not recognized. Must be either fdg or av45')
+        raise Exception(pet_tracer + ' PET tracer not recognized. Must be either fdg or av45')
 
     # Use [3x3x3] structuring element filled with 1 to erode
     el = ndimage.generate_binary_structure(3, 3)
@@ -753,10 +746,10 @@ def reformat_surfname(hemi, left_surface, right_surface):
     return res
 
 
-def normalization_areas(pet_type):
-    if pet_type.upper() == 'FDG':
+def normalization_areas(pet_tracer):
+    if pet_tracer.upper() == 'FDG':
         return 'pons'
-    elif pet_type.upper() == 'AV45':
+    elif pet_tracer.upper() == 'AV45':
         return 'pons-cerebellum'
 
 
@@ -833,7 +826,7 @@ def get_wf(subject_id,
            white_surface_left,
            white_surface_right,
            working_directory_subjects,
-           pet_type,
+           pet_tracer,
            csv_segmentation,
            subcortical_eroded_mask,
            matscript_folder_inverse_deformation,
@@ -957,7 +950,7 @@ def get_wf(subject_id,
                                               output_names=['suvr'],
                                               function=utils.suvr_normalization),
                                  name='pons_normalization')
-    pons_normalization.inputs.pet_type = pet_type
+    pons_normalization.inputs.pet_tracer = pet_tracer
 
     pvc = pe.Node(PETPVC(pvc='IY'), name='petpvc')
 
@@ -1091,16 +1084,16 @@ def get_wf(subject_id,
          r'\1/\2_\3_hemi-\4_midcorticalsurface'),
         # Projection in native space
         (r'(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_native\/.*_hemi_([a-z]+).*',
-         r'\1/\2_\3_task-rest_acq-' + pet_type + r'_pet_space-native_suvr-' + utils.normalization_areas(pet_type) + r'_pvc-iy_hemi-\4_projection.mgh'),
+         r'\1/\2_\3_task-rest_acq-' + pet_tracer + r'_pet_space-native_suvr-' + utils.normalization_areas(pet_tracer) + r'_pvc-iy_hemi-\4_projection.mgh'),
         # Projection in fsaverage
         (r'(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*',
-         r'\1/\2_\3_task-rest_acq-' + pet_type + r'_pet_space-fsaverage_suvr-' + utils.normalization_areas(pet_type) + r'_pvc-iy_hemi-\4_fwhm-\5_projection.mgh'),
+         r'\1/\2_\3_task-rest_acq-' + pet_tracer + r'_pet_space-fsaverage_suvr-' + utils.normalization_areas(pet_tracer) + r'_pvc-iy_hemi-\4_fwhm-\5_projection.mgh'),
         # TSV file for destrieux atlas
         (r'(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/destrieux_tsv\/destrieux.tsv',
-         r'\1/atlas_statistics/\2_\3_task-rest_acq-' + pet_type.lower() + '_pet_space-destrieux_pvc-iy_suvr-' + utils.normalization_areas(pet_type) + '_statistics.tsv'),
+         r'\1/atlas_statistics/\2_\3_task-rest_acq-' + pet_tracer.lower() + '_pet_space-destrieux_pvc-iy_suvr-' + utils.normalization_areas(pet_tracer) + '_statistics.tsv'),
         # TSV file for desikan atlas
         (r'(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/desikan_tsv\/desikan.tsv',
-         r'\1/atlas_statistics/\2_\3_task-rest_acq-' + pet_type.lower() + '_pet_space-desikan_pvc-iy_suvr-' + utils.normalization_areas(pet_type) + '_statistics.tsv')
+         r'\1/atlas_statistics/\2_\3_task-rest_acq-' + pet_tracer.lower() + '_pet_space-desikan_pvc-iy_suvr-' + utils.normalization_areas(pet_tracer) + '_statistics.tsv')
     ]
 
     # 3 Connecting the nodes

@@ -27,6 +27,11 @@ class PetSurface(cpe.Pipeline):
 
     """
 
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        if 'pet_tracer' not in self.parameters.keys():
+            self.parameters['pet_tracer'] = 'fdg'
+
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
@@ -55,12 +60,11 @@ class PetSurface(cpe.Pipeline):
     def build_input_node(self):
         """We iterate over subjects to get all the files needed to run the pipeline
         """
-        from clinica.utils.stream import cprint
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
-        from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system, check_relative_volume_location_in_world_coordinate_system
+        from clinica.utils.exceptions import ClinicaException
+        from clinica.iotools.utils.data_handling import check_relative_volume_location_in_world_coordinate_system
         import clinica.utils.input_files as input_files
 
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
@@ -76,7 +80,8 @@ class PetSurface(cpe.Pipeline):
             pet_file_to_grab = input_files.PET_AV45_NII
             pet_json_file_to_grab = input_files.PET_AV45_JSON
         else:
-            raise ClinicaException('[Error] PET type ' + str(self.parameters['pet_tracer'] + ' not supported'))
+            raise NotImplementedError('Only "fdg" or "av45" tracers are currently accepted (given tracer "%s").' %
+                                      self.parameters['pet_tracer'])
 
         all_errors = []
         try:
@@ -159,9 +164,9 @@ class PetSurface(cpe.Pipeline):
             raise ClinicaException(error_message)
 
         check_relative_volume_location_in_world_coordinate_system('T1w-MRI (orig_nu.mgz)', read_parameters_node.inputs.orig_nu,
-                                                                  self.parameters['pet_type'].upper() + ' PET', read_parameters_node.inputs.pet,
+                                                                  self.parameters['pet_tracer'].upper() + ' PET', read_parameters_node.inputs.pet,
                                                                   self.bids_directory,
-                                                                  self.parameters['pet_type'].lower())
+                                                                  self.parameters['pet_tracer'].lower())
 
         self.connect([
             (read_parameters_node,      self.input_node,    [('pet',                    'pet')]),
@@ -241,7 +246,7 @@ class PetSurface(cpe.Pipeline):
         full_pipe.inputs.caps_dir = self.caps_directory
         full_pipe.inputs.session_id = self.sessions
         full_pipe.inputs.working_directory_subjects = self.base_dir
-        full_pipe.inputs.pet_type = self.parameters['pet_tracer']
+        full_pipe.inputs.pet_tracer = self.parameters['pet_tracer']
         full_pipe.inputs.csv_segmentation = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                                                          '..',
                                                                          '..',
@@ -264,7 +269,7 @@ class PetSurface(cpe.Pipeline):
 
         full_pipe.inputs.matscript_folder_inverse_deformation = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 
-        # This section of code determines wether to use SPM standalone or not
+        # This section of code determines whether to use SPM standalone or not
         full_pipe.inputs.use_spm_standalone = False
         if all(elem in os.environ.keys() for elem in ['SPMSTANDALONE_HOME', 'MCR_HOME']):
             if os.path.exists(os.path.expandvars('$SPMSTANDALONE_HOME')) and os.path.exists(os.path.expandvars('$MCR_HOME')):
