@@ -51,17 +51,15 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
         """Run the pipeline with defined args."""
         from networkx import Graph
         from .t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
-        from .t1_volume_tissue_segmentation_utils import get_pipeline_parameters
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
-        parameters = get_pipeline_parameters(
-            tissue_classes=args.tissue_classes,
-            dartel_tissues=args.dartel_tissues,
-            tissue_probability_maps=args.tissue_probability_maps,
-            save_warped_unmodulated=not args.dont_save_warped_unmodulated,
-            save_warped_modulated=args.save_warped_modulated,
-        )
-
+        parameters = {
+            'tissue_classes': args.tissue_classes,
+            'dartel_tissues': args.dartel_tissues,
+            'tissue_probability_maps': args.tissue_probability_maps,
+            'save_warped_unmodulated': not args.save_warped_unmodulated,
+            'save_warped_modulated': args.save_warped_modulated,
+        }
         pipeline = T1VolumeTissueSegmentation(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),

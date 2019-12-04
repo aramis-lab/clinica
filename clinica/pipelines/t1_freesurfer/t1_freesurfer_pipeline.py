@@ -32,6 +32,16 @@ class T1FreeSurfer(cpe.Pipeline):
             image_ids = extract_image_ids(t1_freesurfer_files)
         return image_ids
 
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        from colorama import Fore
+        from clinica.utils.stream import cprint
+
+        if "-dontrun" in self.parameters['recon_all_args'].split(' '):
+            cprint('%s[Warning] Found -dontrun flag for FreeSurfer recon-all. '
+                   'Please note that this will not run the segmentation.%s' %
+                   (Fore.YELLOW, Fore.RESET))
+
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file."""
         pass

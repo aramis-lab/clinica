@@ -28,6 +28,16 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
         """
         pass
 
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        if 'group_id' not in self.parameters.keys():
+            raise KeyError('Missing compulsory group_id key in pipeline parameter.')
+        if 'tissues' not in self.parameters.keys():
+            self.parameters['tissues'] = [1, 2, 3]
+
+        if not self.parameters['group_id'].isalnum():
+            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
+
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipelines.
 
@@ -53,9 +63,6 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         from clinica.utils.exceptions import ClinicaException, ClinicaCAPSError
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
-
-        if not self.parameters['group_id'].isalnum():
-            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
 
         tissue_names = {
             1: 'graymatter',
@@ -220,10 +227,6 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
         dartel_existing_template = npe.MapNode(utils.DARTELExistingTemplate(),
                                                name='dartel_existing_template',
                                                iterfield=['image_files'])
-        # if self.parameters['optimization_parameters'] is not None:
-        #     dartel_existing_template.inputs.optimization_parameters = self.parameters['optimization_parameters']
-        # if self.parameters['regularization_form'] is not None:
-        #     dartel_existing_template.inputs.regularization_form = self.parameters['regularization_form']
 
         # Connection
         # ==========

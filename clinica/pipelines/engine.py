@@ -219,6 +219,7 @@ class Pipeline(Workflow):
         """
         if not self.is_built:
             self.check_dependencies()
+            self.check_pipeline_parameters()
             if not self.has_input_connections():
                 self.build_input_node()
             self.build_core_nodes()
@@ -900,4 +901,9 @@ class Pipeline(Workflow):
     def check_custom_dependencies(self):
         """Checks dependencies provided by the developer.
         """
+        pass
+
+    @abc.abstractmethod
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
         pass

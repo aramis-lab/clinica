@@ -28,17 +28,14 @@ def test_instantiate_T1FreeSurfer():
 def test_instantiate_T1VolumeTissueSegmentation():
     from os.path import dirname, join, abspath
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
-    from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_utils import get_pipeline_parameters
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'T1VolumeTissueSegmentation')
 
-    parameters = get_pipeline_parameters()
     pipeline = T1VolumeTissueSegmentation(
         bids_directory=join(root, 'in', 'bids'),
         caps_directory=join(root, 'in', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv'),
-        parameters=parameters
     )
     pipeline.build()
 
@@ -46,12 +43,13 @@ def test_instantiate_T1VolumeTissueSegmentation():
 def test_instantiate_T1VolumeCreateDartel():
     from os.path import dirname, join, abspath
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_pipeline import T1VolumeCreateDartel
-    from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_utils import get_pipeline_parameters
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'T1VolumeCreateDartel')
 
-    parameters = get_pipeline_parameters(group_id='UnitTest')
+    parameters = {
+        'group_id': 'UnitTest'
+    }
     pipeline = T1VolumeCreateDartel(
         bids_directory=join(root, 'in', 'bids'),
         caps_directory=join(root, 'in', 'caps'),
@@ -64,12 +62,13 @@ def test_instantiate_T1VolumeCreateDartel():
 def test_instantiate_T1VolumeDartel2MNI():
     from os.path import dirname, join, abspath
     from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_pipeline import T1VolumeDartel2MNI
-    from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_utils import get_pipeline_parameters
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'T1VolumeDartel2MNI')
 
-    parameters = get_pipeline_parameters(group_id='UnitTest')
+    parameters = {
+        'group_id': 'UnitTest'
+    }
     pipeline = T1VolumeDartel2MNI(
         bids_directory=join(root, 'in', 'bids'),
         caps_directory=join(root, 'in', 'caps'),
@@ -82,12 +81,13 @@ def test_instantiate_T1VolumeDartel2MNI():
 def test_instantiate_T1VolumeRegisterDartel():
     from os.path import dirname, join, abspath
     from clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_pipeline import T1VolumeRegisterDartel
-    from clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_utils import get_pipeline_parameters
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'T1VolumeExistingDartel')
 
-    parameters = get_pipeline_parameters(group_id='UnitTest')
+    parameters = {
+        'group_id': 'UnitTest'
+    }
     pipeline = T1VolumeRegisterDartel(
         bids_directory=join(root, 'in', 'bids'),
         caps_directory=join(root, 'in', 'caps'),
@@ -100,11 +100,13 @@ def test_instantiate_T1VolumeRegisterDartel():
 def test_instantiate_T1VolumeParcellation():
     from os.path import dirname, join, abspath
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_pipeline import T1VolumeParcellation
-    from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_utils import get_pipeline_parameters
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'T1VolumeParcellation')
-    parameters = get_pipeline_parameters(group_id='UnitTest')
+
+    parameters = {
+        'group_id': 'UnitTest'
+    }
     pipeline = T1VolumeParcellation(
         caps_directory=join(root, 'in', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv'),
@@ -180,17 +182,14 @@ def test_instantiate_DWIConnectome():
 def test_instantiate_fMRIPreprocessing():
     from os.path import dirname, join, abspath
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
-    from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_utils import get_pipeline_parameters
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'fMRIPreprocessing')
 
-    parameters = get_pipeline_parameters([8, 8, 8], True, True, True)
     pipeline = fMRIPreprocessing(
         bids_directory=join(root, 'in', 'bids'),
         caps_directory=join(root, 'in', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv'),
-        parameters=parameters
     )
     pipeline.build()
 
@@ -198,12 +197,13 @@ def test_instantiate_fMRIPreprocessing():
 def test_instantiate_PETVolume():
     from os.path import dirname, join, abspath
     from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
-    from clinica.pipelines.pet_volume.pet_volume_utils import get_pipeline_parameters
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'PETVolume')
 
-    parameters = get_pipeline_parameters(group_id='UnitTest')
+    parameters = {
+        'group_id': 'UnitTest'
+    }
     pipeline = PETVolume(
         bids_directory=join(root, 'in', 'bids'),
         caps_directory=join(root, 'in', 'caps'),
@@ -244,16 +244,13 @@ def test_instantiate_StatisticsSurface():
 def test_instantiate_PETSurface():
     from os.path import dirname, join, abspath
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
-    from clinica.pipelines.pet_surface.pet_surface_utils import get_pipeline_parameters
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'PETSurface')
-    parameters = get_pipeline_parameters()
     pipeline = PetSurface(
         bids_directory=join(root, 'in', 'bids'),
         caps_directory=join(root, 'in', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv'),
-        parameters=parameters,
     )
     pipeline.build()
 
@@ -295,12 +292,13 @@ def test_instantiate_InputsML():
 def test_instantiate_SpatialSVM():
     from os.path import dirname, join, abspath
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_pipeline import SpatialSVM
-    from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils import get_pipeline_parameters
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'SpatialSVM')
 
-    parameters = get_pipeline_parameters(group_id='ADNIbl')
+    parameters = {
+        'group_id': 'ADNIbl'
+    }
     pipeline = SpatialSVM(
         caps_directory=join(root, 'in', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv'),

@@ -28,6 +28,18 @@ class T1VolumeParcellation(cpe.Pipeline):
         """
         pass
 
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        default_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
+
+        if 'group_id' not in self.parameters.keys():
+            raise KeyError('Missing compulsory group_id key in pipeline parameter.')
+        if 'atlases' not in self.parameters.keys():
+            self.parameters['atlases'] = default_atlases
+
+        if not self.parameters['group_id'].isalnum():
+            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
+
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
 

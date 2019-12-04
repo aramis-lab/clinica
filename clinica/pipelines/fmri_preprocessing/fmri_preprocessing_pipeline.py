@@ -1,9 +1,5 @@
 # coding: utf8
 
-# WARNING: Don't put any import statement here except if it's absolutly
-# necessary. Put it *inside* the different methods.
-# Otherwise it will slow down the dynamic loading of the pipelines list by the
-# command line tool.
 import clinica.pipelines.engine as cpe
 
 __author__ = "Jeremy Guillon"
@@ -46,6 +42,17 @@ class fMRIPreprocessing(cpe.Pipeline):
         pipeline.
 
     """
+
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        if 'full_width_at_half_maximum' not in self.parameters.keys():
+            self.parameters['full_width_at_half_maximum'] = [8, 8, 8]
+        if 't1_native_space' not in self.parameters.keys():
+            self.parameters['t1_native_space'] = False
+        if 'freesurfer_brain_mask' not in self.parameters.keys():
+            self.parameters['freesurfer_brain_mask'] = False
+        if 'unwarping' not in self.parameters.keys():
+            self.parameters['unwarping'] = False
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipelines.

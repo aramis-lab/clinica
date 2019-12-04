@@ -17,8 +17,6 @@ class PetSurfaceCLI(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
-        from .pet_surface_utils import get_pipeline_parameters
-        parameters = get_pipeline_parameters()
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("bids_directory",
@@ -27,7 +25,7 @@ class PetSurfaceCLI(ce.CmdParser):
                                   help='Path to the CAPS directory. (Filled with results from t1-freesurfer pipeline')
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("-pt", "--pet_tracer", type=str, default=parameters['pet_tracer'],
+        optional.add_argument("-pt", "--pet_tracer", type=str, default='fdg',
                               help='PET tracer type. Can be fdg or av45 (default: --pet_tracer %(default)s)')
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
@@ -36,12 +34,11 @@ class PetSurfaceCLI(ce.CmdParser):
         """Run the pipeline with defined args."""
         from networkx import Graph
         from .pet_surface_pipeline import PetSurface
-        from .pet_surface_utils import get_pipeline_parameters
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
-        parameters = get_pipeline_parameters(
-            pet_tracer=args.pet_tracer,
-        )
+        parameters = {
+            'pet_tracer': args.pet_tracer,
+        }
         pipeline = PetSurface(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),

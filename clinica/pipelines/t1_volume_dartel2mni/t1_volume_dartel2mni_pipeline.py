@@ -23,6 +23,22 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
     Returns:
         A clinica pipeline object containing the T1VolumeDartel2MNI pipeline.
     """
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        if 'group_id' not in self.parameters.keys():
+            raise KeyError('Missing compulsory group_id key in pipeline parameter.')
+
+        if not self.parameters['group_id'].isalnum():
+            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
+        if 'tissues' not in self.parameters:
+            self.parameters['tissues'] = [1, 2, 3]
+        if 'voxel_size' not in self.parameters:
+            self.parameters['voxel_size'] = None
+        if 'modulation' not in self.parameters:
+            self.parameters['modulation'] = True
+        if 'fwhm' not in self.parameters:
+            self.parameters['fwhm'] = [8]
+
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
@@ -54,9 +70,6 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
-
-        if not self.parameters['group_id'].isalnum():
-            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
 
         # Check that group already exists
         if not os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])):

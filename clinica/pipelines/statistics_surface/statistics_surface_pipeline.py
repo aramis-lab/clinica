@@ -60,8 +60,44 @@ class StatisticsSurface(cpe.Pipeline):
 
     Returns:
         A clinica pipeline object containing the StatisticsSurface pipeline.
-
     """
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        from .statistics_surface_utils import get_t1_freesurfer_custom_file
+        from clinica.utils.exceptions import ClinicaException
+
+        if 'custom_file' not in self.parameters.keys():
+            self.parameters['custom_file'] = get_t1_freesurfer_custom_file()
+        if 'feature_label' not in self.parameters.keys():
+            self.parameters['feature_label'] = 'ct',
+        if 'full_width_at_half_maximum' not in self.parameters.keys():
+            self.parameters['full_width_at_half_maximum'] = 20
+        if 'threshold_uncorrected_pvalue' not in self.parameters.keys():
+            self.parameters['threshold_uncorrected_pvalue'] = 0.001
+        if 'threshold_corrected_pvalue' not in self.parameters.keys():
+            self.parameters['threshold_corrected_pvalue'] = 0.05,
+        if 'cluster_threshold' not in self.parameters.keys():
+            self.parameters['cluster_threshold'] = 0.001,
+
+        if not self.parameters['group_label'].isalnum():
+            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
+        if self.parameters['glm_type'] not in ['group_comparison', 'correlation']:
+            raise ClinicaException("The glm_type you specified is wrong: it should be group_comparison or "
+                                   "correlation (given value: %s)." % self.parameters['glm_type'])
+        if self.parameters['full_width_at_half_maximum'] not in [0, 5, 10, 15, 20]:
+            raise ClinicaException(
+                "FWHM for the surface smoothing you specified is wrong: it should be 0, 5, 10, 15 or 20 "
+                "(given value: %s)." % self.parameters['full_width_at_half_maximum'])
+        if self.parameters['threshold_uncorrected_pvalue'] < 0 or self.parameters['threshold_uncorrected_pvalue'] > 1:
+            raise ClinicaException("Uncorrected p-value threshold should be a lower than 1 "
+                                   "(given value: %s)." % self.parameters['threshold_uncorrected_pvalue'])
+        if self.parameters['threshold_corrected_pvalue'] < 0 or self.parameters['threshold_corrected_pvalue'] > 1:
+            raise ClinicaException("Corrected p-value threshold should be between 0 and 1 "
+                                   "(given value: %s)." % self.parameters['threshold_corrected_pvalue'])
+        if self.parameters['cluster_threshold'] < 0 or self.parameters['cluster_threshold'] > 1:
+            raise ClinicaException("Cluster threshold should be between 0 and 1 "
+                                   "(given value: %s)." % self.parameters['cluster_threshold'])
+
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """

@@ -26,6 +26,10 @@ class DwiDti(cpe.Pipeline):
 
     """
 
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        pass
+
     def check_custom_dependencies(self): pass
 
     def get_input_fields(self):

@@ -29,6 +29,18 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
     Raises:
 
     """
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        import warnings
+
+        if self.parameters['low_bval'] < 0:
+            raise ValueError(
+                'The low_bval is equals to %s: it should be zero or close to zero.' % self.parameters['low_bval'])
+
+        if self.parameters['low_bval'] > 100:
+            warnings.warn('Warning: The low_bval parameter is %s: it should be close to zero' % self.parameters['low_bval'],
+                          UserWarning)
+
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
@@ -195,7 +207,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
             output_names=['out_reference_b0', 'out_b0_dwi_merge',
                           'out_updated_bval', 'out_updated_bvec'],
             function=prepare_reference_b0))
-        prepare_b0.inputs.low_bval = self._low_bval
+        prepare_b0.inputs.low_bval = self.parameters['low_bval']
         # Mask b0 for computations purposes
         mask_b0_pre = npe.Node(fsl.BET(frac=0.3, mask=True, robust=True),
                                name='PreMaskB0')

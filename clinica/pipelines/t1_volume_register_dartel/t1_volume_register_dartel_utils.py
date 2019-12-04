@@ -15,15 +15,6 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-def get_pipeline_parameters(group_id,
-                            tissues=None):
-    parameters = {
-        'group_id': group_id,
-        'tissues': tissues or [1, 2, 3],
-    }
-    return parameters
-
-
 if 'SPMSTANDALONE_HOME' in os.environ:
     if 'MCR_HOME' in os.environ:
         matlab_cmd = os.environ['SPMSTANDALONE_HOME'] \

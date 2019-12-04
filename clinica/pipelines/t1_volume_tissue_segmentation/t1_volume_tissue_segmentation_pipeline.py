@@ -36,6 +36,25 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         """
         pass
 
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        from clinica.utils.spm import get_tpm
+
+        if 'tissue_classes' not in self.parameters.keys():
+            self.parameters['tissue_classes'] = [1, 2, 3]
+        if 'dartel_tissues' not in self.parameters.keys():
+            self.parameters['dartel_tissues'] = [1, 2, 3]
+        if 'tissue_probability_maps' not in self.parameters.keys():
+            self.parameters['tissue_probability_maps'] = None
+        if 'save_warped_unmodulated' not in self.parameters.keys():
+            self.parameters['save_warped_unmodulated'] = True
+        if 'save_warped_modulated' not in self.parameters.keys():
+            self.parameters['save_warped_modulated'] = False
+
+        # Get Tissue Probability Map from SPM
+        if self.parameters['tissue_probability_maps'] is None:
+            self.parameters['tissue_probability_maps'] = get_tpm()
+
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipelines.
 
@@ -71,7 +90,6 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1W_NII
-        from clinica.utils.spm import get_tpm
 
         # Inputs from anat/ folder
         # ========================
@@ -90,10 +108,6 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         cprint('The pipeline will last approximately 10 minutes per image.')
 
         check_volume_location_in_world_coordinate_system(t1w_files, self.bids_directory)
-
-        # Get Tissue Probability Map from SPM
-        if self.parameters['tissue_probability_maps'] is None:
-            self.parameters['tissue_probability_maps'] = get_tpm()
 
         read_node = npe.Node(name="ReadingFiles",
                              iterables=[
