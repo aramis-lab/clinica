@@ -857,7 +857,7 @@ def t1_pet_paths_to_bids(images, bids_dir, modality, mod_to_update=False):
     from clinica.iotools.converters.adni_to_bids import adni_utils
     from functools import partial
 
-    if modality.lower() not in ['t1', 'fdg', 'pib', 'av45_fbb', 'tau']:
+    if modality.lower() not in ['t1', 'flair', 'fmri', 'fdg', 'pib', 'av45_fbb', 'tau']:
         # This should never be reached
         raise RuntimeError(modality.lower()
                            + ' is not supported for conversion in paths_to_bids')
@@ -912,19 +912,41 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
     import os
     from os import path
     from glob import glob
+    import shutil
+    import re
 
     modality_specific = {'t1': {'output_path': 'anat',
-                                'output_filename': '_T1w'},
+                                'output_filename': '_T1w',
+                                'to_center': True,
+                                'json': 'n'},
+                         'flair': {'output_path': 'anat',
+                                   'output_filename': '_FLAIR',
+                                   'to_center': True,
+                                   'json': 'y'},
+                         'fmri': {'output_path': 'func',
+                                  'output_filename': '_task-rest_bold',
+                                  'to_center': False,
+                                  'json': 'y'},
                          'fdg': {'output_path': 'pet',
-                                 'output_filename': '_task-rest_acq-fdg_pet'},
+                                 'output_filename': '_task-rest_acq-fdg_pet',
+                                 'to_center': True,
+                                 'json': 'n'},
                          'pib': {'output_path': 'pet',
-                                 'output_filename': '_task-rest_acq-pib_pet'},
+                                 'output_filename': '_task-rest_acq-pib_pet',
+                                 'to_center': True,
+                                 'json': 'n'},
                          'av45': {'output_path': 'pet',
-                                  'output_filename': '_task-rest_acq-av45_pet'},
+                                  'output_filename': '_task-rest_acq-av45_pet',
+                                  'to_center': True,
+                                  'json': 'n'},
                          'fbb': {'output_path': 'pet',
-                                 'output_filename': '_task-rest_acq-fbb_pet'},
+                                 'output_filename': '_task-rest_acq-fbb_pet',
+                                 'to_center': True,
+                                 'json': 'n'},
                          'tau': {'output_path': 'pet',
-                                 'output_filename': '_task-rest_acq-tau_pet'}
+                                 'output_filename': '_task-rest_acq-tau_pet',
+                                 'to_center': True,
+                                 'json': 'n'}
                          }
 
     global counter
@@ -973,19 +995,36 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
         # Folder already created with previous instance
         pass
 
+    generate_json = modality_specific[modality]['json']
+    if modality_specific[modality]['to_center']:
+        zip_image = 'n'
+    else:
+        zip_image = 'y'
+
     if image.Is_Dicom:
-        command = 'dcm2niix -b n -z n -o ' + output_path + ' -f ' + output_filename + ' ' + image_path
+        command = 'dcm2niix -b %s -z %s -o %s -f %s %s' % \
+                  (generate_json, zip_image, output_path, output_filename, image_path)
         subprocess.run(command,
                        shell=True,
                        stderr=subprocess.DEVNULL,
                        stdout=subprocess.DEVNULL)
+
+        # If "_t" - the trigger delay time - exists in dcm2niix output filename, we remove it
+        exception_t = glob(path.join(output_path, output_filename + '_t[0-9]*'))
+        for trigger_time in exception_t:
+            res = re.search('_t\d+\.', trigger_time)
+            no_trigger_time = trigger_time.replace(trigger_time[res.start(): res.end()], '.')
+            os.rename(trigger_time, no_trigger_time)
+
         nifti_file = path.join(output_path, output_filename + '.nii')
         output_image = nifti_file + '.gz'
 
         # Check if conversion worked (output file exists?)
-        if not path.isfile(nifti_file):
-            cprint('WARNING: Conversion with dcm2niix failed, trying with dcm2nii')
-            command = 'dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + image_path
+        if not path.isfile(nifti_file) and not path.isfile(output_image):
+            cprint('WARNING: Conversion with dcm2niix failed, trying with dcm2nii '
+                   'for subject ' + subject + ' and session ' + session)
+            command = 'dcm2nii -a n -d n -e n -i y -g %s -p n -m n -r n -x n -o %s %s' % \
+                      (zip_image, output_path, image_path)
             subprocess.run(command,
                            shell=True,
                            stdout=subprocess.DEVNULL,
@@ -995,20 +1034,30 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
             output_image = path.join(output_path,
                                      output_filename + '.nii.gz')
 
-            if not path.isfile(nifti_file):
-                cprint('DICOM to NIFTI conversion error for ' + image_path)
+            if not path.isfile(nifti_file) and not path.isfile(output_image):
+                cprint(Fore.RED + 'WARNING: Conversion of the dicom failed '
+                       'for subject ' + subject + ' and session ' + session + '. '
+                       'Image path: ' + image_path + Fore.RESET)
                 return nan
 
-        center_nifti_origin(nifti_file, output_image)
-        os.remove(nifti_file)
+        # Case when JSON file was expected, but not generated by dcm2niix
+        elif generate_json == 'y' and not os.path.exists(path.join(output_path, output_filename + '.json')):
+            cprint('WARNING: JSON file not generated by dcm2niix '
+                   'for subject ' + subject + ' and session ' + session)
+
+        if modality_specific[modality]['to_center']:
+            center_nifti_origin(nifti_file, output_image)
+            os.remove(nifti_file)
 
     else:
-
         output_image = path.join(output_path, output_filename + '.nii.gz')
-        center_nifti_origin(image_path, output_image)
-        if output_image is None:
-            cprint("Error: For subject %s in session%s an error occurred recentering Nifti image:%s"
-                   % (subject, session, image_path))
+        if modality_specific[modality]['to_center']:
+            center_nifti_origin(image_path, output_image)
+            if output_image is None:
+                cprint("Error: For subject %s in session%s an error occurred recentering Nifti image:%s"
+                       % (subject, session, image_path))
+        else:
+            shutil.copy(image_path, output_image)
 
     # Check if there is still the folder tmp_dcm_folder and remove it
     adni_utils.remove_tmp_dmc_folder(bids_dir, image_id)

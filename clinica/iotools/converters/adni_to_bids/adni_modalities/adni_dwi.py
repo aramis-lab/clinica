@@ -248,6 +248,7 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
     from os import path
     from glob import glob
     import pandas as pd
+    from colorama import Fore
 
     global counter
     alpha_id = bids.remove_space_and_symbols(subj)
@@ -343,8 +344,10 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
                         os.rename(nii_file, path.join(bids_dest_dir,
                                                       bids_name + '.nii.gz'))
                     else:
-                        cprint('WARNING: CONVERSION FAILED... '
-                               'for subject ' + subj + ' and session ' + ses)
+                        cprint(Fore.RED + 'WARNING: Conversion of the dicom failed '
+                               'for subject ' + subj + ' and session ' + ses + '. '
+                               'Image path: ' + dwi_path + Fore.RESET)
+
                         # Removing folder and generated files
                         if os.path.exists(bids_dest_dir):
                             shutil.rmtree(bids_dest_dir, ignore_errors=True)

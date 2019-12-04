@@ -29,6 +29,8 @@ def convert_adni_flair(source_dir, csv_dir, dest_dir, subjs_list=None):
     from os import path
     from clinica.utils.stream import cprint
     from colorama import Fore
+    from clinica.iotools.converters.adni_to_bids.adni_utils import t1_pet_paths_to_bids
+
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
@@ -38,7 +40,8 @@ def convert_adni_flair(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('Calculating paths of FLAIR images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
     images = compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of FLAIR images found. Exporting images into BIDS ...')
-    flair_paths_to_bids(images, dest_dir)
+    # flair_paths_to_bids(images, dest_dir)
+    t1_pet_paths_to_bids(images, dest_dir, 'flair')
     cprint(Fore.GREEN + 'FLAIR conversion done.' + Fore.RESET)
 
 
@@ -213,6 +216,7 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
     import os
     from os import path
     from glob import glob
+    from colorama import Fore
 
     alpha_id = bids.remove_space_and_symbols(subj)
     bids_id = 'sub-ADNI' + alpha_id
@@ -268,8 +272,8 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
 
                 # If dcm2niix didn't work use dcm2nii
                 if not os.path.exists(path.join(bids_dest_dir, bids_name + '.nii.gz')):
-                    cprint('WARNING: Conversion with dcm2niix failed, trying with dcm2nii')
-
+                    cprint('WARNING: Conversion with dcm2niix failed, trying with dcm2nii '
+                           'for subject ' + subj + ' and session ' + ses)
                     # Find all the files eventually created by dcm2niix and remove them
                     flair_dcm2niix = glob(
                         path.join(bids_dest_dir, bids_name + '*'))
@@ -288,4 +292,6 @@ def generate_subject_files(subj, images, dest_dir, mod_to_update):
                         os.rename(nii_file, path.join(bids_dest_dir,
                                                       bids_name + '.nii.gz'))
                     else:
-                        cprint('WARNING: CONVERSION FAILED...')
+                        cprint(Fore.RED + 'WARNING: Conversion of the dicom failed '
+                               'for subject ' + subj + ' and session ' + ses + '. '
+                               'Image path: ' + flair_path + Fore.RESET)

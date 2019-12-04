@@ -29,6 +29,7 @@ def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
     from os import path
     from clinica.utils.stream import cprint
     from colorama import Fore
+    from clinica.iotools.converters.adni_to_bids.adni_utils import t1_pet_paths_to_bids
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
@@ -38,7 +39,8 @@ def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('Calculating paths of fMRI images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
     images = compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of fMRI images found. Exporting images into BIDS ...')
-    fmri_paths_to_bids(dest_dir, images)
+    # fmri_paths_to_bids(dest_dir, images)
+    t1_pet_paths_to_bids(images, dest_dir, 'fmri')
     cprint(Fore.GREEN + 'fMRI conversion done.' + Fore.RESET)
 
 
