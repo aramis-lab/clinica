@@ -105,6 +105,7 @@ class PETVolume(cpe.Pipeline):
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader, insensitive_glob
         from clinica.utils.input_files import t1_volume_final_group_template
         from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.spm import INDEX_TISSUE_MAP
         from clinica.utils.ux import print_groups_in_caps_directory
         from clinica.iotools.utils.data_handling import check_relative_volume_location_in_world_coordinate_system
         import clinica.utils.input_files as input_files
@@ -119,14 +120,6 @@ class PETVolume(cpe.Pipeline):
 
         # Tissues DataGrabber
         # ====================
-        tissue_names = {1: 'graymatter',
-                        2: 'whitematter',
-                        3: 'csf',
-                        4: 'bone',
-                        5: 'softtissue',
-                        6: 'background'
-                        }
-
         all_errors = []
 
         # Grab reference mask
@@ -174,9 +167,9 @@ class PETVolume(cpe.Pipeline):
                                                    self.sessions,
                                                    self.caps_directory,
                                                    {'pattern': 't1/spm/segmentation/normalized_space/*_*_T1w_segm-'
-                                                               + tissue_names[tissue_number]
+                                                               + INDEX_TISSUE_MAP[tissue_number]
                                                                + '_space-Ixi549Space_modulated-off_probability.nii*',
-                                                    'description': 'SPM based probability of ' + tissue_names[tissue_number]
+                                                    'description': 'SPM based probability of ' + INDEX_TISSUE_MAP[tissue_number]
                                                                    + ' based on T1w-MRI in Ixi549 space',
                                                     'needed_pipeline': 't1-volume'})
                 tissues_input.append(current_file)
@@ -263,9 +256,9 @@ class PETVolume(cpe.Pipeline):
                                                        self.sessions,
                                                        self.caps_directory,
                                                        {'pattern': 't1/spm/segmentation/native_space/*_*_T1w_segm-'
-                                                                   + tissue_names[tissue_number]
+                                                                   + INDEX_TISSUE_MAP[tissue_number]
                                                                    + '_probability.nii*',
-                                                        'description': 'SPM based probability of ' + tissue_names[tissue_number]
+                                                        'description': 'SPM based probability of ' + INDEX_TISSUE_MAP[tissue_number]
                                                                        + ' based on T1w-MRI in native space',
                                                         'needed_pipeline': 't1-volume'})
                     pvc_tissues_input.append(current_file)

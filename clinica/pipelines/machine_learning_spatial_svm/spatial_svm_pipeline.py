@@ -40,7 +40,7 @@ class SpatialSVM(cpe.Pipeline):
         if 'no_pvc' not in self.parameters.keys():
             self.parameters['no_pvc'] = False
 
-        check_group_label(self.parameters['group_id'].isalnum())
+        check_group_label(self.parameters['group_id'])
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.

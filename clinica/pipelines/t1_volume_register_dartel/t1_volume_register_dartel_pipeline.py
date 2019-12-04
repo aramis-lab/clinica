@@ -64,52 +64,7 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         from clinica.utils.exceptions import ClinicaException, ClinicaCAPSError
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
-
-        tissue_names = {
-            1: 'graymatter',
-            2: 'whitematter',
-            3: 'csf',
-            4: 'bone',
-            5: 'softtissue',
-            6: 'background'
-        }
-
-        """
-        # Dartel Input Tissues DataGrabber
-        # =================================
-        dartel_input_reader = npe.MapNode(nio.DataGrabber(infields=['subject_id', 'session',
-                                                                    'subject_repeat', 'session_repeat',
-                                                                    'tissue'],
-                                                          outfields=['out_files']),
-                                          name="dartel_input_reader",
-                                          iterfield=['tissue'])
-
-        dartel_input_reader.inputs.base_directory = self.caps_directory
-        dartel_input_reader.inputs.template = 'subjects/%s/%s/t1/spm/segmentation/dartel_input/%s_%s_T1w_segm-%s_dartelinput.nii*'
-        dartel_input_reader.inputs.subject_id = self.subjects
-        dartel_input_reader.inputs.session = self.sessions
-        dartel_input_reader.inputs.tissue = [tissue_names[t] for t in self.parameters['tissues']]
-        dartel_input_reader.inputs.subject_repeat = self.subjects
-        dartel_input_reader.inputs.session_repeat = self.sessions
-        dartel_input_reader.inputs.sort_filelist = False
-
-        # Dartel Templates DataGrabber
-        # ============================
-        templates_reader = npe.MapNode(nio.DataGrabber(infields=['iteration'],
-                                                       outfields=['out_files']),
-                                       name="templates_reader",
-                                       iterfield=['iteration'])
-        templates_reader.inputs.base_directory = self.caps_directory
-        templates_reader.inputs.template = 'groups/group-' + self.parameters['group_id'] + '/t1/group-' + \
-                                           self.parameters['group_id'] + '_iteration-%d_template.nii*'
-        templates_reader.inputs.iteration = range(1, 7)
-        templates_reader.inputs.sort_filelist = False
-
-        self.connect([
-            (dartel_input_reader, self.input_node, [('out_files', 'dartel_input_images')]),
-            (templates_reader, self.input_node, [('out_files', 'dartel_iteration_templates')])
-        ])
-        """
+        from clinica.utils.spm import INDEX_TISSUE_MAP
 
         read_input_node = npe.Node(name="LoadingCLIArguments",
                                    interface=nutil.IdentityInterface(
@@ -127,9 +82,9 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
                                                    self.sessions,
                                                    self.caps_directory,
                                                    {'pattern': 't1/spm/segmentation/dartel_input/*_*_T1w_segm-'
-                                                               + tissue_names[tissue_number] + '_dartelinput.nii*',
+                                                               + INDEX_TISSUE_MAP[tissue_number] + '_dartelinput.nii*',
                                                     'description': 'Dartel input for tissue '
-                                                                   + tissue_names[tissue_number]
+                                                                   + INDEX_TISSUE_MAP[tissue_number]
                                                                    + ' from T1w MRI',
                                                     'needed_pipeline': 't1-volume-tissue-segmentation'})
                 d_input.append(current_file)
