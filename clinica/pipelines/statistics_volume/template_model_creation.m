@@ -1,3 +1,6 @@
+spm('defaults','pet');
+spm_jobman('initcfg');
+
 matlabbatch{1}.spm.stats.factorial_design.dir = {@OUTPUTDIR};
 matlabbatch{1}.spm.stats.factorial_design.des.t2.scans1 = {@SCANS1}';
 matlabbatch{1}.spm.stats.factorial_design.des.t2.scans2 = {@SCANS2}';

@@ -175,7 +175,7 @@ def run_m_script(m_file):
         cprint('USING SPM STANDALONE')
         utls.delete_last_line(m_file)
         # SPM standalone must be run directly from its root folder
-        if platform.system().lower().startswith('Darwin'):
+        if platform.system().lower().startswith('darwin'):
             # Mac OS
             cmdline = 'cd $SPMSTANDALONE_HOME && ./run_spm12.sh $MCR_HOME batch ' + m_file
         elif platform.system().lower().startswith('linux'):
