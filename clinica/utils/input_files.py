@@ -59,6 +59,19 @@ T1_FS_DESIKAN_PARC_R = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/la
                         'description': 'right hemisphere surface-based Desikan parcellation (label/rh.aparc.annot)',
                         'needed_pipeline': 't1-freesurfer'}
 
+
+# T1-Volume
+
+def t1_volume_final_group_template(group_label):
+    import os
+    information = {
+        'pattern': os.path.join('group-' + group_label, 't1', 'group-' + group_label + '_template.nii*'),
+        'description': 'T1w template file of group ' + group_label,
+        'needed_pipeline': 't1-volume or t1-volume-create-dartel'
+    }
+    return information
+
+
 """ DWI """
 
 # BIDS

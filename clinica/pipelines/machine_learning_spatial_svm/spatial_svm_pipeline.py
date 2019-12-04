@@ -73,6 +73,7 @@ class SpatialSVM(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
+        from clinica.utils.input_files import t1_volume_final_group_template
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.ux import print_groups_in_caps_directory
 
@@ -132,9 +133,7 @@ class SpatialSVM(cpe.Pipeline):
             raise ValueError('Image type ' + image_type + ' unknown')
         try:
             dartel_input = clinica_group_reader(self.caps_directory,
-                                                {'pattern': 'group-' + self.parameters['group_id'] + '_template.nii*',
-                                                 'description': 'template file of group ' + self.parameters['group_id'],
-                                                 'needed_pipeline': 't1-volume or t1-volume-create-dartel'})
+                                                t1_volume_final_group_template(self.parameters['group_id']))
         except ClinicaException as e:
             all_errors.append(e)
 
