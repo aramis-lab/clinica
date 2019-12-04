@@ -441,7 +441,8 @@ def dcm_to_nii(input_path, output_path, bids_name):
 
     # If dcm2niix didn't work use dcm2nii
     if not os.path.exists(path.join(output_path, bids_name + '.nii.gz')):
-        cprint('WARNING: Conversion with dcm2niix failed, trying with dcm2nii')
+        cprint('WARNING: Conversion with dcm2niix failed, trying with dcm2nii '
+               'for ' + input_path)
         cmd = 'dcm2nii -a n -d n -e n -i y -g n -p n -m n -r n -x n -o ' + output_path + ' ' + input_path
         subprocess.run(cmd,
                        shell=True,
@@ -675,80 +676,6 @@ def create_path_corr_file(out_dir):
 
     f = open(path_corr, 'a')
     return f
-
-
-def convert_T1(t1_path, output_path, t1_bids_name):
-    """
-    Convert into the BIDS specification a T1 image.
-
-    Args:
-        t1_path: the path of the T1 images to convert.
-        output_path: output folder path.
-        t1_bids_name: name to give to the file.
-
-    """
-    from os import path
-    from shutil import copy
-    import os
-
-    bids_name = path.join(output_path, t1_bids_name + get_bids_suff('T1'))
-
-    if contain_dicom(t1_path):
-        print('DICOM found for t1 in ' + t1_path)
-        dcm_to_nii(t1_path, output_path, t1_bids_name + get_bids_suff('T1'))
-    else:
-        if not os.path.exists(output_path):
-            os.mkdir(output_path)
-        file_ext = get_ext(t1_path)
-        bids_file = bids_name + file_ext
-        print(bids_file)
-        copy(t1_path, bids_file)
-        # If  the original image is not compress, compress it
-        if file_ext == '.nii':
-            compress_nii(path.join(bids_file))
-
-
-def convert_pet(folder_input, folder_output, pet_name, bids_name, task_name, acquisition=''):
-    """
-    Convert PET to BIDS
-
-    Args:
-        folder_input: path to the input folder
-        folder_output: path to the BIDS folder
-        pet_name: original name
-        bids_name: bids name
-        task_name: task name
-        acquisition: acquisition name
-
-    """
-
-    from os import path
-    from shutil import copy
-    import os
-
-    if acquisition != '':
-        pet_bids_name = bids_name+'_task-'+task_name+'_acq-'+acquisition
-    else:
-        pet_bids_name = bids_name+'_task-'+task_name
-
-    if contain_dicom(folder_input):
-        print('DICOM found for PET')
-        dcm_to_nii(folder_input, folder_output, pet_bids_name, 'pet')
-    else:
-        if not os.path.exists(folder_output):
-            os.mkdir(folder_output)
-
-        # If a prefixed pet is chosen for the conversion use it, otherwise extracts the pet file available into the folder
-        if pet_name != '':
-            pet_path = path.join(folder_input, pet_name)
-        else:
-            print('WARNING: feature to be implemented')
-
-        file_ext = get_ext(pet_path)
-        copy(pet_path, path.join(folder_output, pet_bids_name + get_bids_suff('pet') + file_ext))
-        # If  the original image is not compress, compress it
-        if file_ext == '.nii':
-            compress_nii(path.join(folder_output, pet_bids_name + get_bids_suff('pet') + file_ext))
 
 
 def convert_fieldmap(folder_input, folder_output, name, fixed_file=[False, False]):
