@@ -161,6 +161,13 @@ class StatisticsVolume(cpe.Pipeline):
         model_estimation.inputs.template_file = join(dirname(__file__), 'template_model_estimation.m')
         run_spm_model_estimation = run_spm_script_node.clone(name='run_spm_model_estimation')
 
+        model_contrast = npe.Node(nutil.Function(input_names=['mat_file', 'template_file'],
+                                                 output_names=['script_file'],
+                                                 function=utils.contrast),
+                                  name='model_contrast')
+        model_contrast.inputs.template_file = join(dirname(__file__), 'template_model_contrast.m')
+        run_spm_model_contrast = run_spm_script_node.clone(name='run_spm_model_contrast')
+
         model_result = npe.Node(nutil.Function(input_names=['mat_file', 'template_file'],
                                                output_names=['script_file'],
                                                function=utils.results),
@@ -179,6 +186,8 @@ class StatisticsVolume(cpe.Pipeline):
             (model_creation, run_spm_model_creation, [('script_file', 'm_file')]),
             (run_spm_model_creation, model_estimation, [('spm_mat', 'mat_file')]),
             (model_estimation, run_spm_model_estimation, [('script_file', 'm_file')]),
-            (run_spm_model_estimation, model_result, [('spm_mat', 'mat_file')]),
+            (run_spm_model_estimation, model_contrast, [('spm_mat', 'mat_file')]),
+            (model_contrast, run_spm_model_contrast, [('script_file', 'm_file')]),
+            (run_spm_model_contrast, model_result, [('spm_mat', 'mat_file')]),
             (model_result, run_spm_model_result, [('script_file', 'm_file')])
         ])
