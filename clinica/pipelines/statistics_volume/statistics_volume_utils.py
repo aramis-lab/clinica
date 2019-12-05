@@ -3,9 +3,9 @@
 
 def get_group_1_and_2(csv, contrast):
     """
-    @TODO write doc
+
     Args:
-        csv_file:
+        csv:
         contrast:
 
     Returns:
@@ -20,14 +20,14 @@ def get_group_1_and_2(csv, contrast):
     if contrast not in columns:
         raise ClinicaException(contrast + ' is not present in ' + csv)
 
-    values_of_contrast = list(set(csv[contrast]))
-    if len(values_of_contrast) != 2:
+    class_names = list(set(csv[contrast]))
+    if len(class_names) != 2:
         raise ClinicaException('It must exist 2 classes for the contrast category. Here Clinica found: '
-                               + str(values_of_contrast))
-    first_group_idx = [i for i, label in enumerate(list(csv[contrast])) if label == values_of_contrast[0]]
-    second_group_idx = [i for i, label in enumerate(list(csv[contrast])) if label == values_of_contrast[1]]
+                               + str(class_names))
+    first_group_idx = [i for i, label in enumerate(list(csv[contrast])) if label == class_names[0]]
+    second_group_idx = [i for i, label in enumerate(list(csv[contrast])) if label == class_names[1]]
 
-    return first_group_idx, second_group_idx
+    return first_group_idx, second_group_idx, class_names
 
 
 def model_creation(csv, contrast, idx_group1, idx_group2, file_list, template_file):
@@ -106,7 +106,7 @@ def model_creation(csv, contrast, idx_group1, idx_group2, file_list, template_fi
     # Tell matlab to run the script at the end
     with open(current_model, 'a') as file:
         file.write('spm_jobman(\'run\', matlabbatch)')
-    return current_model
+    return current_model, len(covariables)
     
 
 def is_number(s):
@@ -205,13 +205,13 @@ def use_spm_standalone():
     import os
     from os.path import isdir, expandvars
 
-    use_spm_standalone = False
+    use_spm_stand = False
     if all(elem in os.environ.keys() for elem in ['SPMSTANDALONE_HOME', 'MCR_HOME']):
         if isdir(expandvars('$SPMSTANDALONE_HOME')) and isdir(expandvars('$MCR_HOME')):
-            use_spm_standalone = True
+            use_spm_stand = True
         else:
             raise FileNotFoundError('[Error] $SPMSTANDALONE_HOME and $MCR_HOME are defined, but linked to non existent folder')
-    return use_spm_standalone
+    return use_spm_stand
 
 
 def delete_last_line(filename):
@@ -296,12 +296,14 @@ def results(mat_file, template_file):
     return current_model_result
 
 
-def contrast(mat_file, template_file):
+def contrast(mat_file, template_file, number_of_covariables, class_names):
     """
 
     Args:
         mat_file:
         template_file:
+        number_of_covariables:
+        class_names:
 
     Returns:
 
@@ -313,8 +315,35 @@ def contrast(mat_file, template_file):
         filedata = file.read()
     # Replace by the real path to spm.mat
     filedata = filedata.replace('@SPMMAT', '\'' + mat_file + '\'')
-    current_model_estimation = abspath('./current_model_creation.m')
+    filedata = filedata.replace('@COVARNUMBER', '0 ' * number_of_covariables)
+    filedata = filedata.replace('@GROUP1', '\'' + class_names[0] + '\'')
+    filedata = filedata.replace('@GROUP2', '\'' + class_names[1] + '\'')
+    current_model_estimation = abspath('./current_model_contrast.m')
     with open(current_model_estimation, 'w+') as file:
         file.write(filedata)
 
     return current_model_estimation
+
+
+def read_output(spm_mat):
+    from os.path import join, dirname, isdir, isfile, abspath
+    from os import listdir
+
+    if not isfile(spm_mat):
+        if not isdir(dirname(spm_mat)):
+            raise RuntimeError('[Error] output folder ' + dirname(spm_mat) + ' does not exist.')
+        else:
+            raise RuntimeError('[Error] SPM matrix ' + spm_mat + ' does not exist.')
+
+    list_files = [f for f in listdir(dirname(spm_mat)) if not f.startswith('.')]
+
+    figures = [abspath(join(dirname(spm_mat), f)) for f in list_files if f.endswith('png')]
+    if len(figures) < 2:
+        raise RuntimeError('[Error] Figures were not generated')
+    spm_T = [abspath(join(dirname(spm_mat), f)) for f in list_files if f.startswith('spmT')]
+    if len(spm_T) > 2:
+        raise RuntimeError('[Error] 2 t-maps found')
+    spmT_0001 = join(dirname(spm_mat), 'spmT_0001.nii')
+    spmT_0002 = join(dirname(spm_mat), 'spmT_0002.nii')
+
+    return spmT_0001, spmT_0002, figures

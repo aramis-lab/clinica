@@ -34,6 +34,9 @@ class StatisticsVolumeCLI(ce.CmdParser):
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
 
+        clinica_comp.add_argument("group_id",
+                                  help='Define what type of file are grabbed for the analysis')
+
         clinica_comp.add_argument("file_id",
                                   help='Define what type of file are grabbed for the analysis')
 
@@ -65,7 +68,8 @@ class StatisticsVolumeCLI(ce.CmdParser):
             name=self.name
         )
         pipeline.parameters = {'contrast': args.contrast,
-                               'file_id': args.file_id}
+                               'file_id': args.file_id,
+                               'group_id': args.group_id}
 
         if args.n_procs:
             exec_pipeline = pipeline.run(plugin='MultiProc',

@@ -40,7 +40,7 @@ class StatisticsVolume(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        return []
+        return ['spmT_001', 'spmT_002', 'figures']
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -97,14 +97,18 @@ class StatisticsVolume(cpe.Pipeline):
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
         """
+        import nipype.pipeline.engine as npe
+        import nipype.interfaces.io as nio
+        from os.path import join
 
-        # In the same idea as the input node, this output node is supposedly
-        # used to write the output fields in a CAPS. It should be executed only
-        # if this pipeline output is not already connected to a next Clinica
-        # pipeline.
-
-        pass
-
+        datasink = npe.Node(nio.DataSink(),
+                            name='sinker')
+        datasink.inputs.base_directory = join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])
+        datasink.inputs.parameterization = True
+        self.connect([
+            (self.output_node, datasink, [('spmT_001', 'spm_results_analysis_1')]),
+            (self.output_node, datasink, [('spmT_002', 'spm_results_analysis_2')])
+        ])
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
         """
@@ -121,31 +125,14 @@ class StatisticsVolume(cpe.Pipeline):
                               name='unzip_node')
 
         get_groups = npe.Node(nutil.Function(input_names=['csv', 'contrast'],
-                                             output_names=['idx_group1', 'idx_group2'],
+                                             output_names=['idx_group1', 'idx_group2', 'class_names'],
                                              function=utils.get_group_1_and_2),
                               name='get_groups')
 
         get_groups.inputs.contrast = self.parameters['contrast']
         get_groups.inputs.csv = self.tsv_file
 
-        # Script for model creation of 2 sample t tests
-        # - scans1 (list of file for first group)
-        # - scans2 (list of file for second group)
-        # - covariables with their name, and values (first group and second group concatenated)
-        # - output directory
-
-        model_creation = npe.Node(nutil.Function(input_names=['csv',
-                                                              'contrast',
-                                                              'idx_group1',
-                                                              'idx_group2',
-                                                              'file_list',
-                                                              'template_file'],
-                                                 output_names=['script_file'],
-                                                 function=utils.model_creation),
-                                  name='model_creation')
-        model_creation.inputs.csv = self.tsv_file
-        model_creation.inputs.contrast = self.parameters['contrast']
-        model_creation.inputs.template_file = join(dirname(__file__), 'template_model_creation.m')
+        # Run SPM nodes all a copy of a generic SPM script launcher
 
         run_spm_script_node = npe.Node(nutil.Function(input_names=['m_file'],
                                                       output_names=['spm_mat'],
@@ -153,15 +140,38 @@ class StatisticsVolume(cpe.Pipeline):
                                        name='run_spm_script_node')
 
         run_spm_model_creation = run_spm_script_node.clone(name='run_spm_model_creation')
+        run_spm_model_estimation = run_spm_script_node.clone(name='run_spm_model_estimation')
+        run_spm_model_result = run_spm_script_node.clone(name='run_spm_model_result')
+
+        # All the following node are creating the correct script for the different SPM steps
+        # 1. Model creation
+        # 2. Model estimation
+        # 3. Creation of contrast with covariables
+        # 4. Creation of results
+
+        model_creation = npe.Node(nutil.Function(input_names=['csv',
+                                                              'contrast',
+                                                              'idx_group1',
+                                                              'idx_group2',
+                                                              'file_list',
+                                                              'template_file'],
+                                                 output_names=['script_file', 'number_of_covariables'],
+                                                 function=utils.model_creation),
+                                  name='model_creation')
+        model_creation.inputs.csv = self.tsv_file
+        model_creation.inputs.contrast = self.parameters['contrast']
+        model_creation.inputs.template_file = join(dirname(__file__), 'template_model_creation.m')
 
         model_estimation = npe.Node(nutil.Function(input_names=['mat_file', 'template_file'],
                                                    output_names=['script_file'],
                                                    function=utils.estimate),
                                     name='model_estimation')
         model_estimation.inputs.template_file = join(dirname(__file__), 'template_model_estimation.m')
-        run_spm_model_estimation = run_spm_script_node.clone(name='run_spm_model_estimation')
 
-        model_contrast = npe.Node(nutil.Function(input_names=['mat_file', 'template_file'],
+        model_contrast = npe.Node(nutil.Function(input_names=['mat_file',
+                                                              'template_file',
+                                                              'number_of_covariables',
+                                                              'class_names'],
                                                  output_names=['script_file'],
                                                  function=utils.contrast),
                                   name='model_contrast')
@@ -173,7 +183,11 @@ class StatisticsVolume(cpe.Pipeline):
                                                function=utils.results),
                                 name='model_result')
         model_result.inputs.template_file = join(dirname(__file__), 'template_model_results.m')
-        run_spm_model_result = run_spm_script_node.clone(name='run_spm_model_result')
+
+        read_output_node = npe.Node(nutil.Function(input_names=['spm_mat'],
+                                                   output_names=['spmT_001', 'spmT_002', 'figures'],
+                                                   function=utils.read_output),
+                                    name='read_output_node')
 
         # Connection
         # ==========
@@ -186,8 +200,17 @@ class StatisticsVolume(cpe.Pipeline):
             (model_creation, run_spm_model_creation, [('script_file', 'm_file')]),
             (run_spm_model_creation, model_estimation, [('spm_mat', 'mat_file')]),
             (model_estimation, run_spm_model_estimation, [('script_file', 'm_file')]),
+
+            (get_groups, model_contrast, [('class_names', 'class_names')]),
             (run_spm_model_estimation, model_contrast, [('spm_mat', 'mat_file')]),
+            (model_creation, model_contrast, [('number_of_covariables', 'number_of_covariables')]),
+
             (model_contrast, run_spm_model_contrast, [('script_file', 'm_file')]),
             (run_spm_model_contrast, model_result, [('spm_mat', 'mat_file')]),
-            (model_result, run_spm_model_result, [('script_file', 'm_file')])
+            (model_result, run_spm_model_result, [('script_file', 'm_file')]),
+            (run_spm_model_result, read_output_node, [('spm_mat', 'spm_mat')]),
+
+            (read_output_node, self.output_node, [('spmT_001', 'spmT_001')]),
+            (read_output_node, self.output_node, [('spmT_002', 'spmT_002')]),
+            (read_output_node, self.output_node, [('figures', 'figures')]),
         ])
