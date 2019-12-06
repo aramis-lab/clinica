@@ -7,8 +7,8 @@ __copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
 __credits__ = ["Arnaud Marcoux"]
 __license__ = "See LICENSE.txt file"
 __version__ = "0.3.0"
-__maintainer__ = "Alexandre Routier"
-__email__ = "alexandre.routier@icm-institute.org"
+__maintainer__ = "Arnaud Marcoux"
+__email__ = "arnaud.marcoux@icm-institute.org"
 __status__ = "Development"
 
 import clinica.engine as ce
@@ -34,17 +34,19 @@ class StatisticsVolumeCLI(ce.CmdParser):
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
 
-        clinica_comp.add_argument("group_id",
-                                  help='Define what type of file are grabbed for the analysis')
-
-        clinica_comp.add_argument("file_id",
-                                  help='Define what type of file are grabbed for the analysis')
-
-        clinica_comp.add_argument("covariables",
-                                  help='Defines subject list and list of associated covariables')
+        clinica_comp.add_argument("subject_visits_with_covariates_tsv",
+                                  help='TSV file containing a list of subjects with their sessions and all '
+                                       'the covariates and factors needed for the GLM.')
 
         clinica_comp.add_argument("contrast",
-                                  help='Defines the contrast')
+                                  help='Defines the contrast. Must be one of the column names form the TSV file.')
+
+        clinica_comp.add_argument("feature_type",
+                                  help='Define what type of file are grabbed for the analysis')
+
+        clinica_comp.add_argument("group_id",
+                                  help='User-defined identifier for the provided group of subjects.')
+
 
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()

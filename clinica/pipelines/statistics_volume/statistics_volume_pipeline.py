@@ -1,4 +1,14 @@
 
+__author__ = "Arnaud Marcoux"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
+__credits__ = ["Arnaud Marcoux"]
+__license__ = "See LICENSE.txt file"
+__version__ = "0.3.0"
+__maintainer__ = "Arnaud Marcoux"
+__email__ = "arnaud.marcoux@icm-institute.org"
+__status__ = "Development"
+
+
 import clinica.pipelines.engine as cpe
 
 
@@ -63,7 +73,7 @@ class StatisticsVolume(cpe.Pipeline):
                                                    'needed_pipeline': 'pet-volume'})
             except ClinicaException as e:
                 all_errors.append(e)
-        elif self.parameters['file_id'] == 't1':
+        elif self.parameters['file_id'] == 't1-gm':
             try:
                 input_files = clinica_file_reader(self.subjects,
                                                   self.sessions,
@@ -73,6 +83,18 @@ class StatisticsVolume(cpe.Pipeline):
                                                    'needed_pipeline': 't1-volume or t1-volume-existing-template'})
             except ClinicaException as e:
                 all_errors.append(e)
+
+        elif self.parameters['file_id'] == 't1-wm':
+            try:
+                input_files = clinica_file_reader(self.subjects,
+                                                  self.sessions,
+                                                  self.caps_directory,
+                                                  {'pattern': 't1/spm/segmentation/normalized_space/*_T1w_segm-whitematter_space-Ixi549Space_modulated-off_probability.nii*',
+                                                   'description': 'probability map of white matter segmentation based on T1w image in MNI space',
+                                                   'needed_pipeline': 't1-volume or t1-volume-existing-template'})
+            except ClinicaException as e:
+                all_errors.append(e)
+
         else:
             raise ClinicaException(Fore.RED + '[Error] ' + Fore.YELLOW + self.parameters['file_id']
                                    + Fore.RED + ' modality is not currently supported for this analysis' + Fore.RESET)
@@ -105,10 +127,17 @@ class StatisticsVolume(cpe.Pipeline):
                             name='sinker')
         datasink.inputs.base_directory = join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])
         datasink.inputs.parameterization = True
+        datasink.inputs.regexp_substitutions = [
+            (r'(.*)/group-' + self.parameters['group_id'] + r'/spm_results_analysis_./(.*)',
+             r'\1/group-' + self.parameters['group_id'] + r'/\2')
+        ]
+
         self.connect([
             (self.output_node, datasink, [('spmT_001', 'spm_results_analysis_1')]),
-            (self.output_node, datasink, [('spmT_002', 'spm_results_analysis_2')])
+            (self.output_node, datasink, [('spmT_002', 'spm_results_analysis_2')]),
+            (self.output_node, datasink, [('figures', 'report')])
         ])
+
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
         """
@@ -119,11 +148,13 @@ class StatisticsVolume(cpe.Pipeline):
         from clinica.utils.filemanip import unzip_nii
         from os.path import join, dirname
 
+        # SPM cannot handle zipped files
         unzip_node = npe.Node(nutil.Function(input_names=['in_file'],
                                              output_names=['output_files'],
                                              function=unzip_nii),
                               name='unzip_node')
 
+        # Get indexes of the 2 groups, based on the contrast column of the tsv file
         get_groups = npe.Node(nutil.Function(input_names=['csv', 'contrast'],
                                              output_names=['idx_group1', 'idx_group2', 'class_names'],
                                              function=utils.get_group_1_and_2),
@@ -132,7 +163,7 @@ class StatisticsVolume(cpe.Pipeline):
         get_groups.inputs.contrast = self.parameters['contrast']
         get_groups.inputs.csv = self.tsv_file
 
-        # Run SPM nodes all a copy of a generic SPM script launcher
+        # Run SPM nodes are all a copy of a generic SPM script launcher
 
         run_spm_script_node = npe.Node(nutil.Function(input_names=['m_file'],
                                                       output_names=['spm_mat'],
@@ -141,14 +172,16 @@ class StatisticsVolume(cpe.Pipeline):
 
         run_spm_model_creation = run_spm_script_node.clone(name='run_spm_model_creation')
         run_spm_model_estimation = run_spm_script_node.clone(name='run_spm_model_estimation')
+        run_spm_model_contrast = run_spm_script_node.clone(name='run_spm_model_contrast')
         run_spm_model_result = run_spm_script_node.clone(name='run_spm_model_result')
 
-        # All the following node are creating the correct script for the different SPM steps
+        # All the following node are creating the correct (.m) script for the different SPM steps
         # 1. Model creation
         # 2. Model estimation
         # 3. Creation of contrast with covariables
         # 4. Creation of results
 
+        # 1. Model creation
         model_creation = npe.Node(nutil.Function(input_names=['csv',
                                                               'contrast',
                                                               'idx_group1',
@@ -162,12 +195,14 @@ class StatisticsVolume(cpe.Pipeline):
         model_creation.inputs.contrast = self.parameters['contrast']
         model_creation.inputs.template_file = join(dirname(__file__), 'template_model_creation.m')
 
+        # 2. Model estimation
         model_estimation = npe.Node(nutil.Function(input_names=['mat_file', 'template_file'],
                                                    output_names=['script_file'],
                                                    function=utils.estimate),
                                     name='model_estimation')
         model_estimation.inputs.template_file = join(dirname(__file__), 'template_model_estimation.m')
 
+        # 3. Contrast
         model_contrast = npe.Node(nutil.Function(input_names=['mat_file',
                                                               'template_file',
                                                               'number_of_covariables',
@@ -176,15 +211,16 @@ class StatisticsVolume(cpe.Pipeline):
                                                  function=utils.contrast),
                                   name='model_contrast')
         model_contrast.inputs.template_file = join(dirname(__file__), 'template_model_contrast.m')
-        run_spm_model_contrast = run_spm_script_node.clone(name='run_spm_model_contrast')
 
+        # 4. Results
         model_result = npe.Node(nutil.Function(input_names=['mat_file', 'template_file'],
                                                output_names=['script_file'],
                                                function=utils.results),
                                 name='model_result')
         model_result.inputs.template_file = join(dirname(__file__), 'template_model_results.m')
 
-        read_output_node = npe.Node(nutil.Function(input_names=['spm_mat'],
+        # Export results to output node
+        read_output_node = npe.Node(nutil.Function(input_names=['spm_mat', 'class_names'],
                                                    output_names=['spmT_001', 'spmT_002', 'figures'],
                                                    function=utils.read_output),
                                     name='read_output_node')
@@ -209,6 +245,7 @@ class StatisticsVolume(cpe.Pipeline):
             (run_spm_model_contrast, model_result, [('spm_mat', 'mat_file')]),
             (model_result, run_spm_model_result, [('script_file', 'm_file')]),
             (run_spm_model_result, read_output_node, [('spm_mat', 'spm_mat')]),
+            (get_groups, read_output_node, [('class_names', 'class_names')]),
 
             (read_output_node, self.output_node, [('spmT_001', 'spmT_001')]),
             (read_output_node, self.output_node, [('spmT_002', 'spmT_002')]),

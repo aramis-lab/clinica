@@ -1,29 +1,46 @@
 # coding: utf8
 
+__author__ = "Arnaud Marcoux"
+__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
+__credits__ = ["Arnaud Marcoux"]
+__license__ = "See LICENSE.txt file"
+__version__ = "0.3.0"
+__maintainer__ = "Arnaud Marcoux"
+__email__ = "arnaud.marcoux@icm-institute.org"
+__status__ = "Development"
+
 
 def get_group_1_and_2(csv, contrast):
     """
-
+        Based on the csv given in parameter, compute indexes of each group
     Args:
-        csv:
-        contrast:
+        csv: (str) path to the csv file containing information on subjects/sessions with all covariables
+        contrast: (str) name of a column of the csv
 
     Returns:
-
+        first_group_idx: (list of int) list of indexes of first group
+        second_group_idx: (list of int) list of indexes of second group
+        class_names: (list of str of len 2) list of the class names read in the column contrast of the csv
     """
     import pandas as pds
     from clinica.utils.exceptions import ClinicaException
 
+    # StatisticsVolume pipeline has been instantiated with tsv_file=csv, so check of existence and integrity have suceed
+    # No further check are done when trying to read it
     csv = pds.read_csv(csv, sep='\t')
     columns = list(csv.columns)
 
+    # An error is raised if the contrast column is not found in the tsv
     if contrast not in columns:
         raise ClinicaException(contrast + ' is not present in ' + csv)
 
+    # list(set(my_list)) gives unique values of my_list
     class_names = list(set(csv[contrast]))
+
+    # This is a 2-sample t-test: we can only allow 2 classes
     if len(class_names) != 2:
-        raise ClinicaException('It must exist 2 classes for the contrast category. Here Clinica found: '
-                               + str(class_names))
+        raise ClinicaException('It must exist only 2 classes in the column ' + contrast
+                               + ' to perform 2-sample t-tests. Here Clinica found: ' + str(class_names))
     first_group_idx = [i for i, label in enumerate(list(csv[contrast])) if label == class_names[0]]
     second_group_idx = [i for i, label in enumerate(list(csv[contrast])) if label == class_names[1]]
 
@@ -32,14 +49,15 @@ def get_group_1_and_2(csv, contrast):
 
 def model_creation(csv, contrast, idx_group1, idx_group2, file_list, template_file):
     """
+        Create the matlab .m file for the instantiation of the 2-sample t-test model in SPM
 
     Args:
-        csv:
-        contrast:
-        idx_group1:
-        idx_group2:
-        file_list:
-        template_file:
+        csv: (str) path to the csv file containing information on subjects/sessions with all covariables
+        contrast: (str) name of a column of the csv
+        idx_group1: (list of int) list of indexes of first group
+        idx_group2: (list of int) list of indexes of second group
+        file_list: List of files used in the statistical test. Their order is the same as it appears on the csv file
+        template_file: (str) path to the template file used to generate the .m file
 
     Returns:
 
@@ -60,18 +78,23 @@ def model_creation(csv, contrast, idx_group1, idx_group2, file_list, template_fi
     current_model = abspath('./current_model_creation.m')
 
     if isfile(current_model):
+        # This should never be reached
         remove(current_model)
 
     # Read template
     with open(template_file, 'r') as file:
         filedata = file.read()
+
+    # Create output folder for SPM:
     output_folder = abspath(join(dirname(current_model), '..', '2_sample_t_test'))
     mkdir(output_folder)
-    # Replace our string
+
+    # Replace string in matlab file to set the output directory, and all the scans used for group 1 and 2
     filedata = filedata.replace('@OUTPUTDIR', '\'' + output_folder + '\'')
     filedata = filedata.replace('@SCANS1', utls.unravel_list_for_matlab([f for i, f in enumerate(file_list) if i in idx_group1]))
     filedata = filedata.replace('@SCANS2', utls.unravel_list_for_matlab([f for i, f in enumerate(file_list) if i in idx_group2]))
 
+    # Write filedata in the output file
     with open(current_model, 'w+') as file:
         file.write(filedata)
 
@@ -325,9 +348,10 @@ def contrast(mat_file, template_file, number_of_covariables, class_names):
     return current_model_estimation
 
 
-def read_output(spm_mat):
-    from os.path import join, dirname, isdir, isfile, abspath
+def read_output(spm_mat, class_names):
+    from os.path import join, dirname, isdir, isfile, abspath, basename
     from os import listdir
+    from shutil import copyfile
 
     if not isfile(spm_mat):
         if not isdir(dirname(spm_mat)):
@@ -340,10 +364,17 @@ def read_output(spm_mat):
     figures = [abspath(join(dirname(spm_mat), f)) for f in list_files if f.endswith('png')]
     if len(figures) < 2:
         raise RuntimeError('[Error] Figures were not generated')
+    fig_number = [int(f[-7:-4]) for f in figures]
+    new_figure_names = [abspath('./' + 'spm_report-' + str(i) +'.png') for i in fig_number]
+    for old_name, new_name in zip(figures, new_figure_names):
+        copyfile(old_name, new_name)
+
     spm_T = [abspath(join(dirname(spm_mat), f)) for f in list_files if f.startswith('spmT')]
     if len(spm_T) > 2:
-        raise RuntimeError('[Error] 2 t-maps found')
-    spmT_0001 = join(dirname(spm_mat), 'spmT_0001.nii')
-    spmT_0002 = join(dirname(spm_mat), 'spmT_0002.nii')
+        raise RuntimeError('[Error] More than 2 t-maps found')
+    spmT_0001 = abspath('./spm_t-statistics_hypothesis-' + class_names[0] + '-less-than-' + class_names[1] + '.nii')
+    spmT_0002 = abspath('./spm_t-statistics_hypothesis-' + class_names[1] + '-less-than-' + class_names[0] + '.nii')
+    copyfile(join(dirname(spm_mat), 'spmT_0001.nii'), spmT_0001)
+    copyfile(join(dirname(spm_mat), 'spmT_0002.nii'), spmT_0002)
 
-    return spmT_0001, spmT_0002, figures
+    return spmT_0001, spmT_0002, new_figure_names
