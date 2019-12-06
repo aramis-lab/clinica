@@ -20,18 +20,6 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-def group_nested_images_by_subject(class_images, zip_files=False):
-    """
-
-    """
-    from clinica.utils.filemanip import zip_nii
-
-    if zip_files:
-        return [zip_nii([s for tissue in subject for s in tissue], True) for subject in class_images]
-
-    return [[s for tissue in subject for s in tissue] for subject in class_images]
-
-
 def t1w_container_from_filename(t1w_filename):
     """
     Extracts <participant_id> & <sesssion_id> from BIDS <t1w_filename> and

@@ -14,19 +14,8 @@ def prepare_flowfields(flow_fields, tissues):
     return [[f] * len(tissues) for f in flow_fields]
 
 
-def prepare_existing_dartel_flowfields(flow_fields, tissues):
-    return [f * len(tissues) for f in flow_fields]
-
-
 def join_smoothed_files(smoothed_normalized_files):
     """
     Joins outputs
     """
     return [[x for smooth in subject for x in smooth] for subject in zip(*smoothed_normalized_files)]
-
-
-def select_gm_images(in_images):
-    """
-    Selects only
-    """
-    return [image for subject in in_images for image in subject if ('c1' in image or 'graymatter' in image)]
