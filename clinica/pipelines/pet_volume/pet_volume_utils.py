@@ -10,31 +10,6 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-def read_psf(json_path):
-    """readpsf is able to read the json file associated with the PET volume, and extract information needed to perform
-    partial volume correction: the effective resolution in plane, and the effective resolution axial.
-
-        Args:
-            (string) json_path: Path to the json file containing the information
-
-        Returns:
-            (float) The effective resolution in plane
-            (float) The effective axial resolution
-        """
-    import json
-    import os
-
-    if not os.path.exists(json_path):
-        raise Exception('File ' + json_path + ' does not exist. Point spread function information must be provided.')
-
-    # This is a standard way of reading data in a json
-    with open(json_path) as df:
-        data = json.load(df)
-    in_plane = data['Psf'][0]['EffectiveResolutionInPlane']
-    axial = data['Psf'][0]['EffectiveResolutionAxial']
-    return in_plane, axial
-
-
 def create_binary_mask(tissues, threshold=0.3):
     """
 
@@ -189,10 +164,6 @@ def pet_container_from_filename(pet_filename):
     session = m.group(2)
 
     return join('subjects', subject, session, 'pet/preprocessing')
-
-
-def expand_into_list(in_field, n_tissues):
-    return [in_field] * n_tissues
 
 
 def get_from_list(in_list, index):
