@@ -119,10 +119,6 @@ def prepare_dartel_input_images(dartel_input_images):
     return [[[tissue] for tissue in subject] for subject in zip(*dartel_input_images)]
 
 
-def prepare_images_from_segmentation(dartel_input_images):
-    return [[tissue for tissue in subject if tissue] for subject in dartel_input_images if subject]
-
-
 def create_iteration_parameters(dartel_templates, iteration_parameters):
 
     if len(dartel_templates) != 6:
@@ -149,42 +145,3 @@ def create_iteration_parameters(dartel_templates, iteration_parameters):
                                              dartel_templates[i])
                                             )
         return new_iteration_parameters
-
-
-def get_class_images(class_images, index_list):
-    """
-    Utility method to extract class images from a multi session <class_images> set.
-
-    Tissue types are:
-        - 1: Grey Matter
-        - 2: White Matter
-        - 3: CerebroSpinal Fluid
-        - 4: Skull
-        - 5: Out-of-brain soft tissue
-        - 6: Head surrounding
-
-    Args:
-        class_images: image set from which to extract images.
-        index_list: index list of the classes to extract.
-
-    Returns:
-        Extracted images in a list of lists (without empty lists).
-
-    Example:
-    >>> class_n_images = get_class_images(class_images,[1,2])
-    """
-    # Declare class images list
-    class_n_images = {}
-    for idx in index_list:
-        class_n_images[idx] = []
-
-    for session in class_images:
-        for idx in index_list:
-            class_n_images[idx].extend(session[idx-1])
-
-    result = []
-    for idx in index_list:
-        if class_n_images[idx]:
-            result.append([class_n_images[idx]])
-
-    return result
