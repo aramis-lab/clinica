@@ -101,7 +101,7 @@ def t1_volume_native_tpm_in_mni(tissue_number, modulation):
                                 '_modulated-' + pattern_modulation + '_probability.nii*'),
         'description': 'Tissue probability map ' + INDEX_TISSUE_MAP[tissue_number] + ' based on native MRI ' +
                        'in MNI space (Ixi549) ' + description_modulation + ' modulation.',
-        'needed_pipeline': 't1-volume'}
+        'needed_pipeline': 't1-volume-tissue-segmentation'}
     return information
 
 
