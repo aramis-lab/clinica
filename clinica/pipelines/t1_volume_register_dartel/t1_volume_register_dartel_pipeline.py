@@ -15,11 +15,6 @@ __status__ = "Development"
 class T1VolumeRegisterDartel(cpe.Pipeline):
     """T1VolumeExistingDartel - Reuse existing Dartel template.
 
-    Args:
-        input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
-
     Returns:
         A clinica pipeline object containing the T1VolumeExistingDartel pipeline.
     """
@@ -64,7 +59,7 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         from clinica.utils.exceptions import ClinicaException, ClinicaCAPSError
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
-        from clinica.utils.spm import INDEX_TISSUE_MAP
+        from clinica.utils.input_files import t1_volume_i_th_iteration_group_template, t1_volume_dartel_input_tissue
 
         read_input_node = npe.Node(name="LoadingCLIArguments",
                                    interface=nutil.IdentityInterface(
@@ -81,12 +76,7 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
                 current_file = clinica_file_reader(self.subjects,
                                                    self.sessions,
                                                    self.caps_directory,
-                                                   {'pattern': 't1/spm/segmentation/dartel_input/*_*_T1w_segm-'
-                                                               + INDEX_TISSUE_MAP[tissue_number] + '_dartelinput.nii*',
-                                                    'description': 'Dartel input for tissue '
-                                                                   + INDEX_TISSUE_MAP[tissue_number]
-                                                                   + ' from T1w MRI',
-                                                    'needed_pipeline': 't1-volume-tissue-segmentation'})
+                                                   t1_volume_dartel_input_tissue(tissue_number))
                 d_input.append(current_file)
             except ClinicaException as e:
                 all_errors.append(e)
@@ -96,12 +86,10 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
         dartel_iter_templates = []
         for i in range(1, 7):
             try:
-                current_iter = clinica_group_reader(self.caps_directory,
-                                                    {'pattern': 'group-' + self.parameters['group_id'] + '/t1/group-'
-                                                                + self.parameters['group_id'] + '_iteration-' + str(i)
-                                                                + '_template.nii*',
-                                                     'description': 'iteration #' + str(i) + ' of template for group ' + self.parameters['group_id'],
-                                                     'needed_pipeline': 't1-volume-create-dartel'})
+                current_iter = clinica_group_reader(
+                    self.caps_directory,
+                    t1_volume_i_th_iteration_group_template(self.parameters['group_id'], i)
+                )
 
                 dartel_iter_templates.append(current_iter)
             except ClinicaException as e:

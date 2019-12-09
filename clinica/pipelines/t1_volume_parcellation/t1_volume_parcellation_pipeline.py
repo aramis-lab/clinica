@@ -15,11 +15,6 @@ __status__ = "Development"
 class T1VolumeParcellation(cpe.Pipeline):
     """T1VolumeParcellation - Computation of mean GM concentration for a set of regions
 
-    Args:
-        input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
-
     Returns:
         A clinica pipeline object containing the T1VolumeParcellation pipeline.
     """
@@ -67,6 +62,7 @@ class T1VolumeParcellation(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.input_files import t1_volume_template_tpm_in_mni
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.ux import print_groups_in_caps_directory
 
@@ -78,16 +74,11 @@ class T1VolumeParcellation(cpe.Pipeline):
                 (Fore.RED, self.parameters['group_id'], Fore.RESET)
             )
 
-        # Get gray matter map from t1w preprocessing (from t1-volume)
         try:
             gm_mni = clinica_file_reader(self.subjects,
                                          self.sessions,
                                          self.caps_directory,
-                                         {'pattern': 't1/spm/dartel/group-' + self.parameters['group_id']
-                                                     + '/*_T1w_segm-graymatter_space-Ixi549Space_modulated-'
-                                                     + 'on_probability.nii*',
-                                          'description': ' grey matter map in MNI space (Ixi549) with modulation',
-                                          'needed_pipeline': 't1-volume'})
+                                         t1_volume_template_tpm_in_mni(self.parameters['group_id'], 1, True))
         except ClinicaException as e:
             final_error_str = 'Clinica faced error(s) while trying to read files in your CAPS directory.\n'
             final_error_str += str(e)
@@ -97,22 +88,17 @@ class T1VolumeParcellation(cpe.Pipeline):
                                         interface=nutil.IdentityInterface(
                                             fields=self.get_input_fields(),
                                             mandatory_inputs=True))
-
         read_parameters_node.inputs.file_list = gm_mni
         read_parameters_node.inputs.atlas_list = self.parameters['atlases']
 
-        self.connect([(read_parameters_node, self.input_node, [('file_list', 'file_list')]),
-                      (read_parameters_node, self.input_node, [('atlas_list', 'atlas_list')])
-                      ])
+        self.connect([
+            (read_parameters_node, self.input_node, [('file_list', 'file_list')]),
+            (read_parameters_node, self.input_node, [('atlas_list', 'atlas_list')])
+        ])
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
         """
-
-        # In the same idea as the input node, this output node is supposedly
-        # used to write the output fields in a CAPS. It should be executed only
-        # if this pipeline output is not already connected to a next Clinica
-        # pipeline.
         pass
 
     def build_core_nodes(self):

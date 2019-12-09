@@ -23,11 +23,6 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
     """T1VolumeTissueSegmentation - Tissue segmentation, bias correction and
     spatial normalization to MNI space.
 
-    Args:
-        bids_directory: A BIDS directory.
-        caps_directory: An empty output directory where CAPS structured data will be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
-
     Returns:
         A clinica pipeline object containing the T1VolumeTissueSegmentation pipeline.
     """
@@ -217,18 +212,29 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         write_node.inputs.base_directory = self.caps_directory
         write_node.inputs.parameterization = False
         write_node.inputs.regexp_substitutions = [
-            (r'(.*)c1(sub-.*)(\.nii(\.gz)?)$',                                 r'\1\2_segm-graymatter\3'),
-            (r'(.*)c2(sub-.*)(\.nii(\.gz)?)$',                                 r'\1\2_segm-whitematter\3'),
-            (r'(.*)c3(sub-.*)(\.nii(\.gz)?)$',                                 r'\1\2_segm-csf\3'),
-            (r'(.*)c4(sub-.*)(\.nii(\.gz)?)$',                                 r'\1\2_segm-bone\3'),
-            (r'(.*)c5(sub-.*)(\.nii(\.gz)?)$',                                 r'\1\2_segm-softtissue\3'),
-            (r'(.*)c6(sub-.*)(\.nii(\.gz)?)$',                                 r'\1\2_segm-background\3'),
-            (r'(.*)(/native_space/sub-.*)(\.nii(\.gz)?)$',                     r'\1\2_probability\3'),
-            (r'(.*)(/([a-z]+)_deformation_field/)i?y_(sub-.*)(\.nii(\.gz)?)$', r'\1/normalized_space/\4_target-Ixi549Space_transformation-\3_deformation\5'),
-            (r'(.*)(/t1_mni/)w(sub-.*)_T1w(\.nii(\.gz)?)$',                    r'\1/normalized_space/\3_space-Ixi549Space_T1w\4'),
-            (r'(.*)(/modulated_normalized/)mw(sub-.*)(\.nii(\.gz)?)$',         r'\1/normalized_space/\3_space-Ixi549Space_modulated-on_probability\4'),
-            (r'(.*)(/normalized/)w(sub-.*)(\.nii(\.gz)?)$',                    r'\1/normalized_space/\3_space-Ixi549Space_modulated-off_probability\4'),
-            (r'(.*/dartel_input/)r(sub-.*)(\.nii(\.gz)?)$',                    r'\1\2_dartelinput\3'),
+            (r'(.*)c1(sub-.*)(\.nii(\.gz)?)$',
+             r'\1\2_segm-graymatter\3'),
+            (r'(.*)c2(sub-.*)(\.nii(\.gz)?)$',
+             r'\1\2_segm-whitematter\3'),
+            (r'(.*)c3(sub-.*)(\.nii(\.gz)?)$',
+             r'\1\2_segm-csf\3'),
+            (r'(.*)c4(sub-.*)(\.nii(\.gz)?)$',
+             r'\1\2_segm-bone\3'),
+            (r'(.*)c5(sub-.*)(\.nii(\.gz)?)$',
+             r'\1\2_segm-softtissue\3'),
+            (r'(.*)c6(sub-.*)(\.nii(\.gz)?)$',
+             r'\1\2_segm-background\3'),
+            (r'(.*)(/native_space/sub-.*)(\.nii(\.gz)?)$',
+             r'\1\2_probability\3'),
+            (r'(.*)(/([a-z]+)_deformation_field/)i?y_(sub-.*)(\.nii(\.gz)?)$',
+             r'\1/normalized_space/\4_target-Ixi549Space_transformation-\3_deformation\5'),
+            (r'(.*)(/t1_mni/)w(sub-.*)_T1w(\.nii(\.gz)?)$', r'\1/normalized_space/\3_space-Ixi549Space_T1w\4'),
+            (r'(.*)(/modulated_normalized/)mw(sub-.*)(\.nii(\.gz)?)$',
+             r'\1/normalized_space/\3_space-Ixi549Space_modulated-on_probability\4'),
+            (r'(.*)(/normalized/)w(sub-.*)(\.nii(\.gz)?)$',
+             r'\1/normalized_space/\3_space-Ixi549Space_modulated-off_probability\4'),
+            (r'(.*/dartel_input/)r(sub-.*)(\.nii(\.gz)?)$',
+             r'\1\2_dartelinput\3'),
             # Will remove trait_added empty folder
             (r'trait_added', r'')
         ]
@@ -238,15 +244,23 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
             (container_path, write_node, [(('container', fix_join, ''), 'container')]),
             (self.output_node, write_node, [(('native_class_images', seg_utils.zip_list_files, True), 'native_space'),
                                             (('dartel_input_images', seg_utils.zip_list_files, True), 'dartel_input')]),
-            (self.output_node, write_node, [(('inverse_deformation_field', zip_nii, True), 'inverse_deformation_field')]),
-            (self.output_node, write_node, [(('forward_deformation_field', zip_nii, True), 'forward_deformation_field')]),
+            (self.output_node, write_node, [
+                (('inverse_deformation_field', zip_nii, True), 'inverse_deformation_field')
+            ]),
+            (self.output_node, write_node, [
+                (('forward_deformation_field', zip_nii, True), 'forward_deformation_field')
+            ]),
             (self.output_node, write_node, [(('t1_mni', zip_nii, True), 't1_mni')]),
         ])
         if self.parameters['save_warped_unmodulated']:
             self.connect([
-                (self.output_node, write_node, [(('normalized_class_images', seg_utils.zip_list_files, True), 'normalized')]),
+                (self.output_node, write_node, [
+                    (('normalized_class_images', seg_utils.zip_list_files, True), 'normalized')
+                ]),
             ])
         if self.parameters['save_warped_modulated']:
             self.connect([
-                (self.output_node, write_node, [(('modulated_class_images', seg_utils.zip_list_files, True), 'modulated_normalized')]),
+                (self.output_node, write_node, [
+                    (('modulated_class_images', seg_utils.zip_list_files, True), 'modulated_normalized')
+                ]),
             ])
