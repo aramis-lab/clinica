@@ -30,21 +30,11 @@ class StatisticsSurface(cpe.Pipeline):
             [ ] Copy results from <WD> to <CAPS>
         [ ] Clean/adapt statistics_surface_utils.py
 
-    Args:
-        tsv_file: str, Path to the tsv containing the information for GLM.
-        design_matrix: str, the linear model that fits into the GLM, for example '1+group'.
-        contrast: string, the contrast matrix for GLM, if the factor you choose is categorized variable, clinica_surfstat will create two contrasts,
-                  for example, contrast = 'Label', this will create contrastpos = Label.AD - Label.CN, contrastneg = Label.CN - Label.AD; if the fac-
-                  tory that you choose is a continuous factor, clinica_surfstat will just create one contrast, for example, contrast = 'Age', but note,
-                  the string name that you choose should be exactly the same with the columns names in your subjects_visits_tsv.
-        str_format: string, the str_format which uses to read your tsv file, the typy of the string should corresponds exactly with the columns in the tsv file.
-            Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
-        group_label: current group name for this analysis
-        glm_type: based on the hypothesis, you should define one of the glm types, "group_comparison", "correlation"
-        full_width_at_half_maximum: fwhm for the surface smoothing, default is 20, integer.
-        threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float, default is 0.001.
-        threshold_corrected_pvalue: the threshold to display the corrected cluster, default is 0.05, float.
-        cluster_threshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float.
+    Note:
+        The `tsv_file` attribute is overloaded for this pipeline. It must contain a list of subjects
+        with their sessions and all the covariates and factors needed for the GLM.
+
+        Pipeline parameters are explained in StatisticsSurfaceCLI.define_options()
 
     Returns:
         A clinica pipeline object containing the StatisticsSurface pipeline.
@@ -121,7 +111,7 @@ class StatisticsSurface(cpe.Pipeline):
         # Note(AR): if the user wants to compare Cortical Thickness measure with PET measure
         # using the group_id, Clinica won't allow it.
         # TODO: Modify this behaviour
-        if os.path.exists(os.path.join(os.path.abspath(self.caps_directory), 'groups', 'group-' + self.parameters['group_label'])):
+        if os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_label'])):
             error_message = ('Group ID %s already exists, please choose another one or delete the existing folder and '
                              'also the working directory and rerun the pipeline') % self.parameters['group_label']
             raise ClinicaException(error_message)
@@ -175,7 +165,7 @@ class StatisticsSurface(cpe.Pipeline):
         data_prep = npe.Node(name='inputnode',
                              interface=nutil.Function(
                                  input_names=['input_directory', 'subjects_visits_tsv', 'group_label', 'glm_type'],
-                                 output_names=['path_to_matscript', 'surfstat_input_dir', 'output_directory',
+                                 output_names=['path_to_matlab_script', 'surfstat_input_dir', 'output_directory',
                                                'freesurfer_home', 'out_json'],
                                  function=utils.prepare_data))
         data_prep.inputs.input_directory = self.caps_directory
@@ -189,60 +179,31 @@ class StatisticsSurface(cpe.Pipeline):
                                 input_names=['input_directory',
                                              'output_directory',
                                              'subjects_visits_tsv',
-                                             'design_matrix',
-                                             'contrast',
-                                             'str_format',
-                                             'glm_type',
-                                             'group_label',
+                                             'pipeline_parameters',
                                              'freesurfer_home',
-                                             'surface_file',
-                                             'path_to_matscript',
-                                             'full_width_at_half_maximum',
-                                             'threshold_uncorrected_pvalue',
-                                             'threshold_corrected_pvalue',
-                                             'cluster_threshold',
-                                             'feature_label'],
+                                             'path_to_matlab_script',
+                                             ],
                                 output_names=['out_images'],
                                 function=utils.run_matlab))
-        surfstat.inputs.subjects_visits_tsv = self.tsv_file
-        surfstat.inputs.design_matrix = self.parameters['design_matrix']
-        surfstat.inputs.contrast = self.parameters['contrast']
-        surfstat.inputs.str_format = self.parameters['str_format']
-        surfstat.inputs.glm_type = self.parameters['glm_type']
-        surfstat.inputs.group_label = self.parameters['group_label']
-        surfstat.inputs.full_width_at_half_maximum = self.parameters['full_width_at_half_maximum']
-        surfstat.inputs.threshold_uncorrected_pvalue = self.parameters['threshold_uncorrected_pvalue']
-        surfstat.inputs.threshold_corrected_pvalue = self.parameters['threshold_corrected_pvalue']
-        surfstat.inputs.cluster_threshold = self.parameters['cluster_threshold']
-        surfstat.inputs.surface_file = self.parameters['custom_file']
-        surfstat.inputs.feature_label = self.parameters['feature_label']
 
         # Node to create the dictionary for JSONFileSink
         json_dict = npe.Node(name='Jsondict',
                              interface=nutil.Function(
-                                 input_names=['glm_type', 'design_matrix', 'str_format', 'contrast', 'group_label',
-                                              'full_width_at_half_maximum', 'threshold_uncorrected_pvalue',
-                                              'threshold_corrected_pvalue', 'cluster_threshold'],
+                                 input_names=['pipeline_parameters'],
                                  output_names=['json_dict'],
-                                 function=utils.json_dict_create))
-        json_dict.inputs.glm_type = self.parameters['glm_type']
-        json_dict.inputs.design_matrix = self.parameters['design_matrix']
-        json_dict.inputs.str_format = self.parameters['str_format']
-        json_dict.inputs.contrast = self.parameters['contrast']
-        json_dict.inputs.group_label = self.parameters['group_label']
-        json_dict.inputs.full_width_at_half_maximum = self.parameters['full_width_at_half_maximum']
-        json_dict.inputs.threshold_uncorrected_pvalue = self.parameters['threshold_uncorrected_pvalue']
-        json_dict.inputs.threshold_corrected_pvalue = self.parameters['threshold_corrected_pvalue']
-        json_dict.inputs.cluster_threshold = self.parameters['cluster_threshold']
+                                 function=utils.create_glm_info_dictionary))
+        json_dict.inputs.pipeline_parameters = self.parameters
 
         # Node to write the GLM information into a JSON file
-        json_datasink = npe.Node(JSONFileSink(input_names=['out_file']), name='json_datasink')
+        json_datasink = npe.Node(JSONFileSink(
+            input_names=['out_file']),
+            name='json_datasink')
 
         # Connection
         # ==========
         self.connect([
             (data_prep, surfstat, [('surfstat_input_dir', 'input_directory')]),
-            (data_prep, surfstat, [('path_to_matscript', 'path_to_matscript')]),
+            (data_prep, surfstat, [('path_to_matlab_script', 'path_to_matlab_script')]),
             (data_prep, surfstat, [('output_directory', 'output_directory')]),
             (data_prep, surfstat, [('freesurfer_home', 'freesurfer_home')]),
             (data_prep, json_datasink, [('out_json', 'out_file')]),
