@@ -71,7 +71,6 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                                                t1_volume_native_tpm,
                                                t1_volume_deformation_to_template)
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
-        from clinica.utils.spm import INDEX_TISSUE_MAP
         from clinica.utils.ux import print_groups_in_caps_directory
 
         # Check that group already exists
@@ -97,7 +96,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                     self.subjects,
                     self.sessions,
                     self.caps_directory,
-                    t1_volume_native_tpm(INDEX_TISSUE_MAP[tissue_number]))
+                    t1_volume_native_tpm(tissue_number))
                 tissues_input.append(native_space_tpm)
             except ClinicaException as e:
                 all_errors.append(e)

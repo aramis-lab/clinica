@@ -96,16 +96,17 @@ class PETVolume(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipelines.
         """
-        import os
         from colorama import Fore
         from os.path import join, split, realpath, exists
-        from pandas.io.parsers import read_csv
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from .pet_volume_utils import read_psf_information
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader, insensitive_glob
-        from clinica.utils.input_files import t1_volume_final_group_template, t1_volume_native_tpm
+        from clinica.utils.input_files import (t1_volume_final_group_template,
+                                               t1_volume_native_tpm,
+                                               t1_volume_native_tpm_in_mni,
+                                               t1_volume_deformation_to_template)
         from clinica.utils.exceptions import ClinicaException
-        from clinica.utils.spm import INDEX_TISSUE_MAP
         from clinica.utils.ux import print_groups_in_caps_directory
         from clinica.iotools.utils.data_handling import check_relative_volume_location_in_world_coordinate_system
         import clinica.utils.input_files as input_files
@@ -166,18 +167,13 @@ class PETVolume(cpe.Pipeline):
                 current_file = clinica_file_reader(self.subjects,
                                                    self.sessions,
                                                    self.caps_directory,
-                                                   {'pattern': 't1/spm/segmentation/normalized_space/*_*_T1w_segm-'
-                                                               + INDEX_TISSUE_MAP[tissue_number]
-                                                               + '_space-Ixi549Space_modulated-off_probability.nii*',
-                                                    'description': 'SPM based probability of ' + INDEX_TISSUE_MAP[tissue_number]
-                                                                   + ' based on T1w-MRI in Ixi549 space',
-                                                    'needed_pipeline': 't1-volume'})
+                                                   t1_volume_native_tpm_in_mni(tissue_number, False))
                 tissues_input.append(current_file)
             except ClinicaException as e:
                 all_errors.append(e)
         # Tissues_input has a length of len(self.parameters['mask_tissues']). Each of these elements has a size of
         # len(self.subjects). We want the opposite: a list of size len(self.subjects) whose elements have a size of
-        # len(self.parameters['mask_tissues']. The trick is to iter on elements with zip(*mylist)
+        # len(self.parameters['mask_tissues']. The trick is to iter on elements with zip(*my_list)
         tissues_input_final = []
         for subject_tissue_list in zip(*tissues_input):
             tissues_input_final.append(subject_tissue_list)
@@ -188,11 +184,7 @@ class PETVolume(cpe.Pipeline):
             flowfields_caps = clinica_file_reader(self.subjects,
                                                   self.sessions,
                                                   self.caps_directory,
-                                                  {'pattern': 't1/spm/dartel/group-' + self.parameters['group_id']
-                                                              + '/*_*_T1w_target-' + self.parameters['group_id']
-                                                              + '_transformation-forward_deformation.nii*',
-                                                   'description': 'forward deformation of T1w to group space',
-                                                   'needed_pipeline': 't1-volume'})
+                                                  t1_volume_deformation_to_template(self.parameters['group_id']))
         except ClinicaException as e:
             all_errors.append(e)
 
@@ -204,44 +196,7 @@ class PETVolume(cpe.Pipeline):
             all_errors.append(e)
 
         if self.parameters['psf_tsv'] is not None:
-            if not os.path.isfile(self.parameters['psf_tsv']):
-                raise FileNotFoundError('Could not find the psf_tsv file %s' % self.parameters['psf_tsv'])
-            try:
-                psf_df = read_csv(self.parameters['psf_tsv'], sep='\t')
-            except (IOError, UnicodeDecodeError):
-                raise RuntimeError('An error while reading %s happened' % self.parameters['psf_tsv'])
-
-            if psf_df.shape[0] != len(self.subjects):
-                raise ValueError('The number of rows in fwhm_tsv file must match the number of subject-session pairs.')
-
-            if any(elem not in ['participant_id', 'session_id', 'fwhm_x', 'fwhm_y', 'fwhm_z'] for elem in list(psf_df.columns)):
-                raise IOError('The file %s must contain the following columns (separated by tabulations):\n'
-                              'participant_id, session_id, fwhm_x, fwhm_y, fwhm_z\n'
-                              'But we found:\n'
-                              '%s\n'
-                              'Pay attention to the spaces (there should be none).' %
-                              (self.parameters['psf_tsv'], str(list(psf_df.columns))))
-
-            subjects_fwhm = list(psf_df.participant_id)
-            sessions_fwhm = list(psf_df.session_id)
-            idx_reordered = []
-            for i, sub in enumerate(self.subjects):
-                current_ses = self.sessions[i]
-                idx_sub = [j for j in range(len(subjects_fwhm)) if sub == subjects_fwhm[j] and current_ses == sessions_fwhm[j]]
-                if len(idx_sub) == 0:
-                    raise RuntimeError('Subject %s with session %s that you want to proceed was not found '
-                                       'in the TSV file containing PSF specifications (%s).' %
-                                       (sub, current_ses, self.parameters['psf_tsv']))
-                if len(idx_sub) > 1:
-                    raise RuntimeError('Subject %s with session %s that you want to proceed was found multiple times '
-                                       'in the TSV file containing PSF specifications (%s).' %
-                                       (sub, current_ses, self.parameters['psf_tsv']))
-                idx_reordered.append(idx_sub[0])
-
-            fwhm_x = list(psf_df.fwhm_x)
-            fwhm_y = list(psf_df.fwhm_y)
-            fwhm_z = list(psf_df.fwhm_z)
-            iterables_fwhm = [[fwhm_x[i], fwhm_y[i], fwhm_z[i]] for i in idx_reordered]
+            iterables_fwhm = read_psf_information(self.parameters['psf_tsv'], self.subjects, self.sessions)
             self.parameters['apply_pvc'] = True
         else:
             iterables_fwhm = [[]] * len(self.subjects)
@@ -255,7 +210,7 @@ class PETVolume(cpe.Pipeline):
                     current_file = clinica_file_reader(self.subjects,
                                                        self.sessions,
                                                        self.caps_directory,
-                                                       t1_volume_native_tpm(INDEX_TISSUE_MAP[tissue_number]))
+                                                       t1_volume_native_tpm(tissue_number))
                     pvc_tissues_input.append(current_file)
                 except ClinicaException as e:
                     all_errors.append(e)
