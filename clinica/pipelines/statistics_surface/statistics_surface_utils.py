@@ -42,9 +42,7 @@ def prepare_data(input_directory, subjects_visits_tsv, group_label, glm_type):
     import os
     from shutil import copy
     import clinica.pipelines as clp
-    import sys
     import pandas as pd
-    from clinica.utils.stream import cprint
 
     path_to_matscript = os.path.join(os.path.dirname(clp.__path__[0]), 'lib', 'clinicasurfstat')
 
@@ -61,17 +59,16 @@ def prepare_data(input_directory, subjects_visits_tsv, group_label, glm_type):
             try:
                 os.makedirs(output_directory)
             except BaseException:
-                raise OSError("SurfStat: can't create destination directory (%s)!" % (output_directory))
+                raise OSError("SurfStat: can't create destination directory (%s)!" % output_directory)
     elif glm_type == "correlation":
         output_directory = os.path.join(input_directory, 'groups', group_id, 'statistics', 'surfstat_correlation_analysis')
         if not os.path.exists(output_directory):
             try:
                 os.makedirs(output_directory)
             except BaseException:
-                raise OSError("SurfStat: can't create destination directory (%s)!" % (output_directory))
+                raise OSError("SurfStat: can't create destination directory (%s)!" % output_directory)
     else:
-        cprint("The other GLM situations have not been implemented in this pipeline.")
-        sys.exit()
+        raise NotImplementedError("The other GLM situations have not been implemented in this pipeline.")
 
     # Copy the subjects_visits_tsv to the result folder
     # First, check if the subjects_visits_tsv has the same info with the participant.tsv in the folder of statistics.
@@ -101,21 +98,21 @@ def prepare_data(input_directory, subjects_visits_tsv, group_label, glm_type):
     return path_to_matscript, surfstat_input_dir, output_directory, freesurfer_home, out_json
 
 
-def runmatlab(input_directory,
-              output_directory,
-              subjects_visits_tsv,
-              design_matrix, contrast,
-              str_format,
-              glm_type,
-              group_label,
-              freesurfer_home,
-              surface_file,
-              path_to_matscript,
-              full_width_at_half_maximum,
-              threshold_uncorrected_pvalue,
-              threshold_corrected_pvalue,
-              cluster_threshold,
-              feature_label):
+def run_matlab(input_directory,
+               output_directory,
+               subjects_visits_tsv,
+               design_matrix, contrast,
+               str_format,
+               glm_type,
+               group_label,
+               freesurfer_home,
+               surface_file,
+               path_to_matscript,
+               full_width_at_half_maximum,
+               threshold_uncorrected_pvalue,
+               threshold_corrected_pvalue,
+               cluster_threshold,
+               feature_label):
     """
         a wrapper the matlab script of surfstat with nipype.
 
@@ -226,47 +223,3 @@ def json_dict_create(glm_type,
     }
 
     return json_dict
-
-
-def check_inputs(caps,
-                 custom_filename,
-                 fwhm,
-                 tsv_file):
-    """
-        Simply checks if the custom strings provided find the correct files. If files are missing, it is easier to
-        raise an exception here rather than doing it in the MATLAB script.
-    Args:
-        caps: The CAPS folder
-        custom_filename: The string defining where are the files needed for the surfstat analysis
-        fwhm: Full Width at Half Maximum used for the smoothing of the data, needed to catch the file
-        tsv_file: tsv file that contains the subject and session lists, along with the other covariates
-
-    Returns:
-
-    """
-    import os
-    from clinica.utils.stream import cprint
-    import pandas as pd
-
-    subjects_visits = pd.io.parsers.read_csv(tsv_file, sep='\t')
-    subjects = list(subjects_visits.participant_id)
-    sessions = list(subjects_visits.session_id)
-
-    missing_files = []
-    for idx in range(len(subjects)):
-        fullpath = os.path.join(caps,
-                                'subjects',
-                                custom_filename.replace('@subject', subjects[idx]).replace('@session', sessions[idx]).replace('@fwhm', str(fwhm)))
-        left_hemi = fullpath.replace('@hemi', 'lh')
-        right_hemi = fullpath.replace('@hemi', 'rh')
-
-        if not os.path.exists(left_hemi):
-            missing_files.append(left_hemi)
-        if not os.path.exists(right_hemi):
-            missing_files.append(right_hemi)
-
-    if len(missing_files) > 0:
-        cprint(' ** Missing files **')
-        for l in missing_files:
-            cprint('Not found: ' + l)
-        raise Exception(str(len(missing_files)) + ' files not found !')

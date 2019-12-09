@@ -81,11 +81,9 @@ class StatisticsSurfaceCLI(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
-        import os
         from networkx import Graph
         from .statistics_surface_pipeline import StatisticsSurface
-        from .statistics_surface_utils import (check_inputs,
-                                               get_t1_freesurfer_custom_file,
+        from .statistics_surface_utils import (get_t1_freesurfer_custom_file,
                                                get_fdg_pet_surface_custom_file)
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
@@ -118,14 +116,6 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                 if args.feature_label is None:
                     raise ClinicaException('You must specify a --feature_label when using the --custom_files flag.')
 
-        # Check if the group label has been existed, if yes, give an error to the users
-        # Note(AR): if the user wants to compare Cortical Thickness measure with PET measure
-        # using the group_id, Clinica won't allow it.
-        # TODO: Modify this behaviour
-        if os.path.exists(os.path.join(os.path.abspath(self.absolute_path(args.caps_directory)), 'groups', 'group-' + args.group_id)):
-            error_message = 'group_id: ' + args.group_id + ' already exists, please choose another one or delete ' \
-                            'the existing folder and also the working directory and rerun the pipeline'
-            raise ClinicaException(error_message)
         parameters = {
             'group_label': args.group_id,
             'design_matrix': args.design_matrix,
@@ -146,14 +136,6 @@ class StatisticsSurfaceCLI(ce.CmdParser):
             parameters=parameters,
             name=self.name
         )
-
-        check_inputs(pipeline.caps_directory,
-                     pipeline.parameters['custom_file'],
-                     pipeline.parameters['full_width_at_half_maximum'],
-                     pipeline.tsv_file)
-
-        cprint("Parameters used for this pipeline:")
-        cprint(pipeline.parameters)
 
         if args.n_procs:
             exec_pipeline = pipeline.run(plugin='MultiProc',

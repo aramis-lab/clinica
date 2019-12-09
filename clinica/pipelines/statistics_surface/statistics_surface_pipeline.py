@@ -12,18 +12,18 @@ class StatisticsSurface(cpe.Pipeline):
 
     TODO: Refactor StatisticsSurface
         [ ] build_input_node
-            [ ] Remove current read_parameters_node
+            [X] Remove current read_parameters_node
             [ ] With the help of statistics_surface_utils.py::check_inputs, use new clinica_file_reader function
                 to check and extract surface-based features
-            [ ] Delete statistics_surface_utils.py::check_inputs function
-            [ ] Move statistics_surface_cli.py checks of input data in this method
+            [X] Delete statistics_surface_utils.py::check_inputs function
+            [X] Move statistics_surface_cli.py checks of input data in this method
             [ ] Handle overwrite case
             [ ] Display participants, covariates and info regarding the GLM.
         [ ] build_core_nodes
-            [ ] Use surfstat.inputs.full_width_at_half_maximum = self.parameter['full_width_at_half_maximum']
+            [X] Use surfstat.inputs.full_width_at_half_maximum = self.parameter['full_width_at_half_maximum']
                 instead of connecting read_parameters_node.inputs.full_width_at_half_maximum
                 to surfstat.inputs.full_width_at_half_maximum
-            [ ] Repeat for other keys
+            [X] Repeat for other keys
             [ ] Use working directory
         [ ] build_output_node
             [ ] Remove path_to_matscript and freesurfer_home: it should be set in runmatlab function
@@ -31,7 +31,6 @@ class StatisticsSurface(cpe.Pipeline):
         [ ] Clean/adapt statistics_surface_utils.py
 
     Args:
-        caps_directory: str, the output folder of recon-all which will contain the result files: ?h.thickness.fwhm**.mgh.
         tsv_file: str, Path to the tsv containing the information for GLM.
         design_matrix: str, the linear model that fits into the GLM, for example '1+group'.
         contrast: string, the contrast matrix for GLM, if the factor you choose is categorized variable, clinica_surfstat will create two contrasts,
@@ -46,8 +45,6 @@ class StatisticsSurface(cpe.Pipeline):
         threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float, default is 0.001.
         threshold_corrected_pvalue: the threshold to display the corrected cluster, default is 0.05, float.
         cluster_threshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float.
-        working_directory: define where to put the infomartion of the nipype workflow.
-        n_procs: define how many cores to run this workflow.
 
     Returns:
         A clinica pipeline object containing the StatisticsSurface pipeline.
@@ -101,17 +98,7 @@ class StatisticsSurface(cpe.Pipeline):
             A list of (string) input fields name.
         """
 
-        return ['design_matrix',
-                'contrast',
-                'str_format',
-                'group_label',
-                'glm_type',
-                'surface_file',
-                'full_width_at_half_maximum',
-                'threshold_uncorrected_pvalue',
-                'threshold_corrected_pvalue',
-                'cluster_threshold',
-                'feature_label']
+        return []
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipelines.
@@ -125,39 +112,50 @@ class StatisticsSurface(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipelines.
         """
+        import os
+        import pandas as pd
+        from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.stream import cprint
 
-        import nipype.interfaces.utility as nutil
-        import nipype.pipeline.engine as npe
+        # Check if the group label has been existed, if yes, give an error to the users
+        # Note(AR): if the user wants to compare Cortical Thickness measure with PET measure
+        # using the group_id, Clinica won't allow it.
+        # TODO: Modify this behaviour
+        if os.path.exists(os.path.join(os.path.abspath(self.caps_directory), 'groups', 'group-' + self.parameters['group_label'])):
+            error_message = ('Group ID %s already exists, please choose another one or delete the existing folder and '
+                             'also the working directory and rerun the pipeline') % self.parameters['group_label']
+            raise ClinicaException(error_message)
 
-        read_parameters_node = npe.Node(name="LoadingCLIArguments",
-                                        interface=nutil.IdentityInterface(
-                                            fields=self.get_input_fields(),
-                                            mandatory_inputs=True))
-        read_parameters_node.inputs.design_matrix = self.parameters['design_matrix']
-        read_parameters_node.inputs.contrast = self.parameters['contrast']
-        read_parameters_node.inputs.str_format = self.parameters['str_format']
-        read_parameters_node.inputs.group_label = self.parameters['group_label']
-        read_parameters_node.inputs.glm_type = self.parameters['glm_type']
-        read_parameters_node.inputs.surface_file = self.parameters['custom_file']
-        read_parameters_node.inputs.full_width_at_half_maximum = self.parameters['full_width_at_half_maximum']
-        read_parameters_node.inputs.threshold_uncorrected_pvalue = self.parameters['threshold_uncorrected_pvalue']
-        read_parameters_node.inputs.threshold_corrected_pvalue = self.parameters['threshold_corrected_pvalue']
-        read_parameters_node.inputs.cluster_threshold = self.parameters['cluster_threshold']
-        read_parameters_node.inputs.feature_label = self.parameters['feature_label']
+        # Check input files
+        subjects_visits = pd.io.parsers.read_csv(self.tsv_file, sep='\t')
+        subjects = list(subjects_visits.participant_id)
+        sessions = list(subjects_visits.session_id)
+        missing_files = []
+        for idx in range(len(subjects)):
+            full_path = os.path.join(self.caps_directory,
+                                     'subjects',
+                                     self.parameters['custom_file'].replace(
+                                         '@subject', subjects[idx]).replace(
+                                         '@session', sessions[idx]).replace(
+                                         '@fwhm', str(self.parameters['full_width_at_half_maximum']))
+                                     )
+            left_hemi = full_path.replace('@hemi', 'lh')
+            right_hemi = full_path.replace('@hemi', 'rh')
 
-        self.connect([
-            (read_parameters_node, self.input_node, [('design_matrix',                'design_matrix')]),  # noqa
-            (read_parameters_node, self.input_node, [('surface_file',                 'surface_file')]),  # noqa
-            (read_parameters_node, self.input_node, [('contrast',                     'contrast')]),  # noqa
-            (read_parameters_node, self.input_node, [('str_format',                   'str_format')]),  # noqa
-            (read_parameters_node, self.input_node, [('group_label',                  'group_label')]),  # noqa
-            (read_parameters_node, self.input_node, [('glm_type',                     'glm_type')]),  # noqa
-            (read_parameters_node, self.input_node, [('full_width_at_half_maximum',   'full_width_at_half_maximum')]),  # noqa
-            (read_parameters_node, self.input_node, [('threshold_uncorrected_pvalue', 'threshold_uncorrected_pvalue')]),  # noqa
-            (read_parameters_node, self.input_node, [('threshold_corrected_pvalue',   'threshold_corrected_pvalue')]),  # noqa
-            (read_parameters_node, self.input_node, [('cluster_threshold',            'cluster_threshold')]),  # noqa
-            (read_parameters_node, self.input_node, [('feature_label',                'feature_label')])
-        ])
+            if not os.path.exists(left_hemi):
+                missing_files.append(left_hemi)
+            if not os.path.exists(right_hemi):
+                missing_files.append(right_hemi)
+
+        if len(missing_files) > 0:
+            cprint(' ** Missing files **')
+            for l in missing_files:
+                cprint('Not found: ' + l)
+            raise Exception(str(len(missing_files)) + ' files not found !')
+
+        # Print GLM information
+        cprint("Parameters used for this pipeline:")
+        cprint(self.parameters)
 
     def build_output_node(self):
         """Build and connect an output node to the pipelines.
@@ -168,7 +166,6 @@ class StatisticsSurface(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.
         """
-
         import clinica.pipelines.statistics_surface.statistics_surface_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -183,6 +180,8 @@ class StatisticsSurface(cpe.Pipeline):
                                  function=utils.prepare_data))
         data_prep.inputs.input_directory = self.caps_directory
         data_prep.inputs.subjects_visits_tsv = self.tsv_file
+        data_prep.inputs.group_label = self.parameters['group_label']
+        data_prep.inputs.glm_type = self.parameters['glm_type']
 
         # Node to wrap the SurfStat matlab script
         surfstat = npe.Node(name='surfstat',
@@ -204,49 +203,48 @@ class StatisticsSurface(cpe.Pipeline):
                                              'cluster_threshold',
                                              'feature_label'],
                                 output_names=['out_images'],
-                                function=utils.runmatlab))
+                                function=utils.run_matlab))
         surfstat.inputs.subjects_visits_tsv = self.tsv_file
+        surfstat.inputs.design_matrix = self.parameters['design_matrix']
+        surfstat.inputs.contrast = self.parameters['contrast']
+        surfstat.inputs.str_format = self.parameters['str_format']
+        surfstat.inputs.glm_type = self.parameters['glm_type']
+        surfstat.inputs.group_label = self.parameters['group_label']
+        surfstat.inputs.full_width_at_half_maximum = self.parameters['full_width_at_half_maximum']
+        surfstat.inputs.threshold_uncorrected_pvalue = self.parameters['threshold_uncorrected_pvalue']
+        surfstat.inputs.threshold_corrected_pvalue = self.parameters['threshold_corrected_pvalue']
+        surfstat.inputs.cluster_threshold = self.parameters['cluster_threshold']
+        surfstat.inputs.surface_file = self.parameters['custom_file']
+        surfstat.inputs.feature_label = self.parameters['feature_label']
 
         # Node to create the dictionary for JSONFileSink
-        jsondict = npe.Node(name='Jsondict',
-                            interface=nutil.Function(
-                                input_names=['glm_type', 'design_matrix', 'str_format', 'contrast', 'group_label', 'full_width_at_half_maximum',
-                                             'threshold_uncorrected_pvalue', 'threshold_corrected_pvalue', 'cluster_threshold'],
-                                output_names=['json_dict'],
-                                function=utils.json_dict_create))
+        json_dict = npe.Node(name='Jsondict',
+                             interface=nutil.Function(
+                                 input_names=['glm_type', 'design_matrix', 'str_format', 'contrast', 'group_label',
+                                              'full_width_at_half_maximum', 'threshold_uncorrected_pvalue',
+                                              'threshold_corrected_pvalue', 'cluster_threshold'],
+                                 output_names=['json_dict'],
+                                 function=utils.json_dict_create))
+        json_dict.inputs.glm_type = self.parameters['glm_type']
+        json_dict.inputs.design_matrix = self.parameters['design_matrix']
+        json_dict.inputs.str_format = self.parameters['str_format']
+        json_dict.inputs.contrast = self.parameters['contrast']
+        json_dict.inputs.group_label = self.parameters['group_label']
+        json_dict.inputs.full_width_at_half_maximum = self.parameters['full_width_at_half_maximum']
+        json_dict.inputs.threshold_uncorrected_pvalue = self.parameters['threshold_uncorrected_pvalue']
+        json_dict.inputs.threshold_corrected_pvalue = self.parameters['threshold_corrected_pvalue']
+        json_dict.inputs.cluster_threshold = self.parameters['cluster_threshold']
 
         # Node to write the GLM information into a JSON file
-        jsonsink = npe.Node(JSONFileSink(input_names=['out_file']), name='jsonsinker')
+        json_datasink = npe.Node(JSONFileSink(input_names=['out_file']), name='json_datasink')
 
         # Connection
         # ==========
         self.connect([
-            (self.input_node, data_prep, [('group_label', 'group_label')]),  # noqa
-            (self.input_node, data_prep, [('glm_type', 'glm_type')]),  # noqa
-            (self.input_node, surfstat, [('design_matrix', 'design_matrix')]),  # noqa
-            (self.input_node, surfstat, [('contrast', 'contrast')]),  # noqa
-            (self.input_node, surfstat, [('str_format', 'str_format')]),  # noqa
-            (self.input_node, surfstat, [('glm_type', 'glm_type')]),  # noqa
-            (self.input_node, surfstat, [('group_label', 'group_label')]),  # noqa
-            (self.input_node, surfstat, [('full_width_at_half_maximum', 'full_width_at_half_maximum')]),  # noqa
-            (self.input_node, surfstat, [('threshold_uncorrected_pvalue', 'threshold_uncorrected_pvalue')]),  # noqa
-            (self.input_node, surfstat, [('threshold_corrected_pvalue', 'threshold_corrected_pvalue')]),  # noqa
-            (self.input_node, surfstat, [('cluster_threshold', 'cluster_threshold')]),  # noqa
-            (self.input_node, surfstat, [('surface_file', 'surface_file')]),  # noqa
-            (self.input_node, surfstat, [('feature_label', 'feature_label')]),
-            (data_prep, surfstat, [('surfstat_input_dir', 'input_directory')]),  # noqa
-            (data_prep, surfstat, [('path_to_matscript', 'path_to_matscript')]),  # noqa
-            (data_prep, surfstat, [('output_directory', 'output_directory')]),  # noqa
-            (data_prep, surfstat, [('freesurfer_home', 'freesurfer_home')]),  # noqa
-            (self.input_node, jsondict, [('glm_type', 'glm_type')]),  # noqa
-            (self.input_node, jsondict, [('design_matrix', 'design_matrix')]),  # noqa
-            (self.input_node, jsondict, [('str_format', 'str_format')]),  # noqa
-            (self.input_node, jsondict, [('contrast', 'contrast')]),  # noqa
-            (self.input_node, jsondict, [('group_label', 'group_label')]),  # noqa
-            (self.input_node, jsondict, [('full_width_at_half_maximum', 'full_width_at_half_maximum')]),  # noqa
-            (self.input_node, jsondict, [('threshold_uncorrected_pvalue', 'threshold_uncorrected_pvalue')]),  # noqa
-            (self.input_node, jsondict, [('threshold_corrected_pvalue', 'threshold_corrected_pvalue')]),  # noqa
-            (self.input_node, jsondict, [('cluster_threshold', 'cluster_threshold')]),  # noqa
-            (data_prep, jsonsink, [('out_json', 'out_file')]),  # noqa
-            (jsondict, jsonsink, [('json_dict', 'in_dict')]),  # noqa
+            (data_prep, surfstat, [('surfstat_input_dir', 'input_directory')]),
+            (data_prep, surfstat, [('path_to_matscript', 'path_to_matscript')]),
+            (data_prep, surfstat, [('output_directory', 'output_directory')]),
+            (data_prep, surfstat, [('freesurfer_home', 'freesurfer_home')]),
+            (data_prep, json_datasink, [('out_json', 'out_file')]),
+            (json_dict, json_datasink, [('json_dict', 'in_dict')]),
         ])
