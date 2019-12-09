@@ -103,7 +103,7 @@ class PETVolume(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader, insensitive_glob
-        from clinica.utils.input_files import t1_volume_final_group_template
+        from clinica.utils.input_files import t1_volume_final_group_template, t1_volume_native_tpm
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.spm import INDEX_TISSUE_MAP
         from clinica.utils.ux import print_groups_in_caps_directory
@@ -255,12 +255,7 @@ class PETVolume(cpe.Pipeline):
                     current_file = clinica_file_reader(self.subjects,
                                                        self.sessions,
                                                        self.caps_directory,
-                                                       {'pattern': 't1/spm/segmentation/native_space/*_*_T1w_segm-'
-                                                                   + INDEX_TISSUE_MAP[tissue_number]
-                                                                   + '_probability.nii*',
-                                                        'description': 'SPM based probability of ' + INDEX_TISSUE_MAP[tissue_number]
-                                                                       + ' based on T1w-MRI in native space',
-                                                        'needed_pipeline': 't1-volume'})
+                                                       t1_volume_native_tpm(INDEX_TISSUE_MAP[tissue_number]))
                     pvc_tissues_input.append(current_file)
                 except ClinicaException as e:
                     all_errors.append(e)
