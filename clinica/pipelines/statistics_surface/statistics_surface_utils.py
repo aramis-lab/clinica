@@ -41,10 +41,7 @@ def prepare_data(input_directory, subjects_visits_tsv, group_label, glm_type):
     """
     import os
     from shutil import copy
-    import clinica.pipelines as clp
     import pandas as pd
-
-    path_to_matlab_script = os.path.join(os.path.dirname(clp.__path__[0]), 'lib', 'clinicasurfstat')
 
     # CAPS input and output vars
     input_directory = os.path.expanduser(input_directory)
@@ -91,18 +88,13 @@ def prepare_data(input_directory, subjects_visits_tsv, group_label, glm_type):
     # Point to the path to the json file
     out_json = os.path.join(output_directory, 'group-' + group_label + '_glm.json')
 
-    freesurfer_home = os.environ["FREESURFER_HOME"]
-
-    return path_to_matlab_script, surfstat_input_dir, output_directory, freesurfer_home, out_json
+    return surfstat_input_dir, output_directory, out_json
 
 
 def run_matlab(input_directory,
                output_directory,
                subjects_visits_tsv,
-               pipeline_parameters,
-               freesurfer_home,
-               path_to_matlab_script,
-               ):
+               pipeline_parameters):
     """
     Wrap the Matlab script of SurfStat.
 
@@ -111,16 +103,19 @@ def run_matlab(input_directory,
         output_directory (str): output folder to contain the result in CAPS folder
         subjects_visits_tsv (str): TSV file containing the GLM information
         pipeline_parameters (dict): parameters of StatisticsSurface pipeline
-        freesurfer_home (str): the environmental variable $FREESURFER_HOME
-        path_to_matlab_script (str): path to find the matlab script
 
     Returns:
 
     """
-    from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
-    from os.path import join
+    import os
     import sys
+    from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
+    import clinica.pipelines as clinica_pipelines
     from clinica.utils.stream import cprint
+    from clinica.utils.check_dependency import check_environment_variable
+
+    path_to_matlab_script = os.path.join(os.path.dirname(clinica_pipelines.__path__[0]), 'lib', 'clinicasurfstat')
+    freesurfer_home = check_environment_variable('FREESURFER_HOME', 'FreeSurfer')
 
     MatlabCommand.set_default_matlab_cmd(
         get_matlab_command()
@@ -161,7 +156,7 @@ def run_matlab(input_directory,
     matlab.inputs.mfile = True
     # This will stop running with single thread
     matlab.inputs.single_comp_thread = False
-    matlab.inputs.logfile = join(output_directory, "matlab_output.log")
+    matlab.inputs.logfile = os.path.join(output_directory, "matlab_output.log")
     cprint("Matlab logfile is located at the following path: %s" % matlab.inputs.logfile)
     cprint("Matlab script command = %s" % matlab.inputs.script)
     cprint("MatlabCommand inputs flag: single_comp_thread = %s" % matlab.inputs.single_comp_thread)

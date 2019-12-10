@@ -13,7 +13,7 @@ class StatisticsSurface(cpe.Pipeline):
     TODO: Refactor StatisticsSurface
         [ ] build_input_node
             [X] Remove current read_parameters_node
-            [ ] With the help of statistics_surface_utils.py::check_inputs, use new clinica_file_reader function
+            [X] With the help of statistics_surface_utils.py::check_inputs, use new clinica_file_reader function
                 to check and extract surface-based features
             [X] Delete statistics_surface_utils.py::check_inputs function
             [X] Move statistics_surface_cli.py checks of input data in this method
@@ -26,7 +26,7 @@ class StatisticsSurface(cpe.Pipeline):
             [X] Repeat for other keys
             [ ] Use working directory
         [ ] build_output_node
-            [ ] Remove path_to_matscript and freesurfer_home: it should be set in runmatlab function
+            [X] Remove path_to_matscript and freesurfer_home: it should be set in runmatlab function
             [ ] Copy results from <WD> to <CAPS>
         [ ] Clean/adapt statistics_surface_utils.py
 
@@ -103,7 +103,7 @@ class StatisticsSurface(cpe.Pipeline):
         """Build and connect an input node to the pipelines.
         """
         import os
-        import pandas as pd
+        from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.stream import cprint
 
@@ -117,31 +117,39 @@ class StatisticsSurface(cpe.Pipeline):
             raise ClinicaException(error_message)
 
         # Check input files
-        subjects_visits = pd.io.parsers.read_csv(self.tsv_file, sep='\t')
-        subjects = list(subjects_visits.participant_id)
-        sessions = list(subjects_visits.session_id)
-        missing_files = []
-        for idx in range(len(subjects)):
-            full_path = os.path.join(self.caps_directory,
-                                     'subjects',
-                                     self.parameters['custom_file'].replace(
-                                         '@subject', subjects[idx]).replace(
-                                         '@session', sessions[idx]).replace(
-                                         '@fwhm', str(self.parameters['full_width_at_half_maximum']))
-                                     )
-            left_hemi = full_path.replace('@hemi', 'lh')
-            right_hemi = full_path.replace('@hemi', 'rh')
-
-            if not os.path.exists(left_hemi):
-                missing_files.append(left_hemi)
-            if not os.path.exists(right_hemi):
-                missing_files.append(right_hemi)
-
-        if len(missing_files) > 0:
-            cprint(' ** Missing files **')
-            for l in missing_files:
-                cprint('Not found: ' + l)
-            raise Exception(str(len(missing_files)) + ' files not found !')
+        all_errors = []
+        # clinica_files_reader expects regexp to start at subjects/ so sub-*/ses-*/ is removed here
+        pattern_hemisphere = self.parameters['custom_file'].replace(
+            '@subject', 'sub-*').replace(
+            '@session', 'ses-*').replace(
+            '@fwhm', str(self.parameters['full_width_at_half_maximum'])).replace(
+            'sub-*/ses-*/', ''
+        )
+        # Files on left hemisphere
+        lh_surface_based_info = {
+            'pattern': pattern_hemisphere.replace('@hemi', 'lh'),
+            'description': 'surface-based features on left hemisphere at FWHM = %s' %
+                           self.parameters['full_width_at_half_maximum'],
+        }
+        try:
+            clinica_file_reader(self.subjects, self.sessions, self.caps_directory, lh_surface_based_info)
+        except ClinicaException as e:
+            all_errors.append(e)
+        rh_surface_based_info = {
+            'pattern': pattern_hemisphere.replace('@hemi', 'rh'),
+            'description': 'surface-based features on right hemisphere at FWHM = %s' %
+                           self.parameters['full_width_at_half_maximum'],
+        }
+        try:
+            clinica_file_reader(self.subjects, self.sessions, self.caps_directory, rh_surface_based_info)
+        except ClinicaException as e:
+            all_errors.append(e)
+        # Raise all errors if something happened
+        if len(all_errors) > 0:
+            error_message = 'Clinica faced errors while trying to read files in your CAPS directory.\n'
+            for msg in all_errors:
+                error_message += str(msg)
+            raise RuntimeError(error_message)
 
         # Print GLM information
         cprint("Parameters used for this pipeline:")
@@ -165,8 +173,7 @@ class StatisticsSurface(cpe.Pipeline):
         data_prep = npe.Node(name='inputnode',
                              interface=nutil.Function(
                                  input_names=['input_directory', 'subjects_visits_tsv', 'group_label', 'glm_type'],
-                                 output_names=['path_to_matlab_script', 'surfstat_input_dir', 'output_directory',
-                                               'freesurfer_home', 'out_json'],
+                                 output_names=['surfstat_input_dir', 'output_directory', 'out_json'],
                                  function=utils.prepare_data))
         data_prep.inputs.input_directory = self.caps_directory
         data_prep.inputs.subjects_visits_tsv = self.tsv_file
@@ -180,11 +187,11 @@ class StatisticsSurface(cpe.Pipeline):
                                              'output_directory',
                                              'subjects_visits_tsv',
                                              'pipeline_parameters',
-                                             'freesurfer_home',
-                                             'path_to_matlab_script',
                                              ],
                                 output_names=['out_images'],
                                 function=utils.run_matlab))
+        surfstat.inputs.subjects_visits_tsv = self.tsv_file
+        surfstat.inputs.pipeline_parameters = self.parameters
 
         # Node to create the dictionary for JSONFileSink
         json_dict = npe.Node(name='Jsondict',
@@ -203,9 +210,7 @@ class StatisticsSurface(cpe.Pipeline):
         # ==========
         self.connect([
             (data_prep, surfstat, [('surfstat_input_dir', 'input_directory')]),
-            (data_prep, surfstat, [('path_to_matlab_script', 'path_to_matlab_script')]),
             (data_prep, surfstat, [('output_directory', 'output_directory')]),
-            (data_prep, surfstat, [('freesurfer_home', 'freesurfer_home')]),
             (data_prep, json_datasink, [('out_json', 'out_file')]),
             (json_dict, json_datasink, [('json_dict', 'in_dict')]),
         ])
