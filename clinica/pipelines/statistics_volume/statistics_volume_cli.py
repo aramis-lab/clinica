@@ -31,6 +31,7 @@ class StatisticsVolumeCLI(ce.CmdParser):
 
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
 
+        # TODO add group for covar 
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
 
@@ -65,12 +66,12 @@ class StatisticsVolumeCLI(ce.CmdParser):
         # bids_directory=self.absolute_path(args.bids_directory),
         pipeline = StatisticsVolume(
             caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.covariables),
+            tsv_file=self.absolute_path(args.subject_visits_with_covariates_tsv),
             base_dir=self.absolute_path(args.working_directory),
             name=self.name
         )
         pipeline.parameters = {'contrast': args.contrast,
-                               'file_id': args.file_id,
+                               'feature_type': args.feature_type,
                                'group_id': args.group_id}
 
         if args.n_procs:

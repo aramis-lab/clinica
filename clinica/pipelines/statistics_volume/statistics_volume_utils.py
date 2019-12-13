@@ -62,7 +62,8 @@ def model_creation(csv, contrast, idx_group1, idx_group2, file_list, template_fi
     Returns:
 
     """
-    from os.path import join, dirname, isfile, abspath
+    from os.path import join, dirname, isfile, abspath, isdir
+    from shutil import rmtree
     from clinica.utils.exceptions import ClinicaException
     from numbers import Number
     from os import remove, mkdir
@@ -85,8 +86,10 @@ def model_creation(csv, contrast, idx_group1, idx_group2, file_list, template_fi
     with open(template_file, 'r') as file:
         filedata = file.read()
 
-    # Create output folder for SPM:
+    # Create output folder for SPM (and remove it if it already exists)
     output_folder = abspath(join(dirname(current_model), '..', '2_sample_t_test'))
+    if isdir(output_folder):
+        rmtree(output_folder)
     mkdir(output_folder)
 
     # Replace string in matlab file to set the output directory, and all the scans used for group 1 and 2
@@ -129,7 +132,7 @@ def model_creation(csv, contrast, idx_group1, idx_group2, file_list, template_fi
     # Tell matlab to run the script at the end
     with open(current_model, 'a') as file:
         file.write('spm_jobman(\'run\', matlabbatch)')
-    return current_model, len(covariables)
+    return current_model, covariables
     
 
 def is_number(s):
@@ -319,19 +322,21 @@ def results(mat_file, template_file):
     return current_model_result
 
 
-def contrast(mat_file, template_file, number_of_covariables, class_names):
+def contrast(mat_file, template_file, covariables, class_names):
     """
 
     Args:
         mat_file:
         template_file:
-        number_of_covariables:
+        covariables:
         class_names:
 
     Returns:
 
     """
     from os.path import abspath
+
+    number_of_covariables = len(covariables)
 
     # Read template
     with open(template_file, 'r') as file:
@@ -348,8 +353,8 @@ def contrast(mat_file, template_file, number_of_covariables, class_names):
     return current_model_estimation
 
 
-def read_output(spm_mat, class_names):
-    from os.path import join, dirname, isdir, isfile, abspath, basename
+def read_output(spm_mat, class_names, covariables):
+    from os.path import join, dirname, isdir, isfile, abspath
     from os import listdir
     from shutil import copyfile
 
@@ -361,6 +366,7 @@ def read_output(spm_mat, class_names):
 
     list_files = [f for f in listdir(dirname(spm_mat)) if not f.startswith('.')]
 
+    # Handle figure files
     figures = [abspath(join(dirname(spm_mat), f)) for f in list_files if f.endswith('png')]
     if len(figures) < 2:
         raise RuntimeError('[Error] Figures were not generated')
@@ -369,12 +375,58 @@ def read_output(spm_mat, class_names):
     for old_name, new_name in zip(figures, new_figure_names):
         copyfile(old_name, new_name)
 
+    # Handle spm t maps
     spm_T = [abspath(join(dirname(spm_mat), f)) for f in list_files if f.startswith('spmT')]
-    if len(spm_T) > 2:
-        raise RuntimeError('[Error] More than 2 t-maps found')
+    if len(spm_T) != 2:
+        raise RuntimeError('[Error] ' + str(len(spm_T)) + ' SPM t-map(s) were found')
     spmT_0001 = abspath('./spm_t-statistics_hypothesis-' + class_names[0] + '-less-than-' + class_names[1] + '.nii')
     spmT_0002 = abspath('./spm_t-statistics_hypothesis-' + class_names[1] + '-less-than-' + class_names[0] + '.nii')
     copyfile(join(dirname(spm_mat), 'spmT_0001.nii'), spmT_0001)
     copyfile(join(dirname(spm_mat), 'spmT_0002.nii'), spmT_0002)
 
-    return spmT_0001, spmT_0002, new_figure_names
+    variance_of_error = abspath('./variance_of_error.nii')
+    copyfile(abspath(join(dirname(spm_mat), 'ResMS.nii')), variance_of_error)
+
+    resels_per_voxels = abspath('./resels_per_voxel.nii')
+    copyfile(abspath(join(dirname(spm_mat), 'RPV.nii')), resels_per_voxels)
+
+    mask = abspath('./included_voxel_mask.nii')
+    copyfile(abspath(join(dirname(spm_mat), 'mask.nii')), mask)
+
+    # Handle beta files
+    betas = [abspath(join(dirname(spm_mat), f)) for f in list_files if f.startswith('beta_')]
+    if len(betas) != 2 + len(covariables):
+        raise RuntimeError('[Error] Not enough betas files found in output directory')
+    regression_coeff_covar = [abspath('./' + covar + '_regression-coefficient.nii') for covar in covariables]
+    regression_coeff = [abspath('./group-' + class_names[0] + '_regression-coefficient.nii'),
+                        abspath('./group-' + class_names[1] + '_regression-coefficient.nii')]
+    regression_coeff.extend(regression_coeff_covar)
+    # Order is respected:
+    for beta, reg_coeff in zip(betas, regression_coeff):
+        copyfile(beta, reg_coeff)
+
+    # Handle contrast files
+    con_files = [abspath(join(dirname(spm_mat), f)) for f in list_files if f.startswith('con_')]
+    if len(con_files) != 2:
+        raise RuntimeError('There must exists only 2 contrast files !')
+    contrasts = [abspath('./weighted_parameter_estimation_for_contrast_' + class_names[0] + '-less-than-' + class_names[1] + '.nii'),
+                 abspath('./weighted_parameter_estimation_for_contrast_' + class_names[1] + '-less-than-' + class_names[0] + '.nii')]
+    for con, contrast in zip(con_files, contrasts):
+        copyfile(con, contrast)
+
+    return spmT_0001, spmT_0002, new_figure_names, variance_of_error, resels_per_voxels, mask, regression_coeff, contrasts
+
+
+def add_spm2txt(script_file, matlab_path):
+    import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
+    from os.path import abspath
+
+    if utls.use_spm_standalone():
+        result_txt = abspath('./results.txt')
+        line_path = 'addpath(\'' + matlab_path + '\');'
+        spm2txt_line = 'spm2txt(\'' + result_txt + '\', xSPM);'
+        with open(script_file, 'a') as file:
+            file.write(line_path)
+            file.write(spm2txt_line)
+
+    return result_txt

@@ -50,7 +50,7 @@ class StatisticsVolume(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        return ['spmT_001', 'spmT_002', 'figures']
+        return ['spmT_0001', 'spmT_0002', 'figures']
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -63,7 +63,7 @@ class StatisticsVolume(cpe.Pipeline):
         from colorama import Fore
 
         all_errors = []
-        if self.parameters['file_id'] == 'fdg-pet':
+        if self.parameters['feature_type'] == 'fdg-pet':
             try:
                 input_files = clinica_file_reader(self.subjects,
                                                   self.sessions,
@@ -73,23 +73,23 @@ class StatisticsVolume(cpe.Pipeline):
                                                    'needed_pipeline': 'pet-volume'})
             except ClinicaException as e:
                 all_errors.append(e)
-        elif self.parameters['file_id'] == 't1-gm':
+        elif self.parameters['feature_type'] == 't1-gm':
             try:
                 input_files = clinica_file_reader(self.subjects,
                                                   self.sessions,
                                                   self.caps_directory,
-                                                  {'pattern': 't1/spm/segmentation/normalized_space/*_T1w_segm-graymatter_space-Ixi549Space_modulated-off_probability.nii*',
+                                                  {'pattern': 't1/spm/dartel/group-*/*_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.*',
                                                    'description': 'probability map of gray matter segmentation based on T1w image in MNI space',
                                                    'needed_pipeline': 't1-volume or t1-volume-existing-template'})
             except ClinicaException as e:
                 all_errors.append(e)
 
-        elif self.parameters['file_id'] == 't1-wm':
+        elif self.parameters['feature_type'] == 't1-wm':
             try:
                 input_files = clinica_file_reader(self.subjects,
                                                   self.sessions,
                                                   self.caps_directory,
-                                                  {'pattern': 't1/spm/segmentation/normalized_space/*_T1w_segm-whitematter_space-Ixi549Space_modulated-off_probability.nii*',
+                                                  {'pattern': 't1/spm/dartel/group-*/*_T1w_segm-whitematter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.*',
                                                    'description': 'probability map of white matter segmentation based on T1w image in MNI space',
                                                    'needed_pipeline': 't1-volume or t1-volume-existing-template'})
             except ClinicaException as e:
@@ -105,6 +105,7 @@ class StatisticsVolume(cpe.Pipeline):
                 error_message += str(msg)
             raise ClinicaException(error_message)
 
+        # TODO custom file !
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(
                                             fields=self.get_input_fields(),
@@ -132,10 +133,16 @@ class StatisticsVolume(cpe.Pipeline):
              r'\1/group-' + self.parameters['group_id'] + r'/\2')
         ]
 
+        # TODO remove unnecessary folders in output
         self.connect([
-            (self.output_node, datasink, [('spmT_001', 'spm_results_analysis_1')]),
-            (self.output_node, datasink, [('spmT_002', 'spm_results_analysis_2')]),
-            (self.output_node, datasink, [('figures', 'report')])
+            (self.output_node, datasink, [('spmT_0001', 'spm_results_analysis_1')]),
+            (self.output_node, datasink, [('spmT_0002', 'spm_results_analysis_2')]),
+            (self.output_node, datasink, [('new_figure_names', 'figures')]),
+            (self.output_node, datasink, [('variance_of_error', 'variance_of_error')]),
+            (self.output_node, datasink, [('resels_per_voxels', 'resels_per_voxels')]),
+            (self.output_node, datasink, [('mask', 'mask')]),
+            (self.output_node, datasink, [('regression_coeff', 'regression_coeff')]),
+            (self.output_node, datasink, [('contrasts', 'contrasts')])
         ])
 
     def build_core_nodes(self):
@@ -146,7 +153,7 @@ class StatisticsVolume(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.filemanip import unzip_nii
-        from os.path import join, dirname
+        from os.path import join, dirname, abspath
 
         # SPM cannot handle zipped files
         unzip_node = npe.Node(nutil.Function(input_names=['in_file'],
@@ -182,15 +189,18 @@ class StatisticsVolume(cpe.Pipeline):
         # 4. Creation of results
 
         # 1. Model creation
+        # We use overwritte option to be sure this node is always run so that it can delete the output dir if it
+        # already exists (this may cause error in output files otherwise)
         model_creation = npe.Node(nutil.Function(input_names=['csv',
                                                               'contrast',
                                                               'idx_group1',
                                                               'idx_group2',
                                                               'file_list',
                                                               'template_file'],
-                                                 output_names=['script_file', 'number_of_covariables'],
+                                                 output_names=['script_file', 'covariables'],
                                                  function=utils.model_creation),
-                                  name='model_creation')
+                                  name='model_creation',
+                                  overwrite=True)
         model_creation.inputs.csv = self.tsv_file
         model_creation.inputs.contrast = self.parameters['contrast']
         model_creation.inputs.template_file = join(dirname(__file__), 'template_model_creation.m')
@@ -205,7 +215,7 @@ class StatisticsVolume(cpe.Pipeline):
         # 3. Contrast
         model_contrast = npe.Node(nutil.Function(input_names=['mat_file',
                                                               'template_file',
-                                                              'number_of_covariables',
+                                                              'covariables',
                                                               'class_names'],
                                                  output_names=['script_file'],
                                                  function=utils.contrast),
@@ -219,9 +229,18 @@ class StatisticsVolume(cpe.Pipeline):
                                 name='model_result')
         model_result.inputs.template_file = join(dirname(__file__), 'template_model_results.m')
 
+        # Print result to txt file if spm
+
         # Export results to output node
-        read_output_node = npe.Node(nutil.Function(input_names=['spm_mat', 'class_names'],
-                                                   output_names=['spmT_001', 'spmT_002', 'figures'],
+        read_output_node = npe.Node(nutil.Function(input_names=['spm_mat', 'class_names', 'covariables'],
+                                                   output_names=['spmT_0001',
+                                                                 'spmT_0002',
+                                                                 'new_figure_names',
+                                                                 'variance_of_error',
+                                                                 'resels_per_voxels',
+                                                                 'mask',
+                                                                 'regression_coeff',
+                                                                 'contrasts'],
                                                    function=utils.read_output),
                                     name='read_output_node')
 
@@ -239,15 +258,21 @@ class StatisticsVolume(cpe.Pipeline):
 
             (get_groups, model_contrast, [('class_names', 'class_names')]),
             (run_spm_model_estimation, model_contrast, [('spm_mat', 'mat_file')]),
-            (model_creation, model_contrast, [('number_of_covariables', 'number_of_covariables')]),
+            (model_creation, model_contrast, [('covariables', 'covariables')]),
 
             (model_contrast, run_spm_model_contrast, [('script_file', 'm_file')]),
             (run_spm_model_contrast, model_result, [('spm_mat', 'mat_file')]),
             (model_result, run_spm_model_result, [('script_file', 'm_file')]),
             (run_spm_model_result, read_output_node, [('spm_mat', 'spm_mat')]),
             (get_groups, read_output_node, [('class_names', 'class_names')]),
+            (model_creation, read_output_node, [('covariables', 'covariables')]),
 
-            (read_output_node, self.output_node, [('spmT_001', 'spmT_001')]),
-            (read_output_node, self.output_node, [('spmT_002', 'spmT_002')]),
-            (read_output_node, self.output_node, [('figures', 'figures')]),
+            (read_output_node, self.output_node, [('spmT_0001', 'spmT_0001')]),
+            (read_output_node, self.output_node, [('spmT_0002', 'spmT_0002')]),
+            (read_output_node, self.output_node, [('new_figure_names', 'new_figure_names')]),
+            (read_output_node, self.output_node, [('variance_of_error', 'variance_of_error')]),
+            (read_output_node, self.output_node, [('resels_per_voxels', 'resels_per_voxels')]),
+            (read_output_node, self.output_node, [('mask', 'mask')]),
+            (read_output_node, self.output_node, [('regression_coeff', 'regression_coeff')]),
+            (read_output_node, self.output_node, [('contrasts', 'contrasts')]),
         ])

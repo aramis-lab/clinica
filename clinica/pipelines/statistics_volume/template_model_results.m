@@ -16,4 +16,3 @@ matlabbatch{1}.spm.stats.results.export{1}.png = true;
 
 % RUN BATCH JOB
 spm_jobman('run', matlabbatch)
-spm2txt(filename)

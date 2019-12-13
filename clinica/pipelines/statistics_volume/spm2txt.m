@@ -1,12 +1,10 @@
-function spm2txt(filename)
+function spm2txt(filename, xSPM)
 %o=spm2txt(filename)
 %
 %Export the current SPM table to a .txt file FILENAME. Import to your
 %spreadsheet engine as a tab separated data, and voila.
 %
 %Selim Onat (2018)
-
-global xSPM
 
 %%
 t           = spm_list('table',xSPM);
