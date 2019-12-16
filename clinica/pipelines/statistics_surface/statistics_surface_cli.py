@@ -71,7 +71,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                               help='Threshold to display the uncorrected p-value '
                                    '(--threshold_uncorrected_pvalue %(default)s).')
         advanced.add_argument("-tcp", "--threshold_corrected_pvalue",
-                              type=float, default=0.005,
+                              type=float, default=0.05,
                               help='Threshold to display the corrected p-value '
                                    '(default: --threshold_corrected_pvalue %(default)s)')
         advanced.add_argument("-ct", "--cluster_threshold",
