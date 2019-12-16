@@ -29,16 +29,15 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
             self.parameters['tissues'] = [1, 2, 3]
         if 'voxel_size' not in self.parameters:
             self.parameters['voxel_size'] = None
-        if 'modulation' not in self.parameters:
-            self.parameters['modulation'] = True
+        if 'modulate' not in self.parameters:
+            self.parameters['modulate'] = True
         if 'fwhm' not in self.parameters:
             self.parameters['fwhm'] = [8]
 
         check_group_label(self.parameters['group_id'])
 
     def check_custom_dependencies(self):
-        """Check dependencies that can not be listed in the `info.json` file.
-        """
+        """Check dependencies that can not be listed in the `info.json` file."""
         pass
 
     def get_input_fields(self):
@@ -60,8 +59,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         return ['normalized_files', 'smoothed_normalized_files', 'atlas_statistics']
 
     def build_input_node(self):
-        """Build and connect an input node to the pipelines.
-        """
+        """Build and connect an input node to the pipeline."""
         import os
         from colorama import Fore
         import nipype.pipeline.engine as npe
@@ -71,7 +69,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                                                t1_volume_native_tpm,
                                                t1_volume_deformation_to_template)
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
-        from clinica.utils.ux import print_groups_in_caps_directory
+        from clinica.utils.ux import print_groups_in_caps_directory, print_images_to_process
 
         # Check that group already exists
         if not os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])):
@@ -136,6 +134,9 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                 error_message += str(msg)
             raise ClinicaCAPSError(error_message)
 
+        if len(self.subjects):
+            print_images_to_process(self.subjects, self.sessions)
+
         self.connect([
             (read_input_node, self.input_node, [('native_segmentations', 'native_segmentations')]),
             (read_input_node, self.input_node, [('flowfield_files', 'flowfield_files')]),
@@ -143,8 +144,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         ])
 
     def build_output_node(self):
-        """Build and connect an output node to the pipelines.
-        """
+        """Build and connect an output node to the pipeline."""
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
         from clinica.utils.filemanip import zip_nii
@@ -181,8 +181,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         ])
 
     def build_core_nodes(self):
-        """Build and connect the core nodes of the pipelines.
-        """
+        """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.spm as spm
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
@@ -213,7 +212,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                                       iterfield=['apply_to_files', 'flowfield_files'])
         if self.parameters['voxel_size'] is not None:
             dartel2mni_node.inputs.voxel_size = tuple(self.parameters['voxel_size'])
-        dartel2mni_node.inputs.modulate = self.parameters['modulation']
+        dartel2mni_node.inputs.modulate = self.parameters['modulate']
         dartel2mni_node.inputs.fwhm = 0
 
         # Smoothing

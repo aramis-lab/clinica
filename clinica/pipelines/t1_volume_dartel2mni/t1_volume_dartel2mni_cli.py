@@ -60,7 +60,7 @@ class T1VolumeDartel2MNICLI(ce.CmdParser):
             'group_id': args.group_id,
             'tissues': args.tissues,
             'voxel_size': args.voxel_size,
-            'modulation': args.modulation,
+            'modulate': args.modulate,
             'fwhm': args.fwhm
         }
         pipeline = T1VolumeDartel2MNI(
