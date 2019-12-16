@@ -287,7 +287,6 @@ def adni3_image(subject_id, timepoint, visit_str, mprage_meta_subj, mayo_mri_qc_
                                      & ~mprage_meta_subj.Sequence.str.lower().str.endswith('_nd', na=False)]
 
     if filtered_scan.empty:
-        # TODO - LOG THIS
         cprint('NO MPRAGE Meta for ADNI3: ' + subject_id + ' for visit ' + timepoint + ' - ' + visit_str)
         return None
 
@@ -339,7 +338,6 @@ def original_image(subject_id, timepoint, visit_str, mprage_meta_subj, mayo_mri_
     filtered_scan = mprage_meta_subj_orig[cond_mprage | cond_spgr]
 
     if filtered_scan.empty:
-        # TODO - LOG THIS
         cprint('NO MPRAGE Meta: ' + subject_id + ' for visit ' + timepoint + ' - ' + visit_str)
         return None
 
