@@ -29,8 +29,7 @@ def convert_adni_flair(source_dir, csv_dir, dest_dir, subjs_list=None):
     from os import path
     from clinica.utils.stream import cprint
     from colorama import Fore
-    from clinica.iotools.converters.adni_to_bids.adni_utils import t1_pet_paths_to_bids
-
+    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
@@ -41,7 +40,7 @@ def convert_adni_flair(source_dir, csv_dir, dest_dir, subjs_list=None):
     images = compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of FLAIR images found. Exporting images into BIDS ...')
     # flair_paths_to_bids(images, dest_dir)
-    t1_pet_paths_to_bids(images, dest_dir, 'flair')
+    paths_to_bids(images, dest_dir, 'flair')
     cprint(Fore.GREEN + 'FLAIR conversion done.' + Fore.RESET)
 
 
@@ -63,7 +62,7 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
     from os import path, mkdir
     import pandas as pd
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path, visits_to_timepoints_mrilist
+    from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path, visits_to_timepoints
 
     flair_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
                     'Study_ID', 'Series_ID', 'Image_ID', 'Field_Strength', 'Scanner']
@@ -95,7 +94,7 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
         mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(subj[-4:])]
 
         # Obtain corresponding timepoints for the subject visits
-        visits = visits_to_timepoints_mrilist(subj, mri_list_subj, adnimerge_subj, 'FLAIR')
+        visits = visits_to_timepoints(subj, mri_list_subj, adnimerge_subj, 'FLAIR')
 
         for visit_info in visits.keys():
             timepoint = visit_info[0]
@@ -125,7 +124,7 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
                          ('053_S_5272', 'm24')]
 
     # Removing known exceptions from images to convert
-    if flair_df.shape[0] > 0:
+    if not flair_df.empty:
         error_ind = flair_df.index[flair_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
         flair_df.drop(error_ind, inplace=True)
 
@@ -140,50 +139,19 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
     return images
 
 
-def flair_paths_to_bids(images, dest_dir, mod_to_update=False):
-    """
-    Convert FLAIR images
-
-    Args:
-        images: dataframe returned by the method compute_flair_paths
-        dest_dir: path to the destination directory
-        mod_to_update: if is true and an image is already existing it will overwrite the old version
-
-    """
-    from multiprocessing import cpu_count, Pool, Value
-    from functools import partial
-
-    counter = None
-
-    def init(args):
-        ''' store the counter for later use '''
-        global counter
-        counter = args
-
-    subjs_list = [sub for sub in images['Subject_ID'].unique()
-                  if sub == sub and 'S' in sub]
-
-    counter = Value('i', 0)
-    partial_generate_subject_files = partial(generate_subject_files,
-                                             images=images,
-                                             dest_dir=dest_dir,
-                                             mod_to_update=mod_to_update)
-    poolrunner = Pool(cpu_count(), initializer=init, initargs=(counter,))
-    poolrunner.map(partial_generate_subject_files, subjs_list)
-    del counter
-
-
 def flair_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
     """
+    One image among those in the input list is chosen according to QC
+    and then correspoding metadata is extracted to a dictionary
 
     Args:
-        subject_id:
-        timepoint:
-        visit_str:
-        visit_mri_list:
-        mri_qc_subj:
+        subject_id: Subject identifier
+        timepoint: Visit code
+        visit_str: Visit name
+        visit_mri_list: List of images metadata
+        mri_qc_subj: Dataframe containing list of QC of scans for the subject
 
-    Returns:
+    Returns: dictionary - contains image metadata
 
     """
     from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars, select_image_qc
@@ -205,93 +173,3 @@ def flair_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
                   'Field_Strength': sel_scan.MAGSTRENGTH}
 
     return image_dict
-
-
-def generate_subject_files(subj, images, dest_dir, mod_to_update):
-    import clinica.iotools.bids_utils as bids
-    import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
-    from clinica.utils.stream import cprint
-    import pandas as pd
-    import subprocess
-    import os
-    from os import path
-    from glob import glob
-    from colorama import Fore
-
-    alpha_id = bids.remove_space_and_symbols(subj)
-    bids_id = 'sub-ADNI' + alpha_id
-    # Extract the list of sessions available from the flair paths files, removing the duplicates
-    sess_list = images[(images['Subject_ID'] == subj)]['VISCODE'].unique()
-
-    if not os.path.exists(path.join(dest_dir, bids_id)):
-        os.mkdir(path.join(dest_dir, bids_id))
-
-    # For each session available, create the folder if doesn't exist and convert the files
-    for ses in sess_list:
-        with counter.get_lock():
-            counter.value += 1
-        cprint('[FLAIR] Processing subject ' + str(subj)
-               + ' - session ' + ses + ', ' + str(counter.value)
-               + ' / ' + str(len(images)))
-        ses_bids = adni_utils.viscode_to_session(ses)
-        bids_ses_id = 'ses-' + ses_bids
-        bids_file_name = bids_id + '_ses-' + ses_bids
-        ses_path = path.join(dest_dir, bids_id, bids_ses_id)
-
-        flair_info = images[(images['Subject_ID'] == subj) & (images['VISCODE'] == ses)]
-
-        # For the same subject, same session there could be multiple flair with different acq label
-        for j in range(len(flair_info)):
-            flair_subj = flair_info.iloc[j]
-            if not pd.isnull(flair_subj['Path']) and flair_subj['Path'] != '':
-                if not os.path.exists(path.join(ses_path, 'anat')):
-                    os.makedirs(path.join(ses_path, 'anat'))
-                flair_path = flair_subj['Path']
-                bids_name = bids_file_name + '_FLAIR'
-                bids_dest_dir = path.join(ses_path, 'anat')
-                image_id = flair_subj.Image_ID
-
-                # Remove existing image if updating
-                if mod_to_update:
-                    if os.path.isfile(path.join(bids_dest_dir, bids_name)):
-                        os.remove(path.join(bids_dest_dir, bids_name))
-
-                # If the original image is a DICOM, check if contains two DICOM
-                # inside the same folder
-                if flair_subj.Is_Dicom:
-                    flair_path = adni_utils.check_two_dcm_folder(flair_path, bids_dest_dir, image_id)
-
-                if not os.path.exists(bids_dest_dir):
-                    os.makedirs(dest_dir)
-
-                command = 'dcm2niix -b y -z y -o ' + bids_dest_dir + ' -f ' + bids_name + ' ' + flair_path
-                subprocess.run(command,
-                               shell=True,
-                               stderr=subprocess.DEVNULL,
-                               stdout=subprocess.DEVNULL)
-
-                # If dcm2niix didn't work use dcm2nii
-                if not os.path.exists(path.join(bids_dest_dir, bids_name + '.nii.gz')):
-                    cprint('WARNING: Conversion with dcm2niix failed, trying with dcm2nii '
-                           'for subject ' + subj + ' and session ' + ses)
-                    # Find all the files eventually created by dcm2niix and remove them
-                    flair_dcm2niix = glob(
-                        path.join(bids_dest_dir, bids_name + '*'))
-                    for d in flair_dcm2niix:
-                        os.remove(d)
-
-                    command = 'dcm2nii -a n -d n -e n -i y -g y -p n -m n -r n -x n -o ' + bids_dest_dir + ' ' + \
-                              flair_path
-                    subprocess.run(command,
-                                   shell=True,
-                                   stdout=subprocess.DEVNULL,
-                                   stderr=subprocess.DEVNULL)
-                    nii_file = path.join(bids_dest_dir,
-                                         subj.replace('_', '') + '.nii.gz')
-                    if os.path.exists(nii_file):
-                        os.rename(nii_file, path.join(bids_dest_dir,
-                                                      bids_name + '.nii.gz'))
-                    else:
-                        cprint(Fore.RED + 'WARNING: Conversion of the dicom failed '
-                               'for subject ' + subj + ' and session ' + ses + '. '
-                               'Image path: ' + flair_path + Fore.RESET)

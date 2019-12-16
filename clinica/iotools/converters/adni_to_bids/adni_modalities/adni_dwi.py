@@ -29,6 +29,7 @@ def convert_adni_dwi(source_dir, csv_dir, dest_dir, subjs_list=None):
     from os import path
     from clinica.utils.stream import cprint
     from colorama import Fore
+    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
@@ -38,7 +39,8 @@ def convert_adni_dwi(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('Calculating paths of DWI images. Output will be stored in ' + path.join(dest_dir, 'conversion_info') + '.')
     images = compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of DWI images found. Exporting images into BIDS ...')
-    dwi_paths_to_bids(images, dest_dir)
+    # dwi_paths_to_bids(images, dest_dir)
+    paths_to_bids(images, dest_dir, 'dwi')
     cprint(Fore.GREEN + 'DWI conversion done.' + Fore.RESET)
 
 
@@ -60,7 +62,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     from os import path, mkdir
     import pandas as pd
 
-    from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path, visits_to_timepoints_mrilist
+    from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path, visits_to_timepoints
 
     dwi_col_df = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
                   'Study_ID', 'Series_ID', 'Image_ID', 'Field_Strength']
@@ -75,7 +77,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     mri_list = pd.read_csv(path.join(csv_dir, 'MRILIST.csv'), sep=',', low_memory=False)
 
-    # Selecting only DTI images that are not Multiband, processed or enchanced images
+    # Selecting only DTI images that are not Multiband, processed or enhanced images
     mri_list = mri_list[mri_list.SEQUENCE.str.contains('dti', case=False, na=False)]
     unwanted_sequences = ['MB', 'ADC', 'FA', 'TRACEW', 'Enhanced', 'Reg']
     mri_list = mri_list[mri_list.SEQUENCE.map(lambda x: not any(subs in x for subs in unwanted_sequences))]
@@ -92,7 +94,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
         mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(subj[-4:])]
 
         # Obtain corresponding timepoints for the subject visits
-        visits = visits_to_timepoints_mrilist(subj, mri_list_subj, adnimerge_subj, "DWI")
+        visits = visits_to_timepoints(subj, mri_list_subj, adnimerge_subj, "DWI")
 
         for visit_info in visits.keys():
             timepoint = visit_info[0]
@@ -146,7 +148,7 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
                          ('003_S_4441', 'm12')]
 
     # Removing known exceptions from images to convert
-    if dwi_df.shape[0] > 0:
+    if not dwi_df.empty:
         error_ind = dwi_df.index[dwi_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
         dwi_df.drop(error_ind, inplace=True)
 
@@ -161,49 +163,19 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
     return images
 
 
-def dwi_paths_to_bids(images, dest_dir, mod_to_update=False):
-    """
-    Convert DWI images
-
-    Args:
-        images: dataframe returned by the method compute_dwi_paths
-        dest_dir: path to the destination directory
-        mod_to_update: if is true and an image is already existing it will overwrite the old version
-
-    """
-    from multiprocessing import cpu_count, Pool, Value
-    from functools import partial
-
-    counter = None
-
-    def init(args):
-        ''' store the counter for later use '''
-        global counter
-        counter = args
-
-    subjs_list = images['Subject_ID'].unique()
-    counter = Value('i', 0)
-    total = len(images)
-    partial_generate_subject_files = partial(generate_subject_files,
-                                             images=images,
-                                             dest_dir=dest_dir,
-                                             mod_to_update=mod_to_update)
-    poolrunner = Pool(cpu_count(), initializer=init, initargs=(counter,))
-    poolrunner.map(partial_generate_subject_files, subjs_list)
-    del counter
-
-
 def dwi_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
     """
+    One image among those in the input list is chosen according to QC
+    and then correspoding metadata is extracted to a dictionary
 
     Args:
-        subject_id:
-        timepoint:
-        visit_str:
-        visit_mri_list:
-        mri_qc_subj:
+        subject_id: Subject identifier
+        timepoint: Visit code
+        visit_str: Visit name
+        visit_mri_list: List of images metadata
+        mri_qc_subj: Dataframe containing list of QC of scans for the subject
 
-    Returns:
+    Returns: dictionary - contains image metadata
 
     """
     from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars, select_image_qc
@@ -225,134 +197,3 @@ def dwi_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
                   'Field_Strength': sel_scan.MAGSTRENGTH}
 
     return image_dict
-
-
-def generate_subject_files(subj, images, dest_dir, mod_to_update):
-    """
-
-    Args:
-        subj:
-        images:
-        dest_dir:
-        mod_to_update:
-
-    Returns:
-
-    """
-    import clinica.iotools.bids_utils as bids
-    import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
-    from clinica.utils.stream import cprint
-    import subprocess
-    import os
-    import shutil
-    from os import path
-    from glob import glob
-    import pandas as pd
-    from colorama import Fore
-
-    global counter
-    alpha_id = bids.remove_space_and_symbols(subj)
-    bids_id = 'sub-ADNI' + alpha_id
-    # Extract the list of sessions available from the dwi paths files, removing the duplicates
-    sess_list = images[(images['Subject_ID'] == subj)]['VISCODE'].unique()
-
-    if not os.path.exists(path.join(dest_dir, bids_id)):
-        os.mkdir(path.join(dest_dir, bids_id))
-
-    # For each session available, create the folder if doesn't exist and convert the files
-    for ses in sess_list:
-        with counter.get_lock():
-            counter.value += 1
-        cprint('[DWI] Processing subject ' + str(subj)
-               + ' - session ' + ses + ', ' + str(counter.value)
-               + ' / ' + str(len(images)))
-        ses_bids = adni_utils.viscode_to_session(ses)
-        bids_ses_id = 'ses-' + ses_bids
-        bids_file_name = bids_id + '_ses-' + ses_bids
-        ses_path = path.join(dest_dir, bids_id, bids_ses_id)
-
-        if mod_to_update:
-            if os.path.exists(path.join(ses_path, 'dwi')):
-                shutil.rmtree(path.join(ses_path, 'dwi'))
-
-        dwi_info = images[(images['Subject_ID'] == subj) & (images['VISCODE'] == ses)]
-
-        # For the same subject, same session there could be multiple dwi with different acq label
-        for j in range(len(dwi_info)):
-
-            dwi_subj = dwi_info.iloc[j]
-
-            if not pd.isnull(dwi_subj['Path']) and dwi_subj['Path']:
-
-                if not os.path.exists(path.join(ses_path, 'dwi')):
-                    os.makedirs(path.join(ses_path, 'dwi'))
-                dwi_path = dwi_subj['Path']
-
-                bids_name = bids_file_name + '_acq-axial_dwi'
-
-                bids_dest_dir = path.join(ses_path, 'dwi')
-
-                if not os.path.exists(bids_dest_dir):
-                    os.makedirs(bids_dest_dir)
-                command = 'dcm2niix -b y -z y -o ' + bids_dest_dir + ' -f ' + bids_name + ' ' + dwi_path
-                subprocess.run(command,
-                               shell=True,
-                               stdout=subprocess.DEVNULL,
-                               stderr=subprocess.DEVNULL)
-
-                # Removing ADC images
-                adc_image = path.join(bids_dest_dir, bids_name + '_ADC.nii.gz')
-                if os.path.exists(adc_image):
-                    os.remove(adc_image)
-
-                # If dcm2niix didn't work use dcm2nii
-                # We do not chek if .json exists given that dcm2nii does not generate .json file anyways
-                if (not os.path.exists(path.join(bids_dest_dir, bids_name + '.nii.gz')))\
-                        or (not os.path.exists(path.join(bids_dest_dir, bids_name + '.bvec')))\
-                        or (not os.path.exists(path.join(bids_dest_dir, bids_name + '.bval'))):
-
-                    cprint('WARNING: Conversion with dcm2niix failed, trying with dcm2nii '
-                           'for subject ' + subj + ' and session ' + ses)
-
-                    # Find all the files eventually created by dcm2niix and remove them
-                    dwi_dcm2niix = glob(path.join(bids_dest_dir, bids_name + '*'))
-
-                    for d in dwi_dcm2niix:
-                        os.remove(d)
-
-                    command = 'dcm2nii -a n -d n -e n -i y -g y -p n -m n -r n -x n -o %s %s' \
-                              % (bids_dest_dir, dwi_path)
-                    subprocess.run(command,
-                                   shell=True,
-                                   stdout=subprocess.DEVNULL,
-                                   stderr=subprocess.DEVNULL)
-
-                    nii_file = path.join(bids_dest_dir, subj.replace('_', '') + '.nii.gz')
-                    bvec_file = path.join(bids_dest_dir, subj.replace('_', '') + '.bvec')
-                    bval_file = path.join(bids_dest_dir, subj.replace('_', '') + '.bval')
-
-                    if os.path.exists(bvec_file) and os.path.exists(bval_file):
-                        os.rename(bvec_file, path.join(bids_dest_dir,
-                                                       bids_name + '.bvec'))
-                        os.rename(bval_file, path.join(bids_dest_dir,
-                                                       bids_name + '.bval'))
-                    else:
-                        cprint('WARNING: bvec and bval not generated by dcm2nii '
-                               'for subject ' + subj + ' and session ' + ses)
-
-                    if os.path.exists(nii_file):
-                        os.rename(nii_file, path.join(bids_dest_dir,
-                                                      bids_name + '.nii.gz'))
-                    else:
-                        cprint(Fore.RED + 'WARNING: Conversion of the dicom failed '
-                               'for subject ' + subj + ' and session ' + ses + '. '
-                               'Image path: ' + dwi_path + Fore.RESET)
-
-                        # Removing folder and generated files
-                        if os.path.exists(bids_dest_dir):
-                            shutil.rmtree(bids_dest_dir, ignore_errors=True)
-
-                # Case when JSON file was not generated by dcm2niix
-                elif not os.path.exists(path.join(bids_dest_dir, bids_name + '.json')):
-                    cprint('WARNING: JSON file not generated by dcm2niix '
-                           'for subject ' + subj + ' and session ' + ses)

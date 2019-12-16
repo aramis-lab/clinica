@@ -29,7 +29,7 @@ def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
     from os import path
     from clinica.utils.stream import cprint
     from colorama import Fore
-    from clinica.iotools.converters.adni_to_bids.adni_utils import t1_pet_paths_to_bids
+    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
 
     if subjs_list is None:
         adni_merge_path = path.join(csv_dir, 'ADNIMERGE.csv')
@@ -40,7 +40,7 @@ def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):
     images = compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of fMRI images found. Exporting images into BIDS ...')
     # fmri_paths_to_bids(dest_dir, images)
-    t1_pet_paths_to_bids(images, dest_dir, 'fmri')
+    paths_to_bids(images, dest_dir, 'fmri')
     cprint(Fore.GREEN + 'fMRI conversion done.' + Fore.RESET)
 
 
@@ -60,7 +60,7 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list):
 
     from os import path, mkdir
     import pandas as pd
-    from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path, visits_to_timepoints_mrilist
+    from clinica.iotools.converters.adni_to_bids.adni_utils import find_image_path, visits_to_timepoints
 
     fmri_col = ['Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date',
                 'Study_ID', 'Field_Strength', 'Series_ID', 'Image_ID']
@@ -100,7 +100,7 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list):
         mayo_mri_qc_subj = mayo_mri_qc[mayo_mri_qc.RID == int(subj[-4:])]
 
         # Obtain corresponding timepoints for the subject visits
-        visits = visits_to_timepoints_mrilist(subj, mri_list_subj, adnimerge_subj, "fMRI")
+        visits = visits_to_timepoints(subj, mri_list_subj, adnimerge_subj, "fMRI")
 
         for visit_info in visits.keys():
             timepoint = visit_info[0]
@@ -121,7 +121,7 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list):
     conversion_errors = [('006_S_4485', 'm84')]
 
     # Removing known exceptions from images to convert
-    if fmri_df.shape[0] > 0:
+    if not fmri_df.empty:
         error_ind = fmri_df.index[fmri_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
         fmri_df.drop(error_ind, inplace=True)
 
@@ -136,107 +136,19 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list):
     return images
 
 
-def fmri_paths_to_bids(dest_dir, fmri_paths, mod_to_update=False):
-    """
-    Convert the fmri extracted from the fmri_paths to BIDS
-
-    Args:
-        dest_dir: path to the input directory
-        fmri_paths: path to the BIDS directory
-        mod_to_update:  if True overwrite (or create if is missing) all the existing fmri
-
-    """
-    from multiprocessing import cpu_count, Pool, Value
-    from functools import partial
-
-    counter = None
-
-    def init(args):
-        # store the counter for later use
-        global counter
-        counter = args
-
-    subjs_list = fmri_paths['Subject_ID'].drop_duplicates().values
-
-    counter = Value('i', 0)
-    partial_generate_subject_files = partial(generate_subject_files,
-                                             fmri_paths=fmri_paths,
-                                             dest_dir=dest_dir,
-                                             mod_to_update=mod_to_update)
-    poolrunner = Pool(cpu_count(), initializer=init, initargs=(counter,))
-    poolrunner.map(partial_generate_subject_files, subjs_list)
-    del counter
-
-
-def generate_subject_files(subj, fmri_paths, dest_dir, mod_to_update):
-    import clinica.iotools.converters.adni_to_bids.adni_utils as adni_utils
-    import clinica.iotools.bids_utils as bids_utils
-    from clinica.utils.stream import cprint
-    import os
-    from os import path
-    from glob import glob
-
-    sess_list = fmri_paths[(fmri_paths['Subject_ID'] == subj)]['VISCODE'].values
-    alpha_id = adni_utils.remove_space_and_symbols(subj)
-    bids_id = 'sub-ADNI' + alpha_id
-
-    # For each session available, create the folder if doesn't exist and convert the files
-    for ses in sess_list:
-        with counter.get_lock():
-            counter.value += 1
-        cprint('[fMRI] Processing subject ' + str(subj)
-               + ' - session ' + ses + ', ' + str(counter.value)
-               + ' / ' + str(len(fmri_paths)))
-        ses_bids = adni_utils.viscode_to_session(ses)
-        bids_ses_id = 'ses-' + ses_bids
-        bids_file_name = bids_id + '_ses-' + ses_bids
-        ses_path = path.join(dest_dir, bids_id, bids_ses_id)
-
-        # If the fmri already exist
-        existing_fmri = glob(path.join(ses_path, 'func', '*_bold*'))
-        # if mod_to_add:
-        #     if len(existing_fmri) > 0:
-        #         print 'Fmri already existing. Skipped.'
-        #         continue
-
-        if mod_to_update and len(existing_fmri) > 0:
-            # print 'Removing the old fmri folder...'
-            os.remove(existing_fmri[0])
-
-        if not os.path.exists(ses_path):
-            if not os.path.exists(path.join(dest_dir, bids_id)):
-                os.mkdir(path.join(dest_dir, bids_id))
-            os.mkdir(path.join(dest_dir, bids_id, bids_ses_id))
-
-        fmri_info = fmri_paths[(fmri_paths['Subject_ID'] == subj) & (fmri_paths['VISCODE'] == ses)]
-        if not fmri_info['Path'].values[0] == '':
-            if type(fmri_info['Path'].values[0]) != float:
-                if not os.path.exists(path.join(ses_path, 'func')):
-                    os.mkdir(path.join(ses_path, 'func'))
-                fmri_path = fmri_info['Path'].values[0]
-                dcm_to_convert = adni_utils.check_two_dcm_folder(fmri_path,
-                                                                 dest_dir,
-                                                                 fmri_info['Image_ID'].values[0])
-                if not os.path.isfile(os.path.join(ses_path, 'func', bids_file_name + '_task-rest_bold.nii.gz')):
-                    bids_utils.convert_fmri(dcm_to_convert, path.join(ses_path, 'func'), bids_file_name)
-                else:
-                    cprint("Images already converted")
-
-                # Delete the temporary folder used for copying fmri with 2 subjects inside the DICOM folder
-                adni_utils.remove_tmp_dmc_folder(dest_dir, fmri_info['Image_ID'].values[0])
-
-
 def fmri_image(subject_id, timepoint, visit_str, visit_mri_list, mri_qc_subj):
     """
+    One image among those in the input list is chosen according to QC
+    and then correspoding metadata is extracted to a dictionary
 
     Args:
-        subject_id:
-        timepoint:
-        visit_str:
-        visit_mri_list:
-        mri_qc_subj:
+        subject_id: Subject identifier
+        timepoint: Visit code
+        visit_str: Visit name
+        visit_mri_list: List of images metadata
+        mri_qc_subj: Dataframe containing list of QC of scans for the subject
 
-    Returns:
+    Returns: dictionary - contains image metadata
 
     """
     from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars, select_image_qc
