@@ -61,7 +61,7 @@ class T1VolumeDartel2MNICLI(ce.CmdParser):
             'tissues': args.tissues,
             'voxel_size': args.voxel_size,
             'modulate': args.modulate,
-            'fwhm': args.fwhm
+            'smooth': args.smooth
         }
         pipeline = T1VolumeDartel2MNI(
             bids_directory=self.absolute_path(args.bids_directory),
@@ -69,6 +69,7 @@ class T1VolumeDartel2MNICLI(ce.CmdParser):
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
             base_dir=self.absolute_path(args.working_directory),
             parameters=parameters,
+            name=self.name
         )
 
         if args.n_procs:

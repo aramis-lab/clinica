@@ -31,8 +31,8 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
             self.parameters['voxel_size'] = None
         if 'modulate' not in self.parameters:
             self.parameters['modulate'] = True
-        if 'fwhm' not in self.parameters:
-            self.parameters['fwhm'] = [8]
+        if 'smooth' not in self.parameters:
+            self.parameters['smooth'] = [8]
 
         check_group_label(self.parameters['group_id'])
 
@@ -217,13 +217,13 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
 
         # Smoothing
         # =========
-        if self.parameters['fwhm'] is not None and len(self.parameters['fwhm']) > 0:
+        if self.parameters['smooth'] is not None and len(self.parameters['smooth']) > 0:
             smoothing_node = npe.MapNode(spm.Smooth(),
                                          name='smoothing_node',
                                          iterfield=['in_files'])
 
-            smoothing_node.iterables = [('fwhm', [[x, x, x] for x in self.parameters['fwhm']]),
-                                        ('out_prefix', ['fwhm-' + str(x) + 'mm_' for x in self.parameters['fwhm']])]
+            smoothing_node.iterables = [('fwhm', [[x, x, x] for x in self.parameters['smooth']]),
+                                        ('out_prefix', ['fwhm-' + str(x) + 'mm_' for x in self.parameters['smooth']])]
             smoothing_node.synchronize = True
 
             join_smoothing_node = npe.JoinNode(interface=nutil.Function(input_names=['smoothed_normalized_files'],
