@@ -29,7 +29,7 @@ def convert_adni_tau_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     import pandas as pd
     from os import path
     from clinica.utils.stream import cprint
-    from clinica.iotools.converters.adni_to_bids.adni_utils import t1_pet_paths_to_bids
+    from clinica.iotools.converters.adni_to_bids.adni_utils import paths_to_bids
     from colorama import Fore
 
     if subjs_list is None:
@@ -40,7 +40,7 @@ def convert_adni_tau_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
     cprint('Calculating paths of TAU PET images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
     images = compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of TAU PET images found. Exporting images into BIDS ...')
-    t1_pet_paths_to_bids(images, dest_dir, 'tau')
+    paths_to_bids(images, dest_dir, 'tau')
     cprint(Fore.GREEN + 'TAU PET conversion done.' + Fore.RESET)
 
 
@@ -61,8 +61,7 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     import pandas as pd
     import os
     from os import path
-    from clinica.iotools.converters.adni_to_bids.adni_utils import replace_sequence_chars, find_image_path
-    from clinica.utils.stream import cprint
+    from clinica.iotools.converters.adni_to_bids.adni_utils import get_images_pet, find_image_path
 
     pet_tau_col = ['Phase', 'Subject_ID', 'VISCODE', 'Visit', 'Sequence', 'Scan_Date', 'Study_ID',
                    'Series_ID', 'Image_ID', 'Original']
@@ -79,8 +78,7 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
         # PET images metadata for subject
         subject_pet_meta = pet_meta_list[pet_meta_list['Subject'] == subj]
 
-        if subject_pet_meta.shape[0] < 1:
-            # TODO Log somewhere subjects without TAU PET images metadata
+        if subject_pet_meta.empty:
             continue
 
         # QC for TAU PET images for ADNI 2
@@ -91,69 +89,13 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
         # Concatenating visits in both QC files
         tau_qc_subj = pd.concat([tau_qc2_subj, tau_qc3_subj], axis=0, ignore_index=True, sort=False)
+        tau_qc_subj.rename(columns={"SCANDATE": "EXAMDATE"}, inplace=True)
 
-        for visit in list(tau_qc_subj.VISCODE2.unique()):
-            # TODO Infer visit from ADNIMERGE visits
-            if pd.isna(visit):
-                continue
-
-            pet_qc_visit = tau_qc_subj[tau_qc_subj.VISCODE2 == visit]
-
-            # If there are several scans for a timepoint we keep image acquired last (higher LONIUID)
-            pet_qc_visit = pet_qc_visit.sort_values("LONIUID", ascending=False)
-
-            if pet_qc_visit.shape[0] == 0:
-                continue
-
-            qc_visit = pet_qc_visit.iloc[0]
-
-            # Corresponding LONI image ID for original scan in PET Meta List
-            int_image_id = int(qc_visit.LONIUID[1:])
-
-            original_pet_meta = subject_pet_meta[(subject_pet_meta['Orig/Proc'] == 'Original')
-                                                 & (subject_pet_meta['Image ID'] == int_image_id)]
-
-            # If no corresponding TAU PET metadata for an original image,
-            # take scan at the same date containing TAU or AV 45 in sequence name
-            if original_pet_meta.shape[0] < 1:
-                original_pet_meta = subject_pet_meta[(subject_pet_meta['Orig/Proc'] == 'Original')
-                                                     & subject_pet_meta.Sequence.str.contains("tau|av-1451|av1451",
-                                                                                              case=False, na=False)
-                                                     & (subject_pet_meta['Scan Date'] == qc_visit.SCANDATE)]
-
-                if original_pet_meta.shape[0] < 1:
-                    # TODO Log somewhere QC visits without image metadata
-                    cprint('No TAU-PET images metadata for subject - ' + subj + ' for visit ' + qc_visit.VISCODE2)
-                    continue
-
-            original_image = original_pet_meta.iloc[0]
-
-            # Co-registered and Averaged image with the same Series ID of the original image
-            averaged_pet_meta = subject_pet_meta[(subject_pet_meta['Sequence'] == 'AV1451 Co-registered, Averaged')
-                                                 & (subject_pet_meta['Series ID'] == original_image['Series ID'])]
-
-            # If an explicit AV1451 Co-registered, Averaged image does not exist,
-            # the original image is already in that preprocessing stage.
-
-            if averaged_pet_meta.shape[0] < 1:
-                sel_image = original_image
-                original = True
-            else:
-                sel_image = averaged_pet_meta.iloc[0]
-                original = False
-
-            visit = sel_image.Visit
-            sequence = replace_sequence_chars(sel_image.Sequence)
-            date = sel_image['Scan Date']
-            study_id = sel_image['Study ID']
-            series_id = sel_image['Series ID']
-            image_id = sel_image['Image ID']
-
-            row_to_append = pd.DataFrame(
-                [[qc_visit.Phase, subj, qc_visit.VISCODE2, str(visit), sequence, date, str(study_id), str(series_id),
-                  str(image_id), original]],
-                columns=pet_tau_col)
-            pet_tau_dfs_list.append(row_to_append)
+        sequences_preprocessing_step = ['AV1451 Co-registered, Averaged']
+        subj_dfs_list = get_images_pet(subj, tau_qc_subj, subject_pet_meta, pet_tau_col, 'TAU-PET',
+                                       sequences_preprocessing_step)
+        if subj_dfs_list:
+            pet_tau_dfs_list += subj_dfs_list
 
     if pet_tau_dfs_list:
         pet_tau_df = pd.concat(pet_tau_dfs_list, ignore_index=True)
@@ -164,7 +106,7 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
                          ('098_S_4275', 'm84')]
 
     # Removing known exceptions from images to convert
-    if pet_tau_df.shape[0] > 0:
+    if not pet_tau_df.empty:
         error_ind = pet_tau_df.index[pet_tau_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
         pet_tau_df.drop(error_ind, inplace=True)
 

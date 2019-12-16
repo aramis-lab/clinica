@@ -825,7 +825,7 @@ def get_examdates(rid, examdates, viscodes, clinical_data_dir):
         for csv_file in csv_list:
             csv_data = pd.read_csv(path.join(clinical_data_dir, csv_file), low_memory=False)
             exam_date = csv_data[(csv_data.RID == rid) & (csv_data.VISCODE == viscodes[e])]
-            if exam_date.shape[0] > 0 and exam_date.iloc[0].EXAMDATE != '-4':
+            if not exam_date.empty and exam_date.iloc[0].EXAMDATE != '-4':
                 exam = exam_date.iloc[0].EXAMDATE
                 break
 
