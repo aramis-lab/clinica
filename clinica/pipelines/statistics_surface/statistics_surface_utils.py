@@ -27,91 +27,74 @@ def get_fdg_pet_surface_custom_file():
     return custom_file
 
 
-def prepare_data(input_directory, subjects_visits_tsv, group_label, glm_type):
-    """Fetch all the intermediate variables for this workflow.
+def init_input_node(parameters, base_dir, subjects_visits_tsv):
+    """Initialize the pipeline.
 
-    Args:
-        input_directory: CAPS directory
-        subjects_visits_tsv: TSV file defining the GLM model
-        group_label: Current group name for this analysis
-        glm_type: Based on the hypothesis, you should define one of the glm types, "group_comparison", "correlation"
-
-    Returns:
-
+    This function will:
+        - Create `surfstat_results_dir` in `base_dir`/<group_id> for SurfStat;
+        - Save pipeline parameters in JSON file;
+        - Copy TSV file with covariates;
+        - Print begin execution message.
     """
     import os
-    from shutil import copy
-    import pandas as pd
+    import errno
+    import json
+    import shutil
+    from clinica.utils.ux import print_begin_image
+    from clinica.pipelines.statistics_surface.statistics_surface_utils import create_glm_info_dictionary
 
-    # CAPS input and output vars
-    input_directory = os.path.expanduser(input_directory)
-    surfstat_input_dir = os.path.join(input_directory, 'subjects')
+    group_id = 'group-' + parameters['group_label']
 
-    group_id = 'group-' + group_label
-    statistics_dir_tsv = os.path.join(input_directory, 'groups', group_id, 'statistics', 'participant.tsv')
+    # Create surfstat_results_dir for SurfStat
+    surfstat_results_dir = os.path.join(base_dir, group_id)
+    try:
+        os.makedirs(surfstat_results_dir)
+    except OSError as e:
+        if e.errno != errno.EEXIST:  # EEXIST: folder already exists
+            raise e
 
-    if glm_type == "group_comparison":
-        output_directory = os.path.join(input_directory, 'groups', group_id, 'statistics', 'surfstat_group_comparison')
-    elif glm_type == "correlation":
-        output_directory = os.path.join(input_directory, 'groups', group_id, 'statistics', 'surfstat_correlation_analysis')
-    else:
-        raise NotImplementedError("The other GLM situations have not been implemented in this pipeline.")
+    # Save pipeline parameters in JSON file
+    glm_dict = create_glm_info_dictionary(parameters)
+    json_filename = os.path.join(surfstat_results_dir, group_id + '_glm.json')
+    with open(json_filename, 'w') as json_file:
+        json.dump(glm_dict, json_file, indent=4)
 
-    if not os.path.exists(output_directory):
-        try:
-            os.makedirs(output_directory)
-        except BaseException:
-            raise OSError("SurfStat: can't create destination directory (%s)!" % output_directory)
+    # Copy TSV file with covariates
+    tsv_filename = os.path.join(surfstat_results_dir, group_id + '_covariates.tsv')
+    shutil.copyfile(subjects_visits_tsv, tsv_filename)
 
-    # Copy the subjects_visits_tsv to the result folder
-    # First, check if the subjects_visits_tsv has the same info with the participant.tsv in the folder of statistics.
-    # If the participant TSV does not exit, copy subjects_visits_tsv in the folder of statistics too,
-    # if it is here, compare them.
-    if not os.path.isfile(statistics_dir_tsv):
-        copy(subjects_visits_tsv, statistics_dir_tsv)
-    else:
-        # Compare the two TSV files
-        participant_df = pd.io.parsers.read_csv(statistics_dir_tsv, sep='\t')
-        subjects_visits_tsv_df = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
-        participant_list = list(participant_df.participant_id)
-        subjects_visits_tsv_list = list(subjects_visits_tsv_df.participant_id)
-        dif_list = list(set(participant_list) - set(subjects_visits_tsv_list))
-        try:
-            len(dif_list) == 0
-        except BaseException:
-            raise ValueError("It seems that this round of analysis does not contain the same subjects"
-                             "where you want to put the results, please check it!")
+    # Print begin message
+    list_keys = ['AnalysisType', 'DesignMatrix', 'Contrast', 'FWHM', 'ClusterThreshold']
+    list_values = [
+        parameters['glm_type'],
+        parameters['design_matrix'],
+        parameters['contrast'],
+        str(parameters['full_width_at_half_maximum']),
+        str(parameters['cluster_threshold'])
+    ]
+    group_id = 'group-' + parameters['group_label']
+    print_begin_image(group_id, list_keys, list_values)
 
-        group_tsv = 'group-' + group_label + '_participants.tsv'
-        copied_tsv = os.path.join(output_directory, group_tsv)
-        copy(subjects_visits_tsv, copied_tsv)
-    # Point to the path to the json file
-    out_json = os.path.join(output_directory, 'group-' + group_label + '_glm.json')
-
-    return surfstat_input_dir, output_directory, out_json
+    return parameters['group_label'], surfstat_results_dir
 
 
-def run_matlab(input_directory,
-               output_directory,
+def run_matlab(caps_dir,
+               output_dir,
                subjects_visits_tsv,
                pipeline_parameters):
     """
-    Wrap the Matlab script of SurfStat.
+    Wrap the call of SurfStat using clinicasurfstat.m Matlab script.
 
     Args:
-        input_directory (str): surfstat_input_dir where containing all the subjects' output in CAPS directory
-        output_directory (str): output folder to contain the result in CAPS folder
+        caps_dir (str): CAPS directory containing surface-based features
+        output_dir (str): Output directory that will contain outputs of clinicasurfstat.m
         subjects_visits_tsv (str): TSV file containing the GLM information
         pipeline_parameters (dict): parameters of StatisticsSurface pipeline
-
-    Returns:
-
     """
     import os
     import sys
     from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
     import clinica.pipelines as clinica_pipelines
-    from clinica.utils.stream import cprint
     from clinica.utils.check_dependency import check_environment_variable
 
     path_to_matlab_script = os.path.join(os.path.dirname(clinica_pipelines.__path__[0]), 'lib', 'clinicasurfstat')
@@ -136,8 +119,8 @@ def run_matlab(input_directory,
     matlab.inputs.script = """
     clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', %.3f, '%s', %.3f, '%s', %.3f);
     """ % (
-        input_directory,
-        output_directory,
+        os.path.join(caps_dir, 'subjects'),
+        output_dir,
         subjects_visits_tsv,
         pipeline_parameters['design_matrix'],
         pipeline_parameters['contrast'],
@@ -156,20 +139,25 @@ def run_matlab(input_directory,
     matlab.inputs.mfile = True
     # This will stop running with single thread
     matlab.inputs.single_comp_thread = False
-    matlab.inputs.logfile = os.path.join(output_directory, "matlab_output.log")
-    cprint("Matlab logfile is located at the following path: %s" % matlab.inputs.logfile)
-    cprint("Matlab script command = %s" % matlab.inputs.script)
-    cprint("MatlabCommand inputs flag: single_comp_thread = %s" % matlab.inputs.single_comp_thread)
-    cprint("MatlabCommand choose which matlab to use(matlab_cmd): %s" % get_matlab_command())
-    if sys.platform.startswith('linux'):
-        cprint("MatlabCommand inputs flag: nosoftwareopengl = %s" % matlab.inputs.args)
-    out = matlab.run()
-    return out
+    matlab.inputs.logfile = 'group-' + pipeline_parameters['group_label'] + '_matlab.log'
+
+    # cprint("Matlab logfile is located at the following path: %s" % matlab.inputs.logfile)
+    # cprint("Matlab script command = %s" % matlab.inputs.script)
+    # cprint("MatlabCommand inputs flag: single_comp_thread = %s" % matlab.inputs.single_comp_thread)
+    # cprint("MatlabCommand choose which matlab to use(matlab_cmd): %s" % get_matlab_command())
+    # if sys.platform.startswith('linux'):
+    #     cprint("MatlabCommand inputs flag: nosoftwareopengl = %s" % matlab.inputs.args)
+    matlab.run()
+
+    from clinica.utils.stream import cprint
+    cprint(matlab.inputs.logfile)
+
+    return output_dir
 
 
 def create_glm_info_dictionary(pipeline_parameters):
     """Create dictionary containing the GLM information that will be stored in a JSON file."""
-    json_dict = {
+    out_dict = {
         'AnalysisType': pipeline_parameters['glm_type'],
         'DesignMatrix': pipeline_parameters['design_matrix'],
         'StringFormatTSV': pipeline_parameters['str_format'],
@@ -180,5 +168,48 @@ def create_glm_info_dictionary(pipeline_parameters):
         'ThresholdCorrectedPvalue': pipeline_parameters['threshold_corrected_pvalue'],
         'ClusterThreshold': pipeline_parameters['cluster_threshold']
     }
+    return out_dict
 
-    return json_dict
+
+def save_to_caps(source_dir, caps_dir, overwrite_caps, pipeline_parameters):
+    """Save `source_dir`/ to CAPS folder.
+
+    This function copies outputs of `source_dir`/ >to
+    `caps_dir`/groups/<group_id>/<statistics>/surfstat_<glm_type>/
+
+    The `source_dir`/ folder should contain the following elements:
+        - group-<group_label>_<group_1_or_2>-lt-<group_1_or_2>_measure-<measure>_fwhm-<label>_suffix.ext
+    or
+        - group-<group_label>_correlation-<label>_contrast-{-|+}_measure-<measure>_fwhm-<label>_suffix.ext
+    and
+        - group-<group_label>_covariates.tsv
+        - group-<group_label>_glm.json
+
+    Raise:
+        NotImplementedError: If overwrite_caps=True.
+    """
+    import os
+    import shutil
+    from clinica.utils.ux import print_end_image
+
+    group_id = 'group-' + pipeline_parameters['group_label']
+
+    if pipeline_parameters['glm_type'] == "group_comparison":
+        surfstat_folder = 'surfstat_' + pipeline_parameters['glm_type']
+    elif pipeline_parameters['glm_type'] == "correlation":
+        surfstat_folder = 'surfstat_' + pipeline_parameters['glm_type'] + '_analysis'
+    else:
+        raise NotImplementedError("The other GLM situations have not been implemented in this pipeline.")
+
+    destination_dir = os.path.join(
+        os.path.expanduser(caps_dir),
+        'groups',
+        group_id,
+        'statistics',
+        surfstat_folder
+    )
+
+    if overwrite_caps:
+        raise NotImplementedError('save_to_caps(overwrite_caps=True) not implemented')
+    shutil.copytree(source_dir, destination_dir, symlinks=True)
+    print_end_image(group_id)
