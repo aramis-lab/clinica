@@ -149,9 +149,6 @@ def run_matlab(caps_dir,
     #     cprint("MatlabCommand inputs flag: nosoftwareopengl = %s" % matlab.inputs.args)
     matlab.run()
 
-    from clinica.utils.stream import cprint
-    cprint(matlab.inputs.logfile)
-
     return output_dir
 
 

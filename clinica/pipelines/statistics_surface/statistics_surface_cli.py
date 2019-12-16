@@ -47,25 +47,31 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                               type=int, default=20,
                               help='FWHM for the surface smoothing '
                                    '(default: --full_width_at_half_maximum %(default)s).')
-        optional.add_argument("-ft", "--feature_type",
-                              type=str, default='cortical_thickness',
-                              help='Type of surface-based feature: cortical_thickness (from t1-freesurfer pipeline)'
-                                   'or pet_fdg_projection (from pet-surface pipeline)'
-                                   '(default: --feature_type %(default)s).')
+        a_ft = optional.add_argument("-ft", "--feature_type",
+                                     type=str, default='cortical_thickness',
+                                     choices=['cortical_thickness', 'pet_fdg_projection'],
+                                     metavar='{cortical_thickness | pet_fdg_projection}',
+                                     help='Type of surface-based feature: cortical_thickness (from t1-freesurfer '
+                                          'pipeline) or pet_fdg_projection (from pet-surface pipeline) '
+                                          '(default: --feature_type %(default)s).')
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments(add_tsv_flag=False)
         # Advanced arguments (i.e. tricky parameters)
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
-        advanced.add_argument("-cf", "--custom_file",
-                              type=str, default=None,
-                              help='Pattern of file inside CAPS directory using @subject, @session, @fwhm, @hemi. '
-                                   'No --feature_type must be specified in order to use this flag. '
-                                   'If you use this flag, you must specify a label with the --feature_label flag). '
-                                   'See Wiki for an example.')
-        advanced.add_argument("-fl", "--feature_label",
-                              type=str, default=None,
-                              help='Name of the feature type, it will be saved on the CAPS _measure-FEATURE_LABEL '
-                                   'key-value association.')
+        a_cf = advanced.add_argument("-cf", "--custom_file",
+                                     type=str, default=None,
+                                     help='Pattern of file inside CAPS directory using @subject, @session, '
+                                          '@fwhm, @hemi. '
+                                          'This flag cannot be specified with --feature_type flag. '
+                                          'This flag must be specified with the --feature_label flag). '
+                                          'See Wiki for an example.')
+        a_fl = advanced.add_argument("-fl", "--feature_label",
+                                     type=str, default=None,
+                                     help='Name of the feature type, it will be saved on the CAPS '
+                                          '_measure-FEATURE_LABEL key-value association. '
+                                          'This flag cannot be specified with --feature_type flag. '
+                                          'This flag must be specified with the --custom_file flag). '
+                                          'See Wiki for an example.')
         advanced.add_argument("-tup", "--threshold_uncorrected_pvalue",
                               type=float, default=0.001,
                               help='Threshold to display the uncorrected p-value '
@@ -78,6 +84,14 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                               type=float, default=0.001,
                               help='Threshold to define a cluster in the process of cluster-wise correction '
                                    '(default: --cluster_threshold %(default)s).')
+        # Make --feature_type and --custom_file actions mutually exclusive while being on 2 different categories
+        group_ft_cf = self._args.add_mutually_exclusive_group()
+        group_ft_cf._group_actions.append(a_ft)
+        group_ft_cf._group_actions.append(a_cf)
+        # Make --feature_type and --feature_label actions mutually exclusive while being on 2 different categories
+        group_ft_fl = self._args.add_mutually_exclusive_group()
+        group_ft_fl._group_actions.append(a_ft)
+        group_ft_fl._group_actions.append(a_fl)
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
@@ -90,11 +104,6 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         from clinica.utils.exceptions import ClinicaException
 
         if args.feature_type is not None:
-            if args.custom_file is not None:
-                raise ClinicaException('--feature_type and --custom_file are mutually exclusive: you must choose '
-                                       'between one or the other. See documentation for more information.')
-            if args.feature_label is not None:
-                raise ClinicaException('--feature_label should not be used with --feature_type.')
             # FreeSurfer cortical thickness
             if args.feature_type == 'cortical_thickness':
                 args.custom_file = get_t1_freesurfer_custom_file()
@@ -103,12 +112,9 @@ class StatisticsSurfaceCLI(ce.CmdParser):
             elif args.feature_type == 'pet_fdg_projection':
                 args.custom_file = get_fdg_pet_surface_custom_file()
                 args.feature_label = 'fdg'
-            else:
-                raise ClinicaException('Feature type ' + args.feature_type + ' not recognized. Use --custom_file '
-                                       'to specify your own files (without --feature_type).')
         elif args.feature_type is None:
             if args.custom_file is None:
-                cprint('No feature type selected: using cortical thickness as default value')
+                cprint('No feature type selected: using cortical thickness from t1-freesurfer as default value.')
                 args.custom_file = get_t1_freesurfer_custom_file()
                 args.feature_label = 'ct'
             else:
