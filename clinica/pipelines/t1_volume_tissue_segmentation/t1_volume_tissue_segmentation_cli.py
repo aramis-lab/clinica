@@ -57,7 +57,7 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
             'tissue_classes': args.tissue_classes,
             'dartel_tissues': args.dartel_tissues,
             'tissue_probability_maps': args.tissue_probability_maps,
-            'save_warped_unmodulated': not args.save_warped_unmodulated,
+            'save_warped_unmodulated': not args.dont_save_warped_unmodulated,
             'save_warped_modulated': args.save_warped_modulated,
         }
         pipeline = T1VolumeTissueSegmentation(
