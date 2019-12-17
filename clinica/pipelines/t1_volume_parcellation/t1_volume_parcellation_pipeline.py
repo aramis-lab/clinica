@@ -19,8 +19,7 @@ class T1VolumeParcellation(cpe.Pipeline):
         A clinica pipeline object containing the T1VolumeParcellation pipeline.
     """
     def check_custom_dependencies(self):
-        """Check dependencies that can not be listed in the `info.json` file.
-        """
+        """Check dependencies that can not be listed in the `info.json` file."""
         pass
 
     def check_pipeline_parameters(self):
@@ -55,8 +54,7 @@ class T1VolumeParcellation(cpe.Pipeline):
         pass
 
     def build_input_node(self):
-        """Build and connect an input node to the pipeline.
-        """
+        """Build and connect an input node to the pipeline."""
         import os
         from colorama import Fore
         import nipype.pipeline.engine as npe
@@ -64,7 +62,8 @@ class T1VolumeParcellation(cpe.Pipeline):
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import t1_volume_template_tpm_in_mni
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
-        from clinica.utils.ux import print_groups_in_caps_directory
+        from clinica.utils.stream import cprint
+        from clinica.utils.ux import print_groups_in_caps_directory, print_images_to_process
 
         # Check that group already exists
         if not os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])):
@@ -91,19 +90,21 @@ class T1VolumeParcellation(cpe.Pipeline):
         read_parameters_node.inputs.file_list = gm_mni
         read_parameters_node.inputs.atlas_list = self.parameters['atlases']
 
+        if len(self.subjects):
+            print_images_to_process(self.subjects, self.sessions)
+            cprint('The pipeline will last a few seconds per image.')
+
         self.connect([
             (read_parameters_node, self.input_node, [('file_list', 'file_list')]),
             (read_parameters_node, self.input_node, [('atlas_list', 'atlas_list')])
         ])
 
     def build_output_node(self):
-        """Build and connect an output node to the pipeline.
-        """
+        """Build and connect an output node to the pipeline."""
         pass
 
     def build_core_nodes(self):
-        """Build and connect the core nodes of the pipeline.
-        """
+        """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio

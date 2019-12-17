@@ -69,6 +69,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                                                t1_volume_native_tpm,
                                                t1_volume_deformation_to_template)
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+        from clinica.utils.stream import cprint
         from clinica.utils.ux import print_groups_in_caps_directory, print_images_to_process
 
         # Check that group already exists
@@ -136,6 +137,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
+            cprint('The pipeline will last a few minutes per image.')
 
         self.connect([
             (read_input_node, self.input_node, [('native_segmentations', 'native_segmentations')]),

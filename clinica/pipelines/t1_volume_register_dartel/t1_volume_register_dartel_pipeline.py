@@ -19,8 +19,7 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
         A clinica pipeline object containing the T1VolumeExistingDartel pipeline.
     """
     def check_custom_dependencies(self):
-        """Check dependencies that can not be listed in the `info.json` file.
-        """
+        """Check dependencies that can not be listed in the `info.json` file."""
         pass
 
     def check_pipeline_parameters(self):
@@ -53,13 +52,13 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
         return ['dartel_flow_fields']
 
     def build_input_node(self):
-        """Build and connect an input node to the pipelines.
-        """
+        """Build and connect an input node to the pipeline."""
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.exceptions import ClinicaException, ClinicaCAPSError
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
         from clinica.utils.input_files import t1_volume_i_th_iteration_group_template, t1_volume_dartel_input_tissue
+        from clinica.utils.ux import print_images_to_process
 
         read_input_node = npe.Node(name="LoadingCLIArguments",
                                    interface=nutil.IdentityInterface(
@@ -104,14 +103,16 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
         read_input_node.inputs.dartel_input_images = d_input
         read_input_node.inputs.dartel_iteration_templates = dartel_iter_templates
 
+        if len(self.subjects):
+            print_images_to_process(self.subjects, self.sessions)
+
         self.connect([
             (read_input_node, self.input_node, [('dartel_input_images', 'dartel_input_images')]),
             (read_input_node, self.input_node, [('dartel_iteration_templates', 'dartel_iteration_templates')])
         ])
 
     def build_output_node(self):
-        """Build and connect an output node to the pipelines.
-        """
+        """Build and connect an output node to the pipeline."""
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
         import re
@@ -149,7 +150,6 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.
         """
-
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.filemanip import unzip_nii
