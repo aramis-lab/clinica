@@ -31,7 +31,6 @@ class StatisticsVolumeCLI(ce.CmdParser):
 
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
 
-        # TODO add group for covar 
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
 
@@ -43,11 +42,17 @@ class StatisticsVolumeCLI(ce.CmdParser):
                                   help='Defines the contrast. Must be one of the column names form the TSV file.')
 
         clinica_comp.add_argument("feature_type",
-                                  help='Define what type of file are grabbed for the analysis')
+                                  help='Define what type of file are grabbed for the analysis. Use \'custom\' if you want to use the --custom_file flag.')
 
         clinica_comp.add_argument("group_id",
                                   help='User-defined identifier for the provided group of subjects.')
 
+        optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
+
+        optional.add_argument("--custom_files", "-cf", type=str, default=None,
+                              help=('Custom file string. Specify filename using * when the subject or session name appear. '
+                                    + 'Example : \'*_task-rest_acq-fdg_pet_space-Ixi549Space_pet.nii.gz\' will grab the'
+                                    + ' corresponding file in all the subjects/sessions folders'))
 
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
@@ -72,7 +77,8 @@ class StatisticsVolumeCLI(ce.CmdParser):
         )
         pipeline.parameters = {'contrast': args.contrast,
                                'feature_type': args.feature_type,
-                               'group_id': args.group_id}
+                               'group_id': args.group_id,
+                               'custom_files': args.custom_files}
 
         if args.n_procs:
             exec_pipeline = pipeline.run(plugin='MultiProc',

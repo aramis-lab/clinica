@@ -50,7 +50,14 @@ class StatisticsVolume(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        return ['spmT_0001', 'spmT_0002', 'figures']
+        return ['spmT_0001',
+                'spmT_0002',
+                'new_figure_names',
+                'variance_of_error',
+                'resels_per_voxels',
+                'mask',
+                'regression_coeff',
+                'contrast ']
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -94,9 +101,21 @@ class StatisticsVolume(cpe.Pipeline):
                                                    'needed_pipeline': 't1-volume or t1-volume-existing-template'})
             except ClinicaException as e:
                 all_errors.append(e)
-
+        elif self.parameters['feature_type'] == 'custom':
+            if not self.parameters['custom_files']:
+                raise ClinicaException(Fore.RED + '[Error] You did not specify the --custom_files flag in the command line ! Clinica can\'t '
+                                       + 'know what file to use in your analysis ! Type: \n\t' + Fore.BLUE + 'clinica run statistics-volume\n'
+                                       + Fore.RED + ' to have help on how to use the command line.' + Fore.RESET)
+            try:
+                input_files = clinica_file_reader(self.subjects,
+                                                  self.sessions,
+                                                  self.caps_directory,
+                                                  {'pattern': self.parameters['custom_files'],
+                                                   'description': 'custom file provided by user'})
+            except ClinicaException as e:
+                all_errors.append(e)
         else:
-            raise ClinicaException(Fore.RED + '[Error] ' + Fore.YELLOW + self.parameters['file_id']
+            raise ClinicaException(Fore.RED + '[Error] ' + Fore.YELLOW + self.parameters['feature_type']
                                    + Fore.RED + ' modality is not currently supported for this analysis' + Fore.RESET)
 
         if len(all_errors) > 0:
@@ -105,7 +124,6 @@ class StatisticsVolume(cpe.Pipeline):
                 error_message += str(msg)
             raise ClinicaException(error_message)
 
-        # TODO custom file !
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(
                                             fields=self.get_input_fields(),
@@ -126,14 +144,25 @@ class StatisticsVolume(cpe.Pipeline):
 
         datasink = npe.Node(nio.DataSink(),
                             name='sinker')
-        datasink.inputs.base_directory = join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])
+        datasink.inputs.base_directory = join(self.caps_directory,
+                                              'groups',
+                                              'group-' + self.parameters['group_id'],
+                                              'statistics',
+                                              'spm_2_sample_t_test')
         datasink.inputs.parameterization = True
         datasink.inputs.regexp_substitutions = [
-            (r'(.*)/group-' + self.parameters['group_id'] + r'/spm_results_analysis_./(.*)',
-             r'\1/group-' + self.parameters['group_id'] + r'/\2')
+            (r'(.*)/group-' + self.parameters['group_id'] + r'/statistics/spm_2_sample_t_test/spm_results_analysis_./(.*)',
+             r'\1/group-' + self.parameters['group_id'] + r'/statistics/spm_2_sample_t_test/\2'),
+            (r'(.*)/group-' + self.parameters['group_id'] + r'/statistics/spm_2_sample_t_test/tsv_file/.*',
+             r'\1/group-' + self.parameters['group_id'] + r'/statistics/participant.tsv')
+            # Uncomment if you need all the files in the same folder
+            # ,
+            # (r'(.*)/group-' + self.parameters['group_id'] + r'.*/(.*)',
+            # r'\1/group-' + self.parameters['group_id'] + r'/\2')
         ]
 
-        # TODO remove unnecessary folders in output
+        datasink.inputs.tsv_file = self.tsv_file
+
         self.connect([
             (self.output_node, datasink, [('spmT_0001', 'spm_results_analysis_1')]),
             (self.output_node, datasink, [('spmT_0002', 'spm_results_analysis_2')]),
