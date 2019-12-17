@@ -27,8 +27,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         A clinica pipeline object containing the T1VolumeTissueSegmentation pipeline.
     """
     def check_custom_dependencies(self):
-        """Check dependencies that can not be listed in the `info.json` file.
-        """
+        """Check dependencies that can not be listed in the `info.json` file."""
         pass
 
     def check_pipeline_parameters(self):
@@ -76,7 +75,10 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
                 't1_mni']
 
     def build_input_node(self):
-        """Build and connect an input node to the pipelines.
+        """Build and connect an input node to the pipeline.
+
+        Raise:
+            ClinicaBIDSError: If there are duplicated files or missing files for any subject
         """
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -85,6 +87,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1W_NII
+        from clinica.utils.ux import print_images_to_process
 
         # Inputs from anat/ folder
         # ========================
@@ -98,11 +101,11 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
             err = 'Clinica faced error(s) while trying to read files in your CAPS directory.\n' + str(e)
             raise ClinicaBIDSError(err)
 
-        images_to_process = ', '.join(sub + '|' + ses for sub, ses in zip(self.subjects, self.sessions))
-        cprint('The pipeline will be run on the following subject(s): %s' % images_to_process)
-        cprint('The pipeline will last approximately 10 minutes per image.')
-
         check_volume_location_in_world_coordinate_system(t1w_files, self.bids_directory)
+
+        if len(self.subjects):
+            print_images_to_process(self.subjects, self.sessions)
+            cprint('The pipeline will last approximately 10 minutes per image.')
 
         read_node = npe.Node(name="ReadingFiles",
                              iterables=[
@@ -117,13 +120,11 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         ])
 
     def build_output_node(self):
-        """Build and connect an output node to the pipelines.
-        """
+        """Build and connect an output node to the pipeline."""
         pass
 
     def build_core_nodes(self):
-        """Build and connect the core nodes of the pipelines.
-        """
+        """Build and connect the core nodes of the pipeline."""
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         import nipype.interfaces.io as nio

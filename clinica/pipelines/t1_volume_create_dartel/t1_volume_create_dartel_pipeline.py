@@ -30,8 +30,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         check_group_label(self.parameters['group_id'])
 
     def check_custom_dependencies(self):
-        """Check dependencies that can not be listed in the `info.json` file.
-        """
+        """Check dependencies that can not be listed in the `info.json` file."""
         pass
 
     def get_input_fields(self):
@@ -53,8 +52,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         return ['final_template_file', 'template_files', 'dartel_flow_fields']
 
     def build_input_node(self):
-        """Build and connect an input node to the pipelines.
-        """
+        """Build and connect an input node to the pipeline."""
         import os
         import sys
         from colorama import Fore
@@ -64,7 +62,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         from clinica.utils.input_files import t1_volume_dartel_input_tissue
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.stream import cprint
-        from clinica.utils.ux import print_groups_in_caps_directory
+        from clinica.utils.ux import print_groups_in_caps_directory, print_images_to_process, print_begin_image
 
         representative_output = os.path.join(self.caps_directory,
                                              'groups',
@@ -109,13 +107,17 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         #     Each element of this list is a list of size len(self.subjects)
         read_parameters_node.inputs.dartel_inputs = d_input
 
+        if len(self.subjects):
+            print_images_to_process(self.subjects, self.sessions)
+            cprint('Computational time for DARTEL creation will depend on the number of images.')
+            print_begin_image('group-' + self.parameters['group_id'])
+
         self.connect([
             (read_parameters_node, self.input_node, [('dartel_inputs', 'dartel_input_images')])
         ])
 
     def build_output_node(self):
-        """Build and connect an output node to the pipelines.
-        """
+        """Build and connect an output node to the pipeline."""
         import os.path as op
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
@@ -167,8 +169,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         ])
 
     def build_core_nodes(self):
-        """Build and connect the core nodes of the pipelines.
-        """
+        """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.spm as spm
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
