@@ -81,7 +81,7 @@ class SpatialSVM(cpe.Pipeline):
         if not os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])):
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
-                '%sGroup %s does not exist. Did you run t1-volume or t1-volume-create-dartel pipeline?%s' %
+                '%sGroup %s does not exist. Did you run pet-volume, t1-volume or t1-volume-create-dartel pipeline?%s' %
                 (Fore.RED, self.parameters['group_id'], Fore.RESET)
             )
 

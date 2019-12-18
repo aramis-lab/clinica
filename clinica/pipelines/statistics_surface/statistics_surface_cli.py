@@ -143,7 +143,8 @@ class StatisticsSurfaceCLI(ce.CmdParser):
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subject_visits_with_covariates_tsv),
             base_dir=self.absolute_path(args.working_directory),
-            parameters=parameters
+            parameters=parameters,
+            name=self.name
         )
 
         check_inputs(pipeline.caps_directory,
