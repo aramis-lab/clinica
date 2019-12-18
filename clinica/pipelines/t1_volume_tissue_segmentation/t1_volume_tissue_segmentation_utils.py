@@ -44,16 +44,11 @@ def init_input_node(t1w):
     Extracts "sub-<participant_id>_ses-<session_label>" from input node
     and prints begin message.
     """
-    import datetime
-    from colorama import Fore
     from clinica.utils.filemanip import get_subject_id
-    from clinica.utils.stream import cprint
+    from clinica.utils.ux import print_begin_image
 
     subject_id = get_subject_id(t1w)
-
-    now = datetime.datetime.now().strftime('%H:%M:%S')
-    cprint('%s[%s]%s Running pipeline for %s...' %
-           (Fore.BLUE, now, Fore.RESET, subject_id.replace('_', '|')))
+    print_begin_image(subject_id)
 
     return subject_id, t1w
 
@@ -62,13 +57,8 @@ def print_end_pipeline(subject_id, final_file):
     """
     Display end message for <subject_id> when <final_file> is connected.
     """
-    import datetime
-    from colorama import Fore
-    from clinica.utils.stream import cprint
-
-    now = datetime.datetime.now().strftime('%H:%M:%S')
-    cprint('%s[%s]%s ...%s has completed.' % (
-        Fore.GREEN, now, Fore.RESET, subject_id.replace('_', '|')))
+    from clinica.utils.ux import print_end_image
+    print_end_image(subject_id)
 
 
 def zip_list_files(class_images, zip_files=False):

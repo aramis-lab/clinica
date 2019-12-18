@@ -85,6 +85,7 @@ class PETVolumeCLI(ce.CmdParser):
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
             base_dir=self.absolute_path(args.working_directory),
             parameters=parameters,
+            name=self.name
         )
 
         if args.n_procs:

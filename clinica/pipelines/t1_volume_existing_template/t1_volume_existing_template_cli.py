@@ -97,7 +97,7 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
             '\t%st1-volume-tissue-segmentation pipeline%s: Tissue segmentation, bias correction and spatial normalization to MNI space\n'
             '\t%st1-volume-register-dartel pipeline%s: Inter-subject registration using an existing DARTEL template\n'
             '\t%st1-volume-dartel2mni pipeline%s: DARTEL template to MNI\n'
-            '\t%st1-volume-parcellation pipeline%s: Atlas statistics\n'
+            '\t%st1-volume-parcellation pipeline%s: Atlas statistics'
             % (Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET)
         )
 
