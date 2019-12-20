@@ -37,7 +37,8 @@ def convert_adni_av45_fbb_pet(source_dir, csv_dir, dest_dir, subjs_list=None):
         adni_merge = pd.read_csv(adni_merge_path, sep=',', low_memory=False)
         subjs_list = list(adni_merge.PTID.unique())
 
-    cprint('Calculating paths of AV45 and Florbetaben PET images. Output will be stored in %s.' % path.join(dest_dir, 'conversion_info'))
+    cprint('Calculating paths of AV45 and Florbetaben PET images. Output will be stored in %s.' %
+           path.join(dest_dir, 'conversion_info'))
     images = compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list)
     cprint('Paths of AV45 and Florbetaben PET images found. Exporting images into BIDS ...')
     paths_to_bids(images, dest_dir, 'av45_fbb')
@@ -105,7 +106,9 @@ def compute_av45_fbb_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     # Exceptions
     # ==========
     conversion_errors = [  # Eq_1
-                         ('128_S_2220', 'm48')]
+                         ('128_S_2220', 'm48'),
+                         # Several output images
+                         ('098_S_4275', 'm84')]
 
     # Removing known exceptions from images to convert
     if not pet_amyloid_df.empty:

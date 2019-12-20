@@ -121,7 +121,17 @@ def compute_flair_paths(source_dir, csv_dir, dest_dir, subjs_list):
                          ('053_S_4578', 'm48'),
                          ('128_S_4586', 'm48'),
                          ('053_S_4813', 'm48'),
-                         ('053_S_5272', 'm24')]
+                         ('053_S_5272', 'm24'),
+                         ('013_S_1186', 'm48'),
+                         ('031_S_2022', 'bl'),
+                         ('031_S_2022', 'm06'),
+                         ('031_S_2233', 'bl'),
+                         ('031_S_2233', 'm03'),
+                         ('029_S_2395', 'm72'),
+                         ('130_S_6043', 'bl'),
+                         ('031_S_2018', 'bl'),
+                         # Several output images
+                         ('114_S_6039', 'bl')]
 
     # Removing known exceptions from images to convert
     if not flair_df.empty:

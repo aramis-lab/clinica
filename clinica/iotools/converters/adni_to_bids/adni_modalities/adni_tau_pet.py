@@ -107,7 +107,8 @@ def compute_tau_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     # Removing known exceptions from images to convert
     if not pet_tau_df.empty:
-        error_ind = pet_tau_df.index[pet_tau_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
+        error_ind = pet_tau_df.index[pet_tau_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors),
+                                                      axis=1)]
         pet_tau_df.drop(error_ind, inplace=True)
 
     # Checking for images paths in filesystem

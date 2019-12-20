@@ -145,7 +145,9 @@ def compute_dwi_paths(source_dir, csv_dir, dest_dir, subjs_list):
                          ('153_S_6237', 'bl'),
                          ('153_S_6336', 'bl'),
                          ('153_S_6450', 'bl'),
-                         ('003_S_4441', 'm12')]
+                         ('003_S_4441', 'm12'),
+                         # Several output images
+                         ('029_S_2395', 'm72')]
 
     # Removing known exceptions from images to convert
     if not dwi_df.empty:
