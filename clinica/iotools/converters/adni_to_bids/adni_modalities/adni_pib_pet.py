@@ -91,14 +91,14 @@ def compute_pib_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
     if pet_pib_dfs_list:
         pet_pib_df = pd.concat(pet_pib_dfs_list, ignore_index=True)
 
-    # TODO check for exceptions
     # Exceptions
     # ==========
     conversion_errors = []
 
     # Removing known exceptions from images to convert
     if not pet_pib_df.empty:
-        error_ind = pet_pib_df.index[pet_pib_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
+        error_ind = pet_pib_df.index[pet_pib_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors),
+                                                      axis=1)]
         pet_pib_df.drop(error_ind, inplace=True)
 
     images = find_image_path(pet_pib_df, source_dir, 'PIB', 'I', 'Image_ID')

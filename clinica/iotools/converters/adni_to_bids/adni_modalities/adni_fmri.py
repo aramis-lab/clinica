@@ -118,7 +118,14 @@ def compute_fmri_path(source_dir, csv_dir, dest_dir, subjs_list):
 
     # Exceptions
     # ==========
-    conversion_errors = [('006_S_4485', 'm84')]
+    conversion_errors = [('006_S_4485', 'm84'),
+                         # Eq_1
+                         ('094_S_4503', 'm24'),
+                         ('009_S_4388', 'm72'),
+                         ('036_S_6088', 'bl'),
+                         ('036_S_6134', 'bl'),
+                         # Multiple images
+                         ('029_S_2395', 'm72')]
 
     # Removing known exceptions from images to convert
     if not fmri_df.empty:

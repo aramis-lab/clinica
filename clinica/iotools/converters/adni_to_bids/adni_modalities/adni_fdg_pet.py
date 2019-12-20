@@ -113,7 +113,8 @@ def compute_fdg_pet_paths(source_dir, csv_dir, dest_dir, subjs_list):
 
     # Removing known exceptions from images to convert
     if not pet_fdg_df.empty:
-        error_ind = pet_fdg_df.index[pet_fdg_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors), axis=1)]
+        error_ind = pet_fdg_df.index[pet_fdg_df.apply(lambda x: ((x.Subject_ID, x.VISCODE) in conversion_errors),
+                                                      axis=1)]
         pet_fdg_df.drop(error_ind, inplace=True)
 
     images = find_image_path(pet_fdg_df, source_dir, 'FDG', 'I', 'Image_ID')
