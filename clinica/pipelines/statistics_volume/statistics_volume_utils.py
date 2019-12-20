@@ -60,7 +60,8 @@ def model_creation(csv, contrast, idx_group1, idx_group2, file_list, template_fi
         template_file: (str) path to the template file used to generate the .m file
 
     Returns:
-
+        current_model: (str) path to the matlab files with all the @TEXT replaced with the correct names
+        covariables: list of str with the names of covariables
     """
     from os.path import join, dirname, isfile, abspath, isdir
     from shutil import rmtree
@@ -135,8 +136,17 @@ def model_creation(csv, contrast, idx_group1, idx_group2, file_list, template_fi
     return current_model, covariables
     
 
-def is_number(s):
+def is_number(s: str):
+    """
+
+    Args:
+        s: (str) string to test if it can be converted into float
+
+    Returns:
+        True or False
+    """
     try:
+        # Try the conversion, if it is not possible, error will be raised
         float(s)
         return True
     except ValueError:
@@ -145,12 +155,12 @@ def is_number(s):
 
 def unravel_list_for_matlab(my_list):
     """
-
+        Unpack a list into a Matlab compliant format to insert in .m files.
     Args:
-        my_list:
+        my_list: (list) of str
 
     Returns:
-
+        (str) that join the different str of the list, with '
     """
     result = '\',\''.join(my_list)
     result = '\'' + result + '\''
@@ -159,15 +169,15 @@ def unravel_list_for_matlab(my_list):
 
 def write_covariable_lines(m_file_to_write_in, covar_number, covar_name, covar_values):
     """
-
+        Use this function to add covariable lines in the Matlab file m_file_to_write_in for one covariable
     Args:
-        m_file_to_write_in:
-        covar_number: must start at 1
-        covar_name:
-        covar_values:
+        m_file_to_write_in: (str) path to the m-file
+        covar_number: (int) this is the number of the covariable (must start at 1)
+        covar_name: (str) name of the covariable (ex: 'age', 'sex')
+        covar_values: (list) of float with the values of the covariables
 
     Returns:
-
+        nothing
     """
     from os.path import isfile
 
@@ -184,6 +194,16 @@ def write_covariable_lines(m_file_to_write_in, covar_number, covar_name, covar_v
 
 
 def run_m_script(m_file):
+    """
+        Runs a matlab m file for SPM, determining automatically if it must be launched with SPM or SPM Standalone
+        If launch with spm standalone, the line 'spm_jobman('run', matlabbatch)' must be removed because unnecessary
+
+    Args:
+        m_file: (str) path to Matlab m file
+
+    Returns:
+        output_mat_file: (str) path to the SPM.mat file needed in SPM analysis
+    """
     from os.path import isfile, dirname, basename, abspath, join
     from os import system
     import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
@@ -228,6 +248,12 @@ def run_m_script(m_file):
 
 
 def use_spm_standalone():
+    """
+        Tells if SPM standalone can be used
+    Returns:
+        True if SPM standalone is detected, False otherwise. Note that it does not guarentee that SPM (classical) is
+        up and running in the system.
+    """
     import os
     from os.path import isdir, expandvars
 
@@ -276,13 +302,13 @@ def delete_last_line(filename):
 
 def estimate(mat_file, template_file):
     """
-
+        Make a copy of the template file (for estimation) and replace @SPMMAT by the real path to SPM.mat (mat_file)
     Args:
-        mat_file:
-        template_file:
+        mat_file: (str) path to the SPM.mat file of the SPM analysis
+        template_file: (str) path to the template file for the estimation of the model
 
     Returns:
-
+        current_model_estimation: (str) path to the template file filled with SPM.mat information, ready to be launched
     """
     from os.path import abspath
 
@@ -300,13 +326,13 @@ def estimate(mat_file, template_file):
 
 def results(mat_file, template_file):
     """
-
+        Make a copy of the template file (for results) and replace @SPMMAT by the real path to SPM.mat (mat_file)
     Args:
-        mat_file:
-        template_file:
+        mat_file: (str) path to the SPM.mat file of the SPM analysis
+        template_file: (str) path to the template file for getting the results of the model
 
     Returns:
-
+        current_model_estimation: (str) path to the template file filled with SPM.mat information, ready to be launched
     """
     from os.path import abspath
 
@@ -324,15 +350,17 @@ def results(mat_file, template_file):
 
 def contrast(mat_file, template_file, covariables, class_names):
     """
+        Make a copy of the template file (for results) and replace @SPMMAT, @COVARNUMBER, @GROUP1, @GROUP2
+        by the corresponding variables
 
     Args:
-        mat_file:
-        template_file:
-        covariables:
-        class_names:
+        mat_file: (str) path to the SPM.mat file of the SPM analysis
+        template_file: (str) path to the template file for getting the results of the model
+        covariables: (list) of str: list of covariables
+        class_names: (list) of str of length 2 that correspond to the 2 classes for the group comparison
 
     Returns:
-
+        current_model_estimation: (str) path to the template file filled with variables, ready to be launched
     """
     from os.path import abspath
 
@@ -354,6 +382,25 @@ def contrast(mat_file, template_file, covariables, class_names):
 
 
 def read_output(spm_mat, class_names, covariables):
+    """
+        Once analysis is done, grab all the different filenames and rename them in current directory according to class
+        names
+    Args:
+        spm_mat: (str) path to the SPM.mat file of the SPM analysis
+        class_names: (list) of str of length 2 that correspond to the 2 classes for the group comparison
+        covariables: (list) of str: list of covariables
+
+    Returns:
+        spmT_0001: (str) path to t maps for the first group comparison
+        spmT_0002: (str) path to t maps for the second group comparison
+        new_figure_names: (list) path to figure files
+        variance_of_error: (str) path to variance of error
+        resels_per_voxels: (str) path to resels per voxel
+        mask: (str) path to mask of included voxels
+        regression_coeff: (str list) path to regression coefficients
+        contrasts: (str list) path to weighted parameter estimation for the 2 contrasts
+
+    """
     from os.path import join, dirname, isdir, isfile, abspath
     from os import listdir
     from shutil import copyfile
