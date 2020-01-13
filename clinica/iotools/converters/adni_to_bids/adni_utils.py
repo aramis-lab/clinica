@@ -978,9 +978,8 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
         # Conditions to check if output NIFTI files exists,
         # and, if DWI, if .bvec and .bval files are also present
         nifti_exists = path.isfile(nifti_file) or path.isfile(output_image)
-        dwi_bvec_and_bval_exist = not (modality == 'dwi') \
-                                  or (path.isfile(path.join(output_path, output_filename + '.bvec'))
-                                  and path.isfile(path.join(output_path, output_filename + '.bval')))
+        dwi_bvec_and_bval_exist = not (modality == 'dwi') or (path.isfile(path.join(output_path, output_filename + '.bvec'))
+                                                              and path.isfile(path.join(output_path, output_filename + '.bval')))
 
         # Check if conversion worked (output files exist)
         if not nifti_exists or not dwi_bvec_and_bval_exist:
