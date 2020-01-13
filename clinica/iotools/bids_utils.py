@@ -487,11 +487,11 @@ def get_ext(file_path):
 
 
 def compress_nii(file_path):
-    '''
+    """
     Compress nii files.
 
     :param file_path: path to the file to convert
-    '''
+    """
     from os import remove
     import gzip
     import shutil
