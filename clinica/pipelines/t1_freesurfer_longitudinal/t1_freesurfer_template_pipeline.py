@@ -15,15 +15,22 @@ class T1FreeSurferTemplate(cpe.Pipeline):
     def get_processed_images(caps_directory, subjects, sessions):
         import os
         from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.input_files import T1_FS_DESTRIEUX
-        from clinica.utils.filemanip import extract_image_ids
+        from clinica.utils.input_files import T1_FS_T_DESTRIEUX
+        from clinica.utils.longitudinal import get_long_id
+        from clinica.utils.participant import get_unique_subjects
+        import re
+
+        [list_participant_id, list_list_session_ids] = get_unique_subjects(subjects, sessions)
+        list_long_id = [get_long_id(list_session_ids) for list_session_ids in list_list_session_ids]
+
         image_ids = []
         if os.path.isdir(caps_directory):
             t1_freesurfer_files = clinica_file_reader(
-                subjects, sessions,
-                caps_directory, T1_FS_DESTRIEUX, False
+                list_participant_id, list_long_id,
+                caps_directory, T1_FS_T_DESTRIEUX, False
             )
-            image_ids = extract_image_ids(t1_freesurfer_files)
+            image_ids = [re.search(r'(sub-[a-zA-Z0-9]+)_(long-[a-zA-Z0-9]+)', file).group()
+                         for file in t1_freesurfer_files]
         return image_ids
 
     def check_pipeline_parameters(self):
@@ -62,39 +69,48 @@ class T1FreeSurferTemplate(cpe.Pipeline):
         return ['image_id']
 
     def build_input_node(self):
-        """Build and connect an input node to the pipeline.
-        """
+        """Build and connect an input node to the pipeline."""
         import os
+        from colorama import Fore
+
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+
         from clinica.utils.exceptions import ClinicaException, ClinicaCAPSError
-        from clinica.utils.filemanip import save_participants_sessions
+        from clinica.utils.filemanip import (save_participants_sessions,
+                                             extract_subjects_sessions_from_filename)
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1_FS_DESTRIEUX
-        from clinica.utils.participant import get_unique_subjects
+        from clinica.utils.longitudinal import get_long_id, extract_session_ids, get_participants_long_id
+        from clinica.utils.participant import get_unique_subjects, unique_subjects_sessions_to_subjects_sessions
         from clinica.utils.stream import cprint
-        from clinica.utils.ux import print_images_to_process
+        from .longitudinal_utils import extract_participant_long_ids_from_filename, save_part_sess_long_ids_to_tsv
 
-        # # Display image(s) already present in CAPS folder
-        # # ===============================================
-        # output_ids = self.get_processed_images(self.caps_directory, self.subjects, self.sessions)
-        # processed_participants, processed_sessions = extract_subjects_sessions_from_filename(output_ids)
-        # if len(processed_participants) > 0:
-        #     cprint("%sClinica found %s image(s) already processed in CAPS directory:%s" %
-        #            (Fore.YELLOW, len(processed_participants), Fore.RESET))
-        #     for p_id, s_id in zip(processed_participants, processed_sessions):
-        #         cprint("%s\t%s | %s%s" % (Fore.YELLOW, p_id, s_id, Fore.RESET))
-        #     if self.overwrite_caps:
-        #         output_folder = "<CAPS>/subjects/sub-<participant_id>/long-<long_label>/freesurfer_unbiased_template/"
-        #         cprint("%s\nOutput folders in %s will be recreated.\n%s" % (Fore.YELLOW, output_folder, Fore.RESET))
-        #     else:
-        #         cprint("%s\nImage(s) will be ignored by Clinica.\n%s" % (Fore.YELLOW, Fore.RESET))
-        #         input_ids = [p_id + '_' + s_id for p_id, s_id in
-        #                      zip(self.subjects, self.sessions)]
-        #         processed_ids = [p_id + '_' + s_id for p_id, s_id in
-        #                          zip(processed_participants, processed_sessions)]
-        #         to_process_ids = list(set(input_ids) - set(processed_ids))
-        #         self.subjects, self.sessions = extract_subjects_sessions_from_filename(to_process_ids)
+        # Display image(s) already present in CAPS folder
+        # ===============================================
+        output_ids = self.get_processed_images(self.caps_directory, self.subjects, self.sessions)
+        processed_participants, processed_long_sessions = extract_participant_long_ids_from_filename(output_ids)
+        if len(processed_participants) > 0:
+            cprint("%sClinica found %s participant(s) already processed in CAPS directory:%s" %
+                   (Fore.YELLOW, len(processed_participants), Fore.RESET))
+            for p_id, l_id in zip(processed_participants, processed_long_sessions):
+                cprint("%s\t%s | %s%s" % (Fore.YELLOW, p_id, l_id, Fore.RESET))
+            if self.overwrite_caps:
+                output_folder = "<CAPS>/subjects/sub-<participant_id>/long-<long_label>/freesurfer_unbiased_template/"
+                cprint("%s\nOutput folders in %s will be recreated.\n%s" % (Fore.YELLOW, output_folder, Fore.RESET))
+            else:
+                cprint("%s\nParticipant(s) will be ignored by Clinica.\n%s" % (Fore.YELLOW, Fore.RESET))
+                input_ids = [p_id + '_' + s_id for p_id, s_id in
+                             zip(self.subjects, self.sessions)]
+                processed_sessions_per_participant = [extract_session_ids(
+                    os.path.join(self.caps_directory, 'subjects', p_id, l_id, l_id + '_sessions.tsv')
+                ) for (p_id, l_id) in zip(processed_participants, processed_long_sessions)]
+                participants, sessions = unique_subjects_sessions_to_subjects_sessions(
+                    processed_participants,
+                    processed_sessions_per_participant)
+                processed_ids = [p_id + '_' + s_id for p_id, s_id in zip(participants, sessions)]
+                to_process_ids = list(set(input_ids) - set(processed_ids))
+                self.subjects, self.sessions = extract_subjects_sessions_from_filename(to_process_ids)
 
         # Check that t1-freesurfer has run on the CAPS directory
         try:
@@ -108,14 +124,24 @@ class T1FreeSurferTemplate(cpe.Pipeline):
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
         folder_participants_tsv = os.path.join(self.base_dir, self.name)
-        save_participants_sessions(self.subjects, self.sessions, folder_participants_tsv)
+        long_ids = get_participants_long_id(self.subjects, self.sessions)
+        save_part_sess_long_ids_to_tsv(self.subjects, self.sessions, long_ids, folder_participants_tsv)
+
+        [list_participant_id, list_list_session_ids] = get_unique_subjects(self.subjects, self.sessions)
+        list_long_id = [get_long_id(list_session_ids) for list_session_ids in list_list_session_ids]
+
+        def print_images_to_process(unique_part_list, per_part_session_list, list_part_long_id):
+            cprint('The pipeline will be run on the following %s participant(s):' % len(unique_part_list))
+            for (part_id, list_sess_id, list_id) in zip(unique_part_list, per_part_session_list, list_part_long_id):
+                sessions_participant = ', '.join(s_id for s_id in list_sess_id)
+                cprint("\t%s | %s | %s" % (part_id, sessions_participant, list_id))
 
         if len(self.subjects):
-            print_images_to_process(self.subjects, self.sessions)
+            # TODO: Generalize long IDs to the message display
+            print_images_to_process(list_participant_id, list_list_session_ids, list_long_id)
             cprint('List available in %s' % os.path.join(folder_participants_tsv, 'participants.tsv'))
             cprint('The pipeline will last approximately 10 hours per participant.')
 
-        [list_participant_id, list_list_session_ids] = get_unique_subjects(self.subjects, self.sessions)
         read_node = npe.Node(name="ReadingFiles",
                              iterables=[
                                  ('participant_id', list_participant_id),
@@ -174,7 +200,7 @@ class T1FreeSurferTemplate(cpe.Pipeline):
         recon_all = npe.Node(
             interface=nutil.Function(
                 input_names=['subjects_dir', 'subject_id', 'flags', 'directive'],
-                output_names=['recon_all_args'],
+                output_names=['subject_id'],
                 function=run_recon_all_base),
             name='1-SegmentationReconAll')
         recon_all.inputs.directive = '-all'

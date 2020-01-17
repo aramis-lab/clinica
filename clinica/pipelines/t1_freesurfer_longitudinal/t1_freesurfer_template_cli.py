@@ -47,4 +47,3 @@ class T1FreeSurferTemplateCLI(ce.CmdParser):
             print_end_pipeline(self.name, pipeline.base_dir, pipeline.base_dir_was_specified)
         else:
             print_crash_files_and_exit(args.logname, pipeline.base_dir)
-
