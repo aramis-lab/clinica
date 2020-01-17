@@ -59,6 +59,12 @@ T1_FS_DESIKAN_PARC_R = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/la
                         'description': 'right hemisphere surface-based Desikan parcellation (label/rh.aparc.annot).',
                         'needed_pipeline': 't1-freesurfer'}
 
+# FreeSurfer
+
+T1_FS_T_DESTRIEUX = {'pattern': 'freesurfer_unbiased_template/sub-*_long-*/mri/aparc.a2009s+aseg.mgz',
+                     'description': 'Destrieux-based segmentation (mri/aparc.a2009s+aseg.mgz) from unbiased template.',
+                     'needed_pipeline': 't1-freesurfer-longitudinal or t1-freesurfer-template'}
+
 
 # T1-Volume
 
