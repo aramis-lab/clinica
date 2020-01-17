@@ -7,11 +7,11 @@ class T1FreeSurferLongitudinalCorrectionCLI(ce.CmdParser):
 
     def define_name(self):
         """Define the sub-command name to run this pipeline."""
-        self._name = 't1-freesurfer-longitudinal'
+        self._name = 't1-freesurfer-longitudinal-correction'
 
     def define_description(self):
         """Define a description of this pipeline."""
-        self._description = ('Longitudinal correction of T1w images with FreeSurfer:\n'
+        self._description = ('Longitudinal pre-processing correction of T1w images with FreeSurfer:\n'
                              'http://clinica.run/doc/Pipelines/T1_FreeSurfer_Longitudinal/')
 
     def define_options(self):

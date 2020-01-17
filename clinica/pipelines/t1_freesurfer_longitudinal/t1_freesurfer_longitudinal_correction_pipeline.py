@@ -1,13 +1,5 @@
 # coding: utf8
 
-__author__ = "Alexis Guyot"
-__copyright__ = "Copyright 2016-2019, The Aramis Lab Team"
-__credits__ = ["Alexis Guyot"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Alexis Guyot"
-__email__ = "alexis.guyot@icm-institute.org"
-__status__ = "Development"
 
 import clinica.pipelines.engine as cpe
 
@@ -15,21 +7,8 @@ import clinica.pipelines.engine as cpe
 class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
     """FreeSurfer Longitudinal correction class
 
-    Creates a pipeline that runs the Freesurfer longitudinal
-    (correction) processing module for each subjects in a .tsv-defined
-    list of subjects/sessions. This requires a prior run of
-    t1-freesurfer on the TSV file, followed by a run of
-    t1-freesurfer-template on the same TSV file. For each subject, all the
-    timepoints (sessions) are re-processed based on a template computed
-    with t1-freesurfer-template for that specific subject.
-
-    Todos: N/A
-
     Returns:
         A clinica pipeline object containing the T1FreeSurferLongitudinalCorrection pipeline
-
-    Raises:
-
     """
 
     def check_pipeline_parameters(self):
@@ -44,293 +23,176 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
 
+        Note:
+            The list of inputs of the T1FreeSurferLongitudinalCorrection pipeline is:
+                * participant_id (str): Participant ID (e.g. "sub-CLNC01")
+                * session_id (str): Session ID associated to `participant_id` (e.g. "ses-M00")
+                * long_id (str): Longitudinal ID associated to `participant_id` (e.g. "long-M00" or "long-M00M18")
+
         Returns:
             A list of (string) input fields name.
         """
-
-        return ['subject_list',
-                'session_list',
-                'caps_target_list',
-                'caps_dir',
-                'overwrite_warning',
-                'overwrite_caps']
+        return ['participant_id', 'session_id', 'long_id']
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
+
+        Note:
+            The list of inputs of the T1FreeSurferLongitudinalCorrection pipeline is:
+                * image_id (str): Image ID containing participant, session and longitudinal ID
+                    (e.g. "sub-CLNC01_ses-M00_long-M00M18")
 
         Returns:
             A list of (string) output fields name.
         """
 
-        return ['subject',
-                'session',
-                'subject_dir',
-                'caps_target',
-                'caps_dir',
-                'overwrite_warning',
-                'overwrite_caps',
-                'longitudinal_result',
-                'stats_path']
+        return ['image_id']
 
     def build_input_node(self):
-        """Build and connect an input node to the pipeline.
+        """Build and connect an input node to the pipeline."""
+        import os
 
-        This node is supposedly used to load BIDS inputs when this
-        pipeline is not already connected to the output of a previous
-        Clinica pipeline. For the purpose of the example, we simply
-        read input arguments given by the command line interface and
-        transmitted here through the `self.parameters` dictionary and
-        pass it to the `self.input_node` to further by used as input of
-        the core nodes.
-        """
-        import clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        # Step 0: receive data from the template pipeline
-        #         (subjects that have been detected as
-        #         processed/non-processed and corresponding sessions and
-        #         CAPS locations)
-        # ======
-        receivefrom_template_node_name = '0_receivefrom_template'
-        receivefrom_template_node = npe.Node(
-            name=receivefrom_template_node_name,
-            interface=nutil.IdentityInterface(
-                fields=['unpcssd_sublist',
-                        'pcssd_capstargetlist',
-                        'overwrite_tsv'])
-            )
+        from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.filemanip import save_participants_sessions
+        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.input_files import T1_FS_DESTRIEUX, T1_FS_T_DESTRIEUX
+        from clinica.utils.stream import cprint
+        from .longitudinal_utils import grab_image_ids_from_caps_directory, read_part_sess_long_ids_from_tsv
 
-        # check if cross-sectional pipeline run on all subjects
-        checkinput_node_name = '1_check_input'
-        checkinput_node = npe.Node(name=checkinput_node_name,
-                                   interface=nutil.Function(
-                                       input_names=['in_caps_dir',
-                                                    'in_subject_list',
-                                                    'in_session_list',
-                                                    'in_unpcssd_sublist',
-                                                    'in_pcssd_capstargetlist',
-                                                    'in_overwrite_caps',
-                                                    'in_working_directory',
-                                                    'in_n_procs',
-                                                    'in_overwrite_tsv'],
-                                       output_names=['out_subject_list',
-                                                     'out_session_list',
-                                                     'out_caps_target_list',
-                                                     'out_overwrite_warning'],
-                                       function=utils.process_input_node))
-        checkinput_node.inputs.in_caps_dir = self.caps_directory
-        checkinput_node.inputs.in_subject_list = self.subjects
-        checkinput_node.inputs.in_session_list = self.sessions
-        checkinput_node.inputs.in_working_directory = self.base_dir
-        checkinput_node.inputs.in_overwrite_caps = self.parameters[
-            'overwrite_caps']
-        checkinput_node.inputs.in_n_procs = self.parameters['n_procs']
+        #  We re-initialize subjects, sessions and add long IDS since the latter is not handled by Clinica
+        if self.tsv_file:
+            self.subjects, self.sessions, list_long_id = read_part_sess_long_ids_from_tsv(self.tsv_file)
+        else:
+            self.subjects, self.sessions, list_long_id = grab_image_ids_from_caps_directory(self.caps_directory)
+        # TODO: Find a way to distinguish cross-sectional from longitudinal pipelines in Clinica Core
 
+        # TODO: Display image(s) already present in CAPS folder
+        # ===============================================
+        # output_ids = self.get_processed_images(self.caps_directory, self.subjects, self.sessions)
+
+        all_errors = []
+        try:
+            # Check that t1-freesurfer has run on the CAPS directory
+            clinica_file_reader(self.subjects, self.sessions, self.caps_directory, T1_FS_DESTRIEUX)
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        try:
+            # Check that t1-freesurfer-template has run on the CAPS directory
+            clinica_file_reader(self.subjects, list_long_id, self.caps_directory, T1_FS_T_DESTRIEUX)
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        if len(all_errors) > 0:
+            error_message = 'Clinica faced errors while trying to read files in your CAPS directory.\n'
+            for msg in all_errors:
+                error_message += str(msg)
+            raise ClinicaException(error_message)
+
+        # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
+        folder_participants_tsv = os.path.join(self.base_dir, self.name)
+        save_participants_sessions(self.subjects, self.sessions, folder_participants_tsv)
+
+        def print_images_to_process(list_participant_id, list_session_id, list_longitudinal_id):
+            cprint('The pipeline will be run on the following %s image(s):' % len(list_participant_id))
+            for (p_id, s_id, l_id) in zip(list_participant_id, list_session_id, list_longitudinal_id):
+                cprint("\t%s | %s | %s" % (p_id, s_id, l_id))
+
+        if len(self.subjects):
+            # TODO: Generalize long IDs to the message display
+            print_images_to_process(self.subjects, self.sessions, list_long_id)
+            cprint('List available in %s' % os.path.join(folder_participants_tsv, 'participants.tsv'))
+            cprint('The pipeline will last approximately 10 hours per participant.')
+
+        read_node = npe.Node(name="ReadingFiles",
+                             iterables=[
+                                 ('participant_id', self.subjects),
+                                 ('session_id', self.sessions),
+                                 ('session_id', list_long_id),
+                             ],
+                             synchronize=True,
+                             interface=nutil.IdentityInterface(
+                                 fields=self.get_input_fields())
+                             )
         self.connect([
-            (
-                receivefrom_template_node, checkinput_node,
-                [('unpcssd_sublist', 'in_unpcssd_sublist'),
-                 ('pcssd_capstargetlist', 'in_pcssd_capstargetlist'),
-                 ('overwrite_tsv', 'in_overwrite_tsv')]),
-            (
-                checkinput_node, self.input_node,
-                [('out_subject_list', 'subject_list'),
-                 ('out_session_list', 'session_list'),
-                 ('out_caps_target_list', 'caps_target_list'),
-                 ('out_overwrite_warning', 'overwrite_warning')])
+            (read_node, self.input_node, [('participant_id', 'participant_id')]),
+            (read_node, self.input_node, [('session_id', 'session_id')]),
+            (read_node, self.input_node, [('long_id', 'long_id')]),
         ])
 
     def build_output_node(self):
-        """copy the longitudinal-correction folder to CAPS DIR
-
-        Will take all the data stored into the node in working directory
-        that contains the built templates and copy those to the CAPS
-        directory
-        """
-        import nipype.interfaces.utility as nutil
+        """Build and connect an output node to the pipeline."""
         import nipype.pipeline.engine as npe
-        import clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_utils as utils
+        import nipype.interfaces.utility as nutil
+        from .t1_freesurfer_longitudinal_correction_utils import save_to_caps
+        import os
 
-        # define the node to copy data to CAPS folder
-        copy2caps_node_name = '7_copy2caps'
-        copy2caps_node = npe.MapNode(
-            name=copy2caps_node_name,
-            interface=nutil.Function(
-                input_names=['in_subject',
-                             'in_session',
-                             'in_subject_dir',
-                             'in_caps_target',
-                             'in_caps_dir',
-                             'in_overwrite_warning',
-                             'in_overwrite_caps',
-                             'in_stats_path'],
-                output_names=['out_copy2_caps'],
-                function=utils.copy_to_caps
-                ),
-            iterfield=['in_subject',
-                       'in_session',
-                       'in_caps_target',
-                       'in_stats_path'])
-        copy2caps_node.inputs.in_caps_dir = self.caps_directory
-        copy2caps_node.inputs.in_overwrite_caps = self.parameters[
-            'overwrite_caps']
+        save_to_caps = npe.Node(interface=nutil.Function(
+            input_names=['source_dir', 'image_id', 'caps_dir', 'overwrite_caps'],
+            output_names=['image_id'],
+            function=save_to_caps),
+            name='SaveToCaps')
+        save_to_caps.inputs.source_dir = os.path.join(self.base_dir, self.name, 'ReconAll')
+        save_to_caps.inputs.caps_dir = self.caps_directory
+        save_to_caps.inputs.overwrite_caps = self.overwrite_caps
 
         self.connect([
-            (
-                self.output_node, copy2caps_node,
-                [('subject', 'in_subject'),
-                 ('session', 'in_session'),
-                 ('subject_dir', 'in_subject_dir'),
-                 ('caps_target', 'in_caps_target'),
-                 ('overwrite_warning', 'in_overwrite_warning'),
-                 ('stats_path', 'in_stats_path')])
+            (self.output_node, save_to_caps, [('image_id', 'image_id')]),
         ])
 
     def build_core_nodes(self):
-        """Build and connect the core nodes of the pipelines.
-        """
-        import clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_utils as utils
-        import clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_utils as template_utils
+        """Build and connect the core nodes of the pipeline."""
+        import os
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from nipype.interfaces.freesurfer.preprocess import ReconAll
+        from .t1_freesurfer_longitudinal_correction_utils import init_input_node, run_recon_all_long, write_tsv_files
 
-        # Per-subject creation of the template
-        # Step 0: receivefrom_template_node
-        # Step 1: check_input_node
-        # Step 2: get longitudinal subfolder names
-        # ======
-        long_subdirname_node_name = '2_long_subdirname'
-        long_subdirname_node = npe.Node(
-            name=long_subdirname_node_name,
+        # Nodes declaration
+        # =================
+        # Initialize the pipeline
+        init_input = npe.Node(
             interface=nutil.Function(
-                input_names=['in_subject_list',
-                             'in_session_list'],
-                output_names=['out_longsubdirnames_dict'],
-                function=template_utils.get_longsubdir_dict)
-            )
+                input_names=['caps_dir', 'participant_id', 'session_id', 'long_id', 'output_dir'],
+                output_names=['image_id', 'subjects_dir', 'flags'],
+                function=init_input_node),
+            name='0-InitPipeline')
+        init_input.inputs.caps_dir = self.caps_directory
+        init_input.inputs.output_dir = os.path.join(self.base_dir, self.name, 'ReconAll')
 
-        # Step 3: create symbolic links for each subject
-        # ======
-        symlink_node_name = '3_symlink'
-        symlink_node = npe.Node(name=symlink_node_name,
-                                interface=nutil.Function(
-                                    input_names=['in_caps_dir',
-                                                 'in_subject_list',
-                                                 'in_session_list',
-                                                 'in_longsubdirnames_dict'],
-                                    output_names=['out_symlink_path'],
-                                    function=utils.create_symlinks))
-        symlink_node.inputs.in_caps_dir = self.caps_directory
-
-        # Step 4: prepare longitudinal recon-all flags (prior to
-        #         running recon-all -long)
-        # ======
-        prepare_longitudinal_node_name = '4_prepare_longitudinal'
-        prepare_longitudinal_node = npe.MapNode(
-            name=prepare_longitudinal_node_name,
+        # Run recon-all command
+        recon_all = npe.Node(
             interface=nutil.Function(
-                input_names=['in_subject',
-                             'in_session'],
-                output_names=['out_reconalllong_flags'],
-                function=utils.get_reconalllong_flags
-                ),
-            iterfield=['in_subject',
-                       'in_session'])
+                input_names=['subjects_dir', 'participant_id', 'session_id', 'long_id', 'directive'],
+                output_names=['subject_id'],
+                function=run_recon_all_long),
+            name='1-SegmentationReconAll')
+        recon_all.inputs.directive = '-all'
 
-        # Step 5: run freesurfer longitudinal for all {subject,session}
-        #         (i.e. run recon-all -long)
-        # ======
-        run_longitudinal_node_name = '5_run_longitudinal'
-        run_longitudinal_node = npe.MapNode(
-            name=run_longitudinal_node_name,
-            interface=nutil.Function(
-                input_names=['in_subject',
-                             'in_session',
-                             'in_reconalllong_flags',
-                             'in_symlink_path'],
-                output_names=['out_longitudinal_result'],
-                function=utils.run_reconalllong
-                ),
-            iterfield=['in_subject',
-                       'in_session',
-                       'in_reconalllong_flags'])
+        # Generate TSV files containing a summary of the regional statistics
+        create_tsv = npe.Node(interface=nutil.Function(
+            input_names=['subjects_dir', 'image_id'],
+            output_names=['image_id'],
+            function=write_tsv_files),
+            name='2-CreateTsvFiles')
 
-        # Step 6: Create statistics .tsv files for all {subject,session}
-        # ======
-        write_stats_node_name = '6_write_stats'
-        write_stats_node = npe.MapNode(
-            name=write_stats_node_name,
-            interface=nutil.Function(
-                input_names=['in_subject',
-                             'in_session',
-                             'in_symlink_path',
-                             'in_longitudinal_result'],
-                output_names=['out_stats_path'],
-                function=utils.write_stats_files,
-                ),
-            iterfield=['in_subject',
-                       'in_session'])
-
-        # Connection
-        # ==========
+        # Connections
+        # ===========
         self.connect([
-            # long_subdirname_node
-            (
-                self.input_node, long_subdirname_node,
-                [('subject_list', 'in_subject_list'),
-                 ('session_list', 'in_session_list')]),
-            # symlink_node
-            (
-                self.input_node, symlink_node,
-                [('subject_list', 'in_subject_list'),
-                 ('session_list', 'in_session_list')]),
-            (
-                long_subdirname_node, symlink_node,
-                [('out_longsubdirnames_dict', 'in_longsubdirnames_dict')]),
-            # prepare_longitudinal_node
-            (
-                self.input_node, prepare_longitudinal_node,
-                [('subject_list', 'in_subject'),
-                 ('session_list', 'in_session')]),
-            # run_longitudinal_node
-            (
-                self.input_node, run_longitudinal_node,
-                [('subject_list', 'in_subject'),
-                 ('session_list', 'in_session')]),
-            (
-                prepare_longitudinal_node, run_longitudinal_node,
-                [('out_reconalllong_flags', 'in_reconalllong_flags')]),
-            (
-                symlink_node, run_longitudinal_node,
-                [('out_symlink_path', 'in_symlink_path')]),
-            # write_stats_node
-            (
-                self.input_node, write_stats_node,
-                [('subject_list', 'in_subject'),
-                 ('session_list', 'in_session')]),
-            (
-                symlink_node, write_stats_node,
-                [('out_symlink_path', 'in_symlink_path')]),
-            (
-                run_longitudinal_node, write_stats_node,
-                [('out_longitudinal_result', 'in_longitudinal_result')]),
-            # self.output_node (copy2caps_node)
-            (
-                self.input_node, self.output_node,
-                [('subject_list', 'subject'),
-                 ('session_list', 'session')]),
-            (
-                symlink_node, self.output_node,
-                [('out_symlink_path', 'subject_dir')]),
-            (
-                self.input_node, self.output_node,
-                [('caps_target_list', 'caps_target'),
-                 ('overwrite_warning', 'overwrite_warning')]),
-            (
-                write_stats_node, self.output_node,
-                [('out_stats_path', 'stats_path')])
+            # Initialize the pipeline
+            (self.input_node, init_input, [('participant_id', 'participant_id'),
+                                           ('session_id', 'session_id'),
+                                           ('long_id', 'long_id')]),
+            # Run recon-all command
+            (init_input, recon_all, [('subjects_dir', 'subjects_dir')]),
+            (self.input_node, recon_all, [('participant_id', 'participant_id'),
+                                          ('session_id', 'session_id'),
+                                          ('long_id', 'long_id')]),
+            # Generate TSV files
+            (init_input, create_tsv, [('subjects_dir', 'subjects_dir')]),
+            (recon_all,  create_tsv, [('subject_id', 'image_id')]),
+            # Output node
+            (create_tsv, self.output_node, [('image_id', 'image_id')]),
         ])
-
-        return self
