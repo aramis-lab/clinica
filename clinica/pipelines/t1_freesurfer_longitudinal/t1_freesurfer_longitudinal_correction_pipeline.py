@@ -111,7 +111,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
                              iterables=[
                                  ('participant_id', self.subjects),
                                  ('session_id', self.sessions),
-                                 ('session_id', list_long_id),
+                                 ('long_id', list_long_id),
                              ],
                              synchronize=True,
                              interface=nutil.IdentityInterface(
@@ -156,7 +156,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
         init_input = npe.Node(
             interface=nutil.Function(
                 input_names=['caps_dir', 'participant_id', 'session_id', 'long_id', 'output_dir'],
-                output_names=['image_id', 'subjects_dir', 'flags'],
+                output_names=['subjects_dir'],
                 function=init_input_node),
             name='0-InitPipeline')
         init_input.inputs.caps_dir = self.caps_directory

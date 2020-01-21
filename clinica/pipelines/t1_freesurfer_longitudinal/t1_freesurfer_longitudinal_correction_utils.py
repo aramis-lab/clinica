@@ -5,7 +5,7 @@ def init_input_node(caps_dir, participant_id, session_id, long_id, output_dir):
     """Initialize the pipeline."""
     import os
     import errno
-    from clinica.utils.stream import cprint
+    from clinica.utils.longitudinal import read_sessions
     from clinica.utils.ux import print_begin_image
 
     # Extract <image_id>
@@ -19,18 +19,18 @@ def init_input_node(caps_dir, participant_id, session_id, long_id, output_dir):
         if e.errno != errno.EEXIST:  # EEXIST: folder already exists
             raise e
 
-    # Create symbolic link containing cross-sectional segmentation in SUBJECTS_DIR so that recon-all can run
-    cross_sectional_path = os.path.join(
-        caps_dir,
-        'subjects',
-        participant_id,
-        session_id,
-        't1',
-        'freesurfer_cross_sectional',
-        participant_id + '_' + session_id
-    )
-    os.symlink(cross_sectional_path, os.path.join(subjects_dir, participant_id + '_' + session_id))
-    cprint('Creating sym link from %s to %s' % (cross_sectional_path, subjects_dir))
+    # Create symbolic link containing cross-sectional segmentation(s) in SUBJECTS_DIR so that recon-all can run
+    for s_id in read_sessions(caps_dir, participant_id, long_id):
+        cross_sectional_path = os.path.join(
+            caps_dir,
+            'subjects',
+            participant_id,
+            s_id,
+            't1',
+            'freesurfer_cross_sectional',
+            participant_id + '_' + s_id
+        )
+        os.symlink(cross_sectional_path, os.path.join(subjects_dir, participant_id + '_' + s_id))
 
     # Create symbolic links containing unbiased template in SUBJECTS_DIR so that recon-all can run
     template_path = os.path.join(
@@ -42,11 +42,10 @@ def init_input_node(caps_dir, participant_id, session_id, long_id, output_dir):
         participant_id + '_' + long_id
     )
     os.symlink(template_path, os.path.join(subjects_dir, participant_id + '_' + long_id))
-    cprint('Creating sym link from %s to %s' % (template_path, subjects_dir))
 
     print_begin_image(image_id)
 
-    return image_id, subjects_dir
+    return subjects_dir
 
 
 def run_recon_all_long(subjects_dir,
@@ -75,13 +74,11 @@ def run_recon_all_long(subjects_dir,
     See official documentation (https://surfer.nmr.mgh.harvard.edu/fswiki/LongitudinalProcessing) for details.
     """
     import subprocess
-    from clinica.utils.stream import cprint
 
     # Prepare arguments for recon-all.
     flags = " -long {0}_{1} {0}_{2} ".format(participant_id, session_id, long_id)
 
     recon_all_long_command = 'recon-all {0} -sd {1} {2}'.format(flags, subjects_dir, directive)
-    cprint(recon_all_long_command)
     subprocess_run_recon_all_long = subprocess.run(
         recon_all_long_command,
         shell=True,
@@ -97,7 +94,7 @@ def run_recon_all_long(subjects_dir,
 
 def write_tsv_files(subjects_dir, subject_id):
     """
-    Generate statistics TSV files in `subjects_dir`/regional_measures folder for `image_id`.
+    Generate statistics TSV files in `subjects_dir`/regional_measures folder for `subject_id`.
 
     Notes:
         We do not need to check the line "finished without error" in scripts/recon-all.log.
@@ -112,7 +109,7 @@ def write_tsv_files(subjects_dir, subject_id):
 
     image_id = extract_image_id_from_longitudinal_segmentation(subject_id)
     if os.path.isfile(os.path.join(subjects_dir, subject_id, 'mri', 'aparc+aseg.mgz')):
-        generate_regional_measures(subjects_dir, subject_id, "regional_measures", True)
+        generate_regional_measures(subjects_dir, subject_id, "regional_measures")
     else:
         now = datetime.datetime.now().strftime('%H:%M:%S')
         cprint('%s[%s] %s | %s | %s does not contain mri/aseg+aparc.mgz file. '
@@ -129,6 +126,7 @@ def save_to_caps(subjects_dir, freesurfer_id, caps_dir, overwrite_caps=False):
     where `freesurfer_id` = <participant_id>_<session_id>.long.<participant_id>_<long_id>.
     The `source_dir`/`freesurfer_id`/ folder should contain the following elements:
         - fsaverage, lh.EC_average and rh.EC_average symbolic links
+        - symbolic links to cross-sectional segmentation(s) and unbiased template
         - `freesurfer_id`/ folder containing the FreeSurfer segmentation
         - regional_measures/ folder containing TSV files
     Notes:
@@ -144,6 +142,7 @@ def save_to_caps(subjects_dir, freesurfer_id, caps_dir, overwrite_caps=False):
     import errno
     import shutil
     from colorama import Fore
+    from clinica.utils.longitudinal import read_sessions
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_end_image
     from clinica.utils.freesurfer import extract_image_id_from_longitudinal_segmentation
@@ -171,9 +170,9 @@ def save_to_caps(subjects_dir, freesurfer_id, caps_dir, overwrite_caps=False):
             os.unlink(os.path.join(os.path.expanduser(subjects_dir), 'fsaverage'))
             os.unlink(os.path.join(os.path.expanduser(subjects_dir), 'lh.EC_average'))
             os.unlink(os.path.join(os.path.expanduser(subjects_dir), 'rh.EC_average'))
-            os.unlink(os.path.join(os.path.expanduser(subjects_dir), participant_id + '_' + session_id))
-            os.unlink(os.path.join(os.path.expanduser(subjects_dir), participant_id + '_' + session_id))
-
+            os.unlink(os.path.join(os.path.expanduser(subjects_dir), participant_id + '_' + long_id))
+            for s_id in read_sessions(caps_dir, participant_id, long_id):
+                os.unlink(os.path.join(os.path.expanduser(subjects_dir), participant_id + '_' + s_id))
         except FileNotFoundError as e:
             if e.errno != errno.ENOENT:
                 raise e
