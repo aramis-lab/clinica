@@ -1,6 +1,7 @@
 {
     "id": "aramislab/pet-surface",
     "author": "Arnaud Marcoux",
+    "credits": ["Michael Bacci"],
     "version": "0.1",
     "dependencies": [
         {

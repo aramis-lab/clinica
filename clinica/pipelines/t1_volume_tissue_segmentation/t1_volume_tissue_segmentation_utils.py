@@ -10,15 +10,6 @@ from nipype.interfaces.spm.base import SPMCommandInputSpec, SPMCommand
 from nipype.interfaces.base import TraitedSpec, OutputMultiPath, InputMultiPath, File, traits
 from nipype.utils.filemanip import filename_to_list, list_to_filename
 
-__author__ = "Jorge Samper-Gonzalez"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Jorge Samper-Gonzalez"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Jorge Samper-Gonzalez"
-__email__ = "jorge.samper-gonzalez@inria.fr"
-__status__ = "Development"
-
 
 def t1w_container_from_filename(t1w_filename):
     """
