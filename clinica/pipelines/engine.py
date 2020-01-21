@@ -458,15 +458,9 @@ class Pipeline(Workflow):
         free_space_caps = caps_stat.f_bavail * caps_stat.f_frsize
         free_space_wd = wd_stat.f_bavail * wd_stat.f_frsize
 
-        # space estimation file location
-        info_pipelines = read_csv(join(dirname(abspath(__file__)),
-                                       'space_required_by_pipeline.csv'),
-                                  sep=';')
-        pipeline_list = list(info_pipelines.pipeline_name)
         try:
-            idx_pipeline = pipeline_list.index(self._name)
-            space_needed_caps_1_session = info_pipelines.space_caps[idx_pipeline]
-            space_needed_wd_1_session = info_pipelines.space_wd[idx_pipeline]
+            space_needed_caps_1_session = self.info['space_caps']
+            space_needed_wd_1_session = self.info['space_wd']
             space_needed_caps = n_sessions * human2bytes(space_needed_caps_1_session)
             space_needed_wd = n_sessions * human2bytes(space_needed_wd_1_session)
             error = ''
@@ -509,7 +503,7 @@ class Pipeline(Workflow):
                     cprint('Exiting clinica...')
                     sys.exit()
 
-        except ValueError:
+        except KeyError:
             cprint(Fore.RED + 'No info on how much size the pipeline takes. '
                    + 'Running anyway...' + Fore.RESET)
 

@@ -1,6 +1,8 @@
 {
     "id": "aramislab/statistics-surface",
     "author": "Junhao Wen",
+    "space_caps": "20M",
+    "space_wd": "20M",
     "credits": ["Arnaud Marcoux","Alexandre Routier"],
     "version": "0.1",
     "dependencies": []
