@@ -43,7 +43,8 @@ class T1VolumeCLI(ce.CmdParser):
                                    "(default: GM, WM and CSF i.e. --tissue_classes 1 2 3).")
         advanced.add_argument("-tpm", "--tissue_probability_maps",
                               metavar='TissueProbabilityMap.nii', default=None,
-                              help='Tissue probability maps to use for segmentation (default: TPM from SPM software).')
+                              help='Tissue probability maps to use for segmentation '
+                                   '(default: TPM.nii from SPM software).')
         advanced.add_argument("-dswu", "--dont_save_warped_unmodulated",
                               action='store_true', default=False,
                               help="Do not save warped unmodulated images for tissues specified "
