@@ -712,21 +712,23 @@ def test_run_StatisticsVolume(cmdopt):
     root = join(root, 'data', 'StatisticsVolume')
 
     # Remove potential residual of previous UT
-    #clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
     clean_folder(join(working_dir, 'StatisticsVolume'), recreate=False)
 
     # Copy necessary data from in to out
-    #shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     # Instantiate pipeline and run()
     pipeline = StatisticsVolume(
-        caps_directory=join(root, 'in', 'caps'),
+        caps_directory=join(root, 'out', 'caps'),
         tsv_file=join(root, 'in', 'covariates_subsetADNI.txt'),
         base_dir=join(working_dir, 'StatisticsVolume')
     )
     pipeline.parameters = {'contrast': 'group',
                            'feature_type': 'fdg-pet',
-                           'group_id': 'UnitTest'}
+                           'group_id': 'UnitTest',
+                           'threshold_uncorrected_pvalue': 0.001,
+                           'threshold_corrected_pvalue': 0.05}
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 8}, bypass_check=True)
 
     assert 0

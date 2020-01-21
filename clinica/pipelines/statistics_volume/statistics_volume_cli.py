@@ -42,7 +42,7 @@ class StatisticsVolumeCLI(ce.CmdParser):
                                   help='Defines the contrast. Must be one of the column names form the TSV file.')
 
         clinica_comp.add_argument("feature_type",
-                                  help='Define what type of file are grabbed for the analysis. Use \'custom\' if you want to use the --custom_file flag.')
+                                  help='Define what type of file are grabbed for the analysis. Use "fdg-pet", "t1-gm" or "t1-wm". Use "custom" if you want to use the --custom_file flag. ')
 
         clinica_comp.add_argument("group_id",
                                   help='User-defined identifier for the provided group of subjects.')
@@ -53,6 +53,16 @@ class StatisticsVolumeCLI(ce.CmdParser):
                               help=('Custom file string. Specify filename using * when the subject or session name appear. '
                                     + 'Example : \'*_task-rest_acq-fdg_pet_space-Ixi549Space_pet.nii.gz\' will grab the'
                                     + ' corresponding file in all the subjects/sessions folders'))
+
+        optional.add_argument("-tup", "--threshold_uncorrected_pvalue",
+                              type=float, default=0.001,
+                              help='Threshold to display the uncorrected p-value '
+                                   '(--threshold_uncorrected_pvalue 0.001).')
+        optional.add_argument("-tcp", "--threshold_corrected_pvalue",
+                              type=float, default=0.05,
+                              help='Threshold to display the corrected p-value '
+                                   '(default: --threshold_corrected_pvalue 0.05)')
+
 
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
@@ -78,7 +88,9 @@ class StatisticsVolumeCLI(ce.CmdParser):
         pipeline.parameters = {'contrast': args.contrast,
                                'feature_type': args.feature_type,
                                'group_id': args.group_id,
-                               'custom_files': args.custom_files}
+                               'custom_files': args.custom_files,
+                               'threshold_uncorrected_pvalue': args.threshold_uncorrected_pvalue,
+                               'threshold_corrected_pvalue': args.threshold_corrected_pvalue}
 
         if args.n_procs:
             exec_pipeline = pipeline.run(plugin='MultiProc',

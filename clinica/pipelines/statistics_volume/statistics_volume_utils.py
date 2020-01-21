@@ -324,23 +324,31 @@ def estimate(mat_file, template_file):
     return current_model_estimation
 
 
-def results(mat_file, template_file):
+def results(mat_file, template_file, method, threshold):
     """
         Make a copy of the template file (for results) and replace @SPMMAT by the real path to SPM.mat (mat_file)
     Args:
         mat_file: (str) path to the SPM.mat file of the SPM analysis
         template_file: (str) path to the template file for getting the results of the model
+        method: (str)
+        threshold
 
     Returns:
         current_model_estimation: (str) path to the template file filled with SPM.mat information, ready to be launched
     """
     from os.path import abspath
+    import time
 
     # Read template
     with open(template_file, 'r') as file:
         filedata = file.read()
     # Replace by the real path to spm.mat
     filedata = filedata.replace('@SPMMAT', '\'' + mat_file + '\'')
+    filedata = filedata.replace('@CORRECTIONMETHOD', '\'' + method + '\'')
+    filedata = filedata.replace('@THRESH', str(threshold))
+    if method != 'none':
+        # Necessary so that the 2 computations does not overlap
+        time.sleep(15)
     current_model_result = abspath('./current_model_result.m')
     with open(current_model_result, 'w+') as file:
         file.write(filedata)
@@ -381,12 +389,13 @@ def contrast(mat_file, template_file, covariables, class_names):
     return current_model_estimation
 
 
-def read_output(spm_mat, class_names, covariables):
+def read_output(spm_mat, spm_mat_2, class_names, covariables):
     """
         Once analysis is done, grab all the different filenames and rename them in current directory according to class
         names
     Args:
         spm_mat: (str) path to the SPM.mat file of the SPM analysis
+        spm_mat_2: (str) path to the SPM.mat file of the SPM analysis, used to synchronize nodes
         class_names: (list) of str of length 2 that correspond to the 2 classes for the group comparison
         covariables: (list) of str: list of covariables
 
@@ -404,6 +413,8 @@ def read_output(spm_mat, class_names, covariables):
     from os.path import join, dirname, isdir, isfile, abspath
     from os import listdir
     from shutil import copyfile
+
+    assert spm_mat_2 == spm_mat, 'Problem while retrieving SPM.mat files'
 
     if not isfile(spm_mat):
         if not isdir(dirname(spm_mat)):
