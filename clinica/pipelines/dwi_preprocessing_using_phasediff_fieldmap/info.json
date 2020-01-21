@@ -1,6 +1,7 @@
 {
     "id": "aramislab/dwi-preprocessing-using-phasediff-fieldmap",
     "author": ["Alexandre Routier"],
+    "credits": ["Nipype", "Junhao Wen"],
     "version": "0.1.0",
     "dependencies": [
         {

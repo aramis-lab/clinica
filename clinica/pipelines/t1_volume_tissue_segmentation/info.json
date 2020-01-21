@@ -1,6 +1,7 @@
 {
     "id": "aramislab/t1-volume-tissue-segmentation",
     "author": "Jorge Samper-Gonzalez",
+    "credits": ["Alexandre Routier"],
     "version": "0.1.0",
     "dependencies": [
         {

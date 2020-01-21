@@ -1,6 +1,6 @@
 {
     "id": "aramislab/t1-volume",
-    "author": "Jorge Samper-Gonzalez; Simona Bottani",
+    "author": ["Jorge Samper-Gonzalez", "Simona Bottani"],
     "version": "0.1.0",
     "dependencies": [
         {

@@ -1,14 +1,5 @@
 # coding: utf8
 
-__author__ = "Jorge Samper-Gonzalez"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Jorge Samper-Gonzalez"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Jorge Samper-Gonzalez"
-__email__ = "jorge.samper-gonzalez@inria.fr"
-__status__ = "Development"
-
 
 def prepare_flowfields(flow_fields, tissues):
     return [[f] * len(tissues) for f in flow_fields]

@@ -1,14 +1,5 @@
 # coding: utf-8
 
-__author__ = "Arnaud Marcoux"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Arnaud Marcoux", "Michael Bacci"]
-__license__ = "See LICENSE.txt file"
-__version__ = "1.0.0"
-__maintainer__ = "Arnaud Marcoux"
-__email__ = "arnaud.marcoux@inria.fr"
-__status__ = "Development"
-
 
 def perform_gtmseg(caps_dir, subject_id, session_id):
     """gtmseg is a freesurfer command used to perform a segmentation used in some partial volume correction methods.
