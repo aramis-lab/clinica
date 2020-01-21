@@ -26,10 +26,13 @@ class T1FreeSurferLongitudinalCLI(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
+        import os
+        import datetime
         from colorama import Fore
+        from clinica.utils.stream import cprint
         from .t1_freesurfer_template_cli import T1FreeSurferTemplateCLI
         from .t1_freesurfer_longitudinal_correction_cli import T1FreeSurferLongitudinalCorrectionCLI
-        from clinica.utils.stream import cprint
+        from .longitudinal_utils import grab_image_ids_from_caps_directory, save_part_sess_long_ids_to_tsv
 
         cprint(
             'The t1-freesurfer-longitudinal pipeline is divided into 2 parts:\n'
@@ -37,6 +40,12 @@ class T1FreeSurferLongitudinalCLI(ce.CmdParser):
             '\t%st1-freesurfer-longitudinal-correction pipeline%s: Longitudinal correction\n'
             % (Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET)
         )
+
+        if not self.absolute_path(args.subjects_sessions_tsv):
+            l_part, l_sess, l_long = grab_image_ids_from_caps_directory(self.absolute_path(args.caps_directory))
+            now = datetime.datetime.now().strftime('%H:%M:%S')
+            args.subjects_sessions_tsv = now+'_participants.tsv'
+            save_part_sess_long_ids_to_tsv(l_part, l_sess, l_long, os.getcwd(), args.subjects_sessions_tsv)
 
         cprint('%s\nPart 1/2: Running t1-freesurfer-unbiased-template pipeline%s' % (Fore.BLUE, Fore.RESET))
         unbiased_template_cli = T1FreeSurferTemplateCLI()

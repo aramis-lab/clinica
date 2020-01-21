@@ -97,23 +97,3 @@ def read_sessions(caps_dir, participant_id, long_id):
         )
 
     return list(ss_df.session_id)
-
-
-def extract_session_ids(tsv_sessions):
-    """Extract sessions IDs from TSV file.
-
-    Raise:
-        ClinicaException if participant_id or session_id column is missing from TSV file
-    """
-    import pandas
-    from colorama import Fore
-    from clinica.utils.exceptions import ClinicaException
-
-    ss_df = pandas.read_csv(tsv_sessions, sep='\t')
-    if 'session_id' not in list(ss_df.columns.values):
-        raise ClinicaException(
-            "\n%s[Error] The TSV file does not contain session_id column (path: %s)%s" %
-            (Fore.RED, tsv_sessions, Fore.RESET)
-        )
-
-    return list(ss_df.session_id)

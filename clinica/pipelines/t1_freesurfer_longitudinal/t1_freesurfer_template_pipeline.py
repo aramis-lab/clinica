@@ -77,11 +77,10 @@ class T1FreeSurferTemplate(cpe.Pipeline):
         import nipype.pipeline.engine as npe
 
         from clinica.utils.exceptions import ClinicaException, ClinicaCAPSError
-        from clinica.utils.filemanip import (save_participants_sessions,
-                                             extract_subjects_sessions_from_filename)
+        from clinica.utils.filemanip import extract_subjects_sessions_from_filename
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1_FS_DESTRIEUX
-        from clinica.utils.longitudinal import get_long_id, extract_session_ids, get_participants_long_id
+        from clinica.utils.longitudinal import get_long_id, read_sessions, get_participants_long_id
         from clinica.utils.participant import get_unique_subjects, unique_subjects_sessions_to_subjects_sessions
         from clinica.utils.stream import cprint
         from .longitudinal_utils import extract_participant_long_ids_from_filename, save_part_sess_long_ids_to_tsv
@@ -102,9 +101,10 @@ class T1FreeSurferTemplate(cpe.Pipeline):
                 cprint("%s\nParticipant(s) will be ignored by Clinica.\n%s" % (Fore.YELLOW, Fore.RESET))
                 input_ids = [p_id + '_' + s_id for p_id, s_id in
                              zip(self.subjects, self.sessions)]
-                processed_sessions_per_participant = [extract_session_ids(
-                    os.path.join(self.caps_directory, 'subjects', p_id, l_id, l_id + '_sessions.tsv')
-                ) for (p_id, l_id) in zip(processed_participants, processed_long_sessions)]
+                processed_sessions_per_participant = [
+                    read_sessions(self.caps_directory, p_id, l_id)
+                    for (p_id, l_id) in zip(processed_participants, processed_long_sessions)
+                ]
                 participants, sessions = unique_subjects_sessions_to_subjects_sessions(
                     processed_participants,
                     processed_sessions_per_participant)

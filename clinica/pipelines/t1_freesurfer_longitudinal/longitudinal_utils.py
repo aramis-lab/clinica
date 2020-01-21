@@ -14,7 +14,7 @@ def read_part_sess_long_ids_from_tsv(tsv_file):
     TODO: Find a way to merge with utils/filemanip.py::read_participant_tsv into one util
     """
     import os
-    import pandas as pd
+    import pandas
     from colorama import Fore
     from clinica.utils.exceptions import ClinicaException
 
@@ -28,10 +28,10 @@ def read_part_sess_long_ids_from_tsv(tsv_file):
              Fore.YELLOW, Fore.RESET,
              Fore.BLUE, tsv_file, Fore.RESET)
         )
-    df = pd.io.parsers.read_csv(tsv_file, sep='\t')
+    df = pandas.read_csv(tsv_file, sep='\t')
 
-    def check_key_in_data_frame(file, dataframe, key):
-        if key not in list(dataframe.columns.values):
+    def check_key_in_data_frame(file, data_frame, key):
+        if key not in list(data_frame.columns.values):
             raise ClinicaException(
                 "\n%s[Error] The TSV file does not contain %s column (path: %s)%s" %
                 (Fore.RED, key, file, Fore.RESET)
@@ -74,7 +74,7 @@ def save_part_sess_long_ids_to_tsv(participant_ids, session_ids, long_ids, out_f
         data = pandas.DataFrame({
             'participant_id': participant_ids,
             'session_id': session_ids,
-            'long_ids': long_ids
+            'long_id': long_ids
         })
         data.to_csv(tsv_file, sep='\t', index=False, encoding='utf-8')
     except Exception as e:
