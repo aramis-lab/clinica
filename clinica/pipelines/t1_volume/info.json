@@ -2,6 +2,8 @@
     "id": "aramislab/t1-volume",
     "author": ["Jorge Samper-Gonzalez", "Simona Bottani"],
     "version": "0.1.0",
+    "space_caps": "70M",
+    "space_wd": "250M",
     "dependencies": [
         {
             "type": "software",

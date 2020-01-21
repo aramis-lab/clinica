@@ -3,6 +3,8 @@
     "author": "Jeremy Guillon",
     "credits": ["Romain Valabregue"],
     "version": "0.1",
+    "space_caps": "300M",
+    "space_wd": "7G",
     "dependencies": [
         {
             "type": "software",

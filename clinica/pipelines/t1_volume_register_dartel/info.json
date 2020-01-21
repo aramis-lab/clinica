@@ -2,6 +2,8 @@
     "id": "aramislab/t1-volume-register-dartel",
     "author": "Jorge Samper-Gonzalez",
     "version": "0.1.0",
+    "space_caps": "30M",
+    "space_wd": "110M",
     "dependencies": [
         {
             "type": "software",

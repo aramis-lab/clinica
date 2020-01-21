@@ -2,6 +2,8 @@
     "id": "aramislab/t1-volume-dartel2mni",
     "author": "Jorge Samper-Gonzalez; Simona Bottani",
     "version": "0.1.0",
+    "space_caps": "30M",
+    "space_wd": "150M",
     "dependencies": [
         {
             "type": "software",

@@ -3,6 +3,8 @@
     "author": "Arnaud Marcoux",
     "credits": ["Michael Bacci"],
     "version": "0.1",
+    "space_caps": "25M",
+    "space_wd": "1G",
     "dependencies": [
         {
             "type": "software",
