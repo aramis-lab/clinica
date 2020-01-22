@@ -21,15 +21,16 @@ class DwiPreprocessingUsingPhaseDiffFieldmap(cpe.Pipeline):
     """
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
-        import warnings
+        from colorama import Fore
+        from clinica.utils.stream import cprint
 
         if self.parameters['low_bval'] < 0:
-            raise ValueError(
-                'The low_bval is equals to %s: it should be zero or close to zero.' % self.parameters['low_bval'])
+            raise ValueError('%sThe low_bval is equals to %s: it should be zero or close to zero.%s' %
+                             (Fore.RED, self.parameters['low_bval'], Fore.RESET))
 
         if self.parameters['low_bval'] > 100:
-            warnings.warn('Warning: The low_bval parameter is %s: it should be close to zero' % self.parameters['low_bval'],
-                          UserWarning)
+            cprint('%sWarning: The low_bval parameter is %s: it should be close to zero.%s' %
+                   (Fore.YELLOW, self.parameters['low_bval'], Fore.RESET))
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
