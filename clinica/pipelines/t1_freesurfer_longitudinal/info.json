@@ -2,6 +2,8 @@
     "id": "aramislab/t1-freesurfer-longitudinal",
     "author": "Alexis Guyot",
     "version": "0.1",
+    "space_caps": "300M",
+    "space_wd": "300M",
     "dependencies": [
         {
             "type": "software",
