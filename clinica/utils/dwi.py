@@ -243,6 +243,7 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory
             the dwi dataset.
         in_bval (str): B-values file.
         low_bval (optional[int]):
+        working_directory (str): temporary folder results where the results are stored
 
     Returns:
         out_reference_b0 (str): Average of the B0 images or the only B0 image.
@@ -255,7 +256,6 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory
     from clinica.utils.dwi import (insert_b0_into_dwi, b0_dwi_split,
                                    count_b0s, b0_average)
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import b0_flirt_pipeline
-    from clinica.utils.stream import cprint
     import hashlib
 
     import os.path as op
@@ -503,3 +503,12 @@ def generate_acq_file(in_dwi, fsl_phase_encoding_direction, total_readout_time, 
     np.savetxt(out_acq, arr, fmt="%d "*3 + "%f")
 
     return out_acq
+
+
+def bids_dir_to_fsl_dir(bids_dir):
+    """Converts BIDS PhaseEncodingDirection parameters (i,j,k,i-,j-,k-) to FSL direction (x,y,z,x-,y-,z-)."""
+    fsl_dir = bids_dir.lower()
+    if 'i' not in fsl_dir and 'j' not in fsl_dir and 'k' not in fsl_dir:
+        raise ValueError("Unknown PhaseEncodingDirection %s: it should be a value in (i, j, k, i-, j-, k-)" % fsl_dir)
+
+    return fsl_dir.replace('i', 'x').replace('j', 'y').replace('k', 'z')

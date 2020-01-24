@@ -32,6 +32,20 @@ class DwiPreprocessingUsingT1Cli(ce.CmdParser):
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
 
+        # Advanced arguments (i.e. tricky parameters)
+        advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
+        cuda_action = advanced.add_mutually_exclusive_group(required=False)
+        cuda_action.add_argument('--use_cuda_8_0', action='store_true', default=False,
+                                 help=('Use the CUDA 8.0 implementation of FSL eddy. Please note that '
+                                       'the --use_cuda_8_0 and --use_cuda_9_1 flags are mutually exclusive.'))
+        cuda_action.add_argument('--use_cuda_9_1', action='store_true', default=False,
+                                 help=('Use the CUDA 9.1 implementation of FSL eddy. Please note that '
+                                       'the --use_cuda_8_0 and --use_cuda_9_1 flags are mutually exclusive.'))
+        advanced.add_argument("--initrand",
+                              metavar='N', type=int,
+                              help="Set the seed of the random number generator used "
+                                   "when estimating hyperparameters in FSL eddy.")
+
     def run_command(self, args):
         """Run the pipeline with defined args."""
         from networkx import Graph
@@ -39,7 +53,10 @@ class DwiPreprocessingUsingT1Cli(ce.CmdParser):
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         parameters = {
-            'low_bval': args.low_bval
+            'low_bval': args.low_bval,
+            'use_cuda_8_0': args.use_cuda_8_0,
+            'use_cuda_9_1': args.use_cuda_9_1,
+            'seed_fsl_eddy': args.initrand,
         }
         pipeline = DwiPreprocessingUsingT1(
             bids_directory=self.absolute_path(args.bids_directory),
