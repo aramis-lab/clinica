@@ -201,11 +201,11 @@ def insert_b0_into_dwi(in_b0, in_dwi, in_bval, in_bvec):
     return out_dwi, out_bvals, out_bvecs
 
 
-def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
+def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory=None):
     """
-    This function prepare the data for further corrections. It coregisters
+    This function prepares the data for further corrections. It co-registers
     the B0 images and then average it in order to obtain only
-    one average B0 images.
+    one average B0 image.
 
     Args:
         in_dwi (str): Input DWI file.
@@ -216,20 +216,17 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
 
     Returns:
         out_reference_b0 (str): Average of the B0 images or the only B0 image.
-        out_b0_mask (str): Binary mask obtained from the average of
-            the B0 images.
+        out_b0_mask (str): Binary mask obtained from the average of the B0 images.
         out_b0_dwi_merge (str): Average of B0 images merged to the DWIs.
         out_updated_bval (str): Updated gradient values table.
         out_updated_bvec (str): Updated gradient vectors table.
     """
+    import os.path as op
+    import hashlib
+    import tempfile
     from clinica.utils.dwi import (insert_b0_into_dwi, b0_dwi_split,
                                    count_b0s, b0_average)
-    from clinica.workflows.dwi_preprocessing import b0_flirt_pipeline
-    from clinica.utils.stream import cprint
-
-    import os.path as op
-
-    import tempfile
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import b0_flirt_pipeline
 
     # Count the number of b0s
     nb_b0s = count_b0s(in_bval=in_bval, low_bval=low_bval)
@@ -248,11 +245,13 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5):
         # Register the b0 onto the first b0
         b0_flirt = b0_flirt_pipeline(num_b0s=nb_b0s)
         b0_flirt.inputs.inputnode.in_file = extracted_b0
-        # BUG: Nipype does allow to extract the output after running the
-        # workflow: we need to 'guess' where the output will be generated
-        tmp_dir = tempfile.mkdtemp()
+        if working_directory is None:
+            working_directory = tempfile.mkdtemp()
+        tmp_dir = op.join(working_directory, hashlib.md5(in_dwi.encode()).hexdigest())
         b0_flirt.base_dir = tmp_dir
         b0_flirt.run()
+        # BUG: Nipype does allow to extract the output after running the
+        # workflow: we need to 'guess' where the output will be generated
         # out_node = b0_flirt.get_node('outputnode')
         registered_b0s = op.abspath(op.join(
             tmp_dir, 'b0_coregistration', 'concat_ref_moving',
