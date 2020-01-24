@@ -180,3 +180,25 @@ def read_participant_tsv(tsv_file):
 
     # Remove potential whitespace in participant_id or session_id
     return [sub.strip(' ') for sub in participants], [ses.strip(' ') for ses in sessions]
+
+
+def extract_metadata_from_json(json_file, list_keys):
+    import json
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaException
+
+    list_values = []
+    try:
+        with open(json_file, 'r') as file:
+            data = json.load(file)
+            for key in list_keys:
+                list_values.append(data[key])
+    except EnvironmentError:
+        raise EnvironmentError('[Error] Clinica could not open the following JSON file: %s' % json_file)
+    except KeyError as e:
+        raise ClinicaException('\n%s[Error] Clinica could not find the %s key in the following JSON file: %s%s' %
+                               (Fore.RED, e, json_file, Fore.RESET))
+    finally:
+        file.close()
+
+    return list_values
