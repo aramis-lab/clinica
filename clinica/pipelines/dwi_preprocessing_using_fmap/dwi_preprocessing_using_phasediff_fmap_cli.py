@@ -3,15 +3,15 @@
 import clinica.engine as ce
 
 
-class DwiPreprocessingUsingPhaseDiffFieldmapCli(ce.CmdParser):
+class DwiPreprocessingUsingPhaseDiffFMapCli(ce.CmdParser):
 
     def define_name(self):
         """Define the sub-command name to run this pipeline."""
-        self._name = 'dwi-preprocessing-using-fieldmap'
+        self._name = 'dwi-preprocessing-using-phasediff-fmap'
 
     def define_description(self):
         """Define a description of this pipeline."""
-        self._description = ('Preprocessing of raw DWI datasets using a phase difference image:\n'
+        self._description = ('Preprocessing of raw DWI datasets using a phase difference fieldmap:\n'
                              'http://clinica.run/doc/Pipelines/DWI_Preprocessing/')
 
     def define_options(self):
@@ -32,16 +32,33 @@ class DwiPreprocessingUsingPhaseDiffFieldmapCli(ce.CmdParser):
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
 
+        # Advanced arguments (i.e. tricky parameters)
+        advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
+        cuda_action = advanced.add_mutually_exclusive_group(required=False)
+        cuda_action.add_argument('--use_cuda_8_0', action='store_true', default=False,
+                                 help=('Use the CUDA 8.0 implementation of FSL eddy. Please note that '
+                                       'the --use_cuda_8_0 and --use_cuda_9_1 flags are mutually exclusive.'))
+        cuda_action.add_argument('--use_cuda_9_1', action='store_true', default=False,
+                                 help=('Use the CUDA 9.1 implementation of FSL eddy. Please note that '
+                                       'the --use_cuda_8_0 and --use_cuda_9_1 flags are mutually exclusive.'))
+        advanced.add_argument("--initrand",
+                              metavar='N', type=int,
+                              help="Set the seed of the random number generator used "
+                                   "when estimating hyperparameters in FSL eddy.")
+
     def run_command(self, args):
         """Run the pipeline with defined args."""
         from networkx import Graph
-        from .dwi_preprocessing_using_phasediff_fieldmap_pipeline import DwiPreprocessingUsingPhaseDiffFieldmap
+        from .dwi_preprocessing_using_phasediff_fmap_pipeline import DwiPreprocessingUsingPhaseDiffFMap
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         parameters = {
-            'low_bval': args.low_bval
+            'low_bval': args.low_bval,
+            'use_cuda_8_0': args.use_cuda_8_0,
+            'use_cuda_9_1': args.use_cuda_9_1,
+            'seed_fsl_eddy': args.initrand,
         }
-        pipeline = DwiPreprocessingUsingPhaseDiffFieldmap(
+        pipeline = DwiPreprocessingUsingPhaseDiffFMap(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
