@@ -155,6 +155,36 @@ def b0_dwi_split(in_dwi, in_bval, in_bvec, low_bval=5.0):
     return out_b0, out_dwi, out_bvals, out_bvecs
 
 
+def compute_average_b0(in_dwi, in_bval, low_bval=5.0):
+    """Compute average b0 volume from DWI dataset."""
+    import numpy as np
+    import nibabel
+    import os.path as op
+
+    assert (op.isfile(in_dwi))
+    assert (op.isfile(in_bval))
+    assert (low_bval >= 0)
+
+    imgs = np.array(nibabel.four_to_three(nibabel.load(in_dwi)))
+    bvals = np.loadtxt(in_bval)
+    low_bvals = np.where(bvals <= low_bval)[0]
+
+    fname_b0, ext_b0 = op.splitext(op.basename(in_dwi))
+    if ext_b0 == ".gz":
+        fname_b0, ext2 = op.splitext(fname_b0)
+        ext_b0 = ext2 + ext_b0
+    out_b0_average = op.abspath("%s_avg_b0%s" % (fname_b0, ext_b0))
+
+    b0s_data = [imgs[i].get_data() for i in low_bvals]
+    avg_b0_data = np.average(np.array(b0s_data), axis=0)
+
+    hdr = imgs[0].get_header().copy()
+    hdr.set_data_shape(avg_b0_data.shape)
+    nibabel.Nifti1Image(avg_b0_data, imgs[0].get_affine(), hdr).to_filename(out_b0_average)
+
+    return out_b0_average
+
+
 def insert_b0_into_dwi(in_b0, in_dwi, in_bval, in_bvec):
     """
     This function inserts a b0 volume into the dwi dataset as the first volume
@@ -203,9 +233,9 @@ def insert_b0_into_dwi(in_b0, in_dwi, in_bval, in_bvec):
 
 def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory=None):
     """
-    This function prepares the data for further corrections. It co-registers
+    This function prepare the data for further corrections. It co-registers
     the B0 images and then average it in order to obtain only
-    one average B0 image.
+    one average B0 images.
 
     Args:
         in_dwi (str): Input DWI file.
@@ -216,17 +246,21 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory
 
     Returns:
         out_reference_b0 (str): Average of the B0 images or the only B0 image.
-        out_b0_mask (str): Binary mask obtained from the average of the B0 images.
+        out_b0_mask (str): Binary mask obtained from the average of
+            the B0 images.
         out_b0_dwi_merge (str): Average of B0 images merged to the DWIs.
         out_updated_bval (str): Updated gradient values table.
         out_updated_bvec (str): Updated gradient vectors table.
     """
-    import os.path as op
-    import hashlib
-    import tempfile
     from clinica.utils.dwi import (insert_b0_into_dwi, b0_dwi_split,
                                    count_b0s, b0_average)
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import b0_flirt_pipeline
+    from clinica.utils.stream import cprint
+    import hashlib
+
+    import os.path as op
+
+    import tempfile
 
     # Count the number of b0s
     nb_b0s = count_b0s(in_bval=in_bval, low_bval=low_bval)
@@ -352,3 +386,120 @@ def check_dwi_volume(in_dwi, in_bvec, in_bval):
         raise IOError('Number of DWIs, b-vals and b-vecs mismatch '
                       '(# DWI = %s, # B-vec = %s, #B-val = %s) ' %
                       (num_dwis, num_b_vecs, num_b_vals))
+
+
+def find_b0_indices(in_bval, low_bval=5.0):
+    """
+    Returns indices of bval <= low_bval.
+
+    Args:
+        in_bval (str): Bval file.
+        low_bval (Optional[int]): Define the b0 volumes as all volume
+            bval <= low_bval. (Default=5.0)
+
+    Returns:
+        out_indices (int): Indices of bval <= low_bval.
+    """
+    import numpy as np
+    import os.path as op
+
+    assert(op.isfile(in_bval))
+    bvals = np.loadtxt(in_bval)
+
+    idx_low_bvals = np.where(bvals <= low_bval)
+    out_indices = idx_low_bvals[0].tolist()
+
+    return out_indices
+
+
+def generate_index_file(in_bval, low_bval=5.0, image_id=None):
+    """
+    Generate [`image_id`]_index.txt file for FSL eddy command.
+
+    Args:
+        in_bval: Bval file.
+        low_bval: Define the b0 volumes as all volume
+            bval <= low_bval. (Default=5.0)
+        image_id: Optional prefix.
+
+    Returns:
+        out_index: [`image_id`]_index.txt or index.txt file.
+    """
+    import os
+    import numpy as np
+    import os.path as op
+
+    assert(op.isfile(in_bval))
+    bvals = np.loadtxt(in_bval)
+    idx_low_bvals = np.where(bvals <= low_bval)
+    b0_index = idx_low_bvals[0].tolist()
+
+    if not b0_index:
+        raise ValueError("Could not find b-value <= %s in bval file (%s). Found values: %s"
+                         % (low_bval, in_bval, bvals))
+
+    if image_id:
+        out_index = os.path.abspath(image_id + '_index.txt')
+    else:
+        out_index = os.path.abspath('index.txt')
+
+    vols = len(bvals)
+    index_list = []
+    for i in range(0, len(b0_index)):
+        if i == (len(b0_index) - 1):
+            index_list.extend([i+1] * (vols - b0_index[i]))
+        else:
+            index_list.extend([i+1] * (b0_index[i+1] - b0_index[i]))
+    index_array = np.asarray(index_list)
+    try:
+        len(index_list) == vols
+    except ValueError:
+        raise ValueError("It seems that you do not define the index file for FSL eddy correctly!")
+    np.savetxt(out_index, index_array.T)
+
+    return out_index
+
+
+def generate_acq_file(in_dwi, fsl_phase_encoding_direction, total_readout_time, image_id=None):
+    """
+    Generate [`image_id`]_acq.txt file for FSL eddy command.
+
+    Args:
+        in_dwi: DWI file.
+        fsl_phase_encoding_direction: PhaseEncodingDirection from BIDS specifications
+            in FSL format (i.e. x/y/z instead of i/j/k).
+        total_readout_time: TotalReadoutTime from BIDS specifications.
+        image_id: Optional prefix.
+    Returns:
+        out_acq: [`image_id`]_acq.txt or acq.txt file.
+    """
+    import numpy as np
+    import os
+    import nibabel as nb
+
+    if image_id:
+        out_acq = out_acq = os.path.abspath(image_id + '_acq.txt')
+    else:
+        out_acq = os.path.abspath('acq.txt')
+    vols = nb.load(in_dwi).get_data().shape[-1]
+    arr = np.ones([vols, 4])
+    for i in range(vols):
+        if fsl_phase_encoding_direction == 'y-':
+            arr[i, :] = np.array((0, -1, 0, total_readout_time))
+        elif fsl_phase_encoding_direction == 'y':
+            arr[i, :] = np.array((0, 1, 0, total_readout_time))
+        elif fsl_phase_encoding_direction == 'x':
+            arr[i, :] = np.array((1, 0, 0, total_readout_time))
+        elif fsl_phase_encoding_direction == 'x-':
+            arr[i, :] = np.array((-1, 0, 0, total_readout_time))
+        elif fsl_phase_encoding_direction == 'z':
+            arr[i, :] = np.array((0, 1, 0, total_readout_time))
+        elif fsl_phase_encoding_direction == 'z-':
+            arr[i, :] = np.array((0, 0, -1, total_readout_time))
+        else:
+            raise RuntimeError("FSL PhaseEncodingDirection (found value: %s) is unknown,"
+                               "it should be a value in (x, y, z, x-, y-, z-)" % fsl_phase_encoding_direction)
+
+    np.savetxt(out_acq, arr, fmt="%d "*3 + "%f")
+
+    return out_acq
