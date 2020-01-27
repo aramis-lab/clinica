@@ -81,16 +81,16 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
         Leow et al. (2007): Statistical Properties of Jacobian Maps and the Realization of
             Unbiased Large Deformation Nonlinear Image Registration
     """
-    from .dwi_preprocessing_using_t1_utils import (create_jacobian_determinant_image,
-                                                   change_itk_transform_type,
-                                                   expend_matrix_list,
-                                                   rotate_bvecs,
-                                                   ants_combin_transform)
     import nipype.pipeline.engine as pe
     import nipype.interfaces.utility as niu
     import nipype.interfaces.fsl as fsl
     import nipype.interfaces.ants as ants
     import nipype.interfaces.c3 as c3
+    from .dwi_preprocessing_using_t1_utils import (create_jacobian_determinant_image,
+                                                   change_itk_transform_type,
+                                                   expend_matrix_list,
+                                                   rotate_bvecs,
+                                                   ants_combin_transform)
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['T1', 'DWI', 'bvec']), name='inputnode')
 

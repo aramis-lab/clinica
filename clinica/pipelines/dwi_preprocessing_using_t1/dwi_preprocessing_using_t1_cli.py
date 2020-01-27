@@ -56,7 +56,7 @@ class DwiPreprocessingUsingT1Cli(ce.CmdParser):
             'low_bval': args.low_bval,
             'use_cuda_8_0': args.use_cuda_8_0,
             'use_cuda_9_1': args.use_cuda_9_1,
-            'seed_fsl_eddy': args.initrand,
+            'initrand': args.initrand,
         }
         pipeline = DwiPreprocessingUsingT1(
             bids_directory=self.absolute_path(args.bids_directory),

@@ -123,11 +123,10 @@ def init_input_node(dwi, bvec, bval, dwi_json,
                     fmap_magnitude, fmap_phasediff, fmap_phasediff_json):
     """Extract "sub-<participant_id>_ses-<session_label>" from input node and print begin message."""
     from clinica.utils.filemanip import get_subject_id, extract_metadata_from_json
-    from clinica.utils.dwi import check_dwi_volume
-    from clinica.utils.dwi import bids_dir_to_fsl_dir
+    from clinica.utils.dwi import bids_dir_to_fsl_dir, check_dwi_volume
     from clinica.utils.ux import print_begin_image
 
-    # Extract image ID for each file are the same
+    # Extract image ID
     image_id = get_subject_id(dwi)
 
     # Check that the number of DWI, bvec & bval are the same
@@ -159,10 +158,10 @@ def print_end_pipeline(image_id, final_file):
 
 def rads2hz(in_file, delta_te, out_file=None):
     """Converts input phase difference map to Hz."""
+    import math
+    import os.path as op
     import numpy as np
     import nibabel as nb
-    import os.path as op
-    import math
     from nipype.utils import NUMPY_MMAP
 
     if out_file is None:
@@ -216,8 +215,8 @@ def resample_fmap_to_b0(in_fmap, in_b0, out_file=None):
 
 def remove_filename_extension(in_file):
     """Remove extension from `in_file`. This is needed for FSL eddy --field option."""
-    from nipype.utils.filemanip import split_filename
     import os
+    from nipype.utils.filemanip import split_filename
 
     path, source_file_dwi, _ = split_filename(in_file)
     file_without_extension = os.path.join(path, source_file_dwi)

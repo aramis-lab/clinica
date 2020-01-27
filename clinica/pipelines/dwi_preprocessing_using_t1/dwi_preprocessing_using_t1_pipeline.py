@@ -224,9 +224,8 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.fsl as fsl
 
-        from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_utils import prepare_reference_b0
         from .dwi_preprocessing_using_t1_workflows import eddy_fsl_pipeline, epi_pipeline, remove_bias
-        from .dwi_preprocessing_using_t1_utils import init_input_node, print_end_pipeline
+        from .dwi_preprocessing_using_t1_utils import init_input_node, prepare_reference_b0, print_end_pipeline
 
         # Nodes creation
         # ==============

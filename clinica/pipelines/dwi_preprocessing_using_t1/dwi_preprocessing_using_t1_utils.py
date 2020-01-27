@@ -3,9 +3,8 @@
 
 def ants_combine_transform(in_file, transforms_list, reference):
     import os
-    import os.path as op
 
-    out_warp = op.abspath('out_warp.nii.gz')
+    out_warp = os.path.abspath('out_warp.nii.gz')
 
     transforms = ""
     for trans in transforms_list:
@@ -50,9 +49,9 @@ def rename_into_caps(in_bids_dwi,
     Returns:
         The different outputs in CAPS format
     """
+    import os
     from nipype.utils.filemanip import split_filename
     from nipype.interfaces.utility import Rename
-    import os
 
     # Extract <source_file> in format sub-CLNC01_ses-M00[_acq-label]_dwi
     _, source_file_dwi, _ = split_filename(in_bids_dwi)
@@ -138,9 +137,8 @@ def expend_matrix_list(in_matrix, in_bvec):
 
 def ants_warp_image_multi_transform(fix_image, moving_image, ants_warp_affine):
     import os
-    import os.path as op
 
-    out_warp = op.abspath('warped_epi.nii.gz')
+    out_warp = os.path.abspath('warped_epi.nii.gz')
 
     cmd = ('WarpImageMultiTransform 3 %s %s -R %s %s %s %s' %
            (moving_image, out_warp, fix_image, ants_warp_affine[0], ants_warp_affine[1], ants_warp_affine[2]))
@@ -187,10 +185,9 @@ def rotate_bvecs(in_bvec, in_matrix):
 
 def ants_combin_transform(fix_image, moving_image, ants_warp_affine):
     import os
-    import os.path as op
 
-    out_warp_field = op.abspath('out_warp_field.nii.gz')
-    out_warped = op.abspath('out_warped.nii.gz')
+    out_warp_field = os.path.abspath('out_warp_field.nii.gz')
+    out_warped = os.path.abspath('out_warped.nii.gz')
 
     cmd = 'antsApplyTransforms -o [out_warp_field.nii.gz,1] -i ' + moving_image + ' -r ' + fix_image + ' -t ' + \
           ants_warp_affine[0] + ' ' + ants_warp_affine[1] + ' ' + ants_warp_affine[2]
@@ -205,9 +202,8 @@ def ants_combin_transform(fix_image, moving_image, ants_warp_affine):
 
 def create_jacobian_determinant_image(imageDimension, deformationField, outputImage):
     import os
-    import os.path as op
 
-    outputImage = op.abspath(outputImage)
+    outputImage = os.path.abspath(outputImage)
 
     cmd = 'CreateJacobianDeterminantImage ' + str(imageDimension) + ' ' + deformationField + ' ' + outputImage
     os.system(cmd)
@@ -221,7 +217,7 @@ def init_input_node(t1w, dwi, bvec, bval, dwi_json):
     from clinica.utils.dwi import check_dwi_volume, bids_dir_to_fsl_dir
     from clinica.utils.ux import print_begin_image
 
-    # Check the image IDs for each file are the same
+    # Extract image ID
     image_id = get_subject_id(t1w)
 
     # Check that the number of DWI, bvec & bval are the same
@@ -269,14 +265,11 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory
         out_updated_bval (str): Updated gradient values table.
         out_updated_bvec (str): Updated gradient vectors table.
     """
-    from clinica.utils.dwi import (insert_b0_into_dwi, b0_dwi_split,
-                                   count_b0s, b0_average)
-    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import b0_flirt_pipeline
+    import os
     import hashlib
-
-    import os.path as op
-
     import tempfile
+    from clinica.utils.dwi import insert_b0_into_dwi, b0_dwi_split, count_b0s, b0_average
+    from .dwi_preprocessing_using_t1_workflows import b0_flirt_pipeline
 
     # Count the number of b0s
     nb_b0s = count_b0s(in_bval=in_bval, low_bval=low_bval)
@@ -284,8 +277,7 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory
 
     # Split dataset into two datasets: the b0 and the b>low_bval datasets
     [extracted_b0, out_split_dwi, out_split_bval, out_split_bvec] = \
-        b0_dwi_split(
-            in_dwi=in_dwi, in_bval=in_bval, in_bvec=in_bvec, low_bval=low_bval)
+        b0_dwi_split(in_dwi=in_dwi, in_bval=in_bval, in_bvec=in_bvec, low_bval=low_bval)
 
     if nb_b0s == 1:
         # The reference b0 is the extracted b0
@@ -297,22 +289,19 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory
         b0_flirt.inputs.inputnode.in_file = extracted_b0
         if working_directory is None:
             working_directory = tempfile.mkdtemp()
-        tmp_dir = op.join(working_directory, hashlib.md5(in_dwi.encode()).hexdigest())
+        tmp_dir = os.path.join(working_directory, hashlib.md5(in_dwi.encode()).hexdigest())
         b0_flirt.base_dir = tmp_dir
         b0_flirt.run()
         # BUG: Nipype does allow to extract the output after running the
         # workflow: we need to 'guess' where the output will be generated
         # out_node = b0_flirt.get_node('outputnode')
-        registered_b0s = op.abspath(op.join(
-            tmp_dir, 'b0_coregistration', 'concat_ref_moving',
-            'merged_files.nii.gz'))
+        registered_b0s = os.path.abspath(os.path.join(
+            tmp_dir, 'b0_coregistration', 'concat_ref_moving', 'merged_files.nii.gz'))
         # cprint('B0 s will be averaged (file = ' + registered_b0s + ')')
         # Average the b0s to obtain the reference b0
         out_reference_b0 = b0_average(in_file=registered_b0s)
     else:
-        raise ValueError(
-            'The number of b0s should be strictly positive (b-val file =%s).'
-            % in_bval)
+        raise ValueError('The number of b0s should be strictly positive (b-val file =%s).' % in_bval)
 
     # Merge datasets such that bval(DWI) = (0 b1 ... bn)
     [out_b0_dwi_merge, out_updated_bval, out_updated_bvec] = \

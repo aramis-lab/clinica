@@ -26,7 +26,7 @@ def prepare_phasediff_fmap(name='prepare_phasediff_fmap'):
     import nipype.pipeline.engine as npe
     import nipype.interfaces.fsl as fsl
     from nipype.workflows.dmri.fsl.utils import (siemens2rads, cleanup_edge_pipeline, demean_image)
-    from clinica.utils.fmap import rads2hz
+    from .dwi_preprocessing_using_phasediff_fmap_utils import rads2hz
 
     input_node = npe.Node(nutil.IdentityInterface(
         fields=['fmap_mask', 'fmap_phasediff', 'fmap_magnitude', 'delta_echo_time']),
