@@ -1,37 +1,6 @@
 # coding: utf8
 
 
-def erode_mask(in_mask, npass=6, nthreads=2):
-    """
-    Erode the mask.
-
-    This function is used for the erosion of the brain mask thus preventing
-    voxels near the edge of the brain from potentially being erroneously
-    selected as single-fibre voxels during the estimation of the response
-    function.
-
-    Args:
-        in_mask (str): Binary mask.
-        npass (Optional[int]): Number of times to repeatedly apply the erosion
-            (default=6 which is used in MRtrix community).
-        nthreads (Optional[int]): Number of threads used in this function
-            (default=2, 1 disables multi-threading).
-
-    Returns:
-        An eroded mask.
-    """
-    import os.path as op
-    import os
-
-    assert(op.isfile(in_mask))
-
-    out_eroded_mask = op.abspath('eroded_mask.nii.gz')
-    cmd = 'maskfilter -npass %s -nthreads %s %s erode %s' \
-          % (npass, nthreads, in_mask, out_eroded_mask)
-    os.system(cmd)
-    return out_eroded_mask
-
-
 def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
     """
     Computes a list of statistics files for each atlas.
@@ -109,9 +78,7 @@ def extract_bids_identifier_from_caps_filename(caps_dwi_filename):
 
 
 def get_caps_filenames(caps_dwi_filename):
-    """
-    Prepare some filenames with CAPS naming convention
-    """
+    """Prepare some filenames with CAPS naming convention."""
     import re
 
     m = re.search(
@@ -135,12 +102,7 @@ def get_caps_filenames(caps_dwi_filename):
 def rename_into_caps(in_caps_dwi,
                      in_norm_fa, in_norm_md, in_norm_ad, in_norm_rd,
                      in_b_spline_transform, in_affine_matrix):
-    """
-    Rename different outputs of the pipelines into CAPS format.
-
-    Returns:
-        The different outputs with CAPS naming convention
-    """
+    """Rename some outputs of the pipelines into CAPS format."""
     from nipype.interfaces.utility import Rename
     from clinica.pipelines.dwi_dti.dwi_dti_utils import extract_bids_identifier_from_caps_filename
 
@@ -184,38 +146,66 @@ def rename_into_caps(in_caps_dwi,
 
 
 def print_begin_pipeline(in_bids_or_caps_file):
-    """
-    """
-    from clinica.utils.stream import cprint
-    import re
-    import datetime
-    from colorama import Fore
+    from clinica.utils.filemanip import get_subject_id
+    from clinica.utils.ux import print_begin_image
 
-    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)',
-                  in_bids_or_caps_file)
-    if m is None:
-        raise ValueError(
-            'Input filename is not in a BIDS or CAPS compliant format.')
-    now = datetime.datetime.now().strftime('%H:%M:%S')
-
-    cprint('%s[%s]%s Running pipeline for %s...' % (
-        Fore.BLUE, now, Fore.RESET, m.group(0)))
+    print_begin_image(get_subject_id(in_bids_or_caps_file))
 
 
 def print_end_pipeline(in_bids_or_caps_file, final_file_1, final_file_2):
-    """
-    """
-    from clinica.utils.stream import cprint
-    import re
-    import datetime
-    from colorama import Fore
+    from clinica.utils.filemanip import get_subject_id
+    from clinica.utils.ux import print_end_image
 
-    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)',
-                  in_bids_or_caps_file)
-    if m is None:
-        raise ValueError(
-            'Input filename is not in a BIDS or CAPS compliant format.')
-    now = datetime.datetime.now().strftime('%H:%M:%S')
+    print_end_image(get_subject_id(in_bids_or_caps_file))
 
-    cprint('%s[%s]%s ...%s has completed.' % (
-        Fore.GREEN, now, Fore.RESET, m.group(0)))
+
+def apply_ants_registration_syn_quick_transformation(
+        in_image,
+        in_reference_image,
+        in_affine_transformation,
+        in_bspline_transformation,
+        name_output_image=None):
+    """
+    Apply a transformation obtained with antsRegistrationSyNQuick.sh.
+
+    This function applies a rigid & deformable B-Spline syn transformation
+    which has been estimated previously with antsRegistrationSyNQuick script.
+
+    Args:
+        in_image (str): File containing the input image to be transformed.
+        in_reference_image (str): File defining the spacing, origin, size,
+            and direction of the output warped image.
+        in_affine_transformation (str): File containing the transformation
+            matrix obtained by antsRegistrationSyNQuick (expected file:
+            [Prefix]0GenericAffine.mat).
+        in_bspline_transformation (str): File containing the transformation
+            matrix obtained by antsRegistrationSyNQuick (expected file:
+            [Prefix]1Warp.nii.gz).
+        name_output_image (Optional[str]): Name of the output image
+            (default=deformed_image.nii.gz).
+
+    Returns:
+        out_deformed_image (str): File containing the deformed image according
+            to in_affine_transformation and in_bspline_transformation
+            transformations.
+    """
+    import os
+    from clinica.utils.check_dependency import check_ants
+    check_ants()
+
+    assert(os.path.isfile(in_image))
+    assert(os.path.isfile(in_affine_transformation))
+    assert(os.path.isfile(in_bspline_transformation))
+
+    if name_output_image is None:
+        out_deformed_image = os.path.abspath('deformed_image.nii.gz')
+    else:
+        out_deformed_image = os.path.abspath(name_output_image)
+
+    cmd = 'antsApplyTransforms -d 3 -e 0 -i %s -o %s -t %s -t %s -r %s ' \
+          '--interpolation Linear' \
+          % (in_image, out_deformed_image, in_bspline_transformation,
+             in_affine_transformation, in_reference_image)
+    os.system(cmd)
+
+    return out_deformed_image

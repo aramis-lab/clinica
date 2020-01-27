@@ -75,38 +75,60 @@ def get_caps_filenames(dwi_file):
 
 
 def print_begin_pipeline(in_bids_or_caps_file):
-    """
-    """
-    from clinica.utils.stream import cprint
-    import re
-    import datetime
-    from colorama import Fore
+    from clinica.utils.filemanip import get_subject_id
+    from clinica.utils.ux import print_begin_image
 
-    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)',
-                  in_bids_or_caps_file)
-    if m is None:
-        raise ValueError(
-            'Input filename is not in a BIDS or CAPS compliant format.')
-    now = datetime.datetime.now().strftime('%H:%M:%S')
-
-    cprint('%s[%s]%s Running pipeline for %s...' % (
-        Fore.BLUE, now, Fore.RESET, m.group(0)))
+    print_begin_image(get_subject_id(in_bids_or_caps_file))
 
 
 def print_end_pipeline(in_bids_or_caps_file, final_file):
-    """
-    """
-    from clinica.utils.stream import cprint
-    import re
-    import datetime
-    from colorama import Fore
+    from clinica.utils.filemanip import get_subject_id
+    from clinica.utils.ux import print_begin_image
 
-    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)',
-                  in_bids_or_caps_file)
-    if m is None:
-        raise ValueError(
-            'Input filename is not in a BIDS or CAPS compliant format.')
-    now = datetime.datetime.now().strftime('%H:%M:%S')
+    print_begin_image(get_subject_id(in_bids_or_caps_file))
 
-    cprint('%s[%s]%s ...%s has completed.' % (
-        Fore.GREEN, now, Fore.RESET, m.group(0)))
+
+def convert_flirt_transformation_to_mrtrix_transformation(
+        in_source_image,
+        in_reference_image,
+        in_flirt_matrix,
+        name_output_matrix=None):
+    """
+    Convert flirt matrix to mrtrix matrix.
+
+    This function converts a transformation matrix produced by FSL's flirt
+    command into a format usable by MRtrix. The output of this function
+    is usually for the mrtransform command.
+
+    Args:
+        in_source_image (str): File containing the source image used in
+            FSL flirt with the -in flag.
+        in_reference_image (str): File containing the reference image used in
+            FSL flirt with the -ref flag.
+        in_flirt_matrix (str): File containing the transformation matrix
+            obtained by FSL flirt.
+        name_output_matrix (Optional[str]): Name of the output matrix
+            (default=deformed_image.nii.gz).
+
+    Returns:
+        out_mrtrix_matrix (str): Transformation matrix in MRtrix format.
+    """
+    import os
+    from clinica.utils.check_dependency import check_mrtrix
+    check_mrtrix()
+
+    assert(os.path.isfile(in_source_image))
+    assert(os.path.isfile(in_reference_image))
+    assert(os.path.isfile(in_flirt_matrix))
+
+    if name_output_matrix is None:
+        out_mrtrix_matrix = os.path.abspath('mrtrix_matrix.mat')
+    else:
+        out_mrtrix_matrix = os.path.abspath(name_output_matrix)
+
+    cmd = 'transformconvert %s %s %s flirt_import %s' \
+          % (in_flirt_matrix, in_source_image, in_reference_image,
+             out_mrtrix_matrix)
+    os.system(cmd)
+
+    return out_mrtrix_matrix

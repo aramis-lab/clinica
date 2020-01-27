@@ -44,7 +44,7 @@ def register_dti_maps_on_atlas(
     import nipype.pipeline.engine as pe
     from nipype.interfaces.ants import RegistrationSynQuick
     from clinica.utils.atlas import AtlasAbstract
-    from clinica.utils.mri_registration import apply_ants_registration_syn_quick_transformation
+    from .dwi_dti_utils import apply_ants_registration_syn_quick_transformation
 
     from clinica.utils.atlas import JHUDTI811mm
     atlas = JHUDTI811mm()
@@ -108,36 +108,36 @@ def register_dti_maps_on_atlas(
     wf = pe.Workflow(name=name, base_dir=working_directory)
     wf.connect([
         # Registration of FA-map onto the atlas:
-        (inputnode, register_fa, [('in_fa',                 'moving_image'),  # noqa
-                                  ('in_atlas_scalar_image', 'fixed_image')]),  # noqa
+        (inputnode, register_fa, [('in_fa',                 'moving_image'),
+                                  ('in_atlas_scalar_image', 'fixed_image')]),
         # Apply deformation field on MD, AD & RD:
-        (inputnode,   apply_ants_registration_for_md, [('in_md',                 'in_image')]),  # noqa
-        (inputnode,   apply_ants_registration_for_md, [('in_atlas_scalar_image', 'in_reference_image')]),  # noqa
-        (register_fa, apply_ants_registration_for_md, [('out_matrix',            'in_affine_transformation')]),  # noqa
-        (register_fa, apply_ants_registration_for_md, [('forward_warp_field',    'in_bspline_transformation')]),  # noqa
+        (inputnode,   apply_ants_registration_for_md, [('in_md',                 'in_image')]),
+        (inputnode,   apply_ants_registration_for_md, [('in_atlas_scalar_image', 'in_reference_image')]),
+        (register_fa, apply_ants_registration_for_md, [('out_matrix',            'in_affine_transformation')]),
+        (register_fa, apply_ants_registration_for_md, [('forward_warp_field',    'in_bspline_transformation')]),
 
-        (inputnode,   apply_ants_registration_for_ad, [('in_ad',                 'in_image')]),  # noqa
-        (inputnode,   apply_ants_registration_for_ad, [('in_atlas_scalar_image', 'in_reference_image')]),  # noqa
-        (register_fa, apply_ants_registration_for_ad, [('out_matrix',            'in_affine_transformation')]),  # noqa
-        (register_fa, apply_ants_registration_for_ad, [('forward_warp_field',    'in_bspline_transformation')]),  # noqa
+        (inputnode,   apply_ants_registration_for_ad, [('in_ad',                 'in_image')]),
+        (inputnode,   apply_ants_registration_for_ad, [('in_atlas_scalar_image', 'in_reference_image')]),
+        (register_fa, apply_ants_registration_for_ad, [('out_matrix',            'in_affine_transformation')]),
+        (register_fa, apply_ants_registration_for_ad, [('forward_warp_field',    'in_bspline_transformation')]),
 
-        (inputnode,   apply_ants_registration_for_rd, [('in_rd',                 'in_image')]),  # noqa
-        (inputnode,   apply_ants_registration_for_rd, [('in_atlas_scalar_image', 'in_reference_image')]),  # noqa
-        (register_fa, apply_ants_registration_for_rd, [('out_matrix',            'in_affine_transformation')]),  # noqa
-        (register_fa, apply_ants_registration_for_rd, [('forward_warp_field',    'in_bspline_transformation')]),  # noqa
+        (inputnode,   apply_ants_registration_for_rd, [('in_rd',                 'in_image')]),
+        (inputnode,   apply_ants_registration_for_rd, [('in_atlas_scalar_image', 'in_reference_image')]),
+        (register_fa, apply_ants_registration_for_rd, [('out_matrix',            'in_affine_transformation')]),
+        (register_fa, apply_ants_registration_for_rd, [('forward_warp_field',    'in_bspline_transformation')]),
         # Remove negative values from the DTI maps:
-        (register_fa,                    thres_fa, [('warped_image',       'in_file')]),  # noqa
-        (apply_ants_registration_for_md, thres_md, [('out_deformed_image', 'in_file')]),  # noqa
-        (apply_ants_registration_for_rd, thres_rd, [('out_deformed_image', 'in_file')]),  # noqa
-        (apply_ants_registration_for_ad, thres_ad, [('out_deformed_image', 'in_file')]),  # noqa
+        (register_fa,                    thres_fa, [('warped_image',       'in_file')]),
+        (apply_ants_registration_for_md, thres_md, [('out_deformed_image', 'in_file')]),
+        (apply_ants_registration_for_rd, thres_rd, [('out_deformed_image', 'in_file')]),
+        (apply_ants_registration_for_ad, thres_ad, [('out_deformed_image', 'in_file')]),
         # Outputnode:
-        (thres_fa,    outputnode, [('out_file',           'out_norm_fa')]),  # noqa
-        (register_fa, outputnode, [('out_matrix',         'out_affine_matrix'),  # noqa
-                                   ('forward_warp_field', 'out_b_spline_transform'),  # noqa
-                                   ('inverse_warp_field', 'out_inverse_warp')]),  # noqa
-        (thres_md,    outputnode,  [('out_file',          'out_norm_md')]),  # noqa
-        (thres_ad,    outputnode,  [('out_file',          'out_norm_ad')]),  # noqa
-        (thres_rd,    outputnode,  [('out_file',          'out_norm_rd')])   # noqa
+        (thres_fa,    outputnode, [('out_file',           'out_norm_fa')]),
+        (register_fa, outputnode, [('out_matrix',         'out_affine_matrix'),
+                                   ('forward_warp_field', 'out_b_spline_transform'),
+                                   ('inverse_warp_field', 'out_inverse_warp')]),
+        (thres_md,    outputnode,  [('out_file',          'out_norm_md')]),
+        (thres_ad,    outputnode,  [('out_file',          'out_norm_ad')]),
+        (thres_rd,    outputnode,  [('out_file',          'out_norm_rd')]) 
     ])
 
     return wf
