@@ -245,3 +245,78 @@ def print_end_pipeline(image_id, final_file):
     """Display end message for `image_id` when `final_file` is connected."""
     from clinica.utils.ux import print_end_image
     print_end_image(image_id)
+
+
+def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory=None):
+    """
+    This function prepare the data for further corrections. It co-registers
+    the B0 images and then average it in order to obtain only
+    one average B0 images.
+
+    Args:
+        in_dwi (str): Input DWI file.
+        in_bvec (str): Vector file of the diffusion directions of
+            the dwi dataset.
+        in_bval (str): B-values file.
+        low_bval (optional[int]):
+        working_directory (str): temporary folder results where the results are stored
+
+    Returns:
+        out_reference_b0 (str): Average of the B0 images or the only B0 image.
+        out_b0_mask (str): Binary mask obtained from the average of
+            the B0 images.
+        out_b0_dwi_merge (str): Average of B0 images merged to the DWIs.
+        out_updated_bval (str): Updated gradient values table.
+        out_updated_bvec (str): Updated gradient vectors table.
+    """
+    from clinica.utils.dwi import (insert_b0_into_dwi, b0_dwi_split,
+                                   count_b0s, b0_average)
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import b0_flirt_pipeline
+    import hashlib
+
+    import os.path as op
+
+    import tempfile
+
+    # Count the number of b0s
+    nb_b0s = count_b0s(in_bval=in_bval, low_bval=low_bval)
+    # cprint('Found %s b0 for %s' % (nb_b0s, in_dwi))
+
+    # Split dataset into two datasets: the b0 and the b>low_bval datasets
+    [extracted_b0, out_split_dwi, out_split_bval, out_split_bvec] = \
+        b0_dwi_split(
+            in_dwi=in_dwi, in_bval=in_bval, in_bvec=in_bvec, low_bval=low_bval)
+
+    if nb_b0s == 1:
+        # The reference b0 is the extracted b0
+        # cprint('Only one b0 for %s' % in_dwi)
+        out_reference_b0 = extracted_b0
+    elif nb_b0s > 1:
+        # Register the b0 onto the first b0
+        b0_flirt = b0_flirt_pipeline(num_b0s=nb_b0s)
+        b0_flirt.inputs.inputnode.in_file = extracted_b0
+        if working_directory is None:
+            working_directory = tempfile.mkdtemp()
+        tmp_dir = op.join(working_directory, hashlib.md5(in_dwi.encode()).hexdigest())
+        b0_flirt.base_dir = tmp_dir
+        b0_flirt.run()
+        # BUG: Nipype does allow to extract the output after running the
+        # workflow: we need to 'guess' where the output will be generated
+        # out_node = b0_flirt.get_node('outputnode')
+        registered_b0s = op.abspath(op.join(
+            tmp_dir, 'b0_coregistration', 'concat_ref_moving',
+            'merged_files.nii.gz'))
+        # cprint('B0 s will be averaged (file = ' + registered_b0s + ')')
+        # Average the b0s to obtain the reference b0
+        out_reference_b0 = b0_average(in_file=registered_b0s)
+    else:
+        raise ValueError(
+            'The number of b0s should be strictly positive (b-val file =%s).'
+            % in_bval)
+
+    # Merge datasets such that bval(DWI) = (0 b1 ... bn)
+    [out_b0_dwi_merge, out_updated_bval, out_updated_bvec] = \
+        insert_b0_into_dwi(in_b0=out_reference_b0, in_dwi=out_split_dwi,
+                           in_bval=out_split_bval, in_bvec=out_split_bvec)
+
+    return out_reference_b0, out_b0_dwi_merge, out_updated_bval, out_updated_bvec
