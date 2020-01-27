@@ -23,12 +23,6 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
                                   help='Path to the BIDS directory.')
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
-        # Optional arguments (e.g. FWHM)
-        optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("-s", "--smooth",
-                              nargs='+', type=int, default=[8],
-                              help="A list of integers specifying the different isomorphic FWHM in millimeters "
-                                   "to smooth the image (default: --smooth 8).")
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
         # Advanced arguments (i.e. tricky parameters)
@@ -43,17 +37,16 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
                               help='Tissues to use for DARTEL template calculation '
                                    '(default: GM, WM and CSF i.e. --dartel_tissues 1 2 3).')
         advanced.add_argument("-tpm", "--tissue_probability_maps",
-                              metavar=('TissueProbabilityMap.nii'),
-                              help='Tissue probability maps to use for segmentation (default: TPM from SPM software).')
-        advanced.add_argument("-swu", "--save_warped_unmodulated",
-                              action='store_true', default=True,
-                              help="Save warped unmodulated images for tissues specified in --tissue_classes flag.")
+                              metavar='TissueProbabilityMap.nii', default=None,
+                              help='Tissue probability maps to use for segmentation '
+                                   '(default: TPM.nii from SPM software).')
+        advanced.add_argument("-dswu", "--dont_save_warped_unmodulated",
+                              action='store_true', default=False,
+                              help="Do not save warped unmodulated images for tissues specified "
+                                   "in --tissue_classes flag.")
         advanced.add_argument("-swm", "--save_warped_modulated",
-                              action='store_true',
+                              action='store_true', default=False,
                               help="Save warped modulated images for tissues specified in --tissue_classes flag.")
-        # advanced.add_argument("-wdf", "--write_deformation_fields", nargs=2, type=bool,
-        #                         help="Option to save the deformation fields from Unified Segmentation. Both inverse "
-        #                              "and forward fields can be saved. Format: a list of 2 booleans. [Inverse, Forward]")
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
@@ -61,22 +54,21 @@ class T1VolumeTissueSegmentationCLI(ce.CmdParser):
         from .t1_volume_tissue_segmentation_pipeline import T1VolumeTissueSegmentation
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
+        parameters = {
+            'tissue_classes': args.tissue_classes,
+            'dartel_tissues': args.dartel_tissues,
+            'tissue_probability_maps': args.tissue_probability_maps,
+            'save_warped_unmodulated': not args.dont_save_warped_unmodulated,
+            'save_warped_modulated': args.save_warped_modulated,
+        }
         pipeline = T1VolumeTissueSegmentation(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
             base_dir=self.absolute_path(args.working_directory),
+            parameters=parameters,
+            name=self.name
         )
-
-        pipeline.parameters.update({
-            'tissue_classes': args.tissue_classes,
-            'dartel_tissues': args.dartel_tissues,
-            'tpm': args.tissue_probability_maps,
-            'save_warped_unmodulated': args.save_warped_unmodulated,
-            'save_warped_modulated': args.save_warped_modulated,
-            'write_deformation_fields': [True, True],  # args.write_deformation_fields
-            'save_t1_mni': True
-            })
 
         if args.n_procs:
             exec_pipeline = pipeline.run(plugin='MultiProc',

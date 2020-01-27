@@ -13,7 +13,7 @@ def print_images_to_process(list_participant_id, list_session_id):
     cprint('The pipeline will be run on the following %s image(s):' % len(list_participant_id))
     for i in range(0, min(len(unique_participants), LINES_TO_DISPLAY)):
         sessions_i_th_participant = ', '.join(s_id for s_id in sessions_per_participant[i])
-        cprint("\t%s | %s" % (unique_participants[i], sessions_i_th_participant))
+        cprint("\t%s | %s," % (unique_participants[i], sessions_i_th_participant))
 
     if len(unique_participants) > LINES_TO_DISPLAY:
         cprint("\t...")
@@ -27,9 +27,10 @@ def print_begin_image(image_id, list_keys=None, list_values=None):
     from colorama import Fore
     from .stream import cprint
 
-    assert(len(list_keys) == len(list_values))
+    if list_keys is not None:
+        assert(len(list_keys) == len(list_values))
 
-    begin_message = 'Running pipeline for %s' % (image_id.replace('_', '|'))
+    begin_message = 'Running pipeline for %s' % (image_id.replace('_', ' | '))
     if list_keys and list_values:
         begin_message += ' ('
         begin_message += ', '.join(key + ' = ' + value for key, value in zip(list_keys, list_values))
@@ -44,13 +45,14 @@ def print_end_image(image_id):
     from colorama import Fore
     from .stream import cprint
 
-    end_message = '%s has completed' % image_id.replace('_', '|')
+    end_message = '%s has completed' % image_id.replace('_', ' | ')
     now = datetime.datetime.now().strftime('%H:%M:%S')
     cprint('%s[%s]%s %s' % (Fore.GREEN, now, Fore.RESET, end_message))
 
 
 def print_end_pipeline(cli_name, working_directory, working_directory_was_specified):
     """Print end pipeline message after its execution."""
+    import os
     import datetime
     from colorama import Fore
     from .stream import cprint
@@ -58,7 +60,7 @@ def print_end_pipeline(cli_name, working_directory, working_directory_was_specif
     now = datetime.datetime.now().strftime('%H:%M:%S')
     if working_directory_was_specified:
         cprint('%s[%s]%s The %s pipeline has completed. You can now delete the working directory (%s).' %
-               (Fore.GREEN, now, Fore.RESET, cli_name, working_directory))
+               (Fore.GREEN, now, Fore.RESET, cli_name, os.path.join(working_directory, cli_name)))
     else:
         cprint('%s[%s]%s The %s pipeline has completed. Working directory was automatically deleted.' %
                (Fore.GREEN, now, Fore.RESET, cli_name))
@@ -112,3 +114,16 @@ def print_crash_files_and_exit(log_file, working_directory):
            (Fore.YELLOW, working_directory, Fore.RESET))
     # Force the display of "Documentation can be found..."
     raise ClinicaException('')
+
+
+def print_groups_in_caps_directory(caps_directory):
+    """Print group IDs based on `caps_directory`/groups folder."""
+    from .group import extract_group_ids
+    from .stream import cprint
+
+    group_ids = extract_group_ids(caps_directory)
+    if group_ids == ['']:
+        cprint('No group was found in CAPS directory')
+    else:
+        cprint("Groups that exist in your CAPS directory are %s." %
+               ', '.join(g_id.replace('group-', '') for g_id in group_ids))

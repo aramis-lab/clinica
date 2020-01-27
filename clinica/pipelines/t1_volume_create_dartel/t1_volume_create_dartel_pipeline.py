@@ -2,73 +2,26 @@
 
 import clinica.pipelines.engine as cpe
 
-__author__ = "Jorge Samper-Gonzalez"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Jorge Samper-Gonzalez"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Jorge Samper-Gonzalez"
-__email__ = "jorge.samper-gonzalez@inria.fr"
-__status__ = "Development"
-
 
 class T1VolumeCreateDartel(cpe.Pipeline):
     """T1VolumeCreateDartel - Create new Dartel template.
 
-    Args:
-        input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
-
     Returns:
         A clinica pipeline object containing the T1VolumeCreateDartel pipeline.
     """
-    def __init__(self,
-                 bids_directory=None,
-                 caps_directory=None,
-                 tsv_file=None,
-                 base_dir=None,
-                 name=None,
-                 group_id='default'):
-        import os
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        from clinica.utils.group import check_group_label
 
-        super(T1VolumeCreateDartel, self).__init__(
-            bids_directory=bids_directory,
-            caps_directory=caps_directory,
-            tsv_file=tsv_file,
-            base_dir=base_dir,
-            name=name)
+        if 'group_id' not in self.parameters.keys():
+            raise KeyError('Missing compulsory group_id key in pipeline parameter.')
+        if 'dartel_tissues' not in self.parameters.keys():
+            self.parameters['dartel_tissues'] = [1, 2, 3]
 
-        if not group_id.isalnum():
-            raise ValueError('Not valid group_id value. It must be composed only by letters and/or numbers')
-        self._group_id = group_id
-
-        # Check that group does not already exists
-        if os.path.exists(os.path.join(os.path.abspath(caps_directory), 'groups', 'group-' + group_id)):
-            error_message = 'group_id : ' + group_id + ' already exists, please choose another one.' \
-                            + ' Groups that exist in your CAPS directory are: \n'
-            list_groups = os.listdir(os.path.join(os.path.abspath(caps_directory), 'groups'))
-            for e in list_groups:
-                if e.startswith('group-'):
-                    error_message += e + ' \n'
-            raise ValueError(error_message)
-
-        # Check that there is at least 2 subjects
-        if len(self.subjects) <= 1:
-            raise ValueError('This pipeline needs at least 2 subjects to perform DARTEL, and found '
-                             + str(len(self.subjects)) + ' only in ' + self.tsv_file + '.')
-
-        # Default parameters
-        self._parameters = {'dartel_tissues': [1, 2, 3],
-                            'iteration_parameters': None,
-                            'optimization_parameters': None,
-                            'regularization_form': None,
-                            'template_prefix': None
-                            }
+        check_group_label(self.parameters['group_id'])
 
     def check_custom_dependencies(self):
-        """Check dependencies that can not be listed in the `info.json` file.
-        """
+        """Check dependencies that can not be listed in the `info.json` file."""
         pass
 
     def get_input_fields(self):
@@ -90,21 +43,34 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         return ['final_template_file', 'template_files', 'dartel_flow_fields']
 
     def build_input_node(self):
-        """Build and connect an input node to the pipelines.
-        """
-
+        """Build and connect an input node to the pipeline."""
+        import os
+        import sys
+        from colorama import Fore
         import nipype.pipeline.engine as npe
-        from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         import nipype.interfaces.utility as nutil
+        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.input_files import t1_volume_dartel_input_tissue
+        from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.stream import cprint
+        from clinica.utils.ux import print_groups_in_caps_directory, print_images_to_process, print_begin_image
 
-        tissue_names = {1: 'graymatter',
-                        2: 'whitematter',
-                        3: 'csf',
-                        4: 'bone',
-                        5: 'softtissue',
-                        6: 'background'
-                        }
+        representative_output = os.path.join(self.caps_directory,
+                                             'groups',
+                                             'group-' + self.parameters['group_id'],
+                                             't1',
+                                             'group-' + self.parameters['group_id'] + '_template.nii.gz'
+                                             )
+        if os.path.exists(representative_output):
+            cprint("%sDARTEL template for %s already exists. Currently, Clinica does not propose to overwrite outputs "
+                   "for this pipeline.%s" % (Fore.YELLOW, self.parameters['group_id'], Fore.RESET))
+            print_groups_in_caps_directory(self.caps_directory)
+            sys.exit(0)
+
+        # Check that there is at least 2 subjects
+        if len(self.subjects) <= 1:
+            raise ValueError('This pipeline needs at least 2 subjects to perform DARTEL, and found '
+                             + str(len(self.subjects)) + ' only in ' + self.tsv_file + '.')
 
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(fields=self.get_input_fields(),
@@ -116,11 +82,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
                 current_file = clinica_file_reader(self.subjects,
                                                    self.sessions,
                                                    self.caps_directory,
-                                                   {'pattern': 't1/spm/segmentation/dartel_input/*_*_T1w_segm-'
-                                                               + tissue_names[tissue_number] + '_dartelinput.nii*',
-                                                    'description': 'Dartel input for tissue ' + tissue_names[tissue_number]
-                                                                   + ' from T1w MRI',
-                                                    'needed_pipeline': 't1-volume-tissue-segmentation'})
+                                                   t1_volume_dartel_input_tissue(tissue_number))
                 d_input.append(current_file)
             except ClinicaException as e:
                 all_errors.append(e)
@@ -136,13 +98,17 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         #     Each element of this list is a list of size len(self.subjects)
         read_parameters_node.inputs.dartel_inputs = d_input
 
+        if len(self.subjects):
+            print_images_to_process(self.subjects, self.sessions)
+            cprint('Computational time for DARTEL creation will depend on the number of images.')
+            print_begin_image('group-' + self.parameters['group_id'])
+
         self.connect([
             (read_parameters_node, self.input_node, [('dartel_inputs', 'dartel_input_images')])
         ])
 
     def build_output_node(self):
-        """Build and connect an output node to the pipelines.
-        """
+        """Build and connect an output node to the pipeline."""
         import os.path as op
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
@@ -157,7 +123,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         write_flowfields_node.inputs.base_directory = self.caps_directory
         write_flowfields_node.inputs.parameterization = False
         write_flowfields_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
-                                                  '/t1/spm/dartel/group-' + self._group_id
+                                                  '/t1/spm/dartel/group-' + self.parameters['group_id']
                                                   for i in range(len(self.subjects))]
         write_flowfields_node.inputs.regexp_substitutions = [
             (r'(.*)_Template(\.nii(\.gz)?)$', r'\1\2'),
@@ -170,7 +136,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
             (r'(.*)r(sub-.*)(\.nii(\.gz)?)$', r'\1\2\3'),
             (r'(.*)_dartelinput(\.nii(\.gz)?)$', r'\1\2'),
             (r'(.*)flow_fields/u_(sub-.*)_segm-.*(\.nii(\.gz)?)$',
-             r'\1\2_target-' + re.escape(self._group_id) + r'_transformation-forward_deformation\3'),
+             r'\1\2_target-' + re.escape(self.parameters['group_id']) + r'_transformation-forward_deformation\3'),
             (r'trait_added', r'')
         ]
 
@@ -179,12 +145,12 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         write_template_node = npe.Node(nio.DataSink(), name='write_template_node')
         write_template_node.inputs.parameterization = False
         write_template_node.inputs.base_directory = self.caps_directory
-        write_template_node.inputs.container = op.join('groups/group-' + self._group_id, 't1')
+        write_template_node.inputs.container = op.join('groups/group-' + self.parameters['group_id'], 't1')
         write_template_node.inputs.regexp_substitutions = [
             (r'(.*)final_template_file/.*(\.nii(\.gz)?)$',
-             r'\1group-' + re.escape(self._group_id) + r'_template\2'),
+             r'\1group-' + re.escape(self.parameters['group_id']) + r'_template\2'),
             (r'(.*)template_files/.*([0-9])(\.nii(\.gz)?)$',
-             r'\1group-' + re.escape(self._group_id) + r'_iteration-\2_template\3')
+             r'\1group-' + re.escape(self.parameters['group_id']) + r'_iteration-\2_template\3')
         ]
 
         self.connect([
@@ -194,16 +160,11 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         ])
 
     def build_core_nodes(self):
-        """Build and connect the core nodes of the pipelines.
-        """
+        """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.spm as spm
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.filemanip import unzip_nii
-        from clinica.utils.spm import get_tpm
-
-        # Get Tissue Probability Map from SPM
-        tissue_map = get_tpm()
 
         # Unzipping
         # =========
@@ -216,15 +177,6 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         # ===============
         dartel_template = npe.Node(spm.DARTEL(),
                                    name='dartel_template')
-
-        if self.parameters['iteration_parameters'] is not None:
-            dartel_template.inputs.iteration_parameters = self.parameters['iteration_parameters']
-        if self.parameters['optimization_parameters'] is not None:
-            dartel_template.inputs.optimization_parameters = self.parameters['optimization_parameters']
-        if self.parameters['regularization_form'] is not None:
-            dartel_template.inputs.regularization_form = self.parameters['regularization_form']
-        if self.parameters['template_prefix'] is not None:
-            dartel_template.inputs.template_prefix = self.parameters['template_prefix']
 
         # Connection
         # ==========

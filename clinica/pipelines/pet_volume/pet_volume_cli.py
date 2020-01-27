@@ -64,27 +64,29 @@ class PETVolumeCLI(ce.CmdParser):
         from clinica.utils.check_dependency import verify_cat12_atlases
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
+        parameters = {
+            'group_id': args.group_id,
+            'psf_tsv': self.absolute_path(args.psf_tsv),
+            'pet_tracer': args.pet_tracer,
+            'mask_tissues': args.mask_tissues,
+            'mask_threshold': args.mask_threshold,
+            'pvc_mask_tissues': args.pvc_mask_tissues,
+            'smooth': args.smooth,
+            'atlases': args.atlases,
+        }
+
+        # If the user wants to use any of the atlases of CAT12 and has not installed it, we just remove it from the list
+        # of the computed atlases
+        parameters['atlases'] = verify_cat12_atlases(args.atlases)
+
         pipeline = PETVolume(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
             base_dir=self.absolute_path(args.working_directory),
-            group_id=args.group_id,
-            fwhm_tsv=self.absolute_path(args.psf_tsv)
+            parameters=parameters,
+            name=self.name
         )
-
-        # If the user wants to use any of the atlases of CAT12 and has not installed it, we just remove it from the list
-        # of the computed atlases
-        args.atlases = verify_cat12_atlases(args.atlases)
-
-        pipeline.parameters.update({
-            'pet_type': args.pet_tracer,
-            'mask_tissues': args.mask_tissues,
-            'mask_threshold': args.mask_threshold,
-            'pvc_mask_tissues': args.pvc_mask_tissues,
-            'smooth': args.smooth,
-            'atlas_list': args.atlases
-        })
 
         if args.n_procs:
             exec_pipeline = pipeline.run(plugin='MultiProc',

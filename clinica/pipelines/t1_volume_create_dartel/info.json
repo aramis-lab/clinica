@@ -1,7 +1,9 @@
 {
     "id": "aramislab/t1-volume-create-dartel",
     "author": "Jorge Samper-Gonzalez",
-    "version": "0.1",
+    "version": "0.1.0",
+    "space_caps": "130M",
+    "space_wd": "140M",
     "dependencies": [
         {
             "type": "software",

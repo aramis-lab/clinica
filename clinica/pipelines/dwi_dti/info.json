@@ -2,6 +2,8 @@
     "id": "aramislab/dwi-dti",
     "author": ["Alexandre Routier", "Thomas Jacquemont"],
     "version": "0.1.1",
+    "space_caps": "400M",
+    "space_wd": "700M",
     "dependencies": [
         {
             "type": "software",

@@ -5,15 +5,6 @@ from nipype.interfaces.spm.base import SPMCommandInputSpec, SPMCommand, scans_fo
 from nipype.interfaces.base import TraitedSpec, File, traits
 from nipype.utils.filemanip import split_filename
 
-__author__ = "Jorge Samper-Gonzalez"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Jorge Samper-Gonzalez"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Jorge Samper-Gonzalez"
-__email__ = "jorge.samper-gonzalez@inria.fr"
-__status__ = "Development"
-
 
 if 'SPMSTANDALONE_HOME' in os.environ:
     if 'MCR_HOME' in os.environ:
@@ -62,7 +53,7 @@ class DARTELExistingTemplateOutputSpec(TraitedSpec):
 
 
 class DARTELExistingTemplate(SPMCommand):
-    """Use spm DARTEL to create a template and flow fields
+    """Use SPM DARTEL to create a template and flow fields
     http://www.fil.ion.ucl.ac.uk/spm/doc/manual.pdf#page=185
     Examples
     --------
@@ -145,33 +136,3 @@ def create_iteration_parameters(dartel_templates, iteration_parameters):
                                              dartel_templates[i])
                                             )
         return new_iteration_parameters
-
-
-def container_name_for_atlas(filename, group_id):
-    import re
-    import os
-
-    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', filename)
-    subject = m.group(1)
-    session = m.group(2)
-    return os.path.join('subjects', subject, session, 't1', 'spm', 'dartel', 'group-' + group_id, 'atlas_statistics')
-
-
-def container_name_for_write_normalized(filename, group_id):
-    import re
-    import os
-
-    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', filename)
-    subject = m.group(1)
-    session = m.group(2)
-    return os.path.join('subjects', subject, session, 't1', 'spm', 'dartel', 'group-' + group_id)
-
-
-def container_name_for_write_segmentation(filename):
-    import re
-    import os
-
-    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', filename)
-    subject = m.group(1)
-    session = m.group(2)
-    return os.path.join('subjects', subject, session, 't1', 'spm', 'segmentation')

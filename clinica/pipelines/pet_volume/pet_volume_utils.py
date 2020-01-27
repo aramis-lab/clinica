@@ -1,38 +1,49 @@
 # coding: utf8
 
-__author__ = "Jorge Samper-Gonzalez"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Jorge Samper-Gonzalez"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Jorge Samper-Gonzalez"
-__email__ = "jorge.samper-gonzalez@inria.fr"
-__status__ = "Development"
 
-
-def read_psf(json_path):
-    """readpsf is able to read the json file associated with the PET volume, and extract information needed to perform
-    partial volume correction: the effective resolution in plane, and the effective resolution axial.
-
-        Args:
-            (string) json_path: Path to the json file containing the information
-
-        Returns:
-            (float) The effective resolution in plane
-            (float) The effective axial resolution
-        """
-    import json
+def read_psf_information(psf_tsv, subject_ids, session_ids):
     import os
+    from pandas.io.parsers import read_csv
 
-    if not os.path.exists(json_path):
-        raise Exception('File ' + json_path + ' does not exist. Point spread function information must be provided.')
+    if not os.path.isfile(psf_tsv):
+        raise FileNotFoundError('Could not find the psf_tsv file %s' % psf_tsv)
+    try:
+        psf_df = read_csv(psf_tsv, sep='\t')
+    except (IOError, UnicodeDecodeError):
+        raise RuntimeError('An error while reading %s happened' % psf_tsv)
 
-    # This is a standard way of reading data in a json
-    with open(json_path) as df:
-        data = json.load(df)
-    in_plane = data['Psf'][0]['EffectiveResolutionInPlane']
-    axial = data['Psf'][0]['EffectiveResolutionAxial']
-    return in_plane, axial
+    if psf_df.shape[0] != len(subject_ids):
+        raise ValueError('The number of rows in fwhm_tsv file must match the number of subject-session pairs.')
+
+    if any(elem not in ['participant_id', 'session_id', 'fwhm_x', 'fwhm_y', 'fwhm_z'] for elem in list(psf_df.columns)):
+        raise IOError('The file %s must contain the following columns (separated by tabulations):\n'
+                      'participant_id, session_id, fwhm_x, fwhm_y, fwhm_z\n'
+                      'But we found:\n'
+                      '%s\n'
+                      'Pay attention to the spaces (there should be none).' %
+                      (psf_tsv, str(list(psf_df.columns))))
+
+    subjects_fwhm = list(psf_df.participant_id)
+    sessions_fwhm = list(psf_df.session_id)
+    idx_reordered = []
+    for i, sub in enumerate(subject_ids):
+        current_ses = session_ids[i]
+        idx_sub = [j for j in range(len(subjects_fwhm)) if sub == subjects_fwhm[j] and current_ses == sessions_fwhm[j]]
+        if len(idx_sub) == 0:
+            raise RuntimeError('Subject %s with session %s that you want to proceed was not found '
+                               'in the TSV file containing PSF specifications (%s).' %
+                               (sub, current_ses, psf_tsv))
+        if len(idx_sub) > 1:
+            raise RuntimeError('Subject %s with session %s that you want to proceed was found multiple times '
+                               'in the TSV file containing PSF specifications (%s).' %
+                               (sub, current_ses, psf_tsv))
+        idx_reordered.append(idx_sub[0])
+
+    fwhm_x = list(psf_df.fwhm_x)
+    fwhm_y = list(psf_df.fwhm_y)
+    fwhm_z = list(psf_df.fwhm_z)
+    iterables_fwhm = [[fwhm_x[i], fwhm_y[i], fwhm_z[i]] for i in idx_reordered]
+    return iterables_fwhm
 
 
 def create_binary_mask(tissues, threshold=0.3):
@@ -189,10 +200,6 @@ def pet_container_from_filename(pet_filename):
     session = m.group(2)
 
     return join('subjects', subject, session, 'pet/preprocessing')
-
-
-def expand_into_list(in_field, n_tissues):
-    return [in_field] * n_tissues
 
 
 def get_from_list(in_list, index):

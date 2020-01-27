@@ -2,31 +2,29 @@
 
 import clinica.pipelines.engine as cpe
 
-__author__ = "Simona Bottani"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Simona Bottani"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Simona Bottani"
-__email__ = "simona.bottani@icm-institute.org"
-__status__ = "Development"
-
 
 class T1VolumeParcellation(cpe.Pipeline):
     """T1VolumeParcellation - Computation of mean GM concentration for a set of regions
-
-    Args:
-        input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
 
     Returns:
         A clinica pipeline object containing the T1VolumeParcellation pipeline.
     """
     def check_custom_dependencies(self):
-        """Check dependencies that can not be listed in the `info.json` file.
-        """
+        """Check dependencies that can not be listed in the `info.json` file."""
         pass
+
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        from clinica.utils.group import check_group_label
+
+        default_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
+
+        if 'group_id' not in self.parameters.keys():
+            raise KeyError('Missing compulsory group_id key in pipeline parameter.')
+        if 'atlases' not in self.parameters.keys():
+            self.parameters['atlases'] = default_atlases
+
+        check_group_label(self.parameters['group_id'])
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
@@ -47,24 +45,30 @@ class T1VolumeParcellation(cpe.Pipeline):
         pass
 
     def build_input_node(self):
-        """Build and connect an input node to the pipeline.
-        """
-
-        import nipype.interfaces.utility as nutil
+        """Build and connect an input node to the pipeline."""
+        import os
+        from colorama import Fore
         import nipype.pipeline.engine as npe
+        import nipype.interfaces.utility as nutil
         from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.input_files import t1_volume_template_tpm_in_mni
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+        from clinica.utils.stream import cprint
+        from clinica.utils.ux import print_groups_in_caps_directory, print_images_to_process
 
-        # Get gray matter map from t1w preprocessing (from t1-volume)
+        # Check that group already exists
+        if not os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])):
+            print_groups_in_caps_directory(self.caps_directory)
+            raise ClinicaException(
+                '%sGroup %s does not exist. Did you run t1-volume or t1-volume-create-dartel pipeline?%s' %
+                (Fore.RED, self.parameters['group_id'], Fore.RESET)
+            )
+
         try:
             gm_mni = clinica_file_reader(self.subjects,
                                          self.sessions,
                                          self.caps_directory,
-                                         {'pattern': 't1/spm/dartel/group-' + self.parameters['group_id']
-                                                     + '/*_T1w_segm-graymatter_space-Ixi549Space_modulated-'
-                                                     + 'on_probability.nii*',
-                                          'description': ' grey matter map in MNI space (Ixi549) with modulation',
-                                          'needed_pipeline': 't1-volume'})
+                                         t1_volume_template_tpm_in_mni(self.parameters['group_id'], 1, True))
         except ClinicaException as e:
             final_error_str = 'Clinica faced error(s) while trying to read files in your CAPS directory.\n'
             final_error_str += str(e)
@@ -74,27 +78,24 @@ class T1VolumeParcellation(cpe.Pipeline):
                                         interface=nutil.IdentityInterface(
                                             fields=self.get_input_fields(),
                                             mandatory_inputs=True))
-
         read_parameters_node.inputs.file_list = gm_mni
         read_parameters_node.inputs.atlas_list = self.parameters['atlases']
 
-        self.connect([(read_parameters_node, self.input_node, [('file_list', 'file_list')]),
-                      (read_parameters_node, self.input_node, [('atlas_list', 'atlas_list')])
-                      ])
+        if len(self.subjects):
+            print_images_to_process(self.subjects, self.sessions)
+            cprint('The pipeline will last a few seconds per image.')
+
+        self.connect([
+            (read_parameters_node, self.input_node, [('file_list', 'file_list')]),
+            (read_parameters_node, self.input_node, [('atlas_list', 'atlas_list')])
+        ])
 
     def build_output_node(self):
-        """Build and connect an output node to the pipeline.
-        """
-
-        # In the same idea as the input node, this output node is supposedly
-        # used to write the output fields in a CAPS. It should be executed only
-        # if this pipeline output is not already connected to a next Clinica
-        # pipeline.
+        """Build and connect an output node to the pipeline."""
         pass
 
     def build_core_nodes(self):
-        """Build and connect the core nodes of the pipeline.
-        """
+        """Build and connect the core nodes of the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio

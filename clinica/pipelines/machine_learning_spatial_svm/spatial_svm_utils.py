@@ -1,14 +1,12 @@
 # coding: utf8
 
-from __future__ import division
-
 
 def atlas_decomposition(dartel_input):
-    '''
+    """
 
     :param dartel_input: path to the dartel input
     :return: 3 atlases (gm, wm, csf)
-    '''
+    """
 
     import nibabel as nib
 

@@ -1,14 +1,5 @@
 # coding: utf8
 
-__author__ = "Simona Bottani"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Simona Bottani"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Simona Bottani"
-__email__ = "simona.bottani@icm-institute.org"
-__status__ = "Development"
-
 
 def atlas_statistics(in_image, atlas_list):
     """
@@ -25,7 +16,9 @@ def atlas_statistics(in_image, atlas_list):
     from nipype.utils.filemanip import split_filename
     from clinica.utils.atlas import AtlasAbstract
     from clinica.utils.statistics import statistics_on_atlas
-    from clinica.utils.stream import cprint
+    from clinica.utils.filemanip import get_subject_id
+    from clinica.utils.ux import print_end_image
+    subject_id = get_subject_id(in_image)
 
     orig_dir, base, ext = split_filename(in_image)
     atlas_classes = AtlasAbstract.__subclasses__()
@@ -35,7 +28,7 @@ def atlas_statistics(in_image, atlas_list):
             if atlas_class.get_name_atlas() == atlas:
                 out_atlas_statistics = abspath(
                     join('./' + base + '_space-' + atlas + '_map-graymatter_statistics.tsv'))
-                cprint(out_atlas_statistics)
                 statistics_on_atlas(in_image, atlas_class(), out_atlas_statistics)
                 atlas_statistics_list.append(out_atlas_statistics)
+    print_end_image(subject_id)
     return atlas_statistics_list

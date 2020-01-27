@@ -2,6 +2,8 @@
     "id": "aramislab/dwi-connectome",
     "author": ["Jeremy Guillon", "Alexandre Routier", "Thomas Jacquemont"],
     "version": "0.1.0",
+    "space_caps": "1G",
+    "space_wd": "2G",
     "dependencies": [
         {
             "type": "software",

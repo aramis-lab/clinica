@@ -10,27 +10,6 @@ from nipype.interfaces.spm.base import SPMCommandInputSpec, SPMCommand
 from nipype.interfaces.base import TraitedSpec, OutputMultiPath, InputMultiPath, File, traits
 from nipype.utils.filemanip import filename_to_list, list_to_filename
 
-__author__ = "Jorge Samper-Gonzalez"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Jorge Samper-Gonzalez"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Jorge Samper-Gonzalez"
-__email__ = "jorge.samper-gonzalez@inria.fr"
-__status__ = "Development"
-
-
-def group_nested_images_by_subject(class_images, zip_files=False):
-    """
-
-    """
-    from clinica.utils.filemanip import zip_nii
-
-    if zip_files:
-        return [zip_nii([s for tissue in subject for s in tissue], True) for subject in class_images]
-
-    return [[s for tissue in subject for s in tissue] for subject in class_images]
-
 
 def t1w_container_from_filename(t1w_filename):
     """
@@ -56,16 +35,11 @@ def init_input_node(t1w):
     Extracts "sub-<participant_id>_ses-<session_label>" from input node
     and prints begin message.
     """
-    import datetime
-    from colorama import Fore
     from clinica.utils.filemanip import get_subject_id
-    from clinica.utils.stream import cprint
+    from clinica.utils.ux import print_begin_image
 
     subject_id = get_subject_id(t1w)
-
-    now = datetime.datetime.now().strftime('%H:%M:%S')
-    cprint('%s[%s]%s Running pipeline for %s...' %
-           (Fore.BLUE, now, Fore.RESET, subject_id.replace('_', '|')))
+    print_begin_image(subject_id)
 
     return subject_id, t1w
 
@@ -74,13 +48,8 @@ def print_end_pipeline(subject_id, final_file):
     """
     Display end message for <subject_id> when <final_file> is connected.
     """
-    import datetime
-    from colorama import Fore
-    from clinica.utils.stream import cprint
-
-    now = datetime.datetime.now().strftime('%H:%M:%S')
-    cprint('%s[%s]%s ...%s has completed.' % (
-        Fore.GREEN, now, Fore.RESET, subject_id.replace('_', '|')))
+    from clinica.utils.ux import print_end_image
+    print_end_image(subject_id)
 
 
 def zip_list_files(class_images, zip_files=False):

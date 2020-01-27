@@ -8,8 +8,6 @@ The aim of this module is to execute pipelines from the command line,
 and gives to the user some other utils to work with the pipelines.
 """
 
-from __future__ import print_function
-
 import os
 import sys
 
@@ -194,9 +192,9 @@ def execute():
     # from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_cli import T1FreeSurferLongitudinalCLI
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import T1VolumeTissueSegmentationCLI
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_cli import T1VolumeCreateDartelCLI
-    from clinica.pipelines.t1_volume_existing_dartel.t1_volume_existing_dartel_cli import T1VolumeExistingDartelCLI
+    from clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_cli import T1VolumeRegisterDartelCLI
     from clinica.pipelines.t1_volume_dartel2mni.t1_volume_dartel2mni_cli import T1VolumeDartel2MNICLI
-    from clinica.pipelines.t1_volume_new_template.t1_volume_new_template_cli import T1VolumeNewTemplateCLI
+    from clinica.pipelines.t1_volume.t1_volume_cli import T1VolumeCLI
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import T1VolumeExistingTemplateCLI
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DwiPreprocessingUsingPhaseDiffFieldmapCli
@@ -212,7 +210,7 @@ def execute():
                                    extra_dir="pipelines").load()
     pipelines += [
         T1FreeSurferCLI(),
-        T1VolumeNewTemplateCLI(),
+        T1VolumeCLI(),
         # T1FreeSurferLongitudinalCLI(),
         DwiPreprocessingUsingPhaseDiffFieldmapCli(),
         DwiPreprocessingUsingT1Cli(),
@@ -226,7 +224,7 @@ def execute():
         T1VolumeExistingTemplateCLI(),
         T1VolumeTissueSegmentationCLI(),
         T1VolumeCreateDartelCLI(),
-        T1VolumeExistingDartelCLI(),
+        T1VolumeRegisterDartelCLI(),
         T1VolumeDartel2MNICLI(),
         T1VolumeParcellationCLI()
     ]

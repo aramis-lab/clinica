@@ -1,26 +1,10 @@
 # coding: utf8
 
-# WARNING: Don't put any import statement here except if it's absolutely
-# necessary. Put it *inside* the different methods.
-# Otherwise it will slow down the dynamic loading of the pipelines list by the
-# command line tool.
 import clinica.pipelines.engine as cpe
-
-__author__ = "Simona Bottani"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Simona Bottani"
-__email__ = "simona.bottani@icm-institute.org"
-__status__ = "Development"
 
 
 class SpatialSVM(cpe.Pipeline):
     """SpatialSVM - Prepare input data for SVM with spatial and anatomical regularization.
-
-    Todos:
-        - [ ] Final version of CAPS.
-        - [ ] Remove --voxel_size flag and detect automatically this parameter.
 
     Args:
         input_dir: A BIDS directory.
@@ -32,6 +16,23 @@ class SpatialSVM(cpe.Pipeline):
 
     Raises:
     """
+
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        from clinica.utils.group import check_group_label
+
+        if 'group_id' not in self.parameters.keys():
+            raise KeyError('Missing compulsory group_id key in pipeline parameter.')
+        if 'fwhm' not in self.parameters.keys():
+            self.parameters['fwhm'] = 4
+        if 'image_type' not in self.parameters.keys():
+            self.parameters['image_type'] = 't1'
+        if 'pet_tracer' not in self.parameters.keys():
+            self.parameters['pet_tracer'] = 'fdg'
+        if 'no_pvc' not in self.parameters.keys():
+            self.parameters['no_pvc'] = False
+
+        check_group_label(self.parameters['group_id'])
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
@@ -59,88 +60,64 @@ class SpatialSVM(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
         """
-
-        import nipype.interfaces.utility as nutil
+        import os
+        from colorama import Fore
         import nipype.pipeline.engine as npe
-        from clinica.utils.stream import cprint
-        from os.path import exists, join, abspath
-        from os import listdir
-        from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+        import nipype.interfaces.utility as nutil
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
-        import clinica.utils.input_files as input_files
+        from clinica.utils.input_files import t1_volume_final_group_template
+        from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+        from clinica.utils.ux import print_groups_in_caps_directory
 
-        # Check that group-id already exists
-        if not exists(join(abspath(self.caps_directory), 'groups', 'group-' + self.parameters['group_id'])):
-            error_message = 'group_id : ' + self.parameters['group_id'] + ' does not exists, ' \
-                            + 'please choose an other one. Groups that exist' \
-                            + 's in your CAPS directory are : \n'
-            list_groups = listdir(join(abspath(self.caps_directory), 'groups'))
-            has_one_group = False
-            for e in list_groups:
-                if e.startswith('group-'):
-                    error_message += e + ' \n'
-                    has_one_group = True
-            if not has_one_group:
-                error_message = error_message + 'No group found ! ' \
-                                + 'Use t1-volume pipeline if you do not ' \
-                                + 'have a template yet ! '
-            raise ValueError(error_message)
+        # Check that group already exists
+        if not os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])):
+            print_groups_in_caps_directory(self.caps_directory)
+            raise ClinicaException(
+                '%sGroup %s does not exist. Did you run pet-volume, t1-volume or t1-volume-create-dartel pipeline?%s' %
+                (Fore.RED, self.parameters['group_id'], Fore.RESET)
+            )
 
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(fields=self.get_input_fields(),
                                                                           mandatory_inputs=True))
-        image_type = self.parameters['image_type']
-        pet_type = self.parameters['pet_type']
-        no_pvc = self.parameters['no_pvc']
-
         all_errors = []
-        if image_type == 't1':
-            try:
-                input_image = clinica_file_reader(self.subjects,
-                                                  self.sessions,
-                                                  self.caps_directory,
-                                                  {'pattern': 't1/spm/dartel/group-' + self.parameters['group_id']
-                                                              + '/*_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability.nii.gz',
-                                                   'description': 'graymatter tissue segmented in T1w MRI in Ixi549 space',
-                                                   'needed_pipeline': 't1-volume-tissue-segmentation'})
-            except ClinicaException as e:
-                all_errors.append(e)
 
-        elif image_type is 'pet':
-            if no_pvc.lower() == 'true':
-                try:
-                    input_image = clinica_file_reader(self.subjects,
-                                                      self.sessions,
-                                                      self.caps_directory,
-                                                      {'pattern': 'pet/preprocessing/group-' + self.parameters['group_id']
-                                                                  + '/*_pet_space-Ixi549Space_suvr-pons_pet.nii.gz',
-                                                       'description': pet_type + ' PET in Ixi549 space',
-                                                       'needed_pipeline': 'pet-volume'})
-                except ClinicaException as e:
-                    all_errors.append(e)
-
-            elif no_pvc.lower() == 'false':
-                try:
-                    input_image = clinica_file_reader(self.subjects,
-                                                      self.sessions,
-                                                      self.caps_directory,
-                                                      {'pattern': 'pet/preprocessing/group-' + self.parameters['group_id']
-                                                                  + '_pet_space-Ixi549Space_pvc-rbv_suvr-pons_pet.nii.gz',
-                                                       'description': pet_type + ' PET partial volume corrected (RBV) in Ixi549 space',
-                                                       'needed_pipeline': 'pet-volume with PVC'})
-                except ClinicaException as e:
-                    all_errors.append(e)
-
+        if self.parameters['image_type'] == 't1':
+            caps_files_information = {
+                'pattern': os.path.join('t1', 'spm', 'dartel', 'group-' + self.parameters['group_id'],
+                                        '*_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability.nii.gz'),
+                'description': 'graymatter tissue segmented in T1w MRI in Ixi549 space',
+                'needed_pipeline': 't1-volume-tissue-segmentation'
+            }
+        elif self.parameters['image_type'] is 'pet':
+            if self.parameters['no_pvc']:
+                caps_files_information = {
+                    'pattern': os.path.join('pet', 'preprocessing', 'group-' + self.parameters['group_id'],
+                                            '*_pet_space-Ixi549Space_suvr-pons_pet.nii.gz'),
+                    'description': self.parameters['pet_tracer'] + ' PET in Ixi549 space',
+                    'needed_pipeline': 'pet-volume'
+                }
             else:
-                raise ValueError(no_pvc + ' is not a valid keyword for -no_pvc'
-                                 + ':only True or False are accepted (string)')
+                caps_files_information = {
+                    'pattern': os.path.join('pet', 'preprocessing', 'group-' + self.parameters['group_id'],
+                                            '*_pet_space-Ixi549Space_pvc-rbv_suvr-pons_pet.nii.gz'),
+                    'description': self.parameters['pet_tracer'] + ' PET partial volume corrected (RBV) in Ixi549 space',
+                    'needed_pipeline': 'pet-volume with PVC'
+                }
         else:
-            raise ValueError('Image type ' + image_type + ' unknown')
+            raise ValueError('Image type ' + self.parameters['image_type'] + ' unknown.')
+
+        try:
+            input_image = clinica_file_reader(self.subjects,
+                                              self.sessions,
+                                              self.caps_directory,
+                                              caps_files_information)
+        except ClinicaException as e:
+            all_errors.append(e)
+
         try:
             dartel_input = clinica_group_reader(self.caps_directory,
-                                                {'pattern': 'group-' + self.parameters['group_id'] + '_template.nii*',
-                                                 'description': 'template file of group ' + self.parameters['group_id'],
-                                                 'needed_pipeline': 't1-volume or t1-volume-create-dartel'})
+                                                t1_volume_final_group_template(self.parameters['group_id']))
         except ClinicaException as e:
             all_errors.append(e)
 

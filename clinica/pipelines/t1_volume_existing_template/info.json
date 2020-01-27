@@ -2,6 +2,8 @@
     "id": "aramislab/t1-volume-existing-template",
     "author": "Jorge Samper-Gonzalez",
     "version": "0.1.0",
+    "space_caps": "70M",
+    "space_wd": "250M",
     "dependencies": [
         {
             "type": "software",

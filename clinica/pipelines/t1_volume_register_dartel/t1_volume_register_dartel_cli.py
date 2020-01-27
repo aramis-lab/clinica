@@ -3,7 +3,7 @@
 import clinica.engine as ce
 
 
-class T1VolumeExistingDartelCLI(ce.CmdParser):
+class T1VolumeRegisterDartelCLI(ce.CmdParser):
 
     def define_name(self):
         """Define the sub-command name to run this pipeline."""
@@ -35,27 +35,29 @@ class T1VolumeExistingDartelCLI(ce.CmdParser):
         self.add_clinica_standard_arguments()
         # Advanced arguments (i.e. tricky parameters)
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
-        advanced.add_argument("-t", "--tissues", nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
+        advanced.add_argument("-t", "--tissues",
+                              metavar='', nargs='+', type=int, default=[1, 2, 3], choices=range(1, 7),
                               help='Tissues to create flow fields to DARTEL template '
                                    '(default: GM, WM and CSF i.e. --tissues 1 2 3).')
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
-        import os
         from networkx import Graph
-        from .t1_volume_existing_dartel_pipeline import T1VolumeExistingDartel
+        from .t1_volume_register_dartel_pipeline import T1VolumeRegisterDartel
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
-        pipeline = T1VolumeExistingDartel(
+        parameters = {
+            'group_id': args.group_id,
+            'tissues': args.tissues,
+        }
+        pipeline = T1VolumeRegisterDartel(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
             base_dir=self.absolute_path(args.working_directory),
-            group_id=args.group_id)
-
-        pipeline.parameters.update({
-            'tissues': args.tissues
-        })
+            parameters=parameters,
+            name=self.name
+        )
 
         if args.n_procs:
             exec_pipeline = pipeline.run(plugin='MultiProc',

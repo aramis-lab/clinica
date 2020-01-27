@@ -26,8 +26,9 @@ class DwiPreprocessingUsingPhaseDiffFieldmapCli(ce.CmdParser):
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("--low_bval",
-                              metavar=('N'), type=int, default=5,
-                              help='Define the b0 volumes as all volume bval <= lowbval. (default: --low_bval 5)')
+                              metavar='N', type=int, default=5,
+                              help='Define the b0 volumes as all volume bval <= low_bval '
+                                   '(default: --low_bval %(default)s).')
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
 
@@ -37,12 +38,16 @@ class DwiPreprocessingUsingPhaseDiffFieldmapCli(ce.CmdParser):
         from .dwi_preprocessing_using_phasediff_fieldmap_pipeline import DwiPreprocessingUsingPhaseDiffFieldmap
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
+        parameters = {
+            'low_bval': args.low_bval
+        }
         pipeline = DwiPreprocessingUsingPhaseDiffFieldmap(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
             base_dir=self.absolute_path(args.working_directory),
-            low_bval=args.low_bval,
+            parameters=parameters,
+            name=self.name
         )
 
         if args.n_procs:

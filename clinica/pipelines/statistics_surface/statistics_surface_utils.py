@@ -1,13 +1,30 @@
 # coding: utf8
 
-__author__ = "Junhao Wen"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Junhao Wen"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Junhao Wen"
-__email__ = "Junhao.Wen@inria.fr"
-__status__ = "Development"
+
+def get_t1_freesurfer_custom_file():
+    import os
+    custom_file = os.path.join(
+        '@subject',
+        '@session',
+        't1',
+        'freesurfer_cross_sectional',
+        '@subject_@session',
+        'surf',
+        '@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
+    )
+    return custom_file
+
+
+def get_fdg_pet_surface_custom_file():
+    import os
+    custom_file = os.path.join(
+        '@subject',
+        '@session',
+        'pet',
+        'surface',
+        '@subject_@session_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-@hemi_fwhm-@fwhm_projection.mgh'
+    )
+    return custom_file
 
 
 def prepare_data(input_directory, subjects_visits_tsv, group_label, glm_type):
@@ -29,7 +46,7 @@ def prepare_data(input_directory, subjects_visits_tsv, group_label, glm_type):
     import pandas as pd
     from clinica.utils.stream import cprint
 
-    path_to_matscript = os.path.join(os.path.dirname(clp.__path__[0]), 'lib/clinicasurfstat')
+    path_to_matscript = os.path.join(os.path.dirname(clp.__path__[0]), 'lib', 'clinicasurfstat')
 
     # CAPS input and output vars
     input_directory = os.path.expanduser(input_directory)

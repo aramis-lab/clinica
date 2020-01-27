@@ -3,13 +3,6 @@
 import clinica.pipelines.engine as cpe
 from nipype import config
 
-__author__ = ["Alexandre Routier", "Thomas Jacquemont"]
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Nipype"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__status__ = "Development"
-
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
 cfg = dict(execution={'parameterize_dirs': False})
@@ -19,18 +12,16 @@ config.update_config(cfg)
 class DwiDti(cpe.Pipeline):
     """DTI-based processing of DWI datasets.
 
-    Args:
-        input_dir(str): Input directory in a CAPS hierarchy.
-        output_dir(str): Output directory in a CAPS hierarchy.
-        subjects_sessions_list(str): The Subjects-Sessions list file (in .tsv
-            format).
-
     Returns:
         A clinica pipeline object containing the DwiDti pipeline.
 
     Raises:
 
     """
+
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        pass
 
     def check_custom_dependencies(self): pass
 

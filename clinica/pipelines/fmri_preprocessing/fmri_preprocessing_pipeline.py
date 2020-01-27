@@ -1,19 +1,6 @@
 # coding: utf8
 
-# WARNING: Don't put any import statement here except if it's absolutly
-# necessary. Put it *inside* the different methods.
-# Otherwise it will slow down the dynamic loading of the pipelines list by the
-# command line tool.
 import clinica.pipelines.engine as cpe
-
-__author__ = "Jeremy Guillon"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Jeremy Guillon", "Romain Valabregue"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Jeremy Guillon"
-__email__ = "jeremy.guillon@inria.fr"
-__status__ = "Development"
 
 
 class fMRIPreprocessing(cpe.Pipeline):
@@ -43,27 +30,20 @@ class fMRIPreprocessing(cpe.Pipeline):
 
     Returns:
         A nipype workflow object containing the full fMRI preprocessing
-        pipelines.
+        pipeline.
 
-    Raises:
-        IOError:
-
-    Example:
-        >>> from clinica.pipelines.fmri_preprocessing
-        .fmri_preprocessing_pipeline import fMRIPreprocessing
-        >>> pipelines = fMRIPreprocessing('~/MYDATASET_BIDS',
-        '~/MYDATASET_CAPS')
-        >>> pipelines.parameters = {
-        >>>     'num_slices' : 45,
-        >>>     'time_repetition' : 2.4,
-        >>>     'echo_times' : [5.19, 7.65],
-        >>>     'blip_direction' : 1,
-        >>>     'total_readout_time' : 15.6799,
-        >>>     'full_width_at_half_maximum' : [8, 8, 8],
-        >>>     't1_native_space' : False
-        >>> }
-        >>> pipelines.run()
     """
+
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        if 'full_width_at_half_maximum' not in self.parameters.keys():
+            self.parameters['full_width_at_half_maximum'] = [8, 8, 8]
+        if 't1_native_space' not in self.parameters.keys():
+            self.parameters['t1_native_space'] = False
+        if 'freesurfer_brain_mask' not in self.parameters.keys():
+            self.parameters['freesurfer_brain_mask'] = False
+        if 'unwarping' not in self.parameters.keys():
+            self.parameters['unwarping'] = False
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipelines.
@@ -341,7 +321,7 @@ class fMRIPreprocessing(cpe.Pipeline):
         """Build and connect the core nodes of the pipelines.
         """
 
-        import clinica.pipelines.fmri_preprocessing.fmri_preprocessing_utils as utils
+        import clinica.pipelines.fmri_preprocessing.fmri_preprocessing_workflows as utils
         import nipype.interfaces.utility as nutil
         import nipype.interfaces.spm as spm
         import nipype.pipeline.engine as npe

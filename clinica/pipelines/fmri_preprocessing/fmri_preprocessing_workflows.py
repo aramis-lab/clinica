@@ -1,18 +1,10 @@
 # coding: utf8
 
-from __future__ import print_function, division, unicode_literals, \
-    absolute_import
-from nipype.utils.filemanip import (fname_presuffix, filename_to_list,
-                                    list_to_filename)
-from nipype.interfaces.base import (OutputMultiPath, TraitedSpec, isdefined,
-                                    traits, File)
-from nipype.interfaces.spm.base import (SPMCommand, scans_for_fname, func_is_3d,
-                                        scans_for_fnames, SPMCommandInputSpec)
-import nipype.pipeline.engine as npe
-import nipype.interfaces.spm as spm
-import nipype.interfaces.fsl as fsl
-
 import os
+
+import nipype.interfaces.fsl as fsl
+import nipype.interfaces.spm as spm
+import nipype.pipeline.engine as npe
 
 if 'SPMSTANDALONE_HOME' in os.environ:
     if 'MCR_HOME' in os.environ:

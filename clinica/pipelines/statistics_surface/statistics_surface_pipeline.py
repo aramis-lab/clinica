@@ -2,24 +2,33 @@
 
 import clinica.pipelines.engine as cpe
 
-__author__ = "Junhao Wen"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Junhao Wen", "Arnaud Marcoux", "Alexandre Routier"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Junhao Wen"
-__email__ = "Junhao.Wen@inria.fr"
-__status__ = "Development"
-
 
 class StatisticsSurface(cpe.Pipeline):
     """
     Based on the Matlab toolbox [SurfStat](http://www.math.mcgill.ca/keith/surfstat/), which performs statistical
     analyses of univariate and multivariate surface and volumetric data using the generalized linear model (GLM),
-    this pipelines performs analyses including group comparison and correlation with the surface-based features.
-    Currently, this pipelines fits the normalised cortical thickness on FsAverage from `t1-freesurfer` pipelines.
-    New features will be added in the future.
+    this pipeline performs analyses including group comparison and correlation with surface-based features e.g.
+    cortical thickness from t1-freesurfer or map of activity from PET data from pet-surface pipeline.
 
+    TODO: Refactor StatisticsSurface
+        [ ] build_input_node
+            [ ] Remove current read_parameters_node
+            [ ] With the help of statistics_surface_utils.py::check_inputs, use new clinica_file_reader function
+                to check and extract surface-based features
+            [ ] Delete statistics_surface_utils.py::check_inputs function
+            [ ] Move statistics_surface_cli.py checks of input data in this method
+            [ ] Handle overwrite case
+            [ ] Display participants, covariates and info regarding the GLM.
+        [ ] build_core_nodes
+            [ ] Use surfstat.inputs.full_width_at_half_maximum = self.parameter['full_width_at_half_maximum']
+                instead of connecting read_parameters_node.inputs.full_width_at_half_maximum
+                to surfstat.inputs.full_width_at_half_maximum
+            [ ] Repeat for other keys
+            [ ] Use working directory
+        [ ] build_output_node
+            [ ] Remove path_to_matscript and freesurfer_home: it should be set in runmatlab function
+            [ ] Copy results from <WD> to <CAPS>
+        [ ] Clean/adapt statistics_surface_utils.py
 
     Args:
         caps_directory: str, the output folder of recon-all which will contain the result files: ?h.thickness.fwhm**.mgh.
@@ -42,8 +51,44 @@ class StatisticsSurface(cpe.Pipeline):
 
     Returns:
         A clinica pipeline object containing the StatisticsSurface pipeline.
-
     """
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        from .statistics_surface_utils import get_t1_freesurfer_custom_file
+        from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.group import check_group_label
+
+        if 'custom_file' not in self.parameters.keys():
+            self.parameters['custom_file'] = get_t1_freesurfer_custom_file()
+        if 'feature_label' not in self.parameters.keys():
+            self.parameters['feature_label'] = 'ct',
+        if 'full_width_at_half_maximum' not in self.parameters.keys():
+            self.parameters['full_width_at_half_maximum'] = 20
+        if 'threshold_uncorrected_pvalue' not in self.parameters.keys():
+            self.parameters['threshold_uncorrected_pvalue'] = 0.001
+        if 'threshold_corrected_pvalue' not in self.parameters.keys():
+            self.parameters['threshold_corrected_pvalue'] = 0.05,
+        if 'cluster_threshold' not in self.parameters.keys():
+            self.parameters['cluster_threshold'] = 0.001,
+
+        check_group_label(self.parameters['group_label'])
+        if self.parameters['glm_type'] not in ['group_comparison', 'correlation']:
+            raise ClinicaException("The glm_type you specified is wrong: it should be group_comparison or "
+                                   "correlation (given value: %s)." % self.parameters['glm_type'])
+        if self.parameters['full_width_at_half_maximum'] not in [0, 5, 10, 15, 20]:
+            raise ClinicaException(
+                "FWHM for the surface smoothing you specified is wrong: it should be 0, 5, 10, 15 or 20 "
+                "(given value: %s)." % self.parameters['full_width_at_half_maximum'])
+        if self.parameters['threshold_uncorrected_pvalue'] < 0 or self.parameters['threshold_uncorrected_pvalue'] > 1:
+            raise ClinicaException("Uncorrected p-value threshold should be a lower than 1 "
+                                   "(given value: %s)." % self.parameters['threshold_uncorrected_pvalue'])
+        if self.parameters['threshold_corrected_pvalue'] < 0 or self.parameters['threshold_corrected_pvalue'] > 1:
+            raise ClinicaException("Corrected p-value threshold should be between 0 and 1 "
+                                   "(given value: %s)." % self.parameters['threshold_corrected_pvalue'])
+        if self.parameters['cluster_threshold'] < 0 or self.parameters['cluster_threshold'] > 1:
+            raise ClinicaException("Cluster threshold should be between 0 and 1 "
+                                   "(given value: %s)." % self.parameters['cluster_threshold'])
+
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
