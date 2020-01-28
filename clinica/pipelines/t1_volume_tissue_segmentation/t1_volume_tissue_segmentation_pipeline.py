@@ -115,13 +115,14 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
+        from os.path import join
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         import nipype.interfaces.io as nio
         import nipype.interfaces.spm as spm
         from ..t1_volume_tissue_segmentation import t1_volume_tissue_segmentation_utils as seg_utils
         from clinica.utils.filemanip import unzip_nii, zip_nii
-        from clinica.utils.nipype import fix_join
+        from clinica.utils.nipype import fix_join, container_from_filename
 
         # Get <subject_id> (e.g. sub-CLNC01_ses-M00) from input_node
         # and print begin message
@@ -190,9 +191,9 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         # Find container path from t1w filename
         # =====================================
         container_path = npe.Node(
-            nutil.Function(input_names=['t1w_filename'],
+            nutil.Function(input_names=['bids_or_caps_filename'],
                            output_names=['container'],
-                           function=seg_utils.t1w_container_from_filename),
+                           function=container_from_filename),
             name='ContainerPath')
 
         # Writing CAPS
@@ -231,8 +232,8 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         ]
 
         self.connect([
-            (self.input_node, container_path, [('t1w', 't1w_filename')]),
-            (container_path, write_node, [(('container', fix_join, ''), 'container')]),
+            (self.input_node, container_path, [('t1w', 'bids_or_caps_filename')]),
+            (container_path, write_node, [(('container', fix_join, join('t1', 'spm', 'segmentation')), 'container')]),
             (self.output_node, write_node, [(('native_class_images', seg_utils.zip_list_files, True), 'native_space'),
                                             (('dartel_input_images', seg_utils.zip_list_files, True), 'dartel_input')]),
             (self.output_node, write_node, [

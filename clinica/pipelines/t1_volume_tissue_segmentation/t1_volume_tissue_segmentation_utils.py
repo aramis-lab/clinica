@@ -11,25 +11,6 @@ from nipype.interfaces.base import TraitedSpec, OutputMultiPath, InputMultiPath,
 from nipype.utils.filemanip import filename_to_list, list_to_filename
 
 
-def t1w_container_from_filename(t1w_filename):
-    """
-    Extracts <participant_id> & <sesssion_id> from BIDS <t1w_filename> and
-    returns CAPS path.
-    """
-    import re
-    from os.path import join
-    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', t1w_filename)
-
-    if m is None:
-        raise ValueError('Input filename is not in a BIDS or CAPS compliant format. It does not contain the subject' +
-                         ' and session information.')
-
-    participant_id = m.group(1)
-    session_id = m.group(2)
-
-    return join('subjects', participant_id, session_id, 't1', 'spm', 'segmentation')
-
-
 def init_input_node(t1w):
     """
     Extracts "sub-<participant_id>_ses-<session_label>" from input node
