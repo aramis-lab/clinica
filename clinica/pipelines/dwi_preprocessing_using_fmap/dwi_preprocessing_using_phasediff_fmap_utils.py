@@ -9,7 +9,7 @@ def rename_into_caps(in_bids_dwi,
     <source_file>_space-b0_preproc{.nii.gz|bval|bvec}
     <source_file>_space-b0_brainmask.nii.gz
     <source_file>_space-b0_magnitude1.nii.gz
-    <source_file>_space-b0[_fwhm-<fwhmm>]_fmap.nii.gz
+    <source_file>_space-b0[_fwhm-<fwhm>]_fmap.nii.gz
 
     Args:
         in_bids_dwi (str): Input BIDS DWI to extract the <source_file>
@@ -128,7 +128,7 @@ def init_input_node(dwi, bvec, bval, dwi_json,
     # Print begin message
     print_begin_image(image_id,
                       ['TotalReadoutTime', 'PhaseEncodingDirection', 'DeltaEchoTime'],
-                      [total_readout_time, phase_encoding_direction, delta_echo_time])
+                      [str(total_readout_time), phase_encoding_direction, str(delta_echo_time)])
 
     return (image_id, dwi, bvec, bval, total_readout_time, phase_encoding_direction,
             fmap_magnitude, fmap_phasediff, delta_echo_time)

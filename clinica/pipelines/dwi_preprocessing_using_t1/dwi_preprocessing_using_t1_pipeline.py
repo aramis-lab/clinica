@@ -160,6 +160,15 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
                 error_message += str(msg)
             raise ClinicaBIDSError(error_message)
 
+        # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
+        folder_participants_tsv = os.path.join(self.base_dir, self.name)
+        save_participants_sessions(self.subjects, self.sessions, folder_participants_tsv)
+
+        if len(self.subjects):
+            print_images_to_process(self.subjects, self.sessions)
+            cprint('List available in %s' % os.path.join(folder_participants_tsv, 'participants.tsv'))
+            cprint('Computational time will depend of the number of volumes in your DWI dataset and the use of CUDA.')
+
         read_node = npe.Node(name="ReadingFiles",
                              iterables=[
                                  ('t1w', t1w_files),

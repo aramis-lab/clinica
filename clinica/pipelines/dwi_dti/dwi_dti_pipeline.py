@@ -101,6 +101,15 @@ class DwiDti(cpe.Pipeline):
                 error_message += str(msg)
             raise ClinicaCAPSError(error_message)
 
+        # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
+        folder_participants_tsv = os.path.join(self.base_dir, self.name)
+        save_participants_sessions(self.subjects, self.sessions, folder_participants_tsv)
+
+        if len(self.subjects):
+            print_images_to_process(self.subjects, self.sessions)
+            cprint('List available in %s' % os.path.join(folder_participants_tsv, 'participants.tsv'))
+            cprint('The pipeline will last approximately 20 minutes per image.')
+
         read_input_node = npe.Node(name="LoadingCLIArguments",
                                    interface=nutil.IdentityInterface(
                                        fields=self.get_input_fields(),
