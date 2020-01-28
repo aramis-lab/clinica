@@ -1,22 +1,6 @@
 # coding: utf8
 
 
-def dwi_container_from_filename(dwi_filename):
-    import re
-    from os.path import join
-    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', dwi_filename)
-
-    if m is None:
-        raise ValueError(
-            'Input filename is not in a BIDS or CAPS compliant format. '
-            + 'It does not contain the subject and session information.')
-
-    subject = m.group(1)
-    session = m.group(2)
-
-    return join('subjects', subject, session)
-
-
 def rename_into_caps(in_bids_dwi,
                      fname_dwi, fname_bval, fname_bvec, fname_brainmask,
                      fname_magnitude, fname_fmap, fname_smoothed_fmap):

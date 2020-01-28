@@ -47,12 +47,15 @@ class DwiDti(cpe.Pipeline):
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
+        import os
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+        from clinica.utils.filemanip import save_participants_sessions
         import clinica.utils.input_files as input_files
         from clinica.utils.stream import cprint
+        from clinica.utils.ux import print_images_to_process
 
         all_errors = []
 
@@ -121,15 +124,14 @@ class DwiDti(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        from clinica.utils.nipype import fix_join
-
-        import clinica.pipelines.dwi_dti.dwi_dti_utils as utils
+        from clinica.utils.nipype import fix_join, container_from_filename
+        from .dwi_dti_utils import rename_into_caps
 
         # Find container path from filename
         container_path = npe.Node(nutil.Function(
-            input_names=['dwi_filename'],
+            input_names=['bids_or_caps_filename'],
             output_names=['container'],
-            function=utils.dwi_container_from_filename),
+            function=container_from_filename),
             name='container_path')
 
         rename_into_caps = npe.Node(nutil.Function(
@@ -139,7 +141,7 @@ class DwiDti(cpe.Pipeline):
             output_names=['out_caps_fa', 'out_caps_md', 'out_caps_ad',
                           'out_caps_rd', 'out_caps_b_spline_transform',
                           'out_caps_affine_matrix'],
-            function=utils.rename_into_caps),
+            function=rename_into_caps),
             name='rename_into_caps')
 
         # Writing results into CAPS
@@ -149,7 +151,7 @@ class DwiDti(cpe.Pipeline):
         write_results.inputs.parameterization = False
 
         self.connect([
-           (self.input_node, container_path, [('preproc_dwi', 'dwi_filename')]),
+           (self.input_node, container_path, [('preproc_dwi', 'bids_or_caps_filename')]),
 
            (container_path,   write_results, [(('container', fix_join, 'dwi', 'dti_based_processing'), 'container')]),
            (self.output_node, write_results, [('dti',   'native_space.@dti')]),

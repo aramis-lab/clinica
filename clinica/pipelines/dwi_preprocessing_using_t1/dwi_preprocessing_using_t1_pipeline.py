@@ -96,11 +96,17 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
+        import os
+
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+
         from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         import clinica.utils.input_files as input_files
+        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
+        from clinica.utils.filemanip import save_participants_sessions
+        from clinica.utils.stream import cprint
+        from clinica.utils.ux import print_images_to_process
 
         all_errors = []
 
@@ -178,15 +184,15 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        from clinica.utils.nipype import fix_join
-        from .dwi_preprocessing_using_t1_utils import dwi_container_from_filename, rename_into_caps
+        from clinica.utils.nipype import fix_join, container_from_filename
+        from .dwi_preprocessing_using_t1_utils import rename_into_caps
 
         # Find container path from DWI filename
         # =====================================
         container_path = npe.Node(nutil.Function(
-            input_names=['bids_dwi_filename'],
+            input_names=['bids_or_caps_filename'],
             output_names=['container'],
-            function=dwi_container_from_filename),
+            function=container_from_filename),
             name='container_path')
 
         rename_into_caps = npe.Node(nutil.Function(
@@ -205,7 +211,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         write_results.inputs.parameterization = False
 
         self.connect([
-            (self.input_node, container_path,    [('dwi',          'bids_dwi_filename')]),
+            (self.input_node, container_path,    [('dwi',          'bids_or_caps_filename')]),
             (self.input_node,  rename_into_caps, [('dwi',          'in_bids_dwi')]),
             (self.output_node, rename_into_caps, [('preproc_dwi',  'fname_dwi'),
                                                   ('preproc_bval', 'fname_bval'),

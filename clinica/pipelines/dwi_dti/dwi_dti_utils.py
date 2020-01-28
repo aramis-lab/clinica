@@ -47,22 +47,6 @@ def statistics_on_atlases(in_registered_map, name_map, prefix_file=None):
     return atlas_statistics_list
 
 
-def dwi_container_from_filename(dwi_filename):
-    import re
-    from os.path import join
-    m = re.search(r'(sub-[a-zA-Z0-9]+)/(ses-[a-zA-Z0-9]+)', dwi_filename)
-
-    if m is None:
-        raise ValueError(
-            'Input filename is not in a BIDS or CAPS compliant format.'
-            ' It does not contain the subject and session information.')
-
-    subject = m.group(1)
-    session = m.group(2)
-
-    return join('subjects', subject, session)
-
-
 def extract_bids_identifier_from_caps_filename(caps_dwi_filename):
     """Extract BIDS identifier from CAPS filename"""
     import re

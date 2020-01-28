@@ -83,9 +83,9 @@ def print_begin_pipeline(in_bids_or_caps_file):
 
 def print_end_pipeline(in_bids_or_caps_file, final_file):
     from clinica.utils.filemanip import get_subject_id
-    from clinica.utils.ux import print_begin_image
+    from clinica.utils.ux import print_end_image
 
-    print_begin_image(get_subject_id(in_bids_or_caps_file))
+    print_end_image(get_subject_id(in_bids_or_caps_file))
 
 
 def convert_flirt_transformation_to_mrtrix_transformation(

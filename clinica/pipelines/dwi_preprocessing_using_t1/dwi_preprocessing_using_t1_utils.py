@@ -16,23 +16,6 @@ def ants_combine_transform(in_file, transforms_list, reference):
     return out_warp
 
 
-def dwi_container_from_filename(bids_dwi_filename):
-    """ Generate subjects/sub-<participant_id>/ses-<session_id> folder from BIDS filename."""
-    import re
-    from os.path import join
-    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', bids_dwi_filename)
-
-    if m is None:
-        raise ValueError(
-            'Input filename is not in a BIDS or CAPS compliant format. '
-            + 'It does not contain the subject and session information.')
-
-    subject = m.group(1)
-    session = m.group(2)
-
-    return join('subjects', subject, session)
-
-
 def rename_into_caps(in_bids_dwi,
                      fname_dwi, fname_bval, fname_bvec, fname_brainmask):
     """
@@ -231,7 +214,7 @@ def init_input_node(t1w, dwi, bvec, bval, dwi_json):
     # Print begin message
     print_begin_image(image_id,
                       ['TotalReadoutTime', 'PhaseEncodingDirection'],
-                      [total_readout_time, phase_encoding_direction])
+                      [str(total_readout_time), phase_encoding_direction])
 
     return (image_id, t1w, dwi, bvec, bval,
             total_readout_time, phase_encoding_direction)
@@ -269,7 +252,7 @@ def prepare_reference_b0(in_dwi, in_bval, in_bvec, low_bval=5, working_directory
     import hashlib
     import tempfile
     from clinica.utils.dwi import insert_b0_into_dwi, b0_dwi_split, count_b0s, b0_average
-    from .dwi_preprocessing_using_t1_workflows import b0_flirt_pipeline
+    from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_workflows import b0_flirt_pipeline
 
     # Count the number of b0s
     nb_b0s = count_b0s(in_bval=in_bval, low_bval=low_bval)
