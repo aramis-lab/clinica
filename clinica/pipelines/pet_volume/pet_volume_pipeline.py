@@ -4,7 +4,6 @@ from nipype import config
 
 import clinica.pipelines.engine as cpe
 
-
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
 cfg = dict(execution={'parameterize_dirs': False})
@@ -252,20 +251,20 @@ class PETVolume(cpe.Pipeline):
     def build_output_node(self):
         """Build and connect an output node to the pipelines.
         """
+        import re
+        from os.path import join
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
         from clinica.utils.filemanip import zip_nii
-        from clinica.utils.nipype import fix_join
-        import re
-        import clinica.pipelines.pet_volume.pet_volume_utils as utils
+        from clinica.utils.nipype import fix_join, container_from_filename
 
         # Find container path from pet filename
         # =====================================
-        container_path = npe.Node(nutil.Function(input_names=['pet_filename'],
+        container_path = npe.Node(nutil.Function(input_names=['bids_or_caps_filename'],
                                                  output_names=['container'],
-                                                 function=utils.pet_container_from_filename),
+                                                 function=container_from_filename),
                                   name='container_path')
         container_path.inputs.threshold = self.parameters['mask_threshold']
 
@@ -308,28 +307,33 @@ class PETVolume(cpe.Pipeline):
              re.escape(self.parameters['suvr_region']) + r'\4')
         ]
 
-        self.connect([(self.input_node, container_path, [('pet_image', 'pet_filename')]),
-                      (container_path, write_images_node, [(('container', fix_join, 'group-' + self.parameters['group_id']),
-                                                            'container')]),
-                      (self.output_node, write_images_node, [(('pet_t1_native', zip_nii, True), 'pet_t1_native'),
-                                                             (('pet_mni', zip_nii, True), 'pet_mni'),
-                                                             (('pet_suvr', zip_nii, True), 'pet_suvr'),
-                                                             (('binary_mask', zip_nii, True), 'binary_mask'),
-                                                             (('pet_suvr_masked', zip_nii, True), 'pet_suvr_masked'),
-                                                             (('pet_suvr_masked_smoothed', zip_nii, True),
-                                                              'pet_suvr_masked_smoothed'),
-                                                             (('pet_pvc', zip_nii, True), 'pet_pvc'),
-                                                             (('pet_pvc_mni', zip_nii, True), 'pet_pvc_mni'),
-                                                             (('pet_pvc_suvr', zip_nii, True), 'pet_pvc_suvr'),
-                                                             (('pet_pvc_suvr_masked', zip_nii, True),
-                                                              'pet_pvc_suvr_masked'),
-                                                             (('pet_pvc_suvr_masked_smoothed', zip_nii, True),
-                                                              'pet_pvc_suvr_masked_smoothed')]),
-                      (container_path, write_atlas_node, [(('container', fix_join, 'group-' + self.parameters['group_id']),
-                                                           'container')]),
-                      (self.output_node, write_atlas_node, [('atlas_statistics', 'atlas_statistics'),
-                                                            ('pvc_atlas_statistics', 'pvc_atlas_statistics')])
-                      ])
+        self.connect([
+            (self.input_node, container_path, [('pet_image', 'bids_or_caps_filename')]),
+            (container_path, write_images_node, [(
+                ('container', fix_join, join('pet', 'preprocessing', 'group-' + self.parameters['group_id'])),
+                'container')]
+             ),
+            (self.output_node, write_images_node, [(('pet_t1_native', zip_nii, True), 'pet_t1_native'),
+                                                   (('pet_mni', zip_nii, True), 'pet_mni'),
+                                                   (('pet_suvr', zip_nii, True), 'pet_suvr'),
+                                                   (('binary_mask', zip_nii, True), 'binary_mask'),
+                                                   (('pet_suvr_masked', zip_nii, True), 'pet_suvr_masked'),
+                                                   (('pet_suvr_masked_smoothed', zip_nii, True),
+                                                    'pet_suvr_masked_smoothed'),
+                                                   (('pet_pvc', zip_nii, True), 'pet_pvc'),
+                                                   (('pet_pvc_mni', zip_nii, True), 'pet_pvc_mni'),
+                                                   (('pet_pvc_suvr', zip_nii, True), 'pet_pvc_suvr'),
+                                                   (('pet_pvc_suvr_masked', zip_nii, True),
+                                                    'pet_pvc_suvr_masked'),
+                                                   (('pet_pvc_suvr_masked_smoothed', zip_nii, True),
+                                                    'pet_pvc_suvr_masked_smoothed')]),
+            (container_path, write_atlas_node, [(
+                ('container', fix_join, join('pet', 'preprocessing', 'group-' + self.parameters['group_id'])),
+                'container')
+            ]),
+            (self.output_node, write_atlas_node, [('atlas_statistics', 'atlas_statistics'),
+                                                  ('pvc_atlas_statistics', 'pvc_atlas_statistics')])
+        ])
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipelines.

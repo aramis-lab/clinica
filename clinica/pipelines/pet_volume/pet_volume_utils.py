@@ -187,20 +187,5 @@ def atlas_statistics(in_image, in_atlas_list):
     return atlas_statistics_list
 
 
-def pet_container_from_filename(pet_filename):
-    import re
-    from os.path import join
-    m = re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_', pet_filename)
-
-    if m is None:
-        raise ValueError('Input filename is not in a BIDS or CAPS compliant format. It does not contain the subject' +
-                         ' and session information.')
-
-    subject = m.group(1)
-    session = m.group(2)
-
-    return join('subjects', subject, session, 'pet/preprocessing')
-
-
 def get_from_list(in_list, index):
     return in_list[index]
