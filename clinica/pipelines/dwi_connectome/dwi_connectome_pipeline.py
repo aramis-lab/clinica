@@ -417,7 +417,7 @@ class DwiConnectome(cpe.Pipeline):
         # Computation of the diffusion model, tractography & connectome
         # -------------------------------------------------------------
         self.connect([
-            (self.input_node, print_begin_message, [('dwi_file', 'in_bids_or_caps_file')]), 
+            (self.input_node, print_begin_message, [('dwi_file', 'in_bids_or_caps_file')]),
             (self.input_node, caps_filenames_node, [('dwi_file', 'dwi_file')]),
             # Response Estimation
             (self.input_node, resp_estim_node, [('dwi_file', 'in_file')]),  # Preproc. DWI
@@ -437,19 +437,19 @@ class DwiConnectome(cpe.Pipeline):
             (self.input_node, label_convert_node, [('atlas_files', 'in_file')]),  # atlas image files
             (caps_filenames_node, label_convert_node, [('nodes', 'out_file')]),  # converted atlas image filenames
             # Connectomes Generation
-            (tck_gen_node,        conn_gen_node, [('out_file', 'in_file')]), 
-            (caps_filenames_node, conn_gen_node, [('connectomes', 'out_file')]), 
+            (tck_gen_node,        conn_gen_node, [('out_file', 'in_file')]),
+            (caps_filenames_node, conn_gen_node, [('connectomes', 'out_file')]),
         ])
         # Registration T1-DWI (only if space=b0)
         # -------------------
         if self.parameters['dwi_space'] == 'b0':
             self.connect([
                 # MGZ Files Conversion
-                (self.input_node, t1_brain_conv_node, [('t1_brain_file', 'in_file')]), 
-                (self.input_node, wm_mask_conv_node, [('wm_mask_file', 'in_file')]), 
+                (self.input_node, t1_brain_conv_node, [('t1_brain_file', 'in_file')]),
+                (self.input_node, wm_mask_conv_node, [('wm_mask_file', 'in_file')]),
                 # B0 Extraction
-                (self.input_node, split_node, [('dwi_file', 'in_file')]), 
-                (split_node, select_node, [('out_files', 'inlist')]), 
+                (self.input_node, split_node, [('dwi_file', 'in_file')]),
+                (split_node, select_node, [('out_files', 'inlist')]),
                 # Masking
                 (select_node,     mask_node, [('out', 'in_file')]),  # B0
                 (self.input_node, mask_node, [('dwi_brainmask_file', 'mask_file')]),  # Brain mask
@@ -461,28 +461,27 @@ class DwiConnectome(cpe.Pipeline):
                 (mask_node,         wm_transform_node, [('out_file', 'reference')]),  # BO brain-masked
                 (t12b0_reg_node,    wm_transform_node, [('out_matrix_file', 'in_matrix_file')]),  # T1-to-B0 matrix file
                 # FSL flirt matrix to MRtrix matrix Conversion
-                (t1_brain_conv_node, fsl2mrtrix_conv_node, [('out_file', 'in_source_image')]), 
-                (mask_node,          fsl2mrtrix_conv_node, [('out_file', 'in_reference_image')]), 
-                (t12b0_reg_node,     fsl2mrtrix_conv_node, [('out_matrix_file', 'in_flirt_matrix')]), 
+                (t1_brain_conv_node, fsl2mrtrix_conv_node, [('out_file', 'in_source_image')]),
+                (mask_node,          fsl2mrtrix_conv_node, [('out_file', 'in_reference_image')]),
+                (t12b0_reg_node,     fsl2mrtrix_conv_node, [('out_matrix_file', 'in_flirt_matrix')]),
                 # Apply registration without resampling on parcellations
-                (label_convert_node,   parc_transform_node, [('out_file', 'in_files')]), 
-                (fsl2mrtrix_conv_node, parc_transform_node, [('out_mrtrix_matrix', 'linear_transform')]), 
-                (caps_filenames_node,  parc_transform_node, [('nodes', 'out_filename')]), 
+                (label_convert_node,   parc_transform_node, [('out_file', 'in_files')]),
+                (fsl2mrtrix_conv_node, parc_transform_node, [('out_mrtrix_matrix', 'linear_transform')]),
+                (caps_filenames_node,  parc_transform_node, [('nodes', 'out_filename')]),
             ])
         # Special care for Parcellation & WM mask
         # ---------------------------------------
         if self.parameters['dwi_space'] == 'b0':
             self.connect([
-                (
-                wm_transform_node, tck_gen_node, [('out_file', 'seed_image')]), 
-                (parc_transform_node, conn_gen_node, [('out_file', 'in_parc')]), 
-                (parc_transform_node, self.output_node, [('out_file', 'nodes')]), 
+                (wm_transform_node, tck_gen_node, [('out_file', 'seed_image')]),
+                (parc_transform_node, conn_gen_node, [('out_file', 'in_parc')]),
+                (parc_transform_node, self.output_node, [('out_file', 'nodes')]),
             ])
         elif self.parameters['dwi_space'] == 'T1w':
             self.connect([
-                (self.input_node, tck_gen_node, [('wm_mask_file', 'seed_image')]), 
-                (label_convert_node, conn_gen_node, [('out_file', 'in_parc')]), 
-                (label_convert_node, self.output_node, [('out_file', 'nodes')]), 
+                (self.input_node, tck_gen_node, [('wm_mask_file', 'seed_image')]),
+                (label_convert_node, conn_gen_node, [('out_file', 'in_parc')]),
+                (label_convert_node, self.output_node, [('out_file', 'nodes')]),
             ])
         else:
             raise ClinicaCAPSError(

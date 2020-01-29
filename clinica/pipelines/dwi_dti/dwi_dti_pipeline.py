@@ -126,7 +126,6 @@ class DwiDti(cpe.Pipeline):
             (read_input_node, self.input_node, [('preproc_bval', 'preproc_bval')]),
             (read_input_node, self.input_node, [('preproc_bvec', 'preproc_bvec')])
         ])
-        cprint('The pipeline will last approximately 20 minutes per image.')
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
@@ -188,7 +187,7 @@ class DwiDti(cpe.Pipeline):
            (self.output_node, write_results, [('statistics_fa', 'atlas_statistics.@statistics_fa'),
                                               ('statistics_md', 'atlas_statistics.@statistics_md'),
                                               ('statistics_ad', 'atlas_statistics.@statistics_ad'),
-                                              ('statistics_rd', 'atlas_statistics.@statistics_rd')]) 
+                                              ('statistics_rd', 'atlas_statistics.@statistics_rd')])
         ])
 
     def build_core_nodes(self):
@@ -335,7 +334,7 @@ class DwiDti(cpe.Pipeline):
             (scalar_analysis_fa,    self.output_node, [('atlas_statistics_list', 'statistics_fa')]),
             (scalar_analysis_md,    self.output_node, [('atlas_statistics_list', 'statistics_md')]),
             (scalar_analysis_ad,    self.output_node, [('atlas_statistics_list', 'statistics_ad')]),
-            (scalar_analysis_rd,    self.output_node, [('atlas_statistics_list', 'statistics_rd')]), 
+            (scalar_analysis_rd,    self.output_node, [('atlas_statistics_list', 'statistics_rd')]),
             # Print end message
             (self.input_node,    print_end_message, [('preproc_dwi',           'in_bids_or_caps_file')]),
             (thres_rd,           print_end_message, [('out_file',              'final_file_1')]),

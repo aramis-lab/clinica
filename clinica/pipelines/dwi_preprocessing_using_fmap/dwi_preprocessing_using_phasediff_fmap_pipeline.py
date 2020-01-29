@@ -326,8 +326,8 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
             pre_eddy.inputs.use_cuda8_0 = self.parameters['use_cuda_8_0']
         if self.parameters['use_cuda_9_1']:
             pre_eddy.inputs.use_cuda9_1 = self.parameters['use_cuda_9_1']
-        if self.parameters['seed_fsl_eddy']:
-            pre_eddy.inputs.initrand = self.parameters['seed_fsl_eddy']
+        if self.parameters['initrand']:
+            pre_eddy.inputs.initrand = self.parameters['initrand']
 
         # Compute the reference b0
         compute_ref_b0 = npe.Node(niu.Function(input_names=['in_dwi', 'in_bval'],

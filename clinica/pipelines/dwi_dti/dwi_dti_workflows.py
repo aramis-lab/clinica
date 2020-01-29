@@ -137,7 +137,7 @@ def register_dti_maps_on_atlas(
                                    ('inverse_warp_field', 'out_inverse_warp')]),
         (thres_md,    outputnode,  [('out_file',          'out_norm_md')]),
         (thres_ad,    outputnode,  [('out_file',          'out_norm_ad')]),
-        (thres_rd,    outputnode,  [('out_file',          'out_norm_rd')]) 
+        (thres_rd,    outputnode,  [('out_file',          'out_norm_rd')])
     ])
 
     return wf
