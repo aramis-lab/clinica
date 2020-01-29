@@ -14,7 +14,7 @@ You need [preprocessed DWI data](../DWI_Preprocessing) prior to running any of t
 If you only installed the core of Clinica, this pipeline needs the installation of **ANTs v2.3.1**, **FSL 6.0** and **MRtrix3** on your computer. You can find how to install these software packages on the [third-party](../../Third-party) page.
 
 ## Running the pipeline
-The `dwi-dti` pipeline can be run with the following command lines:
+The `dwi-dti` pipeline can be run with the following command line:
 
 ```
 clinica run dwi-dti caps_directory
