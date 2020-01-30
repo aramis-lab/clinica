@@ -39,8 +39,6 @@ ICM members are encouraged to use the version of Clinica available on the cluste
     - `dwi-preprocessing-*` - [DWI pre-processing](Pipelines/DWI_Preprocessing): correction of head motion, magnetic susceptibility, eddy current and bias field induced distortions
     - `dwi-dti` - [DTI scalar maps (FA, MD, AD, RD) and spatial normalization](Pipelines/DWI_DTI): extraction of DTI-based measures (FA, MD, AD, RD)
     - `dwi-connectome` - [Construction of structural connectome](Pipelines/DWI_Connectome): computation of fiber orientation distributions, tractogram and connectome
-- Functional MRI (fMRI)
-    - `fmri-preprocessing` - [fMRI pre-processing](Pipelines/fMRI_Preprocessing): slice timing and motion correction, brain extraction, and spatial normalization
 - PET
     - `pet-volume` - [Volume-based processing of PET images](Pipelines/PET_Volume): registration to T1w MRI, intensity normalization, partial volume correction and spatial normalization
     - `pet-surface` - [Surface-based processing of PET images](Pipelines/PET_Surface): projection of the PET signal onto the subject’s cortical surface
