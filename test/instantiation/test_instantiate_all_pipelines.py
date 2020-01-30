@@ -179,21 +179,6 @@ def test_instantiate_DWIConnectome():
     pipeline.build()
 
 
-def test_instantiate_fMRIPreprocessing():
-    from os.path import dirname, join, abspath
-    from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
-
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'fMRIPreprocessing')
-
-    pipeline = fMRIPreprocessing(
-        bids_directory=join(root, 'in', 'bids'),
-        caps_directory=join(root, 'in', 'caps'),
-        tsv_file=join(root, 'in', 'subjects.tsv'),
-    )
-    pipeline.build()
-
-
 def test_instantiate_PETVolume():
     from os.path import dirname, join, abspath
     from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
