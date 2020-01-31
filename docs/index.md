@@ -6,11 +6,11 @@
 
 Clinica can be installed on Mac OS X and Linux (CentOS or Debian/Ubuntu) machines, and possibly on Windows computers with a Linux Virtual Machine. We assume that users installing and using Clinica are comfortable with using the command line.
 
-!!! info "Clinica on GitHub!"
-    Clinica has moved to GitHub, you can find the repo [here](https://github.com/aramis-lab/clinica/).
+<!-- !!! info "Clinica on GitHub!"
+    Clinica has moved to GitHub, you can find the repo [here](https://github.com/aramis-lab/clinica/).-->
 
-<!-- !!! info "New release: Clinica 0.2!"
-    We are very pleased to announce the release 0.2 of Clinica. The release notes are available here: [v0.2.0](https://github.com/aramis-lab/clinica/releases/tag/v0.2.0), [v0.2.1](https://github.com/aramis-lab/clinica/releases/tag/v0.2.1). -->
+!!! info "New release: Clinica 0.3.2!"
+    We are very pleased to announce the release 0.3.2 of Clinica. The release notes are available here: [v0.3.2](http://bit.ly/2tfZjvh).
 
 <!-- ### Installing Clinica from source -->
   - [Installation](./Installation)
