@@ -69,13 +69,17 @@ class StatisticsVolume(cpe.Pipeline):
         from clinica.utils.exceptions import ClinicaException
         from colorama import Fore
 
+        gic = '*'
+        if self.parameters['group_id_caps'] is not None:
+            gic = self.parameters['group_id_caps']
+
         all_errors = []
         if self.parameters['feature_type'] == 'fdg-pet':
             try:
                 input_files = clinica_file_reader(self.subjects,
                                                   self.sessions,
                                                   self.caps_directory,
-                                                  {'pattern': '*_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-8mm_pet.nii*',
+                                                  {'pattern': '*_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-' + str(self.parameters['smoothing']) + 'mm_pet.nii*',
                                                    'description': 'pons normalized FDG PET image in MNI space (brain masked)',
                                                    'needed_pipeline': 'pet-volume'})
             except ClinicaException as e:
@@ -85,7 +89,7 @@ class StatisticsVolume(cpe.Pipeline):
                 input_files = clinica_file_reader(self.subjects,
                                                   self.sessions,
                                                   self.caps_directory,
-                                                  {'pattern': 't1/spm/dartel/group-*/*_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.*',
+                                                  {'pattern': 't1/spm/dartel/group-' + gic + '/*_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-' + str(self.parameters['smoothing']) + 'mm_probability.nii.*',
                                                    'description': 'probability map of gray matter segmentation based on T1w image in MNI space',
                                                    'needed_pipeline': 't1-volume or t1-volume-existing-template'})
             except ClinicaException as e:
@@ -96,7 +100,7 @@ class StatisticsVolume(cpe.Pipeline):
                 input_files = clinica_file_reader(self.subjects,
                                                   self.sessions,
                                                   self.caps_directory,
-                                                  {'pattern': 't1/spm/dartel/group-*/*_T1w_segm-whitematter_space-Ixi549Space_modulated-on_fwhm-8mm_probability.nii.*',
+                                                  {'pattern': 't1/spm/dartel/group-' + gic + '/*_T1w_segm-whitematter_space-Ixi549Space_modulated-on_fwhm-' + str(self.parameters['smoothing']) + 'mm_probability.nii.*',
                                                    'description': 'probability map of white matter segmentation based on T1w image in MNI space',
                                                    'needed_pipeline': 't1-volume or t1-volume-existing-template'})
             except ClinicaException as e:

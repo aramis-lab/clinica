@@ -63,6 +63,12 @@ class StatisticsVolumeCLI(ce.CmdParser):
                               help='Threshold to display the corrected p-value '
                                    '(default: --threshold_corrected_pvalue 0.05)')
 
+        optional.add_argument("-gic", "--group_id_caps", type=str, default=None,
+                              help='Name of the group that Clinica needs to use to grab input file')
+
+        optional.add_argument("-fwhm", "--smoothing", type=int, default=8,
+                              help='Full Width at Half Maximum (FWHM) of the smoothing used in your input file.')
+
 
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
@@ -90,7 +96,9 @@ class StatisticsVolumeCLI(ce.CmdParser):
                                'group_id': args.group_id,
                                'custom_files': args.custom_files,
                                'threshold_uncorrected_pvalue': args.threshold_uncorrected_pvalue,
-                               'threshold_corrected_pvalue': args.threshold_corrected_pvalue}
+                               'threshold_corrected_pvalue': args.threshold_corrected_pvalue,
+                               'group_id_caps': args.group_id_bids,
+                               'smoothing': args.smoothing}
 
         if args.n_procs:
             exec_pipeline = pipeline.run(plugin='MultiProc',

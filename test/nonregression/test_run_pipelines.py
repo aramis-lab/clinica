@@ -725,10 +725,12 @@ def test_run_StatisticsVolume(cmdopt):
         base_dir=join(working_dir, 'StatisticsVolume')
     )
     pipeline.parameters = {'contrast': 'group',
-                           'feature_type': 'fdg-pet',
+                           'feature_type': 't1-gm',
                            'group_id': 'UnitTest',
                            'threshold_uncorrected_pvalue': 0.001,
-                           'threshold_corrected_pvalue': 0.05}
+                           'threshold_corrected_pvalue': 0.05,
+                           'group_id_bids': 'ADCNbaseline',
+                           'smoothing': 8}
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 8}, bypass_check=True)
 
     assert 0
