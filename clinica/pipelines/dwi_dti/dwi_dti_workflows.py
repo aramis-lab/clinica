@@ -64,31 +64,23 @@ def register_dti_maps_on_atlas(
         interface=RegistrationSynQuick(),
         name='register_fa')
 
-    apply_ants_registration_for_md = pe.Node(interface=niu.Function(
+    apply_ants_registration = pe.Node(interface=niu.Function(
         input_names=['in_image', 'in_reference_image',
                      'in_affine_transformation', 'in_bspline_transformation',
                      'name_output_image'],
         output_names=['out_deformed_image'],
         function=apply_ants_registration_syn_quick_transformation),
-        name='apply_ants_registration_for_md')
+        name='apply_ants_registration')
+
+    apply_ants_registration_for_md = apply_ants_registration.clone('apply_ants_registration_for_md')
     apply_ants_registration_for_md.inputs.name_output_image = \
         'space-' + atlas.get_name_atlas() + '_res-' + atlas.get_spatial_resolution() + '_MD.nii.gz'
-    apply_ants_registration_for_ad = pe.Node(interface=niu.Function(
-        input_names=['in_image', 'in_reference_image',
-                     'in_affine_transformation', 'in_bspline_transformation',
-                     'name_output_image'],
-        output_names=['out_deformed_image'],
-        function=apply_ants_registration_syn_quick_transformation),
-        name='apply_ants_registration_for_ad')
+
+    apply_ants_registration_for_ad = apply_ants_registration.clone('apply_ants_registration_for_ad')
     apply_ants_registration_for_ad.inputs.name_output_image = \
         'space-' + atlas.get_name_atlas() + '_res-' + atlas.get_spatial_resolution() + '_AD.nii.gz'
-    apply_ants_registration_for_rd = pe.Node(interface=niu.Function(
-        input_names=['in_image', 'in_reference_image',
-                     'in_affine_transformation', 'in_bspline_transformation',
-                     'name_output_image'],
-        output_names=['out_deformed_image'],
-        function=apply_ants_registration_syn_quick_transformation),
-        name='apply_ants_registration_for_rd')
+
+    apply_ants_registration_for_rd = apply_ants_registration.clone('apply_ants_registration_for_rd')
     apply_ants_registration_for_rd.inputs.name_output_image = \
         'space-' + atlas.get_name_atlas() + '_res-' + atlas.get_spatial_resolution() + '_RD.nii.gz'
 
