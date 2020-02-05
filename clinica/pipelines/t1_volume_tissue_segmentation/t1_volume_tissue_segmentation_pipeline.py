@@ -234,15 +234,13 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         self.connect([
             (self.input_node, container_path, [('t1w', 'bids_or_caps_filename')]),
             (container_path, write_node, [(('container', fix_join, join('t1', 'spm', 'segmentation')), 'container')]),
-            (self.output_node, write_node, [(('native_class_images', seg_utils.zip_list_files, True), 'native_space'),
-                                            (('dartel_input_images', seg_utils.zip_list_files, True), 'dartel_input')]),
             (self.output_node, write_node, [
-                (('inverse_deformation_field', zip_nii, True), 'inverse_deformation_field')
+                (('native_class_images', seg_utils.zip_list_files, True), 'native_space'),
+                (('dartel_input_images', seg_utils.zip_list_files, True), 'dartel_input'),
+                (('inverse_deformation_field', zip_nii, True), 'inverse_deformation_field'),
+                (('forward_deformation_field', zip_nii, True), 'forward_deformation_field'),
+                (('t1_mni', zip_nii, True), 't1_mni'),
             ]),
-            (self.output_node, write_node, [
-                (('forward_deformation_field', zip_nii, True), 'forward_deformation_field')
-            ]),
-            (self.output_node, write_node, [(('t1_mni', zip_nii, True), 't1_mni')]),
         ])
         if self.parameters['save_warped_unmodulated']:
             self.connect([
