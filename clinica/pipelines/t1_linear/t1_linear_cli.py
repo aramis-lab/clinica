@@ -54,13 +54,13 @@ class T1LinearCLI(ce.CmdParser):
         # Add your own pipeline command line arguments here to be used in the
         # method below. Example below:
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("-hw", "--hello_word_arg",
-                              help='Word to say hello.')
+        optional.add_argument("-rt", "--ref_template",
+                              help='Reference template for registration.')
 
         # Add advanced arguments
-        advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
-        advanced.add_argument("-aa", "--advanced_arg",
-                              help='Your advanced argument.')
+        #advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
+        #advanced.add_argument("-aa", "--advanced_arg",
+        #                      help='Your advanced argument.')
 
     def run_command(self, args):
         """
@@ -69,23 +69,25 @@ class T1LinearCLI(ce.CmdParser):
         from tempfile import mkdtemp
         from .t1_linear_pipeline import T1Linear
 
+        parameters = {
+            'ref_template'        : args.ref_template or 'Reference Template'
+        }
+
         # Most of the time, you will want to instantiate your pipeline with a
         # BIDS and CAPS directory as inputs:
-        # pipeline = T1Linear(
-        #     bids_directory=self.absolute_path(args.bids_directory),
-        #     caps_directory=self.absolute_path(args.caps_directory),
-        #     tsv_file=self.absolute_path(args.subjects_sessions_tsv))
-        pipeline = T1Linear()
-        pipeline.parameters = {
-            # Add your own pipeline parameters here to use them inside your
-            # pipeline. See the file `t1_linear_pipeline.py` to
-            # see an example of use.
-            'hello_word'        : args.hello_word_arg or 'Hello'
-            'advanced_argument' : args.advanced_arg
-        }
+        pipeline = T1Linear(
+             bids_directory=self.absolute_path(args.bids_directory),
+             caps_directory=self.absolute_path(args.caps_directory),
+             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+             parameters=parameters,
+             name=self.name,
+             overwrite_caps=args.overwrite_outputs)
+        
         if args.working_directory is None:
             args.working_directory = mkdtemp()
         pipeline.base_dir = self.absolute_path(args.working_directory)
+        
+        
         if args.n_procs:
             pipeline.run(plugin='MultiProc',
                          plugin_args={'n_procs': args.n_procs})
