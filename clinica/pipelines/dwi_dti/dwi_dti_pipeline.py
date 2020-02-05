@@ -48,58 +48,22 @@ class DwiDti(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import os
+
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
+
+        from clinica.utils.inputs import clinica_list_of_files_reader
+        from clinica.utils.input_files import DWI_PREPROC_BRAINMASK, DWI_PREPROC_NII, DWI_PREPROC_BVAL, DWI_PREPROC_BVEC
         from clinica.utils.filemanip import save_participants_sessions
-        import clinica.utils.input_files as input_files
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
-        all_errors = []
-
-        # b0 Mask
-        try:
-            b0_mask = clinica_file_reader(self.subjects,
-                                          self.sessions,
-                                          self.caps_directory,
-                                          input_files.DWI_PREPROC_BRAINMASK)
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        # DWI preprocessing NIfTI
-        try:
-            dwi_caps = clinica_file_reader(self.subjects,
-                                           self.sessions,
-                                           self.caps_directory,
-                                           input_files.DWI_PREPROC_NII)
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        # bval files
-        try:
-            bval_files = clinica_file_reader(self.subjects,
-                                             self.sessions,
-                                             self.caps_directory,
-                                             input_files.DWI_PREPROC_BVAL)
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        # bvec files
-        try:
-            bvec_files = clinica_file_reader(self.subjects,
-                                             self.sessions,
-                                             self.caps_directory,
-                                             input_files.DWI_PREPROC_BVEC)
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        if len(all_errors) > 0:
-            error_message = 'Clinica faced error(s) while trying to read files in your CAPS directory.\n'
-            for msg in all_errors:
-                error_message += str(msg)
-            raise ClinicaCAPSError(error_message)
+        list_caps_files = clinica_list_of_files_reader(
+            self.subjects,
+            self.sessions,
+            self.caps_directory,
+            [DWI_PREPROC_NII, DWI_PREPROC_BVEC, DWI_PREPROC_BVAL, DWI_PREPROC_BRAINMASK],
+            raise_exception=True)
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
         folder_participants_tsv = os.path.join(self.base_dir, self.name)
@@ -114,10 +78,10 @@ class DwiDti(cpe.Pipeline):
                                    interface=nutil.IdentityInterface(
                                        fields=self.get_input_fields(),
                                        mandatory_inputs=True),
-                                   iterables=[('preproc_dwi', dwi_caps),
-                                              ('preproc_bvec', bvec_files),
-                                              ('preproc_bval', bval_files),
-                                              ('b0_mask', b0_mask)],
+                                   iterables=[('preproc_dwi', list_caps_files[0]),
+                                              ('preproc_bvec', list_caps_files[1]),
+                                              ('preproc_bval', list_caps_files[2]),
+                                              ('b0_mask', list_caps_files[3])],
                                    synchronize=True)
 
         self.connect([

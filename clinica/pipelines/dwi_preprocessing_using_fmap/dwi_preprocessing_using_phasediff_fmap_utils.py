@@ -13,9 +13,9 @@ def rename_into_caps(in_bids_dwi,
 
     Args:
         in_bids_dwi (str): Input BIDS DWI to extract the <source_file>
-        fname_dwi (str): Preprocessed DWI.
-        fname_bval (str): Preprocessed DWI.
-        fname_bvec (str): Preprocessed DWI.
+        fname_dwi (str): Preprocessed DWI file.
+        fname_bval (str): Preprocessed bval.
+        fname_bvec (str): Preprocessed bvec.
         fname_brainmask (str): B0 mask.
         fname_smoothed_fmap (str): Smoothed (calibrated) fmap on b0 space.
         fname_fmap (str): Calibrated fmap on b0 space.

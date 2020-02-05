@@ -1,10 +1,11 @@
 # coding: utf8
 
+from nipype import config
+
 import clinica.pipelines.engine as cpe
 
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
-from nipype import config
 cfg = dict(execution={'parameterize_dirs': False})
 config.update_config(cfg)
 
@@ -12,12 +13,15 @@ config.update_config(cfg)
 class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
     """DWI Preprocessing using phase difference fieldmap.
 
+    Ideas for improvement:
+        - Use promising sdcflows workflows and/dMRIprep
+
     Note:
         Some reading regarding the reproducibility of FSL eddy command:
         https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=fsl;1ccf038f.1608
 
     Returns:
-        A clinica pipeline object containing the DwiPreprocessingUsingPhaseDiffFieldmap pipeline.
+        A clinica pipeline object containing the DwiPreprocessingUsingPhaseDiffFMap pipeline.
     """
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
@@ -100,80 +104,19 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from clinica.utils.inputs import clinica_file_reader
-        import clinica.utils.input_files as input_files
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.filemanip import save_participants_sessions
+        from clinica.utils.inputs import clinica_list_of_files_reader
+        from clinica.utils.input_files import (DWI_NII, DWI_BVAL, DWI_BVEC, DWI_JSON,
+                                               FMAP_MAGNITUDE1_NII, FMAP_PHASEDIFF_NII, FMAP_PHASEDIFF_JSON)
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
-        all_errors = []
-
-        # Inputs from dwi/ folder
-        # =======================
-        try:
-            dwi_files = clinica_file_reader(self.subjects,
-                                            self.sessions,
-                                            self.bids_directory,
-                                            input_files.DWI_NII)
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            dwi_json_files = clinica_file_reader(self.subjects,
-                                                 self.sessions,
-                                                 self.bids_directory,
-                                                 input_files.DWI_JSON)
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            bval_files = clinica_file_reader(self.subjects,
-                                             self.sessions,
-                                             self.bids_directory,
-                                             input_files.DWI_BVAL)
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            bvec_files = clinica_file_reader(self.subjects,
-                                             self.sessions,
-                                             self.bids_directory,
-                                             input_files.DWI_BVEC)
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        # Inputs from fmap/ folder
-        # ========================
-        try:
-            fmap_phasediff_json_files = clinica_file_reader(self.subjects,
-                                                            self.sessions,
-                                                            self.bids_directory,
-                                                            input_files.FMAP_PHASEDIFF_JSON)
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            fmap_phasediff_files = clinica_file_reader(self.subjects,
-                                                       self.sessions,
-                                                       self.bids_directory,
-                                                       input_files.FMAP_PHASEDIFF_NII)
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            fmap_magnitude1_files = clinica_file_reader(self.subjects,
-                                                        self.sessions,
-                                                        self.bids_directory,
-                                                        input_files.FMAP_MAGNITUDE1_NII)
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        if len(all_errors) > 0:
-            error_message = 'Clinica faced error(s) while trying to read files in your BIDS directory.\n'
-            for msg in all_errors:
-                error_message += str(msg)
-            raise ClinicaBIDSError(error_message)
+        list_bids_files = clinica_list_of_files_reader(
+            self.subjects,
+            self.sessions,
+            self.bids_directory,
+            [DWI_NII, DWI_BVEC, DWI_BVAL, DWI_JSON, FMAP_MAGNITUDE1_NII, FMAP_PHASEDIFF_NII, FMAP_PHASEDIFF_JSON],
+            raise_exception=True)
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
         folder_participants_tsv = os.path.join(self.base_dir, self.name)
@@ -186,13 +129,13 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
 
         read_node = npe.Node(name="ReadingFiles",
                              iterables=[
-                                 ('dwi', dwi_files),
-                                 ('bvec', bvec_files),
-                                 ('bval', bval_files),
-                                 ('dwi_json', dwi_json_files),
-                                 ('fmap_magnitude', fmap_magnitude1_files),
-                                 ('fmap_phasediff', fmap_phasediff_files),
-                                 ('fmap_phasediff_json', fmap_phasediff_json_files),
+                                 ('dwi', list_bids_files[0]),
+                                 ('bvec', list_bids_files[1]),
+                                 ('bval', list_bids_files[2]),
+                                 ('dwi_json', list_bids_files[3]),
+                                 ('fmap_magnitude', list_bids_files[4]),
+                                 ('fmap_phasediff', list_bids_files[5]),
+                                 ('fmap_phasediff_json', list_bids_files[6]),
                              ],
                              synchronize=True,
                              interface=nutil.IdentityInterface(

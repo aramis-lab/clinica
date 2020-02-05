@@ -1,8 +1,8 @@
 # coding: utf8
 
-import clinica.pipelines.engine as cpe
 from nipype import config
 
+import clinica.pipelines.engine as cpe
 
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
@@ -101,64 +101,18 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
-        from clinica.utils.inputs import clinica_file_reader
-        import clinica.utils.input_files as input_files
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
+        from clinica.utils.inputs import clinica_list_of_files_reader
+        from clinica.utils.input_files import T1W_NII, DWI_JSON, DWI_NII, DWI_BVEC, DWI_BVAL
         from clinica.utils.filemanip import save_participants_sessions
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process
 
-        all_errors = []
-
-        # Inputs from anat/ folder
-        # ========================
-        try:
-            t1w_files = clinica_file_reader(self.subjects,
-                                            self.sessions,
-                                            self.bids_directory,
-                                            input_files.T1W_NII)
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        # Inputs from dwi/ folder
-        # =======================
-        try:
-            dwi_files = clinica_file_reader(self.subjects,
-                                            self.sessions,
-                                            self.bids_directory,
-                                            input_files.DWI_NII)
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            dwi_json_files = clinica_file_reader(self.subjects,
-                                                 self.sessions,
-                                                 self.bids_directory,
-                                                 input_files.DWI_JSON)
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            bval_files = clinica_file_reader(self.subjects,
-                                             self.sessions,
-                                             self.bids_directory,
-                                             input_files.DWI_BVAL)
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            bvec_files = clinica_file_reader(self.subjects,
-                                             self.sessions,
-                                             self.bids_directory,
-                                             input_files.DWI_BVEC)
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        if len(all_errors) > 0:
-            error_message = 'Clinica faced error(s) while trying to read files in your BIDS directory.\n'
-            for msg in all_errors:
-                error_message += str(msg)
-            raise ClinicaBIDSError(error_message)
+        list_bids_files = clinica_list_of_files_reader(
+            self.subjects,
+            self.sessions,
+            self.bids_directory,
+            [T1W_NII, DWI_JSON, DWI_NII, DWI_BVEC, DWI_BVAL],
+            raise_exception=True)
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
         folder_participants_tsv = os.path.join(self.base_dir, self.name)
@@ -171,11 +125,11 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
 
         read_node = npe.Node(name="ReadingFiles",
                              iterables=[
-                                 ('t1w', t1w_files),
-                                 ('dwi_json', dwi_json_files),
-                                 ('dwi', dwi_files),
-                                 ('bvec', bvec_files),
-                                 ('bval', bval_files),
+                                 ('t1w', list_bids_files[0]),
+                                 ('dwi_json', list_bids_files[1]),
+                                 ('dwi', list_bids_files[2]),
+                                 ('bvec', list_bids_files[3]),
+                                 ('bval', list_bids_files[4]),
                              ],
                              synchronize=True,
                              interface=nutil.IdentityInterface(
