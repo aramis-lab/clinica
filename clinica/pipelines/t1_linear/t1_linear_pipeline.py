@@ -58,7 +58,6 @@ class T1Linear(cpe.Pipeline):
         """
         pass
 
-
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
 
@@ -66,7 +65,7 @@ class T1Linear(cpe.Pipeline):
             A list of (string) input fields name.
         """
 
-        return ['hello_word'] # Fill here the list
+        return ['t1w']
 
 
     def get_output_fields(self):
@@ -76,16 +75,58 @@ class T1Linear(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        return [] # Fill here the list
+        return ['image_id']
 
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
         """
-
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from clinica.utils.inputs import check_bids_folder
+        from clinica.utils.participant import get_subject_session_list
+        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
+        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.input_files import T1W_NII
+        from nipype.interfaces import ants
+        from clinica.utils.filemanip import get_subject_id
 
+        check_bids_folder(self.bids_directory)
+        is_bids_dir = True
+
+        self.sessions, self.subjects = get_subject_session_list(
+                self.bids_directory,
+                tsv,
+                is_bids_dir,
+                False,
+                self.base_dir
+                )
+        # Inputs from anat/ folder
+        # ========================
+        # T1w file:
+        try:
+            t1w_files = clinica_file_reader(self.subjects,
+                    self.sessions,
+                    self.bids_directory,
+                    T1W_NII)
+        except ClinicaException as e:
+            err = 'Clinica faced error(s) while trying to read files in your CAPS directory.\n' + str(e)
+            raise ClinicaBIDSError(err)
+
+        # Read tsv file and load inputs
+        read_node = npe.Node(name="ReadingFiles",
+                iterables=[
+                    ('t1w', t1w_files),
+                    ],
+                synchronize=True,
+                interface=nutil.IdentityInterface(
+                    fields=get_input_fields())
+                )
+        
+        self.connect([
+            (read_node, self.input_node, [('t1w', 't1w')]),
+            ])
+        
         # This node is supposedly used to load BIDS inputs when this pipeline is
         # not already connected to the output of a previous Clinica pipeline.
         # For the purpose of the example, we simply read input arguments given
@@ -93,21 +134,9 @@ class T1Linear(cpe.Pipeline):
         # `self.parameters` dictionary and pass it to the `self.input_node` to
         # further by used as input of the core nodes.
 
-        read_parameters_node = npe.Node(name="LoadingCLIArguments",
-                                        interface=nutil.IdentityInterface(
-                                            fields=self.get_input_fields(),
-                                            mandatory_inputs=True))
-        read_parameters_node.inputs.hello_word = self.parameters['hello_word']
-
-        self.connect([
-            (read_parameters_node,      self.input_node,    [('hello_word',    'hello_word')])
-        ])
-
-
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
         """
-
         # In the same idea as the input node, this output node is supposedly
         # used to write the output fields in a CAPS. It should be executed only
         # if this pipeline output is not already connected to a next Clinica
