@@ -12,6 +12,14 @@ import clinica.pipelines.engine as cpe
 
 class T1Linear(cpe.Pipeline):
     """T1 Linear SHORT DESCRIPTION.
+    This preprocessing pipeline includes globally three steps:
+    1) N4 bias correction (performed with ANTS).
+    2) Linear registration to MNI (MNI icbm152 nlinear sym template)
+      (performed with ANTS) - RegistrationSynQuick.
+    3) Cropping the background (in order to save computational power).  4)
+    Histogram-based intensity normalization. This is a custom function
+    performed by the binary ImageMath included with ANTS.
+
 
     Warnings:
         - A WARNING.
@@ -19,11 +27,14 @@ class T1Linear(cpe.Pipeline):
     Todos:
         - [x] A FILLED TODO ITEM.
         - [ ] AN ON-GOING TODO ITEM.
-
+    
     Args:
-        input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
+        bids_directory (str): Folder with BIDS structure.  
+        caps_directory (str): Folder where CAPS structure will be stored.
+        ref_template (str): reference template used for image registration.  
+        working_directory (str): Folder containing a temporary space to save
+        intermediate results.
+        tsv: The Subjects-Sessions list file (in .tsv format).
 
     Returns:
         A clinica pipeline object containing the T1 Linear pipeline.
