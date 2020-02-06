@@ -68,12 +68,7 @@ Find on [this page](ClinicaConferences) the presentations and demo materials use
 Clinica is distributed under the terms of the MIT license given [here](https://github.com/aramis-lab/clinica/blob/dev/LICENSE.txt).
 
 ## Citing Clinica
-For publications or communications using Clinica, please include the following text:
-
-!!! quote "Citing Clinica"
-    Analyses were performed using the Clinica software platform (www.clinica.run) developed by the ARAMIS Lab ([www.aramislab.fr](http://www.aramislab.fr/)).
-
-Each pipeline's page includes text to cite the software packages that are used by Clinica. Use them depending on the specific pipelines that you used (for example, citing SPM when using the `t1-volume` pipeline).
+For publications or communications using Clinica, please cite [[Routier et al](https://hal.inria.fr/hal-02308126/)] as well as the references mentioned on the wiki page of the pipelines you used. Each page includes text to cite the software packages that are used by Clinica (for example, citing SPM when using the `t1-volume` pipeline).
 
 !!! info "Disclaimer"
     Clinica is a software for research studies. It is not intended for use in medical routine

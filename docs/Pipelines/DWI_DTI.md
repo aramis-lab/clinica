@@ -58,7 +58,7 @@ The main output files are:
 ## Describing this pipeline in your paper
 
 ??? cite "Example of paragraph for the `dwi-dti` pipeline:"
-    These results have been obtained using the `dwi-dti` pipeline of Clinica. A diffusion tensor imaging (DTI) model was fitted to each voxel to calculate the fractional anisotropy (FA), mean diffusivity (MD), radial diffusivity (RD) and axial diffusivity (AD) maps using **MRtrix** [[Tournier et al., 2012](https://doi.org/10.1002/ima.22005)]. The FA map of each subject was then registered to the FA map of the JHU atlas template with the ANTs SyN algorithm [[Avants et al., 2008](https://doi.org/10.1016/j.media.2007.06.004)], and the estimated non-linear deformation was applied to the MD, AD and RD maps to have, for each individual, all the DTI-based maps in the space of the JHU atlas.
+    These results have been obtained using the `dwi-dti` pipeline of Clinica [[Routier et al](https://hal.inria.fr/hal-02308126/)]. A diffusion tensor imaging (DTI) model was fitted to each voxel to calculate the fractional anisotropy (FA), mean diffusivity (MD), radial diffusivity (RD) and axial diffusivity (AD) maps using **MRtrix** [[Tournier et al., 2012](https://doi.org/10.1002/ima.22005)]. The FA map of each subject was then registered to the FA map of the JHU atlas template with the ANTs SyN algorithm [[Avants et al., 2008](https://doi.org/10.1016/j.media.2007.06.004)], and the estimated non-linear deformation was applied to the MD, AD and RD maps to have, for each individual, all the DTI-based maps in the space of the JHU atlas.
 
     We then assessed the integrity of a set of anatomical white matter tracts defined in the:
 
