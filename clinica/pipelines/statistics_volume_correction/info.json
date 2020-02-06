@@ -1,0 +1,12 @@
+{
+    "id": "aramislab/statistics_volume_correction",
+    "author": "Arnaud Marcoux",
+    "version": "0.1.0",
+    "dependencies": [
+        {
+            "type": "binary",
+            "name": "clinica",
+            "version": ">=0.3.0"
+        }
+    ]
+}
