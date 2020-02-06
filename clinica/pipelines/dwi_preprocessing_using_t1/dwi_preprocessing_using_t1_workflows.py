@@ -90,7 +90,7 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
                                                    change_itk_transform_type,
                                                    expend_matrix_list,
                                                    rotate_bvecs,
-                                                   ants_combin_transform)
+                                                   ants_combine_transform)
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['T1', 'DWI', 'bvec']), name='inputnode')
 
@@ -139,7 +139,7 @@ def epi_pipeline(name='susceptibility_distortion_correction_using_t1'):
 
     apply_transform = pe.MapNode(interface=niu.Function(input_names=['fix_image', 'moving_image', 'ants_warp_affine'],
                                                         output_names=['out_warp_field', 'out_warped'],
-                                                        function=ants_combin_transform),
+                                                        function=ants_combine_transform),
                                  iterfield=['moving_image'],
                                  name='warp_filed')
 

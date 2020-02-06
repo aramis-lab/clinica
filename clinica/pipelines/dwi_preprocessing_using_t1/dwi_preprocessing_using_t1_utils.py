@@ -1,21 +1,6 @@
 # coding: utf8
 
 
-def ants_combine_transform(in_file, transforms_list, reference):
-    import os
-
-    out_warp = os.path.abspath('out_warp.nii.gz')
-
-    transforms = ""
-    for trans in transforms_list:
-        transforms += " " + trans
-    cmd = 'antsApplyTransforms -o [out_warp.nii.gz,1] -i %s -r %s -t %s' \
-          % (in_file, reference, transforms)
-    os.system(cmd)
-
-    return out_warp
-
-
 def rename_into_caps(in_bids_dwi,
                      fname_dwi, fname_bval, fname_bvec, fname_brainmask):
     """
@@ -166,7 +151,7 @@ def rotate_bvecs(in_bvec, in_matrix):
     return out_file
 
 
-def ants_combin_transform(fix_image, moving_image, ants_warp_affine):
+def ants_combine_transform(fix_image, moving_image, ants_warp_affine):
     import os
 
     out_warp_field = os.path.abspath('out_warp_field.nii.gz')
@@ -195,7 +180,7 @@ def create_jacobian_determinant_image(imageDimension, deformationField, outputIm
 
 
 def init_input_node(t1w, dwi, bvec, bval, dwi_json):
-    """Extract "sub-<participant_id>_ses-<session_label>" from input node and print begin message."""
+    """Initialize the pipeline."""
     from clinica.utils.filemanip import get_subject_id, extract_metadata_from_json
     from clinica.utils.dwi import check_dwi_volume, bids_dir_to_fsl_dir
     from clinica.utils.ux import print_begin_image
