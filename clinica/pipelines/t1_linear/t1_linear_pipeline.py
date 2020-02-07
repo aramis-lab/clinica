@@ -88,7 +88,6 @@ class T1Linear(cpe.Pipeline):
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1W_NII
-        from nipype.interfaces import ants
         from clinica.utils.filemanip import get_subject_id
 
         check_bids_folder(self.bids_directory)
@@ -141,8 +140,20 @@ class T1Linear(cpe.Pipeline):
         # used to write the output fields in a CAPS. It should be executed only
         # if this pipeline output is not already connected to a next Clinica
         # pipeline.
+        from nipype.interfaces.io import DataSink
+        from nipype.pipeline.ingine as npe
 
-        pass
+
+        write_node = npe.Node(
+                name="WriteCaps",
+                interface=DataSink()
+                )
+        write_node.inputs.base_directory = caps_directory
+        write_node.inputs.parameterization = False
+        
+        self.connect([
+            (self.output_node, write_node, [('image_id', 'image_id')]),
+            ])
 
 
     def build_core_nodes(self):
