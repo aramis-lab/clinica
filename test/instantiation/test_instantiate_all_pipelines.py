@@ -349,3 +349,19 @@ def test_instantiate_T1FreeSurferLongitudinalCorrection():
     pipeline.parameters['n_procs'] = 4
     pipeline.parameters['recon_all_args'] = '-qcache'
     pipeline.build()
+
+def test_instantiate_T1Linear():
+    from os.path import dirname, join, abspath
+    from clinica.pipelines.t1_linear.t1_linear_pipeline import T1Linear
+
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'T1FreeSurferCrossSectional')
+
+    pipeline = T1Linear(
+        bids_directory=join(root, 'in', 'bids'),
+        caps_directory=join(root, 'in', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        ref_template=joint(root, 'ref_template.nii.gz')
+    )
+    pipeline.parameters['nproc'] = 4
+    pipeline.build()
