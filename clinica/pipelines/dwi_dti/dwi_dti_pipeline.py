@@ -178,7 +178,7 @@ class DwiDti(cpe.Pipeline):
         get_caps_filenames = npe.Node(interface=nutil.Function(
             input_names=['caps_dwi_filename'],
             output_names=['bids_source', 'out_dti',
-                          'out_fa', 'out_md', 'out_ad', 'out_rd'],
+                          'out_fa', 'out_md', 'out_ad', 'out_rd', 'out_evec'],
             function=get_caps_filenames),
             name='0-CAPS_Filenames')
 
@@ -254,6 +254,7 @@ class DwiDti(cpe.Pipeline):
             (get_caps_filenames, dti_to_metrics, [('out_md',  'out_adc')]),
             (get_caps_filenames, dti_to_metrics, [('out_ad',  'out_ad')]),
             (get_caps_filenames, dti_to_metrics, [('out_rd',  'out_rd')]),
+            (get_caps_filenames, dti_to_metrics, [('out_evec',  'out_evec')]),
             (self.input_node,    dti_to_metrics, [('b0_mask', 'in_mask')]),
             (dwi_to_dti,         dti_to_metrics, [('tensor',  'in_file')]),
             # Register DTI maps on JHU atlas

@@ -79,8 +79,9 @@ def get_caps_filenames(caps_dwi_filename):
     out_md = caps_prefix + '_MD.nii.gz'
     out_ad = caps_prefix + '_AD.nii.gz'
     out_rd = caps_prefix + '_RD.nii.gz'
+    out_evec = caps_prefix + '_DECFA.nii.gz'
 
-    return bids_source, out_dti, out_fa, out_md, out_ad, out_rd
+    return bids_source, out_dti, out_fa, out_md, out_ad, out_rd, out_evec
 
 
 def rename_into_caps(in_caps_dwi,
