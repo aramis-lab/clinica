@@ -143,53 +143,6 @@ def print_end_pipeline(in_bids_or_caps_file, final_file_1, final_file_2):
     print_end_image(get_subject_id(in_bids_or_caps_file))
 
 
-def apply_ants_registration_syn_quick_transformation(
-        in_image,
-        in_reference_image,
-        in_affine_transformation,
-        in_bspline_transformation,
-        name_output_image=None):
-    """
-    Apply a transformation obtained with antsRegistrationSyNQuick.sh.
-
-    This function applies a rigid & deformable B-Spline syn transformation
-    which has been estimated previously with antsRegistrationSyNQuick script.
-
-    Args:
-        in_image (str): File containing the input image to be transformed.
-        in_reference_image (str): File defining the spacing, origin, size,
-            and direction of the output warped image.
-        in_affine_transformation (str): File containing the transformation
-            matrix obtained by antsRegistrationSyNQuick (expected file:
-            [Prefix]0GenericAffine.mat).
-        in_bspline_transformation (str): File containing the transformation
-            matrix obtained by antsRegistrationSyNQuick (expected file:
-            [Prefix]1Warp.nii.gz).
-        name_output_image (Optional[str]): Name of the output image
-            (default=deformed_image.nii.gz).
-
-    Returns:
-        out_deformed_image (str): File containing the deformed image according
-            to in_affine_transformation and in_bspline_transformation
-            transformations.
-    """
-    import os
-    from clinica.utils.check_dependency import check_ants
-    check_ants()
-
-    assert(os.path.isfile(in_image))
-    assert(os.path.isfile(in_affine_transformation))
-    assert(os.path.isfile(in_bspline_transformation))
-
-    if name_output_image is None:
-        out_deformed_image = os.path.abspath('deformed_image.nii.gz')
-    else:
-        out_deformed_image = os.path.abspath(name_output_image)
-
-    cmd = 'antsApplyTransforms -d 3 -e 0 -i %s -o %s -t %s -t %s -r %s ' \
-          '--interpolation Linear' \
-          % (in_image, out_deformed_image, in_bspline_transformation,
-             in_affine_transformation, in_reference_image)
-    os.system(cmd)
-
-    return out_deformed_image
+def get_ants_transforms(in_affine_transformation, in_bspline_transformation):
+    """Combine transformations for antsApplyTransforms interface."""
+    return [in_bspline_transformation, in_affine_transformation]

@@ -42,15 +42,11 @@ def register_dti_maps_on_atlas(
     import nipype.interfaces.fsl as fsl
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
-    from nipype.interfaces.ants import RegistrationSynQuick
-    from clinica.utils.atlas import AtlasAbstract
-    from .dwi_dti_utils import apply_ants_registration_syn_quick_transformation
-
+    from nipype.interfaces.ants import RegistrationSynQuick, ApplyTransforms
     from clinica.utils.atlas import JHUDTI811mm
-    atlas = JHUDTI811mm()
+    from .dwi_dti_utils import get_ants_transforms
 
-    if not isinstance(atlas, AtlasAbstract):
-        raise Exception("Atlas element must be an AtlasAbstract type")
+    atlas = JHUDTI811mm()
 
     if working_directory is None:
         working_directory = tempfile.mkdtemp()
@@ -64,33 +60,30 @@ def register_dti_maps_on_atlas(
         interface=RegistrationSynQuick(),
         name='register_fa')
 
-    apply_ants_registration = pe.Node(interface=niu.Function(
-        input_names=['in_image', 'in_reference_image',
-                     'in_affine_transformation', 'in_bspline_transformation',
-                     'name_output_image'],
-        output_names=['out_deformed_image'],
-        function=apply_ants_registration_syn_quick_transformation),
+    ants_transforms = pe.Node(interface=niu.Function(
+        input_names=['in_affine_transformation', 'in_bspline_transformation'],
+        output_names=['transforms'],
+        function=get_ants_transforms),
+        name='0-CAPS_Filenames')
+
+    apply_ants_registration = pe.Node(
+        interface=ApplyTransforms(),
         name='apply_ants_registration')
+    apply_ants_registration.inputs.dimension = 3
+    apply_ants_registration.inputs.input_image_type = 0
+    apply_ants_registration.inputs.interpolation = 'Linear'
 
     apply_ants_registration_for_md = apply_ants_registration.clone('apply_ants_registration_for_md')
-    apply_ants_registration_for_md.inputs.name_output_image = \
-        'space-' + atlas.get_name_atlas() + '_res-' + atlas.get_spatial_resolution() + '_MD.nii.gz'
-
     apply_ants_registration_for_ad = apply_ants_registration.clone('apply_ants_registration_for_ad')
-    apply_ants_registration_for_ad.inputs.name_output_image = \
-        'space-' + atlas.get_name_atlas() + '_res-' + atlas.get_spatial_resolution() + '_AD.nii.gz'
-
     apply_ants_registration_for_rd = apply_ants_registration.clone('apply_ants_registration_for_rd')
-    apply_ants_registration_for_rd.inputs.name_output_image = \
-        'space-' + atlas.get_name_atlas() + '_res-' + atlas.get_spatial_resolution() + '_RD.nii.gz'
 
     thres_map = pe.Node(fsl.Threshold(thresh=0.0),
                         iterfield=['in_file'],
                         name='RemoveNegative')
-    thres_fa = thres_map.clone('RemoveNegative_FA')
-    thres_md = thres_map.clone('RemoveNegative_MD')
-    thres_ad = thres_map.clone('RemoveNegative_AD')
-    thres_rd = thres_map.clone('RemoveNegative_RD')
+    thres_norm_fa = thres_map.clone('RemoveNegative_FA')
+    thres_norm_md = thres_map.clone('RemoveNegative_MD')
+    thres_norm_ad = thres_map.clone('RemoveNegative_AD')
+    thres_norm_rd = thres_map.clone('RemoveNegative_RD')
 
     outputnode = pe.Node(niu.IdentityInterface(
         fields=['out_norm_fa', 'out_norm_md', 'out_norm_ad', 'out_norm_rd',
@@ -103,33 +96,33 @@ def register_dti_maps_on_atlas(
         (inputnode, register_fa, [('in_fa',                 'moving_image'),
                                   ('in_atlas_scalar_image', 'fixed_image')]),
         # Apply deformation field on MD, AD & RD:
-        (inputnode,   apply_ants_registration_for_md, [('in_md',                 'in_image')]),
-        (inputnode,   apply_ants_registration_for_md, [('in_atlas_scalar_image', 'in_reference_image')]),
-        (register_fa, apply_ants_registration_for_md, [('out_matrix',            'in_affine_transformation')]),
-        (register_fa, apply_ants_registration_for_md, [('forward_warp_field',    'in_bspline_transformation')]),
+        (register_fa, ants_transforms, [('out_matrix',         'in_affine_transformation')]),
+        (register_fa, ants_transforms, [('forward_warp_field', 'in_bspline_transformation')]),
 
-        (inputnode,   apply_ants_registration_for_ad, [('in_ad',                 'in_image')]),
-        (inputnode,   apply_ants_registration_for_ad, [('in_atlas_scalar_image', 'in_reference_image')]),
-        (register_fa, apply_ants_registration_for_ad, [('out_matrix',            'in_affine_transformation')]),
-        (register_fa, apply_ants_registration_for_ad, [('forward_warp_field',    'in_bspline_transformation')]),
+        (inputnode,       apply_ants_registration_for_md, [('in_md', 'input_image')]),
+        (inputnode,       apply_ants_registration_for_md, [('in_atlas_scalar_image', 'reference_image')]),
+        (ants_transforms, apply_ants_registration_for_md, [('transforms', 'transforms')]),
 
-        (inputnode,   apply_ants_registration_for_rd, [('in_rd',                 'in_image')]),
-        (inputnode,   apply_ants_registration_for_rd, [('in_atlas_scalar_image', 'in_reference_image')]),
-        (register_fa, apply_ants_registration_for_rd, [('out_matrix',            'in_affine_transformation')]),
-        (register_fa, apply_ants_registration_for_rd, [('forward_warp_field',    'in_bspline_transformation')]),
+        (inputnode,       apply_ants_registration_for_ad, [('in_ad', 'input_image')]),
+        (inputnode,       apply_ants_registration_for_ad, [('in_atlas_scalar_image', 'reference_image')]),
+        (ants_transforms, apply_ants_registration_for_ad, [('transforms', 'transforms')]),
+
+        (inputnode,       apply_ants_registration_for_rd, [('in_rd', 'input_image')]),
+        (inputnode,       apply_ants_registration_for_rd, [('in_atlas_scalar_image', 'reference_image')]),
+        (ants_transforms, apply_ants_registration_for_rd, [('transforms', 'transforms')]),
         # Remove negative values from the DTI maps:
-        (register_fa,                    thres_fa, [('warped_image',       'in_file')]),
-        (apply_ants_registration_for_md, thres_md, [('out_deformed_image', 'in_file')]),
-        (apply_ants_registration_for_rd, thres_rd, [('out_deformed_image', 'in_file')]),
-        (apply_ants_registration_for_ad, thres_ad, [('out_deformed_image', 'in_file')]),
+        (register_fa,                    thres_norm_fa, [('warped_image', 'in_file')]),
+        (apply_ants_registration_for_md, thres_norm_md, [('output_image', 'in_file')]),
+        (apply_ants_registration_for_rd, thres_norm_rd, [('output_image', 'in_file')]),
+        (apply_ants_registration_for_ad, thres_norm_ad, [('output_image', 'in_file')]),
         # Outputnode:
-        (thres_fa,    outputnode, [('out_file',           'out_norm_fa')]),
-        (register_fa, outputnode, [('out_matrix',         'out_affine_matrix'),
+        (thres_norm_fa, outputnode, [('out_file', 'out_norm_fa')]),
+        (register_fa, outputnode, [('out_matrix', 'out_affine_matrix'),
                                    ('forward_warp_field', 'out_b_spline_transform'),
                                    ('inverse_warp_field', 'out_inverse_warp')]),
-        (thres_md,    outputnode,  [('out_file',          'out_norm_md')]),
-        (thres_ad,    outputnode,  [('out_file',          'out_norm_ad')]),
-        (thres_rd,    outputnode,  [('out_file',          'out_norm_rd')])
+        (thres_norm_md, outputnode, [('out_file', 'out_norm_md')]),
+        (thres_norm_ad, outputnode, [('out_file', 'out_norm_ad')]),
+        (thres_norm_rd, outputnode, [('out_file', 'out_norm_rd')])
     ])
 
     return wf
