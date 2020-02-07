@@ -88,7 +88,6 @@ class T1Linear(cpe.Pipeline):
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1W_NII
-        from clinica.utils.filemanip import get_subject_id
 
         check_bids_folder(self.bids_directory)
         is_bids_dir = True
@@ -163,28 +162,92 @@ class T1Linear(cpe.Pipeline):
         import t1_linear_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+        from clinica.utils.filemanip import get_subject_id
+        from nipype.interfaces import ants
+        from t1_linear_utils import (crop_nifti,container_from_filename, get_data_datasink)
 
-        # Step 1
-        # ======
-        node1 = npe.Node(name="Step1",
-                         interface=nutil.Function(
-                             input_names=['in_hello_word'],
-                             output_names=[],
-                             function=utils.step1))
 
-        # Step 2
-        # ======
-        node2 = npe.Node(name="Step2",
-                         interface=nutil.Function(
-                             input_names=['in_hello_word'],
-                             output_names=[],
-                             function=utils.step2))
+        image_id_node = npe.Node(
+                interface=nutil.Function(
+                    input_names=['bids_or_caps_file'],
+                    output_names=['image_id'],
+                    function= get_subject_id),
+                name='ImageID'
+                )
 
+        # The core (processing) nodes
+        # =====================================
+
+        # 1. N4biascorrection by ANTS. It uses nipype interface.
+        n4biascorrection = npe.Node(
+                name='n4biascorrection',
+                interface=ants.N4BiasFieldCorrection(
+                    dimension=3, 
+                    save_bias=True, 
+                    bspline_fitting_distance=600
+                    )
+                )
+
+        # 2. `RegistrationSynQuick` by *ANTS*. It uses nipype interface.
+        ants_registration_node = npe.Node(
+                name='antsRegistrationSynQuick',
+                interface=ants.RegistrationSynQuick()
+                )
+        ants_registration_node.inputs.fixed_image = self.ref_template
+        ants_registration_node.inputs.transform_type = 'a'
+        ants_registration_node.inputs.dimension = 3
+
+        # 3. Crop image (using nifti). It uses custom interface, from utils file
+
+        cropnifti = npe.Node(
+                name='cropnifti',
+                interface=nutil.Function(
+                    function=crop_nifti,
+                    input_names=['input_img', 'ref_img'],
+                    output_names=['output_img', 'crop_template']
+                    )
+                )
+        cropnifti.inputs.ref_img = self.ref_template
+
+
+        # Other nodes
+        # =====================================
+        
+        # Get substitutions to rename files
+        get_ids = npe.Node(
+                interface=nutil.Function(
+                    input_names=['image_id'],
+                    output_names=['image_id_out', 'subst_ls'],
+                    function=get_data_datasink),
+                name="GetIDs")
+       
+        # Find container path from t1w filename
+        container_path = npe.Node(
+                nutil.Function(
+                    input_names=['bids_or_caps_filename'],
+                    output_names=['container'],
+                    function=container_from_filename),
+                name='ContainerPath')
+        
         # Connection
         # ==========
         self.connect([
-            # STEP 1
-            (self.input_node,      node1,    [('hello_word',    'in_hello_word')]),
-            # STEP 2
-            (self.input_node,      node2,    [('hello_word',    'in_hello_word')])
-        ])
+            (read_node, image_id_node, [('t1w', 'bids_or_caps_file')]),
+            (read_node, container_path, [('t1w', 'bids_or_caps_filename')]),
+            (image_id_node , ants_registration_node, [('image_id', 'output_prefix')]),
+            (read_node, n4biascorrection, [("t1w", "input_image")]),
+
+            (n4biascorrection, ants_registration_node, [('output_image', 'moving_image')]),
+
+            (ants_registration_node, cropnifti, [('warped_image', 'input_img')]),
+
+            # Connect to DataSink
+            (container_path, write_node, [(('container', fix_join, 't1_linear'), 'container')]),
+            (image_id_node, get_ids, [('image_id', 'image_id')]),
+            (get_ids, write_node, [('image_id_out', '@image_id')]),
+            (get_ids, write_node, [('subst_ls', 'substitutions')]),
+            #(get_ids, write_node, [('regexp_subst_ls', 'regexp_substitutions')]),
+            (n4biascorrection, write_node, [('output_image', '@outfile_corr')]),
+            (ants_registration_node, write_node, [('warped_image', '@outfile_reg')]),
+            (cropnifti, write_node, [('output_img', '@outfile_crop')]),
+            ])
