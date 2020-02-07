@@ -160,12 +160,13 @@ class DwiDti(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.fsl as fsl
         import nipype.interfaces.mrtrix as mrtrix
+        from nipype.interfaces.ants import RegistrationSynQuick, ApplyTransforms
+        from clinica.utils.atlas import JHUDTI811mm
         from clinica.lib.nipype.interfaces.mrtrix3.utils import TensorMetrics
         from clinica.lib.nipype.interfaces.mrtrix.preprocess import DWI2Tensor
         from .dwi_dti_utils import (extract_bids_identifier_from_caps_filename, get_caps_filenames,
                                     print_begin_pipeline, print_end_pipeline,
-                                    statistics_on_atlases)
-        from .dwi_dti_workflows import register_dti_maps_on_atlas
+                                    statistics_on_atlases, get_ants_transforms)
 
         # Nodes creation
         # ==============
@@ -194,9 +195,37 @@ class DwiDti(cpe.Pipeline):
             interface=TensorMetrics(),
             name='2-DTI-based_Metrics')
 
-        register_on_jhu_atlas = register_dti_maps_on_atlas(
-            working_directory=self.base_dir,
-            name="3-Register_DTI_Maps_On_JHU")
+        register_fa = npe.Node(
+            interface=RegistrationSynQuick(),
+            name='register_fa')
+        atlas = JHUDTI811mm()
+        register_fa.inputs.fixed_image = atlas.get_atlas_map()
+
+        ants_transforms = npe.Node(interface=nutil.Function(
+            input_names=['in_affine_transformation', 'in_bspline_transformation'],
+            output_names=['transforms'],
+            function=get_ants_transforms),
+            name='combine_ants_transforms')
+
+        apply_ants_registration = npe.Node(
+            interface=ApplyTransforms(),
+            name='apply_ants_registration')
+        apply_ants_registration.inputs.dimension = 3
+        apply_ants_registration.inputs.input_image_type = 0
+        apply_ants_registration.inputs.interpolation = 'Linear'
+        apply_ants_registration.inputs.reference_image = atlas.get_atlas_map()
+
+        apply_ants_registration_for_md = apply_ants_registration.clone('apply_ants_registration_for_md')
+        apply_ants_registration_for_ad = apply_ants_registration.clone('apply_ants_registration_for_ad')
+        apply_ants_registration_for_rd = apply_ants_registration.clone('apply_ants_registration_for_rd')
+
+        thres_map = npe.Node(fsl.Threshold(thresh=0.0),
+                             iterfield=['in_file'],
+                             name='RemoveNegative')
+        thres_norm_fa = thres_map.clone('RemoveNegative_FA')
+        thres_norm_md = thres_map.clone('RemoveNegative_MD')
+        thres_norm_ad = thres_map.clone('RemoveNegative_AD')
+        thres_norm_rd = thres_map.clone('RemoveNegative_RD')
 
         scalar_analysis = npe.Node(
             interface=nutil.Function(
@@ -220,6 +249,7 @@ class DwiDti(cpe.Pipeline):
         thres_md = thres_map.clone('5-Remove_Negative_MD')
         thres_ad = thres_map.clone('5-Remove_Negative_AD')
         thres_rd = thres_map.clone('5-Remove_Negative_RD')
+        thres_decfa = thres_map.clone('5-Remove_Negative_DECFA')
 
         print_begin_message = npe.Node(
             interface=nutil.Function(
@@ -257,20 +287,34 @@ class DwiDti(cpe.Pipeline):
             (get_caps_filenames, dti_to_metrics, [('out_evec',  'out_evec')]),
             (self.input_node,    dti_to_metrics, [('b0_mask', 'in_mask')]),
             (dwi_to_dti,         dti_to_metrics, [('tensor',  'in_file')]),
-            # Register DTI maps on JHU atlas
-            (dti_to_metrics,    register_on_jhu_atlas, [('out_fa',  'inputnode.in_fa'),
-                                                        ('out_adc', 'inputnode.in_md'),
-                                                        ('out_ad',  'inputnode.in_ad'),
-                                                        ('out_rd',  'inputnode.in_rd')]),
+            # Registration of FA-map onto the atlas:
+            (dti_to_metrics, register_fa, [('out_fa', 'moving_image')]),
+            # Apply deformation field on MD, AD & RD:
+            (register_fa, ants_transforms, [('out_matrix', 'in_affine_transformation')]),
+            (register_fa, ants_transforms, [('forward_warp_field', 'in_bspline_transformation')]),
+
+            (dti_to_metrics, apply_ants_registration_for_md, [('out_adc', 'input_image')]),
+            (ants_transforms, apply_ants_registration_for_md, [('transforms', 'transforms')]),
+
+            (dti_to_metrics, apply_ants_registration_for_ad, [('out_ad', 'input_image')]),
+            (ants_transforms, apply_ants_registration_for_ad, [('transforms', 'transforms')]),
+
+            (dti_to_metrics, apply_ants_registration_for_rd, [('out_rd', 'input_image')]),
+            (ants_transforms, apply_ants_registration_for_rd, [('transforms', 'transforms')]),
+            # Remove negative values from the DTI maps:
+            (register_fa, thres_norm_fa, [('warped_image', 'in_file')]),
+            (apply_ants_registration_for_md, thres_norm_md, [('output_image', 'in_file')]),
+            (apply_ants_registration_for_rd, thres_norm_rd, [('output_image', 'in_file')]),
+            (apply_ants_registration_for_ad, thres_norm_ad, [('output_image', 'in_file')]),
             # Generate regional TSV files
-            (get_bids_identifier,   scalar_analysis_fa, [('bids_identifier',        'prefix_file')]),
-            (register_on_jhu_atlas, scalar_analysis_fa, [('outputnode.out_norm_fa', 'in_registered_map')]),
-            (get_bids_identifier,   scalar_analysis_md, [('bids_identifier',        'prefix_file')]),
-            (register_on_jhu_atlas, scalar_analysis_md, [('outputnode.out_norm_md', 'in_registered_map')]),
-            (get_bids_identifier,   scalar_analysis_ad, [('bids_identifier',        'prefix_file')]),
-            (register_on_jhu_atlas, scalar_analysis_ad, [('outputnode.out_norm_ad', 'in_registered_map')]),
-            (get_bids_identifier,   scalar_analysis_rd, [('bids_identifier',        'prefix_file')]),
-            (register_on_jhu_atlas, scalar_analysis_rd, [('outputnode.out_norm_rd', 'in_registered_map')]),
+            (get_bids_identifier,   scalar_analysis_fa, [('bids_identifier', 'prefix_file')]),
+            (thres_norm_fa, scalar_analysis_fa, [('out_file', 'in_registered_map')]),
+            (get_bids_identifier,   scalar_analysis_md, [('bids_identifier', 'prefix_file')]),
+            (thres_norm_md, scalar_analysis_md, [('out_file', 'in_registered_map')]),
+            (get_bids_identifier,   scalar_analysis_ad, [('bids_identifier', 'prefix_file')]),
+            (thres_norm_ad, scalar_analysis_ad, [('out_file', 'in_registered_map')]),
+            (get_bids_identifier,   scalar_analysis_rd, [('bids_identifier', 'prefix_file')]),
+            (thres_norm_rd, scalar_analysis_rd, [('out_file', 'in_registered_map')]),
             # Remove negative values from the DTI maps:
             (get_caps_filenames, thres_fa, [('out_fa',  'out_file')]),
             (dti_to_metrics,     thres_fa, [('out_fa',  'in_file')]),
@@ -283,19 +327,25 @@ class DwiDti(cpe.Pipeline):
 
             (get_caps_filenames, thres_rd, [('out_rd',  'out_file')]),
             (dti_to_metrics,     thres_rd, [('out_rd',  'in_file')]),
+
+            (get_caps_filenames, thres_decfa, [('out_evec', 'out_file')]),
+            (dti_to_metrics,     thres_decfa, [('out_evec', 'in_file')]),
             # Outputnode
-            (dwi_to_dti,            self.output_node, [('tensor',   'dti')]),
-            (thres_fa,              self.output_node, [('out_file', 'fa')]),
-            (thres_md,              self.output_node, [('out_file', 'md')]),
-            (thres_ad,              self.output_node, [('out_file', 'ad')]),
-            (thres_rd,              self.output_node, [('out_file', 'rd')]),
-            (dti_to_metrics,        self.output_node, [('out_evec', 'decfa')]),
-            (register_on_jhu_atlas, self.output_node, [('outputnode.out_norm_fa',            'registered_fa'),
-                                                       ('outputnode.out_norm_md',            'registered_md'),
-                                                       ('outputnode.out_norm_ad',            'registered_ad'),
-                                                       ('outputnode.out_norm_rd',            'registered_rd'),
-                                                       ('outputnode.out_affine_matrix',      'affine_matrix'),
-                                                       ('outputnode.out_b_spline_transform', 'b_spline_transform')]),
+            (dwi_to_dti,  self.output_node, [('tensor',   'dti')]),
+            (thres_fa,    self.output_node, [('out_file', 'fa')]),
+            (thres_md,    self.output_node, [('out_file', 'md')]),
+            (thres_ad,    self.output_node, [('out_file', 'ad')]),
+            (thres_rd,    self.output_node, [('out_file', 'rd')]),
+            (thres_decfa, self.output_node, [('out_file', 'decfa')]),
+
+            (register_fa, self.output_node, [('out_matrix', 'affine_matrix')]),
+            (register_fa, self.output_node, [('forward_warp_field', 'b_spline_transform')]),
+
+            (thres_norm_fa, self.output_node, [('out_file', 'registered_fa')]),
+            (thres_norm_md, self.output_node, [('out_file', 'registered_md')]),
+            (thres_norm_ad, self.output_node, [('out_file', 'registered_ad')]),
+            (thres_norm_rd, self.output_node, [('out_file', 'registered_rd')]),
+
             (scalar_analysis_fa,    self.output_node, [('atlas_statistics_list', 'statistics_fa')]),
             (scalar_analysis_md,    self.output_node, [('atlas_statistics_list', 'statistics_md')]),
             (scalar_analysis_ad,    self.output_node, [('atlas_statistics_list', 'statistics_ad')]),
