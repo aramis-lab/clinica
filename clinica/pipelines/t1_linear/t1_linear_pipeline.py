@@ -88,9 +88,30 @@ class T1Linear(cpe.Pipeline):
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1W_NII
+        from clinica.utils.inputs import download_file
 
         check_bids_folder(self.bids_directory)
         is_bids_dir = True
+
+        
+        self.ref_template = os.path.join(clinica.__path__[0], 'resources', 'masks', 'mni_icbm152_t1_tal_nlin_sym_09c.nii')
+        self.ref_crop = os.path.join(clinica.__path__[0], 'resources', 'masks', 'ref_cropped_template.nii.gz')
+        url1="https://aramislab.paris.inria.fr/files/data/img_t1_linear/ref_cropped_template.nii.gz"
+        url2="https://aramislab.paris.inria.fr/files/data/img_t1_linear/mni_icbm152_t1_tal_nlin_sym_09c.niii"
+
+        if not(self.ref_template):
+            try:
+                download(url1, self.ref_template)
+            except IOError as err:
+                print('Unable to download required template (mni_icbm152) for processing:', err)
+
+        if not(self.ref_crop):
+            try: 
+                download(url1, self.ref_crop)
+            except IOError as err:
+                print('Unable to download required template (ref_crop) for processing:', err)
+
+
 
         self.sessions, self.subjects = get_subject_session_list(
                 self.bids_directory,
@@ -203,11 +224,11 @@ class T1Linear(cpe.Pipeline):
                 name='cropnifti',
                 interface=nutil.Function(
                     function=crop_nifti,
-                    input_names=['input_img', 'ref_img'],
+                    input_names=['input_img', 'ref_crop'],
                     output_names=['output_img', 'crop_template']
                     )
                 )
-        cropnifti.inputs.ref_img = self.ref_template
+        cropnifti.inputs.ref_crop = self.ref_crop
 
 
         # Other nodes
