@@ -317,3 +317,23 @@ def clinica_group_reader(caps_directory, information, raise_exception=True):
                              + information['needed_pipeline'] + Fore.RESET + '\n')
         raise ClinicaCAPSError(error_string)
     return current_glob_found[0]
+
+def download_file(url, filename):
+    """Function to download a specific file and save it into the ressources
+    folder of the package.
+    Args:
+        url: url where to request is done
+        filename: absolute path to the filename where the file is downloaded
+    Returns:
+
+    Raises:
+    """
+    import urllib.request
+    import shutil
+    import ssl
+    # Download the file from `url` and save it locally under `file_name`:
+    cert=ssl.get_server_certificate(("aramislab.paris.inria.fr", 443))
+    gcontext = ssl.SSLContext()
+
+    with urllib.request.urlopen(url, context=gcontext) as response, open(filename, 'wb') as out_file:
+            shutil.copyfileobj(response, out_file)
