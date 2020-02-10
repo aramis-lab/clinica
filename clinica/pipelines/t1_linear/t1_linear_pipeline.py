@@ -148,7 +148,7 @@ class T1Linear(cpe.Pipeline):
         # if this pipeline output is not already connected to a next Clinica
         # pipeline.
         from nipype.interfaces.io import DataSink
-        from nipype.pipeline.ingine as npe
+        from nipype.pipeline.engine as npe
 
         write_node = npe.Node(
                 name="WriteCaps",
