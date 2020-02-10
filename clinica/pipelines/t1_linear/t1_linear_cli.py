@@ -58,9 +58,9 @@ class T1LinearCLI(ce.CmdParser):
                               help='Reference template for registration.')
 
         # Add advanced arguments
-        #advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
-        #advanced.add_argument("-aa", "--advanced_arg",
-        #                      help='Your advanced argument.')
+        # advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
+        # advanced.add_argument("-aa", "--advanced_arg",
+        #                       help='Your advanced argument.')
 
     def run_command(self, args):
         """
@@ -82,12 +82,9 @@ class T1LinearCLI(ce.CmdParser):
              parameters=parameters,
              name=self.name,
              overwrite_caps=args.overwrite_outputs)
-        
         if args.working_directory is None:
             args.working_directory = mkdtemp()
         pipeline.base_dir = self.absolute_path(args.working_directory)
-        
-        
         if args.n_procs:
             pipeline.run(plugin='MultiProc',
                          plugin_args={'n_procs': args.n_procs})

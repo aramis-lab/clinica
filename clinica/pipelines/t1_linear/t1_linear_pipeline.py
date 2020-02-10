@@ -20,19 +20,14 @@ class T1Linear(cpe.Pipeline):
     Histogram-based intensity normalization. This is a custom function
     performed by the binary ImageMath included with ANTS.
 
-
     Warnings:
         - A WARNING.
 
-    Todos:
-        - [x] A FILLED TODO ITEM.
-        - [ ] AN ON-GOING TODO ITEM.
-    
     Args:
-        bids_directory (str): Folder with BIDS structure.  
+        bids_directory (str): Folder with BIDS structure.
         caps_directory (str): Folder where CAPS structure will be stored.
-        ref_template (str): reference template used for image registration.  
-        working_directory (str): Folder containing a temporary space to save
+        ref_template (str): reference template used for image registration.
+        working_directory (str): Folder containing a temporary space to save.
         intermediate results.
         tsv: The Subjects-Sessions list file (in .tsv format).
 
@@ -40,7 +35,6 @@ class T1Linear(cpe.Pipeline):
         A clinica pipeline object containing the T1 Linear pipeline.
 
     Raises:
-
 
     Example:
         >>> from t1_linear import T1Linear
@@ -51,7 +45,6 @@ class T1Linear(cpe.Pipeline):
         >>> pipeline.base_dir = '/tmp/'
         >>> pipeline.run()
     """
-
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
@@ -67,7 +60,6 @@ class T1Linear(cpe.Pipeline):
 
         return ['t1w']
 
-
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
 
@@ -76,7 +68,6 @@ class T1Linear(cpe.Pipeline):
         """
 
         return ['image_id']
-
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -92,12 +83,10 @@ class T1Linear(cpe.Pipeline):
 
         check_bids_folder(self.bids_directory)
         is_bids_dir = True
-
-        
         self.ref_template = os.path.join(clinica.__path__[0], 'resources', 'masks', 'mni_icbm152_t1_tal_nlin_sym_09c.nii')
         self.ref_crop = os.path.join(clinica.__path__[0], 'resources', 'masks', 'ref_cropped_template.nii.gz')
-        url1="https://aramislab.paris.inria.fr/files/data/img_t1_linear/ref_cropped_template.nii.gz"
-        url2="https://aramislab.paris.inria.fr/files/data/img_t1_linear/mni_icbm152_t1_tal_nlin_sym_09c.niii"
+        url1 = "https://aramislab.paris.inria.fr/files/data/img_t1_linear/ref_cropped_template.nii.gz"
+        url2 = "https://aramislab.paris.inria.fr/files/data/img_t1_linear/mni_icbm152_t1_tal_nlin_sym_09c.niii"
 
         if not(self.ref_template):
             try:
@@ -106,12 +95,10 @@ class T1Linear(cpe.Pipeline):
                 print('Unable to download required template (mni_icbm152) for processing:', err)
 
         if not(self.ref_crop):
-            try: 
+            try:
                 download(url1, self.ref_crop)
             except IOError as err:
                 print('Unable to download required template (ref_crop) for processing:', err)
-
-
 
         self.sessions, self.subjects = get_subject_session_list(
                 self.bids_directory,
@@ -124,7 +111,8 @@ class T1Linear(cpe.Pipeline):
         # ========================
         # T1w file:
         try:
-            t1w_files = clinica_file_reader(self.subjects,
+            t1w_files = clinica_file_reader(
+                    self.subjects,
                     self.sessions,
                     self.bids_directory,
                     T1W_NII)
@@ -133,7 +121,8 @@ class T1Linear(cpe.Pipeline):
             raise ClinicaBIDSError(err)
 
         # Read tsv file and load inputs
-        read_node = npe.Node(name="ReadingFiles",
+        read_node = npe.Node(
+                name="ReadingFiles",
                 iterables=[
                     ('t1w', t1w_files),
                     ],
@@ -141,11 +130,9 @@ class T1Linear(cpe.Pipeline):
                 interface=nutil.IdentityInterface(
                     fields=get_input_fields())
                 )
-        
         self.connect([
             (read_node, self.input_node, [('t1w', 't1w')]),
             ])
-        
         # This node is supposedly used to load BIDS inputs when this pipeline is
         # not already connected to the output of a previous Clinica pipeline.
         # For the purpose of the example, we simply read input arguments given
@@ -163,36 +150,31 @@ class T1Linear(cpe.Pipeline):
         from nipype.interfaces.io import DataSink
         from nipype.pipeline.ingine as npe
 
-
         write_node = npe.Node(
                 name="WriteCaps",
                 interface=DataSink()
                 )
         write_node.inputs.base_directory = caps_directory
         write_node.inputs.parameterization = False
-        
         self.connect([
             (self.output_node, write_node, [('image_id', 'image_id')]),
             ])
 
-
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
         """
-
         import t1_linear_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.filemanip import get_subject_id
         from nipype.interfaces import ants
-        from t1_linear_utils import (crop_nifti,container_from_filename, get_data_datasink)
-
+        from t1_linear_utils import (crop_nifti, container_from_filename, get_data_datasink)
 
         image_id_node = npe.Node(
                 interface=nutil.Function(
                     input_names=['bids_or_caps_file'],
                     output_names=['image_id'],
-                    function= get_subject_id),
+                    function=get_subject_id),
                 name='ImageID'
                 )
 
@@ -203,8 +185,8 @@ class T1Linear(cpe.Pipeline):
         n4biascorrection = npe.Node(
                 name='n4biascorrection',
                 interface=ants.N4BiasFieldCorrection(
-                    dimension=3, 
-                    save_bias=True, 
+                    dimension=3,
+                    save_bias=True,
                     bspline_fitting_distance=600
                     )
                 )
@@ -230,10 +212,8 @@ class T1Linear(cpe.Pipeline):
                 )
         cropnifti.inputs.ref_crop = self.ref_crop
 
-
         # Other nodes
         # =====================================
-        
         # Get substitutions to rename files
         get_ids = npe.Node(
                 interface=nutil.Function(
@@ -241,7 +221,6 @@ class T1Linear(cpe.Pipeline):
                     output_names=['image_id_out', 'subst_ls'],
                     function=get_data_datasink),
                 name="GetIDs")
-       
         # Find container path from t1w filename
         container_path = npe.Node(
                 nutil.Function(
@@ -249,7 +228,6 @@ class T1Linear(cpe.Pipeline):
                     output_names=['container'],
                     function=container_from_filename),
                 name='ContainerPath')
-        
         # Connection
         # ==========
         self.connect([
@@ -267,7 +245,6 @@ class T1Linear(cpe.Pipeline):
             (image_id_node, get_ids, [('image_id', 'image_id')]),
             (get_ids, write_node, [('image_id_out', '@image_id')]),
             (get_ids, write_node, [('subst_ls', 'substitutions')]),
-            #(get_ids, write_node, [('regexp_subst_ls', 'regexp_substitutions')]),
             (n4biascorrection, write_node, [('output_image', '@outfile_corr')]),
             (ants_registration_node, write_node, [('warped_image', '@outfile_reg')]),
             (cropnifti, write_node, [('output_img', '@outfile_crop')]),

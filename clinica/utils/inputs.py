@@ -318,6 +318,7 @@ def clinica_group_reader(caps_directory, information, raise_exception=True):
         raise ClinicaCAPSError(error_string)
     return current_glob_found[0]
 
+
 def download_file(url, filename):
     """Function to download a specific file and save it into the ressources
     folder of the package.
@@ -332,7 +333,7 @@ def download_file(url, filename):
     import shutil
     import ssl
     # Download the file from `url` and save it locally under `file_name`:
-    cert=ssl.get_server_certificate(("aramislab.paris.inria.fr", 443))
+    cert = ssl.get_server_certificate(("aramislab.paris.inria.fr", 443))
     gcontext = ssl.SSLContext()
 
     with urllib.request.urlopen(url, context=gcontext) as response, open(filename, 'wb') as out_file:

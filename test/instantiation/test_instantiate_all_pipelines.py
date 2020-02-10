@@ -350,6 +350,7 @@ def test_instantiate_T1FreeSurferLongitudinalCorrection():
     pipeline.parameters['recon_all_args'] = '-qcache'
     pipeline.build()
 
+
 def test_instantiate_T1Linear():
     from os.path import dirname, join, abspath
     from clinica.pipelines.t1_linear.t1_linear_pipeline import T1Linear
