@@ -356,13 +356,12 @@ def test_instantiate_T1Linear():
     from clinica.pipelines.t1_linear.t1_linear_pipeline import T1Linear
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'T1FreeSurferCrossSectional')
+    root = join(root, 'data', 'T1Linear')
 
     pipeline = T1Linear(
         bids_directory=join(root, 'in', 'bids'),
         caps_directory=join(root, 'in', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv'),
-        ref_template=joint(root, 'ref_template.nii.gz')
     )
     pipeline.parameters['nproc'] = 4
     pipeline.build()

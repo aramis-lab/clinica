@@ -72,6 +72,7 @@ class T1Linear(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
         """
+        import os
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import check_bids_folder
@@ -83,8 +84,10 @@ class T1Linear(cpe.Pipeline):
 
         check_bids_folder(self.bids_directory)
         is_bids_dir = True
-        self.ref_template = os.path.join(clinica.__path__[0], 'resources', 'masks', 'mni_icbm152_t1_tal_nlin_sym_09c.nii')
-        self.ref_crop = os.path.join(clinica.__path__[0], 'resources', 'masks', 'ref_cropped_template.nii.gz')
+        clinica_path = os.getcwd()
+        clinica_path_to_mask = os.path.join(clinica_path, 'clinica', 'resources', 'masks')
+        self.ref_template = os.path.join(clinica_path_to_mask, 'mni_icbm152_t1_tal_nlin_sym_09c.nii')
+        self.ref_crop = os.path.join(clinica_path_to_mask, 'ref_cropped_template.nii.gz')
         url1 = "https://aramislab.paris.inria.fr/files/data/img_t1_linear/ref_cropped_template.nii.gz"
         url2 = "https://aramislab.paris.inria.fr/files/data/img_t1_linear/mni_icbm152_t1_tal_nlin_sym_09c.niii"
 
@@ -102,7 +105,7 @@ class T1Linear(cpe.Pipeline):
 
         self.sessions, self.subjects = get_subject_session_list(
                 self.bids_directory,
-                tsv,
+                self.tsv_file,
                 is_bids_dir,
                 False,
                 self.base_dir
@@ -128,7 +131,7 @@ class T1Linear(cpe.Pipeline):
                     ],
                 synchronize=True,
                 interface=nutil.IdentityInterface(
-                    fields=get_input_fields())
+                    fields=self.get_input_fields())
                 )
         self.connect([
             (read_node, self.input_node, [('t1w', 't1w')]),
@@ -148,13 +151,13 @@ class T1Linear(cpe.Pipeline):
         # if this pipeline output is not already connected to a next Clinica
         # pipeline.
         from nipype.interfaces.io import DataSink
-        from nipype.pipeline.engine as npe
+        import nipype.pipeline.engine as npe
 
         write_node = npe.Node(
                 name="WriteCaps",
                 interface=DataSink()
                 )
-        write_node.inputs.base_directory = caps_directory
+        write_node.inputs.base_directory = self.caps_directory
         write_node.inputs.parameterization = False
         self.connect([
             (self.output_node, write_node, [('image_id', 'image_id')]),
@@ -163,12 +166,12 @@ class T1Linear(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
         """
-        import t1_linear_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.filemanip import get_subject_id
+        from clinica.utils.nipype import fix_join
         from nipype.interfaces import ants
-        from t1_linear_utils import (crop_nifti, container_from_filename, get_data_datasink)
+        from .t1_linear_utils import (crop_nifti, container_from_filename, get_data_datasink)
 
         image_id_node = npe.Node(
                 interface=nutil.Function(
@@ -231,21 +234,21 @@ class T1Linear(cpe.Pipeline):
         # Connection
         # ==========
         self.connect([
-            (read_node, image_id_node, [('t1w', 'bids_or_caps_file')]),
-            (read_node, container_path, [('t1w', 'bids_or_caps_filename')]),
+            (self.input_node, image_id_node, [('t1w', 'bids_or_caps_file')]),
+            (self.input_node, container_path, [('t1w', 'bids_or_caps_filename')]),
             (image_id_node , ants_registration_node, [('image_id', 'output_prefix')]),
-            (read_node, n4biascorrection, [("t1w", "input_image")]),
+            (self.input_node, n4biascorrection, [("t1w", "input_image")]),
 
             (n4biascorrection, ants_registration_node, [('output_image', 'moving_image')]),
 
             (ants_registration_node, cropnifti, [('warped_image', 'input_img')]),
 
             # Connect to DataSink
-            (container_path, write_node, [(('container', fix_join, 't1_linear'), 'container')]),
+            (container_path, self.output_node, [(('container', fix_join, 't1_linear'), 'container')]),
             (image_id_node, get_ids, [('image_id', 'image_id')]),
-            (get_ids, write_node, [('image_id_out', '@image_id')]),
-            (get_ids, write_node, [('subst_ls', 'substitutions')]),
-            (n4biascorrection, write_node, [('output_image', '@outfile_corr')]),
-            (ants_registration_node, write_node, [('warped_image', '@outfile_reg')]),
-            (cropnifti, write_node, [('output_img', '@outfile_crop')]),
+            (get_ids, self.output_node, [('image_id_out', '@image_id')]),
+            (get_ids, self.output_node, [('subst_ls', 'substitutions')]),
+            (n4biascorrection, self.output_node, [('output_image', '@outfile_corr')]),
+            (ants_registration_node, self.output_node, [('warped_image', '@outfile_reg')]),
+            (cropnifti, self.output_node, [('output_img', '@outfile_crop')]),
             ])
