@@ -346,24 +346,21 @@ def fetch_file(url, filename):
     cert = ssl.get_server_certificate(("aramislab.paris.inria.fr", 443))
     gcontext = ssl.SSLContext()
     req = Request(url)
-    try: 
+    try:
         response = urlopen(req, context=gcontext)
     except URLError as e:
         if hasattr(e, 'reason'):
             cprint('We failed to reach a server.')
-            cprint(['Reason: ' +  e.reason])
+            cprint(['Reason: ' + e.reason])
         elif hasattr(e, 'code'):
             cprint('The server could not fulfill the request.')
-            cprint(['Error code: ' +  e.code])
+            cprint(['Error code: ' + e.code])
     else:
         try:
             with open(filename, 'wb') as out_file:
                 shutil.copyfileobj(response, out_file)
         except OSError as err:
             cprint("OS error: {0}".format(err))
-        except:
-            cprint("Unexpected error:", sys.exc_info()[0])
-            raise
-
- #   with urllib.request.urlopen(url, context=gcontext) as response, open(filename, 'wb') as out_file:
- #           shutil.copyfileobj(response, out_file)
+        # except:
+        #   cprint("Unexpected error:", sys.exc_info()[0])
+        #   raise

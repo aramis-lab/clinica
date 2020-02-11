@@ -88,7 +88,7 @@ class T1Linear(cpe.Pipeline):
         check_bids_folder(self.bids_directory)
         is_bids_dir = True
         head_tail = os.path.split(clinica.__file__)
-        path_to_mask = os.path.join(head_tail[0],'resources', 'masks')
+        path_to_mask = os.path.join(head_tail[0], 'resources', 'masks')
         self.ref_template = os.path.join(
                 path_to_mask, 'mni_icbm152_t1_tal_nlin_sym_09c.nii')
         self.ref_crop = os.path.join(path_to_mask, 'ref_cropped_template.nii.gz')

@@ -55,7 +55,7 @@ class T1LinearCLI(ce.CmdParser):
         # method below. Example below:
         # optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         # optional.add_argument("-rt", "--ref_template",
-                              help='Reference template for registration.')
+        #                      help='Reference template for registration.')
 
         # Add advanced arguments
         # advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
