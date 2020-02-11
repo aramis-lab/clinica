@@ -55,9 +55,7 @@ class StatisticsVolumeCorrectionCLI(ce.CmdParser):
     def run_command(self, args):
         import os
         from networkx import Graph
-        from colorama import Fore
         from .statistics_volume_correction_pipeline import StatisticsVolumeCorrection
-        from clinica.utils.stream import cprint
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         # Most of the time, you will want to instantiate your pipeline with a
@@ -71,6 +69,7 @@ class StatisticsVolumeCorrectionCLI(ce.CmdParser):
         )
         pipeline.parameters = {
             't_map': args.t_map,
+            'height_threshold': args.height_threshold,
             'FWEp': args.FWEp,
             'FDRp': args.FDRp,
             'FWEc': args.FWEp,

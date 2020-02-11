@@ -1,14 +1,12 @@
 # coding: utf8
 
-"""Statistics_Volume_Correction - Clinica Utilities.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details:
-http://clinica.run/doc/InteractingWithClinica/
+"""
+Statistics_Volume_Correction - Clinica Utilities.
 """
 
 def peak_correction(t_map, t_threshold, output_name=None):
     import nibabel as nib
-    from os.path import join, basename
+    from os.path import join, basename, abspath
     import numpy as np
 
     original_nifti = nib.load(t_map)
@@ -18,13 +16,14 @@ def peak_correction(t_map, t_threshold, output_name=None):
     if output_name:
         filename = output_name
     else:
-        filename = join('./peak_corrected_' + str(t_threshold) + basename(t_map)
+        filename = join('./peak_corrected_' + str(t_threshold) + basename(t_map))
     nib.save(new_data, filename)
-    return filename
+    return abspath(filename)
+
 
 def cluster_correction(t_map, t_thresh, c_thresh, output_name=None):
     import nibabel as nib
-    from os.path import join, basename
+    from os.path import join, basename, abspath
     import numpy as np
     from scipy.ndimage.measurements import label
 
@@ -42,4 +41,35 @@ def cluster_correction(t_map, t_thresh, c_thresh, output_name=None):
     else:
         filename = join('./cluster_corrected_t-' + str(t_thresh) + '_c-' + str(c_thresh) + basename(t_map))
     nib.save(new_data, filename)
-    return filename
+    return abspath(filename)
+
+
+def produce_figures(nii_file, template, type_of_correction, t_thresh, c_thresh):
+    from nilearn import plotting
+    import numpy as np
+    from os.path import abspath
+
+    assert type_of_correction in ['FWE', 'FDR'], 'Type of correction must be FWE or FDR'
+    if not np.isnan(c_thresh):
+        correction = 'Cluster'
+    else:
+        correction = 'Peak'
+
+    my_title = correction + ' correction ' + type_of_correction + ' Threshold = ' + str(t_thresh)
+    if not np.isnan(c_thresh):
+        my_title = my_title + ' - min cluster size = ' + str(c_thresh),
+
+    plotting.plot_glass_brain(nii_file,
+                              #title=my_title,
+                              output_file='./glass_brain.png')
+
+    plotting.plot_stat_map(nii_file,
+                           #title=my_title,
+                           display_mode='z',
+                           cut_coords=8,
+                           bg_img=template,
+                           colorbar=False,
+                           draw_cross=True,
+                           output_file='./statmap.png')
+
+    return [abspath('./glass_brain.png'), abspath('./statmap.png')]

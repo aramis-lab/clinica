@@ -731,6 +731,43 @@ def test_run_StatisticsVolume(cmdopt):
                            'threshold_corrected_pvalue': 0.05,
                            'group_id_bids': 'ADCNbaseline',
                            'smoothing': 8}
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 2}, bypass_check=True)
+
+    assert 0
+
+
+def test_run_StatisticsVolumeCorrection(cmdopt):
+    from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_pipeline import StatisticsVolumeCorrection
+    from os.path import dirname, join, abspath, exists, isfile
+    import shutil
+    import numpy as np
+    import nibabel as nib
+
+    working_dir = cmdopt
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'StatisticsVolumeCorrection')
+
+    # Remove potential residual of previous UT
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'StatisticsVolumeCorrection'), recreate=False)
+
+    # Copy necessary data from in to out
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+
+    # Instantiate pipeline and run()
+    pipeline = StatisticsVolumeCorrection(
+        caps_directory=join(root, 'out', 'caps'),
+        base_dir=join(working_dir, 'StatisticsVolumeCorrection')
+    )
+    pipeline.parameters = {
+        't_map': 'spm_t-statistics_hypothesis-AD-less-than-CN.nii',
+        'height_threshold': 3.2422,
+        'FWEp': 5.347,
+        'FDRp': 5.097,
+        'FWEc': 1972,
+        'FDRc': 1972
+    }
+
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 8}, bypass_check=True)
 
     assert 0
