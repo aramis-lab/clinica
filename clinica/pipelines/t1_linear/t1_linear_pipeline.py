@@ -250,9 +250,9 @@ class T1Linear(cpe.Pipeline):
             # Connect to DataSink
             (container_path, self.output_node, [(('container', fix_join, 't1_linear'), 'container')]),
             (image_id_node, get_ids, [('image_id', 'image_id')]),
-            (get_ids, self.output_node, [('image_id_out', '@image_id')]),
+            (get_ids, self.output_node, [('image_id_out', 'image_id')]),
             (get_ids, self.output_node, [('subst_ls', 'substitutions')]),
-            (n4biascorrection, self.output_node, [('output_image', '@outfile_corr')]),
-            (ants_registration_node, self.output_node, [('warped_image', '@outfile_reg')]),
-            (cropnifti, self.output_node, [('output_img', '@outfile_crop')]),
+            (n4biascorrection, self.output_node, [('output_image', 'outfile_corr')]),
+            (ants_registration_node, self.output_node, [('warped_image', 'outfile_reg')]),
+            (cropnifti, self.output_node, [('output_img', 'outfile_crop')]),
             ])
