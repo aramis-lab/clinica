@@ -53,8 +53,8 @@ class T1LinearCLI(ce.CmdParser):
 
         # Add your own pipeline command line arguments here to be used in the
         # method below. Example below:
-        optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("-rt", "--ref_template",
+        # optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
+        # optional.add_argument("-rt", "--ref_template",
                               help='Reference template for registration.')
 
         # Add advanced arguments
