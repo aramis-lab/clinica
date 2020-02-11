@@ -61,6 +61,7 @@ class T1LinearCLI(ce.CmdParser):
         # advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
         # advanced.add_argument("-aa", "--advanced_arg",
         #                       help='Your advanced argument.')
+        # self.add_clinica_standard_arguments(add_overwrite_flag=True)
 
     def run_command(self, args):
         """
@@ -80,8 +81,8 @@ class T1LinearCLI(ce.CmdParser):
              caps_directory=self.absolute_path(args.caps_directory),
              tsv_file=self.absolute_path(args.subjects_sessions_tsv),
              parameters=parameters,
-             name=self.name,
-             overwrite_caps=args.overwrite_outputs)
+             name=self.name
+             )
         if args.working_directory is None:
             args.working_directory = mkdtemp()
         pipeline.base_dir = self.absolute_path(args.working_directory)
