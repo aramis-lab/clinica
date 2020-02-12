@@ -44,7 +44,7 @@ def cluster_correction(t_map, t_thresh, c_thresh, output_name=None):
     return abspath(filename)
 
 
-def produce_figures(nii_file, template, type_of_correction, t_thresh, c_thresh):
+def produce_figures(nii_file, template, type_of_correction, t_thresh, c_thresh, n_cuts):
     from nilearn import plotting
     import numpy as np
     from os.path import abspath
@@ -64,12 +64,41 @@ def produce_figures(nii_file, template, type_of_correction, t_thresh, c_thresh):
                               output_file='./glass_brain.png')
 
     plotting.plot_stat_map(nii_file,
-                           #title=my_title,
-                           display_mode='z',
-                           cut_coords=8,
+                           display_mode='x',
+                           cut_coords=np.linspace(-70, 67, n_cuts),
                            bg_img=template,
                            colorbar=False,
                            draw_cross=True,
-                           output_file='./statmap.png')
+                           output_file='./statmap_x.png')
 
-    return [abspath('./glass_brain.png'), abspath('./statmap.png')]
+    plotting.plot_stat_map(nii_file,
+                           display_mode='y',
+                           cut_coords=np.linspace(-104, 69, n_cuts),
+                           bg_img=template,
+                           colorbar=False,
+                           draw_cross=True,
+                           output_file='./statmap_y.png')
+
+    plotting.plot_stat_map(nii_file,
+                           display_mode='z',
+                           cut_coords=np.linspace(-45, 78, n_cuts),
+                           bg_img=template,
+                           colorbar=False,
+                           draw_cross=True,
+                           output_file='./statmap_z.png')
+
+    return [abspath('./glass_brain.png'), abspath('./statmap_x.png'), abspath('./statmap_y.png'), abspath('./statmap_z.png')]
+
+
+def generate_output(t_map, figs, name):
+    from os import makedirs
+    from os.path import join, dirname, basename, splitext
+    from shutil import copyfile
+
+    outfolder = join(dirname(t_map), 'corrected_results_' + splitext(basename(t_map))[0], name)
+    makedirs(outfolder)
+    copyfile(figs[0], join(outfolder, 'glass_brain.png'))
+    copyfile(figs[1], join(outfolder, 't_statistics_thresholded_x.png'))
+    copyfile(figs[2], join(outfolder, 't_statistics_thresholded_y.png'))
+    copyfile(figs[3], join(outfolder, 't_statistics_thresholded_z.png'))
+

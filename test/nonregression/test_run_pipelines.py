@@ -765,7 +765,8 @@ def test_run_StatisticsVolumeCorrection(cmdopt):
         'FWEp': 5.347,
         'FDRp': 5.097,
         'FWEc': 1972,
-        'FDRc': 1972
+        'FDRc': 1972,
+        'n_cuts': 5
     }
 
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 8}, bypass_check=True)

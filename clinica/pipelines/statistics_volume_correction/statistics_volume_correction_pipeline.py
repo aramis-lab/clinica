@@ -113,9 +113,10 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
 
         produce_fig_FWE_peak_correction = npe.Node(name='produce_figure_FWE_peak_correction',
                                                    interface=nutil.Function(
-                                                       input_names=['nii_file', 'template', 'type_of_correction', 't_thresh', 'c_thresh'],
-                                                       output_names=['glass_brain', 'statmap'],
+                                                       input_names=['nii_file', 'template', 'type_of_correction', 't_thresh', 'c_thresh', 'n_cuts'],
+                                                       output_names=['figs'],
                                                        function=utils.produce_figures))
+        produce_fig_FWE_peak_correction.inputs.n_cuts = self.parameters['n_cuts']
         produce_fig_FWE_peak_correction.inputs.template = join(dirname(abspath(__file__)), pardir, pardir, 'resources', 'mni_icbm152_t1_tal_nlin_sym_09a.nii.gz')
 
         produce_fig_FDR_peak_correction = produce_fig_FWE_peak_correction.clone(name='produce_figure_FDR_peak_correction')
@@ -137,6 +138,23 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
         produce_fig_FWE_cluster_correction.inputs.c_thresh = self.parameters['FWEc']
         produce_fig_FDR_cluster_correction.inputs.c_thresh = self.parameters['FDRc']
 
+        save_fig_peak_correction_FWE = npe.Node(name='save_figure_peak_correction_FWE',
+                                                interface=nutil.Function(
+                                                    input_names=['t_map', 'figs', 'name'],
+                                                    output_names=[],
+                                                    function=utils.generate_output))
+        save_fig_peak_correction_FWE.inputs.name = 'FWE_peak_correction'
+
+        save_fig_peak_correction_FDR = save_fig_peak_correction_FWE.clone(name='save_fig_peak_correction_FDR')
+        save_fig_peak_correction_FDR.inputs.name = 'FDR_peak_correction'
+
+        save_fig_cluster_correction_FWE = save_fig_peak_correction_FWE.clone(name='save_fig_cluster_correction_FWE')
+        save_fig_cluster_correction_FWE.inputs.name = 'FWE_cluster_correction'
+
+        save_fig_cluster_correction_FDR = save_fig_peak_correction_FWE.clone(name='save_fig_cluster_correction_FDR')
+        save_fig_cluster_correction_FDR.inputs.name = 'FDR_cluster_correction'
+
+
         # Connection
         # ==========
         self.connect([
@@ -148,5 +166,15 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
             (peak_correction_FWE, produce_fig_FWE_peak_correction, [('output', 'nii_file')]),
             (peak_correction_FDR, produce_fig_FDR_peak_correction, [('output', 'nii_file')]),
             (cluster_correction_FWE, produce_fig_FWE_cluster_correction, [('output', 'nii_file')]),
-            (cluster_correction_FDR, produce_fig_FDR_cluster_correction, [('output', 'nii_file')])
+            (cluster_correction_FDR, produce_fig_FDR_cluster_correction, [('output', 'nii_file')]),
+
+            (produce_fig_FWE_peak_correction, save_fig_peak_correction_FWE, [('figs', 'figs')]),
+            (produce_fig_FDR_peak_correction, save_fig_peak_correction_FDR, [('figs', 'figs')]),
+            (produce_fig_FWE_cluster_correction, save_fig_cluster_correction_FWE, [('figs', 'figs')]),
+            (produce_fig_FDR_cluster_correction, save_fig_cluster_correction_FDR, [('figs', 'figs')]),
+
+            (self.input_node, save_fig_peak_correction_FWE, [('t_map', 't_map')]),
+            (self.input_node, save_fig_peak_correction_FDR, [('t_map', 't_map')]),
+            (self.input_node, save_fig_cluster_correction_FWE, [('t_map', 't_map')]),
+            (self.input_node, save_fig_cluster_correction_FDR, [('t_map', 't_map')])
         ])

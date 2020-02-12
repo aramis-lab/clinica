@@ -48,7 +48,9 @@ class StatisticsVolumeCorrectionCLI(ce.CmdParser):
 
         clinica_comp.add_argument("FDRc",
                                   help='FDR cluster minimum size value for cluster correction')
-
+        optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
+        optional.add_argument("-nc", "--n_cuts", default=8,
+                              help='Number of cuts along each direction')
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
 
@@ -73,7 +75,8 @@ class StatisticsVolumeCorrectionCLI(ce.CmdParser):
             'FWEp': args.FWEp,
             'FDRp': args.FDRp,
             'FWEc': args.FWEp,
-            'FDRc': args.FDRp
+            'FDRc': args.FDRp,
+            'n_cuts': args.n_cuts
         }
 
         if args.n_procs:
