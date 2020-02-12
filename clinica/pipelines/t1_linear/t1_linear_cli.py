@@ -71,7 +71,7 @@ class T1LinearCLI(ce.CmdParser):
         from .t1_linear_pipeline import T1Linear
 
         parameters = {
-            'ref_template'        : args.ref_template or 'Reference Template'
+            #'ref_template'        : args.ref_template or 'Reference Template'
         }
 
         # Most of the time, you will want to instantiate your pipeline with a
