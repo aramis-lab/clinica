@@ -164,7 +164,11 @@ class T1Linear(cpe.Pipeline):
         write_node.inputs.base_directory = self.caps_directory
         write_node.inputs.parameterization = False
         self.connect([
-            (self.output_node, write_node, [('image_id', 'image_id')]),
+            (self.output_node, write_node, [('image_id', '@image_id')]),
+            (self.output_node, write_node, [('outfile_crop', '@outfile_crop')]),
+            (self.output_node, write_node, [('affine_mat', '@affine_mat')]),
+            (self.output_node, write_node, [('container', 'container')]),
+            (self.output_node, write_node, [('substitutions', 'substitutions')]),
             ])
 
     def build_core_nodes(self):
@@ -246,6 +250,7 @@ class T1Linear(cpe.Pipeline):
             (n4biascorrection, ants_registration_node, [('output_image', 'moving_image')]),
 
             (ants_registration_node, cropnifti, [('warped_image', 'input_img')]),
+            (ants_registration_node, self.output_node, [('out_matrix', 'affine_mat')]),
 
             # Connect to DataSink
             (container_path, self.output_node, [(('container', fix_join, 't1_linear'), 'container')]),
