@@ -107,43 +107,42 @@ sub-02           ses-M00      09/01/91        ...   9.586342    0.027254
 ```
 
 ##`center-nifti` - Center the NIfTI files of a BIDS directory
-Your [BIDS](http://bids.neuroimaging.io) dataset may contain NIFTI files whose center is not centered on the origin. SPM is specially sensitive to this case, and segmentations may end up being blank images, or even fail. To mitigate this issue, we propose a simple tool that convert your BIDS dataset into a dataset with the centered NIfTI files for the selected modalities(only T1w by default). Only NIFTI volumes whose center is at more than 80 mm from the origin of the world coordinate system are centered (this can be changed by the `--center_all_files` flag).
-
-
-By default, this tool will convert only T1w images into their centered version but you can easily convert whatever modalities you want.
-
+Your [BIDS](http://bids.neuroimaging.io) dataset may contain NIfTI files whose origin does not correspond to the center of the image (i.e. the anterior commissure). SPM is especially sensitive to this case, and segmentation procedures may result in blank images, or even fail. To mitigate this issue, we propose a simple tool that convert your BIDS dataset into a dataset with centered NIfTI files for the selected modalities. Only NIfTI volumes whose center is at more than 50 mm from the origin of the world coordinate system are centered (this can be changed by the `--center_all_files` flag). This threshold has been chosen empirically after a set of experiments to determine at which distance from the origin SPM segmentation and coregistration procedures stop working properly. By default, this tool will only center T1w images but you can specify other modalities.
 
 ```
-clinica iotools center-nifti bids_directory new_bids_directory --modality modality [--center_all_files]
+clinica iotools center-nifti bids_directory new_bids_directory [--modality modality] [--center_all_files]
 ```
 where:
 
 - `bids_directory` is the input folder containing the dataset in a [BIDS](http://bids.neuroimaging.io) hierarchy.
-- `new_bids_directory` is the output path to the new version of your BIDS dataset, with faulty NIFTI centered. Folder can be empty or nonexistent.
-- `modality_list` is an **optional** parameter that defines which modalities are converted. (Only T1w images are centered by default)
-- `--center_all_files` is an optional flag that forces Clinica to center all the files of the selected modality.
+- `new_bids_directory` is the output path to the new version of your BIDS dataset, with faulty NIfTI centered. This folder can be empty or nonexistent.
+
+Optional arguments:
+- `--modality` is a parameter that defines which modalities are converted. (Only T1w images are centered by default.)
+- `--center_all_files` is an option that forces Clinica to center all the files of the modalities selected with the `--modality` flag.
 
 !!! note
-    The rest of the input `bids` folder will also be copied to the output folder `new_bids`.
+    The images contained in the input `bids_directory` folder that do not need to be centered will also be copied to the output folder `new_bids_directory`.
 
-    If you want to convert FDG PET images, use:
-
-    `clinica iotools center-nifti bids new_bids_directory --modality "fdg_pet"`
+    If you want to convert FDG PET images (e.g. with `_acq-fdg` key/value in PET filename), use:
+    ```
+    clinica iotools center-nifti bids_directory new_bids_directory --modality "fdg_pet"
+    ```
 
     If you want to convert AV45 PET images and T1w:
 
-    `clinica iotools center-nifti bids new_bids_directory --modality "fdg_pet t1w"`
+    ```
+    clinica iotools center-nifti bids_directory new_bids_directory --modality "av45_pet t1w"
+    ```
 
-    So how does this all work ? To know if a NIfTI must be centered, the algorithm look at the filenames of the NIfTI images.
-
-    For example, regarding the file : `bids/sub-01/ses-M0/anat/sub-01_ses-M0_T1w.nii`
+    To know if a NIfTI must be centered, the algorithm checks the filenames of the NIfTI images. For example, regarding the file `bids/sub-01/ses-M0/anat/sub-01_ses-M0_T1w.nii`:
 
      - The filename is `sub-01_ses-M0_T1w.nii`.
-     - The algorithm tests (in a case insensitive way) if the string "fdg_pet" is in the filename : False
-     - The algorithm tests (in a case insensitive way) if the string "t1w" is in the filename : True !
-     - The algorithm tests if the volume has its center at more than 80 mm (Euclidian distance) from the origin: True
+     - The algorithm tests (in a case insensitive way) if the string `fdg_pet` is in the filename: False.
+     - The algorithm tests (in a case insensitive way) if the string `t1w` is in the filename: True!
+     - The algorithm tests if the volume has its center at more than 50 mm (Euclidian distance) from the origin: True.
      - This file will be centered by the algorithm.
 
-    Understanding this, you can now center any modality you want ! If yours files are named following this pattern : `sub-X_ses-Y_magnitude1.nii.gz`, specify the modality `--modality "magnitude1".
+     Understanding this, you can now center any modality you want! If your files are named following this pattern : `sub-X_ses-Y_magnitude1.nii.gz`, specify the modality as follows:`--modality "magnitude1"`.
 
-    The list of the converted files will appear in a text file in `new_bids_directory/centered_nifti_list_TIMESTAMP.txt`
+     The list of the converted files will appear in a text file in `new_bids_directory/centered_nifti_list_TIMESTAMP.txt`.
