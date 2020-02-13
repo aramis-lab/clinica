@@ -1,21 +1,25 @@
 
 # Introduction
 
-The outputs of the Clinica pipelines are stored following a specific structure called **CAPS** (ClinicA Processed Structure), which is inspired from the BIDS structure. The CAPS specifications are described in detail [here](../Specifications).
+The outputs of the Clinica pipelines are stored following a specific structure called **CAPS** (ClinicA Processed Structure), which is inspired from the BIDS structure and the upcoming BIDS Derivatives. The CAPS specifications are described in detail [here](../Specifications).
 
 
 ## Motivation
-The BIDS specifications currently do not provide specific rules for the processed data, so the goal of CAPS (designed by the [Aramis Lab](http://www.aramislab.fr/)) is to define a hierarchy for the data processed using Clinica. The idea is to include in a single folder all the results of the different pipelines and organize the data following the main patterns of the BIDS specification.
+When the development of Clinica started in 2015, the BIDS specifications did not provide specific rules for the processed data. As a result, the goal of CAPS (designed by the [Aramis Lab](http://www.aramislab.fr/)) was to define a hierarchy for the data processed using Clinica. The idea is to include in a single folder all the results of the different pipelines and organize the data following the main patterns of the BIDS specification.
 
 !!! note
-    There is an ongoing initiative called BIDS-derivatives that aims to provide a BIDS standard for processed data. However, in its current state, it is not well adapted to Clinica outputs. This is why Clinica has its own specifications called CAPS. We try to contribute to BIDS-derivatives and the two specifications should ultimately converge.
+    It is our objective for the CAPS and BIDS Derivatives specifications to converge.
 
 
 ## Definitions
 
-We use the same definitions as the BIDS Specifications 1.0.0 concerning **Dataset**, **Subject**, **Session**, **MRI acquisition**, **Data type**, **Task**, **Event** and **Run**. On top on that, we define the notion of:
+We use the same definitions as the BIDS Specifications concerning **Dataset**, **Subject**, **Session**, **MRI acquisition**, **Data type**, **Task**, **Event** and **Run**. On top on that, we define the notion of:
 
-1. **Group** - a set of subjects. You will find this flag when working on any group-wise analysis (e.g. template creation from a list of subjects, statistical analysis). This is simply a label name that will define the group of subjects used for this analysis. It will be written in your output CAPS folder, for possible future reuses. For example, an `AD` group_id label could be used in case you create a template for a group of Alzheimer’s disease patients. Any time you would like to use this `AD` template you will need to provide the group_id used to identify the pipeline output obtained from this group. You might also use `CNvsAD`, for instance, as group_id for a statistical group comparison.
+1. **Group** - a set of subjects (`group` key). You will find this notion when working on any group-wise analysis (e.g. template creation from a list of subjects, statistical analysis). This is simply a label name that will define the group of subjects used for this analysis. It will be written in your output CAPS folder, for possible future reuses.
+
+For example, an `AD` group label could be used in case you create a template for a group of Alzheimer’s disease patients. Any time you would like to use this `AD` template you will need to provide the group label used to identify the pipeline output obtained from this group. You might also use `CNvsAD`, for instance, as group label for a statistical group comparison.
+
+2. **Longitudinal template** - a set of sessions (`long` key). You will find this notion when working on longitudinal datasets. This is simply a label that will define the set of sessions considered. Unlike group, longitudinal template is dedicated to intra-subject analysis. Besides, the longitudinal label for a participant is defined concatenating the different session labels in alphabetical order so that the longitudinal label will be unique. For instance, if the intra-subject template is computed on `M18` and `M00` sessions, the longitudinal ID will be `long-M00M18`.
 
 
 ## Differences with BIDS
