@@ -35,7 +35,7 @@ Pipeline options:
 - `--tissue_classes`: a list of integers (possible values range from 1 to 6) that indicates the tissue classes to save after segmentation (in order: gray matter (GM), white matter (WM), cerebrospinal fluid (CSF), bone, soft-tissue, air/background). Default value is: `1, 2, 3` (GM, WM and CSF are saved).
 - `--dartel_tissues`: a list of integers (possible values range from 1 to 6) that indicates the tissue classes to use for the Dartel template calculation (in order: GM, WM, CSF, bone, soft-tissue, air/background). Default value is: `1, 2, 3` (GM, WM and CSF are used).
 - `--smooth`: a list of integers specifying the different isomorphic full width at half maximum (FWHM) in millimeters used to smooth the images. Default value is: `8`.
-- `--modulate`: a boolean. If `True` output images are modulated and tissue count is preserved. If `False` they are not modulated and concentrations are preserved. Default value: `True`.
+- `--modulate`: a boolean. If `True` output images are modulated and volumes are preserved. If `False` they are not modulated and concentrations are preserved. Default value: `True`.
 
 !!! note
     The arguments common to all Clinica pipelines are described in [Interacting with clinica](../../InteractingWithClinica).
@@ -56,7 +56,7 @@ The main output files are:
     - `<source_file>_segm-{graymatter|whitematter|csf}_probability.nii.gz`: The tissue probability maps for the gray matter, white matter and CSF.
 - normalized_space/
     - `<source_file>_space-Ixi549Space_T1w.nii.gz`: The T1-weighted image in MNI space.
-    - `<source_file>_segm-{graymatter|whitematter|csf}_space-Ixi549Space_modulated-on_probability.nii.gz`: The modulated tissue probability maps, i.e. the tissue probability maps multiplied by their relative volume before and after spatial normalisation, into the MNI space.
+    - `<source_file>_segm-{graymatter|whitematter|csf}_space-Ixi549Space_modulated-off_probability.nii.gz`: The different tissue maps that have been registered to the MNI space without modulation, i.e. no division by the jacobian of the transformation meaning that concentrations are preserved. These outputs are useful if you want to QC both the registration into MNI and the accuracy of the segmentations.
 
 <center>![](../../img/T1_Volume/ex_GM_WM_CSF.png)</center>
 *<center><small>Example of gray matter (GM), white matter (WM) and CSF tissue segmentation.</small></center>*
@@ -78,9 +78,11 @@ under the filename
 Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#dartel-to-mni):
 `subjects/sub-<participant_label>/ses-<session_label>/t1/spm/dartel/group-<group_id>`.
 
-The main output file is:
+The main output files are:
 
- - `<source_file>_segm-{graymatter|whitematter|csf}_space-Ixi549Space_modulated-on_fwhm-<label>_probability.nii.gz`: the different tissue maps that have been registered to the MNI space.
+ - `<source_file>_segm-{graymatter|whitematter|csf}_space-Ixi549Space_modulated-on_fwhm-<label>_probability.nii.gz`: The modulated tissue probability maps, i.e. the tissue probability maps obtained with multiplied by their relative volume before and after spatial normalisation, into the MNI space
+The different tissue maps that have been registered to the MNI space and modulated, i.e. divided by the jacobian of the transformation meaning that volume is preserved.
+
 
  <center>![](../../img/T1_Volume/ex_GM_MNI_space.png)</center>
  *<center><small>Final result: Probability Gray Matter in MNI space without smoothing (top) or smoothed using a 8 mm FWHM kernel (bottom).</small></center>*
@@ -120,7 +122,7 @@ The four main processing steps of the `t1-volume` pipeline can be performed indi
 
     Command line:
     ```
-    clinica run t1-volume-segmentation bids_directory caps_directory
+    clinica run t1-volume-tissue-segmentation bids_directory caps_directory
     ```
 
 - **B1: Inter-subject registration using Dartel (creating a new Dartel template)**
