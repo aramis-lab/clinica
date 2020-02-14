@@ -16,6 +16,10 @@ def init_input_node(caps_dir, participant_id, list_session_ids, output_dir):
     """
     import os
     import errno
+    import datetime
+    from tempfile import mkdtemp
+    from colorama import Fore
+    from clinica.utils.stream import cprint
     from clinica.utils.longitudinal import get_long_id
     from clinica.utils.ux import print_begin_image
 
@@ -24,7 +28,16 @@ def init_input_node(caps_dir, participant_id, list_session_ids, output_dir):
     image_id = participant_id + '_' + long_id
 
     # Create SUBJECTS_DIR for recon-all (otherwise, the command won't run)
-    subjects_dir = os.path.join(output_dir, image_id)
+    if len(list_session_ids) == 1:
+        # Special case: When only one time point is used, 'recon-all -base' can failed
+        # if the $SUBJECTS_DIR is too long ('Word too long.' error).
+        # To circumvent this issue, we create a sym link in $(TMP) so that $SUBJECTS_DIR is a short path
+        subjects_dir = mkdtemp()
+        now = datetime.datetime.now().strftime('%H:%M:%S')
+        cprint('%s[%s] %s has only one time point. Needs to create a $SUBJECTS_DIR folder in %s%s' %
+               (Fore.YELLOW, now, image_id.replace('_', ' | '), subjects_dir, Fore.RESET))
+    else:
+        subjects_dir = os.path.join(output_dir, image_id)
     try:
         os.makedirs(subjects_dir)
     except OSError as e:
