@@ -389,7 +389,7 @@ def contrast(mat_file, template_file, covariables, class_names):
     return current_model_estimation
 
 
-def read_output(spm_mat, spm_mat_2, class_names, covariables):
+def read_output(spm_mat, spm_mat_2, class_names, covariables, group_id, fwhm):
     """
         Once analysis is done, grab all the different filenames and rename them in current directory according to class
         names
@@ -398,6 +398,8 @@ def read_output(spm_mat, spm_mat_2, class_names, covariables):
         spm_mat_2: (str) path to the SPM.mat file of the SPM analysis, used to synchronize nodes
         class_names: (list) of str of length 2 that correspond to the 2 classes for the group comparison
         covariables: (list) of str: list of covariables
+        group_id: name of the group id
+        fwhm: fwhm in mm used
 
     Returns:
         spmT_0001: (str) path to t maps for the first group comparison
@@ -437,8 +439,8 @@ def read_output(spm_mat, spm_mat_2, class_names, covariables):
     spm_T = [abspath(join(dirname(spm_mat), f)) for f in list_files if f.startswith('spmT')]
     if len(spm_T) != 2:
         raise RuntimeError('[Error] ' + str(len(spm_T)) + ' SPM t-map(s) were found')
-    spmT_0001 = abspath('./spm_t-statistics_hypothesis-' + class_names[0] + '-less-than-' + class_names[1] + '.nii')
-    spmT_0002 = abspath('./spm_t-statistics_hypothesis-' + class_names[1] + '-less-than-' + class_names[0] + '.nii')
+    spmT_0001 = abspath('group-' + group_id + '_' + class_names[0] + '-lt-' + class_names[1] + '_measure-<msr>_fwhm-' + str(int(fwhm)) + '_{TStatistics|contrast}.nii.gz')
+    spmT_0002 = abspath('group-' + group_id + '_' + class_names[1] + '-lt-' + class_names[0] + '_measure-<msr>_fwhm-' + str(int(fwhm)) + '_{TStatistics|contrast}.nii.gz')
     copyfile(join(dirname(spm_mat), 'spmT_0001.nii'), spmT_0001)
     copyfile(join(dirname(spm_mat), 'spmT_0002.nii'), spmT_0002)
 

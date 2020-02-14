@@ -42,7 +42,7 @@ class StatisticsVolumeCLI(ce.CmdParser):
                                   help='Defines the contrast. Must be one of the column names form the TSV file.')
 
         clinica_comp.add_argument("feature_type",
-                                  help='Define what type of file are grabbed for the analysis. Use "fdg-pet", "t1-gm" or "t1-wm". Use "custom" if you want to use the --custom_file flag. ')
+                                  help='Define what type of file are grabbed for the analysis. Use "fdg" or "graymatter". Use "custom" if you want to use the --custom_file flag. ')
 
         clinica_comp.add_argument("group_id",
                                   help='User-defined identifier for the provided group of subjects.')
@@ -97,7 +97,7 @@ class StatisticsVolumeCLI(ce.CmdParser):
                                'custom_files': args.custom_files,
                                'threshold_uncorrected_pvalue': args.threshold_uncorrected_pvalue,
                                'threshold_corrected_pvalue': args.threshold_corrected_pvalue,
-                               'group_id_caps': args.group_id_bids,
+                               'group_id_caps': args.group_id_caps,
                                'smoothing': args.smoothing}
 
         if args.n_procs:

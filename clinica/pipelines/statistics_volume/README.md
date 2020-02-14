@@ -17,7 +17,7 @@ where:
   - `caps_directory` is the output folder containing the results in a [CAPS](../CAPS) hierarchy.
   - `subject_visits_with_covariates_tsv` is the path to the TSV file with covariables (mandatory, unlike other Clinica pipelines)
   - `contrast` is the name of the contrast used to differntiate the 2 groups
-  - `feature_type` indicates to Clinica what volume to use
+  - `feature_type` indicates to Clinica what volume to use. It can be either `'fdg'` or `'graymatter'`. Use `'custom'` if you want to use the `--custom_files` flag.
   - `group_id` defines the group name for the anaysis
 
 Optional parameters:

@@ -725,23 +725,26 @@ def test_run_StatisticsVolume(cmdopt):
         base_dir=join(working_dir, 'StatisticsVolume')
     )
     pipeline.parameters = {'contrast': 'group',
-                           'feature_type': 't1-gm',
+                           'feature_type': 'fdg',
                            'group_id': 'UnitTest',
                            'threshold_uncorrected_pvalue': 0.001,
                            'threshold_corrected_pvalue': 0.05,
-                           'group_id_bids': 'ADCNbaseline',
+                           'group_id_caps': None,
                            'smoothing': 8}
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 2}, bypass_check=True)
 
-    assert 0
+    output_t_stat = join(root, 'out', 'caps/groups/group-UnitTest/statistics/spm_2_sample_t_test/t_statistics/spm_t-statistics_hypothesis-CN-less-than-AD.nii')
+    ref_t_stat = join(root, 'ref', 'caps/groups/group-UnitTest/statistics/spm_2_sample_t_test/t_statistics/spm_t-statistics_hypothesis-CN-less-than-AD.nii')
+
+    assert np.allclose(nib.load(output_t_stat).get_data(),
+                       nib.load(ref_t_stat).get_data())
 
 
 def test_run_StatisticsVolumeCorrection(cmdopt):
     from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_pipeline import StatisticsVolumeCorrection
     from os.path import dirname, join, abspath, exists, isfile
     import shutil
-    import numpy as np
-    import nibabel as nib
+
 
     working_dir = cmdopt
     root = dirname(abspath(join(abspath(__file__), pardir)))
@@ -762,17 +765,15 @@ def test_run_StatisticsVolumeCorrection(cmdopt):
     pipeline.parameters = {
         't_map': 'spm_t-statistics_hypothesis-AD-less-than-CN.nii',
         'height_threshold': 3.2422,
-        'FWEp': 5.347,
-        'FDRp': 5.097,
-        'FWEc': 1972,
-        'FDRc': 1972,
-        'n_cuts': 5
+        'FWEp': 4.928,
+        'FDRp': 4.693,
+        'FWEc': 206987,
+        'FDRc': 206987,
+        'n_cuts': 15
     }
 
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 8}, bypass_check=True)
-
-    assert 0
-
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
+    compare_folders(join(root, 'out'), join(root, 'ref'), 'caps')
 
 # def test_run_T1FreeSurferLongitudinal(cmdopt):
 #     """

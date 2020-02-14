@@ -74,7 +74,7 @@ class StatisticsVolume(cpe.Pipeline):
             gic = self.parameters['group_id_caps']
 
         all_errors = []
-        if self.parameters['feature_type'] == 'fdg-pet':
+        if self.parameters['feature_type'] == 'fdg':
             try:
                 input_files = clinica_file_reader(self.subjects,
                                                   self.sessions,
@@ -84,7 +84,7 @@ class StatisticsVolume(cpe.Pipeline):
                                                    'needed_pipeline': 'pet-volume'})
             except ClinicaException as e:
                 all_errors.append(e)
-        elif self.parameters['feature_type'] == 't1-gm':
+        elif self.parameters['feature_type'] == 'graymatter':
             try:
                 input_files = clinica_file_reader(self.subjects,
                                                   self.sessions,
@@ -95,16 +95,6 @@ class StatisticsVolume(cpe.Pipeline):
             except ClinicaException as e:
                 all_errors.append(e)
 
-        elif self.parameters['feature_type'] == 't1-wm':
-            try:
-                input_files = clinica_file_reader(self.subjects,
-                                                  self.sessions,
-                                                  self.caps_directory,
-                                                  {'pattern': 't1/spm/dartel/group-' + gic + '/*_T1w_segm-whitematter_space-Ixi549Space_modulated-on_fwhm-' + str(self.parameters['smoothing']) + 'mm_probability.nii.*',
-                                                   'description': 'probability map of white matter segmentation based on T1w image in MNI space',
-                                                   'needed_pipeline': 't1-volume or t1-volume-existing-template'})
-            except ClinicaException as e:
-                all_errors.append(e)
         elif self.parameters['feature_type'] == 'custom':
             if not self.parameters['custom_files']:
                 raise ClinicaException(Fore.RED + '[Error] You did not specify the --custom_files flag in the command line ! Clinica can\'t '
@@ -146,19 +136,28 @@ class StatisticsVolume(cpe.Pipeline):
         import nipype.interfaces.io as nio
         from os.path import join
 
-        datasink = npe.Node(nio.DataSink(),
-                            name='sinker')
-        datasink.inputs.base_directory = join(self.caps_directory,
-                                              'groups',
-                                              'group-' + self.parameters['group_id'],
-                                              'statistics',
-                                              'spm_2_sample_t_test')
+        relative_path = join('groups',
+                             'group-' + self.parameters['group_id'],
+                             'statistics_volume',
+                             'group_comparison_measure-' + self.parameters['feature_type'])
+
+        datasink = npe.Node(nio.DataSink(), name='sinker')
+        datasink.inputs.base_directory = join(self.caps_directory, relative_path)
+
+
         datasink.inputs.parameterization = True
         datasink.inputs.regexp_substitutions = [
-            (r'(.*)/group-' + self.parameters['group_id'] + r'/statistics/spm_2_sample_t_test/spm_results_analysis_./(.*)',
-             r'\1/group-' + self.parameters['group_id'] + r'/statistics/spm_2_sample_t_test/\2'),
-            (r'(.*)/group-' + self.parameters['group_id'] + r'/statistics/spm_2_sample_t_test/tsv_file/.*',
-             r'\1/group-' + self.parameters['group_id'] + r'/statistics/participant.tsv')
+            (join(self.caps_directory, relative_path) + r'/spm_results_analysis_./(.*)',
+             join(self.caps_directory, relative_path) + r'/\1')
+            #(r'(.*)/' + relative_path + r'/spm_results_analysis_./_j(.*)',
+            # r'\1/' + relative_path + r't_statistics/\2'),
+
+            #(r'(.*)/' + relative_path + r'/spm_results_analysis_./(.*)',
+            # r'\1/' + relative_path + r'/t_statistics/\2'),
+
+            #(r'(.*)/' + relative_path + 'r /tsv_file/.*',
+            # r'\1/group-' + self.parameters['group_id'] + r'/statistics_volume/participant.tsv')
+
             # Uncomment if you need all the files in the same folder
             # ,
             # (r'(.*)/group-' + self.parameters['group_id'] + r'.*/(.*)',
@@ -275,7 +274,7 @@ class StatisticsVolume(cpe.Pipeline):
         # Print result to txt file if spm
 
         # Export results to output node
-        read_output_node = npe.Node(nutil.Function(input_names=['spm_mat', 'spm_mat_2', 'class_names', 'covariables'],
+        read_output_node = npe.Node(nutil.Function(input_names=['spm_mat', 'spm_mat_2', 'class_names', 'covariables', 'group_id', 'fwhm'],
                                                    output_names=['spmT_0001',
                                                                  'spmT_0002',
                                                                  'new_figure_names',
@@ -286,6 +285,9 @@ class StatisticsVolume(cpe.Pipeline):
                                                                  'contrasts'],
                                                    function=utils.read_output),
                                     name='read_output_node')
+        read_output_node.inputs.group_id = self.parameters['group_id']
+        read_output_node.inputs.fwhm = self.parameters['smoothing']
+
 
         # Connection
         # ==========
