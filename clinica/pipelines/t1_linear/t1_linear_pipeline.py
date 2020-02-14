@@ -72,8 +72,8 @@ class T1Linear(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
         """
-        import os import pardir
-        import os.path import dirname, join, abspath, split, exists
+        from  os import pardir
+        from os.path import dirname, join, abspath, split, exists
         import sys
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -88,7 +88,7 @@ class T1Linear(cpe.Pipeline):
         check_bids_folder(self.bids_directory)
         is_bids_dir = True
         
-        root = dirname(abspath(join(abspath(__file__), pardir, pardir))
+        root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
         path_to_mask = join(root, 'resources', 'masks')
         self.ref_template = join(
                 path_to_mask, 'mni_icbm152_t1_tal_nlin_sym_09c.nii')
