@@ -72,9 +72,9 @@ class T1Linear(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
         """
-        import os
+        import os import pardir
+        import os.path import dirname, join, abspath, split, exists
         import sys
-        import clinica
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import check_bids_folder
@@ -87,21 +87,22 @@ class T1Linear(cpe.Pipeline):
 
         check_bids_folder(self.bids_directory)
         is_bids_dir = True
-        head_tail = os.path.split(clinica.__file__)
-        path_to_mask = os.path.join(head_tail[0], 'resources', 'masks')
-        self.ref_template = os.path.join(
+        
+        root = dirname(abspath(join(abspath(__file__), pardir, pardir))
+        path_to_mask = join(root, 'resources', 'masks')
+        self.ref_template = join(
                 path_to_mask, 'mni_icbm152_t1_tal_nlin_sym_09c.nii')
-        self.ref_crop = os.path.join(path_to_mask, 'ref_cropped_template.nii.gz')
+        self.ref_crop = join(path_to_mask, 'ref_cropped_template.nii.gz')
         url1 = "https://aramislab.paris.inria.fr/files/data/img_t1_linear/ref_cropped_template.nii.gz"
         url2 = "https://aramislab.paris.inria.fr/files/data/img_t1_linear/mni_icbm152_t1_tal_nlin_sym_09c.nii"
 
-        if not(os.path.exists(self.ref_template)):
+        if not(exists(self.ref_template)):
             try:
                 fetch_file(url2, self.ref_template)
             except IOError as err:
                 cprint('Unable to download required template (mni_icbm152) for processing:', err)
 
-        if not(os.path.exists(self.ref_crop)):
+        if not(exists(self.ref_crop)):
             try:
                 fetch_file(url1, self.ref_crop)
             except IOError as err:
