@@ -161,31 +161,34 @@ def save_to_caps(subjects_dir, freesurfer_id, caps_dir, overwrite_caps=False):
         't1_freesurfer_longitudinal'
     )
 
+    # Remove symbolic links before the copy
+    def delete_sym_link(path_sym_link):
+        try:
+            os.unlink(path_sym_link)
+        except FileNotFoundError as e:
+            if e.errno != errno.ENOENT:
+                raise e
+    delete_sym_link(os.path.join(os.path.expanduser(subjects_dir), 'fsaverage'))
+    delete_sym_link(os.path.join(os.path.expanduser(subjects_dir), 'lh.EC_average'))
+    delete_sym_link(os.path.join(os.path.expanduser(subjects_dir), 'rh.EC_average'))
+    delete_sym_link(os.path.join(os.path.expanduser(subjects_dir), participant_id + '_' + long_id))
+    for s_id in read_sessions(caps_dir, participant_id, long_id):
+        delete_sym_link(os.path.join(os.path.expanduser(subjects_dir), participant_id + '_' + s_id))
+
     representative_file = os.path.join(freesurfer_id, 'mri', 'aparc+aseg.mgz')
     representative_source_file = os.path.join(os.path.expanduser(subjects_dir), freesurfer_id, representative_file)
     representative_destination_file = os.path.join(destination_dir, representative_file)
     if os.path.isfile(representative_source_file):
-        # Remove symbolic links before the copy
-        try:
-            os.unlink(os.path.join(os.path.expanduser(subjects_dir), 'fsaverage'))
-            os.unlink(os.path.join(os.path.expanduser(subjects_dir), 'lh.EC_average'))
-            os.unlink(os.path.join(os.path.expanduser(subjects_dir), 'rh.EC_average'))
-            os.unlink(os.path.join(os.path.expanduser(subjects_dir), participant_id + '_' + long_id))
-            for s_id in read_sessions(caps_dir, participant_id, long_id):
-                os.unlink(os.path.join(os.path.expanduser(subjects_dir), participant_id + '_' + s_id))
-        except FileNotFoundError as e:
-            if e.errno != errno.ENOENT:
-                raise e
-
         if os.path.isfile(representative_destination_file):
             if overwrite_caps:
                 shutil.rmtree(destination_dir)
+                shutil.copytree(os.path.join(subjects_dir, freesurfer_id), destination_dir, symlinks=True)
+        else:
             shutil.copytree(os.path.join(subjects_dir, freesurfer_id), destination_dir, symlinks=True)
-            print_end_image(freesurfer_id)
+        print_end_image(freesurfer_id)
     else:
         now = datetime.datetime.now().strftime('%H:%M:%S')
-        cprint('%s[%s] %s does not contain mri/aseg+aparc.mgz file. '
-               'Copy will be skipped.%s' %
+        cprint('%s[%s] %s does not contain mri/aseg+aparc.mgz file. Copy will be skipped.%s' %
                (Fore.YELLOW, now, freesurfer_id.replace('_', ' | '), Fore.RESET))
 
     return freesurfer_id
