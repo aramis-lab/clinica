@@ -733,8 +733,8 @@ def test_run_StatisticsVolume(cmdopt):
                            'smoothing': 8}
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 2}, bypass_check=True)
 
-    output_t_stat = join(root, 'out', 'caps/groups/group-UnitTest/statistics/spm_2_sample_t_test/t_statistics/spm_t-statistics_hypothesis-CN-less-than-AD.nii')
-    ref_t_stat = join(root, 'ref', 'caps/groups/group-UnitTest/statistics/spm_2_sample_t_test/t_statistics/spm_t-statistics_hypothesis-CN-less-than-AD.nii')
+    output_t_stat = join(root, 'out', 'caps/groups/group-UnitTest/statistics_volume/group_comparison_measure-fdg/group-UnitTest_CN-lt-AD_measure-fdg_fwhm-8_TStatistics.nii')
+    ref_t_stat = join(root, 'ref', 'caps/groups/group-UnitTest/statistics_volume/group_comparison_measure-fdg/group-UnitTest_CN-lt-AD_measure-fdg_fwhm-8_TStatistics.nii')
 
     assert np.allclose(nib.load(output_t_stat).get_data(),
                        nib.load(ref_t_stat).get_data())
@@ -763,7 +763,7 @@ def test_run_StatisticsVolumeCorrection(cmdopt):
         base_dir=join(working_dir, 'StatisticsVolumeCorrection')
     )
     pipeline.parameters = {
-        't_map': 'spm_t-statistics_hypothesis-AD-less-than-CN.nii',
+        't_map': 'group-UnitTest_AD-lt-CN_measure-fdg_fwhm-8_TStatistics.nii',
         'height_threshold': 3.2422,
         'FWEp': 4.928,
         'FDRp': 4.693,

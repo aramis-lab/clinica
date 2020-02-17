@@ -95,7 +95,7 @@ def generate_output(t_map, figs, name):
     from os.path import join, dirname, basename, splitext, pardir
     from shutil import copyfile
 
-    outfolder = join(dirname(t_map), pardir, 'corrected_results_' + splitext(basename(t_map))[0], name)
+    outfolder = join(dirname(t_map), 'corrected_results_' + splitext(basename(t_map))[0], name)
     makedirs(outfolder)
     copyfile(figs[0], join(outfolder, 'glass_brain.png'))
     copyfile(figs[1], join(outfolder, 't_statistics_thresholded_x.png'))

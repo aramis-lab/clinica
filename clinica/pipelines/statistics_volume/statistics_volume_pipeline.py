@@ -95,12 +95,15 @@ class StatisticsVolume(cpe.Pipeline):
             except ClinicaException as e:
                 all_errors.append(e)
 
-        elif self.parameters['feature_type'] == 'custom':
+        else:
             if not self.parameters['custom_files']:
-                raise ClinicaException(Fore.RED + '[Error] You did not specify the --custom_files flag in the command line ! Clinica can\'t '
+                raise ClinicaException(Fore.RED + '[Error] You did not specify the --custom_files flag in the command line for the feature type '
+                                       + Fore.Blue +  self.parameters['feature_type'] + Fore.RED + '! Clinica can\'t '
                                        + 'know what file to use in your analysis ! Type: \n\t' + Fore.BLUE + 'clinica run statistics-volume\n'
                                        + Fore.RED + ' to have help on how to use the command line.' + Fore.RESET)
             try:
+                # If custom file are grabbed, information of fwhm is irrelevant and should not appear on final filenames
+                self.parameters['smoothing'] = None
                 input_files = clinica_file_reader(self.subjects,
                                                   self.sessions,
                                                   self.caps_directory,
@@ -108,9 +111,6 @@ class StatisticsVolume(cpe.Pipeline):
                                                    'description': 'custom file provided by user'})
             except ClinicaException as e:
                 all_errors.append(e)
-        else:
-            raise ClinicaException(Fore.RED + '[Error] ' + Fore.YELLOW + self.parameters['feature_type']
-                                   + Fore.RED + ' modality is not currently supported for this analysis' + Fore.RESET)
 
         if len(all_errors) > 0:
             error_message = 'Clinica faced errors while trying to read files in your BIDS or CAPS directories.\n'
@@ -134,7 +134,7 @@ class StatisticsVolume(cpe.Pipeline):
         """
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
-        from os.path import join
+        from os.path import join, pardir
 
         relative_path = join('groups',
                              'group-' + self.parameters['group_id'],
@@ -144,25 +144,43 @@ class StatisticsVolume(cpe.Pipeline):
         datasink = npe.Node(nio.DataSink(), name='sinker')
         datasink.inputs.base_directory = join(self.caps_directory, relative_path)
 
-
         datasink.inputs.parameterization = True
-        datasink.inputs.regexp_substitutions = [
-            (join(self.caps_directory, relative_path) + r'/spm_results_analysis_./(.*)',
-             join(self.caps_directory, relative_path) + r'/\1')
-            #(r'(.*)/' + relative_path + r'/spm_results_analysis_./_j(.*)',
-            # r'\1/' + relative_path + r't_statistics/\2'),
+        if self.parameters['smoothing']:
+            datasink.inputs.regexp_substitutions = [
+                # t-stat map
+                (join(self.caps_directory, relative_path) + r'/spm_results_analysis_./(.*)',
+                 join(self.caps_directory, relative_path) + r'/\1'),
 
-            #(r'(.*)/' + relative_path + r'/spm_results_analysis_./(.*)',
-            # r'\1/' + relative_path + r'/t_statistics/\2'),
+                # contrasts
+                (join(self.caps_directory, relative_path) + r'/contrasts/(.*)',
+                 join(self.caps_directory, relative_path) + r'/\1'),
 
-            #(r'(.*)/' + relative_path + 'r /tsv_file/.*',
-            # r'\1/group-' + self.parameters['group_id'] + r'/statistics_volume/participant.tsv')
+                # resels per voxels
+                (join(self.caps_directory, relative_path) + '/resels_per_voxels/resels_per_voxel.nii',
+                 join(self.caps_directory, relative_path) + '/group-' + self.parameters['group_id'] + '_contrast-' + self.parameters['contrast'] + '_RPV.nii'),
 
-            # Uncomment if you need all the files in the same folder
-            # ,
-            # (r'(.*)/group-' + self.parameters['group_id'] + r'.*/(.*)',
-            # r'\1/group-' + self.parameters['group_id'] + r'/\2')
-        ]
+                # mask
+                (join(self.caps_directory, relative_path) + '/mask/included_voxel_mask.nii',
+                 join(self.caps_directory, relative_path) + '/group-' + self.parameters['group_id'] + '_contrast-' + self.parameters['contrast'] + '_mask.nii'),
+
+                # variance of error
+                (join(self.caps_directory, relative_path) + '/variance_of_error/(.*)',
+                 join(self.caps_directory, relative_path) + r'/\1'),
+
+                # tsv file
+                (join(self.caps_directory, relative_path) + r'/tsv_file/.*',
+                 join(self.caps_directory, relative_path) + '/' + pardir + '/group-' + self.parameters['group_id'] + '_participants.tsv'),
+
+                # report (figures)
+                (join(self.caps_directory, relative_path) + r'/figures/(.*)',
+                 join(self.caps_directory, relative_path) + r'/\1'),
+
+                # regression coefficient
+                (join(self.caps_directory, relative_path) + r'/regression_coeff/(.*).nii',
+                 join(self.caps_directory, relative_path) + '/group-' + self.parameters['group_id'] + '_contrast-'
+                 + self.parameters['contrast'] + '_measure-' + r'\1' + '_fwhm-' + str(self.parameters['smoothing']) + '_regressionCoefficient.nii'),
+
+            ]
 
         datasink.inputs.tsv_file = self.tsv_file
 
@@ -274,7 +292,7 @@ class StatisticsVolume(cpe.Pipeline):
         # Print result to txt file if spm
 
         # Export results to output node
-        read_output_node = npe.Node(nutil.Function(input_names=['spm_mat', 'spm_mat_2', 'class_names', 'covariables', 'group_id', 'fwhm'],
+        read_output_node = npe.Node(nutil.Function(input_names=['spm_mat', 'spm_mat_2', 'class_names', 'covariables', 'group_id', 'fwhm', 'measure'],
                                                    output_names=['spmT_0001',
                                                                  'spmT_0002',
                                                                  'new_figure_names',
@@ -287,6 +305,8 @@ class StatisticsVolume(cpe.Pipeline):
                                     name='read_output_node')
         read_output_node.inputs.group_id = self.parameters['group_id']
         read_output_node.inputs.fwhm = self.parameters['smoothing']
+        read_output_node.inputs.measure = self.parameters['feature_type']
+
 
 
         # Connection

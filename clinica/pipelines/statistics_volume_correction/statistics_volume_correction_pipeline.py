@@ -49,12 +49,9 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
         from clinica.utils.exceptions import ClinicaException
 
         all_errors = []
-        try:
-            t_map = clinica_group_reader(self.caps_directory, {'pattern': self.parameters['t_map'] + '*',
-                                                               'description': 'statistics t map',
-                                                               'needed_pipeline': 'statistics-volume'})
-        except ClinicaException as e:
-            all_errors.append(e)
+        t_map = clinica_group_reader(self.caps_directory, {'pattern': self.parameters['t_map'] + '*',
+                                                           'description': 'statistics t map',
+                                                           'needed_pipeline': 'statistics-volume'})
 
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(

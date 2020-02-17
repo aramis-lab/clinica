@@ -389,7 +389,7 @@ def contrast(mat_file, template_file, covariables, class_names):
     return current_model_estimation
 
 
-def read_output(spm_mat, spm_mat_2, class_names, covariables, group_id, fwhm):
+def read_output(spm_mat, spm_mat_2, class_names, covariables, group_id, fwhm, measure):
     """
         Once analysis is done, grab all the different filenames and rename them in current directory according to class
         names
@@ -400,6 +400,7 @@ def read_output(spm_mat, spm_mat_2, class_names, covariables, group_id, fwhm):
         covariables: (list) of str: list of covariables
         group_id: name of the group id
         fwhm: fwhm in mm used
+        measure: measure used
 
     Returns:
         spmT_0001: (str) path to t maps for the first group comparison
@@ -431,7 +432,7 @@ def read_output(spm_mat, spm_mat_2, class_names, covariables, group_id, fwhm):
     if len(figures) < 2:
         raise RuntimeError('[Error] Figures were not generated')
     fig_number = [int(f[-7:-4]) for f in figures]
-    new_figure_names = [abspath('./' + 'spm_report-' + str(i) +'.png') for i in fig_number]
+    new_figure_names = [abspath('./' + 'group-' + group_id + '_report-' + str(i) +'.png') for i in fig_number]
     for old_name, new_name in zip(figures, new_figure_names):
         copyfile(old_name, new_name)
 
@@ -439,12 +440,16 @@ def read_output(spm_mat, spm_mat_2, class_names, covariables, group_id, fwhm):
     spm_T = [abspath(join(dirname(spm_mat), f)) for f in list_files if f.startswith('spmT')]
     if len(spm_T) != 2:
         raise RuntimeError('[Error] ' + str(len(spm_T)) + ' SPM t-map(s) were found')
-    spmT_0001 = abspath('group-' + group_id + '_' + class_names[0] + '-lt-' + class_names[1] + '_measure-<msr>_fwhm-' + str(int(fwhm)) + '_{TStatistics|contrast}.nii.gz')
-    spmT_0002 = abspath('group-' + group_id + '_' + class_names[1] + '-lt-' + class_names[0] + '_measure-<msr>_fwhm-' + str(int(fwhm)) + '_{TStatistics|contrast}.nii.gz')
+    if fwhm:
+        spmT_0001 = abspath('group-' + group_id + '_' + class_names[0] + '-lt-' + class_names[1] + '_measure-' + measure + '_fwhm-' + str(int(fwhm)) + '_TStatistics.nii')
+        spmT_0002 = abspath('group-' + group_id + '_' + class_names[1] + '-lt-' + class_names[0] + '_measure-' + measure + '_fwhm-' + str(int(fwhm)) + '_TStatistics.nii')
+    else:
+        spmT_0001 = abspath('group-' + group_id + '_' + class_names[0] + '-lt-' + class_names[1] + '_measure-' + measure + '_TStatistics.nii')
+        spmT_0002 = abspath('group-' + group_id + '_' + class_names[1] + '-lt-' + class_names[0] + '_measure-' + measure + '_TStatistics.nii')
     copyfile(join(dirname(spm_mat), 'spmT_0001.nii'), spmT_0001)
     copyfile(join(dirname(spm_mat), 'spmT_0002.nii'), spmT_0002)
 
-    variance_of_error = abspath('./variance_of_error.nii')
+    variance_of_error = abspath('./group-' + group_id + '_VarianceError.nii')
     copyfile(abspath(join(dirname(spm_mat), 'ResMS.nii')), variance_of_error)
 
     resels_per_voxels = abspath('./resels_per_voxel.nii')
@@ -457,9 +462,9 @@ def read_output(spm_mat, spm_mat_2, class_names, covariables, group_id, fwhm):
     betas = [abspath(join(dirname(spm_mat), f)) for f in list_files if f.startswith('beta_')]
     if len(betas) != 2 + len(covariables):
         raise RuntimeError('[Error] Not enough betas files found in output directory')
-    regression_coeff_covar = [abspath('./' + covar + '_regression-coefficient.nii') for covar in covariables]
-    regression_coeff = [abspath('./group-' + class_names[0] + '_regression-coefficient.nii'),
-                        abspath('./group-' + class_names[1] + '_regression-coefficient.nii')]
+    regression_coeff_covar = [abspath('./' + covar + '.nii') for covar in covariables]
+    regression_coeff = [abspath('./' + class_names[0] + '.nii'),
+                        abspath('./' + class_names[1] + '.nii')]
     regression_coeff.extend(regression_coeff_covar)
     # Order is respected:
     for beta, reg_coeff in zip(betas, regression_coeff):
@@ -469,8 +474,8 @@ def read_output(spm_mat, spm_mat_2, class_names, covariables, group_id, fwhm):
     con_files = [abspath(join(dirname(spm_mat), f)) for f in list_files if f.startswith('con_')]
     if len(con_files) != 2:
         raise RuntimeError('There must exists only 2 contrast files !')
-    contrasts = [abspath('./weighted_parameter_estimation_for_contrast_' + class_names[0] + '-less-than-' + class_names[1] + '.nii'),
-                 abspath('./weighted_parameter_estimation_for_contrast_' + class_names[1] + '-less-than-' + class_names[0] + '.nii')]
+    contrasts = [abspath('group-' + group_id + '_' + class_names[0] + '-lt-' + class_names[1] + '_measure-' + measure + '_contrast.nii'),
+                 abspath('group-' + group_id + '_' + class_names[1] + '-lt-' + class_names[0] + '_measure-' + measure + '_contrast.nii')]
     for con, contrast in zip(con_files, contrasts):
         copyfile(con, contrast)
 
