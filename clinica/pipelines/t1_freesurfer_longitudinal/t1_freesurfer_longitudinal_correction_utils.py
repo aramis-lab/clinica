@@ -175,6 +175,7 @@ def save_to_caps(subjects_dir, freesurfer_id, caps_dir, overwrite_caps=False):
     for s_id in read_sessions(caps_dir, participant_id, long_id):
         delete_sym_link(os.path.join(os.path.expanduser(subjects_dir), participant_id + '_' + s_id))
 
+    # Save FreeSurfer segmentation
     representative_file = os.path.join(freesurfer_id, 'mri', 'aparc+aseg.mgz')
     representative_source_file = os.path.join(os.path.expanduser(subjects_dir), freesurfer_id, representative_file)
     representative_destination_file = os.path.join(destination_dir, representative_file)

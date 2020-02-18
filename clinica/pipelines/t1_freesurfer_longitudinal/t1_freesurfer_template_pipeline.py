@@ -182,7 +182,7 @@ class T1FreeSurferTemplate(cpe.Pipeline):
         import os
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from .t1_freesurfer_template_utils import init_input_node, run_recon_all_base
+        from .t1_freesurfer_template_utils import init_input_node, run_recon_all_base, move_subjects_dir_to_source_dir
 
         # Nodes declaration
         # =================
@@ -205,6 +205,15 @@ class T1FreeSurferTemplate(cpe.Pipeline):
             name='1-SegmentationReconAll')
         recon_all.inputs.directive = '-all'
 
+        # Run recon-all command
+        move_subjects_dir = npe.Node(
+            interface=nutil.Function(
+                input_names=['subjects_dir', 'source_dir', 'subject_id'],
+                output_names=['subject_id'],
+                function=move_subjects_dir_to_source_dir),
+            name='2-MoveSubjectsDir')
+        move_subjects_dir.inputs.source_dir = os.path.join(self.base_dir, self.name, 'ReconAll')
+
         # Connections
         # ===========
         self.connect([
@@ -215,6 +224,9 @@ class T1FreeSurferTemplate(cpe.Pipeline):
             (init_input, recon_all, [('subjects_dir', 'subjects_dir'),
                                      ('image_id', 'subject_id'),
                                      ('flags',  'flags')]),
+            # Run recon-all command
+            (recon_all, move_subjects_dir, [('subjects_dir', 'subjects_dir'),
+                                            ('subject_id',  'subject_id')]),
             # Output node
-            (recon_all, self.output_node, [('subject_id', 'image_id')]),
+            (move_subjects_dir, self.output_node, [('subject_id', 'image_id')]),
         ])

@@ -101,10 +101,6 @@ def save_to_caps(source_dir, image_id, caps_dir, overwrite_caps=False):
         'freesurfer_cross_sectional'
     )
 
-    representative_file = os.path.join(image_id, 'mri', 'aparc+aseg.mgz')
-    representative_source_file = os.path.join(os.path.expanduser(source_dir), image_id, representative_file)
-    representative_destination_file = os.path.join(destination_dir, representative_file)
-
     # Remove symbolic links before the copy
     def delete_sym_link(path_sym_link):
         try:
@@ -116,6 +112,10 @@ def save_to_caps(source_dir, image_id, caps_dir, overwrite_caps=False):
     delete_sym_link(os.path.join(os.path.expanduser(source_dir), image_id, 'lh.EC_average'))
     delete_sym_link(os.path.join(os.path.expanduser(source_dir), image_id, 'rh.EC_average'))
 
+    # Save FreeSurfer segmentation
+    representative_file = os.path.join(image_id, 'mri', 'aparc+aseg.mgz')
+    representative_source_file = os.path.join(os.path.expanduser(source_dir), image_id, representative_file)
+    representative_destination_file = os.path.join(destination_dir, representative_file)
     if os.path.isfile(representative_source_file):
         if os.path.isfile(representative_destination_file):
             if overwrite_caps:

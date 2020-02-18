@@ -105,6 +105,31 @@ def run_recon_all_base(subjects_dir,
     return subject_id
 
 
+def move_subjects_dir_to_source_dir(subjects_dir,
+                                    source_dir,
+                                    subject_id):
+    """Move content of `subjects_dir`/`subject_id` to `source_dir`.
+
+    This function is called where recon-all has run outside <WD>/<Name>/ReconAll (= `source_dir`). This happens when
+    only one time point is used.
+    Content of `subjects_dir`/`subject_id` is moved to `source_dir` before the deletion of `subjects_dir`.
+    """
+    import os
+    import shutil
+    import datetime
+    from colorama import Fore
+    from clinica.utils.stream import cprint
+
+    if subjects_dir not in source_dir:
+        shutil.move(os.path.join(subjects_dir, subject_id), source_dir, copy_function=shutil.copytree)
+        shutil.rmtree(subjects_dir)
+        now = datetime.datetime.now().strftime('%H:%M:%S')
+        cprint('%s[%s] Segmentation of %s has moved to working directory and $SUBJECTS_DIR folder (%s) was deleted%s' %
+               (Fore.YELLOW, now, subject_id.replace('_', ' | '), subjects_dir, Fore.RESET))
+
+    return subject_id
+
+
 def save_to_caps(source_dir, image_id, list_session_ids, caps_dir, overwrite_caps):
     """Save `subjects_dir` to CAPS folder.
 
@@ -150,11 +175,6 @@ def save_to_caps(source_dir, image_id, list_session_ids, caps_dir, overwrite_cap
     if not os.path.isfile(os.path.join(sessions_tsv_path, long_id + '_sessions.tsv')):
         save_long_id(list_session_ids, sessions_tsv_path, long_id + '_sessions.tsv')
 
-    # Save FreeSurfer segmentation
-    representative_file = os.path.join(image_id, 'mri', 'aparc+aseg.mgz')
-    representative_source_file = os.path.join(os.path.expanduser(source_dir), image_id, representative_file)
-    representative_destination_file = os.path.join(destination_dir, representative_file)
-
     # Remove symbolic links before the copy
     def delete_sym_link(path_sym_link):
         try:
@@ -168,6 +188,10 @@ def save_to_caps(source_dir, image_id, list_session_ids, caps_dir, overwrite_cap
     for session_id in list_session_ids:
         delete_sym_link(os.path.join(os.path.expanduser(source_dir), image_id, participant_id + '_' + session_id))
 
+    # Save FreeSurfer segmentation
+    representative_file = os.path.join(image_id, 'mri', 'aparc+aseg.mgz')
+    representative_source_file = os.path.join(os.path.expanduser(source_dir), image_id, representative_file)
+    representative_destination_file = os.path.join(destination_dir, representative_file)
     if os.path.isfile(representative_source_file):
         if os.path.isfile(representative_destination_file):
             if overwrite_caps:
