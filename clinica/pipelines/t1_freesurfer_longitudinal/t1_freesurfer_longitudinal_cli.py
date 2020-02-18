@@ -43,7 +43,7 @@ class T1FreeSurferLongitudinalCLI(ce.CmdParser):
 
         if not self.absolute_path(args.subjects_sessions_tsv):
             l_part, l_sess, l_long = grab_image_ids_from_caps_directory(self.absolute_path(args.caps_directory))
-            now = datetime.datetime.now().strftime('%H:%M:%S')
+            now = datetime.datetime.now().strftime('%H%M%S')
             args.subjects_sessions_tsv = now+'_participants.tsv'
             save_part_sess_long_ids_to_tsv(l_part, l_sess, l_long, os.getcwd(), args.subjects_sessions_tsv)
 
