@@ -8,16 +8,12 @@ import clinica.pipelines.engine as cpe
 
 class StatisticsVolumeCorrection(cpe.Pipeline):
     """Statistics_Volume_Correction
-
-
     """
-
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
         pass
-
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
@@ -28,7 +24,6 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
 
         return ['t_map']
 
-
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
 
@@ -37,7 +32,6 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
         """
 
         return []
-
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -63,7 +57,6 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
             (read_parameters_node,      self.input_node,    [('t_map', 't_map')])
         ])
 
-
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
         """
@@ -74,7 +67,6 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
         # pipeline.
 
         pass
-
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
@@ -150,7 +142,6 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
 
         save_fig_cluster_correction_FDR = save_fig_peak_correction_FWE.clone(name='save_fig_cluster_correction_FDR')
         save_fig_cluster_correction_FDR.inputs.name = 'FDR_cluster_correction'
-
 
         # Connection
         # ==========

@@ -4,6 +4,7 @@
 Statistics_Volume_Correction - Clinica Utilities.
 """
 
+
 def peak_correction(t_map, t_threshold, output_name=None):
     import nibabel as nib
     from os.path import join, basename, abspath
@@ -60,7 +61,6 @@ def produce_figures(nii_file, template, type_of_correction, t_thresh, c_thresh, 
         my_title = my_title + ' - min cluster size = ' + str(c_thresh),
 
     plotting.plot_glass_brain(nii_file,
-                              #title=my_title,
                               output_file='./glass_brain.png')
 
     plotting.plot_stat_map(nii_file,
@@ -87,7 +87,10 @@ def produce_figures(nii_file, template, type_of_correction, t_thresh, c_thresh, 
                            draw_cross=True,
                            output_file='./statmap_z.png')
 
-    return [abspath('./glass_brain.png'), abspath('./statmap_x.png'), abspath('./statmap_y.png'), abspath('./statmap_z.png')]
+    return [abspath('./glass_brain.png'),
+            abspath('./statmap_x.png'),
+            abspath('./statmap_y.png'),
+            abspath('./statmap_z.png')]
 
 
 def generate_output(t_map, figs, name):
@@ -101,4 +104,3 @@ def generate_output(t_map, figs, name):
     copyfile(figs[1], join(outfolder, 't_statistics_thresholded_x.png'))
     copyfile(figs[2], join(outfolder, 't_statistics_thresholded_y.png'))
     copyfile(figs[3], join(outfolder, 't_statistics_thresholded_z.png'))
-

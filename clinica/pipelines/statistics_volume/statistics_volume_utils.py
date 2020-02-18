@@ -134,7 +134,7 @@ def model_creation(csv, contrast, idx_group1, idx_group2, file_list, template_fi
     with open(current_model, 'a') as file:
         file.write('spm_jobman(\'run\', matlabbatch)')
     return current_model, covariables
-    
+
 
 def is_number(s: str):
     """
@@ -432,7 +432,7 @@ def read_output(spm_mat, spm_mat_2, class_names, covariables, group_id, fwhm, me
     if len(figures) < 2:
         raise RuntimeError('[Error] Figures were not generated')
     fig_number = [int(f[-7:-4]) for f in figures]
-    new_figure_names = [abspath('./' + 'group-' + group_id + '_report-' + str(i) +'.png') for i in fig_number]
+    new_figure_names = [abspath('./' + 'group-' + group_id + '_report-' + str(i) + '.png') for i in fig_number]
     for old_name, new_name in zip(figures, new_figure_names):
         copyfile(old_name, new_name)
 

@@ -98,7 +98,7 @@ class StatisticsVolume(cpe.Pipeline):
         else:
             if not self.parameters['custom_files']:
                 raise ClinicaException(Fore.RED + '[Error] You did not specify the --custom_files flag in the command line for the feature type '
-                                       + Fore.Blue +  self.parameters['feature_type'] + Fore.RED + '! Clinica can\'t '
+                                       + Fore.Blue + self.parameters['feature_type'] + Fore.RED + '! Clinica can\'t '
                                        + 'know what file to use in your analysis ! Type: \n\t' + Fore.BLUE + 'clinica run statistics-volume\n'
                                        + Fore.RED + ' to have help on how to use the command line.' + Fore.RESET)
             try:
@@ -288,7 +288,6 @@ class StatisticsVolume(cpe.Pipeline):
         model_result_FWE_correction.inputs.method = 'FWE'
         model_result_FWE_correction.inputs.threshold = self.parameters['threshold_corrected_pvalue']
 
-
         # Print result to txt file if spm
 
         # Export results to output node
@@ -306,8 +305,6 @@ class StatisticsVolume(cpe.Pipeline):
         read_output_node.inputs.group_id = self.parameters['group_id']
         read_output_node.inputs.fwhm = self.parameters['smoothing']
         read_output_node.inputs.measure = self.parameters['feature_type']
-
-
 
         # Connection
         # ==========
@@ -334,7 +331,7 @@ class StatisticsVolume(cpe.Pipeline):
             (model_result_FWE_correction, run_spm_model_result_FWE_correction, [('script_file', 'm_file')]),
 
             (run_spm_model_result_no_correction, read_output_node, [('spm_mat', 'spm_mat')]),
-            (run_spm_model_result_FWE_correction, read_output_node, [('spm_mat', 'spm_mat_2')]), # Only used for synchronisation
+            (run_spm_model_result_FWE_correction, read_output_node, [('spm_mat', 'spm_mat_2')]),  # Only used for synchronisation
 
             (get_groups, read_output_node, [('class_names', 'class_names')]),
             (model_creation, read_output_node, [('covariables', 'covariables')]),

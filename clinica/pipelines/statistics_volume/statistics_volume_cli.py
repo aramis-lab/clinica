@@ -52,12 +52,13 @@ class StatisticsVolumeCLI(ce.CmdParser):
         optional.add_argument("--custom_files", "-cf", type=str, default=None,
                               help=('Custom file string. Specify filename using * when the subject or session name appear. '
                                     + 'Example : \'*_task-rest_acq-fdg_pet_space-Ixi549Space_pet.nii.gz\' will grab the'
-                                    + ' corresponding file in all the subjects/sessions')
+                                    + ' corresponding file in all the subjects/sessions'))
 
         optional.add_argument("-tup", "--threshold_uncorrected_pvalue",
                               type=float, default=0.001,
                               help='Threshold to display the uncorrected p-value '
-                                   '(--threshold_uncorrected_pvalue 0.001).')
+                                   + '(--threshold_uncorrected_pvalue 0.001).')
+
         optional.add_argument("-tcp", "--threshold_corrected_pvalue",
                               type=float, default=0.05,
                               help='Threshold to display the corrected p-value '
@@ -68,7 +69,6 @@ class StatisticsVolumeCLI(ce.CmdParser):
 
         optional.add_argument("-fwhm", "--smoothing", type=int, default=8,
                               help='Full Width at Half Maximum (FWHM) of the smoothing used in your input file.')
-
 
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
