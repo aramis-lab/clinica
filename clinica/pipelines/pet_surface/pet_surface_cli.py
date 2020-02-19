@@ -30,6 +30,12 @@ class PetSurfaceCLI(ce.CmdParser):
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
 
+        optional.add_argument('-l', '--longitudinal',
+                              help='long_id in case where t1-freesurfer-longitudinal has run',
+                              action='store_true',
+                              dest='longitudinal',
+                              default=False)
+
     def run_command(self, args):
         """Run the pipeline with defined args."""
         from networkx import Graph
@@ -38,6 +44,7 @@ class PetSurfaceCLI(ce.CmdParser):
 
         parameters = {
             'pet_tracer': args.pet_tracer,
+            'longitudinal': args.longitudinal
         }
         pipeline = PetSurface(
             bids_directory=self.absolute_path(args.bids_directory),

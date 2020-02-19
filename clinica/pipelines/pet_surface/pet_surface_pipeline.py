@@ -57,6 +57,7 @@ class PetSurface(cpe.Pipeline):
         from clinica.utils.exceptions import ClinicaException
         from clinica.iotools.utils.data_handling import check_relative_volume_location_in_world_coordinate_system
         import clinica.utils.input_files as input_files
+        from os.path import join
 
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(
@@ -73,7 +74,7 @@ class PetSurface(cpe.Pipeline):
         else:
             raise NotImplementedError('Only "fdg" or "av45" tracers are currently accepted (given tracer "%s").' %
                                       self.parameters['pet_tracer'])
-
+        longitudinal = self.parameters['longitudinal']
         all_errors = []
         try:
 
@@ -85,10 +86,23 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.orig_nu = clinica_file_reader(self.subjects,
-                                                                      self.sessions,
-                                                                      self.caps_directory,
-                                                                      input_files.T1_FS_ORIG_NU)
+            if longitudinal:
+                read_parameters_node.inputs.orig_nu = clinica_file_reader(self.subjects,
+                                                                          self.sessions,
+                                                                          self.caps_directory,
+                                                                          {'pattern': join('t1',
+                                                                                           'long-*',
+                                                                                           'freesurfer_longitudinal',
+                                                                                           'sub-*_ses-*.long.sub-*_*',
+                                                                                           'mri',
+                                                                                           'orig_nu.mgz'),
+                                                                           'description': 'intensity normalized volume generated after correction for non-uniformity in FreeSurfer in longitudinal',
+                                                                           'needed_pipeline': 't1-freesurfer and t1-freesurfer longitudinal'})
+            else:
+                read_parameters_node.inputs.orig_nu = clinica_file_reader(self.subjects,
+                                                                          self.sessions,
+                                                                          self.caps_directory,
+                                                                          input_files.T1_FS_ORIG_NU)
         except ClinicaException as e:
             all_errors.append(e)
 
@@ -101,26 +115,64 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.white_surface_right = clinica_file_reader(self.subjects,
-                                                                                  self.sessions,
-                                                                                  self.caps_directory,
-                                                                                  input_files.T1_FS_WM_SURF_R)
+            if longitudinal:
+                read_parameters_node.inputs.white_surface_right = clinica_file_reader(self.subjects,
+                                                                                      self.sessions,
+                                                                                      self.caps_directory,
+                                                                                      {'pattern': join('t1',
+                                                                                                       'long-*',
+                                                                                                       'freesurfer_longitudinal',
+                                                                                                       'sub-*_ses-*.long.sub-*_*',
+                                                                                                       'surf',
+                                                                                                       'rh.white'),
+                                                                                       'description': 'right white matter/gray matter border surface (rh.white) generated with t1-freesurfer-longitudinal.',
+                                                                                       'needed_pipeline': 't1-freesurfer and t1-freesurfer longitudinal'})
+            else:
+                read_parameters_node.inputs.white_surface_right = clinica_file_reader(self.subjects,
+                                                                                      self.sessions,
+                                                                                      self.caps_directory,
+                                                                                      input_files.T1_FS_WM_SURF_R)
         except ClinicaException as e:
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.white_surface_left = clinica_file_reader(self.subjects,
+            if longitudinal:
+                read_parameters_node.inputs.white_surface_left = clinica_file_reader(self.subjects,
+                                                                                     self.sessions,
+                                                                                     self.caps_directory,
+                                                                                     {'pattern': join('t1',
+                                                                                                      'long-*',
+                                                                                                      'freesurfer_longitudinal',
+                                                                                                      'sub-*_ses-*.long.sub-*_*',
+                                                                                                      'surf',
+                                                                                                      'lh.white'),
+                                                                                      'description': 'left white matter/gray matter border surface (lh.white) generated with t1-freesurfer-longitudinal.',
+                                                                                      'needed_pipeline': 't1-freesurfer and t1-freesurfer longitudinal'})
+            else:
+                read_parameters_node.inputs.white_surface_left = clinica_file_reader(self.subjects,
+                                                                                     self.sessions,
+                                                                                     self.caps_directory,
+                                                                                     input_files.T1_FS_WM_SURF_L)
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        try:
+            if longitudinal:
+                read_parameters_node.inputs.destrieux_left = clinica_file_reader(self.subjects,
                                                                                  self.sessions,
                                                                                  self.caps_directory,
-                                                                                 input_files.T1_FS_WM_SURF_L)
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            read_parameters_node.inputs.destrieux_left = clinica_file_reader(self.subjects,
-                                                                             self.sessions,
-                                                                             self.caps_directory,
-                                                                             input_files.T1_FS_DESTRIEUX_PARC_L)
+                                                                                 {'pattern': join('t1',
+                                                                                                  'long-*',
+                                                                                                  'freesurfer_longitudinal',
+                                                                                                  'sub-*_ses-*.long.sub-*_*',
+                                                                                                  'label/lh.aparc.a2009s.annot'),
+                                                                                  'description': 'left hemisphere surface-based Destrieux parcellation (label/lh.aparc.a2009s.annot) generated with t1-freesurfer-longitudinal.',
+                                                                                  'needed_pipeline': 't1-freesurfer and t1-freesurfer longitudinal'})
+            else:
+                read_parameters_node.inputs.destrieux_left = clinica_file_reader(self.subjects,
+                                                                                 self.sessions,
+                                                                                 self.caps_directory,
+                                                                                 input_files.T1_FS_DESTRIEUX_PARC_L)
         except ClinicaException as e:
             all_errors.append(e)
 
