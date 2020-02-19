@@ -173,7 +173,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
 
         # Generate TSV files containing a summary of the regional statistics
         create_tsv = npe.Node(interface=nutil.Function(
-            input_names=['subjects_dir', 'image_id'],
+            input_names=['subjects_dir', 'subject_id'],
             output_names=['image_id'],
             function=write_tsv_files),
             name='2-CreateTsvFiles')
@@ -192,7 +192,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
                                           ('long_id', 'long_id')]),
             # Generate TSV files
             (init_input, create_tsv, [('subjects_dir', 'subjects_dir')]),
-            (recon_all,  create_tsv, [('subject_id', 'image_id')]),
+            (recon_all,  create_tsv, [('subject_id', 'subject_id')]),
             # Output node
             (create_tsv, self.output_node, [('image_id', 'image_id')]),
         ])

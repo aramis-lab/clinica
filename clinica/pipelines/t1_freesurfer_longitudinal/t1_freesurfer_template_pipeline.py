@@ -205,7 +205,7 @@ class T1FreeSurferTemplate(cpe.Pipeline):
             name='1-SegmentationReconAll')
         recon_all.inputs.directive = '-all'
 
-        # Run recon-all command
+        # Move $SUBJECT_DIR to source_dir (1 time point case)
         move_subjects_dir = npe.Node(
             interface=nutil.Function(
                 input_names=['subjects_dir', 'source_dir', 'subject_id'],
@@ -217,16 +217,16 @@ class T1FreeSurferTemplate(cpe.Pipeline):
         # Connections
         # ===========
         self.connect([
-            # Get <image_id> from input_node and print begin message
+            # Initialize the pipeline
             (self.input_node, init_input, [('participant_id', 'participant_id')]),
             (self.input_node, init_input, [('list_session_ids', 'list_session_ids')]),
             # Run recon-all command
             (init_input, recon_all, [('subjects_dir', 'subjects_dir'),
                                      ('image_id', 'subject_id'),
                                      ('flags',  'flags')]),
-            # Run recon-all command
-            (recon_all, move_subjects_dir, [('subjects_dir', 'subjects_dir'),
-                                            ('subject_id',  'subject_id')]),
+            # Move $SUBJECT_DIR to source_dir (1 time point case)
+            (init_input, move_subjects_dir, [('subjects_dir', 'subjects_dir')]),
+            (recon_all, move_subjects_dir, [('subject_id', 'subject_id')]),
             # Output node
             (move_subjects_dir, self.output_node, [('subject_id', 'image_id')]),
         ])
