@@ -1,30 +1,29 @@
-# `statistics_volume_correction`` - <VERY_SHORT_DESCRIPTION>
+# `statistics_volume_correction`` - Performs corrections after analysis in statistics-volume pipeline
 
-<SHORT_DESCRIPTION>
 
 
 ## Dependencies
-<!-- If you installed the docker image of Clinica, nothing is required. -->
-If you only installed the core of Clinica, this pipeline needs the installation of **<software_package>** on your computer. You can find how to install this software on the [installation](../#installing-clinica-from-source) page.
-
+No dependency is required.
 
 ## Running the pipeline
 The pipeline can be run with the following command line:
 
 ```
-clinica run statistics_volume_correction bids_directory caps_directory
+clinica run statistics_volume_correction caps_directory t_map height_threshold FWEp FDRp FWEc FDRc 
 ```
 where:
 
-  - `bids_directory` is the input folder containing the dataset in a [BIDS](../BIDS) hierarchy.
   - `caps_directory` is the output folder containing the results in a [CAPS](../CAPS) hierarchy.
-  - `<ARG_1>` <ARG_1_DESCRIPTION>
-  - `<ARG_2>` <ARG_2_DESCRIPTION>
+  - `t_map`: name of the T statistic map used for the correction
+  - `height_threshold`: height threshold indicated in the SPM report in output of `statistics-volume` pipeline
+  - `FWEp`: threshold indicated in the SPM report in output of `statistics-volume` pipeline
+  - `FDRp`: indicated in the SPM report in output of `statistics-volume` pipeline
+  - `FWEc`: indicated in the SPM report in output of `statistics-volume` pipeline
+  - `FDRc`: indicated in the SPM report in output of `statistics-volume` pipeline
 
-If you want to run the pipeline on a subset of your BIDS dataset, you can use the `-tsv` flag to specify in a TSV file the participants belonging to your subset.
+Optional parameters:
 
-!!! note
-    If you have
+  - `n_cuts`: number of cuts in final visualization
 
 
 ## Outputs
