@@ -177,26 +177,62 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.destrieux_right = clinica_file_reader(self.subjects,
-                                                                              self.sessions,
-                                                                              self.caps_directory,
-                                                                              input_files.T1_FS_DESTRIEUX_PARC_R)
+            if longitudinal:
+                read_parameters_node.inputs.destrieux_right = clinica_file_reader(self.subjects,
+                                                                                  self.sessions,
+                                                                                  self.caps_directory,
+                                                                                  {'pattern': join('t1',
+                                                                                                   'long-*',
+                                                                                                   'freesurfer_longitudinal',
+                                                                                                   'sub-*_ses-*.long.sub-*_*',
+                                                                                                   'label/rh.aparc.a2009s.annot'),
+                                                                                   'description': 'right hemisphere surface-based Destrieux parcellation (label/rh.aparc.a2009s.annot) generated with t1-freesurfer-longitudinal.',
+                                                                                   'needed_pipeline': 't1-freesurfer and t1-freesurfer longitudinal'})
+            else:
+                read_parameters_node.inputs.destrieux_right = clinica_file_reader(self.subjects,
+                                                                                  self.sessions,
+                                                                                  self.caps_directory,
+                                                                                  input_files.T1_FS_DESTRIEUX_PARC_R)
         except ClinicaException as e:
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.desikan_left = clinica_file_reader(self.subjects,
-                                                                           self.sessions,
-                                                                           self.caps_directory,
-                                                                           input_files.T1_FS_DESIKAN_PARC_L)
+            if longitudinal:
+                read_parameters_node.inputs.desikan_left = clinica_file_reader(self.subjects,
+                                                                               self.sessions,
+                                                                               self.caps_directory,
+                                                                               {'pattern': join('t1',
+                                                                                                'long-*',
+                                                                                                'freesurfer_longitudinal',
+                                                                                                'sub-*_ses-*.long.sub-*_*',
+                                                                                                'label/lh.aparc.annot'),
+                                                                                'description': 'left hemisphere surface-based Desikan parcellation (label/lh.aparc.annot) generated with t1-freesurfer-longitudinal.',
+                                                                                'needed_pipeline': 't1-freesurfer and t1-freesurfer longitudinal'})
+            else:
+                read_parameters_node.inputs.desikan_left = clinica_file_reader(self.subjects,
+                                                                               self.sessions,
+                                                                               self.caps_directory,
+                                                                               input_files.T1_FS_DESIKAN_PARC_L)
         except ClinicaException as e:
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.desikan_right = clinica_file_reader(self.subjects,
-                                                                            self.sessions,
-                                                                            self.caps_directory,
-                                                                            input_files.T1_FS_DESIKAN_PARC_R)
+            if longitudinal:
+                read_parameters_node.inputs.desikan_right = clinica_file_reader(self.subjects,
+                                                                                self.sessions,
+                                                                                self.caps_directory,
+                                                                                {'pattern': join('t1',
+                                                                                                 'long-*',
+                                                                                                 'freesurfer_longitudinal',
+                                                                                                 'sub-*_ses-*.long.sub-*_*',
+                                                                                                 'label/rh.aparc.annot'),
+                                                                                 'description': 'right hemisphere surface-based Desikan parcellation (label/rh.aparc.annot).',
+                                                                                 'needed_pipeline': 't1-freesurfer and t1-freesurfer longitudinal'})
+            else:
+                read_parameters_node.inputs.desikan_right = clinica_file_reader(self.subjects,
+                                                                                self.sessions,
+                                                                                self.caps_directory,
+                                                                                input_files.T1_FS_DESIKAN_PARC_R)
         except ClinicaException as e:
             all_errors.append(e)
 
