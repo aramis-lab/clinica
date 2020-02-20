@@ -27,9 +27,21 @@ T1_FS_ORIG_NU = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/mri/orig_
                                 ' non-uniformity in FreeSurfer (mri/orig_nu.mgz).',
                  'needed_pipeline': 't1-freesurfer'}
 
+T1_FS_LONG_ORIG_NU = {'pattern': 't1/long-*/freesurfer_longitudinal/sub-*_ses-*.long.sub-*_*/mri/orig_nu.mgz',
+                      'description': 'intensity normalized volume generated after correction for non-uniformity in FreeSurfer (orig_nu.mgz) in longitudinal',
+                      'needed_pipeline': 't1-freesurfer and t1-freesurfer longitudinal'}
+
 T1_FS_WM_SURF_R = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/surf/rh.white',
                    'description': 'right white matter/gray matter border surface (rh.white).',
                    'needed_pipeline': 't1-freesurfer'}
+
+T1_FS_LONG_SURF_R = {'pattern': 't1/long-*/freesurfer_longitudinal/sub-*_ses-*.long.sub-*_*/surf/rh.white',
+                     'description': 'right white matter/gray matter border surface (rh.white) generated with t1-freesurfer-longitudinal.',
+                     'needed_pipeline': 't1-freesurfer and t1-freesurfer longitudinal'}
+
+T1_FS_LONG_SURF_L = {'pattern': 't1/long-*/freesurfer_longitudinal/sub-*_ses-*.long.sub-*_*/surf/lh.white',
+                     'description': 'left white matter/gray matter border surface (lh.white) generated with t1-freesurfer-longitudinal.',
+                     'needed_pipeline': 't1-freesurfer and t1-freesurfer longitudinal'}
 
 T1_FS_WM_SURF_L = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/surf/lh.white',
                    'description': 'left white matter/gray matter border surface (lh.white).',
@@ -42,6 +54,14 @@ T1_FS_DESTRIEUX = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/mri/apa
 T1_FS_DESTRIEUX_PARC_L = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/label/lh.aparc.a2009s.annot',
                           'description': 'left hemisphere surface-based Destrieux parcellation (label/lh.aparc.a2009s.annot).',
                           'needed_pipeline': 't1-freesurfer'}
+
+T1_FS_LONG_DESTRIEUX_PARC_L = {'pattern': 't1/long-*/freesurfer_longitudinal/sub-*_ses-*.long.sub-*_*/label/lh.aparc.a2009s.annot',
+                               'description': 'left hemisphere surface-based Destrieux parcellation (label/lh.aparc.a2009s.annot) generated with t1-freesurfer-longitudinal.',
+                               'needed_pipeline': 't1-freesurfer and t1-freesurfer longitudinal'}
+
+T1_FS_LONG_DESTRIEUX_PARC_R = {'pattern': 't1/long-*/freesurfer_longitudinal/sub-*_ses-*.long.sub-*_*/label/rh.aparc.a2009s.annot',
+                               'description': 'right hemisphere surface-based Destrieux parcellation (label/rh.aparc.a2009s.annot) generated with t1-freesurfer-longitudinal.',
+                               'needed_pipeline': 't1-freesurfer and t1-freesurfer longitudinal'}
 
 T1_FS_DESTRIEUX_PARC_R = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/label/rh.aparc.a2009s.annot',
                           'description': 'right hemisphere surface-based Destrieux parcellation (label/rh.aparc.a2009s.annot).',
@@ -58,6 +78,14 @@ T1_FS_DESIKAN_PARC_L = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/la
 T1_FS_DESIKAN_PARC_R = {'pattern': 't1/freesurfer_cross_sectional/sub-*_ses-*/label/rh.aparc.annot',
                         'description': 'right hemisphere surface-based Desikan parcellation (label/rh.aparc.annot).',
                         'needed_pipeline': 't1-freesurfer'}
+
+T1_FS_LONG_DESIKAN_PARC_L = {'pattern': 't1/long-*/freesurfer_longitudinal/sub-*_ses-*.long.sub-*_*/label/lh.aparc.annot',
+                             'description': 'left hemisphere surface-based Desikan parcellation (label/lh.aparc.annot) generated with t1-freesurfer-longitudinal.',
+                             'needed_pipeline': 't1-freesurfer and t1-freesurfer-longitudinal'}
+
+T1_FS_LONG_DESIKAN_PARC_R = {'pattern': 't1/long-*/freesurfer_longitudinal/sub-*_ses-*.long.sub-*_*/label/rh.aparc.annot',
+                             'description': 'right hemisphere surface-based Desikan parcellation (label/rh.aparc.annot) generated with t1-freesurfer-longitudinal.',
+                             'needed_pipeline': 't1-freesurfer and t1-freesurfer-longitudinal'}
 
 
 # T1-Volume

@@ -3,15 +3,15 @@
 import clinica.engine as ce
 
 
-class PetSurfaceCLI(ce.CmdParser):
+class PetSurfaceLongitudinalCLI(ce.CmdParser):
 
     def define_name(self):
         """Define the sub-command name to run this pipeline."""
-        self._name = 'pet-surface'
+        self._name = 'pet-surface-longitudinal'
 
     def define_description(self):
         """Define a description of this pipeline."""
-        self._description = ('Surface-based processing of PET images:\n'
+        self._description = ('Longitudinal surface-based processing of PET images:\n'
                              'http://clinica.run/doc/Pipelines/PET_Surface/')
 
     def define_options(self):
@@ -38,7 +38,7 @@ class PetSurfaceCLI(ce.CmdParser):
 
         parameters = {
             'pet_tracer': args.pet_tracer,
-            'longitudinal': False
+            'longitudinal': True
         }
         pipeline = PetSurface(
             bids_directory=self.absolute_path(args.bids_directory),
