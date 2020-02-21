@@ -1,5 +1,3 @@
-# `t1-linear`` - <VERY_SHORT_DESCRIPTION>
-
 <SHORT_DESCRIPTION>
 
 
