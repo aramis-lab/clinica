@@ -152,11 +152,16 @@ class T1Linear(cpe.Pipeline):
         write_node.inputs.parameterization = False
         self.connect([
             (self.output_node, write_node, [('image_id', '@image_id')]),
-            (self.output_node, write_node, [('outfile_crop', '@outfile_crop')]),
+            (self.output_node, write_node, [('outfile_reg', '@outfile_reg')]),
             (self.output_node, write_node, [('affine_mat', '@affine_mat')]),
             (self.output_node, write_node, [('container', 'container')]),
             (self.output_node, write_node, [('substitutions', 'substitutions')]),
             ])
+
+        if (self.parameters.get('crop_image')):
+            self.connect([
+                (self.output_node, write_node, [('outfile_crop', '@outfile_crop')]),
+                ])
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline.
@@ -236,7 +241,6 @@ class T1Linear(cpe.Pipeline):
 
             (n4biascorrection, ants_registration_node, [('output_image', 'moving_image')]),
 
-            (ants_registration_node, cropnifti, [('warped_image', 'input_img')]),
             (ants_registration_node, self.output_node, [('out_matrix', 'affine_mat')]),
 
             # Connect to DataSink
@@ -246,5 +250,10 @@ class T1Linear(cpe.Pipeline):
             (get_ids, self.output_node, [('subst_ls', 'substitutions')]),
             (n4biascorrection, self.output_node, [('output_image', 'outfile_corr')]),
             (ants_registration_node, self.output_node, [('warped_image', 'outfile_reg')]),
-            (cropnifti, self.output_node, [('output_img', 'outfile_crop')]),
             ])
+        if (self.parameters.get('crop_image')):
+            self.connect([
+                (ants_registration_node, cropnifti, [('warped_image', 'input_img')]),
+                (cropnifti, self.output_node, [('output_img', 'outfile_crop')]),
+                ])
+

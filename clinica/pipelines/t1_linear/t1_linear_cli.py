@@ -36,25 +36,18 @@ class T1LinearCLI(ce.CmdParser):
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
 
-        # group_id can be used by certain pipelines when some operations are performed at the group level
-        # (for example, generation of a template in pipeline t1-volume)
-        # clinica_comp.add_argument("group_id",
-        #                          help='User-defined identifier for the provided group of subjects.')
+        # Clinica optional arguments
+        optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
 
+        optional.add_argument("-cp", "--crop_image", 
+                help='Crop the image using a template (suggested for using with DL models)',
+                action='store_true',
+                default=False
+                )
+        
         # Clinica standard arguments (e.g. --n_procs)
-        clinica_opt = self.add_clinica_standard_arguments()
+        self.add_clinica_standard_arguments()
 
-        # Add your own pipeline command line arguments here to be used in the
-        # method below. Example below:
-        # optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        # optional.add_argument("-rt", "--ref_template",
-        #                      help='Reference template for registration.')
-
-        # Add advanced arguments
-        # advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
-        # advanced.add_argument("-aa", "--advanced_arg",
-        #                       help='Your advanced argument.')
-        # self.add_clinica_standard_arguments(add_overwrite_flag=True)
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
@@ -63,6 +56,7 @@ class T1LinearCLI(ce.CmdParser):
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         parameters = {
+                'crop_image': args.crop_image
                 # 'ref_template'        : args.ref_template or 'Reference Template'
         }
 
