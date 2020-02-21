@@ -715,12 +715,16 @@ def test_run_T1Linear(cmdopt):
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
+    parameters = {
+        'crop_image': True
+    }
     # Instantiate pipeline
     pipeline = T1Linear(
         bids_directory=join(root, 'in', 'bids'),
         caps_directory=join(root, 'out', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv'),
         base_dir=join(working_dir, 'T1Linear'),
+        parameters=parameters
     )
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
@@ -728,7 +732,7 @@ def test_run_T1Linear(cmdopt):
     subjects = ['sub-ADNI022S0004']
     out_data_REG_NIFTI = [nib.load(join(root,
                                         'out', 'caps', 'subjects', sub, 'ses-M00',
-                                        't1_linear', 
+                                        't1_linear',
                                         sub + '_ses-M00_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz')).get_data()
                           for sub in subjects]
     ref_data_REG_NIFTI = [nib.load(join(root, 'ref', sub + '_ses-M00_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz')).get_data()

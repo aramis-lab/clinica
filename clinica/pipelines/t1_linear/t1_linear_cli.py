@@ -39,15 +39,13 @@ class T1LinearCLI(ce.CmdParser):
         # Clinica optional arguments
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
 
-        optional.add_argument("-cp", "--crop_image", 
-                help='Crop the image using a template (suggested for using with DL models)',
-                action='store_true',
-                default=False
-                )
-        
+        optional.add_argument("-cp", "--crop_image",
+                              help='Crop the image using a template (suggested for using with DL models)',
+                              action='store_true',
+                              default=False)
+
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
-
 
     def run_command(self, args):
         """Run the pipeline with defined args."""

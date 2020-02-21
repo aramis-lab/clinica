@@ -256,4 +256,3 @@ class T1Linear(cpe.Pipeline):
                 (ants_registration_node, cropnifti, [('warped_image', 'input_img')]),
                 (cropnifti, self.output_node, [('output_img', 'outfile_crop')]),
                 ])
-
