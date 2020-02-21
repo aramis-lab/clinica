@@ -213,6 +213,7 @@ def execute():
         T1FreeSurferCLI(),
         T1VolumeCLI(),
         # T1FreeSurferLongitudinalCLI(),
+        T1LinearCLI()
         DwiPreprocessingUsingPhaseDiffFieldmapCli(),
         DwiPreprocessingUsingT1Cli(),
         DwiDtiCli(),
@@ -228,7 +229,6 @@ def execute():
         T1VolumeRegisterDartelCLI(),
         T1VolumeDartel2MNICLI(),
         T1VolumeParcellationCLI(),
-        T1LinearCLI()
     ]
 
     run_parser = sub_parser.add_parser(
