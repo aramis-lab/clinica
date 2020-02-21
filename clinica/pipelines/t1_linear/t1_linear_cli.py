@@ -57,11 +57,10 @@ class T1LinearCLI(ce.CmdParser):
         # self.add_clinica_standard_arguments(add_overwrite_flag=True)
 
     def run_command(self, args):
-        """
-        """
-
-        from tempfile import mkdtemp
+         """Run the pipeline with defined args."""
+        from networkx import Graph
         from .t1_linear_pipeline import T1Linear
+        from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         parameters = {
             #'ref_template'        : args.ref_template or 'Reference Template'
@@ -73,14 +72,18 @@ class T1LinearCLI(ce.CmdParser):
              bids_directory=self.absolute_path(args.bids_directory),
              caps_directory=self.absolute_path(args.caps_directory),
              tsv_file=self.absolute_path(args.subjects_sessions_tsv),
+             base_dir=self.absolute_path(args.working_directory),
              parameters=parameters,
              name=self.name
              )
-        if args.working_directory is None:
-            args.working_directory = mkdtemp()
-        pipeline.base_dir = self.absolute_path(args.working_directory)
+       
         if args.n_procs:
-            pipeline.run(plugin='MultiProc',
-                         plugin_args={'n_procs': args.n_procs})
+            exec_pipeline = pipeline.run(plugin='MultiProc',
+                    plugin_args={'n_procs': args.n_procs})
         else:
-            pipeline.run()
+            exec_pipeline = pipeline.run()
+
+        if isinstance(exec_pipeline, Graph):
+            print_end_pipeline(self.name, pipeline.base_dir, pipeline.base_dir_was_specified)
+        else:
+            print_crash_files_and_exit(args.logname, pipeline.base_dir)
