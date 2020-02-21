@@ -3,11 +3,6 @@
 This file has been generated automatically by the `clinica generate template`
 command line tool. See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
 """
-
-# WARNING: Don't put any import statement here except if it's absolutly
-# necessary. Put it *inside* the different methods.
-# Otherwise it will slow down the dynamic loading of the pipelines list by the
-# command line tool.
 import clinica.pipelines.engine as cpe
 
 
@@ -142,20 +137,10 @@ class T1Linear(cpe.Pipeline):
         self.connect([
             (read_node, self.input_node, [('t1w', 't1w')]),
             ])
-        # This node is supposedly used to load BIDS inputs when this pipeline is
-        # not already connected to the output of a previous Clinica pipeline.
-        # For the purpose of the example, we simply read input arguments given
-        # by the command line interface and transmitted here through the
-        # `self.parameters` dictionary and pass it to the `self.input_node` to
-        # further by used as input of the core nodes.
 
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
         """
-        # In the same idea as the input node, this output node is supposedly
-        # used to write the output fields in a CAPS. It should be executed only
-        # if this pipeline output is not already connected to a next Clinica
-        # pipeline.
         from nipype.interfaces.io import DataSink
         import nipype.pipeline.engine as npe
 
