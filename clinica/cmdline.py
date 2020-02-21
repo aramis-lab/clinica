@@ -213,7 +213,7 @@ def execute():
         T1FreeSurferCLI(),
         T1VolumeCLI(),
         # T1FreeSurferLongitudinalCLI(),
-        T1LinearCLI()
+        T1LinearCLI(),
         DwiPreprocessingUsingPhaseDiffFieldmapCli(),
         DwiPreprocessingUsingT1Cli(),
         DwiDtiCli(),
