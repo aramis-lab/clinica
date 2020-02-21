@@ -57,13 +57,13 @@ class T1LinearCLI(ce.CmdParser):
         # self.add_clinica_standard_arguments(add_overwrite_flag=True)
 
     def run_command(self, args):
-         """Run the pipeline with defined args."""
+        """Run the pipeline with defined args."""
         from networkx import Graph
         from .t1_linear_pipeline import T1Linear
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         parameters = {
-            #'ref_template'        : args.ref_template or 'Reference Template'
+                # 'ref_template'        : args.ref_template or 'Reference Template'
         }
 
         # Most of the time, you will want to instantiate your pipeline with a
@@ -76,9 +76,10 @@ class T1LinearCLI(ce.CmdParser):
              parameters=parameters,
              name=self.name
              )
-       
+
         if args.n_procs:
-            exec_pipeline = pipeline.run(plugin='MultiProc',
+            exec_pipeline = pipeline.run(
+                    plugin='MultiProc',
                     plugin_args={'n_procs': args.n_procs})
         else:
             exec_pipeline = pipeline.run()
