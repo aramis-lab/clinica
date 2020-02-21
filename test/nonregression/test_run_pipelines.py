@@ -722,7 +722,6 @@ def test_run_T1Linear(cmdopt):
         tsv_file=join(root, 'in', 'subjects.tsv'),
         base_dir=join(working_dir, 'T1Linear'),
     )
-    pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Check output vs ref
