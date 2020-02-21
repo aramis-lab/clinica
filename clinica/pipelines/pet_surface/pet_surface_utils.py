@@ -1,7 +1,7 @@
 # coding: utf-8
 
 
-def perform_gtmseg(caps_dir, subject_id, session_id):
+def perform_gtmseg(caps_dir, subject_id, session_id, is_longitudinal):
     """gtmseg is a freesurfer command used to perform a segmentation used in some partial volume correction methods.
 
     Warnings:
@@ -14,6 +14,7 @@ def perform_gtmseg(caps_dir, subject_id, session_id):
         (string) caps_dir : CAPS directory.
         (string) subject_id: The subject_id (something like sub-ADNI002S4213)
         (string) session_id: The session id ( something like : ses-M12)
+        (bool)   is_longitudinal: If longitudinal processing, subjects_dir must be put elsewhere
 
     Returns:
         (string) Path to the segmentation volume : a volume where each voxel
@@ -23,41 +24,56 @@ def perform_gtmseg(caps_dir, subject_id, session_id):
     import os
     import shutil
     import nipype.pipeline.engine as pe
+    from clinica.utils.exceptions import ClinicaCAPSError
     from clinica.utils.stream import cprint
     from nipype.interfaces.base import CommandLine
 
     # Old subject_dir is saved for later
     subjects_dir_backup = os.path.expandvars('$SUBJECTS_DIR')
+
+    if is_longitudinal:
+        root = os.path.join(caps_dir, 'subjects', subject_id, session_id, 't1')
+        long_folds = [f for f in os.listdir(root) if f.startswith('long-')]
+        if len(long_folds) > 1:
+            raise ClinicaCAPSError('[Error] Folder ' + root + ' contains ' + str(len(long_folds))
+                                   + ' folders labeled long-*. Only 1 can exist')
+        elif len(long_folds) == 0:
+            raise ClinicaCAPSError('[Error] Folder ' + root + ' does not contains a folder labeled long-*. Have you run t1-freesurfer-longitudinal ?')
+        else:
+            root_env = os.path.join(root, long_folds[0], 'freesurfer_longitudinal')
+            sub_id_cmd = subject_id + '_' + session_id + '.long.' + subject_id + '_' + long_folds[0]
+
+    else:
+
+        root_env = os.path.join(caps_dir, 'subjects', subject_id, session_id, 't1', 'freesurfer_cross_sectional')
+        sub_id_cmd = subject_id + '_' + session_id
+
     # Set the new subject dir for the function to work properly
-    os.environ["SUBJECTS_DIR"] = os.path.join(caps_dir,
-                                              'subjects',
-                                              subject_id,
-                                              session_id,
-                                              't1',
-                                              'freesurfer_cross_sectional')
-    if not os.path.exists(os.path.join(os.path.expandvars('$SUBJECTS_DIR'), subject_id + '_' + session_id, 'mri', 'gtmseg.mgz')):
+    os.environ["SUBJECTS_DIR"] = root_env
+
+    if not os.path.exists(os.path.join(os.path.expandvars('$SUBJECTS_DIR'), sub_id_cmd, 'mri', 'gtmseg.mgz')):
         # Creation of standalone node based on Command Line Interface.
         # We simply put the command line we would run on a console
-        segmentation = pe.Node(interface=CommandLine('gtmseg --s %s_%s --no-seg-stats --xcerseg' % (subject_id, session_id),
+        segmentation = pe.Node(interface=CommandLine('gtmseg --s ' + sub_id_cmd + ' --no-seg-stats --xcerseg',
                                                      terminal_output='stream'), name='gtmseg')
         segmentation.run()
 
-    # We specify the out file to be in the current directory of execution (easy for us to look at it afterward in the
-    # working directory). We copy then the file.
-    out_file = os.path.abspath('./gtmseg.mgz')
-    shutil.copy(os.path.join(os.path.expandvars('$SUBJECTS_DIR'), subject_id + '_' + session_id, 'mri', 'gtmseg.mgz'),
-                out_file)
+        # We specify the out file to be in the current directory of execution (easy for us to look at it afterward in the
+        # working directory). We copy then the file.
+        out_file = os.path.abspath('./gtmseg.mgz')
+        shutil.copy(os.path.join(os.path.expandvars('$SUBJECTS_DIR'), subject_id + '_' + session_id, 'mri', 'gtmseg.mgz'),
+                    out_file)
 
-    # Remove bunch of files created during segmentation in caps dir and not needed
-    gtmsegcab = os.path.join(os.path.expandvars('$SUBJECTS_DIR'), subject_id + '_' + session_id, 'mri', 'gtmseg.ctab')
-    if os.path.exists(gtmsegcab):
-        os.remove(gtmsegcab)
+        # Remove bunch of files created during segmentation in caps dir and not needed
+        gtmsegcab = os.path.join(os.path.expandvars('$SUBJECTS_DIR'), subject_id + '_' + session_id, 'mri', 'gtmseg.ctab')
+        if os.path.exists(gtmsegcab):
+            os.remove(gtmsegcab)
 
-    gtmseglta = os.path.join(os.path.expandvars('$SUBJECTS_DIR'), subject_id + '_' + session_id, 'mri', 'gtmseg.lta')
-    if os.path.exists(gtmseglta):
-        os.remove(gtmseglta)
+        gtmseglta = os.path.join(os.path.expandvars('$SUBJECTS_DIR'), subject_id + '_' + session_id, 'mri', 'gtmseg.lta')
+        if os.path.exists(gtmseglta):
+            os.remove(gtmseglta)
 
-    # Set back the SUBJECT_DIR environment variable of the user
+        # Set back the SUBJECT_DIR environment variable of the user
     os.environ["SUBJECTS_DIR"] = subjects_dir_backup
     return out_file
 
@@ -435,7 +451,7 @@ def mris_expand(in_surface):
     return out_in_node
 
 
-def surf2surf(in_surface, reg_file, gtmsegfile, subject_id, session_id, caps_dir):
+def surf2surf(in_surface, reg_file, gtmsegfile, subject_id, session_id, caps_dir, is_longitudinal):
     """surf2surf is a wrapper of freesurfer command mri_surf2surf. Here the aim is to convert a input surface (which is
     the native space of the subject), into the same surface but in the gtmseg space (space of the volume generated by
     the gtmsegmentation)
@@ -449,26 +465,40 @@ def surf2surf(in_surface, reg_file, gtmsegfile, subject_id, session_id, caps_dir
         (string) subject_id : The subject_id (something like sub-ADNI002S4213)
         (string) session_id : The session id ( something like : ses-M12)
         (string) caps_dir   : Path to the CAPS directory
+        (bool)   is_longitudinal: longitudinal files
 
     Returns:
         (string) Path to the converted surface in current directory
     """
     import os
+    from clinica.utils.exceptions import ClinicaCAPSError
     import shutil
     import sys
 
     # set subjects_dir env. variable for mri_surf2surf to work properly
     subjects_dir_backup = os.path.expandvars('$SUBJECTS_DIR')
-    os.environ["SUBJECTS_DIR"] = os.path.join(caps_dir,
-                                              'subjects',
-                                              subject_id,
-                                              session_id,
-                                              't1',
-                                              'freesurfer_cross_sectional')
+
+    if is_longitudinal:
+        root = os.path.join(caps_dir, 'subjects', subject_id, session_id, 't1')
+        long_folds = [f for f in os.listdir(root) if f.startswith('long-')]
+        if len(long_folds) > 1:
+            raise ClinicaCAPSError('[Error] Folder ' + root + ' contains ' + str(len(long_folds))
+                                   + ' folders labeled long-*. Only 1 can exist')
+        elif len(long_folds) == 0:
+            raise ClinicaCAPSError('[Error] Folder ' + root + ' does not contains a folder labeled long-*. Have you run t1-freesurfer-longitudinal ?')
+        else:
+            root_env = os.path.join(root, long_folds[0], 'freesurfer_longitudinal')
+            sub_id_cmd = subject_id + '_' + session_id + '.long.' + subject_id + '_' + long_folds[0]
+
+    else:
+        root_env = os.path.join(caps_dir, 'subjects', subject_id, session_id, 't1', 'freesurfer_cross_sectional')
+        sub_id_cmd = subject_id + '_' + session_id
+
+    os.environ["SUBJECTS_DIR"] = root_env
 
     # make a copy of surface file to surface directory in CAPS in order to allow processing
     shutil.copy(in_surface, os.path.join(os.path.expandvars('$SUBJECTS_DIR'),
-                                         subject_id + '_' + session_id,
+                                         sub_id_cmd,
                                          'surf'))
 
     # TODO write nicer way to grab hemi & filename (difficulty caused by the dots in filenames)
@@ -479,7 +509,7 @@ def surf2surf(in_surface, reg_file, gtmsegfile, subject_id, session_id, caps_dir
     # Perform surf2surf algorithm
     tval = os.path.abspath('./' + os.path.basename(in_surface) + '_gtmsegspace')
     cmd = 'mri_surf2surf --reg %s %s --sval-xyz %s --hemi %s --tval-xyz %s --tval %s --s %s ' \
-          % (reg_file, gtmsegfile, surfname, hemi, gtmsegfile, tval, subject_id + '_' + session_id)
+          % (reg_file, gtmsegfile, surfname, hemi, gtmsegfile, tval, sub_id_cmd)
 
     # If system is MacOS, this export command must be run just before the mri_vol2surf command to bypass MacOs security
     if sys.platform == 'darwin':
@@ -488,7 +518,7 @@ def surf2surf(in_surface, reg_file, gtmsegfile, subject_id, session_id, caps_dir
 
     # remove file in caps
     os.remove(os.path.join(os.path.expandvars('$SUBJECTS_DIR'),
-                           subject_id + '_' + session_id,
+                           sub_id_cmd,
                            'surf',
                            os.path.basename(in_surface)))
 
@@ -498,7 +528,7 @@ def surf2surf(in_surface, reg_file, gtmsegfile, subject_id, session_id, caps_dir
     return tval
 
 
-def vol2surf(volume, surface, subject_id, session_id, caps_dir, gtmsegfile):
+def vol2surf(volume, surface, subject_id, session_id, caps_dir, gtmsegfile, is_longitudinal):
     """vol2surf is a wrapper of freesurfer command mri_vol2surf. It projects the volume into the surface : the value at
     each vertex is given by the value of the voxel it intersects
 
@@ -514,17 +544,30 @@ def vol2surf(volume, surface, subject_id, session_id, caps_dir, gtmsegfile):
         (string) Path to the data projected onto the surface
     """
     import os
+    from clinica.utils.exceptions import ClinicaCAPSError
     import shutil
     import sys
 
     # set subjects_dir env. variable for mri_vol2surf to work properly
     subjects_dir_backup = os.path.expandvars('$SUBJECTS_DIR')
-    os.environ["SUBJECTS_DIR"] = os.path.join(caps_dir,
-                                              'subjects',
-                                              subject_id,
-                                              session_id,
-                                              't1',
-                                              'freesurfer_cross_sectional')
+
+    if is_longitudinal:
+        root = os.path.join(caps_dir, 'subjects', subject_id, session_id, 't1')
+        long_folds = [f for f in os.listdir(root) if f.startswith('long-')]
+        if len(long_folds) > 1:
+            raise ClinicaCAPSError('[Error] Folder ' + root + ' contains ' + str(len(long_folds))
+                                   + ' folders labeled long-*. Only 1 can exist')
+        elif len(long_folds) == 0:
+            raise ClinicaCAPSError('[Error] Folder ' + root + ' does not contains a folder labeled long-*. Have you run t1-freesurfer-longitudinal ?')
+        else:
+            root_env = os.path.join(root, long_folds[0], 'freesurfer_longitudinal')
+            sub_id_cmd = subject_id + '_' + session_id + '.long.' + subject_id + '_' + long_folds[0]
+
+    else:
+        root_env = os.path.join(caps_dir, 'subjects', subject_id, session_id, 't1', 'freesurfer_cross_sectional')
+        sub_id_cmd = subject_id + '_' + session_id
+
+    os.environ["SUBJECTS_DIR"] = root_env
 
     # TODO write nicer way to grab hemi & filename (difficulty caused by the dots in filenames)
     # extract hemisphere based on filename
@@ -533,15 +576,15 @@ def vol2surf(volume, surface, subject_id, session_id, caps_dir, gtmsegfile):
 
     # copy surface file in caps surf folder to allow processing
     shutil.copy(surface, os.path.join(os.path.expandvars('$SUBJECTS_DIR'),
-                                      subject_id + '_' + session_id,
+                                      sub_id_cmd,
                                       'surf'))
 
     if not os.path.exists(os.path.join(os.path.expandvars('$SUBJECTS_DIR'),
-                                       subject_id + '_' + session_id,
+                                       sub_id_cmd,
                                        'mri',
                                        'gtmseg.mgz')):
         shutil.copy(gtmsegfile, os.path.join(os.path.expandvars('$SUBJECTS_DIR'),
-                                             subject_id + '_' + session_id,
+                                             sub_id_cmd,
                                              'mri',
                                              'gtmseg.mgz'))
 
@@ -552,7 +595,7 @@ def vol2surf(volume, surface, subject_id, session_id, caps_dir, gtmsegfile):
     cmd += ' --o ' + output
     cmd += ' --surf ' + surfname
     cmd += ' --hemi ' + hemi
-    cmd += ' --regheader ' + subject_id + '_' + session_id
+    cmd += ' --regheader ' + sub_id_cmd
     cmd += ' --ref gtmseg.mgz'
     cmd += ' --interp nearest'
 
@@ -563,13 +606,13 @@ def vol2surf(volume, surface, subject_id, session_id, caps_dir, gtmsegfile):
 
     # remove file in caps
     os.remove(os.path.join(os.path.expandvars('$SUBJECTS_DIR'),
-                           subject_id + '_' + session_id,
+                           sub_id_cmd,
                            'surf',
                            os.path.basename(surface)))
     # TODO carreful here...
     # Removing gtmseg.mgz may lead to problems as other vol2surf are using it
     os.remove(os.path.join(os.path.expandvars('$SUBJECTS_DIR'),
-                           subject_id + '_' + session_id,
+                           sub_id_cmd,
                            'mri',
                            'gtmseg.mgz'))
 
@@ -636,16 +679,29 @@ def fsaverage_projection(projection, subject_id, caps_dir, session_id, fwhm):
         (string) Path to the data averaged
     """
     from nipype.interfaces.freesurfer import MRISPreproc
+    from clinica.utils.exceptions import ClinicaCAPSError
     import os
     import shutil
 
     subjects_dir_backup = os.path.expandvars('$SUBJECTS_DIR')
-    os.environ["SUBJECTS_DIR"] = os.path.join(caps_dir,
-                                              'subjects',
-                                              subject_id,
-                                              session_id,
-                                              't1',
-                                              'freesurfer_cross_sectional')
+
+    if is_longitudinal:
+        root = os.path.join(caps_dir, 'subjects', subject_id, session_id, 't1')
+        long_folds = [f for f in os.listdir(root) if f.startswith('long-')]
+        if len(long_folds) > 1:
+            raise ClinicaCAPSError('[Error] Folder ' + root + ' contains ' + str(len(long_folds))
+                                   + ' folders labeled long-*. Only 1 can exist')
+        elif len(long_folds) == 0:
+            raise ClinicaCAPSError('[Error] Folder ' + root + ' does not contains a folder labeled long-*. Have you run t1-freesurfer-longitudinal ?')
+        else:
+            root_env = os.path.join(root, long_folds[0], 'freesurfer_longitudinal')
+            sub_id_cmd = subject_id + '_' + session_id + '.long.' + subject_id + '_' + long_folds[0]
+
+    else:
+        root_env = os.path.join(caps_dir, 'subjects', subject_id, session_id, 't1', 'freesurfer_cross_sectional')
+        sub_id_cmd = subject_id + '_' + session_id
+
+    os.environ["SUBJECTS_DIR"] = root_env
 
     # copy fsaverage folder next to : subject_id + '_' + session_id
     # for the mris_preproc command to properly find src and target
@@ -657,7 +713,7 @@ def fsaverage_projection(projection, subject_id, caps_dir, session_id, fwhm):
 
     # also copy the mgh file in the surf folder (needed by MRISPreproc
     projection_in_surf_folder = os.path.join(os.path.expandvars('$SUBJECTS_DIR'),
-                                             subject_id + '_' + session_id,
+                                             sub_id_cmd,
                                              'surf',
                                              os.path.basename(projection))
 
@@ -825,7 +881,8 @@ def get_wf(subject_id,
            destrieux_right,
            desikan_left,
            desikan_right,
-           use_spm_standalone):
+           use_spm_standalone,
+           is_longitudinal):
     """get_wf create a full workflow for only one subject, and then executes it
 
             Args:
@@ -881,13 +938,15 @@ def get_wf(subject_id,
 
     gtmsegmentation = pe.Node(niu.Function(input_names=['caps_dir',
                                                         'subject_id',
-                                                        'session_id'],
+                                                        'session_id',
+                                                        'is_longitudinal'],
                                            output_names=['gtmseg_file'],
                                            function=utils.perform_gtmseg),
                               name='gtmseg')
     gtmsegmentation.inputs.caps_dir = caps_dir
     gtmsegmentation.inputs.subject_id = subject_id
     gtmsegmentation.inputs.session_id = session_id
+    gtmsegmentation.inputs.is_longitudinal = is_longitudinal
 
     tkregister = pe.Node(Tkregister2(reg_header=True), name='tkreg')
 
@@ -965,7 +1024,8 @@ def get_wf(subject_id,
                                                            'gtmsegfile',
                                                            'subject_id',
                                                            'session_id',
-                                                           'caps_dir'],
+                                                           'caps_dir',
+                                                           'is_longitudinal'],
                                               output_names=['tval'],
                                               function=utils.surf2surf),
                                  name='surf_conversion',
@@ -973,13 +1033,15 @@ def get_wf(subject_id,
     surf_conversion.inputs.subject_id = subject_id
     surf_conversion.inputs.session_id = session_id
     surf_conversion.inputs.caps_dir = caps_dir
+    surf_conversion.inputs.is_longitudinal = is_longitudinal
 
     vol_on_surf = pe.MapNode(niu.Function(input_names=['volume',
                                                        'surface',
                                                        'subject_id',
                                                        'session_id',
                                                        'caps_dir',
-                                                       'gtmsegfile'],
+                                                       'gtmsegfile',
+                                                       'is_longitudinal'],
                                           output_names=['output'],
                                           function=utils.vol2surf),
                              name='vol_on_surf',
@@ -987,6 +1049,7 @@ def get_wf(subject_id,
     vol_on_surf.inputs.subject_id = subject_id
     vol_on_surf.inputs.session_id = session_id
     vol_on_surf.inputs.caps_dir = caps_dir
+    vol_on_surf.inputs.is_longitudinal = is_longitudinal
 
     normal_average = pe.Node(niu.Function(input_names=['in_surfaces'],
                                           output_names=['out_surface'],

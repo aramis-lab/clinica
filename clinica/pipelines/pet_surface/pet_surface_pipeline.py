@@ -353,7 +353,8 @@ class PetSurface(cpe.Pipeline):
                                                           'desikan_right',
                                                           'destrieux_left',
                                                           'destrieux_right',
-                                                          'use_spm_standalone'],
+                                                          'use_spm_standalone',
+                                                          'is_longitudinal'],
                                              output_names=[],
                                              function=utils.get_wf),
                                 name='full_pipeline_mapnode',
@@ -395,6 +396,7 @@ class PetSurface(cpe.Pipeline):
                                                                                     'region-cerebellumPons_eroded-6mm_mask.nii.gz'))
 
         full_pipe.inputs.matscript_folder_inverse_deformation = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+        full_pipe.inputs.is_longitudinal = self.parameters['longitudinal']
 
         # This section of code determines whether to use SPM standalone or not
         full_pipe.inputs.use_spm_standalone = False
