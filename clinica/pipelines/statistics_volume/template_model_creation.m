@@ -1,3 +1,7 @@
+% Obtained using SPM.
+% Launch SPM menu > Stats > Factorial Design Specifications > Select two sample t-test
+% Then View > Show m-code
+
 spm('defaults','pet');
 spm_jobman('initcfg');
 

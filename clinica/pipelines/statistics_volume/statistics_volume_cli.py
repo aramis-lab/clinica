@@ -1,15 +1,4 @@
-# coding: utf8
-
 # coding: utf-8
-
-__author__ = "Arnaud Marcoux"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Arnaud Marcoux"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.3.0"
-__maintainer__ = "Arnaud Marcoux"
-__email__ = "arnaud.marcoux@icm-institute.org"
-__status__ = "Development"
 
 import clinica.engine as ce
 
@@ -22,7 +11,7 @@ class StatisticsVolumeCLI(ce.CmdParser):
 
     def define_description(self):
         """Define a description of this pipeline."""
-        self._description = ('Brief description:\n'
+        self._description = ('Volume-based mass-univariate analysis with SPM:\n'
                              'http://clinica.run/doc/Pipelines/Statistics_Volume/')
 
     def define_options(self):
@@ -48,6 +37,7 @@ class StatisticsVolumeCLI(ce.CmdParser):
                                   help='User-defined identifier for the provided group of subjects.')
 
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
+
 
         optional.add_argument("--custom_files", "-cf", type=str, default=None,
                               help=('Custom file string. Specify filename using * when the subject or session name appear. '
@@ -81,17 +71,7 @@ class StatisticsVolumeCLI(ce.CmdParser):
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
-        # Most of the time, you will want to instantiate your pipeline with a
-        # BIDS and/or CAPS directory as inputs. If the BIDS directory is not needed
-        # for your pipeline, simply remove:
-        # bids_directory=self.absolute_path(args.bids_directory),
-        pipeline = StatisticsVolume(
-            caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subject_visits_with_covariates_tsv),
-            base_dir=self.absolute_path(args.working_directory),
-            name=self.name
-        )
-        pipeline.parameters = {'contrast': args.contrast,
+        pipeline_parameters = {'contrast': args.contrast,
                                'feature_type': args.feature_type,
                                'group_id': args.group_id,
                                'custom_files': args.custom_files,
@@ -99,6 +79,14 @@ class StatisticsVolumeCLI(ce.CmdParser):
                                'threshold_corrected_pvalue': args.threshold_corrected_pvalue,
                                'group_id_caps': args.group_id_caps,
                                'smoothing': args.smoothing}
+
+        pipeline = StatisticsVolume(
+            caps_directory=self.absolute_path(args.caps_directory),
+            tsv_file=self.absolute_path(args.subject_visits_with_covariates_tsv),
+            base_dir=self.absolute_path(args.working_directory),
+            name=self.name,
+            parameters=pipeline_parameters
+        )
 
         if args.n_procs:
             exec_pipeline = pipeline.run(plugin='MultiProc',

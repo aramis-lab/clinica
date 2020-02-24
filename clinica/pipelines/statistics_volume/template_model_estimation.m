@@ -1,3 +1,7 @@
+% Obtained using SPM.
+% Launch SPM menu > Stats > Model Estimation
+% Then View > Show m-code
+
 spm('defaults','pet');
 spm_jobman('initcfg');
 

@@ -1,3 +1,7 @@
+% This file has been obtained with SPM
+% Launch SPM menu > Stats > Contrast Manager
+% Then View > Show m-code
+
 spm('defaults','pet');
 spm_jobman('initcfg');
 

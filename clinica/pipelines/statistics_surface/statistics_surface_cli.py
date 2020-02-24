@@ -1,15 +1,5 @@
 # coding: utf8
 
-__author__ = "Arnaud Marcoux"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Arnaud Marcoux"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.3.0"
-__maintainer__ = "Arnaud Marcoux"
-__email__ = "arnaud.marcoux@icm-institute.org"
-__status__ = "Development"
-
-
 import clinica.engine as ce
 
 

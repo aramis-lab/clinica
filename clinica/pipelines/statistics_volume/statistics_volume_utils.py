@@ -10,53 +10,53 @@ __email__ = "arnaud.marcoux@icm-institute.org"
 __status__ = "Development"
 
 
-def get_group_1_and_2(csv, contrast):
+def get_group_1_and_2(tsv, contrast):
     """
         Based on the csv given in parameter, compute indexes of each group
     Args:
-        csv: (str) path to the csv file containing information on subjects/sessions with all covariables
-        contrast: (str) name of a column of the csv
+        tsv: (str) path to the tsv file containing information on subjects/sessions with all covariables
+        contrast: (str) name of a column of the tsv
 
     Returns:
         first_group_idx: (list of int) list of indexes of first group
         second_group_idx: (list of int) list of indexes of second group
-        class_names: (list of str of len 2) list of the class names read in the column contrast of the csv
+        class_names: (list of str of len 2) list of the class names read in the column contrast of the tsv
     """
     import pandas as pds
     from clinica.utils.exceptions import ClinicaException
 
     # StatisticsVolume pipeline has been instantiated with tsv_file=csv, so check of existence and integrity have suceed
     # No further check are done when trying to read it
-    csv = pds.read_csv(csv, sep='\t')
-    columns = list(csv.columns)
+    tsv = pds.read_csv(tsv, sep='\t')
+    columns = list(tsv.columns)
 
     # An error is raised if the contrast column is not found in the tsv
     if contrast not in columns:
-        raise ClinicaException(contrast + ' is not present in ' + csv)
+        raise ClinicaException(contrast + ' is not present in ' + tsv)
 
     # list(set(my_list)) gives unique values of my_list
-    class_names = list(set(csv[contrast]))
+    class_names = list(set(tsv[contrast]))
 
     # This is a 2-sample t-test: we can only allow 2 classes
     if len(class_names) != 2:
         raise ClinicaException('It must exist only 2 classes in the column ' + contrast
                                + ' to perform 2-sample t-tests. Here Clinica found: ' + str(class_names))
-    first_group_idx = [i for i, label in enumerate(list(csv[contrast])) if label == class_names[0]]
-    second_group_idx = [i for i, label in enumerate(list(csv[contrast])) if label == class_names[1]]
+    first_group_idx = [i for i, label in enumerate(list(tsv[contrast])) if label == class_names[0]]
+    second_group_idx = [i for i, label in enumerate(list(tsv[contrast])) if label == class_names[1]]
 
     return first_group_idx, second_group_idx, class_names
 
 
-def model_creation(csv, contrast, idx_group1, idx_group2, file_list, template_file):
+def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_file):
     """
         Create the matlab .m file for the instantiation of the 2-sample t-test model in SPM
 
     Args:
-        csv: (str) path to the csv file containing information on subjects/sessions with all covariables
-        contrast: (str) name of a column of the csv
+        tsv: (str) path to the tsv file containing information on subjects/sessions with all covariables
+        contrast: (str) name of a column of the tsv
         idx_group1: (list of int) list of indexes of first group
         idx_group2: (list of int) list of indexes of second group
-        file_list: List of files used in the statistical test. Their order is the same as it appears on the csv file
+        file_list: List of files used in the statistical test. Their order is the same as it appears on the tsv file
         template_file: (str) path to the template file used to generate the .m file
 
     Returns:
@@ -103,14 +103,14 @@ def model_creation(csv, contrast, idx_group1, idx_group2, file_list, template_fi
         file.write(filedata)
 
     # Add our covariates
-    csv = pds.read_csv(csv, sep='\t')
-    columns_stripped = [elem.strip(' ') for elem in list(csv.columns)]
-    if columns_stripped != list(csv.columns):
-        raise ClinicaException('[Error] Check the column of your tsv file ' + csv
+    tsv = pds.read_csv(tsv, sep='\t')
+    columns_stripped = [elem.strip(' ') for elem in list(tsv.columns)]
+    if columns_stripped != list(tsv.columns):
+        raise ClinicaException('[Error] Check the column of your tsv file ' + tsv
                                + 'Whitespace in the column names can cause errors')
     covariables = [elem for elem in columns_stripped if elem not in ['participant_id', 'session_id', contrast]]
     for covar_number, covar in enumerate(covariables, start=1):
-        current_covar_data = list(csv[covar])
+        current_covar_data = list(tsv[covar])
         if isinstance(current_covar_data[0], str):
             # Transform data
             temp_data = [elem.replace(',', '.') for elem in current_covar_data]
@@ -206,6 +206,7 @@ def run_m_script(m_file):
     """
     from os.path import isfile, dirname, basename, abspath, join
     from os import system
+    from clinica.utils.spm import use_spm_standalone
     import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
     from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
     import platform
@@ -217,7 +218,7 @@ def run_m_script(m_file):
     assert m_file[-2:] == '.m', '[Error] ' + m_file + ' is not a Matlab file (extension must be .m)'
 
     # Generate command line to run
-    if utls.use_spm_standalone():
+    if use_spm_standalone():
         cprint('USING SPM STANDALONE')
         utls.delete_last_line(m_file)
         # SPM standalone must be run directly from its root folder
@@ -245,25 +246,6 @@ def run_m_script(m_file):
     if not isfile(output_mat_file):
         raise RuntimeError('Output matrix ' + output_mat_file + ' was not produced')
     return output_mat_file
-
-
-def use_spm_standalone():
-    """
-        Tells if SPM standalone can be used
-    Returns:
-        True if SPM standalone is detected, False otherwise. Note that it does not guarentee that SPM (classical) is
-        up and running in the system.
-    """
-    import os
-    from os.path import isdir, expandvars
-
-    use_spm_stand = False
-    if all(elem in os.environ.keys() for elem in ['SPMSTANDALONE_HOME', 'MCR_HOME']):
-        if isdir(expandvars('$SPMSTANDALONE_HOME')) and isdir(expandvars('$MCR_HOME')):
-            use_spm_stand = True
-        else:
-            raise FileNotFoundError('[Error] $SPMSTANDALONE_HOME and $MCR_HOME are defined, but linked to non existent folder')
-    return use_spm_stand
 
 
 def delete_last_line(filename):
@@ -405,7 +387,7 @@ def read_output(spm_mat, spm_mat_2, class_names, covariables, group_id, fwhm, me
     Returns:
         spmT_0001: (str) path to t maps for the first group comparison
         spmT_0002: (str) path to t maps for the second group comparison
-        new_figure_names: (list) path to figure files
+        spm_figures: (list) path to figure files
         variance_of_error: (str) path to variance of error
         resels_per_voxels: (str) path to resels per voxel
         mask: (str) path to mask of included voxels
@@ -432,12 +414,13 @@ def read_output(spm_mat, spm_mat_2, class_names, covariables, group_id, fwhm, me
     if len(figures) < 2:
         raise RuntimeError('[Error] Figures were not generated')
     fig_number = [int(f[-7:-4]) for f in figures]
-    new_figure_names = [abspath('./' + 'group-' + group_id + '_report-' + str(i) + '.png') for i in fig_number]
-    for old_name, new_name in zip(figures, new_figure_names):
+    spm_figures = [abspath('./' + 'group-' + group_id + '_report-' + str(i) + '.png') for i in fig_number]
+    for old_name, new_name in zip(figures, spm_figures):
         copyfile(old_name, new_name)
 
     # Handle spm t maps
     spm_T = [abspath(join(dirname(spm_mat), f)) for f in list_files if f.startswith('spmT')]
+    spm_T = sorted(spm_T)
     if len(spm_T) != 2:
         raise RuntimeError('[Error] ' + str(len(spm_T)) + ' SPM t-map(s) were found')
     if fwhm:
@@ -479,19 +462,4 @@ def read_output(spm_mat, spm_mat_2, class_names, covariables, group_id, fwhm, me
     for con, contrast in zip(con_files, contrasts):
         copyfile(con, contrast)
 
-    return spmT_0001, spmT_0002, new_figure_names, variance_of_error, resels_per_voxels, mask, regression_coeff, contrasts
-
-
-def add_spm2txt(script_file, matlab_path):
-    import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
-    from os.path import abspath
-
-    if utls.use_spm_standalone():
-        result_txt = abspath('./results.txt')
-        line_path = 'addpath(\'' + matlab_path + '\');'
-        spm2txt_line = 'spm2txt(\'' + result_txt + '\', xSPM);'
-        with open(script_file, 'a') as file:
-            file.write(line_path)
-            file.write(spm2txt_line)
-
-    return result_txt
+    return spmT_0001, spmT_0002, spm_figures, variance_of_error, resels_per_voxels, mask, regression_coeff, contrasts

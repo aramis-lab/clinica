@@ -25,4 +25,4 @@ pydot == 1.2.4
 duecredit == 0.6.4
 xgboost == 0.80
 nipy == 0.4.2
-nilearn == 0.6.0
+nilearn == 0.5.0

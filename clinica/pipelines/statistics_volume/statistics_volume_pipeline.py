@@ -1,13 +1,4 @@
-
-__author__ = "Arnaud Marcoux"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Arnaud Marcoux"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.3.0"
-__maintainer__ = "Arnaud Marcoux"
-__email__ = "arnaud.marcoux@icm-institute.org"
-__status__ = "Development"
-
+# coding: utf-8
 
 import clinica.pipelines.engine as cpe
 
@@ -52,12 +43,12 @@ class StatisticsVolume(cpe.Pipeline):
 
         return ['spmT_0001',
                 'spmT_0002',
-                'new_figure_names',
+                'spm_figures',
                 'variance_of_error',
                 'resels_per_voxels',
                 'mask',
                 'regression_coeff',
-                'contrast ']
+                'contrast']
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline.
@@ -187,7 +178,7 @@ class StatisticsVolume(cpe.Pipeline):
         self.connect([
             (self.output_node, datasink, [('spmT_0001', 'spm_results_analysis_1')]),
             (self.output_node, datasink, [('spmT_0002', 'spm_results_analysis_2')]),
-            (self.output_node, datasink, [('new_figure_names', 'figures')]),
+            (self.output_node, datasink, [('spm_figures', 'figures')]),
             (self.output_node, datasink, [('variance_of_error', 'variance_of_error')]),
             (self.output_node, datasink, [('resels_per_voxels', 'resels_per_voxels')]),
             (self.output_node, datasink, [('mask', 'mask')]),
@@ -294,7 +285,7 @@ class StatisticsVolume(cpe.Pipeline):
         read_output_node = npe.Node(nutil.Function(input_names=['spm_mat', 'spm_mat_2', 'class_names', 'covariables', 'group_id', 'fwhm', 'measure'],
                                                    output_names=['spmT_0001',
                                                                  'spmT_0002',
-                                                                 'new_figure_names',
+                                                                 'spm_figures',
                                                                  'variance_of_error',
                                                                  'resels_per_voxels',
                                                                  'mask',
@@ -338,7 +329,7 @@ class StatisticsVolume(cpe.Pipeline):
 
             (read_output_node, self.output_node, [('spmT_0001', 'spmT_0001')]),
             (read_output_node, self.output_node, [('spmT_0002', 'spmT_0002')]),
-            (read_output_node, self.output_node, [('new_figure_names', 'new_figure_names')]),
+            (read_output_node, self.output_node, [('spm_figures', 'spm_figures')]),
             (read_output_node, self.output_node, [('variance_of_error', 'variance_of_error')]),
             (read_output_node, self.output_node, [('resels_per_voxels', 'resels_per_voxels')]),
             (read_output_node, self.output_node, [('mask', 'mask')]),
