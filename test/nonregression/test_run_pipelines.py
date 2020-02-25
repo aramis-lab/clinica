@@ -772,7 +772,7 @@ def test_run_StatisticsVolumeCorrection(cmdopt):
     }
     pipeline = StatisticsVolumeCorrection(
         caps_directory=join(root, 'out', 'caps'),
-        base_dir=join(working_dir, 'StatisticsVolumeCorrection')
+        base_dir=join(working_dir, 'StatisticsVolumeCorrection'),
         parameters=parameters
     )
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)

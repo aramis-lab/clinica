@@ -362,13 +362,6 @@ def test_instantiate_StatisticsVolume(cmdopt):
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'StatisticsVolume')
 
-    # Remove potential residual of previous UT
-    clean_folder(join(root, 'out', 'caps'), recreate=False)
-    clean_folder(join(working_dir, 'StatisticsVolume'), recreate=False)
-
-    # Copy necessary data from in to out
-    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
-
     # Instantiate pipeline and run()
     parameters = {'contrast': 'group',
                   'feature_type': 'fdg',
@@ -379,9 +372,8 @@ def test_instantiate_StatisticsVolume(cmdopt):
                   'smoothing': 8}
 
     pipeline = StatisticsVolume(
-        caps_directory=join(root, 'out', 'caps'),
+        caps_directory=join(root, 'in', 'caps'),
         tsv_file=join(root, 'in', 'covariates_subsetADNI.txt'),
-        base_dir=join(working_dir, 'StatisticsVolume'),
         parameters=parameters
     )
     pipeline.build()
@@ -397,13 +389,6 @@ def test_instantiate_StatisticsVolumeCorrection(cmdopt):
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'StatisticsVolumeCorrection')
 
-    # Remove potential residual of previous UT
-    clean_folder(join(root, 'out', 'caps'), recreate=False)
-    clean_folder(join(working_dir, 'StatisticsVolumeCorrection'), recreate=False)
-
-    # Copy necessary data from in to out
-    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
-
     # Instantiate pipeline and run()
     parameters = {
         't_map': 'group-UnitTest_AD-lt-CN_measure-fdg_fwhm-8_TStatistics.nii',
@@ -415,7 +400,6 @@ def test_instantiate_StatisticsVolumeCorrection(cmdopt):
         'n_cuts': 15
     }
     pipeline = StatisticsVolumeCorrection(
-        caps_directory=join(root, 'out', 'caps'),
-        base_dir=join(working_dir, 'StatisticsVolumeCorrection'),
-        parameters = parameters)
+        caps_directory=join(root, 'in', 'caps'),
+        parameters=parameters)
     pipeline.build()
