@@ -351,7 +351,7 @@ def test_instantiate_T1FreeSurferLongitudinalCorrection():
     pipeline.build()
 
 
-def test_run_StatisticsVolume(cmdopt):
+def test_instantiate_StatisticsVolume(cmdopt):
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import StatisticsVolume
     from os.path import dirname, join, abspath, exists, isfile
     import shutil
@@ -387,7 +387,7 @@ def test_run_StatisticsVolume(cmdopt):
     pipeline.build()
 
 
-def test_run_StatisticsVolumeCorrection(cmdopt):
+def test_instantiate_StatisticsVolumeCorrection(cmdopt):
     from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_pipeline import \
         StatisticsVolumeCorrection
     from os.path import dirname, join, abspath, exists, isfile
