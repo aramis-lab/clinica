@@ -203,13 +203,13 @@ class StatisticsVolume(cpe.Pipeline):
                               name='unzip_node')
 
         # Get indexes of the 2 groups, based on the contrast column of the tsv file
-        get_groups = npe.Node(nutil.Function(input_names=['csv', 'contrast'],
+        get_groups = npe.Node(nutil.Function(input_names=['tsv', 'contrast'],
                                              output_names=['idx_group1', 'idx_group2', 'class_names'],
                                              function=utils.get_group_1_and_2),
                               name='get_groups')
 
         get_groups.inputs.contrast = self.parameters['contrast']
-        get_groups.inputs.csv = self.tsv_file
+        get_groups.inputs.tsv = self.tsv_file
 
         # Run SPM nodes are all a copy of a generic SPM script launcher
 
@@ -233,7 +233,7 @@ class StatisticsVolume(cpe.Pipeline):
         # 1. Model creation
         # We use overwritte option to be sure this node is always run so that it can delete the output dir if it
         # already exists (this may cause error in output files otherwise)
-        model_creation = npe.Node(nutil.Function(input_names=['csv',
+        model_creation = npe.Node(nutil.Function(input_names=['tsv',
                                                               'contrast',
                                                               'idx_group1',
                                                               'idx_group2',
@@ -243,7 +243,7 @@ class StatisticsVolume(cpe.Pipeline):
                                                  function=utils.model_creation),
                                   name='model_creation',
                                   overwrite=True)
-        model_creation.inputs.csv = self.tsv_file
+        model_creation.inputs.tsv = self.tsv_file
         model_creation.inputs.contrast = self.parameters['contrast']
         model_creation.inputs.template_file = join(dirname(__file__), 'template_model_creation.m')
 

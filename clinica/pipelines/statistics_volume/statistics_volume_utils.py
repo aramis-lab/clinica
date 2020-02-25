@@ -210,7 +210,6 @@ def run_m_script(m_file):
     import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
     from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
     import platform
-    from clinica.utils.stream import cprint
 
     assert isinstance(m_file, str), '[Error] Argument must be a string'
     if not isfile(m_file):
@@ -219,7 +218,6 @@ def run_m_script(m_file):
 
     # Generate command line to run
     if use_spm_standalone():
-        cprint('USING SPM STANDALONE')
         utls.delete_last_line(m_file)
         # SPM standalone must be run directly from its root folder
         if platform.system().lower().startswith('darwin'):
@@ -232,7 +230,6 @@ def run_m_script(m_file):
             raise SystemError('Clinica only support Mac OS and Linux')
         system(cmdline)
     else:
-        cprint('USING CLASSICAL SPM')
         MatlabCommand.set_default_matlab_cmd(get_matlab_command())
         matlab = MatlabCommand()
         if platform.system().lower().startswith('linux'):
