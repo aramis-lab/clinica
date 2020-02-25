@@ -349,3 +349,73 @@ def test_instantiate_T1FreeSurferLongitudinalCorrection():
     pipeline.parameters['n_procs'] = 4
     pipeline.parameters['recon_all_args'] = '-qcache'
     pipeline.build()
+
+
+def test_run_StatisticsVolume(cmdopt):
+    from clinica.pipelines.statistics_volume.statistics_volume_pipeline import StatisticsVolume
+    from os.path import dirname, join, abspath, exists, isfile
+    import shutil
+    import numpy as np
+    import nibabel as nib
+
+    working_dir = cmdopt
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'StatisticsVolume')
+
+    # Remove potential residual of previous UT
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'StatisticsVolume'), recreate=False)
+
+    # Copy necessary data from in to out
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+
+    # Instantiate pipeline and run()
+    parameters = {'contrast': 'group',
+                  'feature_type': 'fdg',
+                  'group_id': 'UnitTest',
+                  'threshold_uncorrected_pvalue': 0.001,
+                  'threshold_corrected_pvalue': 0.05,
+                  'group_id_caps': None,
+                  'smoothing': 8}
+
+    pipeline = StatisticsVolume(
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'covariates_subsetADNI.txt'),
+        base_dir=join(working_dir, 'StatisticsVolume'),
+        parameters=parameters
+    )
+    pipeline.build()
+
+
+def test_run_StatisticsVolumeCorrection(cmdopt):
+    from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_pipeline import \
+        StatisticsVolumeCorrection
+    from os.path import dirname, join, abspath, exists, isfile
+    import shutil
+
+    working_dir = cmdopt
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'StatisticsVolumeCorrection')
+
+    # Remove potential residual of previous UT
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'StatisticsVolumeCorrection'), recreate=False)
+
+    # Copy necessary data from in to out
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+
+    # Instantiate pipeline and run()
+    parameters = {
+        't_map': 'group-UnitTest_AD-lt-CN_measure-fdg_fwhm-8_TStatistics.nii',
+        'height_threshold': 3.2422,
+        'FWEp': 4.928,
+        'FDRp': 4.693,
+        'FWEc': 206987,
+        'FDRc': 206987,
+        'n_cuts': 15
+    }
+    pipeline = StatisticsVolumeCorrection(
+        caps_directory=join(root, 'out', 'caps'),
+        base_dir=join(working_dir, 'StatisticsVolumeCorrection'),
+        parameters = parameters)
+    pipeline.build()

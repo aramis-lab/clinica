@@ -719,18 +719,21 @@ def test_run_StatisticsVolume(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     # Instantiate pipeline and run()
+    parameters = {'contrast': 'group',
+                  'feature_type': 'fdg',
+                  'group_id': 'UnitTest',
+                  'threshold_uncorrected_pvalue': 0.001,
+                  'threshold_corrected_pvalue': 0.05,
+                  'group_id_caps': None,
+                  'smoothing': 8}
+
     pipeline = StatisticsVolume(
         caps_directory=join(root, 'out', 'caps'),
         tsv_file=join(root, 'in', 'covariates_subsetADNI.txt'),
-        base_dir=join(working_dir, 'StatisticsVolume')
+        base_dir=join(working_dir, 'StatisticsVolume'),
+        parameters=parameters
     )
-    pipeline.parameters = {'contrast': 'group',
-                           'feature_type': 'fdg',
-                           'group_id': 'UnitTest',
-                           'threshold_uncorrected_pvalue': 0.001,
-                           'threshold_corrected_pvalue': 0.05,
-                           'group_id_caps': None,
-                           'smoothing': 8}
+
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 2}, bypass_check=True)
 
     output_t_stat = join(root, 'out', 'caps/groups/group-UnitTest/statistics_volume/group_comparison_measure-fdg/group-UnitTest_CN-lt-AD_measure-fdg_fwhm-8_TStatistics.nii')
@@ -758,11 +761,7 @@ def test_run_StatisticsVolumeCorrection(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     # Instantiate pipeline and run()
-    pipeline = StatisticsVolumeCorrection(
-        caps_directory=join(root, 'out', 'caps'),
-        base_dir=join(working_dir, 'StatisticsVolumeCorrection')
-    )
-    pipeline.parameters = {
+    parameters = {
         't_map': 'group-UnitTest_AD-lt-CN_measure-fdg_fwhm-8_TStatistics.nii',
         'height_threshold': 3.2422,
         'FWEp': 4.928,
@@ -771,7 +770,11 @@ def test_run_StatisticsVolumeCorrection(cmdopt):
         'FDRc': 206987,
         'n_cuts': 15
     }
-
+    pipeline = StatisticsVolumeCorrection(
+        caps_directory=join(root, 'out', 'caps'),
+        base_dir=join(working_dir, 'StatisticsVolumeCorrection')
+        parameters=parameters
+    )
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
     compare_folders(join(root, 'out'), join(root, 'ref'), 'caps')
 

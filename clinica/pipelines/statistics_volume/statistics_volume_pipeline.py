@@ -58,6 +58,7 @@ class StatisticsVolume(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.ux import print_begin_image
         from colorama import Fore
 
         gic = '*'
@@ -115,6 +116,8 @@ class StatisticsVolume(cpe.Pipeline):
                                             mandatory_inputs=True),
                                         synchronize=True)
         read_parameters_node.inputs.input_files = input_files
+
+        print_begin_image('group-' + self.parameters['group_id'])
 
         self.connect([
             (read_parameters_node,      self.input_node,    [('input_files',    'input_files')])
