@@ -215,5 +215,5 @@ class T1FreeSurfer(cpe.Pipeline):
             (init_input, create_tsv, [('subjects_dir', 'subjects_dir')]),
             (recon_all,  create_tsv, [('subject_id', 'image_id')]),
             # Output node
-            (recon_all, self.output_node, [('subject_id', 'image_id')]),
+            (create_tsv, self.output_node, [('image_id', 'image_id')]),
         ])
