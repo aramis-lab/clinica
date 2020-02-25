@@ -6,6 +6,18 @@ Statistics_Volume_Correction - Clinica Utilities.
 
 
 def peak_correction(t_map, t_threshold, output_name=None):
+    """
+    Threshold the t_map with t_threshold. Pixel intensities that are less than t_threshold are set to 0, other values
+    are left unchanged.
+
+    Args:
+        t_map: (str) path to t-statistics nifti map
+        t_threshold: (float) threshold on t value
+        output_name: (str) optional output name
+
+    Returns:
+        path to the generated file.
+    """
     import nibabel as nib
     from os.path import join, basename, abspath
     import numpy as np
@@ -23,6 +35,18 @@ def peak_correction(t_map, t_threshold, output_name=None):
 
 
 def cluster_correction(t_map, t_thresh, c_thresh, output_name=None):
+    """
+    Performs cluster correction. First t_map is thresholded with t_thresh (like in peak_correction()). Then, clusters
+    that have a size less than c_thresh are removed
+    Args:
+        t_map: (str) path to t-statistics nifti map
+        t_thresh: (float) threshold on t value
+        c_thresh: (int) minimal size of clusters after thresholding
+        output_name: (str) optional output name
+
+    Returns:
+        path to the generated file.
+    """
     import nibabel as nib
     from os.path import join, basename, abspath
     import numpy as np
@@ -46,6 +70,20 @@ def cluster_correction(t_map, t_thresh, c_thresh, output_name=None):
 
 
 def produce_figures(nii_file, template, type_of_correction, t_thresh, c_thresh, n_cuts):
+    """
+    Produce the output figures
+
+    Args:
+        nii_file: (str) path to the nifti file (generated at previous steps)
+        template: (str) path to template used for the stat map plot
+        type_of_correction: (str) Can be either FWE or FDR (used only in potential figure titles)
+        t_thresh: (str) t value threshold used (used only in potential figure titles)
+        c_thresh: (int) cluster minimal size used (used only in potential figure titles)
+        n_cuts: (int) number of cuts in fig
+
+    Returns:
+        List of path to image files: glass brain, statmap along x, statmap along y, statmap along z
+    """
     from nilearn import plotting
     import numpy as np
     from os.path import abspath
@@ -94,6 +132,16 @@ def produce_figures(nii_file, template, type_of_correction, t_thresh, c_thresh, 
 
 
 def generate_output(t_map, figs, name):
+    """
+        Produce output
+    Args:
+        t_map: (str) path to t-map on which whole pipeline was based
+        figs: (list of str) paths to figs to save
+        name: (str) name of the correction (ex: cluster_correction_FWE)
+
+    Returns:
+        Nothing
+    """
     from os import makedirs
     from os.path import join, dirname, basename, splitext, pardir
     from shutil import copyfile
