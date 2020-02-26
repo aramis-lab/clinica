@@ -93,7 +93,7 @@ class {{ pipeline.class_name }}(cpe.Pipeline):
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
-            cprint('The pipeline will last approximately 42 minutes per image.')
+            cprint('The pipeline will last approximately 42 minutes per image.') # Replace by adequate computational time.
 
         read_node = npe.Node(name="ReadingFiles",
                              iterables=[
