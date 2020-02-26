@@ -86,35 +86,3 @@ def crop_nifti(input_img, ref_crop):
     crop_template = ref_crop
 
     return output_img, crop_template
-
-
-def ants_histogram_intensity_normalization(crop_template, input_img, image_dimension):
-    """Histogram-based intensity normalization. It uses the `ImageMath` binary
-    with the parameter `HistogramMatch` provieded by the ANTS package.
-    This is a function to do histogram-based intensity normalization.
-    Normalize the grayscale values for a source image by matching the shape of
-    the source image histogram to a reference histogram.
-    Args:
-       crop_template (str): reference histogram obtained from this image.
-       input_img (str): source image (histogram to be normalized).
-       image_dimension (int): 2 or 3, for the image channels.
-    Returns:
-       output_img (Nifty image): image with histogram normalized.
-    """
-
-    import os
-
-    basedir = os.getcwd()
-    output_img = os.path.join(basedir, os.path.basename(input_img).split('.nii')[0] + '_intensity_norm.nii.gz')
-    commands = [
-            'ImageMath',
-            str(image_dimension),
-            output_img,
-            'HistogramMatch',
-            input_img,
-            crop_template
-            ]
-    cmd = ' '.join(commands)
-    os.system(cmd)
-
-    return output_img

@@ -730,16 +730,17 @@ def test_run_T1Linear(cmdopt):
 
     # Check output vs ref
     subjects = ['sub-ADNI022S0004']
-    out_data_REG_NIFTI = [nib.load(join(root,
-                                        'out', 'caps', 'subjects', sub, 'ses-M00',
-                                        't1_linear',
-                                        sub + '_ses-M00_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz')).get_data()
-                          for sub in subjects]
-    ref_data_REG_NIFTI = [nib.load(join(root, 'ref', sub + '_ses-M00_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz')).get_data()
-                          for sub in subjects]
-    for i in range(len(out_data_REG_NIFTI)):
-        assert np.allclose(out_data_REG_NIFTI[i], ref_data_REG_NIFTI[i],
-                           rtol=1e-3, equal_nan=True)
+    out_files = [join(root,
+        'out', 'caps', 'subjects', sub, 'ses-M00',
+        't1_linear',
+        sub + '_ses-M00_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz')
+        for sub in subjects]
+    ref_files = [join(root, 
+        'ref', 
+        sub + '_ses-M00_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz')
+        for sub in subjects]
+    for i in range(len(out_files)):
+        assert likeliness_measure(out_files[i], ref_files[i], (1e-2, 0.25), (1e-1, 0.001))
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=True)

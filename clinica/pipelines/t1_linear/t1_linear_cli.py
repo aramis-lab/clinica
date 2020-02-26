@@ -1,12 +1,5 @@
 # coding: utf8
 
-"""T1 Linear - Clinica Command Line Interface.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details:
-http://clinica.run/doc/InteractingWithClinica/
-"""
-
-
 import clinica.engine as ce
 
 
@@ -55,7 +48,6 @@ class T1LinearCLI(ce.CmdParser):
 
         parameters = {
                 'crop_image': args.crop_image
-                # 'ref_template'        : args.ref_template or 'Reference Template'
         }
 
         # Most of the time, you will want to instantiate your pipeline with a

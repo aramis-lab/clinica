@@ -363,5 +363,4 @@ def test_instantiate_T1Linear():
         caps_directory=join(root, 'in', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv'),
     )
-    pipeline.parameters['nproc'] = 4
     pipeline.build()

@@ -1,45 +1,17 @@
 # -*- coding: utf-8 -*-
-"""T1 Linear - Clinica Pipeline.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: https://gitlab.icm-institute.org/aramislab/clinica/wikis/docs/InteractingWithClinica.
-"""
 import clinica.pipelines.engine as cpe
 
 
 class T1Linear(cpe.Pipeline):
     """T1 Linear SHORT DESCRIPTION.
     This preprocessing pipeline includes globally three steps:
-    1) N4 bias correction (performed with ANTS).
-    2) Linear registration to MNI (MNI icbm152 nlinear sym template)
-      (performed with ANTS) - RegistrationSynQuick.
-    3) Cropping the background (in order to save computational power).  4)
-    Histogram-based intensity normalization. This is a custom function
-    performed by the binary ImageMath included with ANTS.
-
-    Warnings:
-        - A WARNING.
-
-    Args:
-        bids_directory (str): Folder with BIDS structure.
-        caps_directory (str): Folder where CAPS structure will be stored.
-        ref_template (str): reference template used for image registration.
-        working_directory (str): Folder containing a temporary space to save.
-        intermediate results.
-        tsv: The Subjects-Sessions list file (in .tsv format).
+    1) Bias correction with N4 algorithm from ANTs.
+    2) Linear registration to MNI152NLin2009cSym template with
+       RegistrationSynQuick from ANTs.
+    3) Crop the background (in order to save computational power).
 
     Returns:
         A clinica pipeline object containing the T1 Linear pipeline.
-
-    Raises:
-
-    Example:
-        >>> from t1_linear import T1Linear
-        >>> pipeline = T1Linear('~/MYDATASET_BIDS', '~/MYDATASET_CAPS')
-        >>> pipeline.parameters = {
-        >>>     # ...
-        >>> }
-        >>> pipeline.base_dir = '/tmp/'
-        >>> pipeline.run()
     """
 
     def check_custom_dependencies(self):
@@ -74,15 +46,11 @@ class T1Linear(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import check_bids_folder
-        from clinica.utils.participant import get_subject_session_list
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1W_NII
         from clinica.utils.inputs import fetch_file
         from clinica.utils.stream import cprint
-
-        check_bids_folder(self.bids_directory)
-        is_bids_dir = True
 
         root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
         path_to_mask = join(root, 'resources', 'masks')
@@ -104,13 +72,6 @@ class T1Linear(cpe.Pipeline):
             except IOError as err:
                 cprint('Unable to download required template (ref_crop) for processing:', err)
 
-        self.sessions, self.subjects = get_subject_session_list(
-                self.bids_directory,
-                self.tsv_file,
-                is_bids_dir,
-                False,
-                self.base_dir
-                )
         # Inputs from anat/ folder
         # ========================
         # T1w file:
@@ -121,7 +82,7 @@ class T1Linear(cpe.Pipeline):
                     self.bids_directory,
                     T1W_NII)
         except ClinicaException as e:
-            err = 'Clinica faced error(s) while trying to read files in your CAPS directory.\n' + str(e)
+            err = 'Clinica faced error(s) while trying to read files in your BIDS directory.\n' + str(e)
             raise ClinicaBIDSError(err)
 
         # Read tsv file and load inputs
@@ -141,21 +102,48 @@ class T1Linear(cpe.Pipeline):
     def build_output_node(self):
         """Build and connect an output node to the pipeline.
         """
+        import nipype.interfaces.utility as nutil
         from nipype.interfaces.io import DataSink
         import nipype.pipeline.engine as npe
+        from clinica.utils.nipype import fix_join
+        from .t1_linear_utils import (container_from_filename, get_data_datasink)
 
+        # Writing node
         write_node = npe.Node(
                 name="WriteCaps",
                 interface=DataSink()
                 )
         write_node.inputs.base_directory = self.caps_directory
         write_node.inputs.parameterization = False
+
+        # Other nodes
+        # =====================================
+        # Get substitutions to rename files
+        get_ids = npe.Node(
+                interface=nutil.Function(
+                    input_names=['image_id'],
+                    output_names=['image_id_out', 'subst_ls'],
+                    function=get_data_datasink),
+                name="GetIDs")
+        # Find container path from t1w filename
+        container_path = npe.Node(
+                nutil.Function(
+                    input_names=['bids_or_caps_filename'],
+                    output_names=['container'],
+                    function=container_from_filename),
+                name='ContainerPath')
         self.connect([
-            (self.output_node, write_node, [('image_id', '@image_id')]),
+            (self.input_node, container_path, [('t1w', 'bids_or_caps_filename')]),
+            (container_path, write_node, [(('container', fix_join, 't1_linear'), 'container')]),
+            (self.output_node, get_ids, [('image_id', 'image_id')]),
+            (get_ids, write_node, [('image_id_out', '@image_id')]),
+            (get_ids, write_node, [('subst_ls', 'substitutions')]),
+
+            # (self.output_node, write_node, [('image_id', '@image_id')]),
             (self.output_node, write_node, [('outfile_reg', '@outfile_reg')]),
             (self.output_node, write_node, [('affine_mat', '@affine_mat')]),
-            (self.output_node, write_node, [('container', 'container')]),
-            (self.output_node, write_node, [('substitutions', 'substitutions')]),
+            # (self.output_node, write_node, [('container', 'container')]),
+            # (self.output_node, write_node, [('substitutions', 'substitutions')]),
             ])
 
         if (self.parameters.get('crop_image')):
@@ -169,9 +157,8 @@ class T1Linear(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.filemanip import get_subject_id
-        from clinica.utils.nipype import fix_join
         from nipype.interfaces import ants
-        from .t1_linear_utils import (crop_nifti, container_from_filename, get_data_datasink)
+        from .t1_linear_utils import crop_nifti
 
         image_id_node = npe.Node(
                 interface=nutil.Function(
@@ -215,39 +202,17 @@ class T1Linear(cpe.Pipeline):
                 )
         cropnifti.inputs.ref_crop = self.ref_crop
 
-        # Other nodes
-        # =====================================
-        # Get substitutions to rename files
-        get_ids = npe.Node(
-                interface=nutil.Function(
-                    input_names=['image_id'],
-                    output_names=['image_id_out', 'subst_ls'],
-                    function=get_data_datasink),
-                name="GetIDs")
-        # Find container path from t1w filename
-        container_path = npe.Node(
-                nutil.Function(
-                    input_names=['bids_or_caps_filename'],
-                    output_names=['container'],
-                    function=container_from_filename),
-                name='ContainerPath')
         # Connection
         # ==========
         self.connect([
             (self.input_node, image_id_node, [('t1w', 'bids_or_caps_file')]),
-            (self.input_node, container_path, [('t1w', 'bids_or_caps_filename')]),
-            (image_id_node , ants_registration_node, [('image_id', 'output_prefix')]),
             (self.input_node, n4biascorrection, [("t1w", "input_image")]),
-
             (n4biascorrection, ants_registration_node, [('output_image', 'moving_image')]),
-
-            (ants_registration_node, self.output_node, [('out_matrix', 'affine_mat')]),
+            (image_id_node , ants_registration_node, [('image_id', 'output_prefix')]),
 
             # Connect to DataSink
-            (container_path, self.output_node, [(('container', fix_join, 't1_linear'), 'container')]),
-            (image_id_node, get_ids, [('image_id', 'image_id')]),
-            (get_ids, self.output_node, [('image_id_out', 'image_id')]),
-            (get_ids, self.output_node, [('subst_ls', 'substitutions')]),
+            (image_id_node, self.output_node, [('image_id', 'image_id')]),
+            (ants_registration_node, self.output_node, [('out_matrix', 'affine_mat')]),
             (n4biascorrection, self.output_node, [('output_image', 'outfile_corr')]),
             (ants_registration_node, self.output_node, [('warped_image', 'outfile_reg')]),
             ])
