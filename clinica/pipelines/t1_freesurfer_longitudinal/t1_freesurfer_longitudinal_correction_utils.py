@@ -110,7 +110,7 @@ def write_tsv_files(subjects_dir, subject_id):
     image_id = extract_image_id_from_longitudinal_segmentation(subject_id)
     str_image_id = image_id.participant_id + '_' + image_id.session_id + '_' + image_id.long_id
     if os.path.isfile(os.path.join(subjects_dir, subject_id, 'mri', 'aparc+aseg.mgz')):
-        generate_regional_measures(subjects_dir, subject_id, "regional_measures")
+        generate_regional_measures(subjects_dir, subject_id)
     else:
         now = datetime.datetime.now().strftime('%H:%M:%S')
         cprint('%s[%s] %s does not contain mri/aseg+aparc.mgz file. '
