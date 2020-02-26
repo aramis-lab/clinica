@@ -30,9 +30,11 @@ class T1FreeSurferLongitudinalCLI(ce.CmdParser):
         import datetime
         from colorama import Fore
         from clinica.utils.stream import cprint
+        from clinica.utils.longitudinal import get_participants_long_id
+        from clinica.utils.participant import get_subject_session_list
         from .t1_freesurfer_template_cli import T1FreeSurferTemplateCLI
         from .t1_freesurfer_longitudinal_correction_cli import T1FreeSurferLongitudinalCorrectionCLI
-        from .longitudinal_utils import grab_image_ids_from_caps_directory, save_part_sess_long_ids_to_tsv
+        from .longitudinal_utils import save_part_sess_long_ids_to_tsv
 
         cprint(
             'The t1-freesurfer-longitudinal pipeline is divided into 2 parts:\n'
@@ -42,9 +44,10 @@ class T1FreeSurferLongitudinalCLI(ce.CmdParser):
         )
 
         if not self.absolute_path(args.subjects_sessions_tsv):
-            l_part, l_sess, l_long = grab_image_ids_from_caps_directory(self.absolute_path(args.caps_directory))
+            l_sess, l_part = get_subject_session_list(self.absolute_path(args.caps_directory), None, False, False)
+            l_long = get_participants_long_id(l_part, l_sess)
             now = datetime.datetime.now().strftime('%H%M%S')
-            args.subjects_sessions_tsv = now+'_participants.tsv'
+            args.subjects_sessions_tsv = now + '_participants.tsv'
             save_part_sess_long_ids_to_tsv(l_part, l_sess, l_long, os.getcwd(), args.subjects_sessions_tsv)
 
         cprint('%s\nPart 1/2: Running t1-freesurfer-unbiased-template pipeline%s' % (Fore.BLUE, Fore.RESET))
