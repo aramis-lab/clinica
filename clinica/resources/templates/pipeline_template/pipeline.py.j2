@@ -12,6 +12,13 @@ command line tool. See here for more details: http://www.clinica.run/doc/Interac
 import clinica.pipelines.engine as cpe
 
 
+# Use hash instead of parameters for iterables folder names
+# Otherwise path will be too long and generate OSError
+from nipype import config
+cfg = dict(execution={'parameterize_dirs': False})
+config.update_config(cfg)
+
+
 class {{ pipeline.class_name }}(cpe.Pipeline):
     """{{ pipeline.title }} SHORT DESCRIPTION.
 
