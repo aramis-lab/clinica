@@ -6,7 +6,7 @@ def init_input_node(caps_dir, participant_id, list_session_ids, output_dir):
 
     This function will create folders and symbolic links in SUBJECTS_DIR env variable for upcoming run of recon-all.
 
-    Note(AG):
+    Note (@alexis-g-icm):
         There currently (as of 22 Feb 2019) is a bug in FreeSurfer recon-all -base, which in some cases (e.g., only one
         time point), will crash as it's trying to write lines too long for the shell to handle. This is caused by
         the path to FreeSurfer SUBJECT_DIR being too long itself.
@@ -105,14 +105,21 @@ def run_recon_all_base(subjects_dir,
     return subject_id
 
 
-def move_subjects_dir_to_source_dir(subjects_dir,
-                                    source_dir,
-                                    subject_id):
-    """Move content of `subjects_dir`/`subject_id` to `source_dir`.
+def move_subjects_dir_to_source_dir(subjects_dir, source_dir, subject_id):
+    """
+    Move content of `subjects_dir`/`subject_id` to `source_dir`.
 
-    This function is called where recon-all has run outside <WD>/<Name>/ReconAll (= `source_dir`). This happens when
-    only one time point is used.
-    Content of `subjects_dir`/`subject_id` is moved to `source_dir` before the deletion of `subjects_dir`.
+    This function will move content of `subject_id` if recon-all has run in $(TMP). This happens when only
+    one time point is used. Content of $(TMP)/`subject_id` is copied to `source_dir` before the deletion of $(TMP).
+
+    Args:
+        subjects_dir: $(TMP), if segmentation was performed on 1 time point,
+            <base_dir>/<Pipeline.Name>/ReconAll/`subject_id` otherwise
+        source_dir: <base_dir>/<Pipeline.Name>/ReconAll folder
+        subject_id: Subject ID (e.g. "sub-CLNC01_ses-M00" or "sub-CLNC01_ses-M00M18")
+
+    Returns:
+        subject_id for node connection with Nipype
     """
     import os
     import shutil
@@ -120,10 +127,12 @@ def move_subjects_dir_to_source_dir(subjects_dir,
     from colorama import Fore
     from clinica.utils.stream import cprint
 
-    if subjects_dir not in source_dir:
-        shutil.move(src=os.path.join(subjects_dir, subject_id),
-                    dst=os.path.join(source_dir, subject_id),
-                    copy_function=shutil.copytree)
+    if source_dir not in subjects_dir:
+        shutil.copytree(
+            src=os.path.join(subjects_dir, subject_id),
+            dst=os.path.join(source_dir, subject_id, subject_id),
+            symlinks=True
+        )
         shutil.rmtree(subjects_dir)
         now = datetime.datetime.now().strftime('%H:%M:%S')
         cprint('%s[%s] Segmentation of %s has moved to working directory and $SUBJECTS_DIR folder (%s) was deleted%s' %
@@ -166,16 +175,6 @@ def save_to_caps(source_dir, image_id, list_session_ids, caps_dir, overwrite_cap
         long_id,
         'freesurfer_unbiased_template'
     )
-
-    # Save <long_id>_sessions.tsv to retrieve sessions used to generate <long_id>
-    sessions_tsv_path = os.path.join(
-        os.path.expanduser(caps_dir),
-        'subjects',
-        participant_id,
-        long_id
-    )
-    if not os.path.isfile(os.path.join(sessions_tsv_path, long_id + '_sessions.tsv')):
-        save_long_id(list_session_ids, sessions_tsv_path, long_id + '_sessions.tsv')
 
     # Save <long_id>_sessions.tsv to retrieve sessions used to generate <long_id>
     sessions_tsv_path = os.path.join(
