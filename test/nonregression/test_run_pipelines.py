@@ -742,6 +742,9 @@ def test_run_StatisticsVolume(cmdopt):
     assert np.allclose(nib.load(output_t_stat).get_data(),
                        nib.load(ref_t_stat).get_data())
 
+    # Remove data in out folder
+    clean_folder(join(root, 'out', 'caps'), recreate=True)
+
 
 def test_run_StatisticsVolumeCorrection(cmdopt):
     from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_pipeline import StatisticsVolumeCorrection
@@ -777,6 +780,9 @@ def test_run_StatisticsVolumeCorrection(cmdopt):
     )
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
     compare_folders(join(root, 'out'), join(root, 'ref'), 'caps')
+    
+    # Remove data in out folder
+    clean_folder(join(root, 'out', 'caps'), recreate=True)
 
 # def test_run_T1FreeSurferLongitudinal(cmdopt):
 #     """

@@ -39,12 +39,6 @@ The main output files are:
 The full list of output files can be found in the [ClinicA Processed Structure (CAPS) Specification](https://docs.google.com/document/d/14mjXbqRceHK0fD0BIONniLK713zY7DbQHJEV7kxqsd8/edit#heading=h.f4ddnk971gkn).
 
 
-<!--## Visualization of the results-->
-
-<!--!!! note-->
-<!--    The visualization command is not available for the moment. Please come back later, this section will be updated ASAP.-->
-
-
 ## Describing this pipeline in your paper
 
 <!--You can have a single version for your pipeline-->
