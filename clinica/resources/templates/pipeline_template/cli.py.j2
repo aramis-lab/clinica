@@ -38,25 +38,24 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
         # group_id can be used by certain pipelines when some operations are performed at the group level
         # (for example, generation of a template in pipeline t1-volume)
         # clinica_comp.add_argument("group_id",
-        #                          help='User-defined identifier for the provided group of subjects.')
+        #                           help='User-defined identifier for the provided group of subjects.')
 
         # Add your own pipeline command line arguments here to be used in the
         # method below. Example below:
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("-hw", "--hello_word_arg",
-                              help='Word to say hello.')
+        optional.add_argument("-hw", "--hello_word_arg", default='Hello',
+                              help='Word to say hello (default: --hello_word_arg %(default)s).')
 
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
 
         # Add advanced arguments
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
-        advanced.add_argument("-aa", "--advanced_arg",
-                              help='Your advanced argument.')
+        advanced.add_argument("-aa", "--advanced_arg", default='Advanced',
+                              help='Your advanced argument (default: --advanced_arg %(default)s).')
 
     def run_command(self, args):
-        ""
-        """
+        """Run the pipeline with defined args."""
         import os
         from networkx import Graph
         from colorama import Fore
@@ -64,24 +63,26 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
+        parameters = {
+            # Add your own pipeline parameters here to use them inside your
+            # pipeline. See the file `{{ pipeline.module_name }}_pipeline.py` to
+            # see an example of use.
+            'hello_word' : args.hello_word_arg,
+            'advanced_argument' : args.advanced_arg,
+        }
+
         # Most of the time, you will want to instantiate your pipeline with a
         # BIDS and/or CAPS directory as inputs. If the BIDS directory is not needed
         # for your pipeline, simply remove:
         # bids_directory=self.absolute_path(args.bids_directory),
-        pipeline = T1FreeSurfer(
+        pipeline = {{ pipeline.class_name }}(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
             base_dir=self.absolute_path(args.working_directory),
+            parameters=parameters,
             name=self.name
         )
-        pipeline.parameters = {
-            # Add your own pipeline parameters here to use them inside your
-            # pipeline. See the file `{{ pipeline.module_name }}_pipeline.py` to
-            # see an example of use.
-            'hello_word'        : args.hello_word_arg or 'Hello',
-            'advanced_argument' : args.advanced_arg
-        }
 
         if args.n_procs:
             exec_pipeline = pipeline.run(plugin='MultiProc',
@@ -90,6 +91,6 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
             exec_pipeline = pipeline.run()
 
         if isinstance(exec_pipeline, Graph):
-            print_end_pipeline(self.name, os.path.join(pipeline.base_dir, self.name))
+            print_end_pipeline(self.name, pipeline.base_dir, pipeline.base_dir_was_specified)
         else:
             print_crash_files_and_exit(args.logname, pipeline.base_dir)
