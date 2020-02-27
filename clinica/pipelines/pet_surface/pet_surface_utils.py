@@ -1,6 +1,39 @@
 # coding: utf-8
 
 
+def get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id):
+    """
+
+    Args:
+        is_longitudinal:
+        caps_dir:
+        subject_id:
+        session_id:
+
+    Returns:
+
+    """
+    import os
+    from clinica.utils.exceptions import ClinicaCAPSError
+
+    if is_longitudinal:
+        root = os.path.join(caps_dir, 'subjects', subject_id, session_id, 't1')
+        long_folds = [f for f in os.listdir(root) if f.startswith('long-')]
+        if len(long_folds) > 1:
+            raise ClinicaCAPSError('[Error] Folder ' + root + ' contains ' + str(len(long_folds))
+                                   + ' folders labeled long-*. Only 1 can exist')
+        elif len(long_folds) == 0:
+            raise ClinicaCAPSError('[Error] Folder ' + root + ' does not contains a folder labeled long-*. Have you run t1-freesurfer-longitudinal ?')
+        else:
+            root_env = os.path.join(root, long_folds[0], 'freesurfer_longitudinal')
+            sub_id_cmd = subject_id + '_' + session_id + '.long.' + subject_id + '_' + long_folds[0]
+    else:
+        root_env = os.path.join(caps_dir, 'subjects', subject_id, session_id, 't1', 'freesurfer_cross_sectional')
+        sub_id_cmd = subject_id + '_' + session_id
+
+    return root_env, sub_id_cmd
+
+
 def perform_gtmseg(caps_dir, subject_id, session_id, is_longitudinal):
     """gtmseg is a freesurfer command used to perform a segmentation used in some partial volume correction methods.
 
@@ -24,29 +57,13 @@ def perform_gtmseg(caps_dir, subject_id, session_id, is_longitudinal):
     import os
     import shutil
     import nipype.pipeline.engine as pe
-    from clinica.utils.exceptions import ClinicaCAPSError
     from clinica.utils.stream import cprint
     from nipype.interfaces.base import CommandLine
 
     # Old subject_dir is saved for later
     subjects_dir_backup = os.path.expandvars('$SUBJECTS_DIR')
 
-    if is_longitudinal:
-        root = os.path.join(caps_dir, 'subjects', subject_id, session_id, 't1')
-        long_folds = [f for f in os.listdir(root) if f.startswith('long-')]
-        if len(long_folds) > 1:
-            raise ClinicaCAPSError('[Error] Folder ' + root + ' contains ' + str(len(long_folds))
-                                   + ' folders labeled long-*. Only 1 can exist')
-        elif len(long_folds) == 0:
-            raise ClinicaCAPSError('[Error] Folder ' + root + ' does not contains a folder labeled long-*. Have you run t1-freesurfer-longitudinal ?')
-        else:
-            root_env = os.path.join(root, long_folds[0], 'freesurfer_longitudinal')
-            sub_id_cmd = subject_id + '_' + session_id + '.long.' + subject_id + '_' + long_folds[0]
-
-    else:
-
-        root_env = os.path.join(caps_dir, 'subjects', subject_id, session_id, 't1', 'freesurfer_cross_sectional')
-        sub_id_cmd = subject_id + '_' + session_id
+    root_env, sub_id_cmd = get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id)
 
     # Set the new subject dir for the function to work properly
     os.environ["SUBJECTS_DIR"] = root_env
@@ -478,21 +495,7 @@ def surf2surf(in_surface, reg_file, gtmsegfile, subject_id, session_id, caps_dir
     # set subjects_dir env. variable for mri_surf2surf to work properly
     subjects_dir_backup = os.path.expandvars('$SUBJECTS_DIR')
 
-    if is_longitudinal:
-        root = os.path.join(caps_dir, 'subjects', subject_id, session_id, 't1')
-        long_folds = [f for f in os.listdir(root) if f.startswith('long-')]
-        if len(long_folds) > 1:
-            raise ClinicaCAPSError('[Error] Folder ' + root + ' contains ' + str(len(long_folds))
-                                   + ' folders labeled long-*. Only 1 can exist')
-        elif len(long_folds) == 0:
-            raise ClinicaCAPSError('[Error] Folder ' + root + ' does not contains a folder labeled long-*. Have you run t1-freesurfer-longitudinal ?')
-        else:
-            root_env = os.path.join(root, long_folds[0], 'freesurfer_longitudinal')
-            sub_id_cmd = subject_id + '_' + session_id + '.long.' + subject_id + '_' + long_folds[0]
-
-    else:
-        root_env = os.path.join(caps_dir, 'subjects', subject_id, session_id, 't1', 'freesurfer_cross_sectional')
-        sub_id_cmd = subject_id + '_' + session_id
+    root_env, sub_id_cmd = get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id)
 
     os.environ["SUBJECTS_DIR"] = root_env
 
@@ -551,21 +554,7 @@ def vol2surf(volume, surface, subject_id, session_id, caps_dir, gtmsegfile, is_l
     # set subjects_dir env. variable for mri_vol2surf to work properly
     subjects_dir_backup = os.path.expandvars('$SUBJECTS_DIR')
 
-    if is_longitudinal:
-        root = os.path.join(caps_dir, 'subjects', subject_id, session_id, 't1')
-        long_folds = [f for f in os.listdir(root) if f.startswith('long-')]
-        if len(long_folds) > 1:
-            raise ClinicaCAPSError('[Error] Folder ' + root + ' contains ' + str(len(long_folds))
-                                   + ' folders labeled long-*. Only 1 can exist')
-        elif len(long_folds) == 0:
-            raise ClinicaCAPSError('[Error] Folder ' + root + ' does not contains a folder labeled long-*. Have you run t1-freesurfer-longitudinal ?')
-        else:
-            root_env = os.path.join(root, long_folds[0], 'freesurfer_longitudinal')
-            sub_id_cmd = subject_id + '_' + session_id + '.long.' + subject_id + '_' + long_folds[0]
-
-    else:
-        root_env = os.path.join(caps_dir, 'subjects', subject_id, session_id, 't1', 'freesurfer_cross_sectional')
-        sub_id_cmd = subject_id + '_' + session_id
+    root_env, sub_id_cmd = get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id)
 
     os.environ["SUBJECTS_DIR"] = root_env
 
@@ -664,7 +653,7 @@ def weighted_mean(in_surfaces):
     return out_surface
 
 
-def fsaverage_projection(projection, subject_id, caps_dir, session_id, fwhm):
+def fsaverage_projection(projection, subject_id, caps_dir, session_id, fwhm, is_longitudinal):
     """fsaverage_projection projects your data into an averaged subject called fsaverage, available in your $SUBJECTS_DIR
     folder. fsaverage and the subject must be in the subject_dir, so a copy of fsaverage is performed if necessary
 
@@ -674,6 +663,7 @@ def fsaverage_projection(projection, subject_id, caps_dir, session_id, fwhm):
         (string) session_id : The session id ( something like : ses-M12)
         (string) caps_dir   : Path to the CAPS directory
         (float) fwhm        : FWHM of the Gaussian filter used for smoothing on fsaverage surface (not volume !)
+        (bool) is_longitudinal : longitudinal pipeline or not
 
     Returns:
         (string) Path to the data averaged
@@ -685,21 +675,7 @@ def fsaverage_projection(projection, subject_id, caps_dir, session_id, fwhm):
 
     subjects_dir_backup = os.path.expandvars('$SUBJECTS_DIR')
 
-    if is_longitudinal:
-        root = os.path.join(caps_dir, 'subjects', subject_id, session_id, 't1')
-        long_folds = [f for f in os.listdir(root) if f.startswith('long-')]
-        if len(long_folds) > 1:
-            raise ClinicaCAPSError('[Error] Folder ' + root + ' contains ' + str(len(long_folds))
-                                   + ' folders labeled long-*. Only 1 can exist')
-        elif len(long_folds) == 0:
-            raise ClinicaCAPSError('[Error] Folder ' + root + ' does not contains a folder labeled long-*. Have you run t1-freesurfer-longitudinal ?')
-        else:
-            root_env = os.path.join(root, long_folds[0], 'freesurfer_longitudinal')
-            sub_id_cmd = subject_id + '_' + session_id + '.long.' + subject_id + '_' + long_folds[0]
-
-    else:
-        root_env = os.path.join(caps_dir, 'subjects', subject_id, session_id, 't1', 'freesurfer_cross_sectional')
-        sub_id_cmd = subject_id + '_' + session_id
+    root_env, sub_id_cmd = get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id)
 
     os.environ["SUBJECTS_DIR"] = root_env
 
@@ -1060,7 +1036,8 @@ def get_wf(subject_id,
                                                              'subject_id',
                                                              'caps_dir',
                                                              'session_id',
-                                                             'fwhm'],
+                                                             'fwhm',
+                                                             'is_longitudinal'],
                                                 output_names=['out_fsaverage'],
                                                 function=utils.fsaverage_projection),
                                    name='project_on_fsaverage')
@@ -1068,6 +1045,7 @@ def get_wf(subject_id,
     project_on_fsaverage.inputs.subject_id = subject_id
     project_on_fsaverage.inputs.session_id = session_id
     project_on_fsaverage.inputs.caps_dir = caps_dir
+    project_on_fsaverage.inputs.is_longitudinal = is_longitudinal
 
     extract_mid_surface = pe.Node(niu.Function(input_names=['in_surfaces'],
                                                output_names=['mid_surface'],
