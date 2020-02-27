@@ -47,7 +47,7 @@ If you want to run the pipeline on a subset of your dataset, you can use the `-t
     ```
     You will see these types of message when running Clinica:
     ```text
-    $ clinica run t1-freesurfer-template CAPS -np 2 -wd <WD>
+    $ clinica run t1-freesurfer-template CAPS -np 2 -wd <path_to_wd>
     The pipeline will be run on the following 2 participant(s):
     	sub-CLNC01 | ses-M18, ses-M00 | long-M00M18
     	sub-CLNC02 | ses-M00 | long-M00
