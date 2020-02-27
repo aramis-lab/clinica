@@ -56,11 +56,12 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
         import nipype.pipeline.engine as npe
 
         from clinica.utils.exceptions import ClinicaException
-        from clinica.utils.filemanip import save_participants_sessions
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1_FS_DESTRIEUX, T1_FS_T_DESTRIEUX
         from clinica.utils.stream import cprint
-        from .longitudinal_utils import grab_image_ids_from_caps_directory, read_part_sess_long_ids_from_tsv
+        from .longitudinal_utils import (grab_image_ids_from_caps_directory,
+                                         read_part_sess_long_ids_from_tsv,
+                                         save_part_sess_long_ids_to_tsv)
 
         #  We re-initialize subjects, sessions and add long IDS since the latter is not handled by Clinica
         if self.tsv_file:
@@ -71,7 +72,6 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
 
         # TODO: Display image(s) already present in CAPS folder
         # ===============================================
-        # output_ids = self.get_processed_images(self.caps_directory, self.subjects, self.sessions)
 
         all_errors = []
         try:
@@ -94,7 +94,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
         folder_participants_tsv = os.path.join(self.base_dir, self.name)
-        save_participants_sessions(self.subjects, self.sessions, folder_participants_tsv)
+        save_part_sess_long_ids_to_tsv(self.subjects, self.sessions, list_long_id, folder_participants_tsv)
 
         def print_images_to_process(list_participant_id, list_session_id, list_longitudinal_id):
             cprint('The pipeline will be run on the following %s image(s):' % len(list_participant_id))
