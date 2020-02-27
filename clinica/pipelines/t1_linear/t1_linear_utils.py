@@ -39,7 +39,7 @@ def container_from_filename(bids_or_caps_filename):
 def get_data_datasink(image_id):
     substitutions_ls = [  # registration
             (image_id + '_T1w_corrected.nii.gz',
-                image_id + '_corrected_T1w.nii.gz'),
+                image_id + '_desc-BiasCorrected_T1w.nii.gz'),
             (image_id + 'Warped_cropped_intensity_norm.nii.gz',
                 image_id + '_space-MNI152NLin2009cSym_res-1x1x1_intensity_norm_T1w.nii.gz'),
             (image_id + 'Warped_cropped.nii.gz',
@@ -49,7 +49,7 @@ def get_data_datasink(image_id):
             (image_id + 'Warped_cropped.pt',
                 image_id + '_space-MNI152NLin2009cSym_res-1x1x1_T1w.pt'),
             (image_id + 'Warped.nii.gz',
-                image_id + '_space-MNI152NLin2009cSym_res-1x1x1_linear_registration_T1w.nii.gz')
+                image_id + '_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz')
             ]
     return image_id, substitutions_ls
 
