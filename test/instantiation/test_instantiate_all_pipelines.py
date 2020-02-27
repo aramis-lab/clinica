@@ -312,7 +312,7 @@ def test_instantiate_T1FreeSurferTemplate():
     from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_pipeline import T1FreeSurferTemplate
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'T1FreeSurferLongitudinal')
+    root = join(root, 'data', 'T1FreeSurferTemplate')
 
     pipeline = T1FreeSurferTemplate(
         caps_directory=join(root, 'in', 'caps'),
@@ -326,7 +326,7 @@ def test_instantiate_T1FreeSurferLongitudinalCorrection():
     from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_pipeline import T1FreeSurferLongitudinalCorrection
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'T1FreeSurferLongitudinal')
+    root = join(root, 'data', 'T1FreeSurferLongitudinalCorrection')
 
     pipeline = T1FreeSurferLongitudinalCorrection(
         caps_directory=join(root, 'in', 'caps'),

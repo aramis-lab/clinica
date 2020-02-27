@@ -701,9 +701,10 @@ def test_run_SpatialSVM(cmdopt):
 
 
 def test_run_T1FreeSurferTemplate(cmdopt):
+    # Data for this functional test comes from https://openneuro.org/datasets/ds000204
+    # sub-01 was duplicated into to sub-02 with one session in order to test the "one time point" case
+    from os.path import dirname, join, abspath
     from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_pipeline import T1FreeSurferTemplate
-    from os.path import dirname, join, abspath, isfile
-    import subprocess
 
     working_dir = cmdopt
     root = dirname(abspath(join(abspath(__file__), pardir)))
@@ -712,30 +713,23 @@ def test_run_T1FreeSurferTemplate(cmdopt):
     clean_folder(join(root, 'out', 'caps'))
     clean_folder(join(working_dir, 'T1FreeSurferTemplate'))
 
-    pipeline = T1FreeSurferTemplate(caps_directory=join(root, 'out', 'caps'),
-                                    tsv_file=join(root, 'in', 'subjects.tsv'))
+    pipeline = T1FreeSurferTemplate(
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv')
+    )
     pipeline.base_dir = join(working_dir, 'T1FreeSurferTemplate')
     pipeline.run(bypass_check=True)
 
-    participant_id = 'sub-ADNI082S5029'
-    long_id = 'long-M00M03'
-    log_file = join(root, 'out', 'caps', 'subjects', participant_id, long_id,
-                    'freesurfer_unbiased_template', participant_id+'_'+long_id,
-                    'scripts', 'recon-all-status.log')
-    if isfile(log_file):
-        last_line = str(subprocess.check_output(['tail', '-1', log_file]))
-        if 'finished without error' not in last_line.lower():
-            raise ValueError('FreeSurfer did not mark subject %s  as -finished without error-' % participant_id)
-    else:
-        raise FileNotFoundError(log_file + ' was not found, something went wrong...')
+    # We only check that folders are the same meaning that FreeSurfer finished without error
+    compare_folders(join(root, 'out'), join(root, 'ref'), 'caps')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
 def test_run_T1FreeSurferLongitudinalCorrection(cmdopt):
+    # Data for this functional test comes from https://openneuro.org/datasets/ds000204
+    from os.path import dirname, join, abspath
     from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_pipeline import T1FreeSurferLongitudinalCorrection
-    from os.path import dirname, join, abspath, isfile
-    import subprocess
 
     working_dir = cmdopt
     root = dirname(abspath(join(abspath(__file__), pardir)))
@@ -744,23 +738,14 @@ def test_run_T1FreeSurferLongitudinalCorrection(cmdopt):
     clean_folder(join(root, 'out', 'caps'))
     clean_folder(join(working_dir, 'T1FreeSurferLongitudinalCorrection'))
 
-    pipeline = T1FreeSurferLongitudinalCorrection(caps_directory=join(root, 'out', 'caps'),
-                                                  tsv_file=join(root, 'in', 'subjects.tsv'))
+    pipeline = T1FreeSurferLongitudinalCorrection(
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv')
+    )
     pipeline.base_dir = join(working_dir, 'T1FreeSurferLongitudinalCorrection')
     pipeline.run(bypass_check=True)
 
-    participant_id = 'sub-ADNI082S5029'
-    session_id = 'ses-M00'
-    long_id = 'long-M00M03'
-    freesurfer_id = '{0}_{1}.long.{0}_{2}'.format(participant_id, session_id, long_id)
-    log_file = join(root, 'out', 'caps', 'subjects', participant_id, session_id, long_id,
-                    'freesurfer_longitudinal', freesurfer_id,
-                    'scripts', 'recon-all-status.log')
-    if isfile(log_file):
-        last_line = str(subprocess.check_output(['tail', '-1', log_file]))
-        if 'finished without error' not in last_line.lower():
-            raise ValueError('FreeSurfer did not mark subject %s  as -finished without error-' % participant_id)
-    else:
-        raise FileNotFoundError(log_file + ' was not found, something went wrong...')
+    # We only check that folders are the same meaning that FreeSurfer finished without error
+    compare_folders(join(root, 'out'), join(root, 'ref'), 'caps')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
