@@ -101,7 +101,7 @@ class RegionBasedRepHoldOutRandomForest(base.MLWorkflow):
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_id, image_type, atlas,
                  output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3,
                  grid_search_folds=10, balanced=True, n_estimators_range=(100, 200, 400),
-                 max_depth_range=(None), min_samples_split_range=(2),
+                 max_depth_range=[None], min_samples_split_range=[2],
                  max_features_range=('auto', 0.25, 0.5), splits_indices=None):
 
         super(RegionBasedRepHoldOutRandomForest, self).__init__(input.CAPSRegionBasedInput,

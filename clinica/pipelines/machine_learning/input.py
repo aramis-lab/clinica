@@ -7,12 +7,15 @@ import os.path as path
 import numpy as np
 from pandas.io import parsers
 
+from clinica.utils.stream import cprint
 from clinica.pipelines.machine_learning import base
 import clinica.pipelines.machine_learning.voxel_based_io as vbio
 import clinica.pipelines.machine_learning.vertex_based_io as vtxbio
 import clinica.pipelines.machine_learning.region_based_io as rbio
 import clinica.pipelines.machine_learning.tsv_based_io as tbio
 import clinica.pipelines.machine_learning.ml_utils as utils
+
+
 
 
 __author__ = "Jorge Samper-Gonzalez"
@@ -106,9 +109,9 @@ class CAPSInput(base.MLInput):
         if self._x is None:
             self.get_x()
 
-        print("Computing kernel ...")
+        cprint("Computing kernel ...")
         self._kernel = kernel_function(self._x)
-        print("Kernel computed")
+        cprint("Kernel computed")
         return self._kernel
 
     def save_kernel(self, output_dir):
@@ -145,14 +148,14 @@ class CAPSInput(base.MLInput):
 
 class CAPSVoxelBasedInput(CAPSInput):
 
-    def __init__(self, input_params): 
+    def __init__(self, input_params):
 
         super().__init__(input_params)
 
         self._orig_shape = None
         self._data_mask = None
 
-        if input_params['modulated'] not in ['on', 'off']:
+        if self._input_params['modulated'] not in ['on', 'off']:
             raise Exception("Incorrect modulation parameter. It must be one of the values 'on' or 'off'")
 
     def get_images(self):
@@ -199,9 +202,9 @@ class CAPSVoxelBasedInput(CAPSInput):
         if self._x is not None:
             return self._x
 
-        print('Loading ' + str(len(self.get_images())) + ' subjects')
+        cprint('Loading ' + str(len(self.get_images())) + ' subjects')
         self._x, self._orig_shape, self._data_mask = vbio.load_data(self._images, mask=self._input_params['mask_zeros'])
-        print('Subjects loaded')
+        cprint('Subjects loaded')
 
         return self._x
 
@@ -231,11 +234,11 @@ class CAPSVoxelBasedInput(CAPSInput):
 
 class CAPSRegionBasedInput(CAPSInput):
 
-    def __init__(self, input_params): 
+    def __init__(self, input_params):
 
         super().__init__(input_params)
 
-        if input_params['atlas'] not in ['AAL2', 'Neuromorphometrics', 'AICHA', 'LPBA40', 'Hammers']:
+        if self._input_params['atlas'] not in ['AAL2', 'Neuromorphometrics', 'AICHA', 'LPBA40', 'Hammers']:
             raise Exception("Incorrect atlas name. It must be one of the values 'AAL2', 'Neuromorphometrics', "
                             "'AICHA', 'LPBA40', 'Hammers' ")
 
@@ -280,9 +283,9 @@ class CAPSRegionBasedInput(CAPSInput):
         if self._x is not None:
             return self._x
 
-        print('Loading ' + str(len(self.get_images())) + ' subjects')
+        cprint('Loading ' + str(len(self.get_images())) + ' subjects')
         self._x = rbio.load_data(self._images, self._subjects)
-        print('Subjects loaded')
+        cprint('Subjects loaded')
 
         return self._x
 
@@ -351,7 +354,6 @@ class CAPSVertexBasedInput(CAPSInput):
         return self._images
 
     def get_x(self):
-        from clinica.utils.stream import cprint
         """
         Returns numpy 2D array
         """
@@ -406,7 +408,7 @@ class CAPSTSVBasedInput(CAPSInput):
 
         super().__init__(input_params)
 
-        if input_params['atlas'] not in ['AAL2', 'Neuromorphometrics', 'AICHA', 'LPBA40', 'Hammers']:
+        if self._input_params['atlas'] not in ['AAL2', 'Neuromorphometrics', 'AICHA', 'LPBA40', 'Hammers']:
             raise Exception("Incorrect atlas name. It must be one of the values 'AAL2', 'Neuromorphometrics', "
                             "'AICHA', 'LPBA40', 'Hammers' ")
 
@@ -429,14 +431,14 @@ class CAPSTSVBasedInput(CAPSInput):
         # if self._x is not None:
         #    return self._x
 
-        print('Loading TSV subjects')
+        cprint('Loading TSV subjects')
         string = str('group-' + self._input_params['group_id'] + '_T1w_space-' + self._input_params['atlas'] +
                      '_map-graymatter')
 
         self._x = tbio.load_data(string, self._input_params['caps_directory'], self._subjects, self._sessions,
                                  self._input_params['dataset'])
 
-        print('Subjects loaded')
+        cprint('Subjects loaded')
 
         return self._x
 
@@ -532,15 +534,16 @@ class TsvInput(base.MLInput):
         """
         Returns: a numpy 2d-array.
         """
+
         if self._kernel is not None and not recompute_if_exists:
             return self._kernel
 
         if self._x is None:
             self.get_x()
 
-        print("Computing kernel ...")
+        cprint("Computing kernel ...")
         self._kernel = kernel_function(self._x)
-        print("Kernel computed")
+        cprint("Kernel computed")
         return self._kernel
 
     @staticmethod
