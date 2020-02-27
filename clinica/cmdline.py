@@ -210,7 +210,10 @@ def execute():
     from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
                                    extra_dir="pipelines").load()
+    # The order in pipelines var will the same when typing `clinica run`
+    # Pipelines are sorted by main / advanced pipelines then by modality
     pipelines += [
+        # Main pipelines:
         T1FreeSurferCLI(),
         T1VolumeCLI(),
         T1FreeSurferLongitudinalCLI(),
@@ -223,6 +226,7 @@ def execute():
         PetSurfaceCLI(),
         SpatialSVMCLI(),
         StatisticsSurfaceCLI(),
+        # Advanced pipelines:
         T1VolumeExistingTemplateCLI(),
         T1VolumeTissueSegmentationCLI(),
         T1VolumeCreateDartelCLI(),
