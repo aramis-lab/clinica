@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
 import clinica.pipelines.engine as cpe
 
+# Use hash instead of parameters for iterables folder names
+# Otherwise path will be too long and generate OSError
+from nipype import config
+cfg = dict(execution={'parameterize_dirs': False})
+config.update_config(cfg)
+
 
 class T1Linear(cpe.Pipeline):
-    """T1 Linear SHORT DESCRIPTION.
+    """T1 Linear - Affine registration of T1w images to standard space.
     This preprocessing pipeline includes globally three steps:
     1) Bias correction with N4 algorithm from ANTs.
     2) Linear registration to MNI152NLin2009cSym template with
@@ -85,7 +91,10 @@ class T1Linear(cpe.Pipeline):
             err = 'Clinica faced error(s) while trying to read files in your BIDS directory.\n' + str(e)
             raise ClinicaBIDSError(err)
 
-        # Read tsv file and load inputs
+        if len(self.subjects):
+            print_images_to_process(self.subjects, self.sessions)
+            cprint('The pipeline will last approximately 6 minutes per image.')
+
         read_node = npe.Node(
                 name="ReadingFiles",
                 iterables=[
