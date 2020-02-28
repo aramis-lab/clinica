@@ -36,25 +36,21 @@ def container_from_filename(bids_or_caps_filename):
     return os.path.join('subjects', subject, session)
 
 
-def get_data_datasink(bids_file):
-
-    from nipype.utils.filemanip import split_filena;e
-
-    _, source_file, _ = split_filename(bids_file)
+def get_substitutions_datasink(bids_file):
 
     substitutions_ls = [  # registration
-            (source_file + '_T1w_corrected.nii.gz',
-                source_file + '_desc-BiasCorrected_T1w.nii.gz'),
-            (source_file + 'Warped_cropped_intensity_norm.nii.gz',
-                source_file + '_space-MNI152NLin2009cSym_res-1x1x1_intensity_norm_T1w.nii.gz'),
-            (source_file + 'Warped_cropped.nii.gz',
-                source_file + '_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz'),
-            (source_file + '0GenericAffine.mat',
-                source_file + '_space-MNI152NLin2009cSym_res-1x1x1_affine.mat'),
-            (source_file + 'Warped.nii.gz',
-                source_file + '_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz')
+            (bids_file + '_T1w_corrected.nii.gz',
+                bids_file + '_desc-BiasCorrected_T1w.nii.gz'),
+            (bids_file + 'Warped_cropped_intensity_norm.nii.gz',
+                bids_file + '_space-MNI152NLin2009cSym_res-1x1x1_intensity_norm_T1w.nii.gz'),
+            (bids_file + 'Warped_cropped.nii.gz',
+                bids_file + '_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz'),
+            (bids_file + '0GenericAffine.mat',
+                bids_file + '_space-MNI152NLin2009cSym_res-1x1x1_affine.mat'),
+            (bids_file + 'Warped.nii.gz',
+                bids_file + '_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz')
             ]
-    return source_file, substitutions_ls
+    return bids_file, substitutions_ls
 
 
 # Function used by the nipype interface.

@@ -116,7 +116,7 @@ class T1Linear(cpe.Pipeline):
         from nipype.interfaces.io import DataSink
         import nipype.pipeline.engine as npe
         from clinica.utils.nipype import fix_join
-        from .t1_linear_utils import (container_from_filename, get_data_datasink)
+        from .t1_linear_utils import (container_from_filename, get_substitutions_datasink)
 
         # Writing node
         write_node = npe.Node(
@@ -131,9 +131,9 @@ class T1Linear(cpe.Pipeline):
         # Get substitutions to rename files
         get_ids = npe.Node(
                 interface=nutil.Function(
-                    input_names=['image_id'],
+                    input_names=['bids_file'],
                     output_names=['image_id_out', 'subst_ls'],
-                    function=get_data_datasink),
+                    function=get_substitutions_datasink),
                 name="GetIDs")
         # Find container path from t1w filename
         container_path = npe.Node(
@@ -145,11 +145,11 @@ class T1Linear(cpe.Pipeline):
         self.connect([
             (self.input_node, container_path, [('t1w', 'bids_or_caps_filename')]),
             (container_path, write_node, [(('container', fix_join, 't1_linear'), 'container')]),
-            (self.output_node, get_ids, [('image_id', 'image_id')]),
+            (self.output_node, get_ids, [('image_id', 'bids_file')]),
             (get_ids, write_node, [('image_id_out', '@image_id')]),
             (get_ids, write_node, [('subst_ls', 'substitutions')]),
 
-            # (self.output_node, write_node, [('image_id', '@image_id')]),
+            #(self.output_node, write_node, [('image_id', '@image_id')]),
             (self.output_node, write_node, [('outfile_reg', '@outfile_reg')]),
             (self.output_node, write_node, [('affine_mat', '@affine_mat')]),
             # (self.output_node, write_node, [('container', 'container')]),
@@ -166,15 +166,15 @@ class T1Linear(cpe.Pipeline):
         """
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from clinica.utils.filemanip import get_subject_id
+        from clinica.utils.filemanip import get_filename_no_ext
         from nipype.interfaces import ants
         from .t1_linear_utils import crop_nifti
 
         image_id_node = npe.Node(
                 interface=nutil.Function(
-                    input_names=['bids_or_caps_file'],
+                    input_names=['filename'],
                     output_names=['image_id'],
-                    function=get_subject_id),
+                    function=get_filename_no_ext),
                 name='ImageID'
                 )
 
@@ -215,8 +215,8 @@ class T1Linear(cpe.Pipeline):
         # Connection
         # ==========
         self.connect([
-            (self.input_node, image_id_node, [('t1w', 'bids_or_caps_file')]),
-            (self.input_node, n4biascorrection, [("t1w", "input_image")]),
+            (self.input_node, image_id_node, [('t1w', 'filename')]),
+            (self.input_node, n4biascorrection, [('t1w', 'input_image')]),
             (n4biascorrection, ants_registration_node, [('output_image', 'moving_image')]),
             (image_id_node , ants_registration_node, [('image_id', 'output_prefix')]),
 
