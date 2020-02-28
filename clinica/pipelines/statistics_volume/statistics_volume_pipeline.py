@@ -151,11 +151,11 @@ class StatisticsVolume(cpe.Pipeline):
 
                 # resels per voxels
                 (join(self.caps_directory, relative_path) + '/resels_per_voxels/resels_per_voxel.nii',
-                 join(self.caps_directory, relative_path) + '/group-' + self.parameters['group_id'] + '_contrast-' + self.parameters['contrast'] + '_RPV.nii'),
+                 join(self.caps_directory, relative_path) + '/group-' + self.parameters['group_id'] + '_RPV.nii'),
 
                 # mask
                 (join(self.caps_directory, relative_path) + '/mask/included_voxel_mask.nii',
-                 join(self.caps_directory, relative_path) + '/group-' + self.parameters['group_id'] + '_contrast-' + self.parameters['contrast'] + '_mask.nii'),
+                 join(self.caps_directory, relative_path) + '/group-' + self.parameters['group_id'] + '_mask.nii'),
 
                 # variance of error
                 (join(self.caps_directory, relative_path) + '/variance_of_error/(.*)',
@@ -171,8 +171,9 @@ class StatisticsVolume(cpe.Pipeline):
 
                 # regression coefficient
                 (join(self.caps_directory, relative_path) + r'/regression_coeff/(.*).nii',
-                 join(self.caps_directory, relative_path) + '/group-' + self.parameters['group_id'] + '_contrast-'
-                 + self.parameters['contrast'] + '_measure-' + r'\1' + '_fwhm-' + str(self.parameters['smoothing']) + '_regressionCoefficient.nii'),
+                 join(self.caps_directory, relative_path) + '/group-' + self.parameters['group_id'] + r'_covariate-\1'
+                 + self.parameters['contrast'] + '_measure-' + self.parameters['feature_type'] + '_fwhm-'
+                 + str(self.parameters['smoothing']) + '_regressionCoefficient.nii'),
 
             ]
 

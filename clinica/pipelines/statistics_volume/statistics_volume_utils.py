@@ -440,6 +440,7 @@ def read_output(spm_mat, spm_mat_2, class_names, covariables, group_id, fwhm, me
 
     # Handle beta files
     betas = [abspath(join(dirname(spm_mat), f)) for f in list_files if f.startswith('beta_')]
+    betas = sorted(betas)
     if len(betas) != 2 + len(covariables):
         raise RuntimeError('[Error] Not enough betas files found in output directory')
     regression_coeff_covar = [abspath('./' + covar + '.nii') for covar in covariables]
