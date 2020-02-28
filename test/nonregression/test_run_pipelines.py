@@ -699,6 +699,7 @@ def test_run_SpatialSVM(cmdopt):
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=True)
 
+
 def test_run_T1Linear(cmdopt):
     from os.path import dirname, join, abspath
     import shutil
@@ -733,14 +734,14 @@ def test_run_T1Linear(cmdopt):
     out_files = [join(root,
         'out', 'caps', 'subjects', sub, 'ses-M00',
         't1_linear',
-        sub + '_ses-M00_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz')
+        sub + '_ses-M00_T1w_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz')
         for sub in subjects]
     ref_files = [join(root, 
         'ref', 
-        sub + '_ses-M00_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz')
+        sub + '_ses-M00_T1w_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz')
         for sub in subjects]
     for i in range(len(out_files)):
-        assert likeliness_measure(out_files[i], ref_files[i], (1e-2, 0.25), (1e-1, 0.001))
+        assert likeliness_measure(out_files[i], ref_files[i], (1e-1, 0.015), (1e-1, 0.01))
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=True)

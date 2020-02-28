@@ -146,14 +146,10 @@ class T1Linear(cpe.Pipeline):
             (self.input_node, container_path, [('t1w', 'bids_or_caps_filename')]),
             (container_path, write_node, [(('container', fix_join, 't1_linear'), 'container')]),
             (self.output_node, get_ids, [('image_id', 'bids_file')]),
-            (get_ids, write_node, [('image_id_out', '@image_id')]),
             (get_ids, write_node, [('subst_ls', 'substitutions')]),
-
-            #(self.output_node, write_node, [('image_id', '@image_id')]),
+            (get_ids, write_node, [('image_id_out', '@image_id')]),
             (self.output_node, write_node, [('outfile_reg', '@outfile_reg')]),
             (self.output_node, write_node, [('affine_mat', '@affine_mat')]),
-            # (self.output_node, write_node, [('container', 'container')]),
-            # (self.output_node, write_node, [('substitutions', 'substitutions')]),
             ])
 
         if (self.parameters.get('crop_image')):
