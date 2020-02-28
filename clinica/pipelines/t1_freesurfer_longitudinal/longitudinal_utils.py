@@ -8,6 +8,24 @@ When a new longitudinal pipeline will be developed into Clinica, refactoring wil
 """
 
 
+def extract_subject_session_longitudinal_ids_from_filename(bids_or_caps_files):
+    """Extract participant/session/longitudinal IDs
+    (e.g. ['sub-CLNC01', 'sub-CLNC01']/['ses-M00', 'ses-M18']/['long-M00M18', 'long-M00M18'])
+    from `bids_or_caps_files`.
+
+    TODO: Find a way to merge with utils/filemanip.py::extract_subjects_sessions_from_filename into one util
+    """
+    import re
+    id_bids_or_caps_files = [re.search(r'(sub-[a-zA-Z0-9]+)_(ses-[a-zA-Z0-9]+)_(long-[a-zA-Z0-9]+)', file).group()
+                             for file in bids_or_caps_files]
+    split = [image_id.split('_')
+             for image_id in id_bids_or_caps_files]
+    part_ids = [p_id[0] for p_id in split]
+    sess_ids = [s_id[1] for s_id in split]
+    long_ids = [l_id[2] for l_id in split]
+    return part_ids, sess_ids, long_ids
+
+
 def read_part_sess_long_ids_from_tsv(tsv_file):
     """Extract participant, session and longitudinal from TSV file.
 
