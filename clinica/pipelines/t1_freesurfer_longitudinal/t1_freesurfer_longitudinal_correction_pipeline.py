@@ -51,6 +51,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
         import os
+        from colorama import Fore
 
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -61,7 +62,9 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
         from clinica.utils.stream import cprint
         from .longitudinal_utils import (grab_image_ids_from_caps_directory,
                                          read_part_sess_long_ids_from_tsv,
-                                         save_part_sess_long_ids_to_tsv)
+                                         save_part_sess_long_ids_to_tsv,
+                                         extract_subject_session_longitudinal_ids_from_filename)
+        from .t1_freesurfer_longitudinal_correction_utils import get_processed_images
 
         #  We re-initialize subjects, sessions and add long IDS since the latter is not handled by Clinica
         if self.tsv_file:
@@ -70,8 +73,23 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
             self.subjects, self.sessions, list_long_id = grab_image_ids_from_caps_directory(self.caps_directory)
         # TODO: Find a way to distinguish cross-sectional from longitudinal pipelines in Clinica Core
 
-        # TODO: Display image(s) already present in CAPS folder
+        # Display image(s) already present in CAPS folder
         # ===============================================
+        processed_ids = get_processed_images(self.caps_directory, self.subjects, self.sessions, list_long_id)
+        if len(processed_ids) > 0:
+            cprint("%sClinica found %s images(s) already processed in CAPS directory:%s" %
+                   (Fore.YELLOW, len(processed_ids), Fore.RESET))
+            for image_id in processed_ids:
+                cprint("%s\t%s%s" % (Fore.YELLOW, image_id.replace('_', ' | '), Fore.RESET))
+            if self.overwrite_caps:
+                output_folder = "<CAPS>/subjects/<participant_id>/<session_id>/t1/<long_id>/freesurfer_longitudinal/"
+                cprint("%s\nOutput folders in %s will be recreated.\n%s" % (Fore.YELLOW, output_folder, Fore.RESET))
+            else:
+                cprint("%s\nImage(s) will be ignored by Clinica.\n%s" % (Fore.YELLOW, Fore.RESET))
+                input_ids = [p_id + '_' + s_id + '_' + l_id for p_id, s_id, l_id in
+                             zip(self.subjects, self.sessions, list_long_id)]
+                to_process_ids = list(set(input_ids) - set(processed_ids))
+                self.subjects, self.sessions, list_long_id = extract_subject_session_longitudinal_ids_from_filename(to_process_ids)
 
         all_errors = []
         try:
