@@ -56,6 +56,7 @@ class T1Linear(cpe.Pipeline):
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1W_NII
         from clinica.utils.inputs import fetch_file
+        from clinica.utils.ux import print_images_to_process
         from clinica.utils.stream import cprint
 
         root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
