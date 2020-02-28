@@ -45,19 +45,6 @@ def test_run_T1FreeSurfer(cmdopt):
     # pipeline.build()
     # pipeline.run(bypass_check=True)
     #
-    #
-    # log_file = join(root, 'out', 'caps', 'subjects', 'sub-ADNI082S5029',
-    #                 'ses-M00', 't1', 'freesurfer_cross_sectional',
-    #                 'sub-ADNI082S5029_ses-M00', 'scripts',
-    #                 'recon-all-status.log')
-    # if isfile(log_file):
-    #     last_line = str(subprocess.check_output(['tail', '-1', log_file]))
-    #     if 'finished without error' not in last_line.lower():
-    #         raise ValueError('FreeSurfer did not mark subject '
-    #                          'sub-ADNI082S5029 as -finished without error-')
-    # else:
-    #     raise FileNotFoundError(log_file
-    #                             + ' was not found, something went wrong...')
     # clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
@@ -703,6 +690,7 @@ def test_run_SpatialSVM(cmdopt):
 def test_run_T1FreeSurferTemplate(cmdopt):
     # Data for this functional test comes from https://openneuro.org/datasets/ds000204
     # sub-01 was duplicated into to sub-02 with one session in order to test the "one time point" case
+    import shutil
     from os.path import dirname, join, abspath
     from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_pipeline import T1FreeSurferTemplate
 
@@ -710,15 +698,21 @@ def test_run_T1FreeSurferTemplate(cmdopt):
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'T1FreeSurferTemplate')
 
-    clean_folder(join(root, 'out', 'caps'))
+    # Remove potential residual of previous tests
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
     clean_folder(join(working_dir, 'T1FreeSurferTemplate'))
+
+    # Copy necessary data from in to out
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     pipeline = T1FreeSurferTemplate(
         caps_directory=join(root, 'out', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv')
     )
     pipeline.base_dir = join(working_dir, 'T1FreeSurferTemplate')
-    pipeline.run(bypass_check=True)
+    pipeline.run(plugin='MultiProc',
+                 plugin_args={'n_procs': 2},
+                 bypass_check=True)
 
     # We only check that folders are the same meaning that FreeSurfer finished without error
     compare_folders(join(root, 'out'), join(root, 'ref'), 'caps')
@@ -728,6 +722,7 @@ def test_run_T1FreeSurferTemplate(cmdopt):
 
 def test_run_T1FreeSurferLongitudinalCorrection(cmdopt):
     # Data for this functional test comes from https://openneuro.org/datasets/ds000204
+    import shutil
     from os.path import dirname, join, abspath
     from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_pipeline import T1FreeSurferLongitudinalCorrection
 
@@ -735,8 +730,12 @@ def test_run_T1FreeSurferLongitudinalCorrection(cmdopt):
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'T1FreeSurferLongitudinalCorrection')
 
-    clean_folder(join(root, 'out', 'caps'))
+    # Remove potential residual of previous tests
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
     clean_folder(join(working_dir, 'T1FreeSurferLongitudinalCorrection'))
+
+    # Copy necessary data from in to out
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     pipeline = T1FreeSurferLongitudinalCorrection(
         caps_directory=join(root, 'out', 'caps'),
