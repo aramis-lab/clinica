@@ -34,22 +34,22 @@ class StatisticsVolumeCorrectionCLI(ce.CmdParser):
         clinica_comp.add_argument("t_map",
                                   help='t-statistics map')
 
-        clinica_comp.add_argument("height_threshold",
+        clinica_comp.add_argument("height_threshold", type=float,
                                   help='Height Threshold associated with uncorrected p-value')
 
-        clinica_comp.add_argument("FWEp",
+        clinica_comp.add_argument("FWEp", type=float,
                                   help='FWE p value for peak correction')
 
-        clinica_comp.add_argument("FDRp",
+        clinica_comp.add_argument("FDRp", type=float,
                                   help='FDR p value for peak correction')
 
-        clinica_comp.add_argument("FWEc",
+        clinica_comp.add_argument("FWEc", type=int,
                                   help='FWE cluster minimum size value for cluster correction')
 
-        clinica_comp.add_argument("FDRc",
+        clinica_comp.add_argument("FDRc", type=int,
                                   help='FDR cluster minimum size value for cluster correction')
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("-nc", "--n_cuts", default=8,
+        optional.add_argument("-nc", "--n_cuts", default=8, type=int,
                               help='Number of cuts along each direction')
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
@@ -86,6 +86,6 @@ class StatisticsVolumeCorrectionCLI(ce.CmdParser):
             exec_pipeline = pipeline.run()
 
         if isinstance(exec_pipeline, Graph):
-            print_end_pipeline(self.name, os.path.join(pipeline.base_dir, self.name))
+            print_end_pipeline(self.name, os.path.join(pipeline.base_dir, self.name), pipeline.base_dir_was_specified)
         else:
             print_crash_files_and_exit(args.logname, pipeline.base_dir)
