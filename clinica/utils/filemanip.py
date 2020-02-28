@@ -105,6 +105,15 @@ def get_subject_id(bids_or_caps_file):
 
     return subject_id
 
+def get_filename_no_ext(filename):
+    """
+    Get filename without extension [".nii.gz", ".tar.gz", ".niml.dset"]
+    """
+    from nipype.utils.filemanip import split_filename
+
+    _, filename_no_ext, _ = split_filename(filename)
+
+    return filename_no_ext
 
 def extract_image_ids(bids_or_caps_files):
     """Extract image IDs (e.g. ['sub-CLNC01_ses-M00', 'sub-CLNC01_ses-M18']  from `bids_or_caps_files`."""
