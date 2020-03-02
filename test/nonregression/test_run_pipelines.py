@@ -707,7 +707,8 @@ def test_run_T1FreeSurferTemplate(cmdopt):
 
     pipeline = T1FreeSurferTemplate(
         caps_directory=join(root, 'out', 'caps'),
-        tsv_file=join(root, 'in', 'subjects.tsv')
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'T1FreeSurferLongitudinalCorrection'),
     )
     pipeline.base_dir = join(working_dir, 'T1FreeSurferTemplate')
     pipeline.run(plugin='MultiProc',
@@ -739,7 +740,8 @@ def test_run_T1FreeSurferLongitudinalCorrection(cmdopt):
 
     pipeline = T1FreeSurferLongitudinalCorrection(
         caps_directory=join(root, 'out', 'caps'),
-        tsv_file=join(root, 'in', 'subjects.tsv')
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'T1FreeSurferLongitudinalCorrection'),
     )
     pipeline.base_dir = join(working_dir, 'T1FreeSurferLongitudinalCorrection')
     pipeline.run(bypass_check=True)
