@@ -752,7 +752,6 @@ def test_run_StatisticsVolumeCorrection(cmdopt):
     from os.path import dirname, join, abspath
     import shutil
 
-
     working_dir = cmdopt
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'StatisticsVolumeCorrection')
@@ -784,6 +783,7 @@ def test_run_StatisticsVolumeCorrection(cmdopt):
     
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=True)
+
 
 # def test_run_T1FreeSurferLongitudinal(cmdopt):
 #     """
