@@ -3,15 +3,8 @@
 
 def get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id):
     """
-
-    Args:
-        is_longitudinal:
-        caps_dir:
-        subject_id:
-        session_id:
-
-    Returns:
-
+    Extract path to FreeSurfer segmentation in CAPS folder and FreeSurfer ID
+    (e.g. sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18 or sub-CLNC01_ses-M00).
     """
     import os
     from clinica.utils.exceptions import ClinicaCAPSError
@@ -57,40 +50,40 @@ def perform_gtmseg(caps_dir, subject_id, session_id, is_longitudinal):
     import os
     import shutil
     import nipype.pipeline.engine as pe
-    from clinica.utils.stream import cprint
     from nipype.interfaces.base import CommandLine
+    import clinica.pipelines.pet_surface.pet_surface_utils as utils
 
     # Old subject_dir is saved for later
     subjects_dir_backup = os.path.expandvars('$SUBJECTS_DIR')
 
-    root_env, sub_id_cmd = get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id)
+    root_env, freesurfer_id = utils.get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id)
 
     # Set the new subject dir for the function to work properly
     os.environ["SUBJECTS_DIR"] = root_env
 
-    if not os.path.exists(os.path.join(os.path.expandvars('$SUBJECTS_DIR'), sub_id_cmd, 'mri', 'gtmseg.mgz')):
+    if not os.path.exists(os.path.join(os.path.expandvars('$SUBJECTS_DIR'), freesurfer_id, 'mri', 'gtmseg.mgz')):
         # Creation of standalone node based on Command Line Interface.
         # We simply put the command line we would run on a console
-        segmentation = pe.Node(interface=CommandLine('gtmseg --s ' + sub_id_cmd + ' --no-seg-stats --xcerseg',
+        segmentation = pe.Node(interface=CommandLine('gtmseg --s ' + freesurfer_id + ' --no-seg-stats --xcerseg',
                                                      terminal_output='stream'), name='gtmseg')
         segmentation.run()
 
-        # We specify the out file to be in the current directory of execution (easy for us to look at it afterward in the
-        # working directory). We copy then the file.
-        out_file = os.path.abspath('./gtmseg.mgz')
-        shutil.copy(os.path.join(os.path.expandvars('$SUBJECTS_DIR'), subject_id + '_' + session_id, 'mri', 'gtmseg.mgz'),
-                    out_file)
+    # We specify the out file to be in the current directory of execution (easy for us to look at it afterward in the
+    # working directory). We copy then the file.
+    out_file = os.path.abspath('./gtmseg.mgz')
+    shutil.copy(os.path.join(os.path.expandvars('$SUBJECTS_DIR'), freesurfer_id, 'mri', 'gtmseg.mgz'),
+                out_file)
 
-        # Remove bunch of files created during segmentation in caps dir and not needed
-        gtmsegcab = os.path.join(os.path.expandvars('$SUBJECTS_DIR'), subject_id + '_' + session_id, 'mri', 'gtmseg.ctab')
-        if os.path.exists(gtmsegcab):
-            os.remove(gtmsegcab)
+    # Remove bunch of files created during segmentation in caps dir and not needed
+    gtmsegcab = os.path.join(os.path.expandvars('$SUBJECTS_DIR'), freesurfer_id, 'mri', 'gtmseg.ctab')
+    if os.path.exists(gtmsegcab):
+        os.remove(gtmsegcab)
 
-        gtmseglta = os.path.join(os.path.expandvars('$SUBJECTS_DIR'), subject_id + '_' + session_id, 'mri', 'gtmseg.lta')
-        if os.path.exists(gtmseglta):
-            os.remove(gtmseglta)
+    gtmseglta = os.path.join(os.path.expandvars('$SUBJECTS_DIR'), freesurfer_id, 'mri', 'gtmseg.lta')
+    if os.path.exists(gtmseglta):
+        os.remove(gtmseglta)
 
-        # Set back the SUBJECT_DIR environment variable of the user
+    # Set back the SUBJECT_DIR environment variable of the user
     os.environ["SUBJECTS_DIR"] = subjects_dir_backup
     return out_file
 
@@ -316,7 +309,6 @@ def suvr_normalization(pet_path, mask):
         (string) Path to the suvr normalized volume in the current directory
     """
     import nibabel as nib
-    import numpy
     import os
 
     # Load mask
@@ -421,20 +413,20 @@ def surf2surf(in_surface, reg_file, gtmsegfile, subject_id, session_id, caps_dir
         (string) Path to the converted surface in current directory
     """
     import os
-    from clinica.utils.exceptions import ClinicaCAPSError
     import shutil
     import sys
+    import clinica.pipelines.pet_surface.pet_surface_utils as utils
 
     # set subjects_dir env. variable for mri_surf2surf to work properly
     subjects_dir_backup = os.path.expandvars('$SUBJECTS_DIR')
 
-    root_env, sub_id_cmd = get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id)
+    root_env, freesurfer_id = utils.get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id)
 
     os.environ["SUBJECTS_DIR"] = root_env
 
     # make a copy of surface file to surface directory in CAPS in order to allow processing
     shutil.copy(in_surface, os.path.join(os.path.expandvars('$SUBJECTS_DIR'),
-                                         sub_id_cmd,
+                                         freesurfer_id,
                                          'surf'))
 
     # TODO write nicer way to grab hemi & filename (difficulty caused by the dots in filenames)
@@ -445,7 +437,7 @@ def surf2surf(in_surface, reg_file, gtmsegfile, subject_id, session_id, caps_dir
     # Perform surf2surf algorithm
     tval = os.path.abspath('./' + os.path.basename(in_surface) + '_gtmsegspace')
     cmd = 'mri_surf2surf --reg %s %s --sval-xyz %s --hemi %s --tval-xyz %s --tval %s --s %s ' \
-          % (reg_file, gtmsegfile, surfname, hemi, gtmsegfile, tval, sub_id_cmd)
+          % (reg_file, gtmsegfile, surfname, hemi, gtmsegfile, tval, freesurfer_id)
 
     # If system is MacOS, this export command must be run just before the mri_vol2surf command to bypass MacOs security
     if sys.platform == 'darwin':
@@ -454,7 +446,7 @@ def surf2surf(in_surface, reg_file, gtmsegfile, subject_id, session_id, caps_dir
 
     # remove file in caps
     os.remove(os.path.join(os.path.expandvars('$SUBJECTS_DIR'),
-                           sub_id_cmd,
+                           freesurfer_id,
                            'surf',
                            os.path.basename(in_surface)))
 
@@ -480,14 +472,14 @@ def vol2surf(volume, surface, subject_id, session_id, caps_dir, gtmsegfile, is_l
         (string) Path to the data projected onto the surface
     """
     import os
-    from clinica.utils.exceptions import ClinicaCAPSError
     import shutil
     import sys
+    import clinica.pipelines.pet_surface.pet_surface_utils as utils
 
     # set subjects_dir env. variable for mri_vol2surf to work properly
     subjects_dir_backup = os.path.expandvars('$SUBJECTS_DIR')
 
-    root_env, sub_id_cmd = get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id)
+    root_env, freesurfer_id = utils.get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id)
 
     os.environ["SUBJECTS_DIR"] = root_env
 
@@ -498,15 +490,15 @@ def vol2surf(volume, surface, subject_id, session_id, caps_dir, gtmsegfile, is_l
 
     # copy surface file in caps surf folder to allow processing
     shutil.copy(surface, os.path.join(os.path.expandvars('$SUBJECTS_DIR'),
-                                      sub_id_cmd,
+                                      freesurfer_id,
                                       'surf'))
 
     if not os.path.exists(os.path.join(os.path.expandvars('$SUBJECTS_DIR'),
-                                       sub_id_cmd,
+                                       freesurfer_id,
                                        'mri',
                                        'gtmseg.mgz')):
         shutil.copy(gtmsegfile, os.path.join(os.path.expandvars('$SUBJECTS_DIR'),
-                                             sub_id_cmd,
+                                             freesurfer_id,
                                              'mri',
                                              'gtmseg.mgz'))
 
@@ -517,7 +509,7 @@ def vol2surf(volume, surface, subject_id, session_id, caps_dir, gtmsegfile, is_l
     cmd += ' --o ' + output
     cmd += ' --surf ' + surfname
     cmd += ' --hemi ' + hemi
-    cmd += ' --regheader ' + sub_id_cmd
+    cmd += ' --regheader ' + freesurfer_id
     cmd += ' --ref gtmseg.mgz'
     cmd += ' --interp nearest'
 
@@ -528,13 +520,13 @@ def vol2surf(volume, surface, subject_id, session_id, caps_dir, gtmsegfile, is_l
 
     # remove file in caps
     os.remove(os.path.join(os.path.expandvars('$SUBJECTS_DIR'),
-                           sub_id_cmd,
+                           freesurfer_id,
                            'surf',
                            os.path.basename(surface)))
     # TODO carreful here...
     # Removing gtmseg.mgz may lead to problems as other vol2surf are using it
     os.remove(os.path.join(os.path.expandvars('$SUBJECTS_DIR'),
-                           sub_id_cmd,
+                           freesurfer_id,
                            'mri',
                            'gtmseg.mgz'))
 
@@ -602,13 +594,13 @@ def fsaverage_projection(projection, subject_id, caps_dir, session_id, fwhm, is_
         (string) Path to the data averaged
     """
     from nipype.interfaces.freesurfer import MRISPreproc
-    from clinica.utils.exceptions import ClinicaCAPSError
     import os
     import shutil
+    import clinica.pipelines.pet_surface.pet_surface_utils as utils
 
     subjects_dir_backup = os.path.expandvars('$SUBJECTS_DIR')
 
-    root_env, sub_id_cmd = get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id)
+    root_env, freesurfer_id = utils.get_new_subjects_dir(is_longitudinal, caps_dir, subject_id, session_id)
 
     os.environ["SUBJECTS_DIR"] = root_env
 
@@ -622,7 +614,7 @@ def fsaverage_projection(projection, subject_id, caps_dir, session_id, fwhm, is_
 
     # also copy the mgh file in the surf folder (needed by MRISPreproc
     projection_in_surf_folder = os.path.join(os.path.expandvars('$SUBJECTS_DIR'),
-                                             sub_id_cmd,
+                                             freesurfer_id,
                                              'surf',
                                              os.path.basename(projection))
 
@@ -635,7 +627,7 @@ def fsaverage_projection(projection, subject_id, caps_dir, session_id, fwhm, is_
     # Use standalone node
     fsproj = MRISPreproc()
     fsproj.inputs.target = 'fsaverage'
-    fsproj.inputs.subjects = [subject_id + '_' + session_id]
+    fsproj.inputs.subjects = [freesurfer_id]
     fsproj.inputs.fwhm = fwhm
     fsproj.inputs.hemi = hemi
     fsproj.inputs.surf_measure = os.path.basename(projection)[3:]
