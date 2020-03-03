@@ -804,7 +804,6 @@ def get_wf(subject_id,
                 Void
     """
     import os
-    from clinica.utils.stream import cprint
     import nipype.pipeline.engine as pe
     import nipype.interfaces.utility as niu
     import nipype.interfaces.io as nio
@@ -815,8 +814,9 @@ def get_wf(subject_id,
     from nipype.interfaces.spm import Coregister, Normalize12
     import clinica.pipelines.pet_surface.pet_surface_utils as utils
     from clinica.utils.spm import get_tpm
+    from clinica.utils.ux import print_begin_image
 
-    cprint('***** Beginning processing of ' + subject_id + ' on ' + session_id + ' *****')
+    print_begin_image(subject_id + '_' + session_id)
 
     # Creation of workflow
     # 1 Creation of node
