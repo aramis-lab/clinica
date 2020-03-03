@@ -19,6 +19,13 @@ class StatisticsVolume(cpe.Pipeline):
 
 
     """
+    def check_pipeline_parameters(self):
+        """Check pipeline parameters."""
+        from clinica.utils.exceptions import ClinicaException
+
+        if self.parameters['cluster_threshold'] < 0 or self.parameters['cluster_threshold'] > 1:
+            raise ClinicaException("Cluster threshold should be between 0 and 1 "
+                                   "(given value: %s)." % self.parameters['cluster_threshold'])
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
@@ -198,7 +205,7 @@ class StatisticsVolume(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.filemanip import unzip_nii
-        from os.path import join, dirname, abspath
+        from os.path import join, dirname
 
         # SPM cannot handle zipped files
         unzip_node = npe.Node(nutil.Function(input_names=['in_file'],
@@ -278,7 +285,7 @@ class StatisticsVolume(cpe.Pipeline):
         model_result_FWE_correction = model_result_no_correction.clone(name='model_result_FWE_correction')
 
         model_result_no_correction.inputs.method = 'none'
-        model_result_no_correction.inputs.threshold = self.parameters['threshold_uncorrected_pvalue']
+        model_result_no_correction.inputs.threshold = self.parameters['cluster_threshold']
 
         model_result_FWE_correction.inputs.method = 'FWE'
         model_result_FWE_correction.inputs.threshold = self.parameters['threshold_corrected_pvalue']

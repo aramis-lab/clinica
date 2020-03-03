@@ -44,11 +44,6 @@ class StatisticsVolumeCLI(ce.CmdParser):
                                     + 'Example : \'*_task-rest_acq-fdg_pet_space-Ixi549Space_pet.nii.gz\' will grab the'
                                     + ' corresponding file in all the subjects/sessions'))
 
-        optional.add_argument("-tup", "--threshold_uncorrected_pvalue",
-                              type=float, default=0.001,
-                              help='Threshold to display the uncorrected p-value '
-                                   + '(--threshold_uncorrected_pvalue 0.001).')
-
         optional.add_argument("-tcp", "--threshold_corrected_pvalue",
                               type=float, default=0.05,
                               help='Threshold to display the corrected p-value '
@@ -63,19 +58,24 @@ class StatisticsVolumeCLI(ce.CmdParser):
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
 
+        # Advanced arguments (i.e. tricky parameters)
+        advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
+        advanced.add_argument("-ct", "--cluster_threshold",
+                              type=float, default=0.001,
+                              help='Threshold to define a cluster in the process of cluster-wise correction '
+                                   '(default: --cluster_threshold %(default)s).')
+
     def run_command(self, args):
         import os
         from networkx import Graph
-        from colorama import Fore
         from .statistics_volume_pipeline import StatisticsVolume
-        from clinica.utils.stream import cprint
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         pipeline_parameters = {'contrast': args.contrast,
                                'feature_type': args.feature_type,
                                'group_id': args.group_id,
                                'custom_files': args.custom_files,
-                               'threshold_uncorrected_pvalue': args.threshold_uncorrected_pvalue,
+                               'cluster_threshold': args.cluster_threshold,
                                'threshold_corrected_pvalue': args.threshold_corrected_pvalue,
                                'group_id_caps': args.group_id_caps,
                                'smoothing': args.smoothing}
@@ -95,6 +95,6 @@ class StatisticsVolumeCLI(ce.CmdParser):
             exec_pipeline = pipeline.run()
 
         if isinstance(exec_pipeline, Graph):
-            print_end_pipeline(self.name, os.path.join(pipeline.base_dir, self.name), pipeline.base_dir_was_specified)
+            print_end_pipeline(self.name, pipeline.base_dir, pipeline.base_dir_was_specified)
         else:
             print_crash_files_and_exit(args.logname, pipeline.base_dir)
