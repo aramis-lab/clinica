@@ -233,7 +233,6 @@ class StatisticsVolume(cpe.Pipeline):
         run_spm_model_estimation = run_spm_script_node.clone(name='run_spm_model_estimation')
         run_spm_model_contrast = run_spm_script_node.clone(name='run_spm_model_contrast')
         run_spm_model_result_no_correction = run_spm_script_node.clone(name='run_spm_model_result_no_correction')
-        run_spm_model_result_FWE_correction = run_spm_script_node.clone(name='run_spm_model_result_FWE_correction')
 
         # All the following node are creating the correct (.m) script for the different SPM steps
         # 1. Model creation
@@ -282,18 +281,13 @@ class StatisticsVolume(cpe.Pipeline):
                                               name='model_result_no_correction')
         model_result_no_correction.inputs.template_file = join(dirname(__file__), 'template_model_results.m')
 
-        model_result_FWE_correction = model_result_no_correction.clone(name='model_result_FWE_correction')
-
         model_result_no_correction.inputs.method = 'none'
         model_result_no_correction.inputs.threshold = self.parameters['cluster_threshold']
-
-        model_result_FWE_correction.inputs.method = 'FWE'
-        model_result_FWE_correction.inputs.threshold = self.parameters['threshold_corrected_pvalue']
 
         # Print result to txt file if spm
 
         # Export results to output node
-        read_output_node = npe.Node(nutil.Function(input_names=['spm_mat', 'spm_mat_2', 'class_names', 'covariables', 'group_id', 'fwhm', 'measure'],
+        read_output_node = npe.Node(nutil.Function(input_names=['spm_mat', 'class_names', 'covariables', 'group_id', 'fwhm', 'measure'],
                                                    output_names=['spmT_0001',
                                                                  'spmT_0002',
                                                                  'spm_figures',
@@ -327,13 +321,10 @@ class StatisticsVolume(cpe.Pipeline):
             (model_contrast, run_spm_model_contrast, [('script_file', 'm_file')]),
 
             (run_spm_model_contrast, model_result_no_correction, [('spm_mat', 'mat_file')]),
-            (run_spm_model_contrast, model_result_FWE_correction, [('spm_mat', 'mat_file')]),
 
             (model_result_no_correction, run_spm_model_result_no_correction, [('script_file', 'm_file')]),
-            (model_result_FWE_correction, run_spm_model_result_FWE_correction, [('script_file', 'm_file')]),
 
             (run_spm_model_result_no_correction, read_output_node, [('spm_mat', 'spm_mat')]),
-            (run_spm_model_result_FWE_correction, read_output_node, [('spm_mat', 'spm_mat_2')]),  # Only used for synchronisation
 
             (get_groups, read_output_node, [('class_names', 'class_names')]),
             (model_creation, read_output_node, [('covariables', 'covariables')]),

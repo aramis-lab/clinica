@@ -701,11 +701,11 @@ def test_run_SpatialSVM(cmdopt):
 
 
 def test_run_StatisticsVolume(cmdopt):
-    from clinica.pipelines.statistics_volume.statistics_volume_pipeline import StatisticsVolume
-    from os.path import dirname, join, abspath, exists, isfile
+    from os.path import dirname, join, abspath
     import shutil
     import numpy as np
     import nibabel as nib
+    from clinica.pipelines.statistics_volume.statistics_volume_pipeline import StatisticsVolume
 
     working_dir = cmdopt
     root = dirname(abspath(join(abspath(__file__), pardir)))
@@ -719,13 +719,14 @@ def test_run_StatisticsVolume(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     # Instantiate pipeline and run()
-    parameters = {'contrast': 'group',
-                  'feature_type': 'fdg',
-                  'group_id': 'UnitTest',
-                  'threshold_uncorrected_pvalue': 0.001,
-                  'threshold_corrected_pvalue': 0.05,
-                  'group_id_caps': None,
-                  'smoothing': 8}
+    parameters = {
+        'contrast': 'group',
+        'feature_type': 'fdg',
+        'group_id': 'UnitTest',
+        'cluster_threshold': 0.001,
+        'group_id_caps': None,
+        'smoothing': 8
+    }
 
     pipeline = StatisticsVolume(
         caps_directory=join(root, 'out', 'caps'),
@@ -748,7 +749,7 @@ def test_run_StatisticsVolume(cmdopt):
 
 def test_run_StatisticsVolumeCorrection(cmdopt):
     from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_pipeline import StatisticsVolumeCorrection
-    from os.path import dirname, join, abspath, exists, isfile
+    from os.path import dirname, join, abspath
     import shutil
 
 

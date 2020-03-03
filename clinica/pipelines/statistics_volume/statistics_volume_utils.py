@@ -368,13 +368,12 @@ def contrast(mat_file, template_file, covariables, class_names):
     return current_model_estimation
 
 
-def read_output(spm_mat, spm_mat_2, class_names, covariables, group_id, fwhm, measure):
+def read_output(spm_mat, class_names, covariables, group_id, fwhm, measure):
     """
         Once analysis is done, grab all the different filenames and rename them in current directory according to class
         names
     Args:
         spm_mat: (str) path to the SPM.mat file of the SPM analysis
-        spm_mat_2: (str) path to the SPM.mat file of the SPM analysis, used to synchronize nodes
         class_names: (list) of str of length 2 that correspond to the 2 classes for the group comparison
         covariables: (list) of str: list of covariables
         group_id: name of the group id
@@ -395,8 +394,6 @@ def read_output(spm_mat, spm_mat_2, class_names, covariables, group_id, fwhm, me
     from os.path import join, dirname, isdir, isfile, abspath
     from os import listdir
     from shutil import copyfile
-
-    assert spm_mat_2 == spm_mat, 'Problem while retrieving SPM.mat files'
 
     if not isfile(spm_mat):
         if not isdir(dirname(spm_mat)):

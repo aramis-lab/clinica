@@ -352,24 +352,21 @@ def test_instantiate_T1FreeSurferLongitudinalCorrection():
 
 
 def test_instantiate_StatisticsVolume(cmdopt):
+    from os.path import dirname, join, abspath
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import StatisticsVolume
-    from os.path import dirname, join, abspath, exists, isfile
-    import shutil
-    import numpy as np
-    import nibabel as nib
 
-    working_dir = cmdopt
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'StatisticsVolume')
 
     # Instantiate pipeline and run()
-    parameters = {'contrast': 'group',
-                  'feature_type': 'fdg',
-                  'group_id': 'UnitTest',
-                  'threshold_uncorrected_pvalue': 0.001,
-                  'threshold_corrected_pvalue': 0.05,
-                  'group_id_caps': None,
-                  'smoothing': 8}
+    parameters = {
+        'contrast': 'group',
+        'feature_type': 'fdg',
+        'group_id': 'UnitTest',
+        'cluster_threshold': 0.001,
+        'group_id_caps': None,
+        'smoothing': 8
+    }
 
     pipeline = StatisticsVolume(
         caps_directory=join(root, 'in', 'caps'),
@@ -382,8 +379,7 @@ def test_instantiate_StatisticsVolume(cmdopt):
 def test_instantiate_StatisticsVolumeCorrection(cmdopt):
     from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_pipeline import \
         StatisticsVolumeCorrection
-    from os.path import dirname, join, abspath, exists, isfile
-    import shutil
+    from os.path import dirname, join, abspath
 
     working_dir = cmdopt
     root = dirname(abspath(join(abspath(__file__), pardir)))

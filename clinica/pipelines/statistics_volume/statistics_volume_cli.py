@@ -38,16 +38,10 @@ class StatisticsVolumeCLI(ce.CmdParser):
 
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
 
-
         optional.add_argument("--custom_files", "-cf", type=str, default=None,
                               help=('Custom file string. Specify filename using * when the subject or session name appear. '
                                     + 'Example : \'*_task-rest_acq-fdg_pet_space-Ixi549Space_pet.nii.gz\' will grab the'
                                     + ' corresponding file in all the subjects/sessions'))
-
-        optional.add_argument("-tcp", "--threshold_corrected_pvalue",
-                              type=float, default=0.05,
-                              help='Threshold to display the corrected p-value '
-                                   '(default: --threshold_corrected_pvalue 0.05)')
 
         optional.add_argument("-gic", "--group_id_caps", type=str, default=None,
                               help='Name of the group that Clinica needs to use to grab input file')
@@ -56,7 +50,7 @@ class StatisticsVolumeCLI(ce.CmdParser):
                               help='Full Width at Half Maximum (FWHM) of the smoothing used in your input file.')
 
         # Clinica standard arguments (e.g. --n_procs)
-        self.add_clinica_standard_arguments()
+        self.add_clinica_standard_arguments(add_tsv_flag=False)
 
         # Advanced arguments (i.e. tricky parameters)
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
@@ -66,19 +60,19 @@ class StatisticsVolumeCLI(ce.CmdParser):
                                    '(default: --cluster_threshold %(default)s).')
 
     def run_command(self, args):
-        import os
         from networkx import Graph
         from .statistics_volume_pipeline import StatisticsVolume
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
-        pipeline_parameters = {'contrast': args.contrast,
-                               'feature_type': args.feature_type,
-                               'group_id': args.group_id,
-                               'custom_files': args.custom_files,
-                               'cluster_threshold': args.cluster_threshold,
-                               'threshold_corrected_pvalue': args.threshold_corrected_pvalue,
-                               'group_id_caps': args.group_id_caps,
-                               'smoothing': args.smoothing}
+        pipeline_parameters = {
+            'contrast': args.contrast,
+            'feature_type': args.feature_type,
+            'group_id': args.group_id,
+            'custom_files': args.custom_files,
+            'cluster_threshold': args.cluster_threshold,
+            'group_id_caps': args.group_id_caps,
+            'smoothing': args.smoothing
+        }
 
         pipeline = StatisticsVolume(
             caps_directory=self.absolute_path(args.caps_directory),
