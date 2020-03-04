@@ -204,7 +204,7 @@ def execute():
     from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_cli import fMRIPreprocessingCLI
     from clinica.pipelines.pet_volume.pet_volume_cli import PETVolumeCLI
     from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI
-    from clinica.pipelines.pet_surface.pet_surface_longitudinal import PetSurfaceLongitudinalCLI
+    from clinica.pipelines.pet_surface.pet_surface_longitudinal_cli import PetSurfaceLongitudinalCLI
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_cli import SpatialSVMCLI
     from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
