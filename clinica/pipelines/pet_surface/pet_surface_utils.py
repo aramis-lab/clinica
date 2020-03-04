@@ -1028,14 +1028,32 @@ def get_wf(subject_id,
 
     datasink = pe.Node(nio.DataSink(),
                        name='sinker')
-    datasink.inputs.base_directory = os.path.join(caps_dir,
-                                                  'subjects',
-                                                  subject_id,
-                                                  session_id,
-                                                  'pet',
-                                                  'surface')
+
+    def get_output_dir(is_longitudinal, caps_dir, subject_id, session_id):
+        import os
+        from clinica.utils.exceptions import ClinicaCAPSError
+
+        if is_longitudinal:
+            root = os.path.join(caps_dir, 'subjects', subject_id, session_id, 't1')
+            long_folds = [f for f in os.listdir(root) if f.startswith('long-')]
+            if len(long_folds) > 1:
+                raise ClinicaCAPSError('[Error] Folder ' + root + ' contains ' + str(len(long_folds))
+                                       + ' folders labeled long-*. Only 1 can exist')
+            elif len(long_folds) == 0:
+                raise ClinicaCAPSError(
+                    '[Error] Folder ' + root + ' does not contains a folder labeled long-*. Have you run t1-freesurfer-longitudinal ?')
+            else:
+                output_dir = os.path.join(caps_dir, 'subjects', subject_id, session_id,
+                                          'pet', long_folds[0], 'surface_longitudinal')
+        else:
+            output_dir = os.path.join(caps_dir, 'subjects', subject_id, session_id,
+                                      'pet', 'surface')
+
+        return output_dir
+
+    datasink.inputs.base_directory = get_output_dir(is_longitudinal, caps_dir, subject_id, session_id)
     datasink.inputs.parameterization = True
-    datasink.inputs.regexp_substitutions = [
+    cross_sectional_regexp_substitutions = [
         # Mid surface
         (r'(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/midsurface\/.*_hemi_([a-z]+)(.*)$',
          r'\1/\2_\3_hemi-\4_midcorticalsurface'),
@@ -1045,13 +1063,38 @@ def get_wf(subject_id,
         # Projection in fsaverage
         (r'(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*',
          r'\1/\2_\3_task-rest_acq-' + pet_tracer + r'_pet_space-fsaverage_suvr-' + utils.normalization_areas(pet_tracer) + r'_pvc-iy_hemi-\4_fwhm-\5_projection.mgh'),
-        # TSV file for destrieux atlas
+        # TSV file for Destrieux atlas
         (r'(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/destrieux_tsv\/destrieux.tsv',
          r'\1/atlas_statistics/\2_\3_task-rest_acq-' + pet_tracer.lower() + '_pet_space-destrieux_pvc-iy_suvr-' + utils.normalization_areas(pet_tracer) + '_statistics.tsv'),
-        # TSV file for desikan atlas
+        # TSV file for Desikan atlas
         (r'(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/desikan_tsv\/desikan.tsv',
          r'\1/atlas_statistics/\2_\3_task-rest_acq-' + pet_tracer.lower() + '_pet_space-desikan_pvc-iy_suvr-' + utils.normalization_areas(pet_tracer) + '_statistics.tsv')
     ]
+    longitudinal_regexp_substitutions = [
+        # Mid surface
+        (r'(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/midsurface\/.*_hemi_([a-z]+)(.*)$',
+         r'\1/\2_\3_\4_hemi-\5_midcorticalsurface'),
+        # Projection in native space
+        (r'(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/projection_native\/.*_hemi_([a-z]+).*',
+         r'\1/\2_\3_\4_task-rest_acq-' + pet_tracer + r'_pet_space-native_suvr-' + utils.normalization_areas(
+             pet_tracer) + r'_pvc-iy_hemi-\5_projection.mgh'),
+        # Projection in fsaverage
+        (r'(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*',
+         r'\1/\2_\3_\4_task-rest_acq-' + pet_tracer + r'_pet_space-fsaverage_suvr-' + utils.normalization_areas(
+             pet_tracer) + r'_pvc-iy_hemi-\5_fwhm-\6_projection.mgh'),
+        # TSV file for Destrieux atlas
+        (r'(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/destrieux_tsv\/destrieux.tsv',
+         r'\1/atlas_statistics/\2_\3_\4_task-rest_acq-' + pet_tracer.lower() + '_pet_space-destrieux_pvc-iy_suvr-' + utils.normalization_areas(
+             pet_tracer) + '_statistics.tsv'),
+        # TSV file for Desikan atlas
+        (r'(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/desikan_tsv\/desikan.tsv',
+         r'\1/atlas_statistics/\2_\3_\4_task-rest_acq-' + pet_tracer.lower() + '_pet_space-desikan_pvc-iy_suvr-' + utils.normalization_areas(
+             pet_tracer) + '_statistics.tsv')
+    ]
+    if is_longitudinal:
+        datasink.inputs.regexp_substitutions = longitudinal_regexp_substitutions
+    else:
+        datasink.inputs.regexp_substitutions = cross_sectional_regexp_substitutions
 
     # 3 Connecting the nodes
 
