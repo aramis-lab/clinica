@@ -330,7 +330,8 @@ class Pipeline(Workflow):
             'freesurfer': chk.check_freesurfer,
             'fsl': chk.check_fsl,
             'mrtrix': chk.check_mrtrix,
-            'matlab': chk.check_matlab
+            'matlab': chk.check_matlab,
+            'petpvc': chk.check_petpvc,
         }
         check_binary = chk.is_binary_present
         # check_toolbox = chk.is_toolbox_present

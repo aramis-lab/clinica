@@ -10,6 +10,11 @@
             "type": "software",
             "name": "freesurfer",
             "version": ">=6"
+        },
+         {
+            "type": "software",
+            "name": "petpvc",
+            "version": ""
         }
     ]
 }
