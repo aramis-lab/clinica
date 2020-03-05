@@ -247,10 +247,14 @@ def test_instantiate_PETSurface():
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'PETSurface')
+    parameters = {
+        'longitudinal': False
+    }
     pipeline = PetSurface(
         bids_directory=join(root, 'in', 'bids'),
         caps_directory=join(root, 'in', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv'),
+        parameters=parameters,
     )
     pipeline.build()
 

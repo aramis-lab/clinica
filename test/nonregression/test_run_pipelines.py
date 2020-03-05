@@ -574,11 +574,15 @@ def test_run_PETSurface(cmdopt):
     clean_folder(join(working_dir, 'PETSurface'))
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
+    parameters = {
+        'longitudinal': False
+    }
     pipeline = PetSurface(
         bids_directory=join(root, 'in', 'bids'),
         caps_directory=join(root, 'out', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv'),
         base_dir=join(working_dir, 'PETSurface'),
+        parameters=parameters
     )
     pipeline.build()
     pipeline.run(bypass_check=True)
