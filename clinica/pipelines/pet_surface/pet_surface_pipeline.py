@@ -4,18 +4,10 @@ import clinica.pipelines.engine as cpe
 
 
 class PetSurface(cpe.Pipeline):
-    """Project PET signal onto the surface of the cortex.
-
-    Args:
-        input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be
-            written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv
-            format).
+    """PetSurface - Surface-based processing of PET images.
 
     Returns:
         A clinica pipeline object containing the PetSurface pipeline.
-
     """
 
     def check_pipeline_parameters(self):
@@ -24,14 +16,15 @@ class PetSurface(cpe.Pipeline):
             self.parameters['pet_tracer'] = 'fdg'
 
     def check_custom_dependencies(self):
-        """Check dependencies that can not be listed in the `info.json` file.
-        """
+        """Check dependencies that can not be listed in the `info.json` file."""
         pass
 
     def get_input_fields(self):
-        """Possible inputs of this pipeline.
-        """
+        """Specify the list of possible inputs of this pipeline.
 
+        Returns:
+            A list of (string) input fields name.
+        """
         return ['orig_nu',
                 'pet',
                 'psf',
@@ -43,12 +36,11 @@ class PetSurface(cpe.Pipeline):
                 'desikan_right']
 
     def get_output_fields(self):
-        """Specify the list of possible outputs of this pipeline.
-        """
-
+        """Specify the list of possible outputs of this pipeline."""
         return []
 
     def build_input_node(self):
+        """Build and connect an input node to the pipeline."""
         if self.parameters['longitudinal']:
             self.build_input_node_longitudinal()
         else:
@@ -61,7 +53,6 @@ class PetSurface(cpe.Pipeline):
         from clinica.utils.exceptions import ClinicaException
         from clinica.iotools.utils.data_handling import check_relative_volume_location_in_world_coordinate_system
         import clinica.utils.input_files as input_files
-        from os.path import join
 
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(
@@ -186,8 +177,6 @@ class PetSurface(cpe.Pipeline):
         ])
 
     def build_input_node_cross_sectional(self):
-        """We iterate over subjects to get all the files needed to run the pipeline
-        """
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import clinica_file_reader
@@ -308,21 +297,13 @@ class PetSurface(cpe.Pipeline):
         ])
 
     def build_output_node(self):
-        """Build and connect an output node to the pipeline.
-        """
-
-        # In the same idea as the input node, this output node is supposedly
-        # used to write the output fields in a CAPS. It should be executed only
-        # if this pipeline output is not already connected to a next Clinica
-        # pipeline.
-
+        """Build and connect an output node to the pipeline."""
         pass
 
     def build_core_nodes(self):
         """The function get_wf constructs a pipeline for one subject (in pet_surface_utils.py) and runs it.
         We use iterables to give to the node all the files and information needed.
         """
-
         # TODO(@arnaud.marcoux): Convert it to a Node with iterables + MapNodes.
         #   I'm experimenting something to avoid the "MapNode of MapNode" case
         #   with iterables. I'll try to apply it on the tractography pipeline.
