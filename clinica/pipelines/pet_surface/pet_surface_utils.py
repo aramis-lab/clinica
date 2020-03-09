@@ -671,6 +671,10 @@ def readpsf(json_path):
         """
     import json
     import os
+    import datetime
+    from colorama import Fore
+    from clinica.utils.stream import cprint
+    from clinica.utils.exceptions import ClinicaException
 
     if not os.path.exists(json_path):
         raise Exception('File ' + json_path + ' does not exist. Point spread function information must be provided.')
@@ -678,8 +682,23 @@ def readpsf(json_path):
     # This is a standard way of reading data in a json
     with open(json_path) as df:
         data = json.load(df)
-    in_plane = data['Psf'][0]['EffectiveResolutionInPlane']
-    axial = data['Psf'][0]['EffectiveResolutionAxial']
+    try:
+        in_plane = data['Psf'][0]['EffectiveResolutionInPlane']
+    except KeyError:
+        now = datetime.datetime.now().strftime('%H:%M:%S')
+        error_msg = '%s[%s] Error: Clinica could not find EffectiveResolutionInPlane in the following JSON file: %s%s'\
+                    % (Fore.RED, now, json_path, Fore.RESET)
+        cprint(error_msg)
+        raise ClinicaException(error_msg)
+    try:
+        axial = data['Psf'][0]['EffectiveResolutionAxial']
+    except KeyError:
+        now = datetime.datetime.now().strftime('%H:%M:%S')
+        error_msg = '%s[%s] Error: Clinica could not find EffectiveResolutionAxial in the following JSON file: %s%s'\
+                    % (Fore.RED, now, json_path, Fore.RESET)
+        cprint(error_msg)
+        raise ClinicaException(error_msg)
+
     return in_plane, axial
 
 
