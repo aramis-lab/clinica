@@ -241,7 +241,7 @@ def test_instantiate_StatisticsSurface():
     pipeline.build()
 
 
-def test_instantiate_PETSurface():
+def test_instantiate_PETSurfaceCrossSectional():
     from os.path import dirname, join, abspath
     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
 
@@ -249,6 +249,24 @@ def test_instantiate_PETSurface():
     root = join(root, 'data', 'PETSurface')
     parameters = {
         'longitudinal': False
+    }
+    pipeline = PetSurface(
+        bids_directory=join(root, 'in', 'bids'),
+        caps_directory=join(root, 'in', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        parameters=parameters,
+    )
+    pipeline.build()
+
+
+def test_instantiate_PETSurfaceLongitudinal():
+    from os.path import dirname, join, abspath
+    from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
+
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'PETSurfaceLongitudinal')
+    parameters = {
+        'longitudinal': True
     }
     pipeline = PetSurface(
         bids_directory=join(root, 'in', 'bids'),
