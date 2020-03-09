@@ -1000,8 +1000,11 @@ def get_wf(subject_id,
     atlas_tsv.inputs.atlas_files = surface_atlas
 
     # 2 creation of workflow : working dir, inputnode, outputnode and datasink
+    name_workflow = subject_id.replace('-', '_') + '_' + session_id.replace('-', '_')
+    if is_longitudinal:
+        name_workflow += '_long'
 
-    wf = pe.Workflow(name=subject_id.replace('-', '_') + '_' + session_id.replace('-', '_'))
+    wf = pe.Workflow(name=name_workflow)
     wf.base_dir = working_directory_subjects
 
     inputnode = pe.Node(niu.IdentityInterface(fields=['orig_nu',
