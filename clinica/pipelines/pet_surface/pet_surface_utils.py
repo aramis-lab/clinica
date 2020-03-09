@@ -807,12 +807,12 @@ def get_wf(subject_id,
     import nipype.pipeline.engine as pe
     import nipype.interfaces.utility as niu
     import nipype.interfaces.io as nio
-    from nipype.algorithms.misc import Gunzip
     from nipype.interfaces.freesurfer import Tkregister2, ApplyVolTransform, MRIConvert
     from nipype.interfaces.fsl import Merge
     from nipype.interfaces.petpvc import PETPVC
     from nipype.interfaces.spm import Coregister, Normalize12
     import clinica.pipelines.pet_surface.pet_surface_utils as utils
+    from clinica.utils.filemanip import unzip_nii
     from clinica.utils.spm import get_tpm
     from clinica.utils.ux import print_begin_image
 
@@ -820,8 +820,10 @@ def get_wf(subject_id,
 
     # Creation of workflow
     # 1 Creation of node
-
-    unzip_pet = pe.Node(Gunzip(), name='unzip_pet')
+    unzip_pet = pe.Node(niu.Function(input_names=['in_file'],
+                                     output_names=['out_file'],
+                                     function=unzip_nii),
+                        name='unzip_pet')
 
     unzip_orig_nu = unzip_pet.clone(name='unzip_orig_nu')
 
