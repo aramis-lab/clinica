@@ -184,8 +184,10 @@ def read_participant_tsv(tsv_file):
 
 def extract_metadata_from_json(json_file, list_keys):
     import json
+    import datetime
     from colorama import Fore
     from clinica.utils.exceptions import ClinicaException
+    from clinica.utils.stream import cprint
 
     list_values = []
     try:
@@ -196,8 +198,11 @@ def extract_metadata_from_json(json_file, list_keys):
     except EnvironmentError:
         raise EnvironmentError('[Error] Clinica could not open the following JSON file: %s' % json_file)
     except KeyError as e:
-        raise ClinicaException('\n%s[Error] Clinica could not find the %s key in the following JSON file: %s%s' %
-                               (Fore.RED, e, json_file, Fore.RESET))
+        now = datetime.datetime.now().strftime('%H:%M:%S')
+        error_message = '%s[%s] Error: Clinica could not find the %s key in the following JSON file: %s%s' %\
+                        (Fore.RED, now, e, json_file, Fore.RESET)
+        cprint(error_message)
+        raise ClinicaException(error_message)
     finally:
         file.close()
 
