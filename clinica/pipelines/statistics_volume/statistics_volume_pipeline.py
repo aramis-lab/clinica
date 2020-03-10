@@ -165,7 +165,7 @@ class StatisticsVolume(cpe.Pipeline):
                 # regression coefficient
                 (join(self.caps_directory, relative_path) + r'/regression_coeff/(.*).nii',
                  join(self.caps_directory, relative_path) + '/group-' + self.parameters['group_id'] + r'_covariate-\1'
-                 + self.parameters['contrast'] + '_measure-' + self.parameters['feature_type'] + '_fwhm-'
+                 + '_measure-' + self.parameters['feature_type'] + '_fwhm-'
                  + str(self.parameters['full_width_at_half_maximum']) + '_regressionCoefficient.nii'),
 
             ]
