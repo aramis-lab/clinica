@@ -117,16 +117,16 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
                                                     input_names=['t_map', 'figs', 'name'],
                                                     output_names=[],
                                                     function=utils.generate_output))
-        save_fig_peak_correction_FWE.inputs.name = 'FWE_peak_correction'
+        save_fig_peak_correction_FWE.inputs.name = 'FWEp'
 
         save_fig_peak_correction_FDR = save_fig_peak_correction_FWE.clone(name='save_fig_peak_correction_FDR')
-        save_fig_peak_correction_FDR.inputs.name = 'FDR_peak_correction'
+        save_fig_peak_correction_FDR.inputs.name = 'FDRp'
 
         save_fig_cluster_correction_FWE = save_fig_peak_correction_FWE.clone(name='save_fig_cluster_correction_FWE')
-        save_fig_cluster_correction_FWE.inputs.name = 'FWE_cluster_correction'
+        save_fig_cluster_correction_FWE.inputs.name = 'FWEc'
 
         save_fig_cluster_correction_FDR = save_fig_peak_correction_FWE.clone(name='save_fig_cluster_correction_FDR')
-        save_fig_cluster_correction_FDR.inputs.name = 'FDR_cluster_correction'
+        save_fig_cluster_correction_FDR.inputs.name = 'FDRc'
 
         # Connection
         # ==========

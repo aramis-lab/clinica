@@ -20,7 +20,6 @@ def peak_correction(t_map, t_threshold, output_name=None):
     """
     import nibabel as nib
     from os.path import join, basename, abspath
-    import numpy as np
 
     original_nifti = nib.load(t_map)
     data = original_nifti.get_data()
@@ -143,12 +142,14 @@ def generate_output(t_map, figs, name):
         Nothing
     """
     from os import makedirs
-    from os.path import join, dirname, basename, splitext, pardir
+    from os.path import join, dirname, basename, splitext
     from shutil import copyfile
 
-    outfolder = join(dirname(t_map), 'corrected_results_' + splitext(basename(t_map))[0], name)
-    makedirs(outfolder)
-    copyfile(figs[0], join(outfolder, 'glass_brain.png'))
-    copyfile(figs[1], join(outfolder, 't_statistics_thresholded_x.png'))
-    copyfile(figs[2], join(outfolder, 't_statistics_thresholded_y.png'))
-    copyfile(figs[3], join(outfolder, 't_statistics_thresholded_z.png'))
+    t_map_basename = splitext(basename(t_map))[0]
+
+    out_folder = join(dirname(t_map), t_map_basename.replace('TStatistics', name))
+    makedirs(out_folder)
+    copyfile(figs[0], join(out_folder, t_map_basename.replace('TStatistics', 'desc-' + name + '_GlassBrain.png')))
+    copyfile(figs[1], join(out_folder, t_map_basename.replace('TStatistics', 'desc-' + name + '_axis-x_TStatistics.png')))
+    copyfile(figs[2], join(out_folder, t_map_basename.replace('TStatistics', 'desc-' + name + '_axis-y_TStatistics.png')))
+    copyfile(figs[3], join(out_folder, t_map_basename.replace('TStatistics', 'desc-' + name + '_axis-z_TStatistics.png')))
