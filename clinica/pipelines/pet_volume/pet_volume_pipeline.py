@@ -1,9 +1,7 @@
 # coding: utf8
 
-from nipype import config
-
 import clinica.pipelines.engine as cpe
-
+from nipype import config
 
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
@@ -87,8 +85,9 @@ class PETVolume(cpe.Pipeline):
     def build_input_node(self):
         """Build and connect an input node to the pipelines.
         """
-        from colorama import Fore
+        import os
         from os.path import join, split, realpath, exists
+        from colorama import Fore
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from .pet_volume_utils import read_psf_information
@@ -98,9 +97,11 @@ class PETVolume(cpe.Pipeline):
                                                t1_volume_native_tpm_in_mni,
                                                t1_volume_deformation_to_template)
         from clinica.utils.exceptions import ClinicaException
-        from clinica.utils.ux import print_groups_in_caps_directory
+        from clinica.utils.ux import print_groups_in_caps_directory, print_images_to_process
         from clinica.iotools.utils.data_handling import check_relative_volume_location_in_world_coordinate_system
         import clinica.utils.input_files as input_files
+        from clinica.utils.filemanip import save_participants_sessions
+        from clinica.utils.stream import cprint
 
         # Check that group already exists
         if not exists(join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])):
@@ -224,6 +225,15 @@ class PETVolume(cpe.Pipeline):
                                                                   self.parameters['pet_tracer'] + ' PET', pet_bids,
                                                                   self.bids_directory,
                                                                   self.parameters['pet_tracer'])
+
+        # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
+        folder_participants_tsv = os.path.join(self.base_dir, self.name)
+        save_participants_sessions(self.subjects, self.sessions, folder_participants_tsv)
+
+        if len(self.subjects):
+            print_images_to_process(self.subjects, self.sessions)
+            cprint('List available in %s' % os.path.join(folder_participants_tsv, 'participants.tsv'))
+            cprint('The pipeline will last approximately 10 minutes per image.')
 
         read_input_node = npe.Node(name="LoadingCLIArguments",
                                    interface=nutil.IdentityInterface(
@@ -354,8 +364,16 @@ class PETVolume(cpe.Pipeline):
                         + ' script')
                 spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
 
+        # Initialize pipeline
+        # ===================
+        init_node = npe.Node(interface=nutil.Function(
+            input_names=['pet_nii'],
+            output_names=['pet_nii'],
+            function=utils.init_input_node),
+            name='init_pipeline')
+
         # Unzipping
-        # ==================
+        # =========
         unzip_pet_image = npe.Node(nutil.Function(input_names=['in_file'],
                                                   output_names=['out_file'],
                                                   function=unzip_nii),
@@ -450,7 +468,8 @@ class PETVolume(cpe.Pipeline):
 
         # Connection
         # ==========
-        self.connect([(self.input_node, unzip_pet_image, [('pet_image', 'in_file')]),
+        self.connect([(self.input_node, init_node, [('pet_image', 'pet_nii')]),
+                      (init_node, unzip_pet_image, [('pet_nii', 'in_file')]),
                       (self.input_node, unzip_t1_image_native, [('t1_image_native', 'in_file')]),
                       (self.input_node, unzip_flow_fields, [('flow_fields', 'in_file')]),
                       (self.input_node, unzip_dartel_template, [('dartel_template', 'in_file')]),
