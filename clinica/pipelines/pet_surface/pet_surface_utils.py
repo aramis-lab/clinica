@@ -823,6 +823,9 @@ def get_wf(subject_id,
                 Void
     """
     import os
+    import datetime
+    import nibabel as nib
+    from colorama import Fore
     import nipype.pipeline.engine as pe
     import nipype.interfaces.utility as niu
     import nipype.interfaces.io as nio
@@ -833,7 +836,17 @@ def get_wf(subject_id,
     import clinica.pipelines.pet_surface.pet_surface_utils as utils
     from clinica.utils.filemanip import unzip_nii
     from clinica.utils.spm import get_tpm
+    from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
+
+    # Check that the PET file is a 3D volume
+    img = nib.load(pet)
+    if len(img.shape) == 4:
+        now = datetime.datetime.now().strftime('%H:%M:%S')
+        error_msg = '%s[%s] Error: Clinica does not handle 4D volumes for %s | %s%s'\
+                    % (Fore.RED, now, subject_id, session_id, Fore.RESET)
+        cprint(error_msg)
+        raise NotImplementedError(error_msg)
 
     print_begin_image(subject_id + '_' + session_id)
 
