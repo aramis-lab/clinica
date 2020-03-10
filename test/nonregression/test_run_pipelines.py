@@ -725,7 +725,7 @@ def test_run_StatisticsVolume(cmdopt):
         'group_id': 'UnitTest',
         'cluster_threshold': 0.001,
         'group_id_caps': None,
-        'smoothing': 8
+        'full_width_at_half_maximum': 8
     }
 
     pipeline = StatisticsVolume(
@@ -737,8 +737,12 @@ def test_run_StatisticsVolume(cmdopt):
 
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 2}, bypass_check=True)
 
-    output_t_stat = join(root, 'out', 'caps/groups/group-UnitTest/statistics_volume/group_comparison_measure-fdg/group-UnitTest_CN-lt-AD_measure-fdg_fwhm-8_TStatistics.nii')
-    ref_t_stat = join(root, 'ref', 'caps/groups/group-UnitTest/statistics_volume/group_comparison_measure-fdg/group-UnitTest_CN-lt-AD_measure-fdg_fwhm-8_TStatistics.nii')
+    output_t_stat = join(root, 'out',
+                         'caps', 'groups', 'group-UnitTest', 'statistics_volume', 'group_comparison_measure-fdg',
+                         'group-UnitTest_CN-lt-AD_measure-fdg_fwhm-8_TStatistics.nii')
+    ref_t_stat = join(root, 'ref',
+                      'caps', 'groups', 'group-UnitTest', 'statistics_volume', 'group_comparison_measure-fdg',
+                      'group-UnitTest_CN-lt-AD_measure-fdg_fwhm-8_TStatistics.nii')
 
     assert np.allclose(nib.load(output_t_stat).get_data(),
                        nib.load(ref_t_stat).get_data())

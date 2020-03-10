@@ -365,7 +365,7 @@ def test_instantiate_StatisticsVolume():
         'group_id': 'UnitTest',
         'cluster_threshold': 0.001,
         'group_id_caps': None,
-        'smoothing': 8
+        'full_width_at_half_maximum': 8
     }
 
     pipeline = StatisticsVolume(
