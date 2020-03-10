@@ -1,20 +1,11 @@
 # coding: utf8
 
-__author__ = "Arnaud Marcoux"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Arnaud Marcoux"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.3.0"
-__maintainer__ = "Arnaud Marcoux"
-__email__ = "arnaud.marcoux@icm-institute.org"
-__status__ = "Development"
-
 
 def get_group_1_and_2(tsv, contrast):
     """
-        Based on the csv given in parameter, compute indexes of each group
+        Based on the TSV file given in parameter, compute indexes of each group
     Args:
-        tsv: (str) path to the tsv file containing information on subjects/sessions with all covariables
+        tsv: (str) path to the tsv file containing information on subjects/sessions with all covariates
         contrast: (str) name of a column of the tsv
 
     Returns:
@@ -25,7 +16,8 @@ def get_group_1_and_2(tsv, contrast):
     import pandas as pds
     from clinica.utils.exceptions import ClinicaException
 
-    # StatisticsVolume pipeline has been instantiated with tsv_file=csv, so check of existence and integrity have suceed
+    # StatisticsVolume pipeline has been instantiated with tsv_file=tsv,
+    # so check of existence and integrity have succeeded
     # No further check are done when trying to read it
     tsv = pds.read_csv(tsv, sep='\t')
     columns = list(tsv.columns)
@@ -52,7 +44,7 @@ def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_fi
         Create the matlab .m file for the instantiation of the 2-sample t-test model in SPM
 
     Args:
-        tsv: (str) path to the tsv file containing information on subjects/sessions with all covariables
+        tsv: (str) path to the tsv file containing information on subjects/sessions with all covariates
         contrast: (str) name of a column of the tsv
         idx_group1: (list of int) list of indexes of first group
         idx_group2: (list of int) list of indexes of second group
@@ -61,7 +53,7 @@ def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_fi
 
     Returns:
         current_model: (str) path to the matlab files with all the @TEXT replaced with the correct names
-        covariables: list of str with the names of covariables
+        covariates: list of str with the names of covariates
     """
     from os.path import join, dirname, isfile, abspath, isdir
     from shutil import rmtree
@@ -108,8 +100,8 @@ def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_fi
     if columns_stripped != list(tsv.columns):
         raise ClinicaException('[Error] Check the column of your tsv file ' + tsv
                                + 'Whitespace in the column names can cause errors')
-    covariables = [elem for elem in columns_stripped if elem not in ['participant_id', 'session_id', contrast]]
-    for covar_number, covar in enumerate(covariables, start=1):
+    covariates = [elem for elem in columns_stripped if elem not in ['participant_id', 'session_id', contrast]]
+    for covar_number, covar in enumerate(covariates, start=1):
         current_covar_data = list(tsv[covar])
         if isinstance(current_covar_data[0], str):
             # Transform data
@@ -128,12 +120,12 @@ def model_creation(tsv, contrast, idx_group1, idx_group2, file_list, template_fi
         current_covar_data_group1 = [elem for i, elem in enumerate(current_covar_data) if i in idx_group1]
         current_covar_data_group2 = [elem for i, elem in enumerate(current_covar_data) if i in idx_group2]
         covar_data_concatenated = current_covar_data_group1 + current_covar_data_group2
-        utls.write_covariable_lines(current_model, covar_number, covar, covar_data_concatenated)
+        utls.write_covariate_lines(current_model, covar_number, covar, covar_data_concatenated)
 
     # Tell matlab to run the script at the end
     with open(current_model, 'a') as file:
         file.write('spm_jobman(\'run\', matlabbatch)')
-    return current_model, covariables
+    return current_model, covariates
 
 
 def is_number(s: str):
@@ -167,14 +159,14 @@ def unravel_list_for_matlab(my_list):
     return result
 
 
-def write_covariable_lines(m_file_to_write_in, covar_number, covar_name, covar_values):
+def write_covariate_lines(m_file_to_write_in, covar_number, covar_name, covar_values):
     """
-        Use this function to add covariable lines in the Matlab file m_file_to_write_in for one covariable
+        Use this function to add covariate lines in the Matlab file m_file_to_write_in for one covariate
     Args:
         m_file_to_write_in: (str) path to the m-file
-        covar_number: (int) this is the number of the covariable (must start at 1)
-        covar_name: (str) name of the covariable (ex: 'age', 'sex')
-        covar_values: (list) of float with the values of the covariables
+        covar_number: (int) this is the number of the covariate (must start at 1)
+        covar_name: (str) name of the covariate (ex: 'age', 'sex')
+        covar_values: (list) of float with the values of the covariates
 
     Returns:
         nothing
@@ -335,7 +327,7 @@ def results(mat_file, template_file, method, threshold):
     return current_model_result
 
 
-def contrast(mat_file, template_file, covariables, class_names):
+def contrast(mat_file, template_file, covariates, class_names):
     """
         Make a copy of the template file (for results) and replace @SPMMAT, @COVARNUMBER, @GROUP1, @GROUP2
         by the corresponding variables
@@ -343,7 +335,7 @@ def contrast(mat_file, template_file, covariables, class_names):
     Args:
         mat_file: (str) path to the SPM.mat file of the SPM analysis
         template_file: (str) path to the template file for getting the results of the model
-        covariables: (list) of str: list of covariables
+        covariates: (list) of str: list of covariates
         class_names: (list) of str of length 2 that correspond to the 2 classes for the group comparison
 
     Returns:
@@ -351,14 +343,14 @@ def contrast(mat_file, template_file, covariables, class_names):
     """
     from os.path import abspath
 
-    number_of_covariables = len(covariables)
+    number_of_covariates = len(covariates)
 
     # Read template
     with open(template_file, 'r') as file:
         filedata = file.read()
     # Replace by the real path to spm.mat
     filedata = filedata.replace('@SPMMAT', '\'' + mat_file + '\'')
-    filedata = filedata.replace('@COVARNUMBER', '0 ' * number_of_covariables)
+    filedata = filedata.replace('@COVARNUMBER', '0 ' * number_of_covariates)
     filedata = filedata.replace('@GROUP1', '\'' + class_names[0] + '\'')
     filedata = filedata.replace('@GROUP2', '\'' + class_names[1] + '\'')
     current_model_estimation = abspath('./current_model_contrast.m')
@@ -368,14 +360,14 @@ def contrast(mat_file, template_file, covariables, class_names):
     return current_model_estimation
 
 
-def read_output(spm_mat, class_names, covariables, group_id, fwhm, measure):
+def read_output(spm_mat, class_names, covariates, group_id, fwhm, measure):
     """
         Once analysis is done, grab all the different filenames and rename them in current directory according to class
         names
     Args:
         spm_mat: (str) path to the SPM.mat file of the SPM analysis
         class_names: (list) of str of length 2 that correspond to the 2 classes for the group comparison
-        covariables: (list) of str: list of covariables
+        covariates: (list) of str: list of covariates
         group_id: name of the group id
         fwhm: fwhm in mm used
         measure: measure used
@@ -438,9 +430,9 @@ def read_output(spm_mat, class_names, covariables, group_id, fwhm, measure):
     # Handle beta files
     betas = [abspath(join(dirname(spm_mat), f)) for f in list_files if f.startswith('beta_')]
     betas = sorted(betas)
-    if len(betas) != 2 + len(covariables):
+    if len(betas) != 2 + len(covariates):
         raise RuntimeError('[Error] Not enough betas files found in output directory')
-    regression_coeff_covar = [abspath('./' + covar + '.nii') for covar in covariables]
+    regression_coeff_covar = [abspath('./' + covar + '.nii') for covar in covariates]
     regression_coeff = [abspath('./' + class_names[0] + '.nii'),
                         abspath('./' + class_names[1] + '.nii')]
     regression_coeff.extend(regression_coeff_covar)

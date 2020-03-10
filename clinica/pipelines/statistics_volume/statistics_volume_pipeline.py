@@ -4,20 +4,10 @@ import clinica.pipelines.engine as cpe
 
 
 class StatisticsVolume(cpe.Pipeline):
-    """Statistics_Volume SHORT DESCRIPTION.
-
-
-    Args:
-        input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
+    """StatisticsVolume - Volume-based mass-univariate analysis with SPM.
 
     Returns:
-        A clinica pipeline object containing the Statistics_Volume pipeline.
-
-    Raises:
-
-
+        A clinica pipeline object containing the StatisticsVolume pipeline.
     """
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
@@ -28,8 +18,7 @@ class StatisticsVolume(cpe.Pipeline):
                                    "(given value: %s)." % self.parameters['cluster_threshold'])
 
     def check_custom_dependencies(self):
-        """Check dependencies that can not be listed in the `info.json` file.
-        """
+        """Check dependencies that can not be listed in the `info.json` file."""
         pass
 
     def get_input_fields(self):
@@ -58,9 +47,7 @@ class StatisticsVolume(cpe.Pipeline):
                 'contrast']
 
     def build_input_node(self):
-        """Build and connect an input node to the pipeline.
-        """
-
+        """Build and connect an input node to the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import clinica_file_reader
@@ -78,7 +65,7 @@ class StatisticsVolume(cpe.Pipeline):
                 input_files = clinica_file_reader(self.subjects,
                                                   self.sessions,
                                                   self.caps_directory,
-                                                  {'pattern': '*_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-' + str(self.parameters['smoothing']) + 'mm_pet.nii*',
+                                                  {'pattern': '*_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-' + str(self.parameters['full_width_at_half_maximum']) + 'mm_pet.nii*',
                                                    'description': 'pons normalized FDG PET image in MNI space (brain masked)',
                                                    'needed_pipeline': 'pet-volume'})
             except ClinicaException as e:
@@ -88,7 +75,7 @@ class StatisticsVolume(cpe.Pipeline):
                 input_files = clinica_file_reader(self.subjects,
                                                   self.sessions,
                                                   self.caps_directory,
-                                                  {'pattern': 't1/spm/dartel/group-' + gic + '/*_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-' + str(self.parameters['smoothing']) + 'mm_probability.nii.*',
+                                                  {'pattern': 't1/spm/dartel/group-' + gic + '/*_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-' + str(self.parameters['full_width_at_half_maximum']) + 'mm_probability.nii.*',
                                                    'description': 'probability map of gray matter segmentation based on T1w image in MNI space',
                                                    'needed_pipeline': 't1-volume or t1-volume-existing-template'})
             except ClinicaException as e:
@@ -102,7 +89,7 @@ class StatisticsVolume(cpe.Pipeline):
                                        + Fore.RED + ' to have help on how to use the command line.' + Fore.RESET)
             try:
                 # If custom file are grabbed, information of fwhm is irrelevant and should not appear on final filenames
-                self.parameters['smoothing'] = None
+                self.parameters['full_width_at_half_maximum'] = None
                 input_files = clinica_file_reader(self.subjects,
                                                   self.sessions,
                                                   self.caps_directory,
@@ -131,8 +118,7 @@ class StatisticsVolume(cpe.Pipeline):
         ])
 
     def build_output_node(self):
-        """Build and connect an output node to the pipeline.
-        """
+        """Build and connect an output node to the pipeline."""
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
         from os.path import join, pardir
@@ -146,7 +132,7 @@ class StatisticsVolume(cpe.Pipeline):
         datasink.inputs.base_directory = join(self.caps_directory, relative_path)
 
         datasink.inputs.parameterization = True
-        if self.parameters['smoothing']:
+        if self.parameters['full_width_at_half_maximum']:
             datasink.inputs.regexp_substitutions = [
                 # t-stat map
                 (join(self.caps_directory, relative_path) + r'/spm_results_analysis_./(.*)',
@@ -180,7 +166,7 @@ class StatisticsVolume(cpe.Pipeline):
                 (join(self.caps_directory, relative_path) + r'/regression_coeff/(.*).nii',
                  join(self.caps_directory, relative_path) + '/group-' + self.parameters['group_id'] + r'_covariate-\1'
                  + self.parameters['contrast'] + '_measure-' + self.parameters['feature_type'] + '_fwhm-'
-                 + str(self.parameters['smoothing']) + '_regressionCoefficient.nii'),
+                 + str(self.parameters['full_width_at_half_maximum']) + '_regressionCoefficient.nii'),
 
             ]
 
@@ -198,9 +184,7 @@ class StatisticsVolume(cpe.Pipeline):
         ])
 
     def build_core_nodes(self):
-        """Build and connect the core nodes of the pipeline.
-        """
-
+        """Build and connect the core nodes of the pipeline."""
         import clinica.pipelines.statistics_volume.statistics_volume_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
@@ -223,7 +207,6 @@ class StatisticsVolume(cpe.Pipeline):
         get_groups.inputs.tsv = self.tsv_file
 
         # Run SPM nodes are all a copy of a generic SPM script launcher
-
         run_spm_script_node = npe.Node(nutil.Function(input_names=['m_file'],
                                                       output_names=['spm_mat'],
                                                       function=utils.run_m_script),
@@ -237,11 +220,11 @@ class StatisticsVolume(cpe.Pipeline):
         # All the following node are creating the correct (.m) script for the different SPM steps
         # 1. Model creation
         # 2. Model estimation
-        # 3. Creation of contrast with covariables
+        # 3. Creation of contrast with covariates
         # 4. Creation of results
 
         # 1. Model creation
-        # We use overwritte option to be sure this node is always run so that it can delete the output dir if it
+        # We use overwrite option to be sure this node is always run so that it can delete the output dir if it
         # already exists (this may cause error in output files otherwise)
         model_creation = npe.Node(nutil.Function(input_names=['tsv',
                                                               'contrast',
@@ -249,7 +232,7 @@ class StatisticsVolume(cpe.Pipeline):
                                                               'idx_group2',
                                                               'file_list',
                                                               'template_file'],
-                                                 output_names=['script_file', 'covariables'],
+                                                 output_names=['script_file', 'covariates'],
                                                  function=utils.model_creation),
                                   name='model_creation',
                                   overwrite=True)
@@ -267,7 +250,7 @@ class StatisticsVolume(cpe.Pipeline):
         # 3. Contrast
         model_contrast = npe.Node(nutil.Function(input_names=['mat_file',
                                                               'template_file',
-                                                              'covariables',
+                                                              'covariates',
                                                               'class_names'],
                                                  output_names=['script_file'],
                                                  function=utils.contrast),
@@ -287,7 +270,7 @@ class StatisticsVolume(cpe.Pipeline):
         # Print result to txt file if spm
 
         # Export results to output node
-        read_output_node = npe.Node(nutil.Function(input_names=['spm_mat', 'class_names', 'covariables', 'group_id', 'fwhm', 'measure'],
+        read_output_node = npe.Node(nutil.Function(input_names=['spm_mat', 'class_names', 'covariates', 'group_id', 'fwhm', 'measure'],
                                                    output_names=['spmT_0001',
                                                                  'spmT_0002',
                                                                  'spm_figures',
@@ -299,7 +282,7 @@ class StatisticsVolume(cpe.Pipeline):
                                                    function=utils.read_output),
                                     name='read_output_node')
         read_output_node.inputs.group_id = self.parameters['group_id']
-        read_output_node.inputs.fwhm = self.parameters['smoothing']
+        read_output_node.inputs.fwhm = self.parameters['full_width_at_half_maximum']
         read_output_node.inputs.measure = self.parameters['feature_type']
 
         # Connection
@@ -316,7 +299,7 @@ class StatisticsVolume(cpe.Pipeline):
 
             (get_groups, model_contrast, [('class_names', 'class_names')]),
             (run_spm_model_estimation, model_contrast, [('spm_mat', 'mat_file')]),
-            (model_creation, model_contrast, [('covariables', 'covariables')]),
+            (model_creation, model_contrast, [('covariates', 'covariates')]),
 
             (model_contrast, run_spm_model_contrast, [('script_file', 'm_file')]),
 
@@ -327,7 +310,7 @@ class StatisticsVolume(cpe.Pipeline):
             (run_spm_model_result_no_correction, read_output_node, [('spm_mat', 'spm_mat')]),
 
             (get_groups, read_output_node, [('class_names', 'class_names')]),
-            (model_creation, read_output_node, [('covariables', 'covariables')]),
+            (model_creation, read_output_node, [('covariates', 'covariates')]),
 
             (read_output_node, self.output_node, [('spmT_0001', 'spmT_0001')]),
             (read_output_node, self.output_node, [('spmT_0002', 'spmT_0002')]),
