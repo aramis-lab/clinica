@@ -1,4 +1,4 @@
-# coding: utf8
+# coding: utf-8
 
 
 def get_group_1_and_2(tsv, contrast):

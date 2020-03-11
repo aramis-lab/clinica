@@ -1,7 +1,7 @@
-# coding: utf8
+# coding: utf-8
 
 """
-Statistics_Volume_Correction - Clinica Utilities.
+StatisticsVolumeCorrection - Clinica Utilities.
 """
 
 
@@ -145,6 +145,7 @@ def generate_output(t_map, figs, name):
     from os.path import join, dirname, basename, splitext
     from shutil import copyfile
 
+    # Will extract group-GroupTest_AD-lt-CN_measure-fdg_fwhm-8_TStatistics from TStatistics file
     t_map_basename = splitext(basename(t_map))[0]
 
     out_folder = join(dirname(t_map), t_map_basename.replace('TStatistics', name))
