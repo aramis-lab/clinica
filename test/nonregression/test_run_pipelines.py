@@ -730,7 +730,7 @@ def test_run_StatisticsVolume(cmdopt):
 
     pipeline = StatisticsVolume(
         caps_directory=join(root, 'out', 'caps'),
-        tsv_file=join(root, 'in', 'covariates_subsetADNI.txt'),
+        tsv_file=join(root, 'in', 'group-UnitTest_covariates.tsv'),
         base_dir=join(working_dir, 'StatisticsVolume'),
         parameters=parameters
     )

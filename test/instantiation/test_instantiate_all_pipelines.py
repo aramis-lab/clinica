@@ -370,7 +370,7 @@ def test_instantiate_StatisticsVolume():
 
     pipeline = StatisticsVolume(
         caps_directory=join(root, 'in', 'caps'),
-        tsv_file=join(root, 'in', 'covariates_subsetADNI.txt'),
+        tsv_file=join(root, 'in', 'group-UnitTest_covariates.tsv'),
         parameters=parameters
     )
     pipeline.build()
