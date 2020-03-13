@@ -106,8 +106,12 @@ def get_grad_fsl(bvec, bval):
 def init_input_node(dwi, bvec, bval, dwi_json,
                     fmap_magnitude, fmap_phasediff, fmap_phasediff_json):
     """Extract "sub-<participant_id>_ses-<session_label>" from input node and print begin message."""
+    import datetime
+    import nibabel as nib
+    from colorama import Fore
     from clinica.utils.filemanip import get_subject_id, extract_metadata_from_json
     from clinica.utils.dwi import bids_dir_to_fsl_dir, check_dwi_volume
+    from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
 
     # Extract image ID
@@ -115,6 +119,18 @@ def init_input_node(dwi, bvec, bval, dwi_json,
 
     # Check that the number of DWI, bvec & bval are the same
     check_dwi_volume(dwi, bvec, bval)
+
+    # Check that PhaseDiff and magnitude1 have the same header
+    # Otherwise, FSL in FugueExtrapolationFromMask will crash
+    img_phasediff = nib.load(fmap_phasediff)
+    img_magnitude = nib.load(fmap_magnitude)
+    if img_phasediff.shape != img_magnitude.shape:
+        now = datetime.datetime.now().strftime('%H:%M:%S')
+        error_msg = '%s[%s] Error: Headers of PhaseDiff and Magnitude1 are not the same for %s (%s vs %s)%s' \
+                    % (
+                    Fore.RED, now, image_id.replace('_', ' | '), img_phasediff.shape, img_magnitude.shape, Fore.RESET)
+        cprint(error_msg)
+        raise NotImplementedError(error_msg)
 
     # Read metadata from DWI JSON file:
     [total_readout_time, phase_encoding_direction] = \
