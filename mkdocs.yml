@@ -103,10 +103,10 @@ nav:
       - Prepare input data for spatially regularized SVM: "Pipelines/MachineLearning_PrepareSVM.md"
       - Classification based on machine learning: "Pipelines/MachineLearning_Classification.md"
   - Dataset converters:
-    - ADNI to BIDS: "DatabasesToBIDS#adni-to-bids"
-    - AIBL to BIDS: "DatabasesToBIDS#aibl-to-bids"
-    - NIFD to BIDS: "DatabasesToBIDS#nifd-to-bids"
-    - OASIS to BIDS: "DatabasesToBIDS#oasis-to-bids"
+    - ADNI to BIDS: "Converters/ADNI2BIDS"
+    - AIBL to BIDS: "Converters/AIBL2BIDS"
+    - NIFD to BIDS: "Converters/NIFD2BIDS"
+    - OASIS to BIDS: "Converters/OASIS2BIDS"
   - I/O tools:
     - create-subjects-visits: "IO#create-subjects-visits-generate-the-list-all-subjects-and-visits-of-a-given-dataset"
     - check-missing-modalities: "IO#check-missing-modalities-check-missing-modalities-for-each-subject"

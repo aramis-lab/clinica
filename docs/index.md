@@ -49,7 +49,16 @@ ICM members are encouraged to use the version of Clinica available on the cluste
     - [Classification based on machine learning](Pipelines/MachineLearning_Classification)
 
 ### Dataset converters (`clinica convert`)
-- [Online neuroimaging databases (ADNI, AIBL, NIFD, OASIS) to BIDS converters](DatabasesToBIDS)
+Clinica provides tools to curate several publicly available neuroimaging datasets and convert them to BIDS namely:
+
+- `adni-2-bids` - [ADNI: Alzheimer’s Disease Neuroimaging Initiative](Converters/ADNI2BIDS)
+- `aibl-2-bids` - [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](Converters/AIBL2BIDS)
+- `nifd-2-bids` - [NIFD: Neuroimaging in Frontotemporal Dementia](Converters/NIFD2BIDS)
+- `oasis-2-bids` - [OASIS: Open Access Series of Imaging Studies](Converters/OASIS2BIDS)
+
+!!! note
+    We provide converters for the datasets used in the [Aramis Lab](http://www.aramislab.fr/). Feel free to contact us if you are interested in another dataset or to contribute!
+
 
 ### I/O tools (`clinica iotools`)
 - [Data handling tools for BIDS and CAPS compliant datasets](IO)
