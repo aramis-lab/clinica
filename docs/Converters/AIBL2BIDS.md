@@ -46,7 +46,6 @@ The converter can be run with the following command line:
 
 ```
 clinica convert aibl-to-bids dataset_directory clinical_data_directory bids_directory
-
 ```
 
 where:
@@ -59,7 +58,7 @@ where:
 ## Citing this converter in your paper
 
 !!! cite "Example of paragraph:"
-    The AIBL data have been curated and converted to the Brain Imaging Data Structure (BIDS) format [[Gorgolewski et al., 2016](https:// doi.org/10.1038/sdata.2016.44)] using Clinica [[Samper-González et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
+    The AIBL data have been curated and converted to the Brain Imaging Data Structure (BIDS) format [[Gorgolewski et al., 2016](https://doi.org/10.1038/sdata.2016.44)] using Clinica [[Samper-González et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
 
 !!! tip
     Easily access the papers cited on this page on [Zotero](https://www.zotero.org/groups/2240070/clinica_aramislab/items/collectionKey/NASGJPVL).
