@@ -35,21 +35,51 @@ Currently, the modalities supported by our converter are:
   - Florbetapir (AV45) PET
   - Clinical data
 
-To convert the imaging data to BIDS, a list of subjects with their sessions is first obtained from the `ADNIMERGE` spreadsheet. This list is compared for each modality of interest to the list of scans available, as provided by modality-specific csv files (e.g. `MRILIST.csv`). If the modality was acquired for a specific pair of subject-session, and several scans and/or preprocessed images are available, only one is converted. Regarding the T1 scans, when several are available for a single session, the preferred scan (as identified in `MAYOADIRL_MRI_IMAGEQC_12_08_15.csv`) is chosen. If a preferred scan is not specified then the higher quality scan (as defined in `MRIQUALITY.csv`) is selected. If no quality control is found, then we choose the first scan. Gradwarp and B1-inhomogeneity corrected images are selected when available as these corrections can be performed in a clinical setting, otherwise the original image is selected. 1.5 T images are preferred for ADNI 1 since they are available for a larger number of patients. Regarding the DWI scans, we selected imaging following the 'Axial DTI' sequence. Regarding the FDG and AV45 PET scans, the images co-registered and averaged across time frames are selected. The scans failing quality control (if specified in `PETQC.csv`) are discarded. Data that do not change over time, such as the subject's sex, education level or diagnosis at baseline, are obtained from the ADNIMERGE spreadsheet and gathered in the participants.tsv file, located at the top of the BIDS folder hierarchy. The session-dependent data, such as the clinical scores, are obtained from specific csv files (e.g. `MMSE.csv`) and gathered in `<subjectID> _session.tsv` files in each participant subfolder. The clinical data being converted are defined in a spreadsheet (`clinical_specifications_adni.xlsx`) that is available with the code of the converter. The user can easily modify this file if he/she wants to convert additional clinical data.
+To convert the imaging data to BIDS, a list of subjects with their sessions is first obtained from the `ADNIMERGE` spreadsheet. This list is compared for each modality of interest to the list of scans available, as provided by modality-specific CSV files (e.g. `MRILIST.csv`). If the modality was acquired for a specific pair of subject-session, and several scans and/or preprocessed images are available, only one is converted. Regarding the T1 scans, when several are available for a single session, the preferred scan (as identified in `MAYOADIRL_MRI_IMAGEQC_12_08_15.csv`) is chosen. If a preferred scan is not specified then the higher quality scan (as defined in `MRIQUALITY.csv`) is selected. If no quality control is found, then we choose the first scan. Gradwarp and B1-inhomogeneity corrected images are selected when available as these corrections can be performed in a clinical setting, otherwise the original image is selected. 1.5 T images are preferred for ADNI 1 since they are available for a larger number of patients. Regarding the DWI scans, we selected imaging following the 'Axial DTI' sequence. Regarding the FDG and AV45 PET scans, the images co-registered and averaged across time frames are selected. The scans failing quality control (if specified in `PETQC.csv`) are discarded. Data that do not change over time, such as the subject's sex, education level or diagnosis at baseline, are obtained from the ADNIMERGE spreadsheet and gathered in the participants.tsv file, located at the top of the BIDS folder hierarchy. The session-dependent data, such as the clinical scores, are obtained from specific CSV files (e.g. `MMSE.csv`) and gathered in `<subjectID> _session.tsv` files in each participant subfolder. The clinical data being converted are defined in a spreadsheet (`clinical_specifications_adni.xlsx`) that is available with the code of the converter. The user can easily modify this file if he/she wants to convert additional clinical data.
 
 ## Using the converter
 
 The converter can be run with the following command line:
 
 ```
-clinica convert adni-to-bids dataset_directory clinical_data_directory bids_directory
+clinica convert adni-to-bids <dataset_directory> <clinical_data_directory> <bids_directory>
 ```
-
 where:
-
-  - `dataset_directory` is the path to the original ADNI images's directory;
-  - `clinical_data_directory` is the path to the directory where the csv file with the clinical data is located;
-  - `bids_directory` is the path to the output directory, where the BIDS-converted version of ADNI will be stored.
+  - `<dataset_directory>` is the path to the original ADNI images's directory. Content of its directory looks like:
+```text
+<dataset_directory>
+├── 027_S_0074
+│   ├── 3-plane_localizer
+│   │   ├── ...
+│   │   └── 2015-02-13_09_52_18.0
+│   │       └── S249015
+│   ├── ADNI_Brain_PET__Raw
+│   │   ├── ...
+│   │   └── 2019-01-23_15_54_06.0
+│   │       └── I1119527
+│   ├── ADNI_Brain_PET__Raw_AV45
+│   │   ├── ...
+│   │   └── 2015-04-01_16_18_44.0
+│   │       └── I481838
+│   ├── Axial_DTI
+│   │   ├── ...
+│   │   └── 2019-01-24_10_35_14.0
+│   │       └── S788290
+│   ├── ...
+├── 041_S_1260
+│   ├── ...
+├── ...
+```
+  - `<clinical_data_directory>` is the path to the directory where the CSV files with the clinical data are located. Its content looks like:
+```text
+<clinical_data_directory>
+├── ADAS_ADNI1.csv
+├── ADAS_ADNIGO23.csv
+├── ...
+├── VISITS.csv
+└── VITALS.csv
+```
+  - `<bids_directory>`  is the path to the output directory, where the BIDS-converted version of ADNI will be stored.
 
 ### Optional parameters
 The converter offers the possibility of converting only the clinical data (once that the images are in the BIDS format) using the optional parameter `-c`.
