@@ -105,7 +105,7 @@ def get_grad_fsl(bvec, bval):
 
 def init_input_node(dwi, bvec, bval, dwi_json,
                     fmap_magnitude, fmap_phasediff, fmap_phasediff_json):
-    """Extract "sub-<participant_id>_ses-<session_label>" from input node and print begin message."""
+    """Initialize pipeline (read JSON, check files and print begin message)."""
     import datetime
     import nibabel as nib
     from colorama import Fore
@@ -118,7 +118,14 @@ def init_input_node(dwi, bvec, bval, dwi_json,
     image_id = get_subject_id(dwi)
 
     # Check that the number of DWI, bvec & bval are the same
-    check_dwi_volume(dwi, bvec, bval)
+    try:
+        check_dwi_volume(dwi, bvec, bval)
+    except ValueError as e:
+        now = datetime.datetime.now().strftime('%H:%M:%S')
+        error_msg = '%s[%s] Error: Number of DWIs, b-vals and b-vecs mismatch for  %s%s' %  (
+            Fore.RED, now, image_id.replace('_', ' | '), Fore.RESET)
+        cprint(error_msg)
+        raise
 
     # Check that PhaseDiff and magnitude1 have the same header
     # Otherwise, FSL in FugueExtrapolationFromMask will crash
@@ -126,9 +133,8 @@ def init_input_node(dwi, bvec, bval, dwi_json,
     img_magnitude = nib.load(fmap_magnitude)
     if img_phasediff.shape != img_magnitude.shape:
         now = datetime.datetime.now().strftime('%H:%M:%S')
-        error_msg = '%s[%s] Error: Headers of PhaseDiff and Magnitude1 are not the same for %s (%s vs %s)%s' \
-                    % (
-                    Fore.RED, now, image_id.replace('_', ' | '), img_phasediff.shape, img_magnitude.shape, Fore.RESET)
+        error_msg = '%s[%s] Error: Headers of PhaseDiff and Magnitude1 are not the same for %s (%s vs %s)%s' % (
+            Fore.RED, now, image_id.replace('_', ' | '), img_phasediff.shape, img_magnitude.shape, Fore.RESET)
         cprint(error_msg)
         raise NotImplementedError(error_msg)
 

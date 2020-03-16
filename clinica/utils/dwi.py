@@ -232,12 +232,11 @@ def insert_b0_into_dwi(in_b0, in_dwi, in_bval, in_bvec):
 
 
 def check_dwi_volume(in_dwi, in_bvec, in_bval):
-    # TODO return str instead of raising an error, so that user can be informed of which file is causing problem
     """
     Check that # DWI = # B-val = # B-vec.
 
     Raises
-        IOError
+        ValueError if # DWI, # B-val and # B-vec mismatch
     """
     import nibabel as nib
     import numpy as np
@@ -252,9 +251,8 @@ def check_dwi_volume(in_dwi, in_bvec, in_bval):
     _, _, _, num_dwis = img.shape
 
     if not (num_b_vals == num_b_vecs == num_dwis):
-        raise IOError('Number of DWIs, b-vals and b-vecs mismatch '
-                      '(# DWI = %s, # B-vec = %s, #B-val = %s) ' %
-                      (num_dwis, num_b_vecs, num_b_vals))
+        raise ValueError('Number of DWIs, b-vals and b-vecs mismatch (# DWI = %s, # B-vec = %s, #B-val = %s) ' %
+                         (num_dwis, num_b_vecs, num_b_vals))
 
 
 def find_b0_indices(in_bval, low_bval=5.0):
