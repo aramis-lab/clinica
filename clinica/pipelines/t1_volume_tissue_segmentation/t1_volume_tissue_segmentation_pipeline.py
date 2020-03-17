@@ -88,7 +88,7 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
                                             self.bids_directory,
                                             T1W_NII)
         except ClinicaException as e:
-            err = 'Clinica faced error(s) while trying to read files in your CAPS directory.\n' + str(e)
+            err = 'Clinica faced error(s) while trying to read files in your BIDS directory.\n' + str(e)
             raise ClinicaBIDSError(err)
 
         check_volume_location_in_world_coordinate_system(t1w_files, self.bids_directory)

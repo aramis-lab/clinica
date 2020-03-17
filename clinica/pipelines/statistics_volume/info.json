@@ -1,0 +1,14 @@
+{
+    "id": "aramislab/statistics-volume",
+    "author": " Arnaud Marcoux",
+    "version": "0.1.0",
+    "space_caps": "100M",
+    "space_wd": "20M",
+    "dependencies": [
+        {
+            "type": "software",
+            "name": "spm",
+            "version": ">=12"
+        }
+    ]
+}
