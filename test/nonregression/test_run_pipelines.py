@@ -700,6 +700,42 @@ def test_run_SpatialSVM(cmdopt):
     clean_folder(join(root, 'out', 'caps'), recreate=True)
 
 
+def test_run_T1Linear(cmdopt):
+    from os.path import dirname, join, abspath
+    import shutil
+    from clinica.pipelines.t1_linear.t1_linear_pipeline import T1Linear
+    import nibabel as nib
+    import numpy as np
+
+    working_dir = cmdopt
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'T1Linear')
+
+    # Remove potential residual of previous UT
+    clean_folder(join(working_dir, 'T1Linear'))
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+
+    parameters = {
+        'crop_image': True
+    }
+    # Instantiate pipeline
+    pipeline = T1Linear(
+        bids_directory=join(root, 'in', 'bids'),
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'T1Linear'),
+        parameters=parameters
+    )
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
+
+    # Check output vs ref
+    
+    out_folder = join(root, 'out')
+    ref_folder = join(root, 'out') 
+    
+    compare_folders(out_folder, ref_folder, shared_folder_name='caps')
+
 def test_run_StatisticsVolume(cmdopt):
     from os.path import dirname, join, abspath
     import shutil

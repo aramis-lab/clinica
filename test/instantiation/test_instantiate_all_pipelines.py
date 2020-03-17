@@ -351,6 +351,21 @@ def test_instantiate_T1FreeSurferLongitudinalCorrection():
     pipeline.build()
 
 
+def test_instantiate_T1Linear():
+    from os.path import dirname, join, abspath
+    from clinica.pipelines.t1_linear.t1_linear_pipeline import T1Linear
+
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'T1Linear')
+
+    pipeline = T1Linear(
+        bids_directory=join(root, 'in', 'bids'),
+        caps_directory=join(root, 'in', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+    )
+    pipeline.build()
+
+
 def test_instantiate_StatisticsVolume():
     from os.path import dirname, join, abspath
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import StatisticsVolume
