@@ -207,6 +207,8 @@ def execute():
     from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_cli import SpatialSVMCLI
     from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI
+    from clinica.pipelines.statistics_volume.statistics_volume_cli import StatisticsVolumeCLI
+    from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_cli import StatisticsVolumeCorrectionCLI
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
                                    extra_dir="pipelines").load()
     pipelines += [
@@ -223,6 +225,8 @@ def execute():
         PetSurfaceCLI(),
         SpatialSVMCLI(),
         StatisticsSurfaceCLI(),
+        StatisticsVolumeCLI(),
+        StatisticsVolumeCorrectionCLI(),
         T1VolumeExistingTemplateCLI(),
         T1VolumeTissueSegmentationCLI(),
         T1VolumeCreateDartelCLI(),

@@ -66,3 +66,22 @@ def get_tpm():
             error_str += '\n\t' + file
         raise RuntimeError(error_str)
     return tpm_file_glob[0]
+
+
+def use_spm_standalone():
+    """
+        Tells if SPM standalone can be used
+    Returns:
+        True if SPM standalone is detected, False otherwise. Note that it does not guarentee that SPM (classical) is
+        up and running in the system.
+    """
+    import os
+    from os.path import isdir, expandvars
+
+    use_spm_stand = False
+    if all(elem in os.environ.keys() for elem in ['SPMSTANDALONE_HOME', 'MCR_HOME']):
+        if isdir(expandvars('$SPMSTANDALONE_HOME')) and isdir(expandvars('$MCR_HOME')):
+            use_spm_stand = True
+        else:
+            raise FileNotFoundError('[Error] $SPMSTANDALONE_HOME and $MCR_HOME are defined, but linked to non existent folder')
+    return use_spm_stand
