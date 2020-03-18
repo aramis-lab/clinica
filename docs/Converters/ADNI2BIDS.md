@@ -29,11 +29,18 @@ In order to use the converter, you will need to download both the images and the
 ## Modalities supported
 Currently, the modalities supported by our converter are:
 
-  - T1-weighted MRI
-  - Diffusion weighted imaging (DWI)
-  - Fluorodeoxyglucose (FDG) PET
-  - Florbetapir (AV45) PET
-  - Clinical data
+|                                  | ADNI 1 | ADNI GO/2 | ADNI 3 |
+| :-------------------------------:|:------:|:---------:|:------:|
+| T1-weighted MRI                  | ✓      | ✓         | ✓      |
+| Diffusion weighted imaging (DWI) | -      | ✓         | ✓      |
+| FLAIR MRI                        | -      | ✓         | ✓      |
+| Functional MRI                   | -      | ✓         | ✓      |
+| Fluorodeoxyglucose (FDG) PET     | ✓      | ✓         | ✓      |
+| Pittsburgh compound B (PiB) PET  | ✓      | -         | -      |
+| Florbetapir (AV45) PET           | -      | ✓         | ✓      |
+| Florbetaben (FBB) PET            | -      | -         | ✓      |
+| Flortaucipir (AV1451) PET        | -      | -         | ✓      |
+| Clinical data                    | ✓      | ✓         | ✓      |
 
 To convert the imaging data to BIDS, a list of subjects with their sessions is first obtained from the `ADNIMERGE` spreadsheet. This list is compared for each modality of interest to the list of scans available, as provided by modality-specific CSV files (e.g. `MRILIST.csv`). If the modality was acquired for a specific pair of subject-session, and several scans and/or preprocessed images are available, only one is converted. Regarding the T1 scans, when several are available for a single session, the preferred scan (as identified in `MAYOADIRL_MRI_IMAGEQC_12_08_15.csv`) is chosen. If a preferred scan is not specified then the higher quality scan (as defined in `MRIQUALITY.csv`) is selected. If no quality control is found, then we choose the first scan. Gradwarp and B1-inhomogeneity corrected images are selected when available as these corrections can be performed in a clinical setting, otherwise the original image is selected. 1.5 T images are preferred for ADNI 1 since they are available for a larger number of patients. Regarding the DWI scans, we selected imaging following the 'Axial DTI' sequence. Regarding the FDG and AV45 PET scans, the images co-registered and averaged across time frames are selected. The scans failing quality control (if specified in `PETQC.csv`) are discarded. Data that do not change over time, such as the subject's sex, education level or diagnosis at baseline, are obtained from the ADNIMERGE spreadsheet and gathered in the participants.tsv file, located at the top of the BIDS folder hierarchy. The session-dependent data, such as the clinical scores, are obtained from specific CSV files (e.g. `MMSE.csv`) and gathered in `<subjectID> _session.tsv` files in each participant subfolder. The clinical data being converted are defined in a spreadsheet (`clinical_specifications_adni.xlsx`) that is available with the code of the converter. The user can easily modify this file if he/she wants to convert additional clinical data.
 
@@ -87,9 +94,12 @@ The converter offers the possibility of converting only the clinical data (once 
 Due to the high computational time requested for converting all the modalities of the whole ADNI dataset, it is possible to convert a single modality at the time using the parameter `-m` with one of the following values:
 
 *  `T1` for the T1-weighted MRI
+*  `FLAIR` for FLAIR MRI
 *  `DWI` for Diffusion Weighted Images (DWI)
+*  `fMRI` for resting-state functional MRI
 *  `PET_FDG` for the Fluorodeoxyglucose (FDG) PET
-*  `PET_AV45` for the Florbetapir (AV45) PET
+*  `PET_AMYLOID` for Amyloid tracers namely PiB, AV45 and FBB PET
+*  `PET_TAU` for Tau tracers namely Flortaucipir (AV1451) PET
 
 Is also possible to provide the path to a .txt file with the list of subjects to convert using the optional parameter `-s`.
 
