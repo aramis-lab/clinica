@@ -83,6 +83,19 @@ def check_ants(version_requirements=None):
                 'in your PATH environment.%s' % (Fore.RED, binary, Fore.RESET))
 
 
+def check_convert3d(version_requirements=None):
+    """Check Convert3D software."""
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaMissingDependencyError
+
+    list_binaries = ['c3d_affine_tool', 'c3d']
+    for binary in list_binaries:
+        if not is_binary_present(binary):
+            raise ClinicaMissingDependencyError(
+                '%s\n[Error] Clinica could not find Convert3D software: the %s command is not present '
+                'in your PATH environment.%s' % (Fore.RED, binary, Fore.RESET))
+
+
 def check_freesurfer(version_requirements=None):
     """Check FreeSurfer software."""
     from colorama import Fore

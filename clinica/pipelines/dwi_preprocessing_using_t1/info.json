@@ -12,8 +12,8 @@
             "version": ">=6.0.1"
         },
         {
-            "type": "binary",
-            "name": "c3d_affine_tool",
+            "type": "software",
+            "name": "convert3d",
             "version": ""
         },
         {
