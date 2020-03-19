@@ -49,9 +49,22 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
             self.parameters['initrand'] = None
 
     def check_custom_dependencies(self):
-        """Check dependencies that can not be listed in the `info.json` file.
-        """
-        pass
+        """Check dependencies that can not be listed in the `info.json` file."""
+        from colorama import Fore
+        from clinica.utils.check_dependency import is_binary_present
+        from clinica.utils.exceptions import ClinicaMissingDependencyError
+
+        if self.parameters['use_cuda_8_0']:
+            if not is_binary_present('eddy_cuda8.0'):
+                raise ClinicaMissingDependencyError(
+                    '%s\n[Error] FSL eddy with CUDA 8.0 was set but Clinica could not find '
+                    'eddy_cuda8.0 in your PATH environment.%s' % (Fore.RED, Fore.RESET))
+
+        if self.parameters['use_cuda_9_1']:
+            if not is_binary_present('eddy_cuda9.1'):
+                raise ClinicaMissingDependencyError(
+                    '%s\n[Error] FSL eddy with CUDA 9.1 was set but Clinica could not find '
+                    'eddy_cuda9.1 in your PATH environment.%s' % (Fore.RED, Fore.RESET))
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
