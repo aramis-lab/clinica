@@ -14,7 +14,7 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
     """DWI Preprocessing using phase difference fieldmap.
 
     Ideas for improvement:
-        - Use promising sdcflows workflows and/dMRIprep
+        - Use promising sdcflows workflows and/or dMRIprep
 
     Note:
         Some reading regarding the reproducibility of FSL eddy command:
@@ -23,6 +23,22 @@ class DwiPreprocessingUsingPhaseDiffFMap(cpe.Pipeline):
     Returns:
         A clinica pipeline object containing the DwiPreprocessingUsingPhaseDiffFMap pipeline.
     """
+    @staticmethod
+    def get_processed_images(caps_directory, subjects, sessions):
+        import os
+        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.input_files import DWI_PREPROC_NII
+        from clinica.utils.filemanip import extract_image_ids
+        image_ids = []
+        if os.path.isdir(caps_directory):
+            preproc_files = clinica_file_reader(
+                subjects, sessions,
+                caps_directory, DWI_PREPROC_NII, False
+            )
+            image_ids = extract_image_ids(preproc_files)
+        return image_ids
+
+
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
         from colorama import Fore

@@ -17,7 +17,7 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
         - Replace prepare_reference_b0 function by a first run of FSL eddy
         - Replace B0-T1w registration by FA-T1w registration
         - Replace os.system(cmd) by call of Nipype interface
-        - Use promising sdcflows workflows
+        - Use promising sdcflows workflows and/or dMRIprep
 
     Warnings:
         - Do not use this pipeline if you have fieldmap data in your dataset.
@@ -29,6 +29,21 @@ class DwiPreprocessingUsingT1(cpe.Pipeline):
     Returns:
         A clinica pipeline object containing the DWIPreprocessingUsingT1 pipeline.
     """
+    @staticmethod
+    def get_processed_images(caps_directory, subjects, sessions):
+        import os
+        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.input_files import DWI_PREPROC_NII
+        from clinica.utils.filemanip import extract_image_ids
+        image_ids = []
+        if os.path.isdir(caps_directory):
+            preproc_files = clinica_file_reader(
+                subjects, sessions,
+                caps_directory, DWI_PREPROC_NII, False
+            )
+            image_ids = extract_image_ids(preproc_files)
+        return image_ids
+
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
         from colorama import Fore
