@@ -21,32 +21,41 @@ If you only installed the core of Clinica, this pipeline needs the installation 
 
 To download the ADNI dataset you first need to register to the [LONI Image & Data Archive (IDA)](https://ida.loni.usc.edu/login.jsp), a secure research data repository, and then request access to the ADNI dataset through the submission of an [online application form](https://ida.loni.usc.edu/collaboration/access/appApply.jsp?project=ADNI).
 
-In order to use the converter, you will need to download both the images and the clinical data. To do so, from the [main page](https://ida.loni.usc.edu/login.jsp?returnPage=UserManagement.jsp&project=) click on `PROJECTS` and `ADNI`. To download the imaging data, click on `Download` and choose `Image collections`. In the 'Advanced search' tab, untick ADNI 3 as we currently do not support it, pick the images you wish to download, for example tick `MRI` to download all the MR images, and then click on `SEARCH`. In the `Advanced search results` tab, click `Select All` and `Add To Collection`. Finally, in the `Data Collection` tab, select the collection you just created, tick `All` and click on `Advanced download`. We advise you to group files as 10 zip files. To download the clinical data, click on `Download` and choose `Study Data`. Select all the CSV files which are present in ALL by ticking `Select ALL tabular data` and click `Download`.
+In order to use the converter, you will need to download both the images and the clinical data. To do so, from the [main page](https://ida.loni.usc.edu/login.jsp?returnPage=UserManagement.jsp&project=) click on `PROJECTS` and `ADNI`. To download the imaging data, click on `Download` and choose `Image collections`. In the 'Advanced search' tab, pick the images you wish to download, for example tick `MRI` to download all the MR images, and then click on `SEARCH`. In the `Advanced search results` tab, click `Select All` and `Add To Collection`. Finally, in the `Data Collection` tab, select the collection you just created, tick `All` and click on `Advanced download`. We advise you to group files as 10 zip files. To download the clinical data, click on `Download` and choose `Study Data`. Select all the CSV files which are present in ALL by ticking `Select ALL tabular data` and click `Download`.
 
 !!! note
     You do not have to modify the original folder name or rename the clinical data files before using the converter.
 
 
-!!! warning
-    We do not currently support the conversion of ADNI 3. This will be done in the future.
-
 ## Modalities supported
 Currently, the modalities supported by our converter are:
 
-|                                  | ADNI 1 | ADNI GO/2 | ADNI 3 |
-| :-------------------------------:|:------:|:---------:|:------:|
-| T1-weighted MRI                  | ✓      | ✓         | ✓      |
-| Diffusion weighted imaging (DWI) | -      | ✓         | ✓      |
-| FLAIR MRI                        | -      | ✓         | ✓      |
-| Functional MRI                   | -      | ✓         | ✓      |
-| Fluorodeoxyglucose (FDG) PET     | ✓      | ✓         | ✓      |
-| Pittsburgh compound B (PiB) PET  | ✓      | -         | -      |
-| Florbetapir (AV45) PET           | -      | ✓         | ✓      |
-| Florbetaben (FBB) PET            | -      | -         | ✓      |
-| Flortaucipir (AV1451) PET        | -      | -         | ✓      |
-| Clinical data                    | ✓      | ✓         | ✓      |
+|                                           | ADNI-1 | ADNI-GO/2 | ADNI-3 |
+| :----------------------------------------:|:------:|:---------:|:------:|
+| T1-weighted MRI                           | ✓      | ✓         | ✓      |
+| Diffusion weighted imaging (DWI)          | -      | ✓         | ✓      |
+| FLAIR MRI                                 | -      | ✓         | ✓      |
+| Functional MRI                            | -      | ✓         | ✓      |
+| Fluorodeoxyglucose (FDG) PET              | ✓      | ✓         | ✓      |
+| Pittsburgh compound B (PiB) PET (amyloid) | ✓      | -         | -      |
+| Florbetapir (AV45) PET (amyloid)          | -      | ✓         | ✓      |
+| Florbetaben (FBB) PET (amyloid)           | -      | -         | ✓      |
+| Flortaucipir (AV1451) PET (tau)           | -      | -         | ✓      |
+| Clinical data                             | ✓      | ✓         | ✓      |
 
-To convert the imaging data to BIDS, a list of subjects with their sessions is first obtained from the `ADNIMERGE` spreadsheet. This list is compared for each modality of interest to the list of scans available, as provided by modality-specific CSV files (e.g. `MRILIST.csv`). If the modality was acquired for a specific pair of subject-session, and several scans and/or preprocessed images are available, only one is converted. Regarding the T1 scans, when several are available for a single session, the preferred scan (as identified in `MAYOADIRL_MRI_IMAGEQC_12_08_15.csv`) is chosen. If a preferred scan is not specified then the higher quality scan (as defined in `MRIQUALITY.csv`) is selected. If no quality control is found, then we choose the first scan. Gradwarp and B1-inhomogeneity corrected images are selected when available as these corrections can be performed in a clinical setting, otherwise the original image is selected. 1.5 T images are preferred for ADNI 1 since they are available for a larger number of patients. Regarding the DWI scans, we selected imaging following the 'Axial DTI' sequence. Regarding the FDG and AV45 PET scans, the images co-registered and averaged across time frames are selected. The scans failing quality control (if specified in `PETQC.csv`) are discarded. Data that do not change over time, such as the subject's sex, education level or diagnosis at baseline, are obtained from the ADNIMERGE spreadsheet and gathered in the participants.tsv file, located at the top of the BIDS folder hierarchy. The session-dependent data, such as the clinical scores, are obtained from specific CSV files (e.g. `MMSE.csv`) and gathered in `<subjectID> _session.tsv` files in each participant subfolder. The clinical data being converted are defined in a spreadsheet (`clinical_specifications_adni.xlsx`) that is available with the code of the converter. The user can easily modify this file if he/she wants to convert additional clinical data.
+To convert the imaging data to BIDS, a list of subjects with their sessions is first obtained from the `ADNIMERGE` spreadsheet. This list is compared for each modality of interest to the list of scans available, as provided by modality-specific csv files (e.g. `MPRAGEMETA.csv`). If the modality was acquired for a specific pair of subject-session, and several scans and/or preprocessed images are available, only one is converted:
+- **T1-weighted MRI** When several scans are available for a single session, the preferred scan (as identified in `MAYOADIRL_MRI_IMAGEQC_12_08_15.csv`) is chosen. If a preferred scan is not specified then the higher quality scan (as defined in `MRIQUALITY.csv`) is selected. If no quality control is found, then we choose the first scan for the visit. Gradwarp, B1-inhomogeneity corrected and N3 bias field corrected images are selected. 1.5 T images are preferred for ADNI 1 since they are available for a larger number of patients.
+- **DWI** We select images containing 'DTI' in the sequence name, that are not multiband, processed nor enhanced.
+- **FLAIR** We select images containing 'FLAIR' in the sequence name, without multiplanar reconstruction (MPR).
+- **fMRI** We select images containing 'MRI' in the sequence name, that are not multiband.
+- **FDG, Amyloid and Tau PET** The images co-registered and averaged across time frames are selected.
+
+For all imaging modalities, the scans failing quality control (if it was performed) are discarded.
+
+As a final step in the conversion, images from some modalities are centered (currently, T1, FLAIR and the different PET tracers). For each image, the coordinates of the origin are set to the center of the box containing the image data. This allows other image processing pipelines in Clinica (mainly SPM based) to run without needing further image preprocessing.
+
+Data that do not change over time, such as the subject's sex, education level or diagnosis at baseline, are obtained from the ADNIMERGE spreadsheet and gathered in the `participants.tsv` file, located at the top of the BIDS folder hierarchy. The session-dependent data, such as the clinical scores, are obtained from specific CSV files (e.g. `MMSE.csv`) and gathered in `<subject_id>_session.tsv` files in each participant subfolder. The clinical data being converted are defined in a spreadsheet (`clinical_specifications_adni.xlsx`) that is available with the code of the converter. The user can easily modify this file if he/she wants to convert additional clinical data.
+
 
 ## Using the converter
 
@@ -83,7 +92,7 @@ where:
 ├── ...
 ```
 
-- `<clinical_data_directory>` is the path to the directory where the CSV files with the clinical data are located. Its content looks like:
+- `<clinical_data_directory>` is the path to the directory where the CSV files with the clinical data is located. Its content looks like:
 ```text
 <clinical_data_directory>
 ├── ADAS_ADNI1.csv
@@ -101,14 +110,18 @@ The converter offers the possibility of converting only the clinical data (once 
 Due to the high computational time requested for converting all the modalities of the whole ADNI dataset, it is possible to convert a single modality at the time using the parameter `-m` with one of the following values:
 
 *  `T1` for the T1-weighted MRI
-*  `FLAIR` for FLAIR MRI
+*  `FLAIR` for FLAIR MR Images
 *  `DWI` for Diffusion Weighted Images (DWI)
 *  `fMRI` for resting-state functional MRI
 *  `PET_FDG` for the Fluorodeoxyglucose (FDG) PET
-*  `PET_AMYLOID` for Amyloid tracers namely PiB, AV45 and FBB PET
-*  `PET_TAU` for Tau tracers namely Flortaucipir (AV1451) PET
+*  `PET_AMYLOID` for the Pittsburgh compound B (PIB), Florbetapir (AV45) and Florbetaben (FBB) PET
+*  `PET_TAU` for the Flortaucipir (AV1451) PET
 
-Is also possible to provide the path to a .txt file with the list of subjects to convert using the optional parameter `-s`.
+It is also possible to provide the path to a .txt file with the list of subjects to convert using the optional parameter `--subjects_list`. This file must contain one subject identifier per line. The used format for the identifier is the one corresponding to column `PTID` in ADNIMERGE. For example, we can provide a `subjects.txt` file with the following content:
+```text
+006_S_4713
+006_S_4485
+```
 
 For more information about the optional parameters, you can type:
 
@@ -117,58 +130,75 @@ clinica convert adni-to-bids -h
 ```
 
 ??? failure "Known errors"
-    - T1
-       ```
-       Subject sub-ADNI031S0830 for session ses-M48 folder contains sub-ADNI031S0830_ses-M48_T1w_Eq_1.nii
-       Subject sub-ADNI100S0995 for session ses-M18 folder contains sub-ADNI100S0995_ses-M18_T1w_Eq_1.nii
-       Subject sub-ADNI031S0867 for session ses-M48 folder contains sub-ADNI031S0867_ses-M48_T1w_Eq_1.nii
-       Subject sub-ADNI100S0892 for session ses-M18 folder contains sub-ADNI100S0892_ses-M18_T1w_Eq_1.nii
+    **The following images are not converted since they generate errors. They will not be present in the BIDS output.**
 
-       Subject sub-ADNI029S0845 for session ses-M24 folder is empty
-       Subject sub-ADNI094S1267 for session ses-M24 folder is empty
-       Subject sub-ADNI029S0843 for session ses-M24 folder is empty
-       Subject sub-ADNI027S0307 for session ses-M48 folder is empty
-       Subject sub-ADNI057S1269 for session ses-M24 folder is empty
-       Subject sub-ADNI036S4899 for session ses-M03 folder is empty
-       ```
+    - **T1**
+        - _Interslice distance varies in the volume (incompatible with NIfTI format):_
+            - Subject sub-ADNI031S0830 for session ses-M48
+            - Subject sub-ADNI100S0995 for session ses-M18
+            - Subject sub-ADNI031S0867 for session ses-M48
+            - Subject sub-ADNI100S0892 for session ses-M18
+        - _Image conversion does not generate an output file:_
+            - Subject sub-ADNI029S0845 for session ses-M24
+            - Subject sub-ADNI094S1267 for session ses-M24
+            - Subject sub-ADNI029S0843 for session ses-M24
+            - Subject sub-ADNI027S0307 for session ses-M48
+            - Subject sub-ADNI057S1269 for session ses-M24
+            - Subject sub-ADNI036S4899 for session ses-M03
 
-    - DWI
-       ```
-       Subject sub-ADNI016S4638 for session ses-M00 folder contains sub-ADNI016S4638_ses-M00_dwi_Eq_1.nii
-       Subject sub-ADNI007S4611 for session ses-M03 folder contains sub-ADNI007S4611_ses-M03_dwi_Eq_1.nii
-       Subject sub-ADNI027S5118 for session ses-M00 folder contains sub-ADNI027S5118_ses-M00_dwi_Eq_1.nii
-       Subject sub-ADNI094S2238 for session ses-M48 folder contains sub-ADNI094S2238_ses-M48_dwi_Eq_1.nii
-       Subject sub-ADNI129S4287 for session ses-M00 folder contains sub-ADNI129S4287_ses-M00_dwi_Eq_1.nii
+    - **DWI**
+        - _Interslice distance varies in the volume (incompatible with NIfTI format):_
+            - Subject sub-ADNI016S4638 for session ses-M00
+            - Subject sub-ADNI007S4611 for session ses-M03
+            - Subject sub-ADNI027S5118 for session ses-M00
+            - Subject sub-ADNI094S2238 for session ses-M48
+            - Subject sub-ADNI129S4287 for session ses-M00
+        - _Two images are generated and we can not choose the correct one:_
+            - Subject sub-ADNI098S4018 for session ses-M00
+            - Subject sub-ADNI098S4003 for session ses-M12
+        - _Wrong b-val/b-vec files:_
+            - Subject sub-ADNI029S4585 for session ses-M48
+            - Subject sub-ADNI029S2395 for session ses-M60
+            - Subject sub-ADNI029S0824 for session ses-M108
+            - Subject sub-ADNI029S0914 for session ses-M108
+            - Subject sub-ADNI029S4384 for session ses-M48
+            - Subject sub-ADNI029S4385 for session ses-M48
+            - Subject sub-ADNI094S4630 for session ses-M06
+            - Subject sub-ADNI094S4649 for session ses-M06
+            - Subject sub-ADNI029S5219 for session ses-M24
+        - _Wrong output dimensions:_
+            - Subject sub-ADNI027S2219 for session ses-M36 (256 x 256 x 2013)
+            - Subject sub-ADNI129S2332 for session ses-M12 (256 x 256 x 1549)
 
-       Subject sub-ADNI098S4018 for session ses-M00 folder contains sub-ADNI098S4018_ses-M00_dwia.nii
-       Subject sub-ADNI098S4003 for session ses-M12 folder contains sub-ADNI098S4003_ses-M12_dwia.nii
+    - **FLAIR**
+        - _Interslice distance varies in the volume (incompatible with NIfTI format):_
+            - Subject sub-ADNI141S0767 for session ses-M84
+            - Subject sub-ADNI067S5205 for session ses-M00
+            - Subject sub-ADNI127S4928 for session ses-M24
+            - Subject sub-ADNI024S4674 for session ses-M06
+            - Subject sub-ADNI123S2363 for session ses-M24
+            - Subject sub-ADNI053S4578 for session ses-M48
+            - Subject sub-ADNI128S4586 for session ses-M48
+            - Subject sub-ADNI053S4813 for session ses-M48
+            - Subject sub-ADNI053S5272 for session ses-M24
 
-       Subject sub-ADNI029S4585 for session ses-M48 has wrong b-val/b-vec file
-       Subject sub-ADNI029S2395 for session ses-M60 has wrong b-val/b-vec file
-       Subject sub-ADNI029S0824 for session ses-M108 has wrong b-val/b-vec file
-       Subject sub-ADNI029S0914 for session ses-M108 has wrong b-val/b-vec file
-       Subject sub-ADNI029S4384 for session ses-M48 has wrong b-val/b-vec file
-       Subject sub-ADNI029S4385 for session ses-M48 has wrong b-val/b-vec file
-       Subject sub-ADNI094S4630 for session ses-M06 has wrong b-val/b-vec file
-       Subject sub-ADNI094S4649 for session ses-M06 has wrong b-val/b-vec file
-       Subject sub-ADNI029S5219 for session ses-M24 has wrong b-val/b-vec file
 
-       Subject sub-ADNI027S2219 for session ses-M36 has wrong dimensions (256 x 256 x 2013)
-       Subject sub-ADNI129S2332 for session ses-M12 has wrong dimensions (256 x 256 x 1549)
-       ```
+    - **fMRI**
+        - _Image conversion does not generate an output file:_
+            - Subject sub-ADNI006S4485 for session ses-M84
 
-    - FDG PET
-       ```
-       Subject sub-ADNI941S1195 for session ses-M48 folder is empty
-       Subject sub-ADNI005S0223 for session ses-M12 folder is empty
-       Subject sub-ADNI037S1421 for session ses-M36 folder contains NONAME.nii
-       Subject sub-ADNI037S1078 for session ses-M36 folder contains NONAME.nii
-       ```
+    - **FDG PET**
+        - _Image conversion does not generate an output file:_
+            - Subject sub-ADNI941S1195 for session ses-M48 folder is empty
+            - Subject sub-ADNI005S0223 for session ses-M12 folder is empty
+        - _Inconsistent output filename (`NONAME.nii`):_
+            - Subject sub-ADNI037S1421 for session ses-M36
+            - Subject sub-ADNI037S1078 for session ses-M36
 
-    - AV45 PET
-      ```
-      Subject sub-ADNI128S2220 for session ses-M48 folder contains sub-ADNI128S2220_ses-M48_task-rest_acq-AV45_pet_Eq_1.nii
-      ```
+    - **AV45 PET**
+        - _Interslice distance varies in the volume (incompatible with NIfTI format):_
+            - Subject sub-ADNI128S2220 for session ses-M48
+
 
 ## Citing this converter in your paper
 
