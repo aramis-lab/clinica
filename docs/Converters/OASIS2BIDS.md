@@ -10,7 +10,7 @@
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of the **dcm2nii** and **dcm2niix** DICOM to NIfTI converters, and of **FreeSurfer**. You can find how to install these software packages on the [installation](../#installing-clinica-from-source) page.
+If you only installed the core of Clinica, this pipeline needs the installation of the **dcm2nii** and **dcm2niix** DICOM to NIfTI converters, and of **FreeSurfer**. You can find how to install these software packages on the [installation](../../#installing-clinica-from-source) page.
 
 ## Downloading OASIS
 
@@ -37,22 +37,22 @@ clinica convert oasis-to-bids  dataset_directory clinical_data_directory bids_di
 
 where:
 
-  - `dataset_directory` is the path to the original OASIS images's directory;
+  - `dataset_directory` is the path to the original OASIS images' directory;
   - `clinical_data_directory` is the path to the directory where the xls file with the clinical data is located;
   - `bids_directory` is the path to the output directory, where the BIDS-converted version of OASIS will be stored.
 
 !!! note
-    In order to improve the readability, the BIDS subject id is different from the original OASIS id of the subject. Indeed, the BIDS subject id is so defined:
+    In order to improve the readability, the BIDS subject ID is different from the original OASIS ID and is defined as follows:
     ```
-    sub-OASIS1+ original numerical id of the subject
+    sub-OASIS1+ original numerical ID of the subject
     ```
     Example:
-    If the original subject id is `OAS1_0001_MR1`, since the numerical id is `0001`, the final BIDS id will be `sub-OASIS10001`.
+    If the original subject ID is `OAS1_0001_MR1`, since the numerical ID is `0001`, the final BIDS ID will be `sub-OASIS10001`.
 
 ## Citing this converter in your paper
 
 !!! cite "Example of paragraph:"
-    The OASIS data have been curated and converted to the Brain Imaging Data Structure (BIDS) format [[Gorgolewski et al., 2016](https://doi.org/10.1038/sdata.2016.44)] using Clinica [[Samper-González et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
+    The OASIS data have been curated and converted to the Brain Imaging Data Structure (BIDS) format [[Gorgolewski et al., 2016](https://doi.org/10.1038/sdata.2016.44)] using Clinica [[Routier et al.](https://hal.inria.fr/hal-02308126/); [Samper-González et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
 
 !!! tip
     Easily access the papers cited on this page on [Zotero](https://www.zotero.org/groups/2240070/clinica_aramislab/items/collectionKey/NASGJPVL).

@@ -19,12 +19,12 @@
 
 ## Dependencies
 
-If you only installed the core of Clinica, this pipeline needs the installation of the **dcm2nii** and **dcm2niix** DICOM to NIfTI converters, and of **FreeSurfer**. You can find how to install these software packages on the [installation](../#installing-clinica-from-source) page.
+If you only installed the core of Clinica, this pipeline needs the installation of the **dcm2nii** and **dcm2niix** DICOM to NIfTI converters, and of **FreeSurfer**. You can find how to install these software packages on the [installation](../../#installing-clinica-from-source) page.
 
 ### Downloading AIBL
-To download the AIBL dataset you first need to register to the [LONI Image & Data Archive (IDA)](https://ida.loni.usc.edu/login.jsp), a secure research data repository, and then request access to the AIBL dataset through the submission of an [online application form](https://ida.loni.usc.edu/collaboration/access/appApply.jsp?project=AIBL). If you already have an access for ADNI, you can download AIBL with the same account.
+To download the AIBL dataset you first need to register to the [LONI Image & Data Archive (IDA)](https://ida.loni.usc.edu/login.jsp), a secure research data repository, and then request access to the AIBL dataset through the submission of an [online application form](https://ida.loni.usc.edu/collaboration/access/appApply.jsp?project=AIBL).
 
-In order to use the converter, you will need to download both the images and the clinical data. To do so, from the [main page](https://ida.loni.usc.edu/login.jsp?returnPage=UserManagement.jsp&project=) click on `PROJECTS` and `AIBL`. To download the imaging data, click on `Download` and choose `Image collections`. In the 'Advanced search' tab, pick the images you wish to download, for example tick `MRI` to download all the MR images, and then click on `SEARCH`. In the `Advanced search results` tab, click `Select All` and `Add To Collection`. Finally, in the `Data Collection` tab, select the collection you just created, tick `All` and click on `Advanced download`. We advise you to group files as 10 zip files. To download the clinical data, from the [main page of the AIBL project](https://ida.loni.usc.edu/home/projectPage.jsp?project=AIBL), click on `Download Clinical Data` and on the next page click on `DOWNLOAD`.
+In order to use the converter, you will need to download both the images and the clinical data. To do so, from the [main page](https://ida.loni.usc.edu/login.jsp?returnPage=UserManagement.jsp&project=) click on `PROJECTS` and `AIBL`. To download the imaging data, click on `Download` and choose `Image collections`. In the `Advanced search` tab, pick the images you wish to download, for example tick `MRI` to download all the MR images, and then click on `SEARCH`. In the `Advanced search results` tab, click `Select All` and `Add To Collection`. Finally, in the `Data Collection` tab, select the collection you just created, tick `All` and click on `Advanced download`. We advise you to group files as 10 zip files. To download the clinical data, from the [main page of the AIBL project](https://ida.loni.usc.edu/home/projectPage.jsp?project=AIBL), click on `Download Clinical Data` and on the next page click on `DOWNLOAD`.
 
 !!! note
     You do not have to modify the original folder name or rename the clinical data files before using the converter.
@@ -50,7 +50,7 @@ clinica convert aibl-to-bids dataset_directory clinical_data_directory bids_dire
 
 where:
 
-  - `dataset_directory` is the path to the original AIBL images's directory;
+  - `dataset_directory` is the path to the original AIBL images' directory;
   - `clinical_data_directory` is the path to the directory where the csv file with the clinical data is located;
   - `bids_directory` is the path to the output directory, where the BIDS-converted version of AIBL will be stored.
 
@@ -58,7 +58,7 @@ where:
 ## Citing this converter in your paper
 
 !!! cite "Example of paragraph:"
-    The AIBL data have been curated and converted to the Brain Imaging Data Structure (BIDS) format [[Gorgolewski et al., 2016](https://doi.org/10.1038/sdata.2016.44)] using Clinica [[Samper-González et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
+    The AIBL data have been curated and converted to the Brain Imaging Data Structure (BIDS) format [[Gorgolewski et al., 2016](https://doi.org/10.1038/sdata.2016.44)] using Clinica [[Routier et al.](https://hal.inria.fr/hal-02308126/); [Samper-González et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)].
 
 !!! tip
     Easily access the papers cited on this page on [Zotero](https://www.zotero.org/groups/2240070/clinica_aramislab/items/collectionKey/NASGJPVL).
