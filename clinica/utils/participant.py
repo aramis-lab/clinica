@@ -3,33 +3,23 @@ from clinica.utils.filemanip import read_participant_tsv
 
 
 def get_unique_subjects(in_subject_list, in_session_list):
-    """Get unique participant IDs
+    """Get unique participant IDs with their sessions.
 
-    The function to read the .tsv file returns the following
-    participant_id and session_id lists:
-    participant1, participant1, ..., participant2, participant2, ...
-    session1    , session2    , ..., session1    , session2    , ...
-    This function returns a list where all participants are only selected
-    once:
-    participant1, participant2, ..., participant_n
-    and for each participant, the list of corresponding session id
-    eg.:
-    participant1 -> [session1, session2]
-    participant2 -> [session1]
-    ...
-    participant_n -> [session1, session2, session3]
-
+    This function generates a list of unique participant IDs from `in_subject_list` with their sessions.
     Args:
-        in_subject_list (list of strings): list of participant_id
-        in_session_list (list of strings): list of session_id
+        in_subject_list (list[str]): list of participant IDs
+        in_session_list (list[str]): list of session IDs
 
     Returns:
-        out_unique_subject_list (list of strings): list of
-            participant_id, where each participant appears only once
-        out_persubject_session_list2 (list of list): list of list
+        out_unique_subject_list (list[str]): list of participant IDs, where each participant appears only once
+        out_per_subject_session_list (list[list[str]]): list of list
             (list2) of session_id associated to any single participant
-    """
 
+    Example:
+        >>> from clinica.utils.participant import get_unique_subjects
+        >>> get_unique_subjects(['sub-CLNC01', 'sub-CLNC01', 'sub-CLNC02'], ['ses-M00', 'ses-M18', 'ses-M00'])
+        (['sub-CLNC01', 'sub-CLNC02'], [['ses-M00', 'ses-M18'], ['ses-M00']])
+    """
     import numpy as np
 
     subject_array = np.array(in_subject_list)
@@ -45,14 +35,34 @@ def get_unique_subjects(in_subject_list, in_session_list):
     out_unique_subject_list = unique_subject_array.tolist()
 
     subject_number = len(out_unique_subject_list)
-    out_persubject_session_list2 = [
+    out_per_subject_session_list = [
         session_array[
             out_inverse_positions == subject_index
             ].tolist() for subject_index in range(subject_number)]
 
-    assert len(out_unique_subject_list) == len(out_persubject_session_list2), 'Problem while getting unique subjects and sessions lists'
+    assert len(out_unique_subject_list) == len(out_per_subject_session_list),\
+        'Problem while getting unique subjects and sessions lists'
 
-    return out_unique_subject_list, out_persubject_session_list2
+    return out_unique_subject_list, out_per_subject_session_list
+
+
+def unique_subjects_sessions_to_subjects_sessions(unique_subject_list, per_subject_session_list):
+    """Do reverse operation of get_unique_subjects function.
+
+    Example:
+        >>> from clinica.utils.participant import unique_subjects_sessions_to_subjects_sessions
+        >>> unique_subjects_sessions_to_subjects_sessions(['sub-01', 'sub-02'], [['ses-M00', 'ses-M18'], ['ses-M00']])
+        (['sub-CLNC01', 'sub-01', 'sub-02'], ['ses-M00', 'ses-M18', 'ses-M00'])
+
+    """
+    list_participants = []
+    list_sessions = []
+    for idx, participant_id in enumerate(unique_subject_list):
+        for session_id in per_subject_session_list[idx]:
+            list_participants.append(participant_id)
+            list_sessions.append(session_id)
+
+    return list_participants, list_sessions
 
 
 def get_subject_session_list(input_dir, ss_file=None, is_bids_dir=True, use_session_tsv=False, tsv_dir=None):

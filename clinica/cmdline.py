@@ -189,7 +189,9 @@ def execute():
     from clinica.engine import CmdParser
 
     from clinica.pipelines.t1_freesurfer.t1_freesurfer_cli import T1FreeSurferCLI
-    # from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_cli import T1FreeSurferLongitudinalCLI
+    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_cli import T1FreeSurferLongitudinalCLI
+    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_cli import T1FreeSurferTemplateCLI
+    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_cli import T1FreeSurferLongitudinalCorrectionCLI
     from clinica.pipelines.t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import T1VolumeTissueSegmentationCLI
     from clinica.pipelines.t1_volume_create_dartel.t1_volume_create_dartel_cli import T1VolumeCreateDartelCLI
     from clinica.pipelines.t1_volume_register_dartel.t1_volume_register_dartel_cli import T1VolumeRegisterDartelCLI
@@ -211,7 +213,10 @@ def execute():
     from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_cli import StatisticsVolumeCorrectionCLI
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
                                    extra_dir="pipelines").load()
+    # The order in pipelines var will the same when typing `clinica run`
+    # Pipelines are sorted by main / advanced pipelines then by modality
     pipelines += [
+        # Main pipelines:
         T1FreeSurferCLI(),
         T1VolumeCLI(),
         # T1FreeSurferLongitudinalCLI(),
@@ -227,12 +232,15 @@ def execute():
         StatisticsSurfaceCLI(),
         StatisticsVolumeCLI(),
         StatisticsVolumeCorrectionCLI(),
+        # Advanced pipelines:
         T1VolumeExistingTemplateCLI(),
         T1VolumeTissueSegmentationCLI(),
         T1VolumeCreateDartelCLI(),
         T1VolumeRegisterDartelCLI(),
         T1VolumeDartel2MNICLI(),
         T1VolumeParcellationCLI(),
+        # T1FreeSurferTemplateCLI(),
+        # T1FreeSurferLongitudinalCorrectionCLI(),
     ]
 
     run_parser = sub_parser.add_parser(

@@ -9,19 +9,23 @@ from os import pardir
 warnings.filterwarnings("ignore")
 
 
-def test_instantiate_T1FreeSurfer():
+def test_instantiate_T1FreeSurferCrossSectional():
     from os.path import dirname, join, abspath
     from clinica.pipelines.t1_freesurfer.t1_freesurfer_pipeline import T1FreeSurfer
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'T1FreeSurferCrossSectional')
+    root = join(root, 'data', 'T1FreeSurfer')
+
+    parameters = {
+        'recon_all_args': '-qcache',
+    }
 
     pipeline = T1FreeSurfer(
         bids_directory=join(root, 'in', 'bids'),
         caps_directory=join(root, 'in', 'caps'),
-        tsv_file=join(root, 'in', 'subjects.tsv')
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        parameters=parameters,
     )
-    pipeline.parameters['recon_all_args'] = '-qcache'
     pipeline.build()
 
 
@@ -309,45 +313,29 @@ def test_instantiate_SpatialSVM():
 
 def test_instantiate_T1FreeSurferTemplate():
     from os.path import dirname, join, abspath
-    from tempfile import mkdtemp
     from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_pipeline import T1FreeSurferTemplate
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'T1FreeSurferLongitudinal')
-    # build pipeline
+    root = join(root, 'data', 'T1FreeSurferTemplate')
+
     pipeline = T1FreeSurferTemplate(
         caps_directory=join(root, 'in', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv'),
-        # TODO: Check if this is necessary:
-        base_dir=mkdtemp()
     )
-    pipeline.parameters['overwrite_caps'] = 'True'
-    # Todo: Remove parameters['n_procs']
-    pipeline.parameters['n_procs'] = 4
-    pipeline.parameters['recon_all_args'] = '-qcache'
     pipeline.build()
 
 
 def test_instantiate_T1FreeSurferLongitudinalCorrection():
-    """Instantiation test for t1_freesurfer_longitudinal_correction pipeline
-    """
     from os.path import dirname, join, abspath
-    from tempfile import mkdtemp
     from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_pipeline import T1FreeSurferLongitudinalCorrection
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'T1FreeSurferLongitudinal')
-    # build pipeline
+    root = join(root, 'data', 'T1FreeSurferLongitudinalCorrection')
+
     pipeline = T1FreeSurferLongitudinalCorrection(
         caps_directory=join(root, 'in', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv'),
-        # TODO: Check if this is necessary:
-        base_dir=mkdtemp()
     )
-    pipeline.parameters['overwrite_caps'] = 'True'
-    # Todo: Remove parameters['n_procs']
-    pipeline.parameters['n_procs'] = 4
-    pipeline.parameters['recon_all_args'] = '-qcache'
     pipeline.build()
 
 
