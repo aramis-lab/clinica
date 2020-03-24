@@ -2,100 +2,58 @@
 
 import clinica.engine as ce
 
-__author__ = "Alexis Guyot"
-__copyright__ = "Copyright 2016-2019, The Aramis Lab Team"
-__credits__ = ["Alexis Guyot"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Alexis Guyot"
-__email__ = "alexis.guyot@icm-institute.org"
-__status__ = "Development"
-
 
 class T1FreeSurferLongitudinalCLI(ce.CmdParser):
 
     def define_name(self):
-        """Define the sub-command name to run this pipelines.
-        """
+        """Define the sub-command name to run this pipeline."""
         self._name = 't1-freesurfer-longitudinal'
 
     def define_description(self):
-        """Define a description of this pipeline.
-        """
+        """Define a description of this pipeline."""
         self._description = ('Longitudinal pre-processing of T1w images with FreeSurfer:\n'
                              'http://clinica.run/doc/Pipelines/T1_FreeSurfer_Longitudinal/')
 
     def define_options(self):
-        """Define the sub-command arguments
-        """
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
-        # clinica compulsory arguments (e.g. bids, caps, group_id)
+        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
-        # clinica standard arguments (e.g. --n_procs)
-        clinica_opt = self.add_clinica_standard_arguments()
-        # clinica pipeline-specific arguments
-        clinica_opt.add_argument("-oc", "--overwrite_caps",
-                                 type=str, default='false',
-                                 help='Overwrite existing data in CAPS directory '
-                                      '(Possible values: true, True, TRUE, false, False, FALSE. Default: -oc false)')
+
+        # Clinica standard arguments (e.g. --n_procs)
+        self.add_clinica_standard_arguments(add_overwrite_flag=True)
 
     def run_command(self, args):
-        """Run the pipelines with defined args
-        """
-        import nipype.pipeline.engine as npe
-        from nipype.pipeline.engine import Workflow
-        from .t1_freesurfer_template_pipeline import T1FreeSurferTemplate
-        from .t1_freesurfer_longitudinal_correction_pipeline import T1FreeSurferLongitudinalCorrection
+        """Run the pipeline with defined args."""
+        import os
+        import datetime
+        from colorama import Fore
+        from clinica.utils.stream import cprint
+        from clinica.utils.longitudinal import get_participants_long_id
+        from clinica.utils.participant import get_subject_session_list
+        from .t1_freesurfer_template_cli import T1FreeSurferTemplateCLI
+        from .t1_freesurfer_longitudinal_correction_cli import T1FreeSurferLongitudinalCorrectionCLI
+        from .longitudinal_utils import save_part_sess_long_ids_to_tsv
 
-        template_pipeline = T1FreeSurferTemplate(
-            caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            base_dir=self.absolute_path(args.working_directory)
+        cprint(
+            'The t1-freesurfer-longitudinal pipeline is divided into 2 parts:\n'
+            '\t%st1-freesurfer-unbiased-template pipeline%s: Creation of unbiased template\n'
+            '\t%st1-freesurfer-longitudinal-correction pipeline%s: Longitudinal correction\n'
+            % (Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET)
         )
-        longcorr_pipeline = T1FreeSurferLongitudinalCorrection(
-            caps_directory=self.absolute_path(args.caps_directory),
-            tsv_file=self.absolute_path(args.subjects_sessions_tsv),
-            base_dir=self.absolute_path(args.working_directory)
-        )
 
-        # add n_procs to pipeline parameters so we
-        # know, while running the pipeline, which arguments the user
-        # passed to the CLI
-        template_pipeline.parameters = {
-            # Todo: Remove parameters['n_procs']
-            'n_procs': args.n_procs,
-            'overwrite_caps': args.overwrite_caps
-            }
-        longcorr_pipeline.parameters = {
-            # Todo: Remove parameters['n_procs']
-            'n_procs': args.n_procs,
-            'overwrite_caps': args.overwrite_caps
-            }
+        if not self.absolute_path(args.subjects_sessions_tsv):
+            l_sess, l_part = get_subject_session_list(self.absolute_path(args.caps_directory), None, False, False)
+            l_long = get_participants_long_id(l_part, l_sess)
+            now = datetime.datetime.now().strftime('%H%M%S')
+            args.subjects_sessions_tsv = now + '_participants.tsv'
+            save_part_sess_long_ids_to_tsv(l_part, l_sess, l_long, os.getcwd(), args.subjects_sessions_tsv)
 
-        # separately build the two template and longitudinal-correction pipelines
-        template_pipeline.build()
-        longcorr_pipeline.build()
+        cprint('%s\nPart 1/2: Running t1-freesurfer-unbiased-template pipeline%s' % (Fore.BLUE, Fore.RESET))
+        unbiased_template_cli = T1FreeSurferTemplateCLI()
+        unbiased_template_cli.run_command(args)
 
-        # create overall workflow
-        longitudinal_workflow = npe.Workflow(name='T1FreeSurferLongitudinal')
-        longitudinal_workflow.base_dir = self.absolute_path(args.working_directory)
-        # connect the template pipeline to the longitudinal-correction pipeline
-        longitudinal_workflow.connect(
-            template_pipeline, '5_sendto_longcorr.out_unpcssd_sublist',
-            longcorr_pipeline, '0_receivefrom_template.unpcssd_sublist')
-        longitudinal_workflow.connect(
-            template_pipeline, '5_sendto_longcorr.out_pcssd_capstargetlist',
-            longcorr_pipeline, '0_receivefrom_template.pcssd_capstargetlist')
-        longitudinal_workflow.connect(
-            template_pipeline, '5_sendto_longcorr.out_overwrite_tsv',
-            longcorr_pipeline, '0_receivefrom_template.overwrite_tsv')
-        # run overall workflow
-        if args.n_procs:
-            Workflow.run(
-                longitudinal_workflow,
-                plugin_args={'n_procs': args.n_procs},
-                plugin='MultiProc')
-        else:
-            Workflow.run(longitudinal_workflow)
+        cprint('%s\nPart 2/2 Running t1-freesurfer-longitudinal-correction pipeline%s' % (Fore.BLUE, Fore.RESET))
+        longitudinal_correction_cli = T1FreeSurferLongitudinalCorrectionCLI()
+        longitudinal_correction_cli.run_command(args)
