@@ -86,7 +86,9 @@ def test_run_T1VolumeTissueSegmentation(cmdopt):
                     + 'sub-ADNI011S4105_ses-M00_T1w_segm-graymatter_dartelinput.nii.gz')
 
     assert likeliness_measure(out_file, ref_file, (1e-1, 0.02), (0.4, 0.01))
+
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'T1VolumeTissueSegmentation'), recreate=False)
 
 
 def test_run_T1VolumeCreateDartel(cmdopt):
@@ -136,6 +138,7 @@ def test_run_T1VolumeCreateDartel(cmdopt):
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'T1VolumeCreateDartel'), recreate=False)
 
 
 def test_run_T1VolumeDartel2MNI(cmdopt):
@@ -181,6 +184,7 @@ def test_run_T1VolumeDartel2MNI(cmdopt):
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'T1VolumeDartel2MNI'), recreate=False)
 
 
 def test_run_T1VolumeRegisterDartel(cmdopt):
@@ -226,6 +230,7 @@ def test_run_T1VolumeRegisterDartel(cmdopt):
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'T1VolumeExistingDartel'), recreate=False)
 
 
 def test_run_T1VolumeParcellation(cmdopt):
@@ -251,6 +256,7 @@ def test_run_T1VolumeParcellation(cmdopt):
     pipeline = T1VolumeParcellation(
         caps_directory=join(root, 'in', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'T1VolumeParcellation'),
         parameters=parameters
     )
     pipeline.build()
@@ -270,6 +276,7 @@ def test_run_T1VolumeParcellation(cmdopt):
         assert np.allclose(np.array(out_csv.mean_scalar), np.array(ref_csv.mean_scalar), rtol=1e-8, equal_nan=True)
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'T1VolumeParcellation'), recreate=False)
 
 
 def test_run_DWIPreprocessingUsingT1(cmdopt):
@@ -303,6 +310,7 @@ def test_run_DWIPreprocessingUsingT1(cmdopt):
 
     # Delete out/caps folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'DWIPreprocessingUsingT1'), recreate=False)
 
 
 def test_run_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
@@ -337,6 +345,7 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
 
     # Delete out/caps folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'DWIPreprocessingUsingPhaseDiffFieldmap'), recreate=False)
 
 
 def test_run_DWIDTI(cmdopt):
@@ -379,6 +388,7 @@ def test_run_DWIDTI(cmdopt):
         assert np.allclose(out_mean_scalar, ref_mean_scalar, rtol=0.025, equal_nan=True)
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'DWIDTI'), recreate=False)
 
 
 def test_run_DWIConnectome(cmdopt):
@@ -431,6 +441,7 @@ def test_run_DWIConnectome(cmdopt):
         assert similarity_measure(out_parc_files[i], ref_parc_files[i], 0.955)
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(working_dir, recreate=False)
 
 
 def test_run_fMRIPreprocessing(cmdopt):
@@ -466,6 +477,7 @@ def test_run_fMRIPreprocessing(cmdopt):
         assert similarity_measure(out_files[i], ref_files[i], 0.99)
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'fMRIPreprocessing'), recreate=False)
 
 
 def test_run_PETVolume(cmdopt):
@@ -505,6 +517,7 @@ def test_run_PETVolume(cmdopt):
         assert likeliness_measure(out_files[i], ref_files[i], (1e-2, 0.25), (1e-1, 0.001))
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'PETVolume'), recreate=False)
 
 
 def test_run_StatisticsSurface(cmdopt):
@@ -553,6 +566,7 @@ def test_run_StatisticsSurface(cmdopt):
     for i in range(4):
         assert np.allclose(out_file_mat[0][0][i], ref_file_mat[0][0][i], rtol=1e-8, equal_nan=True)
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'StatisticsSurface'), recreate=False)
 
 
 def test_run_PETSurface(cmdopt):
@@ -594,7 +608,9 @@ def test_run_PETSurface(cmdopt):
         assert np.allclose(np.squeeze(nib.load(out_files[i]).get_data()),
                            np.squeeze(nib.load(ref_files[i]).get_data()),
                            rtol=3e-2, equal_nan=True)
+
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'PETSurface'), recreate=False)
 
 
 def test_run_WorkflowsML(cmdopt):
@@ -694,6 +710,7 @@ def test_run_SpatialSVM(cmdopt):
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=True)
+    clean_folder(join(working_dir, 'SpatialSVM'), recreate=False)
 
 
 def test_run_T1Linear(cmdopt):
@@ -731,6 +748,9 @@ def test_run_T1Linear(cmdopt):
     ref_folder = join(root, 'out') 
     
     compare_folders(out_folder, ref_folder, shared_folder_name='caps')
+
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'T1Linear'), recreate=False)
 
 
 def test_run_StatisticsVolume(cmdopt):
@@ -782,6 +802,7 @@ def test_run_StatisticsVolume(cmdopt):
 
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=True)
+    clean_folder(join(working_dir, 'StatisticsVolume'), recreate=False)
 
 
 def test_run_StatisticsVolumeCorrection(cmdopt):
@@ -820,6 +841,7 @@ def test_run_StatisticsVolumeCorrection(cmdopt):
     
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=True)
+    clean_folder(join(working_dir, 'StatisticsVolumeCorrection'), recreate=False)
 
 
 def test_run_T1FreeSurferTemplate(cmdopt):
@@ -854,6 +876,7 @@ def test_run_T1FreeSurferTemplate(cmdopt):
     compare_folders(join(root, 'out'), join(root, 'ref'), 'caps')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'T1FreeSurferTemplate'), recreate=False)
 
 
 def test_run_T1FreeSurferLongitudinalCorrection(cmdopt):
@@ -885,3 +908,4 @@ def test_run_T1FreeSurferLongitudinalCorrection(cmdopt):
     compare_folders(join(root, 'out'), join(root, 'ref'), 'caps')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'T1FreeSurferLongitudinalCorrection'), recreate=False)
