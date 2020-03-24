@@ -1,13 +1,17 @@
 # `adni-2-bids` – Conversion of the Alzheimer’s Disease Neuroimaging Initiative (ADNI) to BIDS
 
-!!! quote "Description reproduced from the [ADNI's Study Design webpage](http://adni.loni.usc.edu/study-design/)"
-    ADNI is a global research effort that actively supports the investigation and development of treatments that slow or stop the progression of AD. This multisite, longitudinal study assesses clinical, imaging, genetic and biospecimen biomarkers through the process of normal aging to early mild cognitive impairment (EMCI), to late mild cognitive impairment (LMCI), to dementia or AD. With established, standardized methods for imaging and biomarker collection and analysis, ADNI facilitates a way for scientists to conduct cohesive research and share compatible data with other researchers around the world.
+!!! quote  "Description reproduced from the [ADNI website](http://adni.loni.usc.edu/about/)"
+    The Alzheimer’s Disease Neuroimaging Initiative (ADNI) is a longitudinal multicenter study designed to develop clinical, imaging, genetic, and biochemical biomarkers for the early detection and tracking of Alzheimer’s disease (AD). Since its launch more than a decade ago, the landmark public-private partnership has made major contributions to AD research, enabling the sharing of data between researchers around the world.
 
-    The ADNI study has three phases: ADNI1, ADNI GO and ADNI2. New participants were recruited across North America during each phase of the study and agreed to complete a variety of imaging and clinical assessments. Participants are followed and reassessed over time to track the pathology of the disease as it progresses. Results are then shared by ADNI through USC’s Laboratory of Neuro Imaging’s Image Data Archive (IDA).
+    ADNI began in 2004 under the leadership of Dr. Michael W. Weiner, funded as a private-public partnership with $27 million contributed by 20 companies and two foundations through the Foundation for the National Institutes of Health and $40 million from the National Institute on Aging. The initial five-year study (ADNI-1) was extended by two years in 2009 by a Grand Opportunities grant  (ADNI-GO), and in 2011 and 2016 by further competitive renewals of the ADNI-1 grant (ADNI-2, and ADNI-3, respectively). Learn more about each phase of the study in the table below.
 
-    The table below summarizes the North American ADNI study target participant numbers, as well as the types of data taken at the different phases. In reality, the total number of study participants vary.
+    | Study characteristics   | ADNI-1 | ADNI-GO | ADNI-2 | ADNI 3 |
+    | :----------------------:|:------:|:-------:|:------:|:------:|
+    | Primary goal            | Develop biomarkers as outcome measures for clinical trials | Examine biomarkers in earlier stages of disease | Develop biomarkers as predictors of cognitive decline, and as outcome measures | Study the use of tau PET and functional imaging techniques in clinical trials |
+    | Funding	                | $40 million federal (NIA), $27 million industry and foundation | $24 million American Recovery Act funds | $40 million federal (NIA), $27 million industry and foundation | $ 40 million federal (NIA), up to $20 million industry and foundation |
+    | Duration / Start date	  | 5 years / October 2004 | 2 years / September 2009 | 5 years / September 2011 | 5 years / September 2016 |
+    | Cohort                  | 200 elderly controls + 400 MCI + 200 AD | Existing ADNI-1 + 200 early MCI | Existing ADNI-1 and ADNI-GO + 150 elderly controls + 100 early MCI + 150 late MCI + 150 AD | Existing ADNI-1, ADNI-GO, ADNI-2 + 133 elderly controls + 151 MCI + 87 AD |
 
-    <center>![](http://adni.loni.usc.edu/wp-content/uploads/2012/10/about-study-design_2_UPDATED_WIP2.png)</center>
 
 ## Dependencies
 
