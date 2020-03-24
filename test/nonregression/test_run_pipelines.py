@@ -696,6 +696,132 @@ def test_run_SpatialSVM(cmdopt):
     clean_folder(join(root, 'out', 'caps'), recreate=True)
 
 
+def test_run_T1Linear(cmdopt):
+    from os.path import dirname, join, abspath
+    import shutil
+    from clinica.pipelines.t1_linear.t1_linear_pipeline import T1Linear
+    import nibabel as nib
+    import numpy as np
+
+    working_dir = cmdopt
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'T1Linear')
+
+    # Remove potential residual of previous UT
+    clean_folder(join(working_dir, 'T1Linear'))
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+
+    parameters = {
+        'crop_image': True
+    }
+    # Instantiate pipeline
+    pipeline = T1Linear(
+        bids_directory=join(root, 'in', 'bids'),
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'T1Linear'),
+        parameters=parameters
+    )
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
+
+    # Check output vs ref
+    
+    out_folder = join(root, 'out')
+    ref_folder = join(root, 'out') 
+    
+    compare_folders(out_folder, ref_folder, shared_folder_name='caps')
+
+
+def test_run_StatisticsVolume(cmdopt):
+    from os.path import dirname, join, abspath
+    import shutil
+    import numpy as np
+    import nibabel as nib
+    from clinica.pipelines.statistics_volume.statistics_volume_pipeline import StatisticsVolume
+
+    working_dir = cmdopt
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'StatisticsVolume')
+
+    # Remove potential residual of previous UT
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'StatisticsVolume'), recreate=False)
+
+    # Copy necessary data from in to out
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+
+    # Instantiate pipeline and run()
+    parameters = {
+        'contrast': 'group',
+        'feature_type': 'fdg',
+        'group_id': 'UnitTest',
+        'cluster_threshold': 0.001,
+        'group_id_caps': None,
+        'full_width_at_half_maximum': 8
+    }
+
+    pipeline = StatisticsVolume(
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'group-UnitTest_covariates.tsv'),
+        base_dir=join(working_dir, 'StatisticsVolume'),
+        parameters=parameters
+    )
+
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 2}, bypass_check=True)
+
+    output_t_stat = join(root, 'out',
+                         'caps', 'groups', 'group-UnitTest', 'statistics_volume', 'group_comparison_measure-fdg',
+                         'group-UnitTest_CN-lt-AD_measure-fdg_fwhm-8_TStatistics.nii')
+    ref_t_stat = join(root, 'ref',
+                      'caps', 'groups', 'group-UnitTest', 'statistics_volume', 'group_comparison_measure-fdg',
+                      'group-UnitTest_CN-lt-AD_measure-fdg_fwhm-8_TStatistics.nii')
+
+    assert np.allclose(nib.load(output_t_stat).get_data(),
+                       nib.load(ref_t_stat).get_data())
+
+    # Remove data in out folder
+    clean_folder(join(root, 'out', 'caps'), recreate=True)
+
+
+def test_run_StatisticsVolumeCorrection(cmdopt):
+    from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_pipeline import StatisticsVolumeCorrection
+    from os.path import dirname, join, abspath
+    import shutil
+
+    working_dir = cmdopt
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'StatisticsVolumeCorrection')
+
+    # Remove potential residual of previous UT
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'StatisticsVolumeCorrection'), recreate=False)
+
+    # Copy necessary data from in to out
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+
+    # Instantiate pipeline and run()
+    parameters = {
+        't_map': 'group-UnitTest_AD-lt-CN_measure-fdg_fwhm-8_TStatistics.nii',
+        'height_threshold': 3.2422,
+        'FWEp': 4.928,
+        'FDRp': 4.693,
+        'FWEc': 206987,
+        'FDRc': 206987,
+        'n_cuts': 15
+    }
+    pipeline = StatisticsVolumeCorrection(
+        caps_directory=join(root, 'out', 'caps'),
+        base_dir=join(working_dir, 'StatisticsVolumeCorrection'),
+        parameters=parameters
+    )
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
+    compare_folders(join(root, 'out'), join(root, 'ref'), 'caps')
+    
+    # Remove data in out folder
+    clean_folder(join(root, 'out', 'caps'), recreate=True)
+
+
 def test_run_T1FreeSurferTemplate(cmdopt):
     # Data for this functional test comes from https://openneuro.org/datasets/ds000204
     # sub-01 was duplicated into to sub-02 with one session in order to test the "one time point" case

@@ -47,7 +47,7 @@ pipeline {
             echo 'My branch name is ${BRANCH_NAME}'
             sh 'echo "My branch name is ${BRANCH_NAME}"'
             sh 'printenv'
-            sh 'echo "Agent name: ${NODE_NAME}"' 
+            sh 'echo "Agent name: ${NODE_NAME}"'
             script {
               echo "My conda env name is clinica_env_${BRANCH_NAME}"
               }
@@ -74,7 +74,7 @@ pipeline {
               }
             steps {
             echo 'Installing Clinica sources in MacOS...'
-            sh 'echo "Agent name: ${NODE_NAME}"' 
+            sh 'echo "Agent name: ${NODE_NAME}"'
             sh '''
                set +x
                ./.jenkins/scripts/find_env.sh
@@ -103,7 +103,7 @@ pipeline {
               }
             steps {
               echo 'Testing pipeline instantation...'
-              sh 'echo "Agent name: ${NODE_NAME}"' 
+              sh 'echo "Agent name: ${NODE_NAME}"'
               sh '''
                  set +x
                  ./.jenkins/scripts/find_env.sh
@@ -133,7 +133,7 @@ pipeline {
               }
             steps {
               echo 'Testing pipeline instantation...'
-              sh 'echo "Agent name: ${NODE_NAME}"' 
+              sh 'echo "Agent name: ${NODE_NAME}"'
               sh '''
                  set +x
                  ./.jenkins/scripts/find_env.sh
@@ -145,26 +145,6 @@ pipeline {
                  ln -s /Volumes/data/data_ci ./data
                  pytest --verbose --disable-warnings -k 'test_instantiate'
                  module purge
-                 conda deactivate
-                 '''
-            }
-          }  
-          stage('Style test') {
-            agent { label 'ubuntu' }
-            environment {
-              PATH = "$HOME/miniconda/bin:/usr/local/Modules/bin:$PATH"
-              CLINICA_ENV_BRANCH = "clinica_env_$BRANCH_NAME"
-              WORK_DIR_LINUX = "/mnt/data/ci/working_dir_linux"
-              }
-            steps {
-              echo 'Testing pipeline instantation...'
-              sh 'echo "Agent name: ${NODE_NAME}"' 
-              sh '''
-                 set +x
-                 ./.jenkins/scripts/find_env.sh
-                 eval "$(conda shell.bash hook)"
-                 conda activate clinica_env_$BRANCH_NAME
-                 pytest --verbose -k 'test_coding_style'
                  conda deactivate
                  '''
             }

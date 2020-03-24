@@ -56,6 +56,7 @@ def print_end_pipeline(cli_name, working_directory, working_directory_was_specif
     import datetime
     from colorama import Fore
     from .stream import cprint
+    from os.path import abspath
 
     now = datetime.datetime.now().strftime('%H:%M:%S')
     if working_directory_was_specified:

@@ -199,6 +199,7 @@ def execute():
     from clinica.pipelines.t1_volume.t1_volume_cli import T1VolumeCLI
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import T1VolumeExistingTemplateCLI
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
+    from clinica.pipelines.t1_linear.t1_linear_cli import T1LinearCLI
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DwiPreprocessingUsingPhaseDiffFieldmapCli
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DwiPreprocessingUsingT1Cli
     from clinica.pipelines.dwi_dti.dwi_dti_cli import DwiDtiCli
@@ -208,6 +209,8 @@ def execute():
     from clinica.pipelines.pet_surface.pet_surface_cli import PetSurfaceCLI
     from clinica.pipelines.machine_learning_spatial_svm.spatial_svm_cli import SpatialSVMCLI
     from clinica.pipelines.statistics_surface.statistics_surface_cli import StatisticsSurfaceCLI
+    from clinica.pipelines.statistics_volume.statistics_volume_cli import StatisticsVolumeCLI
+    from clinica.pipelines.statistics_volume_correction.statistics_volume_correction_cli import StatisticsVolumeCorrectionCLI
     pipelines = ClinicaClassLoader(baseclass=CmdParser,
                                    extra_dir="pipelines").load()
     # The order in pipelines var will the same when typing `clinica run`
@@ -216,7 +219,8 @@ def execute():
         # Main pipelines:
         T1FreeSurferCLI(),
         T1VolumeCLI(),
-        T1FreeSurferLongitudinalCLI(),
+        # T1FreeSurferLongitudinalCLI(),
+        T1LinearCLI(),
         DwiPreprocessingUsingPhaseDiffFieldmapCli(),
         DwiPreprocessingUsingT1Cli(),
         DwiDtiCli(),
@@ -226,6 +230,8 @@ def execute():
         PetSurfaceCLI(),
         SpatialSVMCLI(),
         StatisticsSurfaceCLI(),
+        StatisticsVolumeCLI(),
+        StatisticsVolumeCorrectionCLI(),
         # Advanced pipelines:
         T1VolumeExistingTemplateCLI(),
         T1VolumeTissueSegmentationCLI(),
@@ -233,8 +239,8 @@ def execute():
         T1VolumeRegisterDartelCLI(),
         T1VolumeDartel2MNICLI(),
         T1VolumeParcellationCLI(),
-        T1FreeSurferTemplateCLI(),
-        T1FreeSurferLongitudinalCorrectionCLI(),
+        # T1FreeSurferTemplateCLI(),
+        # T1FreeSurferLongitudinalCorrectionCLI(),
     ]
 
     run_parser = sub_parser.add_parser(
