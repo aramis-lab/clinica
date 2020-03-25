@@ -44,6 +44,7 @@ ICM members are encouraged to use the version of Clinica available on the cluste
     - `pet-surface` - [Surface-based processing of PET images](Pipelines/PET_Surface): projection of the PET signal onto the subject’s cortical surface
 - Statistics
     - `statistics-surface` - [Surface-based mass-univariate analysis with SurfStat](Pipelines/Stats_Surface)
+    - `statistics-volume` - [Volume-based mass-univariate analysis with SPM](Pipelines/Stats_Volume)
 - Machine Learning
     - `machinelearning-prepare-spatial-svm` - [Prepare input data for spatially regularized SVM](Pipelines/MachineLearning_PrepareSVM)
     - [Classification based on machine learning](Pipelines/MachineLearning_Classification)

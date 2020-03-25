@@ -457,6 +457,10 @@ groups/
 This section includes all the other situation for the generalized linear model. It follows the same spirit as the sections above.
 -->
 
+### `statistics-volume` - Volume-based mass-univariate analysis with SPM
+
+Coming soon !
+
 ## Machine Learning
 ### `machinelearning-prepare-spatial-svm` - Prepare input data for spatially regularized SVM
 ```

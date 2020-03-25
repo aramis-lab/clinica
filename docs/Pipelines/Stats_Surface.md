@@ -1,6 +1,6 @@
 # `statistics-surface` - Surface-based mass-univariate analysis with SurfStat
 
-This command performs statistical analysis (e.g. group comparison, correlation) on surface-based features using the General Linear Model (GLM). To that aim, the pipeline relies on the Matlab toolbox [SurfStat](http://www.math.mcgill.ca/keith/surfstat/) designed for statistical analyses of univariate and multivariate surface and volumetric data using the GLM [[Worsley et al., 2009](http://dx.doi.org/10.1016/S1053-8119(09)70882-1)].
+This command performs statistical analysis (e.g. group comparison, correlation) on surface-based features using the general linear model (GLM). To that aim, the pipeline relies on the Matlab toolbox [SurfStat](http://www.math.mcgill.ca/keith/surfstat/) designed for statistical analyses of univariate and multivariate surface and volumetric data using the GLM [[Worsley et al., 2009](http://dx.doi.org/10.1016/S1053-8119(09)70882-1)].
 
 Surface-based measurements are analyzed on the FsAverage surface template (from FreeSurfer).
 
@@ -28,7 +28,7 @@ clinica run statistics-surface caps_directory subject_visits_with_covariates_tsv
 where:
 
 - `caps_directory` is the folder containing the results of the [`t1-freesurfer`](../T1_FreeSurfer) or [`pet-surface` pipeline](../PET_Surface) pipeline and the output of the present command, both in a [CAPS hierarchy](../../CAPS/Introduction).
-- `subject_visits_with_covariates_tsv` is a TSV file containing a list of subjects with their sessions and all the covariates and factors in your model (the content of the file is explained on the [Example](../Stats_Surface/#comparison-analysis) subsection).
+- `subject_visits_with_covariates_tsv` is a TSV file containing a list of subjects with their sessions and all the covariates and factors in your model (the content of the file is explained in the [Example](../Stats_Surface/#comparison-analysis) subsection).
 - `design_matrix` is a string defining the model that fits into the GLM, e.g. `1 + group + sex + age` where `group`, `sex` and `age` correspond to the names of columns in the TSV file provided.
 - `contrast` is a string defining the contrast matrix or the variable of interest for the GLM, e.g. `group` or `age`.
 - `string_format` is a string defining the format of the columns in the TSV file. For example, the columns contain a string, a string and a number (e.g. `participant_id`, `session_id` and `age`), then you will need to replace `string_format` by `%s %s %f`, meaning that the columns of your TSV file contain a `s`tring, a `s`tring and a `f`loat.
