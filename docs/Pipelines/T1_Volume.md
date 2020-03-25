@@ -1,4 +1,4 @@
-# `t1-volume` – Volume-based processing of T1-weighted MR images
+# `t1-volume` – Volume-based processing of T1-weighted MR images with SPM
 
 This pipeline performs four main processing steps on T1-weighted MR images using the [SPM](http://www.fil.ion.ucl.ac.uk/spm/) software:
 
@@ -38,7 +38,9 @@ Pipeline options:
 - `--modulate`: a boolean. If `True` output images are modulated and volumes are preserved. If `False` they are not modulated and concentrations are preserved. Default value: `True`.
 
 !!! note
-    The arguments common to all Clinica pipelines are described in [Interacting with clinica](../../InteractingWithClinica).
+    - The arguments common to all Clinica pipelines are described in [Interacting with clinica](../../InteractingWithClinica).
+
+    - The creation of a new Dartel template, performed in the `t1-volume` pipeline, requires at least two images.
 
 !!! tip
     Do not hesitate to type `t1-volume --help` to see the full list of parameters.

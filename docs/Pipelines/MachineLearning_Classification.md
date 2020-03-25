@@ -1,4 +1,4 @@
-# Classification based on machine learning
+# Classification based on machine learning using scikit-learn
 
 Clinica provides a modular way to perform classification based on machine learning. To build its own classification pipeline, the user can combine three modules based on [scikit-learn](http://scikit-learn.org/stable/index.html) [[Pedregosa et al., 2011](http://www.jmlr.org/papers/volume12/pedregosa11a/pedregosa11a.pdf)]:
 
