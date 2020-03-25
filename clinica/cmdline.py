@@ -229,7 +229,7 @@ def execute():
         fMRIPreprocessingCLI(),
         PETVolumeCLI(),
         PetSurfaceCLI(),
-        PetSurfaceLongitudinalCLI(),
+        # PetSurfaceLongitudinalCLI(),
         SpatialSVMCLI(),
         StatisticsSurfaceCLI(),
         StatisticsVolumeCLI(),
