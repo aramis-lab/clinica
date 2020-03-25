@@ -569,7 +569,7 @@ def test_run_StatisticsSurface(cmdopt):
     clean_folder(join(working_dir, 'StatisticsSurface'), recreate=False)
 
 
-def test_run_PETSurface(cmdopt):
+def test_run_PETSurfaceCrossSectional(cmdopt):
     from os.path import dirname, join, abspath
     import shutil
     import nibabel as nib
@@ -584,11 +584,15 @@ def test_run_PETSurface(cmdopt):
     clean_folder(join(working_dir, 'PETSurface'))
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
+    parameters = {
+        'longitudinal': False
+    }
     pipeline = PetSurface(
         bids_directory=join(root, 'in', 'bids'),
         caps_directory=join(root, 'out', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv'),
         base_dir=join(working_dir, 'PETSurface'),
+        parameters=parameters
     )
     pipeline.build()
     pipeline.run(bypass_check=True)
@@ -611,6 +615,58 @@ def test_run_PETSurface(cmdopt):
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     clean_folder(join(working_dir, 'PETSurface'), recreate=False)
+
+
+def test_run_PETSurfaceLongitudinal(cmdopt):
+    from os.path import dirname, join, abspath
+    import shutil
+    import nibabel as nib
+    import numpy as np
+    from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
+
+    working_dir = cmdopt
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'PETSurfaceLongitudinal')
+
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'PETSurfaceLongitudinal'))
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+
+    parameters = {
+        'longitudinal': True
+    }
+    pipeline = PetSurface(
+        bids_directory=join(root, 'in', 'bids'),
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'PETSurfaceLongitudinal'),
+        parameters=parameters
+    )
+    pipeline.build()
+    pipeline.run(bypass_check=True)
+
+    # Check files
+    part_id = 'sub-ADNI041S1260'
+    sess_id = 'ses-M24'
+    long_id = 'long-M00M06M12M18M24'
+    image_id = part_id + '_' + sess_id + '_' + long_id
+    out_files = [join(root, 'out', 'caps', 'subjects', part_id, sess_id, 'pet', long_id, 'surface_longitudinal',
+                      image_id + '_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
+                      + h + '_fwhm-' + str(f) + '_projection.mgh')
+                 for h in ['lh', 'rh']
+                 for f in [0, 5, 10, 15, 20, 25]]
+    ref_files = [join(root, 'ref',
+                      image_id + '_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
+                      + h + '_fwhm-' + str(f) + '_projection.mgh')
+                 for h in ['lh', 'rh']
+                 for f in [0, 5, 10, 15, 20, 25]]
+
+    # Tolerance values were taken from PETSurface - Cross-sectional case
+    for i in range(len(out_files)):
+        assert np.allclose(np.squeeze(nib.load(out_files[i]).get_data()),
+                           np.squeeze(nib.load(ref_files[i]).get_data()),
+                           rtol=3e-2, equal_nan=True)
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
 
 
 def test_run_WorkflowsML(cmdopt):

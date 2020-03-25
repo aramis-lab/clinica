@@ -140,6 +140,22 @@ def check_mrtrix(version_requirements=None):
                 'PATH environment.%s' % (Fore.RED, binary, Fore.RESET))
 
 
+def check_petpvc(version_requirements=None):
+    """Check PETPVC software."""
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaMissingDependencyError
+
+    check_environment_variable('MRTRIX_HOME', 'MRtrix')
+
+    list_binaries = ['petpvc', 'pvc_diy', 'pvc_gtm', 'pvc_iy', 'pvc_labbe', 'pvc_make4d', 'pvc_mg',
+                     'pvc_mtc', 'pvc_rbv', 'pvc_relabel', 'pvc_rl', 'pvc_simulate', 'pvc_stc', 'pvc_vc']
+    for binary in list_binaries:
+        if not is_binary_present(binary):
+            raise ClinicaMissingDependencyError(
+                '%s\n[Error] Clinica could not find PETPVC software: the %s command is not present in your '
+                'PATH environment.%s' % (Fore.RED, binary, Fore.RESET))
+
+
 def check_spm(version_requirements=None):
     """Check SPM software."""
     check_environment_variable('SPM_HOME', 'SPM')

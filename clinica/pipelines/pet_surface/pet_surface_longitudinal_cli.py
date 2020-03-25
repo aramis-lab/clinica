@@ -3,16 +3,16 @@
 import clinica.engine as ce
 
 
-class PetSurfaceCLI(ce.CmdParser):
+class PetSurfaceLongitudinalCLI(ce.CmdParser):
 
     def define_name(self):
         """Define the sub-command name to run this pipeline."""
-        self._name = 'pet-surface'
+        self._name = 'pet-surface-longitudinal'
 
     def define_description(self):
         """Define a description of this pipeline."""
-        self._description = ('Surface-based processing of PET images:\n'
-                             'http://clinica.run/doc/Pipelines/PET_Surface/')
+        self._description = ('Longitudinal surface-based processing of PET images:\n'
+                             'http://clinica.run/doc/Pipelines/PET_Surface_Longitudinal/')
 
     def define_options(self):
         """Define the sub-command arguments."""
@@ -22,7 +22,7 @@ class PetSurfaceCLI(ce.CmdParser):
         clinica_comp.add_argument("bids_directory",
                                   help='Path to the BIDS directory.')
         clinica_comp.add_argument("caps_directory",
-                                  help='Path to the CAPS directory. (Filled with results from t1-freesurfer pipeline')
+                                  help='Path to the CAPS directory. (Filled with results from t1-freesurfer-longitudinal pipeline')
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("-pt", "--pet_tracer", type=str, default='fdg',
@@ -38,7 +38,7 @@ class PetSurfaceCLI(ce.CmdParser):
 
         parameters = {
             'pet_tracer': args.pet_tracer,
-            'longitudinal': False
+            'longitudinal': True
         }
         pipeline = PetSurface(
             bids_directory=self.absolute_path(args.bids_directory),
