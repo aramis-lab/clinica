@@ -32,6 +32,7 @@ ICM members are encouraged to use the version of Clinica available on the cluste
 
 ### Pipelines (`clinica run`)
 - Anatomical MRI (T1-weighted)
+    - `t1-linear` - [Linear processing of T1w MR images](Pipelines/T1_Linear): affine registration to the MNI standard space
     - `t1-volume` - [Processing of T1w MR images using SPM](Pipelines/T1_Volume): tissue segmentation and spatial normalization
     - `t1-freesurfer` - [Processing of T1w MR images using FreeSurfer](Pipelines/T1_FreeSurfer): cortical surface, subcortical structures and volumetrics
     <!--- `t1-freesurfer-longitudinal` - [Longitudinal processing of T1w MR images using FreeSurfer](Pipelines/T1_FreeSurfer): cortical surface, subcortical structures and volumetrics-->

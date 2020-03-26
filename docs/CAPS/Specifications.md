@@ -4,6 +4,19 @@ In the following, brackets `[`/`]` will denote optional key/value pairs in the f
 
 ##  T1 MRI data
 
+### `t1-linear` - Affine registration of T1w images to the MNI standard space
+```
+subjects/
+└── sub-<participant_label>/
+    └── ses-<session_label>/
+        └── t1_linear/
+            ├── <source_file>_space-MNI152NLin2009cSym_res-1x1x1_affine.mat
+            ├── <source_file>_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz
+            └── <source_file>_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz
+```
+The `desc-Crop` indicates images of size 169×208×179 after cropping to remove the background.
+
+
 ### `t1-volume` pipeline - Volume-based processing of T1-weighted MR images
 
 #### Segmentation
