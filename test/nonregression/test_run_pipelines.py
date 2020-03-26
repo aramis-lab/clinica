@@ -52,9 +52,24 @@ def test_run_T1FreeSurferCrossSectional(cmdopt):
     pipeline.run(bypass_check=True)
 
     # We only check that folders are the same meaning that FreeSurfer finished without error
-    compare_folders(join(root, 'out'), join(root, 'ref'), 'caps')
+    # surf/ folder is ignored because it contains sym links that makes hard to check with ref data
+    # (sym links of ref data are ignored after rsync on CI machines)
+    def path_to_caps_fs(part_id, sess_id):
+        import os
+        output_folder = os.path.join('caps', 'subjects', part_id, sess_id, 't1', 'freesurfer_cross_sectional')
+        return output_folder
+
+    compare_folders(join(root, 'out'), join(root, 'ref'),
+                    join(path_to_caps_fs('sub-01', 'ses-2011'), 'regional_measures'))
+    compare_folders(join(root, 'out'), join(root, 'ref'),
+                    join(path_to_caps_fs('sub-01', 'ses-2011'), 'sub-01_ses-2011', 'label'))
+    compare_folders(join(root, 'out'), join(root, 'ref'),
+                    join(path_to_caps_fs('sub-01', 'ses-2011'), 'sub-01_ses-2011', 'mri'))
+    compare_folders(join(root, 'out'), join(root, 'ref'),
+                    join(path_to_caps_fs('sub-01', 'ses-2011'), 'sub-01_ses-2011', 'stats'))
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'T1FreeSurfer'), recreate=False)
 
 
 def test_run_T1VolumeTissueSegmentation(cmdopt):
@@ -929,7 +944,20 @@ def test_run_T1FreeSurferTemplate(cmdopt):
                  bypass_check=True)
 
     # We only check that folders are the same meaning that FreeSurfer finished without error
-    compare_folders(join(root, 'out'), join(root, 'ref'), 'caps')
+    # surf/ folder is ignored because it contains sym links that makes hard to check with ref data
+    # (sym links of ref data are ignored after rsync on CI machines)
+    def path_to_caps_fs(part_id, long_id):
+        import os
+        output_folder = os.path.join('caps', 'subjects', part_id, long_id, 'freesurfer_unbiased_template')
+        return output_folder
+
+    for (p_id, l_id) in zip(['sub-01', 'sub-02'], ['long-20112015', 'long-2011']):
+        compare_folders(join(root, 'out'), join(root, 'ref'),
+                        join(path_to_caps_fs(p_id, l_id), p_id + '_' + l_id, 'label'))
+        compare_folders(join(root, 'out'), join(root, 'ref'),
+                        join(path_to_caps_fs(p_id, l_id), p_id + '_' + l_id, 'mri'))
+        compare_folders(join(root, 'out'), join(root, 'ref'),
+                        join(path_to_caps_fs(p_id, l_id), p_id + '_' + l_id, 'stats'))
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     clean_folder(join(working_dir, 'T1FreeSurferTemplate'), recreate=False)
@@ -961,7 +989,25 @@ def test_run_T1FreeSurferLongitudinalCorrection(cmdopt):
     pipeline.run(bypass_check=True)
 
     # We only check that folders are the same meaning that FreeSurfer finished without error
-    compare_folders(join(root, 'out'), join(root, 'ref'), 'caps')
+    # surf/ folder is ignored because it contains sym links that makes hard to check with ref data
+    # (sym links of ref data are ignored after rsync on CI machines)
+    def path_to_caps_fs(part_id, sess_id, long_id):
+        import os
+        output_folder = os.path.join('caps', 'subjects', part_id, sess_id, 't1', long_id, 'freesurfer_longitudinal')
+        return output_folder
+
+    compare_folders(join(root, 'out'), join(root, 'ref'),
+                    join(path_to_caps_fs('sub-01', 'ses-2011', 'long-20112015'),
+                         'regional_measures'))
+    compare_folders(join(root, 'out'), join(root, 'ref'),
+                    join(path_to_caps_fs('sub-01', 'ses-2011', 'long-20112015'),
+                         'sub-01_ses-2011.long.sub-01_long-20112015', 'label'))
+    compare_folders(join(root, 'out'), join(root, 'ref'),
+                    join(path_to_caps_fs('sub-01', 'ses-2011', 'long-20112015'),
+                         'sub-01_ses-2011.long.sub-01_long-20112015', 'mri'))
+    compare_folders(join(root, 'out'), join(root, 'ref'),
+                    join(path_to_caps_fs('sub-01', 'ses-2011', 'long-20112015'),
+                         'sub-01_ses-2011.long.sub-01_long-20112015', 'stats'))
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     clean_folder(join(working_dir, 'T1FreeSurferLongitudinalCorrection'), recreate=False)
