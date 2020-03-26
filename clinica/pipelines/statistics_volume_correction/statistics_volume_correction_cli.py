@@ -25,15 +25,15 @@ class StatisticsVolumeCorrectionCLI(ce.CmdParser):
         clinica_comp.add_argument("t_map",
                                   help='t-statistics map')
         clinica_comp.add_argument("height_threshold", type=float,
-                                  help='Height Threshold associated with uncorrected p-value')
+                                  help='T value corresponding to an uncorrected p-value of 0.001')
         clinica_comp.add_argument("FWEp", type=float,
-                                  help='FWE p value for peak correction')
+                                  help='height threshold (i.e. voxel-level (= peak) threshold)')
         clinica_comp.add_argument("FDRp", type=float,
-                                  help='FDR p value for peak correction')
+                                  help='height threshold (i.e. voxel-level (= peak) threshold)')
         clinica_comp.add_argument("FWEc", type=int,
-                                  help='FWE cluster minimum size value for cluster correction')
+                                  help='extent threshold (i.e. cluster size threshold)')
         clinica_comp.add_argument("FDRc", type=int,
-                                  help='FDR cluster minimum size value for cluster correction')
+                                  help='extent threshold (i.e. cluster size threshold)')
 
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
