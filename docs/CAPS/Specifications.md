@@ -164,7 +164,7 @@ The details of the white matter parcellation of FreeSurfer can be found here: [h
     This file contains the cortical thickness in different regions of the Desikan atlas.
 
 
-### `t1-freesurfer-longitudinal` – FreeSurfer-based longitudinal processing of T1-weighted MR images
+<!--### `t1-freesurfer-longitudinal` – FreeSurfer-based longitudinal processing of T1-weighted MR images
 The outputs of the `t1-freesurfer-longitudinal` pipeline are split into three subfolders, the first one containing the FreeSurfer unbiased template, the second containing the FreeSurfer longitudinal outputs and a third with additional outputs specific to Clinica.
 
 
@@ -215,7 +215,7 @@ where each file is explained in the `t1-freesurfer` sub-section.
 
 !!! Note
     The naming convention `<subject_name>.long.<template_name>` is imposed by FreeSurfer.
-
+-->
 
 ## Diffusion imaging data
 ### `dwi-preprocessing-*` - Preprocessing of raw diffusion weighted imaging (DWI) datasets
