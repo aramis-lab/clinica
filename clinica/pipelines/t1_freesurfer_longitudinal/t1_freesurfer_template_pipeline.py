@@ -95,7 +95,7 @@ class T1FreeSurferTemplate(cpe.Pipeline):
             for p_id, l_id in zip(processed_participants, processed_long_sessions):
                 cprint("%s\t%s | %s%s" % (Fore.YELLOW, p_id, l_id, Fore.RESET))
             if self.overwrite_caps:
-                output_folder = "<CAPS>/subjects/sub-<participant_id>/long-<long_label>/freesurfer_unbiased_template/"
+                output_folder = "<CAPS>/subjects/<participant_id>/<long_id>/freesurfer_unbiased_template/"
                 cprint("%s\nOutput folders in %s will be recreated.\n%s" % (Fore.YELLOW, output_folder, Fore.RESET))
             else:
                 cprint("%s\nParticipant(s) will be ignored by Clinica.\n%s" % (Fore.YELLOW, Fore.RESET))
