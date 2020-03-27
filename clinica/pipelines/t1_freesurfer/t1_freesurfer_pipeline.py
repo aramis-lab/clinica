@@ -97,7 +97,7 @@ class T1FreeSurfer(cpe.Pipeline):
             for image_id in processed_ids:
                 cprint("%s\t%s%s" % (Fore.YELLOW, image_id.replace('_', ' | '), Fore.RESET))
             if self.overwrite_caps:
-                output_folder = "<CAPS>/subjects/sub-<participant_id>/ses-<session_id>/t1/freesurfer_cross_sectional"
+                output_folder = "<CAPS>/subjects/<participant_id>/<session_id>/t1/freesurfer_cross_sectional"
                 cprint("%s\nOutput folders in %s will be recreated.\n%s" % (Fore.YELLOW, output_folder, Fore.RESET))
             else:
                 cprint("%s\nImage(s) will be ignored by Clinica.\n%s" % (Fore.YELLOW, Fore.RESET))
