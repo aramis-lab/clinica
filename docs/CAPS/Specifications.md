@@ -472,7 +472,54 @@ This section includes all the other situation for the generalized linear model. 
 
 ### `statistics-volume` - Volume-based mass-univariate analysis with SPM
 
-Coming soon !
+<!--#### Group comparison-->
+```
+groups/
+└── group-<group_label>/
+    ├── group-<group_label>_participants.tsv
+    └── statistics_volume/
+        └── group_comparison_measure-{graymatter|fdg|av45|<custom_user>}/
+            ├── group-<group_label>_{RPV|mask}.nii
+            ├── group-<group_label>_covariate-<covariate>_measure-<label>_fwhm-<label>_regressionCoefficient.nii
+            ├── group-<grp>_<grp_1>-lt-<grp_2>_measure-<msr>_fwhm-<fwhm>_{TStatistics|contrast}.nii
+            ├── group-<grp>_<grp_2>-lt-<grp_1>_measure-<msr>_fwhm-<fwhm>_{TStatistics|contrast}.nii
+            ├── group-<grp>_report-1.png
+            ├── group-<grp>_report-2.png
+            └── group-<grp>_{mask|RPV|VarianceError}.nii
+```
+
+Suffixes are described in the table below:
+| Name                  | Suffix                   | Description |
+|-----------------------|--------------------------|-------------|
+| T-statistics          | `_TStatistics`           | T statistics for a generalized linear model|
+| Resels per voxels     | `_RPV`                   | Image of the estimated Resels per voxels (known as `RPV.nii` in SPM)|
+| Variance of the error | `_VarianceError`         | Image of the variance of the error (known as `ResMS.nii` in SPM)|
+| Weighted parameters   | `_ contrast`             | Image of the estimated weighted parameters (known as `con_000X.nii` in SPM) |
+| FDR                   | `_regressionCoefficient` | Image of estimated regression coefficient for <covariate> (known as `beta_000X.nii` in SPM)|
+| Report                | `_report-{1|2}`          | SPM report containing FWE/FDR peak/cluster thresholds to report for corrections|
+
+
+
+The `<group_1>-lt-<group_2>` means that the tested hypothesis is: the measurement of `<group_1>` is lower than (`lt`) that `<group_2>`.
+
+The value for `measure` can `graymatter` (output from `t1-volume`), `fdg`, `av45` (output from `pet-volume`), or user-defined maps. Value for `fwhm` corresponds to the size of the volume-based smoothing in mm.
+
+Corrected results are stored under the following hierarchy:
+```
+groups/
+└── group-<group_label>/
+    └── statistics_volume/
+        └── group_comparison_measure-<msr>/
+            └── group-UnitTest_AD-lt-CN_measure-<msr>_fwhm-8_{FDRc|FDRp|FWEc|FWEc}
+                 ├── group-<label>_<grp1>-lt-<grp2>_measure-<msr>_fwhm-<n>_desc-{FDRc|FDRp|FWEc|FWEc}_axis-{x|y|z}_TStatistics.png
+                 └── group-<label>_<grp1>-lt-<grp2>_measure-<msr>_fwhm-<n>_desc-{FDRc|FDRp|FWEc|FWEc}_GlassBrain.png
+```
+
+
+`FWEp` (resp. `FDRp`) corresponds to correction for multiple comparisons with family-wise error (FWE) (resp. false discovery rate (FDR)) correction at the peak (=voxel) level with a statistical threshold of P < 0.05.
+
+`FWEc` (resp. `FDRc`) corresponds to correction for multiple comparisons with family-wise error (FWE) (resp. false discovery rate (FDR)) correction. A statistical threshold of P < 0.001 was first applied (height threshold). An extent threshold of P < 0.05 corrected for multiple comparisons was then applied at the cluster level.
+
 
 ## Machine Learning
 ### `machinelearning-prepare-spatial-svm` - Prepare input data for spatially regularized SVM
