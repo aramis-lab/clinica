@@ -333,18 +333,18 @@ def test_instantiate_SpatialSVM():
     pipeline.build()
 
 
-def test_instantiate_T1FreeSurferTemplate():
-    from os.path import dirname, join, abspath
-    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_pipeline import T1FreeSurferTemplate
-
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'T1FreeSurferTemplate')
-
-    pipeline = T1FreeSurferTemplate(
-        caps_directory=join(root, 'in', 'caps'),
-        tsv_file=join(root, 'in', 'subjects.tsv'),
-    )
-    pipeline.build()
+# def test_instantiate_T1FreeSurferTemplate():
+#     from os.path import dirname, join, abspath
+#     from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_pipeline import T1FreeSurferTemplate
+#
+#     root = dirname(abspath(join(abspath(__file__), pardir)))
+#     root = join(root, 'data', 'T1FreeSurferTemplate')
+#
+#     pipeline = T1FreeSurferTemplate(
+#         caps_directory=join(root, 'in', 'caps'),
+#         tsv_file=join(root, 'in', 'subjects.tsv'),
+#     )
+#     pipeline.build()
 
 
 # def test_instantiate_T1FreeSurferLongitudinalCorrection():
