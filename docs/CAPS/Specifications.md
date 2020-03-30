@@ -379,7 +379,7 @@ In the case above, `_correctedPValue` indicates that these are maps of corrected
 
 The `<group_1>-lt-<group_2>` means that the tested hypothesis is: the measurement of `<group_1>` is lower than (`lt`) that `<group_2>`.
 
-The value for `measure` is `ct`, which corresponds to cortical thickness (currently, this is the only measure proposed by Clinica), and the value for `fwhm` corresponds to the size of the surface-based smoothing in mm and can be `5`, `10`, `15` or `20`.
+Value for `measure` can be `ct` (cortical thickness from `t1-freesurfer`), `fdg` (from `pet-surface`) or user-defined maps. The value for `fwhm` corresponds to the size of the surface-based smoothing in mm and can be `5`, `10`, `15` or `20`.
 
 The JPEG files are simple snapshots. The `*.mat` files can be read later by tools like PySurfer and Surfstat.
 
