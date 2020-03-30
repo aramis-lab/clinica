@@ -53,6 +53,7 @@ The pipeline can then be run with the following command line:
 clinica run statistics-volume-correction caps_directory t_map height_threshold FWEp FDRp FWEc FDRc
 ```
 where:
+
   - `t_map`: name of the T statistic map used for the correction
 
 Optional parameters:
