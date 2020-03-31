@@ -480,9 +480,9 @@ groups/
     └── statistics_volume/
         └── group_comparison_measure-{graymatter|fdg|av45|<custom_user>}/
             ├── group-<group_label>_{RPV|mask}.nii
-            ├── group-<group_label>_covariate-<covariate>_measure-<label>_fwhm-<label>_regressionCoefficient.nii
-            ├── group-<group_label>_<group_1>-lt-<group_2>_measure-<msr>_fwhm-<fwhm>_{TStatistics|contrast}.nii
-            ├── group-<group_label>_<group_2>-lt-<group_1>_measure-<msr>_fwhm-<fwhm>_{TStatistics|contrast}.nii
+            ├── group-<group_label>_covariate-<covariate>_measure-<label>_fwhm-<n>_regressionCoefficient.nii
+            ├── group-<group_label>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<n>_{TStatistics|contrast}.nii
+            ├── group-<group_label>_<group_2>-lt-<group_1>_measure-<label>_fwhm-<n>_{TStatistics|contrast}.nii
             ├── group-<group_label>_report-1.png
             ├── group-<group_label>_report-2.png
             └── group-<group_label>_{mask|RPV|VarianceError}.nii
@@ -509,10 +509,10 @@ Corrected results are stored under the following hierarchy:
 groups/
 └── group-<group_label>/
     └── statistics_volume/
-        └── group_comparison_measure-<msr>/
-            └── group-<group_label>_<group_1>-lt-<group_2>_measure-<msr>_fwhm-<n>_{FDRc|FDRp|FWEc|FWEc}
-                 ├── group-<group_label>_<group_1>-lt-<group_2>_measure-<msr>_fwhm-<n>_desc-{FDRc|FDRp|FWEc|FWEc}_axis-{x|y|z}_TStatistics.png
-                 └── group-<group_label>_<group_1>-lt-<group_2>_measure-<msr>_fwhm-<n>_desc-{FDRc|FDRp|FWEc|FWEc}_GlassBrain.png
+        └── group_comparison_measure-<label>/
+            └── group-<group_label>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<n>_{FDRc|FDRp|FWEc|FWEc}
+                 ├── group-<group_label>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<n>_desc-{FDRc|FDRp|FWEc|FWEc}_axis-{x|y|z}_TStatistics.png
+                 └── group-<group_label>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<n>_desc-{FDRc|FDRp|FWEc|FWEc}_GlassBrain.png
 ```
 
 `FWEp` (resp. `FDRp`) corresponds to correction for multiple comparisons with family-wise error (FWE) (resp. false discovery rate [FDR]) correction at the peak (=voxel) level with a statistical threshold of P < 0.05.
