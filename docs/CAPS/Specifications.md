@@ -5,7 +5,7 @@ In the following, brackets `[`/`]` will denote optional key/value pairs in the f
 ##  T1 MRI data
 
 ### `t1-linear` - Affine registration of T1w images to the MNI standard space
-```
+```text
 subjects/
 └── sub-<participant_label>/
     └── ses-<session_label>/
@@ -20,7 +20,7 @@ The `desc-Crop` indicates images of size 169×208×179 after cropping to remove 
 ### `t1-volume` pipeline - Volume-based processing of T1-weighted MR images
 
 #### Segmentation
-```
+```text
 subjects/
 └── sub-<participant_label>/
     └── ses-<session_label>/
@@ -45,7 +45,7 @@ The T1 image in `Ixi549Space` (reference space of the TPM) is obtained by applyi
 
 
 #### DARTEL
-```
+```text
 groups/
 └── group-<group_label>/
     ├── group-<group_label>_subjects_visits_list.tsv
@@ -63,7 +63,7 @@ The `group-<group_label>_iteration-<index>_template.nii.gz` obtained at each ite
 
 
 #### DARTEL to MNI
-```
+```text
 subjects/
 └── sub-<participant_label>/
     └── ses-<session_label>/
@@ -76,7 +76,7 @@ subjects/
 ```
 
 #### Atlas statistics
-```
+```text
 subjects/
 └── sub-<participant_label>/
     └── ses-<session_label>/
@@ -94,7 +94,7 @@ Statistics files (with `_statistics.tsv` suffix) are detailed in [appendix](#app
 The outputs of the `t1-freesurfer` pipeline are split into two subfolders, the first one containing the FreeSurfer outputs and a second with additional outputs specific to Clinica.
 
 FreeSurfer outputs:
-```
+```text
 subjects/
 └── sub-<participant_label>/
     └── ses-<session_label>/
@@ -109,7 +109,7 @@ subjects/
 ```
 
 Clinica additional outputs:
-```
+```text
 subjects/
 └── sub-<participant_label>/
     └── ses-<session_label>/
@@ -141,7 +141,7 @@ The details of the white matter parcellation of FreeSurfer can be found here: [h
 
 !!! Example "Example - Content of the TSV files"
     Content of `sub-CLNC01_ses­-M00_T1w_segmentationVolumes.tsv`:
-    ```
+    ```text
     Measure:volume	Left-Lateral-Ventricle	Left-Inf-Lat-Vent	...
     /path/to/freesurfer/segmentation/	12345.6	12.334	...
     ```
@@ -149,7 +149,7 @@ The details of the white matter parcellation of FreeSurfer can be found here: [h
     This file contains the volume of the different subcortical structures after segmentation.
 
     Content of `sub-CLNC01_ses­-M00_T1w_parcellation-wm_volume.tsv`:
-    ```
+    ```text
     Measure:volume	wm-lh-bankssts	wm-lh-caudalanteriorcingulate ...
     /path/to/freesurfer/wm parcellation/ 2474.6	1863.7 ...
     ```
@@ -157,7 +157,7 @@ The details of the white matter parcellation of FreeSurfer can be found here: [h
 
 
     Content of `sub-CLNC01_ses­-M00_hemi-left_parcellation-desikan_thickness.tsv`:
-    ```
+    ```text
     lh.aparc.thickness	lh_bankssts_thickness	lh_caudalanteriorcingulate_thickness …
     /path/to/freesurfer/cortical thickness/parcellation 2.048 2.892 …
     ```
@@ -169,7 +169,7 @@ The outputs of the `t1-freesurfer-longitudinal` pipeline are split into three su
 
 
 FreeSurfer unbiased template:
-```
+```text
 subjects/
 └── sub-<participant_label>/
     └── long-<long_label>/
@@ -183,7 +183,7 @@ subjects/
 ```
 
 FreeSurfer longitudinal outputs:
-```
+```text
 subjects/
 └── sub-<participant_label>/
     └── ses-<session_label>/
@@ -199,7 +199,7 @@ subjects/
 ```
 
 Clinica additional outputs:
-```
+```text
 subjects/
 └── sub-<participant_label>/
     └── ses-<session_label>/
@@ -219,7 +219,7 @@ where each file is explained in the `t1-freesurfer` sub-section.
 
 ## Diffusion imaging data
 ### `dwi-preprocessing-*` - Preprocessing of raw diffusion weighted imaging (DWI) datasets
-```
+```text
 subjects/
 └── sub-<participant_label>/
     └── ses-<session_label>/
@@ -235,7 +235,7 @@ The resulting DWI file after preprocessing. According to the subtype of pipeline
 
 
 ### `dwi-dti` - DTI-based processing of corrected DWI datasets
-```
+```text
 subjects/
 └── sub-<participant_label>/
     └── ses­-<session_label>/
@@ -265,7 +265,7 @@ Statistics files (with `_statistics.tsv` suffix) are detailed in [appendix](#app
 
 
 ### `dwi-connectome` - Computation of structural connectome from corrected DWI datasets
-```
+```text
 subjects/
 └── sub-<participant_label>/
     └── ses­-<session_label>/
@@ -283,7 +283,7 @@ Current parcellations used for the computation of connectivity matrices are `des
 ## PET imaging data
 
 ### `pet-volume` - Volume-based processing of PET images
-```
+```text
 subjects/
 └── sub-<participant_label>/
     └── ses-<session_label>/
@@ -297,7 +297,7 @@ subjects/
                     ├── <source_file>_space-Ixi549Space_brainmask.nii.gz
                     └── <source_file>_space-Ixi549Space[_pvc-rbv]_suvr-<suvr>_mask-brain_pet.nii.gz
 ```
-```
+```text
 subjects/
 └── sub-<participant_label>/
     └── ses-<session_label>/
@@ -317,7 +317,7 @@ Statistics files (with `_statistics.tsv` suffix) are detailed in [appendix](#app
 
 
 ### `pet-surface` - Surface-based processing of PET images
-```
+```text
 subjects/
 └── sub-<participant_label>/
     └── ses-<session_label>/
@@ -349,7 +349,7 @@ Files with the `statistics` suffix are text files that display average PET value
 ### `statistics-surface` - Surface-based mass-univariate analysis with SurfStat
 
 #### Group comparison
-```
+```text
 groups/
 └── group-<group_label>/
     └── statistics/
@@ -385,7 +385,7 @@ The JPEG files are simple snapshots. The `*.mat` files can be read later by tool
 
 
 !!! Example
-    ```
+    ```text
     groups/
     └── group-ADvsHC/
         └── statistics/
@@ -413,7 +413,7 @@ The JPEG files are simple snapshots. The `*.mat` files can be read later by tool
     This file describes the model that you want to create, you should include the factor and covariates in your generalized linear model as a column name in this TSV file. For example, the linear model formula is: `CorticalThickness = 1 + age + sex + group`, the contrasts (factors) `group`, `age` and `sex` are the covariates. Additional information is included in the log file.
 
     The content of `group-ADvsHC_participants.tsv` is:
-    ```
+    ```text
     participant_id   session_id   sex      group   age
     sub-CLNC0001     ses-M00      Female   CN      71.1
     sub-CLNC0002     ses-M00      Male     CN      81.3
@@ -435,7 +435,7 @@ The JPEG files are simple snapshots. The `*.mat` files can be read later by tool
 
 
 #### Correlation analysis
-```
+```text
 groups/
 └── group-<group_label>/
     └── statistics/
@@ -473,7 +473,7 @@ This section includes all the other situation for the generalized linear model. 
 ### `statistics-volume` - Volume-based mass-univariate analysis with SPM
 
 <!--#### Group comparison-->
-```
+```text
 groups/
 └── group-<group_label>/
     ├── group-<group_label>_participants.tsv
@@ -505,7 +505,7 @@ The `<group_1>-lt-<group_2>` means that the tested hypothesis is: "the measureme
 The value for `measure` can be `graymatter` (output of `t1-volume`), `fdg` or `av45` (output of `pet-volume`), or user-defined maps. The value for `fwhm` corresponds to the size of the volume-based smoothing in mm.
 
 Corrected results are stored under the following hierarchy:
-```
+```text
 groups/
 └── group-<group_label>/
     └── statistics_volume/
@@ -522,7 +522,7 @@ groups/
 
 ## Machine Learning
 ### `machinelearning-prepare-spatial-svm` - Prepare input data for spatially regularized SVM
-```
+```text
 subjects/
 └── sub-<participant_label>/
     └── ses-<session_label>/
@@ -532,7 +532,7 @@ subjects/
                     ├── <source_file_t1w>_segm-{graymatter|whitematter|csf}_space-Ixi549Space_modulated-on_spatialregularization.nii.gz
                     └── <source_file_pet>_space-Ixi549Space[_pvc-rbv]_suvr-<suvr>_spatialregularization.nii.gz
 ```
-```
+```text
 groups/
 └── group-<group_label>/
     └── machine_learning/
@@ -579,7 +579,7 @@ Possible values for `_map-<map>` key/value are:
 
 !!! Example
     Content of `sub-CLNC01_ses-M00_T1w_space-Hammers_map-graymatter_statistics.tsv`:
-    ```
+    ```text
     index   label_name          mean_scalar
     0.0     Background          0.0011357992189
     1.0     Left Hippocampus    0.576250553131
