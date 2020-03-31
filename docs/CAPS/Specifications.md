@@ -489,6 +489,7 @@ groups/
 ```
 
 Suffixes are described in the table below:
+
 | Name                  | Suffix                   | Description |
 |-----------------------|--------------------------|-------------|
 | T-statistics          | `_TStatistics`           | T statistics for a generalized linear model|
