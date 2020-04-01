@@ -14,7 +14,7 @@ class T1LinearCLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline.
         """
-        self._description = ('Brief description:\n'
+        self._description = ('Affine registration of T1w images to the MNI standard space:\n'
                              'http://clinica.run/doc/Pipelines/T1Linear/')
 
     def define_options(self):
