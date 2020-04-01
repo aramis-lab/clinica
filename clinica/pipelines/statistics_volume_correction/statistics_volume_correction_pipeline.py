@@ -91,7 +91,18 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
                                                        output_names=['figs'],
                                                        function=utils.produce_figures))
         produce_fig_FWE_peak_correction.inputs.n_cuts = self.parameters['n_cuts']
-        produce_fig_FWE_peak_correction.inputs.template = join(dirname(abspath(__file__)), pardir, pardir, 'resources', 'mni_icbm152_t1_tal_nlin_sym_09a.nii.gz')
+        
+        root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
+        path_to_mask = join(root, 'resources', 'masks')
+        produce_fig_FWE_peak_correction.inputs.template = join(path_to_mask, 'mni_icbm152_t1_tal_nlin_sym_09a.nii.gz')
+
+        url = "https://aramislab.paris.inria.fr/files/data/img_t1_linear/mni_icbm152_t1_tal_nlin_sym_09c.nii"
+
+        if not(exists(produce_fig_FWE_peak_correction.inputs.template)):
+            try:
+                fetch_file(url, produce_fig_FWE_peak_correction.inputs.template)
+            except IOError as err:
+                cprint('Unable to download required template (mni_icbm152) for processing:', err)
 
         produce_fig_FDR_peak_correction = produce_fig_FWE_peak_correction.clone(name='produce_figure_FDR_peak_correction')
         produce_fig_FWE_cluster_correction = produce_fig_FWE_peak_correction.clone(name='produce_figure_FWE_cluster_correction')
