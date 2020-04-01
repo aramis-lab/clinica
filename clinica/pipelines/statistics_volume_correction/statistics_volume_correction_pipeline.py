@@ -58,7 +58,7 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import clinica.pipelines.statistics_volume_correction.statistics_volume_correction_utils as utils
-        import clinica.utils.inputs import fetch_file
+        from clinica.utils.inputs import fetch_file
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from os.path import join, abspath, pardir, dirname, exists
