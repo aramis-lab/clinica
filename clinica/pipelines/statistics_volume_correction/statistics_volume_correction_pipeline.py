@@ -91,7 +91,7 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
                                                        output_names=['figs'],
                                                        function=utils.produce_figures))
         produce_fig_FWE_peak_correction.inputs.n_cuts = self.parameters['n_cuts']
-        
+
         root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
         path_to_mask = join(root, 'resources', 'masks')
         produce_fig_FWE_peak_correction.inputs.template = join(path_to_mask, 'mni_icbm152_t1_tal_nlin_sym_09a.nii.gz')
