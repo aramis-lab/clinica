@@ -97,7 +97,7 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
         path_to_mask = join(root, 'resources', 'masks')
         produce_fig_FWE_peak_correction.inputs.template = join(path_to_mask, 'mni_icbm152_t1_tal_nlin_sym_09a.nii.gz')
 
-        url = "https://aramislab.paris.inria.fr/files/data/img_t1_linear/mni_icbm152_t1_tal_nlin_sym_09c.nii"
+        url = "https://aramislab.paris.inria.fr/files/data/img_t1_linear/mni_icbm152_t1_tal_nlin_sym_09a.nii.gz"
 
         if not(exists(produce_fig_FWE_peak_correction.inputs.template)):
             try:
