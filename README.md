@@ -1,5 +1,6 @@
 # Clinica 
-![clinica_logo](https://raw.githubusercontent.com/katjaq/clinica/dev/clinica_logo.png)
+<img src="https://raw.githubusercontent.com/katjaq/clinica/dev/clinica_logo.png" width="400px" />
+
 [![Build Status](https://ci.inria.fr/clinica-aramis/buildStatus/icon?job=clinica%2Fmaster)](https://ci.inria.fr/clinica-aramis/job/clinica/job/master/)
 [![PyPI version](https://badge.fury.io/py/clinica.svg)](https://badge.fury.io/py/clinica)
 [![conda install](https://anaconda.org/aramislab/clinica/badges/installer/conda.svg)](http://www.clinica.run/doc/Installation/)
