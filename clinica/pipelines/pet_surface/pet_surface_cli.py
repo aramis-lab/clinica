@@ -38,6 +38,7 @@ class PetSurfaceCLI(ce.CmdParser):
 
         parameters = {
             'pet_tracer': args.pet_tracer,
+            'longitudinal': False
         }
         pipeline = PetSurface(
             bids_directory=self.absolute_path(args.bids_directory),

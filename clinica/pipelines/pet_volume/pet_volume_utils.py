@@ -46,6 +46,32 @@ def read_psf_information(psf_tsv, subject_ids, session_ids):
     return iterables_fwhm
 
 
+def init_input_node(pet_nii):
+    import datetime
+    import nibabel as nib
+    from colorama import Fore
+    from clinica.utils.filemanip import get_subject_id
+    from clinica.utils.stream import cprint
+    from clinica.utils.ux import print_begin_image
+
+    # Extract image ID
+    image_id = get_subject_id(pet_nii)
+
+    # Check that the PET file is a 3D volume
+    img = nib.load(pet_nii)
+    if len(img.shape) == 4:
+        now = datetime.datetime.now().strftime('%H:%M:%S')
+        error_msg = '%s[%s] Error: Clinica does not handle 4D volumes for %s%s'\
+                    % (Fore.RED, now, image_id.replace('_', ' | '), Fore.RESET)
+        cprint(error_msg)
+        raise NotImplementedError(error_msg)
+
+    # Print begin message
+    print_begin_image(image_id)
+
+    return pet_nii
+
+
 def create_binary_mask(tissues, threshold=0.3):
     """
 

@@ -69,8 +69,8 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
         # Check that there is at least 2 subjects
         if len(self.subjects) <= 1:
-            raise ValueError('This pipeline needs at least 2 subjects to perform DARTEL, and found '
-                             + str(len(self.subjects)) + ' only in ' + self.tsv_file + '.')
+            raise ClinicaException('%sThis pipeline needs at least 2 images to create DARTEL template but '
+                                   'Clinica only found %s.%s' % (Fore.RED, len(self.subjects), Fore.RESET))
 
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
                                         interface=nutil.IdentityInterface(fields=self.get_input_fields(),

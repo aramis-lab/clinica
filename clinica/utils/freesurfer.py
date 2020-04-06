@@ -4,6 +4,42 @@
 """This module contains FreeSurfer utilities."""
 
 
+def extract_image_id_from_longitudinal_segmentation(freesurfer_id):
+    """Extract image ID from longitudinal segmentation folder.
+
+    This function will extract participant, session and longitudinal ID from `freesurfer_id`.
+
+    Example:
+        >>> from clinica.utils.freesurfer import extract_image_id_from_longitudinal_segmentation
+        >>> extract_image_id_from_longitudinal_segmentation('sub-CLNC01_ses-M00')
+        image_id(participant_id='sub-CLNC01', session_id='ses-M00', long_id='')
+        >>> extract_image_id_from_longitudinal_segmentation('sub-CLNC01_long-M0018')
+        image_id(participant_id='sub-CLNC01', session_id='', long_id='long-M0018')
+        >>> extract_image_id_from_longitudinal_segmentation('sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18')
+        image_id(participant_id='sub-CLNC01', session_id='ses-M00', long_id='long-M00M18')
+    """
+    from collections import namedtuple
+    image_id = namedtuple('image_id', ['participant_id', 'session_id', 'long_id'])
+
+    # Case 'sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18'
+    if '.long.' in freesurfer_id:
+        participant_id = freesurfer_id.split('.long.')[0].split('_')[0]
+        session_id = freesurfer_id.split('.long.')[0].split('_')[1]
+        long_id = freesurfer_id.split('.long.')[1].split('_')[1]
+    # Case 'sub-CLNC01_long-M00M18'
+    elif 'long-' in freesurfer_id:
+        participant_id = freesurfer_id.split('_')[0]
+        session_id = ''
+        long_id = freesurfer_id.split('_')[1]
+    # Case 'sub-CLNC01_ses-M00'
+    else:
+        participant_id = freesurfer_id.split('_')[0]
+        session_id = freesurfer_id.split('_')[1]
+        long_id = ''
+
+    return image_id(participant_id, session_id, long_id)
+
+
 def get_secondary_stats(stats_filename, info_type):
     """Read the 'secondary' statistical info from .stats file
 
@@ -61,7 +97,7 @@ def get_secondary_stats(stats_filename, info_type):
 
 
 def generate_regional_measures(
-        segmentation_path, subject_id, output_dir=None, longitudinal=False):
+        segmentation_path, subject_id, output_dir=None):
     """
     Read stats files located in
     <segmentation_path>/<subject_id>/stats/*.stats
@@ -76,38 +112,30 @@ def generate_regional_measures(
 
     Args:
         segmentation_path (string): Path to the FreeSurfer segmentation.
-        subject_id (string): Subject ID in the form sub-CLNC01_ses-M00
+        subject_id (string): Subject ID in the form sub-CLNC01_ses-M00, sub-CLNC01_long-M00M18 or
+            sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18
         output_dir (string): folder where the .tsv stats files will be
-            stored. Will be [pass_segmentation]/regional_measures if no
+            stored. Will be [path_segmentation]/regional_measures if no
             dir is provided by the user
-        longitudinal (boolean): must be set to True if generating
-            regional measures for a longitudinal processing (by default:
-            set to False for a cross-sectional processing)
     """
     import os
     import errno
     import pandas
     from clinica.utils.freesurfer import write_tsv_file
 
-    participant_id = subject_id.split('_')[0]
-    session_id = subject_id.split('_')[1]
+    image_id = extract_image_id_from_longitudinal_segmentation(subject_id)
+    prefix = image_id.participant_id
+    if image_id.session_id:
+        prefix = prefix + '_' + image_id.session_id
+    if image_id.long_id:
+        prefix = prefix + '_' + image_id.long_id
 
-    # get location for recon-all stats files
-    if not longitudinal:
-        # cross-sectional processing
-        stats_folder = os.path.join(segmentation_path, subject_id, 'stats')
-    else:
-        # longitudinal processing
-        subses_long_id = '{0}.long.{1}'.format(subject_id, participant_id)
-        stats_folder = os.path.join(segmentation_path, subses_long_id, 'stats')
+    stats_folder = os.path.join(os.path.expanduser(segmentation_path), subject_id, 'stats')
+
     if not os.path.isdir(stats_folder):
-        ioerror_msg = "Folder {0}/{1} does not contain FreeSurfer segmentation".format(
-            segmentation_path, subject_id)
-        raise IOError(ioerror_msg)
+        raise IOError("Image %s does not contain FreeSurfer segmentation" % prefix.replace('_', ' | '))
 
-    # create output folder for the .tsv files
-    # (define if not provided by user)
-    if output_dir is None:
+    if not output_dir:
         output_dir = os.path.join(segmentation_path, 'regional_measures')
     try:
         os.makedirs(output_dir)
@@ -154,28 +182,19 @@ def generate_regional_measures(
         # secondary (commented out) information common to both 'left'
         # and 'right' .stats file
         for info in ('volume', 'thickness', 'area', 'meancurv'):
-            # secondary information (common to 'left' and 'right')
-            secondary_stats_dict = get_secondary_stats(
-                stats_filename_dict['left'], info)
-            # join primary and secondary information
-            key_list = (
-                list('lh_'+df_dict['left']['StructName'])
-                + list('rh_'+df_dict['right']['StructName'])
-                + list(secondary_stats_dict.keys()))
+            # Secondary information (common to 'left' and 'right')
+            secondary_stats_dict = get_secondary_stats(stats_filename_dict['left'], info)
+            # Join primary and secondary information
+            key_list = (list('lh_'+df_dict['left']['StructName']) +
+                        list('rh_'+df_dict['right']['StructName']) +
+                        list(secondary_stats_dict.keys()))
             col_name = info_dict[info]
-            value_list = (
-                list(df_dict['left'][col_name])
-                + list(df_dict['right'][col_name])
-                + list(secondary_stats_dict.values()))
+            value_list = (list(df_dict['left'][col_name]) +
+                          list(df_dict['right'][col_name]) +
+                          list(secondary_stats_dict.values()))
             # Write .tsv
-            write_tsv_file(
-                os.path.join(
-                    output_dir,
-                    '{0}_parcellation-{1}_{2}.tsv'.format(
-                        subject_id, atlas, info)),
-                key_list,
-                info,
-                value_list)
+            write_tsv_file(os.path.join(output_dir, '{0}_parcellation-{1}_{2}.tsv'.format(prefix, atlas, info)),
+                           key_list, info, value_list)
 
     # Generate TSV files for segmentation files
     #
@@ -193,11 +212,10 @@ def generate_regional_measures(
     secondary_stats_dict = get_secondary_stats(stats_filename, 'volume')
     key_list = list(df['StructName'])+list(secondary_stats_dict.keys())
     value_list = list(df['Volume_mm3'])+list(secondary_stats_dict.values())
-    write_tsv_file(
-        os.path.join(output_dir, subject_id + '_segmentationVolumes.tsv'),
-        key_list, 'volume', value_list)
+    write_tsv_file(os.path.join(output_dir, prefix + '_segmentationVolumes.tsv'),
+                   key_list, 'volume', value_list)
 
-    #  Parsing  wmparc.stats
+    # Parsing wmparc.stats
     stats_filename = os.path.join(stats_folder, 'wmparc.stats')
     df = pandas.read_csv(
         stats_filename,
@@ -206,9 +224,8 @@ def generate_regional_measures(
     secondary_stats_dict = get_secondary_stats(stats_filename, 'volume')
     key_list = list(df['StructName'])+list(secondary_stats_dict.keys())
     value_list = list(df['Volume_mm3'])+list(secondary_stats_dict.values())
-    write_tsv_file(
-        os.path.join(output_dir, subject_id + '_parcellation-wm_volume.tsv'),
-        key_list, 'volume', value_list)
+    write_tsv_file(os.path.join(output_dir, prefix + '_parcellation-wm_volume.tsv'),
+                   key_list, 'volume', value_list)
 
 
 def write_tsv_file(out_filename, name_list, scalar_name, scalar_list):

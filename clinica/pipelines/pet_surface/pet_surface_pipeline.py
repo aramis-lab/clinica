@@ -4,18 +4,10 @@ import clinica.pipelines.engine as cpe
 
 
 class PetSurface(cpe.Pipeline):
-    """Project PET signal onto the surface of the cortex.
-
-    Args:
-        input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be
-            written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv
-            format).
+    """PetSurface - Surface-based processing of PET images.
 
     Returns:
         A clinica pipeline object containing the PetSurface pipeline.
-
     """
 
     def check_pipeline_parameters(self):
@@ -24,14 +16,15 @@ class PetSurface(cpe.Pipeline):
             self.parameters['pet_tracer'] = 'fdg'
 
     def check_custom_dependencies(self):
-        """Check dependencies that can not be listed in the `info.json` file.
-        """
+        """Check dependencies that can not be listed in the `info.json` file."""
         pass
 
     def get_input_fields(self):
-        """Possible inputs of this pipeline.
-        """
+        """Specify the list of possible inputs of this pipeline.
 
+        Returns:
+            A list of (string) input fields name.
+        """
         return ['orig_nu',
                 'pet',
                 'psf',
@@ -43,14 +36,31 @@ class PetSurface(cpe.Pipeline):
                 'desikan_right']
 
     def get_output_fields(self):
-        """Specify the list of possible outputs of this pipeline.
-        """
-
+        """Specify the list of possible outputs of this pipeline."""
         return []
 
     def build_input_node(self):
-        """We iterate over subjects to get all the files needed to run the pipeline
-        """
+        """Build and connect an input node to the pipeline."""
+        import os
+        from clinica.utils.ux import print_images_to_process
+        from clinica.utils.filemanip import save_participants_sessions
+        from clinica.utils.stream import cprint
+
+        if self.parameters['longitudinal']:
+            self.build_input_node_longitudinal()
+        else:
+            self.build_input_node_cross_sectional()
+
+        # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
+        folder_participants_tsv = os.path.join(self.base_dir, self.name)
+        save_participants_sessions(self.subjects, self.sessions, folder_participants_tsv)
+
+        if len(self.subjects):
+            print_images_to_process(self.subjects, self.sessions)
+            cprint('List available in %s' % os.path.join(folder_participants_tsv, 'participants.tsv'))
+            cprint('The pipeline will last approximately a few hours per image.')
+
+    def build_input_node_longitudinal(self):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from clinica.utils.inputs import clinica_file_reader
@@ -73,7 +83,136 @@ class PetSurface(cpe.Pipeline):
         else:
             raise NotImplementedError('Only "fdg" or "av45" tracers are currently accepted (given tracer "%s").' %
                                       self.parameters['pet_tracer'])
+        all_errors = []
+        try:
 
+            read_parameters_node.inputs.pet = clinica_file_reader(self.subjects,
+                                                                  self.sessions,
+                                                                  self.bids_directory,
+                                                                  pet_file_to_grab)
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        try:
+            read_parameters_node.inputs.orig_nu = clinica_file_reader(self.subjects,
+                                                                      self.sessions,
+                                                                      self.caps_directory,
+                                                                      input_files.T1_FS_LONG_ORIG_NU)
+
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        try:
+            read_parameters_node.inputs.psf = clinica_file_reader(self.subjects,
+                                                                  self.sessions,
+                                                                  self.bids_directory,
+                                                                  pet_json_file_to_grab)
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        try:
+
+            read_parameters_node.inputs.white_surface_right = clinica_file_reader(self.subjects,
+                                                                                  self.sessions,
+                                                                                  self.caps_directory,
+                                                                                  input_files.T1_FS_LONG_SURF_R)
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        try:
+
+            read_parameters_node.inputs.white_surface_left = clinica_file_reader(self.subjects,
+                                                                                 self.sessions,
+                                                                                 self.caps_directory,
+                                                                                 input_files.T1_FS_LONG_SURF_L)
+
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        try:
+            read_parameters_node.inputs.destrieux_left = clinica_file_reader(self.subjects,
+                                                                             self.sessions,
+                                                                             self.caps_directory,
+                                                                             input_files.T1_FS_LONG_DESTRIEUX_PARC_L)
+
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        try:
+            read_parameters_node.inputs.destrieux_right = clinica_file_reader(self.subjects,
+                                                                              self.sessions,
+                                                                              self.caps_directory,
+                                                                              input_files.T1_FS_LONG_DESTRIEUX_PARC_R)
+
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        try:
+            read_parameters_node.inputs.desikan_left = clinica_file_reader(self.subjects,
+                                                                           self.sessions,
+                                                                           self.caps_directory,
+                                                                           input_files.T1_FS_LONG_DESIKAN_PARC_L)
+
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        try:
+            read_parameters_node.inputs.desikan_right = clinica_file_reader(self.subjects,
+                                                                            self.sessions,
+                                                                            self.caps_directory,
+                                                                            input_files.T1_FS_LONG_DESIKAN_PARC_R)
+
+        except ClinicaException as e:
+            all_errors.append(e)
+
+        if len(all_errors) > 0:
+            error_message = 'Clinica faced errors while trying to read files in your BIDS or CAPS directories.\n'
+            for msg in all_errors:
+                error_message += str(msg)
+            raise ClinicaException(error_message)
+
+        check_relative_volume_location_in_world_coordinate_system('T1w-MRI (orig_nu.mgz)',
+                                                                  read_parameters_node.inputs.orig_nu,
+                                                                  self.parameters['pet_tracer'].upper() + ' PET',
+                                                                  read_parameters_node.inputs.pet,
+                                                                  self.bids_directory,
+                                                                  self.parameters['pet_tracer'].lower())
+
+        self.connect([
+            (read_parameters_node, self.input_node, [('pet', 'pet')]),
+            (read_parameters_node, self.input_node, [('orig_nu', 'orig_nu')]),
+            (read_parameters_node, self.input_node, [('psf', 'psf')]),
+            (read_parameters_node, self.input_node, [('white_surface_left', 'white_surface_left')]),
+            (read_parameters_node, self.input_node, [('white_surface_right', 'white_surface_right')]),
+            (read_parameters_node, self.input_node, [('destrieux_left', 'destrieux_left')]),
+            (read_parameters_node, self.input_node, [('destrieux_right', 'destrieux_right')]),
+            (read_parameters_node, self.input_node, [('desikan_left', 'desikan_left')]),
+            (read_parameters_node, self.input_node, [('desikan_right', 'desikan_right')])
+        ])
+
+    def build_input_node_cross_sectional(self):
+        import nipype.interfaces.utility as nutil
+        import nipype.pipeline.engine as npe
+        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.exceptions import ClinicaException
+        from clinica.iotools.utils.data_handling import check_relative_volume_location_in_world_coordinate_system
+        import clinica.utils.input_files as input_files
+
+        read_parameters_node = npe.Node(name="LoadingCLIArguments",
+                                        interface=nutil.IdentityInterface(
+                                            fields=self.get_input_fields(),
+                                            mandatory_inputs=True),
+                                        synchronize=True)
+
+        if self.parameters['pet_tracer'].lower() == 'fdg':
+            pet_file_to_grab = input_files.PET_FDG_NII
+            pet_json_file_to_grab = input_files.PET_FDG_JSON
+        elif self.parameters['pet_tracer'].lower() == 'av45':
+            pet_file_to_grab = input_files.PET_AV45_NII
+            pet_json_file_to_grab = input_files.PET_AV45_JSON
+        else:
+            raise NotImplementedError('Only "fdg" or "av45" tracers are currently accepted (given tracer "%s").' %
+                                      self.parameters['pet_tracer'])
         all_errors = []
         try:
 
@@ -172,21 +311,13 @@ class PetSurface(cpe.Pipeline):
         ])
 
     def build_output_node(self):
-        """Build and connect an output node to the pipeline.
-        """
-
-        # In the same idea as the input node, this output node is supposedly
-        # used to write the output fields in a CAPS. It should be executed only
-        # if this pipeline output is not already connected to a next Clinica
-        # pipeline.
-
+        """Build and connect an output node to the pipeline."""
         pass
 
     def build_core_nodes(self):
         """The function get_wf constructs a pipeline for one subject (in pet_surface_utils.py) and runs it.
         We use iterables to give to the node all the files and information needed.
         """
-
         # TODO(@arnaud.marcoux): Convert it to a Node with iterables + MapNodes.
         #   I'm experimenting something to avoid the "MapNode of MapNode" case
         #   with iterables. I'll try to apply it on the tractography pipeline.
@@ -217,7 +348,8 @@ class PetSurface(cpe.Pipeline):
                                                           'desikan_right',
                                                           'destrieux_left',
                                                           'destrieux_right',
-                                                          'use_spm_standalone'],
+                                                          'use_spm_standalone',
+                                                          'is_longitudinal'],
                                              output_names=[],
                                              function=utils.get_wf),
                                 name='full_pipeline_mapnode',
@@ -259,6 +391,7 @@ class PetSurface(cpe.Pipeline):
                                                                                     'region-cerebellumPons_eroded-6mm_mask.nii.gz'))
 
         full_pipe.inputs.matscript_folder_inverse_deformation = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+        full_pipe.inputs.is_longitudinal = self.parameters['longitudinal']
 
         # This section of code determines whether to use SPM standalone or not
         full_pipe.inputs.use_spm_standalone = False

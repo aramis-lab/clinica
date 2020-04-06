@@ -1,0 +1,14 @@
+{
+    "id": "aramislab/t1-linear",
+    "author": "Mauricio Diaz",
+    "version": "0.1.0",
+    "space_caps": "45M",
+    "space_wd": "45M",
+    "dependencies": [
+        {
+            "type": "software",
+            "name": "ants",
+            "version": ">=2.2.0"
+        }
+    ]
+}

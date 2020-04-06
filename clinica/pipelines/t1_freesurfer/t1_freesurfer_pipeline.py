@@ -90,22 +90,19 @@ class T1FreeSurfer(cpe.Pipeline):
 
         # Display image(s) already present in CAPS folder
         # ===============================================
-        output_ids = self.get_processed_images(self.caps_directory, self.subjects, self.sessions)
-        processed_participants, processed_sessions = extract_subjects_sessions_from_filename(output_ids)
-        if len(processed_participants) > 0:
+        processed_ids = self.get_processed_images(self.caps_directory, self.subjects, self.sessions)
+        if len(processed_ids) > 0:
             cprint("%sClinica found %s image(s) already processed in CAPS directory:%s" %
-                   (Fore.YELLOW, len(processed_participants), Fore.RESET))
-            for p_id, s_id in zip(processed_participants, processed_sessions):
-                cprint("%s\t%s | %s%s" % (Fore.YELLOW, p_id, s_id, Fore.RESET))
+                   (Fore.YELLOW, len(processed_ids), Fore.RESET))
+            for image_id in processed_ids:
+                cprint("%s\t%s%s" % (Fore.YELLOW, image_id.replace('_', ' | '), Fore.RESET))
             if self.overwrite_caps:
-                output_folder = "<CAPS>/subjects/sub-<participant_id>/ses-<session_id>/t1/freesurfer_cross_sectional"
+                output_folder = "<CAPS>/subjects/<participant_id>/<session_id>/t1/freesurfer_cross_sectional"
                 cprint("%s\nOutput folders in %s will be recreated.\n%s" % (Fore.YELLOW, output_folder, Fore.RESET))
             else:
                 cprint("%s\nImage(s) will be ignored by Clinica.\n%s" % (Fore.YELLOW, Fore.RESET))
                 input_ids = [p_id + '_' + s_id for p_id, s_id in
                              zip(self.subjects, self.sessions)]
-                processed_ids = [p_id + '_' + s_id for p_id, s_id in
-                                 zip(processed_participants, processed_sessions)]
                 to_process_ids = list(set(input_ids) - set(processed_ids))
                 self.subjects, self.sessions = extract_subjects_sessions_from_filename(to_process_ids)
 
@@ -215,5 +212,5 @@ class T1FreeSurfer(cpe.Pipeline):
             (init_input, create_tsv, [('subjects_dir', 'subjects_dir')]),
             (recon_all,  create_tsv, [('subject_id', 'image_id')]),
             # Output node
-            (recon_all, self.output_node, [('subject_id', 'image_id')]),
+            (create_tsv, self.output_node, [('image_id', 'image_id')]),
         ])

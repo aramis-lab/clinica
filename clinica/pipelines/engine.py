@@ -123,7 +123,7 @@ class Pipeline(Workflow):
 
             check_caps_folder(self._caps_directory)
             input_dir = self._caps_directory
-            is_bids_dir = True
+            is_bids_dir = False
         else:
             check_bids_folder(self._bids_directory)
             input_dir = self._bids_directory
@@ -330,7 +330,8 @@ class Pipeline(Workflow):
             'freesurfer': chk.check_freesurfer,
             'fsl': chk.check_fsl,
             'mrtrix': chk.check_mrtrix,
-            'matlab': chk.check_matlab
+            'matlab': chk.check_matlab,
+            'petpvc': chk.check_petpvc,
         }
         check_binary = chk.is_binary_present
         # check_toolbox = chk.is_toolbox_present

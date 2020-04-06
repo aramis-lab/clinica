@@ -81,12 +81,16 @@ class T1VolumeCLI(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
+        import os
+        import datetime
         from colorama import Fore
         from ..t1_volume_tissue_segmentation.t1_volume_tissue_segmentation_cli import T1VolumeTissueSegmentationCLI
         from ..t1_volume_create_dartel.t1_volume_create_dartel_cli import T1VolumeCreateDartelCLI
         from ..t1_volume_dartel2mni.t1_volume_dartel2mni_cli import T1VolumeDartel2MNICLI
         from ..t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
         from clinica.utils.check_dependency import verify_cat12_atlases
+        from clinica.utils.filemanip import save_participants_sessions
+        from clinica.utils.participant import get_subject_session_list
         from clinica.utils.stream import cprint
 
         # If the user wants to use any of the atlases of CAT12 and has not installed it, we just remove it from the list
@@ -101,6 +105,12 @@ class T1VolumeCLI(ce.CmdParser):
             '\t%st1-volume-parcellation pipeline%s: Atlas statistics'
             % (Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET, Fore.BLUE, Fore.RESET)
         )
+
+        if not self.absolute_path(args.subjects_sessions_tsv):
+            session_ids, participant_ids = get_subject_session_list(self.absolute_path(args.bids_directory), None, True, False)
+            now = datetime.datetime.now().strftime('%H%M%S')
+            args.subjects_sessions_tsv = now + '_participants.tsv'
+            save_participants_sessions(participant_ids, session_ids, os.getcwd(), args.subjects_sessions_tsv)
 
         cprint('%s\nPart 1/4: Running t1-volume-segmentation pipeline%s' % (Fore.BLUE, Fore.RESET))
         tissue_segmentation_cli = T1VolumeTissueSegmentationCLI()
