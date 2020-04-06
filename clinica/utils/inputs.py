@@ -1,5 +1,10 @@
 # coding: utf8
 
+import hashlib
+from collections import namedtuple
+
+RemoteFileStructure = namedtuple('RemoteFileStructure',
+        ['filename', 'url', 'checksum'])
 
 def insensitive_glob(pattern_glob, recursive=False):
     """
@@ -318,15 +323,26 @@ def clinica_group_reader(caps_directory, information, raise_exception=True):
         raise ClinicaCAPSError(error_string)
     return current_glob_found[0]
 
+def _sha256(path):
+    """Calculate the sha256 hash of the file at path."""
+    sha256hash = hashlib.sha256()
+    chunk_size = 8192
+    with open(path, "rb") as f:
+        while True:
+            buffer = f.read(chunk_size)
+            if not buffer:
+                break
+            sha256hash.update(buffer)
+    return sha256hash.hexdigest()
 
-def fetch_file(url, filename):
+def fetch_file(remote, dirname=None):
     """Function to download a specific file and save it into the ressources
     folder of the package.
     Args:
-        url: url where to request is done
-        filename: absolute path to the filename where the file is downloaded
+        remote: satructure containing url, filename and checksum
+        dirname: absolute path where the file will be downloaded
     Returns:
-
+        file_path: absolute file path
     Raises:
     """
     from clinica.utils.exceptions import ClinicaException
@@ -337,15 +353,15 @@ def fetch_file(url, filename):
     import os.path
     from clinica.utils.stream import cprint
 
-    head_tail = os.path.split(filename)
-    if not os.path.exists(head_tail[0]):
+    if not os.path.exists(dirname):
         cprint('Path to the file does not exist')
         cprint('Stop Clinica and handle this error')
 
+    file_path = os.path.join(dirname, remote.filename)
     # Download the file from `url` and save it locally under `file_name`:
-    cert = ssl.get_server_certificate(("aramislab.paris.inria.fr", 443))
+    #cert = ssl.get_server_certificate(("aramislab.paris.inria.fr", 443))
     gcontext = ssl.SSLContext()
-    req = Request(url)
+    req = Request(remote.url + remote.filename)
     try:
         response = urlopen(req, context=gcontext)
     except URLError as e:
@@ -357,10 +373,15 @@ def fetch_file(url, filename):
             cprint(['Error code: ' + e.code])
     else:
         try:
-            with open(filename, 'wb') as out_file:
+            with open(file_path, 'wb') as out_file:
                 shutil.copyfileobj(response, out_file)
         except OSError as err:
-            cprint("OS error: {0}".format(err))
-        # except:
-        #   cprint("Unexpected error:", sys.exc_info()[0])
-        #   raise
+           cprint("OS error: {0}".format(err))
+    
+    checksum = _sha256(file_path)
+    if remote.checksum != checksum:
+        raise IOError("{} has an SHA256 checksum ({}) "
+                "differing from expected ({}), "
+                "file may be corrupted.".format(file_path, checksum,
+                    remote.checksum))
+    return file_path    
