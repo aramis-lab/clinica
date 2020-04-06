@@ -3,8 +3,10 @@
 import hashlib
 from collections import namedtuple
 
-RemoteFileStructure = namedtuple('RemoteFileStructure',
+RemoteFileStructure = namedtuple(
+        'RemoteFileStructure',
         ['filename', 'url', 'checksum'])
+
 
 def insensitive_glob(pattern_glob, recursive=False):
     """
@@ -323,6 +325,7 @@ def clinica_group_reader(caps_directory, information, raise_exception=True):
         raise ClinicaCAPSError(error_string)
     return current_glob_found[0]
 
+
 def _sha256(path):
     """Calculate the sha256 hash of the file at path."""
     sha256hash = hashlib.sha256()
@@ -334,6 +337,7 @@ def _sha256(path):
                 break
             sha256hash.update(buffer)
     return sha256hash.hexdigest()
+
 
 def fetch_file(remote, dirname=None):
     """Function to download a specific file and save it into the ressources
@@ -359,7 +363,6 @@ def fetch_file(remote, dirname=None):
 
     file_path = os.path.join(dirname, remote.filename)
     # Download the file from `url` and save it locally under `file_name`:
-    #cert = ssl.get_server_certificate(("aramislab.paris.inria.fr", 443))
     gcontext = ssl.SSLContext()
     req = Request(remote.url + remote.filename)
     try:
@@ -376,12 +379,14 @@ def fetch_file(remote, dirname=None):
             with open(file_path, 'wb') as out_file:
                 shutil.copyfileobj(response, out_file)
         except OSError as err:
-           cprint("OS error: {0}".format(err))
-    
+            cprint("OS error: {0}".format(err))
+
     checksum = _sha256(file_path)
     if remote.checksum != checksum:
-        raise IOError("{} has an SHA256 checksum ({}) "
+        raise IOError(
+                "{} has an SHA256 checksum ({}) "
                 "differing from expected ({}), "
-                "file may be corrupted.".format(file_path, checksum,
-                    remote.checksum))
-    return file_path    
+                "file may be corrupted.".format(
+                    file_path, checksum, remote.checksum)
+                )
+    return file_path

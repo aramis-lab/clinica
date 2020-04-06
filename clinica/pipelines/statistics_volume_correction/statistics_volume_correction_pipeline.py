@@ -97,9 +97,9 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
         path_to_mask = join(root, 'resources', 'masks')
         url_aramis = 'https://aramislab.paris.inria.fr/files/data/img_t1_linear/'
         FILE1 = RemoteFileStructure(
-                filename = 'mni_icbm152_t1_tal_nlin_sym_09a.nii.gz',
-                url = url_aramis,
-                checksum = '3b244ee7e287319d36a25263744c468ef0ab2fe5a94b15a2138844db73b49adf'
+                filename='mni_icbm152_t1_tal_nlin_sym_09a.nii.gz',
+                url=url_aramis,
+                checksum='3b244ee7e287319d36a25263744c468ef0ab2fe5a94b15a2138844db73b49adf'
                 )
 
         produce_fig_FWE_peak_correction.inputs.template = join(path_to_mask, FILE1.filename)

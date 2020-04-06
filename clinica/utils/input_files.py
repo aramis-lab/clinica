@@ -93,6 +93,7 @@ T1_FS_LONG_DESIKAN_PARC_R = {'pattern': 't1/long-*/freesurfer_longitudinal/sub-*
                              'description': 'right hemisphere surface-based Desikan parcellation (label/rh.aparc.annot) generated with t1-freesurfer-longitudinal.',
                              'needed_pipeline': 't1-freesurfer and t1-freesurfer-longitudinal'}
 
+
 # T1-Volume
 def t1_volume_native_tpm(tissue_number):
     from .spm import INDEX_TISSUE_MAP

@@ -55,7 +55,7 @@ class T1Linear(cpe.Pipeline):
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1W_NII
-        from clinica.utils.inputs import fetch_file, RemoteFileStructure 
+        from clinica.utils.inputs import fetch_file, RemoteFileStructure
         from clinica.utils.ux import print_images_to_process
         from clinica.utils.stream import cprint
 
@@ -64,19 +64,19 @@ class T1Linear(cpe.Pipeline):
         path_to_mask = join(root, 'resources', 'masks')
         url_aramis = 'https://aramislab.paris.inria.fr/files/data/img_t1_linear/'
         FILE1 = RemoteFileStructure(
-                filename = 'ref_cropped_template.nii.gz',
-                url = url_aramis,
-                checksum = '67e1e7861805a8fd35f7fcf2bdf9d2a39d7bcb2fd5a201016c4d2acdd715f5b3'
+                filename='ref_cropped_template.nii.gz',
+                url=url_aramis,
+                checksum='67e1e7861805a8fd35f7fcf2bdf9d2a39d7bcb2fd5a201016c4d2acdd715f5b3'
                 )
         FILE2 = RemoteFileStructure(
-                filename = 'mni_icbm152_t1_tal_nlin_sym_09c.nii',
-                url = url_aramis,
-                checksum = '93359ab97c1c027376397612a9b6c30e95406c15bf8695bd4a8efcb2064eaa34'
+                filename='mni_icbm152_t1_tal_nlin_sym_09c.nii',
+                url=url_aramis,
+                checksum='93359ab97c1c027376397612a9b6c30e95406c15bf8695bd4a8efcb2064eaa34'
                 )
 
         ref_template = join(path_to_mask, FILE2.filename)
         ref_crop = join(path_to_mask, FILE1.filename)
-        
+
         if not(exists(self.ref_template)):
             try:
                 fetch_file(FILE2, path_to_mask)
