@@ -74,8 +74,8 @@ class T1Linear(cpe.Pipeline):
                 checksum='93359ab97c1c027376397612a9b6c30e95406c15bf8695bd4a8efcb2064eaa34'
                 )
 
-        ref_template = join(path_to_mask, FILE2.filename)
-        ref_crop = join(path_to_mask, FILE1.filename)
+        self.ref_template = join(path_to_mask, FILE2.filename)
+        self.ref_crop = join(path_to_mask, FILE1.filename)
 
         if not(exists(self.ref_template)):
             try:
