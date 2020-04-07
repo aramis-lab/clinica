@@ -343,7 +343,7 @@ def fetch_file(remote, dirname=None):
     """Function to download a specific file and save it into the ressources
     folder of the package.
     Args:
-        remote: satructure containing url, filename and checksum
+        remote: structure containing url, filename and checksum
         dirname: absolute path where the file will be downloaded
     Returns:
         file_path: absolute file path
