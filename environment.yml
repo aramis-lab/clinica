@@ -18,3 +18,5 @@ dependencies:
       - nilearn>=0.6.0
       - colorama==0.4.1
       - xgboost==0.80
+      - pytest          # Only for dev
+      - pytest-timeout  # Only for dev
