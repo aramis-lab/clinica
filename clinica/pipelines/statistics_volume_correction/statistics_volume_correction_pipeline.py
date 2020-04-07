@@ -58,7 +58,7 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
         import clinica.pipelines.statistics_volume_correction.statistics_volume_correction_utils as utils
-        from clinica.utils.inputs import fetch_file
+        from clinica.utils.inputs import fetch_file, RemoteFileStructure
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         from os.path import join, abspath, pardir, dirname, exists
@@ -95,13 +95,17 @@ class StatisticsVolumeCorrection(cpe.Pipeline):
 
         root = dirname(abspath(join(abspath(__file__), pardir, pardir)))
         path_to_mask = join(root, 'resources', 'masks')
-        produce_fig_FWE_peak_correction.inputs.template = join(path_to_mask, 'mni_icbm152_t1_tal_nlin_sym_09a.nii.gz')
+        url_aramis = 'https://aramislab.paris.inria.fr/files/data/img_t1_linear/'
+        FILE1 = RemoteFileStructure(
+                filename='mni_icbm152_t1_tal_nlin_sym_09a.nii.gz',
+                url=url_aramis,
+                checksum='3b244ee7e287319d36a25263744c468ef0ab2fe5a94b15a2138844db73b49adf'
+                )
 
-        url = "https://aramislab.paris.inria.fr/files/data/img_t1_linear/mni_icbm152_t1_tal_nlin_sym_09a.nii.gz"
-
+        produce_fig_FWE_peak_correction.inputs.template = join(path_to_mask, FILE1.filename)
         if not(exists(produce_fig_FWE_peak_correction.inputs.template)):
             try:
-                fetch_file(url, produce_fig_FWE_peak_correction.inputs.template)
+                fetch_file(FILE1, path_to_mask)
             except IOError as err:
                 cprint('Unable to download required template (mni_icbm152) for processing:', err)
 
