@@ -78,7 +78,7 @@ def crop_nifti(input_img, ref_crop):
     # crop_template = os.path.join(basedir, os.path.basename(input_img).split('.nii')[0] + '_cropped_template.nii.gz')
 
     # resample the individual MRI into the cropped template image
-    crop_img = resample_to_img(input_img, ref_crop)
+    crop_img = resample_to_img(input_img, ref_crop, force_resample=True)
     crop_img.to_filename(os.path.join(basedir, os.path.basename(input_img).split('.nii')[0] + '_cropped.nii.gz'))
 
     output_img = os.path.join(basedir, os.path.basename(input_img).split('.nii')[0] + '_cropped.nii.gz')
