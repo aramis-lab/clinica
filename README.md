@@ -1,4 +1,4 @@
-<!--(https://raw.githubusercontent.com/aramis-lab/clinica/dev/clinica_logo.png)-->
+<!--(http://www.www.clinica.run/img/clinica_brainweb.png)-->
 
 <h1 align="center">
   <a href="http://www.clinica.run">
