@@ -30,8 +30,8 @@
   <a href="http://www.clinica.run/doc">Documentation</a> |
   <a href="https://groups.google.com/forum/#!forum/clinica-user">Forum</a> |
   See also:
-  <a href="https://github.com/aramis-lab/AD-ML">AD-ML</a>,
-  <a href="https://github.com/aramis-lab/AD-DL">AD-DL</a>
+  <a href="#related-repositories">AD-ML</a>,
+  <a href="#related-repositories">AD-DL</a>
 </p>
 
 
