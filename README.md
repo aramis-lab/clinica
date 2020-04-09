@@ -28,13 +28,10 @@
 <p align="center">
   <a href="http://www.clinica.run">Homepage</a> |
   <a href="http://www.clinica.run/doc">Documentation</a> |
-  <a href="https://groups.google.com/forum/#!forum/clinica-user">Forum</a>
-</p>
-
-<p align="center">
-  Framework for the reproducible classification of Alzheimer's disease using
-  <a href="https://github.com/aramis-lab/AD-ML">machine learning</a> and
-  <a href="https://github.com/aramis-lab/AD-DL">deep learning</a>
+  <a href="https://groups.google.com/forum/#!forum/clinica-user">Forum</a> |
+  See also:
+  <a href="https://github.com/aramis-lab/AD-ML">AD-ML</a>,
+  <a href="https://github.com/aramis-lab/AD-DL">AD-DL</a>
 </p>
 
 
@@ -62,7 +59,7 @@ Clinica can process any BIDS-compliant dataset with a set of complex processing 
   <i>Current pipelines are indicated in blue while new or updated pipelines are indicated in purple (will be released in Summer 2020).</i>
 </p>
 
-
+Clinica is also showcased as a framework for the reproducible classification of Alzheimer's disease using [machine learning](https://github.com/aramis-lab/AD-ML) and [deep learning](https://github.com/aramis-lab/AD-DL).
 
 
 
@@ -78,7 +75,6 @@ conda create --name clinicaEnv python=3.6 clinica -c Aramislab -c conda-forge
 ```
 
 - With `pip` (needs Python 3.6)
-
 ```sh
 pip install clinica
 ```
@@ -121,3 +117,9 @@ We encourage you to contribute to Clinica! Please check out the [Contributing to
 ## License
 
 This software is distributed under the MIT License. See [license file](https://github.com/aramis-lab/clinica/blob/dev/LICENSE.txt) for more information.
+
+
+## Related Repositories
+
+- [AD-DL: Framework for the reproducible classification of Alzheimer's disease using deep learning](https://github.com/aramis-lab/AD-DL)
+- [AD-ML: Framework for the reproducible classification of Alzheimer's disease using machine learning](https://github.com/aramis-lab/AD-ML)
