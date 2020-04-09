@@ -20,3 +20,4 @@ dependencies:
       - xgboost==0.80
       - pytest          # Only for dev
       - pytest-timeout  # Only for dev
+      - pycodestyle==2.4.0
