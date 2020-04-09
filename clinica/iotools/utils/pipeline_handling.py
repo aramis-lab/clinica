@@ -173,7 +173,7 @@ def pet_volume_pipeline(caps_dir, df, **kwargs):
                             atlas_df = pd.read_csv(atlas_path, sep='\t')
                             label_list = [group + '_' + atlas + '_ROI-' + str(x) for x in
                                           range(n_regions)]
-                            ses_df.loc[:, label_list] = atlas_df['mean_scalar'].as_matrix()
+                            ses_df.loc[:, label_list] = atlas_df['mean_scalar'].values
 
         pipeline_df.iloc[i] = ses_df.iloc[0]
 
@@ -313,7 +313,7 @@ def t1_volume_pipeline(caps_dir, df, **kwargs):
                             atlas_df = pd.read_csv(atlas_path, sep='\t')
                             label_list = [group + '_' + atlas + '_ROI-' + str(x) for x in
                                           range(n_regions)]
-                            ses_df.loc[:, label_list] = atlas_df['mean_scalar'].as_matrix()
+                            ses_df.loc[:, label_list] = atlas_df['mean_scalar'].values
 
         pipeline_df.iloc[i] = ses_df.iloc[0]
 
