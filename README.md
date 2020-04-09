@@ -8,7 +8,7 @@
   Clinica
 </h1>
 
-<p align="center"><strong>Software platform for clinical neuroimaging studies.</strong></p>
+<p align="center"><strong>Software platform for clinical neuroimaging studies</strong></p>
 
 <p align="center">
   <a href="https://ci.inria.fr/clinica-aramis/job/clinica/job/master/">
@@ -47,7 +47,7 @@ Clinica is a software platform for clinical research studies involving patients 
 
 Clinica is command-line driven and written in Python. It uses the [Nipype](https://nipype.readthedocs.io/) system for pipelining and combines widely-used software packages for neuroimaging data analysis ([ANTs](http://stnava.github.io/ANTs/), [FreeSurfer](https://surfer.nmr.mgh.harvard.edu/), [FSL](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki), [MRtrix](https://www.mrtrix.org/), [PETPVC](https://github.com/UCL/PETPVC), [SPM](https://www.fil.ion.ucl.ac.uk/spm/)), machine learning ([Scikit-learn](https://scikit-learn.org/stable/)) and the [BIDS standard](http://bids-specification.readthedocs.io/) for data organization.
 
-Clinica provides tools to convert publicly available neuroimaging datasets into BIDS namely:
+Clinica provides tools to convert publicly available neuroimaging datasets into BIDS, namely:
 
 - [ADNI: Alzheimer’s Disease Neuroimaging Initiative](http://www.clinica.run/doc/Converters/ADNI2BIDS)
 - [AIBL: Australian Imaging, Biomarker & Lifestyle Flagship Study of Ageing](http://www.clinica.run/doc/Converters/AIBL2BIDS)
