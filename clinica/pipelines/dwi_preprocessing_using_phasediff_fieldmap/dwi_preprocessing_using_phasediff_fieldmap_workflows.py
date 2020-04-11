@@ -189,8 +189,8 @@ def susceptibility_distortion_correction_using_phasediff_fmap(
         wf.connect([
             (get_b0,    fmm2b0, [('roi_file',     'fixed_image')]),  # noqa
             (n4,        fmm2b0, [('output_image', 'moving_image')]),  # noqa
-            (inputnode, fmm2b0, [('in_mask',      'fixed_image_mask')]),  # noqa
-            (dilate,    fmm2b0, [('out_file',     'moving_image_mask')]),  # noqa
+            (inputnode, fmm2b0, [('in_mask',      'fixed_image_masks')]),  # noqa
+            (dilate,    fmm2b0, [('out_file',     'moving_image_masks')]),  # noqa
             (get_b0,   apply_xfm, [('roi_file',            'reference_image')]),  # noqa
             (rad2rsec, apply_xfm, [('out_file',            'input_image')]),  # noqa
             (fmm2b0,   apply_xfm, [('forward_transforms',  'transforms'),  # noqa

@@ -16,3 +16,5 @@ colorama >= 0.4.1
 xgboost == 0.80
 xlrd >= 1.2.0
 matplotlib
+niflow-nipype1-workflows
+scikit-image
