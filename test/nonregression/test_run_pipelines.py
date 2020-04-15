@@ -356,7 +356,7 @@ def test_run_DWIPreprocessingUsingPhaseDiffFieldmap(cmdopt):
     out_file = join(root, 'out', 'caps', 'subjects', 'sub-CAPP01001TMM', 'ses-M00', 'dwi', 'preprocessing', 'sub-CAPP01001TMM_ses-M00_dwi_space-b0_preproc.nii.gz')
     ref_file = join(root, 'ref', 'sub-CAPP01001TMM_ses-M00_dwi_space-b0_preproc.nii.gz')
 
-    assert similarity_measure(out_file, ref_file, 0.955)
+    assert similarity_measure(out_file, ref_file, 0.95)
 
     # Delete out/caps folder
     clean_folder(join(root, 'out', 'caps'), recreate=False)
