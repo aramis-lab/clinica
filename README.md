@@ -1,4 +1,4 @@
-<!--(http://www.www.clinica.run/img/clinica_brainweb.png)-->
+<!--(http://www.clinica.run/img/clinica_brainweb.png)-->
 
 <h1 align="center">
   <a href="http://www.clinica.run">
