@@ -35,10 +35,10 @@ def likeliness_measure(file1, file2, threshold1, threshold2, display=False):
     import matplotlib.pyplot as plt
 
     print(' ** comparing ' + os.path.basename(file1) + ' **')
-    data1 = nib.load(file1).get_data()
+    data1 = nib.load(file1).get_fdata()
     data1[np.isnan(data1)] = 0
 
-    data2 = nib.load(file2).get_data()
+    data2 = nib.load(file2).get_fdata()
     data2[np.isnan(data2)] = 0
 
     # Get mask where data are 0 in data1 and data2

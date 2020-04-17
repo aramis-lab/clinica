@@ -87,12 +87,12 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
                 value_to_read = file_to_read[participant_fields_db[i]]
                 if participant_fields_bids[i] == 'alternative_id_1' and\
                         (value_to_read.dtype == np.float64 or value_to_read.dtype == np.int64):
-                    if not pd.isnull(file_to_read.get_value(j, participant_fields_db[i])):
-                        value_to_append = str(file_to_read.get_value(j, participant_fields_db[i])).rstrip('.0')
+                    if not pd.isnull(file_to_read.at[j, participant_fields_db[i]]):
+                        value_to_append = str(file_to_read.at[j, participant_fields_db[i]]).rstrip('.0')
                     else:
                         value_to_append = np.NaN
                 else:
-                    value_to_append = file_to_read.get_value(j, participant_fields_db[i])
+                    value_to_append = file_to_read.at[j, participant_fields_db[i]]
                 field_col_values.append(value_to_append)
             # Add the extracted column to the participant_df
             participant_df[participant_fields_bids[i]] = pd.Series(field_col_values)
@@ -118,7 +118,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
             index_to_drop.append(i)
             subjects_to_drop.append(value)
         else:
-            participant_df.set_value(i, 'participant_id', bids_id[0])
+            participant_df.at[i, 'participant_id'] = bids_id[0]
 
     if len(subjects_to_drop) > 0:
         cprint('The following subjects of ADNIMERGE were not found in your BIDS folder :\n'

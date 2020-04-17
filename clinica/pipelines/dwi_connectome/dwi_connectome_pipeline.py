@@ -362,20 +362,8 @@ class DwiConnectome(cpe.Pipeline):
         # -----------------
         tck_gen_node = npe.Node(name="2-TractsGeneration",
                                 interface=Tractography())
-        tck_gen_node.inputs.n_tracks = self.parameters['n_tracks']
+        tck_gen_node.inputs.select = self.parameters['n_tracks']
         tck_gen_node.inputs.algorithm = 'iFOD2'
-
-        # BUG: Info package does not exist
-        # from nipype.interfaces.mrtrix3.base import Info
-        # from distutils.version import LooseVersion
-        #
-        # if Info.looseversion() >= LooseVersion("3.0"):
-        #     tck_gen_node.inputs.select = self.parameters['n_tracks']
-        # elif Info.looseversion() <= LooseVersion("0.4"):
-        #     tck_gen_node.inputs.n_tracks = self.parameters['n_tracks']
-        # else:
-        #     from clinica.utils.exceptions import ClinicaException
-        #     raise ClinicaException("Your MRtrix version is not supported.")
 
         # Connectome Generation
         # ---------------------
