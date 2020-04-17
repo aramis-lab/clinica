@@ -163,7 +163,7 @@ def pet_volume_pipeline(caps_dir, df, **kwargs):
                 group_path = mod_path + os.sep + group
                 if os.path.exists(group_path):
                     # Looking for atlases
-                    atlas_list = summary_df[summary_df.group_id == group]['atlas_id'].values
+                    atlas_list = summary_df[summary_df.group_id == group]['atlas_id'].to_numpy()
                     for atlas in atlas_list:
                         atlas_path = group_path + os.sep + 'atlas_statistics' + os.sep
                         atlas_path = atlas_path + participant_id + '_' + session_id + '_' + atlas + '_statistics.tsv'
@@ -173,7 +173,7 @@ def pet_volume_pipeline(caps_dir, df, **kwargs):
                             atlas_df = pd.read_csv(atlas_path, sep='\t')
                             label_list = [group + '_' + atlas + '_ROI-' + str(x) for x in
                                           range(n_regions)]
-                            ses_df.loc[:, label_list] = atlas_df['mean_scalar'].values
+                            ses_df.loc[:, label_list] = atlas_df['mean_scalar'].to_numpy()
 
         pipeline_df.iloc[i] = ses_df.iloc[0]
 
@@ -303,7 +303,7 @@ def t1_volume_pipeline(caps_dir, df, **kwargs):
                 group_path = mod_path + os.sep + group
                 if os.path.exists(group_path):
                     # Looking for atlases
-                    atlas_list = summary_df[summary_df.group_id == group]['atlas_id'].values
+                    atlas_list = summary_df[summary_df.group_id == group]['atlas_id'].to_numpy()
                     for atlas in atlas_list:
                         atlas_path = group_path + os.sep + 'atlas_statistics' + os.sep
                         atlas_path = atlas_path + participant_id + '_' + session_id + '_' + atlas + '_statistics.tsv'
@@ -313,7 +313,7 @@ def t1_volume_pipeline(caps_dir, df, **kwargs):
                             atlas_df = pd.read_csv(atlas_path, sep='\t')
                             label_list = [group + '_' + atlas + '_ROI-' + str(x) for x in
                                           range(n_regions)]
-                            ses_df.loc[:, label_list] = atlas_df['mean_scalar'].values
+                            ses_df.loc[:, label_list] = atlas_df['mean_scalar'].to_numpy()
 
         pipeline_df.iloc[i] = ses_df.iloc[0]
 
