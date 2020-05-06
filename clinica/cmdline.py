@@ -16,15 +16,6 @@ import argcomplete
 from clinica.engine.cmdparser import *
 from clinica.utils.stream import cprint
 
-__author__ = "Michael Bacci"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Michael Bacci", "Alexandre Routier", "Mauricio Diaz"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Mauricio Diaz"
-__email__ = "mauriciodiaz@inria.fr"
-__status__ = "Development"
-
 
 class ClinicaClassLoader:
     """
@@ -220,7 +211,7 @@ def execute():
         # Main pipelines:
         T1FreeSurferCLI(),
         T1VolumeCLI(),
-        # T1FreeSurferLongitudinalCLI(),
+        T1FreeSurferLongitudinalCLI(),
         T1LinearCLI(),
         DwiPreprocessingUsingPhaseDiffFieldmapCli(),
         DwiPreprocessingUsingT1Cli(),
@@ -229,7 +220,7 @@ def execute():
         fMRIPreprocessingCLI(),
         PETVolumeCLI(),
         PetSurfaceCLI(),
-        # PetSurfaceLongitudinalCLI(),
+        PetSurfaceLongitudinalCLI(),
         SpatialSVMCLI(),
         StatisticsSurfaceCLI(),
         StatisticsVolumeCLI(),
@@ -241,8 +232,8 @@ def execute():
         T1VolumeRegisterDartelCLI(),
         T1VolumeDartel2MNICLI(),
         T1VolumeParcellationCLI(),
-        # T1FreeSurferTemplateCLI(),
-        # T1FreeSurferLongitudinalCorrectionCLI(),
+        T1FreeSurferTemplateCLI(),
+        T1FreeSurferLongitudinalCorrectionCLI(),
     ]
 
     run_parser = sub_parser.add_parser(
@@ -268,7 +259,7 @@ def execute():
     from clinica.iotools.converters.aibl_to_bids.aibl_to_bids_cli import AiblToBidsCLI
     from clinica.iotools.converters.adni_to_bids.adni_to_bids_cli import AdniToBidsCLI
     from clinica.iotools.converters.oasis_to_bids.oasis_to_bids_cli import OasisToBidsCLI
-    from clinica.iotools.converters.nifd_to_bids.nifd_to_bids_cli import NifdToBidsCLI  # noga
+    from clinica.iotools.converters.nifd_to_bids.nifd_to_bids_cli import NifdToBidsCLI
 
     converters = ClinicaClassLoader(baseclass=CmdParser,
                                     extra_dir="iotools/converters").load()

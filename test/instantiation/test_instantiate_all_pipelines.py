@@ -263,22 +263,22 @@ def test_instantiate_PETSurfaceCrossSectional():
     pipeline.build()
 
 
-# def test_instantiate_PETSurfaceLongitudinal():
-#     from os.path import dirname, join, abspath
-#     from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
-#
-#     root = dirname(abspath(join(abspath(__file__), pardir)))
-#     root = join(root, 'data', 'PETSurfaceLongitudinal')
-#     parameters = {
-#         'longitudinal': True
-#     }
-#     pipeline = PetSurface(
-#         bids_directory=join(root, 'in', 'bids'),
-#         caps_directory=join(root, 'in', 'caps'),
-#         tsv_file=join(root, 'in', 'subjects.tsv'),
-#         parameters=parameters,
-#     )
-#     pipeline.build()
+def test_instantiate_PETSurfaceLongitudinal():
+    from os.path import dirname, join, abspath
+    from clinica.pipelines.pet_surface.pet_surface_pipeline import PetSurface
+
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'PETSurfaceLongitudinal')
+    parameters = {
+        'longitudinal': True
+    }
+    pipeline = PetSurface(
+        bids_directory=join(root, 'in', 'bids'),
+        caps_directory=join(root, 'in', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        parameters=parameters,
+    )
+    pipeline.build()
 
 
 def test_instantiate_InputsML():
@@ -333,32 +333,32 @@ def test_instantiate_SpatialSVM():
     pipeline.build()
 
 
-# def test_instantiate_T1FreeSurferTemplate():
-#     from os.path import dirname, join, abspath
-#     from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_pipeline import T1FreeSurferTemplate
-#
-#     root = dirname(abspath(join(abspath(__file__), pardir)))
-#     root = join(root, 'data', 'T1FreeSurferTemplate')
-#
-#     pipeline = T1FreeSurferTemplate(
-#         caps_directory=join(root, 'in', 'caps'),
-#         tsv_file=join(root, 'in', 'subjects.tsv'),
-#     )
-#     pipeline.build()
+def test_instantiate_T1FreeSurferTemplate():
+    from os.path import dirname, join, abspath
+    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_template_pipeline import T1FreeSurferTemplate
+
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'T1FreeSurferTemplate')
+
+    pipeline = T1FreeSurferTemplate(
+        caps_directory=join(root, 'in', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+    )
+    pipeline.build()
 
 
-# def test_instantiate_T1FreeSurferLongitudinalCorrection():
-#     from os.path import dirname, join, abspath
-#     from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_pipeline import T1FreeSurferLongitudinalCorrection
-#
-#     root = dirname(abspath(join(abspath(__file__), pardir)))
-#     root = join(root, 'data', 'T1FreeSurferLongitudinalCorrection')
-#
-#     pipeline = T1FreeSurferLongitudinalCorrection(
-#         caps_directory=join(root, 'in', 'caps'),
-#         tsv_file=join(root, 'in', 'subjects.tsv'),
-#     )
-#     pipeline.build()
+def test_instantiate_T1FreeSurferLongitudinalCorrection():
+    from os.path import dirname, join, abspath
+    from clinica.pipelines.t1_freesurfer_longitudinal.t1_freesurfer_longitudinal_correction_pipeline import T1FreeSurferLongitudinalCorrection
+
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'T1FreeSurferLongitudinalCorrection')
+
+    pipeline = T1FreeSurferLongitudinalCorrection(
+        caps_directory=join(root, 'in', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+    )
+    pipeline.build()
 
 
 def test_instantiate_T1Linear():
