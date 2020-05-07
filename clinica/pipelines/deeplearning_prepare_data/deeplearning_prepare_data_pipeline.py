@@ -36,11 +36,9 @@ class Deeplearningpreparedata(cpe.Pipeline):
 
     """
 
-
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file."""
         pass
-
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
@@ -49,8 +47,7 @@ class Deeplearningpreparedata(cpe.Pipeline):
             A list of (string) input fields name.
         """
 
-        return ['t1w'] # Fill here the list
-
+        return ['t1w']  # Fill here the list
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
@@ -59,8 +56,7 @@ class Deeplearningpreparedata(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        return [] # Fill here the list
-
+        return []  # Fill here the list
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
@@ -93,7 +89,7 @@ class Deeplearningpreparedata(cpe.Pipeline):
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
-            cprint('The pipeline will last approximately 42 minutes per image.') # Replace by adequate computational time.
+            cprint('The pipeline will last approximately 42 minutes per image.')  # Replace by adequate computational time.
 
         read_node = npe.Node(name="ReadingFiles",
                              iterables=[
@@ -107,7 +103,6 @@ class Deeplearningpreparedata(cpe.Pipeline):
             (read_node, self.input_node, [('t1w', 't1w')]),
         ])
 
-
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
 
@@ -117,7 +112,6 @@ class Deeplearningpreparedata(cpe.Pipeline):
         # pipeline.
 
         pass
-
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
