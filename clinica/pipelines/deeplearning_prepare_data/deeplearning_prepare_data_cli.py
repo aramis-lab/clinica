@@ -67,8 +67,8 @@ class DeeplearningpreparedataCLI(ce.CmdParser):
             # Add your own pipeline parameters here to use them inside your
             # pipeline. See the file `deeplearning_prepare_data_pipeline.py` to
             # see an example of use.
-            'hello_word' : args.hello_word_arg,
-            'advanced_argument' : args.advanced_arg,
+            'hello_word': args.hello_word_arg,
+            'advanced_argument': args.advanced_arg,
         }
 
         # Most of the time, you will want to instantiate your pipeline with a
