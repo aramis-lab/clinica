@@ -21,4 +21,3 @@ def step2(t1w, in_advanced_arg):
     from clinica.utils.stream import cprint
 
     cprint(in_advanced_arg + " arg from the step 2 of the Deeplearning prepare data Clinica pipeline for" + t1w)
-
