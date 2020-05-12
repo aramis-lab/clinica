@@ -94,6 +94,10 @@ T1_FS_LONG_DESIKAN_PARC_R = {'pattern': 't1/long-*/freesurfer_longitudinal/sub-*
                              'description': 'right hemisphere surface-based Desikan parcellation (label/rh.aparc.annot) generated with t1-freesurfer-longitudinal.',
                              'needed_pipeline': 't1-freesurfer and t1-freesurfer-longitudinal'}
 
+T1W_LINEAR = {
+        'pattern': '*space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz',
+        'description': 'T1W Image registered using T1_Linear'
+        }
 
 # T1-Volume
 def t1_volume_native_tpm(tissue_number):
