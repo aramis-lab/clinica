@@ -1,14 +1,14 @@
 {
     "id": "aramislab/deeplearning-prepare-data",
-    "author": "John Doe",
+    "author": "Mauricio Diaz",
     "version": "0.1.0",
     "space_caps": "42M",
     "space_wd": "42M",
     "dependencies": [
         {
-            "type": "binary",
-            "name": "clinica",
-            "version": ">=0.1.0"
+            "type": "software",
+            "name": "pytorch",
+            "version": ">=1.0.0"
         }
     ]
 }
