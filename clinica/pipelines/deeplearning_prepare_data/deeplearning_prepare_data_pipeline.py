@@ -1,14 +1,5 @@
 # coding: utf8
 
-"""Deeplearning prepare data - Clinica Pipeline.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details: http://www.clinica.run/doc/InteractingWithClinica/.
-"""
-
-# WARNING: Don't put any import statement here except if it's absolutly
-# necessary. Put it *inside* the different methods.
-# Otherwise it will slow down the dynamic loading of the pipelines list by the
-# command line tool.
 import clinica.pipelines.engine as cpe
 
 
@@ -20,7 +11,9 @@ config.update_config(cfg)
 
 
 class Deeplearningpreparedata(cpe.Pipeline):
-    """Deeplearning prepare data SHORT DESCRIPTION.
+    """Deeplearning prepare data - MRI in nifty format are transformed into
+    Pytorch tensors. The transformation is applied to: the whole volume, a
+    selection of 3D patches, or slices extracted from the 3D volume. 
 
     Warnings:
         - A warning.
@@ -66,31 +59,28 @@ class Deeplearningpreparedata(cpe.Pipeline):
         from clinica.utils.stream import cprint
         from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
         from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.input_files import T1W_NII
+        from clinica.utils.input_files import T1W_LINEAR
         from clinica.utils.ux import print_images_to_process
-
-        # This node is supposedly used to load BIDS and/or CAPS inputs when this pipeline is
-        # not already connected to the output of a previous Clinica pipeline.
-        # For this example, we read T1w MRI data which are passed to a read_node with iterable.
-        # This allows to parallelize the pipelines accross sessions
-        # when connected to the `self.input_node`.
+        from clinica.utils.filemanip import get_subject_id
 
         # Inputs from anat/ folder
         # ========================
-        # T1w file:
+        # T1w_Linear file:
         try:
             t1w_files = clinica_file_reader(self.subjects,
                                             self.sessions,
-                                            self.bids_directory,
-                                            T1W_NII)
+                                            self.caps_directory,
+                                            T1W_LINEAR)
         except ClinicaException as e:
             err = 'Clinica faced error(s) while trying to read files in your BIDS directory.\n' + str(e)
             raise ClinicaBIDSError(err)
 
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
-            cprint('The pipeline will last approximately 42 minutes per image.')  # Replace by adequate computational time.
+            cprint('The pipeline will last approximately 30 seconds per image.')  # Replace by adequate computational time.
 
+        # The reading node
+        # -------------------------
         read_node = npe.Node(name="ReadingFiles",
                              iterables=[
                                  ('t1w', t1w_files),
@@ -99,6 +89,17 @@ class Deeplearningpreparedata(cpe.Pipeline):
                              interface=nutil.IdentityInterface(
                                  fields=self.get_input_fields())
                              )
+        
+        # Get subject ID node
+        # ----------------------
+        image_id_node = npe.Node(
+                interface=nutil.Function(
+                    input_names=['bids_or_caps_file'],
+                    output_names=['image_id'],
+                    function=get_subject_id),
+                name='ImageID'
+                )
+       
         self.connect([
             (read_node, self.input_node, [('t1w', 't1w')]),
         ])
@@ -106,12 +107,6 @@ class Deeplearningpreparedata(cpe.Pipeline):
     def build_output_node(self):
         """Build and connect an output node to the pipeline."""
 
-        # In the same idea as the input node, this output node is supposedly
-        # used to write the output fields in a CAPS. It should be executed only
-        # if this pipeline output is not already connected to a next Clinica
-        # pipeline.
-
-        pass
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
@@ -120,6 +115,55 @@ class Deeplearningpreparedata(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
 
+        from .T1_preparedl_utils import (extract_slices,
+                                         extract_patches,
+                                         save_as_pt)
+        # The processing nodes
+
+        # Node to save MRI in nii.gz format into pytorch .pt format
+        # ----------------------
+        save_as_pt = npe.MapNode(
+               name='save_as_pt',
+               iterfield=['input_img'],
+               interface=nutil.Function(
+                   function=save_as_pt,
+                   input_names=['input_img'],
+                   output_names=['output_file']
+                   )
+               )
+
+        # Extract slices node (options: 3 directions, mode)
+        # ----------------------
+        extract_slices = npe.MapNode(
+                name='extract_slices',
+                iterfield=['preprocessed_T1'],
+                interface=nutil.Function(
+                    function=extract_slices,
+                    input_names=[
+                        'preprocessed_T1', 'slice_direction',
+                        'slice_mode'
+                        ],
+                    output_names=['output_file_rgb', 'output_file_original']
+                    )
+                )
+
+        extract_slices.inputs.slice_direction = slice_direction
+        extract_slices.inputs.slice_mode = slice_mode
+
+        # Extract patches node (options, patch size and stride size)
+        # ----------------------
+        extract_patches = npe.MapNode(
+                name='extract_patches',
+                iterfield=['preprocessed_T1'],
+                interface=nutil.Function(
+                    function=extract_patches,
+                    input_names=['preprocessed_T1', 'patch_size', 'stride_size'],
+                    output_names=['output_patch']
+                    )
+                )
+
+        extract_patches.inputs.patch_size = patch_size
+        extract_patches.inputs.stride_size = stride_size
         # Step 1
         # ======
         node1 = npe.Node(name="Step1",
