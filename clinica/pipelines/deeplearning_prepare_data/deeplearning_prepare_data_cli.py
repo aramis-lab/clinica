@@ -10,7 +10,7 @@ http://clinica.run/doc/InteractingWithClinica/
 import clinica.engine as ce
 
 
-class DeeplearningpreparedataCLI(ce.CmdParser):
+class DeepLearningPrepareDataCLI(ce.CmdParser):
 
     def define_name(self):
         """Define the sub-command name to run this pipeline."""
@@ -91,7 +91,7 @@ class DeeplearningpreparedataCLI(ce.CmdParser):
         import os
         from networkx import Graph
         from colorama import Fore
-        from .deeplearning_prepare_data_pipeline import Deeplearningpreparedata
+        from .deeplearning_prepare_data_pipeline import DeepLearningPrepareData
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
@@ -110,7 +110,7 @@ class DeeplearningpreparedataCLI(ce.CmdParser):
         # BIDS and/or CAPS directory as inputs. If the BIDS directory is not needed
         # for your pipeline, simply remove:
         # bids_directory=self.absolute_path(args.bids_directory),
-        pipeline = Deeplearningpreparedata(
+        pipeline = DeepLearningPrepareData(
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
             base_dir=self.absolute_path(args.working_directory),
