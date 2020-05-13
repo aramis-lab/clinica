@@ -376,6 +376,21 @@ def test_instantiate_T1Linear():
     pipeline.build()
 
 
+def test_instantiate_DLPrepareData():
+    from os.path import dirname, join, abspath
+    from clinica.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_pipeline import Deeplearningpreparedata
+
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'T1Linear')
+
+    pipeline = Deeplearningpreparedata(
+        caps_directory=join(root, 'in', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        extract_method='whole'
+    )
+    pipeline.build()
+
+
 def test_instantiate_StatisticsVolume():
     from os.path import dirname, join, abspath
     from clinica.pipelines.statistics_volume.statistics_volume_pipeline import StatisticsVolume
