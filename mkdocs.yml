@@ -16,31 +16,29 @@ copyright: 'Copyright &copy; 2016-2020 Clinica'
 
 # Google Analytics
 google_analytics:
-  - 'UA-106080699-1'
-  - 'auto'
+  - UA-106080699-1
+  - auto
 
 # Documentation and theme
 theme:
-  name: 'material'
-  language: 'en'
+  name: material
+  icon:
+    repo: material/github
+  language: en
   palette:
-    primary: 'light blue'
-    accent: 'light blue'
-  font:
-    text: 'Roboto'
-    code: 'Roboto Mono'
+    primary: light blue
+    accent: light blue
 
 # Options:
 extra:
-  logo: 'img/clinica_logo.svg'
   feature:
     tabs: true
   social:
-    - type: 'github'
+    - icon: material/github
       link: 'https://github.com/aramis-lab/'
-    - type: 'twitter'
+    - icon: material/twitter
       link: 'https://twitter.com/clinica_run'
-    - type: 'globe'
+    - icon: material/earth
       link: 'http://www.aramislab.fr/'
 
 #use_directory_urls: false # Use this when you work locally
@@ -61,9 +59,6 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: True
   - pymdownx.keys
-
-extra_javascript:
-  - 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML'
 
 extra_css:
   - css/clinica.css

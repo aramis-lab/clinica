@@ -1,5 +1,4 @@
-mkdocs>=0.17.0
-mkdocs-material>=2.5.3
-pymdown-extensions>=4.8
+mkdocs-material>=5.0.0
+pymdown-extensions>=7.0
 Jinja2>=2.10
 Pygments>=2.2.0
