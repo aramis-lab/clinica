@@ -1,4 +1,4 @@
-################  CLINICA requirements for installation ######################
+################  Clinica requirements for installation ######################
 ##### Requirements with Version Specifiers ######
 #   See https://www.python.org/dev/peps/pep-0440/#version-specifiers
 nibabel >= 2.3.3

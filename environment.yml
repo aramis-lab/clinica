@@ -5,8 +5,4 @@ dependencies:
   - python=3.6
   - pip
   - pip:
-      - -r requirements.txt
-      - pytest         # Dev only
-      - pytest-timeout # Dev only
-      - pytest-xdist   # Dev only  
-      - pycodestyle    # Dev only
+      - -r requirements-dev.txt
