@@ -224,7 +224,7 @@ class T1Linear(cpe.Pipeline):
             (self.input_node, image_id_node, [('t1w', 'filename')]),
             (self.input_node, n4biascorrection, [('t1w', 'input_image')]),
             (n4biascorrection, ants_registration_node, [('output_image', 'moving_image')]),
-            (image_id_node , ants_registration_node, [('image_id', 'output_prefix')]),
+            (image_id_node, ants_registration_node, [('image_id', 'output_prefix')]),
 
             # Connect to DataSink
             (image_id_node, self.output_node, [('image_id', 'image_id')]),

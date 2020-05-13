@@ -1,6 +1,8 @@
 # coding: utf8
 
 # Get containers to produce the CAPS structure
+
+
 def container_from_filename(bids_or_caps_filename):
     """Extract container from BIDS or CAPS file.
     Args:
@@ -26,6 +28,7 @@ def container_from_filename(bids_or_caps_filename):
     subject = m.group(1)
     session = m.group(2)
     return os.path.join('subjects', subject, session)
+
 
 def fix_join(path, *paths):
     # This workaround is used in pipelines like DWIPreprocessingUsingT1

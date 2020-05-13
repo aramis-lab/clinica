@@ -6,6 +6,7 @@ command line tool. See here for more details:
 http://clinica.run/doc/InteractingWithClinica/
 """
 
+
 def get_substitutions_datasink(bids_file):
 
     substitutions_ls = [  # registration

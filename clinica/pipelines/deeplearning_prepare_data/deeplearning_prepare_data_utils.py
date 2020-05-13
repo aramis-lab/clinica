@@ -209,6 +209,7 @@ def save_as_pt(input_img):
 
     return output_file
 
+
 def get_data_datasink(image_id):
     substitutions_ls = [  # registration
             (image_id + '_T1w_corrected.nii.gz',
@@ -225,4 +226,3 @@ def get_data_datasink(image_id):
                 image_id + '_T1w_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz')
             ]
     return image_id, substitutions_ls
-
