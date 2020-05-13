@@ -2,7 +2,7 @@
 
 The `dwi-dti` pipeline computes diffusion tensor imaging (DTI) with extraction of DTI-based measures, namely the fractional anisotropy (FA), mean diffusivity (MD), axial diffusivity (AD) and radial diffusivity (RD). Then, the DTI-derived scalar maps (FA, MD, AD, RD) are normalized onto an FA-atlas with labelled tracts. Finally, TSV files containing a summary of the regional statistics (mean DTI-based measures) are generated to ease subsequent statistical analyses.
 
-To that aim, it mainly relies on the **MRtrix3** [[Tournier et al., 2012](https://doi.org/10.1002/ima.22005)] software for DTI computations and on **ANTs** for the normalization aspects [[Avants et al., 2008](https://doi.org/10.1016/j.media.2007.06.004)].
+To that aim, it mainly relies on the **MRtrix3** [[Tournier et al., 2019](https://doi.org/10.1016/j.neuroimage.2019.116137)] software for DTI computations and on **ANTs** for the normalization aspects [[Avants et al., 2008](https://doi.org/10.1016/j.media.2007.06.004)].
 
 
 ## Prerequisites
@@ -58,7 +58,7 @@ The main output files are:
 ## Describing this pipeline in your paper
 
 ??? cite "Example of paragraph for the `dwi-dti` pipeline:"
-    These results have been obtained using the `dwi-dti` pipeline of Clinica [[Routier et al](https://hal.inria.fr/hal-02308126/)]. A diffusion tensor imaging (DTI) model was fitted to each voxel to calculate the fractional anisotropy (FA), mean diffusivity (MD), radial diffusivity (RD) and axial diffusivity (AD) maps using **MRtrix** [[Tournier et al., 2012](https://doi.org/10.1002/ima.22005)]. The FA map of each subject was then registered to the FA map of the JHU atlas template with the ANTs SyN algorithm [[Avants et al., 2008](https://doi.org/10.1016/j.media.2007.06.004)], and the estimated non-linear deformation was applied to the MD, AD and RD maps to have, for each individual, all the DTI-based maps in the space of the JHU atlas.
+    These results have been obtained using the `dwi-dti` pipeline of Clinica [[Routier et al](https://hal.inria.fr/hal-02308126/)]. A diffusion tensor imaging (DTI) model was fitted to each voxel to calculate the fractional anisotropy (FA), mean diffusivity (MD), radial diffusivity (RD) and axial diffusivity (AD) maps using **MRtrix** [[Tournier et al., 2019](https://doi.org/10.1016/j.neuroimage.2019.116137)]. The FA map of each subject was then registered to the FA map of the JHU atlas template with the ANTs SyN algorithm [[Avants et al., 2008](https://doi.org/10.1016/j.media.2007.06.004)], and the estimated non-linear deformation was applied to the MD, AD and RD maps to have, for each individual, all the DTI-based maps in the space of the JHU atlas.
 
     We then assessed the integrity of a set of anatomical white matter tracts defined in the:
 
