@@ -140,23 +140,23 @@ class Deeplearningpreparedata(cpe.Pipeline):
                     function=container_from_filename),
                 name='ContainerPath')
 
-
-    wf.connect([
-        (self.input_node, image_id_node, [('t1w', 'bids_or_caps_file')]),
-        (self.input_node, container_path, [('t1w', 'bids_or_caps_filename')]),
-        (image_id_node, get_ids, [('image_id', 'image_id')]),
-        # Connect to DataSink
-        (get_ids, write_node, [('image_id_out', '@image_id')]),
-        (get_ids, write_node, [('subst_ls', 'substitutions')])
-        ])
+        wf.connect([
+            (self.input_node, image_id_node, [('t1w', 'bids_or_caps_file')]),
+            (self.input_node, container_path, [('t1w', 'bids_or_caps_filename')]),
+            (image_id_node, get_ids, [('image_id', 'image_id')]),
+            # Connect to DataSink
+            (get_ids, write_node, [('image_id_out', '@image_id')]),
+            (get_ids, write_node, [('subst_ls', 'substitutions')])
+            ])
         
-    subfolder = 'image_based'
-    if self.parameters.get('extract_method') == 'slice':
+        subfolder = 'image_based'
+        if self.parameters.get('extract_method') == 'slice':
             subfolder = 'slice_based'
             wf.connect([
                 (self.output_node, write_node, [('slices_rgb_T1', '@slices_rgb_T1')]),
                 (self.output_node, write_node, [('slices_original_T1', '@slices_original_T1')])
                 ])
+
         elif self.parameters.get('extract_method') == 'patch':
             subfolder = 'patch_based'
             wf.connect([
@@ -236,23 +236,16 @@ class Deeplearningpreparedata(cpe.Pipeline):
         # Connections
         # ----------------------
         wf.connect([
-            #(self.input_node, image_id_node, [('t1w', 'bids_or_caps_file')]),
             (self.input_node, save_as_pt, [('t1w', 'input_img')]),
-            #(image_id_node, get_ids, [('image_id', 'image_id')]),
-            # Connect to DataSink
-            #(get_ids, write_node, [('image_id_out', '@image_id')]),
-            #(get_ids, write_node, [('subst_ls', 'substitutions')])
             ])
 
         if self.parameters.get('extract_method') == 'slice':
-            subfolder = 'slice_based'
             wf.connect([
                 (save_as_pt, extract_slices, [('output_file', 'preprocessed_T1')]),
                 (extract_slices, self.output_node, [('output_file_rgb', 'slices_rgb_T1')]),
                 (extract_slices, self.output_node, [('output_file_original', 'slices_original_T1')])
                 ])
         elif self.parameters.get('extract_method') == 'patch':
-            subfolder = 'patch_based'
             wf.connect([
                 (save_as_pt, extract_patches, [('output_file', 'preprocessed_T1')]),
                 (extract_patches, self.output_node, [('output_patch', 'patches_T1')])
