@@ -1,4 +1,5 @@
-#codong: utf8
+# -*- coding: utf-8 -*-
+
 
 import clinica.pipelines.engine as cpe
 
@@ -13,7 +14,7 @@ config.update_config(cfg)
 class DeepLearningPrepareData(cpe.Pipeline):
     """Deeplearning prepare data - MRI in nifty format are transformed into
     Pytorch tensors. The transformation is applied to: the whole volume, a
-    selection of 3D patches, or slices extracted from the 3D volume. 
+    selection of 3D patches, or slices extracted from the 3D volume.
 
     Warnings:
         - A warning.
@@ -83,7 +84,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
             self.slice_direction = self.parameters.get('slice_direction')
             self.slice_mode = self.parameters.get('slice_mode')
         else:
-            self.slice_direction = 'axial' 
+            self.slice_direction = 'axial'
             self.slice_mode = 'rgb'
 
         if self.parameters.get('extract_method') == 'patch':
@@ -93,7 +94,6 @@ class DeepLearningPrepareData(cpe.Pipeline):
             self.patch_size = 50
             self.stride_size = 50
 
-        
         # The reading node
         # -------------------------
         read_node = npe.Node(name="ReadingFiles",
@@ -104,7 +104,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
                              interface=nutil.IdentityInterface(
                                  fields=self.get_input_fields())
                              )
-       
+
         self.connect([
             (read_node, self.input_node, [('t1w', 't1w')]),
         ])
@@ -116,8 +116,8 @@ class DeepLearningPrepareData(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from clinica.utils.nipype import (fix_join, container_from_filename)
         from clinica.utils.filemanip import get_subject_id
-        from .deeplearning_prepare_data_utils import get_data_datasink 
-        
+        from .deeplearning_prepare_data_utils import get_data_datasink
+
         # Write node
         # ----------------------
         write_node = npe.Node(
@@ -145,7 +145,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
                     function=get_subject_id),
                 name='ImageID'
                 )
-        
+
         # Find container path from t1w filename
         # ----------------------
         container_path = npe.Node(
@@ -158,14 +158,14 @@ class DeepLearningPrepareData(cpe.Pipeline):
         self.connect([
             (self.input_node, image_id_node, [('t1w', 'bids_or_caps_file')]),
             (self.input_node, container_path, [('t1w', 'bids_or_caps_filename')]),
-            #(image_id_node, write_node, [('image_id', '@image_id')]),
+            # (image_id_node, write_node, [('image_id', '@image_id')]),
             (image_id_node, get_ids, [('image_id', 'image_id')]),
             # Connect to DataSink
             (get_ids, write_node, [('image_id_out', '@image_id')]),
             (get_ids, write_node, [('subst_ls', 'substitutions')])
 
             ])
-        
+
         subfolder = 'image_based'
         if self.parameters.get('extract_method') == 'slice':
             subfolder = 'slice_based'
@@ -183,7 +183,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
             self.connect([
                 (self.output_node, write_node, [('output_pt_file', '@output_pt_file')])
                 ])
-        
+
         self.connect([
             (container_path, write_node, [(
                 (

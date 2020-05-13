@@ -77,7 +77,6 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
                 choices=['original', 'rgb'], default='rgb'
                 )
 
-
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
 
