@@ -32,9 +32,9 @@ class DeeplearningpreparedataCLI(ce.CmdParser):
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
-        clinica_comp.add_argument("tsv file",
+        clinica_comp.add_argument("tsv_file",
                                   help='Path to the tsv file.')
-        clinica_comp.add_argument("extract method",
+        clinica_comp.add_argument("extract_method",
                                   help='''Method used to extract features. Three options:
                                        'slice' to get 2D slices from the MRI,
                                        'patch' to get 3D volumetric patches or
@@ -50,8 +50,6 @@ class DeeplearningpreparedataCLI(ce.CmdParser):
         # Add your own pipeline command line arguments here to be used in the
         # method below. Example below:
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("-hw", "--hello_word_arg", default='Hello',
-                              help='Word to say hello (default: --hello_word_arg %(default)s).')
 
         optional.add_argument(
                 '-psz', '--patch_size',

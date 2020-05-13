@@ -383,10 +383,13 @@ def test_instantiate_DLPrepareData():
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'T1Linear')
 
+    parameters = {
+            'extract_method': 'whole'
+            }
     pipeline = Deeplearningpreparedata(
         caps_directory=join(root, 'in', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv'),
-        extract_method='whole'
+        parameters=parameters
     )
     pipeline.build()
 
