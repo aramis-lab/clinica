@@ -1,4 +1,4 @@
-# coding: utf8
+#codong: utf8
 
 import clinica.pipelines.engine as cpe
 
@@ -10,7 +10,7 @@ cfg = dict(execution={'parameterize_dirs': False})
 config.update_config(cfg)
 
 
-class Deeplearningpreparedata(cpe.Pipeline):
+class DeepLearningPrepareData(cpe.Pipeline):
     """Deeplearning prepare data - MRI in nifty format are transformed into
     Pytorch tensors. The transformation is applied to: the whole volume, a
     selection of 3D patches, or slices extracted from the 3D volume. 
@@ -49,7 +49,7 @@ class Deeplearningpreparedata(cpe.Pipeline):
             A list of (string) output fields name.
         """
 
-        return []  # Fill here the list
+        return ['image_id']  # Fill here the list
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
@@ -79,6 +79,21 @@ class Deeplearningpreparedata(cpe.Pipeline):
             print_images_to_process(self.subjects, self.sessions)
             cprint('The pipeline will last approximately 30 seconds per image.')  # Replace by adequate computational time.
 
+        if self.parameters.get('extract_method') == 'slice':
+            self.slice_direction = self.parameters.get('slice_direction')
+            self.slice_mode = self.parameters.get('slice_mode')
+        else:
+            self.slice_direction = 'axial' 
+            self.slice_mode = 'rgb'
+
+        if self.parameters.get('extract_method') == 'patch':
+            self.patch_size = self.parameters.get('patch_size')
+            self.stride_size = self.parameters.get('stride_size')
+        else:
+            self.patch_size = 50
+            self.stride_size = 50
+
+        
         # The reading node
         # -------------------------
         read_node = npe.Node(name="ReadingFiles",
@@ -101,6 +116,7 @@ class Deeplearningpreparedata(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from clinica.utils.nipype import (fix_join, container_from_filename)
         from clinica.utils.filemanip import get_subject_id
+        from .deeplearning_prepare_data_utils import get_data_datasink 
         
         # Write node
         # ----------------------
@@ -108,8 +124,17 @@ class Deeplearningpreparedata(cpe.Pipeline):
                 name="WriteCaps",
                 interface=DataSink()
                 )
-        write_node.inputs.base_directory = caps_directory
+        write_node.inputs.base_directory = self.caps_directory
         write_node.inputs.parameterization = False
+
+        # Node
+        # ----------------------
+        get_ids = npe.Node(
+                interface=nutil.Function(
+                    input_names=['image_id'],
+                    output_names=['image_id_out', 'subst_ls'],
+                    function=get_data_datasink),
+                name="GetIDs")
 
         # Get subject ID node
         # ----------------------
@@ -130,46 +155,49 @@ class Deeplearningpreparedata(cpe.Pipeline):
                     function=container_from_filename),
                 name='ContainerPath')
 
-        wf.connect([
+        self.connect([
             (self.input_node, image_id_node, [('t1w', 'bids_or_caps_file')]),
             (self.input_node, container_path, [('t1w', 'bids_or_caps_filename')]),
-            (image_id_node, write_node, [('image_id', '@image_id')]),
+            #(image_id_node, write_node, [('image_id', '@image_id')]),
+            (image_id_node, get_ids, [('image_id', 'image_id')]),
+            # Connect to DataSink
+            (get_ids, write_node, [('image_id_out', '@image_id')]),
+            (get_ids, write_node, [('subst_ls', 'substitutions')])
+
             ])
         
         subfolder = 'image_based'
         if self.parameters.get('extract_method') == 'slice':
             subfolder = 'slice_based'
-            wf.connect([
+            self.connect([
                 (self.output_node, write_node, [('slices_rgb_T1', '@slices_rgb_T1')]),
                 (self.output_node, write_node, [('slices_original_T1', '@slices_original_T1')])
                 ])
 
         elif self.parameters.get('extract_method') == 'patch':
             subfolder = 'patch_based'
-            wf.connect([
+            self.connect([
                 (self.output_node, write_node, [('patches_T1', '@patches_T1')])
                 ])
         else:
-            wf.connect([
+            self.connect([
                 (self.output_node, write_node, [('output_pt_file', '@output_pt_file')])
                 ])
         
-        wf.connect([
+        self.connect([
             (container_path, write_node, [(
                 (
                     'container', fix_join,
                     'deeplearning_prepare_data', subfolder, 't1_linear'
                     ),
-                'container')])
+                'container')]),
             ])
 
     def build_core_nodes(self):
         """Build and connect the core nodes of the pipeline."""
 
-        import deeplearning_prepare_data_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-
         from .deeplearning_prepare_data_utils import (extract_slices,
                                                       extract_patches,
                                                       save_as_pt)
@@ -222,22 +250,22 @@ class Deeplearningpreparedata(cpe.Pipeline):
 
         # Connections
         # ----------------------
-        wf.connect([
+        self.connect([
             (self.input_node, save_as_pt, [('t1w', 'input_img')]),
             ])
 
         if self.parameters.get('extract_method') == 'slice':
-            wf.connect([
+            self.connect([
                 (save_as_pt, extract_slices, [('output_file', 'preprocessed_T1')]),
                 (extract_slices, self.output_node, [('output_file_rgb', 'slices_rgb_T1')]),
                 (extract_slices, self.output_node, [('output_file_original', 'slices_original_T1')])
                 ])
         elif self.parameters.get('extract_method') == 'patch':
-            wf.connect([
+            self.connect([
                 (save_as_pt, extract_patches, [('output_file', 'preprocessed_T1')]),
                 (extract_patches, self.output_node, [('output_patch', 'patches_T1')])
                 ])
         else:
-            wf.connect([
-                (save_as_pt, self.output_node, [('output_file', 'output_pt_file')])
+            self.connect([
+                (save_as_pt, self.output_node, [('output_file', 'output_pt_file')]),
                 ])
