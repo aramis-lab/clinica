@@ -18,7 +18,7 @@ class DeeplearningpreparedataCLI(ce.CmdParser):
 
     def define_description(self):
         """Define a description of this pipeline."""
-        self._description = ('Brief description:\n'
+        self._description = ('Tensor extraction (Pytorch) from T1w images:\n'
                              'http://clinica.run/doc/Pipelines/Deeplearningpreparedata/')
 
     def define_options(self):
@@ -30,10 +30,17 @@ class DeeplearningpreparedataCLI(ce.CmdParser):
         # a BIDS and/or CAPS directory. If your pipeline does not require BIDS input,
         # simply remove the two lines involving the BIDS directory.
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
-        clinica_comp.add_argument("bids_directory",
-                                  help='Path to the BIDS directory.')
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
+        clinica_comp.add_argument("tsv file",
+                                  help='Path to the tsv file.')
+        clinica_comp.add_argument("extract method",
+                                  help='''Method used to extract features. Three options:
+                                       'slice' to get 2D slices from the MRI,
+                                       'patch' to get 3D volumetric patches or
+                                       'whole' to get the complete MRI.''',
+                                  choices=['slice', 'patch', 'whole'], default='whole'
+                                  )
 
         # group_id can be used by certain pipelines when some operations are performed at the group level
         # (for example, generation of a template in pipeline t1-volume)
@@ -45,6 +52,33 @@ class DeeplearningpreparedataCLI(ce.CmdParser):
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("-hw", "--hello_word_arg", default='Hello',
                               help='Word to say hello (default: --hello_word_arg %(default)s).')
+
+        optional.add_argument(
+                '-psz', '--patch_size',
+                help='''Patch size (only for 'patch' extraction) e.g: --patch_size 50''',
+                type=int, default=50
+                )
+        optional.add_argument(
+                '-ssz', '--stride_size',
+                help='''Stride size (only for 'patch' extraction) e.g.: --stride_size 50''',
+                type=int, default=50
+                )
+        optional.add_argument(
+                '-sd', '--slice_direction',
+                help='''Slice direction (only for 'slice' extraction). Three options:
+                '0' -> Sagittal plane,
+                '1' -> Coronal plane or
+                '2' -> Axial plane''',
+                type=int, default=0
+                )
+        optional.add_argument(
+                '-sm', '--slice_mode',
+                help='''Slice mode (only for 'slice' extraction). Two options:
+                'original' to save one single channel (intensity),
+                'rgb' to saves three channel (with same intensity).''',
+                choices=['original', 'rgb'], default='rgb'
+                )
+
 
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
@@ -67,8 +101,11 @@ class DeeplearningpreparedataCLI(ce.CmdParser):
             # Add your own pipeline parameters here to use them inside your
             # pipeline. See the file `deeplearning_prepare_data_pipeline.py` to
             # see an example of use.
-            'hello_word': args.hello_word_arg,
-            'advanced_argument': args.advanced_arg,
+            'extract_method': args.extract_method,
+            'patch_size': args.patch_size,
+            'stride_size': args.stride_size,
+            'slice_direction': args.slice_direction,
+            'slice_mode': args.slice_mode,
         }
 
         # Most of the time, you will want to instantiate your pipeline with a
@@ -76,7 +113,6 @@ class DeeplearningpreparedataCLI(ce.CmdParser):
         # for your pipeline, simply remove:
         # bids_directory=self.absolute_path(args.bids_directory),
         pipeline = Deeplearningpreparedata(
-            bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
             base_dir=self.absolute_path(args.working_directory),
