@@ -18,4 +18,4 @@ xlrd >= 1.2.0
 scipy == 1.2.3
 matplotlib
 niflow-nipype1-workflows
-scikit-image
+scikit-image == 0.16.2
