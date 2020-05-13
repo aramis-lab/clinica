@@ -1,6 +1,13 @@
 # coding: utf8
 
 
+"""
+This module contains utilities to handle groups in Clinica.
+
+See CAPS specifications for details about groups.
+"""
+
+
 def check_group_label(group_label):
     """Check that `group_label` is compliant with specifications."""
     if not group_label.isalnum():

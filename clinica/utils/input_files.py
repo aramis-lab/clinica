@@ -1,8 +1,9 @@
 # coding: utf8
 
 """
-Describe files to grab, to use with inputs.clinica_file_reader() and inputs.clinica_group_reader()
+This module contains dictionaries used in inputs.py::clinica_{file|group}_reader().
 
+These dictionaries describe files to grab.
 """
 
 """ T1w """

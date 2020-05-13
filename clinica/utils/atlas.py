@@ -1,5 +1,18 @@
 # coding: utf8
 
+"""
+This module contains utilities to handle atlases in Clinica.
+
+An atlas is currently defined by its name, a set of labels in a template space and
+the map of this template space (e.g. T1w, FA map derived from DWI).
+
+This current implementation has some drawbacks:
+- Atlas is misleading: it is only a set of labels in a template space
+- This implementation can not handle case where there are several maps (e.g. both T1w and T2w) in template space
+
+Either a refactoring of this module or the use of an external API
+(e.g. TemplateFlow - https://www.templateflow.org/) needs to be considered.
+"""
 
 import abc
 
