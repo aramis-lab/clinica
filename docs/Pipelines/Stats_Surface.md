@@ -19,6 +19,10 @@ Do not hesitate to have a look at the paragraph **Specifying what surface data t
 
 If you only installed the core of Clinica, this pipeline needs the installation of **Matlab** and **FreeSurfer 6.0** on your computer. You can find how to install these software packages on the [third-party](../../Third-party) page. Note that the Matlab `Statistics and Machine Learning Toolbox` is required.
 
+!!! bug "Compatibility issue with Matlab R2019 / R2020"
+    It has been reported that newer versions of Matlab (see details on [GitHub](https://github.com/aramis-lab/clinica/issues/90)) were not compatible with this pipeline. For the moment, we advise you to use at best R2018b version. Matlab versions between 2015 and 2018 are known to work.
+
+
 ## Running the pipeline
 
 The pipeline can be run with the following command line:
