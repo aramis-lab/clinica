@@ -125,8 +125,8 @@ class T1Linear(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         from nipype.interfaces.io import DataSink
         import nipype.pipeline.engine as npe
-        from clinica.utils.nipype import fix_join
-        from .t1_linear_utils import (container_from_filename, get_substitutions_datasink)
+        from clinica.utils.nipype import (fix_join, container_from_filename)
+        from .t1_linear_utils import get_substitutions_datasink
 
         # Writing node
         write_node = npe.Node(
