@@ -101,7 +101,6 @@ class Deeplearningpreparedata(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from clinica.utils.nipype import (fix_join, container_from_filename)
         from clinica.utils.filemanip import get_subject_id
-        from .deeplearning_prepare_data_utils import get_data_datasink 
         
         # Write node
         # ----------------------
@@ -122,15 +121,6 @@ class Deeplearningpreparedata(cpe.Pipeline):
                 name='ImageID'
                 )
         
-        # Node get ID for each MRI
-        # ----------------------
-        get_ids = npe.Node(
-                interface=nutil.Function(
-                    input_names=['image_id'],
-                    output_names=['image_id_out', 'subst_ls'],
-                    function=get_data_datasink),
-                name="GetIDs")
-
         # Find container path from t1w filename
         # ----------------------
         container_path = npe.Node(
@@ -143,10 +133,7 @@ class Deeplearningpreparedata(cpe.Pipeline):
         wf.connect([
             (self.input_node, image_id_node, [('t1w', 'bids_or_caps_file')]),
             (self.input_node, container_path, [('t1w', 'bids_or_caps_filename')]),
-            (image_id_node, get_ids, [('image_id', 'image_id')]),
-            # Connect to DataSink
-            (get_ids, write_node, [('image_id_out', '@image_id')]),
-            (get_ids, write_node, [('subst_ls', 'substitutions')])
+            (image_id_node, write_node, [('image_id', '@image_id')]),
             ])
         
         subfolder = 'image_based'
