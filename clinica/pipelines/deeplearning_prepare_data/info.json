@@ -5,10 +5,10 @@
     "space_caps": "42M",
     "space_wd": "42M",
     "dependencies": [
-        {
-            "type": "software",
-            "name": "pytorch",
-            "version": ">=1.0.0"
-        }
+      {
+        "type": "software",
+        "name": "ants",
+        "version": ">=0.0.1"
+      }
     ]
 }
