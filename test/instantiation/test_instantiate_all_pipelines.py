@@ -399,7 +399,7 @@ def test_instantiate_DLPrepareData():
     from clinica.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_pipeline import Deeplearningpreparedata
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'T1Linear')
+    root = join(root, 'data', 'DeepLearningPrepareData')
 
     parameters = {
             'extract_method': 'whole'
