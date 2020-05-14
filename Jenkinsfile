@@ -15,7 +15,7 @@ pipeline {
               PATH = "$HOME/miniconda/bin:$PATH"
               }
             when { 
-              expression { changeset "environment.yml" || changeset "requirements" } 
+              expression { changeset "environment.yml" || changeset "requirements.txt" } 
             }
             steps {
               echo 'Building Conda environment... ${BRANCH_NAME}'
@@ -29,7 +29,7 @@ pipeline {
               PATH = "$HOME/miniconda3/bin:$PATH"
               }
             when {
-              expression { changeset "environment.yml" || changeset "requirements" }
+              expression { changeset "environment.yml" || changeset "requirements.txt" }
             }
             steps {
               echo 'Building Conda environment...' + 'env.BRANCH_NAME'
