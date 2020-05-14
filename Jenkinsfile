@@ -153,7 +153,7 @@ pipeline {
                  module load clinica.all
                  cd test
                  ln -s /Volumes/data/data_ci ./data
-                 pytest \ 
+                 pytest \
                     --verbose \
                     --junitxml=./test-reports/instantation_mac.xml \
                     --disable-warnings \
