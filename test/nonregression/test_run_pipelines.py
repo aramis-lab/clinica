@@ -814,10 +814,10 @@ def test_run_T1Linear(cmdopt):
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Check output vs ref
-    
+
     out_folder = join(root, 'out')
-    ref_folder = join(root, 'out') 
-    
+    ref_folder = join(root, 'out')
+
     compare_folders(out_folder, ref_folder, shared_folder_name='caps')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -841,7 +841,7 @@ def test_run_DLPrepareData(cmdopt):
 
     # Copy necessary data from in to out
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
-    
+
     # Test the transformation of the complete T1 MRI
     parameters = {
         'extract_method': 'whole'
@@ -869,7 +869,7 @@ def test_run_DLPrepareData(cmdopt):
         parameters=parameters
     )
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
-    
+
     # Test the slice extraction
     parameters = {
         'extract_method': 'slice',
@@ -885,10 +885,10 @@ def test_run_DLPrepareData(cmdopt):
     )
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
     # Check output vs ref
-    
+
     out_folder = join(root, 'out')
-    ref_folder = join(root, 'out') 
-    
+    ref_folder = join(root, 'out')
+
     compare_folders(out_folder, ref_folder, shared_folder_name='caps')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
@@ -982,7 +982,7 @@ def test_run_StatisticsVolumeCorrection(cmdopt):
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
     compare_folders(join(root, 'out'), join(root, 'ref'), 'caps')
-    
+
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=True)
     clean_folder(join(working_dir, 'StatisticsVolumeCorrection'), recreate=False)
