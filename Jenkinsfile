@@ -114,6 +114,7 @@ pipeline {
                  cd test
                  ln -s /mnt/data/ci/data_ci_linux ./data
                  taskset -c 0-21 pytest \
+                    --junitxml=./test-reports/instantation_linux.xml \
                     --verbose \
                     --working_directory=$WORK_DIR_LINUX \
                     --disable-warnings \
@@ -124,6 +125,11 @@ pipeline {
                  conda deactivate
                  '''
             }
+            post {
+              always {
+                junit 'test-reports/*.xml'
+              }
+            }  
           }
           stage('Instantiate Mac') {
             agent { label 'macos' }
@@ -143,11 +149,20 @@ pipeline {
                  module load clinica.all
                  cd test
                  ln -s /Volumes/data/data_ci ./data
-                 pytest --verbose --disable-warnings -k 'test_instantiate'
+                 pytest \ 
+                    --verbose \
+                    --junitxml=./test-reports/instantation_mac.xml \
+                    --disable-warnings \
+                    -k 'test_instantiate'
                  module purge
                  conda deactivate
                  '''
             }
+            post {
+              always {
+                junit 'test-reports/*.xml'
+              }
+            }  
           }
         }
       }
