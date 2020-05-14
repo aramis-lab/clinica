@@ -824,6 +824,46 @@ def test_run_T1Linear(cmdopt):
     clean_folder(join(working_dir, 'T1Linear'), recreate=False)
 
 
+def test_run_DLPrepareData(cmdopt):
+    from os.path import dirname, join, abspath
+    import shutil
+    from clinica.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_pipeline import DeepLearningPrepareData
+    import nibabel as nib
+    import numpy as np
+
+    working_dir = cmdopt
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'DeepLearningPrepareData')
+
+    # Remove potential residual of previous UT
+    clean_folder(join(working_dir, 'DeepLearningPrepareData'))
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+
+    parameters = {
+        'extract_method': 'whole'
+    }
+    # Instantiate pipeline
+    pipeline = DeepLearningPrepareData(
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'DeepLearningPrepareData'),
+        parameters=parameters
+    )
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
+
+    # Check output vs ref
+    
+    out_folder = join(root, 'out')
+    ref_folder = join(root, 'out') 
+    
+    compare_folders(out_folder, ref_folder, shared_folder_name='caps')
+
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'DeepLearningPrepareData'), recreate=False)
+
+
+
 def test_run_StatisticsVolume(cmdopt):
     from os.path import dirname, join, abspath
     import shutil
