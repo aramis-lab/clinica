@@ -164,7 +164,7 @@ pipeline {
             }
             post {
               always {
-                junit 'test-reports/*.xml'
+                junit 'test/test-reports/*.xml'
               }
             }  
           }
