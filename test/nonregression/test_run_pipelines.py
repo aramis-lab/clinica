@@ -838,8 +838,11 @@ def test_run_DLPrepareData(cmdopt):
     # Remove potential residual of previous UT
     clean_folder(join(working_dir, 'DeepLearningPrepareData'))
     clean_folder(join(root, 'out', 'caps'), recreate=False)
-    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
+    # Copy necessary data from in to out
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+    
+    # Test the transformation of the complete T1 MRI
     parameters = {
         'extract_method': 'whole'
     }
@@ -852,6 +855,35 @@ def test_run_DLPrepareData(cmdopt):
     )
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
+    # Test the patch extraction
+    parameters = {
+        'extract_method': 'patch',
+        'patch_size': 50,
+        'stride_size': 50
+    }
+    # Instantiate pipeline
+    pipeline = DeepLearningPrepareData(
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'DeepLearningPrepareData'),
+        parameters=parameters
+    )
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
+    
+    # Test the slice extraction
+    parameters = {
+        'extract_method': 'slice',
+        'slice_mode': 'rgb',
+        'slice_direction': 0
+    }
+    # Instantiate pipeline
+    pipeline = DeepLearningPrepareData(
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'DeepLearningPrepareData'),
+        parameters=parameters
+    )
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
     # Check output vs ref
     
     out_folder = join(root, 'out')
