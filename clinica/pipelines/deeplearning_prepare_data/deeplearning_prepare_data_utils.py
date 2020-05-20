@@ -1,12 +1,5 @@
 # coding: utf8
 
-"""Deeplearning prepare data - Clinica Utilities.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details:
-http://clinica.run/doc/InteractingWithClinica/
-"""
-
-
 def extract_slices(preprocessed_T1, slice_direction=0, slice_mode='original'):
     """
     This function extracts the slices from three directions

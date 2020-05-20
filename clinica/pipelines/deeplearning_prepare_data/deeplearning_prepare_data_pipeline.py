@@ -16,12 +16,6 @@ class DeepLearningPrepareData(cpe.Pipeline):
     Pytorch tensors. The transformation is applied to: the whole volume, a
     selection of 3D patches, or slices extracted from the 3D volume.
 
-    Warnings:
-        - A warning.
-
-    Todos:
-        - [x] A filled todo item.
-        - [ ] An ongoing todo item.
 
     Returns:
         A clinica pipeline object containing the Deeplearning prepare data pipeline.
