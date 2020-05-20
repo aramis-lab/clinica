@@ -64,8 +64,6 @@ class DeepLearningPrepareData(cpe.Pipeline):
         from clinica.utils.ux import print_images_to_process
         from clinica.utils.filemanip import get_subject_id
 
-        # Inputs from anat/ folder
-        # ========================
         # T1w_Linear file:
         try:
             t1w_files = clinica_file_reader(self.subjects,
