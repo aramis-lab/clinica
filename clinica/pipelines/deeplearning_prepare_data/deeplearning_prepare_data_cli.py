@@ -92,10 +92,6 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
             'slice_mode': args.slice_mode,
         }
 
-        # Most of the time, you will want to instantiate your pipeline with a
-        # BIDS and/or CAPS directory as inputs. If the BIDS directory is not needed
-        # for your pipeline, simply remove:
-        # bids_directory=self.absolute_path(args.bids_directory),
         pipeline = DeepLearningPrepareData(
             caps_directory=self.absolute_path(args.caps_directory),
             tsv_file=self.absolute_path(args.subjects_sessions_tsv),
