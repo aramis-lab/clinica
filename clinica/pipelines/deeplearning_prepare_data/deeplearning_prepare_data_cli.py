@@ -1,11 +1,5 @@
 # coding: utf8
 
-"""Deeplearning prepare data - Clinica Command Line Interface.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details:
-http://clinica.run/doc/InteractingWithClinica/
-"""
-
 
 import clinica.engine as ce
 
@@ -19,7 +13,7 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
     def define_description(self):
         """Define a description of this pipeline."""
         self._description = ('Tensor extraction (Pytorch) from T1w images:\n'
-                             'http://clinica.run/doc/Pipelines/Deeplearningpreparedata/')
+                             'http://clinica.run/doc/Pipelines/DeepLearning_PrepareData/')
 
     def define_options(self):
         """Define the sub-command arguments."""
@@ -80,18 +74,11 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
 
-        # Add advanced arguments
-        advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
-        advanced.add_argument("-aa", "--advanced_arg", default='Advanced',
-                              help='Your advanced argument (default: --advanced_arg %(default)s).')
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
-        import os
         from networkx import Graph
-        from colorama import Fore
         from .deeplearning_prepare_data_pipeline import DeepLearningPrepareData
-        from clinica.utils.stream import cprint
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         parameters = {
