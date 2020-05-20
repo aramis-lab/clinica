@@ -74,10 +74,6 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
 
-        # Add advanced arguments
-        advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
-        advanced.add_argument("-aa", "--advanced_arg", default='Advanced',
-                              help='Your advanced argument (default: --advanced_arg %(default)s).')
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
