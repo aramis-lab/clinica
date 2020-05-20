@@ -61,7 +61,6 @@ class DeepLearningPrepareData(cpe.Pipeline):
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1W_LINEAR
         from clinica.utils.ux import print_images_to_process
-        from clinica.utils.filemanip import get_subject_id
 
         # T1w_Linear file:
         try:
