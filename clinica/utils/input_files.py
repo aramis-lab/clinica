@@ -96,7 +96,7 @@ T1_FS_LONG_DESIKAN_PARC_R = {'pattern': 't1/long-*/freesurfer_longitudinal/sub-*
 
 T1W_LINEAR = {
         'pattern': '*space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz',
-        'description': 'T1W Image registered using T1_Linear'
+        'description': 'T1w image registered in MNI152NLin2009cSym space using t1-linear pipeline'
         }
 
 # T1-Volume
