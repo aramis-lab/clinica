@@ -77,11 +77,8 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
-        import os
         from networkx import Graph
-        from colorama import Fore
         from .deeplearning_prepare_data_pipeline import DeepLearningPrepareData
-        from clinica.utils.stream import cprint
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         parameters = {
