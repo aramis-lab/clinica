@@ -58,7 +58,6 @@ class DeepLearningPrepareData(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
         from clinica.utils.stream import cprint
-        from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1W_LINEAR
         from clinica.utils.ux import print_images_to_process
