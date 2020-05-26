@@ -51,10 +51,6 @@ class StatisticsSurface(cpe.Pipeline):
             self.parameters['feature_label'] = 'ct',
         if 'full_width_at_half_maximum' not in self.parameters.keys():
             self.parameters['full_width_at_half_maximum'] = 20
-        if 'threshold_uncorrected_pvalue' not in self.parameters.keys():
-            self.parameters['threshold_uncorrected_pvalue'] = 0.001
-        if 'threshold_corrected_pvalue' not in self.parameters.keys():
-            self.parameters['threshold_corrected_pvalue'] = 0.05,
         if 'cluster_threshold' not in self.parameters.keys():
             self.parameters['cluster_threshold'] = 0.001,
 
@@ -66,12 +62,6 @@ class StatisticsSurface(cpe.Pipeline):
             raise ClinicaException(
                 "FWHM for the surface smoothing you specified is wrong: it should be 0, 5, 10, 15 or 20 "
                 "(given value: %s)." % self.parameters['full_width_at_half_maximum'])
-        if self.parameters['threshold_uncorrected_pvalue'] < 0 or self.parameters['threshold_uncorrected_pvalue'] > 1:
-            raise ClinicaException("Uncorrected p-value threshold should be a lower than 1 "
-                                   "(given value: %s)." % self.parameters['threshold_uncorrected_pvalue'])
-        if self.parameters['threshold_corrected_pvalue'] < 0 or self.parameters['threshold_corrected_pvalue'] > 1:
-            raise ClinicaException("Corrected p-value threshold should be between 0 and 1 "
-                                   "(given value: %s)." % self.parameters['threshold_corrected_pvalue'])
         if self.parameters['cluster_threshold'] < 0 or self.parameters['cluster_threshold'] > 1:
             raise ClinicaException("Cluster threshold should be between 0 and 1 "
                                    "(given value: %s)." % self.parameters['cluster_threshold'])

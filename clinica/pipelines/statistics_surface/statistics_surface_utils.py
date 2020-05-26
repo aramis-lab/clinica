@@ -131,8 +131,8 @@ def run_matlab(caps_dir,
         pipeline_parameters['custom_file'],
         pipeline_parameters['feature_label'],
         'sizeoffwhm', pipeline_parameters['full_width_at_half_maximum'],
-        'thresholduncorrectedpvalue', pipeline_parameters['threshold_uncorrected_pvalue'],
-        'thresholdcorrectedpvalue', pipeline_parameters['threshold_corrected_pvalue'],
+        'thresholduncorrectedpvalue', 0.001,
+        'thresholdcorrectedpvalue', 0.05,
         'clusterthreshold', pipeline_parameters['cluster_threshold']
         )
     # This will create a file: pyscript.m , the pyscript.m is the default name
@@ -161,8 +161,8 @@ def create_glm_info_dictionary(pipeline_parameters):
         'Contrast': pipeline_parameters['contrast'],
         'GroupLabel': pipeline_parameters['group_label'],
         'FWHM': pipeline_parameters['full_width_at_half_maximum'],
-        'ThresholdUncorrectedPvalue': pipeline_parameters['threshold_uncorrected_pvalue'],
-        'ThresholdCorrectedPvalue': pipeline_parameters['threshold_corrected_pvalue'],
+        'ThresholdUncorrectedPvalue': 0.001,
+        'ThresholdCorrectedPvalue': 0.05,
         'ClusterThreshold': pipeline_parameters['cluster_threshold']
     }
     return out_dict

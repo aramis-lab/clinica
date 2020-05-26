@@ -36,7 +36,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                                   help='String to define the format of the columns in the TSV file, e.g., '
                                        '%%s %%s %%s %%f if the columns contain a string, a string, a string '
                                        'and a number, respectively.')
-        clinica_comp.add_argument("group_id",
+        clinica_comp.add_argument("group_label",
                                   help='User-defined identifier for the provided group of subjects.')
         clinica_comp.add_argument("glm_type",
                                   help='String based on the GLM type for the hypothesis. You can choose '
@@ -123,7 +123,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                     raise ClinicaException('You must specify a --feature_label when using the --custom_files flag.')
 
         parameters = {
-            'group_label': args.group_id,
+            'group_label': args.group_label,
             'design_matrix': args.design_matrix,
             'contrast': args.contrast,
             'str_format': args.string_format,
@@ -131,8 +131,6 @@ class StatisticsSurfaceCLI(ce.CmdParser):
             'custom_file': args.custom_file,
             'feature_label': args.feature_label,
             'full_width_at_half_maximum': args.full_width_at_half_maximum,
-            'threshold_uncorrected_pvalue': args.threshold_uncorrected_pvalue,
-            'threshold_corrected_pvalue': args.threshold_corrected_pvalue,
             'cluster_threshold': args.cluster_threshold,
         }
         pipeline = StatisticsSurface(

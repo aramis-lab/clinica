@@ -228,8 +228,6 @@ def test_instantiate_StatisticsSurface():
         'custom_file': '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh',
         'feature_label': 'cortical_thickness',
         'full_width_at_half_maximum': 20,
-        'threshold_uncorrected_pvalue': 0.001,
-        'threshold_corrected_pvalue': 0.05,
         'cluster_threshold': 0.001
     }
     pipeline = StatisticsSurface(
@@ -362,7 +360,7 @@ def test_instantiate_StatisticsVolume():
     parameters = {
         'contrast': 'group',
         'feature_type': 'fdg',
-        'group_id': 'UnitTest',
+        'group_label': 'UnitTest',
         'cluster_threshold': 0.001,
         'group_id_caps': None,
         'full_width_at_half_maximum': 8
