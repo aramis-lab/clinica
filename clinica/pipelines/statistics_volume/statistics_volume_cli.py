@@ -31,7 +31,7 @@ class StatisticsVolumeCLI(ce.CmdParser):
                                   help='Type of volume-based feature: graymatter (from t1-volume pipeline) or '
                                        'fdg (from pet-volume pipeline). Use your own if you want to use '
                                        'the --custom_file flag. ')
-        clinica_comp.add_argument("group_id",
+        clinica_comp.add_argument("group_label",
                                   help='User-defined identifier for the provided group of subjects.')
 
         # Optional arguments (e.g. FWHM)
@@ -64,7 +64,7 @@ class StatisticsVolumeCLI(ce.CmdParser):
         parameters = {
             'contrast': args.contrast,
             'feature_type': args.feature_type,
-            'group_id': args.group_id,
+            'group_label': args.group_id,
             'custom_files': args.custom_files,
             'cluster_threshold': args.cluster_threshold,
             'group_id_caps': args.group_id_caps,
