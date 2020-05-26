@@ -754,7 +754,8 @@ def test_run_SpatialSVM(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     parameters = {
-        'group_id': 'ADNIbl'
+        'group_label': 'ADNIbl',
+        'orig_input_data': 't1-volume'
     }
     # Instantiate pipeline and run()
     pipeline = SpatialSVM(

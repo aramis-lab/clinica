@@ -16,21 +16,31 @@ class SpatialSVMCLI(ce.CmdParser):
 
     def define_options(self):
         """Define the sub-command arguments."""
+        from colorama import Fore
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
-        clinica_comp.add_argument("group_id",
+        clinica_comp.add_argument("group_label",
                                   help='User-defined identifier for the provided group of subjects.')
+        clinica_comp.add_argument("orig_input_data",
+                                  help='''Origin of input data. Type
+                                       't1-volume' to use gray matter maps or
+                                       'pet-volume' to use SUVr maps.''',
+                                  choices=['t1-volume', 'pet-volume'],
+                                  )
         # Optional arguments
-        optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("-it", "--image_type",
-                              default='t1',
-                              help='Imaging modality. Can be t1 or pet (default: --image_type %(default)s)')
-        optional.add_argument("-pt", "--pet_tracer",
-                              default='fdg',
-                              help='PET tracer. Can be fdg or av45 (default: --pet_tracer %(default)s)')
+        optional_pet = self._args.add_argument_group(
+            '%sPipeline options if you use inputs from pet-volume pipeline%s' %
+            (Fore.BLUE, Fore.RESET)
+        )
+        optional_pet.add_argument("-pt", "--pet_tracer",
+                                  default='fdg',
+                                  help='PET tracer. Can be fdg or av45 (default: --pet_tracer %(default)s)')
+        optional_pet.add_argument("-no_pvc", "--no_pvc",
+                                  action='store_true', default=False,
+                                  help="Force the use of non PVC PET data (by default, PVC PET data are used)")
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
         # Advanced arguments (i.e. tricky parameters)
@@ -40,9 +50,6 @@ class SpatialSVMCLI(ce.CmdParser):
                               help='Amount of regularization (in mm). In practice, we found the default value '
                                    '(--full_width_half_maximum %(default)s) to be optimal. We therefore '
                                    'do not recommend to change it unless you have a specific reason to do so.')
-        advanced.add_argument("-no_pvc", "--no_pvc",
-                              action='store_true', default=False,
-                              help="Force the use of non PVC PET data (by default, PVC PET data are used)")
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
@@ -51,11 +58,11 @@ class SpatialSVMCLI(ce.CmdParser):
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         parameters = {
-            'group_id': args.group_id,
-            'fwhm': args.fwhm,
-            'image_type': args.image_type,
+            'group_label': args.group_label,
+            'orig_input_data': args.orig_input_data,
             'pet_tracer': args.pet_tracer,
-            'no_pvc': args.no_pvc
+            'no_pvc': args.no_pvc,
+            'fwhm': args.fwhm,
         }
         pipeline = SpatialSVM(
             caps_directory=self.absolute_path(args.caps_directory),
