@@ -201,21 +201,3 @@ def save_as_pt(input_img):
     torch.save(image_tensor.clone(), output_file)
 
     return output_file
-
-
-def get_data_datasink(image_id):
-    substitutions_ls = [  # registration
-            (image_id + '_T1w_corrected.nii.gz',
-                image_id + '_T1w_desc-BiasCorrected_T1w.nii.gz'),
-            (image_id + 'Warped_cropped_intensity_norm.nii.gz',
-                image_id + '_T1w_space-MNI152NLin2009cSym_res-1x1x1_intensity_norm_T1w.nii.gz'),
-            (image_id + 'Warped_cropped.nii.gz',
-                image_id + '_T1w_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz'),
-            (image_id + '0GenericAffine.mat',
-                image_id + '_T1w_space-MNI152NLin2009cSym_res-1x1x1_affine.mat'),
-            (image_id + 'Warped_cropped.pt',
-                image_id + '_T1w_space-MNI152NLin2009cSym_res-1x1x1_T1w.pt'),
-            (image_id + 'Warped.nii.gz',
-                image_id + '_T1w_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz')
-            ]
-    return image_id, substitutions_ls
