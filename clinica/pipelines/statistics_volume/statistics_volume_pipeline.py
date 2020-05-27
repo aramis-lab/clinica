@@ -67,21 +67,13 @@ class StatisticsVolume(cpe.Pipeline):
         all_errors = []
         if self.parameters['orig_input_data'] == 'pet-volume':
             self.parameters['measure_label'] = 'fdg'
-            try:
-                input_files = clinica_file_reader(self.subjects,
-                                                  self.sessions,
-                                                  self.caps_directory,
-                                                  {'pattern': '*_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-' + str(self.parameters['full_width_at_half_maximum']) + 'mm_pet.nii*',
-                                                   'description': 'pons normalized FDG PET image in MNI space (brain masked)',
-                                                   'needed_pipeline': 'pet-volume'})
-            except ClinicaException as e:
-                all_errors.append(e)
+            information_dict = {
+                'pattern': '*_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-' + str(self.parameters['full_width_at_half_maximum']) + 'mm_pet.nii*',
+                'description': 'pons normalized FDG PET image in MNI space (brain masked)',
+                'needed_pipeline': 'pet-volume'
+            }
         elif self.parameters['orig_input_data'] == 't1-volume':
-            self.parameters['measure_label'] = 'graymatter'
-            try:
-                input_files = t1_volume_template_tpm_in_mni(gic, 0, True)
-            except ClinicaException as e:
-                all_errors.append(e)
+            information_dict = t1_volume_template_tpm_in_mni(gic, 0, True)
 
         else:
             if not self.parameters['custom_file']:
@@ -89,19 +81,23 @@ class StatisticsVolume(cpe.Pipeline):
                                        + Fore.Blue + self.parameters['measure_label'] + Fore.RED + '! Clinica can\'t '
                                        + 'know what file to use in your analysis ! Type: \n\t' + Fore.BLUE + 'clinica run statistics-volume\n'
                                        + Fore.RED + ' to have help on how to use the command line.' + Fore.RESET)
-            try:
-                # If custom file are grabbed, information of fwhm is irrelevant and should not appear on final filenames
-                self.parameters['full_width_at_half_maximum'] = None
-                input_files = clinica_file_reader(self.subjects,
-                                                  self.sessions,
-                                                  self.caps_directory,
-                                                  {'pattern': self.parameters['custom_file'],
-                                                   'description': 'custom file provided by user'})
-            except ClinicaException as e:
-                all_errors.append(e)
+            # If custom file are grabbed, information of fwhm is irrelevant and should not appear on final filenames
+            self.parameters['full_width_at_half_maximum'] = None
+            information_dict = {
+                'pattern': self.parameters['custom_file'],
+                'description': 'custom file provided by user'
+            }
+
+        try:
+            input_files = clinica_file_reader(self.subjects,
+                                              self.sessions,
+                                              self.caps_directory,
+                                              information_dict)
+        except ClinicaException as e:
+            all_errors.append(e)
 
         if len(all_errors) > 0:
-            error_message = 'Clinica faced errors while trying to read files in your BIDS or CAPS directories.\n'
+            error_message = 'Clinica faced errors while trying to read files in your CAPS directories.\n'
             for msg in all_errors:
                 error_message += str(msg)
             raise ClinicaException(error_message)
