@@ -56,6 +56,7 @@ class StatisticsVolume(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.input_files import t1_volume_template_tpm_in_mni
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process, print_begin_image
 
@@ -78,12 +79,7 @@ class StatisticsVolume(cpe.Pipeline):
         elif self.parameters['orig_input_data'] == 't1-volume':
             self.parameters['measure_label'] = 'graymatter'
             try:
-                input_files = clinica_file_reader(self.subjects,
-                                                  self.sessions,
-                                                  self.caps_directory,
-                                                  {'pattern': 't1/spm/dartel/group-' + gic + '/*_T1w_segm-graymatter_space-Ixi549Space_modulated-on_fwhm-' + str(self.parameters['full_width_at_half_maximum']) + 'mm_probability.nii.*',
-                                                   'description': 'probability map of gray matter segmentation based on T1w image in MNI space',
-                                                   'needed_pipeline': 't1-volume or t1-volume-existing-template'})
+                input_files = t1_volume_template_tpm_in_mni(gic, 0, True)
             except ClinicaException as e:
                 all_errors.append(e)
 
