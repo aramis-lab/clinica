@@ -1,7 +1,7 @@
 # coding: utf8
 
 """
-Clinica exceptions
+This module handles Clinica exceptions.
 """
 
 

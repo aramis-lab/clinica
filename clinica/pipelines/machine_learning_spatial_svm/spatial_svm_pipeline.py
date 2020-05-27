@@ -6,11 +6,6 @@ import clinica.pipelines.engine as cpe
 class SpatialSVM(cpe.Pipeline):
     """SpatialSVM - Prepare input data for SVM with spatial and anatomical regularization.
 
-    Args:
-        input_dir: A BIDS directory.
-        output_dir: An empty output directory where CAPS structured data will be written.
-        subjects_sessions_list: The Subjects-Sessions list file (in .tsv format).
-
     Returns:
         A clinica pipeline object containing the SpatialSVM pipeline.
 
@@ -21,18 +16,18 @@ class SpatialSVM(cpe.Pipeline):
         """Check pipeline parameters."""
         from clinica.utils.group import check_group_label
 
-        if 'group_id' not in self.parameters.keys():
-            raise KeyError('Missing compulsory group_id key in pipeline parameter.')
+        if 'group_label' not in self.parameters.keys():
+            raise KeyError('Missing compulsory group_label key in pipeline parameter.')
+        if 'orig_input_data' not in self.parameters.keys():
+            raise KeyError('Missing compulsory orig_input_data key in pipeline parameter.')
         if 'fwhm' not in self.parameters.keys():
             self.parameters['fwhm'] = 4
-        if 'image_type' not in self.parameters.keys():
-            self.parameters['image_type'] = 't1'
         if 'pet_tracer' not in self.parameters.keys():
             self.parameters['pet_tracer'] = 'fdg'
         if 'no_pvc' not in self.parameters.keys():
             self.parameters['no_pvc'] = False
 
-        check_group_label(self.parameters['group_id'])
+        check_group_label(self.parameters['group_label'])
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
@@ -70,11 +65,11 @@ class SpatialSVM(cpe.Pipeline):
         from clinica.utils.ux import print_groups_in_caps_directory
 
         # Check that group already exists
-        if not os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])):
+        if not os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_label'])):
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
                 '%sGroup %s does not exist. Did you run pet-volume, t1-volume or t1-volume-create-dartel pipeline?%s' %
-                (Fore.RED, self.parameters['group_id'], Fore.RESET)
+                (Fore.RED, self.parameters['group_label'], Fore.RESET)
             )
 
         read_parameters_node = npe.Node(name="LoadingCLIArguments",
@@ -82,30 +77,30 @@ class SpatialSVM(cpe.Pipeline):
                                                                           mandatory_inputs=True))
         all_errors = []
 
-        if self.parameters['image_type'] == 't1':
+        if self.parameters['orig_input_data'] == 't1-volume':
             caps_files_information = {
-                'pattern': os.path.join('t1', 'spm', 'dartel', 'group-' + self.parameters['group_id'],
+                'pattern': os.path.join('t1', 'spm', 'dartel', 'group-' + self.parameters['group_label'],
                                         '*_T1w_segm-graymatter_space-Ixi549Space_modulated-on_probability.nii.gz'),
                 'description': 'graymatter tissue segmented in T1w MRI in Ixi549 space',
                 'needed_pipeline': 't1-volume-tissue-segmentation'
             }
-        elif self.parameters['image_type'] is 'pet':
+        elif self.parameters['orig_input_data'] is 'pet-volume':
             if self.parameters['no_pvc']:
                 caps_files_information = {
-                    'pattern': os.path.join('pet', 'preprocessing', 'group-' + self.parameters['group_id'],
+                    'pattern': os.path.join('pet', 'preprocessing', 'group-' + self.parameters['group_label'],
                                             '*_pet_space-Ixi549Space_suvr-pons_pet.nii.gz'),
                     'description': self.parameters['pet_tracer'] + ' PET in Ixi549 space',
                     'needed_pipeline': 'pet-volume'
                 }
             else:
                 caps_files_information = {
-                    'pattern': os.path.join('pet', 'preprocessing', 'group-' + self.parameters['group_id'],
+                    'pattern': os.path.join('pet', 'preprocessing', 'group-' + self.parameters['group_label'],
                                             '*_pet_space-Ixi549Space_pvc-rbv_suvr-pons_pet.nii.gz'),
                     'description': self.parameters['pet_tracer'] + ' PET partial volume corrected (RBV) in Ixi549 space',
                     'needed_pipeline': 'pet-volume with PVC'
                 }
         else:
-            raise ValueError('Image type ' + self.parameters['image_type'] + ' unknown.')
+            raise ValueError('Image type ' + self.parameters['orig_input_data'] + ' unknown.')
 
         try:
             input_image = clinica_file_reader(self.subjects,
@@ -117,7 +112,7 @@ class SpatialSVM(cpe.Pipeline):
 
         try:
             dartel_input = clinica_group_reader(self.caps_directory,
-                                                t1_volume_final_group_template(self.parameters['group_id']))
+                                                t1_volume_final_group_template(self.parameters['group_label']))
         except ClinicaException as e:
             all_errors.append(e)
 
@@ -175,33 +170,33 @@ class SpatialSVM(cpe.Pipeline):
                             name='sinker')
         datasink.inputs.base_directory = self.caps_directory
         datasink.inputs.parameterization = True
-        if self.parameters['image_type'] == 't1':
+        if self.parameters['orig_input_data'] == 't1-volume':
             datasink.inputs.regexp_substitutions = [
                 (r'(.*)/regularized_image/.*/(.*(sub-(.*)_ses-(.*))_T1w(.*)_probability(.*))$',
                  r'\1/subjects/sub-\4/ses-\5/machine_learning/input_spatial_svm/group-' + self.parameters[
-                     'group_id'] + r'/\3_T1w\6_spatialregularization\7'),
+                     'group_label'] + r'/\3_T1w\6_spatialregularization\7'),
 
                 (r'(.*)json_file/(output_data.json)$',
-                 r'\1/groups/group-' + self.parameters['group_id'] + r'/machine_learning/input_spatial_svm/group-' + self.parameters[
-                     'group_id'] + r'_space-Ixi549Space_parameters.json'),
+                 r'\1/groups/group-' + self.parameters['group_label'] + r'/machine_learning/input_spatial_svm/group-' + self.parameters[
+                     'group_label'] + r'_space-Ixi549Space_parameters.json'),
 
                 (r'(.*)fisher_tensor_path/(output_fisher_tensor.npy)$',
-                 r'\1/groups/group-' + self.parameters['group_id'] + r'/machine_learning/input_spatial_svm/group-' + self.parameters[
-                     'group_id'] + r'_space-Ixi549Space_gram.npy')
+                 r'\1/groups/group-' + self.parameters['group_label'] + r'/machine_learning/input_spatial_svm/group-' + self.parameters[
+                     'group_label'] + r'_space-Ixi549Space_gram.npy')
             ]
 
-        elif self.parameters['image_type'] == 'pet':
+        elif self.parameters['orig_input_data'] == 'pet-volume':
             datasink.inputs.regexp_substitutions = [
                 (r'(.*)/regularized_image/.*/(.*(sub-(.*)_ses-(.*))_(task.*)_pet(.*))$',
                  r'\1/subjects/sub-\4/ses-\5/machine_learning/input_spatial_svm/group-' + self.parameters[
-                     'group_id'] + r'/\3_\6_spatialregularization\7'),
+                     'group_label'] + r'/\3_\6_spatialregularization\7'),
                 (r'(.*)json_file/(output_data.json)$',
-                 r'\1/groups/group-' + self.parameters['group_id'] + r'/machine_learning/input_spatial_svm/group-' +
-                 self.parameters['group_id'] + r'_space-Ixi549Space_parameters.json'),
+                 r'\1/groups/group-' + self.parameters['group_label'] + r'/machine_learning/input_spatial_svm/group-' +
+                 self.parameters['group_label'] + r'_space-Ixi549Space_parameters.json'),
                 (r'(.*)fisher_tensor_path/(output_fisher_tensor.npy)$',
-                 r'\1/groups/group-' + self.parameters['group_id'] + r'/machine_learning/input_spatial_svm/group-' +
+                 r'\1/groups/group-' + self.parameters['group_label'] + r'/machine_learning/input_spatial_svm/group-' +
                  self.parameters[
-                     'group_id'] + r'_space-Ixi549Space_gram.npy')
+                     'group_label'] + r'_space-Ixi549Space_gram.npy')
             ]
         # Connection
         # ==========

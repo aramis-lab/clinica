@@ -1,7 +1,9 @@
 # coding: utf8
 
 """
+This module contains the Pipeline abstract class needed for Clinica.
 
+Subclasses are located in clinica/pipeline/<pipeline_name>/<pipeline_name>_pipeline.py
 """
 
 import abc
@@ -509,7 +511,7 @@ class Pipeline(Workflow):
                    + 'Running anyway...' + Fore.RESET)
 
     def update_parallelize_info(self, plugin_args):
-        """ Peforms some checks of the number of threads given in parameters,
+        """ Performs some checks of the number of threads given in parameters,
         given the number of CPUs of the machine in which clinica is running.
         We force the use of plugin MultiProc
 
@@ -557,7 +559,7 @@ class Pipeline(Workflow):
                 cprint('How many threads do you want to use? If you do not '
                        + 'answer within ' + str(timeout)
                        + ' sec, default value of ' + str(n_cpu - 1)
-                       + ' will be taken.')
+                       + ' will be taken. Use --n_procs argument if you want to disable this message next time.')
                 stdin_answer, __, ___ = select.select([sys.stdin], [], [], timeout)
                 if stdin_answer:
                     answer = str(sys.stdin.readline().strip())
@@ -568,7 +570,7 @@ class Pipeline(Workflow):
                         break
                 cprint(Fore.RED + 'Your answer must be a positive integer.'
                        + Fore.RESET)
-            # If plugin_args is None, create the dictionnary
+            # If plugin_args is None, create the dictionary
             # If it already a dict, just update (or create -it is the same
             # code-) the correct key / value
             if plugin_args is None:

@@ -1,8 +1,9 @@
 # coding: utf8
 
 """
-Redirect stream and log
+This module handles stream and log redirection.
 """
+
 import sys
 
 clinica_verbose = False

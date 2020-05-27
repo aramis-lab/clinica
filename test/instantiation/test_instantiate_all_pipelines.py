@@ -323,7 +323,8 @@ def test_instantiate_SpatialSVM():
     root = join(root, 'data', 'SpatialSVM')
 
     parameters = {
-        'group_id': 'ADNIbl'
+        'group_label': 'ADNIbl',
+        'orig_input_data': 't1-volume'
     }
     pipeline = SpatialSVM(
         caps_directory=join(root, 'in', 'caps'),

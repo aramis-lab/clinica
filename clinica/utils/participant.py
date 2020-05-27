@@ -1,4 +1,11 @@
 # coding: utf8
+
+"""
+This module contains utilities for longitudinal pipelines.
+
+See CAPS specifications for details about long ID.
+"""
+
 from clinica.utils.filemanip import read_participant_tsv
 
 
