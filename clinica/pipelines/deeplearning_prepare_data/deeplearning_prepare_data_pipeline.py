@@ -106,7 +106,6 @@ class DeepLearningPrepareData(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from clinica.utils.nipype import (fix_join, container_from_filename)
         from clinica.utils.filemanip import get_subject_id
-        from .deeplearning_prepare_data_utils import get_data_datasink
 
         # Write node
         # ----------------------
