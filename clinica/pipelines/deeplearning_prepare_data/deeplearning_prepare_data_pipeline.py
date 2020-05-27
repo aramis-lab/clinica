@@ -117,15 +117,6 @@ class DeepLearningPrepareData(cpe.Pipeline):
         write_node.inputs.base_directory = self.caps_directory
         write_node.inputs.parameterization = False
 
-        # Node
-        # ----------------------
-        get_ids = npe.Node(
-                interface=nutil.Function(
-                    input_names=['image_id'],
-                    output_names=['image_id_out', 'subst_ls'],
-                    function=get_data_datasink),
-                name="GetIDs")
-
         # Get subject ID node
         # ----------------------
         image_id_node = npe.Node(
@@ -149,11 +140,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
             (self.input_node, image_id_node, [('t1w', 'bids_or_caps_file')]),
             (self.input_node, container_path, [('t1w', 'bids_or_caps_filename')]),
             # (image_id_node, write_node, [('image_id', '@image_id')]),
-            (image_id_node, get_ids, [('image_id', 'image_id')]),
-            # Connect to DataSink
-            (get_ids, write_node, [('image_id_out', '@image_id')]),
-            (get_ids, write_node, [('subst_ls', 'substitutions')])
-
+            (image_id_node, write_node, [('image_id', '@image_id')]),
             ])
 
         subfolder = 'image_based'
