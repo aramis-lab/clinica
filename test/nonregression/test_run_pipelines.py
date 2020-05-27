@@ -527,6 +527,7 @@ def test_run_StatisticsSurface(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     parameters = {
+        'orig_input_data': 't1-freesurfer',
         'design_matrix': '1 + group + age + sex',
         'contrast': 'group',
         'str_format': '%s %s %s %f %s',
@@ -718,8 +719,9 @@ def test_run_StatisticsVolume(cmdopt):
 
     # Instantiate pipeline and run()
     parameters = {
+        'orig_input_data': 'pet-volume',
         'contrast': 'group',
-        'feature_type': 'fdg',
+        'measure_label': 'fdg',
         'group_label': 'UnitTest',
         'cluster_threshold': 0.001,
         'group_id_caps': None,

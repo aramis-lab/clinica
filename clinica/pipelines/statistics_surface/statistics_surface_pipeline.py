@@ -45,10 +45,12 @@ class StatisticsSurface(cpe.Pipeline):
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.group import check_group_label
 
+        if 'orig_input_data' not in self.parameters.keys():
+            raise KeyError('Missing compulsory orig_input_data key in pipeline parameter.')
         if 'custom_file' not in self.parameters.keys():
             self.parameters['custom_file'] = get_t1_freesurfer_custom_file()
-        if 'feature_label' not in self.parameters.keys():
-            self.parameters['feature_label'] = 'ct',
+        if 'measure_label' not in self.parameters.keys():
+            self.parameters['measure_label'] = 'ct',
         if 'full_width_at_half_maximum' not in self.parameters.keys():
             self.parameters['full_width_at_half_maximum'] = 20
         if 'cluster_threshold' not in self.parameters.keys():

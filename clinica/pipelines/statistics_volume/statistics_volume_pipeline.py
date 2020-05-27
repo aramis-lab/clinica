@@ -13,6 +13,9 @@ class StatisticsVolume(cpe.Pipeline):
         """Check pipeline parameters."""
         from clinica.utils.exceptions import ClinicaException
 
+        if 'orig_input_data' not in self.parameters.keys():
+            raise KeyError('Missing compulsory orig_input_data key in pipeline parameter.')
+
         if self.parameters['cluster_threshold'] < 0 or self.parameters['cluster_threshold'] > 1:
             raise ClinicaException("Cluster threshold should be between 0 and 1 "
                                    "(given value: %s)." % self.parameters['cluster_threshold'])
@@ -48,15 +51,11 @@ class StatisticsVolume(cpe.Pipeline):
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
-        import os
         from colorama import Fore
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from clinica.iotools.utils.data_handling import check_volume_location_in_world_coordinate_system
-        from clinica.utils.exceptions import ClinicaBIDSError, ClinicaException
-        from clinica.utils.filemanip import extract_subjects_sessions_from_filename, save_participants_sessions
+        from clinica.utils.exceptions import ClinicaException
         from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.input_files import T1W_NII
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process, print_begin_image
 
@@ -65,7 +64,8 @@ class StatisticsVolume(cpe.Pipeline):
             gic = self.parameters['group_id_caps']
 
         all_errors = []
-        if self.parameters['feature_type'] == 'fdg':
+        if self.parameters['orig_input_data'] == 'pet-volume':
+            self.parameters['measure_label'] = 'fdg'
             try:
                 input_files = clinica_file_reader(self.subjects,
                                                   self.sessions,
@@ -75,7 +75,8 @@ class StatisticsVolume(cpe.Pipeline):
                                                    'needed_pipeline': 'pet-volume'})
             except ClinicaException as e:
                 all_errors.append(e)
-        elif self.parameters['feature_type'] == 'graymatter':
+        elif self.parameters['orig_input_data'] == 't1-volume':
+            self.parameters['measure_label'] = 'graymatter'
             try:
                 input_files = clinica_file_reader(self.subjects,
                                                   self.sessions,
@@ -87,9 +88,9 @@ class StatisticsVolume(cpe.Pipeline):
                 all_errors.append(e)
 
         else:
-            if not self.parameters['custom_files']:
-                raise ClinicaException(Fore.RED + '[Error] You did not specify the --custom_files flag in the command line for the feature type '
-                                       + Fore.Blue + self.parameters['feature_type'] + Fore.RED + '! Clinica can\'t '
+            if not self.parameters['custom_file']:
+                raise ClinicaException(Fore.RED + '[Error] You did not specify the --custom_file flag in the command line for the feature type '
+                                       + Fore.Blue + self.parameters['measure_label'] + Fore.RED + '! Clinica can\'t '
                                        + 'know what file to use in your analysis ! Type: \n\t' + Fore.BLUE + 'clinica run statistics-volume\n'
                                        + Fore.RED + ' to have help on how to use the command line.' + Fore.RESET)
             try:
@@ -98,7 +99,7 @@ class StatisticsVolume(cpe.Pipeline):
                 input_files = clinica_file_reader(self.subjects,
                                                   self.sessions,
                                                   self.caps_directory,
-                                                  {'pattern': self.parameters['custom_files'],
+                                                  {'pattern': self.parameters['custom_file'],
                                                    'description': 'custom file provided by user'})
             except ClinicaException as e:
                 all_errors.append(e)
@@ -134,7 +135,7 @@ class StatisticsVolume(cpe.Pipeline):
         relative_path = join('groups',
                              'group-' + self.parameters['group_label'],
                              'statistics_volume',
-                             'group_comparison_measure-' + self.parameters['feature_type'])
+                             'group_comparison_measure-' + self.parameters['measure_label'])
 
         datasink = npe.Node(nio.DataSink(), name='sinker')
         datasink.inputs.base_directory = join(self.caps_directory, relative_path)
@@ -173,7 +174,7 @@ class StatisticsVolume(cpe.Pipeline):
                 # regression coefficient
                 (join(self.caps_directory, relative_path) + r'/regression_coeff/(.*).nii',
                  join(self.caps_directory, relative_path) + '/group-' + self.parameters['group_label'] + r'_covariate-\1'
-                 + '_measure-' + self.parameters['feature_type'] + '_fwhm-'
+                 + '_measure-' + self.parameters['measure_label'] + '_fwhm-'
                  + str(self.parameters['full_width_at_half_maximum']) + '_regressionCoefficient.nii'),
 
             ]
@@ -291,7 +292,7 @@ class StatisticsVolume(cpe.Pipeline):
                                     name='read_output_node')
         read_output_node.inputs.group_id = self.parameters['group_label']
         read_output_node.inputs.fwhm = self.parameters['full_width_at_half_maximum']
-        read_output_node.inputs.measure = self.parameters['feature_type']
+        read_output_node.inputs.measure = self.parameters['measure_label']
 
         # Connection
         # ==========

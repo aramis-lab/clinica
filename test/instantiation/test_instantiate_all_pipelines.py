@@ -220,13 +220,14 @@ def test_instantiate_StatisticsSurface():
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'StatisticsSurface')
     parameters = {
+        'orig_input_data': 't1-freesurfer',
         'design_matrix': '1 + group + age + sex',
         'contrast': 'group',
         'str_format': '%s %s %s %f %s',
         'group_label': 'UnitTest',
         'glm_type': 'group_comparison',
         'custom_file': '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh',
-        'feature_label': 'cortical_thickness',
+        'measure_label': 'ct',
         'full_width_at_half_maximum': 20,
         'cluster_threshold': 0.001
     }
@@ -358,8 +359,9 @@ def test_instantiate_StatisticsVolume():
 
     # Instantiate pipeline and run()
     parameters = {
+        'orig_input_data': 'pet-volume',
         'contrast': 'group',
-        'feature_type': 'fdg',
+        'measure_label': 'fdg',
         'group_label': 'UnitTest',
         'cluster_threshold': 0.001,
         'group_id_caps': None,
