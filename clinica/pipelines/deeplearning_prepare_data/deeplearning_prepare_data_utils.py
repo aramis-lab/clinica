@@ -195,10 +195,10 @@ def extract_patches(preprocessed_T1, patch_size, stride_size):
 def save_as_pt(input_img):
     """This function transforms  nii.gz file into .pt format, in order to train
        the classifiers model more efficient when loading the data.
-    
+
     Args:
         input_img: MRI in nifty format
-    
+
     Returns:
         file: file stored in the disk
     """
