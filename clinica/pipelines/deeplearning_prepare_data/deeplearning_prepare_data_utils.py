@@ -1,11 +1,15 @@
 # coding: utf8
 
 def extract_slices(preprocessed_T1, slice_direction=0, slice_mode='original'):
-    """
-    This function extracts the slices from three directions
-    :param preprocessed_T1:
-    :param slice_direction: which axis direction that the slices were extracted
-    :return:
+    """This function extracts the slices from three directions
+
+    Args:
+        preprocessed_T1: tensor version of the nifty MRI.
+        slice_direction: which axis direction that the slices were extracted
+        slice_mode: 'original' or 'RGB'
+
+    Returns:
+        file: tensor saved on the disk.
     """
     import torch
     import os
@@ -145,10 +149,15 @@ def extract_slices(preprocessed_T1, slice_direction=0, slice_mode='original'):
 
 
 def extract_patches(preprocessed_T1, patch_size, stride_size):
-    """
-    This function extracts the patches from three directions
-    :param preprocessed_T1:
-    :return:
+    """This function extracts the patches from three directions
+
+    Args:
+        preprocessed_T1: tensor version of the nifty MRI
+        patch_size: size of each patch
+        stride_size: size of each stride
+
+    Returns:
+        file: file stored in the disk
     """
     import torch
     import os
@@ -184,11 +193,14 @@ def extract_patches(preprocessed_T1, patch_size, stride_size):
 
 
 def save_as_pt(input_img):
-    """
-    This function transforms  nii.gz file into .pt format, in order to train
-    the classifiers model more efficient when loading the data.
-    :param input_img:
-    :return:
+    """This function transforms  nii.gz file into .pt format, in order to train
+       the classifiers model more efficient when loading the data.
+    
+    Args:
+        input_img: MRI in nifty format
+    
+    Returns:
+        file: file stored in the disk
     """
 
     import torch
