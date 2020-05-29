@@ -14,7 +14,7 @@ config.update_config(cfg)
 class DeepLearningPrepareData(cpe.Pipeline):
     """Deeplearning prepare data - MRI in nifty format are transformed into
     Pytorch tensors. The transformation is applied to: the whole volume, a
-    selection of 3D patches, or slices extracted from the 3D volume.
+    selection of 3D patches, or slices extracted from the 3D volume. By default it uses the cropped version of the MRI (see option 
 
 
     Returns:
@@ -54,14 +54,20 @@ class DeepLearningPrepareData(cpe.Pipeline):
         from clinica.utils.stream import cprint
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.input_files import T1W_LINEAR
+        from clinica.utils.input_files import T1W_LINEAR_CROPPED
         from clinica.utils.ux import print_images_to_process
+
+        if self.parameters.get('use_full_MRI'):
+            FILE_TYPE=T1W_LINEAR
+        else
+            FILE_TYPE=T1W_LINEAR_CROPPED
 
         # T1w_Linear file:
         try:
             t1w_files = clinica_file_reader(self.subjects,
                                             self.sessions,
                                             self.caps_directory,
-                                            T1W_LINEAR)
+                                            FILE_TYPE)
         except ClinicaException as e:
             err = 'Clinica faced error(s) while trying to read files in your BIDS directory.\n' + str(e)
             raise ClinicaBIDSError(err)
