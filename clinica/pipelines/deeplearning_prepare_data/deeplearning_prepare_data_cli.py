@@ -45,6 +45,14 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
         # method below. Example below:
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
 
+        optional.add_argument("use_full_MRI",
+                                  help='''If this option is enable, the full MRI
+                                       is converted to tensor version. Otherwise
+                                       only the cropped version of the MRI is
+                                       converted.''',
+                                  default=False, action="store_true"
+                                  )
+        
         optional.add_argument(
                 '-psz', '--patch_size',
                 help='''Patch size (only for 'patch' extraction) e.g: --patch_size 50''',
