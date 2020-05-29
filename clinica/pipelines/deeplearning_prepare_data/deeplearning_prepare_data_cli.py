@@ -46,13 +46,13 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
 
         optional.add_argument("use_full_MRI",
-                                  help='''If this option is enable, the full MRI
+                              help='''If this option is enable, the full MRI
                                        is converted to tensor version. Otherwise
                                        only the cropped version of the MRI is
                                        converted.''',
-                                  default=False, action="store_true"
-                                  )
-        
+                              default=False, action="store_true"
+                              )
+
         optional.add_argument(
                 '-psz', '--patch_size',
                 help='''Patch size (only for 'patch' extraction) e.g: --patch_size 50''',
@@ -81,7 +81,6 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
 
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
-
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
