@@ -15,7 +15,10 @@ def extract_slices(preprocessed_T1, slice_direction=0, slice_mode='original'):
     image_tensor = image_tensor.view(image_tensor.shape[1], image_tensor.shape[2], image_tensor.shape[3])
 
     # sagital
-    slice_list_sag = range(20, image_tensor.shape[0] - 20)  # delete the first 20 slice and last 20 slices
+    # M and N correspond to the first and last slices (if need to remove)
+    M = 0
+    N = 0
+    slice_list_sag = range(M, image_tensor.shape[0] - N)  # delete the first 20 slice and last 20 slices
 
     basedir = os.getcwd()
     output_file_original = []
@@ -60,7 +63,7 @@ def extract_slices(preprocessed_T1, slice_direction=0, slice_mode='original'):
 
     elif slice_direction == 1:
         # cornal
-        slice_list_cor = range(15, image_tensor.shape[1] - 15)  # delete the first 20 slice and last 15 slices
+        slice_list_cor = range(M, image_tensor.shape[1] - N)  # delete the first 20 slice and last 15 slices
         for index_slice, index_slice_list in zip(slice_list_cor, range(len(slice_list_cor))):
             # for i in slice_list:
             # sagital
@@ -100,7 +103,7 @@ def extract_slices(preprocessed_T1, slice_direction=0, slice_mode='original'):
     else:
 
         # axial
-        slice_list_axi = range(15, image_tensor.shape[2] - 15)  # delete the first 20 slice and last 15 slices
+        slice_list_axi = range(M, image_tensor.shape[2] - N)  # delete the first 15 slice and last 15 slices
         for index_slice, index_slice_list in zip(slice_list_axi, range(len(slice_list_axi))):
             # for i in slice_list:
             # sagital
