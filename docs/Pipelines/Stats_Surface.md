@@ -26,12 +26,12 @@ If you only installed the core of Clinica, this pipeline needs the installation 
 ## Running the pipeline
 
 The pipeline can be run with the following command line:
-```
+```Text
 clinica run statistics-surface caps_directory subject_visits_with_covariates_tsv design_matrix contrast string_format group_label glm_type
 ```
 where:
 
-- `caps_directory` is the folder containing the results of the [`t1-freesurfer`](../T1_FreeSurfer) or [`pet-surface` pipeline](../PET_Surface) pipeline and the output of the present command, both in a [CAPS hierarchy](../../CAPS/Introduction).
+- `caps_directory` is the folder containing the results of the [`t1-freesurfer`](../T1_FreeSurfer) or [`pet-surface`](../PET_Surface) pipeline and the output of the present command, both in a [CAPS hierarchy](../../CAPS/Introduction).
 - `subject_visits_with_covariates_tsv` is a TSV file containing a list of subjects with their sessions and all the covariates and factors in your model (the content of the file is explained in the [Example](../Stats_Surface/#comparison-analysis) subsection).
 - `design_matrix` is a string defining the model that fits into the GLM, e.g. `1 + group + sex + age` where `group`, `sex` and `age` correspond to the names of columns in the TSV file provided.
 - `contrast` is a string defining the contrast matrix or the variable of interest for the GLM, e.g. `group` or `age`.
@@ -113,8 +113,8 @@ We call this file `ADvsHC_participants.tsv`. The columns of the TSV file contain
 Our linear model formula will be: `CorticalThickness = 1 + age + sex + group`. In this linear model, the `age` and `sex` are the covariates, and `group` is the contrast. Please note that all these variables should correspond to the names of the columns in the `ADvsHC_participants.tsv` file.
 
 Finally, the command line is:
-```bash
-clinica run statistics-surface caps_directory ADvsHC_participants.tsv "1 + age + sex + group" "group" "%s %s %s %s %f" group
+```Text
+clinica run statistics-surface caps_directory ADvsHC_participants.tsv "1 + age + sex + group" "group" "%s %s %s %s %f" group_comparison
 ```
 
 The parameters of the command line are stored in the `group-ADvsHC_glm.json` file:
@@ -137,7 +137,7 @@ The blue area corresponds to the vertex-based corrected p-value and the yellow a
 Let's now assume that you are interested in knowing whether cortical thickness is correlated with age using the same population as above, namely `ADvsHC_participants.tsv`. The string format of the TSV file does not change (i.e. `"%s %s %s %s %f"`). The contrast will become `age` and we will choose `correlation` instead of `group_comparison`.
 
 Finally, the command line is simply:
-```bash
+```Text
 clinica run statistics-surface caps_directory ADvsHC_participants.tsv "1 + age + sex + group" "age" "%s %s %s %s %f" correlation
 ```
 ## Describing this pipeline in your paper
