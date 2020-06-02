@@ -35,7 +35,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
             A list of (string) input fields name.
         """
 
-        return ['t1w']  # Fill here the list
+        return ['input_nifti']
 
     def get_output_fields(self):
         """Specify the list of possible outputs of this pipeline.
@@ -94,7 +94,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
         # -------------------------
         read_node = npe.Node(name="ReadingFiles",
                              iterables=[
-                                 ('t1w', t1w_files),
+                                 ('input_nifti', t1w_files),
                              ],
                              synchronize=True,
                              interface=nutil.IdentityInterface(
@@ -102,7 +102,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
                              )
 
         self.connect([
-            (read_node, self.input_node, [('t1w', 't1w')]),
+            (read_node, self.input_node, [('input_nifti', 'input_nifti')]),
         ])
 
     def build_output_node(self):
@@ -142,8 +142,8 @@ class DeepLearningPrepareData(cpe.Pipeline):
                 name='ContainerPath')
 
         self.connect([
-            (self.input_node, image_id_node, [('t1w', 'bids_or_caps_file')]),
-            (self.input_node, container_path, [('t1w', 'bids_or_caps_filename')]),
+            (self.input_node, image_id_node, [('input_nifti', 'bids_or_caps_file')]),
+            (self.input_node, container_path, [('input_nifti', 'bids_or_caps_filename')]),
             # (image_id_node, write_node, [('image_id', '@image_id')]),
             (image_id_node, write_node, [('image_id', '@image_id')]),
             ])
@@ -233,7 +233,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
         # Connections
         # ----------------------
         self.connect([
-            (self.input_node, save_as_pt, [('t1w', 'input_img')]),
+            (self.input_node, save_as_pt, [('input_nifti', 'input_img')]),
             ])
 
         if self.parameters.get('extract_method') == 'slice':
