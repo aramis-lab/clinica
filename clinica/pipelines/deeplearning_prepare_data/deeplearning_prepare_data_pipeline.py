@@ -12,9 +12,10 @@ config.update_config(cfg)
 
 
 class DeepLearningPrepareData(cpe.Pipeline):
-    """Deeplearning prepare data - MRI in nifty format are transformed into
-    Pytorch tensors. The transformation is applied to: the whole volume, a
-    selection of 3D patches, or slices extracted from the 3D volume. By default it uses the cropped version of the MRI (see option
+    """Deeplearning prepare data - MRI in nifti format are transformed into
+    PyTorch tensors. The transformation is applied to: the whole volume, a
+    selection of 3D patches, or slices extracted from the 3D volume. By default
+    it uses the cropped version of the MRI (see option "--use_full_MRI")
 
 
     Returns:
