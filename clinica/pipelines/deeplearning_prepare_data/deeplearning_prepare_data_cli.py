@@ -45,7 +45,7 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
         # method below. Example below:
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
 
-        optional.add_argument("use_full_MRI",
+        optional.add_argument("--use_full_MRI",
                               help='''If this option is enable, the full MRI
                                        is converted to tensor version. Otherwise
                                        only the cropped version of the MRI is
@@ -97,6 +97,7 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
             'stride_size': args.stride_size,
             'slice_direction': args.slice_direction,
             'slice_mode': args.slice_mode,
+            'use_full_MRI': args.use_full_MRI,
         }
 
         pipeline = DeepLearningPrepareData(
