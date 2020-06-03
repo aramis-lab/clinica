@@ -70,7 +70,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
                                             self.caps_directory,
                                             FILE_TYPE)
         except ClinicaException as e:
-            err = 'Clinica faced error(s) while trying to read files in your BIDS directory.\n' + str(e)
+            err = 'Clinica faced error(s) while trying to read files in your CAPS directory.\n' + str(e)
             raise ClinicaBIDSError(err)
 
         if len(self.subjects):
