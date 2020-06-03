@@ -5,30 +5,9 @@ import clinica.pipelines.engine as cpe
 
 class StatisticsSurface(cpe.Pipeline):
     """
-    Based on the Matlab toolbox [SurfStat](http://www.math.mcgill.ca/keith/surfstat/), which performs statistical
-    analyses of univariate and multivariate surface and volumetric data using the generalized linear model (GLM),
-    this pipeline performs analyses including group comparison and correlation with surface-based features e.g.
-    cortical thickness from t1-freesurfer or map of activity from PET data from pet-surface pipeline.
+    StatisticsSurface - Surface-based mass-univariate analysis with SurfStat
 
-    TODO: Refactor StatisticsSurface
-        [ ] build_input_node
-            [X] Remove current read_parameters_node
-            [X] With the help of statistics_surface_utils.py::check_inputs, use new clinica_file_reader function
-                to check and extract surface-based features
-            [X] Delete statistics_surface_utils.py::check_inputs function
-            [X] Move statistics_surface_cli.py checks of input data in this method
-            [ ] Handle overwrite case
-            [ ] Display participants, covariates and info regarding the GLM.
-        [X] build_core_nodes
-            [X] Use surfstat.inputs.full_width_at_half_maximum = self.parameter['full_width_at_half_maximum']
-                instead of connecting read_parameters_node.inputs.full_width_at_half_maximum
-                to surfstat.inputs.full_width_at_half_maximum
-            [X] Repeat for other keys
-            [X] Use working directory
-        [X] build_output_node
-            [X] Remove path_to_matscript and freesurfer_home: it should be set in runmatlab function
-            [X] Copy results from <WD> to <CAPS>
-        [X] Clean/adapt statistics_surface_utils.py
+    See documentation at http://www.clinica.run/doc/Pipelines/Stats_Surface/
 
     Note:
         The `tsv_file` attribute is overloaded for this pipeline. It must contain a list of subjects

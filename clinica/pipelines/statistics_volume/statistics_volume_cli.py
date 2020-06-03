@@ -29,11 +29,11 @@ class StatisticsVolumeCLI(ce.CmdParser):
         clinica_comp.add_argument("contrast",
                                   help='Defines the contrast. Must be one of the column names form the TSV file.')
         clinica_comp.add_argument("orig_input_data",
-                                  help='''Type of volume-based feature: type 
-                                  't1-volume' to use gray matter maps, 
-                                  'pet-volume' to use FDG-PET data or 
-                                  'custom-pipeline' to use you own data in CAPS directory 
-                                  (see Wiki for details).''',
+                                  help='Type of volume-based feature: type ' 
+                                  '\'t1-volume\' to use gray matter maps, '
+                                  '\'pet-volume\' to use FDG-PET data or '
+                                  '\'custom-pipeline\' to use you own data in CAPS directory ' 
+                                  '(see Wiki for details).',
                                   choices=['t1-volume', 'pet-volume', 'custom-pipeline'])
         clinica_comp.add_argument("group_label",
                                   help='User-defined identifier for the provided group of subjects.')
@@ -50,13 +50,13 @@ class StatisticsVolumeCLI(ce.CmdParser):
         opt_custom_input = self._args.add_argument_group(
             '%sPipeline options if you selected custom-pipeline%s' % (Fore.BLUE, Fore.RESET)
         )
-        opt_custom_input.add_argument( "-cf", "--custom_file",
+        opt_custom_input.add_argument("-cf", "--custom_file",
                                       type=str, default=None,
-                                      help='''Custom file string. Specify filename using * when the subject or session name 
-                                      appears e.g. '*_task-rest_acq-fdg_pet_space-Ixi549Space_pet.nii.gz' will grab 
-                                      the corresponding file in all the subjects/sessions. 
-                                      This flag must be specified with the --measure_label flag). 
-                                      See Wiki for an example.''')
+                                      help='Custom file string. Specify filename using * when the subject or session name ' 
+                                      'appears e.g. \'*_task-rest_acq-fdg_pet_space-Ixi549Space_pet.nii.gz\' will grab ' 
+                                      'the corresponding file in all the subjects/sessions. '
+                                      'This flag must be specified with the --measure_label flag). ' 
+                                      'See Wiki for an example.')
         opt_custom_input.add_argument("-ml", "--measure_label",
                                       type=str, default=None,
                                       help='Name of the feature type, it will be saved on the CAPS '

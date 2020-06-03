@@ -24,11 +24,11 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
         clinica_comp.add_argument("orig_input_data",
-                                  help='''Type of surface-based feature: type 
-                                  't1-freesurfer' to use cortical thickness, 
-                                  'pet-surface' to use projected FDG-PET data or 
-                                  'custom-pipeline' to use you own data in CAPS directory 
-                                  (see Wiki for details).''',
+                                  help='Type of surface-based feature: type '
+                                  '\'t1-freesurfer\' to use cortical thickness, '
+                                  '\'pet-surface\' to use projected FDG-PET data or '
+                                  '\'custom-pipeline\' to use you own data in CAPS directory ' 
+                                  '(see Wiki for details).',
                                   choices=['t1-freesurfer', 'pet-surface', 'custom-pipeline'])
         clinica_comp.add_argument("subject_visits_with_covariates_tsv",
                                   help='TSV file containing a list of subjects with their sessions and all '
@@ -40,15 +40,11 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                                   help='String to define the contrast matrix for the GLM, e.g. group. Please note '
                                        'that, when you want to perform negative correlation, the sign is ignored '
                                        'by the command line.')
-        clinica_comp.add_argument("string_format",
-                                  help='String to define the format of the columns in the TSV file, e.g., '
-                                       '%%s %%s %%s %%f if the columns contain a string, a string, a string '
-                                       'and a number, respectively.')
         clinica_comp.add_argument("group_label",
                                   help='User-defined identifier for the provided group of subjects.')
         clinica_comp.add_argument("glm_type",
-                                  help='''String based on the GLM type for the hypothesis .
-                                  You can choose between 'group_comparison' and 'correlation'.''',
+                                  help='String based on the GLM type for the hypothesis. '
+                                  'You can choose between \'group_comparison\' and \'correlation\'.',
                                   choices=['group_comparison', 'correlation'],
                                   )
         # Optional arguments (e.g. FWHM)
@@ -108,7 +104,6 @@ class StatisticsSurfaceCLI(ce.CmdParser):
             'group_label': args.group_label,
             'design_matrix': args.design_matrix,
             'contrast': args.contrast,
-            'str_format': args.string_format,
             'glm_type': args.glm_type,
             'custom_file': args.custom_file,
             'measure_label': args.measure_label,

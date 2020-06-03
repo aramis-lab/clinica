@@ -78,6 +78,30 @@ def init_input_node(parameters, base_dir, subjects_visits_tsv):
     return parameters['group_label'], surfstat_results_dir
 
 
+def get_string_format_from_tsv(tsv_file):
+    """
+    Determine string format from TSV file.
+
+    If the TSV file is like:
+
+    participant_id  session_id  sex     group   age
+    sub-CLNC0001    ses-M00     Female  CN      71.1
+    sub-CLNC0002    ses-M00     Male    CN      81.3
+    sub-CLNC0003    ses-M00     Male    CN      75.4
+
+    The columns of the TSV file contains consecutively strings, strings,
+    strings, strings and float. The string_format is therefore "%s %s %s %s %f".
+
+    Args:
+        tsv_file: TSV file.
+
+    Returns:
+        String formatting of the TSV file (e.g. "%s %s %s %s %f")
+    """
+    import pandas as pd
+
+    return ""
+
 def run_matlab(caps_dir,
                output_dir,
                subjects_visits_tsv,
@@ -124,7 +148,7 @@ def run_matlab(caps_dir,
         subjects_visits_tsv,
         pipeline_parameters['design_matrix'],
         pipeline_parameters['contrast'],
-        pipeline_parameters['str_format'],
+        get_string_format_from_tsv(subjects_visits_tsv),
         pipeline_parameters['glm_type'],
         pipeline_parameters['group_label'],
         freesurfer_home,
@@ -157,7 +181,6 @@ def create_glm_info_dictionary(pipeline_parameters):
     out_dict = {
         'AnalysisType': pipeline_parameters['glm_type'],
         'DesignMatrix': pipeline_parameters['design_matrix'],
-        'StringFormatTSV': pipeline_parameters['str_format'],
         'Contrast': pipeline_parameters['contrast'],
         'GroupLabel': pipeline_parameters['group_label'],
         'FWHM': pipeline_parameters['full_width_at_half_maximum'],
