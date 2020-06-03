@@ -1,7 +1,7 @@
 # coding: utf8
 
 
-import abc
+from abc import ABC, abstractmethod
 
 __author__ = "Jorge Samper-Gonzalez"
 __copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
@@ -13,114 +13,151 @@ __email__ = "jorge.samper-gonzalez@inria.fr"
 __status__ = "Development"
 
 
-class MLWorkflow:
-    __metaclass__ = abc.ABCMeta
+class MLWorkflow(ABC):
 
-    # def __init__(self, ml_input, ml_validation, ml_algorithm, output_dir):
-    #     self._ml_input = ml_input
-    #     self._ml_validation = ml_validation
-    #     self._ml_algorithm = ml_algorithm
-    #     self._output_dir = output_dir
+    def __init__(self, input_class, validation_class, algorithm_class, all_params, output_dir):
 
-    @abc.abstractmethod
+        self._input_class = input_class
+        self._validation_class = validation_class
+        self._algorithm_class = algorithm_class
+
+        self._input_params = self.create_parameters_dict(all_params, input_class)
+        self._validation_params = self.create_parameters_dict(all_params, validation_class)
+        self._algorithm_params = self.create_parameters_dict(all_params, algorithm_class)
+
+        self._output_dir = output_dir
+
+        self._input = None
+        self._validation = None
+        self._algorithm = None
+
     def run(self):
-        pass
 
-    def save_image(self):
+        from os import path, makedirs
 
-        import os
-        import pandas as pd
+        # Instantiating input class
+        self._input = self._input_class(self._input_params)
 
-        pd.io.parsers.read_csv(os.path.join(self._output_dir, 'results.tsv'), sep='\t')
+        # Computing input values
+        x = self._input.get_x()
+        y = self._input.get_y()
+
+        # Instantiating classification algorithm
+        if self._algorithm_class.uses_kernel():
+            kernel = self._input.get_kernel()
+            self._algorithm = self._algorithm_class(kernel, y, self._algorithm_params)
+        else:
+            self._algorithm = self._algorithm_class(x, y, self._algorithm_params)
+
+        # Instantiating cross-validation method and classification algorithm
+        self._validation = self._validation_class(self._algorithm, self._validation_params)
+
+        # Launching classification with selected cross-validation
+        classifier, best_params, results = self._validation.validate(y)
+
+        # Creation of the directory to save results
+        classifier_dir = path.join(self._output_dir, 'classifier')
+        if not path.exists(classifier_dir):
+            makedirs(classifier_dir)
+
+        # Saving algorithm trained classifier
+        self._algorithm.save_classifier(classifier, classifier_dir)
+        self._algorithm.save_weights(classifier, x, classifier_dir)
+        self._algorithm.save_parameters(best_params, classifier_dir)
+
+        # Saving validation trained classifier
+        self._validation.save_results(self._output_dir)
 
     @staticmethod
-    def metric_distribution(metric, labels, output_path, num_classes=2, metric_label='balanced accuracy'):
-        """
+    def create_parameters_dict(locals_dictionary, component_class):
 
-        Distribution plots of various metrics such as balanced accuracy!
-
-        metric is expected to be ndarray of size [num_repetitions, num_datasets]
-
-        """
-        import numpy as np
-        import matplotlib.pyplot as plt
-        from matplotlib import cm
-        from matplotlib.backends.backend_pdf import PdfPages
-
-        num_repetitions = metric.shape[0]
-        num_datasets = metric.shape[1]
-        assert len(labels) == num_datasets, "Differing number of features and labels!"
-        method_ticks = 1.0 + np.arange(num_datasets)
-
-        fig, ax = plt.subplots(figsize=[9, 9])
-        line_coll = ax.violinplot(metric, widths=0.8, bw_method=0.2,
-                                  showmedians=True, showextrema=False,
-                                  positions=method_ticks)
-
-        cmap = cm.get_cmap('Paired', num_datasets)
-        for cc, ln in enumerate(line_coll['bodies']):
-            ln.set_facecolor(cmap(cc))
-            ln.set_label(labels[cc])
-
-        plt.legend(loc=2, ncol=num_datasets)
-
-        ax.tick_params(axis='both', which='major', labelsize=15)
-        ax.grid(axis='y', which='major')
-
-        lower_lim = np.round(np.min([np.float64(0.9 / num_classes), metric.min()]), 3)
-        upper_lim = np.round(np.max([1.01, metric.max()]), 3)
-        step_tick = 0.1
-        ax.set_ylim(lower_lim, upper_lim)
-
-        ax.set_xticks(method_ticks)
-        ax.set_xlim(np.min(method_ticks) - 1, np.max(method_ticks) + 1)
-        ax.set_xticklabels(labels, rotation=45)  # 'vertical'
-
-        ax.set_yticks(np.arange(lower_lim, upper_lim, step_tick))
-        ax.set_yticklabels(np.arange(lower_lim, upper_lim, step_tick))
-        # plt.xlabel(xlabel, fontsize=16)
-        plt.ylabel(metric_label, fontsize=16)
-
-        fig.tight_layout()
-
-        pp1 = PdfPages(output_path + '.pdf')
-        pp1.savefig()
-        pp1.close()
-
-        return
+        default_parameters = component_class.get_default_parameters()
+        for key in locals_dictionary:
+            if key in default_parameters:
+                default_parameters[key] = locals_dictionary[key]
+        return default_parameters
 
 
-class MLInput:
-    __metaclass__ = abc.ABCMeta
+class MLInput(ABC):
 
-    @abc.abstractmethod
+    def __init__(self, input_params):
+
+        self._input_params = self.get_default_parameters()
+        self._input_params.update(input_params)
+
+        self._x = None
+        self._y = None
+        self._kernel = None
+
+    @abstractmethod
     def get_x(self):
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def get_y(self):
         pass
 
+    @staticmethod
+    @abstractmethod
+    def get_default_parameters():
+        pass
 
-class MLValidation:
-    __metaclass__ = abc.ABCMeta
 
-    @abc.abstractmethod
+class MLValidation(ABC):
+
+    def __init__(self, ml_algorithm, validation_params):
+
+        self._ml_algorithm = ml_algorithm
+
+        self._validation_params = self.get_default_parameters()
+        self._validation_params.update(validation_params)
+
+        self._validation_results = []
+        self._classifier = None
+        self._best_params = None
+
+    @abstractmethod
     def validate(self, y):
         pass
 
+    @staticmethod
+    @abstractmethod
+    def get_default_parameters():
+        pass
 
-class MLAlgorithm:
-    __metaclass__ = abc.ABCMeta
 
-    @abc.abstractmethod
+class MLAlgorithm(ABC):
+
+    def __init__(self, input_data, y, algorithm_params):
+
+        self._algorithm_params = self.get_default_parameters()
+        self._algorithm_params.update(algorithm_params)
+
+        if self.uses_kernel():
+            self._kernel = input_data
+        else:
+            self._x = input_data
+
+        self._y = y
+
+    @staticmethod
+    @abstractmethod
+    def uses_kernel():
+        pass
+
+    @abstractmethod
     def evaluate(self, train_index, test_index):
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def save_classifier(self, classifier, output_dir):
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def save_parameters(self, parameters, output_dir):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def get_default_parameters():
         pass

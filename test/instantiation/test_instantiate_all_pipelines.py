@@ -295,12 +295,29 @@ def test_instantiate_InputsML():
     atlases = ['AAL2', 'Neuromorphometrics', 'AICHA', 'LPBA40', 'Hammers']
     possible_psf = [0, 5, 10, 15, 20, 25]
 
-    voxel_input = [CAPSVoxelBasedInput(caps_dir, tsv, diagnoses_tsv, group_id, im, fwhm=8)
+    voxel_input = [CAPSVoxelBasedInput({'caps_directory': caps_dir,
+                                        'subjects_visits_tsv': tsv,
+                                        'diagnoses_tsv': diagnoses_tsv,
+                                        'group_id': group_id,
+                                        'image_type': im,
+                                        'fwhm': 8})
                    for im in image_type]
-    region_input = [CAPSRegionBasedInput(caps_dir, tsv, diagnoses_tsv, group_id, im, at)
+
+    region_input = [CAPSRegionBasedInput({'caps_directory': caps_dir,
+                                          'subjects_visits_tsv': tsv,
+                                          'diagnoses_tsv': diagnoses_tsv,
+                                          'group_id': group_id,
+                                          'image_type': im,
+                                          'atlas': at})
                     for im in image_type
                     for at in atlases]
-    vertex_input = [CAPSVertexBasedInput(caps_dir, tsv, diagnoses_tsv, group_id, fwhm, 'fdg')
+
+    vertex_input = [CAPSVertexBasedInput({'caps_directory': caps_dir,
+                                          'subjects_visits_tsv': tsv,
+                                          'diagnoses_tsv': diagnoses_tsv,
+                                          'group_id': group_id,
+                                          'image_type': 'fdg',
+                                          'fwhm': fwhm})
                     for fwhm in possible_psf]
 
     # Check that each file exists
