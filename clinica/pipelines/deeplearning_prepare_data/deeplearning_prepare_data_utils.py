@@ -33,8 +33,6 @@ def extract_slices(preprocessed_T1, slice_direction=0, slice_mode='original'):
             # sagital
             slice_select_sag = image_tensor[index_slice, :, :]
 
-            # convert the slices to images based on if transfer learning or not
-            # train from scratch
             extracted_slice_original_sag = slice_select_sag.unsqueeze(0)  # shape should be 1 * W * L
 
             # train for transfer learning, creating the fake RGB image.
@@ -73,8 +71,6 @@ def extract_slices(preprocessed_T1, slice_direction=0, slice_mode='original'):
             # sagital
             slice_select_cor = image_tensor[:, index_slice, :]
 
-            # convert the slices to images based on if transfer learning or not
-            # train from scratch
             extracted_slice_original_cor = slice_select_cor.unsqueeze(0)  # shape should be 1 * W * L
 
             # train for transfer learning, creating the fake RGB image.
@@ -113,8 +109,6 @@ def extract_slices(preprocessed_T1, slice_direction=0, slice_mode='original'):
             # sagital
             slice_select_axi = image_tensor[:, :, index_slice]
 
-            # convert the slices to images based on if transfer learning or not
-            # train from scratch
             extracted_slice_original_axi = slice_select_axi.unsqueeze(0)  # shape should be 1 * W * L
 
             # train for transfer learning, creating the fake RGB image.
