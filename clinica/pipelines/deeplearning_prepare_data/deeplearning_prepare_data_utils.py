@@ -1,20 +1,28 @@
 # coding: utf8
 
-def extract_slices(preprocessed_T1, slice_direction=0, slice_mode='original'):
-    """This function extracts the slices from three directions
+def extract_slices(input_tensor, slice_direction=0, slice_mode='original'):
+    """Extracts the slices from three directions
+    
+    This function extracts slices form the preprocesed nifti image.  The
+    direction of extraction can be defined either on sagital direction (0),
+    cornal direction (1) or axial direction (other). The output slices can be
+    stores following two modes: single (1 channel) ou RGB (3 channels, all the
+    same).
 
+    
     Args:
-        preprocessed_T1: tensor version of the nifty MRI.
+        input_tensor: tensor version of the nifti MRI.
         slice_direction: which axis direction that the slices were extracted
-        slice_mode: 'original' or 'RGB'
+        slice_mode: 'original' or 'RGB'.
 
     Returns:
-        file: tensor saved on the disk.
+        file: multiple tensors saved on the disk, suffixes corresponds to
+            indexes of the slices. Same location than input file.
     """
     import torch
     import os
 
-    image_tensor = torch.load(preprocessed_T1)
+    image_tensor = torch.load(input_tensor)
     # reshape the tensor, delete the first dimension for slice-level
     image_tensor = image_tensor.view(image_tensor.shape[1], image_tensor.shape[2], image_tensor.shape[3])
 
@@ -44,7 +52,7 @@ def extract_slices(preprocessed_T1, slice_direction=0, slice_mode='original'):
                 output_file_original.append(
                         os.path.join(
                             basedir,
-                            os.path.basename(preprocessed_T1).split('.pt')[0]
+                            os.path.basename(input_tensor).split('.pt')[0]
                             + '_axis-sag_originalslice-'
                             + str(index_slice)
                             + '.pt'
@@ -55,7 +63,7 @@ def extract_slices(preprocessed_T1, slice_direction=0, slice_mode='original'):
                 output_file_rgb.append(
                         os.path.join(
                             basedir,
-                            os.path.basename(preprocessed_T1).split('.pt')[0]
+                            os.path.basename(input_tensor).split('.pt')[0]
                             + '_axis-sag_rgbslice-'
                             + str(index_slice)
                             + '.pt'
@@ -82,7 +90,7 @@ def extract_slices(preprocessed_T1, slice_direction=0, slice_mode='original'):
                 output_file_original.append(
                         os.path.join(
                             basedir,
-                            os.path.basename(preprocessed_T1).split('.pt')[0]
+                            os.path.basename(input_tensor).split('.pt')[0]
                             + '_axis-cor_originalslice-'
                             + str(index_slice)
                             + '.pt')
@@ -92,7 +100,7 @@ def extract_slices(preprocessed_T1, slice_direction=0, slice_mode='original'):
                 output_file_rgb.append(
                     os.path.join(
                         basedir,
-                        os.path.basename(preprocessed_T1).split('.pt')[0]
+                        os.path.basename(input_tensor).split('.pt')[0]
                         + '_axis-cor_rgbslice-'
                         + str(index_slice)
                         + '.pt'
@@ -120,7 +128,7 @@ def extract_slices(preprocessed_T1, slice_direction=0, slice_mode='original'):
                 output_file_original.append(
                         os.path.join(
                             basedir,
-                            os.path.basename(preprocessed_T1).split('.pt')[0]
+                            os.path.basename(input_tensor).split('.pt')[0]
                             + '_axis-axi_originalslice-'
                             + str(index_slice)
                             + '.pt'
@@ -131,7 +139,7 @@ def extract_slices(preprocessed_T1, slice_direction=0, slice_mode='original'):
                 output_file_rgb.append(
                         os.path.join(
                             basedir,
-                            os.path.basename(preprocessed_T1).split('.pt')[0]
+                            os.path.basename(input_tensor).split('.pt')[0]
                             + '_axis-axi_rgbslice-'
                             + str(index_slice)
                             + '.pt'
@@ -142,22 +150,29 @@ def extract_slices(preprocessed_T1, slice_direction=0, slice_mode='original'):
     return output_file_rgb, output_file_original
 
 
-def extract_patches(preprocessed_T1, patch_size, stride_size):
-    """This function extracts the patches from three directions
-
+def extract_patches(input_tensor, patch_size, stride_size):
+    """Extracts the patches
+    
+    This function extracts patches form the preprocesed nifti image. Patch size
+    if provieded as input and also the stride size. If stride size is smaller
+    than the patch size an overlap exist between consecutive patches. If stride
+    size is equal to path size there is no overlap. Otherwise, unprocessed
+    zones can exits.
+    
     Args:
-        preprocessed_T1: tensor version of the nifty MRI
-        patch_size: size of each patch
-        stride_size: size of each stride
+        input_tensor: tensor version of the nifti MRI.
+        patch_size: size of a single patch.
+        stride_size: size of the stride leading to next patch.
 
     Returns:
-        file: file stored in the disk
+        file: multiple tensors saved on the disk, suffixes corresponds to
+            indexes of the patches. Same location than input file.
     """
     import torch
     import os
 
     basedir = os.getcwd()
-    image_tensor = torch.load(preprocessed_T1)
+    image_tensor = torch.load(input_tensor)
 
     # use classifiers tensor.upfold to crop the patch.
     patches_tensor = image_tensor.unfold(1, patch_size, stride_size).unfold(2, patch_size, stride_size).unfold(3, patch_size, stride_size).contiguous()
@@ -171,7 +186,7 @@ def extract_patches(preprocessed_T1, patch_size, stride_size):
         output_patch.append(
                 os.path.join(
                     basedir,
-                    os.path.basename(preprocessed_T1).split('.pt')[0]
+                    os.path.basename(input_tensor).split('.pt')[0]
                     + '_patchsize-'
                     + str(patch_size)
                     + '_stride-'
@@ -187,14 +202,17 @@ def extract_patches(preprocessed_T1, patch_size, stride_size):
 
 
 def save_as_pt(input_img):
-    """This function transforms  nii.gz file into .pt format, in order to train
-       the classifiers model more efficient when loading the data.
-
+    """Saves PyTorch tensor version of the nifti image
+    
+    This function convert nifti image to tensor (.pt) version of the image.
+    Tensor version is saved at the same location than input_img.
+    
     Args:
-        input_img: MRI in nifty format
+        input_tensor: tensor version of the nifti MRI.
 
     Returns:
-        file: file stored in the disk
+        filename (str): single tensor file  saved on the disk. Same location than input file.
+
     """
 
     import torch
