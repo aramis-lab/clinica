@@ -94,12 +94,12 @@ T1_FS_LONG_DESIKAN_PARC_R = {'pattern': 't1/long-*/freesurfer_longitudinal/sub-*
                              'needed_pipeline': 't1-freesurfer and t1-freesurfer-longitudinal'}
 
 T1W_LINEAR = {'pattern': '*space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz',
-              'description': 'T1w image registered in MNI152NLin2009cSym space using t1-linear pipeline'
+              'description': 'T1w image registered in MNI152NLin2009cSym space using t1-linear pipeline',
               'needed_pipeline': 't1-linear'}
 
 T1W_LINEAR_CROPPED = {'pattern': '*space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz',
                       'description': 'T1W Image registered using T1_Linear and cropped'
-                      '(matrix size 169×208×179, 1 mm isotropic voxels)'
+                      '(matrix size 169×208×179, 1 mm isotropic voxels)',
                       'needed_pipeline': 't1-linear'}
 
 # T1-Volume
