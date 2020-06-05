@@ -844,7 +844,7 @@ def test_run_DLPrepareData(cmdopt):
 
     # Test the transformation of the complete T1 MRI
     parameters = {
-        'extract_method': 'whole'
+        'extract_method': 'image'
     }
     # Instantiate pipeline
     pipeline = DeepLearningPrepareData(
