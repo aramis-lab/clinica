@@ -15,7 +15,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
     """Deeplearning prepare data - MRI in nifti format are transformed into
     PyTorch tensors. The transformation is applied to: the whole volume, a
     selection of 3D patches, or slices extracted from the 3D volume. By default
-    it uses the cropped version of the MRI (see option "--use_full_MRI")
+    it uses the cropped version of the MRI (see option "--use_uncropper_image")
 
 
     Returns:
@@ -58,7 +58,7 @@ class DeepLearningPrepareData(cpe.Pipeline):
         from clinica.utils.input_files import T1W_LINEAR_CROPPED
         from clinica.utils.ux import print_images_to_process
 
-        if self.parameters.get('use_full_MRI'):
+        if self.parameters.get('use_uncropped_image'):
             FILE_TYPE = T1W_LINEAR
         else:
             FILE_TYPE = T1W_LINEAR_CROPPED
