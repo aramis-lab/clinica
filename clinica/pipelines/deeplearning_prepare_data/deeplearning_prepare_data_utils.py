@@ -100,6 +100,7 @@ def extract_slices(input_tensor, slice_direction=0, slice_mode='single'):
                             + '_axis-cor_channel-single_slice-'
                             + str(index_slice)
                             + it_filename_suffix
+                            )
                         )
                 torch.save(extracted_slice_original_cor.clone(), output_file_original[index_slice_list])
             elif slice_mode == 'rgb':
