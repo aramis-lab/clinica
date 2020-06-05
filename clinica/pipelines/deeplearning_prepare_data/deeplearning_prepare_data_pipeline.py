@@ -202,11 +202,11 @@ class DeepLearningPrepareData(cpe.Pipeline):
         # ----------------------
         extract_slices = npe.MapNode(
                 name='extract_slices',
-                iterfield=['preprocessed_T1'],
+                iterfield=['input_tensor'],
                 interface=nutil.Function(
                     function=extract_slices,
                     input_names=[
-                        'preprocessed_T1', 'slice_direction',
+                        'input_tensor', 'slice_direction',
                         'slice_mode'
                         ],
                     output_names=['output_file_rgb', 'output_file_original']
@@ -220,10 +220,10 @@ class DeepLearningPrepareData(cpe.Pipeline):
         # ----------------------
         extract_patches = npe.MapNode(
                 name='extract_patches',
-                iterfield=['preprocessed_T1'],
+                iterfield=['input_tensor'],
                 interface=nutil.Function(
                     function=extract_patches,
-                    input_names=['preprocessed_T1', 'patch_size', 'stride_size'],
+                    input_names=['input_tensor', 'patch_size', 'stride_size'],
                     output_names=['output_patch']
                     )
                 )
@@ -239,13 +239,13 @@ class DeepLearningPrepareData(cpe.Pipeline):
 
         if self.parameters.get('extract_method') == 'slice':
             self.connect([
-                (save_as_pt, extract_slices, [('output_file', 'preprocessed_T1')]),
+                (save_as_pt, extract_slices, [('output_file', 'input_tensor')]),
                 (extract_slices, self.output_node, [('output_file_rgb', 'slices_rgb_T1')]),
                 (extract_slices, self.output_node, [('output_file_original', 'slices_original_T1')])
                 ])
         elif self.parameters.get('extract_method') == 'patch':
             self.connect([
-                (save_as_pt, extract_patches, [('output_file', 'preprocessed_T1')]),
+                (save_as_pt, extract_patches, [('output_file', 'input_tensor')]),
                 (extract_patches, self.output_node, [('output_patch', 'patches_T1')])
                 ])
         else:
