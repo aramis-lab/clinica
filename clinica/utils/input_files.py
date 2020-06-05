@@ -99,7 +99,7 @@ T1W_LINEAR = {'pattern': '*space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz',
               'needed_pipeline': 't1-linear'}
 
 T1W_LINEAR_CROPPED = {'pattern': '*space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz',
-                      'description': 'T1W Image registered using T1_Linear and cropped'
+                      'description': 'T1W Image registered using t1-linear and cropped '
                       '(matrix size 169×208×179, 1 mm isotropic voxels)',
                       'needed_pipeline': 't1-linear'}
 
