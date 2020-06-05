@@ -74,9 +74,9 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
         optional.add_argument(
                 '-sm', '--slice_mode',
                 help='''Slice mode (only for 'slice' extraction). Two options:
-                'original' to save one single channel (intensity),
+                'single' to save one single channel (intensity),
                 'rgb' to saves three channel (with same intensity).''',
-                choices=['original', 'rgb'], default='rgb'
+                choices=['single', 'rgb'], default='rgb'
                 )
 
         # Clinica standard arguments (e.g. --n_procs)

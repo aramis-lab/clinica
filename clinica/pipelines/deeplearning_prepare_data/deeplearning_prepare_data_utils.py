@@ -1,6 +1,6 @@
 # coding: utf8
 
-def extract_slices(input_tensor, slice_direction=0, slice_mode='original'):
+def extract_slices(input_tensor, slice_direction=0, slice_mode='single'):
     """Extracts the slices from three directions
     
     This function extracts slices form the preprocesed nifti image.  The
@@ -13,7 +13,7 @@ def extract_slices(input_tensor, slice_direction=0, slice_mode='original'):
     Args:
         input_tensor: tensor version of the nifti MRI.
         slice_direction: which axis direction that the slices were extracted
-        slice_mode: 'original' or 'RGB'.
+        slice_mode: 'single' or 'RGB'.
 
     Returns:
         file: multiple tensors saved on the disk, suffixes corresponds to
@@ -33,6 +33,12 @@ def extract_slices(input_tensor, slice_direction=0, slice_mode='original'):
     slice_list_sag = range(M, image_tensor.shape[0] - N)  # delete the first M slices and last N slices
 
     basedir = os.getcwd()
+    input_tensor_filename = os.path.basename(input_tensor)
+    
+    txt_idx = input_tensor_filename.rfind("_")
+    it_filename_prefix = input_tensor_filename[0:txt_idx]
+    it_filename_suffix = input_tensor_filename[txt_idx:]
+    
     output_file_original = []
     output_file_rgb = []
     if slice_direction == 0:
@@ -48,14 +54,14 @@ def extract_slices(input_tensor, slice_direction=0, slice_mode='original'):
             extracted_slice_rgb_sag = torch.stack((slice_select_sag, slice_select_sag, slice_select_sag))  # shape should be 3 * W * L
 
             # save into .pt format
-            if slice_mode == 'original':
+            if slice_mode == 'single':
                 output_file_original.append(
                         os.path.join(
                             basedir,
-                            os.path.basename(input_tensor).split('.pt')[0]
-                            + '_axis-sag_originalslice-'
+                            it_filename_prefix
+                            + '_axis-sag_channel-single_slice-'
                             + str(index_slice)
-                            + '.pt'
+                            + it_filename_suffix
                             )
                         )
                 torch.save(extracted_slice_original_sag.clone(), output_file_original[index_slice_list])
@@ -63,10 +69,10 @@ def extract_slices(input_tensor, slice_direction=0, slice_mode='original'):
                 output_file_rgb.append(
                         os.path.join(
                             basedir,
-                            os.path.basename(input_tensor).split('.pt')[0]
-                            + '_axis-sag_rgbslice-'
+                            it_filename_prefix
+                            + '_axis-sag_channel-rgb_slice-'
                             + str(index_slice)
-                            + '.pt'
+                            + it_filename_suffix
                             )
                         )
                 torch.save(extracted_slice_rgb_sag.clone(), output_file_rgb[index_slice_list])
@@ -86,24 +92,24 @@ def extract_slices(input_tensor, slice_direction=0, slice_mode='original'):
             extracted_slice_rgb_cor = torch.stack((slice_select_cor, slice_select_cor, slice_select_cor))  # shape should be 3 * W * L
 
             # save into .pt format
-            if slice_mode == 'original':
+            if slice_mode == 'single':
                 output_file_original.append(
                         os.path.join(
                             basedir,
-                            os.path.basename(input_tensor).split('.pt')[0]
-                            + '_axis-cor_originalslice-'
+                            it_filename_prefix
+                            + '_axis-cor_channel-single_slice-'
                             + str(index_slice)
-                            + '.pt')
+                            + it_filename_suffix
                         )
                 torch.save(extracted_slice_original_cor.clone(), output_file_original[index_slice_list])
             elif slice_mode == 'rgb':
                 output_file_rgb.append(
                     os.path.join(
                         basedir,
-                        os.path.basename(input_tensor).split('.pt')[0]
-                        + '_axis-cor_rgbslice-'
+                        it_filename_prefix
+                        + '_axis-cor_channel-rgb_slice-'
                         + str(index_slice)
-                        + '.pt'
+                        + it_filename_suffix
                         )
                     )
                 torch.save(extracted_slice_rgb_cor.clone(), output_file_rgb[index_slice_list])
@@ -124,14 +130,14 @@ def extract_slices(input_tensor, slice_direction=0, slice_mode='original'):
             extracted_slice_rgb_axi = torch.stack((slice_select_axi, slice_select_axi, slice_select_axi))  # shape should be 3 * W * L
 
             # save into .pt format
-            if slice_mode == 'original':
+            if slice_mode == 'single':
                 output_file_original.append(
                         os.path.join(
                             basedir,
-                            os.path.basename(input_tensor).split('.pt')[0]
-                            + '_axis-axi_originalslice-'
+                            it_filename_prefix
+                            + '_axis-axi_channel-single_slice-'
                             + str(index_slice)
-                            + '.pt'
+                            + it_filename_suffix
                             )
                         )
                 torch.save(extracted_slice_original_axi.clone(), output_file_original[index_slice_list])
@@ -139,10 +145,10 @@ def extract_slices(input_tensor, slice_direction=0, slice_mode='original'):
                 output_file_rgb.append(
                         os.path.join(
                             basedir,
-                            os.path.basename(input_tensor).split('.pt')[0]
-                            + '_axis-axi_rgbslice-'
+                            it_filename_prefix
+                            + '_axis-axi_channel-rgb_slice-'
                             + str(index_slice)
-                            + '.pt'
+                            + it_filename_suffix
                             )
                         )
                 torch.save(extracted_slice_rgb_axi.clone(), output_file_rgb[index_slice_list])
@@ -178,6 +184,11 @@ def extract_patches(input_tensor, patch_size, stride_size):
     patches_tensor = image_tensor.unfold(1, patch_size, stride_size).unfold(2, patch_size, stride_size).unfold(3, patch_size, stride_size).contiguous()
     # the dimension of patch_tensor should be [1, patch_num1, patch_num2, patch_num3, patch_size1, patch_size2, patch_size3]
     patches_tensor = patches_tensor.view(-1, patch_size, patch_size, patch_size)
+    
+    input_tensor_filename = os.path.basename(input_tensor)
+    txt_idx = input_tensor_filename.rfind("_")
+    it_filename_prefix = input_tensor_filename[0:txt_idx]
+    it_filename_suffix = input_tensor_filename[txt_idx:]
 
     output_patch = []
     for index_patch in range(patches_tensor.shape[0]):
@@ -186,14 +197,14 @@ def extract_patches(input_tensor, patch_size, stride_size):
         output_patch.append(
                 os.path.join(
                     basedir,
-                    os.path.basename(input_tensor).split('.pt')[0]
+                    it_filename_prefix
                     + '_patchsize-'
                     + str(patch_size)
                     + '_stride-'
                     + str(stride_size)
                     + '_patch-'
                     + str(index_patch)
-                    + '.pt'
+                    + it_filename_suffix
                     )
                 )
         torch.save(extracted_patch.clone(), output_patch[index_patch])
