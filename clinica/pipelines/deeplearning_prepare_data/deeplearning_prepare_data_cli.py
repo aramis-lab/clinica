@@ -54,12 +54,12 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
                               )
 
         optional.add_argument(
-                '-psz', '--patch_size',
+                '-ps', '--patch_size',
                 help='''Patch size (only for 'patch' extraction) e.g: --patch_size 50''',
                 type=int, default=50
                 )
         optional.add_argument(
-                '-ssz', '--stride_size',
+                '-ss', '--stride_size',
                 help='''Stride size (only for 'patch' extraction) e.g.: --stride_size 50''',
                 type=int, default=50
                 )
