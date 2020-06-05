@@ -26,8 +26,6 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
-        clinica_comp.add_argument("tsv_file",
-                                  help='Path to the tsv file.')
         clinica_comp.add_argument("extract_method",
                 help='''Format of the extracted features. Three options:
                 'image' to convert to PyTorch tensor the complete 3D image,
