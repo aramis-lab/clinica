@@ -802,7 +802,7 @@ def test_run_T1Linear(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     parameters = {
-        'crop_image': True
+        'uncropped_image': False
     }
     # Instantiate pipeline
     pipeline = T1Linear(
