@@ -33,8 +33,8 @@ class T1LinearCLI(ce.CmdParser):
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
 
         optional.add_argument("-cp", "--uncropped_image",
-                              help='''Do not crop the image with template 
-                              (cropped image are suggested for using with DL 
+                              help='''Do not crop the image with template
+                              (cropped image are suggested for using with DL
                               models)''',
                               action='store_true',
                               default=False)
