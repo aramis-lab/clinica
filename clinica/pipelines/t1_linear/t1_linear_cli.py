@@ -32,7 +32,7 @@ class T1LinearCLI(ce.CmdParser):
         # Clinica optional arguments
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
 
-        optional.add_argument("-cp", "--uncropped_image",
+        optional.add_argument("-ui", "--uncropped_image",
                               help='''Do not crop the image with template
                               (cropped image are suggested for using with DL
                               models)''',
