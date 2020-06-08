@@ -2,9 +2,7 @@
 
 This pipeline performs a set of steps in order to affinely align T1-weighted MR images to the MNI space using the [ANTs](http://stnava.github.io/ANTs/) software package [[Avants et al., 2014](https://doi.org/10.3389/fninf.2014.00044)]. These steps include: bias field correction using N4ITK [[Tustison et al., 2010](https://doi.org/10.1109/TMI.2010.2046908)]; affine registration to the [MNI152NLin2009cSym](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html#template-based-coordinate-systems) template [Fonov et al., [2011](https://doi.org/10.1016/j.neuroimage.2010.07.033), [2009](https://doi.org/10.1016/S1053-8119(09)70884-5)] in MNI space with the SyN algorithm [[Avants et al., 2008](https://doi.org/10.1016/j.media.2007.06.004)]; cropping of the registered images to remove the background.
 
-This pipeline was designed as a prerequisite for the deep learning classification algorithms presented in [[Wen et al., 2020](https://arxiv.org/abs/1904.07773)].
-
-<!--This pipeline was designed as a prerequisite for the [`dl-prepare-dl` pipeline](../DL_Prepare_DL).-->
+This pipeline was designed as a prerequisite for the [`deeplearning-prepare-data` pipeline](../DeepLearning_PrepareData) and deep learning classification algorithms presented in [[Wen et al., 2020](https://arxiv.org/abs/1904.07773)].
 
 ## Dependencies
 If you only installed the core of Clinica, this pipeline needs the installation of **ANTs** on your computer. You can find how to install this software package on the [third-party](../../Third-party) page.
@@ -19,8 +17,7 @@ where:
 - `bids_directory` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
 - `caps_directory` is the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
 
-<!-- If you plan to use the [`dl-prepare-dl` pipeline](../DL_Prepare_DL), do not forget to use the `--crop_image` flag. This flag will produce reduced outputs in order to reduce the computing power required when training deep learning models. -->
-The `--crop_image` flag will produce smaller outputs (matrix size 169×208×179, 1 mm isotropic voxels), useful to reduce the computing power required when training deep learning models.
+On default, cropped images (matrix size 169×208×179, 1 mm isotropic voxels) are generated to reduce the computing power required when training deep learning models. Use `--uncropped_image` flag if you do not want to crop the image.
 
 !!! note
     The arguments common to all Clinica pipelines are described in [Interacting with clinica](../../InteractingWithClinica).
