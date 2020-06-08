@@ -386,6 +386,10 @@ def test_instantiate_T1Linear():
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'T1Linear')
 
+    parameters = {
+            'uncropped_image': False
+            }
+
     pipeline = T1Linear(
         bids_directory=join(root, 'in', 'bids'),
         caps_directory=join(root, 'in', 'caps'),
