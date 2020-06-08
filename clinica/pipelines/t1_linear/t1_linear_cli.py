@@ -32,8 +32,10 @@ class T1LinearCLI(ce.CmdParser):
         # Clinica optional arguments
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
 
-        optional.add_argument("-cp", "--crop_image",
-                              help='Crop the image using a template (suggested for using with DL models)',
+        optional.add_argument("-ui", "--uncropped_image",
+                              help='''Do not crop the image with template
+                              (cropped image are suggested for using with DL
+                              models)''',
                               action='store_true',
                               default=False)
 
@@ -47,7 +49,7 @@ class T1LinearCLI(ce.CmdParser):
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         parameters = {
-                'crop_image': args.crop_image
+                'uncropped_image': args.uncropped_image
         }
 
         # Most of the time, you will want to instantiate your pipeline with a
