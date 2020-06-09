@@ -12,7 +12,7 @@ You need to have performed the [`t1-linear` pipeline](../T1_Linear) on your T1-w
 ## Dependencies
 If you installed the core of Clinica, this pipeline needs no further dependencies.
 
-## Running the pipeline (command line)
+## Running the pipeline
 The pipeline can be run with the following command line:
 ```Text
 clinica run deeplearning-prepare-data <caps_directory> <extraction_method>
@@ -48,95 +48,49 @@ Pipeline options if you use `slice` extraction:
 In the the following subsections, files with `.pt` extension denote tensors in PyTorch format.
 
 The full list of output files can be found in the [ClinicA Processed Structure (CAPS) Specification](../../CAPS/Specifications/#deeplearning-prepare-data-prepare-input-data-for-deep-learning-with-pytorch).
-### Image-based outputs
 
+### Image-based outputs
 Results are stored in the following folder of the [CAPS hierarchy](docs/CAPS): `subjects/<subject_id>/<session_id>/deeplearning_prepare_data/image_based/t1_linear`.
 
 The main output files are:
-- `<source_file>_space-MNI152NLin2009cSym[_desc-Crop]_res-1x1x1_T1w.pt`: T1w image registered to the [`MNI152NLin2009cSym` template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html) and optionally cropped.
+
+- `<source_file>_space-MNI152NLin2009cSym[_desc-Crop]_res-1x1x1_T1w.pt`: tensor version of the complete 3D T1w image registered to the [`MNI152NLin2009cSym` template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html) and optionally cropped.
 
 ### Patch-based outputs
 
-Results are stored in the following folder of the [CAPS hierarchy](docs/CAPS): `subjects/sub-<participant_label>/ses-<session_label>/deeplearning_prepare_data/patch_based/`.
+Results are stored in the following folder of the [CAPS hierarchy](docs/CAPS): `subjects/<subject_id>/<session_id>/deeplearning_prepare_data/patch_based/t1_linear`.
 
 The main output files are:
-...
+
+- `<source_file>_space-MNI152NLin2009cSym[_desc-Crop]_res-1x1x1_patchsize-<N>_stride-<M>_patch-<i>_T1w.pt`: tensor version of the `<i>`-th 3D volumetric patch of size `<N>` with a stride of `<M>`. Each patch embeds the T1w image registered to the [`MNI152NLin2009cSym` template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html) and optionally cropped.
 
 ### Slice-based outputs
 
-Results are stored in the following folder of the [CAPS hierarchy](docs/CAPS): `subjects/sub-<participant_label>/ses-<session_label>/deeplearning_prepare_data/slice_based/`.
+Results are stored in the following folder of the [CAPS hierarchy](docs/CAPS): `subjects/<subject_id>/<session_id>/deeplearning_prepare_data/slice_based/t1_linear`.
 
 The main output files are:
-...
+
+- `<source_file>_space-MNI152NLin2009cSym[_desc-Crop]_res-1x1x1_axis-{sag|cor|axi}_channel-{single|rgb}_T1w.pt`: tensor version of the `<i>`-th 2D slice in  `sag`ittal, `cor`onal or `axi`al plane using three identical channels (`rgb`) or one channel (`single`). Each slice embeds the T1w image registered to the [`MNI152NLin2009cSym` template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html) and optionally cropped.
 
 
+## Going further
+
+- You can now perform classification based on Deep Learning using the [AD-DL Framework](https://github.com/aramis-lab/AD-DL) presented in [[Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)]
 
 
 ## Describing this pipeline in your paper
 
 !!! cite "Example of paragraph"
-These results have been obtained using the `deeplearning-prepare-data` pipeline of Clinica [[Routier et al](https://hal.inria.fr/hal-02308126/); [Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)]. More precisely, _____
+    These results have been obtained using the `deeplearning-prepare-data` pipeline of Clinica [[Routier et al](https://hal.inria.fr/hal-02308126/); [Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)]. More precisely,
 
+    - complete 3D images
+
+    - 3D volumetric patches with patch size of `<patch_size>` and stride size of `<stride_size>`
+
+    - 2D slices in {sagittal | coronal | axial} plane and saved in {three identical channels | one single channel}
+
+    were extracted and converted to PyTorch tensors [[Paszke et al., 2019]](https://papers.nips.cc/paper/9015-pytorch-an-imperative-style-high-performance-deep-learning-library)
 
 
 !!! tip
-   Easily access the papers cited on this page on [Zotero](https://www.zotero.org/groups/2240070/clinica_aramislab/collections/8B2R2826).
-
-
-
-
-# CAPS Specifications
-## Template
-```text
-subjects/<subject_id>/<session_id>/
-    deeplearning_prepare_data/
-        image_based/
-            <pipeline_name>
-                <source_file>_key1-<value_1>...keyN-<value_N>_suffix.pt
-            t1_linear/
-                <source_file>_space-MNI152NLin2009cSym[_desc-Crop]_res-1x1x1_T1w.pt
-            pet_linear/ # e.g. Master project of Ravi
-            t1_volume/  # Likely extension of dl-prepare-data
-            bids/       # Not in AD-DL but could be
-                <source_file>.pt
-        patch_based/
-            <pipeline_name>
-                <source_file>_key1-<value_1>...keyN-<value_N>_patchsize-<N>_stride-<M>_patch-<index>_suffix.pt
-            t1_linear/
-                <source_file>_space-MNI152NLin2009cSym[_desc-Crop]_res-1x1x1_patchsize-<N>_stride-<M>_patch-<i>_T1w.pt
-        slice_based/
-            <pipeline_name>
-            <source_file>_key1-<value_1>...keyN-<value_N>_axis-{sag|cor|axi}_channel-{single|rgb}_slice-<i>_suffix.pt
-            t1_linear/
-<source_file>_space-MNI152NLin2009cSym[_desc-Crop]_res-1x1x1_axis-{sag|cor|axi}_channel-{single|rgb}_slice-<i>_T1w.pt
-        roi_based/    # Maybe one day (user should be able to give the coordinates or a mask)
-```
-
-### Image extraction
-Since `deep-learning-prepare-data` can be generalized to any data produced by Clinica, results are stored in a subfolder `<pipeline_name>` where `<pipeline_name>` is the name of the command line and `-` are replaced by `_`.
-
-
-For `t1-linear`, we have:
-```Text
-subjects/
-└── sub-<participant_label>/
-    └── ses-<session_label>/
-        └── deeplearning_prepare_data
-            └── image_based/
-                └── t1_linear/
-                    └── <source_file>_space-MNI152NLin2009cSym[_desc-Crop]_res-1x1x1_T1w.pt
-```
-### Patch extraction
-
-cf Whole image + explanation of _patchsize-<N>_stride_<M>_patch-<index>
-
-### Slice extraction
-
-cf Whole image + explanation of _axis-{sag|cor|axi}_channel-{1|3}_slice-<index>
-
-### Note
-In first versions of CAPS, outputs were sorted by modality then a meaningful folder name (and optional subfolder if needed). With some hindsights, if the CLI of a pipeline is called modality-my-pipeline, outputs should be stored in subjects/<subject_id>/<session_id>/modality_my_pipeline
-It decreases a little bit the number of sub-folders while having outputs sorted by modality
-It is closer to BIDS-Derivatives recommandations
-Drawback: it breaks the previous CAPS convention (i.e.subjects/<subject_id>/<session_id>/modality/my_pipeline).
-However, first pipelines (e.g. t1-volume) do not follow this convention either (i.e. subjects/<subject_id>/<session_id>/t1/spm instead of  subjects/<subject_id>/<session_id>/t1/volume).
+    Easily access the papers cited on this page on [Zotero](https://www.zotero.org/groups/2240070/clinica_aramislab/collections/8B2R2826).
