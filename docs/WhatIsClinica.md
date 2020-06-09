@@ -12,7 +12,6 @@ Currently, a large part of Clinica is devoted to neuroimaging data analysis. Fut
 - Neuroimaging data analysis
     - Anatomical MRI
     - Diffusion MRI
-    - Functional MRI
     - PET
 - Statistical analysis
 - Machine learning
