@@ -9,7 +9,7 @@
 
 Here is a general overview of the BIDS structure. If you need more details, please check the [documentation](https://bids-specification.readthedocs.io/en/latest/) on the [website](http://bids.neuroimaging.io/).
 
-```
+```Text
 BIDS_Dataset/
 ├── sub-CLNC01/
 │   │   ├── ses-M00/

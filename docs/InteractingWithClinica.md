@@ -11,7 +11,7 @@ If your dataset does not follow this standard, you will need to convert it:
 
 !!! note "Regarding cross-sectional BIDS datasets"
     If you run Clinica with a dataset containing no timepoints e.g.:
-    ```shell
+    ```Text
     BIDS
     └── sub-CLNC0001
         ├── anat
@@ -21,7 +21,7 @@ If your dataset does not follow this standard, you will need to convert it:
             └── sub-CLNC0001_task-rest_acq-fdg_pet.nii.gz
     ```
     Clinica will propose you to create a new BIDS dataset with a fake timepoint. This will result to a new dataset ressembling to:
-    ```shell
+    ```Text
     BIDS
     └── sub-CLNC0001
         └── ses-M00
