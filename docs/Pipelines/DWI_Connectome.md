@@ -20,8 +20,8 @@ You can find how to install these software packages on the [third-party](../../T
 ## Running the pipeline
 
 The pipeline can be run with the following command line:
-```shell
-clinica run dwi-connectome caps_directory
+```Text
+clinica run dwi-connectome <caps_directory>
 ```
 where:
 

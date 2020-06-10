@@ -17,9 +17,8 @@ The pipeline is divided into two sub-pipelines:
 
 ### `statistics-volume` pipeline
 The pipeline can be run with the following command line:
-
-```
-clinica run statistics-volume caps_directory subject_visits_with_covariates_tsv contrast feature_type group_id
+```Text
+clinica run statistics-volume <caps_directory> <subject_visits_with_covariates_tsv> <contrast> <feature_type> <group_id>
 ```
 where:
 
@@ -49,8 +48,8 @@ You will need to report the following information in the `statistics-volume-corr
 
 The pipeline can then be run with the following command line:
 
-```
-clinica run statistics-volume-correction caps_directory t_map height_threshold FWEp FDRp FWEc FDRc
+```Text
+clinica run statistics-volume-correction  <caps_directory> <t_map> <height_threshold> <FWEp> <FDRp> <FWEc> <FDRc>
 ```
 where:
 

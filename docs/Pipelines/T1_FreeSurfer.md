@@ -9,8 +9,8 @@ If you only installed the core of Clinica, this pipeline needs the installation 
 
 ## Running the pipeline
 The pipeline can be run with the following command line:
-```
-clinica run t1-freesurfer bids_directory caps_directory
+```Text
+clinica run t1-freesurfer <bids_directory> <caps_directory>
 ```
 where:
 

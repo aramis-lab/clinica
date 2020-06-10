@@ -19,9 +19,8 @@ If you only installed the core of Clinica, this pipeline needs the installation 
 ## Running the pipeline
 
  The pipeline `t1-volume` can be run with the following command line:
-
-```
-clinica run t1-volume bids_directory caps_directory group_id
+```Text
+clinica run t1-volume <bids_directory> <caps_directory> <group_id>
 ```
 
 where:
@@ -123,35 +122,35 @@ The four main processing steps of the `t1-volume` pipeline can be performed indi
  - **A: Tissue segmentation, bias correction and spatial normalization to MNI space**
 
     Command line:
-    ```
-    clinica run t1-volume-tissue-segmentation bids_directory caps_directory
+    ```Text
+    clinica run t1-volume-tissue-segmentation <bids_directory> <caps_directory>
     ```
 
 - **B1: Inter-subject registration using Dartel (creating a new Dartel template)**
 
     Command line:
-    ```
-    clinica run t1-volume-create-dartel bids_directory caps_directory group_id
+    ```Text
+    clinica run t1-volume-create-dartel <bids_directory> <caps_directory> <group_id>
     ```
 
 - **B2: Inter-subject registration using Dartel (using an existing Dartel template)**
 
     Command line:
-    ```
-    clinica run t1-volume-register-dartel bids_directory caps_directory group_id
+    ```Text
+    clinica run t1-volume-register-dartel <bids_directory> <caps_directory> <group_id>
     ```
 
 - **C: Dartel template to MNI**
 
     Command line:
-    ```
-    clinica run t1-volume-dartel2mni bids_directory caps_directory group_id
+    ```Text
+    clinica run t1-volume-dartel2mni <bids_directory> <caps_directory> <group_id>
     ```
 - **D: Atlas statistics**
 
     Command line:
-    ```
-    clinica run t1-volume-parcellation caps_directory group_id
+    ```Text
+    clinica run t1-volume-parcellation <caps_directory> <group_id>
     ```
 
 These four processing steps can also be performed in one go with one of these two functions:

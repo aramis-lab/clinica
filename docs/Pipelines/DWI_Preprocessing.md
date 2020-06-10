@@ -23,12 +23,11 @@ If you only installed the core of Clinica, the `dwi-preprocessing-using-fmap` pi
 
 ## Running the pipeline
 The pipeline can be run with the following command lines depending on the data you have:
-
+```Text
+clinica run dwi-preprocessing-using-t1 <bids_directory> <caps_directory>
 ```
-clinica run dwi-preprocessing-using-t1 bids_directory caps_directory
-```
-```
-clinica run dwi-preprocessing-using-fmap bids_directory caps_directory
+```Text
+clinica run dwi-preprocessing-using-fmap <bids_directory> <caps_directory>
 ```
 
 where:

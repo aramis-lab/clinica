@@ -10,8 +10,8 @@ If you installed the core of Clinica, this pipeline needs no further dependencie
 
 ## Running the pipeline
 The pipeline can be run with the following command line:
-```
-clinica run machinelearning-prepare-spatial-svm caps_directory group_id
+```Text
+clinica run machinelearning-prepare-spatial-svm <caps_directory> <group_id>
 ```
 where:
 

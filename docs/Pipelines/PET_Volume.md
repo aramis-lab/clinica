@@ -1,4 +1,4 @@
-#`pet-volume` – Volume-based processing of PET images
+# `pet-volume` – Volume-based processing of PET images
 
 
 This pipeline performs several processing steps on PET data in voxel space, which include:
@@ -26,8 +26,8 @@ You need to have performed the [`t1-volume`](../T1_Volume) pipeline on your T1-w
 ## Running the pipeline
 The pipeline can be run with the following command line:
 
-```
-clinica run pet-volume bids_directory caps_directory group_id
+```Text
+clinica run pet-volume <bids_directory> <caps_directory> <group_id>
 ```
 where:
 

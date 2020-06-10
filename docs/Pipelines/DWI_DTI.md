@@ -16,8 +16,8 @@ If you only installed the core of Clinica, this pipeline needs the installation 
 ## Running the pipeline
 The `dwi-dti` pipeline can be run with the following command line:
 
-```
-clinica run dwi-dti caps_directory
+```Text
+clinica run dwi-dti  <caps_directory>
 ```
 
 where:

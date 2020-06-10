@@ -27,7 +27,7 @@ If you only installed the core of Clinica, this pipeline needs the installation 
 
 The pipeline can be run with the following command line:
 ```Text
-clinica run statistics-surface caps_directory subject_visits_with_covariates_tsv design_matrix contrast string_format group_label glm_type
+clinica run statistics-surface  <caps_directory> <subject_visits_with_covariates_tsv> <design_matrix> <contrast> <string_format> <group_label> <glm_type>
 ```
 where:
 
