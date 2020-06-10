@@ -26,9 +26,8 @@ Currently, the modalities supported by our converter are:
 ## Using the converter
 The converter can be run with the following command line:
 
-```
-clinica convert nifd-to-bids dataset_directory clinical_data_directory bids_directory
-
+```Text
+clinica convert nifd-to-bids <dataset_directory> <clinical_data_directory> <bids_directory>
 ```
 
 where:

@@ -61,12 +61,12 @@ Data that do not change over time, such as the subject's sex, education level or
 
 The converter can be run with the following command line:
 
-```
+```Text
 clinica convert adni-to-bids <dataset_directory> <clinical_data_directory> <bids_directory>
 ```
 where:
 
-- `<dataset_directory>` is the path to the original ADNI images' directory. Its content looks like:
+- `dataset_directory` is the path to the downloaded ADNI images' directory. Its content looks like:
 ```text
 <dataset_directory>
 ├── 027_S_0074
@@ -92,7 +92,7 @@ where:
 ├── ...
 ```
 
-- `<clinical_data_directory>` is the path to the directory where the CSV files with the clinical data are located. Its content looks like:
+- `clinical_data_directory` is the path to the directory where the CSV files with the clinical data are located. Its content looks like:
 ```text
 <clinical_data_directory>
 ├── ADAS_ADNI1.csv
@@ -102,7 +102,7 @@ where:
 └── VITALS.csv
 ```
 
-- `<bids_directory>`  is the path to the output directory, where the BIDS-converted version of ADNI will be stored.
+- `bids_directory` is the path to the output directory, where the BIDS-converted version of ADNI will be stored.
 
 ### Optional parameters
 The converter offers the possibility of converting only the clinical data (once the images are in the BIDS format) using the optional parameter `-c`.

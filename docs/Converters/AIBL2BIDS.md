@@ -44,8 +44,8 @@ The conversion of the imaging data to BIDS relies on modality-specific csv files
 
 The converter can be run with the following command line:
 
-```
-clinica convert aibl-to-bids dataset_directory clinical_data_directory bids_directory
+```Text
+clinica convert aibl-to-bids <dataset_directory> <clinical_data_directory> <bids_directory>
 ```
 
 where:

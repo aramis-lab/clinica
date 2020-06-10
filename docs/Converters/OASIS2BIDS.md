@@ -31,8 +31,8 @@ To convert the imaging data to BIDS, the list of subjects is obtained from the d
 ## Using the converter
 The converter can be run with the following command line:
 
-```
-clinica convert oasis-to-bids  dataset_directory clinical_data_directory bids_directory
+```Text
+clinica convert oasis-to-bids <dataset_directory> <clinical_data_directory> <bids_directory>
 ```
 
 where:
@@ -43,11 +43,12 @@ where:
 
 !!! note
     In order to improve the readability, the BIDS subject ID is different from the original OASIS ID and is defined as follows:
-    ```
+    ```Text
     sub-OASIS1+ original numerical ID of the subject
     ```
-    Example:
-    If the original subject ID is `OAS1_0001_MR1`, since the numerical ID is `0001`, the final BIDS ID will be `sub-OASIS10001`.
+    
+    !!! example
+        If the original subject ID is `OAS1_0001_MR1`, since the numerical ID is `0001`, the final BIDS ID will be `sub-OASIS10001`.
 
 ## Citing this converter in your paper
 
