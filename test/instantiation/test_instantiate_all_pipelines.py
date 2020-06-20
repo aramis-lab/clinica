@@ -295,12 +295,29 @@ def test_instantiate_InputsML():
     atlases = ['AAL2', 'Neuromorphometrics', 'AICHA', 'LPBA40', 'Hammers']
     possible_psf = [0, 5, 10, 15, 20, 25]
 
-    voxel_input = [CAPSVoxelBasedInput(caps_dir, tsv, diagnoses_tsv, group_id, im, fwhm=8)
+    voxel_input = [CAPSVoxelBasedInput({'caps_directory': caps_dir,
+                                        'subjects_visits_tsv': tsv,
+                                        'diagnoses_tsv': diagnoses_tsv,
+                                        'group_id': group_id,
+                                        'image_type': im,
+                                        'fwhm': 8})
                    for im in image_type]
-    region_input = [CAPSRegionBasedInput(caps_dir, tsv, diagnoses_tsv, group_id, im, at)
+
+    region_input = [CAPSRegionBasedInput({'caps_directory': caps_dir,
+                                          'subjects_visits_tsv': tsv,
+                                          'diagnoses_tsv': diagnoses_tsv,
+                                          'group_id': group_id,
+                                          'image_type': im,
+                                          'atlas': at})
                     for im in image_type
                     for at in atlases]
-    vertex_input = [CAPSVertexBasedInput(caps_dir, tsv, diagnoses_tsv, group_id, fwhm, 'fdg')
+
+    vertex_input = [CAPSVertexBasedInput({'caps_directory': caps_dir,
+                                          'subjects_visits_tsv': tsv,
+                                          'diagnoses_tsv': diagnoses_tsv,
+                                          'group_id': group_id,
+                                          'image_type': 'fdg',
+                                          'fwhm': fwhm})
                     for fwhm in possible_psf]
 
     # Check that each file exists
@@ -323,7 +340,8 @@ def test_instantiate_SpatialSVM():
     root = join(root, 'data', 'SpatialSVM')
 
     parameters = {
-        'group_id': 'ADNIbl'
+        'group_label': 'ADNIbl',
+        'orig_input_data': 't1-volume'
     }
     pipeline = SpatialSVM(
         caps_directory=join(root, 'in', 'caps'),
@@ -368,10 +386,32 @@ def test_instantiate_T1Linear():
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'T1Linear')
 
+    parameters = {
+            'uncropped_image': False
+            }
+
     pipeline = T1Linear(
         bids_directory=join(root, 'in', 'bids'),
         caps_directory=join(root, 'in', 'caps'),
         tsv_file=join(root, 'in', 'subjects.tsv'),
+    )
+    pipeline.build()
+
+
+def test_instantiate_DLPrepareData():
+    from os.path import dirname, join, abspath
+    from clinica.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_pipeline import DeepLearningPrepareData
+
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'DeepLearningPrepareData')
+
+    parameters = {
+            'extract_method': 'whole'
+            }
+    pipeline = DeepLearningPrepareData(
+        caps_directory=join(root, 'in', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        parameters=parameters
     )
     pipeline.build()
 

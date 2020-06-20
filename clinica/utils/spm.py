@@ -1,5 +1,9 @@
 # coding: utf8
 
+"""
+This module contains SPM utilities.
+"""
+
 INDEX_TISSUE_MAP = {
     1: 'graymatter',
     2: 'whitematter',

@@ -685,10 +685,10 @@ def test_run_PETSurfaceCrossSectional(cmdopt):
 
 
 def test_run_WorkflowsML(cmdopt):
-    from clinica.pipelines.machine_learning.ml_workflows import (RB_RepHoldOut_LogisticRegression,
-                                                                 VertexB_RepHoldOut_dualSVM,
-                                                                 RB_RepHoldOut_RandomForest,
-                                                                 VB_KFold_DualSVM)
+    from clinica.pipelines.machine_learning.ml_workflows import (RegionBasedRepHoldOutLogisticRegression,
+                                                                 VertexBasedRepHoldOutDualSVM,
+                                                                 RegionBasedRepHoldOutRandomForest,
+                                                                 VoxelBasedKFoldDualSVM)
     from os.path import dirname, join, abspath
     import shutil
     import warnings
@@ -706,31 +706,31 @@ def test_run_WorkflowsML(cmdopt):
     diagnoses_tsv = join(root_input, 'in', 'diagnosis.tsv')
     group_id = 'allADNIdartel'
 
-    output_dir1 = join(root, 'out', 'VertexB_RepHoldOut_dualSVM')
+    output_dir1 = join(root, 'out', 'VertexBasedRepHoldOutDualSVM')
     clean_folder(output_dir1, recreate=True)
-    wf1 = VertexB_RepHoldOut_dualSVM(caps_dir, tsv, diagnoses_tsv, group_id, output_dir1, image_type='fdg', fwhm=20,
-                                     n_threads=8, n_iterations=10, grid_search_folds=3, test_size=0.3)
+    wf1 = VertexBasedRepHoldOutDualSVM(caps_dir, tsv, diagnoses_tsv, group_id, output_dir1, image_type='fdg', fwhm=20,
+                                       n_threads=8, n_iterations=10, grid_search_folds=3, test_size=0.3)
     wf1.run()
     shutil.rmtree(output_dir1)
 
-    output_dir2 = join(root, 'out', 'RB_RepHoldOut_LogisticRegression')
+    output_dir2 = join(root, 'out', 'RegionBasedRepHoldOutLogisticRegression')
     clean_folder(output_dir2, recreate=True)
-    wf2 = RB_RepHoldOut_LogisticRegression(caps_dir, tsv, diagnoses_tsv, group_id, 'fdg', 'AICHA', output_dir2,
-                                           n_threads=8, n_iterations=10, grid_search_folds=3, test_size=0.3)
+    wf2 = RegionBasedRepHoldOutLogisticRegression(caps_dir, tsv, diagnoses_tsv, group_id, 'fdg', 'AICHA', output_dir2,
+                                                  n_threads=8, n_iterations=10, grid_search_folds=3, test_size=0.3)
     wf2.run()
     shutil.rmtree(output_dir2)
 
-    output_dir3 = join(root, 'out', 'RB_RepHoldOut_RandomForest')
+    output_dir3 = join(root, 'out', 'RegionBasedRepHoldOutRandomForest')
     clean_folder(output_dir3, recreate=True)
-    wf3 = RB_RepHoldOut_RandomForest(caps_dir, tsv, diagnoses_tsv, group_id, 'T1', 'AAL2', output_dir3, n_threads=8,
-                                     n_iterations=10, grid_search_folds=3, test_size=0.3)
+    wf3 = RegionBasedRepHoldOutRandomForest(caps_dir, tsv, diagnoses_tsv, group_id, 'T1', 'AAL2', output_dir3,
+                                            n_threads=8, n_iterations=10, grid_search_folds=3, test_size=0.3)
     wf3.run()
     shutil.rmtree(output_dir3)
 
-    output_dir4 = join(root, 'out', 'VB_KFold_DualSVM')
+    output_dir4 = join(root, 'out', 'VoxelBasedKFoldDualSVM')
     clean_folder(output_dir4, recreate=True)
-    wf4 = VB_KFold_DualSVM(caps_dir, tsv, diagnoses_tsv, group_id, 'fdg', output_dir4, fwhm=8, n_threads=8, n_folds=5,
-                           grid_search_folds=3)
+    wf4 = VoxelBasedKFoldDualSVM(caps_dir, tsv, diagnoses_tsv, group_id, 'fdg', output_dir4, fwhm=8, n_threads=8,
+                                 n_folds=5, grid_search_folds=3)
     wf4.run()
     shutil.rmtree(output_dir4)
 
@@ -754,7 +754,8 @@ def test_run_SpatialSVM(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     parameters = {
-        'group_id': 'ADNIbl'
+        'group_label': 'ADNIbl',
+        'orig_input_data': 't1-volume'
     }
     # Instantiate pipeline and run()
     pipeline = SpatialSVM(
@@ -801,7 +802,7 @@ def test_run_T1Linear(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     parameters = {
-        'crop_image': True
+        'uncropped_image': False
     }
     # Instantiate pipeline
     pipeline = T1Linear(
@@ -814,14 +815,86 @@ def test_run_T1Linear(cmdopt):
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
 
     # Check output vs ref
-    
+
     out_folder = join(root, 'out')
-    ref_folder = join(root, 'out') 
-    
+    ref_folder = join(root, 'out')
+
     compare_folders(out_folder, ref_folder, shared_folder_name='caps')
 
     clean_folder(join(root, 'out', 'caps'), recreate=False)
     clean_folder(join(working_dir, 'T1Linear'), recreate=False)
+
+
+def test_run_DLPrepareData(cmdopt):
+    from os.path import dirname, join, abspath
+    import shutil
+    from clinica.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_pipeline import DeepLearningPrepareData
+    import nibabel as nib
+    import numpy as np
+
+    working_dir = cmdopt
+    root = dirname(abspath(join(abspath(__file__), pardir)))
+    root = join(root, 'data', 'DeepLearningPrepareData')
+
+    # Remove potential residual of previous UT
+    clean_folder(join(working_dir, 'DeepLearningPrepareData'))
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+
+    # Copy necessary data from in to out
+    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
+
+    # Test the transformation of the complete T1 MRI
+    parameters = {
+        'extract_method': 'image'
+    }
+    # Instantiate pipeline
+    pipeline = DeepLearningPrepareData(
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'DeepLearningPrepareData'),
+        parameters=parameters
+    )
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
+
+    # Test the patch extraction
+    parameters = {
+        'extract_method': 'patch',
+        'patch_size': 50,
+        'stride_size': 50
+    }
+    # Instantiate pipeline
+    pipeline = DeepLearningPrepareData(
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'DeepLearningPrepareData'),
+        parameters=parameters
+    )
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
+
+    # Test the slice extraction
+    parameters = {
+        'extract_method': 'slice',
+        'slice_mode': 'rgb',
+        'slice_direction': 0
+    }
+    # Instantiate pipeline
+    pipeline = DeepLearningPrepareData(
+        caps_directory=join(root, 'out', 'caps'),
+        tsv_file=join(root, 'in', 'subjects.tsv'),
+        base_dir=join(working_dir, 'DeepLearningPrepareData'),
+        parameters=parameters
+    )
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
+    # Check output vs ref
+
+    out_folder = join(root, 'out')
+    ref_folder = join(root, 'out')
+
+    compare_folders(out_folder, ref_folder, shared_folder_name='caps')
+
+    clean_folder(join(root, 'out', 'caps'), recreate=False)
+    clean_folder(join(working_dir, 'DeepLearningPrepareData'), recreate=False)
+
 
 
 def test_run_StatisticsVolume(cmdopt):
@@ -910,7 +983,7 @@ def test_run_StatisticsVolumeCorrection(cmdopt):
     pipeline.build()
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 4}, bypass_check=True)
     compare_folders(join(root, 'out'), join(root, 'ref'), 'caps')
-    
+
     # Remove data in out folder
     clean_folder(join(root, 'out', 'caps'), recreate=True)
     clean_folder(join(working_dir, 'StatisticsVolumeCorrection'), recreate=False)

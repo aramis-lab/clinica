@@ -33,17 +33,9 @@ __status__ = "Development"
 
 class DualSVMAlgorithm(base.MLAlgorithm):
 
-    def __init__(self, kernel, y, balanced=True, grid_search_folds=10, c_range=np.logspace(-6, 2, 17), n_threads=15):
-        self._kernel = kernel
-        self._y = y
-        self._balanced = balanced
-        self._grid_search_folds = grid_search_folds
-        self._c_range = c_range
-        self._n_threads = n_threads
-
     def _launch_svc(self, kernel_train, x_test, y_train, y_test, c):
 
-        if self._balanced:
+        if self._algorithm_params['balanced']:
             svc = SVC(C=c, kernel='precomputed', probability=True, tol=1e-6, class_weight='balanced')
         else:
             svc = SVC(C=c, kernel='precomputed', probability=True, tol=1e-6)
@@ -87,15 +79,15 @@ class DualSVMAlgorithm(base.MLAlgorithm):
 
     def evaluate(self, train_index, test_index):
 
-        inner_pool = ThreadPool(self._n_threads)
+        inner_pool = ThreadPool(self._algorithm_params['n_threads'])
         async_result = {}
-        for i in range(self._grid_search_folds):
+        for i in range(self._algorithm_params['grid_search_folds']):
             async_result[i] = {}
 
         outer_kernel = self._kernel[train_index, :][:, train_index]
         y_train = self._y[train_index]
 
-        skf = StratifiedKFold(n_splits=self._grid_search_folds, shuffle=True)
+        skf = StratifiedKFold(n_splits=self._algorithm_params['grid_search_folds'], shuffle=True)
         inner_cv = list(skf.split(np.zeros(len(y_train)), y_train))
 
         for i in range(len(inner_cv)):
@@ -105,7 +97,7 @@ class DualSVMAlgorithm(base.MLAlgorithm):
             x_test_inner = outer_kernel[inner_test_index, :][:, inner_train_index]
             y_train_inner, y_test_inner = y_train[inner_train_index], y_train[inner_test_index]
 
-            for c in self._c_range:
+            for c in self._algorithm_params['c_range']:
                 async_result[i][c] = inner_pool.apply_async(self._grid_search,
                                                             (inner_kernel, x_test_inner,
                                                              y_train_inner, y_test_inner, c))
@@ -146,7 +138,7 @@ class DualSVMAlgorithm(base.MLAlgorithm):
         # Mean balanced accuracy
         mean_bal_acc = np.mean(bal_acc_list)
 
-        if self._balanced:
+        if self._algorithm_params['balanced']:
             svc = SVC(C=best_c, kernel='precomputed', probability=True, tol=1e-6, class_weight='balanced')
         else:
             svc = SVC(C=best_c, kernel='precomputed', probability=True, tol=1e-6)
@@ -177,29 +169,30 @@ class DualSVMAlgorithm(base.MLAlgorithm):
         with open(path.join(output_dir, 'best_parameters.json'), 'w') as f:
             json.dump(parameters_dict, f)
 
+    @staticmethod
+    def uses_kernel():
+        return True
+
+    @staticmethod
+    def get_default_parameters():
+
+        parameters_dict = {'balanced': True,
+                           'grid_search_folds': 10,
+                           'c_range': np.logspace(-6, 2, 17),
+                           'n_threads': 15}
+
+        return parameters_dict
+
 
 class LogisticReg(base.MLAlgorithm):
 
-    def __init__(self, x, y, penalty='l2', balanced=False, grid_search_folds=10, c_range=np.logspace(-6, 2, 17), n_threads=15):
-        """ penalty can either be 'l2' or 'l1'"""
-        self._penalty = penalty
-        self._x = x
-        self._y = y
-        self._balanced = balanced
-        self._grid_search_folds = grid_search_folds
-        self._c_range = c_range
-        self._n_threads = n_threads
+    def _launch_logistic_reg(self, x_train, x_test, y_train, y_test, c):
 
-    def _launch_logistic_reg(self, x_train, x_test, y_train, y_test, c, shared_x=None, train_indices=None,
-                             test_indices=None):
-
-        # x_train_, mean_x, std_x = centered_normalised_data(x_train)
-        # x_test_ = (x_test - mean_x)/std_x
-
-        if self._balanced:
-            classifier = LogisticRegression(penalty=self._penalty, tol=1e-6, C=c, class_weight='balanced')
+        if self._algorithm_params['balanced']:
+            classifier = LogisticRegression(penalty=self._algorithm_params['penalty'], tol=1e-6, C=c,
+                                            class_weight='balanced')
         else:
-            classifier = LogisticRegression(penalty=self._penalty, tol=1e-6, C=c)
+            classifier = LogisticRegression(penalty=self._algorithm_params['penalty'], tol=1e-6, C=c)
 
         classifier.fit(x_train, y_train)
         y_hat_train = classifier.predict(x_train)
@@ -240,15 +233,15 @@ class LogisticReg(base.MLAlgorithm):
 
     def evaluate(self, train_index, test_index):
 
-        inner_pool = ThreadPool(self._n_threads)
+        inner_pool = ThreadPool(self._algorithm_params['n_threads'])
         async_result = {}
-        for i in range(self._grid_search_folds):
+        for i in range(self._algorithm_params['grid_search_folds']):
             async_result[i] = {}
 
         x_train = self._x[train_index]
         y_train = self._y[train_index]
 
-        skf = StratifiedKFold(n_splits=self._grid_search_folds, shuffle=True)
+        skf = StratifiedKFold(n_splits=self._algorithm_params['grid_search_folds'], shuffle=True)
         inner_cv = list(skf.split(np.zeros(len(y_train)), y_train))
 
         for i in range(len(inner_cv)):
@@ -259,7 +252,7 @@ class LogisticReg(base.MLAlgorithm):
             y_train_inner = y_train[inner_train_index]
             y_test_inner = y_train[inner_test_index]
 
-            for c in self._c_range:
+            for c in self._algorithm_params['c_range']:
                 async_result[i][c] = inner_pool.apply_async(self._grid_search,
                                                             (x_train_inner, x_test_inner,
                                                              y_train_inner, y_test_inner, c))
@@ -300,10 +293,11 @@ class LogisticReg(base.MLAlgorithm):
         # Mean balanced accuracy
         mean_bal_acc = np.mean(bal_acc_list)
 
-        if self._balanced:
-            classifier = LogisticRegression(C=best_c, penalty=self._penalty, tol=1e-6, class_weight='balanced')
+        if self._algorithm_params['balanced']:
+            classifier = LogisticRegression(C=best_c, penalty=self._algorithm_params['penalty'], tol=1e-6,
+                                            class_weight='balanced')
         else:
-            classifier = LogisticRegression(C=best_c, penalty=self._penalty, tol=1e-6)
+            classifier = LogisticRegression(C=best_c, penalty=self._algorithm_params['penalty'], tol=1e-6)
 
         classifier.fit(self._x, self._y)
 
@@ -314,7 +308,7 @@ class LogisticReg(base.MLAlgorithm):
         np.savetxt(path.join(output_dir, 'weights.txt'), classifier.coef_.transpose())
         np.savetxt(path.join(output_dir, 'intercept.txt'), classifier.intercept_)
 
-    def save_weights(self, classifier, output_dir):
+    def save_weights(self, classifier, x, output_dir):
 
         np.savetxt(path.join(output_dir, 'weights.txt'), classifier.coef_.transpose())
         return classifier.coef_.transpose()
@@ -332,35 +326,34 @@ class LogisticReg(base.MLAlgorithm):
         features_bis = (features - mean)/std
         return features_bis, mean, std
 
+    @staticmethod
+    def uses_kernel():
+        return False
+
+    @staticmethod
+    def get_default_parameters():
+        parameters_dict = {'penalty': 'l2',
+                           'balanced': False,
+                           'grid_search_folds': 10,
+                           'c_range': np.logspace(-6, 2, 17),
+                           'n_threads': 15}
+
+        return parameters_dict
+
 
 class RandomForest(base.MLAlgorithm):
 
-    def __init__(self, x, y, balanced=False, grid_search_folds=10,
-                 n_estimators_range=(10, 25, 50, 100, 150, 200, 500),
-                 max_depth_range=(None, 6, 8, 10, 12),
-                 min_samples_split_range=(2, 4, 6, 8),
-                 max_features_range=('auto', 0.1, 0.2, 0.3, 0.4, 0.5),
-                 n_threads=15):
-        self._x = x
-        self._y = y
-        self._balanced = balanced
-        self._grid_search_folds = grid_search_folds
-        self._n_estimators_range = n_estimators_range
-        self._max_depth_range = max_depth_range
-        self._min_samples_split_range = min_samples_split_range
-        self._max_features_range = max_features_range
-        self._n_threads = n_threads
+    def _launch_random_forest(self, x_train, x_test, y_train, y_test, n_estimators, max_depth, min_samples_split,
+                              max_features):
 
-    def _launch_random_forest(self, x_train, x_test, y_train, y_test, n_estimators, max_depth, min_samples_split, max_features):
-
-        if self._balanced:
+        if self._algorithm_params['balanced']:
             classifier = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth,
                                                 min_samples_split=min_samples_split, max_features=max_features,
-                                                class_weight='balanced', n_jobs=self._n_threads)
+                                                class_weight='balanced', n_jobs=self._algorithm_params['n_threads'])
         else:
             classifier = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth,
                                                 min_samples_split=min_samples_split, max_features=max_features,
-                                                n_jobs=self._n_threads)
+                                                n_jobs=self._algorithm_params['n_threads'])
 
         classifier.fit(x_train, y_train)
         y_hat_train = classifier.predict(x_train)
@@ -405,9 +398,6 @@ class RandomForest(base.MLAlgorithm):
             params_list.append(best_params)
             accuracies.append(best_acc)
 
-        # TODO For exploratory purpose only. Erase later
-        # pd.concat(all_params_acc).to_csv('all_params_acc_%s.tsv' % datetime.datetime.now(), sep='\t', index=False, encoding='utf-8')
-
         best_acc = np.mean(accuracies)
         best_n_estimators = int(round(np.mean([x[0] for x in params_list])))
         best_max_depth = int(round(np.mean([x[1] if x[1] is not None else 50 for x in params_list])))
@@ -435,21 +425,21 @@ class RandomForest(base.MLAlgorithm):
 
     def evaluate(self, train_index, test_index):
 
-        inner_pool = ThreadPool(self._n_threads)
+        inner_pool = ThreadPool(self._algorithm_params['n_threads'])
         async_result = {}
-        for i in range(self._grid_search_folds):
+        for i in range(self._algorithm_params['grid_search_folds']):
             async_result[i] = {}
 
         x_train = self._x[train_index]
         y_train = self._y[train_index]
 
-        skf = StratifiedKFold(n_splits=self._grid_search_folds, shuffle=True)
+        skf = StratifiedKFold(n_splits=self._algorithm_params['grid_search_folds'], shuffle=True)
         inner_cv = list(skf.split(np.zeros(len(y_train)), y_train))
 
-        parameters_combinations = list(itertools.product(self._n_estimators_range,
-                                                         self._max_depth_range,
-                                                         self._min_samples_split_range,
-                                                         self._max_features_range))
+        parameters_combinations = list(itertools.product(self._algorithm_params['n_estimators_range'],
+                                                         self._algorithm_params['max_depth_range'],
+                                                         self._algorithm_params['min_samples_split_range'],
+                                                         self._algorithm_params['max_features_range']))
 
         for i in range(len(inner_cv)):
             inner_train_index, inner_test_index = inner_cv[i]
@@ -499,16 +489,16 @@ class RandomForest(base.MLAlgorithm):
         y_test = self._y[test_index]
 
         best_parameter = dict()
-        best_parameter['n_estimators'] = self._n_estimators_range
-        best_parameter['max_depth'] = self._max_depth_range
-        best_parameter['min_samples_split'] = self._min_samples_split_range
-        best_parameter['max_features'] = self._max_features_range
+        best_parameter['n_estimators'] = self._algorithm_params['n_estimators_range']
+        best_parameter['max_depth'] = self._algorithm_params['max_depth_range']
+        best_parameter['min_samples_split'] = self._algorithm_params['min_samples_split_range']
+        best_parameter['max_features'] = self._algorithm_params['max_features_range']
 
         _, y_hat, auc, y_hat_train = self._launch_random_forest(x_train, x_test, y_train, y_test,
-                                                                self._n_estimators_range,
-                                                                self._max_depth_range,
-                                                                self._min_samples_split_range,
-                                                                self._max_features_range)
+                                                                self._algorithm_params['n_estimators_range'],
+                                                                self._algorithm_params['max_depth_range'],
+                                                                self._algorithm_params['min_samples_split_range'],
+                                                                self._algorithm_params['max_features_range'])
         result = dict()
         result['best_parameter'] = best_parameter
         result['evaluation'] = utils.evaluate_prediction(y_test, y_hat)
@@ -528,8 +518,11 @@ class RandomForest(base.MLAlgorithm):
 
         mean_bal_acc = np.mean([result['best_parameter']['balanced_accuracy'] for result in results_list])
         best_n_estimators = int(round(np.mean([result['best_parameter']['n_estimators'] for result in results_list])))
-        best_max_depth = int(round(np.mean([result['best_parameter']['max_depth'] if result['best_parameter']['max_depth'] is not None else 50 for result in results_list])))
-        best_min_samples_split = int(round(np.mean([result['best_parameter']['min_samples_split'] for result in results_list])))
+        best_max_depth = int(round(np.mean([result['best_parameter']['max_depth']
+                                            if result['best_parameter']['max_depth'] is not None
+                                            else 50 for result in results_list])))
+        best_min_samples_split = int(round(np.mean([result['best_parameter']['min_samples_split']
+                                                    for result in results_list])))
 
         max_feat = []
         n_features = self._x.shape[1]
@@ -552,14 +545,16 @@ class RandomForest(base.MLAlgorithm):
             max_feat.append(max_features)
         best_max_features = np.mean(max_feat)
 
-        if self._balanced:
+        if self._algorithm_params['balanced']:
             classifier = RandomForestClassifier(n_estimators=best_n_estimators, max_depth=best_max_depth,
-                                                min_samples_split=best_min_samples_split, max_features=best_max_features,
-                                                class_weight='balanced', n_jobs=self._n_threads)
+                                                min_samples_split=best_min_samples_split,
+                                                max_features=best_max_features,
+                                                class_weight='balanced', n_jobs=self._algorithm_params['n_threads'])
         else:
             classifier = RandomForestClassifier(n_estimators=best_n_estimators, max_depth=best_max_depth,
-                                                min_samples_split=best_min_samples_split, max_features=best_max_features,
-                                                n_jobs=self._n_threads)
+                                                min_samples_split=best_min_samples_split,
+                                                max_features=best_max_features,
+                                                n_jobs=self._algorithm_params['n_threads'])
 
         classifier.fit(self._x, self._y)
 
@@ -574,7 +569,7 @@ class RandomForest(base.MLAlgorithm):
         # print classifier.estimators_
         # np.savetxt(path.join(output_dir, 'estimators.txt'), str(classifier.estimators_))
 
-    def save_weights(self, classifier, output_dir):
+    def save_weights(self, classifier, x, output_dir):
 
         np.savetxt(path.join(output_dir, 'weights.txt'), classifier.feature_importances_)
         return classifier.feature_importances_
@@ -584,41 +579,43 @@ class RandomForest(base.MLAlgorithm):
         with open(path.join(output_dir, 'best_parameters.json'), 'w') as f:
             json.dump(parameters_dict, f)
 
+    @staticmethod
+    def uses_kernel():
+        return False
+
+    @staticmethod
+    def get_default_parameters():
+
+        parameters_dict = {'balanced': False,
+                           'grid_search_folds': 10,
+                           'n_estimators_range': (10, 25, 50, 100, 150, 200, 500),
+                           'max_depth_range': (None, 6, 8, 10, 12),
+                           'min_samples_split_range': (2, 4, 6, 8),
+                           'max_features_range': ('auto', 0.1, 0.2, 0.3, 0.4, 0.5),
+                           'n_threads': 15}
+
+        return parameters_dict
+
 
 class XGBoost(base.MLAlgorithm):
-    def __init__(self, x, y, balanced=False, grid_search_folds=10,
-                 max_depth_range=(0, 6),
-                 learning_rate_range=(0.1, 0.3),
-                 n_estimators_range=(100, 200),
-                 colsample_bytree_range=(0.5, 1),
-                 reg_alpha=0,
-                 reg_lambda=1,
-                 n_threads=15):
-        self._x = x
-        self._y = y
-        self._balanced = balanced
-        self._scale_pos_weight = float(len(self._y - sum(self._y)) / sum(self._y))
-        self._grid_search_folds = grid_search_folds
-        self._max_depth_range = max_depth_range
-        self._learning_rate_range = learning_rate_range
-        self._n_estimators_range = n_estimators_range
-        self._colsample_bytree_range = colsample_bytree_range
-        self._reg_alpha = reg_alpha
-        self._reg_lambda = reg_lambda
-        self._n_threads = n_threads
 
-    def _launch_xgboost(self, x_train, x_test, y_train, y_test, max_depth, learning_rate, n_estimators, colsample_bytree):
-        if self._balanced:
+    def _launch_xgboost(self, x_train, x_test, y_train, y_test, max_depth, learning_rate, n_estimators,
+                        colsample_bytree):
+
+        if self._algorithm_params['balanced']:
             # set scale_pos_weight
             # http://xgboost.readthedocs.io/en/latest//how_to/param_tuning.html
+            scale_pos_weight = float(len(self._y - sum(self._y)) / sum(self._y))
             classifier = XGBClassifier(max_depth=max_depth, learning_rate=learning_rate, n_estimators=n_estimators,
-                                       n_jobs=self._n_threads, colsample_bytree=colsample_bytree,
-                                       reg_alpha=self._reg_alpha, reg_lambda=self._reg_lambda,
-                                       scale_pos_weight=self._scale_pos_weight)
+                                       n_jobs=self._algorithm_params['n_threads'], colsample_bytree=colsample_bytree,
+                                       reg_alpha=self._algorithm_params['reg_alpha'],
+                                       reg_lambda=self._algorithm_params['reg_lambda'],
+                                       scale_pos_weight=scale_pos_weight)
         else:
             classifier = XGBClassifier(max_depth=max_depth, learning_rate=learning_rate, n_estimators=n_estimators,
-                                       n_jobs=self._n_threads, colsample_bytree=colsample_bytree,
-                                       reg_alpha=self._reg_alpha, reg_lambda=self._reg_lambda)
+                                       n_jobs=self._algorithm_params['n_threads'], colsample_bytree=colsample_bytree,
+                                       reg_alpha=self._algorithm_params['reg_alpha'],
+                                       reg_lambda=self._algorithm_params['reg_lambda'])
 
         classifier.fit(x_train, y_train)
         y_hat_train = classifier.predict(x_train)
@@ -677,21 +674,21 @@ class XGBoost(base.MLAlgorithm):
 
     def evaluate(self, train_index, test_index):
 
-        inner_pool = ThreadPool(self._n_threads)
+        inner_pool = ThreadPool(self._algorithm_params['n_threads'])
         async_result = {}
-        for i in range(self._grid_search_folds):
+        for i in range(self._algorithm_params['grid_search_folds']):
             async_result[i] = {}
 
         x_train = self._x[train_index]
         y_train = self._y[train_index]
 
-        skf = StratifiedKFold(n_splits=self._grid_search_folds, shuffle=True)
+        skf = StratifiedKFold(n_splits=self._algorithm_params['grid_search_folds'], shuffle=True)
         inner_cv = list(skf.split(np.zeros(len(y_train)), y_train))
 
-        parameters_combinations = list(itertools.product(self._max_depth_range,
-                                                         self._learning_rate_range,
-                                                         self._n_estimators_range,
-                                                         self._colsample_bytree_range))
+        parameters_combinations = list(itertools.product(self._algorithm_params['max_depth_range'],
+                                                         self._algorithm_params['learning_rate_range'],
+                                                         self._algorithm_params['n_estimators_range'],
+                                                         self._algorithm_params['colsample_bytree_range']))
 
         for i in range(len(inner_cv)):
             inner_train_index, inner_test_index = inner_cv[i]
@@ -741,16 +738,16 @@ class XGBoost(base.MLAlgorithm):
         y_test = self._y[test_index]
 
         best_parameter = dict()
-        best_parameter['max_depth'] = self._max_depth_range
-        best_parameter['learning_rate'] = self._learning_rate_range
-        best_parameter['n_estimators'] = self._n_estimators_range
-        best_parameter['colsample_bytree'] = self._colsample_bytree_range
+        best_parameter['max_depth'] = self._algorithm_params['max_depth_range']
+        best_parameter['learning_rate'] = self._algorithm_params['learning_rate_range']
+        best_parameter['n_estimators'] = self._algorithm_params['n_estimators_range']
+        best_parameter['colsample_bytree'] = self._algorithm_params['colsample_bytree_range']
 
         _, y_hat, auc, y_hat_train = self._launch_xgboost(x_train, x_test, y_train, y_test,
-                                                          self._max_depth_range,
-                                                          self._learning_rate_range,
-                                                          self._n_estimators_range,
-                                                          self._colsample_bytree_range)
+                                                          self._algorithm_params['max_depth_range'],
+                                                          self._algorithm_params['learning_rate_range'],
+                                                          self._algorithm_params['n_estimators_range'],
+                                                          self._algorithm_params['colsample_bytree_range'])
         result = dict()
         result['best_parameter'] = best_parameter
         result['evaluation'] = utils.evaluate_prediction(y_test, y_hat)
@@ -775,16 +772,21 @@ class XGBoost(base.MLAlgorithm):
         best_n_estimators = int(round(np.mean([result['best_parameter']['n_estimators'] for result in results_list])))
         best_colsample_bytree = np.mean([result['best_parameter']['colsample_bytree'] for result in results_list])
 
-        if self._balanced:
+        if self._algorithm_params['balanced']:
+            scale_pos_weight = float(len(self._y - sum(self._y)) / sum(self._y))
+
             classifier = XGBClassifier(max_depth=best_max_depth, learning_rate=best_learning_rate,
-                                       n_estimators=best_n_estimators, n_jobs=self._n_threads,
-                                       colsample_bytree=best_colsample_bytree, reg_alpha=self._reg_alpha,
-                                       reg_lambda=self._reg_lambda, scale_pos_weight=self._scale_pos_weight)
+                                       n_estimators=best_n_estimators, n_jobs=self._algorithm_params['n_threads'],
+                                       colsample_bytree=best_colsample_bytree,
+                                       reg_alpha=self._algorithm_params['reg_alpha'],
+                                       reg_lambda=self._algorithm_params['reg_lambda'],
+                                       scale_pos_weight=scale_pos_weight)
         else:
             classifier = XGBClassifier(max_depth=best_max_depth, learning_rate=best_learning_rate,
-                                       n_estimators=best_n_estimators, n_jobs=self._n_threads,
-                                       colsample_bytree=best_colsample_bytree, reg_alpha=self._reg_alpha,
-                                       reg_lambda=self._reg_lambda)
+                                       n_estimators=best_n_estimators, n_jobs=self._algorithm_params['n_threads'],
+                                       colsample_bytree=best_colsample_bytree,
+                                       reg_alpha=self._algorithm_params['reg_alpha'],
+                                       reg_lambda=self._algorithm_params['reg_lambda'])
 
         classifier.fit(self._x, self._y)
 
@@ -799,7 +801,7 @@ class XGBoost(base.MLAlgorithm):
         # print classifier.estimators_
         # np.savetxt(path.join(output_dir, 'estimators.txt'), str(classifier.estimators_))
 
-    def save_weights(self, classifier, output_dir):
+    def save_weights(self, classifier, x, output_dir):
 
         np.savetxt(path.join(output_dir, 'weights.txt'), classifier.feature_importances_)
         return classifier.feature_importances_
@@ -809,20 +811,32 @@ class XGBoost(base.MLAlgorithm):
         with open(path.join(output_dir, 'best_parameters.json'), 'w') as f:
             json.dump(parameters_dict, f)
 
+    @staticmethod
+    def uses_kernel():
+        return False
+
+    @staticmethod
+    def get_default_parameters():
+        parameters_dict = {'balanced': False,
+                           'grid_search_folds': 10,
+                           'max_depth_range': (0, 6),
+                           'learning_rate_range': (0.1, 0.3),
+                           'n_estimators_range': (100, 200),
+                           'colsample_bytree_range': (0.5, 1),
+                           'reg_alpha': 0,
+                           'reg_lambda': 1,
+                           'n_threads': 15}
+
+        return parameters_dict
+
 
 class OneVsOneSVM(base.MLAlgorithm):
-    def __init__(self, kernel, y, balanced=True, grid_search_folds=10, c_range=np.logspace(-6, 2, 17), n_threads=15):
-        self._kernel = kernel
-        self._y = y
-        self._balanced = balanced
-        self._grid_search_folds = grid_search_folds
-        self._c_range = c_range
-        self._n_threads = n_threads
 
     def _launch_svc(self, kernel_train, x_test, y_train, y_test, c):
 
-        if self._balanced:
-            svc = OneVsOneClassifier(SVC(C=c, kernel='precomputed', probability=True, tol=1e-6, class_weight='balanced'))
+        if self._algorithm_params['balanced']:
+            svc = OneVsOneClassifier(SVC(C=c, kernel='precomputed', probability=True, tol=1e-6,
+                                         class_weight='balanced'))
         else:
             svc = OneVsOneClassifier(SVC(C=c, kernel='precomputed', probability=True, tol=1e-6))
 
@@ -865,15 +879,15 @@ class OneVsOneSVM(base.MLAlgorithm):
 
     def evaluate(self, train_index, test_index):
 
-        inner_pool = ThreadPool(self._n_threads)
+        inner_pool = ThreadPool(self._algorithm_params['n_threads'])
         async_result = {}
-        for i in range(self._grid_search_folds):
+        for i in range(self._algorithm_params['grid_search_folds']):
             async_result[i] = {}
 
         outer_kernel = self._kernel[train_index, :][:, train_index]
         y_train = self._y[train_index]
 
-        skf = StratifiedKFold(n_splits=self._grid_search_folds, shuffle=True)
+        skf = StratifiedKFold(n_splits=self._algorithm_params['grid_search_folds'], shuffle=True)
         inner_cv = list(skf.split(np.zeros(len(y_train)), y_train))
 
         for i in range(len(inner_cv)):
@@ -883,7 +897,7 @@ class OneVsOneSVM(base.MLAlgorithm):
             x_test_inner = outer_kernel[inner_test_index, :][:, inner_train_index]
             y_train_inner, y_test_inner = y_train[inner_train_index], y_train[inner_test_index]
 
-            for c in self._c_range:
+            for c in self._algorithm_params['c_range']:
                 async_result[i][c] = inner_pool.apply_async(self._grid_search,
                                                             (inner_kernel, x_test_inner,
                                                              y_train_inner, y_test_inner, c))
@@ -923,8 +937,9 @@ class OneVsOneSVM(base.MLAlgorithm):
         # Mean balanced accuracy
         mean_bal_acc = np.mean(bal_acc_list)
 
-        if self._balanced:
-            svc = OneVsOneClassifier(SVC(C=best_c, kernel='precomputed', probability=True, tol=1e-6, class_weight='balanced'))
+        if self._algorithm_params['balanced']:
+            svc = OneVsOneClassifier(SVC(C=best_c, kernel='precomputed', probability=True, tol=1e-6,
+                                         class_weight='balanced'))
         else:
             svc = OneVsOneClassifier(SVC(C=best_c, kernel='precomputed', probability=True, tol=1e-6))
 
@@ -953,20 +968,28 @@ class OneVsOneSVM(base.MLAlgorithm):
         with open(path.join(output_dir, 'best_parameters.json'), 'w') as f:
             json.dump(parameters_dict, f)
 
+    @staticmethod
+    def uses_kernel():
+        return True
+
+    @staticmethod
+    def get_default_parameters():
+
+        parameters_dict = {'balanced': True,
+                           'grid_search_folds': 10,
+                           'c_range': np.logspace(-6, 2, 17),
+                           'n_threads': 15}
+
+        return parameters_dict
+
 
 class OneVsRestSVM(base.MLAlgorithm):
-    def __init__(self, kernel, y, balanced=True, grid_search_folds=10, c_range=np.logspace(-6, 2, 17), n_threads=15):
-        self._kernel = kernel
-        self._y = y
-        self._balanced = balanced
-        self._grid_search_folds = grid_search_folds
-        self._c_range = c_range
-        self._n_threads = n_threads
 
     def _launch_svc(self, kernel_train, x_test, y_train, y_test, c):
 
-        if self._balanced:
-            svc = OneVsRestClassifier(SVC(C=c, kernel='precomputed', probability=True, tol=1e-6, class_weight='balanced'))
+        if self._algorithm_params['balanced']:
+            svc = OneVsRestClassifier(SVC(C=c, kernel='precomputed', probability=True, tol=1e-6,
+                                          class_weight='balanced'))
         else:
             svc = OneVsRestClassifier(SVC(C=c, kernel='precomputed', probability=True, tol=1e-6))
 
@@ -1009,15 +1032,15 @@ class OneVsRestSVM(base.MLAlgorithm):
 
     def evaluate(self, train_index, test_index):
 
-        inner_pool = ThreadPool(self._n_threads)
+        inner_pool = ThreadPool(self._algorithm_params['n_threads'])
         async_result = {}
-        for i in range(self._grid_search_folds):
+        for i in range(self._algorithm_params['grid_search_folds']):
             async_result[i] = {}
 
         outer_kernel = self._kernel[train_index, :][:, train_index]
         y_train = self._y[train_index]
 
-        skf = StratifiedKFold(n_splits=self._grid_search_folds, shuffle=True)
+        skf = StratifiedKFold(n_splits=self._algorithm_params['grid_search_folds'], shuffle=True)
         inner_cv = list(skf.split(np.zeros(len(y_train)), y_train))
 
         for i in range(len(inner_cv)):
@@ -1027,7 +1050,7 @@ class OneVsRestSVM(base.MLAlgorithm):
             x_test_inner = outer_kernel[inner_test_index, :][:, inner_train_index]
             y_train_inner, y_test_inner = y_train[inner_train_index], y_train[inner_test_index]
 
-            for c in self._c_range:
+            for c in self._algorithm_params['c_range']:
                 async_result[i][c] = inner_pool.apply_async(self._grid_search,
                                                             (inner_kernel, x_test_inner,
                                                              y_train_inner, y_test_inner, c))
@@ -1067,8 +1090,9 @@ class OneVsRestSVM(base.MLAlgorithm):
         # Mean balanced accuracy
         mean_bal_acc = np.mean(bal_acc_list)
 
-        if self._balanced:
-            svc = OneVsOneClassifier(SVC(C=best_c, kernel='precomputed', probability=True, tol=1e-6, class_weight='balanced'))
+        if self._algorithm_params['balanced']:
+            svc = OneVsOneClassifier(SVC(C=best_c, kernel='precomputed', probability=True, tol=1e-6,
+                                         class_weight='balanced'))
         else:
             svc = OneVsOneClassifier(SVC(C=best_c, kernel='precomputed', probability=True, tol=1e-6))
 
@@ -1096,3 +1120,17 @@ class OneVsRestSVM(base.MLAlgorithm):
     def save_parameters(self, parameters_dict, output_dir):
         with open(path.join(output_dir, 'best_parameters.json'), 'w') as f:
             json.dump(parameters_dict, f)
+
+    @staticmethod
+    def uses_kernel():
+        return True
+
+    @staticmethod
+    def get_default_parameters():
+
+        parameters_dict = {'balanced': True,
+                           'grid_search_folds': 10,
+                           'c_range': np.logspace(-6, 2, 17),
+                           'n_threads': 15}
+
+        return parameters_dict

@@ -1,5 +1,10 @@
 # coding: utf8
 
+"""
+This module gathers formatted messages that are displayed when running Clinica.
+
+These functions are mainly called by the pipelines.
+"""
 
 LINES_TO_DISPLAY = 25
 

@@ -16,7 +16,6 @@ __status__ = "Development"
 
 def convert_images(path_to_dataset, bids_dir, path_to_clinical):
     # Conversion of the entire dataset in BIDS
-
     '''Scans available files in the path_to_dataset,
     identifies the patients that have images described by the json file,
     converts the image with the highest quality for each category'''

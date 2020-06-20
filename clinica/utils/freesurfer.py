@@ -1,7 +1,7 @@
 # coding: utf8
-
-
-"""This module contains FreeSurfer utilities."""
+"""
+This module contains FreeSurfer utilities.
+"""
 
 
 def extract_image_id_from_longitudinal_segmentation(freesurfer_id):

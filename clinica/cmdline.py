@@ -200,6 +200,7 @@ def execute():
     from clinica.pipelines.t1_volume_existing_template.t1_volume_existing_template_cli import T1VolumeExistingTemplateCLI
     from clinica.pipelines.t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
     from clinica.pipelines.t1_linear.t1_linear_cli import T1LinearCLI
+    from clinica.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_cli import DeepLearningPrepareDataCLI
     from clinica.pipelines.dwi_preprocessing_using_phasediff_fieldmap.dwi_preprocessing_using_phasediff_fieldmap_cli import DwiPreprocessingUsingPhaseDiffFieldmapCli
     from clinica.pipelines.dwi_preprocessing_using_t1.dwi_preprocessing_using_t1_cli import DwiPreprocessingUsingT1Cli
     from clinica.pipelines.dwi_dti.dwi_dti_cli import DwiDtiCli
@@ -230,6 +231,7 @@ def execute():
         PETVolumeCLI(),
         PetSurfaceCLI(),
         # PetSurfaceLongitudinalCLI(),
+        DeepLearningPrepareDataCLI(),
         SpatialSVMCLI(),
         StatisticsSurfaceCLI(),
         StatisticsVolumeCLI(),

@@ -1,8 +1,9 @@
 # coding: utf8
 
 """
-Describe files to grab, to use with inputs.clinica_file_reader() and inputs.clinica_group_reader()
+This module contains dictionaries used in inputs.py::clinica_{file|group}_reader().
 
+These dictionaries describe files to grab.
 """
 
 """ T1w """
@@ -93,8 +94,18 @@ T1_FS_LONG_DESIKAN_PARC_R = {'pattern': 't1/long-*/freesurfer_longitudinal/sub-*
                              'description': 'right hemisphere surface-based Desikan parcellation (label/rh.aparc.annot) generated with t1-freesurfer-longitudinal.',
                              'needed_pipeline': 't1-freesurfer and t1-freesurfer-longitudinal'}
 
+T1W_LINEAR = {'pattern': '*space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz',
+              'description': 'T1w image registered in MNI152NLin2009cSym space using t1-linear pipeline',
+              'needed_pipeline': 't1-linear'}
+
+T1W_LINEAR_CROPPED = {'pattern': '*space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz',
+                      'description': 'T1W Image registered using t1-linear and cropped '
+                      '(matrix size 169×208×179, 1 mm isotropic voxels)',
+                      'needed_pipeline': 't1-linear'}
 
 # T1-Volume
+
+
 def t1_volume_native_tpm(tissue_number):
     from .spm import INDEX_TISSUE_MAP
     import os

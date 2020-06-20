@@ -125,8 +125,8 @@ class T1Linear(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         from nipype.interfaces.io import DataSink
         import nipype.pipeline.engine as npe
-        from clinica.utils.nipype import fix_join
-        from .t1_linear_utils import (container_from_filename, get_substitutions_datasink)
+        from clinica.utils.nipype import (fix_join, container_from_filename)
+        from .t1_linear_utils import get_substitutions_datasink
 
         # Writing node
         write_node = npe.Node(
@@ -162,7 +162,7 @@ class T1Linear(cpe.Pipeline):
             (self.output_node, write_node, [('affine_mat', '@affine_mat')]),
             ])
 
-        if (self.parameters.get('crop_image')):
+        if not (self.parameters.get('uncropped_image')):
             self.connect([
                 (self.output_node, write_node, [('outfile_crop', '@outfile_crop')]),
                 ])
@@ -224,7 +224,7 @@ class T1Linear(cpe.Pipeline):
             (self.input_node, image_id_node, [('t1w', 'filename')]),
             (self.input_node, n4biascorrection, [('t1w', 'input_image')]),
             (n4biascorrection, ants_registration_node, [('output_image', 'moving_image')]),
-            (image_id_node , ants_registration_node, [('image_id', 'output_prefix')]),
+            (image_id_node, ants_registration_node, [('image_id', 'output_prefix')]),
 
             # Connect to DataSink
             (image_id_node, self.output_node, [('image_id', 'image_id')]),
@@ -232,7 +232,7 @@ class T1Linear(cpe.Pipeline):
             (n4biascorrection, self.output_node, [('output_image', 'outfile_corr')]),
             (ants_registration_node, self.output_node, [('warped_image', 'outfile_reg')]),
             ])
-        if (self.parameters.get('crop_image')):
+        if not (self.parameters.get('uncropped_image')):
             self.connect([
                 (ants_registration_node, cropnifti, [('warped_image', 'input_img')]),
                 (cropnifti, self.output_node, [('output_img', 'outfile_crop')]),

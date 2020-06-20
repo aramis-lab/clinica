@@ -545,7 +545,6 @@ def create_subs_sess_list(input_dir, output_dir,
 
 
 def center_nifti_origin(input_image, output_image):
-
     """
 
     Put the origin of the coordinate system at the center of the image

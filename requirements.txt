@@ -1,5 +1,5 @@
-################  CLINICA requirements for installation ######################
-##### Requirements with Version Specifiers ######
+# ***************  Clinica requirements for installation ***************
+# ***** Requirements with Version Specifiers *****
 #   See https://www.python.org/dev/peps/pep-0440/#version-specifiers
 nibabel >= 2.3.3
 nipype >= 1.4.0
@@ -18,4 +18,6 @@ xlrd >= 1.2.0
 scipy == 1.2.3
 matplotlib
 niflow-nipype1-workflows
-scikit-image
+scikit-image == 0.16.2
+torch > 1.0
+torchvision
