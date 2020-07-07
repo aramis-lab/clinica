@@ -18,7 +18,7 @@ You need to have performed the [`t1-freesurfer`](../T1_FreeSurfer) pipeline on y
 ## Dependencies
 <!-- If you installed the docker image of Clinica, nothing is required.-->
 
-If you only installed the core of Clinica, this pipeline needs the installation of **FreeSurfer 6.0**, **SPM12**, **FSL 6.O** and **PETPVC 1.2.4** (which depends on **ITK 4**) on your computer. You can find how to install these software packages on the [third-party](../../Third-party) page.
+If you only installed the core of Clinica, this pipeline needs the installation of **FreeSurfer 6.0**, **SPM12**, **FSL 6.0** and **PETPVC 1.2.4** (which depends on **ITK 4**) on your computer. You can find how to install these software packages on the [third-party](../../Third-party) page.
 
 ## Running the pipeline
 The pipeline can be run with the following command line:
