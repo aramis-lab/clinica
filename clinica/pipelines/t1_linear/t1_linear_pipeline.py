@@ -20,6 +20,21 @@ class T1Linear(cpe.Pipeline):
         A clinica pipeline object containing the T1 Linear pipeline.
     """
 
+    @staticmethod
+    def get_processed_images(caps_directory, subjects, sessions):
+        import os
+        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.input_files import T1W_LINEAR_CROPPED
+        from clinica.utils.filemanip import extract_image_ids
+        image_ids = []
+        if os.path.isdir(caps_directory):
+            cropped_files = clinica_file_reader(
+                subjects, sessions,
+                caps_directory, T1W_LINEAR_CROPPED, False
+            )
+            image_ids = extract_image_ids(cropped_files)
+        return image_ids
+
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
         """
