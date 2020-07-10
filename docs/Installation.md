@@ -2,7 +2,8 @@
 
 You will find below the steps for installing Clinica on Linux or Mac. Please do
 not hesitate to contact us on the
-[forum](https://groups.google.com/forum/#!forum/clinica-user)
+[forum](https://groups.google.com/forum/#!forum/clinica-user) or
+[GitHub](https://github.com/aramis-lab/clinica/issues)
 if you encounter any issues.
 
 
@@ -19,13 +20,13 @@ To install Miniconda, open a new terminal and type the following commands:
 
 - If you are on Linux:
 ```bash
-curl https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda-installer.sh
+curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda-installer.sh
 bash /tmp/miniconda-installer.sh
 ```
 
 - If you are on Mac:
 ```bash
-curl https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o /tmp/miniconda-installer.sh
+curl https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o /tmp/miniconda-installer.sh
 bash /tmp/miniconda-installer.sh
 ```
 
