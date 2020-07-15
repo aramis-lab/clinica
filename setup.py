@@ -13,7 +13,10 @@ with open(join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 install_reqs = parse_requirements('requirements.txt', session='hack')
-reqs = [str(ir.req) for ir in install_reqs]
+try:
+    requirements = [str(ir.req) for ir in install_reqs]
+except:
+    requirements = [str(ir.requirement) for ir in install_reqs]
 
 setup(
     name='clinica',
@@ -40,5 +43,5 @@ setup(
         'Intended Audience :: Developers',
         'Programming Language :: Python',
     ],
-    install_requires=reqs
+    install_requires=requirements
 )
