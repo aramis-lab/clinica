@@ -18,12 +18,12 @@ def print_images_to_process(list_participant_id, list_session_id):
     cprint('The pipeline will be run on the following %s image(s):' % len(list_participant_id))
     for i in range(0, min(len(unique_participants), LINES_TO_DISPLAY)):
         sessions_i_th_participant = ', '.join(s_id for s_id in sessions_per_participant[i])
-        cprint("\t%s | %s," % (unique_participants[i], sessions_i_th_participant))
+        cprint("\t%s | %s," % (unique_participants[i], sessions_i_th_participant))
 
     if len(unique_participants) > LINES_TO_DISPLAY:
         cprint("\t...")
         sessions_last_participant = ', '.join(s_id for s_id in sessions_per_participant[-1])
-        cprint("\t%s | %s" % (unique_participants[-1], sessions_last_participant))
+        cprint("\t%s | %s" % (unique_participants[-1], sessions_last_participant))
 
 
 def print_begin_image(image_id, list_keys=None, list_values=None):
