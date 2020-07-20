@@ -1,11 +1,5 @@
 # coding: utf8
 
-"""T1 Linear - Clinica Utilities.
-This file has been generated automatically by the `clinica generate template`
-command line tool. See here for more details:
-http://clinica.run/doc/InteractingWithClinica/
-"""
-
 
 def get_substitutions_datasink(bids_file):
 
@@ -56,3 +50,12 @@ def crop_nifti(input_img, ref_crop):
     crop_template = ref_crop
 
     return output_img, crop_template
+
+
+def print_end_pipeline(t1w, final_file):
+    """
+    Display end message for <subject_id> when <final_file> is connected.
+    """
+    from clinica.utils.ux import print_end_image
+    from clinica.utils.filemanip import get_subject_id
+    print_end_image(get_subject_id(t1w))
