@@ -15,7 +15,7 @@ with open(join(this_directory, 'README.md'), encoding='utf-8') as f:
 install_reqs = parse_requirements('requirements.txt', session='hack')
 try:
     requirements = [str(ir.req) for ir in install_reqs]
-except:
+except Exception:
     requirements = [str(ir.requirement) for ir in install_reqs]
 
 setup(
