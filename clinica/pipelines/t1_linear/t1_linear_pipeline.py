@@ -203,7 +203,7 @@ class T1Linear(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from clinica.utils.filemanip import get_filename_no_ext
         from nipype.interfaces import ants
-        from .t1_linear_utils import crop_nifti
+        from .t1_linear_utils import crop_nifti, print_end_pipeline
 
         image_id_node = npe.Node(
                 interface=nutil.Function(
@@ -247,6 +247,13 @@ class T1Linear(cpe.Pipeline):
                 )
         cropnifti.inputs.ref_crop = self.ref_crop
 
+        # 4. Print end message
+        print_end_message = npe.Node(
+            interface=nutil.Function(
+                input_names=['t1w', 'final_file'],
+                function=print_end_pipeline),
+            name='WriteEndMessage')
+
         # Connection
         # ==========
         self.connect([
@@ -260,9 +267,16 @@ class T1Linear(cpe.Pipeline):
             (ants_registration_node, self.output_node, [('out_matrix', 'affine_mat')]),
             (n4biascorrection, self.output_node, [('output_image', 'outfile_corr')]),
             (ants_registration_node, self.output_node, [('warped_image', 'outfile_reg')]),
-            ])
+            (self.input_node, print_end_message, [('t1w', 't1w')]),
+        ])
         if not (self.parameters.get('uncropped_image')):
             self.connect([
                 (ants_registration_node, cropnifti, [('warped_image', 'input_img')]),
                 (cropnifti, self.output_node, [('output_img', 'outfile_crop')]),
+                (cropnifti, print_end_message, [('output_img', 'final_file')]),
                 ])
+        else:
+            self.connect([
+                (ants_registration_node, print_end_message, [('warped_image', 'final_file')]),
+            ])
+
