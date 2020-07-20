@@ -279,4 +279,3 @@ class T1Linear(cpe.Pipeline):
             self.connect([
                 (ants_registration_node, print_end_message, [('warped_image', 'final_file')]),
             ])
-
