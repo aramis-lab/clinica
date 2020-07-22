@@ -10,12 +10,12 @@ If you only installed the core of Clinica, this pipeline needs the installation 
 ## Running the pipeline
 The pipeline can be run with the following command line:
 ```Text
-clinica run t1-linear <bids_directory> caps_directory
+clinica run t1-linear <bids_directory> <caps_directory>
 ```
 where:
 
-- `bids_directory` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
-- `caps_directory` is the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
+- `bids_directory` is the input folder containing the dataset in a [BIDS](http://www.clinica.run/doc/BIDS/) hierarchy.
+- `caps_directory` is the output folder containing the results in a [CAPS](http://www.clinica.run/doc/CAPS/Introduction) hierarchy.
 
 On default, cropped images (matrix size 169×208×179, 1 mm isotropic voxels) are generated to reduce the computing power required when training deep learning models. Use `--uncropped_image` flag if you do not want to crop the image.
 
