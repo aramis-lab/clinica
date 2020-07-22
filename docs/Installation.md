@@ -13,7 +13,7 @@ if you encounter any issues.
 
 #### Python environment
 You will need a Python environment to run Clinica. We advise you to
-use [Miniconda](http://conda.pydata.org/miniconda.html).
+use [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
 Miniconda allows you to install, run, and update Python packages and their
 dependencies. It can also create environments to isolate your libraries.
 To install Miniconda, open a new terminal and type the following commands:
