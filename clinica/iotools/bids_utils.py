@@ -121,7 +121,7 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
             participant_df.at[i, 'participant_id'] = bids_id[0]
 
     if len(subjects_to_drop) > 0:
-        cprint('The following subjects of ADNIMERGE were not found in your BIDS folder :\n'
+        cprint('The following subjects of dataset directory were not found in your BIDS folder :\n'
                + ', '.join(subjects_to_drop))
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:

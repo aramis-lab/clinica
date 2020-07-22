@@ -6,14 +6,6 @@ Convert OASIS dataset (http://www.oasis-brains.org/) to BIDS.
 
 from clinica.iotools.abstract_converter import Converter
 
-__author__ = "Sabrina Fontanella"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Simona Bottani"
-__email__ = "simona.bottani@icm-institute.org"
-__status__ = "Completed"
-
 
 class OasisToBids(Converter):
     def convert_clinical_data(self, clinical_data_dir, bids_dir):
@@ -22,14 +14,14 @@ class OasisToBids(Converter):
 
         Args:
             clinical_data_dir: path to the folder with the original clinical data
-            bids_dir: path to the bids directory
-
+            bids_dir: path to the BIDS directory
         """
-        import clinica.iotools.bids_utils as bids
         from os import path
         import os
         import numpy as np
-        print('Converting clinical data...')
+        import clinica.iotools.bids_utils as bids
+        from clinica.utils.stream import cprint
+        cprint('Converting clinical data...')
         bids_ids = bids.get_bids_subjs_list(bids_dir)
 
         iotools_folder = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -68,7 +60,6 @@ class OasisToBids(Converter):
         Args:
             source_dir: path to the OASIS dataset
             dest_dir: path to the BIDS directory
-
         """
         from os import path
         from glob import glob
