@@ -56,6 +56,8 @@ As a final step in the conversion, images from some modalities are centered (cur
 
 Data that do not change over time, such as the subject's sex, education level or diagnosis at baseline, are obtained from the ADNIMERGE spreadsheet and gathered in the `participants.tsv` file, located at the top of the BIDS folder hierarchy. The session-dependent data, such as the clinical scores, are obtained from specific CSV files (e.g. `MMSE.csv`) and gathered in `<subject_id>_session.tsv` files in each participant subfolder. The clinical data being converted are defined in a spreadsheet (`clinical_specifications_adni.xlsx`) that is available with the code of the converter. The user can easily modify this file if they want to convert additional clinical data.
 
+For further details regarding clinica data, we recommend to look at the [ADNI Data Package
+](https://adni.bitbucket.io/index.html) developped by the Alzheimer's Disease Neuroimaging Initiative.
 
 ## Using the converter
 
