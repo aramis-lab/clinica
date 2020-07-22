@@ -41,6 +41,10 @@ The main output files in `subjects` subfolder are:
 !!! note
     The full list of output files can be found in the [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#machinelearning-prepare-spatial-svm-prepare-input-data-for-spatially-regularized-svm).
 
+## Going further
+
+- You can now perform classification based on machine learning using the [AD-ML framework](https://github.com/aramis-lab/AD-ML).
+
 ## Describing this pipeline in your paper
 
 !!! cite "Example of paragraph"

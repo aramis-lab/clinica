@@ -101,6 +101,13 @@ The main output file is:
     The full list of output files can be found in the [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#t1-volume-pipeline-volume-based-processing-of-t1-weighted-mr-images).
 
 
+## Going further
+
+- If you have PET data, you can now run the [`pet-volume` pipeline](../PET_Volume) to obtain standardized uptake value ratio maps.
+- You can use mean gray matter maps to perform group comparison with the [`statistics-volume` pipeline](../Stats_Volume).
+- You can perform classification based on [machine learning](../MachineLearning_Classification), as showcased in the [AD-ML framework](https://github.com/aramis-lab/AD-ML).
+
+
 ## Describing this pipeline in your paper
 
 !!! cite "Example of paragraph for the `t1-volume` pipeline:"

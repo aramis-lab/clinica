@@ -30,6 +30,10 @@ Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Sp
 - (optional) `<source_file>_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz`: T1w image registered to the [`MNI152NLin2009cSym` template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html) and cropped.
 - `<source_file>_space-MNI152NLin2009cSym_res-1x1x1_affine.mat`: affine transformation estimated with [ANTs](https://stnava.github.io/ANTs/).
 
+## Going further
+
+- You can now run the [`deeplearning-prepare-data` pipeline](../DeepLearning_PrepareData) to prepare images to be used with the PyTorch library [[Paszke et al., 2019]](https://papers.nips.cc/paper/9015-pytorch-an-imperative-style-high-performance-deep-learning-library) for classification based on deep learning using the [AD-DL framework](https://github.com/aramis-lab/AD-DL) presented in [[Wen et al., 2020](https://doi.org/10.1016/j.media.2020.101694)].
+
 ## Describing this pipeline in your paper
 
 !!! cite "Example of paragraph"

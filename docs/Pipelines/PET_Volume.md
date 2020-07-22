@@ -77,6 +77,12 @@ The main output files are:
     The full list of output files from the pet-volume pipeline can be found in the [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#pet-volume-volume-based-processing-of-pet-images).
 
 
+## Going further
+
+- You can use standardized uptake value ratio (SUVR) maps to perform group comparison with the [`statistics-volume` pipeline](../Stats_Volume).
+- You can perform classification based on [machine learning](../MachineLearning_Classification), as showcased in the [AD-ML framework](https://github.com/aramis-lab/AD-ML).
+
+
 ## Describing this pipeline in your paper
 
 !!! cite "Example of paragraph:"
