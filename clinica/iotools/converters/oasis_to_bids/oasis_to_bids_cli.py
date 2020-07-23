@@ -25,11 +25,7 @@ class OasisToBidsCLI(ce.CmdParser):
 
     def run_command(self, args):
         from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import OasisToBids
-        from clinica.utils.check_dependency import check_freesurfer
-
-        check_freesurfer()
 
         oasis_to_bids = OasisToBids()
-
         oasis_to_bids.convert_images(args.dataset_directory, args.bids_directory)
         oasis_to_bids.convert_clinical_data(args.clinical_data_directory, args.bids_directory)

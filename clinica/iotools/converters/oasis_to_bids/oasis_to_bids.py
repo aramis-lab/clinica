@@ -69,7 +69,11 @@ class OasisToBids(Converter):
 
         def convert_single_subject(subj_folder):
             import os
-            import subprocess
+            import nibabel as nb
+            import numpy as np
+
+            # Permutation to apply to the sform
+            permutation = np.array([2, 1, 0, 3, 5, 4, 6, 7, 8, 10, 9, 11, 12, 13, 14, 15])
 
             t1_folder = path.join(subj_folder, 'PROCESSED', 'MPRAGE',
                                   'SUBJ_111')
@@ -86,14 +90,35 @@ class OasisToBids(Converter):
                 os.mkdir(path.join(session_folder))
                 os.mkdir(path.join(session_folder, 'anat'))
 
-            # In order do convert the Analyze format to NIFTI the path to the .img file is required
+            # In order do convert the Analyze format to Nifti the path to the .img file is required
             img_file_path = glob(path.join(t1_folder, '*.img'))[0]
             output_path = path.join(session_folder, 'anat',
                                     bids_id + '_ses-M00_T1w.nii.gz')
-            subprocess.run('mri_convert' + ' ' + img_file_path + ' ' + output_path,
-                           shell=True,
-                           stdout=subprocess.DEVNULL,
-                           stderr=subprocess.DEVNULL)
+
+            # First, convert to Nifti so that we can extract the sform with NiBabel
+            # (NiBabel creates an 'Spm2AnalyzeImage' object that does not contain 'get_sform' method
+            img_with_wrong_orientation_analyze = nb.load(img_file_path)
+            img_with_wrong_orientation_nifti = nb.Nifti1Image(
+                img_with_wrong_orientation_analyze.get_data(),
+                img_with_wrong_orientation_analyze.affine,
+                header=img_with_wrong_orientation_analyze.header.copy()
+            )
+
+            # Extract sform
+            sform = img_with_wrong_orientation_analyze.affine.flatten()
+
+            # Apply transformation to the sform
+            new_sform = sform[permutation].reshape(4, 4)
+
+            # Save image with good orientation
+            img_with_good_orientation_hdr = img_with_wrong_orientation_nifti.header.copy()
+            img_with_good_orientation_hdr.set_sform(new_sform)
+            img_with_good_orientation_nifti = nb.Nifti1Image(
+                img_with_wrong_orientation_nifti.get_data(),
+                new_sform,
+                header=img_with_good_orientation_hdr
+            )
+            nb.save(img_with_good_orientation_nifti, output_path)
 
         if not os.path.isdir(dest_dir):
             os.mkdir(dest_dir)
