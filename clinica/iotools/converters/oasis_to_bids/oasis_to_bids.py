@@ -76,9 +76,6 @@ class OasisToBids(Converter):
             import nibabel as nb
             import numpy as np
 
-            # Permutation to apply to the sform
-            permutation = np.array([2, 1, 0, 3, 5, 4, 6, 7, 8, 10, 9, 11, 12, 13, 14, 15])
-
             t1_folder = path.join(subj_folder, 'PROCESSED', 'MPRAGE',
                                   'SUBJ_111')
             subj_id = os.path.basename(subj_folder)
@@ -99,42 +96,34 @@ class OasisToBids(Converter):
             output_path = path.join(session_folder, 'anat',
                                     bids_id + '_ses-M00_T1w.nii.gz')
 
-            # First, convert to Nifti so that we can extract the sform with NiBabel
+            # First, convert to Nifti so that we can extract the s_form with NiBabel
             # (NiBabel creates an 'Spm2AnalyzeImage' object that does not contain 'get_sform' method
             img_with_wrong_orientation_analyze = nb.load(img_file_path)
-            img_with_wrong_orientation_nifti = nb.Nifti1Image(
-                img_with_wrong_orientation_analyze.get_data(),
-                img_with_wrong_orientation_analyze.affine,
-                header=img_with_wrong_orientation_analyze.header.copy()
-            )
 
-            # Extract sform
-            # Affine transformation matrix after conversion with FreeSurfer was:
+            # OASIS-1 images have the same header but sform is incorrect
+            # To solve this issue, we use header from images converted with FreeSurfer
+            # to generate a 'clean hard-coded' header
             # affine:
             # [[   0.    0.   -1.   80.]
             #  [   1.    0.    0. -128.]
             #  [   0.    1.    0. -128.]
             #  [   0.    0.    0.    1.]]
-            # If the np.round(   ).astype(np.int16) workaround is not used, the affine transformation will be:
-            # affine:
-            # [[   0.     0.    -1.   127.5]
-            #  [   1.     0.     0.  -127.5]
-            #  [   0.     1.     0.   -79.5]
-            #  [   0.     0.     0.     1. ]]
-            # Tip taken from
-            # https://neurostars.org/t/how-to-change-the-datatype-of-a-niftiimage-and-save-it-with-that-datatype/4809
-            sform = np.round(img_with_wrong_orientation_analyze.affine.flatten()).astype(np.int16)
+            affine = np.array([0, 0, -1, 80, 1, 0, 0, -128, 0, 1, 0, -128, 0, 0, 0, 1]).reshape(4, 4)
+            s_form = affine.astype(np.int16)
 
-            # Apply transformation to the sform
-            new_sform = sform[permutation].reshape(4, 4)
+            hdr = nb.Nifti1Header()
+            hdr.set_data_shape((256, 256, 160))
+            hdr.set_data_dtype(np.int16)
+            hdr['bitpix'] = 16
+            hdr.set_sform(s_form, code='scanner')
+            hdr.set_qform(s_form, code='scanner')
+            hdr['extents'] = 16384
+            hdr['xyzt_units'] = 10
 
-            # Save image with good orientation
-            img_with_good_orientation_hdr = img_with_wrong_orientation_nifti.header.copy()
-            img_with_good_orientation_hdr.set_sform(new_sform)
             img_with_good_orientation_nifti = nb.Nifti1Image(
-                img_with_wrong_orientation_nifti.get_data(),
-                new_sform,
-                header=img_with_good_orientation_hdr
+                np.round(img_with_wrong_orientation_analyze.get_data()).astype(np.int16),
+                s_form,
+                header=hdr
             )
             nb.save(img_with_good_orientation_nifti, output_path)
 
