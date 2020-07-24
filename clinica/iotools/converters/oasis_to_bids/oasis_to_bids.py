@@ -60,6 +60,10 @@ class OasisToBids(Converter):
         Args:
             source_dir: path to the OASIS dataset
             dest_dir: path to the BIDS directory
+
+        Note:
+            Previous version of this method used mri_convert from FreeSurfer to convert Analyze data from OASIS-1.
+            To remove this strong dependency, NiBabel is used instead.
         """
         from os import path
         from glob import glob
@@ -105,7 +109,21 @@ class OasisToBids(Converter):
             )
 
             # Extract sform
-            sform = img_with_wrong_orientation_analyze.affine.flatten()
+            # Affine transformation matrix after conversion with FreeSurfer was:
+            # affine:
+            # [[   0.    0.   -1.   80.]
+            #  [   1.    0.    0. -128.]
+            #  [   0.    1.    0. -128.]
+            #  [   0.    0.    0.    1.]]
+            # If the np.round(   ).astype(np.int16) workaround is not used, the affine transformation will be:
+            # affine:
+            # [[   0.     0.    -1.   127.5]
+            #  [   1.     0.     0.  -127.5]
+            #  [   0.     1.     0.   -79.5]
+            #  [   0.     0.     0.     1. ]]
+            # Tip taken from
+            # https://neurostars.org/t/how-to-change-the-datatype-of-a-niftiimage-and-save-it-with-that-datatype/4809
+            sform = np.round(img_with_wrong_orientation_analyze.affine.flatten()).astype(np.int16)
 
             # Apply transformation to the sform
             new_sform = sform[permutation].reshape(4, 4)
