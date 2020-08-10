@@ -1,13 +1,13 @@
 Field	BIDS CLINICA	BIDS format	BIDS type	Comments	INSIGHT	INSIGHT location	CLINAD	CLINAD location	ADNI	ADNI location	AIBL	AIBL location	CAPP	PREVDEMALS	PREVDEMALS location		NIFD	NIFD location
 BIDS session id	session_id	Keyword 'ses-' followed by the original session id of each dataset without special characters or symbols	string													 		
 Date of the examination	examination_date	YYYY-MM-DD HH:MM:SS	string				date d'evaluation	RETROMIL AM v16_reduced.xlsx/Données	EXAMDATE	ADNIMERGE.csv/ADNIMERGE								
-Age at the session	age	In years with, possibly, decimals	float				age at session	RETROMIL AM v16_reduced.xlsx/Données	AGE	ADNIMERGE.csv/ADNIMERGE								
+Age at the session	age	"In years with, possibly, decimals"	float				age at session	RETROMIL AM v16_reduced.xlsx/Données	AGE	ADNIMERGE.csv/ADNIMERGE								
 Current Diagnosis	diagnosis	Free format 	string						DXCURREN	DXSUM_PDXCONV_ADNIALL.csv								
 Clinica Dementia Rate sum of boxes	cdr_sb	Number	float						CDRSB	ADNIMERGE.csv/ADNIMERGE							CDR_BOX_SCORE	NIFD_Clinical_Data_2017_final_updated.xlsx
-Clinica Dementia Rate Global	cdr_global	"Number: 0;0.5;1;2;3"	float						CDGLOBAL	CDR.csv							CDR_TOT	NIFD_Clinical_Data_2017_final_updated.xlsx
+Clinica Dementia Rate Global	cdr_global	Number: 0;0.5;1;2;3	float						CDGLOBAL	CDR.csv							CDR_TOT	NIFD_Clinical_Data_2017_final_updated.xlsx
 AD Assessment Scale - 11	adas11	Number 	float						ADAS11	ADNIMERGE.csv/ADNIMERGE								
 AD Assessment Scale - 13	adas13	Number 	float						ADAS13	ADNIMERGE.csv/ADNIMERGE								
-Mini-mental state exam	MMSE	Number 	int	maximum value is 30			MMS	RETROMIL AM v16_reduced.xlsx/Données	MMSE	ADNIMERGE.csv/ADNIMERGE	MMSCORE	aibl_mmse_28-Apr-2015.csv		Score MMS	Fichier PrevDemAls suivi-14_04_2017.xlsx/1ere extract datas Paris_Mariem		MMSE_TOT	NIFD_Clinical_Data_2017_final_updated.xlsx
+Mini-mental state exam	MMSE	Number 	int	maximum value is 30			MMS	RETROMIL AM v16_reduced.xlsx/Données	MMSE	ADNIMERGE.csv/ADNIMERGE	MMSCORE	aibl_mmse_*.csv		Score MMS	Fichier PrevDemAls suivi-14_04_2017.xlsx/1ere extract datas Paris_Mariem		MMSE_TOT	NIFD_Clinical_Data_2017_final_updated.xlsx
 Functional Activities Questionnaires	FAQ	Number 	float						FAQ	ADNIMERGE.csv/ADNIMERGE							FAQ_TOTAL	NIFD_Clinical_Data_2017_final_updated.xlsx
 Diagnosis at current session	diagnosis								DX	ADNIMERGE.csv/ADNIMERGE								
 Rey's Auditory Verbal Learning Test - immediate	ravlt_immediate	Number 	int						RAVLT_immediate	ADNIMERGE.csv/ADNIMERGE								
@@ -47,11 +47,11 @@ AD Assessment scale - Aggregate memory subscore	adas_memory	Number	adas_Q1 + ada
 AD Assessment scale - Aggregate language subscore	adas_language	Number	adas_Q2 + adas_Q5 + adas_Q10 + adas_Q11 + adas_Q12	maximum value is 25														
 AD Assessment scale - Aggregate concentration subscore	adas_concentration	Number	adas_Q13	maximum value is 10														
 AD Assessment scale - Aggregate praxis subscore	adas_praxis	Number	adas_Q3 + adas_Q6	maximum value is 5														
-Protocol under which data was collected	adni_current_study	"free format: ADNI1; ADNI2; ADNI3; ADNIGO"	string						COLPROT	ADNIMERGE.csv/ADNIMERGE								
-Code for change in diagnosis	adni_diagnosis_change	"Number: 1 (stable CN) ; 2 (stable MCI); 3 (stable AD); 4 (CN to MCI): 5 (MCI to AD); 6 (CN to AD); 7 (MCI to CN); 8 (AD to MCI); 9 (AD to CN) "							DXCHANGE	DXSUM_PDXCONV_ADNIALL.csv								
-Average FDG-PET of angular, temporal and posterior cingulate	adni_fdg	Number	float						FDG	ADNIMERGE.csv/ADNIMERGE								
-Average PIB SUVR of frontal cortex, anterior cingulate, precuneus cortex and parietal cortex	adni_pib	Number	float						PIB	ADNIMERGE.csv/ADNIMERGE								
-Average AV45 SUVR of frontal, anterior cingulate, precuneus, and parietal cortex relative to cerebellum	adni_av45	Number	float						AV45	ADNIMERGE.csv/ADNIMERGE								
+Protocol under which data was collected	adni_current_study	free format: ADNI1; ADNI2; ADNI3; ADNIGO	string						COLPROT	ADNIMERGE.csv/ADNIMERGE								
+Code for change in diagnosis	adni_diagnosis_change	Number: 1 (stable CN) ; 2 (stable MCI); 3 (stable AD); 4 (CN to MCI): 5 (MCI to AD); 6 (CN to AD); 7 (MCI to CN); 8 (AD to MCI); 9 (AD to CN) 							DXCHANGE	DXSUM_PDXCONV_ADNIALL.csv								
+"Average FDG-PET of angular, temporal and posterior cingulate"	adni_fdg	Number	float						FDG	ADNIMERGE.csv/ADNIMERGE								
+"Average PIB SUVR of frontal cortex, anterior cingulate, precuneus cortex and parietal cortex"	adni_pib	Number	float						PIB	ADNIMERGE.csv/ADNIMERGE								
+"Average AV45 SUVR of frontal, anterior cingulate, precuneus, and parietal cortex relative to cerebellum"	adni_av45	Number	float						AV45	ADNIMERGE.csv/ADNIMERGE								
 UCSF Ventricule Volume	adni_ventricles_vol	Number 	float						Ventricles	ADNIMERGE.csv/ADNIMERGE								
 UCSF Hippocampus Volume	adni_hippocampus_vol	Number 	float						Hippocampus	ADNIMERGE.csv/ADNIMERGE								
 UCSF Whole Brain Volume	adni_brain_vol	Number 	float						Whole Brain	ADNIMERGE.csv/ADNIMERGE								

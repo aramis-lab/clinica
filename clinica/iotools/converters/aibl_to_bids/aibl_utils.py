@@ -4,15 +4,6 @@
 Utils to convert AIBL dataset in BIDS
 """
 
-__author__ = "Simona Bottani"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Simona Bottani"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Simona Bottani"
-__email__ = "simona.bottani@icm-institute.org"
-__status__ = "Development"
-
 
 def listdir_nohidden(path):
     """
@@ -463,10 +454,11 @@ def find_path_to_T1(path_to_dataset, path_to_csv):
     """
     import os
     import pandas
+    import glob
 
     # two csv_files contain information regarding the T1w MRI images
-    mri_meta = pandas.read_csv(os.path.join(path_to_csv, "aibl_mrimeta_28-Apr-2015.csv"))
-    mri_3meta = pandas.read_csv(os.path.join(path_to_csv, "aibl_mri3meta_28-Apr-2015.csv"))
+    mri_meta = pandas.read_csv(glob.glob(os.path.join(path_to_csv, "aibl_mrimeta_*.csv"))[0])
+    mri_3meta = pandas.read_csv(glob.glob(os.path.join(path_to_csv, "aibl_mri3meta_*.csv"))[0])
     file_mri = [mri_meta, mri_3meta]
     subjects_ID = listdir_nohidden(path_to_dataset)
     # list of all the folders which correspond to the subject_ID
@@ -508,6 +500,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
     from clinica.utils.stream import cprint
     from multiprocessing.dummy import Pool
     from multiprocessing import cpu_count, Value
+    import glob
 
     if modality.lower() not in ['t1', 'av45', 'flute', 'pib']:
         # This should never be reached
@@ -569,13 +562,16 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
     if modality == 't1':
         images = find_path_to_T1(path_to_dataset, path_to_csv)
     else:
-        path_to_csv_pet_modality = join(path_to_csv, 'aibl_' + modality
-                                        + 'meta_28-Apr-2015.csv')
+        path_to_csv_pet_modality = glob.glob(join(
+            path_to_csv, 'aibl_' + modality + 'meta_*.csv')
+        )[0]
         if not exists(path_to_csv_pet_modality):
             raise FileNotFoundError(path_to_csv_pet_modality
                                     + ' file not found in clinical data folder')
-        # separator information : either ; or ,
-        df_pet = pds.read_csv(path_to_csv_pet_modality, sep=',|;')
+        # Latest version of Flutemetamol CSV file (aibl_flutemeta_01-Jun-2018.csv)
+        # has an extra column for some rows. However, each CSV file (regarding PET tracers)
+        # contains the same columns. The usecols fixes this issue.
+        df_pet = pds.read_csv(path_to_csv_pet_modality, sep=',|;', usecols=list(range(0, 36)))
         images = find_path_to_pet_modality(path_to_dataset,
                                            df_pet)
     images.to_csv(join(bids_dir, modality + '_paths_aibl.tsv'),
@@ -615,6 +611,7 @@ def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_di
     from os import path
     import re
     import numpy as np
+    import glob
 
     fields_bids = ['participant_id']
     fields_dataset = []
@@ -660,9 +657,9 @@ def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_di
                 file_to_read_path = path.join(clinical_data_dir, location)
 
                 if file_ext == '.xlsx':
-                    file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
+                    file_to_read = pd.read_excel(glob.glob(file_to_read_path)[0], sheet_name=sheet)
                 elif file_ext == '.csv':
-                    file_to_read = pd.read_csv(file_to_read_path)
+                    file_to_read = pd.read_csv(glob.glob(file_to_read_path)[0])
                 prev_location = location
                 prev_sheet = sheet
 
@@ -717,6 +714,7 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
     """
     import pandas as pd
     from os import path
+    import glob
     import numpy as np
 
     # Load data
@@ -745,7 +743,7 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
             tmp = field_location[i]
             location = tmp[0]
             file_to_read_path = path.join(clinical_data_dir, tmp)
-            files_to_read.append(file_to_read_path)
+            files_to_read.append(glob.glob(file_to_read_path)[0])
             sessions_fields_to_read.append(sessions_fields[i])
 
     rid = pd.read_csv(files_to_read[0], dtype={'text': str}, low_memory=False).RID
@@ -801,18 +799,20 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
 
 
 def get_examdates(rid, examdates, viscodes, clinical_data_dir):
-
+    import glob
     from os import path
     from datetime import datetime
     from dateutil.relativedelta import relativedelta
     import pandas as pd
     res_examdates = []
-    csv_list = ('aibl_mri3meta_28-Apr-2015.csv',
-                'aibl_mrimeta_28-Apr-2015.csv',
-                'aibl_cdr_28-Apr-2015.csv',
-                'aibl_flutemeta_28-Apr-2015.csv',
-                'aibl_mmse_28-Apr-2015.csv',
-                'aibl_pibmeta_28-Apr-2015.csv')
+    csv_list = [
+        glob.glob(path.join(clinical_data_dir, 'aibl_mri3meta_*.csv'))[0],
+        glob.glob(path.join(clinical_data_dir, 'aibl_mrimeta_*.csv'))[0],
+        glob.glob(path.join(clinical_data_dir, 'aibl_cdr_*.csv'))[0],
+        glob.glob(path.join(clinical_data_dir, 'aibl_flutemeta_*.csv'))[0],
+        glob.glob(path.join(clinical_data_dir, 'aibl_mmse_*.csv'))[0],
+        glob.glob(path.join(clinical_data_dir, 'aibl_pibmeta_*.csv'))[0]
+    ]
 
     for e in range(len(examdates)):
         exam = examdates[e]
@@ -823,7 +823,10 @@ def get_examdates(rid, examdates, viscodes, clinical_data_dir):
 
         # If EXAMDATE does not exist (-4) we try to obtain it from another .csv file
         for csv_file in csv_list:
-            csv_data = pd.read_csv(path.join(clinical_data_dir, csv_file), low_memory=False)
+            if 'aibl_flutemeta' in csv_file:
+                csv_data = pd.read_csv(csv_file, low_memory=False, usecols=list(range(0, 36)))
+            else:
+                csv_data = pd.read_csv(csv_file, low_memory=False)
             exam_date = csv_data[(csv_data.RID == rid) & (csv_data.VISCODE == viscodes[e])]
             if not exam_date.empty and exam_date.iloc[0].EXAMDATE != '-4':
                 exam = exam_date.iloc[0].EXAMDATE
