@@ -21,6 +21,8 @@ pipeline {
               echo 'Building Conda environment... ${BRANCH_NAME}'
               sh 'ls'
               sh 'conda env create --force --file environment.yml -n clinica_env_${BRANCH_NAME}'
+              sh 'conda activate clinica_env_$BRANCH_NAME'
+              sh 'pip install -r requirements-dev.txt'
             }
           }
           stage('Build in Mac') {
@@ -35,6 +37,8 @@ pipeline {
               echo 'Building Conda environment...' + 'env.BRANCH_NAME'
               sh 'ls'
               sh 'conda env create --force --file environment.yml -n clinica_env_${BRANCH_NAME}'
+              sh 'conda activate clinica_env_$BRANCH_NAME'
+              sh 'pip install -r requirements-dev.txt'
             }
           }
         }
