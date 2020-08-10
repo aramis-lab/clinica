@@ -4,15 +4,6 @@
 Convert the AIBL dataset (http://www.aibl.csiro.au/) into BIDS.
 """
 
-__author__ = "Simona Bottani"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Simona Bottani"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Simona Bottani"
-__email__ = "simona.bottani@icm-institute.org"
-__status__ = "Development"
-
 
 def convert_images(path_to_dataset, path_to_csv, bids_dir):
 
