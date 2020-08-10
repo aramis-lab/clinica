@@ -6,14 +6,6 @@ Convert OASIS dataset (http://www.oasis-brains.org/) to BIDS.
 
 from clinica.iotools.abstract_converter import Converter
 
-__author__ = "Sabrina Fontanella"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Simona Bottani"
-__email__ = "simona.bottani@icm-institute.org"
-__status__ = "Completed"
-
 
 class OasisToBids(Converter):
     def convert_clinical_data(self, clinical_data_dir, bids_dir):
@@ -22,14 +14,14 @@ class OasisToBids(Converter):
 
         Args:
             clinical_data_dir: path to the folder with the original clinical data
-            bids_dir: path to the bids directory
-
+            bids_dir: path to the BIDS directory
         """
-        import clinica.iotools.bids_utils as bids
         from os import path
         import os
         import numpy as np
-        print('Converting clinical data...')
+        import clinica.iotools.bids_utils as bids
+        from clinica.utils.stream import cprint
+        cprint('Converting clinical data...')
         bids_ids = bids.get_bids_subjs_list(bids_dir)
 
         iotools_folder = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -69,6 +61,9 @@ class OasisToBids(Converter):
             source_dir: path to the OASIS dataset
             dest_dir: path to the BIDS directory
 
+        Note:
+            Previous version of this method used mri_convert from FreeSurfer to convert Analyze data from OASIS-1.
+            To remove this strong dependency, NiBabel is used instead.
         """
         from os import path
         from glob import glob
@@ -78,7 +73,8 @@ class OasisToBids(Converter):
 
         def convert_single_subject(subj_folder):
             import os
-            import subprocess
+            import nibabel as nb
+            import numpy as np
 
             t1_folder = path.join(subj_folder, 'PROCESSED', 'MPRAGE',
                                   'SUBJ_111')
@@ -95,14 +91,41 @@ class OasisToBids(Converter):
                 os.mkdir(path.join(session_folder))
                 os.mkdir(path.join(session_folder, 'anat'))
 
-            # In order do convert the Analyze format to NIFTI the path to the .img file is required
+            # In order do convert the Analyze format to Nifti the path to the .img file is required
             img_file_path = glob(path.join(t1_folder, '*.img'))[0]
             output_path = path.join(session_folder, 'anat',
                                     bids_id + '_ses-M00_T1w.nii.gz')
-            subprocess.run('mri_convert' + ' ' + img_file_path + ' ' + output_path,
-                           shell=True,
-                           stdout=subprocess.DEVNULL,
-                           stderr=subprocess.DEVNULL)
+
+            # First, convert to Nifti so that we can extract the s_form with NiBabel
+            # (NiBabel creates an 'Spm2AnalyzeImage' object that does not contain 'get_sform' method
+            img_with_wrong_orientation_analyze = nb.load(img_file_path)
+
+            # OASIS-1 images have the same header but sform is incorrect
+            # To solve this issue, we use header from images converted with FreeSurfer
+            # to generate a 'clean hard-coded' header
+            # affine:
+            # [[   0.    0.   -1.   80.]
+            #  [   1.    0.    0. -128.]
+            #  [   0.    1.    0. -128.]
+            #  [   0.    0.    0.    1.]]
+            affine = np.array([0, 0, -1, 80, 1, 0, 0, -128, 0, 1, 0, -128, 0, 0, 0, 1]).reshape(4, 4)
+            s_form = affine.astype(np.int16)
+
+            hdr = nb.Nifti1Header()
+            hdr.set_data_shape((256, 256, 160))
+            hdr.set_data_dtype(np.int16)
+            hdr['bitpix'] = 16
+            hdr.set_sform(s_form, code='scanner')
+            hdr.set_qform(s_form, code='scanner')
+            hdr['extents'] = 16384
+            hdr['xyzt_units'] = 10
+
+            img_with_good_orientation_nifti = nb.Nifti1Image(
+                np.round(img_with_wrong_orientation_analyze.get_data()).astype(np.int16),
+                s_form,
+                header=hdr
+            )
+            nb.save(img_with_good_orientation_nifti, output_path)
 
         if not os.path.isdir(dest_dir):
             os.mkdir(dest_dir)
