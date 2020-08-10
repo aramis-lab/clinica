@@ -74,7 +74,7 @@ Clinica currently supports macOS and Linux. It can be installed:
 conda create --name clinicaEnv python=3.6 clinica -c Aramislab -c conda-forge
 ```
 
-- With `pip` (needs Python 3.6)
+- With `pip` (needs Python 3.7)
 ```sh
 pip install clinica
 ```
