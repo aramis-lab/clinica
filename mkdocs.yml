@@ -1,25 +1,24 @@
 # Project information
-site_name: 'Clinica Documentation'
-site_description: 'Clinica Documentation'
-site_author: 'Clinica developers'
-site_url: 'http://www.clinica.run'
-#docs_dir: _docs # Useful if a Jekyll theme is used: https://github.com/CloudCannon/edition-jekyll-template
-site_dir: www.clinica.run/www/doc
+site_name: Clinica Documentation
+site_author: Clinica contributors
+site_url: http://www.clinica.run/doc
+site_description: >-
+  Software platform for clinical neuroimaging studies
 
 # Repository
-repo_name: 'aramislab/clinica'
-repo_url: 'https://github.com/aramis-lab/clinica'
-#edit_uri: 'master/edit/doc'
+repo_name: aramislab/clinica
+repo_url: https://github.com/aramis-lab/clinica
+#edit_uri: master/edit/doc
 
 # Copyright
-copyright: 'Copyright &copy; 2016-2020 Clinica'
+copyright: Copyright &copy; 2016-2020 Clinica contributors
 
 # Google Analytics
 google_analytics:
   - UA-106080699-1
   - auto
 
-# Documentation and theme
+# Configuration
 theme:
   name: material
   icon:
@@ -29,90 +28,82 @@ theme:
     primary: light blue
     accent: light blue
 
-# Options:
+# Customization
+extra_css:
+  - css/clinica.css
 extra:
   feature:
     tabs: true
   social:
     - icon: material/github
-      link: 'https://github.com/aramis-lab/'
+      link: https://github.com/aramis-lab/
     - icon: material/twitter
-      link: 'https://twitter.com/clinica_run'
+      link: https://twitter.com/clinica_run
     - icon: material/earth
-      link: 'http://www.aramislab.fr/'
+      link: http://www.aramislab.fr
 
-#use_directory_urls: false # Use this when you work locally
-
-# Extensions:
+# Extensions
 markdown_extensions:
   - admonition
-  - codehilite:
-     linenums: False
+  - codehilite
   - footnotes
-  - toc:
-      permalink: True
-  - pymdownx.arithmatex
   - pymdownx.details
   - pymdownx.emoji
-  # - pymdownx.inlinehilite
-  - pymdownx.superfences
-  - pymdownx.tasklist:
-      custom_checkbox: True
   - pymdownx.keys
+  - pymdownx.superfences
+  - toc:
+      permalink: True
 
-extra_css:
-  - css/clinica.css
-
-# Pages:
+# Page tree
 nav:
-  - Home: "index.md"
+  - Home: index.md
   - Installation:
-    - Installation: "Installation.md"
-    - Third-party: "Third-party.md"
-    # - Before your install: "BeforeYouInstall"
-    # - ICM cluster installation: "ICMClusterInstallation"
+    - Installation: Installation.md
+    - Third-party: Third-party.md
+    # - Before your install: BeforeYouInstall
+    # - ICM cluster installation: ICMClusterInstallation
   # - Quick start:
   - Clinica environment:
-    - What is Clinica?: "WhatIsClinica.md"
-    - Interacting with Clinica: "InteractingWithClinica.md"
-    - BIDS: "BIDS.md"
+    - What is Clinica?: WhatIsClinica.md
+    - Interacting with Clinica: InteractingWithClinica.md
+    - BIDS: BIDS.md
     - CAPS:
-      - Introduction: "CAPS/Introduction.md"
-      - Specifications: "CAPS/Specifications.md"
-    - Atlases: "Atlases.md"
+      - Introduction: CAPS/Introduction.md
+      - Specifications: CAPS/Specifications.md
+    - Atlases: Atlases.md
   - Pipelines:
     - Anatomical MRI:
-      - Linear processing: "Pipelines/T1_Linear.md"
-      - Volume processing: "Pipelines/T1_Volume.md"
-      - FreeSurfer processing: "Pipelines/T1_FreeSurfer.md"
-      #- FreeSurfer longitudinal processing: "Pipelines/T1_FreeSurfer_Longitudinal.md"
+      - Linear processing: Pipelines/T1_Linear.md
+      - Volume processing: Pipelines/T1_Volume.md
+      - FreeSurfer processing: Pipelines/T1_FreeSurfer.md
+      #- FreeSurfer longitudinal processing: Pipelines/T1_FreeSurfer_Longitudinal.md
     - DWI:
-      - Pre-processing: "Pipelines/DWI_Preprocessing.md"
-      - DTI: "Pipelines/DWI_DTI.md"
-      - Connectome: "Pipelines/DWI_Connectome.md"
+      - Pre-processing: Pipelines/DWI_Preprocessing.md
+      - DTI: Pipelines/DWI_DTI.md
+      - Connectome: Pipelines/DWI_Connectome.md
     - PET:
-      - Volume processing: "Pipelines/PET_Volume.md"
-      - Surface processing: "Pipelines/PET_Surface.md"
+      - Volume processing: Pipelines/PET_Volume.md
+      - Surface processing: Pipelines/PET_Surface.md
     - Statistics:
-      - Surface-based mass-univariate analysis: "Pipelines/Stats_Surface.md"
-      - Volume-based mass-univariate analysis: "Pipelines/Stats_Volume.md"
+      - Surface-based mass-univariate analysis: Pipelines/Stats_Surface.md
+      - Volume-based mass-univariate analysis: Pipelines/Stats_Volume.md
     - Deep Learning:
-      - Prepare input data for deep learning: "Pipelines/DeepLearning_PrepareData.md"
+      - Prepare input data for deep learning: Pipelines/DeepLearning_PrepareData.md
     - Machine Learning:
-      - Prepare input data for spatially regularized SVM: "Pipelines/MachineLearning_PrepareSVM.md"
-      - Classification based on machine learning: "Pipelines/MachineLearning_Classification.md"
+      - Prepare input data for spatially regularized SVM: Pipelines/MachineLearning_PrepareSVM.md
+      - Classification based on machine learning: Pipelines/MachineLearning_Classification.md
   - Dataset converters:
-    - ADNI to BIDS: "Converters/ADNI2BIDS.md"
-    - AIBL to BIDS: "Converters/AIBL2BIDS.md"
-    - NIFD to BIDS: "Converters/NIFD2BIDS.md"
-    - OASIS to BIDS: "Converters/OASIS2BIDS.md"
+    - ADNI to BIDS: Converters/ADNI2BIDS.md
+    - AIBL to BIDS: Converters/AIBL2BIDS.md
+    - NIFD to BIDS: Converters/NIFD2BIDS.md
+    - OASIS to BIDS: Converters/OASIS2BIDS.md
   - I/O tools:
-    - create-subjects-visits: "IO#create-subjects-visits-generate-the-list-all-subjects-and-visits-of-a-given-dataset"
-    - check-missing-modalities: "IO#check-missing-modalities-check-missing-modalities-for-each-subject"
-    - merge-tsv: "IO#merge-tsv-gather-bids-and-caps-data-into-a-single-tsv-file"
-    - center-nifti: "IO#center-nifti-center-the-nifti-files-of-a-bids-directory"
+    - create-subjects-visits: IO#create-subjects-visits-generate-the-list-all-subjects-and-visits-of-a-given-dataset
+    - check-missing-modalities: IO#check-missing-modalities-check-missing-modalities-for-each-subject
+    - merge-tsv: IO#merge-tsv-gather-bids-and-caps-data-into-a-single-tsv-file
+    - center-nifti: IO#center-nifti-center-the-nifti-files-of-a-bids-directory
   - Presentations & demos:
-    - NOW 2019: "ClinicaConferences#neuro-openscience-workshop-2019"
-    - OHBM 2018: "ClinicaConferences#educational-course-on-pattern-recognition-for-clinical-neuroimaging-ohbm-2018"
+    - NOW 2019: ClinicaConferences#neuro-openscience-workshop-2019
+    - OHBM 2018: ClinicaConferences#educational-course-on-pattern-recognition-for-clinical-neuroimaging-ohbm-2018
   # - Collaborate:
-    # - Coding for Clinica: "CodingForClinica"
+    # - Coding for Clinica: CodingForClinica
