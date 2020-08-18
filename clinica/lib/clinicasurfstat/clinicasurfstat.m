@@ -42,7 +42,7 @@ while length(pp) >= 2,
     prop = pp{1};
     val = pp{2};
     pp = pp(3 : end);
-    if ischar(prop) 
+    if ischar(prop)
         switch prop
             case 'sizeoffwhm'
                 sizeoffwhm = val;
@@ -108,7 +108,7 @@ for indexsubject = 1 : nrsubject
         error('Unexpected dimension of Y in SurfStatReadData')
     end
     disp(['The subject ID is: ', subjectname, '_', sessionname] )
-    if indexsubject == 1 % check the header format of the input tsv 
+    if indexsubject == 1 % check the header format of the input tsv
         thicksubject = zeros(nrsubject, size(Y,2));
         %if startsWith(contrast, '-') this works for matlab2016b
         if strfind(contrast, '-') % check for negative correlation analysis
@@ -155,8 +155,9 @@ switch glmtype
         if with_intercation ~= 1 % case without interaction, contrast should be negative and positive
             contrastpos    = eval([contrast '(1)']) - eval([ contrast '(2)']); % use char(eval(contrast))
             contrasteffectgroupneg    = eval([contrast '(2)']) - eval([ contrast '(1)']); % use char(eval(contrast))
-            factor1 = char(term(tsvdata{indexunique})){1};
-            factor2 = char(term(tsvdata{indexunique})){2};
+            cell_factor = char(term(tsvdata{indexunique}));
+            factor1 = cell_factor{1};
+            factor2 = cell_factor{2};
 
             thicksubject = thicksubject';
             slmmodel = SurfStatLinMod(thicksubject, eval(designmatrix), averagesurface);
@@ -287,7 +288,7 @@ switch glmtype
                 categorical_contrast = strs_contrast{2};
             else
                 continue_contrast = strs_contrast{2};
-                categorical_contrast = strs_contrast{1} ;               
+                categorical_contrast = strs_contrast{1} ;
             end
             categorical_term = eval(categorical_contrast);
             continue_term = eval(continue_contrast);
@@ -309,14 +310,14 @@ switch glmtype
             ylabel('Yseed')
             set(gcf,'PaperPositionMode','auto');
             print(['Highest T value vertex Yseed versus ' continue_contrast] ,'-djpeg','-r0'); close
-            
+
             % F statistics are obtained by comparing nested models
             % test if the contrast has the same format like in designmatrix
             if strfind(designmatrix, contrast) ~= 0 % contrast is inside designmatrix with the same order
                 designmatrix_reduced_model = strrep(strrep(designmatrix, ' ', ''), strcat('+',contrast), '');
             else % if the order is not the same in designmatrix
                 contrast_inverse = strsplit(contrast, '*');
-                contrast = char(strcat(contrast_inverse(2), '*', contrast_inverse(1))); 
+                contrast = char(strcat(contrast_inverse(2), '*', contrast_inverse(1)));
                 designmatrix_reduced_model = strrep(strrep(designmatrix, ' ', ''), strcat('+',contrast), '');
             end
             slm_reduce = SurfStatLinMod( thicksubject, eval(char(designmatrix_reduced_model)), averagesurface );
@@ -326,8 +327,8 @@ switch glmtype
             print(['interaction-' contrast '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_FStatistics'] ,'-djpeg','-r0'); close
             fvaluewithmask = slm.t .* mask;
             save(['interaction-' contrast '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_FStatistics.mat'],'fvaluewithmask');
-            
-            % pvalue 
+
+            % pvalue
             [ pval, ~, clus ] = SurfStatP( slm , mask, clusterthreshold);
             pval.thresh = thresholdcorrectedpvalue;
             SurfStatView( pval, averagesurface, ['Corrected Pvalue for interaction ', contrast, ' (clusterthreshold = ' num2str(clusterthreshold) ')']);
@@ -337,7 +338,7 @@ switch glmtype
             print(['interaction-' contrast '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_correctedPValue'] ,'-djpeg','-r0'); close
             correctedpvaluesstruct = pval;
             save(['interaction-' contrast '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_correctedPValue.mat'],'correctedpvaluesstruct');
-            
+
             % display the details of cluster-wise correction
             disp('###')
             disp('After correction(Clusterwise Correction for Multiple Comparisons): ')
@@ -348,13 +349,13 @@ switch glmtype
                 disp('No cluster found!')
             end
             disp('###')
-            
+
             % FDR correction with 0.05 threshold, q value
             qval = SurfStatQ( slm , mask );
             SurfStatView( qval, averagesurface, ['False discovery rate for interaction ' contrast]);
             set(gcf,'PaperPositionMode','auto');
             print(['interaction-' contrast '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_FDR'] ,'-djpeg','-r0'); close
-            disp('Interaction: FDR'); 
+            disp('Interaction: FDR');
             qvaluesstruct = qval;
             save(['interaction-' contrast '_measure-' measurelabel '_fwhm-' num2str(sizeoffwhm) '_FDR.mat'],'qvaluesstruct');
         end
@@ -437,4 +438,3 @@ switch glmtype
     otherwise
         error('Check out if you define the glmtype flag correctly, or define your own general linear model, e,g MGLM')
 end
-
