@@ -23,6 +23,8 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
+        clinica_comp.add_argument("group_label",
+                                  help='User-defined identifier for the provided group of subjects.')
         clinica_comp.add_argument("orig_input_data",
                                   help='Type of surface-based feature: type '
                                   '\'t1-freesurfer\' to use cortical thickness, '
@@ -30,6 +32,11 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                                   '\'custom-pipeline\' to use you own data in CAPS directory '
                                   '(see Wiki for details).',
                                   choices=['t1-freesurfer', 'pet-surface', 'custom-pipeline'])
+        clinica_comp.add_argument("glm_type",
+                                  help='String based on the GLM type for the hypothesis. '
+                                  'You can choose between \'group_comparison\' and \'correlation\'.',
+                                  choices=['group_comparison', 'correlation'],
+                                  )
         clinica_comp.add_argument("subject_visits_with_covariates_tsv",
                                   help='TSV file containing a list of subjects with their sessions and all '
                                        'the covariates and factors needed for the GLM.')
@@ -37,13 +44,6 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                                   help='String to define the contrast matrix for the GLM, e.g. group. Please note '
                                        'that, when you want to perform negative correlation, the sign is ignored '
                                        'by the command line.')
-        clinica_comp.add_argument("group_label",
-                                  help='User-defined identifier for the provided group of subjects.')
-        clinica_comp.add_argument("glm_type",
-                                  help='String based on the GLM type for the hypothesis. '
-                                  'You can choose between \'group_comparison\' and \'correlation\'.',
-                                  choices=['group_comparison', 'correlation'],
-                                  )
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("-c", "--covariates",

@@ -23,11 +23,8 @@ class StatisticsVolumeCLI(ce.CmdParser):
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
-        clinica_comp.add_argument("subject_visits_with_covariates_tsv",
-                                  help='TSV file containing a list of subjects with their sessions and all '
-                                       'the covariates and factors needed for the GLM.')
-        clinica_comp.add_argument("contrast",
-                                  help='Defines the contrast. Must be one of the column names form the TSV file.')
+        clinica_comp.add_argument("group_label",
+                                  help='User-defined identifier for the provided group of subjects.')
         clinica_comp.add_argument("orig_input_data",
                                   help='Type of volume-based feature: type '
                                   '\'t1-volume\' to use gray matter maps, '
@@ -35,8 +32,11 @@ class StatisticsVolumeCLI(ce.CmdParser):
                                   '\'custom-pipeline\' to use you own data in CAPS directory '
                                   '(see Wiki for details).',
                                   choices=['t1-volume', 'pet-volume', 'custom-pipeline'])
-        clinica_comp.add_argument("group_label",
-                                  help='User-defined identifier for the provided group of subjects.')
+        clinica_comp.add_argument("subject_visits_with_covariates_tsv",
+                                  help='TSV file containing a list of subjects with their sessions and all '
+                                       'the covariates and factors needed for the GLM.')
+        clinica_comp.add_argument("contrast",
+                                  help='Defines the contrast. Must be one of the column names form the TSV file.')
 
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
