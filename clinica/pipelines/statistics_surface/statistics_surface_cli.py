@@ -27,7 +27,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                                   help='Type of surface-based feature: type '
                                   '\'t1-freesurfer\' to use cortical thickness, '
                                   '\'pet-surface\' to use projected FDG-PET data or '
-                                  '\'custom-pipeline\' to use you own data in CAPS directory ' 
+                                  '\'custom-pipeline\' to use you own data in CAPS directory '
                                   '(see Wiki for details).',
                                   choices=['t1-freesurfer', 'pet-surface', 'custom-pipeline'])
         clinica_comp.add_argument("subject_visits_with_covariates_tsv",
