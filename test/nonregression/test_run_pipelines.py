@@ -528,13 +528,12 @@ def test_run_StatisticsSurface(cmdopt):
 
     parameters = {
         'orig_input_data': 't1-freesurfer',
-        'design_matrix': '1 + group + age + sex',
+        'covariates': 'age sex',
         'contrast': 'group',
-        'str_format': '%s %s %s %f %s',
         'group_label': 'UnitTest',
         'glm_type': 'group_comparison',
         'custom_file': '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh',
-        'feature_label': 'cortical_thickness',
+        'measure_label': 'ct',
         'full_width_at_half_maximum': 20,
         'cluster_threshold': 0.001
     }
@@ -548,8 +547,9 @@ def test_run_StatisticsSurface(cmdopt):
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 8}, bypass_check=True)
 
     # Check files
-    out_file = join(root, 'out/caps/groups/group-UnitTest/statistics/surfstat_group_comparison/group-UnitTest_AD-lt-CN_measure-cortical_thickness_fwhm-20_correctedPValue.mat')
-    ref_file = join(root, 'ref/group-UnitTest_AD-lt-CN_measure-cortical_thickness_fwhm-20_correctedPValue.mat')
+    filename = 'group-UnitTest_AD-lt-CN_measure-ct_fwhm-20_correctedPValue.mat'
+    out_file = join(root, 'out', 'caps', 'groups', 'group-UnitTest', 'statistics', 'surfstat_group_comparison', filename)
+    ref_file = join(root, 'ref', filename)
 
     out_file_mat = loadmat(out_file)['correctedpvaluesstruct']
     ref_file_mat = loadmat(ref_file)['correctedpvaluesstruct']

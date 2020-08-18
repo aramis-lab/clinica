@@ -221,9 +221,8 @@ def test_instantiate_StatisticsSurface():
     root = join(root, 'data', 'StatisticsSurface')
     parameters = {
         'orig_input_data': 't1-freesurfer',
-        'design_matrix': '1 + group + age + sex',
+        'covariates': 'age + sex',
         'contrast': 'group',
-        'str_format': '%s %s %s %f %s',
         'group_label': 'UnitTest',
         'glm_type': 'group_comparison',
         'custom_file': '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh',
