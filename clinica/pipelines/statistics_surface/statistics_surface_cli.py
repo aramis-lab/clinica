@@ -33,9 +33,6 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         clinica_comp.add_argument("subject_visits_with_covariates_tsv",
                                   help='TSV file containing a list of subjects with their sessions and all '
                                        'the covariates and factors needed for the GLM.')
-        clinica_comp.add_argument("design_matrix",
-                                  help='String to define the design matrix that fits into the GLM, '
-                                       'e.g. 1 + group + sex + age.')
         clinica_comp.add_argument("contrast",
                                   help='String to define the contrast matrix for the GLM, e.g. group. Please note '
                                        'that, when you want to perform negative correlation, the sign is ignored '
@@ -49,6 +46,11 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                                   )
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
+        optional.add_argument("-c", "--covariates",
+                              type=str, default=None, metavar='\'covariate_1 ... covariate_n\'',
+                              help='Covariates of the form --covariates \'covariate_1 ... covariate_n\'. '
+                                   'Each covariate must match the column name of the TSV file. '
+                                   'On default, no covariates are taken.')
         optional.add_argument("-fwhm", "--full_width_at_half_maximum",
                               type=int, default=20,
                               help='FWHM for the surface smoothing '
@@ -84,7 +86,6 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         from .statistics_surface_pipeline import StatisticsSurface
         from .statistics_surface_utils import (get_t1_freesurfer_custom_file,
                                                get_fdg_pet_surface_custom_file)
-        from clinica.utils.stream import cprint
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
         from clinica.utils.exceptions import ClinicaException
 
@@ -101,8 +102,9 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                 raise ClinicaException('You must set --measure_label and --custom_file flags.')
 
         parameters = {
+            'orig_input_data': args.orig_input_data,
             'group_label': args.group_label,
-            'design_matrix': args.design_matrix,
+            'covariates': args.covariates,
             'contrast': args.contrast,
             'glm_type': args.glm_type,
             'custom_file': args.custom_file,

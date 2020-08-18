@@ -54,7 +54,7 @@ def init_input_node(parameters, base_dir, subjects_visits_tsv):
             raise e
 
     # Save pipeline parameters in JSON file
-    glm_dict = create_glm_info_dictionary(parameters)
+    glm_dict = create_glm_info_dictionary(subjects_visits_tsv, parameters)
     json_filename = os.path.join(surfstat_results_dir, group_id + '_glm.json')
     with open(json_filename, 'w') as json_file:
         json.dump(glm_dict, json_file, indent=4)
@@ -64,10 +64,10 @@ def init_input_node(parameters, base_dir, subjects_visits_tsv):
     shutil.copyfile(subjects_visits_tsv, tsv_filename)
 
     # Print begin message
-    list_keys = ['AnalysisType', 'DesignMatrix', 'Contrast', 'FWHM', 'ClusterThreshold']
+    list_keys = ['AnalysisType', 'Covariates', 'Contrast', 'FWHM', 'ClusterThreshold']
     list_values = [
         parameters['glm_type'],
-        parameters['design_matrix'],
+        parameters['covariates'],
         parameters['contrast'],
         str(parameters['full_width_at_half_maximum']),
         str(parameters['cluster_threshold'])
@@ -100,7 +100,60 @@ def get_string_format_from_tsv(tsv_file):
     """
     import pandas as pd
 
-    return ""
+    demographics_df = pd.read_csv(tsv_file, sep='\t')
+
+    def dtype_to_str_format(dtype):
+        """Convert pandas dtypes (e.g. int64) to string format (e.g. %d)"""
+        import numpy as np
+        if dtype == np.int64:
+            str_format = "%d"
+        elif dtype == np.float64:
+            str_format = "%f"
+        elif dtype == np.object:
+            str_format = "%s"
+        else:
+            raise ValueError("Unknown dtype (given: %s)" % dtype)
+        return str_format
+
+    list_str_format = []
+    for column in demographics_df.columns:
+        list_str_format.append(dtype_to_str_format(demographics_df[column].dtype))
+
+    return " ".join(list_str_format)
+
+
+def covariates_to_design_matrix(contrast, covariates=None):
+    """
+    Generate design matrix for SurfStat based on the contrast and the optional list of covariates.
+
+    Design matrix "1 + <contrast> + <covariate_1> + ... + <covariate_n>"
+
+    Example:
+        >>> from clinica.pipelines.statistics_surface.statistics_surface_utils import covariates_to_design_matrix
+        >>> covariates_to_design_matrix('group', 'age sex group')
+        1 + group + age + sex
+        >>> covariates_to_design_matrix('group', 'age')
+        1 + group + age
+        >>> covariates_to_design_matrix('group', None)
+        1 + group
+    """
+    if covariates:
+        # Convert string to list while handling case where several spaces are present
+        list_covariates = list(set(covariates.split(' ')))
+        try:
+            list_covariates.remove('')
+        except ValueError:
+            pass
+
+        if contrast in list_covariates:
+            design_matrix = "1 + " + " + ".join(covariate for covariate in list_covariates)
+        else:
+            design_matrix = "1 + " + contrast + " + " + " + ".join(covariate for covariate in list_covariates)
+    else:
+        design_matrix = "1 + " + contrast
+
+    return design_matrix
+
 
 def run_matlab(caps_dir,
                output_dir,
@@ -120,6 +173,7 @@ def run_matlab(caps_dir,
     from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
     import clinica.pipelines as clinica_pipelines
     from clinica.utils.check_dependency import check_environment_variable
+    from clinica.pipelines.statistics_surface.statistics_surface_utils import covariates_to_design_matrix, get_string_format_from_tsv
 
     path_to_matlab_script = os.path.join(os.path.dirname(clinica_pipelines.__path__[0]), 'lib', 'clinicasurfstat')
     freesurfer_home = check_environment_variable('FREESURFER_HOME', 'FreeSurfer')
@@ -146,14 +200,17 @@ def run_matlab(caps_dir,
         os.path.join(caps_dir, 'subjects'),
         output_dir,
         subjects_visits_tsv,
-        pipeline_parameters['design_matrix'],
+        covariates_to_design_matrix(
+            pipeline_parameters['contrast'],
+            pipeline_parameters['covariates']
+        ),
         pipeline_parameters['contrast'],
         get_string_format_from_tsv(subjects_visits_tsv),
         pipeline_parameters['glm_type'],
         pipeline_parameters['group_label'],
         freesurfer_home,
         pipeline_parameters['custom_file'],
-        pipeline_parameters['feature_label'],
+        pipeline_parameters['measure_label'],
         'sizeoffwhm', pipeline_parameters['full_width_at_half_maximum'],
         'thresholduncorrectedpvalue', 0.001,
         'thresholdcorrectedpvalue', 0.05,
@@ -176,12 +233,17 @@ def run_matlab(caps_dir,
     return output_dir
 
 
-def create_glm_info_dictionary(pipeline_parameters):
+def create_glm_info_dictionary(tsv_file, pipeline_parameters):
     """Create dictionary containing the GLM information that will be stored in a JSON file."""
     out_dict = {
         'AnalysisType': pipeline_parameters['glm_type'],
-        'DesignMatrix': pipeline_parameters['design_matrix'],
+        'DesignMatrix':  covariates_to_design_matrix(
+            pipeline_parameters['contrast'],
+            pipeline_parameters['covariates']
+        ),
+        'StringFormatTSV': get_string_format_from_tsv(tsv_file),
         'Contrast': pipeline_parameters['contrast'],
+        'Covariates': pipeline_parameters['covariates'],
         'GroupLabel': pipeline_parameters['group_label'],
         'FWHM': pipeline_parameters['full_width_at_half_maximum'],
         'ThresholdUncorrectedPvalue': 0.001,
@@ -194,7 +256,7 @@ def create_glm_info_dictionary(pipeline_parameters):
 def save_to_caps(source_dir, caps_dir, overwrite_caps, pipeline_parameters):
     """Save `source_dir`/ to CAPS folder.
 
-    This function copies outputs of `source_dir`/ >to
+    This function copies outputs of `source_dir`/ to
     `caps_dir`/groups/<group_id>/<statistics>/surfstat_<glm_type>/
 
     The `source_dir`/ folder should contain the following elements:
