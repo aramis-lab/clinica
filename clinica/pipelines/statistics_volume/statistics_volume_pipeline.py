@@ -73,6 +73,7 @@ class StatisticsVolume(cpe.Pipeline):
                 'needed_pipeline': 'pet-volume'
             }
         elif self.parameters['orig_input_data'] == 't1-volume':
+            self.parameters['measure_label'] = 'graymatter'
             information_dict = t1_volume_template_tpm_in_mni(gic, 0, True)
 
         else:
@@ -271,18 +272,13 @@ class StatisticsVolume(cpe.Pipeline):
         # Print result to txt file if spm
 
         # Export results to output node
-        read_output_node = npe.Node(nutil.Function(input_names=['spm_mat', 'class_names', 'covariates', 'group_label', 'fwhm', 'measure'],
-                                                   output_names=['spmT_0001',
-                                                                 'spmT_0002',
-                                                                 'spm_figures',
-                                                                 'variance_of_error',
-                                                                 'resels_per_voxels',
-                                                                 'mask',
-                                                                 'regression_coeff',
-                                                                 'contrasts'],
-                                                   function=utils.read_output),
-                                    name='read_output_node')
-        read_output_node.inputs.group_id = self.parameters['group_label']
+        read_output_node = npe.Node(nutil.Function(
+            input_names=['spm_mat', 'class_names', 'covariates', 'group_label', 'fwhm', 'measure'],
+            output_names=['spmT_0001', 'spmT_0002', 'spm_figures', 'variance_of_error',
+                          'resels_per_voxels', 'mask', 'regression_coeff', 'contrasts'],
+            function=utils.read_output),
+            name='read_output_node')
+        read_output_node.inputs.group_label = self.parameters['group_label']
         read_output_node.inputs.fwhm = self.parameters['full_width_at_half_maximum']
         read_output_node.inputs.measure = self.parameters['measure_label']
 
