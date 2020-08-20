@@ -89,3 +89,32 @@ def spm_standalone_is_available():
         else:
             raise FileNotFoundError('[Error] $SPMSTANDALONE_HOME and $MCR_HOME are defined, but linked to non existent folder')
     return use_spm_stand
+
+
+def use_spm_standalone():
+    """
+    Use SPM Standalone with MATLAB Common Runtime
+    """
+    import os
+    from colorama import Fore
+    import platform
+    from clinica.utils.stream import cprint
+    from nipype.interfaces import spm
+    # This section of code determines whether to use SPM standalone or not
+    if all(elem in os.environ.keys() for elem in ['SPMSTANDALONE_HOME', 'MCR_HOME']):
+        spm_standalone_home = os.getenv('SPMSTANDALONE_HOME')
+        mcr_home = os.getenv('MCR_HOME')
+        if os.path.exists(spm_standalone_home) and os.path.exists(mcr_home):
+            cprint(Fore.GREEN + 'SPM standalone has been found and will be used in this pipeline' + Fore.RESET)
+            if platform.system().lower().startswith('darwin'):
+                matlab_cmd = ('cd %s && ./run_spm12.sh %s script' %
+                              (spm_standalone_home, mcr_home))
+            elif platform.system().lower().startswith('linux'):
+                matlab_cmd = ('%s %s script' %
+                              (os.path.join(spm_standalone_home, 'run_spm12.sh'), mcr_home))
+            else:
+                raise SystemError('Clinica only support macOS and Linux')
+            spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
+            cprint("Using SPM standalone version %s" % spm.SPMCommand().version)
+        else:
+            raise FileNotFoundError('$SPMSTANDALONE_HOME and $MCR_HOME are defined, but linked to non existent folder ')
