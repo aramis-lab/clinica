@@ -198,7 +198,7 @@ def run_m_script(m_file):
     """
     from os.path import isfile, dirname, basename, abspath, join
     from os import system
-    from clinica.utils.spm import use_spm_standalone
+    from clinica.utils.spm import spm_standalone_is_available
     import clinica.pipelines.statistics_volume.statistics_volume_utils as utls
     from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
     import platform
@@ -209,7 +209,7 @@ def run_m_script(m_file):
     assert m_file[-2:] == '.m', '[Error] ' + m_file + ' is not a Matlab file (extension must be .m)'
 
     # Generate command line to run
-    if use_spm_standalone():
+    if spm_standalone_is_available():
         utls.delete_last_line(m_file)
         # SPM standalone must be run directly from its root folder
         if platform.system().lower().startswith('darwin'):

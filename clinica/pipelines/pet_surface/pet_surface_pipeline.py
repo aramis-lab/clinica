@@ -407,7 +407,7 @@ class PetSurface(cpe.Pipeline):
                                   + ' ' + os.environ['MCR_HOME']
                                   + ' script')
                 spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
-                full_pipe.inputs.use_spm_standalone = True
+                full_pipe.inputs.spm_standalone_is_available = True
             else:
                 raise FileNotFoundError('$SPMSTANDALONE_HOME and $MCR_HOME are defined, but linked to non existent folder ')
 

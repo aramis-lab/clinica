@@ -72,7 +72,7 @@ def get_tpm():
     return tpm_file_glob[0]
 
 
-def use_spm_standalone():
+def spm_standalone_is_available():
     """
         Tells if SPM standalone can be used
     Returns:
