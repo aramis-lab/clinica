@@ -4,15 +4,10 @@ import os
 from nipype.interfaces.spm.base import SPMCommandInputSpec, SPMCommand, scans_for_fnames
 from nipype.interfaces.base import TraitedSpec, File, traits
 from nipype.utils.filemanip import split_filename
+from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
-
-if 'SPMSTANDALONE_HOME' in os.environ:
-    if 'MCR_HOME' in os.environ:
-        matlab_cmd = os.environ['SPMSTANDALONE_HOME'] \
-                + 'run_spm12.sh ' \
-                + os.environ['MCR_HOME'] \
-                + ' script'
-        SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
+if spm_standalone_is_available():
+    use_spm_standalone()
 
 
 class DARTELExistingTemplateInputSpec(SPMCommandInputSpec):

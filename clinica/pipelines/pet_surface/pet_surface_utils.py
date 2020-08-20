@@ -801,7 +801,7 @@ def get_wf(subject_id,
            destrieux_right,
            desikan_left,
            desikan_right,
-           use_spm_standalone,
+           spm_standalone_is_available,
            is_longitudinal):
     """get_wf create a full workflow for only one subject, and then executes it
 
@@ -917,7 +917,7 @@ def get_wf(subject_id,
                                       warping_regularization=[0, 0.001, 0.5, 0.05, 0.2]),
                           name='normalize_to_MNI')
 
-    if use_spm_standalone is True:
+    if spm_standalone_is_available:
         fun_apply_inverse_deformation = utils.runApplyInverseDeformationField_SPM_standalone
     else:
         fun_apply_inverse_deformation = utils.runApplyInverseDeformationField

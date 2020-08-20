@@ -122,6 +122,10 @@ class T1VolumeTissueSegmentation(cpe.Pipeline):
         from ..t1_volume_tissue_segmentation import t1_volume_tissue_segmentation_utils as seg_utils
         from clinica.utils.filemanip import unzip_nii, zip_nii
         from clinica.utils.nipype import fix_join
+        from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
+
+        if spm_standalone_is_available():
+            use_spm_standalone()
 
         # Get <subject_id> (e.g. sub-CLNC01_ses-M00) from input_node
         # and print begin message
