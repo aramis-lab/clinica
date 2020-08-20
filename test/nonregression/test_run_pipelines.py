@@ -459,42 +459,6 @@ def test_run_DWIConnectome(cmdopt):
     clean_folder(working_dir, recreate=False)
 
 
-def test_run_fMRIPreprocessing(cmdopt):
-    from os.path import dirname, join, abspath
-    import shutil
-    from clinica.pipelines.fmri_preprocessing.fmri_preprocessing_pipeline import fMRIPreprocessing
-
-    working_dir = cmdopt
-    root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'fMRIPreprocessing')
-
-    clean_folder(join(root, 'out', 'caps'), recreate=False)
-    clean_folder(join(working_dir, 'fMRIPreprocessing'))
-    shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
-
-    pipeline = fMRIPreprocessing(
-        bids_directory=join(root, 'in', 'bids'),
-        caps_directory=join(root, 'out', 'caps'),
-        tsv_file=join(root, 'in', 'subjects.tsv'),
-        base_dir=join(working_dir, 'fMRIPreprocessing'),
-    )
-    pipeline.build()
-    pipeline.run(bypass_check=True)
-
-    subject_id = 'sub-01001TMM'
-    out_files = [join(root, 'out', 'caps', 'subjects', subject_id, 'ses-M00', 'fmri', 'preprocessing', subject_id + '_ses-M00_task-rest_bold_space-Ixi549Space_preproc.nii.gz'),
-                 join(root, 'out', 'caps', 'subjects', subject_id, 'ses-M00', 'fmri', 'preprocessing', subject_id + '_ses-M00_task-rest_bold_space-meanBOLD_preproc.nii.gz')]
-
-    ref_files = [join(root, 'ref', subject_id + '_ses-M00_task-rest_bold_space-Ixi549Space_preproc.nii.gz'),
-                 join(root, 'ref', subject_id + '_ses-M00_task-rest_bold_space-meanBOLD_preproc.nii.gz')]
-
-    for i in range(len(out_files)):
-        assert similarity_measure(out_files[i], ref_files[i], 0.99)
-
-    clean_folder(join(root, 'out', 'caps'), recreate=False)
-    clean_folder(join(working_dir, 'fMRIPreprocessing'), recreate=False)
-
-
 def test_run_PETVolume(cmdopt):
     from os.path import dirname, join, abspath
     import shutil
