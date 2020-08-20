@@ -165,6 +165,10 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.filemanip import unzip_nii
+        from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
+
+        if spm_standalone_is_available():
+            use_spm_standalone()
 
         # Unzipping
         # =========

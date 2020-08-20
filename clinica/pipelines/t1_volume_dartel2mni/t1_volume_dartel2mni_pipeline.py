@@ -180,6 +180,10 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         import nipype.interfaces.utility as nutil
         from clinica.utils.filemanip import unzip_nii
         from ..t1_volume_dartel2mni import t1_volume_dartel2mni_utils as dartel2mni_utils
+        from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
+
+        if spm_standalone_is_available():
+            use_spm_standalone()
 
         # Unzipping
         # =========

@@ -327,9 +327,7 @@ class PetSurface(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as niu
         import clinica.pipelines.pet_surface.pet_surface_utils as utils
-        from colorama import Fore
-        from nipype.interfaces import spm
-        import platform
+        from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
 
         full_pipe = npe.MapNode(niu.Function(input_names=['subject_id',
                                                           'session_id',
@@ -348,7 +346,7 @@ class PetSurface(cpe.Pipeline):
                                                           'desikan_right',
                                                           'destrieux_left',
                                                           'destrieux_right',
-                                                          'use_spm_standalone',
+                                                          'spm_standalone_is_available',
                                                           'is_longitudinal'],
                                              output_names=[],
                                              function=utils.get_wf),
@@ -394,22 +392,11 @@ class PetSurface(cpe.Pipeline):
         full_pipe.inputs.is_longitudinal = self.parameters['longitudinal']
 
         # This section of code determines whether to use SPM standalone or not
-        full_pipe.inputs.use_spm_standalone = False
-        if all(elem in os.environ.keys() for elem in ['SPMSTANDALONE_HOME', 'MCR_HOME']):
-            if os.path.exists(os.path.expandvars('$SPMSTANDALONE_HOME')) and os.path.exists(os.path.expandvars('$MCR_HOME')):
-                print(Fore.GREEN + 'SPM standalone has been found and will be used in this pipeline' + Fore.RESET)
-                if platform.system() == 'Darwin':
-                    matlab_cmd = ('cd ' + os.path.expandvars('$SPMSTANDALONE_HOME') + ' && ' + './run_spm12.sh'
-                                  + ' ' + os.environ['MCR_HOME']
-                                  + ' script')
-                elif platform.system() == 'Linux':
-                    matlab_cmd = (os.path.join(os.path.expandvars('$SPMSTANDALONE_HOME'), 'run_spm12.sh')
-                                  + ' ' + os.environ['MCR_HOME']
-                                  + ' script')
-                spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
-                full_pipe.inputs.spm_standalone_is_available = True
-            else:
-                raise FileNotFoundError('$SPMSTANDALONE_HOME and $MCR_HOME are defined, but linked to non existent folder ')
+        if spm_standalone_is_available():
+            use_spm_standalone()
+            full_pipe.inputs.spm_standalone_is_available = True
+        else:
+            full_pipe.inputs.spm_standalone_is_available = False
 
         # Connection
         # ==========
