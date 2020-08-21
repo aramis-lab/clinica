@@ -27,3 +27,7 @@ done
 echo "Conda env $CLINICA_ENV_BRANCH not found... Creating"
 conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
 echo "Conda env $CLINICA_ENV_BRANCH was created."
+conda activate $CLINICA_ENV_BRANCH
+pip install -r requirements-dev.txt
+echo "Developement requirements has been installed in  $CLINICA_ENV_BRANCH."
+conda deactivate
