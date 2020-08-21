@@ -115,8 +115,8 @@ pipeline {
               sh 'echo "Agent name: ${NODE_NAME}"'
               sh '''
                  set +x
-                 source ./.jenkins/scripts/find_env.sh
                  eval "$(conda shell.bash hook)"
+                 source ./.jenkins/scripts/find_env.sh
                  conda activate clinica_env_$BRANCH_NAME
                  source /usr/local/Modules/init/profile.sh
                  module load clinica.all
@@ -151,8 +151,8 @@ pipeline {
               sh 'echo "Agent name: ${NODE_NAME}"'
               sh '''
                  set +x
-                 source ./.jenkins/scripts/find_env.sh
                  eval "$(conda shell.bash hook)"
+                 source ./.jenkins/scripts/find_env.sh
                  conda activate clinica_env_$BRANCH_NAME
                  source /usr/local/opt/modules/init/bash
                  module load clinica.all
