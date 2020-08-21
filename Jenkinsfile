@@ -85,9 +85,9 @@ pipeline {
             sh 'echo "Agent name: ${NODE_NAME}"'
             sh '''
                set +x
+               eval "$(conda shell.bash hook)"
                echo $CONDA_PREFIX
                source ./.jenkins/scripts/find_env.sh
-               eval "$(conda shell.bash hook)"
                conda activate clinica_env_$BRANCH_NAME
                echo "Install clinica using pip..."
                pip install --ignore-installed .
