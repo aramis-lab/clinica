@@ -7,7 +7,7 @@ CLINICA_ENV_BRANCH="clinica_env_$BRANCH_NAME"
 set -e
 set +x
 
-
+ENV_EXISTS=0
 # Verify that the conda enviroment correponding to the branch exists, otherwise
 # create it.
 ENVS=$(conda env list | awk '{print $1}' )
@@ -18,14 +18,17 @@ do
   if  [[ "$ENV " == *"$CLINICA_ENV_BRANCH "* ]]
   then
     echo "Find Conda environment named $ENV, continue."
-    exit 0
+    ENV_EXISTS=1
+    break
   fi;
 done
-echo "Conda env $CLINICA_ENV_BRANCH not found... Creating"
-conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
-echo "Conda env $CLINICA_ENV_BRANCH was created."
-source $CONDA_PREFIX/etc/profile.d/conda.sh
-conda activate $CLINICA_ENV_BRANCH
-pip install -r requirements-dev.txt
-echo "Developement requirements has been installed in  $CLINICA_ENV_BRANCH."
-conda deactivate
+if [ "$ENV_EXISTS" = 0 ]; then
+  echo "Conda env $CLINICA_ENV_BRANCH not found... Creating"
+  conda env create --force --file environment.yml -n $CLINICA_ENV_BRANCH
+  echo "Conda env $CLINICA_ENV_BRANCH was created."
+  source $CONDA_PREFIX/etc/profile.d/conda.sh
+  conda activate $CLINICA_ENV_BRANCH
+  pip install -r requirements-dev.txt
+  echo "Developement requirements has been installed in  $CLINICA_ENV_BRANCH."
+  conda deactivate
+fi
