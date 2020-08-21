@@ -15,11 +15,8 @@ echo $ENVS
 
 for ENV in $ENVS
 do
-  if  ! [[ "$ENV " == *"$CLINICA_ENV_BRANCH "* ]]
+  if  [[ "$ENV " == *"$CLINICA_ENV_BRANCH "* ]]
   then
-    #echo "Conda env named $CLINICA_ENV_BRANCH not found, try next"
-    continue
-  else
     echo "Find Conda environment named $ENV, continue."
     exit 0
   fi;
