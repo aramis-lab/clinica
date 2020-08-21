@@ -61,7 +61,7 @@ pipeline {
               }
             sh '''
                set +x
-               ./.jenkins/scripts/find_env.sh
+               source ./.jenkins/scripts/find_env.sh
                conda info --envs
                eval "$(conda shell.bash hook)"
                conda activate clinica_env_$BRANCH_NAME
