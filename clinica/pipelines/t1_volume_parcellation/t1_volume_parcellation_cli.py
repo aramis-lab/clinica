@@ -37,12 +37,7 @@ class T1VolumeParcellationCLI(ce.CmdParser):
         """Run the pipeline with defined args."""
         from networkx import Graph
         from .t1_volume_parcellation_pipeline import T1VolumeParcellation
-        from clinica.utils.check_dependency import verify_cat12_atlases
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
-
-        # If the user wants to use any of the atlases of cat12 and has not installed it, we just remove it from the list
-        # of the computed atlases
-        args.atlases = verify_cat12_atlases(args.atlases)
 
         parameters = {
             'group_id': args.group_id,

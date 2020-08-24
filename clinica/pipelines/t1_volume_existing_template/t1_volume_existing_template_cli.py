@@ -86,12 +86,7 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
         from ..t1_volume_register_dartel.t1_volume_register_dartel_cli import T1VolumeRegisterDartelCLI
         from ..t1_volume_dartel2mni.t1_volume_dartel2mni_cli import T1VolumeDartel2MNICLI
         from ..t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
-        from clinica.utils.check_dependency import verify_cat12_atlases
         from clinica.utils.stream import cprint
-
-        # If the user wants to use any of the atlases of CAT12 and has not installed it, we just remove it from the list
-        # of the computed atlases
-        args.atlases = verify_cat12_atlases(args.atlases)
 
         cprint(
             'The t1-volume-existing-template pipeline is divided into 4 parts:\n'

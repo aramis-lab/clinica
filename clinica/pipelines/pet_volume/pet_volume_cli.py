@@ -61,7 +61,6 @@ class PETVolumeCLI(ce.CmdParser):
         """Run the pipeline with defined args."""
         from networkx import Graph
         from clinica.pipelines.pet_volume.pet_volume_pipeline import PETVolume
-        from clinica.utils.check_dependency import verify_cat12_atlases
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         parameters = {
@@ -74,11 +73,6 @@ class PETVolumeCLI(ce.CmdParser):
             'smooth': args.smooth,
             'atlases': args.atlases,
         }
-
-        # If the user wants to use any of the atlases of CAT12 and has not installed it, we just remove it from the list
-        # of the computed atlases
-        parameters['atlases'] = verify_cat12_atlases(args.atlases)
-
         pipeline = PETVolume(
             bids_directory=self.absolute_path(args.bids_directory),
             caps_directory=self.absolute_path(args.caps_directory),
