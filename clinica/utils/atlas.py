@@ -350,10 +350,13 @@ class Hammers(AtlasAbstract):
 
     @staticmethod
     def get_atlas_labels():
-        import os
-        from .check_dependency import check_cat12
-        cat12 = check_cat12()
-        return os.path.join(cat12, 'templates_1.50mm', 'hammers.nii')
+        from clinica.utils.inputs import RemoteFileStructure, get_file_from_server
+        HAMMERS_PARC = RemoteFileStructure(
+            filename='atlas-Hammers_dseg.nii.gz',
+            url='https://aramislab.paris.inria.fr/files/software/cat12/CAT12-Atlases/',
+            checksum='c034a7bce2dcab390a0b72f4e7d04769eb3fe5b990d0e18d89b0ce73339a5376'
+        )
+        return get_file_from_server(HAMMERS_PARC)
 
     @staticmethod
     def get_atlas_map():
@@ -375,10 +378,13 @@ class LPBA40(AtlasAbstract):
 
     @staticmethod
     def get_atlas_labels():
-        import os
-        from .check_dependency import check_cat12
-        cat12 = check_cat12()
-        return os.path.join(cat12, 'templates_1.50mm', 'lpba40.nii')
+        from clinica.utils.inputs import RemoteFileStructure, get_file_from_server
+        LPBA40_PARC = RemoteFileStructure(
+            filename='atlas-LPBA40_dseg.nii.gz',
+            url='https://aramislab.paris.inria.fr/files/software/cat12/CAT12-Atlases/',
+            checksum='20826b572bbbdbcdbf28bbd3801dc0c2fed28d1e54bc4fd5027e64ccc6d50374'
+        )
+        return get_file_from_server(LPBA40_PARC)
 
     @staticmethod
     def get_atlas_map():
@@ -423,10 +429,13 @@ class Neuromorphometrics(AtlasAbstract):
 
     @staticmethod
     def get_atlas_labels():
-        import os
-        from .check_dependency import check_cat12
-        cat12 = check_cat12()
-        return os.path.join(cat12, 'templates_1.50mm', 'neuromorphometrics.nii')
+        from clinica.utils.inputs import RemoteFileStructure, get_file_from_server
+        NEUROMORPHOMETRICS_PARC = RemoteFileStructure(
+            filename='atlas-Neuromorphometrics_dseg.nii.gz',
+            url='https://aramislab.paris.inria.fr/files/software/cat12/CAT12-Atlases/',
+            checksum='19a50136cd2f8a14357a19ad8a1dc4a2ecb6beb3fc16cb5441f4f2ebaf64a9a5'
+        )
+        return get_file_from_server(NEUROMORPHOMETRICS_PARC)
 
     @staticmethod
     def get_atlas_map():
