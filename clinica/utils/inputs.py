@@ -394,3 +394,24 @@ def fetch_file(remote, dirname=None):
                     file_path, checksum, remote.checksum)
                 )
     return file_path
+
+
+def get_file_from_server(remote_file):
+    import os
+    from pathlib import Path
+    from clinica.utils.stream import cprint
+
+    home = str(Path.home())
+    cache_clinica = os.path.join(home, '.cache', 'clinica', 'data')
+    if not(os.path.exists(cache_clinica)):
+        os.makedirs(cache_clinica)
+
+    local_file = os.path.join(cache_clinica, remote_file.filename)
+
+    if not(os.path.exists(local_file)):
+        try:
+            local_file = fetch_file(remote_file, cache_clinica)
+        except IOError as err:
+            cprint('Unable to download %s from %s: %s' % (remote_file.filename, remote_file.url, err))
+
+    return local_file
