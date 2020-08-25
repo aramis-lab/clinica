@@ -40,31 +40,21 @@ class AtlasAbstract:
         """
         import nibabel as nib
 
-        img_map = nib.load(self.get_atlas_map())
         img_labels = nib.load(self.get_atlas_labels())
-        voxels_map = img_map.header.get_zooms()
         voxels_labels = img_labels.header.get_zooms()
-        if (voxels_map[0] != voxels_labels[0]) or \
-                (voxels_map[1] != voxels_labels[1]) or \
-                (voxels_map[2] != voxels_labels[2]):
-            # if voxels_map != voxels_labels:
-            print("Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas()))
-            # raise Exception(
-            #       "Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas()))
-        # else:
         # Will display integers without decimals
-        if int(voxels_map[0]) == voxels_map[0]:
-            s_x = str(int(voxels_map[0]))
+        if int(voxels_labels[0]) == voxels_labels[0]:
+            s_x = str(int(voxels_labels[0]))
         else:
-            s_x = str(voxels_map[0])
-        if int(voxels_map[1]) == voxels_map[1]:
-            s_y = str(int(voxels_map[1]))
+            s_x = str(voxels_labels[0])
+        if int(voxels_labels[1]) == voxels_labels[1]:
+            s_y = str(int(voxels_labels[1]))
         else:
-            s_y = str(voxels_map[1])
-        if int(voxels_map[2]) == voxels_map[2]:
-            s_z = str(int(voxels_map[2]))
+            s_y = str(voxels_labels[1])
+        if int(voxels_labels[2]) == voxels_labels[2]:
+            s_z = str(int(voxels_labels[2]))
         else:
-            s_z = str(voxels_map[2])
+            s_z = str(voxels_labels[2])
 
         return s_x + "x" + s_y + "x" + s_z
 
@@ -72,13 +62,6 @@ class AtlasAbstract:
     def get_atlas_labels(self):
         """
         Returns the image with the different labels/ROIs.
-        """
-        pass
-
-    @abc.abstractmethod
-    def get_atlas_map(self):
-        """
-        Returns the map associated to the atlas (e.g. T1, FA map from DTI).
         """
         pass
 
@@ -117,13 +100,6 @@ class JHUDTI812mm(AtlasAbstract):
         return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-labels-2mm.nii.gz')
 
     @staticmethod
-    def get_atlas_map():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
-
-    @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUDTI81_FS_LUT_newformat.txt')
@@ -142,13 +118,6 @@ class JHUDTI811mm(AtlasAbstract):
         from .check_dependency import check_environment_variable
         fsl_dir = check_environment_variable('FSLDIR', 'FSL')
         return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-labels-1mm.nii.gz')
-
-    @staticmethod
-    def get_atlas_map():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
 
     @staticmethod
     def get_tsv_roi():
@@ -171,13 +140,6 @@ class JHUTracts01mm(AtlasAbstract):
         return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr0-1mm.nii.gz')
 
     @staticmethod
-    def get_atlas_map():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
-
-    @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
@@ -196,13 +158,6 @@ class JHUTracts02mm(AtlasAbstract):
         from .check_dependency import check_environment_variable
         fsl_dir = check_environment_variable('FSLDIR', 'FSL')
         return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr0-2mm.nii.gz')
-
-    @staticmethod
-    def get_atlas_map():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
 
     @staticmethod
     def get_tsv_roi():
@@ -225,13 +180,6 @@ class JHUTracts251mm(AtlasAbstract):
         return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr25-1mm.nii.gz')
 
     @staticmethod
-    def get_atlas_map():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
-
-    @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
@@ -250,13 +198,6 @@ class JHUTracts252mm(AtlasAbstract):
         from .check_dependency import check_environment_variable
         fsl_dir = check_environment_variable('FSLDIR', 'FSL')
         return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr25-2mm.nii.gz')
-
-    @staticmethod
-    def get_atlas_map():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
 
     @staticmethod
     def get_tsv_roi():
@@ -279,13 +220,6 @@ class JHUTracts501mm(AtlasAbstract):
         return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr50-1mm.nii.gz')
 
     @staticmethod
-    def get_atlas_map():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
-
-    @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
@@ -306,13 +240,6 @@ class JHUTracts502mm(AtlasAbstract):
         return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr50-2mm.nii.gz')
 
     @staticmethod
-    def get_atlas_map():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
-
-    @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
@@ -329,11 +256,6 @@ class AAL2(AtlasAbstract):
     def get_atlas_labels():
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'AAL2.nii')
-
-    @staticmethod
-    def get_atlas_map():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
 
     @staticmethod
     def get_tsv_roi():
@@ -359,11 +281,6 @@ class Hammers(AtlasAbstract):
         return get_file_from_server(HAMMERS_PARC)
 
     @staticmethod
-    def get_atlas_map():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
-
-    @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'lut_Hammers_newformat.txt')
@@ -387,11 +304,6 @@ class LPBA40(AtlasAbstract):
         return get_file_from_server(LPBA40_PARC)
 
     @staticmethod
-    def get_atlas_map():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
-
-    @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'lut_LPBA40_newformat.txt')
@@ -408,11 +320,6 @@ class AICHA(AtlasAbstract):
     def get_atlas_labels():
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'AICHA.nii')
-
-    @staticmethod
-    def get_atlas_map():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
 
     @staticmethod
     def get_tsv_roi():
@@ -438,11 +345,6 @@ class Neuromorphometrics(AtlasAbstract):
         return get_file_from_server(NEUROMORPHOMETRICS_PARC)
 
     @staticmethod
-    def get_atlas_map():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
-
-    @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'lut_Neuromorphometrics_newformat.txt')
@@ -459,11 +361,6 @@ class MCALT_ADIR122(AtlasAbstract):
     def get_atlas_labels():
         from os.path import join, split, realpath
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'MCALT_ADIR122.nii')
-
-    @staticmethod
-    def get_atlas_map():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
 
     @staticmethod
     def get_tsv_roi():

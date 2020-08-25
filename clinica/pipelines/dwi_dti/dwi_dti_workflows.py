@@ -38,15 +38,16 @@ def register_dti_maps_on_atlas(
         out_norm_ad (str): AD-map registered on <atlas_name>.
         out_norm_rd (str): RD-map registered on <atlas_name>.
     """
+    import os
     import tempfile
     import nipype.interfaces.fsl as fsl
     import nipype.interfaces.utility as niu
     import nipype.pipeline.engine as pe
     from nipype.interfaces.ants import RegistrationSynQuick
-    from clinica.utils.atlas import AtlasAbstract
+    from clinica.utils.atlas import AtlasAbstract, JHUDTI811mm
     from clinica.utils.mri_registration import apply_ants_registration_syn_quick_transformation
+    from clinica.utils.check_dependency import check_environment_variable
 
-    from clinica.utils.atlas import JHUDTI811mm
     atlas = JHUDTI811mm()
 
     if not isinstance(atlas, AtlasAbstract):
@@ -58,7 +59,9 @@ def register_dti_maps_on_atlas(
     inputnode = pe.Node(niu.IdentityInterface(
         fields=['in_fa', 'in_md', 'in_ad', 'in_rd', 'in_atlas_scalar_image']),
         name='inputnode')
-    inputnode.inputs.in_atlas_scalar_image = atlas.get_atlas_map()
+    fsl_dir = check_environment_variable('FSLDIR', 'FSL')
+    fa_map = os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
+    inputnode.inputs.in_atlas_scalar_image = fa_map
 
     register_fa = pe.Node(
         interface=RegistrationSynQuick(),
