@@ -3,12 +3,12 @@
 """
 This module contains utilities to handle atlases in Clinica.
 
-An atlas is currently defined by its name, a set of labels in a template space and
-the map of this template space (e.g. T1w, FA map derived from DWI).
+An atlas is currently defined by its name and a set of labels in a template space.
 
 This current implementation has some drawbacks:
 - Atlas is misleading: it is only a set of labels in a template space
-- This implementation can not handle case where there are several maps (e.g. both T1w and T2w) in template space
+- This implementation can not handle case where parcellation is in several template space
+(e.g. `MNI152NLin2009cAsym` and `MNI152NLin6Asym`, see TemplateFlow for example)
 
 Either a refactoring of this module or the use of an external API
 (e.g. TemplateFlow - https://www.templateflow.org/) needs to be considered.
@@ -85,26 +85,6 @@ class AtlasAbstract:
         return index_vector
 
 
-class JHUDTI812mm(AtlasAbstract):
-    def __init__(self):
-        AtlasAbstract.__init__(self)
-
-    @staticmethod
-    def get_name_atlas(): return "JHUDTI81"
-
-    @staticmethod
-    def get_atlas_labels():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-labels-2mm.nii.gz')
-
-    @staticmethod
-    def get_tsv_roi():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUDTI81_FS_LUT_newformat.txt')
-
-
 class JHUDTI811mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
@@ -145,26 +125,6 @@ class JHUTracts01mm(AtlasAbstract):
         return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
 
 
-class JHUTracts02mm(AtlasAbstract):
-    def __init__(self):
-        AtlasAbstract.__init__(self)
-
-    @staticmethod
-    def get_name_atlas(): return "JHUTracts0"
-
-    @staticmethod
-    def get_atlas_labels():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr0-2mm.nii.gz')
-
-    @staticmethod
-    def get_tsv_roi():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
-
-
 class JHUTracts251mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
@@ -185,26 +145,6 @@ class JHUTracts251mm(AtlasAbstract):
         return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
 
 
-class JHUTracts252mm(AtlasAbstract):
-    def __init__(self):
-        AtlasAbstract.__init__(self)
-
-    @staticmethod
-    def get_name_atlas(): return "JHUTracts25"
-
-    @staticmethod
-    def get_atlas_labels():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr25-2mm.nii.gz')
-
-    @staticmethod
-    def get_tsv_roi():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
-
-
 class JHUTracts501mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
@@ -218,26 +158,6 @@ class JHUTracts501mm(AtlasAbstract):
         from .check_dependency import check_environment_variable
         fsl_dir = check_environment_variable('FSLDIR', 'FSL')
         return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr50-1mm.nii.gz')
-
-    @staticmethod
-    def get_tsv_roi():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
-
-
-class JHUTracts502mm(AtlasAbstract):
-    def __init__(self):
-        AtlasAbstract.__init__(self)
-
-    @staticmethod
-    def get_name_atlas(): return "JHUTracts50"
-
-    @staticmethod
-    def get_atlas_labels():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr50-2mm.nii.gz')
 
     @staticmethod
     def get_tsv_roi():
