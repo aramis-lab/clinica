@@ -270,24 +270,6 @@ class Neuromorphometrics(AtlasAbstract):
         return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'lut_Neuromorphometrics_newformat.txt')
 
 
-class MCALT_ADIR122(AtlasAbstract):
-    def __init__(self):
-        AtlasAbstract.__init__(self)
-
-    @staticmethod
-    def get_name_atlas(): return "MCALT_ADIR122"
-
-    @staticmethod
-    def get_atlas_labels():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'MCALT_ADIR122.nii')
-
-    @staticmethod
-    def get_tsv_roi():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'MCALT_ADIR122_ROI.tsv')
-
-
 class AtlasLoader:
     def __init__(self, atlases=None):
         self.atlas = {}
