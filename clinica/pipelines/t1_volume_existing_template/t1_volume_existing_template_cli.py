@@ -72,12 +72,6 @@ class T1VolumeExistingTemplateCLI(ce.CmdParser):
                               nargs=3, type=float,
                               help="A list of 3 floats specifying the voxel sizeof the output image "
                                    "(default: --voxel_size 1.5 1.5 1.5).")
-        # t1-volume-parcellation
-        default_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
-        advanced.add_argument("-atlases", "--atlases",
-                              nargs='+', type=str, metavar='', default=default_atlases, choices=default_atlases,
-                              help='A list of atlases used to calculate the regional mean GM concentrations (default: '
-                                   'all atlases i.e. --atlases %s).' % self.list_to_string(default_atlases))
 
     def run_command(self, args):
         """Run the pipeline with defined args."""

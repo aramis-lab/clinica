@@ -50,12 +50,6 @@ class PETVolumeCLI(ce.CmdParser):
         advanced.add_argument("-smooth", "--smooth", nargs='+', type=int, default=[8], metavar="FWHM_N FWHM_M",
                               help="A list of integers (e.g. --smooth 6 8) specifying the different isomorphic FWHM "
                                    "in millimeters to smooth the image (default: --smooth 8).")
-        list_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
-        advanced.add_argument("-atlases", "--atlases",
-                              nargs='+', type=str, metavar="",
-                              default=list_atlases, choices=list_atlases,
-                              help='A list of atlases used to calculate regional mean SUVRs '
-                                   '(default: all atlases i.e. --atlases AAL2 AICHA Hammers LPBA40 Neuromorphometrics).')
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
@@ -71,7 +65,6 @@ class PETVolumeCLI(ce.CmdParser):
             'mask_threshold': args.mask_threshold,
             'pvc_mask_tissues': args.pvc_mask_tissues,
             'smooth': args.smooth,
-            'atlases': args.atlases,
         }
         pipeline = PETVolume(
             bids_directory=self.absolute_path(args.bids_directory),

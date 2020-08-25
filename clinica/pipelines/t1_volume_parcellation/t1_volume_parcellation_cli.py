@@ -25,13 +25,6 @@ class T1VolumeParcellationCLI(ce.CmdParser):
                                   help='User-defined identifier for the provided group of subjects.')
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
-        # Advanced arguments (i.e. tricky parameters)
-        advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
-        default_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
-        advanced.add_argument("-atlases", "--atlases",
-                              nargs='+', type=str, metavar='', default=default_atlases, choices=default_atlases,
-                              help='A list of atlases used to calculate the regional mean GM concentrations (default: '
-                                   'all atlases i.e. --atlases %s).' % self.list_to_string(default_atlases))
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
@@ -41,7 +34,6 @@ class T1VolumeParcellationCLI(ce.CmdParser):
 
         parameters = {
             'group_id': args.group_id,
-            'atlases': args.atlases,
         }
         pipeline = T1VolumeParcellation(
             caps_directory=self.absolute_path(args.caps_directory),
