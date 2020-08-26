@@ -102,7 +102,7 @@ class JHUDTI811mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUDTI81_FS_LUT_newformat.txt')
+        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases', 'JHUDTI81_FS_LUT_newformat.txt')
 
 
 class JHUTracts01mm(AtlasAbstract):
@@ -122,7 +122,7 @@ class JHUTracts01mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
+        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases', 'JHUTract_FS_LUT_newformat.txt')
 
 
 class JHUTracts251mm(AtlasAbstract):
@@ -142,7 +142,7 @@ class JHUTracts251mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
+        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases', 'JHUTract_FS_LUT_newformat.txt')
 
 
 class JHUTracts501mm(AtlasAbstract):
@@ -175,12 +175,12 @@ class AAL2(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'AAL2.nii')
+        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases', 'atlas-AAL2_dseg.nii.gz')
 
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'lut_AAL2_newformat.txt')
+        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases_spm', 'lut_AAL2_newformat.txt')
 
 
 class Hammers(AtlasAbstract):
@@ -203,7 +203,7 @@ class Hammers(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'lut_Hammers_newformat.txt')
+        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases_spm', 'lut_Hammers_newformat.txt')
 
 
 class LPBA40(AtlasAbstract):
@@ -226,7 +226,7 @@ class LPBA40(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'lut_LPBA40_newformat.txt')
+        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases_spm', 'lut_LPBA40_newformat.txt')
 
 
 class AICHA(AtlasAbstract):
@@ -239,12 +239,12 @@ class AICHA(AtlasAbstract):
     @staticmethod
     def get_atlas_labels():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'AICHA.nii')
+        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases', 'atlas-AAL2_dseg.nii.gz')
 
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'lut_AICHA_newformat.txt')
+        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases_spm', 'lut_AICHA_newformat.txt')
 
 
 class Neuromorphometrics(AtlasAbstract):
@@ -267,7 +267,7 @@ class Neuromorphometrics(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'lut_Neuromorphometrics_newformat.txt')
+        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases_spm', 'lut_Neuromorphometrics_newformat.txt')
 
 
 class AtlasLoader:
