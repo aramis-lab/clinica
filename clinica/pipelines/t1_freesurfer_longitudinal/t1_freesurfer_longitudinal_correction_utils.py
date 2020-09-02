@@ -154,17 +154,24 @@ def move_subjects_dir_to_source_dir(subjects_dir, source_dir, subject_id):
     import shutil
     import datetime
     from colorama import Fore
+    from clinica.utils.freesurfer import extract_image_id_from_longitudinal_segmentation
     from clinica.utils.stream import cprint
+
+    image_id = extract_image_id_from_longitudinal_segmentation(subject_id)
+    participant_id = image_id.participant_id
+    session_id = image_id.session_id
+    long_id = image_id.long_id
+    str_image_id = image_id.participant_id + '_' + image_id.session_id + '_' + image_id.long_id
 
     if source_dir not in subjects_dir:
         shutil.copytree(
             src=os.path.join(subjects_dir, subject_id),
-            dst=os.path.join(source_dir, subject_id, subject_id),
+            dst=os.path.join(source_dir, str_image_id, subject_id),
             symlinks=True
         )
         shutil.copytree(
             src=os.path.join(subjects_dir, 'regional_measures'),
-            dst=os.path.join(source_dir, subject_id, 'regional_measures'),
+            dst=os.path.join(source_dir, str_image_id, 'regional_measures'),
             symlinks=True
         )
         shutil.rmtree(subjects_dir)
@@ -218,7 +225,7 @@ def save_to_caps(source_dir, subject_id, caps_dir, overwrite_caps=False):
 
     # Save FreeSurfer segmentation
     representative_file = os.path.join(subject_id, 'mri', 'aparc+aseg.mgz')
-    representative_source_file = os.path.join(os.path.expanduser(source_dir), subject_id, representative_file)
+    representative_source_file = os.path.join(os.path.expanduser(source_dir), str_image_id, representative_file)
     representative_destination_file = os.path.join(destination_dir, representative_file)
     if os.path.isfile(representative_source_file):
         if os.path.isfile(representative_destination_file):
