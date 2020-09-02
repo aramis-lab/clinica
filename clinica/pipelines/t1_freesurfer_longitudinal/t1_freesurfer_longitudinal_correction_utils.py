@@ -243,12 +243,12 @@ def save_to_caps(source_dir, subject_id, caps_dir, overwrite_caps=False):
                 )
         else:
             shutil.copytree(
-                src=os.path.join(source_dir, subject_id, subject_id),
+                src=os.path.join(source_dir, str_image_id, subject_id),
                 dst=os.path.join(destination_dir, subject_id),
                 symlinks=True
             )
             shutil.copytree(
-                src=os.path.join(source_dir, subject_id, 'regional_measures'),
+                src=os.path.join(source_dir, str_image_id, 'regional_measures'),
                 dst=os.path.join(destination_dir, 'regional_measures'),
                 symlinks=True
             )
