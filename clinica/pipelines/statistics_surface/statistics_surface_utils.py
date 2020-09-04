@@ -182,18 +182,7 @@ def run_matlab(caps_dir,
         get_matlab_command()
     )
     matlab = MatlabCommand()
-
-    # Add the dynamic traits
-    # opengl_trait = traits.Bool(
-    #     True, argstr='-nosoftwareopengl', usedefault=True, desc='Switch on hardware openGL', nohash=True
-    # )
-    # matlab.input_spec.add_trait(matlab.input_spec(), 'nosoftwareopengl', opengl_trait())
-    if sys.platform.startswith('linux'):
-        # Bug(JW): for my laptop, it does not work, but the command line does have the flag -nosoftwareopengl,
-        # TODO: We should try on other computer's matlab to check if this flag works!
-        matlab.inputs.args = '-nosoftwareopengl'
     matlab.inputs.paths = path_to_matlab_script
-
     matlab.inputs.script = """
     clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', %.3f, '%s', %.3f, '%s', %.3f);
     """ % (
@@ -226,8 +215,6 @@ def run_matlab(caps_dir,
     # cprint("Matlab script command = %s" % matlab.inputs.script)
     # cprint("MatlabCommand inputs flag: single_comp_thread = %s" % matlab.inputs.single_comp_thread)
     # cprint("MatlabCommand choose which matlab to use(matlab_cmd): %s" % get_matlab_command())
-    # if sys.platform.startswith('linux'):
-    #     cprint("MatlabCommand inputs flag: nosoftwareopengl = %s" % matlab.inputs.args)
     matlab.run()
 
     return output_dir
