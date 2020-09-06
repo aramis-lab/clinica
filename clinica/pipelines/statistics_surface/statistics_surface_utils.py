@@ -27,246 +27,258 @@ def get_fdg_pet_surface_custom_file():
     return custom_file
 
 
-def prepare_data(input_directory, subjects_visits_tsv, group_label, glm_type):
-    """Fetch all the intermediate variables for this workflow.
+def init_input_node(parameters, base_dir, subjects_visits_tsv):
+    """Initialize the pipeline.
 
-    Args:
-        input_directory: CAPS directory
-        subjects_visits_tsv: TSV file defining the GLM model
-        group_label: Current group name for this analysis
-        glm_type: Based on the hypothesis, you should define one of the glm types, "group_comparison", "correlation"
-
-    Returns:
-
+    This function will:
+        - Create `surfstat_results_dir` in `base_dir`/<group_id> for SurfStat;
+        - Save pipeline parameters in JSON file;
+        - Copy TSV file with covariates;
+        - Print begin execution message.
     """
     import os
-    from shutil import copy
-    import clinica.pipelines as clp
-    import sys
-    import pandas as pd
-    from clinica.utils.stream import cprint
+    import errno
+    import json
+    import shutil
+    from clinica.utils.ux import print_begin_image
+    from clinica.pipelines.statistics_surface.statistics_surface_utils import create_glm_info_dictionary
 
-    path_to_matscript = os.path.join(os.path.dirname(clp.__path__[0]), 'lib', 'clinicasurfstat')
+    group_id = 'group-' + parameters['group_label']
 
-    # CAPS input and output vars
-    input_directory = os.path.expanduser(input_directory)
-    surfstat_input_dir = os.path.join(input_directory, 'subjects')
+    # Create surfstat_results_dir for SurfStat
+    surfstat_results_dir = os.path.join(base_dir, group_id)
+    try:
+        os.makedirs(surfstat_results_dir)
+    except OSError as e:
+        if e.errno != errno.EEXIST:  # EEXIST: folder already exists
+            raise e
 
-    group_id = 'group-' + group_label
-    statistics_dir_tsv = os.path.join(input_directory, 'groups', group_id, 'statistics', 'participant.tsv')
+    # Save pipeline parameters in JSON file
+    glm_dict = create_glm_info_dictionary(subjects_visits_tsv, parameters)
+    json_filename = os.path.join(surfstat_results_dir, group_id + '_glm.json')
+    with open(json_filename, 'w') as json_file:
+        json.dump(glm_dict, json_file, indent=4)
 
-    if glm_type == "group_comparison":
-        output_directory = os.path.join(input_directory, 'groups', group_id, 'statistics', 'surfstat_group_comparison')
-        if not os.path.exists(output_directory):
-            try:
-                os.makedirs(output_directory)
-            except BaseException:
-                raise OSError("SurfStat: can't create destination directory (%s)!" % (output_directory))
-    elif glm_type == "correlation":
-        output_directory = os.path.join(input_directory, 'groups', group_id, 'statistics', 'surfstat_correlation_analysis')
-        if not os.path.exists(output_directory):
-            try:
-                os.makedirs(output_directory)
-            except BaseException:
-                raise OSError("SurfStat: can't create destination directory (%s)!" % (output_directory))
-    else:
-        cprint("The other GLM situations have not been implemented in this pipeline.")
-        sys.exit()
+    # Copy TSV file with covariates
+    tsv_filename = os.path.join(surfstat_results_dir, group_id + '_covariates.tsv')
+    shutil.copyfile(subjects_visits_tsv, tsv_filename)
 
-    # Copy the subjects_visits_tsv to the result folder
-    # First, check if the subjects_visits_tsv has the same info with the participant.tsv in the folder of statistics.
-    # If the participant tsv does not exit, cp subjects_visits_tsv in the folder of statistics too, if it is here, compare them.
-    if not os.path.isfile(statistics_dir_tsv):
-        copy(subjects_visits_tsv, statistics_dir_tsv)
-    else:
-        # Compare the two TSV files
-        participant_df = pd.io.parsers.read_csv(statistics_dir_tsv, sep='\t')
-        subjects_visits_tsv_df = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
-        participant_list = list(participant_df.participant_id)
-        subjects_visits_tsv_list = list(subjects_visits_tsv_df.participant_id)
-        dif_list = list(set(participant_list) - set(subjects_visits_tsv_list))
-        try:
-            len(dif_list) == 0
-        except BaseException:
-            raise ValueError("It seems that this round of analysis does not contain the same subjects where you want to put the results, please check it!")
+    # Print begin message
+    list_keys = ['AnalysisType', 'Covariates', 'Contrast', 'FWHM', 'ClusterThreshold']
+    list_values = [
+        parameters['glm_type'],
+        parameters['covariates'],
+        parameters['contrast'],
+        str(parameters['full_width_at_half_maximum']),
+        str(parameters['cluster_threshold'])
+    ]
+    group_id = 'group-' + parameters['group_label']
+    print_begin_image(group_id, list_keys, list_values)
 
-        group_tsv = 'group-' + group_label + '_participants.tsv'
-        copied_tsv = os.path.join(output_directory, group_tsv)
-        copy(subjects_visits_tsv, copied_tsv)
-    # Point to the path to the json file
-    out_json = os.path.join(output_directory, 'group-' + group_label + '_glm.json')
-
-    freesurfer_home = os.environ["FREESURFER_HOME"]
-
-    return path_to_matscript, surfstat_input_dir, output_directory, freesurfer_home, out_json
+    return parameters['group_label'], surfstat_results_dir
 
 
-def runmatlab(input_directory,
-              output_directory,
-              subjects_visits_tsv,
-              design_matrix, contrast,
-              str_format,
-              glm_type,
-              group_label,
-              freesurfer_home,
-              surface_file,
-              path_to_matscript,
-              full_width_at_half_maximum,
-              threshold_uncorrected_pvalue,
-              threshold_corrected_pvalue,
-              cluster_threshold,
-              feature_label):
+def get_string_format_from_tsv(tsv_file):
     """
-        a wrapper the matlab script of surfstat with nipype.
+    Determine string format from TSV file.
+
+    If the TSV file is like:
+
+    participant_id  session_id  sex     group   age
+    sub-CLNC0001    ses-M00     Female  CN      71.1
+    sub-CLNC0002    ses-M00     Male    CN      81.3
+    sub-CLNC0003    ses-M00     Male    CN      75.4
+
+    The columns of the TSV file contains consecutively strings, strings,
+    strings, strings and float. The string_format is therefore "%s %s %s %s %f".
 
     Args:
-        input_directory: surfstat_input_dir where containing all the subjects' output in CAPS directory
-        output_directory: output folder to contain the result in CAPS folder
-        subjects_visits_tsv: tsv file containing the glm information
-        design_matrix: str, the linear model that fits into the GLM, for example '1+group'.
-        contrast: string, the contrast matrix for GLM, if the factor you choose is categorized variable, clinica_surfstat will create two contrasts,
-                  for example, contrast = 'Label', this will create contrastpos = Label.AD - Label.CN, contrastneg = Label.CN - Label.AD; if the fac-
-                  tory that you choose is a continuous factor, clinica_surfstat will just create one contrast, for example, contrast = 'Age', but note,
-                  the string name that you choose should be exactly the same with the columns names in your subjects_visits_tsv.
-        str_format:string, the str_format which uses to read your tsv file, the type of the string should corresponds exactly with the columns in the tsv file.
-                  Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
-        glm_type: based on the hypothesis, you should define one of the glm types, "group_comparison", "correlation"
-        group_label: current group name for this analysis
-        freesurfer_home: the environmental variable $FREESURFER_HOME
-        surface_file: Specify where to find the data surfaces file in the "CAPS/subject" directory, using specific keywords.
-                     For instance, to catch for each subject the cortical thickness, the string used will be:
-                     '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
-                     More information is available on the documentation page of the surfstat pipelines. The keywords @subject @ session @hemi @fwhm
-                     represents the variable parts.
-        path_to_matscript: path to find the matlab script
-        full_width_at_half_maximum: fwhm for the surface smoothing, default is 20, integer.
-        threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float, default is 0.001.
-        threshold_corrected_pvalue: the threshold to display the corrected cluster, default is 0.05, float.
-        cluster_threshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float.
+        tsv_file: TSV file.
 
     Returns:
-
+        String formatting of the TSV file (e.g. "%s %s %s %s %f")
     """
-    from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
-    from os.path import join
+    import pandas as pd
+
+    demographics_df = pd.read_csv(tsv_file, sep='\t')
+
+    def dtype_to_str_format(dtype):
+        """Convert pandas dtypes (e.g. int64) to string format (e.g. %d)"""
+        import numpy as np
+        if dtype == np.int64:
+            str_format = "%d"
+        elif dtype == np.float64:
+            str_format = "%f"
+        elif dtype == np.object:
+            str_format = "%s"
+        else:
+            raise ValueError("Unknown dtype (given: %s)" % dtype)
+        return str_format
+
+    list_str_format = []
+    for column in demographics_df.columns:
+        list_str_format.append(dtype_to_str_format(demographics_df[column].dtype))
+
+    return " ".join(list_str_format)
+
+
+def covariates_to_design_matrix(contrast, covariates=None):
+    """
+    Generate design matrix for SurfStat based on the contrast and the optional list of covariates.
+
+    Design matrix "1 + <contrast> + <covariate_1> + ... + <covariate_n>"
+
+    Example:
+        >>> from clinica.pipelines.statistics_surface.statistics_surface_utils import covariates_to_design_matrix
+        >>> covariates_to_design_matrix('group', 'age sex group')
+        1 + group + age + sex
+        >>> covariates_to_design_matrix('group', 'age')
+        1 + group + age
+        >>> covariates_to_design_matrix('group', None)
+        1 + group
+    """
+    if covariates:
+        # Convert string to list while handling case where several spaces are present
+        list_covariates = list(set(covariates.split(' ')))
+        try:
+            list_covariates.remove('')
+        except ValueError:
+            pass
+
+        if contrast in list_covariates:
+            design_matrix = "1 + " + " + ".join(covariate for covariate in list_covariates)
+        else:
+            design_matrix = "1 + " + contrast + " + " + " + ".join(covariate for covariate in list_covariates)
+    else:
+        design_matrix = "1 + " + contrast
+
+    return design_matrix
+
+
+def run_matlab(caps_dir,
+               output_dir,
+               subjects_visits_tsv,
+               pipeline_parameters):
+    """
+    Wrap the call of SurfStat using clinicasurfstat.m Matlab script.
+
+    Args:
+        caps_dir (str): CAPS directory containing surface-based features
+        output_dir (str): Output directory that will contain outputs of clinicasurfstat.m
+        subjects_visits_tsv (str): TSV file containing the GLM information
+        pipeline_parameters (dict): parameters of StatisticsSurface pipeline
+    """
+    import os
     import sys
-    from clinica.utils.stream import cprint
+    from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
+    import clinica.pipelines as clinica_pipelines
+    from clinica.utils.check_dependency import check_environment_variable
+    from clinica.pipelines.statistics_surface.statistics_surface_utils import covariates_to_design_matrix, get_string_format_from_tsv
+
+    path_to_matlab_script = os.path.join(os.path.dirname(clinica_pipelines.__path__[0]), 'lib', 'clinicasurfstat')
+    freesurfer_home = check_environment_variable('FREESURFER_HOME', 'FreeSurfer')
 
     MatlabCommand.set_default_matlab_cmd(
-        get_matlab_command())  # this is to set the matlab_path(os.environ) in your bashrc file, to choose which version of matlab do you wanna use
-    # here, set_default_matlab_cmd is a @classmethod
+        get_matlab_command()
+    )
     matlab = MatlabCommand()
-
-    # add the dynamic traits
-    # openGL_trait = traits.Bool(True, argstr='-nosoftwareopengl', usedefault=True, desc='Switch on hardware openGL', nohash=True)
-    # matlab.input_spec.add_trait(matlab.input_spec(), 'nosoftwareopengl', openGL_trait() )
-    if sys.platform.startswith('linux'):
-        matlab.inputs.args = '-nosoftwareopengl'  # Bug, for my laptop, it does not work, but the command line does have the flag -nosoftwareopengl, we should try on other computer's matlab to check if this flag works!
-    matlab.inputs.paths = path_to_matscript  # CLINICA_HOME, this is the path to add into matlab, addpath
-
+    matlab.inputs.paths = path_to_matlab_script
     matlab.inputs.script = """
     clinicasurfstat('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', %.3f, '%s', %.3f, '%s', %.3f);
-    """ % (input_directory, output_directory, subjects_visits_tsv, design_matrix, contrast, str_format, glm_type, group_label, freesurfer_home, surface_file, feature_label, 'sizeoffwhm',
-           full_width_at_half_maximum,
-           'thresholduncorrectedpvalue', threshold_uncorrected_pvalue, 'thresholdcorrectedpvalue',
-           threshold_corrected_pvalue, 'clusterthreshold',
-           cluster_threshold)  # here, we should define the inputs for the matlab function that you want to use
-    matlab.inputs.mfile = True  # this will create a file: pyscript.m , the pyscript.m is the default name
-    matlab.inputs.single_comp_thread = False  # this will stop runing with single thread
-    matlab.inputs.logfile = join(output_directory, "matlab_output.log")
-    cprint("Matlab logfile is located in the folder: %s" % matlab.inputs.logfile)
-    cprint("Matlab script command = %s" % matlab.inputs.script)
-    cprint("MatlabCommand inputs flag: single_comp_thread = %s" % matlab.inputs.single_comp_thread)
-    cprint("MatlabCommand choose which matlab to use(matlab_cmd): %s" % get_matlab_command())
-    if sys.platform.startswith('linux'):
-        cprint("MatlabCommand inputs flag: nosoftwareopengl = %s" % matlab.inputs.args)
-    out = matlab.run()
-    return out
+    """ % (
+        os.path.join(caps_dir, 'subjects'),
+        output_dir,
+        subjects_visits_tsv,
+        covariates_to_design_matrix(
+            pipeline_parameters['contrast'],
+            pipeline_parameters['covariates']
+        ),
+        pipeline_parameters['contrast'],
+        get_string_format_from_tsv(subjects_visits_tsv),
+        pipeline_parameters['glm_type'],
+        pipeline_parameters['group_label'],
+        freesurfer_home,
+        pipeline_parameters['custom_file'],
+        pipeline_parameters['measure_label'],
+        'sizeoffwhm', pipeline_parameters['full_width_at_half_maximum'],
+        'thresholduncorrectedpvalue', 0.001,
+        'thresholdcorrectedpvalue', 0.05,
+        'clusterthreshold', pipeline_parameters['cluster_threshold']
+        )
+    # This will create a file: pyscript.m , the pyscript.m is the default name
+    matlab.inputs.mfile = True
+    # This will stop running with single thread
+    matlab.inputs.single_comp_thread = False
+    matlab.inputs.logfile = 'group-' + pipeline_parameters['group_label'] + '_matlab.log'
+
+    # cprint("Matlab logfile is located at the following path: %s" % matlab.inputs.logfile)
+    # cprint("Matlab script command = %s" % matlab.inputs.script)
+    # cprint("MatlabCommand inputs flag: single_comp_thread = %s" % matlab.inputs.single_comp_thread)
+    # cprint("MatlabCommand choose which matlab to use(matlab_cmd): %s" % get_matlab_command())
+    matlab.run()
+
+    return output_dir
 
 
-def json_dict_create(glm_type,
-                     design_matrix,
-                     str_format,
-                     contrast,
-                     group_label,
-                     full_width_at_half_maximum,
-                     threshold_uncorrected_pvalue,
-                     threshold_corrected_pvalue,
-                     cluster_threshold):
-    """Create a JSON file containing the GLM information.
-
-    Args:
-        design_matrix: str, the linear model that fits into the GLM, for example '1+group'.
-        contrast: string, the contrast matrix for GLM, if the factor you choose is categorized variable, clinica_surfstat will create two contrasts,
-                  for example, contrast = 'Label', this will create contrastpos = Label.AD - Label.CN, contrastneg = Label.CN - Label.AD; if the fac-
-                  tory that you choose is a continuous factor, clinica_surfstat will just create one contrast, for example, contrast = 'Age', but note,
-                  the string name that you choose should be exactly the same with the columns names in your subjects_visits_tsv.
-        str_format:string, the str_format which uses to read your tsv file, the typy of the string should corresponds exactly with the columns in the tsv file.
-                  Defaut parameters, we set these parameters to be some default values, but you can also set it by yourself:
-        glm_type: based on the hypothesis, you should define one of the glm types, "group_comparison", "correlation"
-        group_label: current group name for this analysis
-        full_width_at_half_maximum: fwhm for the surface smoothing, default is 20, integer.
-        threshold_uncorrected_pvalue: threshold to display the uncorrected Pvalue, float, default is 0.001.
-        threshold_corrected_pvalue: the threshold to display the corrected cluster, default is 0.05, float.
-        cluster_threshold: threshold to define a cluster in the process of cluster-wise correction, default is 0.001, float.
-
-    Returns:
-
-    """
-    json_dict = {
-        'AnalysisType': glm_type,
-        'DesignMatrix': design_matrix,
-        'StringFormatTSV': str_format,
-        'Contrast': contrast,
-        'GroupLabel': group_label,
-        'FWHM': full_width_at_half_maximum,
-        'ThresholdUncorrectedPvalue': threshold_uncorrected_pvalue,
-        'ThresholdCorrectedPvalue': threshold_corrected_pvalue,
-        'ClusterThreshold': cluster_threshold
+def create_glm_info_dictionary(tsv_file, pipeline_parameters):
+    """Create dictionary containing the GLM information that will be stored in a JSON file."""
+    out_dict = {
+        'AnalysisType': pipeline_parameters['glm_type'],
+        'DesignMatrix':  covariates_to_design_matrix(
+            pipeline_parameters['contrast'],
+            pipeline_parameters['covariates']
+        ),
+        'StringFormatTSV': get_string_format_from_tsv(tsv_file),
+        'Contrast': pipeline_parameters['contrast'],
+        'Covariates': pipeline_parameters['covariates'],
+        'GroupLabel': pipeline_parameters['group_label'],
+        'FWHM': pipeline_parameters['full_width_at_half_maximum'],
+        'ThresholdUncorrectedPvalue': 0.001,
+        'ThresholdCorrectedPvalue': 0.05,
+        'ClusterThreshold': pipeline_parameters['cluster_threshold']
     }
+    return out_dict
 
-    return json_dict
 
+def save_to_caps(source_dir, caps_dir, overwrite_caps, pipeline_parameters):
+    """Save `source_dir`/ to CAPS folder.
 
-def check_inputs(caps,
-                 custom_filename,
-                 fwhm,
-                 tsv_file):
-    """
-        Simply checks if the custom strings provided find the correct files. If files are missing, it is easier to
-        raise an exception here rather than doing it in the MATLAB script.
-    Args:
-        caps: The CAPS folder
-        custom_filename: The string defining where are the files needed for the surfstat analysis
-        fwhm: Full Width at Half Maximum used for the smoothing of the data, needed to catch the file
-        tsv_file: tsv file that contains the subject and session lists, along with the other covariates
+    This function copies outputs of `source_dir`/ to
+    `caps_dir`/groups/<group_id>/<statistics>/surfstat_<glm_type>/
 
-    Returns:
+    The `source_dir`/ folder should contain the following elements:
+        - group-<group_label>_<group_1_or_2>-lt-<group_1_or_2>_measure-<measure>_fwhm-<label>_suffix.ext
+    or
+        - group-<group_label>_correlation-<label>_contrast-{-|+}_measure-<measure>_fwhm-<label>_suffix.ext
+    and
+        - group-<group_label>_covariates.tsv
+        - group-<group_label>_glm.json
 
+    Raise:
+        NotImplementedError: If overwrite_caps=True.
     """
     import os
-    from clinica.utils.stream import cprint
-    import pandas as pd
+    import shutil
+    from clinica.utils.ux import print_end_image
 
-    subjects_visits = pd.io.parsers.read_csv(tsv_file, sep='\t')
-    subjects = list(subjects_visits.participant_id)
-    sessions = list(subjects_visits.session_id)
+    group_id = 'group-' + pipeline_parameters['group_label']
 
-    missing_files = []
-    for idx in range(len(subjects)):
-        fullpath = os.path.join(caps,
-                                'subjects',
-                                custom_filename.replace('@subject', subjects[idx]).replace('@session', sessions[idx]).replace('@fwhm', str(fwhm)))
-        left_hemi = fullpath.replace('@hemi', 'lh')
-        right_hemi = fullpath.replace('@hemi', 'rh')
+    if pipeline_parameters['glm_type'] == "group_comparison":
+        surfstat_folder = 'surfstat_' + pipeline_parameters['glm_type']
+    elif pipeline_parameters['glm_type'] == "correlation":
+        surfstat_folder = 'surfstat_' + pipeline_parameters['glm_type'] + '_analysis'
+    else:
+        raise NotImplementedError("The other GLM situations have not been implemented in this pipeline.")
 
-        if not os.path.exists(left_hemi):
-            missing_files.append(left_hemi)
-        if not os.path.exists(right_hemi):
-            missing_files.append(right_hemi)
+    destination_dir = os.path.join(
+        os.path.expanduser(caps_dir),
+        'groups',
+        group_id,
+        'statistics',
+        surfstat_folder
+    )
 
-    if len(missing_files) > 0:
-        cprint(' ** Missing files **')
-        for l in missing_files:
-            cprint('Not found: ' + l)
-        raise Exception(str(len(missing_files)) + ' files not found !')
+    if overwrite_caps:
+        raise NotImplementedError('save_to_caps(overwrite_caps=True) not implemented')
+    shutil.copytree(source_dir, destination_dir, symlinks=True)
+    print_end_image(group_id)

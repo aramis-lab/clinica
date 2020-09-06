@@ -515,16 +515,14 @@ def test_run_StatisticsSurface(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     parameters = {
-        'design_matrix': '1 + group + age + sex',
+        'orig_input_data': 't1-freesurfer',
+        'covariates': 'age sex',
         'contrast': 'group',
-        'str_format': '%s %s %s %f %s',
         'group_label': 'UnitTest',
         'glm_type': 'group_comparison',
         'custom_file': '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh',
-        'feature_label': 'cortical_thickness',
+        'measure_label': 'ct',
         'full_width_at_half_maximum': 20,
-        'threshold_uncorrected_pvalue': 0.001,
-        'threshold_corrected_pvalue': 0.05,
         'cluster_threshold': 0.001
     }
     pipeline = StatisticsSurface(
@@ -537,8 +535,9 @@ def test_run_StatisticsSurface(cmdopt):
     pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 8}, bypass_check=True)
 
     # Check files
-    out_file = join(root, 'out/caps/groups/group-UnitTest/statistics/surfstat_group_comparison/group-UnitTest_AD-lt-CN_measure-cortical_thickness_fwhm-20_correctedPValue.mat')
-    ref_file = join(root, 'ref/group-UnitTest_AD-lt-CN_measure-cortical_thickness_fwhm-20_correctedPValue.mat')
+    filename = 'group-UnitTest_AD-lt-CN_measure-ct_fwhm-20_correctedPValue.mat'
+    out_file = join(root, 'out', 'caps', 'groups', 'group-UnitTest', 'statistics', 'surfstat_group_comparison', filename)
+    ref_file = join(root, 'ref', filename)
 
     out_file_mat = loadmat(out_file)['correctedpvaluesstruct']
     ref_file_mat = loadmat(ref_file)['correctedpvaluesstruct']
@@ -874,9 +873,10 @@ def test_run_StatisticsVolume(cmdopt):
 
     # Instantiate pipeline and run()
     parameters = {
+        'orig_input_data': 'pet-volume',
         'contrast': 'group',
-        'feature_type': 'fdg',
-        'group_id': 'UnitTest',
+        'measure_label': 'fdg',
+        'group_label': 'UnitTest',
         'cluster_threshold': 0.001,
         'group_id_caps': None,
         'full_width_at_half_maximum': 8

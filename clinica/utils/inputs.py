@@ -142,7 +142,7 @@ def clinica_file_reader(subjects,
         subjects: list of subjects
         sessions: list of sessions (must be same size as subjects, and must correspond )
         input_directory: location of the bids or caps directory
-        information: dictionnary containg all the relevant information to look for the files. Dict must contains the
+        information: dictionary containing all the relevant information to look for the files. Dict must contains the
                      following keys : pattern, description. The optional key is: needed_pipeline
                              pattern: define the pattern of the final file
                              description: string to describe what the file is

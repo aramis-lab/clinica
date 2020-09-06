@@ -18,62 +18,63 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         from colorama import Fore
-        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
-        clinica_comp = self._args.add_argument_group('%sMandatory arguments%s' % (Fore.BLUE, Fore.RESET))
+
+        # Clinica compulsory arguments
+        clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
+        clinica_comp.add_argument("group_label",
+                                  help='User-defined identifier for the provided group of subjects.')
+        clinica_comp.add_argument("orig_input_data",
+                                  help='Type of surface-based feature: type '
+                                  '\'t1-freesurfer\' to use cortical thickness, '
+                                  '\'pet-surface\' to use projected FDG-PET data or '
+                                  '\'custom-pipeline\' to use you own data in CAPS directory '
+                                  '(see Wiki for details).',
+                                  choices=['t1-freesurfer', 'pet-surface', 'custom-pipeline'])
+        clinica_comp.add_argument("glm_type",
+                                  help='String based on the GLM type for the hypothesis. '
+                                  'You can choose between \'group_comparison\' and \'correlation\'.',
+                                  choices=['group_comparison', 'correlation'],
+                                  )
         clinica_comp.add_argument("subject_visits_with_covariates_tsv",
                                   help='TSV file containing a list of subjects with their sessions and all '
                                        'the covariates and factors needed for the GLM.')
-        clinica_comp.add_argument("design_matrix",
-                                  help='String to define the design matrix that fits into the GLM, '
-                                       'e.g. 1 + group + sex + age.')
         clinica_comp.add_argument("contrast",
                                   help='String to define the contrast matrix for the GLM, e.g. group. Please note '
                                        'that, when you want to perform negative correlation, the sign is ignored '
                                        'by the command line.')
-        clinica_comp.add_argument("string_format",
-                                  help='String to define the format of the columns in the TSV file, e.g., '
-                                       '%%s %%s %%s %%f if the columns contain a string, a string, a string '
-                                       'and a number, respectively.')
-        clinica_comp.add_argument("group_id",
-                                  help='User-defined identifier for the provided group of subjects.')
-        clinica_comp.add_argument("glm_type",
-                                  help='String based on the GLM type for the hypothesis. You can choose '
-                                       'between group_comparison and correlation.')
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
+        optional.add_argument("-c", "--covariates",
+                              type=str, default=None, metavar='\'covariate_1 ... covariate_n\'',
+                              help='Covariates of the form --covariates \'covariate_1 ... covariate_n\'. '
+                                   'Each covariate must match the column name of the TSV file. '
+                                   'On default, no covariates are taken.')
         optional.add_argument("-fwhm", "--full_width_at_half_maximum",
                               type=int, default=20,
                               help='FWHM for the surface smoothing '
                                    '(default: --full_width_at_half_maximum %(default)s).')
-        optional.add_argument("-ft", "--feature_type",
-                              type=str, default='cortical_thickness',
-                              help='Type of surface-based feature: cortical_thickness (from t1-freesurfer pipeline)'
-                                   'or pet_fdg_projection (from pet-surface pipeline)'
-                                   '(default: --feature_type %(default)s).')
+        # Optional arguments for custom pipeline
+        opt_custom_input = self._args.add_argument_group(
+            '%sPipeline options if you selected custom-pipeline%s' % (Fore.BLUE, Fore.RESET)
+        )
+        opt_custom_input.add_argument("-cf", "--custom_file",
+                                      type=str, default=None,
+                                      help='Pattern of file inside CAPS directory using @subject, @session, '
+                                           '@fwhm, @hemi. '
+                                           'This flag must be specified with the --measure_label flag). '
+                                           'See Wiki for an example.')
+        opt_custom_input.add_argument("-ml", "--measure_label",
+                                      type=str, default=None,
+                                      help='Name of the feature type, it will be saved on the CAPS '
+                                           '_measure-FEATURE_LABEL key-value association. '
+                                           'This flag must be specified with the --custom_file flag). '
+                                           'See Wiki for an example.')
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments(add_tsv_flag=False)
         # Advanced arguments (i.e. tricky parameters)
         advanced = self._args.add_argument_group(PIPELINE_CATEGORIES['ADVANCED'])
-        advanced.add_argument("-cf", "--custom_file",
-                              type=str, default=None,
-                              help='Pattern of file inside CAPS directory using @subject, @session, @fwhm, @hemi. '
-                                   'No --feature_type must be specified in order to use this flag. '
-                                   'If you use this flag, you must specify a label with the --feature_label flag). '
-                                   'See Wiki for an example.')
-        advanced.add_argument("-fl", "--feature_label",
-                              type=str, default=None,
-                              help='Name of the feature type, it will be saved on the CAPS _measure-FEATURE_LABEL '
-                                   'key-value association.')
-        advanced.add_argument("-tup", "--threshold_uncorrected_pvalue",
-                              type=float, default=0.001,
-                              help='Threshold to display the uncorrected p-value '
-                                   '(--threshold_uncorrected_pvalue %(default)s).')
-        advanced.add_argument("-tcp", "--threshold_corrected_pvalue",
-                              type=float, default=0.05,
-                              help='Threshold to display the corrected p-value '
-                                   '(default: --threshold_corrected_pvalue %(default)s)')
         advanced.add_argument("-ct", "--cluster_threshold",
                               type=float, default=0.001,
                               help='Threshold to define a cluster in the process of cluster-wise correction '
@@ -81,62 +82,34 @@ class StatisticsSurfaceCLI(ce.CmdParser):
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
-        import os
         from networkx import Graph
         from .statistics_surface_pipeline import StatisticsSurface
-        from .statistics_surface_utils import (check_inputs,
-                                               get_t1_freesurfer_custom_file,
+        from .statistics_surface_utils import (get_t1_freesurfer_custom_file,
                                                get_fdg_pet_surface_custom_file)
-        from clinica.utils.stream import cprint
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
         from clinica.utils.exceptions import ClinicaException
 
-        if args.feature_type is not None:
-            if args.custom_file is not None:
-                raise ClinicaException('--feature_type and --custom_file are mutually exclusive: you must choose '
-                                       'between one or the other. See documentation for more information.')
-            if args.feature_label is not None:
-                raise ClinicaException('--feature_label should not be used with --feature_type.')
-            # FreeSurfer cortical thickness
-            if args.feature_type == 'cortical_thickness':
-                args.custom_file = get_t1_freesurfer_custom_file()
-                args.feature_label = 'ct'
-            # PET cortical projection
-            elif args.feature_type == 'pet_fdg_projection':
-                args.custom_file = get_fdg_pet_surface_custom_file()
-                args.feature_label = 'fdg'
-            else:
-                raise ClinicaException('Feature type ' + args.feature_type + ' not recognized. Use --custom_file '
-                                       'to specify your own files (without --feature_type).')
-        elif args.feature_type is None:
-            if args.custom_file is None:
-                cprint('No feature type selected: using cortical thickness as default value')
-                args.custom_file = get_t1_freesurfer_custom_file()
-                args.feature_label = 'ct'
-            else:
-                cprint('Using custom features.')
-                if args.feature_label is None:
-                    raise ClinicaException('You must specify a --feature_label when using the --custom_files flag.')
+        # FreeSurfer cortical thickness
+        if args.orig_input_data == 't1-freesurfer':
+            args.custom_file = get_t1_freesurfer_custom_file()
+            args.measure_label = 'ct'
+        # PET cortical projection
+        elif args.orig_input_data == 'pet-surface':
+            args.custom_file = get_fdg_pet_surface_custom_file()
+            args.measure_label = 'fdg'
+        else:
+            if (args.custom_file is None) or (args.measure_label is None):
+                raise ClinicaException('You must set --measure_label and --custom_file flags.')
 
-        # Check if the group label has been existed, if yes, give an error to the users
-        # Note(AR): if the user wants to compare Cortical Thickness measure with PET measure
-        # using the group_id, Clinica won't allow it.
-        # TODO: Modify this behaviour
-        if os.path.exists(os.path.join(os.path.abspath(self.absolute_path(args.caps_directory)), 'groups', 'group-' + args.group_id)):
-            error_message = 'group_id: ' + args.group_id + ' already exists, please choose another one or delete ' \
-                            'the existing folder and also the working directory and rerun the pipeline'
-            raise ClinicaException(error_message)
         parameters = {
-            'group_label': args.group_id,
-            'design_matrix': args.design_matrix,
+            'orig_input_data': args.orig_input_data,
+            'group_label': args.group_label,
+            'covariates': args.covariates,
             'contrast': args.contrast,
-            'str_format': args.string_format,
             'glm_type': args.glm_type,
             'custom_file': args.custom_file,
-            'feature_label': args.feature_label,
+            'measure_label': args.measure_label,
             'full_width_at_half_maximum': args.full_width_at_half_maximum,
-            'threshold_uncorrected_pvalue': args.threshold_uncorrected_pvalue,
-            'threshold_corrected_pvalue': args.threshold_corrected_pvalue,
             'cluster_threshold': args.cluster_threshold,
         }
         pipeline = StatisticsSurface(
@@ -146,14 +119,6 @@ class StatisticsSurfaceCLI(ce.CmdParser):
             parameters=parameters,
             name=self.name
         )
-
-        check_inputs(pipeline.caps_directory,
-                     pipeline.parameters['custom_file'],
-                     pipeline.parameters['full_width_at_half_maximum'],
-                     pipeline.tsv_file)
-
-        cprint("Parameters used for this pipeline:")
-        cprint(pipeline.parameters)
 
         if args.n_procs:
             exec_pipeline = pipeline.run(plugin='MultiProc',
