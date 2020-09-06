@@ -9,8 +9,7 @@
 
 
 ## Dependencies
-
-If you only installed the core of Clinica, this pipeline needs the installation of the **dcm2nii** and **dcm2niix** DICOM to NIfTI converters, and of **FreeSurfer**. You can find how to install these software packages on the [installation](../../#installing-clinica-from-source) page.
+If you installed the core of Clinica, this converter needs no further dependencies.
 
 ## Downloading OASIS
 
@@ -37,16 +36,30 @@ clinica convert oasis-to-bids <dataset_directory> <clinical_data_directory> <bid
 
 where:
 
-  - `dataset_directory` is the path to the original OASIS images' directory;
-  - `clinical_data_directory` is the path to the directory where the xls file with the clinical data is located;
-  - `bids_directory` is the path to the output directory, where the BIDS-converted version of OASIS will be stored.
+- `dataset_directory` is the path to the original OASIS images' directory. Its content looks like:
+```text
+<dataset_directory>
+├── OAS1_0001_MR1
+│   ├── FSL_SEG
+│   ├── PROCESSED
+│   │   └── MPRAGE
+│   │       ├── SUBJ_111
+│   │       └── T88_111
+│   │           └── t4_files
+│   └── RAW
+├── ...
+```
+
+- `clinical_data_directory` is the path to the directory containing the CSV file called `oasis_cross-sectional.csv`.
+
+- `bids_directory` is the path to the output directory, where the BIDS-converted version of OASIS will be stored.
 
 !!! note
     In order to improve the readability, the BIDS subject ID is different from the original OASIS ID and is defined as follows:
     ```Text
     sub-OASIS1+ original numerical ID of the subject
     ```
-    
+
     !!! example
         If the original subject ID is `OAS1_0001_MR1`, since the numerical ID is `0001`, the final BIDS ID will be `sub-OASIS10001`.
 
