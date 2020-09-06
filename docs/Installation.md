@@ -7,11 +7,7 @@ not hesitate to contact us on the
 if you encounter any issues.
 
 
-## Quick start
-
-### Installation of Clinica
-
-#### Python environment
+## Prepare your Python environment
 You will need a Python environment to run Clinica. We advise you to
 use [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
 Miniconda allows you to install, run, and update Python packages and their
@@ -19,13 +15,13 @@ dependencies. It can also create environments to isolate your libraries.
 To install Miniconda, open a new terminal and type the following commands:
 
 - If you are on Linux:
-```bash
+```{.sourceCode .bash}
 curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda-installer.sh
 bash /tmp/miniconda-installer.sh
 ```
 
 - If you are on Mac:
-```bash
+```{.sourceCode .bash}
 curl https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o /tmp/miniconda-installer.sh
 bash /tmp/miniconda-installer.sh
 ```
@@ -35,38 +31,24 @@ PATH` given at the end of the installation. If everything went
 fine, open a new terminal and type `conda info`, it will verify if Conda is
 installed, check the version and show your Miniconda path.
 
-Clinica can be installed either by using the conventional
-[PyPI package manager](https://pypi.org/project/clinica/) or by using the
-[Conda package manager](https://conda.io/docs/). In both cases, it is a good idea
-to create an isolated environment if you want to preserve other already installed
-Python libraries.  
+## Install Clinica
 
-#### Using Conda
-
-The latest release of Clinica can be installed using Conda as follows:
+The latest release of Clinica can be installed either by using the conventional
+[PyPI package manager](https://pypi.org/project/clinica/) as follows:
 
 ```bash
-conda create --name clinicaEnv python=3.6 clinica -c Aramislab -c conda-forge
-```
-
-It will download all the needed packages and create the Clinica environment.
-
-!!! info
-    This command will create an environment called `clinicaEnv`. Clinica is
-    already installed inside it. The option `-c Aramislab` tells Conda to search
-    the package on the [Aramis conda channel](https://anaconda.org/Aramislab).
-
-#### Using pip
-
-The latest release of Clinica can be installed using pip as follows:
-
-```bash
-conda create --name clinicaEnv python=3.6
+conda create --name clinicaEnv python=3.7
 conda activate clinicaEnv
 pip install clinica
 ```
 
-### Installation of the third-party software packages
+!!! info
+    Since Clinica `v0.3.5`, Conda version is not proposed anymore (i.e.
+    `conda create --name clinicaEnv python=3.6 clinica -c Aramislab -c conda-forge`
+    will only install Clinica `v0.3.4`). Pip is now the
+    only way to install latest versions of Clinica.
+
+## Installation of the third-party software packages
 Depending on the pipeline that you want to use, you need to install
 **pipeline-specific interfaces**. Not all the dependencies are necessary to run
 Clinica.
@@ -74,14 +56,14 @@ Please refer to [this section](../Third-party) to determine which third-party
 libraries you need to install.
 
 
-### Running the Clinica environment
-#### Activation of the Clinica environment
+## Run the Clinica environment
+### Activation of the Clinica environment
 
 Now that you have created the Clinica environment, you can activate it:
 
-```bash
+```{.sourceCode .bash}
 conda activate clinicaEnv
-activate-global-python-argcomplete --user #Only the first time you activate the environment
+activate-global-python-argcomplete --user # Only the first time you activate the environment
 eval "$(register-python-argcomplete clinica)"
 ```
 
@@ -112,13 +94,13 @@ eval "$(register-python-argcomplete clinica)"
 
     You can now learn how to [interact with Clinica](../InteractingWithClinica).
 
-#### Deactivation of the Clinica environment
+### Deactivation of the Clinica environment
 At the end of your session, remember to deactivate your Conda environment:
-```bash
+```{.sourceCode .bash}
 conda deactivate
 ```
 
-## Developer installation
+<!--## Developer installation
 
 If you plan to contribute to Clinica or if you want to have the current development
 version, you can either:
@@ -161,16 +143,4 @@ conda deactivate
 ```
 
 Remember that Clinica will be only available inside your Conda environment.
-<!-- Further information for Clinica's contributors can be found
-[here](../CodingForClinica). -->
-
-!!! warning  "In case your face `ResolvePackageNotFound: python==3.6` error"
-    When installing Clinica with `conda`, you may see the following error:
-    ```
-    Collecting package metadata (repodata.json): done
-    Solving environment: failed
-
-    ResolvePackageNotFound:
-    - python==3.6
-    ```
-    This is caused by newer version of conda. This has been corrected recently in the `dev` branch on Clinica.
+-->
