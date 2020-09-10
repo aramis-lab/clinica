@@ -25,31 +25,39 @@ If you want to run the pipeline on a subset of your dataset, you can use the `-t
 
 
 !!! note
-    The computational time for one subject is around 8-10 hours (creation of the unbiased template) + 0-5 hours per corresponding session. The code execution speed depends on your CPU and the quality of your input T1 volumes. Please be aware that even though the pipeline runs in parallel, processing many subjects and sessions (e.g. ADNI dataset) is time consuming.
+    The computational time for one subject is around 6-8 hours (creation of the unbiased template) + 2-5 hours per corresponding session. The code execution speed depends on your CPU and the quality of your input T1 volumes. Please be aware that even though the pipeline runs in parallel, processing many subjects and sessions (e.g. ADNI dataset) is time consuming.
 
-??? warning "Case where one session is used for one participant"
-    If your CAPS directory contains one participant with one session e.g.:
+??? warning "Case when longitudinal correction is performed on macOS"
+    If your run the `t1-freesurfer-longitudinal` pipeline on macOS, you will see warning messages when longitudinal correction is performed e.g.:
+    ```text
+    [19:29:11] Needs to create a $SUBJECTS_DIR folder in /var/folders/m_/j76n37kn4vs6zsj8fq0qcgy0000dn9/T/tmpbrbg9w1n for sub-01 | ses-2011 | long-20112015 (macOS case).
+    ```
+    When longitudinal correction is performed on macOS, FreeSurfer (`recon-all -long`) may crash if it has to handle a very long path. The workaround we are currently using is that FreeSurfer will be run in a temporary folder (e.g. `/tmp/tmp<hash>`) instead of `<path_to_wd>/t1-freesurfer-longitudinal-correction/ReconAll`. Then, the results will be copied to the working directory before the temporary folder is deleted.
+
+
+??? warning "Case where one session is used for a participant"
+    If your CAPS directory contains a participant with one session e.g.:
     ```text
     CAPS
     └── subjects
      ├── sub-CLNC01
-     │   ├── ses-M00
-     │   │   └── t1
-     │   │       └── freesurfer_cross_sectional
-     │   └── ses-M18
-     │       └── t1
-     │           └── freesurfer_cross_sectional
+     │   ├── ses-M00
+     │   │   └── t1
+     │   │       └── freesurfer_cross_sectional
+     │   └── ses-M18
+     │       └── t1
+     │           └── freesurfer_cross_sectional
      └── sub-CLNC02
          └── ses-M00
              └── t1
                  └── freesurfer_cross_sectional
     ```
-    You will see these types of message when running Clinica:
+    You will see this type of message when running Clinica:
     ```text
     $ clinica run t1-freesurfer-template CAPS -np 2 -wd <path_to_wd>
     The pipeline will be run on the following 2 participant(s):
-    	sub-CLNC01 | ses-M18, ses-M00 | long-M00M18
-    	sub-CLNC02 | ses-M00 | long-M00
+        sub-CLNC01 | ses-M18, ses-M00 | long-M00M18
+        sub-CLNC02 | ses-M00 | long-M00
     List available in <path_to_wd>/t1-freesurfer-template/participants.tsv
     The pipeline will last approximately 10 hours per participant.
     [13:33:43] sub-CLNC02 | long-M00 has only one time point. Needs to create a $SUBJECTS_DIR folder in /tmp/tmpe7ztq9hq
@@ -60,7 +68,7 @@ If you want to run the pipeline on a subset of your dataset, you can use the `-t
     [20:15:05] sub-CLNC02 | long-M00 has completed
     [20:15:09] The t1-freesurfer-template pipeline has completed. You can now delete the working directory (<path_to_wd>/t1-freesurfer-template).
     ```
-    When one session is used for template creation, FreeSurfer (`recon-all -base`) may crash if it has to handle very long path. The workaround we are currently using is that when one time point is detected for a given participant, FreeSurfer will be run in a temporary folder (e.g. `/tmp/tmp<hash>`) instead of `<path_to_wd>/t1-freesurfer-template/ReconAll`. Then, segmentation will be copied to the working directory before the deletion of the temporary folder.
+    When one session is used for template creation, FreeSurfer (`recon-all -base`) may crash if it has to handle a very long path. The workaround we are currently using is that when one time point is detected for a given participant, FreeSurfer will be run in a temporary folder (e.g. `/tmp/tmp<hash>`) instead of `<path_to_wd>/t1-freesurfer-template/ReconAll`. Then, the results will be copied to the working directory before the temporary folder is deleted.
 
 ## Outputs
 ### Template creation
@@ -68,7 +76,7 @@ Results stored in the following folder of the [CAPS hierarchy](../../CAPS/Specif
 
 `<long_label>` is an identifier defined by concatenating all the sessions associated with the current `<participant_label>` (e.g. if the template for participant `sub-CLNC01` is built from sessions `M00`, `M01`, `M05`, then `<long_label>` will be `M00M01M05`). See [CAPS specifications](../../CAPS/Introduction/#subject-and-group-naming) for full definition and example of `<long_id>`.
 
-This folder contains the standard output structure of the `recon-all` command (`label/`, `mri/`, `surf/`, etc.) already explained in [`t1-freesurfer`](../T1_FreeSurfer) pipeline.
+This folder contains the standard output structure of the `recon-all` command (`label/`, `mri/`, `surf/`, etc.) already explained in the [`t1-freesurfer`](../T1_FreeSurfer) pipeline.
 
 
 ### Longitudinal correction
