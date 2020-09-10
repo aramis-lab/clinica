@@ -101,3 +101,59 @@ groups/
          ├─ group-ADvsHC_AD-lt-HC_measure-ct_fwhm-20_uncorrectedPValue.jpg
          └─ group-ADvsHC_AD-lt-HC_measure-ct_fwhm-20_uncorrectedPValue.mat
 ```
+
+### Subject level example with longitudinal analysis
+This CAPS folder contains the outputs of longitudinal segmentations performed with FreeSurfer for a fictional participant `CLNC01` at sessions `M00` and `M18`. First, the [`t1-freesurfer` pipeline](../../Pipelines/T1_FreeSurfer) is run on the two sessions. Then, the [`t1-freesurfer-longitudinal` pipeline](../../Pipelines/T1_FreeSurfer_Longitudinal) will compute the intra-subject template `sub-CLNC01_long-M00M18` using the `M00` and `M18` sessions. This template is finally used to longitudinally correct the segmentations, whose results are stored in the `sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18` and `sub-CLNC01_ses-M18.long.sub-CLNC01_long-M00M18` folders.
+
+Of note, the `<time_point_id>.long.<template_id>` naming comes from FreeSurfer when running the longitudinal `recon-all` command.
+
+```Text
+subjects/
+├── sub-CLNC01/
+│   ├── long-M00M18/
+│   │   ├── long-M00M18_sessions.tsv
+│   │   └── freesurfer_unbiased_template/
+│   │       └── sub-CLNC01_long-M00M18/
+│   │           ├── base-tps/
+│   │           ├── label/
+│   │           ├── mri/
+│   │           ├── stats/
+│   │           └── surf/
+│   ├── ses-M00/
+│   │   └── t1/
+│   │       ├── freesurfer_cross_sectional/
+│   │       │   ├── regional_measures/
+│   │       │   └── sub-CLNC01_ses-M00/
+│   │       │       ├── label/
+│   │       │       ├── mri/
+│   │       │       ├── stats/
+│   │       │       └── surf/
+│   │       └── long-M00M18/
+│   │           └── freesurfer_longitudinal/
+│   │               ├── regional_measures/
+│   │               └── sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18/
+│   │                   ├── label/
+│   │                   ├── mri/
+│   │                   ├── stats/
+│   │                   └── surf/
+│   └── ses-M18/
+│       └── t1/
+│           ├── freesurfer_cross_sectional/
+│           │   ├── regional_measures/
+│           │   └── sub-CLNC01_ses-M18/
+│           │       ├── label/
+│           │       ├── mri/
+│           │       ├── stats/
+│           │       └── surf/
+│           └── long-M00M18
+│               └── freesurfer_longitudinal
+│                   ├── regional_measures
+│                   └── sub-CLNC01_ses-M18.long.sub-CLNC01_long-M00M18/
+│                       ├── label/
+│                       ├── mri/
+│                       ├── stats/
+│                       └── surf/
+└── sub-CLNC02/
+    ├── ...
+
+```
