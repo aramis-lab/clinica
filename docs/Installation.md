@@ -33,7 +33,7 @@ installed, check the version and show your Miniconda path.
 
 ## Install Clinica
 
-The latest release of Clinica can be installed either by using the conventional
+The latest release of Clinica can be installed by using the conventional
 [PyPI package manager](https://pypi.org/project/clinica/) as follows:
 
 ```bash
@@ -43,7 +43,7 @@ pip install clinica
 ```
 
 !!! info
-    Since Clinica `v0.3.5`, Conda version is not proposed anymore (i.e.
+    Since Clinica `v0.3.5`, Conda installation is not proposed anymore (i.e.
     `conda create --name clinicaEnv python=3.6 clinica -c Aramislab -c conda-forge`
     will only install Clinica `v0.3.4`). Pip is now the
     only way to install latest versions of Clinica.
