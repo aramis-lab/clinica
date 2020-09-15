@@ -7,6 +7,7 @@ This module contains utilities to check dependencies before running Clinica.
 These functions can check binaries, software (e.g. FreeSurfer) or toolboxes (e.g. SPM).
 """
 
+
 def is_binary_present(binary):
     """
     Check if a binary is present.
@@ -68,6 +69,30 @@ def check_software_requirements(current_version, version_requirements, software_
         raise ClinicaMissingDependencyError(
             '%s\n[Error] Your %s version (%s) does not version requirements (%s).%s' %
             (Fore.RED, software_name, current_version, version_requirements, Fore.RESET))
+
+
+def check_dcm2nii():
+    """Check dcm2nii software."""
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaMissingDependencyError
+
+    if not is_binary_present('dcm2nii'):
+        raise ClinicaMissingDependencyError(
+            '%s\n[Error] Clinica could not find dcm2nii tool from MRIcron in your PATH environment: '
+            'this can be downloaded from https://www.nitrc.org/frs/?group_id=152 (choose the 2016 version).%s' %
+            (Fore.RED, Fore.RESET))
+
+
+def check_dcm2niix():
+    """Check dcm2niix software."""
+    from colorama import Fore
+    from clinica.utils.exceptions import ClinicaMissingDependencyError
+
+    if not is_binary_present('dcm2niix'):
+        raise ClinicaMissingDependencyError(
+            '%s\n[Error] Clinica could not find dcm2niix software in your PATH environment: '
+            'this can be downloaded or installed from https://github.com/rordenlab/dcm2niix.%s' %
+            (Fore.RED, Fore.RESET))
 
 
 def check_ants(version_requirements=None):
