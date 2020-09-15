@@ -5,11 +5,11 @@ import clinica.engine as ce
 
 class AiblToBidsCLI(ce.CmdParser):
     def define_name(self):
-        """Define the sub-command name to run this pipeline."""
+        """Define the sub-command name to run this command."""
         self._name = 'aibl-to-bids'
 
     def define_description(self):
-        """Define a description of this pipeline."""
+        """Define a description of this command."""
         self._description = 'Convert AIBL (https://aibl.csiro.au/adni/index.html) into BIDS.'
 
     def define_options(self):

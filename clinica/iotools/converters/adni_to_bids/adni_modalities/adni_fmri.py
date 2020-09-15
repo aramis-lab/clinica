@@ -1,16 +1,8 @@
 # coding: utf-8
 
 """
- Module for converting fMRI of ADNI
+Module for converting fMRI of ADNI
 """
-
-__author__ = "Jorge Samper-Gonzalez and Sabrina Fontanella"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Jorge Samper-Gonzalez"
-__email__ = "jorge.samper-gonzalez@inria.fr"
-__status__ = "Development"
 
 
 def convert_adni_fmri(source_dir, csv_dir, dest_dir, subjs_list=None):

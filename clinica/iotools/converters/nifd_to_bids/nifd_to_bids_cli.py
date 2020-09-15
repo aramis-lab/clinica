@@ -4,23 +4,16 @@ import clinica.engine as ce
 
 
 class NifdToBidsCLI(ce.CmdParser):
-    """
-    todo:add description
-    """
-
     def define_name(self):
-        """Define the sub-command name to run this pipelines.
-        """
+        """Define the sub-command name to run this command."""
         self._name = 'nifd-to-bids'
 
     def define_description(self):
-        """Define a description of this pipeline.
-        """
+        """Define a description of this command."""
         self._description = 'Convert NIFD (http://4rtni-ftldni.ini.usc.edu/) into BIDS.'
 
     def define_options(self):
-        """Define the sub-command arguments
-        """
+        """Define the sub-command arguments."""
         self._args.add_argument("dataset_directory",
                                 help='Path to the NIFD images directory.')
         self._args.add_argument("clinical_data_directory",

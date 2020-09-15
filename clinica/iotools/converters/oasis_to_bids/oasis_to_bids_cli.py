@@ -5,13 +5,11 @@ import clinica.engine as ce
 
 class OasisToBidsCLI(ce.CmdParser):
     def define_name(self):
-        """Define the sub-command name to run this pipelines.
-        """
+        """Define the sub-command name to run this command."""
         self._name = 'oasis-to-bids'
 
     def define_description(self):
-        """Define a description of this pipeline.
-        """
+        """Define a description of this command."""
         self._description = 'Convert OASIS (http://oasis-brains.org/) into BIDS.'
 
     def define_options(self):

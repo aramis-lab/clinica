@@ -1,11 +1,4 @@
-__author__ = "Adam Wild"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Adam Wild"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Adam Wild"
-__email__ = "adam.wild@icm-institute.org"
-__status__ = "Development"
+# coding: utf8
 
 from clinica.iotools.converters.nifd_to_bids.utils.conv_image_folders import get_all_med_name, dict_conversion
 
@@ -90,7 +83,7 @@ def csv_to_path(csv_line, source_dir):
 
 
 def get_patients_source_files(source_dir, path_ida):
-    '''
+    """
     Returns a dictionary containing the paths of all Dicom files for a patient
 
     Args:
@@ -99,8 +92,7 @@ def get_patients_source_files(source_dir, path_ida):
 
     Returns:
         patients_source_files[subject_ID] = [paths_to_all_medical_images_of_subject]
-    '''
-
+    """
     sol = dict()
     fich = open(path_ida, 'r')
     fich.readline()
@@ -115,7 +107,7 @@ def get_patients_source_files(source_dir, path_ida):
 
 
 def filter_patients_source_files(patients_files, source_dir, descriptors):
-    '''
+    """
     Iterates over a dictionary containing all source files for a patient,
     returns the same dictionary with only path to files that could be converted
 
@@ -126,7 +118,7 @@ def filter_patients_source_files(patients_files, source_dir, descriptors):
 
     Returns:
         patients_source_files[subject_ID] = [paths_to_medical_images_described_by_at_least_one_descriptor]
-    '''
+    """
     for patient in patients_files:
         patients_files[patient] = filter(patients_files[patient], source_dir, descriptors)
 
@@ -239,12 +231,12 @@ def collect_conversion_tuples(final_bids, dest_dir, patient):
 
 
 def supress_stdout(func):
-    '''
+    """
     Wrapper, makes a function non-verbose
 
     Args:
         func: function to be silenced
-    '''
+    """
     import os
     import contextlib
 
@@ -258,9 +250,13 @@ def supress_stdout(func):
 
 def convert_dcm_to_nii(single_tuple):
     """
-    :param single_tuple: tuple where tuple[0] is the path to the data,
-    and tuple[1] the path to the coverted data
-    :return:
+
+    Args:
+        single_tuple: tuple where tuple[0] is the path to the data,
+            and tuple[1] the path to the coverted data
+
+    Returns:
+
     """
     import subprocess
     import os
@@ -278,12 +274,12 @@ def convert_dcm_to_nii(single_tuple):
 
 
 def convert(list_tuples):
-    '''
+    """
     Converts a list of tuples = [(path/to/dicom, path/to/nifti), ...]
 
     Args:
         list_tuples: list of tuples, tuple[0] contains a path to a Dicom file, tuple[1] contains the path where the Nifti file needs to be created.
-    '''
+    """
     from multiprocessing import Pool, cpu_count
 
     p = Pool(max(cpu_count() - 1, 1))
