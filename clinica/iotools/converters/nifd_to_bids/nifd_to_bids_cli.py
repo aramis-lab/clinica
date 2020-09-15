@@ -26,21 +26,13 @@ class NifdToBidsCLI(ce.CmdParser):
                                 help='Path to the BIDS directory.')
 
     def run_command(self, args):
-
-        from clinica.iotools.converters.nifd_to_bids.nifd_to_bids import convert_images, convert_clinical_data
-        from clinica.iotools.converter_utils import check_bin
-        from clinica.utils.stream import cprint
+        """Run the converter with defined args."""
         from colorama import Fore
-        import sys
+        from clinica.iotools.converters.nifd_to_bids.nifd_to_bids import convert_images, convert_clinical_data
+        from clinica.utils.stream import cprint
+        from clinica.utils.check_dependency import check_dcm2niix
 
-        missing_bin = check_bin('dcm2niix')
-        if missing_bin:
-            cprint(Fore.RED + 'dcm2niix is required.'
-                   + ' Install it and re-run the converter. You can use the following link :'
-                   + Fore.BLUE + '\nhttps://github.com/rordenlab/dcm2niix'
-                   + Fore.RESET)
-            cprint('Exiting clinica...')
-            sys.exit()
+        check_dcm2niix()
 
         # to_convert = convert_images(args.dataset_directory, args.ida_file, args.bids_directory)
         # convert_clinical_data(args.bids_directory, args.ida_file, args.clinical_data_file, to_convert)

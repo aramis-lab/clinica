@@ -22,6 +22,7 @@ class OasisToBidsCLI(ce.CmdParser):
                                 help='Path to the BIDS directory.')
 
     def run_command(self, args):
+        """Run the converter with defined args."""
         from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import OasisToBids
 
         oasis_to_bids = OasisToBids()
