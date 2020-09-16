@@ -39,14 +39,14 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
 
         Note:
             The list of inputs of the T1FreeSurferLongitudinalCorrection pipeline is:
-                * image_id (str): Image ID containing participant, session and longitudinal ID
-                    (e.g. "sub-CLNC01_ses-M00_long-M00M18")
+                * subject_id (str): FreeSurfer ID
+                    (e.g. "sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18")
 
         Returns:
             A list of (string) output fields name.
         """
 
-        return ['image_id']
+        return ['subject_id']
 
     def build_input_node(self):
         """Build and connect an input node to the pipeline."""
@@ -149,7 +149,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
         import os
 
         save_to_caps = npe.Node(interface=nutil.Function(
-            input_names=['source_dir', 'image_id', 'caps_dir', 'overwrite_caps'],
+            input_names=['source_dir', 'subject_id', 'caps_dir', 'overwrite_caps'],
             output_names=['image_id'],
             function=save_to_caps),
             name='SaveToCaps')
@@ -158,7 +158,7 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
         save_to_caps.inputs.overwrite_caps = self.overwrite_caps
 
         self.connect([
-            (self.output_node, save_to_caps, [('image_id', 'image_id')]),
+            (self.output_node, save_to_caps, [('subject_id', 'subject_id')]),
         ])
 
     def build_core_nodes(self):
@@ -166,7 +166,10 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
         import os
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from .t1_freesurfer_longitudinal_correction_utils import init_input_node, run_recon_all_long, write_tsv_files
+        from .t1_freesurfer_longitudinal_correction_utils import (init_input_node,
+                                                                  run_recon_all_long,
+                                                                  write_tsv_files,
+                                                                  move_subjects_dir_to_source_dir)
 
         # Nodes declaration
         # =================
@@ -192,9 +195,18 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
         # Generate TSV files containing a summary of the regional statistics
         create_tsv = npe.Node(interface=nutil.Function(
             input_names=['subjects_dir', 'subject_id'],
-            output_names=['image_id'],
+            output_names=['subject_id'],
             function=write_tsv_files),
             name='2-CreateTsvFiles')
+
+        # Move $SUBJECT_DIR to source_dir (1 time point case)
+        move_subjects_dir = npe.Node(
+            interface=nutil.Function(
+                input_names=['subjects_dir', 'source_dir', 'subject_id'],
+                output_names=['subject_id'],
+                function=move_subjects_dir_to_source_dir),
+            name='3-MoveSubjectsDir')
+        move_subjects_dir.inputs.source_dir = os.path.join(self.base_dir, self.name, 'ReconAll')
 
         # Connections
         # ===========
@@ -211,6 +223,9 @@ class T1FreeSurferLongitudinalCorrection(cpe.Pipeline):
             # Generate TSV files
             (init_input, create_tsv, [('subjects_dir', 'subjects_dir')]),
             (recon_all,  create_tsv, [('subject_id', 'subject_id')]),
+            # Move $SUBJECT_DIR to source_dir (macOS case)
+            (init_input, move_subjects_dir, [('subjects_dir', 'subjects_dir')]),
+            (create_tsv, move_subjects_dir, [('subject_id', 'subject_id')]),
             # Output node
-            (create_tsv, self.output_node, [('image_id', 'image_id')]),
+            (move_subjects_dir, self.output_node, [('subject_id', 'subject_id')]),
         ])

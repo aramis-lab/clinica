@@ -5,14 +5,28 @@ def init_input_node(caps_dir, participant_id, session_id, long_id, output_dir):
     """Initialize the pipeline."""
     import os
     import errno
+    import datetime
+    import platform
+    from tempfile import mkdtemp
+    from colorama import Fore
     from clinica.utils.longitudinal import read_sessions
     from clinica.utils.ux import print_begin_image
+    from clinica.utils.stream import cprint
 
     # Extract <image_id>
     image_id = '{0}_{1}_{2}'.format(participant_id, session_id, long_id)
 
     # Create SUBJECTS_DIR for recon-all (otherwise, the command won't run)
-    subjects_dir = os.path.join(output_dir, image_id)
+    if platform.system().lower().startswith('darwin'):
+        # Special case: On macOS, 'recon-all -long' can failed if the $SUBJECTS_DIR is too long
+        # To circumvent this issue, we create a sym link in $(TMP) so that $SUBJECTS_DIR is a short path
+        subjects_dir = mkdtemp()
+        now = datetime.datetime.now().strftime('%H:%M:%S')
+        cprint('%s[%s] Needs to create a $SUBJECTS_DIR folder in %s for %s (macOS case). %s' %
+               (Fore.YELLOW, now, subjects_dir, image_id.replace('_', ' | '), Fore.RESET))
+    else:
+        subjects_dir = os.path.join(output_dir, image_id)
+
     try:
         os.makedirs(subjects_dir)
     except OSError as e:
@@ -116,11 +130,60 @@ def write_tsv_files(subjects_dir, subject_id):
         cprint('%s[%s] %s does not contain mri/aseg+aparc.mgz file. '
                'Creation of regional_measures/ folder will be skipped.%s' %
                (Fore.YELLOW, now, str_image_id.replace('_', ' | '), Fore.RESET))
-    return str_image_id
+    return subject_id
 
 
-def save_to_caps(source_dir, image_id, caps_dir, overwrite_caps=False):
-    """Save `source_dir`/`image_id`/ to CAPS folder.
+def move_subjects_dir_to_source_dir(subjects_dir, source_dir, subject_id):
+    """
+    Move content of `subjects_dir`/`subject_id` to `source_dir`.
+
+    This function will move content of `subject_id` if recon-all has run
+    in $(TMP). This happens when FreeSurfer is run on macOS. Content of
+    $(TMP)/`subject_id` is copied to `source_dir` before the deletion of $(TMP).
+
+    Args:
+        subjects_dir: $(TMP), if segmentation was performed on macOS,
+            <base_dir>/<Pipeline.Name>/ReconAll/`subject_id` otherwise
+        source_dir: <base_dir>/<Pipeline.Name>/ReconAll folder
+        subject_id: Subject ID (e.g. "sub-CLNC01_ses-M00.long.sub-CLNC01_long-M00M18")
+
+    Returns:
+        subject_id for node connection with Nipype
+    """
+    import os
+    import shutil
+    import datetime
+    from colorama import Fore
+    from clinica.utils.freesurfer import extract_image_id_from_longitudinal_segmentation
+    from clinica.utils.stream import cprint
+
+    image_id = extract_image_id_from_longitudinal_segmentation(subject_id)
+    participant_id = image_id.participant_id
+    session_id = image_id.session_id
+    long_id = image_id.long_id
+    str_image_id = image_id.participant_id + '_' + image_id.session_id + '_' + image_id.long_id
+
+    if source_dir not in subjects_dir:
+        shutil.copytree(
+            src=os.path.join(subjects_dir, subject_id),
+            dst=os.path.join(source_dir, str_image_id, subject_id),
+            symlinks=True
+        )
+        shutil.copytree(
+            src=os.path.join(subjects_dir, 'regional_measures'),
+            dst=os.path.join(source_dir, str_image_id, 'regional_measures'),
+            symlinks=True
+        )
+        shutil.rmtree(subjects_dir)
+        now = datetime.datetime.now().strftime('%H:%M:%S')
+        cprint('%s[%s] Segmentation of %s has moved to working directory and $SUBJECTS_DIR folder (%s) was deleted%s' %
+               (Fore.YELLOW, now, subject_id.replace('_', ' | '), subjects_dir, Fore.RESET))
+
+    return subject_id
+
+
+def save_to_caps(source_dir, subject_id, caps_dir, overwrite_caps=False):
+    """Save `source_dir`/`subject_id`/ to CAPS folder.
 
     This function copies FreeSurfer segmentation and regional_measures folder of `source_dir`/`image_id`/ to
     `caps_dir`/subjects/<participant_id>/<session_id>/<long_id>/t1_freesurfer_longitudinal/
@@ -142,11 +205,13 @@ def save_to_caps(source_dir, image_id, caps_dir, overwrite_caps=False):
     from colorama import Fore
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_end_image
+    from clinica.utils.freesurfer import extract_image_id_from_longitudinal_segmentation
 
-    participant_id = image_id.split('_')[0]
-    session_id = image_id.split('_')[1]
-    long_id = image_id.split('_')[2]
-    freesurfer_id = participant_id + '_' + session_id + '.long.' + participant_id + '_' + long_id
+    image_id = extract_image_id_from_longitudinal_segmentation(subject_id)
+    participant_id = image_id.participant_id
+    session_id = image_id.session_id
+    long_id = image_id.long_id
+    str_image_id = image_id.participant_id + '_' + image_id.session_id + '_' + image_id.long_id
 
     destination_dir = os.path.join(
         os.path.expanduser(caps_dir),
@@ -159,40 +224,40 @@ def save_to_caps(source_dir, image_id, caps_dir, overwrite_caps=False):
     )
 
     # Save FreeSurfer segmentation
-    representative_file = os.path.join(freesurfer_id, 'mri', 'aparc+aseg.mgz')
-    representative_source_file = os.path.join(os.path.expanduser(source_dir), image_id, representative_file)
+    representative_file = os.path.join(subject_id, 'mri', 'aparc+aseg.mgz')
+    representative_source_file = os.path.join(os.path.expanduser(source_dir), str_image_id, representative_file)
     representative_destination_file = os.path.join(destination_dir, representative_file)
     if os.path.isfile(representative_source_file):
         if os.path.isfile(representative_destination_file):
             if overwrite_caps:
                 shutil.rmtree(destination_dir)
                 shutil.copytree(
-                    src=os.path.join(source_dir, image_id, freesurfer_id),
-                    dst=os.path.join(destination_dir, freesurfer_id),
+                    src=os.path.join(source_dir, subject_id, subject_id),
+                    dst=os.path.join(destination_dir, subject_id),
                     symlinks=True
                 )
                 shutil.copytree(
-                    src=os.path.join(source_dir, image_id, 'regional_measures'),
+                    src=os.path.join(source_dir, subject_id, 'regional_measures'),
                     dst=os.path.join(destination_dir, 'regional_measures'),
                     symlinks=True
                 )
         else:
             shutil.copytree(
-                src=os.path.join(source_dir, image_id, freesurfer_id),
-                dst=os.path.join(destination_dir, freesurfer_id),
+                src=os.path.join(source_dir, str_image_id, subject_id),
+                dst=os.path.join(destination_dir, subject_id),
                 symlinks=True
             )
             shutil.copytree(
-                src=os.path.join(source_dir, image_id, 'regional_measures'),
+                src=os.path.join(source_dir, str_image_id, 'regional_measures'),
                 dst=os.path.join(destination_dir, 'regional_measures'),
                 symlinks=True
             )
-        print_end_image(image_id)
+        print_end_image(str_image_id)
     else:
         now = datetime.datetime.now().strftime('%H:%M:%S')
         cprint('%s[%s] %s does not contain mri/aseg+aparc.mgz file. Copy will be skipped.%s' %
-               (Fore.YELLOW, now, image_id.replace('_', ' | '), Fore.RESET))
-    return image_id
+               (Fore.YELLOW, now, str_image_id.replace('_', ' | '), Fore.RESET))
+    return str_image_id
 
 
 def get_processed_images(caps_directory, part_ids, sess_ids, long_ids):

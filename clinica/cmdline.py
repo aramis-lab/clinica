@@ -220,7 +220,7 @@ def execute():
         # Main pipelines:
         T1FreeSurferCLI(),
         T1VolumeCLI(),
-        # T1FreeSurferLongitudinalCLI(),
+        T1FreeSurferLongitudinalCLI(),
         T1LinearCLI(),
         DwiPreprocessingUsingPhaseDiffFieldmapCli(),
         DwiPreprocessingUsingT1Cli(),
@@ -241,8 +241,8 @@ def execute():
         T1VolumeRegisterDartelCLI(),
         T1VolumeDartel2MNICLI(),
         T1VolumeParcellationCLI(),
-        # T1FreeSurferTemplateCLI(),
-        # T1FreeSurferLongitudinalCorrectionCLI(),
+        T1FreeSurferTemplateCLI(),
+        T1FreeSurferLongitudinalCorrectionCLI(),
     ]
 
     run_parser = sub_parser.add_parser(
