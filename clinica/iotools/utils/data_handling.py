@@ -3,14 +3,6 @@
 """
 Data handling scripts
 """
-__author__ = "Sabrina Fontanella"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = [""]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Simona Bottani"
-__email__ = "simona.bottani@icm-institute.org"
-__status__ = "Completed"
 
 
 def create_merge_file(bids_dir, out_tsv, caps_dir=None, tsv_file=None, pipelines=None, **kwargs):

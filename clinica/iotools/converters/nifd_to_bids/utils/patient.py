@@ -1,11 +1,4 @@
-__author__ = "Adam Wild"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Adam Wild"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Adam Wild"
-__email__ = "adam.wild@icm-institute.org"
-__status__ = "Development"
+# coding: utf8
 
 
 class Patient(object):
@@ -20,9 +13,9 @@ class Patient(object):
         self.ses0 = self.get_ses0()
 
     def get_sessions(self):
-        '''
+        """
         Returns the list of all sessions that the patient attended
-        '''
+        """
         import pandas as pd
 
         def change_format_date(date):
@@ -194,10 +187,10 @@ class Patient(object):
 
     def get_conflicts(self, equivalences, descriptors, folders, conflicts={}):
         # from nifd_utils import extract_name_med_img
-        '''
+        """
         Returns a list of all possible conflicts in dataset according to the json file
         A conflict happens when several images end up in the same directory with the same name after BIDS conversion
-        '''
+        """
         ordered_bids = self.order_priorities(equivalences, descriptors, folders)
 
         for ses in ordered_bids:

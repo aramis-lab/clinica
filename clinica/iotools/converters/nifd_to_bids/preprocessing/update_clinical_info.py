@@ -1,11 +1,4 @@
-__author__ = "Adam Wild"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Adam Wild"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Adam Wild"
-__email__ = "adam.wild@icm-institute.org"
-__status__ = "Development"
+# coding: utf8
 
 
 def write(df, path, name):

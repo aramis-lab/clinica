@@ -1,15 +1,8 @@
-__author__ = "Adam Wild"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Adam Wild"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Adam Wild"
-__email__ = "adam.wild@icm-institute.org"
-__status__ = "Development"
+# coding: utf8
 
 
 class Parse_clinical():
-    '''Creates the clinical files for the BIDS directory'''
+    """Creates the clinical files for the BIDS directory"""
 
     def __init__(self, path_clinical):
         import pandas as pd
@@ -23,13 +16,12 @@ class Parse_clinical():
         self.df_clinical = self.merge_clinical
 
     def make_sessions_ida(self, pat_name):
-        '''
+        """
         Preprocesses ida for the left join operated in merge_clinical_scans
 
         Args:
             pat_name: subject_ID
-        '''
-
+        """
         def write_ses(num):
             num = str(num)
             num = '0' + num if len(num) == 1 else num
@@ -196,7 +188,7 @@ class Parse_clinical():
         return name_clinical, name_BIDS
 
     def make_sessions(self, pat_name):
-        '''
+        """
         Creates the sessions file for a given patient
 
         Args:
@@ -204,7 +196,7 @@ class Parse_clinical():
 
         Returns:
             bloc: pandas dataframe corresponding to the "sessions.tsv" file
-        '''
+        """
         name_clinical, name_BIDS = self.get_names('sessions')
 
         bloc = self.df_clinical[self.df_clinical['LONI_ID'] == pat_name]
@@ -214,7 +206,7 @@ class Parse_clinical():
         return bloc
 
     def make_participants(self, pat_list=None):
-        '''
+        """
         Creates the participants file for all patients
 
         Args:
@@ -222,7 +214,7 @@ class Parse_clinical():
 
         Returns:
             bloc: pandas dataframe corresponding to the "participants.tsv" file
-        '''
+        """
         name_clinical, name_BIDS = self.get_names('participants')
         bloc = self.df_clinical.groupby('LONI_ID').first().reset_index()
         bloc = bloc[name_clinical]

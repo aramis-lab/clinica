@@ -4,21 +4,12 @@
 Convert the NIFD dataset into BIDS.
 """
 
-__author__ = "Adam Wild"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Adam Wild"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Adam Wild"
-__email__ = "adam.wild@icm-institute.org"
-__status__ = "Development"
-
 
 def convert_images(path_to_dataset, bids_dir, path_to_clinical):
     # Conversion of the entire dataset in BIDS
-    '''Scans available files in the path_to_dataset,
+    """Scans available files in the path_to_dataset,
     identifies the patients that have images described by the json file,
-    converts the image with the highest quality for each category'''
+    converts the image with the highest quality for each category"""
 
     import os
     from clinica.iotools.converters.nifd_to_bids.utils.conv_image_folders import get_all_med_name, dict_conversion, \

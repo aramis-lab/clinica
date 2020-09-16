@@ -3,14 +3,7 @@
 """
 Methods to find information in the different pipelines of Clinica
 """
-__author__ = "Elina Thubeau--Sutre"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = [""]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Simona Bottani"
-__email__ = "simona.bottani@icm-institute.org"
-__status__ = "Completed"
+
 
 from glob import glob
 import pandas as pd

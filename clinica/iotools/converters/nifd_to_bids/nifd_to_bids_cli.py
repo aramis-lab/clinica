@@ -4,23 +4,16 @@ import clinica.engine as ce
 
 
 class NifdToBidsCLI(ce.CmdParser):
-    """
-    todo:add description
-    """
-
     def define_name(self):
-        """Define the sub-command name to run this pipelines.
-        """
+        """Define the sub-command name to run this command."""
         self._name = 'nifd-to-bids'
 
     def define_description(self):
-        """Define a description of this pipeline.
-        """
+        """Define a description of this command."""
         self._description = 'Convert NIFD (http://4rtni-ftldni.ini.usc.edu/) into BIDS.'
 
     def define_options(self):
-        """Define the sub-command arguments
-        """
+        """Define the sub-command arguments."""
         self._args.add_argument("dataset_directory",
                                 help='Path to the NIFD images directory.')
         self._args.add_argument("clinical_data_directory",
@@ -33,21 +26,13 @@ class NifdToBidsCLI(ce.CmdParser):
                                 help='Path to the BIDS directory.')
 
     def run_command(self, args):
-
-        from clinica.iotools.converters.nifd_to_bids.nifd_to_bids import convert_images, convert_clinical_data
-        from clinica.iotools.converter_utils import check_bin
-        from clinica.utils.stream import cprint
+        """Run the converter with defined args."""
         from colorama import Fore
-        import sys
+        from clinica.iotools.converters.nifd_to_bids.nifd_to_bids import convert_images, convert_clinical_data
+        from clinica.utils.stream import cprint
+        from clinica.utils.check_dependency import check_dcm2niix
 
-        missing_bin = check_bin('dcm2niix')
-        if missing_bin:
-            cprint(Fore.RED + 'dcm2niix is required.'
-                   + ' Install it and re-run the converter. You can use the following link :'
-                   + Fore.BLUE + '\nhttps://github.com/rordenlab/dcm2niix'
-                   + Fore.RESET)
-            cprint('Exiting clinica...')
-            sys.exit()
+        check_dcm2niix()
 
         # to_convert = convert_images(args.dataset_directory, args.ida_file, args.bids_directory)
         # convert_clinical_data(args.bids_directory, args.ida_file, args.clinical_data_file, to_convert)

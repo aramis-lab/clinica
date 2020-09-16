@@ -510,7 +510,7 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
     counter = None
 
     def init(args):
-        ''' store the counter for later use '''
+        """ store the counter for later use """
         global counter
         counter = args
 

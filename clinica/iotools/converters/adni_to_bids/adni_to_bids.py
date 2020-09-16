@@ -2,15 +2,6 @@
 
 from clinica.iotools.abstract_converter import Converter
 
-__author__ = "Jorge Samper-Gonzalez and Sabrina Fontanella"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = [""]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Jorge Samper-Gonzalez"
-__email__ = "jorge.samper-gonzalez@inria.fr"
-__status__ = "Development"
-
 
 class AdniToBids(Converter):
 
@@ -28,15 +19,10 @@ class AdniToBids(Converter):
         """
         Check the dependencies of ADNI converter
         """
-        from clinica.utils.check_dependency import is_binary_present
+        from clinica.utils.check_dependency import check_dcm2nii, check_dcm2niix
 
-        list_binaries = ['dcm2nii', 'dcm2niix']
-
-        for binary in list_binaries:
-            if not is_binary_present(binary):
-                raise RuntimeError(
-                    '%s is not present '
-                    'in your PATH environment.' % binary)
+        check_dcm2nii()
+        check_dcm2niix()
 
     def convert_clinical_data(self,  clinical_data_dir, out_path):
         """

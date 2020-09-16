@@ -5,13 +5,11 @@ import clinica.engine as ce
 
 class OasisToBidsCLI(ce.CmdParser):
     def define_name(self):
-        """Define the sub-command name to run this pipelines.
-        """
+        """Define the sub-command name to run this command."""
         self._name = 'oasis-to-bids'
 
     def define_description(self):
-        """Define a description of this pipeline.
-        """
+        """Define a description of this command."""
         self._description = 'Convert OASIS (http://oasis-brains.org/) into BIDS.'
 
     def define_options(self):
@@ -24,6 +22,7 @@ class OasisToBidsCLI(ce.CmdParser):
                                 help='Path to the BIDS directory.')
 
     def run_command(self, args):
+        """Run the converter with defined args."""
         from clinica.iotools.converters.oasis_to_bids.oasis_to_bids import OasisToBids
 
         oasis_to_bids = OasisToBids()

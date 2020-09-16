@@ -1,11 +1,5 @@
-__author__ = "Adam Wild"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Adam Wild"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Adam Wild"
-__email__ = "adam.wild@icm-institute.org"
-__status__ = "Development"
+# coding: utf8
+
 
 from clinica.iotools.converters.nifd_to_bids.utils.descriptor import Descriptor
 
@@ -20,7 +14,7 @@ class Old_image_folder(object):
         self.bids_info = None
 
     def get_new_name(self, desc_list):
-        '''
+        """
         Finds the descriptor that describes the current image with the highest priority
 
         Args:
@@ -28,7 +22,7 @@ class Old_image_folder(object):
 
         Returns:
             res_desc: Single descriptor instance
-        '''
+        """
         pos_desc = [desc for desc in desc_list if desc.describes(self.name)]
         if len(pos_desc) == 0:
             return None
@@ -47,7 +41,7 @@ class Old_image_folder(object):
 
 
 def get_all_med_name(path_dataset):
-    '''
+    """
     Creates a list 'medical_images' containing all possible medical images' names in the NIFD dataset
 
     Args:
@@ -55,7 +49,7 @@ def get_all_med_name(path_dataset):
 
     Returns:
         medical_images = ['t1_mprage', 't1_mprage_S3_DIS3D', ...]
-    '''
+    """
     import os
 
     subfolders = [f.path for f in os.scandir(path_dataset) if f.is_dir()]
@@ -70,7 +64,7 @@ def get_all_med_name(path_dataset):
 
 
 def get_descriptors(path_root):
-    '''
+    """
     Loading the descriptors
 
     Args:
@@ -78,7 +72,7 @@ def get_descriptors(path_root):
 
     Returns:
         descriptors: list of descriptor instances
-    '''
+    """
     import os
     import json
 
