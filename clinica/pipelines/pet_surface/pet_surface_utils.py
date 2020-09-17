@@ -98,17 +98,13 @@ def remove_nan(volname):
     Returns:
         (string) Path to the volume in Nifti that does not contain any NaNs
     """
-    import nibabel as nib
     import os
+    import nibabel as nib
+    import numpy as np
 
     # Load the volume and get the data
     nifti_in = nib.load(volname)
-    data = nifti_in.get_data()
-
-    # Extract mask where input data is different from itself (equivalent to finding NaNs, because NaN != NaN is True)
-    # and replace with 0s
-    nan_mask = data != data
-    data[nan_mask] = 0
+    data = np.nan_to_num(nifti_in.get_data())
 
     # Now create final image (using header of original image), and save it in current directory
     nifti_out = nib.Nifti1Image(data, nifti_in.affine, header=nifti_in.header)
