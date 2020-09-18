@@ -421,15 +421,6 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
                                           + sessions_df['adas_Q6'])  # / 10
             sessions_df['adas_concentration'] = sessions_df['adas_Q13']  # / 5
 
-            list_diagnosis_nan = np.where(pd.isnull(sessions_df['diagnosis']))
-            diagnosis_change = {1: 'CN', 2: 'MCI', 3: 'AD'}
-
-            for j in list_diagnosis_nan[0]:
-                if not pd.isna(sessions_df['adni_diagnosis_change'].iloc[j]) \
-                        and int(sessions_df['adni_diagnosis_change'].iloc[j]) < 4:
-                    sessions_df['diagnosis'].iloc[j] = diagnosis_change[
-                        int(sessions_df['adni_diagnosis_change'].iloc[j])]
-
             sessions_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf-8')
 
 
@@ -629,11 +620,10 @@ def update_sessions_dict(sessions_dict, subj_bids, visit_id, field_value, bids_f
 
 def convert_diagnosis_code(diagnosis_code):
     """
-    Convert the numeric field DXCURREN and DXCHANGE contained in DXSUM_PDXCONV_ADNIALL.csv into a code that identify the
-    diagnosis
+    Convert the string field DX contained in ADNIMERGE.csv into a code that identify the diagnosis
 
     Args:
-        diagnosis_code: a string that represents a number between 1 and 9
+        diagnosis_code: a string that represents the diagnosis
 
     Returns:
         A code that identify a diagnosis
@@ -642,13 +632,13 @@ def convert_diagnosis_code(diagnosis_code):
 
     from pandas import isna
 
-    # Legenda
-    diagnosis = {1: 'CN', 2: 'MCI', 3: 'AD', 4: 'MCI', 5: 'AD', 6: 'AD', 7: 'CN', 8: 'MCI', 9: 'CN'}
+    # Legend
+    diagnosis = {'CN': 'CN', 'MCI': 'MCI', 'Dementia': 'AD'}
 
     if isna(diagnosis_code):
         return diagnosis_code
     else:
-        return diagnosis[int(diagnosis_code)]
+        return diagnosis[diagnosis_code]
 
 
 def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
