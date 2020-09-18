@@ -17,7 +17,7 @@ class DwiPreprocessingUsingPhaseDiffFieldmapCli(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
-        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
+        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_label)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("bids_directory",
                                   help='Path to the BIDS directory.')

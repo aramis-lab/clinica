@@ -13,8 +13,8 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         """Check pipeline parameters."""
         from clinica.utils.group import check_group_label
 
-        if 'group_id' not in self.parameters.keys():
-            raise KeyError('Missing compulsory group_id key in pipeline parameter.')
+        if 'group_label' not in self.parameters.keys():
+            raise KeyError('Missing compulsory group_label key in pipeline parameter.')
 
         if 'tissues' not in self.parameters:
             self.parameters['tissues'] = [1, 2, 3]
@@ -25,7 +25,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         if 'smooth' not in self.parameters:
             self.parameters['smooth'] = [8]
 
-        check_group_label(self.parameters['group_id'])
+        check_group_label(self.parameters['group_label'])
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file."""
@@ -64,11 +64,11 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         from clinica.utils.ux import print_groups_in_caps_directory, print_images_to_process
 
         # Check that group already exists
-        if not os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])):
+        if not os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_label'])):
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
                 '%sGroup %s does not exist. Did you run t1-volume or t1-volume-create-dartel pipeline?%s' %
-                (Fore.RED, self.parameters['group_id'], Fore.RESET)
+                (Fore.RED, self.parameters['group_label'], Fore.RESET)
             )
 
         all_errors = []
@@ -106,7 +106,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
                 self.subjects,
                 self.sessions,
                 self.caps_directory,
-                t1_volume_deformation_to_template(self.parameters['group_id']))
+                t1_volume_deformation_to_template(self.parameters['group_label']))
         except ClinicaException as e:
             all_errors.append(e)
 
@@ -115,7 +115,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         try:
             read_input_node.inputs.template_file = clinica_group_reader(
                 self.caps_directory,
-                t1_volume_final_group_template(self.parameters['group_id'])
+                t1_volume_final_group_template(self.parameters['group_label'])
             )
         except ClinicaException as e:
             all_errors.append(e)
@@ -151,7 +151,7 @@ class T1VolumeDartel2MNI(cpe.Pipeline):
         write_normalized_node.inputs.base_directory = self.caps_directory
         write_normalized_node.inputs.parameterization = False
         write_normalized_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
-                                                  '/t1/spm/dartel/group-' + self.parameters['group_id']
+                                                  '/t1/spm/dartel/group-' + self.parameters['group_label']
                                                   for i in range(len(self.subjects))]
         write_normalized_node.inputs.regexp_substitutions = [
             (r'(.*)c1(sub-.*)(\.nii(\.gz)?)$', r'\1\2_segm-graymatter_probability\3'),

@@ -18,7 +18,7 @@ class SpatialSVMCLI(ce.CmdParser):
         """Define the sub-command arguments."""
         from colorama import Fore
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
-        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
+        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_label)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')

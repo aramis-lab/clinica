@@ -17,13 +17,13 @@ class PETVolumeCLI(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
-        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
+        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_label)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("bids_directory",
                                   help='Path to the BIDS directory.')
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
-        clinica_comp.add_argument("group_id",
+        clinica_comp.add_argument("group_label",
                                   help='User-defined identifier for the provided group of subjects.')
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
@@ -58,7 +58,7 @@ class PETVolumeCLI(ce.CmdParser):
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         parameters = {
-            'group_id': args.group_id,
+            'group_label': args.group_label,
             'psf_tsv': self.absolute_path(args.psf_tsv),
             'pet_tracer': args.pet_tracer,
             'mask_tissues': args.mask_tissues,

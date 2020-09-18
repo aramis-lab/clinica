@@ -21,15 +21,6 @@ from sklearn.multiclass import OneVsOneClassifier, OneVsRestClassifier
 from clinica.pipelines.machine_learning import base
 import clinica.pipelines.machine_learning.ml_utils as utils
 
-__author__ = "Jorge Samper-Gonzalez"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Jorge Samper-Gonzalez", "Pascal Lu", "Simona Bottani"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Jorge Samper-Gonzalez"
-__email__ = "jorge.samper-gonzalez@inria.fr"
-__status__ = "Development"
-
 
 class DualSVMAlgorithm(base.MLAlgorithm):
 

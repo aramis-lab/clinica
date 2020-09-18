@@ -1,26 +1,12 @@
 # coding: utf8
 
-import numpy as np
-import pandas as pd
-import nibabel as nib
-import os
-
-__author__ = "Arnaud Marcoux"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Arnaud Marcoux"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Arnaud Marcoux"
-__email__ = "arnaud.marcoux@inria.fr"
-__status__ = "Development"
-
 
 def load_data(mgh_list):
     """
 
     Args: mgh_list : list of mgh files. Each element contains as many paths as
     needed (each element must be associated to a single subject). Surfaces must
-    have the same number of vertices accross subjects.
+    have the same number of vertices across subjects.
 
     Returns: data : matrix of raw data
 

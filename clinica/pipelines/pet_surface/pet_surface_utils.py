@@ -808,15 +808,15 @@ def get_wf(subject_id,
             Args:
                 (string) subject_id          : The subject id
                 (string) session_id          : The session id
-                (string) psf                 : Path the json file containing information on the point spread function
+                (string) psf                 : Path the JSON file containing information on the point spread function
                 (string) caps_dir            : Path to the CAPS directory
                 (string) pet                 : Path to the PET image in the bids directory
                 (string) orig_nu             : Path to the orig_nu file (must be in the CAPS directory, in mri)
                 (string) white_surface_left  : Path to the left white surface in native space of subject
-                (string) white_surface_right : Path to the right white suface in native space of subject
+                (string) white_surface_right : Path to the right white surface in native space of subject
                 (string) csv_segmentation    : Path to the csv for the segmentation (problems encountered while using __file__)
                 (string) subcortical_eroded_mask               : Path to the mask of the eroded version used for the suvr
-                (string) matscript_folder_inverse_deformation  : Path to the current foler (containing the matlab script
+                (string) matscript_folder_inverse_deformation  : Path to the current folder containing the matlab script
                                                                  used to call the spm function for the inverse deformation
 
             Returns:

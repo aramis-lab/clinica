@@ -121,7 +121,7 @@ def test_run_T1VolumeCreateDartel(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     parameters = {
-        'group_id': 'UnitTest'
+        'group_label': 'UnitTest'
     }
     # Instantiate pipeline
     pipeline = T1VolumeCreateDartel(
@@ -173,7 +173,7 @@ def test_run_T1VolumeDartel2MNI(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     parameters = {
-        'group_id': 'UnitTest'
+        'group_label': 'UnitTest'
     }
     # Instantiate pipeline and run()
     pipeline = T1VolumeDartel2MNI(
@@ -218,7 +218,7 @@ def test_run_T1VolumeRegisterDartel(cmdopt):
 
     # Instantiate and run pipeline
     parameters = {
-        'group_id': 'UnitTest'
+        'group_label': 'UnitTest'
     }
     pipeline = T1VolumeRegisterDartel(
         bids_directory=join(root, 'in', 'bids'),
@@ -266,7 +266,7 @@ def test_run_T1VolumeParcellation(cmdopt):
 
     # Instantiate pipeline
     parameters = {
-        'group_id': 'UnitTest'
+        'group_label': 'UnitTest'
     }
     pipeline = T1VolumeParcellation(
         caps_directory=join(root, 'in', 'caps'),
@@ -473,7 +473,7 @@ def test_run_PETVolume(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     parameters = {
-        'group_id': 'UnitTest'
+        'group_label': 'UnitTest'
     }
     pipeline = PETVolume(
         bids_directory=join(root, 'in', 'bids'),
@@ -667,32 +667,32 @@ def test_run_WorkflowsML(cmdopt):
     caps_dir = join(root_input, 'in', 'caps')
     tsv = join(root_input, 'in', 'subjects.tsv')
     diagnoses_tsv = join(root_input, 'in', 'diagnosis.tsv')
-    group_id = 'allADNIdartel'
+    group_label = 'allADNIdartel'
 
     output_dir1 = join(root, 'out', 'VertexBasedRepHoldOutDualSVM')
     clean_folder(output_dir1, recreate=True)
-    wf1 = VertexBasedRepHoldOutDualSVM(caps_dir, tsv, diagnoses_tsv, group_id, output_dir1, image_type='fdg', fwhm=20,
+    wf1 = VertexBasedRepHoldOutDualSVM(caps_dir, tsv, diagnoses_tsv, group_label, output_dir1, image_type='fdg', fwhm=20,
                                        n_threads=8, n_iterations=10, grid_search_folds=3, test_size=0.3)
     wf1.run()
     shutil.rmtree(output_dir1)
 
     output_dir2 = join(root, 'out', 'RegionBasedRepHoldOutLogisticRegression')
     clean_folder(output_dir2, recreate=True)
-    wf2 = RegionBasedRepHoldOutLogisticRegression(caps_dir, tsv, diagnoses_tsv, group_id, 'fdg', 'AICHA', output_dir2,
+    wf2 = RegionBasedRepHoldOutLogisticRegression(caps_dir, tsv, diagnoses_tsv, group_label, 'fdg', 'AICHA', output_dir2,
                                                   n_threads=8, n_iterations=10, grid_search_folds=3, test_size=0.3)
     wf2.run()
     shutil.rmtree(output_dir2)
 
     output_dir3 = join(root, 'out', 'RegionBasedRepHoldOutRandomForest')
     clean_folder(output_dir3, recreate=True)
-    wf3 = RegionBasedRepHoldOutRandomForest(caps_dir, tsv, diagnoses_tsv, group_id, 'T1', 'AAL2', output_dir3,
+    wf3 = RegionBasedRepHoldOutRandomForest(caps_dir, tsv, diagnoses_tsv, group_label, 'T1', 'AAL2', output_dir3,
                                             n_threads=8, n_iterations=10, grid_search_folds=3, test_size=0.3)
     wf3.run()
     shutil.rmtree(output_dir3)
 
     output_dir4 = join(root, 'out', 'VoxelBasedKFoldDualSVM')
     clean_folder(output_dir4, recreate=True)
-    wf4 = VoxelBasedKFoldDualSVM(caps_dir, tsv, diagnoses_tsv, group_id, 'fdg', output_dir4, fwhm=8, n_threads=8,
+    wf4 = VoxelBasedKFoldDualSVM(caps_dir, tsv, diagnoses_tsv, group_label, 'fdg', output_dir4, fwhm=8, n_threads=8,
                                  n_folds=5, grid_search_folds=3)
     wf4.run()
     shutil.rmtree(output_dir4)
@@ -878,7 +878,7 @@ def test_run_StatisticsVolume(cmdopt):
         'measure_label': 'fdg',
         'group_label': 'UnitTest',
         'cluster_threshold': 0.001,
-        'group_id_caps': None,
+        'group_label_caps': None,
         'full_width_at_half_maximum': 8
     }
 

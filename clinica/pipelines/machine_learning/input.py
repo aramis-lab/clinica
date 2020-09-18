@@ -16,18 +16,6 @@ import clinica.pipelines.machine_learning.tsv_based_io as tbio
 import clinica.pipelines.machine_learning.ml_utils as utils
 
 
-
-
-__author__ = "Jorge Samper-Gonzalez"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Jorge Samper-Gonzalez", "Simona Bottani"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Jorge Samper-Gonzalez"
-__email__ = "jorge.samper-gonzalez@inria.fr"
-__status__ = "Development"
-
-
 class CAPSInput(base.MLInput):
 
     def __init__(self, input_params):
@@ -139,7 +127,7 @@ class CAPSInput(base.MLInput):
         parameters_dict = {'caps_directory': None,
                            'subjects_visits_tsv': None,
                            'diagnoses_tsv': None,
-                           'group_id': None,
+                           'group_label': None,
                            'image_type': None,
                            'precomputed_kernel': None}
 
@@ -171,7 +159,7 @@ class CAPSVoxelBasedInput(CAPSInput):
             fwhm = '' if self._input_params['fwhm'] == 0 else '_fwhm-%dmm' % int(self._input_params['fwhm'])
 
             self._images = [path.join(self._input_params['caps_directory'], 'subjects', self._subjects[i],
-                                      self._sessions[i], 't1/spm/dartel/group-' + self._input_params['group_id'],
+                                      self._sessions[i], 't1/spm/dartel/group-' + self._input_params['group_label'],
                                       '%s_%s_T1w_segm-graymatter_space-Ixi549Space_modulated-%s%s_probability.nii.gz'
                                       % (self._subjects[i], self._sessions[i], self._input_params['modulated'], fwhm))
                             for i in range(len(self._subjects))]
@@ -181,7 +169,7 @@ class CAPSVoxelBasedInput(CAPSInput):
             suvr = 'pons' if self._input_params['image_type'] == 'fdg' else 'cerebellumPons'
 
             self._images = [path.join(self._input_params['caps_directory'], 'subjects', self._subjects[i],
-                                      self._sessions[i], 'pet/preprocessing/group-' + self._input_params['group_id'],
+                                      self._sessions[i], 'pet/preprocessing/group-' + self._input_params['group_label'],
                                       '%s_%s_task-rest_acq-%s_pet_space-Ixi549Space%s_suvr-%s_mask-brain%s_pet.nii.gz'
                                       % (self._subjects[i], self._sessions[i], self._input_params['image_type'], pvc,
                                          suvr, fwhm))
@@ -253,7 +241,7 @@ class CAPSRegionBasedInput(CAPSInput):
 
         if self._input_params['image_type'] == 'T1':
             self._images = [path.join(self._input_params['caps_directory'], 'subjects', self._subjects[i],
-                                      self._sessions[i], 't1/spm/dartel/group-' + self._input_params['group_id'],
+                                      self._sessions[i], 't1/spm/dartel/group-' + self._input_params['group_label'],
                                       'atlas_statistics/', '%s_%s_T1w_space-%s_map-graymatter_statistics.tsv'
                                       % (self._subjects[i], self._sessions[i], self._input_params['atlas']))
                             for i in range(len(self._subjects))]
@@ -262,7 +250,7 @@ class CAPSRegionBasedInput(CAPSInput):
             suvr = 'pons' if self._input_params['image_type'] == 'fdg' else 'cerebellumPons'
 
             self._images = [path.join(self._input_params['caps_directory'], 'subjects', self._subjects[i],
-                                      self._sessions[i], 'pet/preprocessing/group-' + self._input_params['group_id'],
+                                      self._sessions[i], 'pet/preprocessing/group-' + self._input_params['group_label'],
                                       'atlas_statistics', '%s_%s_task-rest_acq-%s_pet_space-%s%s_suvr-%s_statistics.tsv'
                                       % (self._subjects[i], self._sessions[i], self._input_params['image_type'],
                                          self._input_params['atlas'], pvc, suvr))
@@ -432,7 +420,7 @@ class CAPSTSVBasedInput(CAPSInput):
         #    return self._x
 
         cprint('Loading TSV subjects')
-        string = str('group-' + self._input_params['group_id'] + '_T1w_space-' + self._input_params['atlas'] +
+        string = str('group-' + self._input_params['group_label'] + '_T1w_space-' + self._input_params['atlas'] +
                      '_map-graymatter')
 
         self._x = tbio.load_data(string, self._input_params['caps_directory'], self._subjects, self._sessions,
@@ -495,7 +483,7 @@ class CAPSVoxelBasedInputREGSVM(CAPSVoxelBasedInput):
             fwhm = '' if self._input_params['fwhm'] == 0 else '_fwhm-%dmm' % int(self._input_params['fwhm'])
             suvr = 'pons' if self._input_params['image_type'] == 'fdg' else 'cerebellumPons'
             self._images = [path.join(self._input_params['caps_directory'], 'subjects', self._subjects[i],
-                                      self._sessions[i], 'pet/preprocessing/group-' + self._input_params['group_id'],
+                                      self._sessions[i], 'pet/preprocessing/group-' + self._input_params['group_label'],
                                       '%s_%s_task-rest_acq-%s_pet_space-Ixi549Space%s_suvr-%s_mask-brain%s_pet.nii.gz'
                                       % (self._subjects[i], self._sessions[i], self._input_params['image_type'],
                                          pvc, suvr, fwhm))

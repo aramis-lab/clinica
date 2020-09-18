@@ -20,8 +20,8 @@ class PETVolume(cpe.Pipeline):
         from clinica.utils.group import check_group_label
         default_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
 
-        if 'group_id' not in self.parameters.keys():
-            raise KeyError('Missing compulsory group_id key in pipeline parameter.')
+        if 'group_label' not in self.parameters.keys():
+            raise KeyError('Missing compulsory group_label key in pipeline parameter.')
         if 'psf_tsv' not in self.parameters.keys():
             self.parameters['psf_tsv'] = None
         if 'pet_tracer' not in self.parameters.keys():
@@ -37,7 +37,7 @@ class PETVolume(cpe.Pipeline):
         if 'atlases' not in self.parameters.keys():
             self.parameters['atlases'] = default_atlases
 
-        check_group_label(self.parameters['group_id'])
+        check_group_label(self.parameters['group_label'])
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
@@ -104,11 +104,11 @@ class PETVolume(cpe.Pipeline):
         from clinica.utils.stream import cprint
 
         # Check that group already exists
-        if not exists(join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])):
+        if not exists(join(self.caps_directory, 'groups', 'group-' + self.parameters['group_label'])):
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
                 '%sGroup %s does not exist. Did you run t1-volume or t1-volume-create-dartel pipeline?%s' %
-                (Fore.RED, self.parameters['group_id'], Fore.RESET)
+                (Fore.RED, self.parameters['group_label'], Fore.RESET)
             )
 
         # Tissues DataGrabber
@@ -176,14 +176,14 @@ class PETVolume(cpe.Pipeline):
             flowfields_caps = clinica_file_reader(self.subjects,
                                                   self.sessions,
                                                   self.caps_directory,
-                                                  t1_volume_deformation_to_template(self.parameters['group_id']))
+                                                  t1_volume_deformation_to_template(self.parameters['group_label']))
         except ClinicaException as e:
             all_errors.append(e)
 
         # Dartel Template
         try:
             final_template = clinica_group_reader(self.caps_directory,
-                                                  t1_volume_final_group_template(self.parameters['group_id']))
+                                                  t1_volume_final_group_template(self.parameters['group_label']))
         except ClinicaException as e:
             all_errors.append(e)
 
@@ -319,7 +319,7 @@ class PETVolume(cpe.Pipeline):
         ]
 
         self.connect([(self.input_node, container_path, [('pet_image', 'pet_filename')]),
-                      (container_path, write_images_node, [(('container', fix_join, 'group-' + self.parameters['group_id']),
+                      (container_path, write_images_node, [(('container', fix_join, 'group-' + self.parameters['group_label']),
                                                             'container')]),
                       (self.output_node, write_images_node, [(('pet_t1_native', zip_nii, True), 'pet_t1_native'),
                                                              (('pet_mni', zip_nii, True), 'pet_mni'),
@@ -335,7 +335,7 @@ class PETVolume(cpe.Pipeline):
                                                               'pet_pvc_suvr_masked'),
                                                              (('pet_pvc_suvr_masked_smoothed', zip_nii, True),
                                                               'pet_pvc_suvr_masked_smoothed')]),
-                      (container_path, write_atlas_node, [(('container', fix_join, 'group-' + self.parameters['group_id']),
+                      (container_path, write_atlas_node, [(('container', fix_join, 'group-' + self.parameters['group_label']),
                                                            'container')]),
                       (self.output_node, write_atlas_node, [('atlas_statistics', 'atlas_statistics'),
                                                             ('pvc_atlas_statistics', 'pvc_atlas_statistics')])
