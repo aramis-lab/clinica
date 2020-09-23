@@ -15,6 +15,8 @@ class StatisticsVolume(cpe.Pipeline):
 
         if 'orig_input_data' not in self.parameters.keys():
             raise KeyError('Missing compulsory orig_input_data key in pipeline parameter.')
+        if 'group_label_dartel' not in self.parameters.keys():
+            self.parameters['group_label_dartel'] = None
 
         if self.parameters['cluster_threshold'] < 0 or self.parameters['cluster_threshold'] > 1:
             raise ClinicaException("Cluster threshold should be between 0 and 1 "
@@ -61,8 +63,8 @@ class StatisticsVolume(cpe.Pipeline):
         from clinica.utils.ux import print_images_to_process, print_begin_image
 
         gic = '*'
-        if self.parameters['group_id_caps'] is not None:
-            gic = self.parameters['group_id_caps']
+        if self.parameters['group_label_dartel'] is not None:
+            gic = self.parameters['group_label_dartel']
 
         all_errors = []
         if self.parameters['orig_input_data'] == 'pet-volume':
