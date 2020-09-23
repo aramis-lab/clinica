@@ -1,51 +1,6 @@
 # coding: utf8
 
 
-def read_psf_information(psf_tsv, subject_ids, session_ids):
-    import os
-    from pandas.io.parsers import read_csv
-
-    if not os.path.isfile(psf_tsv):
-        raise FileNotFoundError('Could not find the psf_tsv file %s' % psf_tsv)
-    try:
-        psf_df = read_csv(psf_tsv, sep='\t')
-    except (IOError, UnicodeDecodeError):
-        raise RuntimeError('An error while reading %s happened' % psf_tsv)
-
-    if psf_df.shape[0] != len(subject_ids):
-        raise ValueError('The number of rows in fwhm_tsv file must match the number of subject-session pairs.')
-
-    if any(elem not in ['participant_id', 'session_id', 'fwhm_x', 'fwhm_y', 'fwhm_z'] for elem in list(psf_df.columns)):
-        raise IOError('The file %s must contain the following columns (separated by tabulations):\n'
-                      'participant_id, session_id, fwhm_x, fwhm_y, fwhm_z\n'
-                      'But we found:\n'
-                      '%s\n'
-                      'Pay attention to the spaces (there should be none).' %
-                      (psf_tsv, str(list(psf_df.columns))))
-
-    subjects_fwhm = list(psf_df.participant_id)
-    sessions_fwhm = list(psf_df.session_id)
-    idx_reordered = []
-    for i, sub in enumerate(subject_ids):
-        current_ses = session_ids[i]
-        idx_sub = [j for j in range(len(subjects_fwhm)) if sub == subjects_fwhm[j] and current_ses == sessions_fwhm[j]]
-        if len(idx_sub) == 0:
-            raise RuntimeError('Subject %s with session %s that you want to proceed was not found '
-                               'in the TSV file containing PSF specifications (%s).' %
-                               (sub, current_ses, psf_tsv))
-        if len(idx_sub) > 1:
-            raise RuntimeError('Subject %s with session %s that you want to proceed was found multiple times '
-                               'in the TSV file containing PSF specifications (%s).' %
-                               (sub, current_ses, psf_tsv))
-        idx_reordered.append(idx_sub[0])
-
-    fwhm_x = list(psf_df.fwhm_x)
-    fwhm_y = list(psf_df.fwhm_y)
-    fwhm_z = list(psf_df.fwhm_z)
-    iterables_fwhm = [[fwhm_x[i], fwhm_y[i], fwhm_z[i]] for i in idx_reordered]
-    return iterables_fwhm
-
-
 def init_input_node(pet_nii):
     import datetime
     import nibabel as nib

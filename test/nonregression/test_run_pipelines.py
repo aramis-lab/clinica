@@ -473,7 +473,9 @@ def test_run_PETVolume(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     parameters = {
-        'group_label': 'UnitTest'
+        'group_label': 'UnitTest',
+        'acq_label': 'fdg',
+        'suvr_reference_region': 'pons'
     }
     pipeline = PETVolume(
         bids_directory=join(root, 'in', 'bids'),

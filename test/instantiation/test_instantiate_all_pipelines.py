@@ -191,7 +191,9 @@ def test_instantiate_PETVolume():
     root = join(root, 'data', 'PETVolume')
 
     parameters = {
-        'group_label': 'UnitTest'
+        'group_label': 'UnitTest',
+        'acq_label': 'fdg',
+        'suvr_reference_region': 'pons'
     }
     pipeline = PETVolume(
         bids_directory=join(root, 'in', 'bids'),
