@@ -37,9 +37,6 @@ def read_psf_information(pvc_psf_tsv, subject_ids, session_ids, pet_tracer):
     except (IOError, UnicodeDecodeError):
         raise RuntimeError('An error while reading %s happened' % pvc_psf_tsv)
 
-    # if psf_df.shape[0] != len(subject_ids):
-    #     raise ValueError('The number of rows in pvc_psf_tsv file must match the number of subject-session pairs.')
-
     if any(elem not in ['participant_id', 'session_id', 'acq_label', 'psf_x', 'psf_y', 'psf_z'] for elem in list(psf_df.columns)):
         raise IOError(
             'The file %s must contain the following columns (separated by tabulations):\n'
@@ -74,3 +71,32 @@ def read_psf_information(pvc_psf_tsv, subject_ids, session_ids, pet_tracer):
     psf_z = list(psf_df.psf_z)
     iterables_psf = [[psf_x[i], psf_y[i], psf_z[i]] for i in idx_reordered]
     return iterables_psf
+
+
+def get_suvr_mask(suvr_reference_region):
+    """Get path of the SUVR mask from SUVR reference region label.
+
+    Args:
+        suvr_reference_region: Label of the SUVR reference region
+
+    Returns:
+        Path of the SUVR mask
+    """
+    import os
+    suvr_reference_region_to_suvr = {
+        'pons': os.path.join(
+            os.path.split(os.path.realpath(__file__))[0],
+            '..',
+            'resources',
+            'masks',
+            'region-pons_eroded-6mm_mask.nii.gz'
+        ),
+        'cerebellumPons': os.path.join(
+            os.path.split(os.path.realpath(__file__))[0],
+            '..',
+            'resources',
+            'masks',
+            'region-cerebellumPons_eroded-6mm_mask.nii.gz'
+        ),
+    }
+    return suvr_reference_region_to_suvr[suvr_reference_region]
