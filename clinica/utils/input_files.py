@@ -257,16 +257,3 @@ def bids_pet_nii(acq_label):
         'description': 'PET data with ' + acq_label + ' tracer'
     }
     return information
-
-
-PET_FDG_NII = {'pattern': 'pet/sub-*_ses-*_acq-fdg_pet.nii*',
-               'description': 'FDG-PET data'}
-
-PET_FDG_JSON = {'pattern': 'pet/sub-*_ses-*_acq-fdg_pet.json',
-                'description': 'JSON file describing the point spread function (PSF) in FDG PET.'}
-
-PET_AV45_NII = {'pattern': 'pet/sub-*_ses-*_acq-av45_pet.nii*',
-                'description': 'AV45-PET data'}
-
-PET_AV45_JSON = {'pattern': 'pet/sub-*_ses-*_acq-av45_pet.json',
-                 'description': 'JSON file describing the point spread function (PSF) in AV45 PET.'}
