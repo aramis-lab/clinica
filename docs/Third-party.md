@@ -2,12 +2,19 @@
 
 ## Converters
 
-If you want to run the `convert <dataset>-to-bids` commands (e.g. `adni-to-bids`), you will need to install the [**dcm2niix**](https://github.com/rordenlab/dcm2niix), [**dcm2nii**](https://www.nitrc.org/frs/?group_id=152) and [**FreeSurfer**](http://surfer.nmr.mgh.harvard.edu/) tools.
+If you want to run the `convert <dataset>-to-bids` commands (e.g. `adni-to-bids`), you may have to install the [**dcm2niix**](https://github.com/rordenlab/dcm2niix), [**dcm2nii**](https://www.nitrc.org/frs/?group_id=152) and/or [**FreeSurfer**](http://surfer.nmr.mgh.harvard.edu/) tools.
+
+|                   | dcm2nii | dcm2niix | FreeSurfer |
+|:------------------|:-------:|:--------:|:----------:|
+| `adni-to-bids`    |    x    |    x     |            |
+| `aibl-to-bids`    |    x    |    x     |     x      |
+| `nifd-to-bids`    |         |    x     |            |
+| `oasis-to-bids`   |         |          |            |
 
 Please refer to each tool’s website for installation instructions:
 
   * [**dcm2niix**](https://github.com/rordenlab/dcm2niix) Download [here](https://github.com/rordenlab/dcm2niix) and follow the installation instructions on the same page.
-  * [**dcm2nii**](https://www.nitrc.org/frs/?group_id=152) Download [here](https://www.nitrc.org/frs/?group_id=152).
+  * [**dcm2nii**](https://www.nitrc.org/frs/?group_id=152) `dcm2nii` is incuded in MRIcron and can be downloaded [here](https://www.nitrc.org/frs/?group_id=152). Please download the 2016 version since `dcm2nii` is no more available afterwards.
   * [**FreeSurfer 6.0**](http://surfer.nmr.mgh.harvard.edu/)
     - For Linux users, download and install FreeSurfer following the instructions on the [wiki](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall). Please note that on Ubuntu you will need to install the packages `tcsh` and `libjpeg62` (a `sudo apt-get install tcsh libjpeg62` should do the job).
     - For Mac users, download [here](http://surfer.nmr.mgh.harvard.edu/fswiki/DownloadAndInstall) and follow the instructions on the FreeSurfer [wiki](https://surfer.nmr.mgh.harvard.edu/fswiki/MacOsInstall).
@@ -26,7 +33,6 @@ Not all the following dependencies are necessary to install and run Clinica. You
 | `dwi-preprocessing-*`    |   x  |       |     x     |            |  x  |     |        |    x    |        |     |
 | `dwi-dti`                |   x  |       |           |            |  x  |     |        |    x    |        |     |
 | `dwi-connectome`         |   x  |       |           |            |  x  |     |        |    x    |        |     |
-| `fmri-preprocessing`     |      |       |           |     x      |  x  |     |    x   |         |        |     |
 | `pet-surface`            |      |       |           |            |  x  |  x* |        |         |   x*   |  x  |
 | `pet-volume`             |      |   x   |           |            |     |  x* |    x   |         |   x*   |  x  |
 | `statistics-surface`     |      |       |           |            |     |     |    x   |         |        |     |
