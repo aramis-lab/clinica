@@ -5,16 +5,6 @@ This file contains a set of functional tests designed to check the correct execu
 different functions available in Clinica
 """
 
-__author__ = "Arnaud Marcoux"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Arnaud Marcoux"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.2.0"
-__maintainer__ = "Arnaud Marcoux, Mauricio Diaz"
-__email__ = "arnaud.marcoux@inria.fr, mauricio.diaz@inria.fr"
-__status__ = "Development"
-
-
 import warnings
 from os import pardir
 
@@ -565,6 +555,9 @@ def test_run_PETSurfaceCrossSectional(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     parameters = {
+        'acq_label': 'FDG',
+        'suvr_reference_region': 'pons',
+        'pvc_psf_tsv': join(root, 'in', 'subjects.tsv'),
         'longitudinal': False
     }
     pipeline = PetSurface(
@@ -583,7 +576,8 @@ def test_run_PETSurfaceCrossSectional(cmdopt):
                       + h + '_fwhm-' + str(f) + '_projection.mgh')
                  for h in ['lh', 'rh']
                  for f in [0, 5, 10, 15, 20, 25]]
-    ref_files = [join(root, 'ref/sub-ADNI011S4105_ses-M00_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
+    ref_files = [join(root, 'ref',
+                      'sub-ADNI011S4105_ses-M00_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-'
                       + h + '_fwhm-' + str(f) + '_projection.mgh')
                  for h in ['lh', 'rh']
                  for f in [0, 5, 10, 15, 20, 25]]
@@ -613,6 +607,9 @@ def test_run_PETSurfaceCrossSectional(cmdopt):
 #     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 #
 #     parameters = {
+#         'acq_label': 'FDG',
+#         'suvr_reference_region': 'pons',
+#         'pvc_psf_tsv': join(root, 'in', 'subjects.tsv'),
 #         'longitudinal': True
 #     }
 #     pipeline = PetSurface(

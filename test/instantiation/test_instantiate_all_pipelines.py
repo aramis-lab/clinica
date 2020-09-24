@@ -237,6 +237,9 @@ def test_instantiate_PETSurfaceCrossSectional():
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'PETSurface')
     parameters = {
+        'acq_label': 'FDG',
+        'suvr_reference_region': 'pons',
+        'pvc_psf_tsv': join(root, 'in', 'subjects.tsv'),
         'longitudinal': False
     }
     pipeline = PetSurface(
@@ -255,6 +258,9 @@ def test_instantiate_PETSurfaceCrossSectional():
 #     root = dirname(abspath(join(abspath(__file__), pardir)))
 #     root = join(root, 'data', 'PETSurfaceLongitudinal')
 #     parameters = {
+#         'acq_label': 'FDG',
+#         'suvr_reference_region': 'pons',
+#         'pvc_psf_tsv': join(root, 'in', 'subjects.tsv'),
 #         'longitudinal': True
 #     }
 #     pipeline = PetSurface(

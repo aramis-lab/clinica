@@ -6,15 +6,6 @@ different functions available in Clinica
 """
 
 
-__author__ = "Arnaud Marcoux"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Arnaud Marcoux"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.2.0"
-__maintainer__ = "Arnaud Marcoux"
-__email__ = "arnaud.marcoux@inria.fr"
-__status__ = "Development"
-
 import warnings
 import sys
 from testing_tools import create_list_hashes, compare_folders_with_hashes, compare_folders_structures

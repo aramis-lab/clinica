@@ -1,14 +1,5 @@
 # coding: utf8
 
-__author__ = "Arnaud Marcoux"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Arnaud Marcoux"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.2.0"
-__maintainer__ = "Arnaud Marcoux, Mauricio Diaz"
-__email__ = "arnaud.marcoux@inria.fr, mauricio.diaz@inria.fr"
-__status__ = "Development"
-
 
 def likeliness_measure(file1, file2, threshold1, threshold2, display=False):
     """
