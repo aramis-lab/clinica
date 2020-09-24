@@ -48,6 +48,26 @@ pip install clinica
     will only install Clinica `v0.3.4`). Pip is now the
     only way to install latest versions of Clinica.
 
+??? info "Developer installation (Advanced)"
+    If you plan to contribute to Clinica or if you want to have the current development
+    version, you can either:
+
+    * Download the tarball for a specific version from our
+    [repository](https://github.com/aramis-lab/clinica/releases).
+    Then decompress it.
+    * Clone Clinica's repository from GitHub:
+    ```bash
+    git clone https://github.com/aramis-lab/clinica.git
+    ```
+
+    We suggest creating a custom Conda environment and installing Clinica:
+    ```bash
+    cd clinica
+    conda create --name clinicaEnv python=3.7
+    pip install -r requirements-dev.txt
+    pip install -e .
+    ```
+
 ## Installation of the third-party software packages
 Depending on the pipeline that you want to use, you need to install
 **pipeline-specific interfaces**. Not all the dependencies are necessary to run
@@ -99,48 +119,3 @@ At the end of your session, remember to deactivate your Conda environment:
 ```{.sourceCode .bash}
 conda deactivate
 ```
-
-<!--## Developer installation
-
-If you plan to contribute to Clinica or if you want to have the current development
-version, you can either:
-
-* Download the tarball for a specific version from our
-[repository](https://github.com/aramis-lab/clinica/releases).
-Then decompress it.
-* Clone Clinica's repository from GitHub:
-```bash
-git clone https://github.com/aramis-lab/clinica.git
-```
-
-We suggest creating a custom Conda environment and installing Clinica using the
-provided YML file:
-
-```bash
-cd clinica
-conda env create -f environment.yml
-```
-
-By default, the environment is named `clinica_env`. You can choose a different
-name by adding the option `--name my_clinica_environment`.
-
-Clinica is installed within the environment created. Remember to
-activate the environment before proceeding:
-
-```bash
-conda activate clinica_env
-pip install -e . # Only the first time you activate the environment
-activate-global-python-argcomplete --user # Only the first time you activate the environment
-eval "$(register-python-argcomplete clinica)"
-```
-
-If everything goes well, type `clinica` and you should see the help message which
-is displayed above.
-
-At the end of your session, you can deactivate your Conda environment:
-```bash
-conda deactivate
-```
-
-Remember that Clinica will be only available inside your Conda environment.
--->
