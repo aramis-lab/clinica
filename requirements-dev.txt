@@ -7,3 +7,7 @@ pytest
 pytest-timeout
 pytest-xdist
 pycodestyle
+mkdocs-material>=5.0.0
+pymdown-extensions>=7.0
+Jinja2>=2.10
+Pygments>=2.2.0

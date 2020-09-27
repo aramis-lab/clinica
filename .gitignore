@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Python and system files
 build/
 dist/
@@ -29,3 +30,10 @@ crash*
 test/data
 
 
+=======
+# Folder created when building the wiki
+www.clinica.run/
+site
+
+.DS_Store
+>>>>>>> 292942609807b697dc625d6f5d4870ee3d9a4aec
