@@ -331,19 +331,13 @@ class PETVolume(cpe.Pipeline):
         from nipype.interfaces.petpvc import PETPVC
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+
         from clinica.utils.filemanip import unzip_nii
+        from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
         import clinica.pipelines.pet_volume.pet_volume_utils as utils
 
-        import os
-
-        if 'SPMSTANDALONE_HOME' in os.environ:
-            if 'MCR_HOME' in os.environ:
-                matlab_cmd = (
-                        os.path.join(
-                            os.environ['SPMSTANDALONE_HOME'], 'run_spm12.sh')
-                        + ' ' + os.environ['MCR_HOME']
-                        + ' script')
-                spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
+        if spm_standalone_is_available():
+            use_spm_standalone()
 
         # Initialize pipeline
         # ===================
