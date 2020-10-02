@@ -18,11 +18,14 @@ pipeline {
               changeset "requirements.txt"
             }
             steps {
-              echo 'Building Conda environment... ${BRANCH_NAME}'
-              sh 'ls'
-              sh 'conda env create --force --file environment.yml -n clinica_env_${BRANCH_NAME}'
-              sh 'conda activate clinica_env_$BRANCH_NAME'
-              sh 'pip install -r requirements-dev.txt'
+              echo 'My branch name is ${BRANCH_NAME}'
+              echo 'Building Conda environment... clinica_env_${BRANCH_NAME}'
+              sh '''
+                 eval "$(conda shell.bash hook)"
+                 conda env create --force --file environment.yml -n clinica_env_${BRANCH_NAME}
+                 conda activate clinica_env_$BRANCH_NAME
+                 pip install -r requirements-dev.txt
+                 '''
             }
           }
           stage('Build in Mac') {
@@ -34,11 +37,14 @@ pipeline {
               changeset "requirements.txt"
             }
             steps {
-              echo 'Building Conda environment...' + 'env.BRANCH_NAME'
-              sh 'ls'
-              sh 'conda env create --force --file environment.yml -n clinica_env_${BRANCH_NAME}'
-              sh 'conda activate clinica_env_$BRANCH_NAME'
-              sh 'pip install -r requirements-dev.txt'
+              echo 'My branch name is ${BRANCH_NAME}'
+              echo 'Building Conda environment... clinica_env_${BRANCH_NAME}'
+              sh '''
+                 eval "$(conda shell.bash hook)"
+                 conda env create --force --file environment.yml -n clinica_env_${BRANCH_NAME}
+                 conda activate clinica_env_$BRANCH_NAME
+                 pip install -r requirements-dev.txt
+                 '''
             }
           }
         }
@@ -53,12 +59,9 @@ pipeline {
             steps {
             echo 'Installing Clinica sources in Linux...'
             echo 'My branch name is ${BRANCH_NAME}'
-            sh 'echo "My branch name is ${BRANCH_NAME}"'
+            echo "My conda env name is clinica_env_${BRANCH_NAME}"
             sh 'printenv'
             sh 'echo "Agent name: ${NODE_NAME}"'
-            script {
-              echo "My conda env name is clinica_env_${BRANCH_NAME}"
-              }
             sh '''
                set +x
                source ./.jenkins/scripts/find_env.sh
@@ -83,6 +86,8 @@ pipeline {
             steps {
             echo 'Installing Clinica sources in MacOS...'
             sh 'echo "Agent name: ${NODE_NAME}"'
+            echo 'My branch name is ${BRANCH_NAME}'
+            echo "My conda env name is clinica_env_${BRANCH_NAME}"
             sh '''
                set +x
                eval "$(conda shell.bash hook)"
