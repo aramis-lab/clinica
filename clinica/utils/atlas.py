@@ -96,8 +96,19 @@ class JHUDTI811mm(AtlasAbstract):
     def get_atlas_labels():
         import os
         from .check_dependency import check_environment_variable
+        from .inputs import _sha256
         fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-labels-1mm.nii.gz')
+        atlas_labels = os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-labels-1mm.nii.gz')
+        expected_checksum = "fac584ec75ff2a8631710d3345df96733ed87d9bde3387f5b462f8d22914ed69"
+        if _sha256(atlas_labels) != expected_checksum:
+            raise IOError(
+                "{} has an SHA256 checksum ({}) "
+                "differing from expected ({}), "
+                "file may be corrupted and changed with newer version of FSL.".format(
+                    atlas_labels, _sha256(atlas_labels), expected_checksum
+                )
+            )
+        return atlas_labels
 
     @staticmethod
     def get_tsv_roi():
@@ -116,8 +127,19 @@ class JHUTracts01mm(AtlasAbstract):
     def get_atlas_labels():
         import os
         from .check_dependency import check_environment_variable
+        from .inputs import _sha256
         fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr0-1mm.nii.gz')
+        atlas_labels = os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr0-1mm.nii.gz')
+        expected_checksum = "eb1de9413a46b02d2b5c7b77852097c6f42c8a5d55a5dbdef949c2e63b95354e"
+        if _sha256(atlas_labels) != expected_checksum:
+            raise IOError(
+                "{} has an SHA256 checksum ({}) "
+                "differing from expected ({}), "
+                "file may be corrupted and changed with newer version of FSL.".format(
+                    atlas_labels, _sha256(atlas_labels), expected_checksum
+                )
+            )
+        return atlas_labels
 
     @staticmethod
     def get_tsv_roi():
@@ -136,8 +158,19 @@ class JHUTracts251mm(AtlasAbstract):
     def get_atlas_labels():
         import os
         from .check_dependency import check_environment_variable
+        from .inputs import _sha256
         fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr25-1mm.nii.gz')
+        atlas_labels = os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr25-1mm.nii.gz')
+        expected_checksum = "7cd85fa2be1918fc83173e9bc0746031fd4c08d70d6c81b7b9224b5d3da6d8a6"
+        if _sha256(atlas_labels) != expected_checksum:
+            raise IOError(
+                "{} has an SHA256 checksum ({}) "
+                "differing from expected ({}), "
+                "file may be corrupted and changed with newer version of FSL.".format(
+                    atlas_labels, _sha256(atlas_labels), expected_checksum
+                )
+            )
+        return atlas_labels
 
     @staticmethod
     def get_tsv_roi():
@@ -156,8 +189,19 @@ class JHUTracts501mm(AtlasAbstract):
     def get_atlas_labels():
         import os
         from .check_dependency import check_environment_variable
+        from .inputs import _sha256
         fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr50-1mm.nii.gz')
+        atlas_labels = os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr50-1mm.nii.gz')
+        expected_checksum = "20ff0216d770686838de26393c0bdac38c8104760631a1a2b5f518bc0bbb470a"
+        if _sha256(atlas_labels) != expected_checksum:
+            raise IOError(
+                "{} has an SHA256 checksum ({}) "
+                "differing from expected ({}), "
+                "file may be corrupted and changed with newer version of FSL.".format(
+                    atlas_labels, _sha256(atlas_labels), expected_checksum
+                )
+            )
+        return atlas_labels
 
     @staticmethod
     def get_tsv_roi():
