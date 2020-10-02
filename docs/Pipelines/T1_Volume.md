@@ -14,7 +14,7 @@ This pipeline performs four main processing steps on T1-weighted MR images using
 ## Dependencies
 <!---If you installed the docker image of Clinica, nothing is required.-->
 
-If you only installed the core of Clinica, this pipeline needs the installation of **SPM12** and **CAT12**. You can find how to install these software packages on the [third-party](../../Third-party) page.
+If you only installed the core of Clinica, this pipeline needs the installation of **SPM12**. You can find how to install these software packages on the [third-party](../../Third-party) page.
 
 ## Running the pipeline
 
