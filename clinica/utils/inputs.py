@@ -7,9 +7,7 @@ This module contains utilities to grab or download files for Clinica.
 import hashlib
 from collections import namedtuple
 
-RemoteFileStructure = namedtuple(
-        'RemoteFileStructure',
-        ['filename', 'url', 'checksum'])
+RemoteFileStructure = namedtuple("RemoteFileStructure", ["filename", "url", "checksum"])
 
 
 def insensitive_glob(pattern_glob, recursive=False):
@@ -24,9 +22,9 @@ def insensitive_glob(pattern_glob, recursive=False):
     from glob import glob
 
     def either(c):
-        return '[%s%s]' % (c.lower(), c.upper()) if c.isalpha() else c
+        return "[%s%s]" % (c.lower(), c.upper()) if c.isalpha() else c
 
-    return glob(''.join(map(either, pattern_glob)), recursive=recursive)
+    return glob("".join(map(either, pattern_glob)), recursive=recursive)
 
 
 def determine_caps_or_bids(input_dir):
@@ -43,23 +41,39 @@ def determine_caps_or_bids(input_dir):
     from os.path import isdir, join
     from os import listdir
 
-    if isdir(join(input_dir, 'subjects')):
-        if (
-            len([sub for sub in listdir(join(input_dir, 'subjects')) if (sub.startswith('sub-') and isdir(join(input_dir, 'subjects', sub)))]) > 0
-            or isdir(join(input_dir, 'groups'))
-        ):
+    if isdir(join(input_dir, "subjects")):
+        if len(
+            [
+                sub
+                for sub in listdir(join(input_dir, "subjects"))
+                if (sub.startswith("sub-") and isdir(join(input_dir, "subjects", sub)))
+            ]
+        ) > 0 or isdir(join(input_dir, "groups")):
             return False
         else:
-            raise RuntimeError(f"Could not determine if {input_dir} is a CAPS or BIDS directory")
+            raise RuntimeError(
+                f"Could not determine if {input_dir} is a CAPS or BIDS directory"
+            )
 
     else:
-        if len([sub for sub in listdir(input_dir) if (sub.startswith('sub-') and isdir(join(input_dir, sub)))]) > 0:
+        if (
+            len(
+                [
+                    sub
+                    for sub in listdir(input_dir)
+                    if (sub.startswith("sub-") and isdir(join(input_dir, sub)))
+                ]
+            )
+            > 0
+        ):
             return True
         else:
-            if isdir(join(input_dir, 'groups')):
+            if isdir(join(input_dir, "groups")):
                 return False
             else:
-                raise RuntimeError(f"Could not determine if {input_dir} is a CAPS or BIDS directory")
+                raise RuntimeError(
+                    f"Could not determine if {input_dir} is a CAPS or BIDS directory"
+                )
 
 
 def check_bids_folder(bids_directory):
@@ -77,7 +91,9 @@ def check_bids_folder(bids_directory):
     from colorama import Fore
     from clinica.utils.exceptions import ClinicaBIDSError
 
-    assert isinstance(bids_directory, str), 'Argument you provided to check_bids_folder() is not a string.'
+    assert isinstance(
+        bids_directory, str
+    ), "Argument you provided to check_bids_folder() is not a string."
 
     if not isdir(bids_directory):
         raise ClinicaBIDSError(
@@ -87,7 +103,7 @@ def check_bids_folder(bids_directory):
             f" - If you gave relative path, did you run Clinica on the good folder?"
         )
 
-    if isdir(join(bids_directory, 'subjects')):
+    if isdir(join(bids_directory, "subjects")):
         raise ClinicaBIDSError(
             f"{Fore.RED}\n[Error] The BIDS directory ({bids_directory}) you provided seems to "
             f"be a CAPS directory due to the presence of a 'subjects' folder.{Fore.RESET}"
@@ -98,7 +114,7 @@ def check_bids_folder(bids_directory):
             f"{Fore.RED}\n[Error] The BIDS directory you provided  is empty. ({bids_directory}).{Fore.RESET}"
         )
 
-    if len([item for item in listdir(bids_directory) if item.startswith('sub-')]) == 0:
+    if len([item for item in listdir(bids_directory) if item.startswith("sub-")]) == 0:
         raise ClinicaBIDSError(
             f"{Fore.RED}\n[Error] Your BIDS directory does not contains a single folder whose name "
             f"starts with 'sub-'. Check that your folder follow BIDS standard.{Fore.RESET}"
@@ -119,7 +135,9 @@ def check_caps_folder(caps_directory):
     from colorama import Fore
     from clinica.utils.exceptions import ClinicaCAPSError
 
-    assert isinstance(caps_directory, str), 'Argument you provided to check_caps_folder() is not a string.'
+    assert isinstance(
+        caps_directory, str
+    ), "Argument you provided to check_caps_folder() is not a string."
 
     if not os.path.isdir(caps_directory):
         raise ClinicaCAPSError(
@@ -129,7 +147,7 @@ def check_caps_folder(caps_directory):
             f" - If you gave relative path, did you run Clinica on the good folder?"
         )
 
-    sub_folders = [item for item in listdir(caps_directory) if item.startswith('sub-')]
+    sub_folders = [item for item in listdir(caps_directory) if item.startswith("sub-")]
     if len(sub_folders) > 0:
         error_string = (
             f"\n[Error] Your CAPS directory contains at least one folder whose name "
@@ -145,11 +163,9 @@ def check_caps_folder(caps_directory):
         raise ClinicaCAPSError(error_string)
 
 
-def clinica_file_reader(subjects,
-                        sessions,
-                        input_directory,
-                        information,
-                        raise_exception=True):
+def clinica_file_reader(
+    subjects, sessions, input_directory, information, raise_exception=True
+):
     """
     This function grabs files relative to a subject and session list according to a glob pattern (using *)
     Args:
@@ -227,17 +243,18 @@ def clinica_file_reader(subjects,
     from colorama import Fore
     from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
 
-    assert isinstance(information, dict), (
-        "A dict must be provided for the argument 'dict'"
-    )
-    assert all(elem in information.keys() for elem in ['pattern', 'description']), (
-        "'information' must contain the keys 'pattern' and 'description'"
-    )
-    assert all(elem in ['pattern', 'description', 'needed_pipeline'] for elem in information.keys()), (
-        "'information' can only contain the keys 'pattern', 'description' and 'needed_pipeline'"
-    )
+    assert isinstance(
+        information, dict
+    ), "A dict must be provided for the argument 'dict'"
+    assert all(
+        elem in information.keys() for elem in ["pattern", "description"]
+    ), "'information' must contain the keys 'pattern' and 'description'"
+    assert all(
+        elem in ["pattern", "description", "needed_pipeline"]
+        for elem in information.keys()
+    ), "'information' can only contain the keys 'pattern', 'description' and 'needed_pipeline'"
 
-    pattern = information['pattern']
+    pattern = information["pattern"]
     is_bids = determine_caps_or_bids(input_directory)
 
     if is_bids:
@@ -246,14 +263,14 @@ def clinica_file_reader(subjects,
         check_caps_folder(input_directory)
 
     # Some check on the formatting on the data
-    assert pattern[0] != '/', (
+    assert pattern[0] != "/", (
         "pattern argument cannot start with char: / (does not work in os.path.join function). "
         "If you want to indicate the exact name of the file, use the format"
         " directory_name/filename.extension or filename.extension in the pattern argument"
     )
-    assert len(subjects) == len(sessions), (
-        "Subjects and sessions must have the same length"
-    )
+    assert len(subjects) == len(
+        sessions
+    ), "Subjects and sessions must have the same length"
     if len(subjects) == 0:
         return []
 
@@ -265,16 +282,14 @@ def clinica_file_reader(subjects,
         if is_bids:
             origin_pattern = join(input_directory, sub, ses)
         else:
-            origin_pattern = join(input_directory, 'subjects', sub, ses)
+            origin_pattern = join(input_directory, "subjects", sub, ses)
 
-        current_pattern = join(origin_pattern, '**/', pattern)
+        current_pattern = join(origin_pattern, "**/", pattern)
         current_glob_found = insensitive_glob(current_pattern, recursive=True)
 
         # Error handling if more than 1 file are found, or when no file is found
         if len(current_glob_found) > 1:
-            error_str = (
-                f"\t* {Fore.BLUE}  ({sub} | {ses}) {Fore.RESET}: More than 1 file found:\n"
-            )
+            error_str = f"\t* {Fore.BLUE}  ({sub} | {ses}) {Fore.RESET}: More than 1 file found:\n"
             for found_file in current_glob_found:
                 error_str += f"\t\t{found_file}\n"
             error_encountered.append(error_str)
@@ -292,8 +307,8 @@ def clinica_file_reader(subjects,
             f"{Fore.RED}\n[Error] Clinica encountered {len(error_encountered)} "
             f"problem(s) while getting {information['description']}:\n{Fore.RESET}"
         )
-        if 'needed_pipeline' in information.keys():
-            if information['needed_pipeline']:
+        if "needed_pipeline" in information.keys():
+            if information["needed_pipeline"]:
                 error_message += (
                     f"{Fore.YELLOW}Please note that the following clinica pipeline(s) must "
                     f"have run to obtain these files: {information['needed_pipeline']}{Fore.RESET}\n"
@@ -331,15 +346,17 @@ def clinica_group_reader(caps_directory, information, raise_exception=True):
     from colorama import Fore
     from clinica.utils.exceptions import ClinicaCAPSError
 
-    assert isinstance(information, dict), "A dict must be provided for the argument 'dict'"
+    assert isinstance(
+        information, dict
+    ), "A dict must be provided for the argument 'dict'"
     assert all(
         elem in information.keys()
-        for elem in ['pattern', 'description', 'needed_pipeline']
+        for elem in ["pattern", "description", "needed_pipeline"]
     ), "'information' must contain the keys 'pattern', 'description', 'needed_pipeline'"
 
-    pattern = information['pattern']
+    pattern = information["pattern"]
     # Some check on the formatting on the data
-    assert pattern[0] != '/', (
+    assert pattern[0] != "/", (
         "pattern argument cannot start with char: / (does not work in os.path.join function). "
         "If you want to indicate the exact name of the file, use the format"
         " directory_name/filename.extension or filename.extension in the pattern argument."
@@ -347,13 +364,13 @@ def clinica_group_reader(caps_directory, information, raise_exception=True):
 
     check_caps_folder(caps_directory)
 
-    current_pattern = join(caps_directory, '**/', pattern)
+    current_pattern = join(caps_directory, "**/", pattern)
     current_glob_found = insensitive_glob(current_pattern, recursive=True)
 
     if len(current_glob_found) != 1 and raise_exception is True:
         error_string = f"{Fore.RED}\n[Error] Clinica encountered a problem while getting {information['description']}. "
         if len(current_glob_found) == 0:
-            error_string += 'No file was found'
+            error_string += "No file was found"
         else:
             error_string += f"{len(current_glob_found)} files were found:"
             for found_files in current_glob_found:
@@ -398,8 +415,8 @@ def fetch_file(remote, dirname=None):
     from clinica.utils.stream import cprint
 
     if not os.path.exists(dirname):
-        cprint('Path to the file does not exist')
-        cprint('Stop Clinica and handle this error')
+        cprint("Path to the file does not exist")
+        cprint("Stop Clinica and handle this error")
 
     file_path = os.path.join(dirname, remote.filename)
     # Download the file from `url` and save it locally under `file_name`:
@@ -408,15 +425,15 @@ def fetch_file(remote, dirname=None):
     try:
         response = urlopen(req, context=gcontext)
     except URLError as e:
-        if hasattr(e, 'reason'):
-            cprint('We failed to reach a server.')
-            cprint(['Reason: ' + e.reason])
-        elif hasattr(e, 'code'):
-            cprint('The server could not fulfill the request.')
-            cprint(['Error code: ' + e.code])
+        if hasattr(e, "reason"):
+            cprint("We failed to reach a server.")
+            cprint(["Reason: " + e.reason])
+        elif hasattr(e, "code"):
+            cprint("The server could not fulfill the request.")
+            cprint(["Error code: " + e.code])
     else:
         try:
-            with open(file_path, 'wb') as out_file:
+            with open(file_path, "wb") as out_file:
                 shutil.copyfileobj(response, out_file)
         except OSError as err:
             cprint("OS error: {0}".format(err))
@@ -436,16 +453,18 @@ def get_file_from_server(remote_file):
     from clinica.utils.stream import cprint
 
     home = str(Path.home())
-    cache_clinica = os.path.join(home, '.cache', 'clinica', 'data')
-    if not(os.path.exists(cache_clinica)):
+    cache_clinica = os.path.join(home, ".cache", "clinica", "data")
+    if not (os.path.exists(cache_clinica)):
         os.makedirs(cache_clinica)
 
     local_file = os.path.join(cache_clinica, remote_file.filename)
 
-    if not(os.path.exists(local_file)):
+    if not (os.path.exists(local_file)):
         try:
             local_file = fetch_file(remote_file, cache_clinica)
         except IOError as err:
-            cprint(f"Unable to download {remote_file.filename} from {remote_file.url}: {err}")
+            cprint(
+                f"Unable to download {remote_file.filename} from {remote_file.url}: {err}"
+            )
 
     return local_file
