@@ -24,6 +24,7 @@ class AtlasAbstract:
     Naming convention for children classes of AtlasAbstract:
     <name_atlas>[<resolution>][<map>]
     """
+
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
@@ -76,6 +77,7 @@ class AtlasAbstract:
     def get_index(self):
         import nibabel as nib
         import numpy as np
+
         img_labels = nib.load(self.get_atlas_labels())
         img_labels = img_labels.get_data()
         labels = list(set(img_labels.ravel()))
@@ -90,16 +92,22 @@ class JHUDTI811mm(AtlasAbstract):
         AtlasAbstract.__init__(self)
 
     @staticmethod
-    def get_name_atlas(): return "JHUDTI81"
+    def get_name_atlas():
+        return "JHUDTI81"
 
     @staticmethod
     def get_atlas_labels():
         import os
         from .check_dependency import check_environment_variable
         from .inputs import _sha256
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        atlas_labels = os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-labels-1mm.nii.gz')
-        expected_checksum = "fac584ec75ff2a8631710d3345df96733ed87d9bde3387f5b462f8d22914ed69"
+
+        fsl_dir = check_environment_variable("FSLDIR", "FSL")
+        atlas_labels = os.path.join(
+            fsl_dir, "data", "atlases", "JHU", "JHU-ICBM-labels-1mm.nii.gz"
+        )
+        expected_checksum = (
+            "fac584ec75ff2a8631710d3345df96733ed87d9bde3387f5b462f8d22914ed69"
+        )
         if _sha256(atlas_labels) != expected_checksum:
             raise IOError(
                 f"{atlas_labels} has an SHA256 checksum ({_sha256(atlas_labels)}) "
@@ -111,7 +119,14 @@ class JHUDTI811mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases', 'atlas-JHUDTI81_dseg.tsv')
+
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-JHUDTI81_dseg.tsv",
+        )
 
 
 class JHUTracts01mm(AtlasAbstract):
@@ -119,16 +134,22 @@ class JHUTracts01mm(AtlasAbstract):
         AtlasAbstract.__init__(self)
 
     @staticmethod
-    def get_name_atlas(): return "JHUTracts0"
+    def get_name_atlas():
+        return "JHUTracts0"
 
     @staticmethod
     def get_atlas_labels():
         import os
         from .check_dependency import check_environment_variable
         from .inputs import _sha256
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        atlas_labels = os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr0-1mm.nii.gz')
-        expected_checksum = "eb1de9413a46b02d2b5c7b77852097c6f42c8a5d55a5dbdef949c2e63b95354e"
+
+        fsl_dir = check_environment_variable("FSLDIR", "FSL")
+        atlas_labels = os.path.join(
+            fsl_dir, "data", "atlases", "JHU", "JHU-ICBM-tracts-maxprob-thr0-1mm.nii.gz"
+        )
+        expected_checksum = (
+            "eb1de9413a46b02d2b5c7b77852097c6f42c8a5d55a5dbdef949c2e63b95354e"
+        )
         if _sha256(atlas_labels) != expected_checksum:
             raise IOError(
                 f"{atlas_labels} has an SHA256 checksum ({_sha256(atlas_labels)}) "
@@ -140,7 +161,14 @@ class JHUTracts01mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases', 'atlas-JHUTract_dseg.tsv')
+
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-JHUTract_dseg.tsv",
+        )
 
 
 class JHUTracts251mm(AtlasAbstract):
@@ -148,16 +176,26 @@ class JHUTracts251mm(AtlasAbstract):
         AtlasAbstract.__init__(self)
 
     @staticmethod
-    def get_name_atlas(): return "JHUTracts25"
+    def get_name_atlas():
+        return "JHUTracts25"
 
     @staticmethod
     def get_atlas_labels():
         import os
         from .check_dependency import check_environment_variable
         from .inputs import _sha256
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        atlas_labels = os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr25-1mm.nii.gz')
-        expected_checksum = "7cd85fa2be1918fc83173e9bc0746031fd4c08d70d6c81b7b9224b5d3da6d8a6"
+
+        fsl_dir = check_environment_variable("FSLDIR", "FSL")
+        atlas_labels = os.path.join(
+            fsl_dir,
+            "data",
+            "atlases",
+            "JHU",
+            "JHU-ICBM-tracts-maxprob-thr25-1mm.nii.gz",
+        )
+        expected_checksum = (
+            "7cd85fa2be1918fc83173e9bc0746031fd4c08d70d6c81b7b9224b5d3da6d8a6"
+        )
         if _sha256(atlas_labels) != expected_checksum:
             raise IOError(
                 f"{atlas_labels} has an SHA256 checksum ({_sha256(atlas_labels)}) "
@@ -169,7 +207,14 @@ class JHUTracts251mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases', 'atlas-JHUTract_dseg.tsv')
+
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-JHUTract_dseg.tsv",
+        )
 
 
 class JHUTracts501mm(AtlasAbstract):
@@ -177,16 +222,26 @@ class JHUTracts501mm(AtlasAbstract):
         AtlasAbstract.__init__(self)
 
     @staticmethod
-    def get_name_atlas(): return "JHUTracts50"
+    def get_name_atlas():
+        return "JHUTracts50"
 
     @staticmethod
     def get_atlas_labels():
         import os
         from .check_dependency import check_environment_variable
         from .inputs import _sha256
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        atlas_labels = os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr50-1mm.nii.gz')
-        expected_checksum = "20ff0216d770686838de26393c0bdac38c8104760631a1a2b5f518bc0bbb470a"
+
+        fsl_dir = check_environment_variable("FSLDIR", "FSL")
+        atlas_labels = os.path.join(
+            fsl_dir,
+            "data",
+            "atlases",
+            "JHU",
+            "JHU-ICBM-tracts-maxprob-thr50-1mm.nii.gz",
+        )
+        expected_checksum = (
+            "20ff0216d770686838de26393c0bdac38c8104760631a1a2b5f518bc0bbb470a"
+        )
         if _sha256(atlas_labels) != expected_checksum:
             raise IOError(
                 f"{atlas_labels} has an SHA256 checksum ({_sha256(atlas_labels)}) "
@@ -198,7 +253,14 @@ class JHUTracts501mm(AtlasAbstract):
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases', 'atlas-JHUTract_dseg.tsv')
+
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-JHUTract_dseg.tsv",
+        )
 
 
 class AAL2(AtlasAbstract):
@@ -206,17 +268,32 @@ class AAL2(AtlasAbstract):
         AtlasAbstract.__init__(self)
 
     @staticmethod
-    def get_name_atlas(): return "AAL2"
+    def get_name_atlas():
+        return "AAL2"
 
     @staticmethod
     def get_atlas_labels():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases', 'atlas-AAL2_dseg.nii.gz')
+
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-AAL2_dseg.nii.gz",
+        )
 
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases', 'atlas-AAL2_dseg.tsv')
+
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-AAL2_dseg.tsv",
+        )
 
 
 class Hammers(AtlasAbstract):
@@ -224,22 +301,31 @@ class Hammers(AtlasAbstract):
         AtlasAbstract.__init__(self)
 
     @staticmethod
-    def get_name_atlas(): return "Hammers"
+    def get_name_atlas():
+        return "Hammers"
 
     @staticmethod
     def get_atlas_labels():
         from clinica.utils.inputs import RemoteFileStructure, get_file_from_server
+
         HAMMERS_PARC = RemoteFileStructure(
-            filename='atlas-Hammers_dseg.nii.gz',
-            url='https://aramislab.paris.inria.fr/files/software/cat12/CAT12-Atlases/',
-            checksum='c034a7bce2dcab390a0b72f4e7d04769eb3fe5b990d0e18d89b0ce73339a5376'
+            filename="atlas-Hammers_dseg.nii.gz",
+            url="https://aramislab.paris.inria.fr/files/software/cat12/CAT12-Atlases/",
+            checksum="c034a7bce2dcab390a0b72f4e7d04769eb3fe5b990d0e18d89b0ce73339a5376",
         )
         return get_file_from_server(HAMMERS_PARC)
 
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases', 'atlas-Hammers_dseg.tsv')
+
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-Hammers_dseg.tsv",
+        )
 
 
 class LPBA40(AtlasAbstract):
@@ -247,22 +333,31 @@ class LPBA40(AtlasAbstract):
         AtlasAbstract.__init__(self)
 
     @staticmethod
-    def get_name_atlas(): return "LPBA40"
+    def get_name_atlas():
+        return "LPBA40"
 
     @staticmethod
     def get_atlas_labels():
         from clinica.utils.inputs import RemoteFileStructure, get_file_from_server
+
         LPBA40_PARC = RemoteFileStructure(
-            filename='atlas-LPBA40_dseg.nii.gz',
-            url='https://aramislab.paris.inria.fr/files/software/cat12/CAT12-Atlases/',
-            checksum='20826b572bbbdbcdbf28bbd3801dc0c2fed28d1e54bc4fd5027e64ccc6d50374'
+            filename="atlas-LPBA40_dseg.nii.gz",
+            url="https://aramislab.paris.inria.fr/files/software/cat12/CAT12-Atlases/",
+            checksum="20826b572bbbdbcdbf28bbd3801dc0c2fed28d1e54bc4fd5027e64ccc6d50374",
         )
         return get_file_from_server(LPBA40_PARC)
 
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases', 'atlas-LPBA40_dseg.tsv')
+
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-LPBA40_dseg.tsv",
+        )
 
 
 class AICHA(AtlasAbstract):
@@ -270,17 +365,32 @@ class AICHA(AtlasAbstract):
         AtlasAbstract.__init__(self)
 
     @staticmethod
-    def get_name_atlas(): return "AICHA"
+    def get_name_atlas():
+        return "AICHA"
 
     @staticmethod
     def get_atlas_labels():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases', 'atlas-AICHA_dseg.nii.gz')
+
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-AICHA_dseg.nii.gz",
+        )
 
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases', 'atlas-AICHA_dseg.tsv')
+
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-AICHA_dseg.tsv",
+        )
 
 
 class Neuromorphometrics(AtlasAbstract):
@@ -288,22 +398,31 @@ class Neuromorphometrics(AtlasAbstract):
         AtlasAbstract.__init__(self)
 
     @staticmethod
-    def get_name_atlas(): return "Neuromorphometrics"
+    def get_name_atlas():
+        return "Neuromorphometrics"
 
     @staticmethod
     def get_atlas_labels():
         from clinica.utils.inputs import RemoteFileStructure, get_file_from_server
+
         NEUROMORPHOMETRICS_PARC = RemoteFileStructure(
-            filename='atlas-Neuromorphometrics_dseg.nii.gz',
-            url='https://aramislab.paris.inria.fr/files/software/cat12/CAT12-Atlases/',
-            checksum='19a50136cd2f8a14357a19ad8a1dc4a2ecb6beb3fc16cb5441f4f2ebaf64a9a5'
+            filename="atlas-Neuromorphometrics_dseg.nii.gz",
+            url="https://aramislab.paris.inria.fr/files/software/cat12/CAT12-Atlases/",
+            checksum="19a50136cd2f8a14357a19ad8a1dc4a2ecb6beb3fc16cb5441f4f2ebaf64a9a5",
         )
         return get_file_from_server(NEUROMORPHOMETRICS_PARC)
 
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '..', 'resources', 'atlases', 'atlas-Neuromorphometrics_dseg.tsv')
+
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-Neuromorphometrics_dseg.tsv",
+        )
 
 
 class AtlasLoader:
@@ -317,4 +436,5 @@ class AtlasLoader:
         if not isinstance(atlas, AtlasAbstract):
             raise Exception("Atlas element must be an AtlasAbstract type")
 
-    def get_atlases(self): return self.atlas
+    def get_atlases(self):
+        return self.atlas
