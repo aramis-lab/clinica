@@ -44,10 +44,13 @@ def determine_caps_or_bids(input_dir):
     from os import listdir
 
     if isdir(join(input_dir, 'subjects')):
-        if len([sub for sub in listdir(join(input_dir, 'subjects')) if (sub.startswith('sub-') and isdir(join(input_dir, 'subjects', sub)))]) > 0 or isdir(join(input_dir, 'groups')):
+        if (
+            len([sub for sub in listdir(join(input_dir, 'subjects')) if (sub.startswith('sub-') and isdir(join(input_dir, 'subjects', sub)))]) > 0
+            or isdir(join(input_dir, 'groups'))
+        ):
             return False
         else:
-            raise RuntimeError('Could not determine if ' + input_dir + ' is a CAPS or BIDS directory')
+            raise RuntimeError(f"Could not determine if {input_dir} is a CAPS or BIDS directory")
 
     else:
         if len([sub for sub in listdir(input_dir) if (sub.startswith('sub-') and isdir(join(input_dir, sub)))]) > 0:
@@ -56,7 +59,7 @@ def determine_caps_or_bids(input_dir):
             if isdir(join(input_dir, 'groups')):
                 return False
             else:
-                raise RuntimeError('Could not determine if ' + input_dir + ' is a CAPS or BIDS directory')
+                raise RuntimeError(f"Could not determine if {input_dir} is a CAPS or BIDS directory")
 
 
 def check_bids_folder(bids_directory):
@@ -77,23 +80,29 @@ def check_bids_folder(bids_directory):
     assert isinstance(bids_directory, str), 'Argument you provided to check_bids_folder() is not a string.'
 
     if not isdir(bids_directory):
-        raise ClinicaBIDSError(Fore.RED + '\n[Error] The BIDS directory you gave is not a folder.\n' + Fore.RESET
-                               + Fore.YELLOW + '\nError explanations:\n' + Fore.RESET
-                               + ' - Clinica expected the following path to be a folder:' + Fore.BLUE + bids_directory
-                               + Fore.RESET + '\n'
-                               + ' - If you gave relative path, did you run Clinica on the good folder?')
+        raise ClinicaBIDSError(
+            f"{Fore.RED}\n[Error] The BIDS directory you gave is not a folder.\n{Fore.RESET}"
+            f"{Fore.YELLOW}\nError explanations:\n{Fore.RESET}"
+            f" - Clinica expected the following path to be a folder: {Fore.BLUE}{bids_directory}{Fore.RESET}\n"
+            f" - If you gave relative path, did you run Clinica on the good folder?"
+        )
 
     if isdir(join(bids_directory, 'subjects')):
-        raise ClinicaBIDSError(Fore.RED + '\n[Error] The BIDS directory (' + bids_directory + ') you provided seems to '
-                               + 'be a CAPS directory due to the presence of a \'subjects\' folder.' + Fore.RESET)
+        raise ClinicaBIDSError(
+            f"{Fore.RED}\n[Error] The BIDS directory ({bids_directory}) you provided seems to "
+            f"be a CAPS directory due to the presence of a 'subjects' folder.{Fore.RESET}"
+        )
 
     if len(listdir(bids_directory)) == 0:
-        raise ClinicaBIDSError(Fore.RED + '\n[Error] The BIDS directory you provided  is empty. (' + bids_directory
-                               + ').' + Fore.RESET)
+        raise ClinicaBIDSError(
+            f"{Fore.RED}\n[Error] The BIDS directory you provided  is empty. ({bids_directory}).{Fore.RESET}"
+        )
 
     if len([item for item in listdir(bids_directory) if item.startswith('sub-')]) == 0:
-        raise ClinicaBIDSError(Fore.RED + '\n[Error] Your BIDS directory does not contains a single folder whose name '
-                               + 'starts with \'sub-\'. Check that your folder follow BIDS standard' + Fore.RESET)
+        raise ClinicaBIDSError(
+            f"{Fore.RED}\n[Error] Your BIDS directory does not contains a single folder whose name "
+            f"starts with 'sub-'. Check that your folder follow BIDS standard.{Fore.RESET}"
+        )
 
 
 def check_caps_folder(caps_directory):
@@ -113,21 +122,26 @@ def check_caps_folder(caps_directory):
     assert isinstance(caps_directory, str), 'Argument you provided to check_caps_folder() is not a string.'
 
     if not os.path.isdir(caps_directory):
-        raise ClinicaCAPSError(Fore.RED + '\n[Error] The CAPS directory you gave is not a folder.\n' + Fore.RESET
-                               + Fore.YELLOW + '\nError explanations:\n' + Fore.RESET
-                               + ' - Clinica expected the following path to be a folder:' + Fore.BLUE + caps_directory
-                               + Fore.RESET + '\n'
-                               + ' - If you gave relative path, did you run Clinica on the good folder?')
+        raise ClinicaCAPSError(
+            f"{Fore.RED}\n[Error] The CAPS directory you gave is not a folder.\n{Fore.RESET}"
+            f"{Fore.YELLOW}\nError explanations:\n{Fore.RESET}"
+            f" - Clinica expected the following path to be a folder: {Fore.BLUE}{caps_directory}{Fore.RESET}\n"
+            f" - If you gave relative path, did you run Clinica on the good folder?"
+        )
 
     sub_folders = [item for item in listdir(caps_directory) if item.startswith('sub-')]
     if len(sub_folders) > 0:
-        error_string = '\n[Error] Your CAPS directory contains at least one folder whose name ' \
-                       + 'starts with \'sub-\'. Check that you did not swap BIDS and CAPS folders.\n' \
-                       + ' Folder(s) found that match(es) BIDS architecture:\n'
-        for dir in sub_folders:
-            error_string += '\t' + dir + '\n'
-        error_string += 'A CAPS directory has a folder \'subjects\' at its root, in which are stored the output ' \
-                        + 'of the pipeline for each subject.'
+        error_string = (
+            f"\n[Error] Your CAPS directory contains at least one folder whose name "
+            f"starts with 'sub-'. Check that you did not swap BIDS and CAPS folders.\n"
+            f" Folder(s) found that match(es) BIDS architecture:\n"
+        )
+        for directory in sub_folders:
+            error_string += f"\t{directory}\n"
+        error_string += (
+            "A CAPS directory has a folder 'subjects' at its root, in which "
+            "are stored the output of the pipeline for each subject."
+        )
         raise ClinicaCAPSError(error_string)
 
 
@@ -213,9 +227,15 @@ def clinica_file_reader(subjects,
     from colorama import Fore
     from clinica.utils.exceptions import ClinicaBIDSError, ClinicaCAPSError
 
-    assert isinstance(information, dict), 'A dict must be provided for the argmuent \'dict\''
-    assert all(elem in information.keys() for elem in ['pattern', 'description']), '\'information\' must contain the keys \'pattern\' and \'description'
-    assert all(elem in ['pattern', 'description', 'needed_pipeline'] for elem in information.keys()), '\'information\' can only contain the keys \'pattern\', \'description\' and \'needed_pipeline\''
+    assert isinstance(information, dict), (
+        "A dict must be provided for the argument 'dict'"
+    )
+    assert all(elem in information.keys() for elem in ['pattern', 'description']), (
+        "'information' must contain the keys 'pattern' and 'description'"
+    )
+    assert all(elem in ['pattern', 'description', 'needed_pipeline'] for elem in information.keys()), (
+        "'information' can only contain the keys 'pattern', 'description' and 'needed_pipeline'"
+    )
 
     pattern = information['pattern']
     is_bids = determine_caps_or_bids(input_directory)
@@ -226,14 +246,18 @@ def clinica_file_reader(subjects,
         check_caps_folder(input_directory)
 
     # Some check on the formatting on the data
-    assert pattern[0] != '/', 'pattern argument cannot start with char: / (does not work in os.path.join function). ' \
-                              + 'If you want to indicate the exact name of the file, use the format' \
-                              + ' directory_name/filename.extension or filename.extension in the pattern argument'
-    assert len(subjects) == len(sessions), 'Subjects and sessions must have the same length'
+    assert pattern[0] != '/', (
+        "pattern argument cannot start with char: / (does not work in os.path.join function). "
+        "If you want to indicate the exact name of the file, use the format"
+        " directory_name/filename.extension or filename.extension in the pattern argument"
+    )
+    assert len(subjects) == len(sessions), (
+        "Subjects and sessions must have the same length"
+    )
     if len(subjects) == 0:
         return []
 
-    # rez is the list containing the results
+    # results is the list containing the results
     results = []
     # error is the list of the errors that happen during the whole process
     error_encountered = []
@@ -248,24 +272,32 @@ def clinica_file_reader(subjects,
 
         # Error handling if more than 1 file are found, or when no file is found
         if len(current_glob_found) > 1:
-            error_str = '\t*' + Fore.BLUE + ' (' + sub + ' | ' + ses + ') ' + Fore.RESET + ': More than 1 file found:\n'
+            error_str = (
+                f"\t* {Fore.BLUE}  ({sub} | {ses}) {Fore.RESET}: More than 1 file found:\n"
+            )
             for found_file in current_glob_found:
-                error_str += '\t\t' + found_file + '\n'
+                error_str += f"\t\t{found_file}\n"
             error_encountered.append(error_str)
         elif len(current_glob_found) == 0:
-            error_encountered.append('\t*' + Fore.BLUE + ' (' + sub + ' | ' + ses + ') ' + Fore.RESET + ': No file found\n')
+            error_encountered.append(
+                f"\t* {Fore.BLUE} ({sub} | {ses}) {Fore.RESET}: No file found\n"
+            )
         # Otherwise the file found is added to the result
         else:
             results.append(current_glob_found[0])
 
     # We do not raise an error, so that the developper can gather all the problems before Clinica crashes
     if len(error_encountered) > 0 and raise_exception is True:
-        error_message = Fore.RED + '\n[Error] Clinica encountered ' + str(len(error_encountered)) \
-                        + ' problem(s) while getting ' + information['description'] + ':\n' + Fore.RESET
+        error_message = (
+            f"{Fore.RED}\n[Error] Clinica encountered {len(error_encountered)} "
+            f"problem(s) while getting {information['description']}:\n{Fore.RESET}"
+        )
         if 'needed_pipeline' in information.keys():
             if information['needed_pipeline']:
-                error_message += Fore.YELLOW + 'Please note that the following clinica pipeline(s) must have run ' \
-                                 'to obtain these files: ' + information['needed_pipeline'] + Fore.RESET + '\n'
+                error_message += (
+                    f"{Fore.YELLOW}Please note that the following clinica pipeline(s) must "
+                    f"have run to obtain these files: {information['needed_pipeline']}{Fore.RESET}\n"
+                )
         for msg in error_encountered:
             error_message += msg
         if is_bids:
@@ -281,7 +313,7 @@ def clinica_group_reader(caps_directory, information, raise_exception=True):
     as order is arbitrary in glob.glob().
     Args:
         caps_directory: input caps directory
-        information: dictionnary containg all the relevant information to look for the files. Dict must contains the
+        information: dictionary containing all the relevant information to look for the files. Dict must contains the
                      following keys : pattern, description, needed_pipeline
                              pattern: define the pattern of the final file
                              description: string to describe what the file is
@@ -299,16 +331,19 @@ def clinica_group_reader(caps_directory, information, raise_exception=True):
     from colorama import Fore
     from clinica.utils.exceptions import ClinicaCAPSError
 
-    assert isinstance(information, dict), 'A dict must be provided for the argmuent \'dict\''
-    assert all(elem in information.keys()
-               for elem in ['pattern', 'description', 'needed_pipeline']
-               ), '\'information\' must contain the keys \'pattern\', \'description\', \'needed_pipeline\''
+    assert isinstance(information, dict), "A dict must be provided for the argument 'dict'"
+    assert all(
+        elem in information.keys()
+        for elem in ['pattern', 'description', 'needed_pipeline']
+    ), "'information' must contain the keys 'pattern', 'description', 'needed_pipeline'"
 
     pattern = information['pattern']
     # Some check on the formatting on the data
-    assert pattern[0] != '/', 'pattern argument cannot start with char: / (does not work in os.path.join function). ' \
-                              + 'If you want to indicate the exact name of the file, use the format' \
-                              + ' directory_name/filename.extension or filename.extension in the pattern argument'
+    assert pattern[0] != '/', (
+        "pattern argument cannot start with char: / (does not work in os.path.join function). "
+        "If you want to indicate the exact name of the file, use the format"
+        " directory_name/filename.extension or filename.extension in the pattern argument."
+    )
 
     check_caps_folder(caps_directory)
 
@@ -316,16 +351,18 @@ def clinica_group_reader(caps_directory, information, raise_exception=True):
     current_glob_found = insensitive_glob(current_pattern, recursive=True)
 
     if len(current_glob_found) != 1 and raise_exception is True:
-        error_string = Fore.RED + '\n[Error] Clinica encountered a problem while getting ' + information['description'] + '. '
+        error_string = f"{Fore.RED}\n[Error] Clinica encountered a problem while getting {information['description']}. "
         if len(current_glob_found) == 0:
             error_string += 'No file was found'
         else:
-            error_string += str(len(current_glob_found)) + ' files were found:'
+            error_string += f"{len(current_glob_found)} files were found:"
             for found_files in current_glob_found:
-                error_string += '\n\t' + found_files
-            error_string += (Fore.RESET + '\n\tCAPS directory: ' + caps_directory + '\n' + Fore.YELLOW
-                             + 'Please note that the following clinica pipeline(s) must have run to obtain these files: '
-                             + information['needed_pipeline'] + Fore.RESET + '\n')
+                error_string += f"\n\t{found_files}"
+            error_string += (
+                f"{Fore.RESET}\n\tCAPS directory: {caps_directory}\n{Fore.YELLOW}"
+                f"Please note that the following clinica pipeline(s) must have run to obtain these files: "
+                f"{information['needed_pipeline']} {Fore.RESET}\n"
+            )
         raise ClinicaCAPSError(error_string)
     return current_glob_found[0]
 
@@ -344,7 +381,7 @@ def _sha256(path):
 
 
 def fetch_file(remote, dirname=None):
-    """Function to download a specific file and save it into the ressources
+    """Function to download a specific file and save it into the resources
     folder of the package.
     Args:
         remote: structure containing url, filename and checksum
@@ -353,7 +390,6 @@ def fetch_file(remote, dirname=None):
         file_path: absolute file path
     Raises:
     """
-    from clinica.utils.exceptions import ClinicaException
     from urllib.request import Request, urlopen
     from urllib.error import URLError
     import shutil
@@ -388,11 +424,9 @@ def fetch_file(remote, dirname=None):
     checksum = _sha256(file_path)
     if remote.checksum != checksum:
         raise IOError(
-                "{} has an SHA256 checksum ({}) "
-                "differing from expected ({}), "
-                "file may be corrupted.".format(
-                    file_path, checksum, remote.checksum)
-                )
+            f"{file_path} has an SHA256 checksum ({checksum}) from expected "
+            f"({remote.checksum}), file may be corrupted."
+        )
     return file_path
 
 
@@ -412,6 +446,6 @@ def get_file_from_server(remote_file):
         try:
             local_file = fetch_file(remote_file, cache_clinica)
         except IOError as err:
-            cprint('Unable to download %s from %s: %s' % (remote_file.filename, remote_file.url, err))
+            cprint(f"Unable to download {remote_file.filename} from {remote_file.url}: {err}")
 
     return local_file
