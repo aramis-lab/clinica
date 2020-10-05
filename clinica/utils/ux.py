@@ -113,7 +113,7 @@ def print_crash_files_and_exit(log_file, working_directory):
                (Fore.YELLOW, file,  Fore.RESET))
 
     cprint('%s\n'
-           'If your pipeline crashed due to lack of space of network issues, '
+           'If your pipeline crashed due to lack of space or network issues, '
            're-run the pipeline with the working directory (-wd %s).\n'
            'Known issues are displayed here: http://www.clinica.run/doc/InteractingWithClinica/#known-issues\n'
            'Otherwise, you can delete it.%s' %
