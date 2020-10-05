@@ -102,11 +102,9 @@ class JHUDTI811mm(AtlasAbstract):
         expected_checksum = "fac584ec75ff2a8631710d3345df96733ed87d9bde3387f5b462f8d22914ed69"
         if _sha256(atlas_labels) != expected_checksum:
             raise IOError(
-                "{} has an SHA256 checksum ({}) "
-                "differing from expected ({}), "
-                "file may be corrupted and changed with newer version of FSL.".format(
-                    atlas_labels, _sha256(atlas_labels), expected_checksum
-                )
+                f"{atlas_labels} has an SHA256 checksum ({_sha256(atlas_labels)}) "
+                f"differing from expected ({expected_checksum}), "
+                f"file may be corrupted and changed with newer version of FSL."
             )
         return atlas_labels
 
@@ -133,11 +131,9 @@ class JHUTracts01mm(AtlasAbstract):
         expected_checksum = "eb1de9413a46b02d2b5c7b77852097c6f42c8a5d55a5dbdef949c2e63b95354e"
         if _sha256(atlas_labels) != expected_checksum:
             raise IOError(
-                "{} has an SHA256 checksum ({}) "
-                "differing from expected ({}), "
-                "file may be corrupted and changed with newer version of FSL.".format(
-                    atlas_labels, _sha256(atlas_labels), expected_checksum
-                )
+                f"{atlas_labels} has an SHA256 checksum ({_sha256(atlas_labels)}) "
+                f"differing from expected ({expected_checksum}), "
+                f"file may be corrupted and changed with newer version of FSL."
             )
         return atlas_labels
 
@@ -164,11 +160,9 @@ class JHUTracts251mm(AtlasAbstract):
         expected_checksum = "7cd85fa2be1918fc83173e9bc0746031fd4c08d70d6c81b7b9224b5d3da6d8a6"
         if _sha256(atlas_labels) != expected_checksum:
             raise IOError(
-                "{} has an SHA256 checksum ({}) "
-                "differing from expected ({}), "
-                "file may be corrupted and changed with newer version of FSL.".format(
-                    atlas_labels, _sha256(atlas_labels), expected_checksum
-                )
+                f"{atlas_labels} has an SHA256 checksum ({_sha256(atlas_labels)}) "
+                f"differing from expected ({expected_checksum}), "
+                f"file may be corrupted and changed with newer version of FSL."
             )
         return atlas_labels
 
@@ -195,11 +189,9 @@ class JHUTracts501mm(AtlasAbstract):
         expected_checksum = "20ff0216d770686838de26393c0bdac38c8104760631a1a2b5f518bc0bbb470a"
         if _sha256(atlas_labels) != expected_checksum:
             raise IOError(
-                "{} has an SHA256 checksum ({}) "
-                "differing from expected ({}), "
-                "file may be corrupted and changed with newer version of FSL.".format(
-                    atlas_labels, _sha256(atlas_labels), expected_checksum
-                )
+                f"{atlas_labels} has an SHA256 checksum ({_sha256(atlas_labels)}) "
+                f"differing from expected ({expected_checksum}), "
+                f"file may be corrupted and changed with newer version of FSL."
             )
         return atlas_labels
 
