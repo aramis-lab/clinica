@@ -72,12 +72,6 @@ class T1VolumeCLI(ce.CmdParser):
                               nargs=3, type=float,
                               help="A list of 3 floats specifying the voxel sizeof the output image "
                                    "(default: --voxel_size 1.5 1.5 1.5).")
-        # t1-volume-parcellation
-        default_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
-        advanced.add_argument("-atlases", "--atlases",
-                              nargs='+', type=str, metavar='', default=default_atlases, choices=default_atlases,
-                              help='A list of atlases used to calculate the regional mean GM concentrations (default: '
-                                   'all atlases i.e. --atlases %s).' % self.list_to_string(default_atlases))
 
     def run_command(self, args):
         """Run the pipeline with defined args."""
@@ -88,14 +82,9 @@ class T1VolumeCLI(ce.CmdParser):
         from ..t1_volume_create_dartel.t1_volume_create_dartel_cli import T1VolumeCreateDartelCLI
         from ..t1_volume_dartel2mni.t1_volume_dartel2mni_cli import T1VolumeDartel2MNICLI
         from ..t1_volume_parcellation.t1_volume_parcellation_cli import T1VolumeParcellationCLI
-        from clinica.utils.check_dependency import verify_cat12_atlases
         from clinica.utils.filemanip import save_participants_sessions
         from clinica.utils.participant import get_subject_session_list
         from clinica.utils.stream import cprint
-
-        # If the user wants to use any of the atlases of CAT12 and has not installed it, we just remove it from the list
-        # of the computed atlases
-        args.atlases = verify_cat12_atlases(args.atlases)
 
         cprint(
             'The t1-volume pipeline is divided into 4 parts:\n'

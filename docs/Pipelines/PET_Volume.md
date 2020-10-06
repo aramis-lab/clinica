@@ -17,7 +17,7 @@ You need to have performed the [`t1-volume`](../T1_Volume) pipeline on your T1-w
 ## Dependencies
 <!--- If you installed the docker image of Clinica, nothing is required.-->
 
-- If you only installed the core of Clinica, this pipeline needs the installation of **SPM12** and **CAT12**. You can find how to install these software packages on the [third-party](../../Third-party) page.
+- If you only installed the core of Clinica, this pipeline needs the installation of **SPM12**. You can find how to install these software packages on the [third-party](../../Third-party) page.
 
 - If you want to apply partial volume correction (PVC) on your PET data, you will need to install **PETPVC 1.2.4**, which depends on **ITK 4**. More information on the [third-party](../../Third-party) page.
 

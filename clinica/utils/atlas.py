@@ -3,12 +3,12 @@
 """
 This module contains utilities to handle atlases in Clinica.
 
-An atlas is currently defined by its name, a set of labels in a template space and
-the map of this template space (e.g. T1w, FA map derived from DWI).
+An atlas is currently defined by its name and a set of labels in a template space.
 
 This current implementation has some drawbacks:
 - Atlas is misleading: it is only a set of labels in a template space
-- This implementation can not handle case where there are several maps (e.g. both T1w and T2w) in template space
+- This implementation can not handle case where parcellation is in several template space
+(e.g. `MNI152NLin2009cAsym` and `MNI152NLin6Asym`, see TemplateFlow for example)
 
 Either a refactoring of this module or the use of an external API
 (e.g. TemplateFlow - https://www.templateflow.org/) needs to be considered.
@@ -24,6 +24,7 @@ class AtlasAbstract:
     Naming convention for children classes of AtlasAbstract:
     <name_atlas>[<resolution>][<map>]
     """
+
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
@@ -40,31 +41,21 @@ class AtlasAbstract:
         """
         import nibabel as nib
 
-        img_map = nib.load(self.get_atlas_map())
         img_labels = nib.load(self.get_atlas_labels())
-        voxels_map = img_map.header.get_zooms()
         voxels_labels = img_labels.header.get_zooms()
-        if (voxels_map[0] != voxels_labels[0]) or \
-                (voxels_map[1] != voxels_labels[1]) or \
-                (voxels_map[2] != voxels_labels[2]):
-            # if voxels_map != voxels_labels:
-            print("Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas()))
-            # raise Exception(
-            #       "Spatial resolution of labels and map image from %s atlas mismatch" % (self.get_name_atlas()))
-        # else:
         # Will display integers without decimals
-        if int(voxels_map[0]) == voxels_map[0]:
-            s_x = str(int(voxels_map[0]))
+        if int(voxels_labels[0]) == voxels_labels[0]:
+            s_x = str(int(voxels_labels[0]))
         else:
-            s_x = str(voxels_map[0])
-        if int(voxels_map[1]) == voxels_map[1]:
-            s_y = str(int(voxels_map[1]))
+            s_x = str(voxels_labels[0])
+        if int(voxels_labels[1]) == voxels_labels[1]:
+            s_y = str(int(voxels_labels[1]))
         else:
-            s_y = str(voxels_map[1])
-        if int(voxels_map[2]) == voxels_map[2]:
-            s_z = str(int(voxels_map[2]))
+            s_y = str(voxels_labels[1])
+        if int(voxels_labels[2]) == voxels_labels[2]:
+            s_z = str(int(voxels_labels[2]))
         else:
-            s_z = str(voxels_map[2])
+            s_z = str(voxels_labels[2])
 
         return s_x + "x" + s_y + "x" + s_z
 
@@ -72,13 +63,6 @@ class AtlasAbstract:
     def get_atlas_labels(self):
         """
         Returns the image with the different labels/ROIs.
-        """
-        pass
-
-    @abc.abstractmethod
-    def get_atlas_map(self):
-        """
-        Returns the map associated to the atlas (e.g. T1, FA map from DTI).
         """
         pass
 
@@ -93,6 +77,7 @@ class AtlasAbstract:
     def get_index(self):
         import nibabel as nib
         import numpy as np
+
         img_labels = nib.load(self.get_atlas_labels())
         img_labels = img_labels.get_data()
         labels = list(set(img_labels.ravel()))
@@ -102,58 +87,46 @@ class AtlasAbstract:
         return index_vector
 
 
-class JHUDTI812mm(AtlasAbstract):
-    def __init__(self):
-        AtlasAbstract.__init__(self)
-
-    @staticmethod
-    def get_name_atlas(): return "JHUDTI81"
-
-    @staticmethod
-    def get_atlas_labels():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-labels-2mm.nii.gz')
-
-    @staticmethod
-    def get_atlas_map():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
-
-    @staticmethod
-    def get_tsv_roi():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUDTI81_FS_LUT_newformat.txt')
-
-
 class JHUDTI811mm(AtlasAbstract):
     def __init__(self):
         AtlasAbstract.__init__(self)
 
     @staticmethod
-    def get_name_atlas(): return "JHUDTI81"
+    def get_name_atlas():
+        return "JHUDTI81"
 
     @staticmethod
     def get_atlas_labels():
         import os
         from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-labels-1mm.nii.gz')
+        from .inputs import _sha256
 
-    @staticmethod
-    def get_atlas_map():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
+        fsl_dir = check_environment_variable("FSLDIR", "FSL")
+        atlas_labels = os.path.join(
+            fsl_dir, "data", "atlases", "JHU", "JHU-ICBM-labels-1mm.nii.gz"
+        )
+        expected_checksum = (
+            "fac584ec75ff2a8631710d3345df96733ed87d9bde3387f5b462f8d22914ed69"
+        )
+        if _sha256(atlas_labels) != expected_checksum:
+            raise IOError(
+                f"{atlas_labels} has an SHA256 checksum ({_sha256(atlas_labels)}) "
+                f"differing from expected ({expected_checksum}), "
+                f"file may be corrupted and changed with newer version of FSL."
+            )
+        return atlas_labels
 
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUDTI81_FS_LUT_newformat.txt')
+
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-JHUDTI81_dseg.tsv",
+        )
 
 
 class JHUTracts01mm(AtlasAbstract):
@@ -161,53 +134,41 @@ class JHUTracts01mm(AtlasAbstract):
         AtlasAbstract.__init__(self)
 
     @staticmethod
-    def get_name_atlas(): return "JHUTracts0"
+    def get_name_atlas():
+        return "JHUTracts0"
 
     @staticmethod
     def get_atlas_labels():
         import os
         from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr0-1mm.nii.gz')
+        from .inputs import _sha256
 
-    @staticmethod
-    def get_atlas_map():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
-
-    @staticmethod
-    def get_tsv_roi():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
-
-
-class JHUTracts02mm(AtlasAbstract):
-    def __init__(self):
-        AtlasAbstract.__init__(self)
-
-    @staticmethod
-    def get_name_atlas(): return "JHUTracts0"
-
-    @staticmethod
-    def get_atlas_labels():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr0-2mm.nii.gz')
-
-    @staticmethod
-    def get_atlas_map():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
+        fsl_dir = check_environment_variable("FSLDIR", "FSL")
+        atlas_labels = os.path.join(
+            fsl_dir, "data", "atlases", "JHU", "JHU-ICBM-tracts-maxprob-thr0-1mm.nii.gz"
+        )
+        expected_checksum = (
+            "eb1de9413a46b02d2b5c7b77852097c6f42c8a5d55a5dbdef949c2e63b95354e"
+        )
+        if _sha256(atlas_labels) != expected_checksum:
+            raise IOError(
+                f"{atlas_labels} has an SHA256 checksum ({_sha256(atlas_labels)}) "
+                f"differing from expected ({expected_checksum}), "
+                f"file may be corrupted and changed with newer version of FSL."
+            )
+        return atlas_labels
 
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
+
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-JHUTract_dseg.tsv",
+        )
 
 
 class JHUTracts251mm(AtlasAbstract):
@@ -215,53 +176,45 @@ class JHUTracts251mm(AtlasAbstract):
         AtlasAbstract.__init__(self)
 
     @staticmethod
-    def get_name_atlas(): return "JHUTracts25"
+    def get_name_atlas():
+        return "JHUTracts25"
 
     @staticmethod
     def get_atlas_labels():
         import os
         from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr25-1mm.nii.gz')
+        from .inputs import _sha256
 
-    @staticmethod
-    def get_atlas_map():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
-
-    @staticmethod
-    def get_tsv_roi():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
-
-
-class JHUTracts252mm(AtlasAbstract):
-    def __init__(self):
-        AtlasAbstract.__init__(self)
-
-    @staticmethod
-    def get_name_atlas(): return "JHUTracts25"
-
-    @staticmethod
-    def get_atlas_labels():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr25-2mm.nii.gz')
-
-    @staticmethod
-    def get_atlas_map():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
+        fsl_dir = check_environment_variable("FSLDIR", "FSL")
+        atlas_labels = os.path.join(
+            fsl_dir,
+            "data",
+            "atlases",
+            "JHU",
+            "JHU-ICBM-tracts-maxprob-thr25-1mm.nii.gz",
+        )
+        expected_checksum = (
+            "7cd85fa2be1918fc83173e9bc0746031fd4c08d70d6c81b7b9224b5d3da6d8a6"
+        )
+        if _sha256(atlas_labels) != expected_checksum:
+            raise IOError(
+                f"{atlas_labels} has an SHA256 checksum ({_sha256(atlas_labels)}) "
+                f"differing from expected ({expected_checksum}), "
+                f"file may be corrupted and changed with newer version of FSL."
+            )
+        return atlas_labels
 
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
+
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-JHUTract_dseg.tsv",
+        )
 
 
 class JHUTracts501mm(AtlasAbstract):
@@ -269,53 +222,45 @@ class JHUTracts501mm(AtlasAbstract):
         AtlasAbstract.__init__(self)
 
     @staticmethod
-    def get_name_atlas(): return "JHUTracts50"
+    def get_name_atlas():
+        return "JHUTracts50"
 
     @staticmethod
     def get_atlas_labels():
         import os
         from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr50-1mm.nii.gz')
+        from .inputs import _sha256
 
-    @staticmethod
-    def get_atlas_map():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-1mm.nii.gz')
-
-    @staticmethod
-    def get_tsv_roi():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
-
-
-class JHUTracts502mm(AtlasAbstract):
-    def __init__(self):
-        AtlasAbstract.__init__(self)
-
-    @staticmethod
-    def get_name_atlas(): return "JHUTracts50"
-
-    @staticmethod
-    def get_atlas_labels():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-tracts-maxprob-thr50-2mm.nii.gz')
-
-    @staticmethod
-    def get_atlas_map():
-        import os
-        from .check_dependency import check_environment_variable
-        fsl_dir = check_environment_variable('FSLDIR', 'FSL')
-        return os.path.join(fsl_dir, 'data', 'atlases', 'JHU', 'JHU-ICBM-FA-2mm.nii.gz')
+        fsl_dir = check_environment_variable("FSLDIR", "FSL")
+        atlas_labels = os.path.join(
+            fsl_dir,
+            "data",
+            "atlases",
+            "JHU",
+            "JHU-ICBM-tracts-maxprob-thr50-1mm.nii.gz",
+        )
+        expected_checksum = (
+            "20ff0216d770686838de26393c0bdac38c8104760631a1a2b5f518bc0bbb470a"
+        )
+        if _sha256(atlas_labels) != expected_checksum:
+            raise IOError(
+                f"{atlas_labels} has an SHA256 checksum ({_sha256(atlas_labels)}) "
+                f"differing from expected ({expected_checksum}), "
+                f"file may be corrupted and changed with newer version of FSL."
+            )
+        return atlas_labels
 
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases', 'JHUTract_FS_LUT_newformat.txt')
+
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-JHUTract_dseg.tsv",
+        )
 
 
 class AAL2(AtlasAbstract):
@@ -323,22 +268,32 @@ class AAL2(AtlasAbstract):
         AtlasAbstract.__init__(self)
 
     @staticmethod
-    def get_name_atlas(): return "AAL2"
+    def get_name_atlas():
+        return "AAL2"
 
     @staticmethod
     def get_atlas_labels():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'AAL2.nii')
 
-    @staticmethod
-    def get_atlas_map():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-AAL2_dseg.nii.gz",
+        )
 
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'lut_AAL2_newformat.txt')
+
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-AAL2_dseg.tsv",
+        )
 
 
 class Hammers(AtlasAbstract):
@@ -346,24 +301,31 @@ class Hammers(AtlasAbstract):
         AtlasAbstract.__init__(self)
 
     @staticmethod
-    def get_name_atlas(): return "Hammers"
+    def get_name_atlas():
+        return "Hammers"
 
     @staticmethod
     def get_atlas_labels():
-        import os
-        from .check_dependency import check_cat12
-        cat12 = check_cat12()
-        return os.path.join(cat12, 'templates_1.50mm', 'hammers.nii')
+        from clinica.utils.inputs import RemoteFileStructure, get_file_from_server
 
-    @staticmethod
-    def get_atlas_map():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
+        HAMMERS_PARC = RemoteFileStructure(
+            filename="atlas-Hammers_dseg.nii.gz",
+            url="https://aramislab.paris.inria.fr/files/software/cat12/CAT12-Atlases/",
+            checksum="c034a7bce2dcab390a0b72f4e7d04769eb3fe5b990d0e18d89b0ce73339a5376",
+        )
+        return get_file_from_server(HAMMERS_PARC)
 
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'lut_Hammers_newformat.txt')
+
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-Hammers_dseg.tsv",
+        )
 
 
 class LPBA40(AtlasAbstract):
@@ -371,24 +333,31 @@ class LPBA40(AtlasAbstract):
         AtlasAbstract.__init__(self)
 
     @staticmethod
-    def get_name_atlas(): return "LPBA40"
+    def get_name_atlas():
+        return "LPBA40"
 
     @staticmethod
     def get_atlas_labels():
-        import os
-        from .check_dependency import check_cat12
-        cat12 = check_cat12()
-        return os.path.join(cat12, 'templates_1.50mm', 'lpba40.nii')
+        from clinica.utils.inputs import RemoteFileStructure, get_file_from_server
 
-    @staticmethod
-    def get_atlas_map():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
+        LPBA40_PARC = RemoteFileStructure(
+            filename="atlas-LPBA40_dseg.nii.gz",
+            url="https://aramislab.paris.inria.fr/files/software/cat12/CAT12-Atlases/",
+            checksum="20826b572bbbdbcdbf28bbd3801dc0c2fed28d1e54bc4fd5027e64ccc6d50374",
+        )
+        return get_file_from_server(LPBA40_PARC)
 
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'lut_LPBA40_newformat.txt')
+
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-LPBA40_dseg.tsv",
+        )
 
 
 class AICHA(AtlasAbstract):
@@ -396,22 +365,32 @@ class AICHA(AtlasAbstract):
         AtlasAbstract.__init__(self)
 
     @staticmethod
-    def get_name_atlas(): return "AICHA"
+    def get_name_atlas():
+        return "AICHA"
 
     @staticmethod
     def get_atlas_labels():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'AICHA.nii')
 
-    @staticmethod
-    def get_atlas_map():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-AICHA_dseg.nii.gz",
+        )
 
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'lut_AICHA_newformat.txt')
+
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-AICHA_dseg.tsv",
+        )
 
 
 class Neuromorphometrics(AtlasAbstract):
@@ -419,47 +398,31 @@ class Neuromorphometrics(AtlasAbstract):
         AtlasAbstract.__init__(self)
 
     @staticmethod
-    def get_name_atlas(): return "Neuromorphometrics"
+    def get_name_atlas():
+        return "Neuromorphometrics"
 
     @staticmethod
     def get_atlas_labels():
-        import os
-        from .check_dependency import check_cat12
-        cat12 = check_cat12()
-        return os.path.join(cat12, 'templates_1.50mm', 'neuromorphometrics.nii')
+        from clinica.utils.inputs import RemoteFileStructure, get_file_from_server
 
-    @staticmethod
-    def get_atlas_map():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
+        NEUROMORPHOMETRICS_PARC = RemoteFileStructure(
+            filename="atlas-Neuromorphometrics_dseg.nii.gz",
+            url="https://aramislab.paris.inria.fr/files/software/cat12/CAT12-Atlases/",
+            checksum="19a50136cd2f8a14357a19ad8a1dc4a2ecb6beb3fc16cb5441f4f2ebaf64a9a5",
+        )
+        return get_file_from_server(NEUROMORPHOMETRICS_PARC)
 
     @staticmethod
     def get_tsv_roi():
         from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'lut_Neuromorphometrics_newformat.txt')
 
-
-class MCALT_ADIR122(AtlasAbstract):
-    def __init__(self):
-        AtlasAbstract.__init__(self)
-
-    @staticmethod
-    def get_name_atlas(): return "MCALT_ADIR122"
-
-    @staticmethod
-    def get_atlas_labels():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'MCALT_ADIR122.nii')
-
-    @staticmethod
-    def get_atlas_map():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'Template_MNI152.nii')
-
-    @staticmethod
-    def get_tsv_roi():
-        from os.path import join, split, realpath
-        return join(split(realpath(__file__))[0], '../resources/atlases_spm', 'MCALT_ADIR122_ROI.tsv')
+        return join(
+            split(realpath(__file__))[0],
+            "..",
+            "resources",
+            "atlases",
+            "atlas-Neuromorphometrics_dseg.tsv",
+        )
 
 
 class AtlasLoader:
@@ -473,4 +436,5 @@ class AtlasLoader:
         if not isinstance(atlas, AtlasAbstract):
             raise Exception("Atlas element must be an AtlasAbstract type")
 
-    def get_atlases(self): return self.atlas
+    def get_atlases(self):
+        return self.atlas
