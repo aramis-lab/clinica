@@ -27,13 +27,13 @@ You need to have performed the [`t1-volume`](../T1_Volume) pipeline on your T1-w
 The pipeline can be run with the following command line:
 
 ```Text
-clinica run pet-volume <bids_directory> <caps_directory> <group_id>
+clinica run pet-volume <bids_directory> <caps_directory> <group_label>
 ```
 where:
 
 - `bids_directory` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
 - `caps_directory` acts both as an input folder (where the results of the `t1-volume-*` pipeline are stored) and as the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
-- `group_id` is the ID of the group that is associated to the DARTEL template that you had created when running the `t1-volume-*` pipeline.
+- `group_label` is the ID of the group that is associated to the DARTEL template that you had created when running the `t1-volume-*` pipeline.
 
 Pipeline options:
 

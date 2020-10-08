@@ -20,14 +20,14 @@ If you only installed the core of Clinica, this pipeline needs the installation 
 
  The pipeline `t1-volume` can be run with the following command line:
 ```Text
-clinica run t1-volume <bids_directory> <caps_directory> <group_id>
+clinica run t1-volume <bids_directory> <caps_directory> <group_label>
 ```
 
 where:
 
 - `bids_directory` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
 - `caps_directory` is the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
-- `group_id` is the user-defined identifier for the provided group of subjects.
+- `group_label` is the user-defined identifier for the provided group of subjects.
 
 Pipeline options:
 
@@ -65,19 +65,19 @@ The main output files are:
 
 ### Inter-subject registration using Dartel
 The final estimation of the gray matter template is stored under the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#dartel):
-`groups/group-<group_id>/t1/group-<group_id>_template.nii.gz`
+`groups/group-<group_label>/t1/group-<group_label>_template.nii.gz`
 
 <center>![](../../img/T1_Volume/ex_Dartel_template_GM.png)</center>
 *<center><small>Example of a group template calculated using DARTEL. Only the gray matter class is shown.</small></center>*
 
 The flow fields containing the deformation from an image to the group template are stored in the folder
-`subjects/sub-<participant_label>/ses-<session_label>/t1/spm/dartel/group-<group_id>/`
+`subjects/sub-<participant_label>/ses-<session_label>/t1/spm/dartel/group-<group_label>/`
 under the filename
 `<source_file>_target-<group-id>_transformation-forward_deformation.nii.gz`.
 
 ### Dartel template to MNI
 Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#dartel-to-mni):
-`subjects/sub-<participant_label>/ses-<session_label>/t1/spm/dartel/group-<group_id>`.
+`subjects/sub-<participant_label>/ses-<session_label>/t1/spm/dartel/group-<group_label>`.
 
 The main output files are:
 
@@ -91,7 +91,7 @@ The different tissue maps that have been registered to the MNI space and modulat
 
 ### Atlas statistics
 Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#atlas-statistics):
-`subjects/sub-<participant_label>/ses-<session_label>/t1/spm/dartel/group-<group_id>/atlas_statistics/`.
+`subjects/sub-<participant_label>/ses-<session_label>/t1/spm/dartel/group-<group_label>/atlas_statistics/`.
 
 The main output file is:
 
@@ -137,27 +137,27 @@ The four main processing steps of the `t1-volume` pipeline can be performed indi
 
     Command line:
     ```Text
-    clinica run t1-volume-create-dartel <bids_directory> <caps_directory> <group_id>
+    clinica run t1-volume-create-dartel <bids_directory> <caps_directory> <group_label>
     ```
 
 - **B2: Inter-subject registration using Dartel (using an existing Dartel template)**
 
     Command line:
     ```Text
-    clinica run t1-volume-register-dartel <bids_directory> <caps_directory> <group_id>
+    clinica run t1-volume-register-dartel <bids_directory> <caps_directory> <group_label>
     ```
 
 - **C: Dartel template to MNI**
 
     Command line:
     ```Text
-    clinica run t1-volume-dartel2mni <bids_directory> <caps_directory> <group_id>
+    clinica run t1-volume-dartel2mni <bids_directory> <caps_directory> <group_label>
     ```
 - **D: Atlas statistics**
 
     Command line:
     ```Text
-    clinica run t1-volume-parcellation <caps_directory> <group_id>
+    clinica run t1-volume-parcellation <caps_directory> <group_label>
     ```
 
 These four processing steps can also be performed in one go with one of these two functions:

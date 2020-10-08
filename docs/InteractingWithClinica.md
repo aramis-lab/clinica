@@ -93,8 +93,8 @@ Running a pipeline involves most of the time these two parameters:
 - `bids_directory`, which is the input folder containing the dataset in a [BIDS](../BIDS) hierarchy;
 - `caps_directory`, which is the output folder containing the expected results in a [CAPS](../CAPS/Introduction) hierarchy. It can be also the input folder containing the dataset in a [CAPS](../CAPS/Introduction) hierarchy.
 
-### `group_id`
-You will see the `group_id` flag when working on any group-wise analysis (e.g. template creation from a list of subjects, statistical analysis). This is simply a label name that will define the  group of subjects used for this analysis. It will be written in your output CAPS folder, for possible future reuses. For example, an `AD` group ID label could be used when creating a template for a group of Alzheimer’s disease patients. Any time you would like to use this `AD` template you will need to provide the group ID used to identify the pipeline output obtained from this group. You might also use `CNvsAD`, for instance, as group ID for a statistical group comparison between patients with Alzheimer's disease (`AD`) and cognitively normal (`CN`) subjects.
+### `group_label`
+You will see the `group_label` flag when working on any group-wise analysis (e.g. template creation from a list of subjects, statistical analysis). This is simply a label name that will define the  group of subjects used for this analysis. It will be written in your output CAPS folder, for possible future reuses. For example, an `AD` group ID label could be used when creating a template for a group of Alzheimer’s disease patients. Any time you would like to use this `AD` template you will need to provide the group ID used to identify the pipeline output obtained from this group. You might also use `CNvsAD`, for instance, as group ID for a statistical group comparison between patients with Alzheimer's disease (`AD`) and cognitively normal (`CN`) subjects.
 
 ### `-tsv` / `--subjects_sessions_tsv`
 
