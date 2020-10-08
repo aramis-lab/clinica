@@ -22,10 +22,6 @@ class SpatialSVM(cpe.Pipeline):
             raise KeyError('Missing compulsory orig_input_data key in pipeline parameter.')
         if 'fwhm' not in self.parameters.keys():
             self.parameters['fwhm'] = 4
-        if 'pet_tracer' not in self.parameters.keys():
-            self.parameters['pet_tracer'] = 'fdg'
-        if 'no_pvc' not in self.parameters.keys():
-            self.parameters['no_pvc'] = False
 
         check_group_label(self.parameters['group_label'])
 
@@ -84,20 +80,20 @@ class SpatialSVM(cpe.Pipeline):
                 'description': 'graymatter tissue segmented in T1w MRI in Ixi549 space',
                 'needed_pipeline': 't1-volume-tissue-segmentation'
             }
-        elif self.parameters['orig_input_data'] is 'pet-volume':
-            if self.parameters['no_pvc']:
+        elif self.parameters['orig_input_data'] == 'pet-volume':
+            if self.parameters['use_pvc_data']:
                 caps_files_information = {
                     'pattern': os.path.join('pet', 'preprocessing', 'group-' + self.parameters['group_label'],
-                                            '*_pet_space-Ixi549Space_suvr-pons_pet.nii.gz'),
-                    'description': self.parameters['pet_tracer'] + ' PET in Ixi549 space',
-                    'needed_pipeline': 'pet-volume'
+                                            '*_acq-' + self.parameters['acq_label'] + '_pet_space-Ixi549Space_pvc-rbv_suvr-' + self.parameters['suvr_reference_region'] + '_pet.nii.gz'),
+                    'description': self.parameters['acq_label'] + ' PET partial volume corrected (RBV) in Ixi549 space',
+                    'needed_pipeline': 'pet-volume with PVC'
                 }
             else:
                 caps_files_information = {
                     'pattern': os.path.join('pet', 'preprocessing', 'group-' + self.parameters['group_label'],
-                                            '*_pet_space-Ixi549Space_pvc-rbv_suvr-pons_pet.nii.gz'),
-                    'description': self.parameters['pet_tracer'] + ' PET partial volume corrected (RBV) in Ixi549 space',
-                    'needed_pipeline': 'pet-volume with PVC'
+                                            '*_acq-' + self.parameters['acq_label'] + '*_pet_space-Ixi549Space_suvr-' + self.parameters['suvr_reference_region'] + '_pet.nii.gz'),
+                    'description': self.parameters['acq_label'] + ' PET in Ixi549 space',
+                    'needed_pipeline': 'pet-volume'
                 }
         else:
             raise ValueError('Image type ' + self.parameters['orig_input_data'] + ' unknown.')
@@ -133,14 +129,11 @@ class SpatialSVM(cpe.Pipeline):
         ])
 
     def build_output_node(self):
-        """Build and connect an output node to the pipeline.
-        """
+        """Build and connect an output node to the pipeline."""
         pass
 
     def build_core_nodes(self):
-        """Build and connect the core nodes of the pipeline.
-        """
-
+        """Build and connect the core nodes of the pipeline."""
         import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe

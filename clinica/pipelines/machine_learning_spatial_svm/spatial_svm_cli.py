@@ -35,12 +35,21 @@ class SpatialSVMCLI(ce.CmdParser):
             '%sPipeline options if you use inputs from pet-volume pipeline%s' %
             (Fore.BLUE, Fore.RESET)
         )
-        optional_pet.add_argument("-pt", "--pet_tracer",
-                                  default='fdg',
-                                  help='PET tracer. Can be fdg or av45 (default: --pet_tracer %(default)s)')
-        optional_pet.add_argument("-no_pvc", "--no_pvc",
-                                  action='store_true', default=False,
-                                  help="Force the use of non PVC PET data (by default, PVC PET data are used)")
+        optional_pet.add_argument("-al", "--acq_label",
+                                  type=str,
+                                  default=None,
+                                  help='Name of the PET tracer label in the acquisition entity '
+                                       '(acq-<acq_label>).')
+        optional_pet.add_argument("-suvr", "--suvr_reference_region",
+                                  choices=['cerebellumPons', 'pons'],
+                                  default=None,
+                                  help='Intensity normalization using the average PET uptake in reference regions '
+                                       'resulting in a standardized uptake value ratio (SUVR) map. It can be '
+                                       'cerebellumPons (used for AV45 tracers) or pons (used for 18F-FDG tracers).')
+        optional_pet.add_argument("-pvc", "--use_pvc_data",
+                                  action='store_true',
+                                  default=False,
+                                  help="Use PET data with partial value correction (by default, PET data with no PVC are used)")
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
         # Advanced arguments (i.e. tricky parameters)
@@ -54,15 +63,30 @@ class SpatialSVMCLI(ce.CmdParser):
     def run_command(self, args):
         """Run the pipeline with defined args."""
         from networkx import Graph
+        from colorama import Fore
         from .spatial_svm_pipeline import SpatialSVM
+        from clinica.utils.exceptions import ClinicaException
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
+
+        if args.orig_input_data == 'pet-volume':
+            if args.acq_label is None:
+                raise ClinicaException(
+                    f"{Fore.RED}You selected pet-volume pipeline without setting --acq_label flag. "
+                    f"Clinica will now exit.{Fore.RESET}"
+                )
+            if args.suvr_reference_region is None:
+                raise ClinicaException(
+                    f"{Fore.RED}You selected pet-volume pipeline without setting --suvr_reference_region flag. "
+                    f"Clinica will now exit.{Fore.RESET}"
+                )
 
         parameters = {
             'group_label': args.group_label,
             'orig_input_data': args.orig_input_data,
-            'pet_tracer': args.pet_tracer,
-            'no_pvc': args.no_pvc,
-            'fwhm': args.fwhm,
+            'acq_label': args.acq_label,
+            'use_pvc_data': args.use_pvc_data,
+            'suvr_reference_region': args.suvr_reference_region,
+            'fwhm': args.full_width_half_maximum,
         }
         pipeline = SpatialSVM(
             caps_directory=self.absolute_path(args.caps_directory),
