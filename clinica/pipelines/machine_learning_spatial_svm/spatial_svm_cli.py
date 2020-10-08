@@ -35,7 +35,7 @@ class SpatialSVMCLI(ce.CmdParser):
             '%sPipeline options if you use inputs from pet-volume pipeline%s' %
             (Fore.BLUE, Fore.RESET)
         )
-        optional_pet.add_argument("-al", "--acq_label",
+        optional_pet.add_argument("-acq", "--acq_label",
                                   type=str,
                                   default=None,
                                   help='Name of the PET tracer label in the acquisition entity '
