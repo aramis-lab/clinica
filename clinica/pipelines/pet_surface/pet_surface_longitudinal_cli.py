@@ -17,16 +17,23 @@ class PetSurfaceLongitudinalCLI(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
-        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id)
+        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_label)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("bids_directory",
                                   help='Path to the BIDS directory.')
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory. (Filled with results from t1-freesurfer-longitudinal pipeline')
-        # Optional arguments (e.g. FWHM)
-        optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("-pt", "--pet_tracer", type=str, default='fdg',
-                              help='PET tracer type. Can be fdg or av45 (default: --pet_tracer %(default)s)')
+        clinica_comp.add_argument("acq_label", type=str,
+                                  help='Name of the PET tracer label in the acquisition entity '
+                                       '(acq-<acq_label>).')
+        clinica_comp.add_argument("suvr_reference_region",  choices=['cerebellumPons', 'pons'],
+                                  help='Intensity normalization using the average PET uptake in reference regions '
+                                       'resulting in a standardized uptake value ratio (SUVR) map. It can be '
+                                       'cerebellumPons (used for AV45 tracers) or pons (used for 18F-FDG tracers).')
+        clinica_comp.add_argument("pvc_psf_tsv",
+                                  help='TSV file containing for each PET image its point spread function (PSF) measured '
+                                       'in mm at x, y & z coordinates. Columns must contain: '
+                                       'participant_id, session_id, acq_label, psf_x, psf_y and psf_z.')
         # Clinica standard arguments (e.g. --n_procs)
         self.add_clinica_standard_arguments()
 
@@ -37,7 +44,9 @@ class PetSurfaceLongitudinalCLI(ce.CmdParser):
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
 
         parameters = {
-            'pet_tracer': args.pet_tracer,
+            'acq_label': args.acq_label,
+            'suvr_reference_region': args.suvr_reference_region,
+            'pvc_psf_tsv': self.absolute_path(args.pvc_psf_tsv),
             'longitudinal': True
         }
         pipeline = PetSurface(

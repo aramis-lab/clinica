@@ -1,18 +1,9 @@
 # coding: utf8
 
-import numpy as np
-import pandas as pd
-import nibabel as nib
 import os
 
-__author__ = "Simona Bottani"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Simona Bottani"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Arnaud Marcoux"
-__email__ = "simona.bottani@icm-institute.com"
-__status__ = "Development"
+import numpy as np
+import pandas as pd
 
 
 def load_data(images, caps_directory, subjects, sessions, dataset):

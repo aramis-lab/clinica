@@ -245,27 +245,15 @@ DWI_PREPROC_BVAL = {'pattern': 'dwi/preprocessing/*_dwi_space-*_preproc.bval',
                     'description': 'preprocessed bval',
                     'needed_pipeline': 'dwi-preprocessing-using-t1 or dwi-preprocessing-using-fieldmap'}
 
-""" fMRI """
-
-# BIDS
-FMRI_BOLD_NII = {'pattern': 'func/sub-*_ses-*_bold.nii*',
-                 'description': 'blood-oxygen-level-dependent (BOLD) image'}
-
-FMRI_BOLD_JSON = {'pattern': 'func/sub-*_ses-*_bold.json',
-                  'description': 'blood-oxygen-level-dependent (BOLD) JSON file'}
-
 """ PET """
 
 # BIDS
 
-PET_FDG_NII = {'pattern': 'pet/sub-*_ses-*_acq-fdg_pet.nii*',
-               'description': 'FDG-PET data'}
 
-PET_FDG_JSON = {'pattern': 'pet/sub-*_ses-*_acq-fdg_pet.json',
-                'description': 'JSON file describing the point spread function (PSF) in FDG PET.'}
-
-PET_AV45_NII = {'pattern': 'pet/sub-*_ses-*_acq-av45_pet.nii*',
-                'description': 'AV45-PET data'}
-
-PET_AV45_JSON = {'pattern': 'pet/sub-*_ses-*_acq-av45_pet.json',
-                 'description': 'JSON file describing the point spread function (PSF) in AV45 PET.'}
+def bids_pet_nii(acq_label):
+    import os
+    information = {
+        'pattern': os.path.join('pet', 'sub-*_ses-*_acq-' + acq_label + '_pet.nii*'),
+        'description': 'PET data with ' + acq_label + ' tracer'
+    }
+    return information

@@ -19,7 +19,7 @@ class DeepLearningPrepareDataCLI(ce.CmdParser):
         """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
 
-        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id...)
+        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_label...)
         # Most of the time, you will want to read your pipeline inputs into
         # a BIDS and/or CAPS directory. If your pipeline does not require BIDS input,
         # simply remove the two lines involving the BIDS directory.

@@ -13,12 +13,12 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         """Check pipeline parameters."""
         from clinica.utils.group import check_group_label
 
-        if 'group_id' not in self.parameters.keys():
-            raise KeyError('Missing compulsory group_id key in pipeline parameter.')
+        if 'group_label' not in self.parameters.keys():
+            raise KeyError('Missing compulsory group_label key in pipeline parameter.')
         if 'dartel_tissues' not in self.parameters.keys():
             self.parameters['dartel_tissues'] = [1, 2, 3]
 
-        check_group_label(self.parameters['group_id'])
+        check_group_label(self.parameters['group_label'])
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file."""
@@ -57,13 +57,13 @@ class T1VolumeCreateDartel(cpe.Pipeline):
 
         representative_output = os.path.join(self.caps_directory,
                                              'groups',
-                                             'group-' + self.parameters['group_id'],
+                                             'group-' + self.parameters['group_label'],
                                              't1',
-                                             'group-' + self.parameters['group_id'] + '_template.nii.gz'
+                                             'group-' + self.parameters['group_label'] + '_template.nii.gz'
                                              )
         if os.path.exists(representative_output):
             cprint("%sDARTEL template for %s already exists. Currently, Clinica does not propose to overwrite outputs "
-                   "for this pipeline.%s" % (Fore.YELLOW, self.parameters['group_id'], Fore.RESET))
+                   "for this pipeline.%s" % (Fore.YELLOW, self.parameters['group_label'], Fore.RESET))
             print_groups_in_caps_directory(self.caps_directory)
             sys.exit(0)
 
@@ -101,7 +101,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
             cprint('Computational time for DARTEL creation will depend on the number of images.')
-            print_begin_image('group-' + self.parameters['group_id'])
+            print_begin_image('group-' + self.parameters['group_label'])
 
         self.connect([
             (read_parameters_node, self.input_node, [('dartel_inputs', 'dartel_input_images')])
@@ -123,7 +123,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         write_flowfields_node.inputs.base_directory = self.caps_directory
         write_flowfields_node.inputs.parameterization = False
         write_flowfields_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
-                                                  '/t1/spm/dartel/group-' + self.parameters['group_id']
+                                                  '/t1/spm/dartel/group-' + self.parameters['group_label']
                                                   for i in range(len(self.subjects))]
         write_flowfields_node.inputs.regexp_substitutions = [
             (r'(.*)_Template(\.nii(\.gz)?)$', r'\1\2'),
@@ -136,7 +136,7 @@ class T1VolumeCreateDartel(cpe.Pipeline):
             (r'(.*)r(sub-.*)(\.nii(\.gz)?)$', r'\1\2\3'),
             (r'(.*)_dartelinput(\.nii(\.gz)?)$', r'\1\2'),
             (r'(.*)flow_fields/u_(sub-.*)_segm-.*(\.nii(\.gz)?)$',
-             r'\1\2_target-' + re.escape(self.parameters['group_id']) + r'_transformation-forward_deformation\3'),
+             r'\1\2_target-' + re.escape(self.parameters['group_label']) + r'_transformation-forward_deformation\3'),
             (r'trait_added', r'')
         ]
 
@@ -145,12 +145,12 @@ class T1VolumeCreateDartel(cpe.Pipeline):
         write_template_node = npe.Node(nio.DataSink(), name='write_template_node')
         write_template_node.inputs.parameterization = False
         write_template_node.inputs.base_directory = self.caps_directory
-        write_template_node.inputs.container = op.join('groups/group-' + self.parameters['group_id'], 't1')
+        write_template_node.inputs.container = op.join('groups/group-' + self.parameters['group_label'], 't1')
         write_template_node.inputs.regexp_substitutions = [
             (r'(.*)final_template_file/.*(\.nii(\.gz)?)$',
-             r'\1group-' + re.escape(self.parameters['group_id']) + r'_template\2'),
+             r'\1group-' + re.escape(self.parameters['group_label']) + r'_template\2'),
             (r'(.*)template_files/.*([0-9])(\.nii(\.gz)?)$',
-             r'\1group-' + re.escape(self.parameters['group_id']) + r'_iteration-\2_template\3')
+             r'\1group-' + re.escape(self.parameters['group_label']) + r'_iteration-\2_template\3')
         ]
 
         self.connect([

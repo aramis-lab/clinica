@@ -52,7 +52,7 @@ def test_instantiate_T1VolumeCreateDartel():
     root = join(root, 'data', 'T1VolumeCreateDartel')
 
     parameters = {
-        'group_id': 'UnitTest'
+        'group_label': 'UnitTest'
     }
     pipeline = T1VolumeCreateDartel(
         bids_directory=join(root, 'in', 'bids'),
@@ -71,7 +71,7 @@ def test_instantiate_T1VolumeDartel2MNI():
     root = join(root, 'data', 'T1VolumeDartel2MNI')
 
     parameters = {
-        'group_id': 'UnitTest'
+        'group_label': 'UnitTest'
     }
     pipeline = T1VolumeDartel2MNI(
         bids_directory=join(root, 'in', 'bids'),
@@ -90,7 +90,7 @@ def test_instantiate_T1VolumeRegisterDartel():
     root = join(root, 'data', 'T1VolumeExistingDartel')
 
     parameters = {
-        'group_id': 'UnitTest'
+        'group_label': 'UnitTest'
     }
     pipeline = T1VolumeRegisterDartel(
         bids_directory=join(root, 'in', 'bids'),
@@ -109,7 +109,7 @@ def test_instantiate_T1VolumeParcellation():
     root = join(root, 'data', 'T1VolumeParcellation')
 
     parameters = {
-        'group_id': 'UnitTest'
+        'group_label': 'UnitTest'
     }
     pipeline = T1VolumeParcellation(
         caps_directory=join(root, 'in', 'caps'),
@@ -191,7 +191,9 @@ def test_instantiate_PETVolume():
     root = join(root, 'data', 'PETVolume')
 
     parameters = {
-        'group_id': 'UnitTest'
+        'group_label': 'UnitTest',
+        'acq_label': 'fdg',
+        'suvr_reference_region': 'pons'
     }
     pipeline = PETVolume(
         bids_directory=join(root, 'in', 'bids'),
@@ -235,6 +237,9 @@ def test_instantiate_PETSurfaceCrossSectional():
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'PETSurface')
     parameters = {
+        'acq_label': 'FDG',
+        'suvr_reference_region': 'pons',
+        'pvc_psf_tsv': join(root, 'in', 'subjects.tsv'),
         'longitudinal': False
     }
     pipeline = PetSurface(
@@ -253,6 +258,9 @@ def test_instantiate_PETSurfaceCrossSectional():
 #     root = dirname(abspath(join(abspath(__file__), pardir)))
 #     root = join(root, 'data', 'PETSurfaceLongitudinal')
 #     parameters = {
+#         'acq_label': 'FDG',
+#         'suvr_reference_region': 'pons',
+#         'pvc_psf_tsv': join(root, 'in', 'subjects.tsv'),
 #         'longitudinal': True
 #     }
 #     pipeline = PetSurface(
@@ -273,7 +281,7 @@ def test_instantiate_InputsML():
     caps_dir = join(root, 'in', 'caps')
     tsv = join(root, 'in', 'subjects.tsv')
     diagnoses_tsv = join(root, 'in', 'diagnosis.tsv')
-    group_id = 'allADNIdartel'
+    group_label = 'allADNIdartel'
     image_type = ['T1', 'fdg']
     atlases = ['AAL2', 'Neuromorphometrics', 'AICHA', 'LPBA40', 'Hammers']
     possible_psf = [0, 5, 10, 15, 20, 25]
@@ -281,7 +289,7 @@ def test_instantiate_InputsML():
     voxel_input = [CAPSVoxelBasedInput({'caps_directory': caps_dir,
                                         'subjects_visits_tsv': tsv,
                                         'diagnoses_tsv': diagnoses_tsv,
-                                        'group_id': group_id,
+                                        'group_label': group_label,
                                         'image_type': im,
                                         'fwhm': 8})
                    for im in image_type]
@@ -289,7 +297,7 @@ def test_instantiate_InputsML():
     region_input = [CAPSRegionBasedInput({'caps_directory': caps_dir,
                                           'subjects_visits_tsv': tsv,
                                           'diagnoses_tsv': diagnoses_tsv,
-                                          'group_id': group_id,
+                                          'group_label': group_label,
                                           'image_type': im,
                                           'atlas': at})
                     for im in image_type
@@ -298,7 +306,7 @@ def test_instantiate_InputsML():
     vertex_input = [CAPSVertexBasedInput({'caps_directory': caps_dir,
                                           'subjects_visits_tsv': tsv,
                                           'diagnoses_tsv': diagnoses_tsv,
-                                          'group_id': group_id,
+                                          'group_label': group_label,
                                           'image_type': 'fdg',
                                           'fwhm': fwhm})
                     for fwhm in possible_psf]
@@ -413,7 +421,7 @@ def test_instantiate_StatisticsVolume():
         'measure_label': 'fdg',
         'group_label': 'UnitTest',
         'cluster_threshold': 0.001,
-        'group_id_caps': None,
+        'group_label_caps': None,
         'full_width_at_half_maximum': 8
     }
 

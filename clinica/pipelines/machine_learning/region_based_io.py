@@ -6,23 +6,14 @@ import pandas as pd
 import nibabel as nib
 from os.path import join
 
-__author__ = "Jorge Samper-Gonzalez"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Jorge Samper-Gonzalez", "Simona Bottani"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Jorge Samper-Gonzalez"
-__email__ = "jorge.samper-gonzalez@inria.fr"
-__status__ = "Development"
 
-
-def get_caps_t1_list(input_directory, subjects_visits_tsv, group_id, atlas_id):
+def get_caps_t1_list(input_directory, subjects_visits_tsv, group_label, atlas_id):
     """
     path to arrive to the list of the file with the statistics on atlas_id
     Args:
         input_directory:
         subjects_visits_tsv:
-        group_id:
+        group_label:
         atlas_id:
 
     Returns:
@@ -38,19 +29,19 @@ def get_caps_t1_list(input_directory, subjects_visits_tsv, group_id, atlas_id):
     subjects = list(subjects_visits.participant_id)
     sessions = list(subjects_visits.session_id)
     image_list = [join(input_directory + '/subjects/' + subjects[i] + '/'
-                       + sessions[i] + '/t1/spm/dartel/group-' + group_id + '/atlas_statistics/' + subjects[i] + '_'
+                       + sessions[i] + '/t1/spm/dartel/group-' + group_label + '/atlas_statistics/' + subjects[i] + '_'
                        + sessions[i]+'_T1w_space-'+atlas_id+'_map-graymatter_statistics.tsv')
                   for i in range(len(subjects))]
     return image_list
 
 
-def get_caps_pet_list(input_directory, subjects_visits_tsv, group_id, atlas_id):
+def get_caps_pet_list(input_directory, subjects_visits_tsv, group_label, atlas_id):
     """
 
     Args:
         input_directory:
         subjects_visits_tsv:
-        group_id:
+        group_label:
         atlas_id:
 
     Returns:

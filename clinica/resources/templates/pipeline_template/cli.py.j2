@@ -25,7 +25,7 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
         """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
 
-        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_id...)
+        # Clinica compulsory arguments (e.g. BIDS, CAPS, group_label...)
         # Most of the time, you will want to read your pipeline inputs into
         # a BIDS and/or CAPS directory. If your pipeline does not require BIDS input,
         # simply remove the two lines involving the BIDS directory.
@@ -35,9 +35,9 @@ class {{ pipeline.class_name }}CLI(ce.CmdParser):
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory.')
 
-        # group_id can be used by certain pipelines when some operations are performed at the group level
-        # (for example, generation of a template in pipeline t1-volume)
-        # clinica_comp.add_argument("group_id",
+        # group_label can be used by certain pipelines when some operations are performed at the group level
+        # (for example, generation of a template in t1-volume pipeline)
+        # clinica_comp.add_argument("group_label",
         #                           help='User-defined identifier for the provided group of subjects.')
 
         # Add your own pipeline command line arguments here to be used in the

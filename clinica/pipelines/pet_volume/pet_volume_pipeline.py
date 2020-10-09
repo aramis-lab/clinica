@@ -1,7 +1,8 @@
 # coding: utf8
 
-import clinica.pipelines.engine as cpe
 from nipype import config
+
+import clinica.pipelines.engine as cpe
 
 # Use hash instead of parameters for iterables folder names
 # Otherwise path will be too long and generate OSError
@@ -20,12 +21,12 @@ class PETVolume(cpe.Pipeline):
         from clinica.utils.group import check_group_label
         default_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
 
-        if 'group_id' not in self.parameters.keys():
-            raise KeyError('Missing compulsory group_id key in pipeline parameter.')
-        if 'psf_tsv' not in self.parameters.keys():
-            self.parameters['psf_tsv'] = None
-        if 'pet_tracer' not in self.parameters.keys():
-            self.parameters['pet_tracer'] = 'fdg'
+        if 'group_label' not in self.parameters.keys():
+            raise KeyError('Missing compulsory group_label key in pipeline parameter.')
+        if 'acq_label' not in self.parameters.keys():
+            raise KeyError('Missing compulsory acq_label key in pipeline parameter.')
+        if 'pvc_psf_tsv' not in self.parameters.keys():
+            self.parameters['pvc_psf_tsv'] = None
         if 'mask_tissues' not in self.parameters.keys():
             self.parameters['mask_tissues'] = [1, 2, 3]
         if 'mask_threshold' not in self.parameters.keys():
@@ -37,15 +38,14 @@ class PETVolume(cpe.Pipeline):
         if 'atlases' not in self.parameters.keys():
             self.parameters['atlases'] = default_atlases
 
-        check_group_label(self.parameters['group_id'])
+        check_group_label(self.parameters['group_label'])
 
     def check_custom_dependencies(self):
-        """Check dependencies that can not be listed in the `info.json` file.
-        """
+        """Check dependencies that can not be listed in the `info.json` file."""
         pass
 
     def get_input_fields(self):
-        """Specify the list of possible inputs of this pipelines.
+        """Specify the list of possible inputs of this pipeline.
 
         Returns:
             A list of (string) input fields name.
@@ -55,18 +55,17 @@ class PETVolume(cpe.Pipeline):
                 't1_image_native',
                 'mask_tissues',
                 'pvc_mask_tissues',
-                'fwhm',
+                'psf',
                 'flow_fields',
                 'dartel_template',
                 'reference_mask']
 
     def get_output_fields(self):
-        """Specify the list of possible outputs of this pipelines.
+        """Specify the list of possible outputs of this pipeline.
 
         Returns:
             A list of (string) output fields name.
         """
-
         return ['pet_t1_native',
                 'pet_mni',
                 'pet_suvr',
@@ -83,32 +82,32 @@ class PETVolume(cpe.Pipeline):
                 ]
 
     def build_input_node(self):
-        """Build and connect an input node to the pipelines.
-        """
+        """Build and connect an input node to the pipeline."""
         import os
-        from os.path import join, split, realpath, exists
+        from os.path import join, exists
         from colorama import Fore
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
-        from .pet_volume_utils import read_psf_information
-        from clinica.utils.inputs import clinica_file_reader, clinica_group_reader, insensitive_glob
+        from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
         from clinica.utils.input_files import (t1_volume_final_group_template,
                                                t1_volume_native_tpm,
                                                t1_volume_native_tpm_in_mni,
-                                               t1_volume_deformation_to_template)
+                                               t1_volume_deformation_to_template,
+                                               bids_pet_nii,
+                                               T1W_NII)
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.ux import print_groups_in_caps_directory, print_images_to_process
         from clinica.iotools.utils.data_handling import check_relative_volume_location_in_world_coordinate_system
-        import clinica.utils.input_files as input_files
         from clinica.utils.filemanip import save_participants_sessions
+        from clinica.utils.pet import read_psf_information, get_suvr_mask
         from clinica.utils.stream import cprint
 
         # Check that group already exists
-        if not exists(join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])):
+        if not exists(join(self.caps_directory, 'groups', 'group-' + self.parameters['group_label'])):
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
                 '%sGroup %s does not exist. Did you run t1-volume or t1-volume-create-dartel pipeline?%s' %
-                (Fore.RED, self.parameters['group_id'], Fore.RESET)
+                (Fore.RED, self.parameters['group_label'], Fore.RESET)
             )
 
         # Tissues DataGrabber
@@ -116,30 +115,14 @@ class PETVolume(cpe.Pipeline):
         all_errors = []
 
         # Grab reference mask
-        if self.parameters['pet_tracer'] == 'fdg':
-            reference_mask_template = 'region-pons_eroded-6mm_mask.nii*'
-            self.parameters['suvr_region'] = 'pons'
-            pet_file_to_grab = input_files.PET_FDG_NII
-        elif self.parameters['pet_tracer'] == 'av45':
-            reference_mask_template = 'region-cerebellumPons_eroded-6mm_mask.nii*'
-            self.parameters['suvr_region'] = 'cerebellumPons'
-            pet_file_to_grab = input_files.PET_AV45_NII
-        else:
-            raise NotImplementedError('Only "fdg" or "av45" tracers are currently accepted (given tracer "%s").' %
-                                      self.parameters['pet_tracer'])
-        reference_mask_path = join(split(realpath(__file__))[0], '../../resources/masks', reference_mask_template)
-        reference_mask_file = insensitive_glob(reference_mask_path)
-        if len(reference_mask_file) != 1:
-            all_errors.append('An error happened while trying to get reference mask ' + str(reference_mask_path))
-        else:
-            reference_mask_file = reference_mask_file[0]
+        reference_mask_file = get_suvr_mask(self.parameters['suvr_reference_region'])
 
         # PET from BIDS directory
         try:
             pet_bids = clinica_file_reader(self.subjects,
                                            self.sessions,
                                            self.bids_directory,
-                                           pet_file_to_grab)
+                                           bids_pet_nii(self.parameters['acq_label']))
         except ClinicaException as e:
             all_errors.append(e)
 
@@ -148,7 +131,7 @@ class PETVolume(cpe.Pipeline):
             t1w_bids = clinica_file_reader(self.subjects,
                                            self.sessions,
                                            self.bids_directory,
-                                           input_files.T1W_NII)
+                                           T1W_NII)
         except ClinicaException as e:
             all_errors.append(e)
 
@@ -176,22 +159,22 @@ class PETVolume(cpe.Pipeline):
             flowfields_caps = clinica_file_reader(self.subjects,
                                                   self.sessions,
                                                   self.caps_directory,
-                                                  t1_volume_deformation_to_template(self.parameters['group_id']))
+                                                  t1_volume_deformation_to_template(self.parameters['group_label']))
         except ClinicaException as e:
             all_errors.append(e)
 
         # Dartel Template
         try:
             final_template = clinica_group_reader(self.caps_directory,
-                                                  t1_volume_final_group_template(self.parameters['group_id']))
+                                                  t1_volume_final_group_template(self.parameters['group_label']))
         except ClinicaException as e:
             all_errors.append(e)
 
-        if self.parameters['psf_tsv'] is not None:
-            iterables_fwhm = read_psf_information(self.parameters['psf_tsv'], self.subjects, self.sessions)
+        if self.parameters['pvc_psf_tsv'] is not None:
+            iterables_psf = read_psf_information(self.parameters['pvc_psf_tsv'], self.subjects, self.sessions)
             self.parameters['apply_pvc'] = True
         else:
-            iterables_fwhm = [[]] * len(self.subjects)
+            iterables_psf = [[]] * len(self.subjects)
             self.parameters['apply_pvc'] = False
 
         if self.parameters['apply_pvc']:
@@ -222,9 +205,9 @@ class PETVolume(cpe.Pipeline):
             raise ClinicaException(error_message)
 
         check_relative_volume_location_in_world_coordinate_system('T1w-MRI', t1w_bids,
-                                                                  self.parameters['pet_tracer'] + ' PET', pet_bids,
+                                                                  self.parameters['acq_label'] + ' PET', pet_bids,
                                                                   self.bids_directory,
-                                                                  self.parameters['pet_tracer'])
+                                                                  self.parameters['acq_label'])
 
         # Save subjects to process in <WD>/<Pipeline.name>/participants.tsv
         folder_participants_tsv = os.path.join(self.base_dir, self.name)
@@ -242,7 +225,7 @@ class PETVolume(cpe.Pipeline):
                                    iterables=[('pet_image', pet_bids),
                                               ('t1_image_native', t1w_bids),
                                               ('mask_tissues', tissues_input),
-                                              ('fwhm', iterables_fwhm),
+                                              ('psf', iterables_psf),
                                               ('flow_fields', flowfields_caps),
                                               ('pvc_mask_tissues', pvc_tissues_input)],
                                    synchronize=True)
@@ -250,19 +233,19 @@ class PETVolume(cpe.Pipeline):
         read_input_node.inputs.reference_mask = reference_mask_file
         read_input_node.inputs.dartel_template = final_template
 
-        self.connect([(read_input_node, self.input_node, [('pet_image', 'pet_image')]),
-                      (read_input_node, self.input_node, [('t1_image_native', 't1_image_native')]),
-                      (read_input_node, self.input_node, [('mask_tissues', 'mask_tissues')]),
-                      (read_input_node, self.input_node, [('flow_fields', 'flow_fields')]),
-                      (read_input_node, self.input_node, [('dartel_template', 'dartel_template')]),
-                      (read_input_node, self.input_node, [('reference_mask', 'reference_mask')]),
-                      (read_input_node, self.input_node, [('fwhm', 'fwhm')]),
-                      (read_input_node, self.input_node, [('pvc_mask_tissues', 'pvc_mask_tissues')])])
+        self.connect([
+            (read_input_node, self.input_node, [('pet_image', 'pet_image'),
+                                                ('t1_image_native', 't1_image_native'),
+                                                ('mask_tissues', 'mask_tissues'),
+                                                ('flow_fields', 'flow_fields'),
+                                                ('dartel_template', 'dartel_template'),
+                                                ('reference_mask', 'reference_mask'),
+                                                ('psf', 'psf'),
+                                                ('pvc_mask_tissues', 'pvc_mask_tissues')])
+        ])
 
     def build_output_node(self):
-        """Build and connect an output node to the pipelines.
-        """
-
+        """Build and connect an output node to the pipeline."""
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
         import nipype.interfaces.io as nio
@@ -291,17 +274,17 @@ class PETVolume(cpe.Pipeline):
             (r'(.*/)pet_mni/wr(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-Ixi549Space_pet\3'),
             (r'(.*/)pet_pvc_mni/wpvc-rbv_r(sub-.*)(\.nii(\.gz)?)$', r'\1\2_space-Ixi549Space_pvc-rbv_pet\3'),
             (r'(.*/)pet_suvr/suvr_wr(sub-.*)(\.nii(\.gz)?)$',
-             r'\1\2_space-Ixi549Space_suvr-' + re.escape(self.parameters['suvr_region']) + r'_pet\3'),
+             r'\1\2_space-Ixi549Space_suvr-' + re.escape(self.parameters['suvr_reference_region']) + r'_pet\3'),
             (r'(.*/)pet_pvc_suvr/suvr_wpvc-rbv_r(sub-.*)(\.nii(\.gz)?)$',
-             r'\1\2_space-Ixi549Space_pvc-rbv_suvr-' + re.escape(self.parameters['suvr_region']) + r'_pet\3'),
+             r'\1\2_space-Ixi549Space_pvc-rbv_suvr-' + re.escape(self.parameters['suvr_reference_region']) + r'_pet\3'),
             (r'(.*/)pet_suvr_masked/masked_suvr_wr(sub-.*)(\.nii(\.gz)?)$',
-             r'\1\2_space-Ixi549Space_suvr-' + re.escape(self.parameters['suvr_region']) + r'_mask-brain_pet\3'),
+             r'\1\2_space-Ixi549Space_suvr-' + re.escape(self.parameters['suvr_reference_region']) + r'_mask-brain_pet\3'),
             (r'(.*/)pet_pvc_suvr_masked/masked_suvr_wpvc-rbv_r(sub-.*)(\.nii(\.gz)?)$',
-             r'\1\2_space-Ixi549Space_pvc-rbv_suvr-' + re.escape(self.parameters['suvr_region']) + r'_mask-brain_pet\3'),
+             r'\1\2_space-Ixi549Space_pvc-rbv_suvr-' + re.escape(self.parameters['suvr_reference_region']) + r'_mask-brain_pet\3'),
             (r'(.*/)pet_suvr_masked_smoothed/(fwhm-[0-9]+mm)_masked_suvr_wr(sub-.*)(\.nii(\.gz)?)$',
-             r'\1\3_space-Ixi549Space_suvr-' + re.escape(self.parameters['suvr_region']) + r'_mask-brain_\2_pet\4'),
+             r'\1\3_space-Ixi549Space_suvr-' + re.escape(self.parameters['suvr_reference_region']) + r'_mask-brain_\2_pet\4'),
             (r'(.*/)pet_pvc_suvr_masked_smoothed/(fwhm-[0-9]+mm)_masked_suvr_wpvc-rbv_r(sub-.*)(\.nii(\.gz)?)$',
-             r'\1\3_space-Ixi549Space_pvc-rbv_suvr-' + re.escape(self.parameters['suvr_region']) + r'_mask-brain_\2_pet\4'),
+             r'\1\3_space-Ixi549Space_pvc-rbv_suvr-' + re.escape(self.parameters['suvr_reference_region']) + r'_mask-brain_\2_pet\4'),
             (r'(.*/)binary_mask/(sub-.*_T1w_).*(space-[a-zA-Z0-9]+).*(_brainmask\.nii(\.gz)?)$', r'\1\2\3\4')
         ]
 
@@ -313,13 +296,13 @@ class PETVolume(cpe.Pipeline):
         write_atlas_node.inputs.parameterization = False
         write_atlas_node.inputs.regexp_substitutions = [
             (r'(.*/atlas_statistics/)suvr_wr(sub-.*)(_statistics\.tsv)$', r'\1\2' + r'_suvr-' +
-             re.escape(self.parameters['suvr_region']) + r'\3'),
+             re.escape(self.parameters['suvr_reference_region']) + r'\3'),
             (r'(.*/)pvc_(atlas_statistics/)suvr_wpvc-rbv_r(sub-.*)(_statistics\.tsv)$', r'\1\2\3' + r'_pvc-rbv_suvr-' +
-             re.escape(self.parameters['suvr_region']) + r'\4')
+             re.escape(self.parameters['suvr_reference_region']) + r'\4')
         ]
 
         self.connect([(self.input_node, container_path, [('pet_image', 'pet_filename')]),
-                      (container_path, write_images_node, [(('container', fix_join, 'group-' + self.parameters['group_id']),
+                      (container_path, write_images_node, [(('container', fix_join, 'group-' + self.parameters['group_label']),
                                                             'container')]),
                       (self.output_node, write_images_node, [(('pet_t1_native', zip_nii, True), 'pet_t1_native'),
                                                              (('pet_mni', zip_nii, True), 'pet_mni'),
@@ -335,34 +318,26 @@ class PETVolume(cpe.Pipeline):
                                                               'pet_pvc_suvr_masked'),
                                                              (('pet_pvc_suvr_masked_smoothed', zip_nii, True),
                                                               'pet_pvc_suvr_masked_smoothed')]),
-                      (container_path, write_atlas_node, [(('container', fix_join, 'group-' + self.parameters['group_id']),
+                      (container_path, write_atlas_node, [(('container', fix_join, 'group-' + self.parameters['group_label']),
                                                            'container')]),
                       (self.output_node, write_atlas_node, [('atlas_statistics', 'atlas_statistics'),
                                                             ('pvc_atlas_statistics', 'pvc_atlas_statistics')])
                       ])
 
     def build_core_nodes(self):
-        """Build and connect the core nodes of the pipelines.
-        """
-
+        """Build and connect an output node to the pipeline."""
         import nipype.interfaces.spm as spm
         import nipype.interfaces.spm.utils as spmutils
         from nipype.interfaces.petpvc import PETPVC
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe
+
         from clinica.utils.filemanip import unzip_nii
+        from clinica.utils.spm import spm_standalone_is_available, use_spm_standalone
         import clinica.pipelines.pet_volume.pet_volume_utils as utils
 
-        import os
-
-        if 'SPMSTANDALONE_HOME' in os.environ:
-            if 'MCR_HOME' in os.environ:
-                matlab_cmd = (
-                        os.path.join(
-                            os.environ['SPMSTANDALONE_HOME'], 'run_spm12.sh')
-                        + ' ' + os.environ['MCR_HOME']
-                        + ' script')
-                spm.SPMCommand.set_mlab_paths(matlab_cmd=matlab_cmd, use_mcr=True)
+        if spm_standalone_is_available():
+            use_spm_standalone()
 
         # Initialize pipeline
         # ===================
@@ -579,9 +554,9 @@ class PETVolume(cpe.Pipeline):
                           (coreg_pet_t1, petpvc, [('coregistered_source', 'in_file'),
                                                   (('coregistered_source', utils.pet_pvc_name, 'RBV'), 'out_file')]),
                           (pvc_mask, petpvc, [('out_mask', 'mask_file')]),
-                          (self.input_node, petpvc, [(('fwhm', utils.get_from_list, 0), 'fwhm_x'),
-                                                     (('fwhm', utils.get_from_list, 1), 'fwhm_y'),
-                                                     (('fwhm', utils.get_from_list, 2), 'fwhm_z')]),
+                          (self.input_node, petpvc, [(('psf', utils.get_from_list, 0), 'fwhm_x'),
+                                                     (('psf', utils.get_from_list, 1), 'fwhm_y'),
+                                                     (('psf', utils.get_from_list, 2), 'fwhm_z')]),
                           (petpvc, dartel_mni_reg_pvc, [('out_file', 'apply_to_files')]),
                           (dartel_mni_reg_pvc, reslice_pvc, [('normalized_files', 'space_defining')]),
                           (dartel_mni_reg_pvc, norm_to_ref_pvc, [('normalized_files', 'pet_image')]),

@@ -40,8 +40,8 @@ class StatisticsVolumeCLI(ce.CmdParser):
 
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("-gic", "--group_id_caps", type=str, default=None,
-                              help='Name of the group that Clinica needs to use to grab input file.')
+        optional.add_argument("-gld", "--group_label_dartel", type=str, default=None,
+                              help='Name of the DARTEL template that Clinica needs to use to grab input file.')
         optional.add_argument("-fwhm", "--full_width_at_half_maximum", type=int, default=8,
                               help='Full Width at Half Maximum (FWHM) of the smoothing used in your input file '
                                    '(default: --full_width_at_half_maximum %(default)s).')
@@ -88,10 +88,10 @@ class StatisticsVolumeCLI(ce.CmdParser):
         parameters = {
             'contrast': args.contrast,
             'orig_input_data': args.orig_input_data,
-            'group_label': args.group_id,
+            'group_label': args.group_label,
             'custom_files': args.custom_files,
             'cluster_threshold': args.cluster_threshold,
-            'group_id_caps': args.group_id_caps,
+            'group_label_dartel': args.group_label_dartel,
             'full_width_at_half_maximum': args.full_width_at_half_maximum
         }
 

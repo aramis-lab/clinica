@@ -19,12 +19,12 @@ class T1VolumeParcellation(cpe.Pipeline):
 
         default_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
 
-        if 'group_id' not in self.parameters.keys():
-            raise KeyError('Missing compulsory group_id key in pipeline parameter.')
+        if 'group_label' not in self.parameters.keys():
+            raise KeyError('Missing compulsory group_label key in pipeline parameter.')
         if 'atlases' not in self.parameters.keys():
             self.parameters['atlases'] = default_atlases
 
-        check_group_label(self.parameters['group_id'])
+        check_group_label(self.parameters['group_label'])
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.
@@ -57,18 +57,18 @@ class T1VolumeParcellation(cpe.Pipeline):
         from clinica.utils.ux import print_groups_in_caps_directory, print_images_to_process
 
         # Check that group already exists
-        if not os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_id'])):
+        if not os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_label'])):
             print_groups_in_caps_directory(self.caps_directory)
             raise ClinicaException(
                 '%sGroup %s does not exist. Did you run t1-volume or t1-volume-create-dartel pipeline?%s' %
-                (Fore.RED, self.parameters['group_id'], Fore.RESET)
+                (Fore.RED, self.parameters['group_label'], Fore.RESET)
             )
 
         try:
             gm_mni = clinica_file_reader(self.subjects,
                                          self.sessions,
                                          self.caps_directory,
-                                         t1_volume_template_tpm_in_mni(self.parameters['group_id'], 1, True))
+                                         t1_volume_template_tpm_in_mni(self.parameters['group_label'], 1, True))
         except ClinicaException as e:
             final_error_str = 'Clinica faced error(s) while trying to read files in your CAPS directory.\n'
             final_error_str += str(e)
@@ -118,7 +118,7 @@ class T1VolumeParcellation(cpe.Pipeline):
         datasink.inputs.parameterization = True
         datasink.inputs.regexp_substitutions = [
             (r'(.*)(atlas_statistics)/.*/(sub-(.*)_ses-(.*)_T1.*)$',
-             r'\1/subjects/sub-\4/ses-\5/t1/spm/dartel/group-' + self.parameters['group_id'] + r'/\2/\3')]
+             r'\1/subjects/sub-\4/ses-\5/t1/spm/dartel/group-' + self.parameters['group_label'] + r'/\2/\3')]
 
         # Connection
         # ==========

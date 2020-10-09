@@ -98,17 +98,13 @@ def remove_nan(volname):
     Returns:
         (string) Path to the volume in Nifti that does not contain any NaNs
     """
-    import nibabel as nib
     import os
+    import nibabel as nib
+    import numpy as np
 
     # Load the volume and get the data
     nifti_in = nib.load(volname)
-    data = nifti_in.get_data()
-
-    # Extract mask where input data is different from itself (equivalent to finding NaNs, because NaN != NaN is True)
-    # and replace with 0s
-    nan_mask = data != data
-    data[nan_mask] = 0
+    data = np.nan_to_num(nifti_in.get_data())
 
     # Now create final image (using header of original image), and save it in current directory
     nifti_out = nib.Nifti1Image(data, nifti_in.affine, header=nifti_in.header)
@@ -658,50 +654,6 @@ def get_mid_surface(in_surfaces):
     return in_surfaces[3]
 
 
-def readpsf(json_path):
-    """readpsf is able to read the json file associated with the PET volume, and extract information needed to perform
-    partial volume correction : the effective resolution in plane, and the effective resolution axial.
-
-        Args:
-            (string) json_path : Path to the json file containing the information
-
-        Returns:
-            (float) The effective resolution in plane
-            (float) The effective axial resolution
-        """
-    import json
-    import os
-    import datetime
-    from colorama import Fore
-    from clinica.utils.stream import cprint
-    from clinica.utils.exceptions import ClinicaException
-
-    if not os.path.exists(json_path):
-        raise Exception('File ' + json_path + ' does not exist. Point spread function information must be provided.')
-
-    # This is a standard way of reading data in a json
-    with open(json_path) as df:
-        data = json.load(df)
-    try:
-        in_plane = data['Psf'][0]['EffectiveResolutionInPlane']
-    except KeyError:
-        now = datetime.datetime.now().strftime('%H:%M:%S')
-        error_msg = '%s[%s] Error: Clinica could not find EffectiveResolutionInPlane in the following JSON file: %s%s'\
-                    % (Fore.RED, now, json_path, Fore.RESET)
-        cprint(error_msg)
-        raise ClinicaException(error_msg)
-    try:
-        axial = data['Psf'][0]['EffectiveResolutionAxial']
-    except KeyError:
-        now = datetime.datetime.now().strftime('%H:%M:%S')
-        error_msg = '%s[%s] Error: Clinica could not find EffectiveResolutionAxial in the following JSON file: %s%s'\
-                    % (Fore.RED, now, json_path, Fore.RESET)
-        cprint(error_msg)
-        raise ClinicaException(error_msg)
-
-    return in_plane, axial
-
-
 def reformat_surfname(hemi, left_surface, right_surface):
     res = None
     if hemi == 'lh':
@@ -711,13 +663,6 @@ def reformat_surfname(hemi, left_surface, right_surface):
     else:
         raise Exception('First input of this reformat_surfname function must be either lh or rh')
     return res
-
-
-def normalization_areas(pet_tracer):
-    if pet_tracer.upper() == 'FDG':
-        return 'pons'
-    elif pet_tracer.upper() == 'AV45':
-        return 'pons-cerebellum'
 
 
 def produce_tsv(pet, atlas_files):
@@ -786,16 +731,16 @@ def produce_tsv(pet, atlas_files):
 
 def get_wf(subject_id,
            session_id,
-           psf,
+           pvc_psf_tsv,
            caps_dir,
            pet,
            orig_nu,
            white_surface_left,
            white_surface_right,
            working_directory_subjects,
-           pet_tracer,
+           acq_label,
            csv_segmentation,
-           subcortical_eroded_mask,
+           suvr_reference_region,
            matscript_folder_inverse_deformation,
            destrieux_left,
            destrieux_right,
@@ -805,22 +750,29 @@ def get_wf(subject_id,
            is_longitudinal):
     """get_wf create a full workflow for only one subject, and then executes it
 
-            Args:
-                (string) subject_id          : The subject id
-                (string) session_id          : The session id
-                (string) psf                 : Path the json file containing information on the point spread function
-                (string) caps_dir            : Path to the CAPS directory
-                (string) pet                 : Path to the PET image in the bids directory
-                (string) orig_nu             : Path to the orig_nu file (must be in the CAPS directory, in mri)
-                (string) white_surface_left  : Path to the left white surface in native space of subject
-                (string) white_surface_right : Path to the right white suface in native space of subject
-                (string) csv_segmentation    : Path to the csv for the segmentation (problems encountered while using __file__)
-                (string) subcortical_eroded_mask               : Path to the mask of the eroded version used for the suvr
-                (string) matscript_folder_inverse_deformation  : Path to the current foler (containing the matlab script
-                                                                 used to call the spm function for the inverse deformation
+    Args:
+        subject_id (string): The subject ID
+        session_id (string): The session ID
+        pvc_psf_tsv (string): Path the TSV file containing information on the point spread function (PSF)
+        caps_dir (string): Path to the CAPS directory
+        pet (string): Path to the PET image in the bids directory
+        orig_nu (string): Path to the orig_nu file (must be in the CAPS directory, in mri)
+        white_surface_left (string): Path to the left white surface in native space of subject
+        white_surface_right (string): Path to the right white surface in native space of subject
+        working_directory_subjects (string):
+        acq_label (string):
+        csv_segmentation (string): Path to the CSV for the segmentation (problems encountered while using __file__)
+        suvr_reference_region (string): Label of the SUVR reference region
+        matscript_folder_inverse_deformation (string): Path to the current folder containing the matlab script used to call the spm function for the inverse deformation
+        destrieux_left (string):
+        destrieux_right (string):
+        desikan_left (string):
+        desikan_right (string):
+        spm_standalone_is_available (string):
+        is_longitudinal (string):
 
-            Returns:
-                Void
+    Returns:
+        Void
     """
     import os
     import datetime
@@ -835,6 +787,7 @@ def get_wf(subject_id,
     from nipype.interfaces.spm import Coregister, Normalize12
     import clinica.pipelines.pet_surface.pet_surface_utils as utils
     from clinica.utils.filemanip import unzip_nii
+    from clinica.utils.pet import read_psf_information, get_suvr_mask
     from clinica.utils.spm import get_tpm
     from clinica.utils.stream import cprint
     from clinica.utils.ux import print_begin_image
@@ -860,7 +813,7 @@ def get_wf(subject_id,
     unzip_orig_nu = unzip_pet.clone(name='unzip_orig_nu')
 
     unzip_mask = unzip_pet.clone(name='unzip_mask')
-    unzip_mask.inputs.in_file = subcortical_eroded_mask
+    unzip_mask.inputs.in_file = get_suvr_mask(suvr_reference_region)
 
     coreg = pe.Node(Coregister(), name='coreg')
 
@@ -907,9 +860,7 @@ def get_wf(subject_id,
     vol2vol_mask = pe.Node(ApplyVolTransform(reg_header=True, interp='nearest'),
                            name='vol2vol_mask')
 
-    tpm_nii = get_tpm()
-
-    normalize12 = pe.Node(Normalize12(tpm=tpm_nii,
+    normalize12 = pe.Node(Normalize12(tpm=get_tpm(),
                                       affine_regularization_type='mni',
                                       jobtype='est',
                                       bias_fwhm=60,
@@ -935,9 +886,15 @@ def get_wf(subject_id,
                                               output_names=['suvr'],
                                               function=utils.suvr_normalization),
                                  name='pons_normalization')
-    pons_normalization.inputs.pet_tracer = pet_tracer
+    pons_normalization.inputs.pet_tracer = acq_label
+
+    # read_psf_information expects a list of subjects/sessions and returns a list of PSF
+    psf_info = read_psf_information(pvc_psf_tsv, [subject_id], [session_id], acq_label)[0]
 
     pvc = pe.Node(PETPVC(pvc='IY'), name='petpvc')
+    pvc.inputs.fwhm_x = psf_info[0]
+    pvc.inputs.fwhm_y = psf_info[1]
+    pvc.inputs.fwhm_z = psf_info[2]
 
     reformat_surface_name = pe.Node(niu.Function(input_names=['hemi',
                                                               'left_surface',
@@ -1011,10 +968,6 @@ def get_wf(subject_id,
                                                function=utils.get_mid_surface),
                                   name='extract_mid_surface')
 
-    psfreader = pe.Node(niu.Function(input_names=['json_path'],
-                                     output_names=['in_plane', 'axial'],
-                                     function=utils.readpsf),
-                        name='psfreader')
 
     surface_atlas = {'destrieux': {'lh': destrieux_left,
                                    'rh': destrieux_right},
@@ -1051,7 +1004,7 @@ def get_wf(subject_id,
 
     inputnode.inputs.orig_nu = orig_nu
     inputnode.inputs.pet = pet
-    inputnode.inputs.psf = psf
+    inputnode.inputs.psf = pvc_psf_tsv
     inputnode.inputs.white_surface_right = white_surface_right
     inputnode.inputs.white_surface_left = white_surface_left
 
@@ -1096,16 +1049,16 @@ def get_wf(subject_id,
          r'\1/\2_\3_hemi-\4_midcorticalsurface'),
         # Projection in native space
         (r'(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_native\/.*_hemi_([a-z]+).*',
-         r'\1/\2_\3_task-rest_acq-' + pet_tracer + r'_pet_space-native_suvr-' + utils.normalization_areas(pet_tracer) + r'_pvc-iy_hemi-\4_projection.mgh'),
+         r'\1/\2_\3_task-rest_acq-' + acq_label + r'_pet_space-native_suvr-' + suvr_reference_region + r'_pvc-iy_hemi-\4_projection.mgh'),
         # Projection in fsaverage
         (r'(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*',
-         r'\1/\2_\3_task-rest_acq-' + pet_tracer + r'_pet_space-fsaverage_suvr-' + utils.normalization_areas(pet_tracer) + r'_pvc-iy_hemi-\4_fwhm-\5_projection.mgh'),
+         r'\1/\2_\3_task-rest_acq-' + acq_label + r'_pet_space-fsaverage_suvr-' + suvr_reference_region + r'_pvc-iy_hemi-\4_fwhm-\5_projection.mgh'),
         # TSV file for Destrieux atlas
         (r'(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/destrieux_tsv\/destrieux.tsv',
-         r'\1/atlas_statistics/\2_\3_task-rest_acq-' + pet_tracer.lower() + '_pet_space-destrieux_pvc-iy_suvr-' + utils.normalization_areas(pet_tracer) + '_statistics.tsv'),
+         r'\1/atlas_statistics/\2_\3_task-rest_acq-' + acq_label + '_pet_space-destrieux_pvc-iy_suvr-' + suvr_reference_region + '_statistics.tsv'),
         # TSV file for Desikan atlas
         (r'(.*(sub-.*)\/(ses-.*)\/pet\/surface)\/desikan_tsv\/desikan.tsv',
-         r'\1/atlas_statistics/\2_\3_task-rest_acq-' + pet_tracer.lower() + '_pet_space-desikan_pvc-iy_suvr-' + utils.normalization_areas(pet_tracer) + '_statistics.tsv')
+         r'\1/atlas_statistics/\2_\3_task-rest_acq-' + acq_label + '_pet_space-desikan_pvc-iy_suvr-' + suvr_reference_region + '_statistics.tsv')
     ]
     longitudinal_regexp_substitutions = [
         # Mid surface
@@ -1113,20 +1066,16 @@ def get_wf(subject_id,
          r'\1/\2_\3_\4_hemi-\5_midcorticalsurface'),
         # Projection in native space
         (r'(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/projection_native\/.*_hemi_([a-z]+).*',
-         r'\1/\2_\3_\4_task-rest_acq-' + pet_tracer + r'_pet_space-native_suvr-' + utils.normalization_areas(
-             pet_tracer) + r'_pvc-iy_hemi-\5_projection.mgh'),
+         r'\1/\2_\3_\4_task-rest_acq-' + acq_label + r'_pet_space-native_suvr-' + suvr_reference_region + r'_pvc-iy_hemi-\5_projection.mgh'),
         # Projection in fsaverage
         (r'(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/projection_fsaverage\/.*_hemi_([a-z]+).*_fwhm_([0-9]+).*',
-         r'\1/\2_\3_\4_task-rest_acq-' + pet_tracer + r'_pet_space-fsaverage_suvr-' + utils.normalization_areas(
-             pet_tracer) + r'_pvc-iy_hemi-\5_fwhm-\6_projection.mgh'),
+         r'\1/\2_\3_\4_task-rest_acq-' + acq_label + r'_pet_space-fsaverage_suvr-' + suvr_reference_region + r'_pvc-iy_hemi-\5_fwhm-\6_projection.mgh'),
         # TSV file for Destrieux atlas
         (r'(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/destrieux_tsv\/destrieux.tsv',
-         r'\1/atlas_statistics/\2_\3_\4_task-rest_acq-' + pet_tracer.lower() + '_pet_space-destrieux_pvc-iy_suvr-' + utils.normalization_areas(
-             pet_tracer) + '_statistics.tsv'),
+         r'\1/atlas_statistics/\2_\3_\4_task-rest_acq-' + acq_label + '_pet_space-destrieux_pvc-iy_suvr-' + suvr_reference_region + '_statistics.tsv'),
         # TSV file for Desikan atlas
         (r'(.*(sub-.*)\/(ses-.*)\/pet\/(long-.*)\/surface_longitudinal)\/desikan_tsv\/desikan.tsv',
-         r'\1/atlas_statistics/\2_\3_\4_task-rest_acq-' + pet_tracer.lower() + '_pet_space-desikan_pvc-iy_suvr-' + utils.normalization_areas(
-             pet_tracer) + '_statistics.tsv')
+         r'\1/atlas_statistics/\2_\3_\4_task-rest_acq-' + acq_label + '_pet_space-desikan_pvc-iy_suvr-' + suvr_reference_region + '_statistics.tsv')
     ]
     if is_longitudinal:
         datasink.inputs.regexp_substitutions = longitudinal_regexp_substitutions
@@ -1168,11 +1117,6 @@ def get_wf(subject_id,
                 (convert_gtmseg, labelconversion, [('out_file', 'gtmsegfile')]),
                 (labelconversion, merge_volume, [('list_of_regions', 'in_files')]),
 
-                (inputnode, psfreader, [('psf', 'json_path')]),
-
-                (psfreader, pvc, [('in_plane', 'fwhm_x')]),
-                (psfreader, pvc, [('in_plane', 'fwhm_y')]),
-                (psfreader, pvc, [('axial', 'fwhm_z')]),
                 (merge_volume, pvc, [('merged_file', 'mask_file')]),
                 (pons_normalization, pvc, [('suvr', 'in_file')]),
 

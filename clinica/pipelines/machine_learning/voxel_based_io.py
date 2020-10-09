@@ -5,17 +5,8 @@ import pandas as pd
 import nibabel as nib
 from os.path import join
 
-__author__ = "Jorge Samper-Gonzalez"
-__copyright__ = "Copyright 2016-2019 The Aramis Lab Team"
-__credits__ = ["Jorge Samper-Gonzalez"]
-__license__ = "See LICENSE.txt file"
-__version__ = "0.1.0"
-__maintainer__ = "Jorge Samper-Gonzalez"
-__email__ = "jorge.samper-gonzalez@inria.fr"
-__status__ = "Development"
 
-
-def get_caps_t1_list(input_directory, subjects_visits_tsv, group_id, fwhm, modulated):
+def get_caps_t1_list(input_directory, subjects_visits_tsv, group_label, fwhm, modulated):
 
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
     if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
@@ -24,18 +15,18 @@ def get_caps_t1_list(input_directory, subjects_visits_tsv, group_id, fwhm, modul
     sessions = list(subjects_visits.session_id)
     if fwhm == 0:
         image_list = [join(input_directory, 'subjects/' + subjects[i] + '/'
-                           + sessions[i] + '/t1/spm/dartel/group-' + group_id + '/'
+                           + sessions[i] + '/t1/spm/dartel/group-' + group_label + '/'
                            + subjects[i] + '_' + sessions[i] + '_T1w_segm-graymatter'+'_space-Ixi549Space_modulated-'+modulated+'_probability.nii.gz') for i in range(len(subjects))]
     else:
         image_list = [join(input_directory, 'subjects/' + subjects[i] + '/'
-                           + sessions[i] + '/t1/spm/dartel/group-' + group_id + '/'
+                           + sessions[i] + '/t1/spm/dartel/group-' + group_label + '/'
                            + subjects[i] + '_' + sessions[i] + '_T1w_segm-graymatter' + '_space-Ixi549Space_modulated-' + modulated + '_fwhm-'+fwhm+'mm_probability.nii.gz')
                       for i in range(len(subjects))]
 
     return image_list
 
 
-def get_caps_pet_list(input_directory, subjects_visits_tsv, group_id, pet_type):
+def get_caps_pet_list(input_directory, subjects_visits_tsv, group_label, pet_type):
 
     subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
     if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
@@ -44,7 +35,7 @@ def get_caps_pet_list(input_directory, subjects_visits_tsv, group_id, pet_type):
     sessions = list(subjects_visits.session_id)
 
     image_list = [join(input_directory, 'subjects/' + subjects[i] + '/'
-                       + sessions[i] + '/pet/preprocessing/group-' + group_id + '/' + subjects[i]
+                       + sessions[i] + '/pet/preprocessing/group-' + group_label + '/' + subjects[i]
                        + '_' + sessions[i] + '_task-rest_acq-' + pet_type + '_pet_space-Ixi549Space_pet.nii.gz') for i in range(len(subjects))]
 
     return image_list

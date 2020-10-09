@@ -17,12 +17,12 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
         """Check pipeline parameters."""
         from clinica.utils.group import check_group_label
 
-        if 'group_id' not in self.parameters.keys():
-            raise KeyError('Missing compulsory group_id key in pipeline parameter.')
+        if 'group_label' not in self.parameters.keys():
+            raise KeyError('Missing compulsory group_label key in pipeline parameter.')
         if 'tissues' not in self.parameters.keys():
             self.parameters['tissues'] = [1, 2, 3]
 
-        check_group_label(self.parameters['group_id'])
+        check_group_label(self.parameters['group_label'])
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipelines.
@@ -78,7 +78,7 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
             try:
                 current_iter = clinica_group_reader(
                     self.caps_directory,
-                    t1_volume_i_th_iteration_group_template(self.parameters['group_id'], i)
+                    t1_volume_i_th_iteration_group_template(self.parameters['group_label'], i)
                 )
 
                 dartel_iter_templates.append(current_iter)
@@ -117,7 +117,7 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
         write_flowfields_node.inputs.base_directory = self.caps_directory
         write_flowfields_node.inputs.parameterization = False
         write_flowfields_node.inputs.container = ['subjects/' + self.subjects[i] + '/' + self.sessions[i] +
-                                                  '/t1/spm/dartel/group-' + self.parameters['group_id']
+                                                  '/t1/spm/dartel/group-' + self.parameters['group_label']
                                                   for i in range(len(self.subjects))]
         write_flowfields_node.inputs.regexp_substitutions = [
             (r'(.*)_Template(\.nii(\.gz)?)$', r'\1\2'),
@@ -130,7 +130,7 @@ class T1VolumeRegisterDartel(cpe.Pipeline):
             (r'(.*)r(sub-.*)(\.nii(\.gz)?)$', r'\1\2\3'),
             (r'(.*)_dartelinput(\.nii(\.gz)?)$', r'\1\2'),
             (r'(.*)flow_fields/u_(sub-.*)_segm-.*(\.nii(\.gz)?)$',
-             r'\1\2_target-' + re.escape(self.parameters['group_id']) + r'_transformation-forward_deformation\3'),
+             r'\1\2_target-' + re.escape(self.parameters['group_label']) + r'_transformation-forward_deformation\3'),
             (r'trait_added', r'')
         ]
 

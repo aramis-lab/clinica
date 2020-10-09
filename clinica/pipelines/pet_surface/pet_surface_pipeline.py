@@ -12,8 +12,12 @@ class PetSurface(cpe.Pipeline):
 
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
-        if 'pet_tracer' not in self.parameters.keys():
-            self.parameters['pet_tracer'] = 'fdg'
+        if 'acq_label' not in self.parameters.keys():
+            raise KeyError('Missing compulsory acq_label key in pipeline parameter.')
+        if 'suvr_reference_region' not in self.parameters.keys():
+            raise KeyError('Missing compulsory suvr_reference_region key in pipeline parameter.')
+        if 'pvc_psf_tsv' not in self.parameters.keys():
+            raise KeyError('Missing compulsory pvc_psf_tsv key in pipeline parameter.')
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file."""
@@ -27,7 +31,6 @@ class PetSurface(cpe.Pipeline):
         """
         return ['orig_nu',
                 'pet',
-                'psf',
                 'white_surface_left',
                 'white_surface_right',
                 'destrieux_left',
@@ -74,22 +77,13 @@ class PetSurface(cpe.Pipeline):
                                             mandatory_inputs=True),
                                         synchronize=True)
 
-        if self.parameters['pet_tracer'].lower() == 'fdg':
-            pet_file_to_grab = input_files.PET_FDG_NII
-            pet_json_file_to_grab = input_files.PET_FDG_JSON
-        elif self.parameters['pet_tracer'].lower() == 'av45':
-            pet_file_to_grab = input_files.PET_AV45_NII
-            pet_json_file_to_grab = input_files.PET_AV45_JSON
-        else:
-            raise NotImplementedError('Only "fdg" or "av45" tracers are currently accepted (given tracer "%s").' %
-                                      self.parameters['pet_tracer'])
         all_errors = []
         try:
 
             read_parameters_node.inputs.pet = clinica_file_reader(self.subjects,
                                                                   self.sessions,
                                                                   self.bids_directory,
-                                                                  pet_file_to_grab)
+                                                                  input_files.bids_pet_nii(self.parameters['acq_label']))
         except ClinicaException as e:
             all_errors.append(e)
 
@@ -103,15 +97,6 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(e)
 
         try:
-            read_parameters_node.inputs.psf = clinica_file_reader(self.subjects,
-                                                                  self.sessions,
-                                                                  self.bids_directory,
-                                                                  pet_json_file_to_grab)
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-
             read_parameters_node.inputs.white_surface_right = clinica_file_reader(self.subjects,
                                                                                   self.sessions,
                                                                                   self.caps_directory,
@@ -120,7 +105,6 @@ class PetSurface(cpe.Pipeline):
             all_errors.append(e)
 
         try:
-
             read_parameters_node.inputs.white_surface_left = clinica_file_reader(self.subjects,
                                                                                  self.sessions,
                                                                                  self.caps_directory,
@@ -173,21 +157,20 @@ class PetSurface(cpe.Pipeline):
 
         check_relative_volume_location_in_world_coordinate_system('T1w-MRI (orig_nu.mgz)',
                                                                   read_parameters_node.inputs.orig_nu,
-                                                                  self.parameters['pet_tracer'].upper() + ' PET',
+                                                                  self.parameters['acq_label'].upper() + ' PET',
                                                                   read_parameters_node.inputs.pet,
                                                                   self.bids_directory,
-                                                                  self.parameters['pet_tracer'].lower())
+                                                                  self.parameters['acq_label'].lower())
 
         self.connect([
-            (read_parameters_node, self.input_node, [('pet', 'pet')]),
-            (read_parameters_node, self.input_node, [('orig_nu', 'orig_nu')]),
-            (read_parameters_node, self.input_node, [('psf', 'psf')]),
-            (read_parameters_node, self.input_node, [('white_surface_left', 'white_surface_left')]),
-            (read_parameters_node, self.input_node, [('white_surface_right', 'white_surface_right')]),
-            (read_parameters_node, self.input_node, [('destrieux_left', 'destrieux_left')]),
-            (read_parameters_node, self.input_node, [('destrieux_right', 'destrieux_right')]),
-            (read_parameters_node, self.input_node, [('desikan_left', 'desikan_left')]),
-            (read_parameters_node, self.input_node, [('desikan_right', 'desikan_right')])
+            (read_parameters_node, self.input_node, [('pet', 'pet'),
+                                                     ('orig_nu', 'orig_nu'),
+                                                     ('white_surface_left', 'white_surface_left'),
+                                                     ('white_surface_right', 'white_surface_right'),
+                                                     ('destrieux_left', 'destrieux_left'),
+                                                     ('destrieux_right', 'destrieux_right'),
+                                                     ('desikan_left', 'desikan_left'),
+                                                     ('desikan_right', 'desikan_right')])
         ])
 
     def build_input_node_cross_sectional(self):
@@ -204,22 +187,13 @@ class PetSurface(cpe.Pipeline):
                                             mandatory_inputs=True),
                                         synchronize=True)
 
-        if self.parameters['pet_tracer'].lower() == 'fdg':
-            pet_file_to_grab = input_files.PET_FDG_NII
-            pet_json_file_to_grab = input_files.PET_FDG_JSON
-        elif self.parameters['pet_tracer'].lower() == 'av45':
-            pet_file_to_grab = input_files.PET_AV45_NII
-            pet_json_file_to_grab = input_files.PET_AV45_JSON
-        else:
-            raise NotImplementedError('Only "fdg" or "av45" tracers are currently accepted (given tracer "%s").' %
-                                      self.parameters['pet_tracer'])
         all_errors = []
         try:
 
             read_parameters_node.inputs.pet = clinica_file_reader(self.subjects,
                                                                   self.sessions,
                                                                   self.bids_directory,
-                                                                  pet_file_to_grab)
+                                                                  input_files.bids_pet_nii(self.parameters['acq_label']))
         except ClinicaException as e:
             all_errors.append(e)
 
@@ -228,14 +202,6 @@ class PetSurface(cpe.Pipeline):
                                                                       self.sessions,
                                                                       self.caps_directory,
                                                                       input_files.T1_FS_ORIG_NU)
-        except ClinicaException as e:
-            all_errors.append(e)
-
-        try:
-            read_parameters_node.inputs.psf = clinica_file_reader(self.subjects,
-                                                                  self.sessions,
-                                                                  self.bids_directory,
-                                                                  pet_json_file_to_grab)
         except ClinicaException as e:
             all_errors.append(e)
 
@@ -294,20 +260,19 @@ class PetSurface(cpe.Pipeline):
             raise ClinicaException(error_message)
 
         check_relative_volume_location_in_world_coordinate_system('T1w-MRI (orig_nu.mgz)', read_parameters_node.inputs.orig_nu,
-                                                                  self.parameters['pet_tracer'].upper() + ' PET', read_parameters_node.inputs.pet,
+                                                                  self.parameters['acq_label'].upper() + ' PET', read_parameters_node.inputs.pet,
                                                                   self.bids_directory,
-                                                                  self.parameters['pet_tracer'].lower())
+                                                                  self.parameters['acq_label'].lower())
 
         self.connect([
-            (read_parameters_node,      self.input_node,    [('pet',                    'pet')]),
-            (read_parameters_node,      self.input_node,    [('orig_nu',                'orig_nu')]),
-            (read_parameters_node,      self.input_node,    [('psf',                    'psf')]),
-            (read_parameters_node,      self.input_node,    [('white_surface_left',     'white_surface_left')]),
-            (read_parameters_node,      self.input_node,    [('white_surface_right',    'white_surface_right')]),
-            (read_parameters_node,      self.input_node,    [('destrieux_left',         'destrieux_left')]),
-            (read_parameters_node,      self.input_node,    [('destrieux_right',        'destrieux_right')]),
-            (read_parameters_node,      self.input_node,    [('desikan_left',           'desikan_left')]),
-            (read_parameters_node,      self.input_node,    [('desikan_right',          'desikan_right')])
+            (read_parameters_node, self.input_node, [('pet',                 'pet'),
+                                                     ('orig_nu',             'orig_nu'),
+                                                     ('white_surface_left',  'white_surface_left'),
+                                                     ('white_surface_right', 'white_surface_right'),
+                                                     ('destrieux_left',      'destrieux_left'),
+                                                     ('destrieux_right',     'destrieux_right'),
+                                                     ('desikan_left',        'desikan_left'),
+                                                     ('desikan_right',       'desikan_right')])
         ])
 
     def build_output_node(self):
@@ -332,15 +297,15 @@ class PetSurface(cpe.Pipeline):
         full_pipe = npe.MapNode(niu.Function(input_names=['subject_id',
                                                           'session_id',
                                                           'caps_dir',
-                                                          'psf',
+                                                          'pvc_psf_tsv',
                                                           'pet',
                                                           'orig_nu',
                                                           'white_surface_left',
                                                           'white_surface_right',
                                                           'working_directory_subjects',
-                                                          'pet_tracer',
+                                                          'acq_label',
                                                           'csv_segmentation',
-                                                          'subcortical_eroded_mask',
+                                                          'suvr_reference_region',
                                                           'matscript_folder_inverse_deformation',
                                                           'desikan_left',
                                                           'desikan_right',
@@ -353,7 +318,6 @@ class PetSurface(cpe.Pipeline):
                                 name='full_pipeline_mapnode',
                                 iterfield=['subject_id',
                                            'session_id',
-                                           'psf',
                                            'pet',
                                            'orig_nu',
                                            'white_surface_left',
@@ -364,30 +328,19 @@ class PetSurface(cpe.Pipeline):
                                            'destrieux_right'])
 
         full_pipe.inputs.subject_id = self.subjects
-        full_pipe.inputs.caps_dir = self.caps_directory
         full_pipe.inputs.session_id = self.sessions
+        full_pipe.inputs.caps_dir = self.caps_directory
+        full_pipe.inputs.pvc_psf_tsv = self.parameters['pvc_psf_tsv']
         full_pipe.inputs.working_directory_subjects = self.base_dir
-        full_pipe.inputs.pet_tracer = self.parameters['pet_tracer']
-        full_pipe.inputs.csv_segmentation = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                                                         '..',
-                                                                         '..',
-                                                                         'resources',
-                                                                         'label_conversion_gtmsegmentation.csv'))
-        if self.parameters['pet_tracer'].lower() == 'fdg':
-            full_pipe.inputs.subcortical_eroded_mask = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                                                                    '..',
-                                                                                    '..',
-                                                                                    'resources',
-                                                                                    'masks',
-                                                                                    'region-pons_eroded-6mm_mask.nii.gz'))
-        elif self.parameters['pet_tracer'].lower() == 'av45':
-            full_pipe.inputs.subcortical_eroded_mask = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                                                                    '..',
-                                                                                    '..',
-                                                                                    'resources',
-                                                                                    'masks',
-                                                                                    'region-cerebellumPons_eroded-6mm_mask.nii.gz'))
-
+        full_pipe.inputs.acq_label = self.parameters['acq_label']
+        full_pipe.inputs.suvr_reference_region = self.parameters['suvr_reference_region']
+        full_pipe.inputs.csv_segmentation = os.path.abspath(os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            '..',
+            '..',
+            'resources',
+            'label_conversion_gtmsegmentation.csv'
+        ))
         full_pipe.inputs.matscript_folder_inverse_deformation = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
         full_pipe.inputs.is_longitudinal = self.parameters['longitudinal']
 
@@ -401,13 +354,12 @@ class PetSurface(cpe.Pipeline):
         # Connection
         # ==========
         self.connect([
-            (self.input_node, full_pipe, [('pet', 'pet')]),
-            (self.input_node, full_pipe, [('psf', 'psf')]),
-            (self.input_node, full_pipe, [('white_surface_left', 'white_surface_left')]),
-            (self.input_node, full_pipe, [('white_surface_right', 'white_surface_right')]),
-            (self.input_node, full_pipe, [('orig_nu', 'orig_nu')]),
-            (self.input_node, full_pipe, [('destrieux_left', 'destrieux_left')]),
-            (self.input_node, full_pipe, [('destrieux_right', 'destrieux_right')]),
-            (self.input_node, full_pipe, [('desikan_left', 'desikan_left')]),
-            (self.input_node, full_pipe, [('desikan_right', 'desikan_right')])
+            (self.input_node, full_pipe, [('pet', 'pet'),
+                                          ('white_surface_left', 'white_surface_left'),
+                                          ('white_surface_right', 'white_surface_right'),
+                                          ('orig_nu', 'orig_nu'),
+                                          ('destrieux_left', 'destrieux_left'),
+                                          ('destrieux_right', 'destrieux_right'),
+                                          ('desikan_left', 'desikan_left'),
+                                          ('desikan_right', 'desikan_right')])
         ])
