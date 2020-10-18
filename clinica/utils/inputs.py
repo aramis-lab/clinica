@@ -447,13 +447,16 @@ def fetch_file(remote, dirname=None):
     return file_path
 
 
-def get_file_from_server(remote_file):
+def get_file_from_server(remote_file, cache_path=None):
     import os
     from pathlib import Path
     from clinica.utils.stream import cprint
 
     home = str(Path.home())
-    cache_clinica = os.path.join(home, ".cache", "clinica", "data")
+    if cache_path:
+        cache_clinica = os.path.join(home, ".cache", cache_path)
+    else:
+        cache_clinica = os.path.join(home, ".cache", "clinica", "data")
     if not (os.path.exists(cache_clinica)):
         os.makedirs(cache_clinica)
 
