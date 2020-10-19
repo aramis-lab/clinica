@@ -507,15 +507,13 @@ def test_run_StatisticsSurface(cmdopt):
     shutil.copytree(join(root, 'in', 'caps'), join(root, 'out', 'caps'))
 
     parameters = {
-        'orig_input_data': 't1-freesurfer',
-        'covariates': 'age sex',
-        'contrast': 'group',
+        # Clinica compulsory parameters
         'group_label': 'UnitTest',
+        'orig_input_data': 't1-freesurfer',
         'glm_type': 'group_comparison',
-        'custom_file': '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh',
-        'measure_label': 'ct',
-        'full_width_at_half_maximum': 20,
-        'cluster_threshold': 0.001
+        'contrast': 'group',
+        # Optional parameters
+        'covariates': 'age sex',
     }
     pipeline = StatisticsSurface(
         caps_directory=join(root, 'out', 'caps'),
@@ -524,7 +522,7 @@ def test_run_StatisticsSurface(cmdopt):
         parameters=parameters
     )
     pipeline.build()
-    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 8}, bypass_check=True)
+    pipeline.run(plugin='MultiProc', plugin_args={'n_procs': 1}, bypass_check=True)
 
     # Check files
     filename = 'group-UnitTest_AD-lt-CN_measure-ct_fwhm-20_correctedPValue.mat'

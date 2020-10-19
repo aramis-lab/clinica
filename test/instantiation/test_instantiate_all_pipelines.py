@@ -210,16 +210,15 @@ def test_instantiate_StatisticsSurface():
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
     root = join(root, 'data', 'StatisticsSurface')
+
     parameters = {
-        'orig_input_data': 't1-freesurfer',
-        'covariates': 'age + sex',
-        'contrast': 'group',
+        # Clinica compulsory parameters
         'group_label': 'UnitTest',
+        'orig_input_data': 't1-freesurfer',
         'glm_type': 'group_comparison',
-        'custom_file': '@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh',
-        'measure_label': 'ct',
-        'full_width_at_half_maximum': 20,
-        'cluster_threshold': 0.001
+        'contrast': 'group',
+        # Optional parameters
+        'covariates': 'age sex',
     }
     pipeline = StatisticsSurface(
         caps_directory=join(root, 'in', 'caps'),

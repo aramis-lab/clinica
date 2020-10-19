@@ -24,38 +24,49 @@ class StatisticsSurface(cpe.Pipeline):
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.group import check_group_label
 
+        # Clinica compulsory parameters
+        self.parameters.setdefault('group_label', None)
+        check_group_label(self.parameters['group_label'])
+
         if 'orig_input_data' not in self.parameters.keys():
             raise KeyError('Missing compulsory orig_input_data key in pipeline parameter.')
-        if 'covariates' not in self.parameters.keys():
-            self.parameters['covariates'] = None
-        if 'custom_file' not in self.parameters.keys():
-            self.parameters['custom_file'] = get_t1_freesurfer_custom_file()
-        if 'measure_label' not in self.parameters.keys():
-            self.parameters['measure_label'] = 'ct',
-        if 'full_width_at_half_maximum' not in self.parameters.keys():
-            self.parameters['full_width_at_half_maximum'] = 20
-        if 'cluster_threshold' not in self.parameters.keys():
-            self.parameters['cluster_threshold'] = 0.001,
 
-        check_group_label(self.parameters['group_label'])
+        self.parameters.setdefault('glm_type', None)
         if self.parameters['glm_type'] not in ['group_comparison', 'correlation']:
-            raise ClinicaException("The glm_type you specified is wrong: it should be group_comparison or "
-                                   "correlation (given value: %s)." % self.parameters['glm_type'])
-        if self.parameters['full_width_at_half_maximum'] not in [0, 5, 10, 15, 20]:
             raise ClinicaException(
-                "FWHM for the surface smoothing you specified is wrong: it should be 0, 5, 10, 15 or 20 "
-                "(given value: %s)." % self.parameters['full_width_at_half_maximum'])
+                f"The glm_type you specified is wrong: it should be group_comparison or "
+                f"correlation (given value: {self.parameters['glm_type']})."
+            )
+
+        if 'contrast' not in self.parameters.keys():
+            raise KeyError('Missing compulsory contrast key in pipeline parameter.')
+
+        # Optional parameters
+        self.parameters.setdefault('covariates', None)
+        self.parameters.setdefault('full_width_at_half_maximum', 20)
+
+        # Optional parameters for inputs from pet-surface pipeline
+        self.parameters.setdefault('acq_label', None)
+        self.parameters.setdefault('suvr_reference_region', None)
+
+        # Optional parameters for custom pipeline
+        self.parameters.setdefault('custom_file', get_t1_freesurfer_custom_file())
+        self.parameters.setdefault('measure_label', 'ct')
+
+        # Advanced parameters
+        self.parameters.setdefault('cluster_threshold', 0.001)
         if self.parameters['cluster_threshold'] < 0 or self.parameters['cluster_threshold'] > 1:
-            raise ClinicaException("Cluster threshold should be between 0 and 1 "
-                                   "(given value: %s)." % self.parameters['cluster_threshold'])
+            raise ClinicaException(
+                f"Cluster threshold should be between 0 and 1 "
+                f"(given value: {self.parameters['cluster_threshold']})."
+            )
 
     def check_custom_dependencies(self):
-        """Check dependencies that can not be listed in the `info.json` file.
-        """
+        """Check dependencies that can not be listed in the `info.json` file."""
         pass
 
     def get_input_fields(self):
-        """Specify the list of possible inputs of this pipelines.
+        """Specify the list of possible inputs of this pipeline.
 
         Returns:
             A list of (string) input fields name.
@@ -63,7 +74,7 @@ class StatisticsSurface(cpe.Pipeline):
         return []
 
     def get_output_fields(self):
-        """Specify the list of possible outputs of this pipelines.
+        """Specify the list of possible outputs of this pipeline.
 
         Returns:
             A list of (string) output fields name.
@@ -71,8 +82,7 @@ class StatisticsSurface(cpe.Pipeline):
         return ['output_dir']
 
     def build_input_node(self):
-        """Build and connect an input node to the pipelines.
-        """
+        """Build and connect an input node to the pipeline."""
         import os
         from clinica.utils.inputs import clinica_file_reader
         from clinica.utils.exceptions import ClinicaException
@@ -85,8 +95,11 @@ class StatisticsSurface(cpe.Pipeline):
         # using the group_id, Clinica won't allow it.
         # TODO: Modify this behaviour
         if os.path.exists(os.path.join(self.caps_directory, 'groups', 'group-' + self.parameters['group_label'])):
-            error_message = ('Group ID %s already exists, please choose another one or delete the existing folder and '
-                             'also the working directory and rerun the pipeline') % self.parameters['group_label']
+            error_message = (
+                f"Group label {self.parameters['group_label']} already exists, "
+                f"please choose another one or delete the existing folder and "
+                f"also the working directory and rerun the pipeline"
+            )
             raise ClinicaException(error_message)
             # statistics_dir_tsv = os.path.join(input_directory, 'groups', group_id, 'statistics', 'participant.tsv')
             # # Copy the subjects_visits_tsv to the result folder
