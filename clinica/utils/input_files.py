@@ -261,9 +261,19 @@ def bids_pet_nii(acq_label):
 # PET-Volume
 
 
+# coding: utf8
+
+
 def pet_volume_normalized_suvr_pet(
-    acq_label, suvr_reference_region, use_brainmasked_image, use_pvc_data, fwhm=0
+    acq_label,
+    group_label,
+    suvr_reference_region,
+    use_brainmasked_image,
+    use_pvc_data,
+    fwhm=0,
 ):
+    import os
+
     if use_brainmasked_image:
         mask_key_value = "_mask-brain"
         mask_description = "Brain-masked"
@@ -288,9 +298,12 @@ def pet_volume_normalized_suvr_pet(
     suvr_key_value = f"_suvr-{suvr_reference_region}"
 
     information = {
-        "pattern": (
+        "pattern": os.path.join(
+            "pet",
+            "preprocessing",
+            f"group-{group_label}",
             f"*_acq-{acq_label}_pet"
-            f"_space-Ixi549Space{pvc_key_value}{suvr_key_value}{mask_key_value}{fwhm_key_value}_pet.nii*"
+            f"_space-Ixi549Space{pvc_key_value}{suvr_key_value}{mask_key_value}{fwhm_key_value}_pet.nii*",
         ),
         "description": (
             f"{mask_description} SUVR map (using {suvr_reference_region} region) of {acq_label}-PET "
