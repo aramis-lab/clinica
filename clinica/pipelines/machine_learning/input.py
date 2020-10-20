@@ -223,12 +223,12 @@ class CAPSVoxelBasedInput(CAPSInput):
 class CAPSRegionBasedInput(CAPSInput):
 
     def __init__(self, input_params):
+        from clinica.utils.atlas import VOLUME_ATLASES
 
         super().__init__(input_params)
 
-        if self._input_params['atlas'] not in ['AAL2', 'Neuromorphometrics', 'AICHA', 'LPBA40', 'Hammers']:
-            raise Exception("Incorrect atlas name. It must be one of the values 'AAL2', 'Neuromorphometrics', "
-                            "'AICHA', 'LPBA40', 'Hammers' ")
+        if self._input_params['atlas'] not in VOLUME_ATLASES:
+            raise ValueError(f"Incorrect atlas name (given value: {self._input_params['atlas']}). It must be one of {VOLUME_ATLASES}")
 
     def get_images(self):
         """
@@ -393,12 +393,12 @@ class CAPSVertexBasedInput(CAPSInput):
 class CAPSTSVBasedInput(CAPSInput):
 
     def __init__(self, input_params):
+        from clinica.utils.atlas import VOLUME_ATLASES
 
         super().__init__(input_params)
 
-        if self._input_params['atlas'] not in ['AAL2', 'Neuromorphometrics', 'AICHA', 'LPBA40', 'Hammers']:
-            raise Exception("Incorrect atlas name. It must be one of the values 'AAL2', 'Neuromorphometrics', "
-                            "'AICHA', 'LPBA40', 'Hammers' ")
+        if self._input_params['atlas'] not in VOLUME_ATLASES:
+            raise ValueError(f"Incorrect atlas name (given value: {self._input_params['atlas']}). It must be one of {VOLUME_ATLASES}")
 
     def get_images(self):
         """

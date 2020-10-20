@@ -16,15 +16,12 @@ class T1VolumeParcellation(cpe.Pipeline):
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
         from clinica.utils.group import check_group_label
+        from clinica.utils.atlas import T1_VOLUME_ATLASES
 
-        default_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
+        self.parameters.setdefault("group_label", None)
+        check_group_label(self.parameters["group_label"])
 
-        if 'group_label' not in self.parameters.keys():
-            raise KeyError('Missing compulsory group_label key in pipeline parameter.')
-        if 'atlases' not in self.parameters.keys():
-            self.parameters['atlases'] = default_atlases
-
-        check_group_label(self.parameters['group_label'])
+        self.parameters.setdefault("atlases", T1_VOLUME_ATLASES)
 
     def get_input_fields(self):
         """Specify the list of possible inputs of this pipeline.

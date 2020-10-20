@@ -17,6 +17,31 @@ Either a refactoring of this module or the use of an external API
 import abc
 
 
+T1_VOLUME_ATLASES = [
+    "AAL2",
+    "AICHA",
+    "Hammers",
+    "LPBA40",
+    "Neuromorphometrics",
+]
+
+PET_VOLUME_ATLASES = [
+    "AAL2",
+    "AICHA",
+    "Hammers",
+    "LPBA40",
+    "Neuromorphometrics",
+]
+
+DWI_DTI_ATLASES = [
+    "JHUDTI81",
+    "JHUTract0",
+    "JHUTract25",
+]
+
+VOLUME_ATLASES = list(set(T1_VOLUME_ATLASES + PET_VOLUME_ATLASES + DWI_DTI_ATLASES))
+
+
 class AtlasAbstract:
     """
     Abstract class for Atlas handling.

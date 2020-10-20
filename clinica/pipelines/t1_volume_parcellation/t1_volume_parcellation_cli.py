@@ -34,7 +34,6 @@ class T1VolumeParcellationCLI(ce.CmdParser):
 
         parameters = {
             'group_label': args.group_label,
-            'atlases': args.atlases,
         }
         pipeline = T1VolumeParcellation(
             caps_directory=self.absolute_path(args.caps_directory),

@@ -19,26 +19,19 @@ class PETVolume(cpe.Pipeline):
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
         from clinica.utils.group import check_group_label
-        default_atlases = ['AAL2', 'LPBA40', 'Neuromorphometrics', 'AICHA', 'Hammers']
+        from clinica.utils.atlas import PET_VOLUME_ATLASES
 
-        if 'group_label' not in self.parameters.keys():
-            raise KeyError('Missing compulsory group_label key in pipeline parameter.')
+        self.parameters.setdefault("group_label", None)
+        check_group_label(self.parameters["group_label"])
         if 'acq_label' not in self.parameters.keys():
             raise KeyError('Missing compulsory acq_label key in pipeline parameter.')
-        if 'pvc_psf_tsv' not in self.parameters.keys():
-            self.parameters['pvc_psf_tsv'] = None
-        if 'mask_tissues' not in self.parameters.keys():
-            self.parameters['mask_tissues'] = [1, 2, 3]
-        if 'mask_threshold' not in self.parameters.keys():
-            self.parameters['mask_threshold'] = 0.3
-        if 'pvc_mask_tissues' not in self.parameters.keys():
-            self.parameters['pvc_mask_tissues'] = [1, 2, 3]
-        if 'smooth' not in self.parameters.keys():
-            self.parameters['smooth'] = [8]
-        if 'atlases' not in self.parameters.keys():
-            self.parameters['atlases'] = default_atlases
 
-        check_group_label(self.parameters['group_label'])
+        self.parameters.setdefault("pvc_psf_tsv", None)
+        self.parameters.setdefault("mask_tissues", [1, 2, 3])
+        self.parameters.setdefault("mask_threshold", 0.3)
+        self.parameters.setdefault("pvc_mask_tissues", [1, 2, 3])
+        self.parameters.setdefault("smooth", [8])
+        self.parameters.setdefault("atlases", PET_VOLUME_ATLASES)
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file."""
