@@ -30,10 +30,9 @@ class SpatialSVMCLI(ce.CmdParser):
                                        'pet-volume' to use SUVr maps.''',
                                   choices=['t1-volume', 'pet-volume'],
                                   )
-        # Optional arguments
+        # Optional arguments for inputs from pet-volume pipeline
         optional_pet = self._args.add_argument_group(
-            '%sPipeline options if you use inputs from pet-volume pipeline%s' %
-            (Fore.BLUE, Fore.RESET)
+            f"{Fore.BLUE}Pipeline options if you use inputs from pet-volume pipeline{Fore.RESET}"
         )
         optional_pet.add_argument("-acq", "--acq_label",
                                   type=str,
@@ -81,11 +80,14 @@ class SpatialSVMCLI(ce.CmdParser):
                 )
 
         parameters = {
+            # Clinica compulsory arguments
             'group_label': args.group_label,
             'orig_input_data': args.orig_input_data,
+            # Optional arguments for inputs from pet-volume pipeline
             'acq_label': args.acq_label,
             'use_pvc_data': args.use_pvc_data,
             'suvr_reference_region': args.suvr_reference_region,
+            # Advanced arguments
             'fwhm': args.full_width_half_maximum,
         }
         pipeline = SpatialSVM(
