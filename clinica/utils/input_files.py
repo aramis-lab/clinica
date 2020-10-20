@@ -276,10 +276,10 @@ def pet_volume_normalized_suvr_pet(
 
     if use_brainmasked_image:
         mask_key_value = "_mask-brain"
-        mask_description = "Brain-masked"
+        mask_description = "brain-masked"
     else:
         mask_key_value = ""
-        mask_description = "Full"
+        mask_description = "full"
 
     if use_pvc_data:
         pvc_key_value = "_pvc-rbv"
@@ -307,7 +307,7 @@ def pet_volume_normalized_suvr_pet(
         ),
         "description": (
             f"{mask_description} SUVR map (using {suvr_reference_region} region) of {acq_label}-PET "
-            f"with {pvc_description} and {fwhm_description} in Ixi549Space space"
+            f"{pvc_description} and {fwhm_description} in Ixi549Space space based on {group_label} DARTEL template"
         ),
         "needed_pipeline": "pet-volume",
     }
