@@ -448,6 +448,19 @@ def fetch_file(remote, dirname=None):
 
 
 def get_file_from_server(remote_file, cache_path=None):
+    """
+    Download file from server
+
+    Args:
+        remote_file (str): RemoteFileStructure defined in clinica.utils.inputs
+        cache_path (str): (default: ~/.cache/clinica/data)
+
+    Returns:
+        Path to downloaded file.
+
+    Note:
+        This function will be in Clinica.
+    """
     import os
     from pathlib import Path
     from clinica.utils.stream import cprint
