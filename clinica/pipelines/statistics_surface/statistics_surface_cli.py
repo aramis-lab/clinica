@@ -57,8 +57,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                                    '(default: --full_width_at_half_maximum %(default)s).')
         # Optional arguments for inputs from pet-surface pipeline
         opt_pet = self._args.add_argument_group(
-            '%sPipeline options if you use inputs from pet-volume pipeline%s' %
-            (Fore.BLUE, Fore.RESET)
+            f"{Fore.BLUE}Pipeline options if you use inputs from pet-surface pipeline{Fore.RESET}"
         )
         opt_pet.add_argument("-acq", "--acq_label",
                              type=str,
@@ -72,7 +71,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                                   'cerebellumPons (used for AV45 tracers) or pons (used for 18F-FDG tracers).')
         # Optional arguments for custom pipeline
         opt_custom_input = self._args.add_argument_group(
-            '%sPipeline options if you selected custom-pipeline%s' % (Fore.BLUE, Fore.RESET)
+            f"{Fore.BLUE}Pipeline options if you selected custom-pipeline{Fore.RESET}"
         )
         opt_custom_input.add_argument("-cf", "--custom_file",
                                       type=str, default=None,

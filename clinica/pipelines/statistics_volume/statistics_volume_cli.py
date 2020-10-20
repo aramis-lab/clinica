@@ -48,8 +48,7 @@ class StatisticsVolumeCLI(ce.CmdParser):
 
         # Optional arguments for inputs from pet-volume pipeline
         optional_pet = self._args.add_argument_group(
-            '%sPipeline options if you use inputs from pet-volume pipeline%s' %
-            (Fore.BLUE, Fore.RESET)
+            f"{Fore.BLUE}Pipeline options if you use inputs from pet-volume pipeline{Fore.RESET}"
         )
         optional_pet.add_argument("-acq", "--acq_label",
                                   type=str,
@@ -69,7 +68,7 @@ class StatisticsVolumeCLI(ce.CmdParser):
 
         # Optional arguments for custom pipeline
         opt_custom_input = self._args.add_argument_group(
-            '%sPipeline options if you selected custom-pipeline%s' % (Fore.BLUE, Fore.RESET)
+            f"{Fore.BLUE}Pipeline options if you selected custom-pipeline{Fore.RESET}"
         )
         opt_custom_input.add_argument("-cf", "--custom_file",
                                       type=str, default=None,
