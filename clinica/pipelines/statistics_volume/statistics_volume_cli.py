@@ -28,7 +28,7 @@ class StatisticsVolumeCLI(ce.CmdParser):
         clinica_comp.add_argument("orig_input_data",
                                   help='Type of volume-based feature: type '
                                   '\'t1-volume\' to use gray matter maps, '
-                                  '\'pet-volume\' to use FDG-PET data or '
+                                  '\'pet-volume\' to use PET data or '
                                   '\'custom-pipeline\' to use you own data in CAPS directory '
                                   '(see Wiki for details).',
                                   choices=['t1-volume', 'pet-volume', 'custom-pipeline'])
@@ -40,11 +40,32 @@ class StatisticsVolumeCLI(ce.CmdParser):
 
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("-gld", "--group_label_dartel", type=str, default=None,
+        optional.add_argument("-gld", "--group_label_dartel", type=str, default='*',
                               help='Name of the DARTEL template that Clinica needs to use to grab input file.')
         optional.add_argument("-fwhm", "--full_width_at_half_maximum", type=int, default=8,
                               help='Full Width at Half Maximum (FWHM) of the smoothing used in your input file '
                                    '(default: --full_width_at_half_maximum %(default)s).')
+
+        # Optional arguments for inputs from pet-volume pipeline
+        optional_pet = self._args.add_argument_group(
+            '%sPipeline options if you use inputs from pet-volume pipeline%s' %
+            (Fore.BLUE, Fore.RESET)
+        )
+        optional_pet.add_argument("-acq", "--acq_label",
+                                  type=str,
+                                  default=None,
+                                  help='Name of the PET tracer label in the acquisition entity '
+                                       '(acq-<acq_label>).')
+        optional_pet.add_argument("-suvr", "--suvr_reference_region",
+                                  choices=['cerebellumPons', 'pons'],
+                                  default=None,
+                                  help='Intensity normalization using the average PET uptake in reference regions '
+                                       'resulting in a standardized uptake value ratio (SUVR) map. It can be '
+                                       'cerebellumPons (used for AV45 tracers) or pons (used for 18F-FDG tracers).')
+        optional_pet.add_argument("-pvc", "--use_pvc_data",
+                                  action='store_true',
+                                  default=False,
+                                  help="Use PET data with partial value correction (by default, PET data with no PVC are used)")
 
         # Optional arguments for custom pipeline
         opt_custom_input = self._args.add_argument_group(
@@ -76,9 +97,23 @@ class StatisticsVolumeCLI(ce.CmdParser):
 
     def run_command(self, args):
         from networkx import Graph
+        from colorama import Fore
         from .statistics_volume_pipeline import StatisticsVolume
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
         from clinica.utils.exceptions import ClinicaException
+
+        # PET-Volume pipeline
+        if args.orig_input_data == 'pet-volume':
+            if args.acq_label is None:
+                raise ClinicaException(
+                    f"{Fore.RED}You selected pet-volume pipeline without setting --acq_label flag. "
+                    f"Clinica will now exit.{Fore.RESET}"
+                )
+            if args.suvr_reference_region is None:
+                raise ClinicaException(
+                    f"{Fore.RED}You selected pet-volume pipeline without setting --suvr_reference_region flag. "
+                    f"Clinica will now exit.{Fore.RESET}"
+                )
 
         # Custom pipeline
         if args.orig_input_data == 'custom-pipeline':
@@ -86,13 +121,22 @@ class StatisticsVolumeCLI(ce.CmdParser):
                 raise ClinicaException('You must set --measure_label and --custom_file flags.')
 
         parameters = {
-            'contrast': args.contrast,
-            'orig_input_data': args.orig_input_data,
+            # Clinica compulsory arguments
             'group_label': args.group_label,
-            'custom_files': args.custom_files,
-            'cluster_threshold': args.cluster_threshold,
+            'orig_input_data': args.orig_input_data,
+            'contrast': args.contrast,
+            # Optional arguments
             'group_label_dartel': args.group_label_dartel,
-            'full_width_at_half_maximum': args.full_width_at_half_maximum
+            'full_width_at_half_maximum': args.full_width_at_half_maximum,
+            # Optional arguments for inputs from pet-volume pipeline
+            'acq_label': args.acq_label,
+            'use_pvc_data': args.use_pvc_data,
+            'suvr_reference_region': args.suvr_reference_region,
+            # Optional arguments for custom pipeline
+            'measure_label': args.measure_label,
+            'custom_file': args.custom_file,
+            # Advanced arguments
+            'cluster_threshold': args.cluster_threshold,
         }
 
         pipeline = StatisticsVolume(

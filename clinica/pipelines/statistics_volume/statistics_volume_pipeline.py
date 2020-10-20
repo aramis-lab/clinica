@@ -12,11 +12,33 @@ class StatisticsVolume(cpe.Pipeline):
     def check_pipeline_parameters(self):
         """Check pipeline parameters."""
         from clinica.utils.exceptions import ClinicaException
+        from clinica.utils.group import check_group_label
+
+        # Clinica compulsory parameters
+        self.parameters.setdefault('group_label', None)
+        check_group_label(self.parameters['group_label'])
 
         if 'orig_input_data' not in self.parameters.keys():
             raise KeyError('Missing compulsory orig_input_data key in pipeline parameter.')
-        if 'group_label_dartel' not in self.parameters.keys():
-            self.parameters['group_label_dartel'] = None
+
+        if 'contrast' not in self.parameters.keys():
+            raise KeyError('Missing compulsory contrast key in pipeline parameter.')
+
+        # Optional parameters
+        self.parameters.setdefault('group_label_dartel', '*')
+        self.parameters.setdefault('full_width_at_half_maximum', 8)
+
+        # Optional parameters for inputs from pet-volume pipeline
+        self.parameters.setdefault('acq_label', None)
+        self.parameters.setdefault('use_pvc_data', None)
+        self.parameters.setdefault('suvr_reference_region', None)
+
+        # Optional parameters for custom pipeline
+        self.parameters.setdefault('measure_label', None)
+        self.parameters.setdefault('custom_file', None)
+
+        # Advanced parameters
+        self.parameters.setdefault('cluster_threshold', 0.001)
 
         if self.parameters['cluster_threshold'] < 0 or self.parameters['cluster_threshold'] > 1:
             raise ClinicaException("Cluster threshold should be between 0 and 1 "
@@ -58,38 +80,49 @@ class StatisticsVolume(cpe.Pipeline):
         import nipype.pipeline.engine as npe
         from clinica.utils.exceptions import ClinicaException
         from clinica.utils.inputs import clinica_file_reader
-        from clinica.utils.input_files import t1_volume_template_tpm_in_mni
+        from clinica.utils.input_files import (t1_volume_template_tpm_in_mni,
+                                               pet_volume_normalized_suvr_pet)
         from clinica.utils.stream import cprint
         from clinica.utils.ux import print_images_to_process, print_begin_image
 
-        gic = '*'
-        if self.parameters['group_label_dartel'] is not None:
-            gic = self.parameters['group_label_dartel']
-
         all_errors = []
         if self.parameters['orig_input_data'] == 'pet-volume':
-            self.parameters['measure_label'] = 'fdg'
-            information_dict = {
-                'pattern': '*_pet_space-Ixi549Space_suvr-pons_mask-brain_fwhm-' + str(self.parameters['full_width_at_half_maximum']) + 'mm_pet.nii*',
-                'description': 'pons normalized FDG PET image in MNI space (brain masked)',
-                'needed_pipeline': 'pet-volume'
-            }
+            if not (
+                self.parameters["acq_label"]
+                and self.parameters["suvr_reference_region"]
+            ):
+                raise ValueError(
+                    f"Missing value(s) in parameters from pet-volume pipeline. Given values:\n"
+                    f"- acq_label: {self.parameters['acq_label']}\n"
+                    f"- suvr_reference_region: {self.parameters['suvr_reference_region']}\n"
+                )
+
+            self.parameters['measure_label'] = self.parameters['acq_label']
+            information_dict = pet_volume_normalized_suvr_pet(
+                acq_label=self.parameters["acq_label"],
+                group_label=self.parameters["group_label_dartel"],
+                suvr_reference_region=self.parameters["suvr_reference_region"],
+                use_brainmasked_image=True,
+                use_pvc_data=self.parameters["use_pvc_data"],
+                fwhm=self.parameters['full_width_at_half_maximum']
+            )
         elif self.parameters['orig_input_data'] == 't1-volume':
             self.parameters['measure_label'] = 'graymatter'
-            information_dict = t1_volume_template_tpm_in_mni(gic, 0, True)
+            information_dict = t1_volume_template_tpm_in_mni(self.parameters['group_label_dartel'], 0, True)
 
-        else:
-            if not self.parameters['custom_file']:
-                raise ClinicaException(Fore.RED + '[Error] You did not specify the --custom_file flag in the command line for the feature type '
-                                       + Fore.Blue + self.parameters['measure_label'] + Fore.RED + '! Clinica can\'t '
-                                       + 'know what file to use in your analysis ! Type: \n\t' + Fore.BLUE + 'clinica run statistics-volume\n'
-                                       + Fore.RED + ' to have help on how to use the command line.' + Fore.RESET)
+        elif self.parameters['orig_input_data'] == 'custom-pipeline':
+            if self.parameters['custom_file'] is None:
+                raise ClinicaException(
+                    f"{Fore.RED}Custom pipeline was selected but no 'custom_file' was specified.{Fore.RESET}"
+                )
             # If custom file are grabbed, information of fwhm is irrelevant and should not appear on final filenames
             self.parameters['full_width_at_half_maximum'] = None
             information_dict = {
                 'pattern': self.parameters['custom_file'],
                 'description': 'custom file provided by user'
             }
+        else:
+            raise ValueError(f"Input data {self.parameters['orig_input_data']} unknown.")
 
         try:
             input_files = clinica_file_reader(self.subjects,
@@ -115,7 +148,7 @@ class StatisticsVolume(cpe.Pipeline):
         if len(self.subjects):
             print_images_to_process(self.subjects, self.sessions)
             cprint('The pipeline will last a few minutes. Images generated by SPM will popup during the pipeline.')
-            print_begin_image('group-' + self.parameters['group_label'])
+            print_begin_image(f"group-{self.parameters['group_label']}")
 
         self.connect([
             (read_parameters_node,      self.input_node,    [('input_files',    'input_files')])

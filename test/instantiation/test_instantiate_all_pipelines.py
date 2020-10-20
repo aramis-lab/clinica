@@ -415,13 +415,14 @@ def test_instantiate_StatisticsVolume():
 
     # Instantiate pipeline and run()
     parameters = {
+        # Clinica compulsory parameters
+        'group_label': 'UnitTest',
         'orig_input_data': 'pet-volume',
         'contrast': 'group',
-        'measure_label': 'fdg',
-        'group_label': 'UnitTest',
-        'cluster_threshold': 0.001,
-        'group_label_caps': None,
-        'full_width_at_half_maximum': 8
+        # Optional arguments for inputs from pet-volume pipeline
+        'acq_label': 'FDG',
+        'use_pvc_data': False,
+        'suvr_reference_region': 'pons',
     }
 
     pipeline = StatisticsVolume(
