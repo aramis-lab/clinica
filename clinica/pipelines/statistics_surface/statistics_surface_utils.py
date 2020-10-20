@@ -4,13 +4,13 @@
 def get_t1_freesurfer_custom_file():
     import os
     custom_file = os.path.join(
-        '@subject',
-        '@session',
-        't1',
-        'freesurfer_cross_sectional',
-        '@subject_@session',
-        'surf',
-        '@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
+        "@subject",
+        "@session",
+        "t1",
+        "freesurfer_cross_sectional",
+        "@subject_@session",
+        "surf",
+        "@hemi.thickness.fwhm@fwhm.fsaverage.mgh"
     )
     return custom_file
 
@@ -18,11 +18,12 @@ def get_t1_freesurfer_custom_file():
 def get_pet_surface_custom_file(acq_label, suvr_reference_region):
     import os
     custom_file = os.path.join(
-        '@subject',
-        '@session',
-        'pet',
-        'surface',
-        '@subject_@session_task-rest_acq-' + acq_label + '_pet_space-fsaverage_suvr-' + suvr_reference_region + '_pvc-iy_hemi-@hemi_fwhm-@fwhm_projection.mgh'
+        "@subject",
+        "@session",
+        "pet",
+        "surface",
+        f"@subject_@session_task-rest_acq-{acq_label}_pet"
+        f"_space-fsaverage_suvr-{suvr_reference_region}_pvc-iy_hemi-@hemi_fwhm-@fwhm_projection.mgh"
     )
     return custom_file
 
