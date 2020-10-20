@@ -73,6 +73,12 @@ def read_psf_information(pvc_psf_tsv, subject_ids, session_ids, pet_tracer):
     return iterables_psf
 
 
+LIST_SUVR_REFERENCE_REGIONS = [
+    "pons",
+    "cerebellumPons",
+]
+
+
 def get_suvr_mask(suvr_reference_region):
     """Get path of the SUVR mask from SUVR reference region label.
 

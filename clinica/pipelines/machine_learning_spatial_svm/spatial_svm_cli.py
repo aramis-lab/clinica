@@ -18,6 +18,8 @@ class SpatialSVMCLI(ce.CmdParser):
         """Define the sub-command arguments."""
         from colorama import Fore
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+        from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS
+
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_label)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("caps_directory",
@@ -40,7 +42,7 @@ class SpatialSVMCLI(ce.CmdParser):
                                   help='Name of the PET tracer label in the acquisition entity '
                                        '(acq-<acq_label>).')
         optional_pet.add_argument("-suvr", "--suvr_reference_region",
-                                  choices=['cerebellumPons', 'pons'],
+                                  choices=LIST_SUVR_REFERENCE_REGIONS,
                                   default=None,
                                   help='Intensity normalization using the average PET uptake in reference regions '
                                        'resulting in a standardized uptake value ratio (SUVR) map. It can be '
