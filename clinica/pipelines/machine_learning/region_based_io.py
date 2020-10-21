@@ -4,7 +4,6 @@
 import numpy as np
 import pandas as pd
 import nibabel as nib
-from os.path import join
 
 
 def get_caps_t1_list(input_directory, subjects_visits_tsv, group_label, atlas_id):
@@ -19,44 +18,29 @@ def get_caps_t1_list(input_directory, subjects_visits_tsv, group_label, atlas_id
     Returns:
 
     """
-
     from os.path import join
     import pandas as pd
 
-    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
-    if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
-        raise Exception('Subjects and visits file is not in the correct format.')
+    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep="\t")
+    if list(subjects_visits.columns.values) != ["participant_id", "session_id"]:
+        raise Exception("Subjects and visits file is not in the correct format.")
     subjects = list(subjects_visits.participant_id)
     sessions = list(subjects_visits.session_id)
-    image_list = [join(input_directory + '/subjects/' + subjects[i] + '/'
-                       + sessions[i] + '/t1/spm/dartel/group-' + group_label + '/atlas_statistics/' + subjects[i] + '_'
-                       + sessions[i]+'_T1w_space-'+atlas_id+'_map-graymatter_statistics.tsv')
-                  for i in range(len(subjects))]
-    return image_list
-
-
-def get_caps_pet_list(input_directory, subjects_visits_tsv, group_label, atlas_id):
-    """
-
-    Args:
-        input_directory:
-        subjects_visits_tsv:
-        group_label:
-        atlas_id:
-
-    Returns:
-
-    """
-
-    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep='\t')
-    if list(subjects_visits.columns.values) != ['participant_id', 'session_id']:
-        raise Exception('Subjects and visits file is not in the correct format.')
-    subjects = list(subjects_visits.participant_id)
-    sessions = list(subjects_visits.session_id)
-    image_list = [join(input_directory, 'analysis-series-default/subjects/' + subjects[i] + '/'
-                       + sessions[i] + '/pet/atlas_statistics/' + subjects[i] + '_' + sessions[i]
-                       + '_space-' + atlas_id + '_map-fdgstatistic2.tsv')
-                  for i in range(len(subjects))]
+    image_list = [
+        join(
+            input_directory,
+            "subjects",
+            subjects[i],
+            sessions[i],
+            "t1",
+            "spm",
+            "dartel",
+            f"group-{group_label}",
+            "atlas_statistics",
+            f"{subjects[i]}_{sessions[i]}_T1w_space-{atlas_id}_map-graymatter_statistics.tsv",
+        )
+        for i in range(len(subjects))
+    ]
     return image_list
 
 
@@ -103,12 +87,14 @@ def features_weights(image_list, dual_coefficients, sv_indices, scaler=None):
     """
 
     if len(sv_indices) != len(dual_coefficients):
-        print("Length dual coefficients: " + str(len(dual_coefficients)))
-        print("Length indices: " + str(len(sv_indices)))
-        raise ValueError('The number of support vectors indices and the number of coefficients must be the same.')
+        raise ValueError(
+            f"The number of support vectors indices and the number of coefficients must be the same.\n"
+            f"- Number of dual coefficients: {len(dual_coefficients)}\n"
+            f"- Number of indices:: {len(sv_indices)}\n"
+        )
 
     if len(image_list) == 0:
-        raise ValueError('The number of images must be greater than 0.')
+        raise ValueError("The number of images must be greater than 0.")
 
     sv_images = [image_list[i] for i in sv_indices]
 
@@ -134,9 +120,6 @@ def weights_to_nifti(weights, atlas, output_filename):
     Returns:
 
     """
-
-    from os.path import join, split, realpath
-
     from clinica.utils.atlas import AtlasAbstract
 
     atlas_path = None
