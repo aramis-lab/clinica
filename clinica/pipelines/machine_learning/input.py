@@ -35,9 +35,8 @@ class CAPSInput(base.MLInput):
             raise Exception('Diagnoses file is not in the correct format.')
         self._diagnoses = list(diagnoses.diagnosis)
 
-        if self._input_params['image_type'] not in ['T1', 'fdg', 'av45', 'pib', 'flute', 'dwi']:
-            raise Exception("Incorrect image type. It must be one of the values 'T1', 'fdg', 'av45', "
-                            "'pib', 'flute' or 'dwi'")
+        if self._input_params["image_type"] not in ["T1w", "PET"]:
+            raise Exception("Incorrect image type. It must be one of the values 'T1w', 'PET'")
 
         if self._input_params['precomputed_kernel'] is not None:
             if type(self._input_params['precomputed_kernel']) == np.ndarray:
@@ -57,26 +56,20 @@ class CAPSInput(base.MLInput):
     @abc.abstractmethod
     def get_images(self):
         """
-
         Returns: a list of filenames
-
         """
         pass
 
     @abc.abstractmethod
     def get_x(self):
         """
-
         Returns: a numpy 2d-array.
-
         """
         pass
 
     def get_y(self):
         """
-
         Returns: a list of integers. Each integer represents a class.
-
         """
         if self._y is not None:
             return self._y
@@ -87,9 +80,7 @@ class CAPSInput(base.MLInput):
 
     def get_kernel(self, kernel_function=utils.gram_matrix_linear, recompute_if_exists=False):
         """
-
         Returns: a numpy 2d-array.
-
         """
         if self._kernel is not None and not recompute_if_exists:
             return self._kernel
@@ -124,12 +115,13 @@ class CAPSInput(base.MLInput):
     @staticmethod
     def get_default_parameters():
 
-        parameters_dict = {'caps_directory': None,
-                           'subjects_visits_tsv': None,
-                           'diagnoses_tsv': None,
-                           'group_label': None,
-                           'image_type': None,
-                           'precomputed_kernel': None}
+        parameters_dict = {}
+        parameters_dict.setdefault('caps_directory', None)
+        parameters_dict.setdefault('subjects_visits_tsv', None)
+        parameters_dict.setdefault('diagnoses_tsv', None)
+        parameters_dict.setdefault('group_label', None)
+        parameters_dict.setdefault('image_type', None)
+        parameters_dict.setdefault('precomputed_kernel', None)
 
         return parameters_dict
 
@@ -148,51 +140,71 @@ class CAPSVoxelBasedInput(CAPSInput):
 
     def get_images(self):
         """
-
         Returns: a list of filenames
-
         """
+        from clinica.utils.inputs import clinica_file_reader
+        from clinica.utils.input_files import pet_volume_normalized_suvr_pet
+
         if self._images is not None:
             return self._images
 
-        if self._input_params['image_type'] == 'T1':
-            fwhm = '' if self._input_params['fwhm'] == 0 else '_fwhm-%dmm' % int(self._input_params['fwhm'])
+        if self._input_params["image_type"] == "T1w":
+            if self._input_params['fwhm'] == 0:
+                fwhm_key_value = ""
+            else:
+                fwhm_key_value = f"_{self._input_params['fwhm']}mm"
 
-            self._images = [path.join(self._input_params['caps_directory'], 'subjects', self._subjects[i],
-                                      self._sessions[i], 't1/spm/dartel/group-' + self._input_params['group_label'],
-                                      '%s_%s_T1w_segm-graymatter_space-Ixi549Space_modulated-%s%s_probability.nii.gz'
-                                      % (self._subjects[i], self._sessions[i], self._input_params['modulated'], fwhm))
-                            for i in range(len(self._subjects))]
+            self._images = [
+                path.join(
+                    self._input_params['caps_directory'],
+                    "subjects",
+                    self._subjects[i],
+                    self._sessions[i],
+                    "t1",
+                    "spm",
+                    "dartel",
+                    f"group-{self._input_params['group_label']}",
+                    f"{self._subjects[i]}_{self._sessions[i]}_T1w"
+                    f"_segm-graymatter_space-Ixi549Space_modulated-{self._input_params['modulated']}{fwhm_key_value}_probability.nii.gz",
+                )
+                for i in range(len(self._subjects))
+            ]
+
+            for image in self._images:
+                if not path.exists(image):
+                    raise Exception("File %s doesn't exists." % image)
+
+        elif self._input_params['image_type'] == "PET":
+            caps_files_information = pet_volume_normalized_suvr_pet(
+                acq_label=self._input_params["acq_label"],
+                suvr_reference_region=self._input_params["suvr_reference_region"],
+                use_brainmasked_image=True,
+                use_pvc_data=self._input_params["use_pvc_data"],
+                fwhm=self._input_params['fwhm']
+            )
+            self._images = clinica_file_reader(
+                self._subjects,
+                self._sessions,
+                self._input_params['caps_directory'],
+                caps_files_information
+            )
         else:
-            pvc = '' if self._input_params['pvc'] is None else '_pvc-%s' % self._input_params['pvc']
-            fwhm = '' if self._input_params['fwhm'] == 0 else '_fwhm-%dmm' % int(self._input_params['fwhm'])
-            suvr = 'pons' if self._input_params['image_type'] == 'fdg' else 'cerebellumPons'
-
-            self._images = [path.join(self._input_params['caps_directory'], 'subjects', self._subjects[i],
-                                      self._sessions[i], 'pet/preprocessing/group-' + self._input_params['group_label'],
-                                      '%s_%s_task-rest_acq-%s_pet_space-Ixi549Space%s_suvr-%s_mask-brain%s_pet.nii.gz'
-                                      % (self._subjects[i], self._sessions[i], self._input_params['image_type'], pvc,
-                                         suvr, fwhm))
-                            for i in range(len(self._subjects))]
-
-        for image in self._images:
-            if not path.exists(image):
-                raise Exception("File %s doesn't exists." % image)
+            raise ValueError(
+                f"Unknown image type (given value: {self._input_params['image_type']})"
+            )
 
         return self._images
 
     def get_x(self):
         """
-
         Returns: a numpy 2d-array.
-
         """
         if self._x is not None:
             return self._x
 
-        cprint('Loading ' + str(len(self.get_images())) + ' subjects')
+        cprint(f"Loading {len(self.get_images())} subjects")
         self._x, self._orig_shape, self._data_mask = vbio.load_data(self._images, mask=self._input_params['mask_zeros'])
-        cprint('Subjects loaded')
+        cprint("Subjects loaded")
 
         return self._x
 
@@ -209,13 +221,16 @@ class CAPSVoxelBasedInput(CAPSInput):
     def get_default_parameters():
 
         parameters_dict = super(CAPSVoxelBasedInput, CAPSVoxelBasedInput).get_default_parameters()
-
-        new_parameters = {'fwhm': 0,
-                          'modulated': "on",
-                          'pvc': None,
-                          'mask_zeros': True}
-
-        parameters_dict.update(new_parameters)
+        # t1-volume / pet-volume
+        parameters_dict.setdefault("fwhm", 0)
+        # t1-volume / pet-volume ?
+        parameters_dict.setdefault("mask_zeros", True)
+        # t1-volume
+        parameters_dict.setdefault("modulated", "on")
+        # pet-volume
+        parameters_dict.setdefault('acq_label', None)
+        parameters_dict.setdefault('suvr_reference_region', None)
+        parameters_dict.setdefault("use_pvc_data", False)
 
         return parameters_dict
 
@@ -228,7 +243,10 @@ class CAPSRegionBasedInput(CAPSInput):
         super().__init__(input_params)
 
         if self._input_params['atlas'] not in VOLUME_ATLASES:
-            raise ValueError(f"Incorrect atlas name (given value: {self._input_params['atlas']}). It must be one of {VOLUME_ATLASES}")
+            raise ValueError(
+                f"Incorrect atlas name (given value: {self._input_params['atlas']}). "
+                f"It must be one of {VOLUME_ATLASES}"
+            )
 
     def get_images(self):
         """
@@ -239,22 +257,50 @@ class CAPSRegionBasedInput(CAPSInput):
         if self._images is not None:
             return self._images
 
-        if self._input_params['image_type'] == 'T1':
-            self._images = [path.join(self._input_params['caps_directory'], 'subjects', self._subjects[i],
-                                      self._sessions[i], 't1/spm/dartel/group-' + self._input_params['group_label'],
-                                      'atlas_statistics/', '%s_%s_T1w_space-%s_map-graymatter_statistics.tsv'
-                                      % (self._subjects[i], self._sessions[i], self._input_params['atlas']))
-                            for i in range(len(self._subjects))]
-        else:
-            pvc = '' if self._input_params['pvc'] is None else '_pvc-%s' % self._input_params['pvc']
-            suvr = 'pons' if self._input_params['image_type'] == 'fdg' else 'cerebellumPons'
+        if self._input_params["image_type"] == "T1w":
+            self._images = [
+                path.join(
+                    self._input_params['caps_directory'],
+                    "subjects",
+                    self._subjects[i],
+                    self._sessions[i],
+                    "t1",
+                    "spm",
+                    "dartel",
+                    f"group-{self._input_params['group_label']}",
+                    "atlas_statistics",
+                    f"{self._subjects[i]}_{self._sessions[i]}_T1w"
+                    f"_space-{self._input_params['atlas']}_map-graymatter_statistics.tsv",
+                )
+                for i in range(len(self._subjects))
+            ]
 
-            self._images = [path.join(self._input_params['caps_directory'], 'subjects', self._subjects[i],
-                                      self._sessions[i], 'pet/preprocessing/group-' + self._input_params['group_label'],
-                                      'atlas_statistics', '%s_%s_task-rest_acq-%s_pet_space-%s%s_suvr-%s_statistics.tsv'
-                                      % (self._subjects[i], self._sessions[i], self._input_params['image_type'],
-                                         self._input_params['atlas'], pvc, suvr))
-                            for i in range(len(self._subjects))]
+        elif self._input_params["image_type"] == "PET":
+            if self._input_params["use_pvc_data"]:
+                pvc_key_value = "_pvc-rbv"
+            else:
+                pvc_key_value = ""
+
+            self._images = [
+                path.join(
+                    self._input_params['caps_directory'],
+                    "subjects",
+                    self._subjects[i],
+                    self._sessions[i],
+                    "pet",
+                    "preprocessing",
+                    f"group-{self._input_params['group_label']}",
+                    "atlas_statistics",
+                    f"{self._subjects[i]}_{self._sessions[i]}_task-rest_acq-{self._input_params['acq_label']}_pet"
+                    f"_space-{self._input_params['atlas']}{pvc_key_value}"
+                    f"_suvr-{self._input_params['suvr_reference_region']}_statistics.tsv",
+                )
+                for i in range(len(self._subjects))
+            ]
+        else:
+            raise ValueError(
+                f"Unknown image type (given value: {self._input_params['image_type']})"
+            )
 
         for image in self._images:
             if not path.exists(image):
@@ -264,16 +310,14 @@ class CAPSRegionBasedInput(CAPSInput):
 
     def get_x(self):
         """
-
         Returns: a numpy 2d-array.
-
         """
         if self._x is not None:
             return self._x
 
-        cprint('Loading ' + str(len(self.get_images())) + ' subjects')
+        cprint(f"Loading {len(self.get_images())} subjects")
         self._x = rbio.load_data(self._images, self._subjects)
-        cprint('Subjects loaded')
+        cprint("Subjects loaded")
 
         return self._x
 
@@ -287,71 +331,88 @@ class CAPSRegionBasedInput(CAPSInput):
         Returns:
 
         """
-
         output_filename = path.join(output_dir, 'weights.nii.gz')
         rbio.weights_to_nifti(weights, self._input_params['atlas'], output_filename)
 
     @staticmethod
     def get_default_parameters():
-
         parameters_dict = super(CAPSRegionBasedInput, CAPSRegionBasedInput).get_default_parameters()
 
-        new_parameters = {'atlas': None,
-                          'pvc': None,
-                          'mask_zeros': True}
-
-        parameters_dict.update(new_parameters)
+        # t1-volume / pet-volume
+        parameters_dict.setdefault("atlas", None)
+        # t1-volume / pet-volume ?
+        parameters_dict.setdefault("mask_zeros", True)
+        # pet-volume
+        parameters_dict.setdefault('acq_label', None)
+        parameters_dict.setdefault('suvr_reference_region', None)
+        parameters_dict.setdefault("use_pvc_data", False)
 
         return parameters_dict
 
 
 class CAPSVertexBasedInput(CAPSInput):
-
     def __init__(self, input_params):
 
         super().__init__(input_params)
 
     def get_images(self):
-        import os
         """
         returns list of filnames
         """
+        import os
 
         if self._images is not None:
             return self._images
 
-        if self._input_params['image_type'] == 'fdg' and self._images is None:
+        if self._input_params["image_type"] == "PET":
             self._images = []
-            hemi = ['lh', 'rh']
+            hemi = ["lh", "rh"]
             for i in range(len(self._subjects)):
-                self._images.append([os.path.join(self._input_params['caps_directory'], 'subjects', self._subjects[i],
-                                                  self._sessions[i], 'pet', 'surface', self._subjects[i] + '_' +
-                                                  self._sessions[i] + '_task-rest_acq-fdg_pet_space-fsaverage_'
-                                                                      'suvr-pons_pvc-iy_hemi-' + h + '_fwhm-' +
-                                                  str(self._input_params['fwhm']) + '_projection.mgh') for h in hemi])
+                self._images.append(
+                    [
+                        os.path.join(
+                            self._input_params["caps_directory"],
+                            "subjects",
+                            self._subjects[i],
+                            self._sessions[i],
+                            "pet",
+                            "surface",
+                            f"{self._subjects[i]}_{self._sessions[i]}_task-rest_acq-fdg_pet"
+                            f"_space-fsaverage_suvr-{self._input_params['suvr_reference_region']}"
+                            f"_pvc-iy_hemi-{h}_fwhm-{self._input_params['fwhm']}_projection.mgh",
+                        )
+                        for h in hemi
+                    ]
+                )
             missing_files = []
-            missing_files_string_error = ''
+            missing_files_string_error = ""
             for img in self._images:
                 for side in img:
                     if not os.path.exists(side):
                         missing_files.append(side)
-                        missing_files_string_error += side + '\n'
+                        missing_files_string_error += side + "\n"
             if len(missing_files) > 0:
-                raise IOError('Could not find the following files : \n' + missing_files_string_error
-                              + '\n' + str(len(missing_files)) + ' files missing')
+                raise IOError(
+                    f"Could not find the following files:\n"
+                    f"{missing_files_string_error}\n"
+                    f"{len(missing_files)} files missing."
+                )
+        else:
+            raise ValueError(
+                f"Unknown image type (given value: {self._input_params['image_type']})"
+            )
         return self._images
 
     def get_x(self):
         """
         Returns numpy 2D array
         """
-
         if self._x is not None:
             return self._x
 
-        cprint('Loading ' + str(len(self.get_images())) + ' subjects')
+        cprint(f"Loading  str({len(self.get_images())} subjects")
         self._x = vtxbio.load_data(self._images)
-        cprint(str(len(self._x)) + ' subjects loaded')
+        cprint(f"{len(self._x)} subjects loaded")
         return self._x
 
     def save_weights_as_datasurface(self, weights, output_dir):
@@ -380,12 +441,10 @@ class CAPSVertexBasedInput(CAPSInput):
 
     @staticmethod
     def get_default_parameters():
-
         parameters_dict = super(CAPSVertexBasedInput, CAPSVertexBasedInput).get_default_parameters()
 
-        new_parameters = {'fwhm': 0}
-
-        parameters_dict.update(new_parameters)
+        # pet-surface
+        parameters_dict.setdefault("fwhm", 0)
 
         return parameters_dict
 
@@ -398,33 +457,34 @@ class CAPSTSVBasedInput(CAPSInput):
         super().__init__(input_params)
 
         if self._input_params['atlas'] not in VOLUME_ATLASES:
-            raise ValueError(f"Incorrect atlas name (given value: {self._input_params['atlas']}). It must be one of {VOLUME_ATLASES}")
+            raise ValueError(
+                f"Incorrect atlas name (given value: {self._input_params['atlas']}). "
+                f"It must be one of {VOLUME_ATLASES}"
+            )
 
     def get_images(self):
         """
-
         Returns: string
-
         """
-
         pass
 
     def get_x(self):
         """
-
         Returns: a numpy 2d-array.
-
         """
 
         # if self._x is not None:
         #    return self._x
 
-        cprint('Loading TSV subjects')
-        string = str('group-' + self._input_params['group_label'] + '_T1w_space-' + self._input_params['atlas'] +
-                     '_map-graymatter')
+        cprint("Loading TSV subjects")
 
-        self._x = tbio.load_data(string, self._input_params['caps_directory'], self._subjects, self._sessions,
-                                 self._input_params['dataset'])
+        self._x = tbio.load_data(
+            f"group-{self._input_params['group_label']}_T1w_space-{self._input_params['atlas']}_map-graymatter",
+            self._input_params['caps_directory'],
+            self._subjects,
+            self._sessions,
+            self._input_params['dataset']
+        )
 
         cprint('Subjects loaded')
 
@@ -451,43 +511,68 @@ class CAPSTSVBasedInput(CAPSInput):
 
         parameters_dict = super(CAPSTSVBasedInput, CAPSTSVBasedInput).get_default_parameters()
 
-        new_parameters = {'atlas': None,
-                          'pvc': None,
-                          'dataset': None}
-
-        parameters_dict.update(new_parameters)
+        # ???
+        parameters_dict.setdefault("dataset", None)
+        # pet-volume
+        parameters_dict.setdefault('acq_label', None)
+        parameters_dict.setdefault('suvr_reference_region', None)
+        parameters_dict.setdefault("use_pvc_data", False)
 
         return parameters_dict
 
 
 class CAPSVoxelBasedInputREGSVM(CAPSVoxelBasedInput):
-
     def get_images(self):
         """
-
         Returns: a list of filenames
-
         """
         if self._images is not None:
             return self._images
 
-        if self._input_params['image_type'] == 'T1':
-            fwhm = '' if self._input_params['fwhm'] == 0 else '_fwhm-%dmm' % int(self._input_params['fwhm'])
+        if self._input_params["image_type"] == "T1w":
+            if self._input_params['fwhm'] == 0:
+                fwhm_key_value = ""
+            else:
+                fwhm_key_value = f"_{self._input_params['fwhm']}mm"
 
-            self._images = [path.join(self._input_params['caps_directory'],
-                                      'regul_%s_%s_T1w_segm-graymatter_space-Ixi549Space_modulated-%s%s_probability.nii'
-                                      % (self._subjects[i], self._sessions[i], self._input_params['modulated'], fwhm))
-                            for i in range(len(self._subjects))]
+            self._images = [
+                path.join(
+                    self._input_params["caps_directory"],
+                    f"regul_{self._subjects[i]}_{self._sessions[i]}_T1w"
+                    f"_segm-graymatter_space-Ixi549Space_modulated-{self._input_params['modulated']}{fwhm_key_value}_probability.nii",
+                )
+                for i in range(len(self._subjects))
+            ]
+        elif self._input_params["image_type"] == "PET":
+            if self._input_params['fwhm'] == 0:
+                fwhm_key_value = ""
+            else:
+                fwhm_key_value = f"_{self._input_params['fwhm']}mm"
+
+            if self._input_params["use_pvc_data"]:
+                pvc_key_value = "_pvc-rbv"
+            else:
+                pvc_key_value = ""
+
+            self._images = [
+                path.join(
+                    self._input_params["caps_directory"],
+                    "subjects",
+                    self._subjects[i],
+                    self._sessions[i],
+                    "pet",
+                    "preprocessing",
+                    "group-" + self._input_params["group_label"],
+                    f"{self._subjects[i]}_{self._sessions[i]}_task-rest_acq-{self._input_params['acq_label']}_pet"
+                    f"_space-Ixi549Space{pvc_key_value}_suvr-{self._input_params['suvr_reference_region']}"
+                    f"_mask-brain{fwhm_key_value}_pet.nii.gz",
+                )
+                for i in range(len(self._subjects))
+            ]
         else:
-            pvc = '' if self._input_params['pvc'] is None else '_pvc-%s' % self._input_params['pvc']
-            fwhm = '' if self._input_params['fwhm'] == 0 else '_fwhm-%dmm' % int(self._input_params['fwhm'])
-            suvr = 'pons' if self._input_params['image_type'] == 'fdg' else 'cerebellumPons'
-            self._images = [path.join(self._input_params['caps_directory'], 'subjects', self._subjects[i],
-                                      self._sessions[i], 'pet/preprocessing/group-' + self._input_params['group_label'],
-                                      '%s_%s_task-rest_acq-%s_pet_space-Ixi549Space%s_suvr-%s_mask-brain%s_pet.nii.gz'
-                                      % (self._subjects[i], self._sessions[i], self._input_params['image_type'],
-                                         pvc, suvr, fwhm))
-                            for i in range(len(self._subjects))]
+            raise ValueError(
+                f"Unknown image type (given value: {self._input_params['image_type']})"
+            )
 
         for image in self._images:
             if not path.exists(image):
@@ -537,7 +622,8 @@ class TsvInput(base.MLInput):
     @staticmethod
     def get_default_parameters():
 
-        parameters_dict = {'data_tsv': None,
-                           'columns': None}
+        parameters_dict = {}
+        parameters_dict.setdefault("data_tsv", None)
+        parameters_dict.setdefault("columns", None)
 
         return parameters_dict

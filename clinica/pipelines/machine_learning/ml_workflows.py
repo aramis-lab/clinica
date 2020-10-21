@@ -9,7 +9,7 @@ from clinica.pipelines.machine_learning import base, input, algorithm, validatio
 class VoxelBasedKFoldDualSVM(base.MLWorkflow):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_label, image_type, output_dir, fwhm=0,
-                 modulated="on", pvc=None, precomputed_kernel=None, mask_zeros=True, n_threads=15, n_folds=10,
+                 modulated="on", use_pvc_data=False, precomputed_kernel=None, mask_zeros=True, n_threads=15, n_folds=10,
                  grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17), splits_indices=None):
 
         super(VoxelBasedKFoldDualSVM, self).__init__(input.CAPSVoxelBasedInput,
@@ -22,7 +22,7 @@ class VoxelBasedKFoldDualSVM(base.MLWorkflow):
 class VoxelBasedRepKFoldDualSVM(base.MLWorkflow):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_label, image_type, output_dir, fwhm=0,
-                 modulated="on", pvc=None, precomputed_kernel=None, mask_zeros=True, n_threads=15, n_iterations=100,
+                 modulated="on", use_pvc_data=False, precomputed_kernel=None, mask_zeros=True, n_threads=15, n_iterations=100,
                  n_folds=10, grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17), splits_indices=None):
 
         super(VoxelBasedRepKFoldDualSVM, self).__init__(input.CAPSVoxelBasedInput,
@@ -35,7 +35,7 @@ class VoxelBasedRepKFoldDualSVM(base.MLWorkflow):
 class VoxelBasedRepHoldOutDualSVM(base.MLWorkflow):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_label, image_type, output_dir, fwhm=0,
-                 modulated="on", pvc=None, precomputed_kernel=None, mask_zeros=True, n_threads=15, n_iterations=100,
+                 modulated="on", use_pvc_data=False, precomputed_kernel=None, mask_zeros=True, n_threads=15, n_iterations=100,
                  test_size=0.3, grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17),
                  splits_indices=None):
 
@@ -62,7 +62,7 @@ class VertexBasedRepHoldOutDualSVM(base.MLWorkflow):
 class RegionBasedRepHoldOutDualSVM(base.MLWorkflow):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_label, image_type,  atlas,
-                 output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3,
+                 output_dir, use_pvc_data=False, n_threads=15, n_iterations=100, test_size=0.3,
                  grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17), splits_indices=None):
 
         super(RegionBasedRepHoldOutDualSVM, self).__init__(input.CAPSRegionBasedInput,
@@ -75,7 +75,7 @@ class RegionBasedRepHoldOutDualSVM(base.MLWorkflow):
 class RegionBasedRepHoldOutLogisticRegression(base.MLWorkflow):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_label, image_type, atlas,
-                 output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3,
+                 output_dir, use_pvc_data=False, n_threads=15, n_iterations=100, test_size=0.3,
                  grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17), splits_indices=None):
 
         super(RegionBasedRepHoldOutLogisticRegression, self).__init__(input.CAPSRegionBasedInput,
@@ -88,7 +88,7 @@ class RegionBasedRepHoldOutLogisticRegression(base.MLWorkflow):
 class RegionBasedRepHoldOutRandomForest(base.MLWorkflow):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_label, image_type, atlas,
-                 output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3,
+                 output_dir, use_pvc_data=False, n_threads=15, n_iterations=100, test_size=0.3,
                  grid_search_folds=10, balanced=True, n_estimators_range=(100, 200, 400),
                  max_depth_range=[None], min_samples_split_range=[2],
                  max_features_range=('auto', 0.25, 0.5), splits_indices=None):
@@ -103,7 +103,7 @@ class RegionBasedRepHoldOutRandomForest(base.MLWorkflow):
 class RegionBasedLearningCurveRepHoldOutDualSVM(base.MLWorkflow):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_label, image_type,  atlas,
-                 output_dir, pvc=None, precomputed_kernel=None, n_threads=15, n_iterations=100, test_size=0.3,
+                 output_dir, use_pvc_data=False, precomputed_kernel=None, n_threads=15, n_iterations=100, test_size=0.3,
                  n_learning_points=10, grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17)):
 
         super(RegionBasedLearningCurveRepHoldOutDualSVM, self).__init__(input.CAPSRegionBasedInput,
@@ -116,7 +116,7 @@ class RegionBasedLearningCurveRepHoldOutDualSVM(base.MLWorkflow):
 class VoxelBasedLearningCurveRepHoldOutDualSVM(base.MLWorkflow):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_label, image_type, output_dir, fwhm=0,
-                 modulated="on", pvc=None, precomputed_kernel=None, mask_zeros=True, n_threads=15, n_iterations=100,
+                 modulated="on", use_pvc_data=False, precomputed_kernel=None, mask_zeros=True, n_threads=15, n_iterations=100,
                  test_size=0.3, n_learning_points=10, grid_search_folds=10, balanced=True,
                  c_range=np.logspace(-6, 2, 17)):
 
@@ -130,7 +130,7 @@ class VoxelBasedLearningCurveRepHoldOutDualSVM(base.MLWorkflow):
 class RegionBasedRepKFoldDualSVM(base.MLWorkflow):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_label, image_type,  atlas,
-                 output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3, n_folds=10,
+                 output_dir, use_pvc_data=False, n_threads=15, n_iterations=100, test_size=0.3, n_folds=10,
                  grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17), splits_indices=None):
 
         super(RegionBasedRepKFoldDualSVM, self).__init__(input.CAPSRegionBasedInput,
@@ -143,7 +143,7 @@ class RegionBasedRepKFoldDualSVM(base.MLWorkflow):
 class CAPSTsvRepHoldOutDualSVM(base.MLWorkflow):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_label, image_type,  atlas, dataset,
-                 output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3,
+                 output_dir, use_pvc_data=False, n_threads=15, n_iterations=100, test_size=0.3,
                  grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17), splits_indices=None):
 
         super(CAPSTsvRepHoldOutDualSVM, self).__init__(input.CAPSTSVBasedInput,
@@ -155,7 +155,7 @@ class CAPSTsvRepHoldOutDualSVM(base.MLWorkflow):
 
 class CAPSTsvRepHoldOutRandomForest(base.MLWorkflow):
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_label, image_type, atlas, dataset,
-                 output_dir, pvc=None, n_threads=15, n_iterations=100, test_size=0.3,
+                 output_dir, use_pvc_data=False, n_threads=15, n_iterations=100, test_size=0.3,
                  grid_search_folds=10, balanced=True, n_estimators_range=(100, 200, 400),
                  max_depth_range=[None], min_samples_split_range=[2],
                  max_features_range=('auto', 0.25, 0.5), splits_indices=None):
@@ -172,7 +172,7 @@ class CAPSTsvRepHoldOutRandomForest(base.MLWorkflow):
 class VoxelBasedREGRepKFoldDualSVM(base.MLWorkflow):
 
     def __init__(self, caps_directory, subjects_visits_tsv, diagnoses_tsv, group_label, image_type, output_dir, fwhm=0,
-                 modulated="on", pvc=None, precomputed_kernel=None, mask_zeros=True, n_threads=15, n_iterations=100,
+                 modulated="on", use_pvc_data=False, precomputed_kernel=None, mask_zeros=True, n_threads=15, n_iterations=100,
                  n_folds=10,
                  test_size=0.1, grid_search_folds=10, balanced=True, c_range=np.logspace(-6, 2, 17),
                  splits_indices=None):
