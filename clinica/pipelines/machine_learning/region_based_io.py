@@ -6,44 +6,6 @@ import pandas as pd
 import nibabel as nib
 
 
-def get_caps_t1_list(input_directory, subjects_visits_tsv, group_label, atlas_id):
-    """
-    path to arrive to the list of the file with the statistics on atlas_id
-    Args:
-        input_directory:
-        subjects_visits_tsv:
-        group_label:
-        atlas_id:
-
-    Returns:
-
-    """
-    from os.path import join
-    import pandas as pd
-
-    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep="\t")
-    if list(subjects_visits.columns.values) != ["participant_id", "session_id"]:
-        raise Exception("Subjects and visits file is not in the correct format.")
-    subjects = list(subjects_visits.participant_id)
-    sessions = list(subjects_visits.session_id)
-    image_list = [
-        join(
-            input_directory,
-            "subjects",
-            subjects[i],
-            sessions[i],
-            "t1",
-            "spm",
-            "dartel",
-            f"group-{group_label}",
-            "atlas_statistics",
-            f"{subjects[i]}_{sessions[i]}_T1w_space-{atlas_id}_map-graymatter_statistics.tsv",
-        )
-        for i in range(len(subjects))
-    ]
-    return image_list
-
-
 def load_data(image_list, subjects):
     """
 

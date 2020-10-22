@@ -1,64 +1,7 @@
 # coding: utf8
 
 import numpy as np
-import pandas as pd
 import nibabel as nib
-from os.path import join
-
-
-def get_caps_t1_list(
-    input_directory, subjects_visits_tsv, group_label, fwhm, modulated
-):
-
-    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep="\t")
-    if list(subjects_visits.columns.values) != ["participant_id", "session_id"]:
-        raise Exception("Subjects and visits file is not in the correct format.")
-    subjects = list(subjects_visits.participant_id)
-    sessions = list(subjects_visits.session_id)
-    if fwhm == 0:
-        fwhm_key_value = ""
-    else:
-        fwhm_key_value = f"_{fwhm}mm"
-
-    image_list = [
-        join(
-            input_directory,
-            "subjects",
-            subjects[i],
-            sessions[i],
-            "t1",
-            "spm",
-            "dartel",
-            f"group-{group_label}",
-            f"{subjects[i]}_{sessions[i]}_T1w_segm-graymatter_space-Ixi549Space_modulated-{modulated}{fwhm_key_value}_probability.nii.gz",
-        )
-        for i in range(len(subjects))
-    ]
-    return image_list
-
-
-def get_caps_pet_list(input_directory, subjects_visits_tsv, group_label, acq_label):
-    subjects_visits = pd.io.parsers.read_csv(subjects_visits_tsv, sep="\t")
-    if list(subjects_visits.columns.values) != ["participant_id", "session_id"]:
-        raise Exception("Subjects and visits file is not in the correct format.")
-    subjects = list(subjects_visits.participant_id)
-    sessions = list(subjects_visits.session_id)
-
-    image_list = [
-        join(
-            input_directory,
-            "subjects",
-            subjects[i],
-            sessions[i],
-            "pet",
-            "preprocessing",
-            f"group-{group_label}",
-            f"{subjects[i]}_{sessions[i]}_task-rest_acq-{acq_label}_pet_space-Ixi549Space_pet.nii.gz",
-        )
-        for i in range(len(subjects))
-    ]
-
-    return image_list
 
 
 def load_data(image_list, mask=True):
