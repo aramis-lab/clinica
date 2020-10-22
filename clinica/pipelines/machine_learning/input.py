@@ -36,7 +36,10 @@ class CAPSInput(base.MLInput):
         self._diagnoses = list(diagnoses.diagnosis)
 
         if self._input_params["image_type"] not in ["T1w", "PET"]:
-            raise Exception("Incorrect image type. It must be one of the values 'T1w', 'PET'")
+            raise ValueError(
+                f"Incorrect image type. It must be one of the values 'T1w', 'PET' "
+                f"(given value: {self._input_params['image_type']})"
+            )
 
         if self._input_params['precomputed_kernel'] is not None:
             if type(self._input_params['precomputed_kernel']) == np.ndarray:
@@ -152,7 +155,7 @@ class CAPSVoxelBasedInput(CAPSInput):
             if self._input_params['fwhm'] == 0:
                 fwhm_key_value = ""
             else:
-                fwhm_key_value = f"_{self._input_params['fwhm']}mm"
+                fwhm_key_value = f"_fwhm-{self._input_params['fwhm']}mm"
 
             self._images = [
                 path.join(
@@ -177,6 +180,7 @@ class CAPSVoxelBasedInput(CAPSInput):
         elif self._input_params['image_type'] == "PET":
             caps_files_information = pet_volume_normalized_suvr_pet(
                 acq_label=self._input_params["acq_label"],
+                group_label=self._input_params["group_label"],
                 suvr_reference_region=self._input_params["suvr_reference_region"],
                 use_brainmasked_image=True,
                 use_pvc_data=self._input_params["use_pvc_data"],
@@ -377,7 +381,7 @@ class CAPSVertexBasedInput(CAPSInput):
                             self._sessions[i],
                             "pet",
                             "surface",
-                            f"{self._subjects[i]}_{self._sessions[i]}_task-rest_acq-fdg_pet"
+                            f"{self._subjects[i]}_{self._sessions[i]}_task-rest_acq-{self._input_params['acq_label']}_pet"
                             f"_space-fsaverage_suvr-{self._input_params['suvr_reference_region']}"
                             f"_pvc-iy_hemi-{h}_fwhm-{self._input_params['fwhm']}_projection.mgh",
                         )
@@ -533,7 +537,7 @@ class CAPSVoxelBasedInputREGSVM(CAPSVoxelBasedInput):
             if self._input_params['fwhm'] == 0:
                 fwhm_key_value = ""
             else:
-                fwhm_key_value = f"_{self._input_params['fwhm']}mm"
+                fwhm_key_value = f"_fwhm-{self._input_params['fwhm']}mm"
 
             self._images = [
                 path.join(
@@ -547,7 +551,7 @@ class CAPSVoxelBasedInputREGSVM(CAPSVoxelBasedInput):
             if self._input_params['fwhm'] == 0:
                 fwhm_key_value = ""
             else:
-                fwhm_key_value = f"_{self._input_params['fwhm']}mm"
+                fwhm_key_value = f"_fwhm-{self._input_params['fwhm']}mm"
 
             if self._input_params["use_pvc_data"]:
                 pvc_key_value = "_pvc-rbv"
@@ -562,7 +566,7 @@ class CAPSVoxelBasedInputREGSVM(CAPSVoxelBasedInput):
                     self._sessions[i],
                     "pet",
                     "preprocessing",
-                    "group-" + self._input_params["group_label"],
+                    f"group-{self._input_params['group_label']}",
                     f"{self._subjects[i]}_{self._sessions[i]}_task-rest_acq-{self._input_params['acq_label']}_pet"
                     f"_space-Ixi549Space{pvc_key_value}_suvr-{self._input_params['suvr_reference_region']}"
                     f"_mask-brain{fwhm_key_value}_pet.nii.gz",

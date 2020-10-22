@@ -261,9 +261,6 @@ def bids_pet_nii(acq_label):
 # PET-Volume
 
 
-# coding: utf8
-
-
 def pet_volume_normalized_suvr_pet(
     acq_label,
     group_label,
