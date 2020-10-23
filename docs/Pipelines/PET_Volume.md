@@ -35,6 +35,8 @@ where:
 - `caps_directory` acts both as an input folder (where the results of the `t1-volume-*` pipeline are stored) and as the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
 - `group_label` is the ID of the group that is associated to the DARTEL template that you had created when running the `t1-volume-*` pipeline.
 
+- `acq_label` is the label given to the acquisition, specifying the tracer used.
+
 Pipeline options:
 
 - `--pet_tracer`: type of PET image to process. Possible values are `fdg` and `av45`. Default value is `fdg`.

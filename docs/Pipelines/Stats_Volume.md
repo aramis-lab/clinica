@@ -33,6 +33,8 @@ Optional parameters:
   - `--group_id_caps` is used when you have multiple groups in your CAPS and Clinica is not able to determine which one to choose when reading inputs.
   - `-fwhm` is the full width at half maximum (FWHM) of the smoothing used in your input file (by default 8 (mm), i.e. the default value of the [`t1-volume`](../T1_Volume)) and [`pet-volume`](../PET_Volume) pipelines)).
 
+- `acq_label` is the label given to the acquisition, specifying the tracer used.
+
 ### `statistics-volume-correction` pipeline
 Once the `statistics-volume` sub-pipeline has finished, you need to open the SPM report (`report1.png` or `report2.png` file). This will look like as follows:
 
