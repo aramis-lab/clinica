@@ -364,8 +364,6 @@ class CAPSVertexBasedInput(CAPSInput):
         returns list of filnames
         """
         import os
-        from clinica.utils.stream import cprint
-        cprint(f"input_params = {self._input_params}")
 
         if self._images is not None:
             return self._images
