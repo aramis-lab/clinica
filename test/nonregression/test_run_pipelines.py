@@ -645,52 +645,105 @@ def test_run_PETSurfaceCrossSectional(cmdopt):
 
 
 def test_run_WorkflowsML(cmdopt):
-    from clinica.pipelines.machine_learning.ml_workflows import (RegionBasedRepHoldOutLogisticRegression,
-                                                                 VertexBasedRepHoldOutDualSVM,
-                                                                 RegionBasedRepHoldOutRandomForest,
-                                                                 VoxelBasedKFoldDualSVM)
+    from clinica.pipelines.machine_learning.ml_workflows import (
+        RegionBasedRepHoldOutLogisticRegression,
+        VertexBasedRepHoldOutDualSVM,
+        RegionBasedRepHoldOutRandomForest,
+        VoxelBasedKFoldDualSVM,
+    )
     from os.path import dirname, join, abspath
     import shutil
     import warnings
+
     warnings.filterwarnings("ignore", category=DeprecationWarning)
     warnings.filterwarnings("ignore", category=UserWarning)
     warnings.filterwarnings("ignore", category=FutureWarning)
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'WorkflowsML')
+    root = join(root, "data", "WorkflowsML")
     root_input = dirname(abspath(join(abspath(__file__), pardir)))
-    root_input = join(root_input, 'data', 'InputsML')
+    root_input = join(root_input, "data", "InputsML")
 
-    caps_dir = join(root_input, 'in', 'caps')
-    tsv = join(root_input, 'in', 'subjects.tsv')
-    diagnoses_tsv = join(root_input, 'in', 'diagnosis.tsv')
-    group_label = 'allADNIdartel'
+    caps_dir = join(root_input, "in", "caps")
+    tsv = join(root_input, "in", "subjects.tsv")
+    diagnoses_tsv = join(root_input, "in", "diagnosis.tsv")
+    group_label = "allADNIdartel"
 
-    output_dir1 = join(root, 'out', 'VertexBasedRepHoldOutDualSVM')
+    output_dir1 = join(root, "out", "VertexBasedRepHoldOutDualSVM")
     clean_folder(output_dir1, recreate=True)
-    wf1 = VertexBasedRepHoldOutDualSVM(caps_dir, tsv, diagnoses_tsv, group_label, output_dir1, image_type='fdg', fwhm=20,
-                                       n_threads=8, n_iterations=10, grid_search_folds=3, test_size=0.3)
+    wf1 = VertexBasedRepHoldOutDualSVM(
+        caps_directory=caps_dir,
+        subjects_visits_tsv=tsv,
+        diagnoses_tsv=diagnoses_tsv,
+        group_label=group_label,
+        output_dir=output_dir1,
+        image_type="PET",
+        acq_label="fdg",
+        suvr_reference_region="pons",
+        fwhm=20,
+        n_threads=2,
+        n_iterations=10,
+        grid_search_folds=3,
+        test_size=0.3,
+    )
     wf1.run()
     shutil.rmtree(output_dir1)
 
-    output_dir2 = join(root, 'out', 'RegionBasedRepHoldOutLogisticRegression')
+    output_dir2 = join(root, "out", "RegionBasedRepHoldOutLogisticRegression")
     clean_folder(output_dir2, recreate=True)
-    wf2 = RegionBasedRepHoldOutLogisticRegression(caps_dir, tsv, diagnoses_tsv, group_label, 'fdg', 'AICHA', output_dir2,
-                                                  n_threads=8, n_iterations=10, grid_search_folds=3, test_size=0.3)
+    wf2 = RegionBasedRepHoldOutLogisticRegression(
+        caps_directory=caps_dir,
+        subjects_visits_tsv=tsv,
+        diagnoses_tsv=diagnoses_tsv,
+        group_label=group_label,
+        image_type="PET",
+        atlas="AICHA",
+        output_dir=output_dir2,
+        acq_label="fdg",
+        suvr_reference_region="pons",
+        use_pvc_data=False,
+        n_threads=2,
+        n_iterations=10,
+        grid_search_folds=3,
+        test_size=0.3,
+    )
     wf2.run()
     shutil.rmtree(output_dir2)
 
-    output_dir3 = join(root, 'out', 'RegionBasedRepHoldOutRandomForest')
+    output_dir3 = join(root, "out", "RegionBasedRepHoldOutRandomForest")
     clean_folder(output_dir3, recreate=True)
-    wf3 = RegionBasedRepHoldOutRandomForest(caps_dir, tsv, diagnoses_tsv, group_label, 'T1', 'AAL2', output_dir3,
-                                            n_threads=8, n_iterations=10, grid_search_folds=3, test_size=0.3)
+    wf3 = RegionBasedRepHoldOutRandomForest(
+        caps_directory=caps_dir,
+        subjects_visits_tsv=tsv,
+        diagnoses_tsv=diagnoses_tsv,
+        group_label=group_label,
+        image_type="T1w",
+        atlas="AAL2",
+        output_dir=output_dir3,
+        n_threads=2,
+        n_iterations=10,
+        grid_search_folds=3,
+        test_size=0.3,
+    )
     wf3.run()
     shutil.rmtree(output_dir3)
 
-    output_dir4 = join(root, 'out', 'VoxelBasedKFoldDualSVM')
+    output_dir4 = join(root, "out", "VoxelBasedKFoldDualSVM")
     clean_folder(output_dir4, recreate=True)
-    wf4 = VoxelBasedKFoldDualSVM(caps_dir, tsv, diagnoses_tsv, group_label, 'fdg', output_dir4, fwhm=8, n_threads=8,
-                                 n_folds=5, grid_search_folds=3)
+    wf4 = VoxelBasedKFoldDualSVM(
+        caps_directory=caps_dir,
+        subjects_visits_tsv=tsv,
+        diagnoses_tsv=diagnoses_tsv,
+        group_label=group_label,
+        image_type="PET",
+        output_dir=output_dir4,
+        acq_label="fdg",
+        suvr_reference_region="pons",
+        fwhm=8,
+        n_threads=2,
+        n_folds=5,
+        grid_search_folds=3,
+    )
     wf4.run()
     shutil.rmtree(output_dir4)
 
