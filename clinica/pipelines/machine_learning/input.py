@@ -364,6 +364,8 @@ class CAPSVertexBasedInput(CAPSInput):
         returns list of filnames
         """
         import os
+        from clinica.utils.stream import cprint
+        cprint(f"input_params = {self._input_params}")
 
         if self._images is not None:
             return self._images
@@ -449,6 +451,8 @@ class CAPSVertexBasedInput(CAPSInput):
 
         # pet-surface
         parameters_dict.setdefault("fwhm", 0)
+        parameters_dict.setdefault('acq_label', None)
+        parameters_dict.setdefault('suvr_reference_region', None)
 
         return parameters_dict
 

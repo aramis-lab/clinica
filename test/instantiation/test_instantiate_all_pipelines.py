@@ -273,42 +273,72 @@ def test_instantiate_PETSurfaceCrossSectional():
 
 def test_instantiate_InputsML():
     from os.path import dirname, join, abspath, exists
-    from clinica.pipelines.machine_learning.input import CAPSVoxelBasedInput, CAPSRegionBasedInput, CAPSVertexBasedInput
+    from clinica.pipelines.machine_learning.input import (
+        CAPSVoxelBasedInput,
+        CAPSRegionBasedInput,
+        CAPSVertexBasedInput,
+    )
 
     root = dirname(abspath(join(abspath(__file__), pardir)))
-    root = join(root, 'data', 'InputsML')
-    caps_dir = join(root, 'in', 'caps')
-    tsv = join(root, 'in', 'subjects.tsv')
-    diagnoses_tsv = join(root, 'in', 'diagnosis.tsv')
-    group_label = 'allADNIdartel'
-    image_type = ['T1', 'fdg']
-    atlases = ['AAL2', 'Neuromorphometrics', 'AICHA', 'LPBA40', 'Hammers']
-    possible_psf = [0, 5, 10, 15, 20, 25]
+    root = join(root, "data", "InputsML")
+    caps_dir = join(root, "in", "caps")
+    tsv = join(root, "in", "subjects.tsv")
+    diagnoses_tsv = join(root, "in", "diagnosis.tsv")
+    group_label = "allADNIdartel"
+    image_type = ["T1w", "PET"]
+    atlases = ["AAL2", "Neuromorphometrics", "AICHA", "LPBA40", "Hammers"]
+    possible_fwhm = [0, 5, 10, 15, 20, 25]
 
-    voxel_input = [CAPSVoxelBasedInput({'caps_directory': caps_dir,
-                                        'subjects_visits_tsv': tsv,
-                                        'diagnoses_tsv': diagnoses_tsv,
-                                        'group_label': group_label,
-                                        'image_type': im,
-                                        'fwhm': 8})
-                   for im in image_type]
+    voxel_input = [
+        CAPSVoxelBasedInput(
+            {
+                "caps_directory": caps_dir,
+                "subjects_visits_tsv": tsv,
+                "diagnoses_tsv": diagnoses_tsv,
+                "group_label": group_label,
+                "image_type": im,
+                "fwhm": 8,
+                "acq_label": "fdg",
+                "suvr_reference_region": "pons",
+                "use_pvc_data": False,
+            }
+        )
+        for im in image_type
+    ]
 
-    region_input = [CAPSRegionBasedInput({'caps_directory': caps_dir,
-                                          'subjects_visits_tsv': tsv,
-                                          'diagnoses_tsv': diagnoses_tsv,
-                                          'group_label': group_label,
-                                          'image_type': im,
-                                          'atlas': at})
-                    for im in image_type
-                    for at in atlases]
+    region_input = [
+        CAPSRegionBasedInput(
+            {
+                "caps_directory": caps_dir,
+                "subjects_visits_tsv": tsv,
+                "diagnoses_tsv": diagnoses_tsv,
+                "group_label": group_label,
+                "image_type": im,
+                "atlas": at,
+                "acq_label": "fdg",
+                "suvr_reference_region": "pons",
+                "use_pvc_data": False,
+            }
+        )
+        for im in image_type
+        for at in atlases
+    ]
 
-    vertex_input = [CAPSVertexBasedInput({'caps_directory': caps_dir,
-                                          'subjects_visits_tsv': tsv,
-                                          'diagnoses_tsv': diagnoses_tsv,
-                                          'group_label': group_label,
-                                          'image_type': 'fdg',
-                                          'fwhm': fwhm})
-                    for fwhm in possible_psf]
+    vertex_input = [
+        CAPSVertexBasedInput(
+            {
+                "caps_directory": caps_dir,
+                "subjects_visits_tsv": tsv,
+                "diagnoses_tsv": diagnoses_tsv,
+                "group_label": group_label,
+                "image_type": "PET",
+                "fwhm": fwhm,
+                "acq_label": "fdg",
+                "suvr_reference_region": "pons",
+            }
+        )
+        for fwhm in possible_fwhm
+    ]
 
     # Check that each file exists
     for inputs in voxel_input + region_input + vertex_input:
@@ -319,7 +349,7 @@ def test_instantiate_InputsML():
                 assert exists(file[0])
                 assert exists(file[1])
             else:
-                raise ValueError('An error occured...')
+                raise ValueError("An error occurred...")
 
 
 def test_instantiate_SpatialSVM():
