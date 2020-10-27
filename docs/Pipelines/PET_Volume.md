@@ -27,33 +27,25 @@ You need to have performed the [`t1-volume`](../T1_Volume) pipeline on your T1-w
 The pipeline can be run with the following command line:
 
 ```Text
-clinica run pet-volume <bids_directory> <caps_directory> <group_label>
+clinica run pet-volume <bids_directory> <caps_directory> <group_label> <acq_label> <suvr_reference_region>
 ```
 where:
 
 - `bids_directory` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
 - `caps_directory` acts both as an input folder (where the results of the `t1-volume-*` pipeline are stored) and as the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
-- `group_label` is the ID of the group that is associated to the DARTEL template that you had created when running the `t1-volume-*` pipeline.
-
-- `acq_label` is the label given to the acquisition, specifying the tracer used.
+- `group_label` is the label of the group that is associated to the DARTEL template that you had created when running the [`t1-volume`](../T1_Volume) pipeline.
+- `acq_label` is the label given to the acquisition, specifying the tracer used (`acq-<acq_label>`).
+- `suvr_reference_region` is the reference region used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio (SUVR) map. It can be `cerebellumPons` (used for amyloid tracers) or `pons` (used for FDG).
 
 Pipeline options:
 
-- `--pet_tracer`: type of PET image to process. Possible values are `fdg` and `av45`. Default value is `fdg`.
-- `--smooth`: a list of integers specifying the different isomorphic full width at half maximum (FWHM) in millimeters to smooth the image. Default value is: 0, 8 (both without smoothing and with an isomorphic smoothing of 8 mm)
-- `--pvc_fwhm`: TSV file containing the `fwhm_x`, `fwhm_y` and `fwhm_z` of the PSF for each PET image. More explanation below.
+- `--smooth`: a list of integers specifying the different isotropic full width at half maximum (FWHM) in millimeters to smooth the image. Default value is: 0, 8 (both without smoothing and with an isotropic smoothing of 8 mm)
+- `--pvc_psf_tsv`: TSV file containing the `psf_x`, `psf_y` and `psf_z` of the PSF for each PET image. More explanation are given in [PET Introduction](../PET_Introduction) page.
 
 
 
-!!! note "Partial volume correction"
-    To correct for [partial volume effects](http://www.turkupetcentre.net/petanalysis/image_pve.html), the pipeline uses the [region-based voxel-wise (RBV) correction](http://doc.pmod.com/pneuro/8893.htm) implemented in the [PETPVC toolbox](https://github.com/UCL/PETPVC).
-    You need to specify in a TSV file the full width at half maximum (FWHM), in millimeters, of the [point spread function (PSF)](https://en.wikipedia.org/wiki/Point_spread_function) associated with your data, in the x, y and z directions. For instance, if the FWHM of the PSF associated with your first image is 8 mm along the x axis, 9 mm along the y axis, and 10 mm along z axis, the first row of your TSV file will look like this:
-    ```
-    participant_id    session_id     fwhm_x    fwhm_y    fwhm_z
-    sub-CLNC0001      ses-M00        8         9         10
-    sub-CLNC0002      ses-M00        7         6         5
-    sub-CLNC0003      ses-M00        6         6         6
-    ```
+!!! info
+    Since the release of Clinica v0.3.8, the handling of PSF information in the TSV file has changed: `fwhm_x`, `fwhm_y`, `fwhm_z` columns have been replaced by `psf_x`, `psf_y`, `psf_z` and the `acq_label` column has been added. Additionally, the SUVR reference region is now a compulsory argument: it will be easier for you to modify Clinica if you want to add a custom reference region ([PET Introduction](../PET_Introduction) page). Choose `cerebellumPons` for amyloid tracers or `pons` for FDG to have the previous behaviour.
 
 !!! note
     The arguments common to all Clinica pipelines are described in [Interacting with clinica](../../InteractingWithClinica).
@@ -71,10 +63,10 @@ The main output files are:
 
 - `<source_file>_space-Ixi549Space[_pvc-rbv]_suvr-<label>_mask-brain[_fwhm-<X>mm]_pet.nii.gz`: standard uptake value ratio (SUVR) PET image in MNI space, masked to keep only the brain, and optionally smoothed.
 
-- `atlas_statistics/<source_file>_space-<space>[_pvc-rbv]_suvr-<label>_statistics.tsv`: TSV files summarizing the regional statistics on the labelled atlas <space\>.
+- `atlas_statistics/<source_file>_space-<space>[_pvc-rbv]_suvr-<label>_statistics.tsv`: TSV files summarizing the regional statistics on the labelled atlas `<space>`.
 
 !!! note
-    The [pvc-rbv] label indicates whether the PET image has undergone partial value correction (region-based voxel-wise method) or not.
+    The `[_pvc-rbv]` label indicates whether the PET image has undergone partial value correction (region-based voxel-wise method) or not.
 
     The full list of output files from the pet-volume pipeline can be found in the [The ClinicA Processed Structure (CAPS) specifications](../../CAPS/Specifications/#pet-volume-volume-based-processing-of-pet-images).
 
