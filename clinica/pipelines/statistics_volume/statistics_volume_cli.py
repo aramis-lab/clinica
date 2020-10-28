@@ -41,10 +41,10 @@ class StatisticsVolumeCLI(ce.CmdParser):
 
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
-        optional.add_argument("-gld", "--group_label_dartel", type=str, default='*',
-                              help='Name of the DARTEL template that Clinica needs to use to grab input file.')
+        optional.add_argument("-dartel", "--group_label_dartel", type=str, default='*',
+                              help='Name of the DARTEL template that Clinica needs to use to grab the input files.')
         optional.add_argument("-fwhm", "--full_width_at_half_maximum", type=int, default=8,
-                              help='Full Width at Half Maximum (FWHM) of the smoothing used in your input file '
+                              help='Full Width at Half Maximum (FWHM) of the smoothing used in your input files '
                                    '(default: --full_width_at_half_maximum %(default)s).')
 
         # Optional arguments for inputs from pet-volume pipeline
