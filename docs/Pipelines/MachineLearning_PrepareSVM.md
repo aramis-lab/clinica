@@ -11,16 +11,20 @@ If you installed the core of Clinica, this pipeline needs no further dependencie
 ## Running the pipeline
 The pipeline can be run with the following command line:
 ```Text
-clinica run machinelearning-prepare-spatial-svm <caps_directory> <group_id>
+clinica run machinelearning-prepare-spatial-svm <caps_directory> <group_label> <origin_input_data>
 ```
 where:
 
 - `caps_directory` is the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy
-- `group_id` is the user-defined identifier for the provided group of subjects
+- `group_label` is the user-defined identifier for the provided group of subjects
+- `origin_input_data` can be `t1-volume` to use gray matter maps or `pet-volume` to use SUVr maps.
 
-Pipeline options:
 
-- `image_type`: possible options are `t1` and `pet` depending on the imaging modality considered. Default value: `t1`. When this flag is set to `pet`, the `pet_tracer` must be specified too (default value: `fdg`, other possible value: `av45`).
+Pipeline options if you use inputs from `pet-volume` pipeline:
+
+- `--acq_label`: Name of the label given to the acquisition, specifying the tracer used (`acq-<acq_label>`).
+- `--suvr_reference_region`: Intensity normalization using the average PET uptake in reference regions resulting in a standardized uptake value ratio (SUVR) map. It can be `cerebellumPons` (used for amyloid tracers) or `pons` (used for 18F-FDG tracers).
+- `--use_pvc_data`: Use PET data with partial value correction (by default, PET data with no PVC are used)
 
 !!! note
     The arguments common to all Clinica pipelines are described in [Interacting with clinica](../../InteractingWithClinica).
@@ -30,7 +34,7 @@ Pipeline options:
 
 ## Outputs
 
-Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#machinelearning-prepare-spatial-svm-prepare-input-data-for-spatially-regularized-svm): `subjects/sub-<participant_label>/ses-<session_label>machine_learning/input_spatial_svm/group-<group_label>/` and `groups/group-<group_label>machine_learning/input_spatial_svm/`.
+Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#machinelearning-prepare-spatial-svm-prepare-input-data-for-spatially-regularized-svm): `subjects/<participant_id>/<session_id>/machine_learning/input_spatial_svm/<group_id>/` and `groups/<group_id>/machine_learning/input_spatial_svm/`.
 
 The main output files in `subjects` subfolder are:
 
