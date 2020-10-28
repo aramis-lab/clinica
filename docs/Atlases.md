@@ -31,11 +31,11 @@ These atlases are mainly used when processing T1-weighted images with the [`t1-f
     Easily access the papers cited on this page on [Zotero](https://www.zotero.org/groups/2240070/clinica_aramislab/items/collectionKey/JPGDLCMZ).
 
 
-## Tutorial: How to add new volume atlas to Clinica?
+## Tutorial: How to add a new volume atlas to Clinica?
 
-It is possible to run the [`t1-volume`](../T1_Volume) and [`pet-volume`](../PET_Volume) <!--and [`dwi-dti`](../DWI_DTI)--> pipelines using a custom parcellation.
+It is possible to run the [`t1-volume`](../T1_Volume) and [`pet-volume`](../PET_Volume) <!--and [`dwi-dti`](../DWI_DTI)--> pipelines using a custom parcellation. To do so:
 
-- Install Clinica following the [developer instructions](../../Installation/#install-clinica) ;
+- Install Clinica following the [developer instructions](../../Installation/#install-clinica);
 
 - In the `<clinica>/clinica/utils/atlas.py` file, modify the following two elements:
     - The label of the volume atlas that will be stored in CAPS filename(s):
@@ -48,7 +48,7 @@ It is possible to run the [`t1-volume`](../T1_Volume) and [`pet-volume`](../PET_
         "Neuromorphometrics",
     ]
     ```
-    Simply define a new label that will be your new volume. `T1_VOLUME_ATLASES` is used by all command-line interfaces using atlases from [`t1-volume`](../T1_Volume) pipeline so you do not need to modify the pipelines' CLI to make this new region appear. The same rationale applies for `PET_VOLUME_ATLASES`<!-- and `DWI_DTI_VOLUME_ATLASES`-->.
+    Simply define a new label that will be your new volume. `T1_VOLUME_ATLASES` is used by all the command-line interfaces using atlases from the [`t1-volume`](../T1_Volume) pipeline so you do not need to modify the pipelines' CLI to make this new region appear. The same rationale applies to `PET_VOLUME_ATLASES`<!-- and `DWI_DTI_VOLUME_ATLASES`-->.
 
     - Create a new class inherited from `AtlasAbstract` and fill the three compulsory methods. If we take for instance the AAL2 parcellation:
     ```python
@@ -84,7 +84,7 @@ It is possible to run the [`t1-volume`](../T1_Volume) and [`pet-volume`](../PET_
             "atlas-AAL2_dseg.tsv",
         )
     ```
-    The string returned by the `get_name_atlas()` method must match the label given in the `{T1|PET}_VOLUME_ATLASES` list. The `get_atlas_labels()` method must return the path to the parcellation in NIfTI format while the `get_tsv_roi()` method must return the path a TSV file. In this example, the TSV and labels files associated with the `AAL2` atlas are located at `<clinica>/resources/atlases/atlas-AAL2_dseg.{nii.gz|tsv}`. Finally, the TSV file must contain the `roi_value` and `roi_name` columns and looks like:
+    The string returned by the `get_name_atlas()` method must match the label given in the `{T1|PET}_VOLUME_ATLASES` list. The `get_atlas_labels()` method must return the path to the parcellation in NIfTI format while the `get_tsv_roi()` method must return the path to a TSV file. In this example, the labels and TSV files associated with the `AAL2` atlas are located at `<clinica>/resources/atlases/atlas-AAL2_dseg.{nii.gz|tsv}`. Finally, the TSV file must contain the `roi_value` and `roi_name` columns and looks like:
     ```
     roi_value   roi_name
     0           Background
