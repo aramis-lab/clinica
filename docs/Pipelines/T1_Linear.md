@@ -24,7 +24,7 @@ On default, cropped images (matrix size 169×208×179, 1 mm isotropic voxels) ar
 
 
 ## Outputs
-Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#t1-linear-affine-registration-of-t1w-images-to-the-mni-standard-space): `subjects/sub-<participant_label>/ses-<session_label>/t1_linear` with the following outputs:
+Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#t1-linear-affine-registration-of-t1w-images-to-the-mni-standard-space): `subjects/<participant_id>/<session_id>/t1_linear` with the following outputs:
 
 - `<source_file>_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz`: T1w image affinely registered to the [`MNI152NLin2009cSym` template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html).
 - (optional) `<source_file>_space-MNI152NLin2009cSym_desc-Crop_res-1x1x1_T1w.nii.gz`: T1w image registered to the [`MNI152NLin2009cSym` template](https://bids-specification.readthedocs.io/en/stable/99-appendices/08-coordinate-systems.html) and cropped.

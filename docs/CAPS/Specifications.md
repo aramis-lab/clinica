@@ -2,13 +2,19 @@
 
 In the following, brackets `[`/`]` will denote optional key/value pairs in the filename while accolades `{`/`}` will indicate a list of compulsory values (e.g. `hemi-{left|right}` means that the key `hemi` only accepts `left` or `right` as values).
 
+Finally:
+- `participant_id` denotes `<participant_id>`
+- `participant_id` denotes `<participant_id>`
+- `group_id` denotes `<participant_id>`
+- `long_id` denotes `<participant_id>`
+
 ##  T1 MRI data
 
 ### `t1-linear` - Affine registration of T1w images to the MNI standard space
 ```Text
 subjects/
-└─ sub-<participant_label>/
-    └─ ses-<session_label>/
+└─ <participant_id>/
+    └─ <session_id>/
       └─ t1_linear/
          ├─ <source_file>_space-MNI152NLin2009cSym_res-1x1x1_affine.mat
          ├─ <source_file>_space-MNI152NLin2009cSym_res-1x1x1_T1w.nii.gz
@@ -22,8 +28,8 @@ The `desc-Crop` indicates images of size 169×208×179 after cropping to remove 
 #### Segmentation
 ```Text
 subjects/
-└─ sub-<participant_label>/
-   └─ ses-<session_label>/
+└─ <participant_id>/
+   └─ <session_id>/
       └─ t1/
          └─ spm/
             └─ segmentation/
@@ -47,30 +53,30 @@ The T1 image in `Ixi549Space` (reference space of the TPM) is obtained by applyi
 #### DARTEL
 ```Text
 groups/
-└─ group-<group_label>/
-   ├─ group-<group_label>_subjects_visits_list.tsv
+└─ <group_id>/
+   ├─ <group_id>_subjects_visits_list.tsv
    └─ t1/
-      ├─ group-<group_label>_iteration-<index>_template.nii.gz
-      └─ group-<group_label>_template.nii.gz
+      ├─ <group_id>_iteration-<index>_template.nii.gz
+      └─ <group_id>_template.nii.gz
 ```
 
-The final group template is `group-<group_label>_template.nii.gz`.
+The final group template is `<group_id>_template.nii.gz`.
 
-The `group-<group_label>_iteration-<index>_template.nii.gz` obtained at each iteration will only be used when obtaining flow fields for registering a new image into an existing template (SPM DARTEL Existing templates procedure).
+The `<group_id>_iteration-<index>_template.nii.gz` obtained at each iteration will only be used when obtaining flow fields for registering a new image into an existing template (SPM DARTEL Existing templates procedure).
 
 !!! Note "Note for SPM experts"
-    The original name of `group-<group_label>_iteration-<index>_template.nii.gz` is `Template<index>.nii`.
+    The original name of `<group_id>_iteration-<index>_template.nii.gz` is `Template<index>.nii`.
 
 
 #### DARTEL to MNI
 ```Text
 subjects/
-└─ sub-<participant_label>/
-   └─ ses-<session_label>/
+└─ <participant_id>/
+   └─ <session_id>/
       └─ t1/
          └─ spm/
             └─ dartel/
-               └─ group-<group_label>/
+               └─ <group_id>/
                   ├─ <source_file>_target-<group_label>_transformation-forward_deformation.nii.gz
                   └─ <source_file>_segm-<segm>_space-Ixi549Space_modulated-{on|off}[_fwhm-<X>mm]_probability.nii.gz
 ```
@@ -78,12 +84,12 @@ subjects/
 #### Atlas statistics
 ```Text
 subjects/
-└─ sub-<participant_label>/
-   └─ ses-<session_label>/
+└─ <participant_id>/
+   └─ <session_id>/
       └─ t1/
          └─ spm/
             └─ dartel/
-               └─ group-<group_label>/
+               └─ <group_id>/
                   └─ atlas_statistics/
                      └─ <source_file>_space-<space>_map-graymatter_statistics.tsv
 ```
@@ -96,11 +102,11 @@ The outputs of the `t1-freesurfer` pipeline are split into two subfolders, the f
 FreeSurfer outputs:
 ```Text
 subjects/
-└─ sub-<participant_label>/
-   └─ ses-<session_label>/
+└─ <participant_id>/
+   └─ <session_id>/
       └─ t1/
          └─ freesurfer_cross_sectional/
-            └─ sub-<participant_label>_ses-<session_label>/
+            └─ <participant_id>_<session_id>/
                ├─ label/
                ├─ mri/
                ├─ scripts/
@@ -111,8 +117,8 @@ subjects/
 Clinica additional outputs:
 ```Text
 subjects/
-└─ sub-<participant_label>/
-   └─ ses-<session_label>/
+└─ <participant_id>/
+   └─ <session_id>/
       └─ t1/
          └─ freesurfer_cross_sectional/
             └─ regional_measures/
@@ -164,17 +170,14 @@ The details of the white matter parcellation of FreeSurfer can be found here: [h
     This file contains the cortical thickness in different regions of the Desikan atlas.
 
 
-<!--### `t1-freesurfer-longitudinal` – FreeSurfer-based longitudinal processing of T1-weighted MR images
-The outputs of the `t1-freesurfer-longitudinal` pipeline are split into three subfolders, the first one containing the FreeSurfer unbiased template, the second containing the FreeSurfer longitudinal outputs and a third with additional outputs specific to Clinica.
-
-
-FreeSurfer unbiased template:
+### `t1-freesurfer-longitudinal` – FreeSurfer-based longitudinal processing of T1-weighted MR images
+#### FreeSurfer unbiased templates
 ```Text
 subjects/
-└─ sub-<participant_label>/
-   └─ long-<long_label>/
+└─ <participant_id>/
+   └─ <long_id>/
       └─ freesurfer_unbiased_template/
-         └─ sub-<participant_label>/
+         └─ <participant_id>_<long_id>/
             ├─ label/
             ├─ mri/
             ├─ scripts/
@@ -182,15 +185,17 @@ subjects/
             └─ surf/
 ```
 
-FreeSurfer longitudinal outputs:
+### FreeSurfer longitudinal outputs
+The outputs are split into two subfolders, the first containing the FreeSurfer longitudinal outputs and a second with additional outputs specific to Clinica.
+
 ```Text
 subjects/
-└─ sub-<participant_label>/
-   └─ ses-<session_label>/
+└─ <participant_id>/
+   └─ <session_id>/
       └─ t1/
-         └─ long-<long_label>/
+         └─ <long_id>/
             └─ freesurfer_longitudinal/
-               └─ sub-<participant_label>_ses-<session_label>.long.sub-<participant_label>/
+               └─ <participant_id>_<session_id>.long.<participant_id>_<long_id>/
                   ├─ label/
                   ├─ mri/
                   ├─ scripts/
@@ -201,28 +206,28 @@ subjects/
 Clinica additional outputs:
 ```Text
 subjects/
-└─ sub-<participant_label>/
-   └─ ses-<session_label>/
+└─ <participant_id>/
+   └─ <session_id>/
       └─ t1/
-         └─ long-<long_label>/
+         └─ <long_id>/
             └─ freesurfer_longitudinal/
                └─ regional_measures/
-                  ├─ <source_file>_parcellation-wm_volume.tsv
-                  ├─ <source_file>_segmentationVolumes.tsv
-                  └─ <source_file>_hemi-{left|right}_parcellation-<parcellation>_thickness.tsv
+                  ├─ <participant_id>_<session_id>_<long_id>_parcellation-wm_volume.tsv
+                  ├─ <participant_id>_<session_id>_<long_id>_segmentationVolumes.tsv
+                  └─ <participant_id>_<session_id>_<long_id>_hemi-{left|right}_parcellation-<parcellation>_thickness.tsv
 ```
 where each file is explained in the `t1-freesurfer` sub-section.
 
 !!! Note
     The naming convention `<subject_name>.long.<template_name>` is imposed by FreeSurfer.
--->
+
 
 ## Diffusion imaging data
 ### `dwi-preprocessing-*` - Preprocessing of raw diffusion weighted imaging (DWI) datasets
 ```Text
 subjects/
-└─ sub-<participant_label>/
-   └─ ses-<session_label>/
+└─ <participant_id>/
+   └─ <session_id>/
       └─ dwi/
          └─ preprocessing/
             ├─ <source_file>_space-<space>_preproc.bval
@@ -237,8 +242,8 @@ The resulting DWI file after preprocessing. According to the subtype of pipeline
 ### `dwi-dti` - DTI-based processing of corrected DWI datasets
 ```Text
 subjects/
-└─ sub-<participant_label>/
-   └─ ses­-<session_label>/
+└─ <participant_id>/
+   └─ <session_id>/
       └─ dwi/
          └─ dti_based_processing/
             ├─ native_space/
@@ -267,8 +272,8 @@ Statistics files (with `_statistics.tsv` suffix) are detailed in [appendix](#app
 ### `dwi-connectome` - Computation of structural connectome from corrected DWI datasets
 ```Text
 subjects/
-└─ sub-<participant_label>/
-    └─ ses­-<session_label>/
+└─ <participant_id>/
+    └─ <session_id>/
         └─ dwi/
             └─ connectome_based_processing/
                 ├─ <source_file>_space-{b0|T1w}_model-CSD_diffmodel.nii.gz
@@ -285,11 +290,11 @@ Current parcellations used for the computation of connectivity matrices are `des
 ### `pet-volume` - Volume-based processing of PET images
 ```Text
 subjects/
-└─ sub-<participant_label>/
-   └─ ses-<session_label>/
+└─ <participant_id>/
+   └─ <session_id>/
       └─ pet/
          └─ preprocessing/
-            └─ group-<group_label>/
+            └─ <group_id>/
                ├─ <source_file>_space-T1w_pet.nii.gz
                ├─ <source_file>_space-T1w[_pvc-rbv]_pet.nii.gz
                ├─ <source_file>_space-Ixi549Space[_pvc-rbv]_pet.nii.gz
@@ -299,8 +304,8 @@ subjects/
 ```
 ```Text
 subjects/
-└─ sub-<participant_label>/
-   └─ ses-<session_label>/
+└─ <participant_id>/
+   └─ <session_id>/
       └─ pet/
          └─ preprocessing/
             └─ atlas_statistics/
@@ -319,8 +324,8 @@ Statistics files (with `_statistics.tsv` suffix) are detailed in [appendix](#app
 ### `pet-surface` - Surface-based processing of PET images
 ```Text
 subjects/
-└─ sub-<participant_label>/
-   └─ ses-<session_label>/
+└─ <participant_id>/
+   └─ <session_id>/
       └─ pet/
          └─ surface/
             ├─ atlas_statistics/
@@ -351,17 +356,17 @@ Files with the `statistics` suffix are text files that display average PET value
 #### Group comparison
 ```Text
 groups/
-└─ group-<group_label>/
+└─ <group_id>/
    └─ statistics/
       ├─ participants.tsv
       └─ surfstat_group_comparison/
-         ├─ group-<group_label>_<group_1>-lt-<group_2>_measure-<measure>_fwhm-<label>_correctedPValue.jpg
-         ├─ group-<group_label>_<group_2>-lt-<group_1>_measure-<measure>_fwhm-<label>_correctedPValue.jpg
-         ├─ group-<group_label>_<group_1>-lt-<group_2>_measure-<measure>_fwhm-<label>_correctedPValue.mat
-         ├─ group-<group_label>_<group_2>-lt-<group_1>_measure-<measure>_fwhm-<label>_correctedPValue.mat
-         ├─ group-<group_label>_participants.tsv
-         ├─ group-<group_label>_output.log
-         └─ group-<group_label>_glm.json
+         ├─ <group_id>_<group_1>-lt-<group_2>_measure-<measure>_fwhm-<label>_correctedPValue.jpg
+         ├─ <group_id>_<group_2>-lt-<group_1>_measure-<measure>_fwhm-<label>_correctedPValue.jpg
+         ├─ <group_id>_<group_1>-lt-<group_2>_measure-<measure>_fwhm-<label>_correctedPValue.mat
+         ├─ <group_id>_<group_2>-lt-<group_1>_measure-<measure>_fwhm-<label>_correctedPValue.mat
+         ├─ <group_id>_participants.tsv
+         ├─ <group_id>_output.log
+         └─ <group_id>_glm.json
 ```
 
 
@@ -427,7 +432,7 @@ The JPEG files are simple snapshots. The `*.mat` files can be read later by tool
 
     (Note that to make the display clearer, the rows contain successive tabs, which should not happen in an actual TSV file.)
 
-    The `group-<group_label>` key/value stands for the `group_label` for your analysis. It can be used to run different analyses for different subjects or different analyses for the same subjects.
+    The `<group_id>` key/value stands for the `group_label` for your analysis. It can be used to run different analyses for different subjects or different analyses for the same subjects.
 
     The example image here maps statistically significant differences in cortical thickness between a group of patients with Alzheimer’s disease and a group of healthy controls (yellow: correction at the vertex level; blue: correction at the cluster level).
 
@@ -437,15 +442,15 @@ The JPEG files are simple snapshots. The `*.mat` files can be read later by tool
 #### Correlation analysis
 ```Text
 groups/
-└─ group-<group_label>/
+└─ <group_id>/
    └─ statistics/
       ├─ participants.tsv
       └─ surfstat_correlation_analysis/
-         ├─ group-<group_label>_correlation-<label>_contrast-{negative|positive}_measure-<measure>_fwhm-<label>_correctedPValue.jpg
-         ├─ group-<group_label>_correlation-<label>_contrast-{negative|positive}_measure-<measure>_fwhm-<label>_correctedPValue.mat
-         ├─ group-<group_label>_output.log
-         ├─ group-<group_label>_participants.tsv
-         └─ group-<group_label>_glm.json
+         ├─ <group_id>_correlation-<label>_contrast-{negative|positive}_measure-<measure>_fwhm-<label>_correctedPValue.jpg
+         ├─ <group_id>_correlation-<label>_contrast-{negative|positive}_measure-<measure>_fwhm-<label>_correctedPValue.mat
+         ├─ <group_id>_output.log
+         ├─ <group_id>_participants.tsv
+         └─ <group_id>_glm.json
 ```
 
 The `correlation-<label>` here describes the factor of the model which can be, for example, `age`. The `contrast-{negative|positive}` is the sign of the correlation you want to study, which can be `negative` or `positive`.
@@ -456,15 +461,15 @@ All other key/value pairs are defined in the same way as in the previous section
 <!--### Generalised Linear Model (GLM)
 ```
 groups/
-└─ group-<group_label>/
+└─ <group_id>/
     └─ statistics/
         └─ participants.tsv
             ├─ surfstat_glm/
-            └─ group-<group_label>_measure-<measure>_fwhm-<label>_correctedPValue.jpeg
-                ├─ group-<group_label>_measure-<measure>_fwhm-<label>_correctedPValue.mat
-                ├─ group-<group_label>_output.log
-                ├─ group-<group_label>_participants.tsv
-                └─ group-<group_label>_glm.json
+            └─ <group_id>_measure-<measure>_fwhm-<label>_correctedPValue.jpeg
+                ├─ <group_id>_measure-<measure>_fwhm-<label>_correctedPValue.mat
+                ├─ <group_id>_output.log
+                ├─ <group_id>_participants.tsv
+                └─ <group_id>_glm.json
 ```
 
 This section includes all the other situation for the generalized linear model. It follows the same spirit as the sections above.
@@ -475,17 +480,17 @@ This section includes all the other situation for the generalized linear model. 
 <!--#### Group comparison-->
 ```Text
 groups/
-└─ group-<group_label>/
-   ├─ group-<group_label>_participants.tsv
+└─ <group_id>/
+   ├─ <group_id>_participants.tsv
    └─ statistics_volume/
       └─ group_comparison_measure-{graymatter|fdg|av45|<custom_user>}/
-         ├─ group-<group_label>_{RPV|mask}.nii
-         ├─ group-<group_label>_covariate-<covariate>_measure-<label>_fwhm-<n>_regressionCoefficient.nii
-         ├─ group-<group_label>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<n>_{TStatistics|contrast}.nii
-         ├─ group-<group_label>_<group_2>-lt-<group_1>_measure-<label>_fwhm-<n>_{TStatistics|contrast}.nii
-         ├─ group-<group_label>_report-1.png
-         ├─ group-<group_label>_report-2.png
-         └─ group-<group_label>_{mask|RPV|VarianceError}.nii
+         ├─ <group_id>_{RPV|mask}.nii
+         ├─ <group_id>_covariate-<covariate>_measure-<label>_fwhm-<n>_regressionCoefficient.nii
+         ├─ <group_id>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<n>_{TStatistics|contrast}.nii
+         ├─ <group_id>_<group_2>-lt-<group_1>_measure-<label>_fwhm-<n>_{TStatistics|contrast}.nii
+         ├─ <group_id>_report-1.png
+         ├─ <group_id>_report-2.png
+         └─ <group_id>_{mask|RPV|VarianceError}.nii
 ```
 
 Suffixes are described in the table below:
@@ -507,12 +512,12 @@ The value for `measure` can be `graymatter` (output of `t1-volume`), `fdg` or `a
 Corrected results are stored under the following hierarchy:
 ```Text
 groups/
-└─ group-<group_label>/
+└─ <group_id>/
    └─ statistics_volume/
       └─ group_comparison_measure-<label>/
-         └─ group-<group_label>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<n>_{FDRc|FDRp|FWEc|FWEc}
-            ├─ group-<group_label>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<n>_desc-{FDRc|FDRp|FWEc|FWEc}_axis-{x|y|z}_TStatistics.png
-            └─ group-<group_label>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<n>_desc-{FDRc|FDRp|FWEc|FWEc}_GlassBrain.png
+         └─ <group_id>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<n>_{FDRc|FDRp|FWEc|FWEc}
+            ├─ <group_id>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<n>_desc-{FDRc|FDRp|FWEc|FWEc}_axis-{x|y|z}_TStatistics.png
+            └─ <group_id>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<n>_desc-{FDRc|FDRp|FWEc|FWEc}_GlassBrain.png
 ```
 
 `FWEp` (resp. `FDRp`) corresponds to correction for multiple comparisons with family-wise error (FWE) (resp. false discovery rate [FDR]) correction at the peak (=voxel) level with a statistical threshold of P < 0.05.
@@ -525,7 +530,7 @@ In the following subsections, files with the `.pt` extension denote tensors in P
 #### Image-based outputs
 ```Text
 subjects/
-└─ <subject_id>/
+└─ <participant_id>/
    └─ <session_id>/
       └─ deeplearning_prepare_data/
          └─ image_based/
@@ -537,7 +542,7 @@ Given a file generated by a Clinica pipeline, the PyTorch tensor of the 3D image
 !!! Example "Example for the `t1-linear` pipeline"
     ```Text
     subjects/
-    └─ <subject_id>/
+    └─ <participant_id>/
        └─ <session_id>/
           └─ deeplearning_prepare_data/
              └─ image_based/
@@ -548,7 +553,7 @@ Given a file generated by a Clinica pipeline, the PyTorch tensor of the 3D image
 #### Patch-based outputs
 ```Text
 subjects/
-└─ <subject_id>/
+└─ <participant_id>/
    └─ <session_id>/
       └─ deeplearning_prepare_data/
          └─ patch_based/
@@ -567,7 +572,7 @@ Given a file generated by a Clinica pipeline, the PyTorch tensor of the 3D patch
 !!! Example "Example for the `t1-linear` pipeline using a patch size and patch stride of `50`"
     ```Text
     subjects/
-    └─ <subject_id>/
+    └─ <participant_id>/
        └─ <session_id>/
           └─ deeplearning_prepare_data/
              └─ patch_based/
@@ -578,7 +583,7 @@ Given a file generated by a Clinica pipeline, the PyTorch tensor of the 3D patch
 #### Slice-based outputs
 ```Text
 subjects/
-└─ <subject_id>/
+└─ <participant_id>/
    └─ <session_id>/
       └─ deeplearning_prepare_data/
          └─ slice_based/
@@ -597,7 +602,7 @@ Given a file generated by a Clinica pipeline, the PyTorch tensor of the 2D slice
 !!! Example "Example for the `t1-linear` pipeline using slices in `sag`ittal plane and `rgb` channel"
     ```Text
     subjects/
-    └─ <subject_id>/
+    └─ <participant_id>/
        └─ <session_id>/
           └─ deeplearning_prepare_data/
              └─ slice_based/
@@ -609,21 +614,21 @@ Given a file generated by a Clinica pipeline, the PyTorch tensor of the 2D slice
 ### `machinelearning-prepare-spatial-svm` - Prepare input data for spatially regularized SVM
 ```Text
 subjects/
-└─ sub-<participant_label>/
-   └─ ses-<session_label>/
+└─ <participant_id>/
+   └─ <session_id>/
       └─ machine_learning/
          └─ input_spatial_svm/
-            └─ group-<group_label>/
+            └─ <group_id>/
                ├─ <source_file_t1w>_segm-{graymatter|whitematter|csf}_space-Ixi549Space_modulated-on_spatialregularization.nii.gz
                └─ <source_file_pet>_space-Ixi549Space[_pvc-rbv]_suvr-<suvr>_spatialregularization.nii.gz
 ```
 ```Text
 groups/
-└─ group-<group_label>/
+└─ <group_id>/
    └─ machine_learning/
       └─ input_spatial_svm/
-         ├─ group-<group_label>_space-Ixi549Space_gram.npy
-         └─ group-<group_label>_space-Ixi549Space_parameters.json
+         ├─ <group_id>_space-Ixi549Space_gram.npy
+         └─ <group_id>_space-Ixi549Space_parameters.json
 ```
 
 

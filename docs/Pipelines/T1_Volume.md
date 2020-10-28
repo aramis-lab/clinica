@@ -49,7 +49,7 @@ Pipeline options:
 
 ### Tissue segmentation, bias correction and spatial normalization
 Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#segmentation):
-`subjects/sub-<participant_label>/ses-<session_label>/t1/spm/segmentation`.
+`subjects/<participant_id>/<session_id>/t1/spm/segmentation`.
 
 The main output files are:
 
@@ -65,19 +65,19 @@ The main output files are:
 
 ### Inter-subject registration using Dartel
 The final estimation of the gray matter template is stored under the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#dartel):
-`groups/group-<group_label>/t1/group-<group_label>_template.nii.gz`
+`groups/<group_id>/t1/<group_id>_template.nii.gz`
 
 <center>![](../../img/T1_Volume/ex_Dartel_template_GM.png)</center>
 *<center><small>Example of a group template calculated using DARTEL. Only the gray matter class is shown.</small></center>*
 
 The flow fields containing the deformation from an image to the group template are stored in the folder
-`subjects/sub-<participant_label>/ses-<session_label>/t1/spm/dartel/group-<group_label>/`
+`subjects/<participant_id>/<session_id>/t1/spm/dartel/<group_id>/`
 under the filename
-`<source_file>_target-<group-id>_transformation-forward_deformation.nii.gz`.
+`<source_file>_target-<group_label>_transformation-forward_deformation.nii.gz`.
 
 ### Dartel template to MNI
 Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#dartel-to-mni):
-`subjects/sub-<participant_label>/ses-<session_label>/t1/spm/dartel/group-<group_label>`.
+`subjects/<participant_id>/<session_id>/t1/spm/dartel/<group_id>`.
 
 The main output files are:
 
@@ -91,7 +91,7 @@ The different tissue maps that have been registered to the MNI space and modulat
 
 ### Atlas statistics
 Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#atlas-statistics):
-`subjects/sub-<participant_label>/ses-<session_label>/t1/spm/dartel/group-<group_label>/atlas_statistics/`.
+`subjects/<participant_id>/<session_id>/t1/spm/dartel/<group_id>/atlas_statistics/`.
 
 The main output file is:
 
