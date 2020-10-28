@@ -39,10 +39,12 @@ where:
 - `contrast` is a string defining the contrast matrix or the variable of interest for the GLM, e.g. `group` or `age`.
 
 Pipeline options:
+
 - `--covariates`: Covariates of the form `--covariates 'covariate_1 covariate_n'`. Each covariate must match the name of the TSV file. By default, no covariate is considered.
 - `--full_width_at_half_maximum`: FWHM for the surface smoothing. Default value is `20`.
 
 Pipeline options if you use inputs from the `pet-surface` pipeline:
+
 - `--acq_label`: Name of the label given to the PET acquisition, specifying the tracer used (`acq-<acq_label>`).
 - `--suvr_reference_region`: Reference region used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio (SUVR) map. It can be `cerebellumPons` (used for amyloid tracers) or `pons` (used for FDG).
 
