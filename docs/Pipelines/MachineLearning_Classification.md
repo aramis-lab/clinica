@@ -20,7 +20,7 @@ If you installed the core of Clinica, this pipeline needs no further dependencie
 Two classes corresponding to the voxel-based and the region-based approaches are implemented in `input.py`:
 
   - `CAPSVoxelBasedInput`: all the voxel of the image are used as features.
-  - `CAPSRegionBasedInput`: a list of values stored in a TSV file is used as features. This list corresponds to PET or T1 image intensities averaged over a set of regions obtained from a brain parcellation when running the SPM pipeline.
+  - `CAPSRegionBasedInput`: a list of values stored in a TSV file is used as features. This list corresponds to PET or T1 image intensities averaged over a set of regions obtained from a brain parcellation when running the [`t1-volume`](../T1_Volume) and/or [`pet-volume`](../PET_Volume) pipeline.
 
 !!! note
     The atlases that can be used for the region-based approaches are listed [here](../../Atlases).
@@ -48,8 +48,8 @@ The input is the name of the classification algorithm used.
 ## Running your pipeline
 No matter the combination of modules chosen, the inputs necessary are:
 
-- `caps_directory`: the folder containing the results of the SPM pipeline (where TSV files are stored)
-- `subjects_visits_tsv`: the TSV file containing the participant_id and the session_id
+- `caps_directory`: the folder containing the results of the [`t1-volume`](../T1_Volume) and/or the [`pet-volume`](../PET_Volume) pipeline (where TSV files are stored)
+- `subjects_visits_tsv`: the TSV file containing the `participant_id` and the `session_id` columns
 - `diagnoses_tsv`: a TSV file where the diagnosis for each participant (identified by a participant ID) is reported (i.e. AD, CN). It allows the algorithm to perform the dual classification (between the two labels reported).
 Example of a diagnosis TSV file:
 ````
@@ -60,15 +60,17 @@ sub-CLNC0003      AD
 sub-CLNC0004      AD
 sub-CLNC0005      CN
 ````
-- `group_id`: the ID of the group of subjects studied
-- `image_type`: a value to set the modality studied ("T1" or "fdg")
+- `group_label`: the label of the group of subjects studied
+- `image_type`: a value to set the modality studied (`T1w` or `PET`)
 - `output_dir`: the directory where outputs are saved
 - `atlas`: the name of the atlas used for the brain parcellation in case of a region-based approach
-- `fwhm`: the FWHM value in mm used in the SPM pipeline
-- `modulated`: a flag to indicate if when running the SPM pipeline the image has been modulated or not ("on", "off")
-- `pvc`: type of PVC if used during the preprocessing of the PET images (e.g. "RBV")
+- `fwhm`: the FWHM value in mm used in the `t1-volume` or `pet-volume` pipeline
+- `modulated`: a flag to indicate if, when running the [`t1-volume`](../T1_Volume) pipeline, the image has been modulated or not (`on`, `off`)
+- `acq_label`: label given to the PET acquisition, specifying the tracer used (`acq-<acq_label>`)
+- `suvr_reference_region`: intensity normalization using the average PET uptake in reference regions resulting in a standardized uptake value ratio (SUVR) map. It can be cerebellumPons (used for amyloid tracers) or pons (used for 18F-FDG tracers).
+- `use_pvc_data`: use PET data with partial value correction (`True`/`False`). By default, PET data with no PVC are used)
 - `precomputed_kernel`: to load the precomputed kernel if it exists
-- `mask_zeros`: a flag to indicate if zero-valued voxels should be taken into account for the classification ("True", "False")
+- `mask_zeros`: a flag to indicate if zero-valued voxels should be taken into account for the classification (`True`/`False`)
 - `n_iterations`: number of times a task is repeated
 - `grid_search_folds`: number of folds to use for the hyper-parameter grid search (e.g. 10)
 - `c_range`: range used to select the best value for the C parameter, in the logspace
@@ -117,7 +119,7 @@ Results are saved in the output folder following this hierarchy:
                     └── weights.txt
 ```
 
-If `image_type` is `fdg`:
+If `image_type` is `PET`:
 ```
 └── <image-type>
     └── region_based/voxel_base
