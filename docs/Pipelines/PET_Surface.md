@@ -24,49 +24,21 @@ If you only installed the core of Clinica, this pipeline needs the installation 
 The pipeline can be run with the following command line:
 
 ```Text
-clinica run pet-surface <bids_directory> <caps_directory>
+clinica run pet-surface <bids_directory> <caps_directory> <acq_label> <suvr_reference_region> <pvc_psf_tsv>
 ```
 where:
 
-  - `bids_directory` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
-  - `caps_directory` is the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
+- `bids_directory` is the input folder containing the dataset in a [BIDS](../../BIDS) hierarchy.
+- `caps_directory` acts both as an input folder (where the results of the `t1-freesurfer` pipeline are stored) and as the output folder containing the results in a [CAPS](../../CAPS/Introduction) hierarchy.
+- `acq_label` is the label given to the acquisition, specifying the tracer used (`acq-<acq_label>`).
+- `suvr_reference_region` is the reference region used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio (SUVR) map. It can be `cerebellumPons` (used for amyloid tracers) or `pons` (used for FDG).
+- `pvc_psf_tsv` is the TSV file containing the `psf_x`, `psf_y` and `psf_z` of the PSF for each PET image. More explanation are given in [PET Introduction](../PET_Introduction) page.
 
-- `acq_label` is the label given to the acquisition, specifying the tracer used.
-
-
-If you want to run the pipeline on a subset of your BIDS dataset, you can use the `-tsv` flag to specify in a TSV file the participants belonging to your subset.
-
-Please note that next to each PET file in your BIDS folder, a `json` file must be added to specify the `EffectiveResolutionInPlane` and `EffectiveResolutionAxial` in mm relative to the point spread function (PSF).
-
-Your BIDS hierarchy (for a given subject `sub-001`) must look like this:
-```text
-bids
-└── sub-001
-    └── ses-M00
-        ├── anat
-        │   └── sub-001_ses-M00_T1w.nii.gz
-        └── pet
-            ├── sub-001_ses-M00_task-rest_acq-fdg_pet.json
-            └── sub-001_ses-M00_task-rest_acq-fdg_pet.nii.gz
-```
-
-The `sub-001_ses-M00_task-rest_acq-fdg_pet.json` must look like this:
-
-```
-{
-	"Psf":[
-		{
-			"EffectiveResolutionInPlane": 5.5,
-			"EffectiveResolutionAxial": 5.5
-		}
-	]
-}
-```
+!!! info
+    Since the release of Clinica v0.3.8, the handling of PSF information has changed. In previous versions of Clinica, each BIDS-PET image had to contain a JSON file with the `EffectiveResolutionInPlane` and `EffectiveResolutionAxial` fields corresponding to the relative to the PSF in mm. `EffectiveResolutionInPlane` is replaced by both `psf_x` and `psf_y`, `EffectiveResolutionAxial` is replaced by `psf_z` and the `acq_label` column has been added. Additionally, the SUVR reference region is now a compulsory argument: it will be easier for you to modify Clinica if you want to add a custom reference region ([PET Introduction](../PET_Introduction) page). Choose `cerebellumPons` for amyloid tracers or `pons` for FDG to have the previous behaviour.
 
 
 Pipeline options:
-
-- `--pet_tracer`: type of PET image to process. Possible values are `fdg` and `av45`. Default value is `fdg`. This parameter affects the reference region used for the intensity normalization (FDG: pons, AV45: pons and cerebellum).
 
 - `-np`: This parameter specifies the number of threads to run in parallel. We recommend using `your_number_of_cpu - 1`. Please note that PETPVC is extremely demanding in terms of resources and may cause the pipeline to crash if many subjects happen to be partial volume corrected at the same time (Error : `Failed to allocate memory for image`). To mitigate this issue, you can do the following:
 
@@ -84,9 +56,9 @@ Pipeline options:
 
 ## Outputs
 
-Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#pet-surface-surface-based-processing-of-pet-images): `subjects/sub-<participant_label>/ses-<session_label>/pet/surface`
+Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#pet-surface-surface-based-processing-of-pet-images): `subjects/<participant_id>/<session_id>/pet/surface`
 
-The files are (where `*` stands for `sub-<participant_label>_ses-<session_label>`):
+The files are (where `*` stands for `<participant_id>_<session_id>`):
 
 - `atlas_statistics/*_task-<label>_acq-<label>_pet_space-<label>_pvc-iy_suvr-<label>_statistics.tsv`: TSV files summarizing the regional statistics on the labelled atlases (Desikan and Destrieux).
 - `*_hemi-{left|right}_midcorticalsurface`: surface at equal distance between the white matter/gray matter interface and the pial surface (one per hemisphere).
