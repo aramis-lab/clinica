@@ -55,7 +55,7 @@ Pipeline options:
 
 
 ## Outputs
-Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#pet-volume-volume-based-processing-of-pet-images): `subjects/sub-<participant_label>/ses-<session_label>/pet/preprocessing`.
+Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Specifications/#pet-volume-volume-based-processing-of-pet-images): `subjects/<participant_id>/<session_id>/pet/preprocessing`.
 
 The main output files are:
 
