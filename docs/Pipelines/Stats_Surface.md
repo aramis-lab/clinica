@@ -32,19 +32,19 @@ clinica run statistics-surface <caps_directory> <group_label> <origin_input_data
 where:
 
 - `caps_directory` is the folder containing the results of the [`t1-freesurfer`](../T1_FreeSurfer) or [`pet-surface`](../PET_Surface) pipeline and the output of the present command, both in a [CAPS hierarchy](../../CAPS/Introduction).
-- `group_label` is a string defining the group label for the current analysis which helps you keep track of different analyses.
-- `origin_input_data` is the is the type of surface-based feature: it can type `t1-freesurfer` for cortical thickness, `pet-surface` for projected PET data or `custom-pipeline` for you own data in CAPS directory (see below for details).
+- `group_label` is a string defining the group label for the current analysis, which helps you keep track of different analyses.
+- `origin_input_data` is the type of surface-based feature: it can be `t1-freesurfer` for cortical thickness, `pet-surface` for projected PET data or `custom-pipeline` for you own data in CAPS directory (see below for details).
 - `glm_type` is a string defining the type of analysis of your model, choose one between `group_comparison` and `correlation`.
 - `subject_visits_with_covariates_tsv` is a TSV file containing a list of subjects with their sessions and all the covariates and factors in your model (the content of the file is explained in the [Example](../Stats_Surface/#comparison-analysis) subsection).
 - `contrast` is a string defining the contrast matrix or the variable of interest for the GLM, e.g. `group` or `age`.
 
 Pipeline options:
-- `--covariates`: Covariates of the form `--covariates 'covariate_1 covariate_n'`. Each covariate must match the name of the TSV file. On default, no covariates taken.
+- `--covariates`: Covariates of the form `--covariates 'covariate_1 covariate_n'`. Each covariate must match the name of the TSV file. By default, no covariate is considered.
 - `--full_width_at_half_maximum`: FWHM for the surface smoothing. Default value is `20`.
 
-Pipeline options if you use inputs from `pet-surface` pipeline:
+Pipeline options if you use inputs from the `pet-surface` pipeline:
 - `--acq_label`: Name of the label given to the PET acquisition, specifying the tracer used (`acq-<acq_label>`).
-- `--suvr_reference_region`: Intensity normalization using the average PET uptake in reference regions resulting in a standardized uptake value ratio (SUVR) map. It can be `cerebellumPons` (used for amyloid tracers) or `pons` (used for 18F-FDG tracers).
+- `--suvr_reference_region`: Reference region used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio (SUVR) map. It can be `cerebellumPons` (used for amyloid tracers) or `pons` (used for FDG).
 
 !!! tip
     Check the [Example](../Stats_Surface/#comparison-analysis) subsection for further clarification.
@@ -56,16 +56,16 @@ Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Sp
 
 The main outputs for the group comparison are:
 
-- `<group_id>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<label>_correctedPValue.jpg`: contains both the cluster level and the vertex level corrected p-value maps, based on random field theory.
+- `<group_id>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<label>_correctedPValue.jpg`: contains both the cluster level and the vertex level corrected p-value maps, based on the random field theory.
 - `<group_id>_<group_1>-lt-<group_2>_measure-<label>_fwhm-<label>_FDR.jpg`: contains corrected p-value maps, based on the false discovery rate (FDR).
-- `<group_id>_participants.tsv` is a copy of the `subject_visits_with_covariates_tsv` parameter.
+- `<group_id>_participants.tsv` is a copy of the `subject_visits_with_covariates_tsv` parameter file.
 - `<group_id>_glm.json` is a JSON file containing all the model information of the analysis (i.e. what you wrote on the command line).
 
 The `<group_1>-lt-<group_2>` means that the tested hypothesis is: "the measurement of `<group_1>` is lower than (`lt`) the measurement of `<group_2>`". The pipeline includes both contrasts so `*<group_2>-lt-<group_1>*` files are also saved.
 
-The value for FWHM corresponds to the size of the surface-based smoothing in mm and can be 5, 10, 15, 20.
+The FWHM value corresponds to the size in mm of the kernel used to smooth the surface and can be 5, 10, 15, 20.
 
-Analysis with cortical thickness (respectively FDG-PET data) will be saved under the `_measure-ct` keyword (respectively the `_measure-fdg` keyword).
+Analysis with cortical thickness (respectively PET data) will be saved under the `_measure-ct` keyword (respectively the `_measure-<acq_label>` keyword).
 
 !!! tip
     See the Example subsection for further clarification.
@@ -76,12 +76,12 @@ Results are stored in the following folder of the [CAPS hierarchy](../../CAPS/Sp
 
 The main outputs for the correlation are:
 
-- `<group_id>_correlation-<label>_contrast-<label>_measure-<label>_fwhm-<label>_correctedPValue.jpg`: contains p-value maps corrected at both the cluster and vertex levels, based on random field theory.
+- `<group_id>_correlation-<label>_contrast-<label>_measure-<label>_fwhm-<label>_correctedPValue.jpg`: contains p-value maps corrected at both the cluster and vertex levels, based on the random field theory.
 - `<group_id>_correlation-<label>_contrast-<label>_measure-<label>_fwhm-<label>_FDR.jpg`: contains corrected p-value maps, based on the false discovery rate (FDR).
 - `<group_id>_correlation-<label>_contrast-<label>_measure-<label>_fwhm-<label>_T-statistics.jpg`: contains the maps of T statistics.
 - `<group_id>_correlation-<label>_contrast-<label>_measure-<label>_fwhm-<label>_Uncorrected p-value.jpg`: contains the maps of uncorrected p-values.
-- `<group_id>_participants.tsv` is a copy of `subject_visits_with_covariates_tsv`.
-- `<group_id>_glm.json` is a JSON file summarizing the parameters of the analysis.
+- `<group_id>_participants.tsv` is a copy of the `subject_visits_with_covariates_tsv` parameter file.
+- `<group_id>_glm.json` is a JSON file summarizing the parameters of the analysis (i.e. what you wrote on the command line).
 
 The `correlation-<label>` describes the factor of the model, which can be for example `age`. The `contrast-<label>` is the sign of your factor which can be `negative` or `positive`.
 
@@ -139,13 +139,13 @@ The blue area corresponds to the vertex-based corrected p-value and the yellow a
 ### Correlation analysis
 Let's now assume that you are interested in knowing whether cortical thickness is correlated with age using the same population as above, namely `ADvsHC_participants.tsv`. The contrast will become `age` and we will choose `correlation` instead of `group_comparison`.
 
-Finally, the command line is simply:
+The command line is simply:
 ```Text
 clinica run statistics-surface caps_directory ADvsHC t1-freesurfer correlation ADvsHC_participants.tsv age --covariates 'group sex'
 ```
 ## Describing this pipeline in your paper
 
-!!! cite "Example of paragraph:"
+!!! cite "Example of paragraph (group comparison):"
     Theses results have been obtained using the `statistics-surface` command of Clinica [[Routier et al](https://hal.inria.fr/hal-02308126/)]. More precisely, a point-wise, vertex-to-vertex model based on the Matlab SurfStat toolbox (http://www.math.mcgill.ca/keith/surfstat/) was used to conduct a group comparison of whole brain cortical thickness. The data were smoothed using a Gaussian kernel with a full width at half maximum (FWHM) set to `<FWHM>` mm. The general linear model was used to control for the effect of `<covariate_1>`, ... and  `<covariate_N>`. Statistics were corrected for multiple comparisons using the random field theory for non-isotropic images [[Worsley et al., 1999](http://dx.doi.org/10.1002/(SICI)1097-0193(1999)8:2/3<98::AID-HBM5>3.0.CO;2-F)]. A statistical threshold of P < `<ClusterThreshold>` was first applied (height threshold). An extent threshold of P < 0.05 corrected for multiple comparisons was then applied at the cluster level..
 
 !!! tip
@@ -160,21 +160,21 @@ clinica run statistics-surface caps_directory ADvsHC t1-freesurfer correlation A
 
 ## (Advanced) Specifying what surface data to use
 
-If you run the help command line `clinica run statistics-surface -h`, you will find 2 optional flags that we will describe :
+If you run the help command line `clinica run statistics-surface -h`, you will find two optional flags:
 
 - `--feature_type FEATURE_TYPE` allows you to decide what feature type to take for your analysis. If it is `cortical_thickness` (default value), the thickness file for each hemisphere and each subject and session of the tsv file will be used. Keep in mind that those thickness files are generated using the `t1-freesurfer` pipeline, so be sure to have run it before using it! Other directly-implemented solutions are present but they are not yet released.
-- The other flag `--custom_file CUSTOM_FILE` allows to specify yourself what file should be taken in the `CAPS/subjects` directory. `CUSTOM_FILE` is a string describing the folder hierarchy to find the file. For instance, let's say we want to manually indicate to use the cortical thickness. Here is the generic link to the surface data files.
+- The other flag `--custom_file CUSTOM_FILE` allows you to specify yourself what file should be taken in the `CAPS/subjects` directory. `CUSTOM_FILE` is a string describing the folder hierarchy to find the file. For instance, let's say we want to manually indicate to use the cortical thickness. Here is the generic link to the surface data files:
 
-`CAPS/subjects/sub-*/ses-M*/t1/freesurfer_cross_sectional/sub-*_ses-M*/surf/*h.thickness.fwhm*.fsaverage.mgh`
+    `CAPS/subjects/sub-*/ses-M*/t1/freesurfer_cross_sectional/sub-*_ses-M*/surf/*h.thickness.fwhm*.fsaverage.mgh`
 
-(Example: `CAPS/subjects/sub-ADNI011S4075/ses-M00/t1/freesurfer_cross_sectional/sub-ADNI011S4075_ses-M00/surf/lh.thickness.fwhm15.fsaverage.mgh`)
+    Example: `CAPS/subjects/sub-ADNI011S4075/ses-M00/t1/freesurfer_cross_sectional/sub-ADNI011S4075_ses-M00/surf/lh.thickness.fwhm15.fsaverage.mgh`
 
-Note that the file must be in the `CAPS/subjects` directory. So my `CUSTOM_STRING` must only describe the path starting after the `subjects` folder. So now, we just need to replace the `*` by the correct keywords, in order for the pipeline to catch the correct filenames. `@subject` is the subject, `@session` the session, `@hemi` the hemisphere, `@fwhm` the full width at half maximum. All those variables are already known, you just need to indicate where they are in the filename!
+    Note that the file must be in the `CAPS/subjects` directory. So my `CUSTOM_STRING` must only describe the path starting after the `subjects` folder. So now, we just need to replace the `*` by the correct keywords, in order for the pipeline to catch the correct filenames. `@subject` is the subject, `@session` the session, `@hemi` the hemisphere, `@fwhm` the full width at half maximum. All those variables are already known, you just need to indicate where they are in the filename!
 
-As a result, we will get for `CUSTOM_FILE` of cortical thickness :
-`@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh`
+    As a result, we will get for `CUSTOM_FILE` of cortical thickness:
+    `@subject/@session/t1/freesurfer_cross_sectional/@subject_@session/surf/@hemi.thickness.fwhm@fwhm.fsaverage.mgh`
 
-You will finally need to define the name your surface feature `--feature_label FEATURE_LABEL`. It will appear in the `_measure-<FEATURE_LABEL>` of the output files once the pipeline has run.
+    You will finally need to define the name your surface feature `--feature_label FEATURE_LABEL`. It will appear in the `_measure-<FEATURE_LABEL>` of the output files once the pipeline has run.
 
 Note that `--custom_file` and `--feature_type` cannot be combined.
 
