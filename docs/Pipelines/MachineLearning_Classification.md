@@ -2,12 +2,12 @@
 
 Clinica provides a modular way to perform classification based on machine learning. To build its own classification pipeline, the user can combine three modules based on [scikit-learn](http://scikit-learn.org/stable/index.html) [[Pedregosa et al., 2011](http://www.jmlr.org/papers/volume12/pedregosa11a/pedregosa11a.pdf)]:
 
-  - Input (e.g. gray matter maps obtained from T1-weighted MRI images, FDG PET images)
+  - Input (e.g. gray matter maps obtained from T1-weighted MR images, FDG PET images)
   - Algorithm (e.g. support vector machine, logistic regression, random forest)
   - Validation (e.g. K-fold cross validation, repeated K-fold cross validation, repeated hold-out validation)
 
 ## Prerequisites
-You need to have performed the [`t1-volume`](../T1_Volume) pipeline on your T1-weighted MRI images and/or the [`pet-volume`](../PET_Volume) pipeline on your PET images.
+You need to have performed the [`t1-volume`](../T1_Volume) pipeline on your T1-weighted MR images and/or the [`pet-volume`](../PET_Volume) pipeline on your PET images.
 
 
 ## Dependencies
@@ -19,7 +19,7 @@ If you installed the core of Clinica, this pipeline needs no further dependencie
 ### Input
 Two classes corresponding to the voxel-based and the region-based approaches are implemented in `input.py`:
 
-  - `CAPSVoxelBasedInput`: all the voxel of the image are used as features.
+  - `CAPSVoxelBasedInput`: all the voxels of the image are used as features.
   - `CAPSRegionBasedInput`: a list of values stored in a TSV file is used as features. This list corresponds to PET or T1 image intensities averaged over a set of regions obtained from a brain parcellation when running the [`t1-volume`](../T1_Volume) and/or [`pet-volume`](../PET_Volume) pipeline.
 
 !!! note
@@ -32,7 +32,7 @@ Three classes corresponding to the machine learning-based classification algorit
   - `LogisticReg`: logistic regression algorithm (input: all the data available)
   - `RandomForest`: random forest algorithm (input: all the data available)
 
-Each algorithm implements a grid search approach to choose the best parameters for the classification by looking at the value of the balanced accuracy. The area under curve (AUC) is also reported. The labels are automatically assigned based on the `diagnoses_tsv` file.
+Each algorithm implements a grid search approach to choose the best parameters for the classification by looking at the value of the balanced accuracy. The area under the receiver operating characteristic (ROC) curve (AUC) is also reported. The labels are automatically assigned based on the `diagnoses_tsv` file.
 
 
 ### Validation
@@ -50,7 +50,7 @@ No matter the combination of modules chosen, the inputs necessary are:
 
 - `caps_directory`: the folder containing the results of the [`t1-volume`](../T1_Volume) and/or the [`pet-volume`](../PET_Volume) pipeline (where TSV files are stored)
 - `subjects_visits_tsv`: the TSV file containing the `participant_id` and the `session_id` columns
-- `diagnoses_tsv`: a TSV file where the diagnosis for each participant (identified by a participant ID) is reported (i.e. AD, CN). It allows the algorithm to perform the dual classification (between the two labels reported).
+- `diagnoses_tsv`: a TSV file where the diagnosis for each participant (identified by a participant ID) is reported (e.g. AD, CN). It allows the algorithm to perform the dual classification (between the two labels reported).
 Example of a diagnosis TSV file:
 ````
 participant_id    diagnosis
@@ -67,7 +67,7 @@ sub-CLNC0005      CN
 - `fwhm`: the FWHM value in mm used in the `t1-volume` or `pet-volume` pipeline
 - `modulated`: a flag to indicate if, when running the [`t1-volume`](../T1_Volume) pipeline, the image has been modulated or not (`on`, `off`)
 - `acq_label`: label given to the PET acquisition, specifying the tracer used (`acq-<acq_label>`)
-- `suvr_reference_region`: intensity normalization using the average PET uptake in reference regions resulting in a standardized uptake value ratio (SUVR) map. It can be cerebellumPons (used for amyloid tracers) or pons (used for 18F-FDG tracers).
+- `suvr_reference_region`: reference region used to perform intensity normalization (i.e. dividing each voxel of the image by the average uptake in this region) resulting in a standardized uptake value ratio (SUVR) map. It can be `cerebellumPons` (used for amyloid tracers) or `pons` (used for FDG).
 - `use_pvc_data`: use PET data with partial value correction (`True`/`False`). By default, PET data with no PVC are used)
 - `precomputed_kernel`: to load the precomputed kernel if it exists
 - `mask_zeros`: a flag to indicate if zero-valued voxels should be taken into account for the classification (`True`/`False`)
@@ -131,7 +131,7 @@ If `image_type` is `PET`:
 ## Describing this pipeline in your paper
 
 !!! cite "Example of paragraph:"
-		These results have been obtained using the machine learning-based classification modules of Clinica [[Routier et al](https://hal.inria.fr/hal-02308126/); [Samper et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)]. Clinica provides a modular way to perform classification based on machine learning by combining different inputs (e.g. gray matter maps obtained from T1-weighted MRI images, FDG PET images), algorithms (e.g. support vector machine, logistic regression, random forest) and validation strategies (e.g. K-fold cross validation, repeated K-fold cross validation, repeated hold-out validation). These modules rely on [scikit-learn](http://scikit-learn.org/stable/index.html) [[Pedregosa et al., 2011](http://www.jmlr.org/papers/volume12/pedregosa11a/pedregosa11a.pdf)].
+		These results have been obtained using the machine learning-based classification modules of Clinica [[Routier et al](https://hal.inria.fr/hal-02308126/); [Samper et al., 2018](https://doi.org/10.1016/j.neuroimage.2018.08.042)]. Clinica provides a modular way to perform classification based on machine learning by combining different inputs (e.g. gray matter maps obtained from T1-weighted MR images, FDG PET images), algorithms (e.g. support vector machine, logistic regression, random forest) and validation strategies (e.g. K-fold cross validation, repeated K-fold cross validation, repeated hold-out validation). These modules rely on [scikit-learn](http://scikit-learn.org/stable/index.html) [[Pedregosa et al., 2011](http://www.jmlr.org/papers/volume12/pedregosa11a/pedregosa11a.pdf)].
 
 ## Support
 
