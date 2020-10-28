@@ -69,7 +69,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                              default=None,
                              help='Intensity normalization using the average PET uptake in reference regions '
                                   'resulting in a standardized uptake value ratio (SUVR) map. It can be '
-                                  'cerebellumPons (used for AV45 tracers) or pons (used for 18F-FDG tracers).')
+                                  'cerebellumPons (used for amyloid tracers) or pons (used for 18F-FDG tracers).')
         # Optional arguments for custom pipeline
         opt_custom_input = self._args.add_argument_group(
             f"{Fore.BLUE}Pipeline options if you selected custom-pipeline{Fore.RESET}"

@@ -31,7 +31,7 @@ class PETVolumeCLI(ce.CmdParser):
         clinica_comp.add_argument("suvr_reference_region",  choices=LIST_SUVR_REFERENCE_REGIONS,
                                   help='Intensity normalization using the average PET uptake in reference regions '
                                        'resulting in a standardized uptake value ratio (SUVR) map. It can be '
-                                       'cerebellumPons (used for AV45 tracers) or pons (used for 18F-FDG tracers).')
+                                       'cerebellumPons (used for amyloid tracers) or pons (used for 18F-FDG tracers).')
         # Optional arguments (e.g. FWHM)
         optional = self._args.add_argument_group(PIPELINE_CATEGORIES['OPTIONAL'])
         optional.add_argument("-psf", "--pvc_psf_tsv",

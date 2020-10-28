@@ -29,7 +29,7 @@ class PetSurfaceCLI(ce.CmdParser):
         clinica_comp.add_argument("suvr_reference_region",  choices=LIST_SUVR_REFERENCE_REGIONS,
                                   help='Intensity normalization using the average PET uptake in reference regions '
                                        'resulting in a standardized uptake value ratio (SUVR) map. It can be '
-                                       'cerebellumPons (used for AV45 tracers) or pons (used for 18F-FDG tracers).')
+                                       'cerebellumPons (used for amyloid tracers) or pons (used for 18F-FDG tracers).')
         clinica_comp.add_argument("pvc_psf_tsv",
                                   help='TSV file containing for each PET image its point spread function (PSF) measured '
                                        'in mm at x, y & z coordinates. Columns must contain: '

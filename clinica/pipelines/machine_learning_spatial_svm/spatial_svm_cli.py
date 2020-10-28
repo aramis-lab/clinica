@@ -45,7 +45,7 @@ class SpatialSVMCLI(ce.CmdParser):
                                   default=None,
                                   help='Intensity normalization using the average PET uptake in reference regions '
                                        'resulting in a standardized uptake value ratio (SUVR) map. It can be '
-                                       'cerebellumPons (used for AV45 tracers) or pons (used for 18F-FDG tracers).')
+                                       'cerebellumPons (used for amyloid tracers) or pons (used for 18F-FDG tracers).')
         optional_pet.add_argument("-pvc", "--use_pvc_data",
                                   action='store_true',
                                   default=False,
