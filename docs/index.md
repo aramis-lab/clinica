@@ -38,7 +38,7 @@ ICM members are encouraged to use the version of Clinica available on the cluste
     - `dwi-dti` - [DTI scalar maps (FA, MD, AD, RD) and spatial normalization](Pipelines/DWI_DTI): extraction of DTI-based measures (FA, MD, AD, RD)
     - `dwi-connectome` - [Construction of structural connectome](Pipelines/DWI_Connectome): computation of fiber orientation distributions, tractogram and connectome
 - PET
-    - [Introduction page to read before running PET pipelines](Pipelines/PET_Introduction): information on partial volume correction and reference regions for standardized uptake value ratio (SUVR) map when running PET pipelines
+    - [Introduction to concepts used in the PET pipelines](Pipelines/PET_Introduction): partial volume correction and standardized uptake value ratio (SUVR) map computation
     - `pet-volume` - [Volume-based processing of PET images](Pipelines/PET_Volume): registration to T1w MRI, intensity normalization, partial volume correction and spatial normalization
     - `pet-surface` - [Surface-based processing of PET images](Pipelines/PET_Surface): projection of the PET signal onto the subject’s cortical surface
 - Statistics
