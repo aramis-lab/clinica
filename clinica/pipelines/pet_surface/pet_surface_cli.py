@@ -25,7 +25,7 @@ class PetSurfaceCLI(ce.CmdParser):
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory. (Filled with results from t1-freesurfer pipeline')
         clinica_comp.add_argument("acq_label", type=str,
-                                  help='Name of the label given to the acquisition, specifying the tracer used (acq-<acq_label>).')
+                                  help='Name of the label given to the PET acquisition, specifying the tracer used (acq-<acq_label>).')
         clinica_comp.add_argument("suvr_reference_region",  choices=LIST_SUVR_REFERENCE_REGIONS,
                                   help='Intensity normalization using the average PET uptake in reference regions '
                                        'resulting in a standardized uptake value ratio (SUVR) map. It can be '

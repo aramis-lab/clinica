@@ -63,7 +63,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         opt_pet.add_argument("-acq", "--acq_label",
                              type=str,
                              default=None,
-                             help='Name of the label given to the acquisition, specifying the tracer used (acq-<acq_label>).')
+                             help='Name of the label given to the PET acquisition, specifying the tracer used (acq-<acq_label>).')
         opt_pet.add_argument("-suvr", "--suvr_reference_region",
                              choices=LIST_SUVR_REFERENCE_REGIONS,
                              default=None,
