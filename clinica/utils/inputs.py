@@ -457,9 +457,6 @@ def get_file_from_server(remote_file, cache_path=None):
 
     Returns:
         Path to downloaded file.
-
-    Note:
-        This function will be in Clinica.
     """
     import os
     from pathlib import Path
@@ -470,8 +467,8 @@ def get_file_from_server(remote_file, cache_path=None):
         cache_clinica = os.path.join(home, ".cache", cache_path)
     else:
         cache_clinica = os.path.join(home, ".cache", "clinica", "data")
-    if not (os.path.exists(cache_clinica)):
-        os.makedirs(cache_clinica)
+
+    os.makedirs(cache_clinica, exist_ok=True)
 
     local_file = os.path.join(cache_clinica, remote_file.filename)
 
