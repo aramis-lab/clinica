@@ -92,6 +92,8 @@ class AdniToBids(Converter):
         import os
         from os import path
         import pandas as pd
+        from colorama import Fore
+        from copy import copy
 
         from clinica.utils.stream import cprint
         import clinica.iotools.converters.adni_to_bids.adni_modalities.adni_t1 as adni_t1
@@ -110,6 +112,18 @@ class AdniToBids(Converter):
         if subjs_list_path is not None:
             cprint('Loading a subjects lists provided by the user...')
             subjs_list = [line.rstrip('\n') for line in open(subjs_list_path)]
+            subjs_list_copy = copy(subjs_list)
+
+            # Check that there are no errors in subjs_list given by the user
+            for subj in subjs_list_copy:
+                adnimerge_subj = adni_merge[adni_merge.PTID == subj]
+                if len(adnimerge_subj) == 0:
+                    cprint(
+                        Fore.RED + "subject with PTID " + subj + " does not exist. Please check your subjects list." +
+                        Fore.RESET)
+                    subjs_list.remove(subj)
+            del subjs_list_copy
+
         else:
             cprint('Using all the subjects contained into the ADNIMERGE.csv file...')
             subjs_list = list(adni_merge['PTID'].unique())
