@@ -886,23 +886,26 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
 
     global counter
 
-    with counter.get_lock():
-        counter.value += 1
-
     subject = image.Subject_ID
 
     if modality == 'av45_fbb':
         modality = image.Tracer.lower()
 
+    with counter.get_lock():
+        counter.value += 1
+        if image.Path == '':
+            cprint(Fore.RED + '[' + modality.upper() + '] No path specified for '
+                   + image.Subject_ID + ' in session '
+                   + image.VISCODE + ' ' + str(counter.value)
+                   + ' / ' + str(total) + Fore.RESET)
+        else:
+            cprint('[' + modality.upper() + '] Processing subject ' + str(subject)
+                   + ' - session ' + image.VISCODE + ', ' + str(counter.value)
+                   + ' / ' + str(total))
+
     if image.Path == '':
-        cprint(Fore.RED + '[' + modality.upper() + '] No path specified for '
-               + image.Subject_ID + ' in session '
-               + image.VISCODE + ' ' + str(counter.value)
-               + ' / ' + str(total) + Fore.RESET)
         return nan
-    cprint('[' + modality.upper() + '] Processing subject ' + str(subject)
-           + ' - session ' + image.VISCODE + ', ' + str(counter.value)
-           + ' / ' + str(total))
+
     session = viscode_to_session(image.VISCODE)
     image_path = image.Path
     image_id = image.Image_ID
