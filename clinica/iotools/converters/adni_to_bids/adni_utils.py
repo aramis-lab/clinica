@@ -35,7 +35,7 @@ def visits_to_timepoints(subject, mri_list_subj, adnimerge_subj, modality, visit
             if key_preferred_visit not in visits.keys():
                 visits[key_preferred_visit] = preferred_visit_name
             elif visits[key_preferred_visit] != preferred_visit_name:
-                cprint('[%s] Subject %s has multiple visits for one timepoint.' % (modality, subject))
+                cprint(f"[{modality}] Subject {subject} has multiple visits for one timepoint.")
 
             unique_visits.remove(preferred_visit_name)
             continue
@@ -55,7 +55,7 @@ def visits_to_timepoints(subject, mri_list_subj, adnimerge_subj, modality, visit
         if key_min_visit not in visits.keys():
             visits[key_min_visit] = image[visit_field]
         elif visits[key_min_visit] != image[visit_field]:
-            cprint('[%s] Subject %s has multiple visits for one timepoint.' % (modality, subject))
+            cprint(f"[{modality}] Subject {subject} has multiple visits for one timepoint.")
 
     return visits
 
@@ -137,17 +137,14 @@ def get_closest_visit(image, pending_timepoints, subject, visit_field, scandate_
             min_visit = timepoint
 
     if min_visit is None:
-        cprint('No corresponding timepoint in ADNIMERGE for subject ' + subject + ' in visit ' + image[visit_field])
+        cprint(f"No corresponding timepoint in ADNIMERGE for subject {subject} in visit {image[visit_field]}")
         cprint(image)
         return None
 
     if min_visit2 is not None and min_db > 90:
-        cprint('More than 60 days for corresponding timepoint in ADNIMERGE for subject ' + subject + ' in visit ' +
-               image[visit_field] + ' on ' + image[scandate_field])
-        cprint('Timepoint 1: ' + min_visit.VISCODE + ' - ' + min_visit.ORIGPROT + ' on ' + min_visit.EXAMDATE +
-               ' (Distance: ' + str(min_db) + ' days)')
-        cprint('Timepoint 2: ' + min_visit2.VISCODE + ' - ' + min_visit2.ORIGPROT + ' on ' + min_visit2.EXAMDATE +
-               ' (Distance: ' + str(min_db2) + ' days)')
+        cprint(f"More than 60 days for corresponding timepoint in ADNIMERGE for subject {subject} in visit {image[visit_field]} on {image[scandate_field]}")
+        cprint(f"Timepoint 1: {min_visit.VISCODE} - {min_visit.ORIGPROT} on {min_visit.EXAMDATE} (Distance: {min_db} days)")
+        cprint(f"Timepoint 2: {min_visit2.VISCODE} - {min_visit2.ORIGPROT} on {min_visit2.EXAMDATE} (Distance: {min_db2} days)")
 
         # If image is too close to the date between two visits we prefer the earlier visit
         if (datetime.strptime(min_visit.EXAMDATE, "%Y-%m-%d")
@@ -157,7 +154,7 @@ def get_closest_visit(image, pending_timepoints, subject, visit_field, scandate_
             if abs((dif / 2.0) - min_db) < 30:
                 min_visit = min_visit2
 
-        cprint('We prefer ' + min_visit.VISCODE)
+        cprint(f"We prefer {min_visit.VISCODE}")
 
     key_min_visit = (min_visit.VISCODE, min_visit.COLPROT, min_visit.ORIGPROT)
 
@@ -295,7 +292,7 @@ def get_images_pet(subject, pet_qc_subj, subject_pet_meta, df_cols, modality, se
                 break
 
         if original_pet_meta.empty:
-            cprint('No %s images metadata for subject %s and visit %s' % (modality, subject, qc_visit[viscode_field]))
+            cprint(f"No {modality} images metadata for subject {subject} and visit {qc_visit[viscode_field]}")
             continue
 
         original_image = original_pet_meta.iloc[0]
@@ -329,8 +326,7 @@ def get_images_pet(subject, pet_qc_subj, subject_pet_meta, df_cols, modality, se
             elif 'fbb' in sel_image.Sequence.lower():
                 tracer = 'FBB'
             else:
-                cprint('Unknown tracer for Amyloid PET image metadata for subject ' + subject +
-                       ' for visit ' + qc_visit[viscode_field])
+                cprint(f"Unknown tracer for Amyloid PET image metadata for subject {subject} for visit {qc_visit[viscode_field]}")
                 continue
 
             scan_data = [[phase, subject, qc_visit[viscode_field], str(visit), sequence, date, str(study_id),
@@ -484,7 +480,7 @@ def create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bi
             if location != previous_location:
                 previous_location = location
                 file_to_read_path = path.join(clinical_data_dir, location)
-                cprint('\tReading clinical data file : ' + location)
+                cprint(f"\tReading clinical data file: {location}")
                 file_to_read = pd.read_csv(file_to_read_path, dtype=str)
 
                 for r in range(0, len(file_to_read.values)):
@@ -757,8 +753,7 @@ def find_image_path(images, source_dir, modality, prefix, id_field):
         is_dicom.append(dicom)
         image_folders.append(image_path)
         if image_path == '':
-            cprint('No %s image path found for subject %s in visit %s with image id %s'
-                   % (modality, str(image.Subject_ID), str(image.VISCODE), str(image.Image_ID)))
+            cprint(f"No {modality} image path found for subject {image.Subject_ID} in visit {image.VISCODE} with image ID {image.Image_ID}")
 
     images.loc[:, 'Is_Dicom'] = pd.Series(is_dicom, index=images.index)
     images.loc[:, 'Path'] = pd.Series(image_folders, index=images.index)
@@ -894,14 +889,12 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
     with counter.get_lock():
         counter.value += 1
         if image.Path == '':
-            cprint(Fore.RED + '[' + modality.upper() + '] No path specified for '
-                   + image.Subject_ID + ' in session '
-                   + image.VISCODE + ' ' + str(counter.value)
-                   + ' / ' + str(total) + Fore.RESET)
+            cprint(
+                f"{Fore.RED}[{modality.upper()}] No path specified for {image.Subject_ID} "
+                f"in session {image.VISCODE} {counter.value}/{total}{Fore.RESET}"
+            )
         else:
-            cprint('[' + modality.upper() + '] Processing subject ' + str(subject)
-                   + ' - session ' + image.VISCODE + ', ' + str(counter.value)
-                   + ' / ' + str(total))
+            cprint(f"[{modality.upper()}] Processing subject {subject} - session {image.VISCODE}, {counter.value}/{total}")
 
     if image.Path == '':
         return nan
@@ -969,10 +962,11 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
         # Check if conversion worked (output files exist)
         if not nifti_exists or not dwi_bvec_and_bval_exist:
 
-            cprint('WARNING: Conversion with dcm2niix failed, trying with dcm2nii '
-                   'for subject ' + subject + ' and session ' + session)
-            command = 'dcm2nii -a n -d n -e n -i y -g %s -p n -m n -r n -x n -o %s %s' % \
-                      (zip_image, output_path, image_path)
+            cprint(
+                f"WARNING: Conversion with dcm2niix failed, trying with dcm2nii "
+                f"for subject {subject} and session {session}"
+            )
+            command = f"dcm2nii -a n -d n -e n -i y -g {zip_image} -p n -m n -r n -x n -o {output_path} {image_path}"
             subprocess.run(command,
                            shell=True,
                            stdout=subprocess.DEVNULL,
@@ -987,8 +981,10 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
                     os.rename(bvec_file, path.join(output_path, output_filename + '.bvec'))
                     os.rename(bval_file, path.join(output_path, output_filename + '.bval'))
                 else:
-                    cprint(Fore.RED + 'WARNING: bvec and bval not generated by dcm2nii '
-                           'for subject ' + subject + ' and session ' + session + '. ' + Fore.RESET)
+                    cprint(
+                        f"{Fore.RED}WARNING: bvec and bval not generated by dcm2nii "
+                        f"for subject {subject} and session {session}{Fore.RESET}"
+                    )
 
             nifti_files = glob(path.join(output_path, subject.replace('_', '') + '.nii*'))
             output_image = path.join(output_path, output_filename + '.nii.gz')
@@ -1008,9 +1004,10 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
             # We check if neither the NIFTI file to be centered
             # nor the final compressed NIFTI file exist. In this case, conversion failed
             if conversion_failed or (not path.isfile(nifti_file) and not path.isfile(output_image)):
-                cprint(Fore.RED + 'WARNING: Conversion of the dicom failed '
-                       'for subject ' + subject + ' and session ' + session + '. '
-                       'Image path: ' + image_path + Fore.RESET)
+                cprint(
+                    f"{Fore.RED} WARNING: Conversion of the dicom failed "
+                    f"for subject {subject} and session {session}. Image path: {image_path}{Fore.RESET}"
+                )
                 # If conversion failed we remove the folder if it is empty
                 if not os.listdir(output_path):
                     os.rmdir(output_path)
@@ -1018,8 +1015,7 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
 
         # Case when JSON file was expected, but not generated by dcm2niix
         elif generate_json == 'y' and not os.path.exists(path.join(output_path, output_filename + '.json')):
-            cprint('WARNING: JSON file not generated by dcm2niix '
-                   'for subject ' + subject + ' and session ' + session)
+            cprint(f"WARNING: JSON file not generated by dcm2niix for subject {subject} and session {session}")
 
         if modality_specific[modality]['to_center']:
             center_nifti_origin(nifti_file, output_image)
@@ -1030,8 +1026,7 @@ def create_file(image, modality, total, bids_dir, mod_to_update):
         if modality_specific[modality]['to_center']:
             center_nifti_origin(image_path, output_image)
             if output_image is None:
-                cprint("Error: For subject %s in session%s an error occurred recentering Nifti image:%s"
-                       % (subject, session, image_path))
+                cprint(f"Error: For subject {subject} in session {session}, an error occurred recentering Nifti image: {image_path}")
         else:
             shutil.copy(image_path, output_image)
 
