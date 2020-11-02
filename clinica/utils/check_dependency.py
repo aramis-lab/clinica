@@ -26,12 +26,17 @@ def is_binary_present(binary):
     """
     import subprocess
     import os
+    import sys
+    if sys.version_info[0] >= 3 and sys.version_info[1] >= 7:
+        import errno
+    else:
+        errno = os.errno
 
     try:
         devnull = open(os.devnull)
         subprocess.Popen([binary], stdout=devnull, stderr=devnull).communicate()
     except OSError as e:
-        if e.errno == os.errno.ENOENT:
+        if e.errno == errno.ENOENT:
             return False
     return True
 
