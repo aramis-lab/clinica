@@ -72,7 +72,7 @@ class AdniToBids(Converter):
         adni_utils.create_adni_sessions_dict(bids_ids, clinic_specs_path, clinical_data_dir, bids_subjs_paths)
 
         # -- Creation of scans files --
-        cprint('Creating scans files...')
+        cprint("Creating scans files...")
         adni_utils.create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids)
 
     def convert_images(self, source_dir, clinical_dir, dest_dir, subjs_list_path=None,
@@ -110,7 +110,7 @@ class AdniToBids(Converter):
 
         # Load a file with subjects list or compute all the subjects
         if subjs_list_path is not None:
-            cprint('Loading a subjects lists provided by the user...')
+            cprint("Loading a subjects lists provided by the user...")
             subjs_list = [line.rstrip('\n') for line in open(subjs_list_path)]
             subjs_list_copy = copy(subjs_list)
 
@@ -119,13 +119,13 @@ class AdniToBids(Converter):
                 adnimerge_subj = adni_merge[adni_merge.PTID == subj]
                 if len(adnimerge_subj) == 0:
                     cprint(
-                        Fore.RED + "subject with PTID " + subj + " does not exist. Please check your subjects list." +
-                        Fore.RESET)
+                        f"{Fore.RED}Subject with PTID {subj} does not exist. Please check your subjects list.{Fore.RESET}"
+                    )
                     subjs_list.remove(subj)
             del subjs_list_copy
 
         else:
-            cprint('Using all the subjects contained into the ADNIMERGE.csv file...')
+            cprint("Using all the subjects contained into the ADNIMERGE.csv file...")
             subjs_list = list(adni_merge['PTID'].unique())
 
         # Create the output folder if is not already existing
