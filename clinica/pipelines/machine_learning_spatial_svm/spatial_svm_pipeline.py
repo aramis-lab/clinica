@@ -16,18 +16,20 @@ class SpatialSVM(cpe.Pipeline):
         """Check pipeline parameters."""
         from clinica.utils.group import check_group_label
 
-        if 'group_label' not in self.parameters.keys():
-            raise KeyError('Missing compulsory group_label key in pipeline parameter.')
+        # Clinica compulsory parameters
+        self.parameters.setdefault('group_label', None)
+        check_group_label(self.parameters['group_label'])
+
         if 'orig_input_data' not in self.parameters.keys():
             raise KeyError('Missing compulsory orig_input_data key in pipeline parameter.')
-        if 'fwhm' not in self.parameters.keys():
-            self.parameters['fwhm'] = 4
-        if 'pet_tracer' not in self.parameters.keys():
-            self.parameters['pet_tracer'] = 'fdg'
-        if 'no_pvc' not in self.parameters.keys():
-            self.parameters['no_pvc'] = False
 
-        check_group_label(self.parameters['group_label'])
+        # Optional parameters for inputs from pet-volume pipeline
+        self.parameters.setdefault('acq_label', None)
+        self.parameters.setdefault('suvr_reference_region', None)
+        self.parameters.setdefault('use_pvc_data', False)
+
+        # Advanced parameters
+        self.parameters.setdefault('fwhm', 4)
 
     def check_custom_dependencies(self):
         """Check dependencies that can not be listed in the `info.json` file.
@@ -53,14 +55,14 @@ class SpatialSVM(cpe.Pipeline):
         return ['regularized_image']
 
     def build_input_node(self):
-        """Build and connect an input node to the pipeline.
-        """
+        """Build and connect an input node to the pipeline."""
         import os
         from colorama import Fore
         import nipype.pipeline.engine as npe
         import nipype.interfaces.utility as nutil
         from clinica.utils.inputs import clinica_file_reader, clinica_group_reader
-        from clinica.utils.input_files import t1_volume_final_group_template
+        from clinica.utils.input_files import (t1_volume_final_group_template,
+                                               pet_volume_normalized_suvr_pet)
         from clinica.utils.exceptions import ClinicaCAPSError, ClinicaException
         from clinica.utils.ux import print_groups_in_caps_directory
 
@@ -84,23 +86,26 @@ class SpatialSVM(cpe.Pipeline):
                 'description': 'graymatter tissue segmented in T1w MRI in Ixi549 space',
                 'needed_pipeline': 't1-volume-tissue-segmentation'
             }
-        elif self.parameters['orig_input_data'] is 'pet-volume':
-            if self.parameters['no_pvc']:
-                caps_files_information = {
-                    'pattern': os.path.join('pet', 'preprocessing', 'group-' + self.parameters['group_label'],
-                                            '*_pet_space-Ixi549Space_suvr-pons_pet.nii.gz'),
-                    'description': self.parameters['pet_tracer'] + ' PET in Ixi549 space',
-                    'needed_pipeline': 'pet-volume'
-                }
-            else:
-                caps_files_information = {
-                    'pattern': os.path.join('pet', 'preprocessing', 'group-' + self.parameters['group_label'],
-                                            '*_pet_space-Ixi549Space_pvc-rbv_suvr-pons_pet.nii.gz'),
-                    'description': self.parameters['pet_tracer'] + ' PET partial volume corrected (RBV) in Ixi549 space',
-                    'needed_pipeline': 'pet-volume with PVC'
-                }
+        elif self.parameters['orig_input_data'] == 'pet-volume':
+            if not (
+                self.parameters["acq_label"]
+                and self.parameters["suvr_reference_region"]
+            ):
+                raise ValueError(
+                    f"Missing value(s) in parameters from pet-volume pipeline. Given values:\n"
+                    f"- acq_label: {self.parameters['acq_label']}\n"
+                    f"- suvr_reference_region: {self.parameters['suvr_reference_region']}\n"
+                    f"- use_pvc_data: {self.parameters['use_pvc_data']}\n"
+                )
+            caps_files_information = pet_volume_normalized_suvr_pet(
+                acq_label=self.parameters["acq_label"],
+                suvr_reference_region=self.parameters["suvr_reference_region"],
+                use_brainmasked_image=False,
+                use_pvc_data=self.parameters["use_pvc_data"],
+                fwhm=0
+            )
         else:
-            raise ValueError('Image type ' + self.parameters['orig_input_data'] + ' unknown.')
+            raise ValueError(f"Image type {self.parameters['orig_input_data']} unknown.")
 
         try:
             input_image = clinica_file_reader(self.subjects,
@@ -133,14 +138,11 @@ class SpatialSVM(cpe.Pipeline):
         ])
 
     def build_output_node(self):
-        """Build and connect an output node to the pipeline.
-        """
+        """Build and connect an output node to the pipeline."""
         pass
 
     def build_core_nodes(self):
-        """Build and connect the core nodes of the pipeline.
-        """
-
+        """Build and connect the core nodes of the pipeline."""
         import clinica.pipelines.machine_learning_spatial_svm.spatial_svm_utils as utils
         import nipype.interfaces.utility as nutil
         import nipype.pipeline.engine as npe

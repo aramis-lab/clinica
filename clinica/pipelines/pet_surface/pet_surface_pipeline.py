@@ -157,10 +157,10 @@ class PetSurface(cpe.Pipeline):
 
         check_relative_volume_location_in_world_coordinate_system('T1w-MRI (orig_nu.mgz)',
                                                                   read_parameters_node.inputs.orig_nu,
-                                                                  self.parameters['acq_label'].upper() + ' PET',
+                                                                  self.parameters['acq_label'] + ' PET',
                                                                   read_parameters_node.inputs.pet,
                                                                   self.bids_directory,
-                                                                  self.parameters['acq_label'].lower())
+                                                                  self.parameters['acq_label'])
 
         self.connect([
             (read_parameters_node, self.input_node, [('pet', 'pet'),
@@ -260,9 +260,9 @@ class PetSurface(cpe.Pipeline):
             raise ClinicaException(error_message)
 
         check_relative_volume_location_in_world_coordinate_system('T1w-MRI (orig_nu.mgz)', read_parameters_node.inputs.orig_nu,
-                                                                  self.parameters['acq_label'].upper() + ' PET', read_parameters_node.inputs.pet,
+                                                                  self.parameters['acq_label'] + ' PET', read_parameters_node.inputs.pet,
                                                                   self.bids_directory,
-                                                                  self.parameters['acq_label'].lower())
+                                                                  self.parameters['acq_label'])
 
         self.connect([
             (read_parameters_node, self.input_node, [('pet',                 'pet'),

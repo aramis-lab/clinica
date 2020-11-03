@@ -16,8 +16,9 @@ class StatisticsSurfaceCLI(ce.CmdParser):
 
     def define_options(self):
         """Define the sub-command arguments."""
-        from clinica.engine.cmdparser import PIPELINE_CATEGORIES
         from colorama import Fore
+        from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+        from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS
 
         # Clinica compulsory arguments
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
@@ -28,7 +29,7 @@ class StatisticsSurfaceCLI(ce.CmdParser):
         clinica_comp.add_argument("orig_input_data",
                                   help='Type of surface-based feature: type '
                                   '\'t1-freesurfer\' to use cortical thickness, '
-                                  '\'pet-surface\' to use projected FDG-PET data or '
+                                  '\'pet-surface\' to use projected PET data or '
                                   '\'custom-pipeline\' to use you own data in CAPS directory '
                                   '(see Wiki for details).',
                                   choices=['t1-freesurfer', 'pet-surface', 'custom-pipeline'])
@@ -55,9 +56,23 @@ class StatisticsSurfaceCLI(ce.CmdParser):
                               type=int, default=20,
                               help='FWHM for the surface smoothing '
                                    '(default: --full_width_at_half_maximum %(default)s).')
+        # Optional arguments for inputs from pet-surface pipeline
+        opt_pet = self._args.add_argument_group(
+            f"{Fore.BLUE}Pipeline options if you use inputs from pet-surface pipeline{Fore.RESET}"
+        )
+        opt_pet.add_argument("-acq", "--acq_label",
+                             type=str,
+                             default=None,
+                             help='Name of the label given to the PET acquisition, specifying the tracer used (acq-<acq_label>).')
+        opt_pet.add_argument("-suvr", "--suvr_reference_region",
+                             choices=LIST_SUVR_REFERENCE_REGIONS,
+                             default=None,
+                             help='Intensity normalization using the average PET uptake in reference regions '
+                                  'resulting in a standardized uptake value ratio (SUVR) map. It can be '
+                                  'cerebellumPons (used for amyloid tracers) or pons (used for 18F-FDG tracers).')
         # Optional arguments for custom pipeline
         opt_custom_input = self._args.add_argument_group(
-            '%sPipeline options if you selected custom-pipeline%s' % (Fore.BLUE, Fore.RESET)
+            f"{Fore.BLUE}Pipeline options if you selected custom-pipeline{Fore.RESET}"
         )
         opt_custom_input.add_argument("-cf", "--custom_file",
                                       type=str, default=None,
@@ -83,11 +98,25 @@ class StatisticsSurfaceCLI(ce.CmdParser):
     def run_command(self, args):
         """Run the pipeline with defined args."""
         from networkx import Graph
+        from colorama import Fore
         from .statistics_surface_pipeline import StatisticsSurface
         from .statistics_surface_utils import (get_t1_freesurfer_custom_file,
-                                               get_fdg_pet_surface_custom_file)
+                                               get_pet_surface_custom_file)
         from clinica.utils.ux import print_end_pipeline, print_crash_files_and_exit
         from clinica.utils.exceptions import ClinicaException
+
+        # PET-Surface pipeline
+        if args.orig_input_data == 'pet-surface':
+            if args.acq_label is None:
+                raise ClinicaException(
+                    f"{Fore.RED}You selected pet-surface pipeline without setting --acq_label flag. "
+                    f"Clinica will now exit.{Fore.RESET}"
+                )
+            if args.suvr_reference_region is None:
+                raise ClinicaException(
+                    f"{Fore.RED}You selected pet-surface pipeline without setting --suvr_reference_region flag. "
+                    f"Clinica will now exit.{Fore.RESET}"
+                )
 
         # FreeSurfer cortical thickness
         if args.orig_input_data == 't1-freesurfer':
@@ -95,21 +124,28 @@ class StatisticsSurfaceCLI(ce.CmdParser):
             args.measure_label = 'ct'
         # PET cortical projection
         elif args.orig_input_data == 'pet-surface':
-            args.custom_file = get_fdg_pet_surface_custom_file()
-            args.measure_label = 'fdg'
+            args.custom_file = get_pet_surface_custom_file(args.acq_label, args.suvr_reference_region)
+            args.measure_label = args.acq_label
         else:
             if (args.custom_file is None) or (args.measure_label is None):
                 raise ClinicaException('You must set --measure_label and --custom_file flags.')
 
         parameters = {
-            'orig_input_data': args.orig_input_data,
+            # Clinica compulsory arguments
             'group_label': args.group_label,
-            'covariates': args.covariates,
-            'contrast': args.contrast,
+            'orig_input_data': args.orig_input_data,
             'glm_type': args.glm_type,
+            'contrast': args.contrast,
+            # Optional arguments
+            'covariates': args.covariates,
+            'full_width_at_half_maximum': args.full_width_at_half_maximum,
+            # Optional arguments for inputs from pet-surface pipeline
+            'acq_label': args.acq_label,
+            'suvr_reference_region': args.suvr_reference_region,
+            # Optional arguments for custom pipeline
             'custom_file': args.custom_file,
             'measure_label': args.measure_label,
-            'full_width_at_half_maximum': args.full_width_at_half_maximum,
+            # Advanced arguments (i.e. tricky parameters)
             'cluster_threshold': args.cluster_threshold,
         }
         pipeline = StatisticsSurface(

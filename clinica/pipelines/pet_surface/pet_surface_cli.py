@@ -17,6 +17,7 @@ class PetSurfaceCLI(ce.CmdParser):
     def define_options(self):
         """Define the sub-command arguments."""
         from clinica.engine.cmdparser import PIPELINE_CATEGORIES
+        from clinica.utils.pet import LIST_SUVR_REFERENCE_REGIONS
         # Clinica compulsory arguments (e.g. BIDS, CAPS, group_label)
         clinica_comp = self._args.add_argument_group(PIPELINE_CATEGORIES['CLINICA_COMPULSORY'])
         clinica_comp.add_argument("bids_directory",
@@ -24,12 +25,11 @@ class PetSurfaceCLI(ce.CmdParser):
         clinica_comp.add_argument("caps_directory",
                                   help='Path to the CAPS directory. (Filled with results from t1-freesurfer pipeline')
         clinica_comp.add_argument("acq_label", type=str,
-                                  help='Name of the PET tracer label in the acquisition entity '
-                                       '(acq-<acq_label>).')
-        clinica_comp.add_argument("suvr_reference_region",  choices=['cerebellumPons', 'pons'],
+                                  help='Name of the label given to the PET acquisition, specifying the tracer used (acq-<acq_label>).')
+        clinica_comp.add_argument("suvr_reference_region",  choices=LIST_SUVR_REFERENCE_REGIONS,
                                   help='Intensity normalization using the average PET uptake in reference regions '
                                        'resulting in a standardized uptake value ratio (SUVR) map. It can be '
-                                       'cerebellumPons (used for AV45 tracers) or pons (used for 18F-FDG tracers).')
+                                       'cerebellumPons (used for amyloid tracers) or pons (used for 18F-FDG tracers).')
         clinica_comp.add_argument("pvc_psf_tsv",
                                   help='TSV file containing for each PET image its point spread function (PSF) measured '
                                        'in mm at x, y & z coordinates. Columns must contain: '

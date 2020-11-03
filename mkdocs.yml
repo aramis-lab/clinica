@@ -82,6 +82,7 @@ nav:
       - DTI: Pipelines/DWI_DTI.md
       - Connectome: Pipelines/DWI_Connectome.md
     - PET:
+      - Introduction: Pipelines/PET_Introduction.md
       - Volume processing: Pipelines/PET_Volume.md
       - Surface processing: Pipelines/PET_Surface.md
     - Statistics:

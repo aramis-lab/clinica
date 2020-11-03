@@ -257,3 +257,55 @@ def bids_pet_nii(acq_label):
         'description': 'PET data with ' + acq_label + ' tracer'
     }
     return information
+
+# PET-Volume
+
+
+def pet_volume_normalized_suvr_pet(
+    acq_label,
+    group_label,
+    suvr_reference_region,
+    use_brainmasked_image,
+    use_pvc_data,
+    fwhm=0,
+):
+    import os
+
+    if use_brainmasked_image:
+        mask_key_value = "_mask-brain"
+        mask_description = "brain-masked"
+    else:
+        mask_key_value = ""
+        mask_description = "full"
+
+    if use_pvc_data:
+        pvc_key_value = "_pvc-rbv"
+        pvc_description = "using RBV method for PVC"
+    else:
+        pvc_key_value = ""
+        pvc_description = "without PVC"
+
+    if fwhm:
+        fwhm_key_value = f"_fwhm-{fwhm}mm"
+        fwhm_description = f"with {fwhm}mm smoothing"
+    else:
+        fwhm_key_value = f""
+        fwhm_description = f"with no smoothing"
+
+    suvr_key_value = f"_suvr-{suvr_reference_region}"
+
+    information = {
+        "pattern": os.path.join(
+            "pet",
+            "preprocessing",
+            f"group-{group_label}",
+            f"*_acq-{acq_label}_pet"
+            f"_space-Ixi549Space{pvc_key_value}{suvr_key_value}{mask_key_value}{fwhm_key_value}_pet.nii*",
+        ),
+        "description": (
+            f"{mask_description} SUVR map (using {suvr_reference_region} region) of {acq_label}-PET "
+            f"{pvc_description} and {fwhm_description} in Ixi549Space space based on {group_label} DARTEL template"
+        ),
+        "needed_pipeline": "pet-volume",
+    }
+    return information

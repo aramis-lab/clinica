@@ -73,6 +73,12 @@ def read_psf_information(pvc_psf_tsv, subject_ids, session_ids, pet_tracer):
     return iterables_psf
 
 
+LIST_SUVR_REFERENCE_REGIONS = [
+    "pons",
+    "cerebellumPons",
+]
+
+
 def get_suvr_mask(suvr_reference_region):
     """Get path of the SUVR mask from SUVR reference region label.
 
@@ -83,20 +89,21 @@ def get_suvr_mask(suvr_reference_region):
         Path of the SUVR mask
     """
     import os
+
     suvr_reference_region_to_suvr = {
-        'pons': os.path.join(
+        "pons": os.path.join(
             os.path.split(os.path.realpath(__file__))[0],
-            '..',
-            'resources',
-            'masks',
-            'region-pons_eroded-6mm_mask.nii.gz'
+            "..",
+            "resources",
+            "masks",
+            "region-pons_eroded-6mm_mask.nii.gz",
         ),
-        'cerebellumPons': os.path.join(
+        "cerebellumPons": os.path.join(
             os.path.split(os.path.realpath(__file__))[0],
-            '..',
-            'resources',
-            'masks',
-            'region-cerebellumPons_eroded-6mm_mask.nii.gz'
+            "..",
+            "resources",
+            "masks",
+            "region-cerebellumPons_eroded-6mm_mask.nii.gz",
         ),
     }
     return suvr_reference_region_to_suvr[suvr_reference_region]

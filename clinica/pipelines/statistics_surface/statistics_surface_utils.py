@@ -4,25 +4,26 @@
 def get_t1_freesurfer_custom_file():
     import os
     custom_file = os.path.join(
-        '@subject',
-        '@session',
-        't1',
-        'freesurfer_cross_sectional',
-        '@subject_@session',
-        'surf',
-        '@hemi.thickness.fwhm@fwhm.fsaverage.mgh'
+        "@subject",
+        "@session",
+        "t1",
+        "freesurfer_cross_sectional",
+        "@subject_@session",
+        "surf",
+        "@hemi.thickness.fwhm@fwhm.fsaverage.mgh"
     )
     return custom_file
 
 
-def get_fdg_pet_surface_custom_file():
+def get_pet_surface_custom_file(acq_label, suvr_reference_region):
     import os
     custom_file = os.path.join(
-        '@subject',
-        '@session',
-        'pet',
-        'surface',
-        '@subject_@session_task-rest_acq-fdg_pet_space-fsaverage_suvr-pons_pvc-iy_hemi-@hemi_fwhm-@fwhm_projection.mgh'
+        "@subject",
+        "@session",
+        "pet",
+        "surface",
+        f"@subject_@session_task-rest_acq-{acq_label}_pet"
+        f"_space-fsaverage_suvr-{suvr_reference_region}_pvc-iy_hemi-@hemi_fwhm-@fwhm_projection.mgh"
     )
     return custom_file
 
@@ -169,7 +170,6 @@ def run_matlab(caps_dir,
         pipeline_parameters (dict): parameters of StatisticsSurface pipeline
     """
     import os
-    import sys
     from nipype.interfaces.matlab import MatlabCommand, get_matlab_command
     import clinica.pipelines as clinica_pipelines
     from clinica.utils.check_dependency import check_environment_variable
@@ -223,6 +223,7 @@ def run_matlab(caps_dir,
 def create_glm_info_dictionary(tsv_file, pipeline_parameters):
     """Create dictionary containing the GLM information that will be stored in a JSON file."""
     out_dict = {
+        # Clinica compulsory arguments
         'AnalysisType': pipeline_parameters['glm_type'],
         'DesignMatrix':  covariates_to_design_matrix(
             pipeline_parameters['contrast'],
@@ -230,13 +231,23 @@ def create_glm_info_dictionary(tsv_file, pipeline_parameters):
         ),
         'StringFormatTSV': get_string_format_from_tsv(tsv_file),
         'Contrast': pipeline_parameters['contrast'],
-        'Covariates': pipeline_parameters['covariates'],
         'GroupLabel': pipeline_parameters['group_label'],
+        # Optional arguments
+        'Covariates': pipeline_parameters['covariates'],
         'FWHM': pipeline_parameters['full_width_at_half_maximum'],
+        # Optional arguments for custom pipeline
+        'custom_file': pipeline_parameters['custom_file'],
+        'measure_label': pipeline_parameters['measure_label'],
+        # Advanced arguments (i.e. tricky parameters)
         'ThresholdUncorrectedPvalue': 0.001,
         'ThresholdCorrectedPvalue': 0.05,
         'ClusterThreshold': pipeline_parameters['cluster_threshold']
     }
+    # Optional arguments for inputs from pet-surface pipeline
+    if pipeline_parameters['acq_label'] and pipeline_parameters['suvr_reference_region']:
+        out_dict['acq_label'] = pipeline_parameters['acq_label']
+        out_dict['suvr_reference_region'] = pipeline_parameters['suvr_reference_region']
+
     return out_dict
 
 

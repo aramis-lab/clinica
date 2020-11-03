@@ -32,12 +32,13 @@ ICM members are encouraged to use the version of Clinica available on the cluste
     - `t1-linear` - [Linear processing of T1w MR images](Pipelines/T1_Linear): affine registration to the MNI standard space
     - `t1-volume` - [Processing of T1w MR images using SPM](Pipelines/T1_Volume): tissue segmentation and spatial normalization
     - `t1-freesurfer` - [Processing of T1w MR images using FreeSurfer](Pipelines/T1_FreeSurfer): cortical surface, subcortical structures and volumetrics
-    <!--- `t1-freesurfer-longitudinal` - [Longitudinal processing of T1w MR images using FreeSurfer](Pipelines/T1_FreeSurfer): cortical surface, subcortical structures and volumetrics-->
+    - `t1-freesurfer-longitudinal` - [Longitudinal processing of T1w MR images using FreeSurfer](Pipelines/T1_FreeSurfer): cortical surface, subcortical structures and volumetrics
 - Diffusion MRI (DWI)
     - `dwi-preprocessing-*` - [DWI pre-processing](Pipelines/DWI_Preprocessing): correction of head motion, magnetic susceptibility, eddy current and bias field induced distortions
     - `dwi-dti` - [DTI scalar maps (FA, MD, AD, RD) and spatial normalization](Pipelines/DWI_DTI): extraction of DTI-based measures (FA, MD, AD, RD)
     - `dwi-connectome` - [Construction of structural connectome](Pipelines/DWI_Connectome): computation of fiber orientation distributions, tractogram and connectome
 - PET
+    - [Introduction to concepts used in the PET pipelines](Pipelines/PET_Introduction): partial volume correction and standardized uptake value ratio (SUVR) map computation
     - `pet-volume` - [Volume-based processing of PET images](Pipelines/PET_Volume): registration to T1w MRI, intensity normalization, partial volume correction and spatial normalization
     - `pet-surface` - [Surface-based processing of PET images](Pipelines/PET_Surface): projection of the PET signal onto the subject’s cortical surface
 - Statistics
