@@ -136,8 +136,7 @@ def convert_clinical_data(bids_dir, path_to_clinical, to_convert):
 
     cprint('Creating clinical data files')
 
-    bids.write_dataset_json('NIFD', bids_dir)
-    bids.write_readme(bids_dir)
+    bids.write_modality_agnostic_files('NIFD', bids_dir)
     pc = Parse_clinical(path_to_clinical)
     pc.make_all(bids_dir)
     pc.make_all_scans(to_convert)

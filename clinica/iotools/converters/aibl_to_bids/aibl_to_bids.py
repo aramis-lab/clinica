@@ -45,7 +45,6 @@ def convert_clinical_data(bids_dir, path_to_csv):
     if not exists(clinical_spec_path):
         raise FileNotFoundError(clinical_spec_path + ' file not found ! This is an internal file of Clinica.')
 
-    bids.write_dataset_json('AIBL', bids_dir)
-    bids.write_readme(bids_dir)
+    bids.write_modality_agnostic_files('AIBL', bids_dir)
     create_participants_df_AIBL(bids_dir, clinical_spec_path, path_to_csv, delete_non_bids_info=True)
     create_sessions_dict_AIBL(bids_dir, path_to_csv, clinical_spec_path)

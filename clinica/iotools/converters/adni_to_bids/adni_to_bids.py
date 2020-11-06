@@ -59,8 +59,7 @@ class AdniToBids(Converter):
 
         # -- Creation of modality agnostic files --
         cprint("Creating modality agnostic files...")
-        bids.write_dataset_json('ADNI', out_path)
-        bids.write_readme(out_path)
+        bids.write_modality_agnostic_files('ADNI', out_path)
 
         # -- Creation of participant.tsv --
         cprint("Creating participants.tsv...")

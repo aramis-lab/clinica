@@ -286,9 +286,10 @@ def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids
     return scans_dict
 
 
-def write_dataset_json(study_name, bids_dir):
+def write_modality_agnostic_files(study_name, bids_dir):
     """
-    Write the file dataset_description.json at the root of the BIDS directory.
+    Write the files README, dataset_description.json, .bidsignore and .bids-validator-config.json
+    at the root of the BIDS directory.
 
     Args:
         study_name: name of the study (Ex ADNI)
@@ -299,6 +300,7 @@ def write_dataset_json(study_name, bids_dir):
     """
     import json
     from os import path
+    import clinica
 
     dataset_dict = {"Name": study_name,
                     "BIDSVersion": "1.4.1",
@@ -308,24 +310,41 @@ def write_dataset_json(study_name, bids_dir):
     f.write(dataset_json)
     f.close()
 
-
-def write_readme(bids_dir):
-    """
-    Write the file README at the root of the BIDS directory.
-
-    Args:
-        bids_dir: path to the bids directory
-
-    Returns:
-
-    """
-    from os import path
-    import clinica
-
     file = open(path.join(bids_dir, 'README'), 'w')
     file.write("This bids was generated with Clinica v%s.\nMore information on http://www.clinica.run\n"
                % clinica.__version__)
     file.close()
+
+    validator_dict = {
+        "ignore": [
+            # Possibly dcm2nii errors
+            "NIFTI_UNIT",
+            "INCONSISTENT_PARAMETERS",
+
+            # fMRI-specific errors
+            "SLICE_TIMING_NOT_DEFINED",
+            "NIFTI_PIXDIM4",
+            "BOLD_NOT_4D",
+            "REPETITION_TIME_MUST_DEFINE",
+            "TASK_NAME_MUST_DEFINE",
+
+            # Won't fix errors
+            "MISSING_SESSION",  # Allows subjects to have different sessions
+            "INCONSISTENT_SUBJECTS",  # Allows subjects to have different modalities
+            "SCANS_FILENAME_NOT_MATCH_DATASET"  # Necessary until PET is added to BIDS standard
+            "CUSTOM_COLUMN_WITHOUT_DESCRIPTION",  # We won't create these JSON files as clinical description
+            # is already done in TSV files of clinica.
+            "NO_AUTHORS",  # Optional field in dataset_description.json
+        ],
+        "warn": [], "error": [], "ignoredFiles": []}
+    validator_json = json.dumps(validator_dict, skipkeys=True, indent=4)
+    f = open(path.join(bids_dir, ".bids-validator-config.json"), "w")
+    f.write(validator_json)
+    f.close()
+
+    f = open(path.join(bids_dir, '.bidsignore'), 'w')
+    f.write('pet/\nconversion_info/\n')  # pet/ is necessary until PET is added to BIDS standard
+    f.close()
 
 
 def write_sessions_tsv(bids_dir, sessions_dict):

@@ -29,8 +29,7 @@ class OasisToBids(Converter):
                                       'clinical_specifications.xlsx')
 
         # -- Creation of modality agnostic files --
-        bids.write_dataset_json('OASIS-1', bids_dir)
-        bids.write_readme(bids_dir)
+        bids.write_modality_agnostic_files('OASIS-1', bids_dir)
 
         # --Create participants.tsv--
         participants_df = bids.create_participants_df('OASIS', clinic_specs_path, clinical_data_dir, bids_ids)
