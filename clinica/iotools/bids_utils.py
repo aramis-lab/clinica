@@ -225,6 +225,7 @@ def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids
     """
     import pandas as pd
     from os import path
+    import glob
     scans_dict = {}
     prev_file = ''
     prev_sheet = ''
@@ -234,7 +235,7 @@ def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids
 
     # Init the dictionary with the subject ids
     for bids_id in bids_ids:
-        scans_dict.update({bids_id: {'T1/DWI/fMRI/FMAP': {}, 'FDG': {}}})
+        scans_dict.update({bids_id: {'T1/DWI/fMRI/FMAP': {}, 'PIB': {}, 'AV45': {}, 'FLUTE': {}, 'FDG': {}}})
 
     scans_specs = pd.read_excel(clinic_specs_path, sheet_name='scans.tsv')
     fields_dataset = []
@@ -266,9 +267,9 @@ def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids
         else:
             file_to_read_path = path.join(clinical_data_dir, file_name)
             if sheet != '':
-                file_to_read = pd.read_excel(file_to_read_path, sheet_name=sheet)
+                file_to_read = pd.read_excel(glob.glob(file_to_read_path)[0], sheet_name=sheet)
             else:
-                file_to_read = pd.read_excel(file_to_read_path)
+                file_to_read = pd.read_csv(glob.glob(file_to_read_path)[0])
             prev_file = file_name
             prev_sheet = sheet
 
@@ -382,7 +383,7 @@ def write_sessions_tsv(bids_dir, sessions_dict):
         session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf8')
 
 
-def write_scans_tsv(bids_dir, bids_ids, scans_dict):
+def write_scans_tsv(bids_dir, bids_ids, scans_dict, replace_aibl_nan=False):
     """
 
     Write the scans dict into tsv files
@@ -416,7 +417,9 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
                 if mod_name == "anat" or mod_name == "dwi" or mod_name == "func":
                     f_type = 'T1/DWI/fMRI/FMAP'
                 elif mod_name == 'pet':
-                    f_type = 'FDG'
+                    description_dict = {carac.split('-')[0]: carac.split('-')[1] for carac in file_name.split('_') if
+                                        '-' in carac}
+                    f_type = description_dict['acq'].upper()
 
                 row_to_append = pd.DataFrame(scans_dict[bids_id][f_type], index=[0])
                 # Insert the column filename as first value
@@ -424,6 +427,8 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
                 scans_df = scans_df.append(row_to_append)
 
             scans_df = scans_df.fillna("n/a")
+            if replace_aibl_nan:
+                scans_df = scans_df.replace("-4", "n/a")
             scans_df.to_csv(path.join(bids_dir, bids_id, 'ses-M00', tsv_name), sep='\t', index=False, encoding='utf8')
 
 
