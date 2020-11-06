@@ -284,6 +284,49 @@ def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids
     return scans_dict
 
 
+def write_dataset_json(study_name, bids_dir):
+    """
+    Write the file dataset_description.json at the root of the BIDS directory.
+
+    Args:
+        study_name: name of the study (Ex ADNI)
+        bids_dir: path to the bids directory
+
+    Returns:
+
+    """
+    import json
+    from os import path
+
+    dataset_dict = {"Name": study_name,
+                    "BIDSVersion": "1.4.1",
+                    "DatasetType": "raw"}
+    dataset_json = json.dumps(dataset_dict, skipkeys=True, indent=4)
+    f = open(path.join(bids_dir, "dataset_description.json"), "w")
+    f.write(dataset_json)
+    f.close()
+
+
+def write_readme(bids_dir):
+    """
+    Write the file README at the root of the BIDS directory.
+
+    Args:
+        bids_dir: path to the bids directory
+
+    Returns:
+
+    """
+    from os import path
+    import clinica
+
+    file = open(path.join(bids_dir, 'README'), 'w')
+    file.write("This bids was generated with Clinica v%s.\nMore information on http://www.clinica.run\n"
+               % clinica.__version__)
+    file.close()
+
+
+
 def write_sessions_tsv(bids_dir, sessions_dict):
     """
     Write the content of the function create scans dict in several tsv files following the BIDS specification

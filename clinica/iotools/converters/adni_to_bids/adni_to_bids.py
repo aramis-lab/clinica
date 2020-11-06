@@ -57,6 +57,11 @@ class AdniToBids(Converter):
             bids_ids = ['sub-ADNI' + subj.replace('_', '') for subj in list(adni_merge.PTID.unique())]
             bids_subjs_paths = [path.join(out_path, subj) for subj in bids_ids]
 
+        # -- Creation of modality agnostic files --
+        cprint("Creating modality agnostic files...")
+        bids.write_dataset_json('ADNI', out_path)
+        bids.write_readme(out_path)
+
         # -- Creation of participant.tsv --
         cprint("Creating participants.tsv...")
         participants_df = bids.create_participants_df('ADNI', clinic_specs_path, clinical_data_dir, bids_ids)
