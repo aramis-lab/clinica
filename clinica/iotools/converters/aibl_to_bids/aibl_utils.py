@@ -861,7 +861,7 @@ def create_scans_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path):
                 "ses-M36": "m36",
                 "ses-M54": "m54"}
 
-    scans_dict = bids.create_scans_dict(input_path, clinical_data_dir, 'AIBL', clinical_spec_path, bids_ids,
+    scans_dict = bids.create_scans_dict(clinical_data_dir, 'AIBL', clinical_spec_path, bids_ids,
                                         'RID', 'VISCODE', ses_dict)
     bids.write_scans_tsv(input_path, bids_ids, scans_dict, replace_aibl_nan=True)
 
