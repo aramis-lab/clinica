@@ -120,6 +120,8 @@ def create_participants_df(study_name, clinical_spec_path, clinical_data_dir, bi
     if delete_non_bids_info:
         participant_df = participant_df.drop(index_to_drop)
 
+    participant_df = participant_df.fillna("n/a")
+
     return participant_df
 
 
@@ -326,14 +328,13 @@ def write_readme(bids_dir):
     file.close()
 
 
-
 def write_sessions_tsv(bids_dir, sessions_dict):
     """
     Write the content of the function create scans dict in several tsv files following the BIDS specification
 
     Args:
         bids_dir: path to the bids directory
-        sessions_dict: output of the function create_scans_dict
+        sessions_dict: output of the function create_sessions_dict
 
     Returns:
 
@@ -353,12 +354,13 @@ def write_sessions_tsv(bids_dir, sessions_dict):
             cols = session_df.columns.tolist()
             cols = cols[-1:] + cols[:-1]
             session_df = session_df[cols]
-            session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf8')
         else:
             print("No session data available for " + sp)
             session_df = pd.DataFrame(columns=['session_id'])
             session_df['session_id'] = pd.Series('M00')
-            session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf8')
+
+        session_df = session_df.fillna("n/a")
+        session_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf8')
 
 
 def write_scans_tsv(bids_dir, bids_ids, scans_dict):
@@ -402,6 +404,7 @@ def write_scans_tsv(bids_dir, bids_ids, scans_dict):
                 row_to_append.insert(0, 'filename', path.join(mod_name, file_name))
                 scans_df = scans_df.append(row_to_append)
 
+            scans_df = scans_df.fillna("n/a")
             scans_df.to_csv(path.join(bids_dir, bids_id, 'ses-M00', tsv_name), sep='\t', index=False, encoding='utf8')
 
 

@@ -417,6 +417,7 @@ def write_adni_sessions_tsv(sessions_dict, fields_bids, bids_subjs_paths):
                                           + sessions_df['adas_Q6'])  # / 10
             sessions_df['adas_concentration'] = sessions_df['adas_Q13']  # / 5
 
+            sessions_df = sessions_df.fillna("n/a")
             sessions_df.to_csv(path.join(sp, bids_id + '_sessions.tsv'), sep='\t', index=False, encoding='utf-8')
 
 
@@ -654,6 +655,7 @@ def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
     import pandas as pd
     from os import path
     from os.path import normpath
+    from clinica.utils.stream import cprint
 
     scans_dict = {}
 
@@ -701,6 +703,7 @@ def create_adni_scans_files(clinic_specs_path, bids_subjs_paths, bids_ids):
                         type_mod = 'FDG'
 
                     scans_df['filename'] = pd.Series(path.join(mod_name, file_name))
+                    scans_df = scans_df.fillna("n/a")
                     scans_df.to_csv(scans_tsv, header=False, sep='\t', index=False, encoding='utf-8')
 
             scans_df = pd.DataFrame(columns=(fields_bids))

@@ -675,7 +675,7 @@ def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_di
                         value_to_append = str(file_to_read.at[j, participant_fields_db[i]])
 
                     else:
-                        value_to_append = np.NaN
+                        value_to_append = "n/a"
                 else:
                     value_to_append = file_to_read.at[j, participant_fields_db[i]]
                 field_col_values.append(value_to_append)
@@ -692,7 +692,7 @@ def create_participants_df_AIBL(input_path, clinical_spec_path, clinical_data_di
         else:
             participant_df['sex'][i] = 'F'
 
-    participant_df.replace('-4', np.nan)
+    participant_df.replace('-4', "n/a")
 
     # Delete all the rows of the subjects that are not available in the BIDS dataset
     if delete_non_bids_info:
@@ -760,13 +760,13 @@ def create_sessions_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path)
             for j in sessions_fields_to_read:
                 if j in list(file_to_read.columns.values) and j == 'MMSCORE':
                     MMSCORE = file_to_read.loc[(file_to_read["RID"] == r), j]
-                    MMSCORE[MMSCORE == -4] = np.nan
+                    MMSCORE[MMSCORE == -4] = "n/a"
                 elif j in list(file_to_read.columns.values) and j == 'CDGLOBAL':
                     CDGLOBAL = file_to_read.loc[(file_to_read["RID"] == r), j]
-                    CDGLOBAL[CDGLOBAL == -4] = np.nan
+                    CDGLOBAL[CDGLOBAL == -4] = "n/a"
                 elif j in list(file_to_read.columns.values) and j == 'DXCURREN':
                     DXCURREN = file_to_read.loc[(file_to_read["RID"] == r), j]
-                    DXCURREN[DXCURREN == -4] = np.nan
+                    DXCURREN[DXCURREN == -4] = "n/a"
                     DXCURREN[DXCURREN == 1] = 'CN'
                     DXCURREN[DXCURREN == 2] = 'MCI'
                     DXCURREN[DXCURREN == 3] = 'AD'
