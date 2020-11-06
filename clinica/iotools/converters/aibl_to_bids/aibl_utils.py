@@ -525,18 +525,21 @@ def paths_to_bids(path_to_dataset, path_to_csv, bids_dir, modality):
                         'av45': 'Path_to_pet',
                         'flute': 'Path_to_pet',
                         'pib': 'Path_to_pet'}
-        # depending on the dataframe, there is different way of accessing
-        # the iage object
+        # depending on the DataFrame, there is different way of accessing
+        # the image object
         image_path = image[name_of_path[modality]]
         with counter.get_lock():
             counter.value += 1
+            if image_path is nan:
+                cprint('No path specified for ' + subject + ' in session '
+                       + session)
+            else:
+                cprint('[' + modality.upper() + '] Processing subject ' + str(subject)
+                       + ' - session ' + session + ', ' + str(counter.value) + ' / '
+                       + str(total))
+
         if image_path is nan:
-            cprint('No path specified for ' + subject + ' in session '
-                   + session)
             return nan
-        cprint('[' + modality.upper() + '] Processing subject ' + str(subject)
-               + ' - session ' + session + ', ' + str(counter.value) + ' / '
-               + str(total))
         session = viscode_to_session(session)
         # creation of the path
         if modality == 't1':
@@ -852,8 +855,15 @@ def create_scans_dict_AIBL(input_path, clinical_data_dir, clinical_spec_path):
     rid_list = list(set(rid_df))
     bids_ids = ["sub-AIBL%i" % rid for rid in rid_list]
 
-    scans_dict = bids.create_scans_dict(clinical_data_dir, 'AIBL', clinical_spec_path, bids_ids, 'RID')
-    bids.write_scans_tsv(input_path, rid_list, scans_dict, replace_aibl_nan=True)
+    # This dictionary should be automatically computed from the dataset
+    ses_dict = {"ses-M00": "bl",
+                "ses-M18": "m18",
+                "ses-M36": "m36",
+                "ses-M54": "m54"}
+
+    scans_dict = bids.create_scans_dict(input_path, clinical_data_dir, 'AIBL', clinical_spec_path, bids_ids,
+                                        'RID', 'VISCODE', ses_dict)
+    bids.write_scans_tsv(input_path, bids_ids, scans_dict, replace_aibl_nan=True)
 
 
 def get_examdates(rid, examdates, viscodes, clinical_data_dir):
