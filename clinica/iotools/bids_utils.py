@@ -210,7 +210,7 @@ def create_sessions_dict(clinical_data_dir, study_name, clinical_spec_path, bids
     return sessions_dict
 
 
-def create_scans_dict(bids_dir, clinical_data_dir, study_name, clinic_specs_path, bids_ids,
+def create_scans_dict(clinical_data_dir, study_name, clinic_specs_path, bids_ids,
                       name_column_ids, name_column_ses, ses_dict):
     """
 
@@ -227,7 +227,9 @@ def create_scans_dict(bids_dir, clinical_data_dir, study_name, clinic_specs_path
     import pandas as pd
     from os import path, listdir
     import glob
+    import datetime
     from clinica.utils.stream import cprint
+
     scans_dict = {}
     prev_file = ''
     prev_sheet = ''
@@ -280,20 +282,21 @@ def create_scans_dict(bids_dir, clinical_data_dir, study_name, clinic_specs_path
 
         for bids_id in bids_ids:
             original_id = bids_id.replace('sub-'+study_name, '')
-            if path.exists(path.join(bids_dir, bids_id)):
-                session_list = [session for session in listdir(path.join(bids_dir, bids_id)) if session[:4:] == "ses-"]
-                for session_name in session_list:
-                    row_to_extract = file_to_read[(file_to_read[name_column_ids] == int(original_id)) &
-                                                  (file_to_read[name_column_ses] == ses_dict[session_name])
-                                                  ].index.tolist()
-                    if len(row_to_extract) > 0:
-                        row_to_extract = row_to_extract[0]
-                        # Fill the dictionary with all the information
-                        scans_dict[bids_id][session_name][fields_mod[i]][fields_bids[i]] = \
-                            file_to_read.iloc[row_to_extract][fields_dataset[i]]
-                    else:
-                        print(" Scans information for %s %s not found." % (bids_id, session_name))
-                        scans_dict[bids_id][session_name][fields_mod[i]][fields_bids[i]] = "n/a"
+            for session_name in ses_dict.keys():
+                row_to_extract = file_to_read[(file_to_read[name_column_ids] == int(original_id)) &
+                                              (file_to_read[name_column_ses] == ses_dict[session_name])
+                                              ].index.tolist()
+                if len(row_to_extract) > 0:
+                    row_to_extract = row_to_extract[0]
+                    # Fill the dictionary with all the information
+                    value = file_to_read.iloc[row_to_extract][fields_dataset[i]]
+                    if fields_bids[i] == 'acq_time' and value != "-4":
+                        date_obj = datetime.datetime.strptime(value, '%m/%d/%Y')
+                        value = date_obj.strftime("%Y-%m-%dT%H:%M:%S")
+                    scans_dict[bids_id][session_name][fields_mod[i]][fields_bids[i]] = value
+                else:
+                    print(" Scans information for %s %s not found." % (bids_id, session_name))
+                    scans_dict[bids_id][session_name][fields_mod[i]][fields_bids[i]] = "n/a"
 
     return scans_dict
 
